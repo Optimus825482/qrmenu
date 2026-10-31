@@ -1,6 +1,7 @@
 import type {
   LogoutReason,
   Prisma,
+  RoleKind,
   SessionStatus,
   UserSession,
 } from "@/generated/prisma/client";
@@ -12,6 +13,38 @@ import { audit } from "./audit";
 
 const ACTIVE_STATUSES: SessionStatus[] = ["ONLINE", "UYARI"];
 const MINUTE_MS = 60_000;
+/** Who receives `session.changed` (the online-users window). */
+const SESSION_WATCHERS: RoleKind[] = ["SISTEM", "YONETIM"];
+
+const sessionWithNames = {
+  include: { user: { select: { fullName: true } }, role: { select: { code: true } } },
+} as const;
+
+type NamedSession = Prisma.UserSessionGetPayload<typeof sessionWithNames>;
+
+/** Live row for the online-users window. Delivered on commit, scoped to the session hotel. */
+async function publishSessionChanged(tx: Prisma.TransactionClient, session: NamedSession): Promise<void> {
+  const payload: Record<string, unknown> = {
+    sessionId: session.id,
+    userId: session.userId,
+    fullName: session.user.fullName,
+    status: session.status,
+    hotelId: session.hotelId,
+    roleCode: session.role.code,
+    loginAt: session.loginAt.toISOString(),
+    expiresAt: session.expiresAt.toISOString(),
+  };
+  if (session.outletId) payload.outletId = session.outletId;
+  await publish(
+    {
+      type: "session.changed",
+      hotelId: session.hotelId,
+      roleKinds: SESSION_WATCHERS,
+      payload,
+    },
+    tx,
+  );
+}
 
 export type CreateSessionInput = {
   userId: string;
@@ -88,6 +121,8 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
       after: { outletId: input.outletId, roleId: input.roleId },
       ip: input.ip,
     });
+    const named = await tx.userSession.findUniqueOrThrow({ where: { id: session.id }, ...sessionWithNames });
+    await publishSessionChanged(tx, named);
     return session;
   });
 }
@@ -103,15 +138,33 @@ export async function touchSession(id: string): Promise<void> {
 /**
  * Ends an open session with status CIKTI for every reason (closed by the user or the system).
  * DUSURULDU is reserved for a dropped connection/device and is never set here. ZORUNLU (forced
- * by an administrator) is recorded as a FORCE_LOGOUT event/audit. Closing an already closed
- * session is a no-op.
+ * by an administrator) is recorded as a FORCE_LOGOUT event/audit. Returns false when the session
+ * was not open (already closed is a no-op).
  */
 export async function closeSession(
   id: string,
   reason: LogoutReason,
   byUserId?: string,
-): Promise<void> {
-  await prisma.$transaction((tx) => closeSessionInTx(tx, id, reason, byUserId));
+): Promise<boolean> {
+  return prisma.$transaction((tx) => closeSessionInTx(tx, id, reason, byUserId));
+}
+
+/**
+ * Marks one ONLINE session UYARI (the sweeper). Conditional, so overlapping sweeps cannot both
+ * win. Publishes `session.changed` with status UYARI. Returns false when another pass won.
+ */
+export async function warnSession(id: string, now: Date): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const { count } = await tx.userSession.updateMany({
+      where: { id, status: "ONLINE", warnedAt: null },
+      data: { status: "UYARI", warnedAt: now },
+    });
+    if (count === 0) return false;
+    await tx.sessionEvent.create({ data: { sessionId: id, event: "WARN" } });
+    const named = await tx.userSession.findUniqueOrThrow({ where: { id }, ...sessionWithNames });
+    await publishSessionChanged(tx, named);
+    return true;
+  });
 }
 
 /**
@@ -153,7 +206,7 @@ async function closeSessionInTx(
   });
   if (count === 0) return false;
 
-  const session = await tx.userSession.findUniqueOrThrow({ where: { id } });
+  const session = await tx.userSession.findUniqueOrThrow({ where: { id }, ...sessionWithNames });
   const event = reason === "ZORUNLU" ? "FORCE_LOGOUT" : "LOGOUT";
   await tx.sessionEvent.create({
     data: { sessionId: id, event, detail: { reason, byUserId: byUserId ?? null } },
@@ -177,5 +230,6 @@ async function closeSessionInTx(
     },
     tx,
   );
+  await publishSessionChanged(tx, session);
   return true;
 }

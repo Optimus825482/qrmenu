@@ -1,6 +1,6 @@
 import type { LogoutReason } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { closeSession } from "./sessions";
+import { closeSession, warnSession } from "./sessions";
 
 const MINUTE_MS = 60_000;
 
@@ -69,15 +69,7 @@ export async function sweepSessions(now: Date, deps: SweepDeps): Promise<SweepRe
 
   let warned = 0;
   for (const s of candidates) {
-    const won = await prisma.$transaction(async (tx) => {
-      const { count } = await tx.userSession.updateMany({
-        where: { id: s.id, status: "ONLINE", warnedAt: null },
-        data: { status: "UYARI", warnedAt: now },
-      });
-      if (count === 0) return false;
-      await tx.sessionEvent.create({ data: { sessionId: s.id, event: "WARN" } });
-      return true;
-    });
+    const won = await warnSession(s.id, now);
     if (!won) continue;
     warned++;
 
