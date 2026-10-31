@@ -8,7 +8,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
 import {
-  conflictFromPrisma,
+  uniqueConflictFromPrisma,
   listQuerySchema,
   orderByFor,
   type Page,
@@ -376,7 +376,7 @@ export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
       },
     );
   } catch (error) {
-    conflictFromPrisma(error, USERNAME_TAKEN);
+    uniqueConflictFromPrisma(error, USERNAME_TAKEN);
   }
 }
 
@@ -459,7 +459,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
       return row;
     });
   } catch (error) {
-    conflictFromPrisma(error, USERNAME_TAKEN);
+    uniqueConflictFromPrisma(error, USERNAME_TAKEN);
   }
 }
 

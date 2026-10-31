@@ -23,8 +23,7 @@ async function closeAll(sessions: { id: string }[], reason: LogoutReason): Promi
   let closed = 0;
   for (const { id } of sessions) {
     try {
-      await closeSession(id, reason);
-      closed++;
+      if (await closeSession(id, reason)) closed++;
     } catch (err) {
       console.error(`[session.sweep] oturum kapatılamadı (${reason})`, id, err);
     }

@@ -194,6 +194,18 @@ describe("permissions: matris ve canlı etki", () => {
     expect(await permRow("R-OTM", "MB-TUK", null)).not.toBeNull();
   });
 
+  it("sistem kapsamlı izin yazımı hotelId'siz denetlenir; otel kapsamlısı otel kimliğiyle", async () => {
+    const admin = await sys();
+    const role = await roleByCode("R-OTM");
+    await permissions.setScreen(admin, role.id, null, "MB-TUK", ONLY_V);
+    await permissions.setModule(admin, role.id, null, "MINIBAR", false);
+    const rows = await testDb.auditLog.findMany({
+      where: { action: { in: ["PERM_SET_SCREEN", "PERM_SET_MODULE"] } },
+    });
+    expect(rows).toHaveLength(2);
+    expect(rows.every((r) => r.hotelId === null && r.userId === admin.user.id)).toBe(true);
+  });
+
   it("matrix: otel satırı yoksa sistem satırı inherited:true; override inherited:false", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");

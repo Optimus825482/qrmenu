@@ -151,7 +151,7 @@ export async function set(
     else await tx.setting.create({ data: { hotelId, key: k, value: next } });
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: hotelId ?? ctx.session.hotelId,
+      hotelId: hotelId ?? undefined,
       action: "SETTING_SET",
       entity: "Setting",
       entityId: k,

@@ -14,7 +14,14 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const publishMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/realtime", () => ({ publish: publishMock }));
 
-const { conflictFromPrisma, listQuerySchema, pageArgs, publishDefinition, withAdminTx } =
+const {
+  conflictFromPrisma,
+  listQuerySchema,
+  pageArgs,
+  publishDefinition,
+  uniqueConflictFromPrisma,
+  withAdminTx,
+} =
   await import("@/modules/core/server/admin/crud");
 const { DomainError } = await import("@/lib/result");
 
@@ -137,7 +144,7 @@ describe("withAdminTx (gerçek test DB)", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       userId: ctx.user.id,
-      hotelId: ctx.session.hotelId,
+      hotelId: null,
       entity: "CR-TAN",
       after: { action: "D", scope: "SYSTEM" },
     });
@@ -171,6 +178,20 @@ describe("conflictFromPrisma", () => {
     expect(() => conflictFromPrisma(other, "x")).toThrow(other);
     const plain = new Error("başka");
     expect(() => conflictFromPrisma(plain, "x")).toThrow(plain);
+  });
+
+  it("uniqueConflictFromPrisma: yalnız P2002 özel mesajı alır; P2003 genel çakışma, diğerleri aynen atılır", () => {
+    expect(() => uniqueConflictFromPrisma(known("P2002"), "Kullanıcı adı alınmış")).toThrow("Kullanıcı adı alınmış");
+    let thrown: unknown;
+    try {
+      uniqueConflictFromPrisma(known("P2003"), "Kullanıcı adı alınmış");
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toMatchObject({ code: "CONFLICT" });
+    expect((thrown as Error).message).not.toBe("Kullanıcı adı alınmış");
+    const other = known("P2025");
+    expect(() => uniqueConflictFromPrisma(other, "x")).toThrow(other);
   });
 
   it("gerçek unique ihlali (otel kodu) CONFLICT olur", async () => {

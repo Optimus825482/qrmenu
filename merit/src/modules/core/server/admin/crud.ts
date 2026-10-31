@@ -44,7 +44,7 @@ export async function withAdminTx<T>(
     try {
       await audit(prisma, {
         userId: ctx.user.id,
-        hotelId: ctx.session.hotelId,
+        hotelId: undefined,
         action: "YETKISIZ_DENEME",
         entity: options.screen,
         after: { action: options.action, scope: "SYSTEM" },
@@ -74,6 +74,19 @@ const CONFLICT_CODES = new Set(["P2002", "P2003", "P2014"]);
 export function conflictFromPrisma(err: unknown, message: string): never {
   if (isConflictError(err)) throw new DomainError("CONFLICT", message);
   throw err;
+}
+
+const GENERIC_CONFLICT = "Kayıt başka bir kayıtla çakıştığı için işlem tamamlanamadı";
+
+/**
+ * Like `conflictFromPrisma`, but only a unique violation (P2002) gets the caller's specific
+ * message; other constraint codes (e.g. a foreign key, P2003) get a generic conflict message.
+ */
+export function uniqueConflictFromPrisma(err: unknown, message: string): never {
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    throw new DomainError("CONFLICT", message);
+  }
+  return conflictFromPrisma(err, GENERIC_CONFLICT);
 }
 
 /** True for a Prisma constraint violation; lets a caller compute an expensive message only then. */

@@ -6,7 +6,7 @@ import { DomainError } from "@/lib/result";
 import { assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import {
-  conflictFromPrisma,
+  uniqueConflictFromPrisma,
   listQuerySchema,
   orderByFor,
   type Page,
@@ -22,6 +22,35 @@ const INVALID = "Girilen bilgiler geçersiz";
 const ALREADY_MEMBER = "Bu kullanıcı zaten bu outletin ekibinde";
 const NOT_FOUND = "Ekip üyeliği bulunamadı";
 const OUTLET_ROLE_KINDS: RoleKind[] = ["OUTLET", "MUTFAK"];
+const PROTECTED_KINDS: RoleKind[] = ["SISTEM", "YONETIM"];
+const PROTECTED_TARGET = "Sistem ve yönetim kullanıcılarının ekip üyeliğini yalnızca sistem yöneticisi değiştirebilir";
+
+/** Records the attempt (audit failures never mask the denial) and refuses. */
+async function deny(ctx: Ctx, hotelId: string, detail: Record<string, unknown>): Promise<never> {
+  try {
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: SCREEN,
+      after: detail,
+    });
+  } catch (error) {
+    console.error("members: YETKISIZ_DENEME denetim kaydı yazılamadı", { error });
+  }
+  throw new DomainError("FORBIDDEN", PROTECTED_TARGET);
+}
+
+/** A non-SISTEM actor may not touch the team membership of SISTEM or YONETIM users. */
+async function assertTargetAllowed(
+  ctx: Ctx,
+  hotelId: string,
+  target: { id: string; kind: RoleKind },
+  op: string,
+): Promise<void> {
+  if (ctx.user.roleKind === "SISTEM" || !PROTECTED_KINDS.includes(target.kind)) return;
+  return deny(ctx, hotelId, { action: "O", op, userId: target.id, reason: `${target.kind}_TARGET` });
+}
 
 export type MemberRow = {
   id: string;
@@ -43,7 +72,9 @@ const SELECT = {
   outletId: true,
   roleId: true,
   isActive: true,
-  user: { select: { username: true, fullName: true, isActive: true, role: { select: { name: true } } } },
+  user: {
+    select: { username: true, fullName: true, isActive: true, role: { select: { name: true, kind: true } } },
+  },
   role: { select: { name: true } },
 } satisfies Prisma.OutletMemberSelect;
 
@@ -130,7 +161,7 @@ export async function candidates(ctx: Ctx, outletId: string, q?: string): Promis
   const users = await prisma.user.findMany({
     where: {
       isActive: true,
-      role: { kind: { not: "SISTEM" } },
+      role: { kind: { notIn: ctx.user.roleKind === "SISTEM" ? ["SISTEM"] : PROTECTED_KINDS } },
       OR: [{ hotelId }, { userHotels: { some: { hotelId } } }],
       outletMemberships: { none: { outletId } },
       ...(term
@@ -161,11 +192,18 @@ export async function assign(ctx: Ctx, raw: AssignInput): Promise<MemberRow> {
     return await withAdminTx(ctx, { screen: SCREEN, action: "O", hotelId }, async (tx) => {
       const user = await tx.user.findUnique({
         where: { id: input.userId },
-        select: { id: true, isActive: true, hotelId: true, userHotels: { select: { hotelId: true } } },
+        select: {
+          id: true,
+          isActive: true,
+          hotelId: true,
+          userHotels: { select: { hotelId: true } },
+          role: { select: { kind: true } },
+        },
       });
       if (!user) {
         throw new DomainError("VALIDATION", INVALID, { fieldErrors: { userId: ["Kullanıcı bulunamadı"] } });
       }
+      await assertTargetAllowed(ctx, hotelId, { id: user.id, kind: user.role.kind }, "assign");
       if (!user.isActive) {
         throw new DomainError("VALIDATION", INVALID, {
           fieldErrors: { userId: ["Pasif kullanıcı ekibe eklenemez"] },
@@ -210,7 +248,7 @@ export async function assign(ctx: Ctx, raw: AssignInput): Promise<MemberRow> {
       return row;
     });
   } catch (error) {
-    conflictFromPrisma(error, ALREADY_MEMBER);
+    uniqueConflictFromPrisma(error, ALREADY_MEMBER);
   }
 }
 
@@ -228,6 +266,7 @@ export async function remove(ctx: Ctx, id: string): Promise<void> {
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
     const before = await tx.outletMember.findUnique({ where: { id }, select: SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+    await assertTargetAllowed(ctx, hotelId, { id: before.userId, kind: before.user.role.kind }, "remove");
     await tx.outletMember.delete({ where: { id } });
     await audit(tx, {
       userId: ctx.user.id,
@@ -246,6 +285,7 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
     const before = await tx.outletMember.findUnique({ where: { id }, select: SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+    await assertTargetAllowed(ctx, hotelId, { id: before.userId, kind: before.user.role.kind }, "setActive");
     if (before.isActive === isActive) return toRow(before);
     const row = toRow(await tx.outletMember.update({ where: { id }, data: { isActive }, select: SELECT }));
     await audit(tx, {

@@ -195,6 +195,13 @@ describe("set", () => {
     expect(call?.[1]).not.toBe(testDb);
   });
 
+  it("sistem satırı yazımı hotelId'siz denetlenir (SYSTEM kapsamı)", async () => {
+    const ctx = await sys();
+    await settingsAdmin.set(ctx, null, "dnd.minChecks", 3);
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "SETTING_SET" } });
+    expect(log).toMatchObject({ hotelId: null, userId: ctx.user.id, after: { scope: "SYSTEM", value: 3 } });
+  });
+
   it("YONETIM sistem kapsamında yazamaz: FORBIDDEN + YETKISIZ_DENEME; satır yok", async () => {
     const ctx = await mgmt();
     await expect(settingsAdmin.set(ctx, null, "dnd.minChecks", 3)).rejects.toMatchObject({

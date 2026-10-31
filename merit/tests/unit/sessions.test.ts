@@ -89,6 +89,28 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     }
   });
 
+  it("session.changed: SISTEM oturumu yalnız SISTEM'e, KAT oturumu SISTEM ve YONETIM'e yayınlanır", async () => {
+    const sysUser = await makeUser({ username: "sys-ses", roleCode: "R-SYS", hotelCode: "MR" });
+    const kat = await makeUser({ username: "kat-ses", roleCode: "R-KAT", hotelCode: "MR" });
+    const received: MeritEvent[] = [];
+    const off = subscribe(
+      (e) => e.type === "session.changed",
+      (e) => received.push(e),
+    );
+    try {
+      const sysSession = await newSession(sysUser.id, "MR", sysUser.roleId);
+      const katSession = await newSession(kat.id, "MR", kat.roleId);
+      await vi.waitFor(() => expect(received).toHaveLength(2), { timeout: 2000 });
+      const kindsOf = (id: string) => received.find((e) => (e.payload as { sessionId: string }).sessionId === id)?.roleKinds;
+      expect(kindsOf(sysSession.id)).toEqual(["SISTEM"]);
+      expect([...(kindsOf(katSession.id) ?? [])].sort()).toEqual(["SISTEM", "YONETIM"]);
+    } finally {
+      off();
+    }
+    const rows = await testDb.userSession.findMany({ where: { userId: { in: [sysUser.id, kat.id] } } });
+    expect(rows.every((r) => r.status === "ONLINE")).toBe(true);
+  });
+
   it("başka kullanıcının oturumuna dokunmaz", async () => {
     const a = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
     const b = await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "MR" });
@@ -273,6 +295,18 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     } finally {
       await testDb.setting.updateMany({ where, data: { value: true } });
     }
+  });
+
+  it("çerezdeki oturum aynı kullanıcınınsa ve singleDevice açıksa TEK_CIHAZ ile kapanır, yenisi açık kalır", async () => {
+    const user = await makeUser({ username: "kat.tek", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const own = await newSession(user.id, "MR", user.roleId);
+    const res = await performLogin(creds("kat.tek"), { ...makeDeps(), cookieSessionId: async () => own.id });
+    expect(res.ok).toBe(true);
+    expect(await testDb.userSession.findUniqueOrThrow({ where: { id: own.id } })).toMatchObject({
+      status: "CIKTI",
+      logoutReason: "TEK_CIHAZ",
+    });
+    expect(await testDb.userSession.count({ where: { userId: user.id, status: "ONLINE" } })).toBe(1);
   });
 
   it("çerez oturumu kapatılamazsa (hata) geçerli giriş yine de başarılı olur", async () => {

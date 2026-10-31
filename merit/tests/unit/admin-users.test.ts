@@ -464,6 +464,55 @@ describe("members", () => {
     });
   });
 
+  it("YONETIM başka yöneticiyi/sistem kullanıcısını ekibe atayamaz (FORBIDDEN + YETKISIZ_DENEME); SISTEM atayabilir", async () => {
+    const { ctx, outlet } = await setup();
+    const m = await mgmt();
+    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
+    await expect(members.assign(m, { userId: peer.id, outletId: outlet.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect(await testDb.outletMember.count()).toBe(0);
+    const denials = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME", userId: m.user.id } });
+    expect(denials).toHaveLength(1);
+    expect(denials[0]).toMatchObject({ entity: "CR-KUL", after: { op: "assign", userId: peer.id } });
+
+    const row = await members.assign(ctx, { userId: peer.id, outletId: outlet.id });
+    expect(row.userId).toBe(peer.id);
+    expect(await testDb.outletMember.count()).toBe(1);
+  });
+
+  it("YONETIM yöneticinin üyeliğini kaldıramaz/pasifleştiremez; üyelik değişmez", async () => {
+    const { ctx, outlet } = await setup();
+    const m = await mgmt();
+    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
+    const row = await members.assign(ctx, { userId: peer.id, outletId: outlet.id });
+
+    await expect(members.remove(m, row.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(members.setActive(m, row.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await testDb.outletMember.findUniqueOrThrow({ where: { id: row.id } })).toMatchObject({
+      isActive: true,
+    });
+    expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME", userId: m.user.id } })).toBe(2);
+
+    await members.setActive(ctx, row.id, false);
+    await members.remove(ctx, row.id);
+    expect(await testDb.outletMember.count()).toBe(0);
+  });
+
+  it("candidates: YONETIM için yöneticiler ve sistem kullanıcıları hariç; SISTEM için yöneticiler dahil", async () => {
+    const { ctx, outlet } = await setup();
+    const m = await mgmt();
+    await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
+    await makeUser({ username: "sys-mr-aday", roleCode: "R-SYS", hotelCode: "MR" });
+    const forMgmt = (await members.candidates(m, outlet.id)).map((c) => c.username);
+    expect(forMgmt).toContain("uye.garson");
+    expect(forMgmt).not.toContain("otm-esdeger");
+    expect(forMgmt).not.toContain("sys-mr-aday");
+    const forSys = (await members.candidates(ctx, outlet.id)).map((c) => c.username);
+    expect(forSys).toContain("otm-esdeger");
+    expect(forSys).not.toContain("sys-mr-aday");
+  });
+
   it("YONETIM kendi otelinin outletine atar; başka otelin outletine FORBIDDEN", async () => {
     const { outlet, user } = await setup();
     const m = await mgmt();

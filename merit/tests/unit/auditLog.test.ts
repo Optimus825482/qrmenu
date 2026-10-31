@@ -59,6 +59,20 @@ describe("denetim günlüğü", () => {
     });
   });
 
+  it("sistem kapsamlı yazımların hotelId'siz satırları YONETIM listesinde görünmez", async () => {
+    const otm = await makeUser({ username: "mudur2", roleCode: "R-OTM", hotelCode: "MR" });
+    const sysUser = await makeUser({ username: "sys-ayar", roleCode: "R-SYS", hotelCode: "MR" });
+    const sysCtx = await ctxFor(sysUser, { hotelCode: "MR" });
+    const { set } = await import("@/modules/core/server/admin/settingsAdmin");
+    await set(sysCtx, null, "dnd.minChecks", 3);
+    expect(await testDb.auditLog.count({ where: { action: "SETTING_SET", hotelId: null } })).toBe(1);
+
+    const page = await auditLog.list(await ctxFor(otm, { hotelCode: "MR" }), {});
+    expect(page.items.map((r) => r.action)).not.toContain("SETTING_SET");
+    const all = await auditLog.list(sysCtx, {});
+    expect(all.items.map((r) => r.action)).toContain("SETTING_SET");
+  });
+
   it("işlem, varlık, kullanıcı ve tarih aralığı birlikte süzer", async () => {
     const sys = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "MR" });
     const ctx = await ctxFor(sys, { hotelCode: "MR" });

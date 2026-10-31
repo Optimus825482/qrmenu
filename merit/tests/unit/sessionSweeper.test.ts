@@ -183,6 +183,25 @@ describe("sweepSessions (gerçek test DB)", () => {
     errorLog.mockRestore();
   });
 
+  it("closeSession false dönerse (oturum zaten kapanmış) kapatılmış sayılmaz", async () => {
+    const gone = await openSession({ expiresAt: at(-1) });
+    const good = await openSession({ expiresAt: at(-2) });
+    const real = await vi.importActual<typeof import("@/modules/core/server/sessions")>(
+      "@/modules/core/server/sessions",
+    );
+    vi.mocked(closeSession).mockImplementation(async (id, reason, byUserId) =>
+      id === gone.id ? false : real.closeSession(id, reason, byUserId),
+    );
+    try {
+      const result = await sweepSessions(NOW, deps());
+      expect(result).toEqual({ warned: 0, expired: 1, idle: 0 });
+      expect((await reload(good.id)).logoutReason).toBe("SURE_ASIMI");
+      expect((await reload(gone.id)).status).toBe("ONLINE");
+    } finally {
+      vi.mocked(closeSession).mockImplementation(real.closeSession);
+    }
+  });
+
   it("bir oturum kapatılamazsa diğerleri işlenir, hata bir kez loglanır, yalnız kapananlar sayılır", async () => {
     const bad = await openSession({ expiresAt: at(-1) });
     const good = await openSession({ expiresAt: at(-2) });

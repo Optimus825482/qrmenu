@@ -17,13 +17,18 @@ const MINUTE_MS = 60_000;
 const SESSION_WATCHERS: RoleKind[] = ["SISTEM", "YONETIM"];
 
 const sessionWithNames = {
-  include: { user: { select: { fullName: true } }, role: { select: { code: true } } },
+  include: {
+    user: { select: { fullName: true, role: { select: { kind: true } } } },
+    role: { select: { code: true, kind: true } },
+  },
 } as const;
 
 type NamedSession = Prisma.UserSessionGetPayload<typeof sessionWithNames>;
 
 /** Live row for the online-users window. Delivered on commit, scoped to the session hotel. */
 async function publishSessionChanged(tx: Prisma.TransactionClient, session: NamedSession): Promise<void> {
+  // A system-role session (or a system-role user) is visible to SISTEM watchers only.
+  const systemOnly = session.role.kind === "SISTEM" || session.user.role.kind === "SISTEM";
   const payload: Record<string, unknown> = {
     sessionId: session.id,
     userId: session.userId,
@@ -39,7 +44,7 @@ async function publishSessionChanged(tx: Prisma.TransactionClient, session: Name
     {
       type: "session.changed",
       hotelId: session.hotelId,
-      roleKinds: SESSION_WATCHERS,
+      roleKinds: systemOnly ? ["SISTEM"] : SESSION_WATCHERS,
       payload,
     },
     tx,

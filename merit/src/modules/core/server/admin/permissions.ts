@@ -146,7 +146,7 @@ export async function setModule(
     }
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: hotelId ?? ctx.session.hotelId,
+      hotelId: hotelId ?? undefined,
       action: "PERM_SET_MODULE",
       entity: "RoleModuleAccess",
       entityId: roleId,
@@ -184,7 +184,7 @@ export async function setScreen(
     }
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: hotelId ?? ctx.session.hotelId,
+      hotelId: hotelId ?? undefined,
       action: "PERM_SET_SCREEN",
       entity: "RoleScreenPermission",
       entityId: roleId,
@@ -277,7 +277,7 @@ export async function copyFromRole(
     const copied = { screens: screens.length, modules: modules.length };
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: hotelId ?? ctx.session.hotelId,
+      hotelId: hotelId ?? undefined,
       action: "PERM_COPY",
       entity: "Role",
       entityId: roleId,
