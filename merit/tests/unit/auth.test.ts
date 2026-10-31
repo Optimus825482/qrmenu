@@ -101,6 +101,28 @@ describe("requireUser (gerçek test DB)", () => {
     expect(touched.lastSeenAt.getTime()).toBeGreaterThan(old.getTime() + 100_000);
   });
 
+  it("46 dk hareketsiz oturum UNAUTHORIZED olur ve CIKTI/HAREKETSIZLIK ile kapanır", async () => {
+    const { session } = await login();
+    await testDb.userSession.update({
+      where: { id: session.id },
+      data: { lastSeenAt: new Date(Date.now() - 46 * 60_000) },
+    });
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    const after = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(after.status).toBe("CIKTI");
+    expect(after.logoutReason).toBe("HAREKETSIZLIK");
+  });
+
+  it("44 dk hareketsiz oturum geçer ve lastSeenAt güncellenir", async () => {
+    const { session } = await login();
+    const old = new Date(Date.now() - 44 * 60_000);
+    await testDb.userSession.update({ where: { id: session.id }, data: { lastSeenAt: old } });
+    await expect(requireUser()).resolves.toBeDefined();
+    const after = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(after.status).toBe("ONLINE");
+    expect(after.lastSeenAt.getTime()).toBeGreaterThan(old.getTime() + 60_000);
+  });
+
   it("çerez yok / bekleyen çerez / bilinmeyen oturum → UNAUTHORIZED", async () => {
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
     await cookieFor({ userId: "u1", pendingTargets: true });

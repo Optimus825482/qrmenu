@@ -10,7 +10,13 @@ import {
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 
-const { createSession } = await import("@/modules/core/server/sessions");
+// closeSession stays real but can be made to fail once per test.
+vi.mock("@/modules/core/server/sessions", async (importActual) => {
+  const actual = await importActual<typeof import("@/modules/core/server/sessions")>();
+  return { ...actual, closeSession: vi.fn(actual.closeSession) };
+});
+
+const { createSession, closeSession } = await import("@/modules/core/server/sessions");
 const { sweepSessions } = await import("@/modules/core/server/sessionSweeper");
 
 const MIN = 60_000;
@@ -175,5 +181,32 @@ describe("sweepSessions (gerçek test DB)", () => {
     expect((await reload(warnedSession.id)).status).toBe("UYARI");
     expect(errorLog).toHaveBeenCalledTimes(1);
     errorLog.mockRestore();
+  });
+
+  it("bir oturum kapatılamazsa diğerleri işlenir, hata bir kez loglanır, yalnız kapananlar sayılır", async () => {
+    const bad = await openSession({ expiresAt: at(-1) });
+    const good = await openSession({ expiresAt: at(-2) });
+    const idle = await openSession({ lastSeenAt: at(-60) });
+    const toWarn = await openSession({ expiresAt: at(15) });
+    const real = await vi.importActual<typeof import("@/modules/core/server/sessions")>(
+      "@/modules/core/server/sessions",
+    );
+    vi.mocked(closeSession).mockImplementation(async (id, reason, byUserId) => {
+      if (id === bad.id) throw new Error("boom");
+      return real.closeSession(id, reason, byUserId);
+    });
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const result = await sweepSessions(NOW, deps());
+
+    expect(errorLog).toHaveBeenCalledTimes(1);
+    expect(errorLog.mock.calls[0]).toContain(bad.id);
+    expect(result).toEqual({ warned: 1, expired: 1, idle: 1 });
+    expect((await reload(bad.id)).status).toBe("ONLINE");
+    expect((await reload(good.id)).logoutReason).toBe("SURE_ASIMI");
+    expect((await reload(idle.id)).logoutReason).toBe("HAREKETSIZLIK");
+    expect((await reload(toWarn.id)).status).toBe("UYARI");
+    errorLog.mockRestore();
+    vi.mocked(closeSession).mockImplementation(real.closeSession);
   });
 });

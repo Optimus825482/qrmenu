@@ -1,3 +1,4 @@
+import type { LogoutReason } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { closeSession } from "./sessions";
 
@@ -23,6 +24,20 @@ export const placeholderNotifier: Notifier = async () => {};
 
 const ACTIVE = ["ONLINE", "UYARI"] as const;
 
+/** Closes each session on its own; one failing row is logged and skipped. Returns how many closed. */
+async function closeAll(sessions: { id: string }[], reason: LogoutReason): Promise<number> {
+  let closed = 0;
+  for (const { id } of sessions) {
+    try {
+      await closeSession(id, reason);
+      closed++;
+    } catch (err) {
+      console.error(`[session.sweep] oturum kapatılamadı (${reason})`, id, err);
+    }
+  }
+  return closed;
+}
+
 /**
  * One pass over the open sessions (run every minute by the `session.sweep` job):
  *  1. expiresAt <= now          -> closed with SURE_ASIMI
@@ -32,18 +47,22 @@ const ACTIVE = ["ONLINE", "UYARI"] as const;
  * most once: the status flip is a conditional update, so overlapping sweeps cannot both win.
  */
 export async function sweepSessions(now: Date, deps: SweepDeps): Promise<SweepResult> {
-  const expired = await prisma.userSession.findMany({
-    where: { status: { in: [...ACTIVE] }, expiresAt: { lte: now } },
-    select: { id: true },
-  });
-  for (const { id } of expired) await closeSession(id, "SURE_ASIMI");
+  const expired = await closeAll(
+    await prisma.userSession.findMany({
+      where: { status: { in: [...ACTIVE] }, expiresAt: { lte: now } },
+      select: { id: true },
+    }),
+    "SURE_ASIMI",
+  );
 
   const idleBefore = new Date(now.getTime() - deps.idleMinutes * MINUTE_MS);
-  const idle = await prisma.userSession.findMany({
-    where: { status: { in: [...ACTIVE] }, lastSeenAt: { lte: idleBefore } },
-    select: { id: true },
-  });
-  for (const { id } of idle) await closeSession(id, "HAREKETSIZLIK");
+  const idle = await closeAll(
+    await prisma.userSession.findMany({
+      where: { status: { in: [...ACTIVE] }, lastSeenAt: { lte: idleBefore } },
+      select: { id: true },
+    }),
+    "HAREKETSIZLIK",
+  );
 
   const candidates = await prisma.userSession.findMany({
     where: {
@@ -81,5 +100,5 @@ export async function sweepSessions(now: Date, deps: SweepDeps): Promise<SweepRe
     }
   }
 
-  return { warned, expired: expired.length, idle: idle.length };
+  return { warned, expired, idle };
 }
