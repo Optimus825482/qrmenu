@@ -3,9 +3,14 @@
  * components only use the classes below. Scoped to .xp-shell so the modern staff UI is untouched.
  */
 
-/* The palette is shared with iframe app pages (.xp-frame-page), which render outside the shell. */
+/*
+ * The palette is shared with iframe app pages (.xp-frame-page), which render outside the shell.
+ * It is the Luna theme; [data-theme="luna"] repeats it so a Luna preview swatch inside another
+ * theme shows Luna (the other themes follow below).
+ */
 .xp-shell,
-.xp-frame-page {
+.xp-frame-page,
+[data-theme="luna"] {
   /* Luna palette */
   --xp-title-1: #0058e6;
   --xp-title-2: #3a81f3;
@@ -13,6 +18,9 @@
   --xp-title-inactive-1: #7a96df;
   --xp-title-inactive-2: #a6bcf0;
   --xp-title-text: #ffffff;
+  --xp-title-shadow: var(--xp-title-dark);
+  /* Headings and figures inside windows (on light backgrounds). */
+  --xp-heading: var(--xp-title-1);
   --xp-body: #ece9d8;
   --xp-body-edge: #aca899;
   --xp-body-light: #ffffff;
@@ -27,6 +35,7 @@
   --xp-taskbar: #245edb;
   --xp-taskbar-light: #3f8cf3;
   --xp-taskbar-dark: #1941a5;
+  --xp-taskbar-text: var(--xp-title-text);
   --xp-task-button: #3c81f3;
   --xp-task-button-light: #63a0f7;
   --xp-task-button-active: #1e52b7;
@@ -36,6 +45,7 @@
   --xp-start-1: #3c9b3c;
   --xp-start-2: #61b861;
   --xp-start-dark: #2a7a2a;
+  --xp-start-text: #ffffff;
   --xp-start-right: #d3e5fa;
   --xp-start-right-edge: #95bdee;
   --xp-start-group: #7a96df;
@@ -66,12 +76,117 @@
   --xi-white: #ffffff;
 }
 
+/* ---- themes ----------------------------------------------------------------------------- */
+
+/*
+ * Color schemes (Denetim Masası → Tema): title bars, taskbar and Start menu. The shell root carries
+ * data-theme; plain attribute selectors (like the wallpapers) also let a preview swatch show its
+ * own theme anywhere.
+ */
+
+[data-theme="zeytin"] {
+  --xp-title-1: #3f6b2a;
+  --xp-title-2: #7da74c;
+  --xp-title-dark: #2c4d1c;
+  --xp-title-inactive-1: #97a986;
+  --xp-title-inactive-2: #bfccb0;
+  --xp-select: #4f7d33;
+  --xp-taskbar: #3a5f23;
+  --xp-taskbar-light: #5f8b3e;
+  --xp-taskbar-dark: #283f17;
+  --xp-task-button: #4c7a30;
+  --xp-task-button-light: #6e9a4c;
+  --xp-task-button-active: #2c4a1a;
+  --xp-tray: #4a7330;
+  --xp-tray-light: #5f8b3e;
+  --xp-tray-edge: #2c4a1a;
+  --xp-start-right: #e4ecd8;
+  --xp-start-right-edge: #a9bf90;
+  --xp-start-group: #5f7f45;
+  --xp-start-header-1: #3f6b2a;
+  --xp-start-header-2: #7da74c;
+}
+
+[data-theme="gumus"] {
+  --xp-title-1: #6b7a8f;
+  --xp-title-2: #aab6c6;
+  --xp-title-dark: #56647a;
+  --xp-title-inactive-1: #a9b2bf;
+  --xp-title-inactive-2: #ccd3dc;
+  --xp-title-text: #000000;
+  --xp-title-shadow: rgba(255, 255, 255, 0.35);
+  --xp-heading: #4f5d70;
+  --xp-taskbar: #7d8b9e;
+  --xp-taskbar-light: #a6b2c2;
+  --xp-taskbar-dark: #5d6a7c;
+  --xp-taskbar-text: #000000;
+  --xp-task-button: #95a2b4;
+  --xp-task-button-light: #b7c1ce;
+  --xp-task-button-active: #6b7a8f;
+  --xp-tray: #8c99ab;
+  --xp-tray-light: #a6b2c2;
+  --xp-tray-edge: #5d6a7c;
+  --xp-start-right: #eef1f5;
+  --xp-start-right-edge: #c3cbd6;
+  --xp-start-group: #5d6a7c;
+  --xp-start-header-1: #6b7a8f;
+  --xp-start-header-2: #aab6c6;
+}
+
+[data-theme="royal"] {
+  --xp-title-1: #0b1f4b;
+  --xp-title-2: #2b4a8f;
+  --xp-title-dark: #06122e;
+  --xp-title-inactive-1: #5b6a8c;
+  --xp-title-inactive-2: #8794b3;
+  --xp-select: #2b4a8f;
+  --xp-orange: #947833;
+  --xp-accent: #947833;
+  --xp-taskbar: #0b1f4b;
+  --xp-taskbar-light: #2b4a8f;
+  --xp-taskbar-dark: #050e26;
+  --xp-task-button: #1c3670;
+  --xp-task-button-light: #2b4a8f;
+  --xp-task-button-active: #06122e;
+  --xp-tray: #13295c;
+  --xp-tray-light: #1c3670;
+  --xp-tray-edge: #947833;
+  --xp-start-right: #e7eaf2;
+  --xp-start-right-edge: #b8c0d6;
+  --xp-start-group: #947833;
+  --xp-start-header-1: #0b1f4b;
+  --xp-start-header-2: #2b4a8f;
+}
+
+/*
+ * Preview of a theme: title bar, a light band and the taskbar in that theme's colors. Uses only
+ * tokens every theme block sets, so it also renders inside the mobile shell.
+ */
+.xp-theme-swatch {
+  background: linear-gradient(
+    180deg,
+    var(--xp-title-2) 0%,
+    var(--xp-title-1) 28%,
+    var(--xp-title-1) 40%,
+    var(--xp-title-inactive-2) 40%,
+    var(--xp-title-inactive-2) 76%,
+    var(--xp-taskbar) 76%
+  );
+}
+
 .xp-shell {
+  /*
+   * Base text: Denetim Masası sets both variables inline on the root (yazı boyutu, yazı tipi).
+   * Other sizes are drawn against an 11px base and scale with it: calc(var(--xp-font-size) * n / 11).
+   */
+  --xp-font-size: 12px;
+  --xp-font-family: Tahoma, "Segoe UI", sans-serif;
+
   position: fixed;
   inset: 0;
   overflow: hidden;
-  font-family: Tahoma, "Segoe UI", sans-serif;
-  font-size: 11px;
+  font-family: var(--xp-font-family);
+  font-size: var(--xp-font-size);
   line-height: 1.3;
   color: var(--xp-text);
   background: var(--xp-taskbar);
@@ -79,7 +194,8 @@
   -webkit-user-select: none;
 }
 
-.xp-shell button {
+/* Zero specificity: the component rules below (task buttons, Start button…) set their own. */
+:where(.xp-shell button) {
   font: inherit;
   color: inherit;
 }
@@ -236,8 +352,8 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: bold;
-  font-size: 12px;
-  text-shadow: 1px 1px 0 var(--xp-title-dark);
+  font-size: calc(var(--xp-font-size) * 12 / 11);
+  text-shadow: 1px 1px 0 var(--xp-title-shadow);
 }
 
 .xp-title-button {
@@ -250,6 +366,7 @@
   background: linear-gradient(180deg, var(--xp-title-2), var(--xp-title-1));
   color: var(--xp-title-text);
   font-weight: bold;
+  /* The glyph belongs to the fixed 21px button, not to the text scale. */
   font-size: 12px;
   line-height: 1;
   cursor: default;
@@ -327,7 +444,7 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  font-size: 12px;
+  font-size: calc(var(--xp-font-size) * 12 / 11);
 }
 
 .xp-app-placeholder p {
@@ -375,7 +492,7 @@
 .xp-about h1 {
   margin: 0 0 2px;
   font-size: 18px;
-  color: var(--xp-title-1);
+  color: var(--xp-heading);
 }
 
 .xp-about dl {
@@ -405,7 +522,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 10px;
-  font-size: 12px;
+  font-size: calc(var(--xp-font-size) * 12 / 11);
   min-height: 100%;
   background: var(--xp-body);
 }
@@ -418,8 +535,8 @@
 
 .xp-cc-head h2 {
   margin: 0;
-  font-size: 14px;
-  color: var(--xp-title-1);
+  font-size: calc(var(--xp-font-size) * 14 / 11);
+  color: var(--xp-heading);
 }
 
 .xp-badge {
@@ -447,9 +564,9 @@
 
 .xp-kpi-value {
   display: block;
-  font-size: 26px;
+  font-size: calc(var(--xp-font-size) * 26 / 11);
   font-weight: bold;
-  color: var(--xp-title-1);
+  color: var(--xp-heading);
 }
 
 .xp-kpi-label {
@@ -477,7 +594,7 @@
 
 .xp-group legend {
   padding: 0 4px;
-  color: var(--xp-title-1);
+  color: var(--xp-heading);
 }
 
 .xp-list {
@@ -520,8 +637,8 @@
 
 .xp-hotel-picker h2 {
   margin: 0 0 4px;
-  font-size: 14px;
-  color: var(--xp-title-1);
+  font-size: calc(var(--xp-font-size) * 14 / 11);
+  color: var(--xp-heading);
 }
 
 .xp-hotel-picker p {
@@ -553,7 +670,7 @@
 
 .xp-hotel-card strong {
   display: block;
-  font-size: 12px;
+  font-size: calc(var(--xp-font-size) * 12 / 11);
 }
 
 .xp-hotel-card span {
@@ -588,10 +705,10 @@
   border: 0;
   border-radius: 0 12px 12px 0;
   background: linear-gradient(180deg, var(--xp-start-2) 0%, var(--xp-start-1) 30%, var(--xp-start-dark) 100%);
-  color: var(--xp-title-text);
+  color: var(--xp-start-text);
   font-style: italic;
   font-weight: bold;
-  font-size: 17px;
+  font-size: calc(var(--xp-font-size) * 17 / 11);
   text-shadow: 1px 1px 1px var(--xp-start-dark);
   box-shadow: 1px 0 3px var(--xp-shadow);
   cursor: default;
@@ -619,7 +736,7 @@
   border: 1px solid var(--xp-taskbar-dark);
   border-radius: 3px;
   background: linear-gradient(180deg, var(--xp-task-button-light), var(--xp-task-button));
-  color: var(--xp-title-text);
+  color: var(--xp-taskbar-text);
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -643,7 +760,7 @@
   padding: 0 12px;
   background: linear-gradient(180deg, var(--xp-tray-light), var(--xp-tray));
   border-left: 1px solid var(--xp-tray-edge);
-  color: var(--xp-title-text);
+  color: var(--xp-taskbar-text);
 }
 
 .xp-sse-dot {
@@ -689,8 +806,8 @@
   background: linear-gradient(180deg, var(--xp-start-header-2), var(--xp-start-header-1));
   color: var(--xp-title-text);
   font-weight: bold;
-  font-size: 14px;
-  text-shadow: 1px 1px 1px var(--xp-title-dark);
+  font-size: calc(var(--xp-font-size) * 14 / 11);
+  text-shadow: 1px 1px 1px var(--xp-title-shadow);
 }
 
 .xp-start-avatar {
@@ -727,7 +844,7 @@
 .xp-start-group {
   padding: 6px 10px 2px;
   font-weight: bold;
-  font-size: 10px;
+  font-size: calc(var(--xp-font-size) * 10 / 11);
   color: var(--xp-start-group);
   letter-spacing: 0.04em;
 }
@@ -881,6 +998,204 @@
 
 .xp-button:focus-visible {
   box-shadow: inset 0 0 0 2px var(--xp-title-2);
+}
+
+.xp-button:disabled {
+  color: var(--xp-muted);
+  border-color: var(--xp-body-edge);
+  background: var(--xp-body);
+  box-shadow: none;
+}
+
+/* ---- Denetim Masası --------------------------------------------------------------------- */
+
+/* The category pane stays put; only the panel scrolls. */
+.xp-cp {
+  display: flex;
+  height: 100%;
+  background: var(--xp-body-light);
+}
+
+.xp-cp-nav {
+  flex: none;
+  width: 160px;
+  padding: 10px 8px;
+  background: linear-gradient(180deg, var(--xp-title-inactive-2), var(--xp-title-inactive-1));
+}
+
+.xp-cp-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 3px;
+  background: var(--xp-body-light);
+}
+
+.xp-cp-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  text-align: left;
+  cursor: default;
+}
+
+.xp-cp-tab:hover {
+  text-decoration: underline;
+}
+
+.xp-cp-tab[aria-selected="true"] {
+  background: var(--xp-select);
+  color: var(--xp-select-text);
+  font-weight: bold;
+}
+
+.xp-cp-main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 10px 14px;
+}
+
+.xp-cp-title {
+  margin: 0 0 2px;
+  font-size: calc(var(--xp-font-size) * 14 / 11);
+  color: var(--xp-heading);
+}
+
+.xp-cp-note {
+  margin: 0 0 8px;
+  color: var(--xp-muted);
+}
+
+.xp-cp-section {
+  margin: 0 0 10px;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--xp-body-edge);
+  border-radius: 3px;
+}
+
+.xp-cp-heading {
+  margin: 0 0 6px;
+  font-size: var(--xp-font-size);
+  font-weight: bold;
+  color: var(--xp-heading);
+}
+
+.xp-cp-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.xp-cp-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+}
+
+.xp-cp-choice input {
+  margin: 0;
+  accent-color: var(--xp-select);
+}
+
+.xp-cp-preview {
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body);
+}
+
+.xp-cp-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.xp-cp-swatch-choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  text-align: center;
+}
+
+/* The radio covers its box: the whole box is the click target, the swatch is the visual. */
+.xp-cp-swatch-choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+}
+
+.xp-cp-swatch-choice:has(input:checked) {
+  border-color: var(--xp-select);
+  background: var(--xp-start-right);
+  font-weight: bold;
+}
+
+.xp-cp-swatch-choice:has(input:focus-visible) {
+  outline: 1px dotted var(--xp-focus);
+  outline-offset: 1px;
+}
+
+.xp-cp-swatch {
+  display: block;
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--xp-body-edge);
+}
+
+.xp-cp-swatch[data-wallpaper] {
+  background: var(--xp-wallpaper);
+  background-size: cover;
+}
+
+.xp-cp-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.xp-cp-install {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+}
+
+.xp-cp-install .xp-button {
+  min-height: 26px;
+  font-weight: bold;
+}
+
+.xp-badge.is-ok {
+  background: var(--xp-sse-open);
+}
+
+.xp-cp-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 0;
+}
+
+.xp-cp-facts dt {
+  color: var(--xp-muted);
+}
+
+.xp-cp-facts dd {
+  margin: 0;
 }
 
 /* ---- icon pictogram fills --------------------------------------------------------------- */

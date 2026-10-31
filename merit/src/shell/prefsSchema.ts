@@ -1,9 +1,19 @@
 import { z } from "zod";
-import { MAX_WINDOWS, WALLPAPERS, type ShellPrefs } from "./types";
+import {
+  DEFAULT_APPEARANCE,
+  FONT_FAMILIES,
+  FONT_SCALES,
+  MAX_WINDOWS,
+  THEMES,
+  WALLPAPERS,
+  type ShellPrefs,
+} from "./types";
 
 /**
  * Shape check for `User.prefs.shell`. Prefs come from the browser, so sizes are capped; the store
- * re-validates app ids, hotels and geometry on restore anyway.
+ * re-validates app ids, hotels and geometry on restore anyway. The appearance fields added later
+ * (font, theme) default when missing, so older records stay valid; a present but unknown value is
+ * rejected like any other malformed field.
  */
 const coord = z.number().finite().min(-10_000).max(100_000);
 const size = z.number().finite().min(0).max(100_000);
@@ -28,6 +38,9 @@ const winState = z.object({
 
 export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object({
   wallpaper: z.enum(WALLPAPERS),
+  fontScale: z.enum(FONT_SCALES).default(DEFAULT_APPEARANCE.fontScale),
+  fontFamily: z.enum(FONT_FAMILIES).default(DEFAULT_APPEARANCE.fontFamily),
+  theme: z.enum(THEMES).default(DEFAULT_APPEARANCE.theme),
   icons: z.array(z.object({ appId: id, x: coord, y: coord })).max(200),
   windows: z.array(winState).max(MAX_WINDOWS),
 });

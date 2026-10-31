@@ -2,12 +2,19 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { getApp, type AppDefinition } from "./registry";
 import {
+  DEFAULT_APPEARANCE,
+  FONT_FAMILIES,
+  FONT_SCALES,
   MAX_WINDOWS,
+  THEMES,
   WALLPAPERS,
+  type FontFamily,
+  type FontScale,
   type HotelRef,
   type IconPos,
   type Rect,
   type ShellPrefs,
+  type Theme,
   type Wallpaper,
   type WinState,
 } from "./types";
@@ -18,7 +25,7 @@ import {
  */
 
 export { MAX_WINDOWS, WALLPAPERS };
-export type { HotelRef, IconPos, Rect, ShellPrefs, Wallpaper, WinState };
+export type { FontFamily, FontScale, HotelRef, IconPos, Rect, ShellPrefs, Theme, Wallpaper, WinState };
 
 export const Z_BASE = 300;
 /**
@@ -47,6 +54,9 @@ type ShellState = {
   cascade: number;
   viewport: { w: number; h: number };
   wallpaper: Wallpaper;
+  fontScale: FontScale;
+  fontFamily: FontFamily;
+  theme: Theme;
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
@@ -81,6 +91,11 @@ type ShellActions = {
   resize(id: string, w: number, h: number): void;
   setHotel(id: string, hotelId: string): void;
   setWallpaper(wallpaper: Wallpaper): void;
+  setFontScale(scale: FontScale): void;
+  setFontFamily(family: FontFamily): void;
+  setTheme(theme: Theme): void;
+  /** Wallpaper, font and theme back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
+  resetAppearance(): void;
   addIcon(appId: string, x: number, y: number): void;
   moveIcon(appId: string, x: number, y: number): void;
   removeIcon(appId: string): void;
@@ -90,6 +105,10 @@ type ShellActions = {
 };
 
 export type WindowStore = ShellState & ShellActions;
+
+/** `value` when it is one of `allowed`, else `fallback` (stored prefs are not trusted blindly). */
+const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
+  allowed.includes(value as T) ? (value as T) : fallback;
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
 
@@ -225,7 +244,7 @@ export function createWindowStore() {
       seq: 1,
       cascade: 0,
       viewport: { w: 1920, h: 1080 },
-      wallpaper: "bliss",
+      ...DEFAULT_APPEARANCE,
       icons: [],
       hotels: [],
       appIds: null,
@@ -355,6 +374,22 @@ export function createWindowStore() {
         if (WALLPAPERS.includes(wallpaper)) set({ wallpaper });
       },
 
+      setFontScale(fontScale) {
+        if (FONT_SCALES.includes(fontScale)) set({ fontScale });
+      },
+
+      setFontFamily(fontFamily) {
+        if (FONT_FAMILIES.includes(fontFamily)) set({ fontFamily });
+      },
+
+      setTheme(theme) {
+        if (THEMES.includes(theme)) set({ theme });
+      },
+
+      resetAppearance() {
+        set({ ...DEFAULT_APPEARANCE });
+      },
+
       addIcon(appId, x, y) {
         const { icons, viewport } = get();
         if (!allowed(appId) || icons.some((i) => i.appId === appId)) return;
@@ -378,9 +413,12 @@ export function createWindowStore() {
       },
 
       snapshot() {
-        const { wallpaper, icons, order, windows } = get();
+        const { wallpaper, fontScale, fontFamily, theme, icons, order, windows } = get();
         return {
           wallpaper,
+          fontScale,
+          fontFamily,
+          theme,
           icons: icons.map((i) => ({ ...i })),
           windows: order.map((id) => ({ ...windows[id] })),
         };
@@ -427,7 +465,10 @@ export function createWindowStore() {
           nextZ: ranked.nextZ,
           order,
           icons,
-          wallpaper: WALLPAPERS.includes(p.wallpaper) ? p.wallpaper : "bliss",
+          wallpaper: oneOf(WALLPAPERS, p.wallpaper, DEFAULT_APPEARANCE.wallpaper),
+          fontScale: oneOf(FONT_SCALES, p.fontScale, DEFAULT_APPEARANCE.fontScale),
+          fontFamily: oneOf(FONT_FAMILIES, p.fontFamily, DEFAULT_APPEARANCE.fontFamily),
+          theme: oneOf(THEMES, p.theme, DEFAULT_APPEARANCE.theme),
           seq: Math.max(get().seq, maxSeq + 1),
           cascade: 0,
           ready: true,

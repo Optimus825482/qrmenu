@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
+import pkg from "./package.json";
 
 const nextConfig: NextConfig = {
-  env: { MERIT_BUILD_DATE: new Date().toISOString().slice(0, 10) },
+  // Shown in Hakkında and Denetim Masası → Uygulama (inlined into client bundles too).
+  env: { MERIT_BUILD_DATE: new Date().toISOString().slice(0, 10), MERIT_VERSION: pkg.version },
   // Clickjacking protection: pages may only be framed by Merit itself (the shell's iframe apps).
   async headers() {
     return [
@@ -10,6 +12,14 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        ],
+      },
+      {
+        // The service worker must be revalidated on every check, or updates reach browsers late.
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache" },
         ],
       },
     ];

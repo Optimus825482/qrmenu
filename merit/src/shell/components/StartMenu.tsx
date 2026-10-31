@@ -4,6 +4,7 @@ import { useEffect, useRef, type KeyboardEvent, type RefObject } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
 import { XpIcon } from "../icons";
 import type { AppCategory, AppDefinition } from "../registry";
+import { usePwaInstall } from "../usePwaInstall";
 
 /** Start-menu groups in display order (spec §5.1). */
 const CATEGORIES: { key: AppCategory; label: string }[] = [
@@ -16,7 +17,7 @@ const CATEGORIES: { key: AppCategory; label: string }[] = [
   { key: "SISTEM", label: "SİSTEM" },
 ];
 
-/** App opened by the right column's "Ayarlar" entry. */
+/** App opened by the right column's "Denetim Masası" entry. */
 const SETTINGS_APP_ID = "core.ayarlar";
 
 export const APP_DRAG_TYPE = "text/merit-app";
@@ -90,6 +91,7 @@ function StartPanel({ apps, userName, onOpenApp, onClose, startButtonRef }: Omit
     apps: apps.filter((a) => a.category === c.key),
   })).filter((g) => g.apps.length > 0);
   const settings = apps.find((a) => a.id === SETTINGS_APP_ID);
+  const { canInstall, promptInstall } = usePwaInstall();
 
   const item = (app: AppDefinition, label = app.title) => (
     <button
@@ -130,9 +132,23 @@ function StartPanel({ apps, userName, onOpenApp, onClose, startButtonRef }: Omit
           ))}
         </div>
         <div className="xp-start-right">
-          {settings ? (
+          {settings || canInstall ? (
             <div role="menu" aria-label="Sistem kısayolları">
-              {item(settings, "Ayarlar")}
+              {settings ? item(settings) : null}
+              {canInstall ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="xp-start-item"
+                  onClick={() => {
+                    onClose();
+                    void promptInstall();
+                  }}
+                >
+                  <XpIcon name="pencere" size={24} />
+                  Uygulama olarak yükle
+                </button>
+              ) : null}
             </div>
           ) : null}
           <div className="xp-start-logout-wrap">

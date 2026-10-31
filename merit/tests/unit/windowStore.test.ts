@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerApp, type AppDefinition } from "@/shell/registry";
+import { DEFAULT_APPEARANCE } from "@/shell/types";
 import {
   createWindowStore,
   hotelsForApp,
@@ -190,6 +191,7 @@ describe("windowStore", () => {
     s().configure({ hotels: TWO_HOTELS, appIds: ["t.a", "t.otel"] });
     const base = { x: 0, y: 0, w: 500, h: 400, minimized: false, maximized: false };
     s().restore({
+      ...DEFAULT_APPEARANCE,
       wallpaper: "gumus",
       icons: [
         { appId: "t.a", x: 1, y: 2 },
@@ -247,7 +249,7 @@ describe("windowStore", () => {
     it("restore: kayıtlı otelde görünmeyen uygulamanın oteli düşer (tek uygun otele bağlanır)", () => {
       const base = { x: 0, y: 0, w: 500, h: 400, minimized: false, maximized: false, z: 300 };
       s().restore({
-        wallpaper: "bliss",
+        ...DEFAULT_APPEARANCE,
         icons: [],
         windows: [
           { ...base, id: "w1", appId: "t.minibar", hotelId: "h1", title: "Minibar · Merit Royal" },
@@ -297,7 +299,7 @@ describe("windowStore", () => {
   it("restore z değerlerini sırayla 300'den yeniden numaralar; nextZ max+1", () => {
     const base = { x: 0, y: 0, w: 500, h: 400, minimized: false, maximized: false };
     s().restore({
-      wallpaper: "bliss",
+      ...DEFAULT_APPEARANCE,
       icons: [],
       windows: [
         { ...base, id: "w1", appId: "t.a", title: "App t.a", z: 9000 },
@@ -319,7 +321,7 @@ describe("windowStore", () => {
       title: "App t.a",
       z: 300 + i,
     }));
-    s().restore({ wallpaper: "bliss", icons: [], windows });
+    s().restore({ ...DEFAULT_APPEARANCE, icons: [], windows });
     expect(s().order).toHaveLength(MAX_WINDOWS);
   });
 

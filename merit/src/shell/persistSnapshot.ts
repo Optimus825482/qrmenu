@@ -7,7 +7,7 @@ export type RestoredLayout = Pick<ShellPrefs, "windows" | "icons">;
 /**
  * What the shell persists. On the desktop: the whole current state. In mobile mode the desktop
  * layout is not shown or editable, so `windows`/`icons` stay exactly as restored and only the
- * wallpaper follows the current state.
+ * appearance (wallpaper, font, theme) follows the current state.
  */
 export function buildPersistSnapshot(
   mode: ShellMode,
@@ -15,5 +15,5 @@ export function buildPersistSnapshot(
   state: ShellPrefs,
 ): ShellPrefs {
   if (mode === "desktop") return state;
-  return { windows: restored.windows, icons: restored.icons, wallpaper: state.wallpaper };
+  return { ...state, windows: restored.windows, icons: restored.icons };
 }

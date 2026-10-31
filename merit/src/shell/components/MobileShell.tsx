@@ -2,9 +2,10 @@
 
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
+import { fontVariables } from "../appearance";
 import { useMobileDefs } from "../useMobileDefs";
 import { useSse, type SseStatus } from "../useSse";
-import { useWindowStore, windowStore } from "../windowStore";
+import { useWindowStore } from "../windowStore";
 import { DefinitionsTab } from "./mobile/DefinitionsTab";
 import type { SubscribeEvents } from "./mobile/events";
 import { type MobileTabId, TabIcon } from "./mobile/icons";
@@ -43,6 +44,9 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
   const [active, setActive] = useState<MobileTabId>("izleme");
   const [definitionsOn, setDefinitionsOn] = useMobileDefs(mobileDefinitions);
   const wallpaper = useWindowStore((s) => s.wallpaper);
+  const theme = useWindowStore((s) => s.theme);
+  const fontScale = useWindowStore((s) => s.fontScale);
+  const fontFamily = useWindowStore((s) => s.fontFamily);
 
   const listeners = useRef(new Set<(e: MeritEvent) => void>());
   const subscribe = useCallback<SubscribeEvents>((listener) => {
@@ -74,7 +78,12 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
   };
 
   return (
-    <div className="mb-shell" data-wallpaper={wallpaper}>
+    <div
+      className="mb-shell"
+      data-wallpaper={wallpaper}
+      data-theme={theme}
+      style={fontVariables(fontScale, fontFamily)}
+    >
       <header className="mb-appbar">
         <div>
           <p className="mb-appbar-title">Merit OS</p>
@@ -110,8 +119,6 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
           {current === "ayarlar" ? (
             <SettingsTab
               userName={user.fullName}
-              wallpaper={wallpaper}
-              onWallpaper={(w) => windowStore.getState().setWallpaper(w)}
               definitionsOn={definitionsOn}
               onDefinitions={setDefinitionsOn}
             />

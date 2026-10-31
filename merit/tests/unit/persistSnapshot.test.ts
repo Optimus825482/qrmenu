@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildPersistSnapshot } from "@/shell/persistSnapshot";
-import type { ShellPrefs } from "@/shell/types";
+import { DEFAULT_APPEARANCE, type ShellPrefs } from "@/shell/types";
 
 const win = (id: string, x: number): ShellPrefs["windows"][number] => ({
   id,
@@ -22,6 +22,7 @@ const restored = {
 
 // What a phone-sized clamp would have done to the live store state.
 const clamped: ShellPrefs = {
+  ...DEFAULT_APPEARANCE,
   wallpaper: "royal-gold",
   windows: [win("w1", 10)],
   icons: [{ appId: "core.komuta", x: 300, y: 300 }],

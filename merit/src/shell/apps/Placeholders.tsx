@@ -15,16 +15,6 @@ function Placeholder({ icon, text, note }: { icon: string; text: string; note: s
   );
 }
 
-export function AyarlarPlaceholder() {
-  return (
-    <Placeholder
-      icon="ayarlar"
-      text="Sistem Ayarları — sonraki aşamada doldurulacak"
-      note="Otel ve sistem kapsamlı ayarlar bu pencerede düzenlenecek."
-    />
-  );
-}
-
 export function OnlinePlaceholder() {
   return (
     <Placeholder

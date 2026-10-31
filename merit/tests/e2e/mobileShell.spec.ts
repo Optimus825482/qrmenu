@@ -132,9 +132,11 @@ test("Ayarlar: duvar kağıdı seçilir; oturum kapatma düğmesi var", async ({
   await tab(page, "Ayarlar").click();
   const panel = page.getByRole("tabpanel", { name: "Ayarlar" });
   await expect(panel.getByRole("button", { name: "Oturumu Kapat" })).toBeVisible();
-  await panel.getByRole("radio", { name: "Royal Gold" }).click();
+  // Scoped to the group: the Tema group has a "Royal Gold" option too.
+  const wallpapers = panel.getByRole("radiogroup", { name: "Duvar kağıdı" });
+  await wallpapers.getByRole("radio", { name: "Royal Gold" }).click();
   await expect(page.locator(".mb-shell")).toHaveAttribute("data-wallpaper", "royal-gold");
-  await expect(panel.getByRole("radio", { name: "Royal Gold" })).toBeChecked();
+  await expect(wallpapers.getByRole("radio", { name: "Royal Gold" })).toBeChecked();
 });
 
 test("?mobil=1 ile 1280px'te de mobil; parametresiz 1280px masaüstü; yeniden boyutlandırma", async ({
@@ -259,7 +261,10 @@ test("mobil kabuk masaüstü düzenini bozmaz: simge konumu korunur, yalnız duv
   await expect(tabs(page)).toBeVisible();
   await tab(page, "Ayarlar").click();
   const saved2 = waitForPrefsSave();
-  await page.getByRole("radio", { name: "Gümüş" }).click();
+  await page
+    .getByRole("radiogroup", { name: "Duvar kağıdı" })
+    .getByRole("radio", { name: "Gümüş" })
+    .click();
   expect((await saved2).ok()).toBe(true);
 
   // 3. Desktop again (fresh load, no localStorage copy): same icon position, new wallpaper.

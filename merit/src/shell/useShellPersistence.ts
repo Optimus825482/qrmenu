@@ -5,7 +5,7 @@ import { confirmStore } from "./confirm";
 import { saveShellPrefs } from "./prefsAction";
 import { buildPersistSnapshot, type RestoredLayout } from "./persistSnapshot";
 import { parseShellPrefs } from "./prefsSchema";
-import type { HotelRef, ShellPrefs } from "./types";
+import { DEFAULT_APPEARANCE, type HotelRef, type ShellPrefs } from "./types";
 import { currentShellMode, type ShellMode } from "./useShellMode";
 import { gridPosition, windowStore } from "./windowStore";
 
@@ -85,7 +85,7 @@ export function useShellPersistence({
     const local = readLocal(userId);
     const { serverPrefs: fromServer, appIds: visible } = initial.current;
     const fallback: ShellPrefs = {
-      wallpaper: "bliss",
+      ...DEFAULT_APPEARANCE,
       icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, store.viewport) })),
       windows: [],
     };
@@ -93,7 +93,7 @@ export function useShellPersistence({
     store.restore(chosen);
 
     // Desktop layout as restored (and kept current while on the desktop). While the mobile shell is
-    // showing, saves send exactly this and only the wallpaper may change.
+    // showing, saves send exactly this and only the appearance (wallpaper, font, theme) may change.
     let layout: RestoredLayout =
       mode === "mobile"
         ? { windows: chosen.windows, icons: chosen.icons }

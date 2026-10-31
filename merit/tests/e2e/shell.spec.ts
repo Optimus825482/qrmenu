@@ -144,7 +144,7 @@ test("sağ tık → Duvar kağıdı → Royal Gold; yenilemeden sonra korunur", 
 test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kaldırır", async ({ page }) => {
   await openAdmin(page);
   const removeVia = async () => {
-    await icon(page, "Sistem Ayarları").click({ button: "right" });
+    await icon(page, "Denetim Masası").click({ button: "right" });
     await page
       .getByRole("menu", { name: "Simge menüsü" })
       .getByRole("menuitem", { name: "Kısayolu kaldır" })
@@ -156,7 +156,7 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await expect(icon(page, "Sistem Ayarları")).toBeVisible();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
 
   // Enter on the title-bar × means "close" (= Hayır), not Evet; Tab skips the ×.
   await removeVia();
@@ -169,24 +169,24 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await dialog.getByRole("button", { name: "Kapat" }).focus();
   await page.keyboard.press("Enter");
   await expect(dialog).toBeHidden();
-  await expect(icon(page, "Sistem Ayarları")).toBeVisible();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
 
   await removeVia();
   await expect(dialog).toBeVisible();
   const saved = waitForPrefsSave(page);
   await page.keyboard.press("Enter");
   await expect(dialog).toBeHidden();
-  await expect(icon(page, "Sistem Ayarları")).toHaveCount(0);
+  await expect(icon(page, "Denetim Masası")).toHaveCount(0);
   expect((await saved).ok()).toBe(true); // the next test (new browser context) relies on it
 });
 
 test("Başlat öğesini masaüstüne sürükle → onay → kısayol geri gelir", async ({ page }) => {
   await openAdmin(page);
-  await expect(icon(page, "Sistem Ayarları")).toHaveCount(0); // removed by the previous test
+  await expect(icon(page, "Denetim Masası")).toHaveCount(0); // removed by the previous test
   await page.getByRole("button", { name: "başlat" }).click();
   const item = page
     .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Sistem Ayarları" });
+    .getByRole("menuitem", { name: "Denetim Masası" });
   const box = (await desktop(page).boundingBox())!;
   await item.dragTo(desktop(page), {
     targetPosition: { x: box.width - 300, y: 200 },
@@ -194,7 +194,7 @@ test("Başlat öğesini masaüstüne sürükle → onay → kısayol geri gelir"
   const dialog = page.getByRole("dialog", { name: "Kısayol oluştur" });
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Evet" }).click();
-  await expect(icon(page, "Sistem Ayarları")).toBeVisible();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
 });
 
 test("mudur.mr (R-OTM): yetkisiz simgeler görünmez; /admin/hakkinda → /admin", async ({ page }) => {
@@ -202,13 +202,13 @@ test("mudur.mr (R-OTM): yetkisiz simgeler görünmez; /admin/hakkinda → /admin
   await expect(page).toHaveURL(/\/admin(#.*)?$/);
   await expect(desktop(page)).toBeVisible();
   await expect(icon(page, "Komuta Merkezi")).toBeVisible();
-  await expect(icon(page, "Sistem Ayarları")).toHaveCount(0);
+  await expect(icon(page, "Denetim Masası")).toHaveCount(0);
   await expect(icon(page, "Hakkında")).toHaveCount(0);
 
   await page.getByRole("button", { name: "başlat" }).click();
   const menu = page.getByRole("menu", { name: "Başlat menüsü" });
   await expect(menu.getByRole("menuitem", { name: "Komuta Merkezi", exact: true })).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Sistem Ayarları", exact: true })).toHaveCount(0);
+  await expect(menu.getByRole("menuitem", { name: "Denetim Masası", exact: true })).toHaveCount(0);
   await expect(menu.getByRole("menuitem", { name: "Hakkında", exact: true })).toHaveCount(0);
   await page.keyboard.press("Escape");
 

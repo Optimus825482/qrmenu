@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { registerCoreApps } from "@/modules/core/apps";
+import { fontVariables } from "@/shell/appearance";
 import { alertDialog } from "@/shell/confirm";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
 import { Desktop } from "@/shell/components/Desktop";
@@ -60,6 +61,9 @@ export function ShellClient({
   const mode = useShellMode();
   const ready = useWindowStore((s) => s.ready);
   const order = useWindowStore((s) => s.order);
+  const theme = useWindowStore((s) => s.theme);
+  const fontScale = useWindowStore((s) => s.fontScale);
+  const fontFamily = useWindowStore((s) => s.fontFamily);
   const [startOpen, setStartOpen] = useState(false);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const openApp = useCallback((appId: string) => {
@@ -73,14 +77,14 @@ export function ShellClient({
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
 
-  // Same persistence for both shells (wallpaper, layout). Both share the tab's one SSE connection
+  // Same persistence for both shells (appearance, layout). Both share the tab's one SSE connection
   // (sseStore), which survives a switch between them.
   if (mode === "mobile") {
     return ready ? <MobileShell user={user} mobileDefinitions={mobileDefinitions} /> : null;
   }
 
   return (
-    <div className="xp-shell">
+    <div className="xp-shell" data-theme={theme} style={fontVariables(fontScale, fontFamily)}>
       {ready ? (
         <>
           <Desktop apps={apps} onOpenApp={openApp} />

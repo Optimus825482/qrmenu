@@ -33,15 +33,15 @@ export function registerCoreApps(): void {
   });
   registerApp({
     id: "core.ayarlar",
-    title: "Sistem Ayarları",
+    title: "Denetim Masası",
     icon: "ayarlar",
     moduleKey: "CORE",
     screenCode: "CR-SYS",
     category: "SISTEM",
     needsHotel: false,
-    window: { w: 640, h: 460 },
+    window: { w: 640, h: 480 },
     kind: "component",
-    component: () => import("@/shell/apps/Placeholders").then((m) => ({ default: m.AyarlarPlaceholder })),
+    component: () => import("@/shell/apps/ControlPanel").then((m) => ({ default: m.ControlPanel })),
     mobile: "none",
   });
   // The iframe app contract: the window hosts a same-origin page (src/app/(admin)/admin/hakkinda).

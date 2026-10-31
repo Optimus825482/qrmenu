@@ -24,10 +24,28 @@
   flex-direction: column;
   background: var(--mb-bg);
   color: var(--mb-text);
-  font-family: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
-  font-size: 15px;
+  /* Same appearance settings as the desktop (inline --xp-font-* on the root); one step bigger. */
+  --mb-font-size: calc(var(--xp-font-size, 12px) + 3px);
+  font-family: var(--xp-font-family, Roboto, "Segoe UI", system-ui, -apple-system, sans-serif);
+  font-size: var(--mb-font-size);
   line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Theme (Denetim Masası → Tema): the accent color of the mobile shell. */
+.mb-shell[data-theme="zeytin"] {
+  --mb-primary: #3f6b2a;
+  --mb-primary-soft: #e4ecd8;
+}
+
+.mb-shell[data-theme="gumus"] {
+  --mb-primary: #56647a;
+  --mb-primary-soft: #e8ecf1;
+}
+
+.mb-shell[data-theme="royal"] {
+  --mb-primary: #0b1f4b;
+  --mb-primary-soft: #e7eaf2;
 }
 
 .mb-shell button {
@@ -61,14 +79,14 @@
 
 .mb-appbar-title {
   margin: 0;
-  font-size: 18px;
+  font-size: calc(var(--mb-font-size) * 18 / 15);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
 .mb-appbar-sub {
   margin: 0;
-  font-size: 12px;
+  font-size: calc(var(--mb-font-size) * 12 / 15);
   opacity: 0.85;
 }
 
@@ -79,7 +97,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
-  font-size: 12px;
+  font-size: calc(var(--mb-font-size) * 12 / 15);
 }
 
 .mb-sse-dot {
@@ -122,13 +140,13 @@
 
 .mb-heading {
   margin: 0;
-  font-size: 20px;
+  font-size: calc(var(--mb-font-size) * 20 / 15);
   font-weight: 600;
 }
 
 .mb-subheading {
   margin: 0 0 8px;
-  font-size: 13px;
+  font-size: calc(var(--mb-font-size) * 13 / 15);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -138,7 +156,7 @@
 .mb-hint {
   display: block;
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: calc(var(--mb-font-size) * 13 / 15);
   font-weight: 400;
   color: var(--mb-muted);
 }
@@ -218,13 +236,13 @@
 }
 
 .mb-kpi-value {
-  font-size: 28px;
+  font-size: calc(var(--mb-font-size) * 28 / 15);
   font-weight: 600;
   color: var(--mb-primary);
 }
 
 .mb-kpi-label {
-  font-size: 12px;
+  font-size: calc(var(--mb-font-size) * 12 / 15);
   color: var(--mb-muted);
 }
 
@@ -318,14 +336,14 @@
 }
 
 .mb-note-body {
-  font-size: 14px;
+  font-size: calc(var(--mb-font-size) * 14 / 15);
   color: var(--mb-muted);
   overflow-wrap: anywhere;
 }
 
 .mb-note-time {
   flex: none;
-  font-size: 12px;
+  font-size: calc(var(--mb-font-size) * 12 / 15);
   color: var(--mb-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -339,6 +357,7 @@
 }
 
 .mb-wallpaper {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -351,16 +370,63 @@
   cursor: pointer;
 }
 
-.mb-wallpaper[aria-checked="true"] {
+/* The radio covers its card: the whole card is the touch target. */
+.mb-wallpaper input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mb-wallpaper:has(input:checked) {
   border-color: var(--mb-primary);
   background: var(--mb-primary-soft);
   font-weight: 600;
+}
+
+.mb-wallpaper:has(input:focus-visible) {
+  outline: 2px solid var(--mb-primary);
+  outline-offset: 2px;
+}
+
+.mb-choices {
+  display: flex;
+  flex-direction: column;
+}
+
+.mb-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.mb-choice input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--mb-primary);
+}
+
+.mb-preview {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--mb-bg);
 }
 
 .mb-wallpaper-swatch {
   display: block;
   height: 44px;
   border-radius: 8px;
+}
+
+.mb-wallpaper-swatch[data-wallpaper] {
   background: var(--xp-wallpaper);
   background-size: cover;
 }
@@ -462,7 +528,7 @@
   border: 0;
   background: transparent;
   color: var(--mb-muted);
-  font-size: 12px;
+  font-size: calc(var(--mb-font-size) * 12 / 15);
   cursor: pointer;
 }
 
@@ -495,7 +561,7 @@
   border-radius: 999px;
   background: var(--mb-danger);
   color: #ffffff;
-  font-size: 11px;
+  font-size: calc(var(--mb-font-size) * 11 / 15);
   font-weight: 600;
   line-height: 18px;
   text-align: center;

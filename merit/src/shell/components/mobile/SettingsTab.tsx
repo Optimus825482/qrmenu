@@ -1,42 +1,23 @@
 "use client";
 
 import { LogoutButton } from "@/components/LogoutButton";
-import { WALLPAPER_LABELS, WALLPAPERS, type Wallpaper } from "../../types";
+import { AppearanceOptions } from "../AppearanceOptions";
 
 type Props = {
   userName: string;
-  wallpaper: Wallpaper;
-  onWallpaper(w: Wallpaper): void;
   definitionsOn: boolean;
   onDefinitions(on: boolean): void;
 };
 
-/** Ayarlar: wallpaper, the "Tanımlamaları mobilde aç" switch (this session only) and sign-out. */
-export function SettingsTab({ userName, wallpaper, onWallpaper, definitionsOn, onDefinitions }: Props) {
+/**
+ * Ayarlar: the appearance options of Denetim Masası (yazı boyutu, yazı tipi, duvar kağıdı, tema),
+ * the "Tanımlamaları mobilde aç" switch (this session only) and sign-out.
+ */
+export function SettingsTab({ userName, definitionsOn, onDefinitions }: Props) {
   return (
     <div className="mb-stack">
       <h2 className="mb-heading">Ayarlar</h2>
-      <section className="mb-card" aria-labelledby="mb-wallpaper-label">
-        <h3 className="mb-subheading" id="mb-wallpaper-label">
-          Duvar kağıdı
-        </h3>
-        <div className="mb-wallpapers" role="radiogroup" aria-labelledby="mb-wallpaper-label">
-          {WALLPAPERS.map((w) => (
-            <button
-              key={w}
-              type="button"
-              role="radio"
-              aria-checked={w === wallpaper}
-              className="mb-wallpaper"
-              data-wallpaper={w}
-              onClick={() => onWallpaper(w)}
-            >
-              <span className="mb-wallpaper-swatch" aria-hidden="true" />
-              <span>{WALLPAPER_LABELS[w]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
+      <AppearanceOptions variant="mobile" />
       <section className="mb-card">
         <div className="mb-switch-row">
           <span id="mb-defs-label" className="mb-switch-text">
