@@ -270,4 +270,37 @@ describe("resolveGuestTokenLimited", () => {
       "TABLE",
     );
   });
+
+  it("global yedek hiçbir geçerli tokenı reddetmez: (a) geçerli imzalı token yine çözülür; (b) bilinmeyen RATE_LIMITED ve scan log yok; imzasız legacy token da çözülür", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 }); // per-IP: bol
+    const globalLimiter = createRateLimiter({ max: 2, windowMs: 60_000 });
+    for (let i = 0; i < 2; i++) {
+      await resolveGuestTokenLimited(`yok-${i}`, { ...meta, ip: `10.4.0.${i}` }, limiter, globalLimiter);
+    }
+    await testDb.qrScanLog.deleteMany({});
+    // (b) global aşım + bilinmeyen token → RATE_LIMITED, scan log yok
+    expect(await resolveGuestTokenLimited("yok-x", { ...meta, ip: "10.4.1.1" }, limiter, globalLimiter)).toEqual({
+      kind: "NONE",
+      reason: "RATE_LIMITED",
+    });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
+    // (a) global aşım + geçerli imzalı token → yine çözülür (normal akış: log + scan.table)
+    const { token, table, outlet } = await tableFixture();
+    expect(
+      (await resolveGuestTokenLimited(token, { ...meta, ip: "10.4.1.2" }, limiter, globalLimiter)).kind,
+    ).toBe("TABLE");
+    expect(await testDb.qrScanLog.findFirst({ where: { tableId: table.id } })).toMatchObject({
+      tableId: table.id,
+      ok: true,
+    });
+    expect(publishMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "scan.table", outletId: outlet.id }),
+    );
+    // global engel imzasız legacy tokenı da reddetmez (fiziksel QR, yeniden basılamaz)
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: "eski-masa-9" } });
+    expect(
+      (await resolveGuestTokenLimited("eski-masa-9", { ...meta, ip: "10.4.1.3" }, limiter, globalLimiter)).kind,
+    ).toBe("TABLE");
+  });
 });

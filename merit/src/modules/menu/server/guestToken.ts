@@ -143,10 +143,13 @@ export const rateLimitDelay = { ms: 250 };
 
 /**
  * `resolveGuestToken` with the unknown-token limits. While under the limits behaviour is plain: an
- * unknown token counts as a miss. When the IP (or the global backstop) is over its limit, only a signed-shaped
- * token (30 chars) is looked up, and only proceeds (logging as usual) if it resolves to a table/room whose HMAC
- * verifies. Anything else (unsigned/legacy, unknown, forged) is counted, delayed and answered `RATE_LIMITED`
- * without a scan log; unsigned tokens cause no DB lookup at all while blocked.
+ * unknown token counts as a miss. When the per-IP limiter is over its limit, only a signed-shaped
+ * token (30 chars) is looked up, and only proceeds (logging as usual) if it resolves to a table/room
+ * whose HMAC verifies. Anything else (unsigned/legacy, unknown, forged) is counted, delayed and
+ * answered `RATE_LIMITED` without a scan log; unsigned tokens cause no DB lookup at all while the IP
+ * is blocked. The global backstop alone never refuses a valid token: every token (legacy included —
+ * physical QRs cannot be reissued) gets the cheap unique lookup and proceeds when it resolves;
+ * only an unresolved token is delayed and answered `RATE_LIMITED` without a scan log.
  */
 export async function resolveGuestTokenLimited(
   token: string,
@@ -155,21 +158,27 @@ export async function resolveGuestTokenLimited(
   globalLimiter: RateLimiter = globalUnknownTokenLimiter,
   options: ResolveOptions = {},
 ): Promise<GuestTarget> {
-  const blocked = !limiter.peek(meta.ip).allowed || !globalLimiter.peek(GLOBAL_KEY).allowed;
+  const perIpBlocked = !limiter.peek(meta.ip).allowed;
+  const globallyBlocked = !globalLimiter.peek(GLOBAL_KEY).allowed;
   const refuse = async (): Promise<GuestTarget> => {
     limiter.hit(meta.ip);
     globalLimiter.hit(GLOBAL_KEY);
     if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
     return none("RATE_LIMITED");
   };
-  if (blocked) {
-    if (!isSignedToken(token)) return refuse();
-    const probe = await resolveGuestToken(token, meta, { log: false, logUnknown: false });
-    const verified =
-      (probe.kind === "TABLE" && verifyQrToken(token, "TABLE", probe.table.id)) ||
-      (probe.kind === "ROOM" && verifyQrToken(token, "ROOM", probe.roomId));
-    if (!verified) return refuse();
-    return resolveGuestToken(token, meta, options);
+  if (perIpBlocked || globallyBlocked) {
+    if (!perIpBlocked || isSignedToken(token)) {
+      const probe = await resolveGuestToken(token, meta, { log: false, logUnknown: false });
+      if (probe.kind === "TABLE" || probe.kind === "ROOM") {
+        if (!perIpBlocked) return resolveGuestToken(token, meta, options);
+        // A blocked IP must not learn which signed tokens exist: the HMAC has to hold too.
+        const verified =
+          (probe.kind === "TABLE" && verifyQrToken(token, "TABLE", probe.table.id)) ||
+          (probe.kind === "ROOM" && verifyQrToken(token, "ROOM", probe.roomId));
+        if (verified) return resolveGuestToken(token, meta, options);
+      }
+    }
+    return refuse();
   }
   const result = await resolveGuestToken(token, meta, options);
   if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
