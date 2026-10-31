@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 20:08",
-  headline: "P1 main'e birleştirildi. Sıradaki: P5 (plan hazır) veya P2 planı.",
+  updatedAt: "31.10.2026 20:12",
+  headline: "P5 QR Menü uygulaması başladı (dal p5/qr-menu, 14 görev); T1 uygulanıyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -93,11 +93,13 @@ window.ILERLEME = {
       code: "P5", title: "QR Menü ve QR Sipariş", weight: 17,
       summary: "Menü ağacı, tema, masa QR, fiyat göster/gizle, sipariş → onay → KDS + yazıcı",
       tasks: [
-        { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri", status: "pending" },
-        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları", status: "pending" },
-        { title: "Misafir menü, sepet, sipariş durumu, garson çağırma", status: "pending" },
-        { title: "Garson, kasa ve KDS ekranları; masa ataması", status: "pending" },
-        { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi", status: "pending" }
+        { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "active" },
+        { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "pending" },
+        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "pending" },
+        { title: "Misafir menü, sepet, sipariş durumu, garson çağırma (T6–T8)", status: "pending" },
+        { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
+        { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
+        { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "pending" }
       ]
     },
     {
@@ -149,6 +151,7 @@ window.ILERLEME = {
     { at: "31.10 19:08", text: "T11 onaylandı (8a40c4d); T8 sayaç düzeltmesi (0ebaf41). T12 başladı." },
     { at: "31.10 19:40", text: "P1 T12 tamam: tanım zinciri kabul e2e'si (9), 17 ertelenmiş minör düzeltildi, belgeler. Dal sonu incelemesi başladı." },
     { at: "31.10 20:00", text: "P1 dal sonu incelemesi (Opus) ve iki düzeltme turu tamamlandı (3a322e6, ed81bec). Birleştirme onayı bekleniyor." },
-    { at: "31.10 20:08", text: "P1 main'e birleştirildi (fast-forward, 38 commit)." }
+    { at: "31.10 20:08", text: "P1 main'e birleştirildi (fast-forward, 38 commit)." },
+    { at: "31.10 20:12", text: "P5 QR Menü ve Sipariş uygulaması başladı (dal p5/qr-menu); T1 uygulanıyor." }
   ]
 };
