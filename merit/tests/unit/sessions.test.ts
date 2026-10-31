@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const { createSession, touchSession, closeSession } = await import(
   "@/modules/core/server/sessions"
 );
-const { performLogin, performSelectTarget, resetRateLimit, rateLimitInternals } = await import(
+const { performLogin, performSelectTarget, resetRateLimit, __rateLimitInternals } = await import(
   "@/modules/core/server/login"
 );
 const { hashPassword } = await import("@/lib/password");
@@ -280,44 +280,72 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(after.ok).toBe(true);
   });
 
-  it("IP haritası dolunca yeni IP RATE_LIMITED (fail closed), mevcut IP etkilenmez; reset ikisini de temizler", async () => {
+  it("IP haritası dolunca en eski IP atılır, yeni IP geçer; mevcut IP bütçesini korur", async () => {
     await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
-    const { ipAttempts, userAttempts, maxEntries } = rateLimitInternals;
+    const { ipAttempts, maxIpEntries } = __rateLimitInternals;
     const live = Date.now() + 60_000;
-    for (let i = 0; i < maxEntries; i++) ipAttempts.set(`fake-${i}`, { count: 1, resetAt: live });
-    expect(ipAttempts.size).toBe(maxEntries);
+    for (let i = 0; i < maxIpEntries; i++) ipAttempts.set(`fake-${i}`, { count: 1, resetAt: live });
+    expect(ipAttempts.size).toBe(maxIpEntries);
 
     const deps = makeDeps();
     const fresh = await performLogin({ ...creds("gar1"), ip: "9.9.9.9" }, deps);
-    expect(fresh).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
-    expect(deps.setCookie).not.toHaveBeenCalled();
-    expect(ipAttempts.size).toBe(maxEntries); // live entries were not evicted
-    expect(ipAttempts.has("fake-0")).toBe(true);
+    expect(fresh.ok).toBe(true); // a new IP is not refused
+    expect(ipAttempts.size).toBe(maxIpEntries); // size stays at the cap
+    expect(ipAttempts.has("fake-0")).toBe(false); // the oldest entry was evicted
+    expect(ipAttempts.has("fake-1")).toBe(true);
+    expect(ipAttempts.has("9.9.9.9")).toBe(true);
 
-    const existing = await performLogin({ ...creds("gar1", "yanlis"), ip: "fake-0" }, deps);
-    expect(existing).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
-    expect(ipAttempts.get("fake-0")?.count).toBe(2);
+    // an existing IP keeps (and spends) its own budget: fake-1 has 1 of 5 used
+    for (let n = 2; n <= 5; n++) {
+      const r = await performLogin({ ...creds("gar1", "yanlis"), ip: "fake-1" }, deps);
+      expect(r).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+      expect(ipAttempts.get("fake-1")?.count).toBe(n);
+    }
+    // fake-1 has spent 5/5 (and so has gar1): the next attempt is refused
+    const blocked = await performLogin({ ...creds("gar1"), ip: "fake-1" }, deps);
+    expect(blocked).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+  });
 
-    // expired entries are pruned first, which makes room for a new IP again
-    for (const entry of ipAttempts.values()) entry.resetAt = Date.now() - 1;
-    const afterExpiry = await performLogin({ ...creds("gar1"), ip: "9.9.9.9" }, deps);
-    expect(afterExpiry.ok).toBe(true);
-    expect(ipAttempts.size).toBe(1);
+  it("süresi dolan IP kayıtları temizlenir; resetRateLimit iki haritayı da boşaltır", async () => {
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    const { ipAttempts, userAttempts } = __rateLimitInternals;
+    for (let i = 0; i < 50; i++) ipAttempts.set(`old-${i}`, { count: 5, resetAt: Date.now() - 1 });
+    const res = await performLogin({ ...creds("gar1"), ip: "old-0" }, makeDeps());
+    expect(res.ok).toBe(true); // expired window: budget restarts
+    expect(ipAttempts.size).toBe(1); // 49 stale entries pruned, old-0 re-inserted
+    expect(ipAttempts.get("old-0")?.count).toBe(1);
 
-    for (let i = 0; i < maxEntries; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
+    expect(userAttempts.size).toBe(1);
     resetRateLimit();
     expect(ipAttempts.size).toBe(0);
     expect(userAttempts.size).toBe(0);
   });
 
-  it("kullanıcı adı haritası dolunca yeni kullanıcı adı RATE_LIMITED", async () => {
-    const { userAttempts, maxEntries } = rateLimitInternals;
+  it("kullanıcı adı haritasında sınır yok: çok sayıda kullanıcı adı varken yeni ad reddedilmez", async () => {
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    const { userAttempts } = __rateLimitInternals;
     const live = Date.now() + 60_000;
-    for (let i = 0; i < maxEntries; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
-    const res = await performLogin(creds("yeni.kullanici"), makeDeps());
-    expect(res).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
-    const known = await performLogin(creds("u0"), makeDeps());
-    expect(known).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    for (let i = 0; i < 12_000; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
+
+    const fresh = await performLogin(creds("gar1"), makeDeps());
+    expect(fresh.ok).toBe(true);
+    expect(userAttempts.size).toBe(12_001); // nothing evicted, nothing refused
+
+    // existing username keeps its own budget: u0 has used 1 of 5
+    for (let n = 2; n <= 5; n++) {
+      const r = await performLogin({ ...creds("u0", "x"), ip: `10.2.0.${n}` }, makeDeps());
+      expect(r).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    }
+    const blocked = await performLogin({ ...creds("u0", "x"), ip: "10.2.0.99" }, makeDeps());
+    expect(blocked).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+  });
+
+  it("süresi dolan kullanıcı adı kayıtları yeni girişte temizlenir", async () => {
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    const { userAttempts } = __rateLimitInternals;
+    for (let i = 0; i < 100; i++) userAttempts.set(`stale${i}`, { count: 5, resetAt: Date.now() - 1 });
+    await performLogin(creds("gar1"), makeDeps());
+    expect([...userAttempts.keys()]).toEqual(["gar1"]);
   });
 
   it("geçersiz girdi VALIDATION döner", async () => {

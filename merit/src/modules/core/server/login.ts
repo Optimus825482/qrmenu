@@ -23,51 +23,67 @@ const INVALID_CREDENTIALS = "Kullanıcı adı veya şifre hatalı";
 const PENDING_COOKIE_TTL_SECONDS = 300;
 
 // --- rate limit: 5 attempts per minute per IP and per username, in memory (per instance) -------
-// The IP comes from a spoofable header, so a per-username limit backs it up: guessing one
-// account's password from rotating IPs is still capped. (Side effect: an attacker can keep one
-// username locked for a minute; accepted.) IPs and usernames live in separate maps, each capped
-// at RATE_MAX_ENTRIES. A full map first drops expired entries; if it is still full, NEW keys are
-// refused (fail closed) and live entries are never evicted.
+// Fixed 60 s window per key. The username limit is the real protection against password
+// guessing; the IP limit is best-effort because the IP comes from a spoofable header.
+//   - usernames: no capacity cap and never refused for size. Expired entries are pruned on every
+//     insert, so memory is bounded by request rate x 60 s.
+//   - IPs: capped at RATE_MAX_IP_ENTRIES; when still full after pruning, the OLDEST entry is
+//     evicted (fail open for the spoofable key; refusing new IPs would be a login DoS).
+// Trade-off: an attacker can keep one username locked for a minute. A DB-backed
+// `login_attempts` counter (shared across instances, survives restarts) is planned for P1.
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_ATTEMPTS = 5;
-const RATE_MAX_ENTRIES = 10_000;
+const RATE_MAX_IP_ENTRIES = 10_000;
 type Attempt = { count: number; resetAt: number };
 type AttemptMap = Map<string, Attempt>;
 const ipAttempts: AttemptMap = new Map();
 const userAttempts: AttemptMap = new Map();
 
-/** Test hook: direct access to the two maps and their cap. */
-export const rateLimitInternals = { ipAttempts, userAttempts, maxEntries: RATE_MAX_ENTRIES };
+/** Test-only hook: direct access to the two maps and the IP cap. */
+export const __rateLimitInternals = {
+  ipAttempts,
+  userAttempts,
+  maxIpEntries: RATE_MAX_IP_ENTRIES,
+};
 
 function liveAttempt(map: AttemptMap, key: string, now: number): Attempt | undefined {
   const entry = map.get(key);
   return entry && entry.resetAt > now ? entry : undefined;
 }
 
-function isBlocked(map: AttemptMap, key: string, now: number): boolean {
-  const entry = liveAttempt(map, key, now);
-  if (entry) return entry.count >= RATE_MAX_ATTEMPTS;
-  if (map.size >= RATE_MAX_ENTRIES) {
-    for (const [k, v] of map) if (v.resetAt <= now) map.delete(k);
-    return map.size >= RATE_MAX_ENTRIES;
+/** Entries are inserted in resetAt order (a new window always re-inserts), so expired ones lead. */
+function pruneExpired(map: AttemptMap, now: number): void {
+  for (const [key, entry] of map) {
+    if (entry.resetAt > now) break;
+    map.delete(key);
   }
-  return false;
 }
 
-function recordAttempt(map: AttemptMap, key: string, now: number): void {
+function recordAttempt(map: AttemptMap, key: string, now: number, maxEntries?: number): void {
   const entry = liveAttempt(map, key, now);
-  if (entry) entry.count += 1;
-  else map.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+  if (entry) {
+    entry.count += 1;
+    return;
+  }
+  map.delete(key); // an expired entry of this key: re-insert at the end to keep the order
+  pruneExpired(map, now);
+  if (maxEntries !== undefined) {
+    while (map.size >= maxEntries) map.delete(map.keys().next().value as string);
+  }
+  map.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
 }
 
 function consumeRateLimit(ip: string, username: string): void {
   const now = Date.now();
   const user = username.toLowerCase();
-  if (isBlocked(ipAttempts, ip, now) || isBlocked(userAttempts, user, now)) {
+  const exhausted = (map: AttemptMap, key: string) =>
+    (liveAttempt(map, key, now)?.count ?? 0) >= RATE_MAX_ATTEMPTS;
+  // Both keys are checked before either is recorded.
+  if (exhausted(ipAttempts, ip) || exhausted(userAttempts, user)) {
     throw new DomainError("RATE_LIMITED", "Çok fazla deneme. Bir dakika sonra tekrar deneyin.");
   }
-  recordAttempt(ipAttempts, ip, now);
+  recordAttempt(ipAttempts, ip, now, RATE_MAX_IP_ENTRIES);
   recordAttempt(userAttempts, user, now);
 }
 
