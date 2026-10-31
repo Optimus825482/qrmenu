@@ -57,3 +57,20 @@ export async function verifyPassword(plain: string, stored: string): Promise<Pas
   }
   return REJECT;
 }
+
+export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MAX_LENGTH = 128;
+
+/**
+ * The staff password policy: at least 10 characters with an upper-case letter, a lower-case
+ * letter and a digit (Turkish letters count). Returns the Turkish reason a password is rejected,
+ * or `null` when it is acceptable. Applies to passwords being set, never to logins.
+ */
+export function passwordPolicyError(plain: string): string | null {
+  if (plain.length < PASSWORD_MIN_LENGTH) return `Şifre en az ${PASSWORD_MIN_LENGTH} karakter olmalı`;
+  if (plain.length > PASSWORD_MAX_LENGTH) return `Şifre en fazla ${PASSWORD_MAX_LENGTH} karakter olabilir`;
+  if (!/\p{Lu}/u.test(plain)) return "Şifre en az bir büyük harf içermeli";
+  if (!/\p{Ll}/u.test(plain)) return "Şifre en az bir küçük harf içermeli";
+  if (!/\d/.test(plain)) return "Şifre en az bir rakam içermeli";
+  return null;
+}

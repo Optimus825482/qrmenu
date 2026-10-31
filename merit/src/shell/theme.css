@@ -1694,3 +1694,16 @@
   margin: 0;
   color: var(--xp-close-2);
 }
+
+/* ---- Ekipler: kullanıcı ekle arama + liste ------------------------------------------------ */
+
+.xp-candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 280px;
+}
+
+.xp-candidate select {
+  min-height: 110px;
+}

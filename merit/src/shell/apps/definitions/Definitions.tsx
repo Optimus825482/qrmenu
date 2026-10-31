@@ -6,9 +6,11 @@ import type { AppProps } from "../../registry";
 import { FloorsPanel } from "./panels/FloorsPanel";
 import { HotelPanel } from "./panels/HotelPanel";
 import { OutletsPanel } from "./panels/OutletsPanel";
+import { MembersPanel } from "./panels/MembersPanel";
 import { RoomsPanel } from "./panels/RoomsPanel";
 import { RoomTypesPanel } from "./panels/RoomTypesPanel";
 import { TablesPanel } from "./panels/TablesPanel";
+import { UsersPanel } from "./panels/UsersPanel";
 
 type NodeDef = {
   id: string;
@@ -27,8 +29,8 @@ export const DEFINITION_NODES: readonly NodeDef[] = [
   { id: "odalar", label: "Odalar", level: 2 },
   { id: "outletler", label: "Outletler", level: 1 },
   { id: "masalar", label: "Masalar", level: 2 },
-  { id: "kullanicilar", label: "Kullanıcılar", level: 1, task: 5 },
-  { id: "ekipler", label: "Ekipler", level: 1, task: 5 },
+  { id: "kullanicilar", label: "Kullanıcılar", level: 1 },
+  { id: "ekipler", label: "Ekipler", level: 1 },
   { id: "roller", label: "Roller", level: 1, task: 6 },
   { id: "yetki-matrisi", label: "Yetki Matrisi", level: 1, task: 6 },
 ];
@@ -88,6 +90,10 @@ export function Definitions({ hotelId, initialPanel, setStatus }: AppProps) {
     body = <RoomsPanel hotelId={hotelId} setStatus={setStatus} />;
   } else if (node.id === "outletler") {
     body = <OutletsPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "kullanicilar") {
+    body = <UsersPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "ekipler") {
+    body = <MembersPanel hotelId={hotelId} setStatus={setStatus} />;
   } else if (node.id === "masalar") {
     body = <TablesPanel hotelId={hotelId} setStatus={setStatus} />;
   } else {

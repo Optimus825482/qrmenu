@@ -435,6 +435,54 @@ test("Masalar: Toplu Ekle 1–5 → M1..M5; tekrar CONFLICT; masalı outlet sili
   expect(errors).toEqual([]);
 });
 
+test("Kullanıcılar: Yeni test.garson (R-GAR, MR) listede; zayıf şifre reddedilir; Ekipler: Havuz Bar'a eklenir; pasife al onaylı, rozet pasif", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  const win = await definitionsWindow(page, MR);
+
+  await node(win, "Kullanıcılar").click();
+  await expect(row(win, "garson.havuz")).toBeVisible();
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yeni kullanıcı" });
+  await dialog.getByLabel("Kullanıcı adı").fill("test.garson");
+  await dialog.getByLabel("Ad soyad").fill("Test Garson");
+  await dialog.getByLabel("Rol", { exact: true }).selectOption({ label: "Garson" });
+  await expect(dialog.getByLabel("Ana otel")).toHaveValue(/.+/);
+  await dialog.getByLabel("Şifre", { exact: true }).fill("kisa");
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(dialog.getByText("Şifre en az 10 karakter olmalı")).toBeVisible();
+  await dialog.getByLabel("Şifre", { exact: true }).fill("Garson2026Pw");
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row(win, "test.garson")).toBeVisible();
+  await expect(row(win, "test.garson")).toContainText("Garson");
+  await expect(row(win, "test.garson")).toContainText("Merit Royal");
+
+  // Ekipler: add the new user to Havuz Bar.
+  await node(win, "Ekipler").click();
+  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await expect(row(win, "garson.havuz")).toBeVisible();
+  await win.getByRole("button", { name: "Kullanıcı ekle" }).click();
+  const add = page.getByRole("dialog", { name: "Kullanıcı ekle" });
+  await add.getByLabel("Kullanıcı ara").fill("test.garson");
+  await add.getByRole("option", { name: /test\.garson/ }).click();
+  await add.getByRole("button", { name: "Ekle" }).click();
+  await expect(row(win, "test.garson")).toBeVisible();
+
+  // Pasife al asks first; Hayır changes nothing, Evet shows the pasif badge.
+  await node(win, "Kullanıcılar").click();
+  await row(win, "test.garson").click();
+  await win.getByRole("button", { name: "Pasife al" }).click();
+  const ask = page.getByRole("dialog", { name: "Kullanıcıyı pasife al" });
+  await ask.getByRole("button", { name: "Hayır" }).click();
+  await expect(row(win, "test.garson")).toContainText("aktif");
+  await win.getByRole("button", { name: "Pasife al" }).click();
+  await ask.getByRole("button", { name: "Evet" }).click();
+  await expect(row(win, "test.garson")).toContainText("pasif");
+  expect(errors).toEqual([]);
+});
+
 test("canlı yenileme: başka pencerede eklenen kat açık listede görünür", async ({ page }) => {
   await openAdmin(page);
   const first = await definitionsWindow(page, MR);

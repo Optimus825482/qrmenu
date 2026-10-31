@@ -115,6 +115,27 @@ export async function closeSession(
 }
 
 /**
+ * Closes every open session of a user inside the caller's transaction (deactivation, password
+ * reset): each gets status CIKTI, `reason` and its own `session.closed` event so SSE streams end.
+ */
+export async function closeUserSessionsInTx(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  reason: LogoutReason,
+  byUserId?: string,
+): Promise<number> {
+  const open = await tx.userSession.findMany({
+    where: { userId, status: { in: ACTIVE_STATUSES } },
+    select: { id: true },
+  });
+  let closed = 0;
+  for (const { id } of open) {
+    if (await closeSessionInTx(tx, id, reason, byUserId)) closed += 1;
+  }
+  return closed;
+}
+
+/**
  * The close itself, inside the caller's transaction: status, SessionEvent, audit and the
  * `session.closed` event (delivered on commit). Shared by closeSession and the single-device
  * displacement in createSession. Returns false when the session was not open (no-op).
