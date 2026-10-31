@@ -1,4 +1,5 @@
-import type { OutletType } from "@/generated/prisma/client";
+import type { OutletType, User } from "@/generated/prisma/client";
+import type { Ctx } from "@/lib/auth";
 import { runSeed } from "../../prisma/seed";
 import { testDb, truncate } from "./db";
 
@@ -58,4 +59,31 @@ export async function makeOutlet(hotelCode: string, name: string, type: OutletTy
 
 export async function addMember(userId: string, outletId: string, isActive = true) {
   return testDb.outletMember.create({ data: { userId, outletId, isActive } });
+}
+
+/**
+ * A request context for `user` working in `hotelCode` (no UserSession row: pure RBAC tests).
+ * `hotelIds` is the session hotel plus `extraHotelCodes`.
+ */
+export async function ctxFor(
+  user: User,
+  opts: { hotelCode: string; extraHotelCodes?: string[] },
+): Promise<Ctx> {
+  const role = await testDb.role.findUniqueOrThrow({ where: { id: user.roleId } });
+  const sessionHotelId = await hotelId(opts.hotelCode);
+  const hotelIds = [sessionHotelId];
+  for (const code of opts.extraHotelCodes ?? []) hotelIds.push(await hotelId(code));
+  return {
+    user: {
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
+      roleId: role.id,
+      roleCode: role.code,
+      roleKind: role.kind,
+      hotelId: user.hotelId ?? undefined,
+    },
+    session: { id: `test-session-${user.id}`, hotelId: sessionHotelId },
+    hotelIds,
+  };
 }
