@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useHydrated } from "@/components/useHydrated";
@@ -43,6 +44,15 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <form action={submit} className="flex flex-col gap-5" aria-busy={busy}>
       <header className="text-center">
+        <Image
+          src="/brand/merit-royal-logo-thumb.png"
+          alt="Merit Royal"
+          width={300}
+          height={288}
+          priority
+          className="mx-auto mb-2 w-auto"
+          style={{ maxHeight: 48 }}
+        />
         <h1 className="text-2xl font-bold tracking-[0.2em] text-brand">MERIT OS</h1>
         <p className="mt-1 text-sm text-muted">Personel girişi</p>
       </header>

@@ -96,9 +96,19 @@ test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve henüz yapılmay
   await form.getByRole("button", { name: "Kaydet" }).click();
   await expect(win.getByRole("status").filter({ hasText: "Otel bilgileri kaydedildi" })).toBeVisible();
 
+  // Modüller: each switch saves at once; turning one off asks first, Hayır leaves it on.
+  const modules = win.getByRole("group", { name: "Modüller" });
+  await expect(modules.getByRole("switch")).toHaveCount(4);
+  await expect(modules.getByRole("switch", { name: "Minibar" })).toBeChecked();
+  await modules.getByRole("switch", { name: "Minibar" }).click();
+  const off = page.getByRole("dialog", { name: "Minibar modülünü kapat" });
+  await off.getByRole("button", { name: "Hayır" }).click();
+  await expect(modules.getByRole("switch", { name: "Minibar" })).toBeChecked();
+  await modules.getByRole("switch", { name: "Minibar" }).click();
+  await off.getByRole("button", { name: "Evet" }).click();
+  await expect(modules.getByRole("switch", { name: "Minibar" })).not.toBeChecked();
+
   // Not-yet-built sections say which task adds them.
-  await node(win, "Outletler").click();
-  await expect(win.getByText("Bu bölüm P1 Task 4'te eklenecek.")).toBeVisible();
   await node(win, "Roller").click();
   await expect(win.getByText("Bu bölüm P1 Task 6'te eklenecek.")).toBeVisible();
 
@@ -115,6 +125,11 @@ test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve henüz yapılmay
   const saved = again.getByRole("form", { name: "Otel bilgileri" });
   await expect(saved.getByLabel("Adres", { exact: true })).toHaveValue("Girne, KKTC");
   await expect(saved.getByLabel("Bildirim e-postaları")).toBeChecked();
+  // The module switch survived the reload; turning it back on needs no confirmation.
+  const savedModules = again.getByRole("group", { name: "Modüller" });
+  await expect(savedModules.getByRole("switch", { name: "Minibar" })).not.toBeChecked();
+  await savedModules.getByRole("switch", { name: "Minibar" }).click();
+  await expect(savedModules.getByRole("switch", { name: "Minibar" })).toBeChecked();
   expect(errors).toEqual([]);
 });
 
@@ -322,6 +337,101 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   await ask.getByRole("button", { name: "Evet" }).click();
   await expect(row(win, "601")).toHaveCount(0);
   await expect(win.getByText("3 kayıt")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("Outletler: Yeni Havuz Bar 2 (menü + sipariş) → listede; satır içi anahtar rozeti değiştirir; ikinci oda servisi CONFLICT", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  const win = await definitionsWindow(page, MR);
+
+  await node(win, "Outletler").click();
+  await expect(row(win, "Oda Servisi")).toBeVisible(); // seeded
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yeni outlet" });
+  await dialog.getByLabel("Outlet adı").fill("Havuz Bar 2");
+  await dialog.getByLabel("Tür").selectOption({ label: "Bar" });
+  // Ordering without a menu is rejected under the field.
+  await dialog.getByLabel("Menü", { exact: true }).uncheck();
+  await dialog.getByLabel("Sipariş alır").check();
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(dialog.getByText("Sipariş almak için menü açık olmalıdır")).toBeVisible();
+  await dialog.getByLabel("Menü", { exact: true }).check();
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const created = row(win, "Havuz Bar 2");
+  await expect(created).toBeVisible();
+  await expect(created).toContainText("Menü");
+  await expect(created.getByText("Sipariş", { exact: true })).toBeVisible();
+
+  // The inline switch closes ordering: the badge says so.
+  await created.getByRole("switch", { name: "Sipariş aç/kapa: Havuz Bar 2" }).click();
+  await expect(created.getByText("Sipariş kapalı")).toBeVisible();
+  await created.getByRole("switch", { name: "Sipariş aç/kapa: Havuz Bar 2" }).click();
+  await expect(created.getByText("Sipariş kapalı")).toHaveCount(0);
+
+  // A second room-service outlet is refused with the Turkish message.
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  await dialog.getByLabel("Outlet adı").fill("Oda Servisi 2");
+  await dialog.getByLabel("Tür").selectOption({ label: "Oda Servisi" });
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(dialog.getByRole("alert")).toHaveText("Her otelde bir oda servisi outleti olabilir");
+  await dialog.getByRole("button", { name: "Vazgeç" }).click();
+  expect(errors).toEqual([]);
+});
+
+test("Masalar: Toplu Ekle 1–5 → M1..M5; tekrar CONFLICT; masalı outlet silinemez", async ({ page }) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  const win = await definitionsWindow(page, MR);
+
+  await node(win, "Masalar").click();
+  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar 2" });
+  await expect(win.getByText("Bu outletin kayıtlı masası yok")).toBeVisible();
+  await win.getByRole("button", { name: "Toplu Ekle" }).click();
+  const bulk = page.getByRole("dialog", { name: "Toplu masa ekle" });
+  await expect(bulk.getByLabel("Ön ek")).toHaveValue("M");
+  await bulk.getByLabel("Başlangıç numarası").fill("1");
+  await bulk.getByLabel("Bitiş numarası").fill("5");
+  await bulk.getByRole("button", { name: "Ekle" }).click();
+  const added = page.getByRole("alertdialog", { name: "Masalar eklendi" });
+  await expect(added).toContainText("5 masa eklendi.");
+  await added.getByRole("button", { name: "Tamam" }).click();
+  for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
+    await expect(row(win, label)).toBeVisible();
+  }
+  await expect(win.getByText("5 kayıt")).toBeVisible();
+
+  // Same range again: nothing is written.
+  await win.getByRole("button", { name: "Toplu Ekle" }).click();
+  await bulk.getByLabel("Başlangıç numarası").fill("3");
+  await bulk.getByLabel("Bitiş numarası").fill("7");
+  await bulk.getByRole("button", { name: "Ekle" }).click();
+  await expect(bulk.getByRole("alert")).toContainText("Hiçbir masa eklenmedi");
+  await bulk.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(win.getByText("5 kayıt")).toBeVisible();
+
+  // Single table: new, rename, delete.
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const one = page.getByRole("dialog", { name: "Yeni masa" });
+  await one.getByLabel("Masa etiketi").fill("VIP 1");
+  await one.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row(win, "VIP 1")).toBeVisible();
+  await win.getByRole("button", { name: "Seçili kaydı sil" }).click();
+  await page.getByRole("dialog", { name: "Masayı sil" }).getByRole("button", { name: "Evet" }).click();
+  await expect(row(win, "VIP 1")).toHaveCount(0);
+
+  // The outlet with tables cannot be deleted.
+  await node(win, "Outletler").click();
+  await row(win, "Havuz Bar 2").click();
+  await win.getByRole("button", { name: "Seçili kaydı sil" }).click();
+  await page.getByRole("dialog", { name: "Outleti sil" }).getByRole("button", { name: "Evet" }).click();
+  await expect(page.getByRole("alertdialog", { name: "Outlet silinemedi" })).toContainText("pasife alın");
+  await page.getByRole("alertdialog", { name: "Outlet silinemedi" }).getByRole("button", { name: "Tamam" }).click();
+  await expect(row(win, "Havuz Bar 2")).toBeVisible();
   expect(errors).toEqual([]);
 });
 

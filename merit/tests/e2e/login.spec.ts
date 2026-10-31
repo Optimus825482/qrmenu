@@ -18,6 +18,10 @@ test("giriş sayfası: Merit OS başlığı, etiketli alanlar, konsolda hata yok
 
   await page.goto("/giris");
   await expect(page.getByText("MERIT OS")).toBeVisible();
+  const logo = page.getByRole("img", { name: "Merit Royal" });
+  await expect(logo).toBeVisible();
+  expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+  expect((await logo.boundingBox())?.height).toBeLessThanOrEqual(48);
   await expect(page.getByLabel("Kullanıcı adı")).toHaveAttribute("autocomplete", "username");
   await expect(page.getByLabel("Şifre")).toHaveAttribute("autocomplete", "current-password");
   await expect(page.getByRole("button", { name: "Giriş Yap" })).toBeVisible();

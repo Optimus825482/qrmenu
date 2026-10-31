@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Merit OS",
   description: "Merit otelleri operasyon platformu",
   // app/manifest.ts adds <link rel="manifest">; iOS reads the home-screen icon from here.
-  icons: { apple: "/icons/merit-192.png" },
+  icons: { apple: { url: "/icons/legacy/apple-touch-icon-180.png", sizes: "180x180", type: "image/png" } },
   appleWebApp: { capable: true, title: "Merit OS", statusBarStyle: "default" },
 };
 

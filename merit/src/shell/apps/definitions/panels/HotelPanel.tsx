@@ -7,6 +7,7 @@ import type { HotelRow } from "@/modules/core/server/admin/hotels";
 import { Field } from "@/shell/ui/Field";
 import { FieldErrorsContext } from "@/shell/ui/formContext";
 import { useLiveList } from "@/shell/ui/useLiveList";
+import { HotelModules } from "./HotelModules";
 
 type Props = { hotelId: string; setStatus(text: string): void };
 
@@ -56,6 +57,7 @@ export function HotelPanel({ hotelId, setStatus }: Props) {
           Otel bilgileri kaydedildi
         </p>
       ) : null}
+      <HotelModules hotelId={hotelId} />
     </>
   );
 }

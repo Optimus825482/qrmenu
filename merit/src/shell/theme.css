@@ -1652,6 +1652,24 @@
   font-weight: bold;
 }
 
+.xp-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.xp-hotel-modules {
+  max-width: 520px;
+  margin: 8px 10px;
+}
+
+.xp-module-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
 .xp-bulk-note {
   margin: 0;
 }

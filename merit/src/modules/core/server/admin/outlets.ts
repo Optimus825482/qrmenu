@@ -1,0 +1,327 @@
+import { z } from "zod";
+import { OutletType, PriceDisplay, type Prisma } from "@/generated/prisma/client";
+import type { Ctx } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { DomainError } from "@/lib/result";
+import { assertCan } from "@/lib/rbac";
+import { audit } from "@/modules/core/server/audit";
+import {
+  conflictFromPrisma,
+  listQuerySchema,
+  orderByFor,
+  type Page,
+  pageArgs,
+  parseInput,
+  publishDefinition,
+  toPage,
+  withAdminTx,
+} from "./crud";
+
+const SCREEN = "CR-TAN";
+const INVALID = "Girilen bilgiler geçersiz";
+const NAME_TAKEN = "Bu adda bir outlet zaten var";
+const ONE_ROOM_SERVICE = "Her otelde bir oda servisi outleti olabilir";
+const HAS_RECORDS =
+  "Outletin masa, sipariş, ekip veya menü kaydı var; silmek yerine pasife alın";
+
+export type OutletRow = {
+  id: string;
+  hotelId: string;
+  name: string;
+  type: OutletType;
+  hasMenu: boolean;
+  hasOrdering: boolean;
+  orderingEnabled: boolean;
+  priceDisplay: PriceDisplay;
+  kdsEnabled: boolean;
+  phoneConfirmRequired: boolean;
+  isActive: boolean;
+  tableCount: number;
+};
+
+const SELECT = {
+  id: true,
+  hotelId: true,
+  name: true,
+  type: true,
+  hasMenu: true,
+  hasOrdering: true,
+  orderingEnabled: true,
+  priceDisplay: true,
+  kdsEnabled: true,
+  phoneConfirmRequired: true,
+  isActive: true,
+  _count: { select: { tables: true } },
+} satisfies Prisma.OutletSelect;
+
+type OutletWithCount = Prisma.OutletGetPayload<{ select: typeof SELECT }>;
+
+const toRow = ({ _count, ...outlet }: OutletWithCount): OutletRow => ({
+  ...outlet,
+  tableCount: _count.tables,
+});
+
+export const outletSchema = z
+  .object({
+    /** Read-only: accepted so a form can echo it back, but a different hotel is rejected. */
+    hotelId: z.string().optional(),
+    name: z.string("Outlet adı gerekli").trim().min(1, "Outlet adı gerekli").max(80, "En fazla 80 karakter olabilir"),
+    type: z.enum(OutletType, "Outlet türünü seçin"),
+    hasMenu: z.boolean().default(true),
+    hasOrdering: z.boolean().default(false),
+    orderingEnabled: z.boolean().default(true),
+    priceDisplay: z.enum(PriceDisplay, "Fiyat gösterimini seçin").default("INHERIT"),
+    phoneConfirmRequired: z.boolean().default(false),
+    kdsEnabled: z.boolean().default(false),
+    isActive: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.hasOrdering && !value.hasMenu) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["hasOrdering"],
+        message: "Sipariş almak için menü açık olmalıdır",
+      });
+    }
+  });
+export type OutletInput = z.input<typeof outletSchema>;
+
+export const outletListQuerySchema = listQuerySchema;
+
+const ORDER = {
+  name: (dir: "asc" | "desc") => ({ name: dir }),
+  type: (dir: "asc" | "desc") => ({ type: dir }),
+  priceDisplay: (dir: "asc" | "desc") => ({ priceDisplay: dir }),
+  orderingEnabled: (dir: "asc" | "desc") => ({ orderingEnabled: dir }),
+  tableCount: (dir: "asc" | "desc") => ({ tables: { _count: dir } }),
+  isActive: (dir: "asc" | "desc") => ({ isActive: dir }),
+};
+
+type Db = Pick<Prisma.TransactionClient, "outlet">;
+
+function hotelImmutable(): DomainError {
+  return new DomainError("VALIDATION", INVALID, {
+    fieldErrors: { hotelId: ["Outlet başka bir otele taşınamaz; yeni outlet oluşturun"] },
+  });
+}
+
+/** A hotel has at most one ODA_SERVISI outlet (`exceptId` = the outlet being edited). */
+async function assertRoomServiceFree(
+  db: Db,
+  hotelId: string,
+  type: OutletType,
+  exceptId?: string,
+): Promise<void> {
+  if (type !== "ODA_SERVISI") return;
+  const other = await db.outlet.findFirst({
+    where: { hotelId, type: "ODA_SERVISI", ...(exceptId ? { id: { not: exceptId } } : {}) },
+    select: { id: true },
+  });
+  if (other) throw new DomainError("CONFLICT", ONE_ROOM_SERVICE, { fieldErrors: { type: [ONE_ROOM_SERVICE] } });
+}
+
+/** The unique index that tripped is not told apart by Prisma: look which rule the input breaks. */
+async function conflictMessage(hotelId: string, type: OutletType, exceptId?: string): Promise<string> {
+  try {
+    await assertRoomServiceFree(prisma, hotelId, type, exceptId);
+  } catch (error) {
+    if (error instanceof DomainError) return error.message;
+    throw error;
+  }
+  return NAME_TAKEN;
+}
+
+export async function list(
+  ctx: Ctx,
+  hotelId: string,
+  rawQuery: z.input<typeof outletListQuerySchema>,
+): Promise<Page<OutletRow>> {
+  await assertCan(ctx, SCREEN, "V", hotelId);
+  const query = parseInput(outletListQuerySchema, rawQuery);
+  const where: Prisma.OutletWhereInput = {
+    hotelId,
+    ...(query.q ? { name: { contains: query.q, mode: "insensitive" } } : {}),
+  };
+  const [items, total] = await Promise.all([
+    prisma.outlet.findMany({
+      where,
+      select: SELECT,
+      orderBy: orderByFor<Prisma.OutletOrderByWithRelationInput>(query.sort, ORDER, { name: "asc" }),
+      ...pageArgs(query),
+    }),
+    prisma.outlet.count({ where }),
+  ]);
+  return toPage(items.map(toRow), total, query);
+}
+
+export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promise<OutletRow> {
+  const input = parseInput(outletSchema, raw);
+  if (input.hotelId !== undefined && input.hotelId !== hotelId) throw hotelImmutable();
+  try {
+    return await withAdminTx(ctx, { screen: SCREEN, action: "O", hotelId }, async (tx) => {
+      await assertRoomServiceFree(tx, hotelId, input.type);
+      const created = await tx.outlet.create({
+        data: {
+          hotelId,
+          name: input.name,
+          type: input.type,
+          hasMenu: input.hasMenu,
+          hasOrdering: input.hasOrdering,
+          orderingEnabled: input.orderingEnabled,
+          priceDisplay: input.priceDisplay,
+          phoneConfirmRequired: input.phoneConfirmRequired,
+          kdsEnabled: input.kdsEnabled,
+          isActive: input.isActive ?? true,
+        },
+        select: SELECT,
+      });
+      const row = toRow(created);
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId,
+        action: "OUTLET_CREATE",
+        entity: "Outlet",
+        entityId: row.id,
+        after: row,
+      });
+      await publishDefinition(tx, { hotelId, entity: "outlet", id: row.id, op: "create" });
+      return row;
+    });
+  } catch (error) {
+    conflictFromPrisma(error, await conflictMessage(hotelId, input.type));
+  }
+}
+
+/** Replaces the editable fields; the hotel can never change. */
+export async function update(
+  ctx: Ctx,
+  hotelId: string,
+  id: string,
+  raw: OutletInput,
+): Promise<OutletRow> {
+  const input = parseInput(outletSchema, raw);
+  if (input.hotelId !== undefined && input.hotelId !== hotelId) throw hotelImmutable();
+  try {
+    return await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
+      const before = await tx.outlet.findFirst({ where: { id, hotelId }, select: SELECT });
+      if (!before) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+      await assertRoomServiceFree(tx, hotelId, input.type, id);
+      const updated = await tx.outlet.update({
+        where: { id },
+        data: {
+          name: input.name,
+          type: input.type,
+          hasMenu: input.hasMenu,
+          hasOrdering: input.hasOrdering,
+          orderingEnabled: input.orderingEnabled,
+          priceDisplay: input.priceDisplay,
+          phoneConfirmRequired: input.phoneConfirmRequired,
+          kdsEnabled: input.kdsEnabled,
+          ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+        },
+        select: SELECT,
+      });
+      const row = toRow(updated);
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId,
+        action: "OUTLET_UPDATE",
+        entity: "Outlet",
+        entityId: id,
+        before: toRow(before),
+        after: row,
+      });
+      await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
+      return row;
+    });
+  } catch (error) {
+    conflictFromPrisma(error, await conflictMessage(hotelId, input.type, id));
+  }
+}
+
+/** Runs `change` on the outlet found by id; the hotel is read from the outlet and authorised as usual. */
+async function patchById(
+  ctx: Ctx,
+  id: string,
+  action: string,
+  change: (before: OutletRow) => Prisma.OutletUpdateInput | undefined,
+): Promise<OutletRow> {
+  const found = await prisma.outlet.findUnique({ where: { id }, select: { hotelId: true } });
+  if (!found) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+  const { hotelId } = found;
+  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
+    const raw = await tx.outlet.findFirst({ where: { id, hotelId }, select: SELECT });
+    if (!raw) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+    const before = toRow(raw);
+    const data = change(before);
+    if (!data) return before;
+    const row = toRow(await tx.outlet.update({ where: { id }, data, select: SELECT }));
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId,
+      action,
+      entity: "Outlet",
+      entityId: id,
+      before,
+      after: row,
+    });
+    await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
+    return row;
+  });
+}
+
+export function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<OutletRow> {
+  return patchById(ctx, id, "OUTLET_SET_ACTIVE", (before) =>
+    before.isActive === isActive ? undefined : { isActive },
+  );
+}
+
+/** The grid's inline "sipariş aç/kapa" switch. */
+export function setOrderingEnabled(ctx: Ctx, id: string, enabled: boolean): Promise<OutletRow> {
+  return patchById(ctx, id, "OUTLET_UPDATE", (before) =>
+    before.orderingEnabled === enabled ? undefined : { orderingEnabled: enabled },
+  );
+}
+
+export async function remove(ctx: Ctx, hotelId: string, id: string): Promise<void> {
+  try {
+    await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
+      const before = await tx.outlet.findFirst({
+        where: { id, hotelId },
+        select: {
+          ...SELECT,
+          _count: {
+            select: {
+              tables: true,
+              orders: true,
+              waiterCalls: true,
+              members: true,
+              assignments: true,
+              sessions: true,
+              menuNodes: true,
+            },
+          },
+        },
+      });
+      if (!before) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+      if (Object.values(before._count).some((count) => count > 0)) {
+        throw new DomainError("CONFLICT", HAS_RECORDS);
+      }
+      await tx.outlet.delete({ where: { id } });
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId,
+        action: "OUTLET_DELETE",
+        entity: "Outlet",
+        entityId: id,
+        before: toRow(before),
+      });
+      await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "delete" });
+    });
+  } catch (error) {
+    // A record added between the count and the delete trips the foreign key.
+    conflictFromPrisma(error, HAS_RECORDS);
+  }
+}
+
+export { remove as delete };

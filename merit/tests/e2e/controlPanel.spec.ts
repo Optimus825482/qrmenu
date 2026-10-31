@@ -248,6 +248,14 @@ test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ re
     display: "standalone",
   });
   expect(manifest.icons.length).toBeGreaterThan(0);
+  const sources = (manifest.icons as { src: string }[]).map((icon) => icon.src);
+  expect(sources).toEqual(
+    expect.arrayContaining([
+      "/icons/merit.svg",
+      "/icons/legacy/icon-192.png",
+      "/icons/legacy/icon-512.png",
+    ]),
+  );
   for (const icon of manifest.icons as { src: string }[]) {
     expect((await request.get(icon.src)).status()).toBe(200);
   }
@@ -257,6 +265,10 @@ test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ re
   expect(sw.headers()["content-type"]).toMatch(/javascript/);
 
   await page.goto("/giris");
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+    "href",
+    /icons\/legacy\/apple-touch-icon-180\.png/,
+  );
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
     "href",
     /manifest\.webmanifest/,
