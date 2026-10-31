@@ -362,3 +362,74 @@ test("mobil Ayarlar: aynı yazı boyutu / yazı tipi / tema seçenekleri", async
   expect(await cssVar(page, ".xp-shell", "--xp-font-size")).toBe("14px");
   expect(errors).toEqual([]);
 });
+
+test("Sistem: admin DND kontrol sayısını sistem geneli ve otel için değiştirir; yenilemede kalıcı, rozet 'otel'", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  if (!(await panelWindow(page).isVisible())) await openControlPanel(page);
+  const win = panelWindow(page);
+  await win.getByRole("tab", { name: "Sistem" }).click();
+  const scope = win.getByLabel("Kapsam");
+  await expect(scope).toHaveValue("");
+
+  const row = win.getByRole("group", { name: "DND asgari kontrol sayısı" });
+  // The seed writes system rows for every key: they show as "sistem".
+  await expect(row.getByText("sistem", { exact: true })).toBeVisible();
+  await row.getByLabel("DND asgari kontrol sayısı").fill("4");
+  await row.getByRole("button", { name: "Kaydet" }).click();
+  await expect(win.getByRole("status")).toContainText("DND asgari kontrol sayısı kaydedildi");
+  await expect(row.getByText("sistem", { exact: true })).toBeVisible();
+
+  // Hotel scope: the system value applies until the hotel gets its own.
+  await scope.selectOption({ label: "Otel: Merit Royal" });
+  await expect(row.getByLabel("DND asgari kontrol sayısı")).toHaveValue("4");
+  await expect(row.getByText("sistem", { exact: true })).toBeVisible();
+  await row.getByLabel("DND asgari kontrol sayısı").fill("3");
+  await row.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row.getByText("otel", { exact: true })).toBeVisible();
+
+  await page.reload();
+  const again = panelWindow(page);
+  await expect(again).toBeVisible();
+  await again.getByRole("tab", { name: "Sistem" }).click();
+  await again.getByLabel("Kapsam").selectOption({ label: "Otel: Merit Royal" });
+  const reloaded = again.getByRole("group", { name: "DND asgari kontrol sayısı" });
+  await expect(reloaded.getByLabel("DND asgari kontrol sayısı")).toHaveValue("3");
+  await expect(reloaded.getByText("otel", { exact: true })).toBeVisible();
+
+  // Removing the hotel value falls back to the system value 4.
+  await reloaded.getByRole("button", { name: "Otel değerini kaldır" }).click();
+  await page.getByRole("dialog", { name: "Otel değerini kaldır" }).getByRole("button", { name: "Evet" }).click();
+  await expect(reloaded.getByLabel("DND asgari kontrol sayısı")).toHaveValue("4");
+  await expect(reloaded.getByText("sistem", { exact: true })).toBeVisible();
+
+  // Invalid value comes back as a field error and nothing is saved.
+  await reloaded.getByLabel("DND asgari kontrol sayısı").fill("99");
+  await reloaded.getByRole("button", { name: "Kaydet" }).click();
+  await expect(reloaded.getByRole("alert")).toBeVisible();
+  expect(errors.filter((e) => !/status of 4\d\d/.test(e))).toEqual([]);
+});
+
+test("Sistem: otel yöneticisi (ayar.mr) 'Sistem geneli' görmez, kendi otelini düzenler", async ({
+  page,
+}) => {
+  await login(page, "ayar.mr");
+  await expect(page).toHaveURL(/\/admin$/);
+  await openControlPanel(page);
+  const win = panelWindow(page);
+  await win.getByRole("tab", { name: "Sistem" }).click();
+  const scope = win.getByLabel("Kapsam");
+  await expect(scope.getByRole("option", { name: "Sistem geneli" })).toHaveCount(0);
+  await expect(scope.getByRole("option")).toHaveCount(1);
+  const row = win.getByRole("group", { name: "DND asgari kontrol sayısı" });
+  await row.getByLabel("DND asgari kontrol sayısı").fill("5");
+  await row.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row.getByText("otel", { exact: true })).toBeVisible();
+  await page.reload();
+  await panelWindow(page).getByRole("tab", { name: "Sistem" }).click();
+  await expect(
+    panelWindow(page).getByRole("group", { name: "DND asgari kontrol sayısı" }).getByLabel("DND asgari kontrol sayısı"),
+  ).toHaveValue("5");
+});

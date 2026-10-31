@@ -77,6 +77,17 @@ async function resetAndSeed(): Promise<void> {
     await makeUser("bos.kullanici", "R-OUT", "MR");
     // Management role without the system screens (CR-SYS): sees Komuta Merkezi only.
     await makeUser("mudur.mr", "R-OTM", "MR");
+    // Management role that may edit the MR hotel settings (CR-SYS V,D for MR only): no system scope.
+    await makeUser("ayar.mr", "R-FBM", "MR");
+    await db.roleScreenPermission.create({
+      data: {
+        roleId: await role("R-FBM"),
+        screenId: (await db.appScreen.findUniqueOrThrow({ where: { code: "CR-SYS" } })).id,
+        hotelId: mr,
+        canView: true,
+        canEdit: true,
+      },
+    });
   } finally {
     await db.$disconnect();
   }
