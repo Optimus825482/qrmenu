@@ -613,6 +613,7 @@ model Notification {
   isRead    Boolean   @default(false) @map("is_read")
   readAt    DateTime? @map("read_at")
   createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
@@ -630,6 +631,7 @@ model PushSubscription {
   userAgent  String?  @map("user_agent")
   lastUsedAt DateTime @default(now()) @map("last_used_at")
   createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1048,17 +1050,18 @@ model DailyTaskItem {
   statusLogs  TaskStatusLog[]
   roomDnds    RoomDnd[]
 
+  @@index([taskId])
   @@map("daily_task_items")
 }
 
 model TaskStatusLog {
-  id         String     @id @default(cuid())
-  taskItemId String     @map("task_item_id")
-  from       TaskStatus
+  id         String      @id @default(cuid())
+  taskItemId String      @map("task_item_id")
+  from       TaskStatus?
   to         TaskStatus
-  userId     String?    @map("user_id")
+  userId     String?     @map("user_id")
   note       String?
-  createdAt  DateTime   @default(now()) @map("created_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
 
   taskItem DailyTaskItem @relation(fields: [taskItemId], references: [id], onDelete: Cascade)
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -1135,6 +1138,7 @@ model EmailLog {
   refType    String?     @map("ref_type")
   refId      String?     @map("ref_id")
   createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -1154,7 +1158,7 @@ model MenuNode {
   imageUrl    String?      @map("image_url")
   price       Decimal?     @db.Decimal(10, 2)
   currency    String       @default("EUR")
-  allergens   String[]
+  allergens   String[]     @default([])
   isAvailable Boolean      @default(true) @map("is_available")
   sortOrder   Int          @default(0) @map("sort_order")
   isActive    Boolean      @default(true) @map("is_active")
@@ -1232,8 +1236,8 @@ model Order {
 
   hotel            Hotel        @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   outlet           Outlet       @relation(fields: [outletId], references: [id], onDelete: Restrict)
-  table            OutletTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  room             Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  table            OutletTable? @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  room             Room?        @relation(fields: [roomId], references: [id], onDelete: Restrict)
   approvedBy       User?        @relation("OrderApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   phoneConfirmedBy User?        @relation("OrderPhoneConfirmedBy", fields: [phoneConfirmedById], references: [id], onDelete: SetNull)
   items            OrderItem[]
@@ -1258,6 +1262,7 @@ model OrderItem {
   order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuNode MenuNode @relation(fields: [menuNodeId], references: [id], onDelete: Restrict)
 
+  @@index([orderId])
   @@map("order_items")
 }
 
@@ -1274,6 +1279,7 @@ model OrderEvent {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([orderId])
   @@map("order_events")
 }
 
@@ -1307,6 +1313,7 @@ model WaiterCall {
   table      OutletTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
   resolvedBy User?       @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
 
+  @@index([outletId, status])
   @@map("waiter_calls")
 }
 
@@ -1349,5 +1356,6 @@ model PrintJob {
   printer Printer @relation(fields: [printerId], references: [id], onDelete: Restrict)
   order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
+  @@index([printerId, status])
   @@map("print_jobs")
 }
