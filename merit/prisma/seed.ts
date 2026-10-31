@@ -7,7 +7,7 @@ import { HOTEL_MODULES, HOTELS, ROOM_SERVICE_OUTLET } from "./seed/hotels";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
 import { DEFAULT_SETTINGS } from "./seed/settings";
 
-const FALLBACK_ADMIN_PASSWORD = "Merit!2026";
+const MIN_ADMIN_PASSWORD_LENGTH = 10;
 const BCRYPT_ROUNDS = 12;
 
 async function seedHotels(db: PrismaClient) {
@@ -24,11 +24,13 @@ async function seedHotels(db: PrismaClient) {
         update: {}, // an operator may have switched the module off
       });
     }
-    await db.outlet.upsert({
-      where: { hotelId_name: { hotelId: hotel.id, name: ROOM_SERVICE_OUTLET.name } },
-      create: { hotelId: hotel.id, ...ROOM_SERVICE_OUTLET },
-      update: {},
+    // Looked up by type, not name: an admin may have renamed it, and a hotel may have only one.
+    const roomService = await db.outlet.findFirst({
+      where: { hotelId: hotel.id, type: ROOM_SERVICE_OUTLET.type },
     });
+    if (!roomService) {
+      await db.outlet.create({ data: { hotelId: hotel.id, ...ROOM_SERVICE_OUTLET } });
+    }
   }
 }
 
@@ -127,17 +129,21 @@ async function seedSettings(db: PrismaClient) {
   }
 }
 
+/** The admin password has no default: a missing or weak value must stop the seed. */
+function requireAdminPassword(): string {
+  const password = process.env.SEED_ADMIN_PASSWORD;
+  if (!password || password.length < MIN_ADMIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `SEED_ADMIN_PASSWORD tanımlı değil veya ${MIN_ADMIN_PASSWORD_LENGTH} karakterden kısa; .env dosyasına ekleyin`,
+    );
+  }
+  return password;
+}
+
 /** Creates the admin user once; an existing admin (and its password) is left untouched. */
-async function seedAdmin(db: PrismaClient) {
+async function seedAdmin(db: PrismaClient, password: string) {
   if (await db.user.findUnique({ where: { username: "admin" } })) return;
 
-  let password = process.env.SEED_ADMIN_PASSWORD;
-  if (!password) {
-    console.warn(
-      "UYARI: SEED_ADMIN_PASSWORD tanımlı değil; admin için varsayılan şifre kullanılıyor. İlk girişten sonra değiştirin.",
-    );
-    password = FALLBACK_ADMIN_PASSWORD;
-  }
   const role = await db.role.findUniqueOrThrow({ where: { code: "R-SYS" } });
   await db.user.create({
     data: {
@@ -151,12 +157,13 @@ async function seedAdmin(db: PrismaClient) {
 
 /** Idempotent: safe to run any number of times against the same database. */
 export async function runSeed(db: PrismaClient): Promise<void> {
+  const adminPassword = requireAdminPassword(); // fail closed, before anything is written
   await seedHotels(db);
   await seedScreens(db);
   await seedRoles(db);
   await seedPermissions(db);
   await seedSettings(db);
-  await seedAdmin(db);
+  await seedAdmin(db, adminPassword);
 }
 
 async function main() {

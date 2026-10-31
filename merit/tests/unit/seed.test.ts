@@ -126,4 +126,28 @@ describe("seed (gerçek test DB)", () => {
       db.setting.create({ data: { hotelId: null, key: "x", value: 2 } }),
     ).rejects.toMatchObject({ code: "P2002" });
   });
+
+  it("SEED_ADMIN_PASSWORD yoksa runSeed hiçbir şey yazmadan hata verir", async () => {
+    const saved = process.env.SEED_ADMIN_PASSWORD;
+    delete process.env.SEED_ADMIN_PASSWORD;
+    try {
+      await expect(runSeed(db)).rejects.toThrow(
+        "SEED_ADMIN_PASSWORD tanımlı değil veya 10 karakterden kısa; .env dosyasına ekleyin",
+      );
+      process.env.SEED_ADMIN_PASSWORD = "kisa";
+      await expect(runSeed(db)).rejects.toThrow(/10 karakterden kısa/);
+      expect(await db.hotel.count()).toBe(0);
+    } finally {
+      if (saved === undefined) delete process.env.SEED_ADMIN_PASSWORD;
+      else process.env.SEED_ADMIN_PASSWORD = saved;
+    }
+  });
+
+  it("oda servisi outleti yeniden adlandırılsa bile ikinci seed onu türüne göre bulur", async () => {
+    await runSeed(db);
+    await db.outlet.updateMany({ where: { type: "ODA_SERVISI" }, data: { name: "IRD" } });
+    await runSeed(db);
+    expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
+    expect(await db.outlet.count({ where: { type: "ODA_SERVISI", name: "IRD" } })).toBe(3);
+  });
 });
