@@ -29,6 +29,7 @@ jobs:
       APP_BASE_URL: http://localhost:3000
       SEED_ADMIN_PASSWORD: ci-admin-password
       TZ: Europe/Nicosia
+      MERIT_DISABLE_JOBS: "1"
     defaults:
       run:
         working-directory: merit
