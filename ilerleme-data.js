@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 19:08",
-  headline: "P1 T1–T11 tamam; T12 (kabul + ertelenmiş minörler) uygulanıyor, ardından dal sonu incelemesi.",
+  updatedAt: "31.10.2026 19:40",
+  headline: "P1 12 görev tamam (497 birim + 65 e2e yeşil); dal sonu incelemesi sürüyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -54,7 +54,8 @@ window.ILERLEME = {
         { title: "T9 Bildirim merkezi ve denetim günlüğü pencereleri", status: "done", doneAt: "31.10 17:45" },
         { title: "T10 Sistem ayarları penceresi (Denetim Masası → Sistem)", status: "done", doneAt: "31.10 18:43" },
         { title: "T11 P0'dan devreden düzeltmeler (testler, resync, bildirim rolü, iframe teması)", status: "done", doneAt: "31.10 19:04" },
-        { title: "T12 Kabul: tanım zinciri e2e'leri, belgeler", status: "active" }
+        { title: "T12 Kabul: tanım zinciri e2e'leri, belgeler", status: "done", doneAt: "31.10 19:38" },
+        { title: "Final dal incelemesi + düzeltme dalgası", status: "active" }
       ]
     },
     {
@@ -144,6 +145,7 @@ window.ILERLEME = {
     { at: "31.10 17:45", text: "P1 T9 bildirim zili ve denetim günlüğü uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T10." },
     { at: "31.10 18:31", text: "T7–T9 e2e doğrulandı (35/35) ve commit edildi (bcaaa49, 73c21c7, ef696f4); T10 başladı." },
     { at: "31.10 18:50", text: "T10 sistem ayarları onaylandı (d098a00); T8 zorla çıkışa rol hiyerarşisi eklendi (e183229). T11 başladı." },
-    { at: "31.10 19:08", text: "T11 onaylandı (8a40c4d); T8 sayaç düzeltmesi (0ebaf41). T12 başladı." }
+    { at: "31.10 19:08", text: "T11 onaylandı (8a40c4d); T8 sayaç düzeltmesi (0ebaf41). T12 başladı." },
+    { at: "31.10 19:40", text: "P1 T12 tamam: tanım zinciri kabul e2e'si (9), 17 ertelenmiş minör düzeltildi, belgeler. Dal sonu incelemesi başladı." }
   ]
 };
