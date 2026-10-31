@@ -29,7 +29,7 @@ test("Masa QR: Havuz Bar M1..M5 toplu üretilir, rozetler imzalı olur, ZIP 5 SV
   await expect(page).toHaveURL(/\/admin$/);
   await expect(desktop(page)).toBeVisible();
   const win = await openTableQr(page);
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
 
   for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
     await expect(win.getByTestId(`tq-badge-${label}`)).toHaveText("QR yok");

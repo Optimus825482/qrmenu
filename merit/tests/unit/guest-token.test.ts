@@ -8,7 +8,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const publishMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/realtime", () => ({ publish: publishMock }));
 
-const { resolveGuestToken, resolveGuestTokenLimited } = await import("@/modules/menu/server/guestToken");
+const { rateLimitDelay, resolveGuestToken, resolveGuestTokenLimited } = await import("@/modules/menu/server/guestToken");
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
@@ -18,6 +18,7 @@ beforeEach(async () => {
   await testDb.qrScanLog.deleteMany({});
   await testDb.hotelModule.updateMany({ data: { enabled: true } });
   publishMock.mockReset();
+  rateLimitDelay.ms = 0;
 });
 afterAll(async () => {
   await dropReferenceData();
@@ -51,6 +52,17 @@ describe("resolveGuestToken", () => {
     expect(publishMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "scan.table", outletId: outlet.id, payload: { tableId: table.id } }),
     );
+  });
+
+  it("{ log: false }: çözümler ama QrScanLog yazmaz ve scan.table yayınlamaz", async () => {
+    const { table, token } = await tableFixture();
+    expect(await resolveGuestToken(token, meta, { log: false })).toMatchObject({ kind: "TABLE", table: { id: table.id } });
+    expect(await resolveGuestToken("yok-boyle-token", meta, { log: false })).toEqual({
+      kind: "NONE",
+      reason: "BILINMEYEN",
+    });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
   });
 
   it("imzasız (eski) token da DB araması ile çözülür", async () => {
@@ -148,26 +160,52 @@ describe("resolveGuestTokenLimited", () => {
     expect((await resolveGuestTokenLimited(token, { ...meta, ip: "10.8.8.8" }, limiter)).kind).toBe("TABLE");
   });
 
-  it("sınırı aşan IP için çözümleme (DB sorgusu) yapılmaz; biçimsiz token da sayılır", async () => {
+  it("sınırı aşan IP: geçerli token yine çözülür (log + scan.table), bilinmeyen RATE_LIMITED (log yok, olay yok)", async () => {
+    const limiter = createRateLimiter({ max: 2, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+    for (let i = 0; i < 2; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter);
+    expect(limiter.peek(meta.ip).allowed).toBe(false);
+    await testDb.qrScanLog.deleteMany({});
+    const { token, table } = await tableFixture();
+    expect((await resolveGuestTokenLimited(token, meta, limiter, globalLimiter)).kind).toBe("TABLE");
+    expect(await testDb.qrScanLog.findMany()).toMatchObject([{ tableId: table.id, ok: true }]);
+    expect(publishMock).toHaveBeenCalledTimes(1);
+
+    await testDb.qrScanLog.deleteMany({});
+    publishMock.mockReset();
+    expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter)).toEqual({
+      kind: "NONE",
+      reason: "RATE_LIMITED",
+    });
+    expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter)).toMatchObject({
+      reason: "RATE_LIMITED",
+    });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
+  });
+
+  it("engelli IP: bilinmeyen token 250 ms gecikmeyle RATE_LIMITED döner", async () => {
+    const limiter = createRateLimiter({ max: 1, windowMs: 60_000 });
+    await resolveGuestTokenLimited("yok-0", meta, limiter);
+    rateLimitDelay.ms = 250;
+    const started = Date.now();
+    expect((await resolveGuestTokenLimited("yok-1", meta, limiter)).kind).toBe("NONE");
+    expect(Date.now() - started).toBeGreaterThanOrEqual(240);
+  });
+
+  it("biçimsiz token da sayılır (60. deneme BILINMEYEN, 61. RATE_LIMITED)", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
     const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
     for (let i = 0; i < 59; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter);
     expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter)).toMatchObject({
       reason: "BILINMEYEN",
-    }); // 60th, malformed: still counted
-    const find = vi.spyOn(testDb.outletTable, "findUnique");
-    try {
-      expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter)).toEqual({
-        kind: "NONE",
-        reason: "RATE_LIMITED",
-      });
-      expect(find).not.toHaveBeenCalled();
-    } finally {
-      find.mockRestore();
-    }
+    });
+    expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter)).toMatchObject({
+      reason: "RATE_LIMITED",
+    });
   });
 
-  it("global yedek: 600/dk sonrası farklı IP'ler de RATE_LIMITED; geçerli token etkilenmez", async () => {
+  it("global yedek: sınır sonrası farklı IP'lerde bilinmeyen RATE_LIMITED, geçerli token çözülür, log yok", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
     const globalLimiter = createRateLimiter({ max: 5, windowMs: 60_000 });
     for (let i = 0; i < 5; i++) {
@@ -175,9 +213,16 @@ describe("resolveGuestTokenLimited", () => {
         await resolveGuestTokenLimited(`yok-${i}`, { ...meta, ip: `10.2.0.${i}` }, limiter, globalLimiter),
       ).toMatchObject({ reason: "BILINMEYEN" });
     }
+    await testDb.qrScanLog.deleteMany({});
     expect(await resolveGuestTokenLimited("yok-x", { ...meta, ip: "10.2.1.1" }, limiter, globalLimiter)).toEqual({
       kind: "NONE",
       reason: "RATE_LIMITED",
     });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
+    const { token } = await tableFixture();
+    expect((await resolveGuestTokenLimited(token, { ...meta, ip: "10.2.1.2" }, limiter, globalLimiter)).kind).toBe(
+      "TABLE",
+    );
   });
 });

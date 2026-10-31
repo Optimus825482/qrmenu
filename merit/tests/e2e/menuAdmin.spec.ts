@@ -53,7 +53,7 @@ async function createNode(win: Locator, button: string, name: string, price?: st
 test("Menü Yönetimi: ağaç kur, tükendi, çeviri, görsel, sipariş kapat", async ({ page }) => {
   await openAdmin(page, "admin");
   const win = await openApp(page, "Menü Yönetimi", MR);
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
 
   await createNode(win, "Yeni Kategori", "İçecekler");
   await createNode(win, "Yeni Alt Kategori", "Soğuk");
@@ -128,7 +128,7 @@ test("Tema Yönetimi: yeni tema, Deniz'i Havuz Bar'a ata, varsayılan silinemez"
 test("fbm.mr: Menü Yönetimi MR için açılır, Havuz Bar menüsünü düzenler, temayı atar", async ({ page }) => {
   await openAdmin(page, "fbm.mr");
   const win = await openApp(page, "Menü Yönetimi", MR);
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
   await expect(win.getByRole("treeitem", { name: /İçecekler/ })).toBeVisible();
   await expect(win.getByRole("button", { name: "Yeni Kategori" })).toBeVisible();
 

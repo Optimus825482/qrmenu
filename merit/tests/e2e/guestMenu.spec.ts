@@ -36,7 +36,7 @@ async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locat
   await expect(hotelCard.or(win)).toBeVisible();
   if (await hotelCard.isVisible()) await hotelCard.click();
   await expect(win).toBeVisible();
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
   return { page, win };
 }
 

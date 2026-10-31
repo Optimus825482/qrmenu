@@ -24,7 +24,7 @@ const UA_MAX = 255;
 
 const none = (reason: NoneReason): GuestTarget => ({ kind: "NONE", reason });
 
-async function logScan(
+async function writeScan(
   meta: GuestMeta,
   data: { tableId?: string; roomId?: string; ok: boolean; error?: string },
 ): Promise<void> {
@@ -45,7 +45,15 @@ async function logScan(
   }
 }
 
-async function resolve(token: string, meta: GuestMeta, logUnknown: boolean): Promise<GuestTarget> {
+async function resolve(
+  token: string,
+  meta: GuestMeta,
+  log: boolean,
+  logUnknown: boolean,
+): Promise<GuestTarget> {
+  const logScan = async (...args: Parameters<typeof writeScan>): Promise<void> => {
+    if (log) await writeScan(...args);
+  };
   const unknown = async (): Promise<GuestTarget> => {
     if (logUnknown) await logScan(meta, { ok: false, error: "BILINMEYEN" });
     return none("BILINMEYEN");
@@ -68,15 +76,17 @@ async function resolve(token: string, meta: GuestMeta, logUnknown: boolean): Pro
       return fail(reason === "OUTLET_PASIF" || reason === "OTEL_PASIF" ? reason : "MENU_KAPALI");
     }
     await logScan(meta, { tableId: table.id, ok: true });
-    try {
-      await publish({
-        type: "scan.table",
-        hotelId: state.hotelId,
-        outletId: state.outletId,
-        payload: { tableId: table.id },
-      });
-    } catch (error) {
-      console.error("[guest token] scan.table", error);
+    if (log) {
+      try {
+        await publish({
+          type: "scan.table",
+          hotelId: state.hotelId,
+          outletId: state.outletId,
+          payload: { tableId: table.id },
+        });
+      } catch (error) {
+        console.error("[guest token] scan.table", error);
+      }
     }
     return { kind: "TABLE", table: { id: table.id, label: table.label }, state };
   }
@@ -96,14 +106,25 @@ async function resolve(token: string, meta: GuestMeta, logUnknown: boolean): Pro
   return unknown();
 }
 
+export type ResolveOptions = {
+  /** Write the QrScanLog row and publish `scan.table` (default true). Pass false for re-resolutions. */
+  log?: boolean;
+  /** Write the scan log row of an unknown token (default true; the limiter turns it off when blocked). */
+  logUnknown?: boolean;
+};
+
 /**
  * Resolves a guest QR token (DB lookup only: legacy unsigned tokens work too). Never throws:
- * failures answer `NONE`. Writes a QrScanLog; publishes `scan.table` only for a usable table.
- * Rate limiting is the caller's job (see `resolveGuestTokenLimited`).
+ * failures answer `NONE`. Writes a QrScanLog; publishes `scan.table` only for a usable table
+ * (both skipped with `{ log: false }`). Rate limiting is the caller's job (see `resolveGuestTokenLimited`).
  */
-export async function resolveGuestToken(token: string, meta: GuestMeta): Promise<GuestTarget> {
+export async function resolveGuestToken(
+  token: string,
+  meta: GuestMeta,
+  options: ResolveOptions = {},
+): Promise<GuestTarget> {
   try {
-    return await resolve(token, meta, true);
+    return await resolve(token, meta, options.log ?? true, options.logUnknown ?? true);
   } catch (error) {
     console.error("[guest token]", error);
     return none("HATA");
@@ -116,23 +137,31 @@ export const unknownTokenLimiter: RateLimiter = createRateLimiter({ max: 60, win
 export const globalUnknownTokenLimiter: RateLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
 const GLOBAL_KEY = "*";
 
+/** Pause before answering RATE_LIMITED for an unknown token (brute-force slowdown). Tests set it to 0. */
+export const rateLimitDelay = { ms: 250 };
+
 /**
- * `resolveGuestToken` with the unknown-token limits. An IP (or the whole service) already over the
- * limit gets `RATE_LIMITED` without any lookup; every `BILINMEYEN` result counts; refused
- * attempts are not logged.
+ * `resolveGuestToken` with the unknown-token limits. The (cheap, unique-index) lookup always runs:
+ * a valid token is never refused, even from an IP over its limit. Only unknown results count; an
+ * unknown token from an IP (or a service) over the limit gets `RATE_LIMITED` after a short delay,
+ * without a scan log.
  */
 export async function resolveGuestTokenLimited(
   token: string,
   meta: GuestMeta,
   limiter: RateLimiter = unknownTokenLimiter,
   globalLimiter: RateLimiter = globalUnknownTokenLimiter,
+  options: ResolveOptions = {},
 ): Promise<GuestTarget> {
-  if (!limiter.peek(meta.ip).allowed || !globalLimiter.peek(GLOBAL_KEY).allowed) return none("RATE_LIMITED");
-  const result = await resolveGuestToken(token, meta);
+  const blocked = !limiter.peek(meta.ip).allowed || !globalLimiter.peek(GLOBAL_KEY).allowed;
+  const result = await resolveGuestToken(token, meta, blocked ? { ...options, logUnknown: false } : options);
   if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
     const perIp = limiter.hit(meta.ip);
     const global = globalLimiter.hit(GLOBAL_KEY);
-    if (!perIp.allowed || !global.allowed) return none("RATE_LIMITED");
+    if (blocked || !perIp.allowed || !global.allowed) {
+      if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
+      return none("RATE_LIMITED");
+    }
   }
   return result;
 }

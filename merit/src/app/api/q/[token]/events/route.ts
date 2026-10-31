@@ -1,7 +1,12 @@
 import { isListening, startRealtimeListener } from "@/lib/realtime";
 import { createFilteredSseStream } from "@/lib/sse";
 import { guestEventFilter } from "@/modules/menu/guestEventFilter";
-import { guestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
+import {
+  globalUnknownTokenLimiter,
+  guestMeta,
+  resolveGuestTokenLimited,
+  unknownTokenLimiter,
+} from "@/modules/menu/server/guestToken";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,7 +26,13 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> },
 ): Promise<Response> {
   const { token } = await params;
-  const target = await resolveGuestTokenLimited(token, guestMeta(request.headers));
+  const target = await resolveGuestTokenLimited(
+    token,
+    guestMeta(request.headers),
+    unknownTokenLimiter,
+    globalUnknownTokenLimiter,
+    { log: false }, // a (re)connect is not a scan
+  );
   if (target.kind === "NONE") {
     if (target.reason === "RATE_LIMITED") {
       return new Response("Too Many Requests", { status: 429, headers: { ...NO_STORE, "Retry-After": "60" } });
