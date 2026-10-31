@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { unstable_rethrow } from "next/navigation";
 import { ZodError, type ZodType } from "zod";
 
 export type ErrorCode =
@@ -87,6 +88,9 @@ export function safeAction<I, O>(
       const input = schema.parse(raw);
       return ok(await handler(input));
     } catch (err) {
+      // redirect(), notFound(), forbidden() and dynamic-rendering bailouts are control flow that
+      // Next.js must see: never turn them into an INTERNAL result.
+      unstable_rethrow(err);
       if (err instanceof ZodError) return { ok: false, error: fromZod(err).toResultError() };
       if (err instanceof DomainError) return { ok: false, error: err.toResultError() };
       const errorId = randomBytes(4).toString("hex");

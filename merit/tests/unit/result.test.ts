@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import {
   DomainError,
@@ -128,5 +129,45 @@ describe("safeAction", () => {
     const logged = spy.mock.calls[0];
     expect(String(logged[0])).toContain(r.error.errorId);
     expect(logged).toContain(original);
+  });
+});
+
+describe("safeAction ve Next.js kontrol akışı hataları", () => {
+  it("redirect() hatasını INTERNAL'a çevirmeden yeniden fırlatır", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const action = safeAction(z.object({}), async () => {
+      redirect("/secim");
+    });
+    await expect(action({})).rejects.toMatchObject({
+      digest: expect.stringContaining("NEXT_REDIRECT;replace;/secim;307;"),
+    });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("digest'i NEXT_REDIRECT ile başlayan hata nesnesi de yeniden fırlatılır", async () => {
+    const control = Object.assign(new Error("NEXT_REDIRECT"), {
+      digest: "NEXT_REDIRECT;replace;/x;307;",
+    });
+    const action = safeAction(z.object({}), async () => {
+      throw control;
+    });
+    await expect(action({})).rejects.toBe(control);
+  });
+
+  it("notFound() da yeniden fırlatılır", async () => {
+    const action = safeAction(z.object({}), async () => {
+      notFound();
+    });
+    await expect(action({})).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+  });
+
+  it("sıradan hata hâlâ INTERNAL döner", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const action = safeAction(z.object({}), async () => {
+      throw Object.assign(new Error("boom"), { digest: "BAŞKA" });
+    });
+    await expect(action({})).resolves.toMatchObject({ ok: false, error: { code: "INTERNAL" } });
+    spy.mockRestore();
   });
 });
