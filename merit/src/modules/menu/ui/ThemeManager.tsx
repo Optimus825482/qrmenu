@@ -48,7 +48,7 @@ function ThemePreview({ colors }: { colors: Colors }) {
         <span>12,00 EUR</span>
       </div>
       <div className="xp-theme-preview-button" style={{ background: colors.accent, color: colors.textOnAccent }}>
-        Sepete ekle
+        Seçimlere ekle
       </div>
     </div>
   );
