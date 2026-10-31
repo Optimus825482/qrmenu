@@ -90,3 +90,4 @@ Branch review (Opus, e97dad6..b81b947): 0 Critical / 2 Important / Minor. Needs 
 Final fix wave DONE (3a322e6; 507 tests, e2e 24/24). Haiku re-review dispatched.
 Fix wave re-review (Haiku): 1,2,3,5,6 FIXED; 4 PARTIAL — roles.ts:120,262,302,325 hâlâ ctx.session.hotelId. Fix round 2 dispatched (Sonnet). Low: users.ts deny hotelId SISTEM hedefte (P2 backlog).
 Fix round 2 DONE (ed81bec, 508 tests). P1 CLOSED pending final verification run (check + build + full e2e + migrate diff) and user merge decision.
+Final verification (ed81bec): check 508/508, build OK, e2e 65/65, migrate diff empty. P1 READY TO MERGE — kullanıcı onayı bekleniyor.
