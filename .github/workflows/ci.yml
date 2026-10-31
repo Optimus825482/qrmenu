@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: merit_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_test
+      DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/merit_test
+      SESSION_SECRET: ci-session-secret-0123456789abcdef0123456789
+      QR_HMAC_SECRET: ci-qr-hmac-secret-0123456789abcdef012345678
+      PRINT_GATEWAY_KEY: ci-print-gateway-key
+      APP_BASE_URL: http://localhost:3000
+      SEED_ADMIN_PASSWORD: ci-admin-password
+      TZ: Europe/Nicosia
+    defaults:
+      run:
+        working-directory: merit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npm run check
