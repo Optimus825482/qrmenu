@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "playwright-report/**",
     "test-results/**",
+    // Standalone sub-package (print gateway) — has its own tsconfig/eslint scope:
+    "tools/**",
   ]),
 ]);
 
