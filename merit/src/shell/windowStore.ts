@@ -50,16 +50,28 @@ type ShellState = {
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
-  /** Apps the user may see; null = every registered app. */
+  /** Apps the user may see (union over their hotels); null = every registered app. */
   appIds: string[] | null;
+  /**
+   * Screen codes visible per hotel (visibleScreens(ctx, hotelId)); null = no per-hotel limit.
+   * A window bound to a hotel needs its app's screen visible in that hotel.
+   */
+  screensByHotel: Record<string, string[]> | null;
   /** False until the first restore(): the client renders the desktop only after it. */
   ready: boolean;
 };
 
 type ShellActions = {
-  configure(opts: { hotels?: HotelRef[]; appIds?: string[] | null }): void;
+  configure(opts: {
+    hotels?: HotelRef[];
+    appIds?: string[] | null;
+    screensByHotel?: Record<string, string[]> | null;
+  }): void;
   setViewport(w: number, h: number): void;
-  /** New window id; null for an unknown / not-visible app or when MAX_WINDOWS are open. */
+  /**
+   * New window id; null for an unknown / not-visible app, an app not visible in the requested
+   * hotel, or when MAX_WINDOWS are open.
+   */
   open(appId: string, opts?: { hotelId?: string }): string | null;
   close(id: string): void;
   focus(id: string): void;
@@ -135,6 +147,25 @@ function renumberZ(
   return { windows: out, nextZ: Z_BASE + ranked.length };
 }
 
+/** Whether `app` may run in `hotelId`: the hotel is in scope and the app's screen visible there. */
+export function appVisibleInHotel(
+  s: Pick<ShellState, "hotels" | "screensByHotel">,
+  app: Pick<AppDefinition, "screenCode">,
+  hotelId: string,
+): boolean {
+  if (!s.hotels.some((h) => h.id === hotelId)) return false;
+  return s.screensByHotel === null || (s.screensByHotel[hotelId] ?? []).includes(app.screenCode);
+}
+
+/** The hotels a window of `appId` may be bound to (the hotel picker's cards). */
+export function hotelsForApp(
+  s: Pick<ShellState, "hotels" | "screensByHotel">,
+  appId: string,
+): HotelRef[] {
+  const app = getApp(appId);
+  return app ? s.hotels.filter((h) => appVisibleInHotel(s, app, h.id)) : [];
+}
+
 /** The window with the highest z that is not minimized. */
 export function selectActiveId(s: Pick<ShellState, "windows" | "order">): string | undefined {
   let best: WinState | undefined;
@@ -147,18 +178,26 @@ export function selectActiveId(s: Pick<ShellState, "windows" | "order">): string
 
 export function createWindowStore() {
   return createStore<WindowStore>()((set, get) => {
-    const allowed = (appId: string): AppDefinition | undefined => {
+    /** The app, when the user may see it at all and, with `hotelId`, in that hotel. */
+    const allowed = (appId: string, hotelId?: string): AppDefinition | undefined => {
       const app = getApp(appId);
       const { appIds } = get();
-      return app && (appIds === null || appIds.includes(appId)) ? app : undefined;
+      if (!app || (appIds !== null && !appIds.includes(appId))) return undefined;
+      if (hotelId !== undefined && app.needsHotel && !appVisibleInHotel(get(), app, hotelId)) {
+        return undefined;
+      }
+      return app;
     };
 
-    /** Hotel context for a window: an in-scope choice, the only hotel, or none (picker). */
+    /**
+     * Hotel context for a window: a choice where the app is visible, the only such hotel, or none
+     * (picker).
+     */
     const resolveHotel = (app: AppDefinition, wanted?: string): string | undefined => {
       if (!app.needsHotel) return undefined;
-      const { hotels } = get();
-      if (wanted && hotels.some((h) => h.id === wanted)) return wanted;
-      return hotels.length === 1 ? hotels[0].id : undefined;
+      if (wanted && appVisibleInHotel(get(), app, wanted)) return wanted;
+      const choices = hotelsForApp(get(), app.id);
+      return choices.length === 1 ? choices[0].id : undefined;
     };
 
     const titleFor = (app: AppDefinition, hotelId?: string): string => {
@@ -190,12 +229,14 @@ export function createWindowStore() {
       icons: [],
       hotels: [],
       appIds: null,
+      screensByHotel: null,
       ready: false,
 
-      configure({ hotels, appIds }) {
+      configure({ hotels, appIds, screensByHotel }) {
         set({
           ...(hotels !== undefined ? { hotels } : {}),
           ...(appIds !== undefined ? { appIds } : {}),
+          ...(screensByHotel !== undefined ? { screensByHotel } : {}),
         });
       },
 
@@ -213,7 +254,7 @@ export function createWindowStore() {
       },
 
       open(appId, opts = {}) {
-        const app = allowed(appId);
+        const app = allowed(appId, opts.hotelId);
         if (!app || get().order.length >= MAX_WINDOWS) return null;
         compactZ();
         const { viewport: vp, order, cascade, seq, nextZ } = get();
@@ -305,7 +346,7 @@ export function createWindowStore() {
       setHotel(id, hotelId) {
         update(id, (w) => {
           const app = getApp(w.appId);
-          if (!app || !get().hotels.some((h) => h.id === hotelId)) return w;
+          if (!app || !appVisibleInHotel(get(), app, hotelId)) return w;
           return { ...w, hotelId, title: titleFor(app, hotelId) };
         });
       },

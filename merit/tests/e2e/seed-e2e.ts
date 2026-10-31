@@ -75,6 +75,8 @@ async function resetAndSeed(): Promise<void> {
     }
 
     await makeUser("bos.kullanici", "R-OUT", "MR");
+    // Management role without the system screens (CR-SYS): sees Komuta Merkezi only.
+    await makeUser("mudur.mr", "R-OTM", "MR");
   } finally {
     await db.$disconnect();
   }

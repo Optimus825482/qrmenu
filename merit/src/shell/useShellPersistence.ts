@@ -43,6 +43,8 @@ type Options = {
   hotels: HotelRef[];
   /** Ids of the apps the user may see, in display order. */
   appIds: string[];
+  /** Screen codes visible per hotel (windows bound to a hotel are limited by it). */
+  screensByHotel: Record<string, string[]>;
   serverPrefs: ShellPrefs | null;
   confirmSimpleActions: boolean;
 };
@@ -58,6 +60,7 @@ export function useShellPersistence({
   userId,
   hotels,
   appIds,
+  screensByHotel,
   serverPrefs,
   confirmSimpleActions,
 }: Options): void {
@@ -66,8 +69,8 @@ export function useShellPersistence({
   }, [confirmSimpleActions]);
 
   useLayoutEffect(() => {
-    windowStore.getState().configure({ hotels, appIds });
-  }, [hotels, appIds]);
+    windowStore.getState().configure({ hotels, appIds, screensByHotel });
+  }, [hotels, appIds, screensByHotel]);
 
   // Read once per mount: a router.refresh() must not overwrite the live layout with server props.
   const initial = useRef({ serverPrefs, appIds });

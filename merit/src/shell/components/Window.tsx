@@ -20,6 +20,7 @@ import { getApp, type AppDefinition, type AppProps } from "../registry";
 import {
   clampWindowPosition,
   deskHeight,
+  hotelsForApp,
   minSize,
   selectActiveId,
   useWindowStore,
@@ -75,6 +76,14 @@ export function Window({ id, hotels, userName }: Props) {
   const [dirty, setDirty] = useState(false);
 
   const actions = windowStore.getState();
+  // A string selector keeps the snapshot stable between renders (no new array each time).
+  const pickableKey = useWindowStore((s) =>
+    win
+      ? hotelsForApp(s, win.appId)
+          .map((h) => h.id)
+          .join("|")
+      : "",
+  );
   const app = win ? getApp(win.appId) : undefined;
 
   const requestClose = useCallback(async () => {
@@ -105,6 +114,9 @@ export function Window({ id, hotels, userName }: Props) {
 
   const resizable = app.window.resizable !== false;
   const hotel = win.hotelId ? hotels.find((h) => h.id === win.hotelId) : undefined;
+  // Only hotels where this app's screen is visible (store: screensByHotel).
+  const pickableIds = new Set(pickableKey.split("|"));
+  const pickable = hotels.filter((h) => pickableIds.has(h.id));
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || win.maximized || (e.target as Element).closest("button")) return;
@@ -210,7 +222,7 @@ export function Window({ id, hotels, userName }: Props) {
 
   let body: ReactNode;
   if (app.needsHotel && !win.hotelId) {
-    body = <HotelPicker hotels={hotels} onPick={(hotelId) => actions.setHotel(id, hotelId)} />;
+    body = <HotelPicker hotels={pickable} onPick={(hotelId) => actions.setHotel(id, hotelId)} />;
   } else if (app.kind === "component") {
     body = (
       <AppErrorBoundary key={reloadKey}>

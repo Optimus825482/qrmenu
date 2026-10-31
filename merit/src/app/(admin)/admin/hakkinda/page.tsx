@@ -1,28 +1,20 @@
 import "@/shell/theme.css";
 import { redirect } from "next/navigation";
-import { requireUser, type Ctx } from "@/lib/auth";
-import { DomainError } from "@/lib/result";
 import { XpIcon } from "@/shell/icons";
 import pkg from "../../../../../package.json";
+import { currentUser, permits } from "../guard";
 
 // Set by next.config.ts when the build (or dev server) starts.
 const BUILD_DATE = process.env.MERIT_BUILD_DATE ?? "—";
 
 const SHELL_ROLE_KINDS = new Set(["SISTEM", "YONETIM"]);
 
-async function currentUser(): Promise<Ctx | null> {
-  try {
-    return await requireUser();
-  } catch (error) {
-    if (error instanceof DomainError && error.code === "UNAUTHORIZED") return null;
-    throw error;
-  }
-}
-
 /** Content of the "Hakkında" window: an iframe-kind app (same-origin page inside the shell). */
 export default async function AboutPage() {
   const ctx = await currentUser();
   if (!ctx) redirect("/giris?next=%2Fadmin%2Fhakkinda");
+  // Same screen as the app registry entry (core.hakkinda → CR-SYS); the denial is audited.
+  if (!(await permits(ctx, "CR-SYS", "V"))) redirect("/admin");
   if (!SHELL_ROLE_KINDS.has(ctx.user.roleKind)) redirect("/secim");
 
   return (

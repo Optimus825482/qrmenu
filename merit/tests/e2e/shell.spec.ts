@@ -196,3 +196,23 @@ test("Başlat öğesini masaüstüne sürükle → onay → kısayol geri gelir"
   await dialog.getByRole("button", { name: "Evet" }).click();
   await expect(icon(page, "Sistem Ayarları")).toBeVisible();
 });
+
+test("mudur.mr (R-OTM): yetkisiz simgeler görünmez; /admin/hakkinda → /admin", async ({ page }) => {
+  await login(page, "mudur.mr");
+  await expect(page).toHaveURL(/\/admin(#.*)?$/);
+  await expect(desktop(page)).toBeVisible();
+  await expect(icon(page, "Komuta Merkezi")).toBeVisible();
+  await expect(icon(page, "Sistem Ayarları")).toHaveCount(0);
+  await expect(icon(page, "Hakkında")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "başlat" }).click();
+  const menu = page.getByRole("menu", { name: "Başlat menüsü" });
+  await expect(menu.getByRole("menuitem", { name: "Komuta Merkezi", exact: true })).toBeVisible();
+  await expect(menu.getByRole("menuitem", { name: "Sistem Ayarları", exact: true })).toHaveCount(0);
+  await expect(menu.getByRole("menuitem", { name: "Hakkında", exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/admin/hakkinda");
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(desktop(page)).toBeVisible();
+});

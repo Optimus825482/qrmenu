@@ -100,7 +100,44 @@ test("Hakkında: iframe uygulaması 'Merit OS' sayfasını gösterir", async ({ 
   await expect(frame.getByText("Bu pencere iframe uygulama sözleşmesinin örneğidir.")).toBeVisible();
   await expect(frame.getByText("0.1.0", { exact: true })).toBeVisible();
 
+  // Framing protection (next.config.ts headers) still lets the shell frame its own pages.
+  const response = await page.request.get("/admin/hakkinda");
+  expect(response.headers()["x-frame-options"]).toBe("SAMEORIGIN");
+  expect(response.headers()["content-security-policy"]).toContain("frame-ancestors 'self'");
+
   expect(errors).toEqual([]);
+});
+
+test("tek SSE bağlantısı: görev çubuğu ve iki Komuta Merkezi penceresi aynı EventSource'u paylaşır", async ({
+  page,
+}) => {
+  const streams: string[] = [];
+  page.on("request", (r) => {
+    if (r.method() === "GET" && new URL(r.url()).pathname === "/api/sse") streams.push(r.url());
+  });
+  await openAdmin(page);
+  await desktop(page).getByRole("button", { name: "Komuta Merkezi", exact: true }).dblclick();
+  await openFromStart(page, "Komuta Merkezi");
+  const windows = page.getByRole("region", { name: "Komuta Merkezi", exact: true });
+  await expect(windows).toHaveCount(2);
+  await expect(windows.nth(0).getByText("çevrimdışı")).toBeHidden();
+  await expect(windows.nth(1).getByText("çevrimdışı")).toBeHidden();
+
+  const id = await adminId();
+  await pgNotify({ type: "notification.created", userIds: [id], at: new Date().toISOString() });
+  for (const i of [0, 1]) {
+    await expect(
+      windows.nth(i).getByRole("list", { name: "Canlı Akış" }).getByText("notification.created"),
+    ).toBeVisible({ timeout: 3000 });
+  }
+  expect(streams).toHaveLength(1);
+
+  // Closing every window keeps the taskbar's subscription: still the same single stream.
+  await windows.nth(1).getByRole("button", { name: "Kapat" }).click();
+  await windows.nth(0).getByRole("button", { name: "Kapat" }).click();
+  await expect(windows).toHaveCount(0);
+  await page.waitForTimeout(500);
+  expect(streams).toHaveLength(1);
 });
 
 test("/admin/hakkinda: oturumsuz → giriş; yönetim rolü dışı → /secim", async ({ page }) => {

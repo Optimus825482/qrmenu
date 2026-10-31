@@ -1,33 +1,24 @@
 import "@/shell/theme.css";
 import "@/shell/mobile.css";
 import { redirect } from "next/navigation";
-import { requireUser, type Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { visibleScreens } from "@/lib/rbac";
-import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { loadShellPrefs } from "@/shell/prefsAction";
+import { currentUser, permits } from "./guard";
 import { ShellClient } from "./ShellClient";
 
 /** The admin desktop is for system and management roles only. */
 const SHELL_ROLE_KINDS = new Set(["SISTEM", "YONETIM"]);
 
-async function currentUser(): Promise<Ctx | null> {
-  try {
-    return await requireUser();
-  } catch (error) {
-    if (error instanceof DomainError && error.code === "UNAUTHORIZED") return null;
-    throw error;
-  }
-}
-
 export default async function AdminPage() {
   const ctx = await currentUser();
   if (!ctx) redirect("/giris?next=%2Fadmin");
+  // The desktop opens on Komuta Merkezi: without it the user has no business here (audited).
+  if (!(await permits(ctx, "CR-KOM", "V"))) redirect("/secim");
   if (!SHELL_ROLE_KINDS.has(ctx.user.roleKind)) redirect("/secim");
 
-  const [screens, hotels, prefs, confirmSimpleActions, mobileDefinitions] = await Promise.all([
-    visibleScreens(ctx),
+  const [hotels, prefs, confirmSimpleActions, mobileDefinitions] = await Promise.all([
     prisma.hotel.findMany({
       where: { id: { in: ctx.hotelIds }, isActive: true },
       select: { id: true, name: true, code: true },
@@ -37,12 +28,17 @@ export default async function AdminPage() {
     getSetting("shell.confirmSimpleActions", ctx.session.hotelId),
     getSetting("shell.mobileDefinitions", ctx.session.hotelId),
   ]);
+  // Permissions and modules are per hotel: the desktop shows the union, a window bound to a hotel
+  // only what that hotel allows.
+  const screensByHotel: Record<string, string[]> = Object.fromEntries(
+    await Promise.all(hotels.map(async (h) => [h.id, await visibleScreens(ctx, h.id)] as const)),
+  );
 
   return (
     <ShellClient
       user={{ id: ctx.user.id, fullName: ctx.user.fullName }}
       hotels={hotels}
-      screens={screens}
+      screensByHotel={screensByHotel}
       prefs={prefs}
       confirmSimpleActions={confirmSimpleActions}
       mobileDefinitions={mobileDefinitions}

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { registerApp, type AppDefinition } from "@/shell/registry";
 import {
   createWindowStore,
+  hotelsForApp,
   MAX_WINDOWS,
   MIN_H,
   MIN_W,
@@ -30,6 +31,7 @@ registerApp(app("t.a"));
 registerApp(app("t.b"));
 registerApp(app("t.min", { window: { w: 600, h: 500, minW: 420, minH: 300 } }));
 registerApp(app("t.otel", { title: "Otel Uyg", needsHotel: true }));
+registerApp(app("t.minibar", { title: "Minibar", needsHotel: true, screenCode: "MB-KAT" }));
 
 const TWO_HOTELS = [
   { id: "h1", name: "Merit Royal" },
@@ -204,6 +206,66 @@ describe("windowStore", () => {
     expect(s().icons.map((i) => i.appId)).toEqual(["t.a"]);
     expect(s().order).toEqual(["w1", "w3"]);
     expect(s().windows.w3).toMatchObject({ hotelId: undefined, title: "Otel Uyg" });
+  });
+
+  describe("otel bazlı görünürlük (screensByHotel)", () => {
+    const THREE_HOTELS = [...TWO_HOTELS, { id: "h3", name: "Merit Royal Diamond" }];
+    // MB-KAT only in h2; CR-KOM everywhere.
+    const byHotel = { h1: ["CR-KOM"], h2: ["CR-KOM", "MB-KAT"], h3: ["CR-KOM"] };
+
+    beforeEach(() => {
+      s().configure({ hotels: THREE_HOTELS, screensByHotel: byHotel });
+    });
+
+    it("hotelsForApp yalnız ekranın görünür olduğu otelleri verir", () => {
+      expect(hotelsForApp(s(), "t.minibar").map((h) => h.id)).toEqual(["h2"]);
+      expect(hotelsForApp(s(), "t.otel").map((h) => h.id)).toEqual(["h1", "h2", "h3"]);
+      expect(hotelsForApp(s(), "yok")).toEqual([]);
+    });
+
+    it("open: ekranın görünmediği otelle null; tek uygun otel otomatik seçilir", () => {
+      expect(s().open("t.minibar", { hotelId: "h1" })).toBeNull();
+      const w = open("t.minibar");
+      expect(s().windows[w]).toMatchObject({
+        hotelId: "h2",
+        title: "Minibar · Merit Royal Premium",
+      });
+      const k = open("t.otel");
+      expect(s().windows[k].hotelId).toBeUndefined(); // three choices → picker
+    });
+
+    it("setHotel ekranın görünmediği oteli reddeder", () => {
+      s().configure({ screensByHotel: { h1: ["CR-KOM"], h2: ["MB-KAT"], h3: ["MB-KAT"] } });
+      const w = open("t.minibar");
+      expect(s().windows[w].hotelId).toBeUndefined();
+      s().setHotel(w, "h1");
+      expect(s().windows[w].hotelId).toBeUndefined();
+      s().setHotel(w, "h3");
+      expect(s().windows[w].hotelId).toBe("h3");
+    });
+
+    it("restore: kayıtlı otelde görünmeyen uygulamanın oteli düşer (tek uygun otele bağlanır)", () => {
+      const base = { x: 0, y: 0, w: 500, h: 400, minimized: false, maximized: false, z: 300 };
+      s().restore({
+        wallpaper: "bliss",
+        icons: [],
+        windows: [
+          { ...base, id: "w1", appId: "t.minibar", hotelId: "h1", title: "Minibar · Merit Royal" },
+          { ...base, id: "w2", appId: "t.otel", hotelId: "h3", title: "Otel Uyg · X" },
+        ],
+      });
+      expect(s().windows.w1.hotelId).toBe("h2");
+      expect(s().windows.w2).toMatchObject({
+        hotelId: "h3",
+        title: "Otel Uyg · Merit Royal Diamond",
+      });
+    });
+
+    it("screensByHotel null iken yalnız otel kapsamı belirleyicidir", () => {
+      s().configure({ screensByHotel: null });
+      expect(hotelsForApp(s(), "t.minibar")).toHaveLength(3);
+      expect(s().open("t.minibar", { hotelId: "h1" })).not.toBeNull();
+    });
   });
 
   it("simgeler: ekle (tekrarsız), taşı (0'a kırp), kaldır, hizala ızgaraya dizer", () => {

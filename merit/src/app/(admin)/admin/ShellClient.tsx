@@ -21,8 +21,8 @@ registerCoreApps();
 export type ShellClientProps = {
   user: { id: string; fullName: string };
   hotels: HotelInfo[];
-  /** visibleScreens(ctx): screen codes the user may view. */
-  screens: string[];
+  /** visibleScreens(ctx, hotelId) for every hotel in scope: screen codes the user may view there. */
+  screensByHotel: Record<string, string[]>;
   prefs: ShellPrefs | null;
   confirmSimpleActions: boolean;
   /** Setting shell.mobileDefinitions: default of the mobile "Tanımlamaları mobilde aç" switch. */
@@ -36,20 +36,23 @@ export type ShellClientProps = {
 export function ShellClient({
   user,
   hotels,
-  screens,
+  screensByHotel,
   prefs,
   confirmSimpleActions,
   mobileDefinitions,
 }: ShellClientProps) {
-  const apps = useMemo(
-    () => getApps().filter((a) => screens.includes(a.screenCode)),
-    [screens],
-  );
+  // Desktop and Start menu show the union over the user's hotels; windows bound to a hotel are
+  // limited per hotel by the store (screensByHotel).
+  const apps = useMemo(() => {
+    const visible = new Set(Object.values(screensByHotel).flat());
+    return getApps().filter((a) => visible.has(a.screenCode));
+  }, [screensByHotel]);
   const appIds = useMemo(() => apps.map((a) => a.id), [apps]);
   useShellPersistence({
     userId: user.id,
     hotels,
     appIds,
+    screensByHotel,
     serverPrefs: prefs,
     confirmSimpleActions,
   });
@@ -70,8 +73,8 @@ export function ShellClient({
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
 
-  // Same persistence for both shells (wallpaper, layout); only one shell is mounted at a time, so
-  // there is one SSE connection either way.
+  // Same persistence for both shells (wallpaper, layout). Both share the tab's one SSE connection
+  // (sseStore), which survives a switch between them.
   if (mode === "mobile") {
     return ready ? <MobileShell user={user} mobileDefinitions={mobileDefinitions} /> : null;
   }
