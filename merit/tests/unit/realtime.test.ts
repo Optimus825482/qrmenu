@@ -28,6 +28,7 @@ const evt = (patch: Partial<MeritEvent> = {}): MeritEvent => ({
 });
 const scope = (patch: Partial<Parameters<typeof matchesScope>[1]> = {}) => ({
   userId: "u1",
+  sessionId: "s1",
   hotelIds: ["h1"],
   roleKind: "OUTLET" as const,
   ...patch,
@@ -187,6 +188,32 @@ describe("publish / subscribe (gerçek Postgres)", () => {
     expect(good).toHaveBeenCalledTimes(1);
   });
 
+  it("sınırı aşan olayı anlaşılır bir hatayla reddeder (pg'nin ham hatası sızmaz)", async () => {
+    const userIds = Array.from({ length: 400 }, (_, i) => `ckxxxxxxxxxxxxxxxxxxxxx${i}`);
+    await expect(publish({ type: "test.huge", userIds })).rejects.toMatchObject({
+      name: "DomainError",
+      code: "INTERNAL",
+      message: "Gerçek zaman olayı 8000 bayt sınırını aşıyor",
+    });
+  });
+
+  it("geçersiz biçimli olaylar (null, dizi, kötü type) yoksayılır, abone çağrılmaz", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const cb = vi.fn();
+    const off = subscribe(() => true, cb);
+    for (const raw of ["null", "[1]", '"x"', '{"type":"a\\nb"}', '{"type":5}', '{"type":""}']) {
+      await pgQuery(`select pg_notify('merit_events', '${raw}')`);
+    }
+    await publish({ type: "test.ok", hotelId: "x" }); // the listener is still alive afterwards
+    await sleep(300);
+    off();
+    const calls = warn.mock.calls.length;
+    warn.mockRestore();
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb.mock.calls[0][0].type).toBe("test.ok");
+    expect(calls).toBe(6);
+  });
+
   it("bağlantı koparsa geri çekilmeyle yeniden bağlanır ve olaylar yine gelir", async () => {
     await pgQuery(
       "select pg_terminate_backend(pid) from pg_stat_activity where query = 'LISTEN merit_events'",
@@ -267,6 +294,19 @@ describe("createSseStream", () => {
     for (let i = 0; i < 20 && !done; i++) done = (await reader.read()).done;
     expect(done).toBe(true);
     clear.mockRestore();
+  });
+
+  it("azami ömür dolunca reconnect olayı yazar ve akışı kapatır", async () => {
+    const base = listenerCount();
+    const reader = createSseStream(scope(), {
+      signal: new AbortController().signal,
+      maxLifetimeMs: 50,
+    }).getReader();
+    expect(listenerCount()).toBe(base + 1);
+    const got = await readUntil(reader, "event: reconnect\ndata: {}\n\n");
+    expect(got).toContain("event: hello");
+    expect((await reader.read()).done).toBe(true);
+    expect(listenerCount()).toBe(base);
   });
 
   it("zaten abort edilmiş sinyalde abonelik hiç açılmaz", () => {

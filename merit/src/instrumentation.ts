@@ -8,9 +8,18 @@ export async function register(): Promise<void> {
     console.warn("MERIT_DISABLE_JOBS production ortamında yoksayıldı");
   }
 
-  // Dynamic imports: the edge bundle must never pull in pg.
-  const { getBoss, registerJobs } = await import("@/lib/jobs");
-  await registerJobs(await getBoss());
-  const { startRealtimeListener } = await import("@/lib/realtime");
-  await startRealtimeListener();
+  // Dynamic imports: the edge bundle must never pull in pg. The listener goes first and each
+  // step is isolated, so a pg-boss failure cannot keep realtime from starting (and vice versa).
+  try {
+    const { startRealtimeListener } = await import("@/lib/realtime");
+    await startRealtimeListener();
+  } catch (err) {
+    console.error("[instrumentation] gerçek zaman dinleyicisi başlatılamadı", err);
+  }
+  try {
+    const { getBoss, registerJobs } = await import("@/lib/jobs");
+    await registerJobs(await getBoss());
+  } catch (err) {
+    console.error("[instrumentation] işler başlatılamadı", err);
+  }
 }

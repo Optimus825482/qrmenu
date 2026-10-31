@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { type MeritEvent, SSE_EVENT_TYPES } from "@/lib/realtime-events";
 
@@ -16,6 +17,7 @@ export function useSse(
   onEvent: (e: MeritEvent) => void,
   types?: string[],
 ): { status: SseStatus } {
+  const router = useRouter();
   const [status, setStatus] = useState<SseStatus>("connecting");
   const handler = useRef(onEvent);
   useEffect(() => {
@@ -25,7 +27,10 @@ export function useSse(
   const typeKey = JSON.stringify(types ?? SSE_EVENT_TYPES);
 
   useEffect(() => {
-    const eventTypes: string[] = JSON.parse(typeKey);
+    // session.closed / reconnect are control events the hook always handles itself.
+    const eventTypes: string[] = [
+      ...new Set([...JSON.parse(typeKey), "session.closed", "reconnect"]),
+    ];
     let source: EventSource | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let delay = MIN_DELAY_MS;
@@ -39,6 +44,21 @@ export function useSse(
       }
     };
 
+    const onControl = (msg: MessageEvent<string>) => {
+      if (msg.type === "session.closed") {
+        // The session ended server-side: stop reconnecting and go to the login page.
+        disposed = true;
+        source?.close();
+        setStatus("closed");
+        router.replace("/giris");
+      } else {
+        // The server recycled the stream (max lifetime): reconnect right away.
+        source?.close();
+        delay = MIN_DELAY_MS;
+        connect();
+      }
+    };
+
     const connect = () => {
       if (disposed) return;
       setStatus("connecting");
@@ -49,7 +69,12 @@ export function useSse(
         setStatus("open");
       };
       es.addEventListener("message", onMessage as EventListener);
-      for (const type of eventTypes) es.addEventListener(type, onMessage as EventListener);
+      for (const type of eventTypes) {
+        if (type === "session.closed" || type === "reconnect") {
+          es.addEventListener(type, onControl as EventListener);
+        }
+        if (type !== "reconnect") es.addEventListener(type, onMessage as EventListener);
+      }
       es.onerror = () => {
         // Take over reconnecting from the browser so the delay is ours (and 401s back off too).
         es.close();
@@ -67,7 +92,7 @@ export function useSse(
       source?.close();
       setStatus("closed");
     };
-  }, [typeKey]);
+  }, [typeKey, router]);
 
   return { status };
 }

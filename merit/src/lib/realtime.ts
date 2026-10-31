@@ -2,12 +2,15 @@ import { Client } from "pg";
 import type { Prisma, RoleKind } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-import { type MeritEvent, REALTIME_CHANNEL } from "@/lib/realtime-events";
+import { EVENT_TYPE_RE, type MeritEvent, REALTIME_CHANNEL } from "@/lib/realtime-events";
+import { DomainError } from "@/lib/result";
 
 export type { MeritEvent } from "@/lib/realtime-events";
 
 /** pg_notify payloads are limited to 8000 bytes; stay safely below. */
 const MAX_PAYLOAD_BYTES = 7500;
+/** Hard ceiling after truncation (pg_notify rejects payloads of 8000 bytes or more). */
+const HARD_LIMIT_BYTES = 7900;
 const BACKOFF_MS = [1000, 2000, 4000, 8000];
 
 type Subscriber = { filter: (e: MeritEvent) => boolean; cb: (e: MeritEvent) => void };
@@ -41,6 +44,7 @@ function state(): RealtimeState {
 
 export type Scope = {
   userId: string;
+  sessionId: string;
   hotelIds: string[];
   outletId?: string;
   roleKind: RoleKind;
@@ -82,6 +86,9 @@ export async function publish(
     delete full.payload;
     json = JSON.stringify(full);
   }
+  if (Buffer.byteLength(json) > HARD_LIMIT_BYTES) {
+    throw new DomainError("INTERNAL", "Gerçek zaman olayı 8000 bayt sınırını aşıyor");
+  }
   const db = tx ?? prisma;
   await db.$executeRaw`SELECT pg_notify(${REALTIME_CHANNEL}, ${json})`;
 }
@@ -109,7 +116,18 @@ function dispatch(raw: string | undefined): void {
   if (!raw) return;
   let event: MeritEvent;
   try {
-    event = JSON.parse(raw) as MeritEvent;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      typeof (parsed as { type?: unknown }).type !== "string" ||
+      !EVENT_TYPE_RE.test((parsed as { type: string }).type)
+    ) {
+      console.warn("[realtime] geçersiz olay yoksayıldı", raw.slice(0, 200));
+      return;
+    }
+    event = parsed as MeritEvent;
   } catch {
     console.error("[realtime] çözülemeyen olay", raw.slice(0, 200));
     return;
@@ -137,7 +155,12 @@ function scheduleReconnect(): void {
 async function connect(): Promise<void> {
   const st = state();
   if (st.stopped) return;
-  const client = new Client({ connectionString: env.DATABASE_URL });
+  const client = new Client({
+    connectionString: env.DATABASE_URL,
+    // A hung connect must fail (-> scheduleReconnect), and dead TCP peers must be noticed.
+    connectionTimeoutMillis: 5000,
+    keepAlive: true,
+  });
   st.client = client;
 
   // 'error' and 'end' both fire for one failure; only the current client may trigger recovery.

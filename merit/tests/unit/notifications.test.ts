@@ -118,6 +118,28 @@ describe("notify", () => {
     expect(received).toHaveLength(0);
   });
 
+  it("250 alıcı: 100/100/50 kişilik 3 olaya bölünür, 250 satır yazılır", async () => {
+    const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-GAR" } });
+    await testDb.user.createMany({
+      data: Array.from({ length: 250 }, (_, i) => ({
+        username: `bulk${i}`,
+        passwordHash: "x",
+        fullName: `Bulk ${i}`,
+        roleId: role.id,
+      })),
+    });
+    const ids = (await testDb.user.findMany({ select: { id: true } })).map((u) => u.id);
+    expect(ids).toHaveLength(250);
+
+    expect(await notify({ ...input, recipients: ids })).toBe(250);
+
+    expect(await testDb.notification.count()).toBe(250);
+    await sleep(500);
+    expect(received.map((e) => e.userIds?.length).sort()).toEqual([100, 100, 50]);
+    expect(received.every((e) => !e.payloadTruncated && e.payload !== undefined)).toBe(true);
+    expect(received.flatMap((e) => e.userIds ?? []).sort()).toEqual([...ids].sort());
+  });
+
   it("tx verilirse satırlar ve olay transaction'la birlikte geri alınır", async () => {
     const a = await makeUser({ username: "tx1", roleCode: "R-GAR", hotelCode: "MR" });
     await expect(

@@ -17,8 +17,13 @@ export type MeritEvent = {
 
 export const REALTIME_CHANNEL = "merit_events";
 
+/** Event type names are written into SSE `event:` lines, so they are restricted to a safe alphabet. */
+export const EVENT_TYPE_RE = /^[\w.:-]{1,64}$/;
+
 /** Event types the shell listens to by default. Later modules append their own. */
 export const SSE_EVENT_TYPES: readonly string[] = [
   "notification.created",
   "settings.changed",
+  "session.closed",
+  "reconnect",
 ];

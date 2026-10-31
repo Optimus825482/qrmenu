@@ -2,6 +2,8 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 
+const RECIPIENTS_PER_EVENT = 100;
+
 export type NotifyInput = {
   recipients: string[] | { hotelId: string; roleCodes: string[] };
   type: string;
@@ -54,20 +56,24 @@ export async function notify(input: NotifyInput, tx?: Prisma.TransactionClient):
       refId: input.refId,
     })),
   });
-  await publish(
-    {
-      type: "notification.created",
-      userIds,
-      hotelId,
-      payload: {
-        type: input.type,
-        title: input.title,
-        body: input.body,
-        refType: input.refType,
-        refId: input.refId,
+  const payload = {
+    type: input.type,
+    title: input.title,
+    body: input.body,
+    refType: input.refType,
+    refId: input.refId,
+  };
+  // pg_notify is limited to 8000 bytes, so large fan-outs are announced in several events.
+  for (let i = 0; i < userIds.length; i += RECIPIENTS_PER_EVENT) {
+    await publish(
+      {
+        type: "notification.created",
+        userIds: userIds.slice(i, i + RECIPIENTS_PER_EVENT),
+        hotelId,
+        payload,
       },
-    },
-    tx,
-  );
+      tx,
+    );
+  }
   return count;
 }

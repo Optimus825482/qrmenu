@@ -1,5 +1,6 @@
 import type { LogoutReason, SessionStatus, UserSession } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 // Interim source of the session.* settings; Task 9 replaces sessionSetting() with the real service.
 import { DEFAULT_SETTINGS } from "../../../../prisma/seed/settings";
@@ -149,5 +150,15 @@ export async function closeSession(
       entityId: id,
       after: { reason, sessionUserId: session.userId },
     });
+    // Ends this session's SSE stream (on commit); the user's other sessions are unaffected.
+    await publish(
+      {
+        type: "session.closed",
+        userIds: [session.userId],
+        hotelId: session.hotelId,
+        payload: { sessionId: id },
+      },
+      tx,
+    );
   });
 }

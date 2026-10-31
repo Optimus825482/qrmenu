@@ -23,6 +23,7 @@ export async function GET(request: Request): Promise<Response> {
   const stream = createSseStream(
     {
       userId: ctx.user.id,
+      sessionId: ctx.session.id,
       hotelIds: ctx.hotelIds,
       outletId: ctx.session.outletId,
       roleKind: ctx.user.roleKind,
