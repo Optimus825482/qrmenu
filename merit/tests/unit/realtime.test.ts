@@ -110,7 +110,9 @@ describe("publish / subscribe (gerçek Postgres)", () => {
     await startRealtimeListener();
     expect(isListening()).toBe(true);
     const { rows } = await pgQuery(
-      "select count(*)::int as n from pg_stat_activity where query = 'LISTEN merit_events'",
+      // Scoped to this database: a dev server listening on the dev database must not count.
+      "select count(*)::int as n from pg_stat_activity " +
+        "where query = 'LISTEN merit_events' and datname = current_database()",
     );
     expect(rows[0].n).toBe(1);
   });

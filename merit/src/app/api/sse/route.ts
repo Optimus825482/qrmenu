@@ -40,3 +40,21 @@ export async function GET(request: Request): Promise<Response> {
     },
   });
 }
+
+/**
+ * Session probe for the client after a dropped stream (sseStore): 204 while the session is valid,
+ * 401 once it is not, without opening a stream. Lets the tab leave for /giris when it missed the
+ * `session.closed` frame.
+ */
+export async function HEAD(): Promise<Response> {
+  const headers = { "Cache-Control": "no-store" };
+  try {
+    await requireUser();
+    return new Response(null, { status: 204, headers });
+  } catch (err) {
+    if (err instanceof DomainError && err.code === "UNAUTHORIZED") {
+      return new Response(null, { status: 401, headers });
+    }
+    throw err;
+  }
+}

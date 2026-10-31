@@ -36,8 +36,8 @@ const SSE_LABEL: Record<SseStatus, string> = {
 
 /**
  * Android shell for narrow screens: a Material-style app bar and bottom tabs (İzleme, Raporlar,
- * Bildirimler, Ayarlar, plus Tanımlar while the session switch is on). Owns the one SSE
- * connection of the mounted shell and fans events out to the tabs.
+ * Bildirimler, Ayarlar, plus Tanımlar while the session switch is on). Subscribes once to the
+ * tab's shared SSE connection (sseStore) and fans events out to the tabs.
  */
 export function MobileShell({ user, mobileDefinitions }: Props) {
   const [active, setActive] = useState<MobileTabId>("izleme");
