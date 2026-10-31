@@ -14,22 +14,6 @@
         "3001"
       ],
       "port": 3001
-    },
-    {
-      "name": "ilerleme",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "--yes",
-        "http-server@14.1.1",
-        ".",
-        "-a",
-        "127.0.0.1",
-        "-p",
-        "3002",
-        "-c-1",
-        "--no-dotfiles"
-      ],
-      "port": 3002
     }
   ]
 }

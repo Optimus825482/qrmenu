@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 14:25",
-  headline: "P0 iskeleti main'e birleştirildi. Sırada P1 (çekirdek tanımlar ve online kullanıcı takibi).",
+  updatedAt: "31.10.2026 14:22",
+  headline: "P1 uygulaması başladı (dal p1/cekirdek); P5 planı paralel oturumda yazılıyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -43,7 +43,7 @@ window.ILERLEME = {
       code: "P1", title: "Çekirdek tanımlar ve oturum takibi", weight: 12,
       summary: "Otel/kat/oda/oda tipi/outlet/masa/kullanıcı/rol/yetki pencereleri, kurulum rehberi, online kullanıcılar, denetim günlüğü, ayarlar",
       tasks: [
-        { title: "T1 Ortak yönetim bileşenleri: XP veri tablosu, form penceresi, CRUD action deseni", status: "pending" },
+        { title: "T1 Ortak yönetim bileşenleri: XP veri tablosu, form penceresi, CRUD action deseni", status: "active" },
         { title: "T2 Otel, kat ve oda tipi pencereleri", status: "pending" },
         { title: "T3 Oda penceresi (toplu oda ekleme, oda tipi atama, misafir mesajı)", status: "pending" },
         { title: "T4 Outlet ve masa pencereleri; otel bazlı modül aç/kapa", status: "pending" },
@@ -133,6 +133,7 @@ window.ILERLEME = {
     { at: "31.10 14:00", text: "Denetim Masası ve PWA 'uygulama olarak yükle' eklendi." },
     { at: "31.10 14:05", text: "P0 main'e birleştirildi (44 commit, 274 birim + 36 e2e test)." },
     { at: "31.10 14:15", text: "İlerleme sayfası oluşturuldu." },
-    { at: "31.10 14:25", text: "P1 planı yazıldı (docs/superpowers/plans/2026-10-31-p1-cekirdek.md); yürütme onayı bekleniyor." }
+    { at: "31.10 14:25", text: "P1 planı yazıldı (docs/superpowers/plans/2026-10-31-p1-cekirdek.md)." },
+    { at: "31.10 14:22", text: "P1 uygulaması subagent-driven başladı; P5 planı paralel oturumda." }
   ]
 };
