@@ -88,13 +88,15 @@ describe("seed (gerçek test DB)", () => {
     expect((await permission("R-SGF", "QS-KUY"))?.canApprove).toBe(true);
   });
 
-  it("CORE ekranları: CR-RAP her role V,R; CR-KOM yalnız SISTEM/YONETIM; CR-KUL yalnız R-SYS ve R-ITT", async () => {
+  it("CORE ekranları: CR-RAP her role V,R; CR-KOM yalnız SISTEM/YONETIM; CR-KUL R-SYS, R-ITT (V,R) ve yönetim rolleri (V,O,D)", async () => {
     await runSeed(db);
     expect(await permission("R-HKS", "CR-RAP")).toMatchObject({ canView: true, canReport: true, canCreate: false });
     expect(await permission("R-OTM", "CR-KOM")).toMatchObject({ canView: true, canReport: true });
     expect(await permission("R-GAR", "CR-KOM")).toBeNull();
     expect(await permission("R-ITT", "CR-KUL")).toMatchObject({ canView: true, canReport: true, canCreate: false });
-    expect(await permission("R-OTM", "CR-KUL")).toBeNull();
+    expect(await permission("R-OTM", "CR-KUL")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: false, canReport: false });
+    expect(await permission("R-FBM", "CR-KUL")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: false });
+    expect(await permission("R-GAR", "CR-KUL")).toBeNull();
   });
 
   it("tanım ekranları CR-TAN/CR-REH: R-SYS tam, R-ITT yalnız V, yönetim rolleri V,O,D; diğer rollerde satır yok", async () => {

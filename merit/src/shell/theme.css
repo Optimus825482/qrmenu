@@ -1707,3 +1707,72 @@
 .xp-candidate select {
   min-height: 110px;
 }
+
+/* ---- Yetki Matrisi ------------------------------------------------------------------------ */
+
+.xp-matrix {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 4px;
+}
+
+.xp-matrix-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 4px 6px 0;
+}
+
+.xp-matrix-modules .xp-module-switch[data-inherited="true"] {
+  opacity: 0.55;
+}
+
+.xp-matrix-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 6px 6px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-matrix-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.xp-matrix-grid th,
+.xp-matrix-grid td {
+  padding: 1px 6px;
+  border-bottom: 1px solid var(--xp-body-edge);
+  text-align: center;
+}
+
+.xp-matrix-grid thead th {
+  position: sticky;
+  top: 0;
+  background: var(--xp-body);
+}
+
+.xp-matrix-grid tbody th {
+  text-align: left;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
+.xp-matrix-name {
+  color: var(--xp-muted);
+}
+
+/* In a hotel scope, inherited cells are faded and hotel overrides are bold. */
+.xp-matrix-grid tr[data-inherited="true"] td,
+.xp-matrix-grid tr[data-inherited="true"] th {
+  opacity: 0.55;
+}
+
+.xp-matrix-grid tr[data-inherited="false"] th,
+.xp-matrix-grid tr[data-inherited="false"] td {
+  font-weight: bold;
+}

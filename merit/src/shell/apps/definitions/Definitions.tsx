@@ -5,6 +5,8 @@ import { XpIcon } from "../../icons";
 import type { AppProps } from "../../registry";
 import { FloorsPanel } from "./panels/FloorsPanel";
 import { HotelPanel } from "./panels/HotelPanel";
+import { PermissionMatrixPanel } from "./panels/PermissionMatrixPanel";
+import { RolesPanel } from "./panels/RolesPanel";
 import { OutletsPanel } from "./panels/OutletsPanel";
 import { MembersPanel } from "./panels/MembersPanel";
 import { RoomsPanel } from "./panels/RoomsPanel";
@@ -31,8 +33,8 @@ export const DEFINITION_NODES: readonly NodeDef[] = [
   { id: "masalar", label: "Masalar", level: 2 },
   { id: "kullanicilar", label: "Kullanıcılar", level: 1 },
   { id: "ekipler", label: "Ekipler", level: 1 },
-  { id: "roller", label: "Roller", level: 1, task: 6 },
-  { id: "yetki-matrisi", label: "Yetki Matrisi", level: 1, task: 6 },
+  { id: "roller", label: "Roller", level: 1 },
+  { id: "yetki-matrisi", label: "Yetki Matrisi", level: 1 },
 ];
 
 const DEFAULT_PANEL = "otel";
@@ -94,6 +96,10 @@ export function Definitions({ hotelId, initialPanel, setStatus }: AppProps) {
     body = <UsersPanel hotelId={hotelId} setStatus={setStatus} />;
   } else if (node.id === "ekipler") {
     body = <MembersPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "roller") {
+    body = <RolesPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "yetki-matrisi") {
+    body = <PermissionMatrixPanel hotelId={hotelId} setStatus={setStatus} />;
   } else if (node.id === "masalar") {
     body = <TablesPanel hotelId={hotelId} setStatus={setStatus} />;
   } else {

@@ -84,6 +84,10 @@ export type DefinitionChange = {
   entity: string;
   id: string;
   op: "create" | "update" | "delete";
+  /** Extra payload fields (e.g. `roleId` of a permission change). */
+  extra?: Record<string, unknown>;
+  /** Deliver to every role kind (default: SISTEM/YONETIM only), e.g. permission changes reach affected users. */
+  allRoles?: boolean;
 };
 
 /** Tells open admin lists to refresh; delivered after `tx` commits, to SISTEM/YONETIM sessions. */
@@ -95,8 +99,8 @@ export async function publishDefinition(
     {
       type: "definition.changed",
       hotelId: change.hotelId,
-      roleKinds: ["SISTEM", "YONETIM"],
-      payload: { entity: change.entity, id: change.id, op: change.op },
+      roleKinds: change.allRoles ? undefined : ["SISTEM", "YONETIM"],
+      payload: { ...change.extra, entity: change.entity, id: change.id, op: change.op },
     },
     tx,
   );

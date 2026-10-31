@@ -58,7 +58,7 @@ const row = (win: Locator, text: string) => win.getByRole("row").filter({ hasTex
 const MR = { name: "Merit Royal", code: "MR" };
 const MRP = { name: "Merit Royal Premium", code: "MRP" };
 
-test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve henüz yapılmayan bölümler", async ({
+test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve Roller listesi", async ({
   page,
 }) => {
   const errors = trackErrors(page);
@@ -108,9 +108,9 @@ test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve henüz yapılmay
   await off.getByRole("button", { name: "Evet" }).click();
   await expect(modules.getByRole("switch", { name: "Minibar" })).not.toBeChecked();
 
-  // Not-yet-built sections say which task adds them.
+  // Roller lists the seeded roles.
   await node(win, "Roller").click();
-  await expect(win.getByText("Bu bölüm P1 Task 6'te eklenecek.")).toBeVisible();
+  await expect(row(win, "Sistem Yöneticisi")).toBeVisible();
 
   // Arrow keys walk the tree.
   await node(win, "Roller").focus();
@@ -483,6 +483,51 @@ test("Kullanıcılar: Yeni test.garson (R-GAR, MR) listede; zayıf şifre redded
   expect(errors).toEqual([]);
 });
 
+test("Roller: Yeni R-TST (OUTLET) → Yetki Matrisi: QS-KUY görüntüle işaretle → yenile → işaretli; yinelenen kod reddedilir", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  const win = await definitionsWindow(page, MR);
+
+  await node(win, "Roller").click();
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const dialog = page.getByRole("dialog", { name: "Yeni rol" });
+  await dialog.getByLabel("Kod").fill("R-TST");
+  await dialog.getByLabel("Ad", { exact: true }).fill("Test Rolü");
+  await dialog.getByLabel("Tür").selectOption("OUTLET");
+  await dialog.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row(win, "R-TST")).toBeVisible();
+
+  // The code is unique: a second R-TST is refused under the field.
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const again = page.getByRole("dialog", { name: "Yeni rol" });
+  await again.getByLabel("Kod").fill("R-TST");
+  await again.getByLabel("Ad", { exact: true }).fill("Başka");
+  await again.getByRole("button", { name: "Kaydet" }).click();
+  await expect(again.getByText("Bu rol kodu zaten kullanılıyor").first()).toBeVisible();
+  await again.getByRole("button", { name: "Vazgeç" }).click();
+
+  await node(win, "Yetki Matrisi").click();
+  await win.getByLabel("Rol", { exact: true }).selectOption({ label: "R-TST — Test Rolü" });
+  const cell = win.getByRole("checkbox", { name: "QS-KUY Görüntüle" });
+  await expect(cell).not.toBeChecked();
+  await cell.click();
+  await expect(cell).toBeChecked();
+
+  await page.reload();
+  const reloaded = await definitionsWindow(page, MR);
+  await node(reloaded, "Yetki Matrisi").click();
+  await reloaded.getByLabel("Rol", { exact: true }).selectOption({ label: "R-TST — Test Rolü" });
+  await expect(reloaded.getByRole("checkbox", { name: "QS-KUY Görüntüle" })).toBeChecked();
+
+  // A hotel scope inherits the system rows (nothing overridden yet).
+  await reloaded.getByLabel("Otel", { exact: true }).selectOption({ label: MR.name });
+  await expect(reloaded.getByRole("checkbox", { name: "QS-KUY Görüntüle" })).toBeChecked();
+  await expect(reloaded.getByRole("row").filter({ hasText: "QS-KUY" })).toHaveAttribute("data-inherited", "true");
+  expect(errors).toEqual([]);
+});
+
 test("canlı yenileme: başka pencerede eklenen kat açık listede görünür", async ({ page }) => {
   await openAdmin(page);
   const first = await definitionsWindow(page, MR);
@@ -514,4 +559,22 @@ test("mudur.mr (yönetim): Tanımlamalar görünür, tek oteli olduğundan seçi
   await expect(win).toBeVisible();
   await node(win, "Katlar").click();
   await expect(row(win, "10. Kat")).toBeVisible();
+});
+
+test("mudur.mr (yönetim): Roller ve Yetki Matrisi salt okunur", async ({ page }) => {
+  await login(page, "mudur.mr");
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.getByRole("button", { name: "başlat" }).click();
+  await page
+    .getByRole("menu", { name: "Başlat menüsü" })
+    .getByRole("menuitem", { name: "Tanımlamalar" })
+    .click();
+  const win = winFor(page, MR.name).last();
+  await expect(win).toBeVisible();
+  await node(win, "Roller").click();
+  await expect(row(win, "R-TST")).toBeVisible();
+  await expect(win.getByRole("button", { name: "Yeni kayıt" })).toHaveCount(0);
+  await node(win, "Yetki Matrisi").click();
+  await expect(win.getByText("yalnızca sistem yöneticisi değiştirebilir")).toBeVisible();
+  await expect(win.getByRole("checkbox", { name: "QS-KUY Görüntüle" })).toBeDisabled();
 });

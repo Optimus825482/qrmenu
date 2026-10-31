@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { registerCoreApps } from "@/modules/core/apps";
 import { fontVariables } from "@/shell/appearance";
 import { alertDialog } from "@/shell/confirm";
@@ -15,13 +16,14 @@ import { Window } from "@/shell/components/Window";
 import { getApps } from "@/shell/registry";
 import type { ShellPrefs } from "@/shell/types";
 import { useShellMode } from "@/shell/useShellMode";
+import { useSse } from "@/shell/useSse";
 import { useShellPersistence } from "@/shell/useShellPersistence";
 import { MAX_WINDOWS, useWindowStore, windowStore } from "@/shell/windowStore";
 
 registerCoreApps();
 
 export type ShellClientProps = {
-  user: { id: string; fullName: string };
+  user: { id: string; fullName: string; roleId: string };
   hotels: HotelInfo[];
   /** visibleScreens(ctx, hotelId) for every hotel in scope: screen codes the user may view there. */
   screensByHotel: Record<string, string[]>;
@@ -58,6 +60,21 @@ export function ShellClient({
     serverPrefs: prefs,
     confirmSimpleActions,
   });
+
+  // A permission change for this user's role: re-run the server page so screensByHotel (and the
+  // icons/Start menu derived from it) follow the new matrix without a reload.
+  const router = useRouter();
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useSse(
+    (e) => {
+      const payload = e.payload as { entity?: unknown; roleId?: unknown } | undefined;
+      if (payload?.entity !== "permission" || payload.roleId !== user.roleId) return;
+      clearTimeout(refreshTimer.current);
+      refreshTimer.current = setTimeout(() => router.refresh(), 300);
+    },
+    ["definition.changed"],
+  );
+  useEffect(() => () => clearTimeout(refreshTimer.current), []);
 
   const mode = useShellMode();
   const ready = useWindowStore((s) => s.ready);

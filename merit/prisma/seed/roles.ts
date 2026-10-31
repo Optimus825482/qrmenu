@@ -57,6 +57,7 @@ const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-ONL"]);
 const CORE_DEFINITIONS = new Set(["CR-TAN", "CR-REH"]);
 const DEFINITIONS_VIEW_ONLY: readonly Action[] = ["V"];
 const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
+/** CR-KUL (users/teams): hotel managers also get V,O,D; roles and permission edits stay SISTEM-only in the services. */
 /** Remaining CORE screens (user/role admin, settings, audit) belong to these roles only. */
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
 
@@ -79,6 +80,7 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
       if (role.code === "R-ITT") return DEFINITIONS_VIEW_ONLY;
       return role.kind === "YONETIM" ? DEFINITIONS_MANAGE : [];
     }
+    if (screen.code === "CR-KUL" && role.kind === "YONETIM") return DEFINITIONS_MANAGE;
     if (CORE_MANAGEMENT.has(screen.code)) {
       return role.kind === "SISTEM" || role.kind === "YONETIM" ? VIEW_REPORT : [];
     }
