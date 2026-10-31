@@ -118,8 +118,10 @@ export async function touchSession(id: string): Promise<void> {
 }
 
 /**
- * Ends an open session. ZORUNLU (forced by an administrator) marks it DUSURULDU, every other
- * reason CIKTI. Closing an already closed session is a no-op.
+ * Ends an open session with status CIKTI for every reason (closed by the user or the system).
+ * DUSURULDU is reserved for a dropped connection/device and is never set here. ZORUNLU (forced
+ * by an administrator) is recorded as a FORCE_LOGOUT event/audit. Closing an already closed
+ * session is a no-op.
  */
 export async function closeSession(
   id: string,
@@ -130,7 +132,7 @@ export async function closeSession(
   await prisma.$transaction(async (tx) => {
     const { count } = await tx.userSession.updateMany({
       where: { id, status: { in: ACTIVE_STATUSES } },
-      data: { status: forced ? "DUSURULDU" : "CIKTI", logoutReason: reason, logoutAt: new Date() },
+      data: { status: "CIKTI", logoutReason: reason, logoutAt: new Date() },
     });
     if (count === 0) return;
 

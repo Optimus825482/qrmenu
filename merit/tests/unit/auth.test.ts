@@ -17,6 +17,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 // A minimal cookie jar standing in for next/headers cookies().
 const jar = new Map<string, string>();
 vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "user-agent": "UA/test", "x-forwarded-for": "10.9.9.9" }),
   cookies: async () => ({
     get: (name: string) => (jar.has(name) ? { name, value: jar.get(name)! } : undefined),
     getAll: () => [...jar].map(([name, value]) => ({ name, value })),
@@ -26,6 +27,7 @@ vi.mock("next/headers", () => ({
 
 const { requireUser, writeSessionCookie, SESSION_COOKIE_NAME } = await import("@/lib/auth");
 const { createSession, closeSession } = await import("@/modules/core/server/sessions");
+const { selectTargetAction } = await import("@/modules/core/server/loginAction");
 const { proxy, config } = await import("@/proxy");
 const { env } = await import("@/lib/env");
 
@@ -137,6 +139,53 @@ describe("requireUser (gerçek test DB)", () => {
     const { session } = await login();
     await cookieFor({ userId: "baska", sessionId: session.id });
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+});
+
+describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
+  it("requireUser: userId + pendingTargets var, geçerli sessionId yok → UNAUTHORIZED", async () => {
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
+    await cookieFor({ userId: user.id, pendingTargets: true });
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+
+    await cookieFor({ userId: user.id, pendingTargets: true, sessionId: "gecersiz" });
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("selectTargetAction: bekleyen bayrağı olmayan çerez reddedilir, oturum açılmaz", async () => {
+    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
+
+    const noCookie = await selectTargetAction(0);
+    expect(noCookie).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+
+    await cookieFor({ userId: user.id });
+    expect(await selectTargetAction(0)).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+
+    await cookieFor({ userId: user.id, pendingTargets: false });
+    expect(await selectTargetAction(0)).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+
+    // a full session cookie is not a selection ticket either
+    const session = await createSession({
+      userId: user.id,
+      hotelId: await hotelId("MR"),
+      roleId: user.roleId,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-KAT" });
+    expect(await selectTargetAction(0)).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    expect(await testDb.userSession.count()).toBe(1);
+  });
+
+  it("selectTargetAction: bekleyen çerezle oturum açılır ve çerez tam oturumla değişir", async () => {
+    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
+    await cookieFor({ userId: user.id, pendingTargets: true });
+    const res = await selectTargetAction(0);
+    expect(res).toMatchObject({ ok: true, data: { next: "/kat" } });
+
+    const row = await testDb.userSession.findFirstOrThrow({ where: { userId: user.id } });
+    const ctx = await requireUser(); // the new cookie now grants access
+    expect(ctx.session.id).toBe(row.id);
+    const { getSession } = await import("@/lib/auth");
+    expect((await getSession()).pendingTargets).toBeUndefined();
   });
 });
 

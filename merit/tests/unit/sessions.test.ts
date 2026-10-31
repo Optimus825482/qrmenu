@@ -126,7 +126,7 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     expect(await testDb.userSession.count()).toBe(0);
   });
 
-  it("closeSession(ZORUNLU, adminId) oturumu düşürür ve audit satırı yazar; ikinci çağrı etkisiz", async () => {
+  it("closeSession(ZORUNLU, adminId) oturumu CIKTI yapar ve audit satırı yazar; ikinci çağrı etkisiz", async () => {
     const admin = await makeUser({ username: "sys1", roleCode: "R-SYS" });
     const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
     const s = await newSession(user.id, "MR", user.roleId);
@@ -135,7 +135,7 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     await closeSession(s.id, "ZORUNLU", admin.id);
 
     const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
-    expect(row.status).toBe("DUSURULDU");
+    expect(row.status).toBe("CIKTI");
     expect(row.logoutReason).toBe("ZORUNLU");
     expect(row.logoutAt).toBeInstanceOf(Date);
 
@@ -146,6 +146,17 @@ describe("createSession / closeSession (gerçek test DB)", () => {
       where: { sessionId: s.id, event: "FORCE_LOGOUT" },
     });
     expect(events).toHaveLength(1);
+  });
+
+  it("closeSession hiçbir nedenle DUSURULDU üretmez: her LogoutReason CIKTI", async () => {
+    const reasons = ["MANUEL", "SURE_ASIMI", "HAREKETSIZLIK", "ZORUNLU", "TEK_CIHAZ", "SISTEM"] as const;
+    for (const reason of reasons) {
+      const user = await makeUser({ username: `gar-${reason}`, roleCode: "R-GAR", hotelCode: "MR" });
+      const s = await newSession(user.id, "MR", user.roleId);
+      await closeSession(s.id, reason);
+      const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
+      expect(row).toMatchObject({ status: "CIKTI", logoutReason: reason });
+    }
   });
 
   it("closeSession(MANUEL) CIKTI yapar ve LOGOUT olayı/audit yazar", async () => {
