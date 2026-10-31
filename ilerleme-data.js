@@ -98,7 +98,7 @@ window.ILERLEME = {
         { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "done", doneAt: "31.10 20:34" },
         { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "active" },
         { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "done", doneAt: "31.10 20:42" },
-        { title: "Misafir menü, sepet, sipariş durumu, garson çağırma (T6–T8)", status: "pending" },
+        { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "pending" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
         { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "pending" }
