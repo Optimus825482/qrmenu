@@ -182,7 +182,9 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
   await expect(row.getByTestId("unread-dot")).toBeVisible();
   await expect(tab(page, "Bildirimler")).toContainText("1"); // unread badge
 
-  // Live prepend: a notification created while the tab is open shows up on top.
+  // Live prepend: a notification created while the tab is open shows up on top. Wait for the SSE
+  // connection first, or the pg_notify below can be sent before anyone listens.
+  await expect(page.locator('.mb-sse[data-status="open"]')).toBeVisible();
   await insertNotification(id, "Yeni sipariş", "Salon 2");
   await pgNotify({ type: "notification.created", userIds: [id], at: new Date().toISOString() });
   const live = list.getByRole("button", { name: /Yeni sipariş/ });
@@ -218,5 +220,54 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
       }),
     )
     .toBe("0");
+  expect(errors).toEqual([]);
+});
+
+test("mobil kabuk masaüstü düzenini bozmaz: simge konumu korunur, yalnız duvar kağıdı değişir", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  const waitForPrefsSave = () =>
+    page.waitForResponse(
+      (r) => r.request().method() === "POST" && "next-action" in r.request().headers(),
+    );
+  const icon = () => desktop(page).getByRole("button", { name: "Komuta Merkezi", exact: true });
+  const iconPos = () => icon().evaluate((el) => {
+    const e = el as HTMLElement;
+    return { left: parseFloat(e.style.left), top: parseFloat(e.style.top) };
+  });
+
+  // 1. Desktop: drag the icon to a known position and wait for the save.
+  await page.setViewportSize(WIDE);
+  await login(page, "admin");
+  await expect(desktop(page)).toBeVisible();
+  const box = (await icon().boundingBox())!;
+  const saved1 = waitForPrefsSave();
+  await page.mouse.move(box.x + 30, box.y + 30);
+  await page.mouse.down();
+  // A short first move starts the drag (and captures the pointer) before the long one.
+  await page.mouse.move(box.x + 45, box.y + 45, { steps: 3 });
+  await page.mouse.move(box.x + 600, box.y + 300, { steps: 10 });
+  await page.mouse.up();
+  await saved1;
+  const known = await iconPos();
+  expect(known.left).toBeGreaterThan(400);
+
+  // 2. Phone: change the wallpaper, wait for the save.
+  await page.setViewportSize(PHONE);
+  await page.reload();
+  await expect(tabs(page)).toBeVisible();
+  await tab(page, "Ayarlar").click();
+  const saved2 = waitForPrefsSave();
+  await page.getByRole("radio", { name: "Gümüş" }).click();
+  expect((await saved2).ok()).toBe(true);
+
+  // 3. Desktop again (fresh load, no localStorage copy): same icon position, new wallpaper.
+  await page.evaluate(() => window.localStorage.clear());
+  await page.setViewportSize(WIDE);
+  await page.reload();
+  await expect(desktop(page)).toBeVisible();
+  await expect(page.locator("[data-wallpaper]")).toHaveAttribute("data-wallpaper", "gumus");
+  expect(await iconPos()).toEqual(known);
   expect(errors).toEqual([]);
 });

@@ -3,11 +3,15 @@
 import { useLayoutEffect, useRef } from "react";
 import { confirmStore } from "./confirm";
 import { saveShellPrefs } from "./prefsAction";
+import { buildPersistSnapshot, type RestoredLayout } from "./persistSnapshot";
 import { parseShellPrefs } from "./prefsSchema";
 import type { HotelRef, ShellPrefs } from "./types";
+import { currentShellMode, type ShellMode } from "./useShellMode";
 import { gridPosition, windowStore } from "./windowStore";
 
 const SAVE_DEBOUNCE_MS = 1000;
+
+const layoutOf = (p: ShellPrefs): RestoredLayout => ({ windows: p.windows, icons: p.icons });
 
 /** localStorage cache. `pending` = changed here but not yet confirmed saved on the server. */
 type LocalEntry = { prefs: ShellPrefs; pending: boolean };
@@ -70,7 +74,10 @@ export function useShellPersistence({
 
   useLayoutEffect(() => {
     const store = windowStore.getState();
-    store.setViewport(window.innerWidth, window.innerHeight);
+    // useShellMode() still says 'desktop' while hydrating, so read the real mode from the window.
+    // In mobile mode the phone size must not reach the store: it would clamp the desktop layout.
+    let mode: ShellMode = currentShellMode();
+    if (mode === "desktop") store.setViewport(window.innerWidth, window.innerHeight);
 
     const local = readLocal(userId);
     const { serverPrefs: fromServer, appIds: visible } = initial.current;
@@ -79,20 +86,30 @@ export function useShellPersistence({
       icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, store.viewport) })),
       windows: [],
     };
-    store.restore(local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback));
+    const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
+    store.restore(chosen);
+
+    // Desktop layout as restored (and kept current while on the desktop). While the mobile shell is
+    // showing, saves send exactly this and only the wallpaper may change.
+    let layout: RestoredLayout =
+      mode === "mobile"
+        ? { windows: chosen.windows, icons: chosen.icons }
+        : layoutOf(windowStore.getState().snapshot());
+    const persistSnapshot = (): ShellPrefs =>
+      buildPersistSnapshot(mode, layout, windowStore.getState().snapshot());
 
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let last = JSON.stringify(windowStore.getState().snapshot());
+    let last = JSON.stringify(persistSnapshot());
 
     const flush = () => {
       if (timer) clearTimeout(timer);
       timer = undefined;
-      const snap = windowStore.getState().snapshot();
+      const snap = persistSnapshot();
       const json = JSON.stringify(snap);
       saveShellPrefs(snap)
         .then((result) => {
           // Only a save of the current layout clears the pending mark.
-          if (result.ok && JSON.stringify(windowStore.getState().snapshot()) === json) {
+          if (result.ok && JSON.stringify(persistSnapshot()) === json) {
             writeLocal(userId, { prefs: snap, pending: false });
           }
         })
@@ -106,7 +123,8 @@ export function useShellPersistence({
     };
 
     const unsubscribe = windowStore.subscribe((state) => {
-      const snap = state.snapshot();
+      if (mode === "desktop") layout = layoutOf(state.snapshot());
+      const snap = buildPersistSnapshot(mode, layout, state.snapshot());
       const json = JSON.stringify(snap);
       if (json === last) return;
       last = json;
@@ -115,8 +133,16 @@ export function useShellPersistence({
     });
     if (local?.pending) schedule();
 
-    const onResize = () =>
-      windowStore.getState().setViewport(window.innerWidth, window.innerHeight);
+    // Mode changes (resize across 760 px, ?mobil=1 via history) are handled here, not through the
+    // effect deps: re-running the effect would restore the layout again on every such change.
+    const onResize = () => {
+      mode = currentShellMode();
+      if (mode !== "desktop") return;
+      // Also covers mobile -> desktop: clamping resumes against the real size.
+      const store = windowStore.getState();
+      store.setViewport(window.innerWidth, window.innerHeight);
+      layout = layoutOf(windowStore.getState().snapshot());
+    };
     const onLeave = () => {
       if (timer) flush();
     };
@@ -125,11 +151,13 @@ export function useShellPersistence({
       if (document.visibilityState === "hidden") onLeave();
     };
     window.addEventListener("resize", onResize);
+    window.addEventListener("popstate", onResize);
     window.addEventListener("beforeunload", onLeave);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       unsubscribe();
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("popstate", onResize);
       window.removeEventListener("beforeunload", onLeave);
       document.removeEventListener("visibilitychange", onVisibility);
       if (timer) flush();
