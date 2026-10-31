@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 15:58",
-  headline: "P1 T1–T5 tamam; T5+ devir belgesiyle (docs/DEVIR.md) sürdürülür.",
+  updatedAt: "31.10.2026 17:45",
+  headline: "P1 T9 bildirim zili ve denetim günlüğü incelendi (commit yok); sıradaki T10 (docs/DEVIR.md).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -48,10 +48,10 @@ window.ILERLEME = {
         { title: "T3 Oda penceresi (toplu oda ekleme, oda tipi atama, misafir mesajı)", status: "done", doneAt: "31.10 15:26" },
         { title: "T4 Outlet ve masa pencereleri; otel bazlı modül aç/kapa", status: "done", doneAt: "31.10 15:40" },
         { title: "T5 Kullanıcı penceresi ve outlet ekip ataması", status: "done", doneAt: "31.10 15:56" },
-        { title: "T6 Rol penceresi ve yetki matrisi (V/O/D/A/R, otel bazlı)", status: "active" },
-        { title: "T7 Kurulum rehberi (bağımlılık zinciri, tamamlanma yüzdesi)", status: "pending" },
-        { title: "T8 Online kullanıcı takibi (canlı liste, zorla çıkış)", status: "pending" },
-        { title: "T9 Bildirim merkezi ve denetim günlüğü pencereleri", status: "pending" },
+        { title: "T6 Rol penceresi ve yetki matrisi (V/O/D/A/R, otel bazlı)", status: "done", doneAt: "31.10 16:25" },
+        { title: "T7 Kurulum rehberi (bağımlılık zinciri, tamamlanma yüzdesi)", status: "done", doneAt: "31.10 16:52" },
+        { title: "T8 Online kullanıcı takibi (canlı liste, zorla çıkış)", status: "done", doneAt: "31.10 17:18" },
+        { title: "T9 Bildirim merkezi ve denetim günlüğü pencereleri", status: "done", doneAt: "31.10 17:45" },
         { title: "T10 Sistem ayarları penceresi (Denetim Masası → Sistem)", status: "pending" },
         { title: "T11 P0'dan devreden düzeltmeler (testler, resync, bildirim rolü, iframe teması)", status: "pending" },
         { title: "T12 Kabul: tanım zinciri e2e'leri, belgeler", status: "pending" }
@@ -136,6 +136,11 @@ window.ILERLEME = {
     { at: "31.10 14:25", text: "P1 planı yazıldı (docs/superpowers/plans/2026-10-31-p1-cekirdek.md)." },
     { at: "31.10 14:22", text: "P1 uygulaması subagent-driven başladı; P5 planı paralel oturumda." },
     { at: "31.10 15:03", text: "Kabuğa alt telif bandı, marka filigranı ve düz renk duvar kağıdı eklendi (Denetim Masası)." },
-    { at: "31.10 15:45", text: "P1 T4 incelemesi onaylandı (5 minör T12'ye ertelendi); T5 başladı. Devir notu docs/DEVIR.md yazıldı." }
+    { at: "31.10 15:45", text: "P1 T4 incelemesi onaylandı (5 minör T12'ye ertelendi); T5 başladı. Devir notu docs/DEVIR.md yazıldı." },
+    { at: "31.10 16:25", text: "P1 T6 rol penceresi ve yetki matrisi uygulandı (815a61f). İnceleme henüz yapılmadı." },
+    { at: "31.10 16:33", text: "P1 T6 incelemesi onaylandı (815a61f). Otel kapsamında tümü-false sessiz no-op ve 7 minör T12'ye ertelendi. Sıradaki: T7." },
+    { at: "31.10 16:52", text: "P1 T7 kurulum rehberi uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T8." },
+    { at: "31.10 17:18", text: "P1 T8 online kullanıcı takibi uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T9." },
+    { at: "31.10 17:45", text: "P1 T9 bildirim zili ve denetim günlüğü uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T10." }
   ]
 };

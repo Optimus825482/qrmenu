@@ -62,7 +62,7 @@ describe("floors", () => {
       expect(rows, action).toHaveLength(1);
       expect(rows[0]).toMatchObject({ entity: "Floor", entityId: created.id, hotelId: mr });
     }
-    const events = publishMock.mock.calls.map((c) => c[0]);
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
     expect(events).toHaveLength(3);
     expect(events.map((e) => e.payload.op)).toEqual(["create", "update", "delete"]);
     for (const e of events) {
@@ -170,7 +170,7 @@ describe("roomTypes", () => {
     for (const action of ["ROOMTYPE_CREATE", "ROOMTYPE_UPDATE", "ROOMTYPE_DELETE"]) {
       expect(await auditRows(action), action).toHaveLength(1);
     }
-    const events = publishMock.mock.calls.map((c) => c[0]);
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
     expect(events.map((e) => e.payload)).toEqual([
       { entity: "roomType", id: created.id, op: "create" },
       { entity: "roomType", id: created.id, op: "update" },
@@ -224,7 +224,9 @@ describe("roomTypes", () => {
     // Mevcut "Deluxe" olduğu gibi kalır (9 kabin).
     expect(names).toEqual(["Deluxe:9", "Standart:1", "Suit:3"]);
     expect(await auditRows("ROOMTYPE_COPY")).toHaveLength(1);
-    expect(publishMock.mock.calls[0][0]).toMatchObject({
+    expect(
+      publishMock.mock.calls.map((c) => c[0]).find((e) => e.type === "definition.changed"),
+    ).toMatchObject({
       type: "definition.changed",
       hotelId: mr,
       payload: { entity: "roomType", op: "create" },
@@ -270,7 +272,9 @@ describe("hotels", () => {
     const rows = await auditRows("HOTEL_UPDATE");
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ entity: "Hotel", entityId: mr, hotelId: mr });
-    expect(publishMock.mock.calls[0][0]).toMatchObject({
+    expect(
+      publishMock.mock.calls.map((c) => c[0]).find((e) => e.type === "definition.changed"),
+    ).toMatchObject({
       type: "definition.changed",
       hotelId: mr,
       payload: { entity: "hotel", id: mr, op: "update" },

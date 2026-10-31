@@ -33,6 +33,19 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
   registerApp({
+    id: "core.rehber",
+    title: "Kurulum Rehberi",
+    icon: "soru",
+    moduleKey: "CORE",
+    screenCode: "CR-REH",
+    category: "GENEL",
+    needsHotel: true,
+    window: { w: 720, h: 520 },
+    kind: "component",
+    component: () => import("@/shell/apps/SetupGuide").then((m) => ({ default: m.SetupGuide })),
+    mobile: "none",
+  });
+  registerApp({
     id: "core.online",
     title: "Online Kullanıcılar",
     icon: "online",
@@ -40,10 +53,23 @@ export function registerCoreApps(): void {
     screenCode: "CR-ONL",
     category: "SISTEM",
     needsHotel: true,
-    window: { w: 640, h: 420 },
+    window: { w: 960, h: 560, minW: 640, minH: 420 },
     kind: "component",
-    component: () => import("@/shell/apps/Placeholders").then((m) => ({ default: m.OnlinePlaceholder })),
+    component: () => import("@/shell/apps/OnlineUsers").then((m) => ({ default: m.OnlineUsers })),
     mobile: "readonly",
+  });
+  registerApp({
+    id: "core.denetim",
+    title: "Denetim Günlüğü",
+    icon: "denetim",
+    moduleKey: "CORE",
+    screenCode: "CR-DEN",
+    category: "SISTEM",
+    needsHotel: false,
+    window: { w: 900, h: 560, minW: 640, minH: 420 },
+    kind: "component",
+    component: () => import("@/shell/apps/AuditLog").then((m) => ({ default: m.AuditLog })),
+    mobile: "none",
   });
   registerApp({
     id: "core.ayarlar",

@@ -89,6 +89,16 @@ const GLYPHS: Record<string, ReactNode> = {
       <circle className="xi-frame" cx="16" cy="24" r="1.8" />
     </>
   ),
+  // Clipboard: Denetim Günlüğü.
+  denetim: (
+    <>
+      <rect className="xi-paper" x="6" y="4" width="20" height="25" rx="2" />
+      <rect className="xi-blue" x="11" y="2" width="10" height="5" rx="1" />
+      <rect className="xi-light" x="9" y="12" width="14" height="2" />
+      <rect className="xi-light" x="9" y="16" width="14" height="2" />
+      <rect className="xi-light" x="9" y="20" width="9" height="2" />
+    </>
+  ),
   bilgi: (
     <>
       <circle className="xi-blue" cx="16" cy="16" r="13" />

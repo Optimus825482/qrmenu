@@ -730,6 +730,231 @@
   border-bottom: 0;
 }
 
+/* ---- ilerleme çubuğu (Kurulum Rehberi, Komuta Merkezi kurulum kartı) ----------------------- */
+
+.xp-progress {
+  flex: 1;
+  min-width: 60px;
+  height: 12px;
+  align-self: center;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body);
+}
+
+.xp-progress-bar {
+  height: 100%;
+  background: var(--xp-select);
+}
+
+.xp-cc-setup {
+  flex: none;
+}
+
+.xp-cc-setup .xp-list {
+  flex: none;
+}
+
+/* ---- Kurulum Rehberi -------------------------------------------------------------------- */
+
+.xp-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  min-height: 100%;
+  background: var(--xp-body);
+}
+
+.xp-guide-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.xp-guide-head h2 {
+  margin: 0;
+  font-size: calc(var(--xp-font-size) * 14 / 11);
+  color: var(--xp-heading);
+}
+
+.xp-guide-percent {
+  font-size: calc(var(--xp-font-size) * 18 / 11);
+  font-weight: bold;
+  color: var(--xp-heading);
+}
+
+.xp-guide .xp-progress {
+  flex: none;
+  height: 16px;
+}
+
+.xp-guide-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-guide-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--xp-body-shade);
+}
+
+.xp-guide-step:last-child {
+  border-bottom: 0;
+}
+
+.xp-guide-mark {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  color: var(--xp-muted);
+}
+
+.xp-guide-step[data-done="true"] .xp-guide-mark {
+  color: var(--xp-select);
+  font-weight: bold;
+}
+
+.xp-guide-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.xp-guide-count {
+  flex: none;
+  min-width: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--xp-muted);
+}
+
+/* ---- Online kullanıcılar ---------------------------------------------------------------- */
+
+.xp-online {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--xp-body);
+}
+
+.xp-online-counts {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px 8px 0;
+}
+
+.xp-online-count {
+  padding: 6px 8px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-online-count span {
+  display: block;
+  color: var(--xp-muted);
+}
+
+.xp-online-count strong {
+  font-size: calc(var(--xp-font-size) * 16 / 11);
+  font-variant-numeric: tabular-nums;
+  color: var(--xp-heading);
+}
+
+.xp-online .xp-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+.xp-audit {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--xp-body);
+}
+
+.xp-audit .xp-grid {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
+.xp-audit .xp-grid-bar {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.xp-audit-filters {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.xp-audit-filters input {
+  max-width: 148px;
+}
+
+.xp-audit-detail {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 42%;
+  overflow: auto;
+  padding: 8px;
+  border-top: 1px solid var(--xp-body-edge);
+}
+
+.xp-audit-detail h3 {
+  margin: 0 0 4px;
+  font-size: inherit;
+}
+
+.xp-audit-detail pre {
+  margin: 0;
+  max-height: 140px;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.xp-online-user {
+  color: var(--xp-muted);
+}
+
+.xp-online-remain {
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-online-status[data-status="UYARI"] {
+  color: var(--xp-close-2);
+  font-weight: bold;
+}
+
+.xp-online .xp-grid-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.xp-online .xp-grid-toolbar select {
+  min-height: 21px;
+  padding: 1px 4px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  font: inherit;
+}
+
 /* ---- hotel picker ----------------------------------------------------------------------- */
 
 .xp-hotel-picker {
@@ -878,6 +1103,95 @@
 
 .xp-sse-dot[data-status="connecting"] {
   background: var(--xp-sse-connecting);
+}
+
+.xp-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.xp-bell-button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.xp-bell-badge {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 7px;
+  background: var(--xp-close-2);
+  color: var(--xp-title-text);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+
+.xp-bell-panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 2;
+  width: 320px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  color: var(--xp-text);
+  box-shadow: 2px 2px 8px var(--xp-shadow);
+}
+
+.xp-bell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.xp-bell-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.xp-bell-item {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: 6px;
+  border: 0;
+  border-top: 1px solid var(--xp-body-edge);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.xp-bell-item[data-read="false"] .xp-bell-item-title {
+  font-weight: bold;
+}
+
+.xp-bell-item-body {
+  color: var(--xp-muted);
+}
+
+.xp-bell-item time {
+  color: var(--xp-muted);
+  font-size: calc(var(--xp-font-size) * 10 / 11);
 }
 
 /* ---- start menu ------------------------------------------------------------------------- */

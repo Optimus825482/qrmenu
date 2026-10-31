@@ -101,7 +101,7 @@ describe("outlets: CRUD", () => {
       "OUTLET_SET_ACTIVE",
       "OUTLET_DELETE",
     ]);
-    const events = publishMock.mock.calls.map((c) => c[0]);
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
     expect(events).toHaveLength(5);
     for (const e of events) {
       expect(e).toMatchObject({
@@ -217,14 +217,15 @@ describe("tables", () => {
       .map((a) => a.action)
       .filter((a) => a.startsWith("TABLE_"));
     expect(actions).toEqual(["TABLE_CREATE", "TABLE_UPDATE", "TABLE_DELETE"]);
-    for (const [event] of publishMock.mock.calls) {
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
+    for (const event of events) {
       expect(event).toMatchObject({
         type: "definition.changed",
         hotelId: mr,
         payload: { entity: "table" },
       });
     }
-    expect(publishMock.mock.calls).toHaveLength(3);
+    expect(events).toHaveLength(3);
   });
 
   it("bulkCreate 1..20 → M1..M20 doğal sırayla; tekrar CONFLICT ve hiçbiri eklenmez", async () => {
@@ -292,7 +293,9 @@ describe("hotelModules", () => {
       "ROOM_SERVICE",
     ]);
 
-    const events = publishMock.mock.calls.map((c) => c[0]);
+    const events = publishMock.mock.calls
+      .map((c) => c[0])
+      .filter((e) => e.type !== "audit.created");
     expect(events.map((e) => e.type).sort()).toEqual(["definition.changed", "settings.changed"]);
     expect(events.find((e) => e.type === "definition.changed")).toMatchObject({
       hotelId: mr,

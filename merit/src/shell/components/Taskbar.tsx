@@ -5,6 +5,7 @@ import { XpIcon } from "../icons";
 import { getApp } from "../registry";
 import { useSse, type SseStatus } from "../useSse";
 import { selectActiveId, useWindowStore, windowStore } from "../windowStore";
+import { NotificationBell } from "./NotificationBell";
 
 const clockFormat = new Intl.DateTimeFormat("tr-TR", {
   hour: "2-digit",
@@ -89,6 +90,7 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef }: Props) {
         })}
       </div>
       <div className="xp-tray">
+        <NotificationBell />
         <span
           className="xp-sse-dot"
           data-status={status}

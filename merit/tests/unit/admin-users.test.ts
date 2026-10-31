@@ -44,7 +44,7 @@ async function sys() {
   return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP", "MRD"] });
 }
 
-/** Hotel manager of MR; the seed gives YONETIM roles no CR-KUL row, so the test grants one. */
+/** Hotel manager of MR. Seed already grants YONETIM CR-KUL V,O,D; reset so this test owns the flags. */
 async function mgmt() {
   const role = await roleByCode("R-OTM");
   const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-KUL" } });

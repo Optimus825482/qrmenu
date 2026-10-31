@@ -114,6 +114,21 @@ async function seedPermissions(db: PrismaClient) {
       });
     }
   }
+
+  // Existing databases kept the first CR-ONL row (view + report). Hotel managers also need A
+  // (force logout). Fresh seeds already write A; this only lifts rows that were created earlier.
+  const onlineScreen = screenId.get("CR-ONL");
+  if (onlineScreen) {
+    const managerIds = ROLES.filter((role) => role.kind === "YONETIM")
+      .map((role) => roleId.get(role.code))
+      .filter((id): id is string => id !== undefined);
+    if (managerIds.length > 0) {
+      await db.roleScreenPermission.updateMany({
+        where: { screenId: onlineScreen, hotelId: null, roleId: { in: managerIds } },
+        data: { canView: true, canApprove: true, canReport: true },
+      });
+    }
+  }
 }
 
 /** System settings (hotelId = null): created when missing, never overwritten. */

@@ -48,8 +48,10 @@ const VIEW_REPORT: readonly Action[] = ["V", "R"];
 
 /** CORE screens every role may open for reporting. */
 const CORE_ALL_ROLES = new Set(["CR-RAP"]);
-/** CORE screens open (view + report) to system and management roles only. */
-const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-ONL"]);
+/** Command center: view + report for system and management roles only. */
+const CORE_MANAGEMENT = new Set(["CR-KOM"]);
+/** Online users: hotel managers may also force-logout (A). R-SYS already has A via profile TAM. */
+const ONLINE_FORCE: readonly Action[] = ["V", "A", "R"];
 /**
  * Definition screens (Tanımlamalar, Kurulum Rehberi): R-SYS has everything (module "ALL"), the
  * support role only views, management roles may view, create and edit; nobody else has a row.
@@ -58,7 +60,7 @@ const CORE_DEFINITIONS = new Set(["CR-TAN", "CR-REH"]);
 const DEFINITIONS_VIEW_ONLY: readonly Action[] = ["V"];
 const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
 /** CR-KUL (users/teams): hotel managers also get V,O,D; roles and permission edits stay SISTEM-only in the services. */
-/** Remaining CORE screens (user/role admin, settings, audit) belong to these roles only. */
+/** Remaining CORE screens (user/role admin, settings) belong to these roles only. */
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
 
 /** Concrete module list of a role; 'ALL' expands to every non-core module. */
@@ -81,6 +83,16 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
       return role.kind === "YONETIM" ? DEFINITIONS_MANAGE : [];
     }
     if (screen.code === "CR-KUL" && role.kind === "YONETIM") return DEFINITIONS_MANAGE;
+    if (screen.code === "CR-ONL") {
+      if (role.kind === "YONETIM") return ONLINE_FORCE;
+      if (role.kind === "SISTEM") return VIEW_REPORT;
+      return [];
+    }
+    // Audit log is read-only. Managers see their hotels in the service; R-SYS is TAM via modules ALL.
+    if (screen.code === "CR-DEN") {
+      if (role.kind === "YONETIM" || role.kind === "SISTEM") return VIEW_REPORT;
+      return [];
+    }
     if (CORE_MANAGEMENT.has(screen.code)) {
       return role.kind === "SISTEM" || role.kind === "YONETIM" ? VIEW_REPORT : [];
     }

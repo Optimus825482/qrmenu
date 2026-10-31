@@ -10,21 +10,54 @@
 |---|---|---|
 | A Analiz/tasarım | Bitti | `docs/analiz/2026-10-31-anlayis-notu.md`, spec: `docs/superpowers/specs/2026-10-31-merit-platform-design.md` |
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
-| P1 Çekirdek tanımlar | **Devam ediyor** — dal `p1/cekirdek`; T1–T5 ve K1 bitti ve incelemeden geçti (T5 güvenlik düzeltmesi `ee8eef7` dahil); **T6 uygulandı (`815a61f`) ama henüz İNCELENMEDİ** (bkz. §1a); T7–T12 sırada | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md`; defter `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` |
+| P1 Çekirdek tanımlar | **Devam ediyor** — dal `p1/cekirdek`; T1–T9 ve K1 bitti (T7–T9 incelendi, **commit yok**, çalışma ağacında); sıradaki iş T10 | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` Task 10 (satır ~207); defter `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` |
 | P5 QR Menü/Sipariş | Planı yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` (kopya `main`'e alındı; orijinal worktree dalı `worktree-quizzical-albattani-805b4d`, commit `3d3fa90`) |
 | P2, P3, P4, P6, P7, P8 | Plan yazılmadı | Bu belgenin §5'i kapsamı tarif eder; plan `superpowers:writing-plans` ile spec'ten yazılır |
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Tam olarak kalınan yer (31 Ekim 2026, 16:05 — Fable haftalık sınır doldu)
+## 1a. Tam olarak kalınan yer (31 Ekim 2026, 17:47 — kullanım sınırı devri)
 
-- Son commit: `ee8eef7` fix(p1) rol hiyerarşisi (T5). Defter: `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` (son satır "Task 5 CLOSED").
-- **GÜNCELLEME 16:25:** T6 uygulayıcısı bitti: commit `815a61f` (412 birim testi, e2e 11/11). Sıradaki adım T6 İNCELEMESİ (review-package `ed2e983..815a61f` → Sonnet inceleme → düzeltme → Haiku). Uygulayıcı ağaçta ikinci bir yazıcı fark etti ve çift blokları temizledi; `admin-users.test.ts`'de yabancı, commit edilmemiş bir yorum değişikliği kalmış olabilir → `git status`/`git diff` ile bak, gereksizse `git checkout -- merit/tests/unit/admin-users.test.ts`. Aşağıdaki eski not artık geçersiz:
-- (eski) **T6** Sonnet uygulayıcısına verildi; brief `.superpowers/sdd/2026-10-31-p1-cekirdek/task-6-brief.md`. Sonucu `git log` ile kontrol et: `feat(p1): Rol penceresi ve yetki matrisi` commit'i ve `task-6-report.md` varsa uygulayıcı bitmiştir → inceleme adımına geç (review-package → Sonnet inceleme → düzeltme → Haiku yeniden inceleme). Yoksa çalışma ağacında yarım iş olabilir: `git status` bak; yarımsa T6'yı taze uygulayıcıyla baştan başlat (yarım dosyaları `git stash` ile kenara al).
-- T6 brief'ine eklenen bağlayıcı karar: seed'e `CR-KUL` için YONETIM `V,O,D` satırı eklenecek (T5 kararı).
-- T12'ye ertelenen minörler defterde (T4: 5, T5: 5 + yeniden incelemeden 4).
-- Her task sonrası `ilerleme-data.js` güncelle + commit (T5 done, T6 active olarak işaretli durumda).
-- Kullanıcının 3001 dev sunucusu migration 0004 sonrası yeniden başlatılmalı (söylendi).
+Cursor kullanımına yaklaşıldığı için T10'a girilmedi. Bu bölüm bir sonraki coding agent için tek kaynaktır. Eski çelişkili notlar silindi; ayrıntılı `Ruling:` ve inceleme satırları `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` sonundadır. Onları buraya kopyalama.
+
+### Şimdi ne yapılacak
+
+1. Bu bölümü ve §3'ü oku. Repoyu tarama.
+2. **T7, T8, T9'u yeniden yazma.** Üçü de uygulandı ve incelendi (0 Critical / 0 Important). Dosyalar çalışma ağacında, commit yok.
+3. Sıradaki tek kalem **T10**: Sistem ayarları penceresi (Denetim Masası → Sistem). Plan: `docs/superpowers/plans/2026-10-31-p1-cekirdek.md`, "Task 10" başlığı (yaklaşık satır 207). Yalnız o görevin dosyalarını oku.
+4. T10 bitince §3'teki inceleme adımını uygula. Sonra `docs/DEVIR.md` §1a, `progress.md` ve `ilerleme-data.js` güncellenir. T11'e bu oturumda geçilmez; sınır dolmaya yakınsa yine burada durulur.
+5. **Commit ve push yok**, Erkan açıkça istemedikçe. T7–T9'u T10'dan önce commit'lemek de onun kararı. İsterse önce çalışma ağacını commit'let, sonra T10'a gir.
+
+### Git ve çalışma ağacı
+
+- Dal: `p1/cekirdek`. HEAD: `3361ae0` (devir commit'i). Son özellik commit'i: `815a61f` (`feat(p1): Rol penceresi ve yetki matrisi`, T6).
+- Commit'lenmemiş ve bitmiş: T7 kurulum rehberi, T8 online kullanıcı takibi, T9 bildirim zili + denetim günlüğü, artı `ilerleme-data.js` / `progress.md` / bu dosya. `git status` kirli görünür; bu yarım iş değildir, stash'leme ve T7–T9'u baştan başlatma.
+- `ilerleme-data.js` P1 listesinde T1–T9 `done`, T10–T12 `pending`. Başlık T10'u gösterir.
+
+### Son doğrulama
+
+- T9 sonrası `npm run check`: lint, tsc ve 437 birim test geçti. T8 turunda 432, T7 turunda 427 idi.
+- e2e spec'ler yazıldı (`onlineUsers.spec.ts`, `auditLog.spec.ts` ve T7 rehber spec'i). **Koşturma:** `npm run test:e2e` demo veritabanını sıfırlar.
+- Tarayıcı doğrulanamadı. 3001 bir ara ayaktı; giriş formu `hydrated` false kaldığı için Giriş Yap disabled. Sunucuyu ajan başlatmaz ve durdurmaz. Erkan 3001'i kendisi yeniler. Doğrulanamazsa bunu rapora yaz, görevi geri alma.
+
+### Erkan'ın elle çalıştırabileceği komutlar
+
+- Müdür rolünün T8 zorla çıkış (`CR-ONL` onay) ve T9 denetim (`CR-DEN` V,R) satırlarını görmesi: `merit` içinde `npm run db:seed`. Tabloları silmez. R-SYS zaten görür.
+- Uygulamayı ajan başlatmaz (`python app.py`, `npm run dev`, `pip install` yok).
+
+### T10 kabul özeti (planın yerine geçmez)
+
+- Yeni: `src/shell/apps/controlPanel/SystemPanel.tsx`, `server/admin/settingsAdmin.ts`, `actions/settingsAdmin.ts`, `tests/unit/settingsAdmin.test.ts` (`merit/` altında).
+- Değişen: `ControlPanel.tsx` (üçüncü kategori "Sistem", yalnız `can(CR-SYS,'D')`), `src/lib/settings-defs.ts` (her anahtar için Türkçe `SETTING_META`).
+- `listGrouped` gruplar: Oturum, MyBar, DND, Stok, Fiyat, Sipariş, Oda Servisi, Kabuk, E-posta, QR. Kapsam: sistem geneli yalnız SISTEM; otel kapsamı YONETIM'in kendi otelleri. Kaynak rozeti: varsayılan / sistem / otel. `clearHotelOverride` satırı siler. Birim: sistem kapsamında YONETIM `FORBIDDEN`; otelde `dnd.minChecks` set → `source: 'hotel'`, clear → `system` veya `default`.
+
+### Bilinçli olarak T12'ye bırakılanlar
+
+Ayrıntı `progress.md` içinde. Özet: T6 tümü-false otel kapsamı sessiz no-op (Important, plan böyle); T4–T9 minörleri. T10 sırasında bunları düzeltme.
+
+### Token
+
+Yalnız bu §1a, §3 ve T10 plan bölümü. `progress.md`'nin tamamını okuma; son T9 satırından sonrasına bakman gerekmez, T10'a kadar defter güncel. Kullanım yine dolarsa kodu yarım bırakma: dur, bu §1a'yı yeni durumla değiştir.
 
 ## 2. Çalışma ortamı
 
@@ -54,7 +87,7 @@
 
 ## 5. Kalan alt projelerin kapsamı (plan yazarken kaynak)
 
-- **P1 (kalan T4–T12)**: plan dosyasında ayrıntılı; defterdeki ertelenmiş minörler T12'de ele alınır.
+- **P1 (kalan T10–T12)**: plan dosyasında ayrıntılı; defterdeki ertelenmiş minörler T12'de ele alınır. T9 kapandı (commit yok). Sıradaki T10; bkz. §1a.
 - **P2 Minibar tanımları + göç** (spec §6.1, §6.2, §12; minibarlatest `routes/sistem_yoneticisi_routes.py` setup bölümü, `utils/qr_service.py`): ürün grubu/ürün (fiyat alanları iç rapor, misafire gösterilmez), setup (dolap içi/dışı, içerik adetleri), otel bazlı oda tipi–setup ataması, oda QR üretimi (HMAC token, SVG/PNG/ZIP, yazdırma şablonu, misafir mesajı), zimmet havuzu giriş/iade/düzeltme/kritik seviye, `scripts/migrate-from-minibarlatest` (idempotent, `legacy_id_map`, `--dry-run`, rapor; kullanıcıdan pg dump gelince).
 - **P3 Minibar operasyonu** (spec §6.3–6.5, §6.7; minibarlatest `routes/kat_sorumlusu_routes.py`, `utils/minibar_servisleri.py`, `utils/dnd_service.py`, `utils/gorev_service.py`, `utils/gorev_oncelik_service.py`, `utils/excel_service.py`, `static/js/oda_kontrol.js`): kat sorumlusu PWA (`/kat`: kat planı, kat doluluk, QR okuyucu html5-qrcode, oda kontrolü), depo ekranları (`/depo`), doluluk Excel, günlük görevler, öncelik planı, pg-boss işleri (00:01 yükleme görevleri, 10:00/18:00 uyarı, 23:59 DND gün sonu), raporlar için veri.
 - **P4 MyBar + bildirim** (spec §6.6, §9.2; referans şablon): misafir `/q/[token]` (next-intl tr/en/de/ru/ar, RTL), günlük sınır, idempotency, not çevirisi (ayarla kapatılabilir), kat sorumlusu zorunlu onay penceresi, karşılama/kapatma/iptal, Web Push (VAPID).

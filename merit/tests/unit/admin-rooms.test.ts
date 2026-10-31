@@ -117,7 +117,7 @@ describe("rooms: CRUD", () => {
       expect(found, action).toHaveLength(count);
       expect(found[0]).toMatchObject({ entity: "Room", entityId: created.id, hotelId: mr });
     }
-    const events = publishMock.mock.calls.map((c) => c[0]);
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
     expect(events.map((e) => e.payload.op)).toEqual([
       "create",
       "update",
@@ -220,8 +220,9 @@ describe("rooms: bulkCreate", () => {
     const audit = await auditRows("ROOM_BULK_CREATE");
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({ entity: "Room", hotelId: mr });
-    expect(publishMock.mock.calls).toHaveLength(1);
-    expect(publishMock.mock.calls[0][0]).toMatchObject({
+    const events = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "definition.changed");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
       type: "definition.changed",
       hotelId: mr,
       payload: { entity: "room", op: "create" },

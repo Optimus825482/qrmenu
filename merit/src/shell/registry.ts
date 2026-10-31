@@ -27,6 +27,11 @@ export type AppProps = {
   close(): void;
   setStatus(text: string): void;
   setDirty(dirty: boolean): void;
+  /**
+   * Opens another app in a new window (`panel` = the app's `initialPanel`, e.g. a Tanımlamalar tree
+   * node). Does nothing for an app the user may not open; at the window limit it says so.
+   */
+  openApp(appId: string, opts?: { hotelId?: string; panel?: string }): void;
 };
 
 /** App registration contract (spec §5.2). Modules add their apps with registerApp(). */

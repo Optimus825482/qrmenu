@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@/generated/prisma/client";
+import { publish } from "@/lib/realtime";
 
 export type AuditEntry = {
   userId?: string;
@@ -11,12 +12,15 @@ export type AuditEntry = {
   ip?: string;
 };
 
-/** Writes an audit_logs row. Pass the transaction client to make it atomic with the change. */
+/**
+ * Writes an audit_logs row and announces `audit.created` to SISTEM sessions.
+ * Pass the transaction client so the NOTIFY commits with the row and disappears on rollback.
+ */
 export async function audit(
   tx: Pick<PrismaClient, "auditLog"> | Prisma.TransactionClient,
   entry: AuditEntry,
 ): Promise<void> {
-  await tx.auditLog.create({
+  const row = await tx.auditLog.create({
     data: {
       userId: entry.userId,
       hotelId: entry.hotelId,
@@ -27,5 +31,21 @@ export async function audit(
       after: entry.after as Prisma.InputJsonValue | undefined,
       ip: entry.ip,
     },
+    select: { id: true, action: true, entity: true, entityId: true, hotelId: true },
   });
+  await publish(
+    {
+      type: "audit.created",
+      roleKinds: ["SISTEM"],
+      ...(row.hotelId ? { hotelId: row.hotelId } : {}),
+      payload: {
+        id: row.id,
+        action: row.action,
+        entity: row.entity,
+        entityId: row.entityId,
+        hotelId: row.hotelId,
+      },
+    },
+    tx as Prisma.TransactionClient,
+  );
 }

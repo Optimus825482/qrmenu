@@ -5,6 +5,7 @@ import type { MeritEvent } from "@/lib/realtime-events";
 import { TZ } from "@/lib/time";
 import { formatInTimeZone } from "date-fns-tz";
 import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
+import { useSetupSummary } from "../useSetupSummary";
 import { useSse } from "../useSse";
 import type { AppProps } from "../registry";
 
@@ -22,6 +23,9 @@ export function CommandCenter({ hotelId, setStatus }: AppProps) {
     setStatus(`Son güncelleme ${clock(at)}`),
   );
 
+  const setup = useSetupSummary();
+  const setupRows = hotelId ? setup.rows.filter((r) => r.hotelId === hotelId) : setup.rows;
+
   const { status } = useSse((e: MeritEvent) => {
     const parsed = new Date(e.at);
     const at = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
@@ -29,6 +33,7 @@ export function CommandCenter({ hotelId, setStatus }: AppProps) {
       [{ key: ++counter.current, at, type: e.type, hotelId: e.hotelId }, ...prev].slice(0, FEED_LIMIT),
     );
     if (affectsKpis(e.type)) scheduleRefresh();
+    if (e.type === "definition.changed") setup.scheduleRefresh();
   });
 
   const hotelCode = (id?: string) => kpis?.openSessionsByHotel.find((h) => h.hotelId === id)?.code;
@@ -62,6 +67,29 @@ export function CommandCenter({ hotelId, setStatus }: AppProps) {
           <span className="xp-kpi-label">Bugünkü bildirim</span>
         </div>
       </div>
+      {setupRows.length > 0 ? (
+        <fieldset className="xp-group xp-cc-setup">
+          <legend>Kurulum %</legend>
+          <ul className="xp-list" aria-label="Kurulum durumu">
+            {setupRows.map((r) => (
+              <li key={r.hotelId} data-testid={`setup-${r.code}`}>
+                <span>{r.name}</span>
+                <div
+                  role="progressbar"
+                  aria-label={`${r.name} kurulum ilerlemesi`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={r.percent}
+                  className="xp-progress"
+                >
+                  <div className="xp-progress-bar" style={{ width: `${r.percent}%` }} />
+                </div>
+                <span className="xp-list-count">%{r.percent}</span>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+      ) : null}
       <div className="xp-cc-cols">
         <fieldset className="xp-group">
           <legend>Otellere göre online</legend>

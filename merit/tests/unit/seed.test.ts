@@ -97,6 +97,17 @@ describe("seed (gerçek test DB)", () => {
     expect(await permission("R-OTM", "CR-KUL")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: false, canReport: false });
     expect(await permission("R-FBM", "CR-KUL")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: false });
     expect(await permission("R-GAR", "CR-KUL")).toBeNull();
+    expect(await permission("R-OTM", "CR-DEN")).toMatchObject({
+      canView: true,
+      canReport: true,
+      canCreate: false,
+      canEdit: false,
+      canApprove: false,
+    });
+    expect(await permission("R-FBM", "CR-DEN")).toMatchObject({ canView: true, canReport: true });
+    expect(await permission("R-ITT", "CR-DEN")).toMatchObject({ canView: true, canReport: true, canCreate: false });
+    expect(await permission("R-SYS", "CR-DEN")).toMatchObject({ canView: true, canReport: true, canApprove: true });
+    expect(await permission("R-GAR", "CR-DEN")).toBeNull();
   });
 
   it("tanım ekranları CR-TAN/CR-REH: R-SYS tam, R-ITT yalnız V, yönetim rolleri V,O,D; diğer rollerde satır yok", async () => {
