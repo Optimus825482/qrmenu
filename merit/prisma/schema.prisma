@@ -1,0 +1,1353 @@
+// Merit platform data model — design spec §3.1, §3.2, §3.3.
+// Models are English, tables are snake_case plurals via @@map, enum values follow the Turkish business language.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enums ─────────────────────────────
+
+enum ModuleKey {
+  CORE
+  MINIBAR
+  QR_MENU
+  QR_ORDER
+  ROOM_SERVICE
+}
+
+enum OutletType {
+  HAVUZ
+  BAR
+  SAHIL
+  SALON
+  BAHCE
+  SPA
+  CABANA
+  ODA_SERVISI
+  GENEL
+}
+
+enum PriceDisplay {
+  INHERIT
+  SHOW
+  HIDE
+}
+
+enum RoleKind {
+  SISTEM
+  YONETIM
+  OUTLET
+  MUTFAK
+  MINIBAR
+}
+
+enum SessionStatus {
+  ONLINE
+  UYARI
+  CIKTI
+  DUSURULDU
+}
+
+enum LogoutReason {
+  MANUEL
+  SURE_ASIMI
+  HAREKETSIZLIK
+  ZORUNLU
+  TEK_CIHAZ
+  SISTEM
+}
+
+enum ScanKind {
+  MISAFIR
+  PERSONEL
+  SISTEM
+}
+
+enum StockMovementType {
+  GIRIS
+  IADE
+  KULLANIM
+  MYBAR
+  DUZELTME
+  GOC
+}
+
+enum MinibarTxType {
+  SETUP_KONTROL
+  SARFIYAT_YOK
+  MYBAR_KARSILAMA
+  LEGACY
+}
+
+enum RoomCheckType {
+  URUN_EKLENDI
+  SARFIYAT_YOK
+  DND
+  ACIK
+}
+
+enum DndStatus {
+  AKTIF
+  TAMAMLANDI
+  IPTAL
+  EKSIK
+}
+
+enum MybarStatus {
+  BEKLEMEDE
+  TAMAMLANDI
+  IPTAL
+}
+
+enum GuestRecordKind {
+  IN_HOUSE
+  ARRIVAL
+  DEPARTURE
+}
+
+enum UploadStatus {
+  YUKLENDI
+  ISLENIYOR
+  TAMAMLANDI
+  HATA
+  SILINDI
+}
+
+enum TaskType {
+  INHOUSE_KONTROL
+  ARRIVAL_KONTROL
+  DEPARTURE_KONTROL
+}
+
+enum TaskStatus {
+  BEKLIYOR
+  DEVAM
+  TAMAMLANDI
+  DND_BEKLIYOR
+  EKSIK
+}
+
+enum StockRequestStatus {
+  BEKLEMEDE
+  ONAYLANDI
+  TESLIM_EDILDI
+  REDDEDILDI
+  IPTAL
+}
+
+enum Urgency {
+  NORMAL
+  ACIL
+}
+
+enum EmailStatus {
+  GONDERILDI
+  HATA
+  BEKLEMEDE
+}
+
+enum MenuNodeKind {
+  KATEGORI
+  ALT_KATEGORI
+  GRUP
+  OGE
+}
+
+enum OrderKind {
+  MASA
+  ODA_SERVISI
+}
+
+enum OrderStatus {
+  GONDERILDI
+  TEYIT_BEKLIYOR
+  ONAYLANDI
+  HAZIR
+  YOLDA
+  SERVIS_EDILDI
+  TESLIM_EDILDI
+  REDDEDILDI
+  IPTAL
+}
+
+enum CallType {
+  GARSON
+  HESAP
+  DIGER
+}
+
+enum CallStatus {
+  ACIK
+  YANITLANDI
+  KAPANDI
+}
+
+enum PrintJobKind {
+  FIS
+  TEST
+}
+
+enum PrintJobStatus {
+  KUYRUKTA
+  BASILIYOR
+  BASILDI
+  HATA
+}
+
+// ───────────────────────────── §3.1 Core ─────────────────────────────
+
+model Hotel {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  name               String
+  logoUrl            String?  @map("logo_url")
+  address            String?
+  phone              String?
+  isSystemDefault    Boolean  @default(false) @map("is_system_default")
+  isActive           Boolean  @default(true) @map("is_active")
+  emailNotifyEnabled Boolean  @default(false) @map("email_notify_enabled")
+  emailAlertEnabled  Boolean  @default(false) @map("email_alert_enabled")
+  emailReportEnabled Boolean  @default(false) @map("email_report_enabled")
+  emailSystemEnabled Boolean  @default(false) @map("email_system_enabled")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  modules             HotelModule[]
+  floors              Floor[]
+  roomTypes           RoomType[]
+  rooms               Room[]
+  outlets             Outlet[]
+  users               User[]
+  userHotels          UserHotel[]
+  roleScreenPerms     RoleScreenPermission[]
+  roleModuleAccesses  RoleModuleAccess[]
+  sessions            UserSession[]
+  settings            Setting[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  roomTypeSetups      RoomTypeSetup[]
+  stocks              HotelStock[]
+  stockMovements      HotelStockMovement[]
+  minibarTransactions MinibarTransaction[]
+  roomDnds            RoomDnd[]
+  mybarRequests       MybarRequest[]
+  guestRecords        GuestRecord[]
+  occupancyUploads    OccupancyUpload[]
+  uploadTasks         UploadTask[]
+  dailyTasks          DailyTask[]
+  stockRequests       StockRequest[]
+  orders              Order[]
+  orderCounters       OrderCounter[]
+  printers            Printer[]
+
+  @@map("hotels")
+}
+
+model HotelModule {
+  id        String    @id @default(cuid())
+  hotelId   String    @map("hotel_id")
+  moduleKey ModuleKey @map("module_key")
+  enabled   Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([hotelId, moduleKey])
+  @@map("hotel_modules")
+}
+
+model Floor {
+  id        String   @id @default(cuid())
+  hotelId   String   @map("hotel_id")
+  number    Int
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  hotel Hotel  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  rooms Room[]
+
+  @@unique([hotelId, number])
+  @@map("floors")
+}
+
+model RoomType {
+  id           String   @id @default(cuid())
+  hotelId      String   @map("hotel_id")
+  name         String
+  cabinetCount Int      @default(0) @map("cabinet_count")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  hotel  Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  rooms  Room[]
+  setups RoomTypeSetup[]
+
+  @@unique([hotelId, name])
+  @@map("room_types")
+}
+
+model Room {
+  id            String    @id @default(cuid())
+  hotelId       String    @map("hotel_id")
+  floorId       String    @map("floor_id")
+  roomTypeId    String?   @map("room_type_id")
+  number        String
+  capacity      Int?
+  qrToken       String?   @unique @map("qr_token")
+  qrGeneratedAt DateTime? @map("qr_generated_at")
+  guestMessage  String?   @map("guest_message") @db.VarChar(500)
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  hotel               Hotel                @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  floor               Floor                @relation(fields: [floorId], references: [id], onDelete: Restrict)
+  roomType            RoomType?            @relation(fields: [roomTypeId], references: [id], onDelete: SetNull)
+  qrScanLogs          QrScanLog[]
+  minibarTransactions MinibarTransaction[]
+  roomChecks          RoomCheck[]
+  roomDnds            RoomDnd[]
+  mybarRequests       MybarRequest[]
+  guestRecords        GuestRecord[]
+  dailyTaskItems      DailyTaskItem[]
+  orders              Order[]
+
+  @@unique([hotelId, number])
+  @@map("rooms")
+}
+
+model Outlet {
+  id                   String       @id @default(cuid())
+  hotelId              String       @map("hotel_id")
+  name                 String
+  type                 OutletType
+  hasMenu              Boolean      @default(true) @map("has_menu")
+  hasOrdering          Boolean      @default(false) @map("has_ordering")
+  orderingEnabled      Boolean      @default(true) @map("ordering_enabled")
+  priceDisplay         PriceDisplay @default(INHERIT) @map("price_display")
+  themeId              String?      @map("theme_id")
+  printerId            String?      @map("printer_id")
+  kdsEnabled           Boolean      @default(false) @map("kds_enabled")
+  phoneConfirmRequired Boolean      @default(false) @map("phone_confirm_required")
+  isActive             Boolean      @default(true) @map("is_active")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  hotel          Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  theme          MenuTheme?        @relation(fields: [themeId], references: [id], onDelete: SetNull)
+  defaultPrinter Printer?          @relation("OutletDefaultPrinter", fields: [printerId], references: [id], onDelete: SetNull)
+  ownedPrinters  Printer[]         @relation("PrinterOutlet")
+  tables         OutletTable[]
+  members        OutletMember[]
+  assignments    TableAssignment[]
+  sessions       UserSession[]
+  menuNodes      MenuNode[]
+  orders         Order[]
+  waiterCalls    WaiterCall[]
+
+  @@unique([hotelId, name])
+  @@map("outlets")
+}
+
+model OutletTable {
+  id        String   @id @default(cuid())
+  outletId  String   @map("outlet_id")
+  label     String
+  qrToken   String   @unique @map("qr_token")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  outlet      Outlet            @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  assignments TableAssignment[]
+  qrScanLogs  QrScanLog[]
+  orders      Order[]
+  waiterCalls WaiterCall[]
+
+  @@unique([outletId, label])
+  @@map("outlet_tables")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name")
+  email        String?
+  phone        String?
+  roleId       String    @map("role_id")
+  hotelId      String?   @map("hotel_id")
+  supervisorId String?   @map("supervisor_id")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  prefs        Json?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  role                 Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  hotel                Hotel?               @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  supervisor           User?                @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  supervisees          User[]               @relation("UserSupervisor")
+  userHotels           UserHotel[]
+  outletMemberships    OutletMember[]
+  tableAssignments     TableAssignment[]
+  sessions             UserSession[]
+  notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
+  auditLogs            AuditLog[]
+  qrScanLogs           QrScanLog[]
+  stockMovements       HotelStockMovement[]
+  minibarTransactions  MinibarTransaction[]
+  roomChecks           RoomCheck[]
+  roomDndChecks        RoomDndCheck[]
+  mybarSeen            MybarRequest[]       @relation("MybarSeenBy")
+  mybarCompleted       MybarRequest[]       @relation("MybarCompletedBy")
+  mybarCancelled       MybarRequest[]       @relation("MybarCancelledBy")
+  occupancyUploads     OccupancyUpload[]
+  taskStatusLogs       TaskStatusLog[]
+  stockRequestsMade    StockRequest[]       @relation("StockRequestRequestedBy")
+  stockRequestsHandled StockRequest[]       @relation("StockRequestHandledBy")
+  emailLogs            EmailLog[]
+  ordersApproved       Order[]              @relation("OrderApprovedBy")
+  ordersPhoneConfirmed Order[]              @relation("OrderPhoneConfirmedBy")
+  orderEvents          OrderEvent[]
+  waiterCallsResolved  WaiterCall[]
+
+  @@map("users")
+}
+
+model UserHotel {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  hotelId   String   @map("hotel_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, hotelId])
+  @@map("user_hotels")
+}
+
+model OutletMember {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  outletId  String   @map("outlet_id")
+  roleId    String?  @map("role_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  role   Role?  @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, outletId])
+  @@map("outlet_members")
+}
+
+// Partial unique index (at most one active assignment per table) lives in the migration SQL.
+model TableAssignment {
+  id        String   @id @default(cuid())
+  outletId  String   @map("outlet_id")
+  tableId   String   @map("table_id")
+  userId    String   @map("user_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  outlet Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  table  OutletTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  user   User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("table_assignments")
+}
+
+model Role {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  kind             RoleKind
+  maxOnlineMinutes Int?     @map("max_online_minutes")
+  defaultScreen    String?  @map("default_screen")
+  isSystem         Boolean  @default(false) @map("is_system")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  users             User[]
+  outletMembers     OutletMember[]
+  screenPermissions RoleScreenPermission[]
+  moduleAccesses    RoleModuleAccess[]
+  sessions          UserSession[]
+
+  @@map("roles")
+}
+
+model AppScreen {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  moduleKey ModuleKey @map("module_key")
+  name      String
+  path      String
+  group     String
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  permissions RoleScreenPermission[]
+
+  @@map("app_screens")
+}
+
+model RoleScreenPermission {
+  id         String   @id @default(cuid())
+  roleId     String   @map("role_id")
+  screenId   String   @map("screen_id")
+  hotelId    String?  @map("hotel_id")
+  canView    Boolean  @default(false) @map("can_view")
+  canCreate  Boolean  @default(false) @map("can_create")
+  canEdit    Boolean  @default(false) @map("can_edit")
+  canApprove Boolean  @default(false) @map("can_approve")
+  canReport  Boolean  @default(false) @map("can_report")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  role   Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  screen AppScreen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  hotel  Hotel?    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, screenId, hotelId])
+  @@map("role_screen_permissions")
+}
+
+model RoleModuleAccess {
+  id        String    @id @default(cuid())
+  roleId    String    @map("role_id")
+  hotelId   String?   @map("hotel_id")
+  moduleKey ModuleKey @map("module_key")
+  enabled   Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  role  Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, hotelId, moduleKey])
+  @@map("role_module_accesses")
+}
+
+model UserSession {
+  id           String        @id @default(cuid())
+  userId       String        @map("user_id")
+  hotelId      String        @map("hotel_id")
+  outletId     String?       @map("outlet_id")
+  roleId       String        @map("role_id")
+  deviceLabel  String?       @map("device_label")
+  status       SessionStatus @default(ONLINE)
+  loginAt      DateTime      @default(now()) @map("login_at")
+  lastSeenAt   DateTime      @default(now()) @map("last_seen_at")
+  expiresAt    DateTime      @map("expires_at")
+  warnedAt     DateTime?     @map("warned_at")
+  logoutAt     DateTime?     @map("logout_at")
+  logoutReason LogoutReason? @map("logout_reason")
+  ip           String
+  userAgent    String        @map("user_agent")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  hotel  Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  outlet Outlet?        @relation(fields: [outletId], references: [id], onDelete: SetNull)
+  role   Role           @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  events SessionEvent[]
+
+  @@index([status, expiresAt])
+  @@map("user_sessions")
+}
+
+model SessionEvent {
+  id        String   @id @default(cuid())
+  sessionId String   @map("session_id")
+  event     String
+  detail    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("session_events")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  hotelId   String?  @map("hotel_id")
+  key       String
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([hotelId, key])
+  @@map("settings")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  hotelId   String?   @map("hotel_id")
+  type      String
+  title     String
+  body      String
+  refType   String?   @map("ref_type")
+  refId     String?   @map("ref_id")
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?  @map("user_agent")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  hotelId   String?  @map("hotel_id")
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id")
+  before    Json?
+  after     Json?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+model QrScanLog {
+  id        String   @id @default(cuid())
+  roomId    String?  @map("room_id")
+  tableId   String?  @map("table_id")
+  userId    String?  @map("user_id")
+  kind      ScanKind
+  ok        Boolean
+  error     String?
+  ip        String
+  userAgent String   @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  room  Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  table OutletTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  user  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("qr_scan_logs")
+}
+
+// ───────────────────────────── §3.2 Minibar ─────────────────────────────
+
+model ProductGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  @@map("product_groups")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  groupId       String   @map("group_id")
+  code          String?  @unique
+  name          String
+  barcode       String?  @unique
+  unit          String   @default("Adet")
+  criticalLevel Int      @default(10) @map("critical_level")
+  purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
+  salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  group             ProductGroup             @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  setupItems        SetupItem[]
+  stocks            HotelStock[]
+  stockMovements    HotelStockMovement[]
+  transactionItems  MinibarTransactionItem[]
+  mybarRequestItems MybarRequestItem[]
+  stockRequestItems StockRequestItem[]
+
+  @@map("products")
+}
+
+model Setup {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String?
+  isInsideCabinet Boolean  @default(true) @map("is_inside_cabinet")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  items            SetupItem[]
+  roomTypeSetups   RoomTypeSetup[]
+  transactionItems MinibarTransactionItem[]
+
+  @@map("setups")
+}
+
+model SetupItem {
+  id        String   @id @default(cuid())
+  setupId   String   @map("setup_id")
+  productId String   @map("product_id")
+  qty       Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  setup   Setup   @relation(fields: [setupId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([setupId, productId])
+  @@map("setup_items")
+}
+
+model RoomTypeSetup {
+  hotelId    String   @map("hotel_id")
+  roomTypeId String   @map("room_type_id")
+  setupId    String   @map("setup_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  hotel    Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+  setup    Setup    @relation(fields: [setupId], references: [id], onDelete: Restrict)
+
+  @@id([hotelId, roomTypeId, setupId])
+  @@map("room_type_setups")
+}
+
+// CHECK (remaining_qty >= 0) lives in the migration SQL.
+model HotelStock {
+  id            String   @id @default(cuid())
+  hotelId       String   @map("hotel_id")
+  productId     String   @map("product_id")
+  totalQty      Int      @default(0) @map("total_qty")
+  usedQty       Int      @default(0) @map("used_qty")
+  remainingQty  Int      @default(0) @map("remaining_qty")
+  criticalLevel Int      @default(50) @map("critical_level")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([hotelId, productId])
+  @@map("hotel_stocks")
+}
+
+model HotelStockMovement {
+  id        String            @id @default(cuid())
+  hotelId   String            @map("hotel_id")
+  productId String            @map("product_id")
+  userId    String            @map("user_id")
+  type      StockMovementType
+  qty       Int
+  refType   String?           @map("ref_type")
+  refId     String?           @map("ref_id")
+  note      String?
+  createdAt DateTime          @default(now()) @map("created_at")
+
+  hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([hotelId, productId, createdAt])
+  @@map("hotel_stock_movements")
+}
+
+model MinibarTransaction {
+  id         String        @id @default(cuid())
+  hotelId    String        @map("hotel_id")
+  roomId     String        @map("room_id")
+  userId     String        @map("user_id")
+  type       MinibarTxType
+  legacyType String?       @map("legacy_type")
+  note       String?
+  occurredAt DateTime      @default(now()) @map("occurred_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  hotel Hotel                    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room  Room                     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user  User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items MinibarTransactionItem[]
+
+  @@index([roomId, occurredAt])
+  @@index([hotelId, occurredAt])
+  @@map("minibar_transactions")
+}
+
+model MinibarTransactionItem {
+  id            String   @id @default(cuid())
+  transactionId String   @map("transaction_id")
+  productId     String   @map("product_id")
+  setupId       String?  @map("setup_id")
+  setupQty      Int      @default(0) @map("setup_qty")
+  startStock    Int      @default(0) @map("start_stock")
+  endStock      Int      @default(0) @map("end_stock")
+  consumed      Int      @default(0)
+  added         Int      @default(0)
+  purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
+  salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  transaction MinibarTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product     Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
+  setup       Setup?             @relation(fields: [setupId], references: [id], onDelete: SetNull)
+
+  @@map("minibar_transaction_items")
+}
+
+model RoomCheck {
+  id        String        @id @default(cuid())
+  roomId    String        @map("room_id")
+  userId    String        @map("user_id")
+  checkDate DateTime      @map("check_date") @db.Date
+  startedAt DateTime      @default(now()) @map("started_at")
+  endedAt   DateTime?     @map("ended_at")
+  type      RoomCheckType
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([roomId, checkDate])
+  @@index([userId, checkDate])
+  @@map("room_checks")
+}
+
+model RoomDnd {
+  id         String    @id @default(cuid())
+  hotelId    String    @map("hotel_id")
+  roomId     String    @map("room_id")
+  date       DateTime  @db.Date
+  count      Int       @default(1)
+  firstAt    DateTime  @default(now()) @map("first_at")
+  lastAt     DateTime  @default(now()) @map("last_at")
+  status     DndStatus @default(AKTIF)
+  taskItemId String?   @map("task_item_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  hotel    Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room     Room           @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  taskItem DailyTaskItem? @relation(fields: [taskItemId], references: [id], onDelete: SetNull)
+  checks   RoomDndCheck[]
+
+  @@unique([roomId, date])
+  @@map("room_dnds")
+}
+
+model RoomDndCheck {
+  id        String   @id @default(cuid())
+  dndId     String   @map("dnd_id")
+  no        Int
+  userId    String   @map("user_id")
+  at        DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  dnd  RoomDnd @relation(fields: [dndId], references: [id], onDelete: Cascade)
+  user User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("room_dnd_checks")
+}
+
+model MybarRequest {
+  id                String      @id @default(cuid())
+  hotelId           String      @map("hotel_id")
+  roomId            String      @map("room_id")
+  businessDate      DateTime    @map("business_date") @db.Date
+  status            MybarStatus @default(BEKLEMEDE)
+  language          String
+  note              String?
+  noteTr            String?     @map("note_tr")
+  seenById          String?     @map("seen_by_id")
+  seenAt            DateTime?   @map("seen_at")
+  completedById     String?     @map("completed_by_id")
+  completedAt       DateTime?   @map("completed_at")
+  closeNote         String?     @map("close_note")
+  closedWithMissing Boolean     @default(false) @map("closed_with_missing")
+  cancelledById     String?     @map("cancelled_by_id")
+  cancelledAt       DateTime?   @map("cancelled_at")
+  cancelNote        String?     @map("cancel_note")
+  idempotencyKey    String      @unique @map("idempotency_key")
+  clientIp          String      @map("client_ip")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  hotel       Hotel              @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room        Room               @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  seenBy      User?              @relation("MybarSeenBy", fields: [seenById], references: [id], onDelete: SetNull)
+  completedBy User?              @relation("MybarCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  cancelledBy User?              @relation("MybarCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  items       MybarRequestItem[]
+
+  @@index([hotelId, status])
+  @@index([roomId, businessDate])
+  @@map("mybar_requests")
+}
+
+model MybarRequestItem {
+  id           String   @id @default(cuid())
+  requestId    String   @map("request_id")
+  productId    String   @map("product_id")
+  requestedQty Int      @map("requested_qty")
+  deliveredQty Int      @default(0) @map("delivered_qty")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  request MybarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("mybar_request_items")
+}
+
+model GuestRecord {
+  id            String          @id @default(cuid())
+  hotelId       String          @map("hotel_id")
+  roomId        String          @map("room_id")
+  uploadId      String?         @map("upload_id")
+  batchCode     String          @map("batch_code")
+  guestCount    Int             @map("guest_count")
+  arrivalDate   DateTime        @map("arrival_date") @db.Date
+  arrivalTime   String?         @map("arrival_time")
+  departureDate DateTime        @map("departure_date") @db.Date
+  departureTime String?         @map("departure_time")
+  kind          GuestRecordKind
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  hotel          Hotel            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room           Room             @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  upload         OccupancyUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+  dailyTaskItems DailyTaskItem[]
+
+  @@map("guest_records")
+}
+
+model OccupancyUpload {
+  id        String       @id @default(cuid())
+  hotelId   String       @map("hotel_id")
+  code      String       @unique
+  fileName  String       @map("file_name")
+  kind      String
+  status    UploadStatus @default(YUKLENDI)
+  totalRows Int          @default(0) @map("total_rows")
+  okRows    Int          @default(0) @map("ok_rows")
+  errorRows Int          @default(0) @map("error_rows")
+  errors    Json         @default("[]")
+  userId    String       @map("user_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  hotel        Hotel         @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  guestRecords GuestRecord[]
+  uploadTasks  UploadTask[]
+
+  @@map("occupancy_uploads")
+}
+
+model UploadTask {
+  id        String       @id @default(cuid())
+  hotelId   String       @map("hotel_id")
+  date      DateTime     @db.Date
+  kind      String
+  status    UploadStatus @default(YUKLENDI)
+  uploadId  String?      @map("upload_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  hotel  Hotel            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  upload OccupancyUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
+
+  @@unique([hotelId, date, kind])
+  @@map("upload_tasks")
+}
+
+model DailyTask {
+  id          String     @id @default(cuid())
+  hotelId     String     @map("hotel_id")
+  date        DateTime   @db.Date
+  type        TaskType
+  status      TaskStatus @default(BEKLIYOR)
+  completedAt DateTime?  @map("completed_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  hotel Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  items DailyTaskItem[]
+
+  @@unique([hotelId, date, type])
+  @@map("daily_tasks")
+}
+
+model DailyTaskItem {
+  id            String     @id @default(cuid())
+  taskId        String     @map("task_id")
+  roomId        String     @map("room_id")
+  guestRecordId String?    @map("guest_record_id")
+  status        TaskStatus @default(BEKLIYOR)
+  arrivalTime   String?    @map("arrival_time")
+  departureTime String?    @map("departure_time")
+  priority      Int        @default(999)
+  checkedAt     DateTime?  @map("checked_at")
+  dndCount      Int        @default(0) @map("dnd_count")
+  lastDndAt     DateTime?  @map("last_dnd_at")
+  note          String?
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  task        DailyTask       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  room        Room            @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  guestRecord GuestRecord?    @relation(fields: [guestRecordId], references: [id], onDelete: SetNull)
+  statusLogs  TaskStatusLog[]
+  roomDnds    RoomDnd[]
+
+  @@map("daily_task_items")
+}
+
+model TaskStatusLog {
+  id         String     @id @default(cuid())
+  taskItemId String     @map("task_item_id")
+  from       TaskStatus
+  to         TaskStatus
+  userId     String?    @map("user_id")
+  note       String?
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  taskItem DailyTaskItem @relation(fields: [taskItemId], references: [id], onDelete: Cascade)
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("task_status_logs")
+}
+
+model StockRequest {
+  id            String             @id @default(cuid())
+  hotelId       String             @map("hotel_id")
+  code          String             @unique
+  requestedById String             @map("requested_by_id")
+  handledById   String?            @map("handled_by_id")
+  status        StockRequestStatus @default(BEKLEMEDE)
+  note          String?
+  rejectReason  String?            @map("reject_reason")
+  approvedAt    DateTime?          @map("approved_at")
+  deliveredAt   DateTime?          @map("delivered_at")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  hotel       Hotel              @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  requestedBy User               @relation("StockRequestRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  handledBy   User?              @relation("StockRequestHandledBy", fields: [handledById], references: [id], onDelete: SetNull)
+  items       StockRequestItem[]
+
+  @@map("stock_requests")
+}
+
+model StockRequestItem {
+  id           String   @id @default(cuid())
+  requestId    String   @map("request_id")
+  productId    String   @map("product_id")
+  requestedQty Int      @map("requested_qty")
+  approvedQty  Int?     @map("approved_qty")
+  deliveredQty Int?     @map("delivered_qty")
+  urgency      Urgency  @default(NORMAL)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  request StockRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("stock_request_items")
+}
+
+// Singleton row (system level).
+model EmailSetting {
+  id          String   @id @default(cuid())
+  smtpHost    String   @map("smtp_host")
+  port        Int
+  user        String
+  passwordEnc String   @map("password_enc")
+  tls         Boolean  @default(false)
+  ssl         Boolean  @default(false)
+  senderEmail String   @map("sender_email")
+  senderName  String   @map("sender_name")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("email_settings")
+}
+
+model EmailLog {
+  id         String      @id @default(cuid())
+  to         String
+  userId     String?     @map("user_id")
+  subject    String
+  kind       String
+  status     EmailStatus @default(BEKLEMEDE)
+  error      String?
+  trackingId String      @unique @map("tracking_id")
+  refType    String?     @map("ref_type")
+  refId      String?     @map("ref_id")
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("email_logs")
+}
+
+// ───────────────────────────── §3.3 Menu & orders ─────────────────────────────
+
+// Hierarchy rule (OGE under GRUP, GRUP under ALT_KATEGORI, ...) is enforced in the service layer.
+model MenuNode {
+  id          String       @id @default(cuid())
+  outletId    String       @map("outlet_id")
+  parentId    String?      @map("parent_id")
+  kind        MenuNodeKind
+  name        String
+  detail      String?
+  imageUrl    String?      @map("image_url")
+  price       Decimal?     @db.Decimal(10, 2)
+  currency    String       @default("EUR")
+  allergens   String[]
+  isAvailable Boolean      @default(true) @map("is_available")
+  sortOrder   Int          @default(0) @map("sort_order")
+  isActive    Boolean      @default(true) @map("is_active")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  outlet       Outlet                @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  parent       MenuNode?             @relation("MenuNodeTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     MenuNode[]            @relation("MenuNodeTree")
+  translations MenuNodeTranslation[]
+  orderItems   OrderItem[]
+
+  @@index([outletId, parentId])
+  @@map("menu_nodes")
+}
+
+model MenuNodeTranslation {
+  id        String   @id @default(cuid())
+  nodeId    String   @map("node_id")
+  lang      String
+  name      String
+  detail    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  node MenuNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@unique([nodeId, lang])
+  @@map("menu_node_translations")
+}
+
+model MenuTheme {
+  id           String   @id @default(cuid())
+  name         String
+  bg           String
+  accent       String
+  soft         String
+  textOnAccent String   @map("text_on_accent")
+  isDefault    Boolean  @default(false) @map("is_default")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  outlets Outlet[]
+
+  @@map("menu_themes")
+}
+
+model Order {
+  id                 String      @id @default(cuid())
+  hotelId            String      @map("hotel_id")
+  outletId           String      @map("outlet_id")
+  kind               OrderKind
+  tableId            String?     @map("table_id")
+  roomId             String?     @map("room_id")
+  businessDate       DateTime    @map("business_date") @db.Date
+  orderNo            Int         @map("order_no")
+  status             OrderStatus @default(GONDERILDI)
+  guestLanguage      String      @map("guest_language")
+  pricesShown        Boolean     @default(false) @map("prices_shown")
+  currency           String      @default("EUR")
+  subtotal           Decimal?    @db.Decimal(10, 2)
+  note               String?
+  approvedById       String?     @map("approved_by_id")
+  approvedAt         DateTime?   @map("approved_at")
+  rejectReason       String?     @map("reject_reason")
+  phoneConfirmedById String?     @map("phone_confirmed_by_id")
+  phoneConfirmedAt   DateTime?   @map("phone_confirmed_at")
+  readyAt            DateTime?   @map("ready_at")
+  servedAt           DateTime?   @map("served_at")
+  cancelledAt        DateTime?   @map("cancelled_at")
+  idempotencyKey     String      @unique @map("idempotency_key")
+  clientIp           String      @map("client_ip")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  hotel            Hotel        @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  outlet           Outlet       @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  table            OutletTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  room             Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  approvedBy       User?        @relation("OrderApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  phoneConfirmedBy User?        @relation("OrderPhoneConfirmedBy", fields: [phoneConfirmedById], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+  events           OrderEvent[]
+  printJobs        PrintJob[]
+
+  @@unique([hotelId, businessDate, orderNo])
+  @@index([outletId, status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String   @map("order_id")
+  menuNodeId   String   @map("menu_node_id")
+  nameSnapshot String   @map("name_snapshot")
+  qty          Int
+  unitPrice    Decimal? @map("unit_price") @db.Decimal(10, 2)
+  note         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuNode MenuNode @relation(fields: [menuNodeId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model OrderEvent {
+  id        String       @id @default(cuid())
+  orderId   String       @map("order_id")
+  userId    String?      @map("user_id")
+  from      OrderStatus?
+  to        OrderStatus
+  note      String?
+  at        DateTime     @default(now())
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("order_events")
+}
+
+// Per-hotel, per-business-day counter that backs Order.orderNo.
+model OrderCounter {
+  id           String   @id @default(cuid())
+  hotelId      String   @map("hotel_id")
+  businessDate DateTime @map("business_date") @db.Date
+  lastNo       Int      @default(0) @map("last_no")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+
+  @@unique([hotelId, businessDate])
+  @@map("order_counters")
+}
+
+model WaiterCall {
+  id           String     @id @default(cuid())
+  outletId     String     @map("outlet_id")
+  tableId      String     @map("table_id")
+  type         CallType
+  status       CallStatus @default(ACIK)
+  resolvedById String?    @map("resolved_by_id")
+  resolvedAt   DateTime?  @map("resolved_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  outlet     Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  table      OutletTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  resolvedBy User?       @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@map("waiter_calls")
+}
+
+model Printer {
+  id         String    @id @default(cuid())
+  hotelId    String    @map("hotel_id")
+  outletId   String?   @map("outlet_id")
+  name       String
+  ip         String
+  port       Int       @default(9100)
+  codepage   String    @default("cp857")
+  paperWidth Int       @default(80) @map("paper_width")
+  isActive   Boolean   @default(true) @map("is_active")
+  lastSeenAt DateTime? @map("last_seen_at")
+  lastStatus String?   @map("last_status")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  hotel             Hotel      @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  outlet            Outlet?    @relation("PrinterOutlet", fields: [outletId], references: [id], onDelete: SetNull)
+  defaultForOutlets Outlet[]   @relation("OutletDefaultPrinter")
+  jobs              PrintJob[]
+
+  @@map("printers")
+}
+
+model PrintJob {
+  id        String         @id @default(cuid())
+  printerId String         @map("printer_id")
+  orderId   String?        @map("order_id")
+  kind      PrintJobKind
+  payload   Json
+  status    PrintJobStatus @default(KUYRUKTA)
+  attempts  Int            @default(0)
+  error     String?
+  printedAt DateTime?      @map("printed_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  printer Printer @relation(fields: [printerId], references: [id], onDelete: Restrict)
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@map("print_jobs")
+}
