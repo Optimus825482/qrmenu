@@ -21,7 +21,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_test
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/merit
       DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/merit_test
       SESSION_SECRET: ci-session-secret-0123456789abcdef0123456789
       QR_HMAC_SECRET: ci-qr-hmac-secret-0123456789abcdef012345678
@@ -41,5 +41,12 @@ jobs:
           cache-dependency-path: merit/package-lock.json
       - run: npm ci
       - run: npx prisma generate
-      - run: npx prisma migrate deploy
+      - name: Create dev database
+        run: psql postgresql://postgres:test@localhost:5432/postgres -c "CREATE DATABASE merit;"
+      - name: Migrate dev database
+        run: npx prisma migrate deploy
+      - name: Migrate test database
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
       - run: npm run check
