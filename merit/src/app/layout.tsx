@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Merit OS", statusBarStyle: "default" },
 };
 
-export const viewport: Viewport = { themeColor: APP_THEME_COLOR };
+export const viewport: Viewport = {
+  themeColor: APP_THEME_COLOR,
+  // Lets the PWA draw under the OS bars; the footer band and mobile tab bar pad env(safe-area-inset-bottom).
+  viewportFit: "cover",
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

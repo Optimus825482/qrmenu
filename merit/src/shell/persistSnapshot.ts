@@ -7,7 +7,7 @@ export type RestoredLayout = Pick<ShellPrefs, "windows" | "icons">;
 /**
  * What the shell persists. On the desktop: the whole current state. In mobile mode the desktop
  * layout is not shown or editable, so `windows`/`icons` stay exactly as restored and only the
- * appearance (wallpaper, font, theme) follows the current state.
+ * appearance (wallpaper, font, theme, brand switches) follows the current state.
  */
 export function buildPersistSnapshot(
   mode: ShellMode,

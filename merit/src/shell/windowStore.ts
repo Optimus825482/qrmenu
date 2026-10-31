@@ -5,6 +5,7 @@ import {
   DEFAULT_APPEARANCE,
   FONT_FAMILIES,
   FONT_SCALES,
+  HEX_COLOR,
   MAX_WINDOWS,
   THEMES,
   WALLPAPERS,
@@ -36,6 +37,8 @@ export const Z_SPAN = 10_000;
 export const MIN_W = 360;
 export const MIN_H = 240;
 export const TASKBAR_H = 30;
+/** Height of the copyright band below the taskbar (theme.css: .xp-footer-band), when enabled. */
+export const FOOTER_HEIGHT = 22;
 export const CASCADE_STEP = 24;
 export const CASCADE_ORIGIN = 32;
 /** Desktop icon grid used by "Simgeleri hizala" and the default layout. */
@@ -54,9 +57,12 @@ type ShellState = {
   cascade: number;
   viewport: { w: number; h: number };
   wallpaper: Wallpaper;
+  wallpaperColor: string;
   fontScale: FontScale;
   fontFamily: FontFamily;
   theme: Theme;
+  footerBand: boolean;
+  brandWatermark: boolean;
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
@@ -91,10 +97,15 @@ type ShellActions = {
   resize(id: string, w: number, h: number): void;
   setHotel(id: string, hotelId: string): void;
   setWallpaper(wallpaper: Wallpaper): void;
+  /** `#rrggbb` color of the "Düz renk" wallpaper; anything else is ignored. */
+  setWallpaperColor(hex: string): void;
   setFontScale(scale: FontScale): void;
   setFontFamily(family: FontFamily): void;
   setTheme(theme: Theme): void;
-  /** Wallpaper, font and theme back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
+  /** Shows/hides the footer band; the desktop area (and maximized windows) shrink with it. */
+  setFooterBand(on: boolean): void;
+  setBrandWatermark(on: boolean): void;
+  /** Wallpaper, font, theme and brand switches back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
   resetAppearance(): void;
   addIcon(appId: string, x: number, y: number): void;
   moveIcon(appId: string, x: number, y: number): void;
@@ -110,10 +121,23 @@ export type WindowStore = ShellState & ShellActions;
 const oneOf = <T extends string>(allowed: readonly T[], value: unknown, fallback: T): T =>
   allowed.includes(value as T) ? (value as T) : fallback;
 
+const bool = (value: unknown, fallback: boolean): boolean =>
+  typeof value === "boolean" ? value : fallback;
+
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), Math.max(lo, hi));
 
-/** Height available to windows: the viewport minus the taskbar. */
+/** Height available to windows: the (effective) viewport minus the taskbar. */
 export const deskHeight = (vp: { h: number }) => Math.max(0, vp.h - TASKBAR_H);
+
+/**
+ * The viewport as windows and icons see it: the browser viewport minus the footer band when it is
+ * shown. Everything that positions or clamps goes through this, never through `viewport` directly.
+ */
+export function effectiveViewport(
+  s: Pick<ShellState, "viewport" | "footerBand">,
+): ShellState["viewport"] {
+  return { w: s.viewport.w, h: Math.max(0, s.viewport.h - (s.footerBand ? FOOTER_HEIGHT : 0)) };
+}
 
 export function minSize(app: AppDefinition | undefined): { w: number; h: number } {
   return { w: app?.window.minW ?? MIN_W, h: app?.window.minH ?? MIN_H };
@@ -237,6 +261,17 @@ export function createWindowStore() {
       if (next && next !== current) set({ windows: { ...get().windows, [id]: next } });
     };
 
+    /** Every window re-fitted to `vp` (maximized ones fill it, others are clamped into it). */
+    const fitWindows = (vp: ShellState["viewport"]): Record<string, WinState> => {
+      const windows: Record<string, WinState> = {};
+      for (const [id, win] of Object.entries(get().windows)) {
+        windows[id] = win.maximized
+          ? { ...win, ...maximizedRect(vp) }
+          : { ...win, ...clampWindowPosition(win.x, win.y, win.w, win.h, vp) };
+      }
+      return windows;
+    };
+
     return {
       windows: {},
       order: [],
@@ -263,20 +298,18 @@ export function createWindowStore() {
         const vp = { w: Math.max(0, Math.round(w)), h: Math.max(0, Math.round(h)) };
         const old = get().viewport;
         if (old.w === vp.w && old.h === vp.h) return;
-        const windows: Record<string, WinState> = {};
-        for (const [id, win] of Object.entries(get().windows)) {
-          windows[id] = win.maximized
-            ? { ...win, ...maximizedRect(vp) }
-            : { ...win, ...clampWindowPosition(win.x, win.y, win.w, win.h, vp) };
-        }
-        set({ viewport: vp, windows });
+        set({
+          viewport: vp,
+          windows: fitWindows(effectiveViewport({ viewport: vp, footerBand: get().footerBand })),
+        });
       },
 
       open(appId, opts = {}) {
         const app = allowed(appId, opts.hotelId);
         if (!app || get().order.length >= MAX_WINDOWS) return null;
         compactZ();
-        const { viewport: vp, order, cascade, seq, nextZ } = get();
+        const { order, cascade, seq, nextZ } = get();
+        const vp = effectiveViewport(get());
         const w = Math.min(app.window.w, Math.max(minSize(app).w, vp.w));
         const h = Math.min(app.window.h, Math.max(minSize(app).h, deskHeight(vp)));
         let step = order.length === 0 ? 0 : cascade + 1;
@@ -328,7 +361,7 @@ export function createWindowStore() {
       },
 
       toggleMaximize(id) {
-        const vp = get().viewport;
+        const vp = effectiveViewport(get());
         update(id, (w) => {
           if (w.maximized) {
             const prev = w.prev ?? { x: w.x, y: w.y, w: w.w, h: w.h };
@@ -342,7 +375,7 @@ export function createWindowStore() {
       },
 
       move(id, x, y) {
-        const vp = get().viewport;
+        const vp = effectiveViewport(get());
         update(id, (w) => {
           if (w.maximized) return w;
           const pos = clampWindowPosition(x, y, w.w, w.h, vp);
@@ -351,7 +384,7 @@ export function createWindowStore() {
       },
 
       resize(id, width, height) {
-        const vp = get().viewport;
+        const vp = effectiveViewport(get());
         update(id, (w) => {
           const app = getApp(w.appId);
           if (w.maximized || app?.window.resizable === false) return w;
@@ -374,6 +407,10 @@ export function createWindowStore() {
         if (WALLPAPERS.includes(wallpaper)) set({ wallpaper });
       },
 
+      setWallpaperColor(hex) {
+        if (typeof hex === "string" && HEX_COLOR.test(hex)) set({ wallpaperColor: hex.toLowerCase() });
+      },
+
       setFontScale(fontScale) {
         if (FONT_SCALES.includes(fontScale)) set({ fontScale });
       },
@@ -386,18 +423,33 @@ export function createWindowStore() {
         if (THEMES.includes(theme)) set({ theme });
       },
 
+      setFooterBand(on) {
+        if (typeof on !== "boolean" || on === get().footerBand) return;
+        const vp = effectiveViewport({ viewport: get().viewport, footerBand: on });
+        set({
+          footerBand: on,
+          windows: fitWindows(vp),
+          icons: get().icons.map((i) => ({ appId: i.appId, ...iconPosition(i.x, i.y, vp) })),
+        });
+      },
+
+      setBrandWatermark(on) {
+        if (typeof on === "boolean") set({ brandWatermark: on });
+      },
+
       resetAppearance() {
+        get().setFooterBand(DEFAULT_APPEARANCE.footerBand);
         set({ ...DEFAULT_APPEARANCE });
       },
 
       addIcon(appId, x, y) {
-        const { icons, viewport } = get();
+        const { icons } = get();
         if (!allowed(appId) || icons.some((i) => i.appId === appId)) return;
-        set({ icons: [...icons, { appId, ...iconPosition(x, y, viewport) }] });
+        set({ icons: [...icons, { appId, ...iconPosition(x, y, effectiveViewport(get())) }] });
       },
 
       moveIcon(appId, x, y) {
-        const pos = iconPosition(x, y, get().viewport);
+        const pos = iconPosition(x, y, effectiveViewport(get()));
         set({ icons: get().icons.map((i) => (i.appId === appId ? { appId, ...pos } : i)) });
       },
 
@@ -406,26 +458,41 @@ export function createWindowStore() {
       },
 
       arrangeIcons() {
-        const vp = get().viewport;
+        const vp = effectiveViewport(get());
         // Keep the visual reading order: left-to-right columns, top-to-bottom within a column.
         const sorted = [...get().icons].sort((a, b) => a.x - b.x || a.y - b.y);
         set({ icons: sorted.map((i, n) => ({ appId: i.appId, ...gridPosition(n, vp) })) });
       },
 
       snapshot() {
-        const { wallpaper, fontScale, fontFamily, theme, icons, order, windows } = get();
-        return {
+        const {
           wallpaper,
+          wallpaperColor,
           fontScale,
           fontFamily,
           theme,
+          footerBand,
+          brandWatermark,
+          icons,
+          order,
+          windows,
+        } = get();
+        return {
+          wallpaper,
+          wallpaperColor,
+          fontScale,
+          fontFamily,
+          theme,
+          footerBand,
+          brandWatermark,
           icons: icons.map((i) => ({ ...i })),
           windows: order.map((id) => ({ ...windows[id] })),
         };
       },
 
       restore(p) {
-        const vp = get().viewport;
+        const footerBand = bool(p.footerBand, DEFAULT_APPEARANCE.footerBand);
+        const vp = effectiveViewport({ viewport: get().viewport, footerBand });
         const windows: Record<string, WinState> = {};
         const order: string[] = [];
         let maxSeq = 0;
@@ -466,9 +533,15 @@ export function createWindowStore() {
           order,
           icons,
           wallpaper: oneOf(WALLPAPERS, p.wallpaper, DEFAULT_APPEARANCE.wallpaper),
+          wallpaperColor:
+            typeof p.wallpaperColor === "string" && HEX_COLOR.test(p.wallpaperColor)
+              ? p.wallpaperColor.toLowerCase()
+              : DEFAULT_APPEARANCE.wallpaperColor,
           fontScale: oneOf(FONT_SCALES, p.fontScale, DEFAULT_APPEARANCE.fontScale),
           fontFamily: oneOf(FONT_FAMILIES, p.fontFamily, DEFAULT_APPEARANCE.fontFamily),
           theme: oneOf(THEMES, p.theme, DEFAULT_APPEARANCE.theme),
+          footerBand,
+          brandWatermark: bool(p.brandWatermark, DEFAULT_APPEARANCE.brandWatermark),
           seq: Math.max(get().seq, maxSeq + 1),
           cascade: 0,
           ready: true,

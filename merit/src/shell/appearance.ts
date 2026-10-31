@@ -50,10 +50,16 @@ export const THEME_LABELS: Record<Theme, string> = {
   royal: "Royal Gold",
 };
 
-/** Inline style of a shell root: the font variables every shell text size derives from. */
-export function fontVariables(scale: FontScale, family: FontFamily): CSSProperties {
+/** Inline style of a shell root: the font variables every shell text size derives from (+ wallpaper color). */
+export function fontVariables(
+  scale: FontScale,
+  family: FontFamily,
+  wallpaperColor?: string,
+): CSSProperties {
   return {
     "--xp-font-size": FONT_SCALE_PX[scale],
     "--xp-font-family": FONT_STACKS[family],
+    // Color of the "Düz renk" wallpaper ([data-wallpaper="ozel"] in theme.css).
+    ...(wallpaperColor ? { "--xp-wallpaper-custom": wallpaperColor } : {}),
   } as CSSProperties;
 }

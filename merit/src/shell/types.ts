@@ -1,6 +1,7 @@
 /** Shell data shapes shared by the client store and the server prefs action. */
 
-export const WALLPAPERS = ["bliss", "klasik", "royal-gold", "gumus"] as const;
+/** `ozel` = a flat color chosen by the user (`wallpaperColor`). */
+export const WALLPAPERS = ["bliss", "klasik", "royal-gold", "gumus", "ozel"] as const;
 export type Wallpaper = (typeof WALLPAPERS)[number];
 
 export const WALLPAPER_LABELS: Record<Wallpaper, string> = {
@@ -8,7 +9,11 @@ export const WALLPAPER_LABELS: Record<Wallpaper, string> = {
   klasik: "Klasik",
   "royal-gold": "Royal Gold",
   gumus: "Gümüş",
+  ozel: "Düz renk",
 };
+
+/** `#rrggbb`, the only color syntax accepted for the custom wallpaper. */
+export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
 /** Base text size of the shell (`--xp-font-size`). */
 export const FONT_SCALES = ["S", "M", "L", "XL"] as const;
@@ -25,17 +30,26 @@ export type Theme = (typeof THEMES)[number];
 /** The appearance fields of ShellPrefs. They may change in the mobile shell too. */
 export type Appearance = {
   wallpaper: Wallpaper;
+  /** Color of the `ozel` wallpaper. */
+  wallpaperColor: string;
   fontScale: FontScale;
   fontFamily: FontFamily;
   theme: Theme;
+  /** Sticky copyright band below the taskbar (desktop shell only). */
+  footerBand: boolean;
+  /** Brand mark drawn on the wallpaper (desktop shell only). */
+  brandWatermark: boolean;
 };
 
 /** "Varsayılana dön", and what a record saved before these fields existed falls back to. */
 export const DEFAULT_APPEARANCE: Appearance = {
   wallpaper: "bliss",
+  wallpaperColor: "#3a6ea5",
   fontScale: "M",
   fontFamily: "tahoma",
   theme: "luna",
+  footerBand: true,
+  brandWatermark: true,
 };
 
 export type Rect = { x: number; y: number; w: number; h: number };

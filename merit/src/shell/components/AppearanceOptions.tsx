@@ -1,8 +1,15 @@
 "use client";
 
-import { useId, type CSSProperties, type ReactNode } from "react";
+import { useId, useState, type CSSProperties, type ReactNode } from "react";
 import { FONT_FAMILY_LABELS, FONT_SCALE_LABELS, FONT_STACKS, THEME_LABELS } from "../appearance";
-import { FONT_FAMILIES, FONT_SCALES, THEMES, WALLPAPER_LABELS, WALLPAPERS } from "../types";
+import {
+  FONT_FAMILIES,
+  FONT_SCALES,
+  HEX_COLOR,
+  THEMES,
+  WALLPAPER_LABELS,
+  WALLPAPERS,
+} from "../types";
 import { useWindowStore, windowStore } from "../windowStore";
 
 type Variant = "xp" | "mobile";
@@ -42,6 +49,92 @@ const CLASSES: Record<
     preview: "mb-preview",
   },
 };
+
+type SwitchProps = {
+  variant: Variant;
+  label: string;
+  checked: boolean;
+  onChange(on: boolean): void;
+};
+
+/** A labelled on/off switch: a native checkbox on the desktop, the Material-style toggle on mobile. */
+function SwitchRow({ variant, label, checked, onChange }: SwitchProps) {
+  const id = useId();
+  if (variant === "mobile") {
+    return (
+      <div className="mb-switch-row">
+        <span id={id} className="mb-switch-text">
+          {label}
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          aria-labelledby={id}
+          className="mb-switch"
+          onClick={() => onChange(!checked)}
+        >
+          <span className="mb-switch-thumb" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <label className="xp-cp-choice">
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
+/**
+ * "Arka plan rengi": a color picker plus a #rrggbb field for the "Düz renk" wallpaper. A valid
+ * color switches the wallpaper to it; text that is not (yet) a color is kept in the field only.
+ */
+function WallpaperColor({ variant }: { variant: Variant }) {
+  const color = useWindowStore((s) => s.wallpaperColor);
+  // Text typed in the field while it is not a valid color yet; null = show the stored color.
+  const [draft, setDraft] = useState<string | null>(null);
+  const id = useId();
+
+  const apply = (value: string) => {
+    if (!HEX_COLOR.test(value)) {
+      setDraft(value);
+      return;
+    }
+    setDraft(null);
+    const store = windowStore.getState();
+    store.setWallpaperColor(value);
+    store.setWallpaper("ozel");
+  };
+
+  return (
+    <div className={variant === "xp" ? "xp-cp-color" : "mb-color"}>
+      <label htmlFor={`${id}-hex`}>Arka plan rengi</label>
+      <input
+        type="color"
+        aria-label="Renk seçici"
+        value={color}
+        onChange={(e) => apply(e.target.value)}
+      />
+      <input
+        id={`${id}-hex`}
+        type="text"
+        value={draft ?? color}
+        maxLength={7}
+        spellCheck={false}
+        autoComplete="off"
+        onChange={(e) => apply(e.target.value.trim())}
+        onBlur={() => setDraft(null)}
+      />
+    </div>
+  );
+}
 
 const PREVIEW_TEXT = "Örnek metin: Merit OS — ÇĞİÖŞÜ çğıöşü 0123456789";
 
@@ -102,8 +195,9 @@ function ChoiceGroup<T extends string>({
 }
 
 /**
- * Yazı boyutu, yazı tipi, duvar kağıdı and tema, read from and written to the shell store (the
- * change applies at once; useShellPersistence saves it). Used by Denetim Masası and the mobile
+ * Yazı boyutu, yazı tipi, duvar kağıdı, tema and the Marka switches (alt telif bandı, filigran),
+ * read from and written to the shell store (the change applies at once; useShellPersistence saves
+ * it). Used by Denetim Masası and the mobile
  * Ayarlar tab, so both offer the same options.
  */
 export function AppearanceOptions({ variant }: { variant: Variant }) {
@@ -111,6 +205,9 @@ export function AppearanceOptions({ variant }: { variant: Variant }) {
   const fontFamily = useWindowStore((s) => s.fontFamily);
   const wallpaper = useWindowStore((s) => s.wallpaper);
   const theme = useWindowStore((s) => s.theme);
+  const footerBand = useWindowStore((s) => s.footerBand);
+  const brandWatermark = useWindowStore((s) => s.brandWatermark);
+  const brandId = useId();
   const cls = CLASSES[variant];
   const store = () => windowStore.getState();
 
@@ -143,7 +240,9 @@ export function AppearanceOptions({ variant }: { variant: Variant }) {
         value={wallpaper}
         onChange={(v) => store().setWallpaper(v)}
         swatch={(w) => <span className={cls.swatch} data-wallpaper={w} aria-hidden="true" />}
-      />
+      >
+        <WallpaperColor variant={variant} />
+      </ChoiceGroup>
       <ChoiceGroup
         variant={variant}
         label="Tema"
@@ -155,6 +254,25 @@ export function AppearanceOptions({ variant }: { variant: Variant }) {
           <span className={`${cls.swatch} xp-theme-swatch`} data-theme={t} aria-hidden="true" />
         )}
       />
+      <section className={cls.section} aria-labelledby={`${brandId}-label`}>
+        <h3 className={cls.heading} id={`${brandId}-label`}>
+          Marka
+        </h3>
+        <div className={variant === "xp" ? cls.choices : undefined}>
+          <SwitchRow
+            variant={variant}
+            label="Alt telif bandı"
+            checked={footerBand}
+            onChange={(on) => store().setFooterBand(on)}
+          />
+          <SwitchRow
+            variant={variant}
+            label="Duvar kağıdı filigranı"
+            checked={brandWatermark}
+            onChange={(on) => store().setBrandWatermark(on)}
+          />
+        </div>
+      </section>
     </>
   );
 }

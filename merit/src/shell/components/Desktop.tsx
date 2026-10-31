@@ -14,12 +14,14 @@ import type { AppDefinition } from "../registry";
 import { WALLPAPER_LABELS, type IconPos } from "../types";
 import {
   deskHeight,
+  effectiveViewport,
   ICON_CELL_H,
   ICON_CELL_W,
   useWindowStore,
   WALLPAPERS,
   windowStore,
 } from "../windowStore";
+import { BrandWatermark } from "./BrandWatermark";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { APP_DRAG_TYPE } from "./StartMenu";
 
@@ -49,6 +51,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
   const router = useRouter();
   const wallpaper = useWindowStore((s) => s.wallpaper);
   const icons = useWindowStore((s) => s.icons);
+  const brandWatermark = useWindowStore((s) => s.brandWatermark);
   const [selected, setSelected] = useState<string | null>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const appById = new Map(apps.map((a) => [a.id, a]));
@@ -149,6 +152,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
       onDragOver={onDragOver}
       onDrop={(e) => void onDrop(e)}
     >
+      {brandWatermark ? <BrandWatermark /> : null}
       {icons.map((icon) => {
         const app = appById.get(icon.appId);
         if (!app) return null;
@@ -220,7 +224,7 @@ function DesktopIcon({ icon, app, selected, onSelect, onOpen, onMenu }: IconProp
       e.currentTarget.setPointerCapture(e.pointerId);
       e.currentTarget.classList.add("is-dragging");
     }
-    const vp = windowStore.getState().viewport;
+    const vp = effectiveViewport(windowStore.getState());
     d.x = Math.min(Math.max(0, icon.x + dx), Math.max(0, vp.w - ICON_CELL_W));
     d.y = Math.min(Math.max(0, icon.y + dy), Math.max(0, deskHeight(vp) - ICON_CELL_H));
     e.currentTarget.style.left = `${d.x}px`;

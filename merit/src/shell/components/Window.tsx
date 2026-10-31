@@ -20,6 +20,7 @@ import { getApp, type AppDefinition, type AppProps } from "../registry";
 import {
   clampWindowPosition,
   deskHeight,
+  effectiveViewport,
   hotelsForApp,
   minSize,
   selectActiveId,
@@ -125,7 +126,7 @@ export function Window({ id, hotels, userName }: Props) {
     e.preventDefault();
     const bar = e.currentTarget;
     bar.setPointerCapture(e.pointerId);
-    const vp = windowStore.getState().viewport;
+    const vp = effectiveViewport(windowStore.getState());
     const start = { px: e.clientX, py: e.clientY, x: win.x, y: win.y };
     let next = { x: win.x, y: win.y };
     let frame = 0;
@@ -163,7 +164,7 @@ export function Window({ id, hotels, userName }: Props) {
     e.stopPropagation();
     const grip = e.currentTarget;
     grip.setPointerCapture(e.pointerId);
-    const vp = windowStore.getState().viewport;
+    const vp = effectiveViewport(windowStore.getState());
     const min = minSize(app);
     const start = { px: e.clientX, py: e.clientY, w: win.w, h: win.h };
     let next = { w: win.w, h: win.h };

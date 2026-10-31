@@ -420,6 +420,35 @@
   background: var(--mb-bg);
 }
 
+.mb-color {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.mb-color input[type="color"] {
+  width: 56px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--mb-line);
+  border-radius: 8px;
+  background: var(--mb-surface);
+}
+
+.mb-color input[type="text"] {
+  width: 110px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--mb-line);
+  border-radius: 8px;
+  background: var(--mb-surface);
+  color: var(--mb-text);
+  font: inherit;
+  font-family: monospace;
+}
+
 .mb-wallpaper-swatch {
   display: block;
   height: 44px;

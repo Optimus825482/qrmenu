@@ -3,6 +3,7 @@ import { registerApp, type AppDefinition } from "@/shell/registry";
 import { DEFAULT_APPEARANCE } from "@/shell/types";
 import {
   createWindowStore,
+  FOOTER_HEIGHT,
   hotelsForApp,
   MAX_WINDOWS,
   MIN_H,
@@ -99,7 +100,7 @@ describe("windowStore", () => {
       x: 0,
       y: 0,
       w: 1280,
-      h: 800 - TASKBAR_H,
+      h: 800 - TASKBAR_H - FOOTER_HEIGHT, // footer band is on by default
       prev: { x: 100, y: 80, w: before.w, h: before.h },
     });
     s().toggleMaximize(a);
@@ -125,7 +126,7 @@ describe("windowStore", () => {
     s().move(a, -50, -10);
     expect(s().windows[a]).toMatchObject({ x: 0, y: 0 });
     s().move(a, 5000, 5000);
-    expect(s().windows[a]).toMatchObject({ x: 1280 - 500, y: 800 - TASKBAR_H - 400 });
+    expect(s().windows[a]).toMatchObject({ x: 1280 - 500, y: 800 - TASKBAR_H - FOOTER_HEIGHT - 400 });
   });
 
   it("close pencereyi ve sırasını siler", () => {

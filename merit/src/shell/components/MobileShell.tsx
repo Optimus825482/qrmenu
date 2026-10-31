@@ -44,6 +44,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
   const [active, setActive] = useState<MobileTabId>("izleme");
   const [definitionsOn, setDefinitionsOn] = useMobileDefs(mobileDefinitions);
   const wallpaper = useWindowStore((s) => s.wallpaper);
+  const wallpaperColor = useWindowStore((s) => s.wallpaperColor);
   const theme = useWindowStore((s) => s.theme);
   const fontScale = useWindowStore((s) => s.fontScale);
   const fontFamily = useWindowStore((s) => s.fontFamily);
@@ -82,7 +83,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
       className="mb-shell"
       data-wallpaper={wallpaper}
       data-theme={theme}
-      style={fontVariables(fontScale, fontFamily)}
+      style={fontVariables(fontScale, fontFamily, wallpaperColor)}
     >
       <header className="mb-appbar">
         <div>

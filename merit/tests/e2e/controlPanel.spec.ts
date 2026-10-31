@@ -110,6 +110,133 @@ test("Varsayılana dön: onaydan sonra M / Tahoma / Luna / Bliss", async ({ page
   expect((await saved).ok()).toBe(true);
 });
 
+test("Marka: alt telif bandı ve filigran görünür; Denetim Masası'ndan kapanır, yenilemede kalıcı, açılınca geri gelir", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  await expect(panelWindow(page)).toBeVisible();
+  const footer = page.locator(".xp-footer-band");
+  const watermark = page.locator(".xp-brand-watermark");
+  const bandSwitch = panelWindow(page).getByRole("switch", { name: "Alt telif bandı" });
+  const markSwitch = panelWindow(page).getByRole("switch", { name: "Duvar kağıdı filigranı" });
+
+  // Defaults: both on.
+  await expect(footer).toHaveText(
+    "MERIT ROYAL F&B OPERATION COMMAND CENTER © 2026 · CODE BY ERKAN ERDEM",
+  );
+  await expect(watermark).toHaveCount(1);
+  await expect(watermark).toHaveAttribute("aria-hidden", "true");
+  expect(await watermark.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+  await expect(watermark).toContainText("MERIT ROYAL");
+  await expect(watermark).toContainText("F&B OPERATION COMMAND CENTER");
+  await expect(watermark).not.toContainText("ERKAN");
+  await expect(watermark).not.toContainText("©");
+  await expect(bandSwitch).toBeChecked();
+  await expect(markSwitch).toBeChecked();
+
+  // The band sits at the very bottom, the taskbar right above it, the desktop above that.
+  const vh = page.viewportSize()!.height;
+  const box = async (sel: string) => (await page.locator(sel).boundingBox())!;
+  const fb = await box(".xp-footer-band");
+  expect(fb.height).toBe(22);
+  expect(fb.y + fb.height).toBe(vh);
+  const tb = await box(".xp-taskbar");
+  expect(tb.y + tb.height).toBe(vh - 22);
+  const dk = await box(".xp-desktop");
+  expect(dk.y + dk.height).toBe(vh - 22 - 30);
+
+  // A maximized window fills the desktop minus taskbar and footer.
+  await panelWindow(page).getByRole("button", { name: "Ekranı kapla" }).click();
+  const maxed = await panelWindow(page).boundingBox();
+  expect(Math.round(maxed!.y + maxed!.height)).toBeLessThanOrEqual(vh - 22 - 30);
+  await panelWindow(page).getByRole("button", { name: "Önceki boyut" }).click();
+
+  await bandSwitch.uncheck();
+  await markSwitch.uncheck();
+  const saved = waitForPrefsSave(page);
+  await expect(footer).toHaveCount(0);
+  await expect(watermark).toHaveCount(0);
+  const tbOff = await box(".xp-taskbar");
+  expect(tbOff.y + tbOff.height).toBe(vh);
+  expect((await saved).ok()).toBe(true);
+
+  // Survives a reload, with and without the localStorage copy.
+  await page.reload();
+  await expect(panelWindow(page)).toBeVisible();
+  await expect(footer).toHaveCount(0);
+  await expect(watermark).toHaveCount(0);
+  await page.evaluate(() => window.localStorage.clear());
+  await page.reload();
+  await expect(panelWindow(page)).toBeVisible();
+  await expect(footer).toHaveCount(0);
+  await expect(watermark).toHaveCount(0);
+  await expect(bandSwitch).not.toBeChecked();
+  await expect(markSwitch).not.toBeChecked();
+
+  await bandSwitch.check();
+  const savedOn = waitForPrefsSave(page);
+  await markSwitch.check();
+  await expect(footer).toHaveCount(1);
+  await expect(watermark).toHaveCount(1);
+  const tbOn = await box(".xp-taskbar");
+  expect(tbOn.y + tbOn.height).toBe(vh - 22);
+  expect((await savedOn).ok()).toBe(true); // the next tests start from the saved "on" state
+  expect(errors).toEqual([]);
+});
+
+test("Düz renk: renk alanına #112233 yazılınca masaüstü o renge döner, yenilemede kalıcı; geçersiz metin yok sayılır", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  await expect(panelWindow(page)).toBeVisible();
+  await expect(group(page, "Duvar kağıdı").getByRole("radio", { name: "Düz renk" })).toBeVisible();
+  const hex = panelWindow(page).getByRole("textbox", { name: "Arka plan rengi" });
+  const bg = () => desktop(page).evaluate((el) => getComputedStyle(el).backgroundColor);
+
+  await hex.fill("#12"); // not a color: ignored
+  await expect(desktop(page)).toHaveAttribute("data-wallpaper", "bliss");
+  await hex.fill("#112233");
+  await expect(desktop(page)).toHaveAttribute("data-wallpaper", "ozel");
+  expect(await bg()).toBe("rgb(17, 34, 51)");
+  await expect(group(page, "Duvar kağıdı").getByRole("radio", { name: "Düz renk" })).toBeChecked();
+  const saved = waitForPrefsSave(page);
+  await expect(hex).toHaveValue("#112233");
+  expect((await saved).ok()).toBe(true);
+
+  await page.reload();
+  await expect(desktop(page)).toHaveAttribute("data-wallpaper", "ozel");
+  expect(await bg()).toBe("rgb(17, 34, 51)");
+  await page.evaluate(() => window.localStorage.clear());
+  await page.reload();
+  await expect(desktop(page)).toHaveAttribute("data-wallpaper", "ozel");
+  expect(await bg()).toBe("rgb(17, 34, 51)");
+
+  // Right-click menu offers it too; the watermark is still there on top of the flat color.
+  // (dispatched: the Denetim Masası window covers most of the free desktop)
+  await desktop(page).dispatchEvent("contextmenu", { clientX: 1200, clientY: 120, button: 2 });
+  await page.getByRole("menuitem", { name: "Duvar kağıdı" }).click();
+  await expect(page.getByRole("menuitemradio", { name: "Düz renk" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".xp-brand-watermark")).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
+
+test("mobil Ayarlar: Marka anahtarları var, alt telif bandı mobilde çizilmez", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page, "admin");
+  await expect(page).toHaveURL(/\/admin$/);
+  await page
+    .getByRole("tablist", { name: "Ana sekmeler" })
+    .getByRole("tab", { name: "Ayarlar" })
+    .click();
+  const panel = page.getByRole("tabpanel", { name: "Ayarlar" });
+  await expect(panel.getByRole("switch", { name: "Alt telif bandı" })).toBeVisible();
+  await expect(panel.getByRole("switch", { name: "Duvar kağıdı filigranı" })).toBeVisible();
+  await expect(page.locator(".xp-footer-band")).toHaveCount(0);
+});
+
 test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ request, page }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.status()).toBe(200);

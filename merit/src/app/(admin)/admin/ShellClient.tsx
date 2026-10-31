@@ -6,6 +6,7 @@ import { fontVariables } from "@/shell/appearance";
 import { alertDialog } from "@/shell/confirm";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
 import { Desktop } from "@/shell/components/Desktop";
+import { FooterBand } from "@/shell/components/FooterBand";
 import { MobileShell } from "@/shell/components/MobileShell";
 import type { HotelInfo } from "@/shell/components/HotelPicker";
 import { StartMenu } from "@/shell/components/StartMenu";
@@ -64,6 +65,8 @@ export function ShellClient({
   const theme = useWindowStore((s) => s.theme);
   const fontScale = useWindowStore((s) => s.fontScale);
   const fontFamily = useWindowStore((s) => s.fontFamily);
+  const footerBand = useWindowStore((s) => s.footerBand);
+  const wallpaperColor = useWindowStore((s) => s.wallpaperColor);
   const [startOpen, setStartOpen] = useState(false);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const openApp = useCallback((appId: string) => {
@@ -84,7 +87,12 @@ export function ShellClient({
   }
 
   return (
-    <div className="xp-shell" data-theme={theme} style={fontVariables(fontScale, fontFamily)}>
+    <div
+      className="xp-shell"
+      data-theme={theme}
+      data-footer={footerBand ? "on" : "off"}
+      style={fontVariables(fontScale, fontFamily, wallpaperColor)}
+    >
       {ready ? (
         <>
           <Desktop apps={apps} onOpenApp={openApp} />
@@ -106,6 +114,7 @@ export function ShellClient({
             onClose={closeStart}
             startButtonRef={startButtonRef}
           />
+          {footerBand ? <FooterBand /> : null}
           <ConfirmDialog />
         </>
       ) : null}

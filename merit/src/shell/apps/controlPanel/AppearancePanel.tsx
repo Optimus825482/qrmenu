@@ -4,12 +4,12 @@ import { confirm } from "../../confirm";
 import { AppearanceOptions } from "../../components/AppearanceOptions";
 import { windowStore } from "../../windowStore";
 
-/** Denetim Masası → Görünüm: font, wallpaper and theme; every change applies and saves at once. */
+/** Denetim Masası → Görünüm: font, wallpaper, theme and brand switches; every change applies and saves at once. */
 export function AppearancePanel() {
   const reset = async () => {
     const yes = await confirm({
       title: "Varsayılana dön",
-      message: "Yazı boyutu, yazı tipi, duvar kağıdı ve tema varsayılan değerlerine dönsün mü?",
+      message: "Yazı boyutu, yazı tipi, duvar kağıdı, tema ve marka ayarları varsayılan değerlerine dönsün mü?",
       danger: false,
     });
     if (yes) windowStore.getState().resetAppearance();

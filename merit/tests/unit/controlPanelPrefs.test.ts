@@ -20,9 +20,12 @@ describe("ShellPrefs görünüm alanları", () => {
     });
     expect(DEFAULT_APPEARANCE).toEqual({
       wallpaper: "bliss",
+      wallpaperColor: "#3a6ea5",
       fontScale: "M",
       fontFamily: "tahoma",
       theme: "luna",
+      footerBand: true,
+      brandWatermark: true,
     });
   });
 
