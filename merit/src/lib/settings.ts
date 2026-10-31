@@ -46,7 +46,10 @@ async function loadRows(keys: readonly SettingKey[], hotelId?: string): Promise<
   });
 }
 
-/** Per-request memo: React cache() dedupes identical (key, hotelId) reads within one request. */
+/**
+ * Per-request memo: React cache() dedupes identical (key, hotelId) reads within one request.
+ * Caveat: a getSetting after a setSetting of the same key in the same request returns the old value.
+ */
 const readSetting = cache(async (key: SettingKey, hotelId: string): Promise<unknown> => {
   return resolve(key, await loadRows([key], hotelId || undefined), hotelId || undefined);
 });
@@ -82,6 +85,27 @@ export async function setSetting<K extends SettingKey>(
   hotelId?: string,
 ): Promise<void> {
   await assertCan(ctx, "CR-SYS", "D", hotelId);
+  // Without a hotel, assertCan falls back to the session hotel, so a hotel manager holding D on
+  // CR-SYS would pass it: system-wide rows are reserved for SISTEM roles.
+  if (hotelId === undefined && ctx.user.roleKind !== "SISTEM") {
+    try {
+      await audit(prisma, {
+        userId: ctx.user.id,
+        hotelId: ctx.session.hotelId,
+        action: "YETKISIZ_DENEME",
+        entity: "Setting",
+        entityId: key,
+        after: { scope: "SYSTEM" },
+      });
+    } catch (error) {
+      // A failing audit write must never mask the denial.
+      console.error("setSetting: YETKISIZ_DENEME denetim kaydı yazılamadı", { key, error });
+    }
+    throw new DomainError(
+      "FORBIDDEN",
+      "Sistem geneli ayarları yalnızca sistem yöneticisi değiştirebilir",
+    );
+  }
   if (!isSettingKey(key)) {
     throw new DomainError("VALIDATION", `Bilinmeyen ayar anahtarı: ${String(key)}`);
   }

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MeritEvent } from "@/lib/realtime-events";
 import { testDb } from "../helpers/db";
 import {
@@ -186,6 +186,51 @@ describe("setSetting", () => {
     expect(await getSetting("dnd.minChecks", mr)).toBe(4);
     expect(await getSetting("dnd.minChecks", await hotelId("MRD"))).toBe(3);
     expect(await testDb.setting.count({ where: { key: "dnd.minChecks" } })).toBe(2);
+  });
+
+  describe("sistem geneli yazım yalnız SISTEM rolüne açık", () => {
+    async function managerWithCrSysEdit() {
+      const mr = await hotelId("MR");
+      const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-OTM" } });
+      const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-SYS" } });
+      await testDb.roleScreenPermission.create({
+        data: { roleId: role.id, screenId: screen.id, hotelId: mr, canView: true, canEdit: true },
+      });
+      const user = await makeUser({ username: "otm1", roleCode: "R-OTM", hotelCode: "MR" });
+      return ctxFor(user, { hotelCode: "MR" });
+    }
+    afterEach(async () => {
+      await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
+    });
+
+    it("CR-SYS D yetkili otel müdürü (YONETIM) sistem satırı yazamaz: FORBIDDEN + YETKISIZ_DENEME", async () => {
+      const ctx = await managerWithCrSysEdit();
+      await expect(setSetting(ctx, "dnd.minChecks", 3)).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+      expect(await row("dnd.minChecks", null)).toBeNull();
+      const logs = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME" } });
+      expect(logs).toHaveLength(1);
+      expect(logs[0]).toMatchObject({
+        entity: "Setting",
+        entityId: "dnd.minChecks",
+        userId: ctx.user.id,
+        after: { scope: "SYSTEM" },
+      });
+    });
+
+    it("aynı kullanıcı kendi oteli için yazabilir", async () => {
+      const ctx = await managerWithCrSysEdit();
+      const mr = await hotelId("MR");
+      await setSetting(ctx, "dnd.minChecks", 3, mr);
+      expect(await getSetting("dnd.minChecks", mr)).toBe(3);
+      expect(await row("dnd.minChecks", null)).toBeNull();
+    });
+
+    it("R-SYS otelsiz (sistem) yazabilir", async () => {
+      await setSetting(await admin(), "dnd.minChecks", 3);
+      expect((await row("dnd.minChecks", null))?.value).toBe(3);
+    });
   });
 
   it("kapsam dışı otel için FORBIDDEN", async () => {
