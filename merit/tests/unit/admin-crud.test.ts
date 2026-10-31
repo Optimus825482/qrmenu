@@ -4,6 +4,7 @@ import { testDb, truncate } from "../helpers/db";
 import {
   ctxFor,
   dropReferenceData,
+  hotelId,
   makeUser,
   resetReferenceData,
   resetTestData,
@@ -111,16 +112,42 @@ describe("withAdminTx (gerçek test DB)", () => {
     expect(await testDb.auditLog.count({ where: { action: "GERI_ALINMALI" } })).toBe(0);
   });
 
-  it("yönetim rolü R-OTM CR-TAN için V/O/D yapabilir, onaylayamaz", async () => {
+  it("yönetim rolü R-OTM kendi otelinde CR-TAN için V/O/D yapabilir, onaylayamaz", async () => {
     const ctx = await ctxOf("R-OTM");
+    const mr = await hotelId("MR");
     for (const action of ["V", "O", "D"] as const) {
       await expect(
-        withAdminTx(ctx, { screen: "CR-TAN", action }, async () => action),
+        withAdminTx(ctx, { screen: "CR-TAN", action, hotelId: mr }, async () => action),
       ).resolves.toBe(action);
     }
     await expect(
-      withAdminTx(ctx, { screen: "CR-TAN", action: "A" }, async () => "x"),
+      withAdminTx(ctx, { screen: "CR-TAN", action: "A", hotelId: mr }, async () => "x"),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("sistem geneli (hotelId yok): R-OTM yetkisi olsa da FORBIDDEN + SYSTEM kapsamlı denetim kaydı, fn çalışmaz", async () => {
+    const ctx = await ctxOf("R-OTM");
+    const fn = vi.fn(async () => "x");
+    await expect(withAdminTx(ctx, { screen: "CR-TAN", action: "D" }, fn)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: "Sistem geneli işlemleri yalnızca sistem yöneticisi yapabilir",
+    });
+    expect(fn).not.toHaveBeenCalled();
+    const rows = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME" } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      userId: ctx.user.id,
+      hotelId: ctx.session.hotelId,
+      entity: "CR-TAN",
+      after: { action: "D", scope: "SYSTEM" },
+    });
+  });
+
+  it("R-SYS hotelId olmadan sistem geneli yazabilir", async () => {
+    const ctx = await ctxOf("R-SYS");
+    await expect(withAdminTx(ctx, { screen: "CR-TAN", action: "D" }, async () => "ok")).resolves.toBe(
+      "ok",
+    );
   });
 });
 

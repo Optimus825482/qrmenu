@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 import { type Action, assertCan } from "@/lib/rbac";
+import { audit } from "@/modules/core/server/audit";
 
 export {
   type ListQuery,
@@ -26,7 +27,7 @@ export {
 export type AdminTxOptions = { screen: string; action: Action; hotelId?: string };
 
 /**
- * Authorises (`assertCan` audits a denial), then runs `fn` in one database transaction and returns
+ * Authorises (`assertCan` audits a denial; no `hotelId` = system-wide, SISTEM roles only), then runs `fn` in one database transaction and returns
  * its value. Audit rows and `publishDefinition` written through `tx` commit or roll back with it.
  */
 export async function withAdminTx<T>(
@@ -35,6 +36,29 @@ export async function withAdminTx<T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
   await assertCan(ctx, options.screen, options.action, options.hotelId);
+  // Without a hotel assertCan falls back to the session hotel, so a hotel manager holding the
+  // permission would pass it: system-wide writes (hotels, roles...) are reserved for SISTEM roles.
+  if (options.hotelId === undefined && ctx.user.roleKind !== "SISTEM") {
+    try {
+      await audit(prisma, {
+        userId: ctx.user.id,
+        hotelId: ctx.session.hotelId,
+        action: "YETKISIZ_DENEME",
+        entity: options.screen,
+        after: { action: options.action, scope: "SYSTEM" },
+      });
+    } catch (error) {
+      // A failing audit write must never mask the denial.
+      console.error("withAdminTx: YETKISIZ_DENEME denetim kaydı yazılamadı", {
+        screen: options.screen,
+        error,
+      });
+    }
+    throw new DomainError(
+      "FORBIDDEN",
+      "Sistem geneli işlemleri yalnızca sistem yöneticisi yapabilir",
+    );
+  }
   return prisma.$transaction(fn);
 }
 

@@ -157,7 +157,14 @@ export function DataGrid<T extends { id: string }>({
                 className="xp-grid-cell"
                 data-sortable={column.sortable ? "true" : undefined}
                 aria-sort={sorted ? (sorted === "asc" ? "ascending" : "descending") : undefined}
+                tabIndex={column.sortable ? 0 : undefined}
                 onClick={() => toggleSort(column)}
+                onKeyDown={(e) => {
+                  if (column.sortable && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault();
+                    toggleSort(column);
+                  }
+                }}
               >
                 {column.title}
                 {sorted ? (

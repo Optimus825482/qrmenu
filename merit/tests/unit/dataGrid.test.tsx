@@ -137,6 +137,21 @@ describe("DataGrid", () => {
     expect(props.onSort).not.toHaveBeenCalled();
   });
 
+  it("sıralanabilir başlık klavyeyle erişilir: tabIndex=0, Enter/Boşluk sıralar; sıralanamaz başlık odaklanamaz", () => {
+    const props = setup({ sort: { field: "name", dir: "desc" } });
+    const sortable = screen.getByRole("columnheader", { name: /Ad/ });
+    expect(sortable.getAttribute("tabindex")).toBe("0");
+    expect(sortable.getAttribute("aria-sort")).toBe("descending");
+    fireEvent.keyDown(sortable, { key: "Enter" });
+    expect(props.onSort).toHaveBeenLastCalledWith({ field: "name", dir: "asc" });
+    fireEvent.keyDown(sortable, { key: " " });
+    expect(props.onSort).toHaveBeenCalledTimes(2);
+    const plain = screen.getByRole("columnheader", { name: /Kat/ });
+    expect(plain.getAttribute("tabindex")).toBeNull();
+    fireEvent.keyDown(plain, { key: "Enter" });
+    expect(props.onSort).toHaveBeenCalledTimes(2);
+  });
+
   it("sayfalama: sonraki/önceki sayfa onPage çağırır", () => {
     const props = setup({ total: 45, page: 2 });
     fireEvent.click(screen.getByRole("button", { name: "Sonraki sayfa" }));
