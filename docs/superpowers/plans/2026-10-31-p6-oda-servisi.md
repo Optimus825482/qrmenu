@@ -44,6 +44,8 @@
 - **Migration numarası / sıra:** `NNNN_p6_oda_servisi`, sıra P5 → P2 → P3 → P4 → P6 → P7 → P8; `ls prisma/migrations`.
 - **P7 uyumu:** `rs-sla` raporu SLA başlangıcı için `phoneConfirmedAt ?? createdAt`, teslim için `deliveredAt` kullanır (P6 bu iki alanı yazar; `servedAt` oda servisinde yazılmaz).
 
+- **Terminoloji kararı (Erkan, 31.10 21:11):** Misafir ve personel arayüzlerinde **"sepet" terimi kullanılmaz; yerine "Seçimler"** (misafirin seçtiği öğeler listesi; "Seçimlerim", "Seçimleri gönder"). Çeviriler: en *Selections* / *My selections*, de *Auswahl* / *Meine Auswahl*, ru *Выбор* / *Мой выбор*, ar *اختياراتي*. Kod tanımlayıcılarında da `selection`/`Selections` tercih edilir (`selectionStore.ts`, `SelectionsDrawer.tsx`); planda geçen `cart*` adları buna göre okunur. Alışveriş çağrışımı yapan "satın al", "ödeme" gibi ifadeler de yok; "Gönder"/"Siparişi ilet" kullanılır.
+
 ## Review Focus
 
 1. **Aynı odadan eşzamanlı çok sipariş (yanlışlıkla çift dokunma, birden çok cihaz):** oda satırı `FOR UPDATE` ile kilitlenir; `rs.maxOpenPerRoom=3` iken 5 eşzamanlı farklı-anahtarlı gönderimden tam 3'ü oluşur, kalanlar `CONFLICT "Odanız için en fazla 3 açık sipariş olabilir"`; aynı `idempotencyKey` aynı siparişi döner → Task 3 testi.
