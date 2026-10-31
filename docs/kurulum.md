@@ -53,8 +53,16 @@ npx prisma migrate deploy     # bekleyen migrasyonları uygular (üretimde migra
 SEED_ADMIN_PASSWORD='<parola>' npm run db:seed   # yalnız ilk kurulumda
 ```
 
-`npm run build` sırasında arka plan işleri başlamaz. Derleme ve migrasyon komutlarının
-çalıştığı kabukta `.env` değişkenleri (en azından `DATABASE_URL`) tanımlı olmalıdır.
+`npm run build` sırasında arka plan işleri başlamaz, ancak `src/lib/env.ts` zorunlu
+değişkenleri modül yüklenirken doğrular: derleme (ve migrasyon/seed) komutlarının
+çalıştığı kabukta **tüm zorunlu değişkenler** (`DATABASE_URL`, `SESSION_SECRET`,
+`QR_HMAC_SECRET`, `APP_BASE_URL`, `PRINT_GATEWAY_KEY`) tanımlı olmalıdır; örneğin:
+
+```bash
+set -a; source /etc/merit/merit.env; set +a
+npm run build
+```
+
 Güncellemelerde sıra: kodu çek, `npm ci`, `npm run build`, `npx prisma migrate deploy`,
 süreci yeniden başlat. Seed'i yalnız ilk kurulumda çalıştırmanız yeterlidir.
 
@@ -77,7 +85,7 @@ EnvironmentFile=/etc/merit/merit.env
 Environment=NODE_ENV=production
 Environment=TZ=Europe/Nicosia
 Environment=PORT=3000
-ExecStart=/usr/bin/npm start
+ExecStart=/usr/bin/npm start -- -H 127.0.0.1
 Restart=always
 RestartSec=5
 
@@ -94,7 +102,7 @@ journalctl -u merit -f
 ### pm2 (alternatif)
 
 ```bash
-TZ=Europe/Nicosia NODE_ENV=production pm2 start npm --name merit -- start
+TZ=Europe/Nicosia NODE_ENV=production pm2 start npm --name merit -- start -- -H 127.0.0.1
 pm2 save
 ```
 
@@ -141,7 +149,8 @@ server {
 ```
 
 Uygulamanın portunu (3000) dış ağa açmayın; yalnız vekil erişebilsin (güvenlik
-duvarı ile kısıtlayın veya `HOSTNAME=127.0.0.1` ile yalnız yerel arayüzde dinletin).
+duvarı ile kısıtlayın veya `npm start -- -H 127.0.0.1` ile yalnız yerel arayüzde dinletin; yukarıdaki
+systemd ve pm2 örnekleri bunu zaten yapar).
 
 ## 7. Sağlık denetimi
 
@@ -190,6 +199,8 @@ journald'ın varsayılanı yeterlidir.
   doğrudan internete açılmamalı.
 - `.env` dosyası `600` izinli olmalı, sürüm denetimine girmemeli; `SEED_ADMIN_PASSWORD`
   ilk seed'den sonra ortamdan çıkarılmalıdır.
-- **P0 için tek örnek (instance) önerilir.** Her süreç kendi `LISTEN` bağlantısını tutar,
-  yani birden fazla örnek SSE açısından sorun çıkarmaz; pg-boss zamanlamaları da
-  idempotenttir. Yine de P0'da yatay ölçekleme hedeflenmemiş ve sınanmamıştır.
+- **P0'da desteklenen topoloji tek örnektir (instance).** Giriş hız sınırlayıcısı süreç
+  belleğinde tutulur, yani örnek başınadır; birden fazla örnekte sınır örnek sayısı kadar
+  gevşer. SSE dinleyicisi süreç başına olduğundan çoklu örnek SSE için sorun çıkarmaz ve
+  pg-boss zamanlamaları idempotenttir; ancak yatay ölçekleme P0'da hedeflenmemiş ve
+  sınanmamıştır.

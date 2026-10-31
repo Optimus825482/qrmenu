@@ -78,6 +78,8 @@ kabuğu ve Komuta Merkezi, mobil kabuk ve CI.
   çalıştırmayın. `merit_test` e2e için kullanılmaz.
 - İlk kurulumda `npx playwright install chromium` gerekir. `localhost:3000` üzerinde
   zaten çalışan bir sunucu yeniden kullanılır, yoksa Playwright `npm run dev` başlatır.
+- Bu belgedeki komutlar bash sözdizimindedir; PowerShell'de ortam değişkenlerini
+  `$env:NAME="değer"` ile verin.
 - Giriş hız sınırlayıcısı kullanıcı adı ve IP başına dakikada 5 denemeye izin verir.
   Başarılı girişler kullanıcı adı sayacını sıfırlar; bu yüzden testleri art arda
   çalıştırmak sorun değildir. Başarısız bir koşudan sonra "çok fazla deneme" hatası
