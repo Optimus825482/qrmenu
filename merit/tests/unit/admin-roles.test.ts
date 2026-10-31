@@ -249,6 +249,18 @@ describe("permissions: matris ve canlı etki", () => {
     expect(await testDb.auditLog.count({ where: { action: "PERM_COPY", entityId: target.id } })).toBe(1);
   });
 
+  it("copyFromRole: rolü kendisinden kopyalamak VALIDATION (YETKISIZ_DENEME yazılmaz), satırlar korunur", async () => {
+    const admin = await sys();
+    const kat = await roleByCode("R-KAT");
+    const before = await testDb.roleScreenPermission.count({ where: { roleId: kat.id } });
+    await expect(permissions.copyFromRole(admin, kat.id, kat.id, null)).rejects.toMatchObject({
+      code: "VALIDATION",
+      message: "Rol kendisinden kopyalanamaz",
+    });
+    expect(await testDb.roleScreenPermission.count({ where: { roleId: kat.id } })).toBe(before);
+    expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBe(0);
+  });
+
   it("YONETIM yazamaz (CR-KUL D olsa da): FORBIDDEN + YETKISIZ_DENEME; matris okunur", async () => {
     const ctx = await otm();
     const role = await roleByCode("R-GAR");

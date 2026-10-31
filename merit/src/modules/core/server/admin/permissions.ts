@@ -6,7 +6,7 @@ import { DomainError } from "@/lib/result";
 import { assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import { parseInput, publishDefinition, withAdminTx } from "./crud";
-import { denyRoleAdmin, requireSystemActor, ROLE_SCREEN } from "./roles";
+import { requireSystemActor, ROLE_SCREEN } from "./roles";
 
 const SCREEN = ROLE_SCREEN;
 const LOCKOUT = "R-SYS rolünün yetkileri değiştirilemez";
@@ -244,7 +244,8 @@ export async function copyFromRole(
   const scope = { roleId, hotelId };
   await authorise(ctx, scope, "copy");
   if (roleId === sourceRoleId) {
-    return denyRoleAdmin(ctx, "Rol kendisinden kopyalanamaz", { op: "copy", roleId });
+    // A mistake in the request, not an attempt to cross a boundary: no YETKISIZ_DENEME audit row.
+    throw new DomainError("VALIDATION", "Rol kendisinden kopyalanamaz");
   }
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: hotelId ?? undefined }, async (tx) => {
     const roleCode = await guard(tx, scope);

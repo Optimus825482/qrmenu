@@ -33,7 +33,8 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
         <input type="text" defaultValue={editing?.phone ?? ""} maxLength={30} />
       </Field>
       <Field name="roleId" label="Rol">
-        <select defaultValue={editing?.roleId ?? ""}>
+        {/* keyed by the option count: options arrive after the dialog opens, and an uncontrolled select ignores a later defaultValue */}
+        <select key={options?.roles.length ?? 0} defaultValue={editing?.roleId ?? ""}>
           <option value="">Rol seçin</option>
           {(options?.roles ?? []).map((r) => (
             <option key={r.id} value={r.id}>
@@ -43,7 +44,7 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
         </select>
       </Field>
       <Field name="hotelId" label="Ana otel">
-        <select defaultValue={primary}>
+        <select key={hotels.length} defaultValue={primary}>
           <option value="">Otelsiz (sistem)</option>
           {hotels.map((h) => (
             <option key={h.id} value={h.id}>

@@ -44,7 +44,7 @@ describe("useLiveList", () => {
     expect(load).toHaveBeenCalledWith({ page: 1, pageSize: 20 });
     expect(result.current.total).toBe(2);
     expect(result.current.loading).toBe(false);
-    expect(sseTypes).toEqual(["definition.changed"]);
+    expect(sseTypes).toEqual(["definition.changed", "realtime.resync"]);
   });
 
   it("setQ 300 ms debounce ile yeniden yükler ve sayfayı 1'e alır", async () => {
@@ -130,5 +130,54 @@ describe("useLiveList", () => {
     act(() => result.current.reload());
     await waitFor(() => expect(result.current.error).toBe("Yetkiniz yok"));
     expect(result.current.rows).toHaveLength(1);
+  });
+
+  it("realtime.resync (akış kesildi): entity/otel bakılmadan 500 ms sonra yeniler", async () => {
+    const load = vi.fn(async (q: ListQuery) => page(["a"], 1, q));
+    renderHook(() => useLiveList(load, { hotelId: "h1", entities: ["Room"] }));
+    await waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+    vi.useFakeTimers();
+    act(() =>
+      sseHandler?.({ type: "realtime.resync", payload: {}, at: new Date().toISOString() } as MeritEvent),
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(501);
+    });
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("geç gelen eski yanıt atılır (son istek kazanır)", async () => {
+    const resolvers: Array<() => void> = [];
+    const load = vi.fn(
+      (q: ListQuery) =>
+        new Promise<ReturnType<typeof page>>((resolve) => {
+          const label = q.sort ? "yeni" : "eski";
+          resolvers.push(() => resolve(page([label], 1, q)));
+        }),
+    );
+    const { result } = renderHook(() => useLiveList(load, { entities: ["Room"] }));
+    await waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+    act(() => result.current.setSort({ field: "name", dir: "asc" }));
+    await waitFor(() => expect(load).toHaveBeenCalledTimes(2));
+    // The newer request answers first, the older one afterwards: the older answer must not win.
+    await act(async () => {
+      resolvers[1]();
+    });
+    await waitFor(() => expect(result.current.rows).toEqual([{ id: "yeni" }]));
+    await act(async () => {
+      resolvers[0]();
+    });
+    expect(result.current.rows).toEqual([{ id: "yeni" }]);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it("silmelerle boşalan son sayfada son dolu sayfaya geri döner", async () => {
+    const load = vi.fn(async (q: ListQuery) => (q.page === 3 ? page([], 30, q) : page(["a"], 30, q)));
+    const { result } = renderHook(() => useLiveList(load, { entities: ["Room"] }));
+    await waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+    act(() => result.current.setPage(3));
+    await waitFor(() => expect(result.current.page).toBe(2)); // ceil(30 / 20)
+    await waitFor(() => expect(load).toHaveBeenLastCalledWith({ page: 2, pageSize: 20 }));
+    expect(result.current.rows).toEqual([{ id: "a" }]);
   });
 });

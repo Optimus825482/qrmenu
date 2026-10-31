@@ -149,13 +149,19 @@ async function startSession(
  * "online": close it with SISTEM. The same user's session is left to the single-device rule.
  */
 async function closeForeignCookieSession(userId: string, deps: LoginDeps): Promise<void> {
-  const sessionId = await deps.cookieSessionId?.();
-  if (!sessionId) return;
-  const stale = await prisma.userSession.findUnique({
-    where: { id: sessionId },
-    select: { userId: true },
-  });
-  if (stale && stale.userId !== userId) await closeSession(sessionId, "SISTEM");
+  // Best effort: a failure here (cookie unreadable, DB hiccup) must not turn a valid login into an
+  // error. The orphaned session is left to the idle sweeper.
+  try {
+    const sessionId = await deps.cookieSessionId?.();
+    if (!sessionId) return;
+    const stale = await prisma.userSession.findUnique({
+      where: { id: sessionId },
+      select: { userId: true },
+    });
+    if (stale && stale.userId !== userId) await closeSession(sessionId, "SISTEM");
+  } catch (error) {
+    console.error("login: önceki çerez oturumu kapatılamadı", { error });
+  }
 }
 
 // --- login --------------------------------------------------------------------------------------

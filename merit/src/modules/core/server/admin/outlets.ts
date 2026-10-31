@@ -7,6 +7,7 @@ import { assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import {
   conflictFromPrisma,
+  isConflictError,
   listQuerySchema,
   orderByFor,
   type Page,
@@ -188,6 +189,8 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
       return row;
     });
   } catch (error) {
+    // The message needs a query: only pay for it when a constraint actually tripped.
+    if (!isConflictError(error)) throw error;
     conflictFromPrisma(error, await conflictMessage(hotelId, input.type));
   }
 }
@@ -235,6 +238,7 @@ export async function update(
       return row;
     });
   } catch (error) {
+    if (!isConflictError(error)) throw error;
     conflictFromPrisma(error, await conflictMessage(hotelId, input.type, id));
   }
 }

@@ -143,13 +143,14 @@ export function DataGrid<T extends { id: string }>({
         ref={gridRef}
         role="grid"
         tabIndex={0}
-        aria-rowcount={total}
+        // The header row counts as row 1: data rows are numbered from 2 across all pages.
+        aria-rowcount={total + 1}
         aria-colcount={columns.length}
         aria-activedescendant={selectedIndex === -1 ? undefined : rowId(rows[selectedIndex].id)}
         className="xp-grid-body"
         onKeyDown={onKeyDown}
       >
-        <div role="row" className="xp-grid-row xp-grid-head" style={{ gridTemplateColumns: template }}>
+        <div role="row" aria-rowindex={1} className="xp-grid-row xp-grid-head" style={{ gridTemplateColumns: template }}>
           {columns.map((column) => {
             const sorted = sort?.field === column.key ? sort.dir : undefined;
             return (
@@ -183,10 +184,11 @@ export function DataGrid<T extends { id: string }>({
           })}
         </div>
 
-        {rows.map((row) => (
+        {rows.map((row, index) => (
           <div
             key={row.id}
             id={rowId(row.id)}
+            aria-rowindex={(page - 1) * pageSize + index + 2}
             data-row-id={row.id}
             role="row"
             aria-selected={row.id === selectedId}

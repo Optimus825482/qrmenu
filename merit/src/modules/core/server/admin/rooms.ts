@@ -433,7 +433,8 @@ export async function bulkCreate(ctx: Ctx, hotelId: string, raw: BulkInput): Pro
       const conflicts = await existingNumbers(prisma, hotelId, numbers);
       throw bulkConflict(conflicts.length > 0 ? conflicts : numbers);
     }
-    throw error;
+    // The floor or room type was deleted between the reference check and the insert.
+    conflictFromPrisma(error, "Seçilen kat veya oda tipi artık yok; listeyi yenileyip tekrar deneyin");
   }
 }
 

@@ -275,6 +275,24 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     }
   });
 
+  it("çerez oturumu kapatılamazsa (hata) geçerli giriş yine de başarılı olur", async () => {
+    await makeUser({ username: "kat.hata", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const deps = {
+        ...makeDeps(),
+        cookieSessionId: async (): Promise<string> => {
+          throw new Error("çerez okunamadı");
+        },
+      };
+      const res = await performLogin(creds("kat.hata"), deps);
+      expect(res.ok).toBe(true);
+      expect(errorLog).toHaveBeenCalled();
+    } finally {
+      errorLog.mockRestore();
+    }
+  });
+
   it("R-SYS tek ADMIN hedefi: next /admin", async () => {
     await makeUser({ username: "sys1", roleCode: "R-SYS", passwordHash });
     const res = await performLogin(creds("sys1"), makeDeps());

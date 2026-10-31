@@ -77,6 +77,39 @@ describe("SETTING_META", () => {
   });
 });
 
+describe("SETTING_META tipi ↔ zod şeması", () => {
+  it("editör tipi, varsayılan değerin tipi ve şema ile uyumlu (boolean/number/enum/text)", () => {
+    for (const key of keys) {
+      const meta = SETTING_META[key];
+      const schema = SETTING_SCHEMAS[key];
+      const fallback = DEFAULT_SETTINGS[key];
+      expect(schema.safeParse(fallback).success, `${key}: varsayılan şemaya uymuyor`).toBe(true);
+      switch (meta.type) {
+        case "boolean":
+          expect(typeof fallback, key).toBe("boolean");
+          expect(schema.safeParse(true).success, key).toBe(true);
+          expect(schema.safeParse(false).success, key).toBe(true);
+          expect(schema.safeParse("true").success, key).toBe(false);
+          break;
+        case "number":
+          expect(typeof fallback, key).toBe("number");
+          expect(schema.safeParse("5").success, key).toBe(false);
+          break;
+        case "enum": {
+          const values = meta.options!.map((o) => o.value);
+          expect(values, key).toContain(fallback);
+          expect(schema.safeParse("__yok__").success, key).toBe(false);
+          break;
+        }
+        case "text":
+          expect(typeof fallback, key).toBe("string");
+          expect(schema.safeParse(42).success, key).toBe(false);
+          break;
+      }
+    }
+  });
+});
+
 describe("listGrouped", () => {
   it("sistem kapsamı: on grup sırayla, tüm anahtarlar varsayılan", async () => {
     const groups = await settingsAdmin.listGrouped(await sys(), null);
@@ -156,6 +189,10 @@ describe("set", () => {
       .filter((e) => e.type === "settings.changed");
     expect(changed[0].hotelId).toBeUndefined();
     expect(changed[0].payload).toEqual({ key: "price.currency" });
+    // The event is published through the write's transaction, so it is delivered only on commit.
+    const call = publishMock.mock.calls.find((c) => c[0].type === "settings.changed");
+    expect(call?.[1]).toBeDefined();
+    expect(call?.[1]).not.toBe(testDb);
   });
 
   it("YONETIM sistem kapsamında yazamaz: FORBIDDEN + YETKISIZ_DENEME; satır yok", async () => {

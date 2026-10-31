@@ -39,6 +39,7 @@ export function useNotifications(subscribe: SubscribeEvents) {
   }, []);
 
   useEffect(() => {
+    // Deferred: react-hooks/set-state-in-effect rejects a direct call that ends in setState.
     const first = setTimeout(() => void load(), 0);
     let timer: ReturnType<typeof setTimeout> | undefined;
     const off = subscribe((e) => {

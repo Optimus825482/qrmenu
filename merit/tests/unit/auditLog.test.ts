@@ -139,6 +139,24 @@ describe("denetim günlüğü", () => {
     expect(lines[1]).not.toContain("DIGER");
   });
 
+  it("capabilities: CSV yetkisi (R) yoksa canExport false; yetki varken true", async () => {
+    const sys = await makeUser({ username: "cap-sys", roleCode: "R-SYS", hotelCode: "MR" });
+    expect(await auditLog.capabilities(await ctxFor(sys, { hotelCode: "MR" }))).toEqual({ canExport: true });
+
+    const otm = await makeUser({ username: "cap-otm", roleCode: "R-OTM", hotelCode: "MR" });
+    const ctx = await ctxFor(otm, { hotelCode: "MR" });
+    expect(await auditLog.capabilities(ctx)).toEqual({ canExport: true });
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-DEN" } });
+    await testDb.roleScreenPermission.updateMany({
+      where: { roleId: otm.roleId, screenId: screen.id },
+      data: { canReport: false },
+    });
+    expect(await auditLog.capabilities(await ctxFor(otm, { hotelCode: "MR" }))).toEqual({ canExport: false });
+    await expect(auditLog.exportCsv(await ctxFor(otm, { hotelCode: "MR" }))).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
+
   it("get başka otelin satırını NOT_FOUND döner, kendi satırında before/after durur", async () => {
     const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
     const ctx = await ctxFor(otm, { hotelCode: "MR" });

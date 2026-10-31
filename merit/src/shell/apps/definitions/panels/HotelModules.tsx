@@ -51,7 +51,7 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
       const yes = await confirm({
         title: `${label} modülünü kapat`,
         message: `${label} bu otelde kapatılsın mı? Modülü kullanan personel ve ekranlar erişimini kaybeder.`,
-        danger: false,
+        danger: true,
       });
       if (!yes) return;
     }

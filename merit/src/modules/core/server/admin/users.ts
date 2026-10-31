@@ -317,7 +317,8 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
   const scope = await scopeHotels(ctx, "O");
   const [roles, hotels] = await Promise.all([
     prisma.role.findMany({
-      where: isSystem(ctx) ? {} : { kind: { not: "SISTEM" } },
+      // Only SISTEM may assign SISTEM and YONETIM roles (assertCanAssign): do not offer what is refused.
+      where: isSystem(ctx) ? {} : { kind: { notIn: ["SISTEM", "YONETIM"] } },
       select: { id: true, code: true, name: true, kind: true },
       orderBy: [{ name: "asc" }],
     }),
@@ -335,7 +336,6 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
 export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
   const input = parseInput(createUserSchema, raw);
   const hotels = [...new Set([...(input.hotelId ? [input.hotelId] : []), ...input.hotelIds])];
-  const passwordHash = await hashPassword(input.password);
   try {
     return await withAdminTx(
       ctx,
@@ -346,6 +346,7 @@ export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
         if (await tx.user.findUnique({ where: { username: input.username }, select: { id: true } })) {
           throw new DomainError("CONFLICT", USERNAME_TAKEN, { fieldErrors: { username: [USERNAME_TAKEN] } });
         }
+        const passwordHash = await hashPassword(input.password); // only after authorisation
         const extras = hotels.filter((h) => h !== input.hotelId);
         const created = await tx.user.create({
           data: {
@@ -420,6 +421,13 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         await assertCanAssign(ctx, tx, input.roleId, hotels, "D");
       }
       await assertSupervisor(tx, input.supervisorId, id);
+      if (
+        input.username !== before.username &&
+        (await tx.user.findUnique({ where: { username: input.username }, select: { id: true } }))
+      ) {
+        // Checked up front so a foreign-key failure is never mistaken for a taken name below.
+        throw new DomainError("CONFLICT", USERNAME_TAKEN, { fieldErrors: { username: [USERNAME_TAKEN] } });
+      }
       const extras = hotels.filter((h) => h !== input.hotelId);
       await tx.userHotel.deleteMany({ where: { userId: id, hotelId: { notIn: extras } } });
       const kept = new Set(before.userHotels.map((l) => l.hotelId));

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  auditLogCapabilitiesAction,
   auditLogExportAction,
   auditLogGetAction,
   auditLogListAction,
@@ -65,6 +66,7 @@ export function AuditLog({ setStatus }: AppProps) {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [detail, setDetail] = useState<AuditDetail | null>(null);
   const [busy, setBusy] = useState(false);
+  const [canExport, setCanExport] = useState(false);
   const latest = useRef(0);
   const detailSeq = useRef(0);
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -108,9 +110,22 @@ export function AuditLog({ setStatus }: AppProps) {
   }, [query, setStatus]);
 
   useEffect(() => {
+    // Deferred: react-hooks/set-state-in-effect rejects a direct call that ends in setState.
     const first = setTimeout(() => void load(), 0);
     return () => clearTimeout(first);
   }, [load]);
+
+  useEffect(() => {
+    let live = true;
+    void auditLogCapabilitiesAction()
+      .then((result) => {
+        if (live && result.ok) setCanExport(result.data.canExport);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useSse(() => {
     clearTimeout(reloadTimer.current);
@@ -271,9 +286,11 @@ export function AuditLog({ setStatus }: AppProps) {
                 onChange={(event) => patchFilter({ entity: event.target.value })}
               />
             </label>
-            <button type="button" className="xp-button" disabled={busy} onClick={() => void exportCsv()}>
-              CSV&apos;ye aktar
-            </button>
+            {canExport ? (
+              <button type="button" className="xp-button" disabled={busy} onClick={() => void exportCsv()}>
+                CSV&apos;ye aktar
+              </button>
+            ) : null}
           </div>
         }
       />

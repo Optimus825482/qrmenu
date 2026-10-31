@@ -193,13 +193,17 @@ function SettingRow({
   const dirty = meta.secret ? draft !== "" : draft !== initial;
   const canSave = dirty && next !== undefined && !(typeof next === "number" && Number.isNaN(next));
 
-  const save = async () => {
+  const save = async (value: unknown = next) => {
     setBusy(true);
     setError(null);
     try {
-      const result = await setSettingAction({ hotelId, key: item.key, value: next });
-      if (result.ok) onChanged(result.data, `${meta.label} kaydedildi`);
-      else {
+      const result = await setSettingAction({ hotelId, key: item.key, value });
+      if (result.ok) {
+        // A saved secret comes back masked, so the row's identity does not change and it would
+        // not remount: empty the field here or the clear text stays on screen.
+        if (meta.secret) setDraft("");
+        onChanged(result.data, `${meta.label} kaydedildi`);
+      } else {
         const message = result.error.fieldErrors?.value?.[0] ?? result.error.message;
         setError(message);
         onFailed(message);
@@ -290,6 +294,11 @@ function SettingRow({
       <button type="button" className="xp-button" disabled={busy || !canSave} onClick={() => void save()}>
         Kaydet
       </button>
+      {meta.secret && item.source !== "default" ? (
+        <button type="button" className="xp-button" disabled={busy} onClick={() => void save("")}>
+          Değeri temizle
+        </button>
+      ) : null}
       {hotelId !== null && item.source === "hotel" ? (
         <button type="button" className="xp-button" disabled={busy} onClick={() => void clear()}>
           Otel değerini kaldır

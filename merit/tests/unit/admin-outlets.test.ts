@@ -149,6 +149,23 @@ describe("outlets: CRUD", () => {
     expect(await testDb.outlet.count({ where: { hotelId: mr, type: "ODA_SERVISI" } })).toBe(1);
   });
 
+  it("eşzamanlı iki ODA_SERVISI oluşturma: biri başarır, diğeri Türkçe CONFLICT (kısmi unique yarışı)", async () => {
+    const ctx = await sys();
+    const mrp = await hotelId("MRP");
+    await testDb.outlet.deleteMany({ where: { hotelId: mrp, type: "ODA_SERVISI" } });
+
+    const attempt = (name: string) => outlets.create(ctx, mrp, { ...BAR, name, type: "ODA_SERVISI" });
+    const results = await Promise.allSettled([attempt("Oda Servisi A"), attempt("Oda Servisi B")]);
+
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const failed = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(failed.reason).toMatchObject({
+      code: "CONFLICT",
+      message: "Her otelde bir oda servisi outleti olabilir",
+    });
+    expect(await testDb.outlet.count({ where: { hotelId: mrp, type: "ODA_SERVISI" } })).toBe(1);
+  });
+
   it("outlet başka otele taşınamaz; başka otelin outleti NOT_FOUND", async () => {
     const ctx = await sys();
     const mr = await hotelId("MR");

@@ -14,6 +14,17 @@ import {
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 const publishMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/realtime", () => ({ publish: publishMock }));
+const hashSpy = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/password", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/password")>();
+  return {
+    ...original,
+    hashPassword: (...args: Parameters<typeof original.hashPassword>) => {
+      hashSpy();
+      return original.hashPassword(...args);
+    },
+  };
+});
 
 const users = await import("@/modules/core/server/admin/users");
 const members = await import("@/modules/core/server/admin/members");
@@ -32,6 +43,7 @@ beforeEach(async () => {
   await testDb.hotelModule.updateMany({ data: { enabled: true } });
   resetRateLimit();
   publishMock.mockReset();
+  hashSpy.mockReset();
 });
 afterAll(async () => {
   await truncate(...TABLES);
@@ -126,6 +138,26 @@ describe("users: oluşturma ve güncelleme", () => {
       .filter((e) => e.type === "definition.changed");
     expect(events.length).toBeGreaterThanOrEqual(2);
     for (const e of events) expect(e.payload).toMatchObject({ entity: "user", id: created.id });
+  });
+
+  it("update: başka kullanıcının adına yeniden adlandırma CONFLICT (alan hatası username); kendi adını korumak serbest", async () => {
+    const ctx = await sys();
+    const first = await newUser(ctx, "ilk.kisi");
+    const second = await newUser(ctx, "ikinci.kisi");
+    const profile = (row: typeof second, username: string) => ({
+      username,
+      fullName: row.fullName,
+      roleId: row.roleId,
+      hotelId: row.hotelId ?? undefined,
+      hotelIds: row.hotelIds,
+    });
+    await expect(users.update(ctx, second.id, profile(second, first.username))).rejects.toMatchObject({
+      code: "CONFLICT",
+      fieldErrors: { username: expect.any(Array) },
+    });
+    await expect(users.update(ctx, second.id, profile(second, "ikinci.kisi"))).resolves.toMatchObject({
+      username: "ikinci.kisi",
+    });
   });
 
   it("zayıf şifre VALIDATION (alan hatası password); kayıt yazılmaz", async () => {
@@ -276,6 +308,39 @@ describe("users: YONETIM kapsamı", () => {
     await expect(
       users.update(s, low.id, { username: "alt.kisi", fullName: "A", roleId: otm.id, hotelId: mr, hotelIds: [] }),
     ).resolves.toMatchObject({ roleCode: "R-OTM" });
+  });
+
+  it("options: YONETIM'e SISTEM ve YONETIM rolleri sunulmaz (atayamayacağı roller); SISTEM hepsini görür", async () => {
+    const m = await mgmt();
+    const managerOptions = await users.options(m);
+    const kinds = new Set(managerOptions.roles.map((r) => r.kind));
+    expect(kinds.has("SISTEM")).toBe(false);
+    expect(kinds.has("YONETIM")).toBe(false);
+    expect(managerOptions.roles.some((r) => r.code === "R-GAR")).toBe(true);
+
+    const systemOptions = await users.options(await sys());
+    const systemKinds = new Set(systemOptions.roles.map((r) => r.kind));
+    expect(systemKinds.has("SISTEM")).toBe(true);
+    expect(systemKinds.has("YONETIM")).toBe(true);
+  });
+
+  it("create: yetkisiz çağrıda bcrypt hesaplanmaz (önce yetki, sonra hash); yetkili çağrıda bir kez hesaplanır", async () => {
+    const gar = await roleByCode("R-GAR");
+    const user = await makeUser({ username: "gar-denied", roleCode: "R-GAR", hotelCode: "MR" });
+    const denied = await ctxFor(user, { hotelCode: "MR" });
+    const input = {
+      username: "yeni.kisi",
+      fullName: "Yeni Kişi",
+      roleId: gar.id,
+      hotelId: await hotelId("MR"),
+      hotelIds: [],
+      password: GOOD,
+    };
+    await expect(users.create(denied, input)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(hashSpy).not.toHaveBeenCalled();
+
+    await users.create(await sys(), input);
+    expect(hashSpy).toHaveBeenCalledTimes(1);
   });
 
   it("R-GAR yetkisiz: list FORBIDDEN", async () => {

@@ -113,6 +113,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
   }, [hotelId, setStatus, statusFilter]);
 
   useEffect(() => {
+    // Deferred: react-hooks/set-state-in-effect rejects a direct call that ends in setState.
     const first = setTimeout(() => void load(), 0);
     return () => clearTimeout(first);
   }, [load]);

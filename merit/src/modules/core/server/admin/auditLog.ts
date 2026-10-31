@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { orderByFor, parseInput } from "./crud";
 import { listQuerySchema, pageArgs, toPage, type Page } from "./listQuery";
@@ -216,4 +216,9 @@ export async function exportCsv(ctx: Ctx, raw: AuditListInput = {}): Promise<str
       .join(",");
   });
   return `\uFEFF${[header, ...lines].join("\n")}`;
+}
+
+/** What the actor may do in the window beyond reading: the CSV button is hidden without R. */
+export async function capabilities(ctx: Ctx): Promise<{ canExport: boolean }> {
+  return { canExport: await can(ctx, SCREEN, "R") };
 }

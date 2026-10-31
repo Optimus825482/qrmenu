@@ -96,6 +96,18 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
   }, DEFINITION_EVENTS);
   useEffect(() => () => clearTimeout(reloadTimer.current), []);
 
+  /**
+   * Role or scope picked: drop the grid at once. Until the new matrix arrives the old flags
+   * would still be on screen, and a click would write them onto the newly chosen role/scope.
+   */
+  const changeScope = (nextRoleId: string, nextScope: string) => {
+    if (nextRoleId === roleId && nextScope === scope) return;
+    setData(null);
+    setCopyFrom("");
+    setRoleId(nextRoleId);
+    setScope(nextScope);
+  };
+
   const fail = useCallback((title: string, message: string) => void alertDialog({ title, message }), []);
 
   const toggleCell = async (cell: ScreenCell, action: (typeof ACTIONS)[number], value: boolean) => {
@@ -111,6 +123,15 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
   };
 
   const toggleModule = async (moduleKey: string, enabled: boolean) => {
+    if (!enabled) {
+      const label = MODULE_LABELS[moduleKey as keyof typeof MODULE_LABELS] ?? moduleKey;
+      const yes = await confirm({
+        title: `${label} modülünü kapat`,
+        message: `${label} modülü "${role?.name ?? ""}" rolü için ${hotelScope ? "bu otelde" : "sistem genelinde"} kapatılsın mı? Rolün bu modüldeki ekranları kullanılamaz.`,
+        danger: true,
+      });
+      if (!yes) return;
+    }
     setBusy(true);
     try {
       const result = await setPermissionModuleAction({ roleId, hotelId: hotelScope, moduleKey, enabled });
@@ -157,7 +178,7 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
       <div className="xp-defs-filters">
         <label>
           Rol
-          <select aria-label="Rol" value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+          <select aria-label="Rol" value={roleId} onChange={(e) => changeScope(e.target.value, scope)}>
             {(options?.roles ?? []).map((r) => (
               <option key={r.id} value={r.id}>
                 {r.code} — {r.name}
@@ -167,7 +188,7 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
         </label>
         <label>
           Kapsam
-          <select aria-label="Otel" value={scope} onChange={(e) => setScope(e.target.value)}>
+          <select aria-label="Otel" value={scope} onChange={(e) => changeScope(roleId, e.target.value)}>
             <option value={SYSTEM_SCOPE}>Sistem geneli</option>
             {(options?.hotels ?? []).map((h) => (
               <option key={h.id} value={h.id}>

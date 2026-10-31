@@ -9,7 +9,8 @@ import { useSse } from "../useSse";
 const SEARCH_DEBOUNCE_MS = 300;
 const RELOAD_DEBOUNCE_MS = 500;
 const LOAD_FAILED = "Liste yüklenemedi";
-const DEFINITION_EVENTS = ["definition.changed"] as const;
+// `realtime.resync`: the stream was interrupted, so events may have been missed: reload.
+const LIVE_EVENTS = ["definition.changed", "realtime.resync"] as const;
 
 type Options = {
   /** Reload only for changes in this hotel; omit for system-wide lists (any hotel's change reloads). */
@@ -40,7 +41,7 @@ export type LiveList<T> = {
 /**
  * Server-paged list that stays current: loads through `load` (a Server Action), refetches on page /
  * size / search / sort changes, and reloads (500 ms debounce) when a `definition.changed` event
- * names one of `entities` in this hotel.
+ * names one of `entities` in this hotel, or when the stream reports `realtime.resync`.
  */
 export function useLiveList<T>(
   load: (query: ListQuery) => Promise<Result<Page<T>>>,
@@ -108,13 +109,18 @@ export function useLiveList<T>(
   // Live refresh.
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const onEvent = (e: MeritEvent) => {
+    if (e.type === "realtime.resync") {
+      clearTimeout(reloadTimer.current);
+      reloadTimer.current = setTimeout(() => setTick((t) => t + 1), RELOAD_DEBOUNCE_MS);
+      return;
+    }
     const entity = (e.payload as { entity?: unknown } | undefined)?.entity;
     if (typeof entity !== "string" || !entities.includes(entity)) return;
     if (hotelId !== undefined && e.hotelId !== hotelId) return;
     clearTimeout(reloadTimer.current);
     reloadTimer.current = setTimeout(() => setTick((t) => t + 1), RELOAD_DEBOUNCE_MS);
   };
-  useSse(onEvent, DEFINITION_EVENTS);
+  useSse(onEvent, LIVE_EVENTS);
   useEffect(() => () => clearTimeout(reloadTimer.current), []);
 
   const reload = useCallback(() => setTick((t) => t + 1), []);

@@ -83,7 +83,6 @@ export const bulkSchema = z
 export type BulkInput = z.input<typeof bulkSchema>;
 
 export type BulkResult = { created: number; labels: string[] };
-export type BulkPreview = { labels: string[]; conflicts: string[] };
 
 /** "M2" before "M10": numbers inside labels compare as numbers. */
 const collator = new Intl.Collator("tr", { numeric: true, sensitivity: "base" });
@@ -286,12 +285,4 @@ export async function bulkCreate(ctx: Ctx, outletId: string, raw: BulkInput): Pr
     }
     throw error;
   }
-}
-
-/** What bulkCreate would do for this input, without writing. */
-export async function bulkPreview(ctx: Ctx, outletId: string, raw: BulkInput): Promise<BulkPreview> {
-  const hotelId = await outletHotel(prisma, outletId);
-  await assertCan(ctx, SCREEN, "V", hotelId);
-  const labels = bulkLabels(parseInput(bulkSchema, raw));
-  return { labels, conflicts: await existingLabels(prisma, outletId, labels) };
 }

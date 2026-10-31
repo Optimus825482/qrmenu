@@ -72,10 +72,13 @@ const CONFLICT_CODES = new Set(["P2002", "P2003", "P2014"]);
  * error is rethrown untouched. Use in a `catch`: `catch (e) { conflictFromPrisma(e, "...") }`.
  */
 export function conflictFromPrisma(err: unknown, message: string): never {
-  if (err instanceof Prisma.PrismaClientKnownRequestError && CONFLICT_CODES.has(err.code)) {
-    throw new DomainError("CONFLICT", message);
-  }
+  if (isConflictError(err)) throw new DomainError("CONFLICT", message);
   throw err;
+}
+
+/** True for a Prisma constraint violation; lets a caller compute an expensive message only then. */
+export function isConflictError(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && CONFLICT_CODES.has(err.code);
 }
 
 export type DefinitionChange = {
