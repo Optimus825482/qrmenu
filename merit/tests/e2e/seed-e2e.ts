@@ -1,4 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+import { pgAdapter } from "../../src/lib/pgAdapter";
 import { config } from "dotenv";
 import path from "node:path";
 import { PrismaClient } from "../../src/generated/prisma/client";
@@ -34,7 +34,7 @@ function connectionString(): string {
 
 /** Empties every application table, re-runs the seed and creates the e2e staff users. */
 async function resetAndSeed(): Promise<void> {
-  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: connectionString() }) });
+  const db = new PrismaClient({ adapter: pgAdapter(connectionString()) });
   try {
     const rows = await db.$queryRaw<{ tablename: string }[]>`
       SELECT tablename FROM pg_tables WHERE schemaname = 'public'`;

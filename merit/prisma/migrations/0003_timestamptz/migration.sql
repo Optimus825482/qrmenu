@@ -1,0 +1,246 @@
+-- Every instant column becomes timestamptz (spec §10). Existing values were written by Prisma
+-- as UTC wall-clock in timestamp(3) columns, so they are reinterpreted AT TIME ZONE 'UTC'
+-- instead of in the session TimeZone (which would shift them on a non-UTC server).
+
+-- AlterTable
+ALTER TABLE "app_screens" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "audit_logs" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "daily_task_items" ALTER COLUMN "checked_at" SET DATA TYPE TIMESTAMPTZ(3) USING "checked_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "last_dnd_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_dnd_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "daily_tasks" ALTER COLUMN "completed_at" SET DATA TYPE TIMESTAMPTZ(3) USING "completed_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "email_logs" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "email_settings" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "floors" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "guest_records" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "hotel_modules" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "hotel_stock_movements" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "hotel_stocks" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "hotels" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "menu_node_translations" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "menu_nodes" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "menu_themes" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "minibar_transaction_items" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "minibar_transactions" ALTER COLUMN "occurred_at" SET DATA TYPE TIMESTAMPTZ(3) USING "occurred_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "mybar_request_items" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "mybar_requests" ALTER COLUMN "seen_at" SET DATA TYPE TIMESTAMPTZ(3) USING "seen_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "completed_at" SET DATA TYPE TIMESTAMPTZ(3) USING "completed_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "cancelled_at" SET DATA TYPE TIMESTAMPTZ(3) USING "cancelled_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "notifications" ALTER COLUMN "read_at" SET DATA TYPE TIMESTAMPTZ(3) USING "read_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "occupancy_uploads" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "order_counters" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "order_events" ALTER COLUMN "at" SET DATA TYPE TIMESTAMPTZ(3) USING "at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "order_items" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "orders" ALTER COLUMN "approved_at" SET DATA TYPE TIMESTAMPTZ(3) USING "approved_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "phone_confirmed_at" SET DATA TYPE TIMESTAMPTZ(3) USING "phone_confirmed_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "ready_at" SET DATA TYPE TIMESTAMPTZ(3) USING "ready_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "served_at" SET DATA TYPE TIMESTAMPTZ(3) USING "served_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "cancelled_at" SET DATA TYPE TIMESTAMPTZ(3) USING "cancelled_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "outlet_members" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "outlet_tables" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "outlets" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "print_jobs" ALTER COLUMN "printed_at" SET DATA TYPE TIMESTAMPTZ(3) USING "printed_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "printers" ALTER COLUMN "last_seen_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_seen_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "product_groups" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "products" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "push_subscriptions" ALTER COLUMN "last_used_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_used_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "qr_scan_logs" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "role_module_accesses" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "role_screen_permissions" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "roles" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "room_checks" ALTER COLUMN "started_at" SET DATA TYPE TIMESTAMPTZ(3) USING "started_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "ended_at" SET DATA TYPE TIMESTAMPTZ(3) USING "ended_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "room_dnd_checks" ALTER COLUMN "at" SET DATA TYPE TIMESTAMPTZ(3) USING "at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "room_dnds" ALTER COLUMN "first_at" SET DATA TYPE TIMESTAMPTZ(3) USING "first_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "last_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "room_type_setups" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "room_types" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "rooms" ALTER COLUMN "qr_generated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "qr_generated_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "session_events" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "settings" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "setup_items" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "setups" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "stock_request_items" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "stock_requests" ALTER COLUMN "approved_at" SET DATA TYPE TIMESTAMPTZ(3) USING "approved_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "delivered_at" SET DATA TYPE TIMESTAMPTZ(3) USING "delivered_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "table_assignments" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "task_status_logs" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "upload_tasks" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "user_hotels" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "user_sessions" ALTER COLUMN "login_at" SET DATA TYPE TIMESTAMPTZ(3) USING "login_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "last_seen_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_seen_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "expires_at" SET DATA TYPE TIMESTAMPTZ(3) USING "expires_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "warned_at" SET DATA TYPE TIMESTAMPTZ(3) USING "warned_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "logout_at" SET DATA TYPE TIMESTAMPTZ(3) USING "logout_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "last_login_at" SET DATA TYPE TIMESTAMPTZ(3) USING "last_login_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';
+
+-- AlterTable
+ALTER TABLE "waiter_calls" ALTER COLUMN "resolved_at" SET DATA TYPE TIMESTAMPTZ(3) USING "resolved_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ(3) USING "created_at" AT TIME ZONE 'UTC',
+ALTER COLUMN "updated_at" SET DATA TYPE TIMESTAMPTZ(3) USING "updated_at" AT TIME ZONE 'UTC';

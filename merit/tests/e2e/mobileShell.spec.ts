@@ -48,7 +48,7 @@ async function insertNotification(userId: string, title: string, body: string): 
   await withDb((c) =>
     c.query(
       `INSERT INTO notifications (id, user_id, type, title, body, created_at, updated_at)
-       VALUES ($1, $2, 'test.note', $3, $4, now(), now())`,
+       VALUES ($1, $2, 'test.note', $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [id, userId, title, body],
     ),
   );

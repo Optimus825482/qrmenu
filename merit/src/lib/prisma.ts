@@ -1,6 +1,6 @@
-import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
+import { pgAdapter } from "@/lib/pgAdapter";
 
 declare global {
   var __prisma: PrismaClient | undefined;
@@ -8,7 +8,7 @@ declare global {
 
 function createClient(): PrismaClient {
   return new PrismaClient({
-    adapter: new PrismaPg({ connectionString: env.DATABASE_URL }),
+    adapter: pgAdapter(env.DATABASE_URL),
     log: ["warn", "error"],
   });
 }

@@ -17,6 +17,9 @@ jobs:
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: merit_test
+          # A non-UTC server zone: wall-clock (timestamp without time zone) bugs surface in CI.
+          TZ: Europe/Istanbul
+          PGTZ: Europe/Istanbul
         ports:
           - 5432:5432
         options: >-

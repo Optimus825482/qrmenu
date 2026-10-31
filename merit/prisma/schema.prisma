@@ -214,8 +214,8 @@ model Hotel {
   emailAlertEnabled  Boolean  @default(false) @map("email_alert_enabled")
   emailReportEnabled Boolean  @default(false) @map("email_report_enabled")
   emailSystemEnabled Boolean  @default(false) @map("email_system_enabled")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   modules             HotelModule[]
   floors              Floor[]
@@ -253,8 +253,8 @@ model HotelModule {
   hotelId   String    @map("hotel_id")
   moduleKey ModuleKey @map("module_key")
   enabled   Boolean   @default(true)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
 
@@ -268,8 +268,8 @@ model Floor {
   number    Int
   name      String
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel Hotel  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   rooms Room[]
@@ -284,8 +284,8 @@ model RoomType {
   name         String
   cabinetCount Int      @default(0) @map("cabinet_count")
   isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel  Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   rooms  Room[]
@@ -303,11 +303,11 @@ model Room {
   number        String
   capacity      Int?
   qrToken       String?   @unique @map("qr_token")
-  qrGeneratedAt DateTime? @map("qr_generated_at")
+  qrGeneratedAt DateTime? @map("qr_generated_at") @db.Timestamptz(3)
   guestMessage  String?   @map("guest_message") @db.VarChar(500)
   isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel               Hotel                @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   floor               Floor                @relation(fields: [floorId], references: [id], onDelete: Restrict)
@@ -339,8 +339,8 @@ model Outlet {
   kdsEnabled           Boolean      @default(false) @map("kds_enabled")
   phoneConfirmRequired Boolean      @default(false) @map("phone_confirm_required")
   isActive             Boolean      @default(true) @map("is_active")
-  createdAt            DateTime     @default(now()) @map("created_at")
-  updatedAt            DateTime     @updatedAt @map("updated_at")
+  createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel          Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   theme          MenuTheme?        @relation(fields: [themeId], references: [id], onDelete: SetNull)
@@ -364,8 +364,8 @@ model OutletTable {
   label     String
   qrToken   String   @unique @map("qr_token")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet      Outlet            @relation(fields: [outletId], references: [id], onDelete: Restrict)
   assignments TableAssignment[]
@@ -388,10 +388,10 @@ model User {
   hotelId      String?   @map("hotel_id")
   supervisorId String?   @map("supervisor_id")
   isActive     Boolean   @default(true) @map("is_active")
-  lastLoginAt  DateTime? @map("last_login_at")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(3)
   prefs        Json?
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   role                 Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
   hotel                Hotel?               @relation(fields: [hotelId], references: [id], onDelete: Restrict)
@@ -429,7 +429,7 @@ model UserHotel {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
   hotelId   String   @map("hotel_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
@@ -444,8 +444,8 @@ model OutletMember {
   outletId  String   @map("outlet_id")
   roleId    String?  @map("role_id")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
@@ -462,8 +462,8 @@ model TableAssignment {
   tableId   String   @map("table_id")
   userId    String   @map("user_id")
   isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
   table  OutletTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
@@ -480,8 +480,8 @@ model Role {
   maxOnlineMinutes Int?     @map("max_online_minutes")
   defaultScreen    String?  @map("default_screen")
   isSystem         Boolean  @default(false) @map("is_system")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   users             User[]
   outletMembers     OutletMember[]
@@ -501,8 +501,8 @@ model AppScreen {
   group     String
   sortOrder Int       @default(0) @map("sort_order")
   isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   permissions RoleScreenPermission[]
 
@@ -519,8 +519,8 @@ model RoleScreenPermission {
   canEdit    Boolean  @default(false) @map("can_edit")
   canApprove Boolean  @default(false) @map("can_approve")
   canReport  Boolean  @default(false) @map("can_report")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   role   Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
   screen AppScreen @relation(fields: [screenId], references: [id], onDelete: Cascade)
@@ -536,8 +536,8 @@ model RoleModuleAccess {
   hotelId   String?   @map("hotel_id")
   moduleKey ModuleKey @map("module_key")
   enabled   Boolean   @default(true)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   role  Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
@@ -554,16 +554,16 @@ model UserSession {
   roleId       String        @map("role_id")
   deviceLabel  String?       @map("device_label")
   status       SessionStatus @default(ONLINE)
-  loginAt      DateTime      @default(now()) @map("login_at")
-  lastSeenAt   DateTime      @default(now()) @map("last_seen_at")
-  expiresAt    DateTime      @map("expires_at")
-  warnedAt     DateTime?     @map("warned_at")
-  logoutAt     DateTime?     @map("logout_at")
+  loginAt      DateTime      @default(now()) @map("login_at") @db.Timestamptz(3)
+  lastSeenAt   DateTime      @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  expiresAt    DateTime      @map("expires_at") @db.Timestamptz(3)
+  warnedAt     DateTime?     @map("warned_at") @db.Timestamptz(3)
+  logoutAt     DateTime?     @map("logout_at") @db.Timestamptz(3)
   logoutReason LogoutReason? @map("logout_reason")
   ip           String
   userAgent    String        @map("user_agent")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user   User           @relation(fields: [userId], references: [id], onDelete: Restrict)
   hotel  Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
@@ -580,7 +580,7 @@ model SessionEvent {
   sessionId String   @map("session_id")
   event     String
   detail    Json?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -592,8 +592,8 @@ model Setting {
   hotelId   String?  @map("hotel_id")
   key       String
   value     Json
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
 
@@ -611,9 +611,9 @@ model Notification {
   refType   String?   @map("ref_type")
   refId     String?   @map("ref_id")
   isRead    Boolean   @default(false) @map("is_read")
-  readAt    DateTime? @map("read_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  readAt    DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
@@ -629,9 +629,9 @@ model PushSubscription {
   p256dh     String
   auth       String
   userAgent  String?  @map("user_agent")
-  lastUsedAt DateTime @default(now()) @map("last_used_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -648,7 +648,7 @@ model AuditLog {
   before    Json?
   after     Json?
   ip        String?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
@@ -668,7 +668,7 @@ model QrScanLog {
   error     String?
   ip        String
   userAgent String   @map("user_agent")
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   room  Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
   table OutletTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
@@ -684,8 +684,8 @@ model ProductGroup {
   name        String   @unique
   description String?
   isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   products Product[]
 
@@ -703,8 +703,8 @@ model Product {
   purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
   salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
   isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   group             ProductGroup             @relation(fields: [groupId], references: [id], onDelete: Restrict)
   setupItems        SetupItem[]
@@ -723,8 +723,8 @@ model Setup {
   description     String?
   isInsideCabinet Boolean  @default(true) @map("is_inside_cabinet")
   isActive        Boolean  @default(true) @map("is_active")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   items            SetupItem[]
   roomTypeSetups   RoomTypeSetup[]
@@ -738,8 +738,8 @@ model SetupItem {
   setupId   String   @map("setup_id")
   productId String   @map("product_id")
   qty       Int
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   setup   Setup   @relation(fields: [setupId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -752,7 +752,7 @@ model RoomTypeSetup {
   hotelId    String   @map("hotel_id")
   roomTypeId String   @map("room_type_id")
   setupId    String   @map("setup_id")
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   hotel    Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
   roomType RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
@@ -771,8 +771,8 @@ model HotelStock {
   usedQty       Int      @default(0) @map("used_qty")
   remainingQty  Int      @default(0) @map("remaining_qty")
   criticalLevel Int      @default(50) @map("critical_level")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -791,7 +791,7 @@ model HotelStockMovement {
   refType   String?           @map("ref_type")
   refId     String?           @map("ref_id")
   note      String?
-  createdAt DateTime          @default(now()) @map("created_at")
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
 
   hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -809,8 +809,8 @@ model MinibarTransaction {
   type       MinibarTxType
   legacyType String?       @map("legacy_type")
   note       String?
-  occurredAt DateTime      @default(now()) @map("occurred_at")
-  createdAt  DateTime      @default(now()) @map("created_at")
+  occurredAt DateTime      @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
 
   hotel Hotel                    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   room  Room                     @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -834,7 +834,7 @@ model MinibarTransactionItem {
   added         Int      @default(0)
   purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
   salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
-  createdAt     DateTime @default(now()) @map("created_at")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   transaction MinibarTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   product     Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -848,11 +848,11 @@ model RoomCheck {
   roomId    String        @map("room_id")
   userId    String        @map("user_id")
   checkDate DateTime      @map("check_date") @db.Date
-  startedAt DateTime      @default(now()) @map("started_at")
-  endedAt   DateTime?     @map("ended_at")
+  startedAt DateTime      @default(now()) @map("started_at") @db.Timestamptz(3)
+  endedAt   DateTime?     @map("ended_at") @db.Timestamptz(3)
   type      RoomCheckType
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Restrict)
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -868,12 +868,12 @@ model RoomDnd {
   roomId     String    @map("room_id")
   date       DateTime  @db.Date
   count      Int       @default(1)
-  firstAt    DateTime  @default(now()) @map("first_at")
-  lastAt     DateTime  @default(now()) @map("last_at")
+  firstAt    DateTime  @default(now()) @map("first_at") @db.Timestamptz(3)
+  lastAt     DateTime  @default(now()) @map("last_at") @db.Timestamptz(3)
   status     DndStatus @default(AKTIF)
   taskItemId String?   @map("task_item_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel    Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   room     Room           @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -889,9 +889,9 @@ model RoomDndCheck {
   dndId     String   @map("dnd_id")
   no        Int
   userId    String   @map("user_id")
-  at        DateTime @default(now())
+  at        DateTime @default(now()) @db.Timestamptz(3)
   note      String?
-  createdAt DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   dnd  RoomDnd @relation(fields: [dndId], references: [id], onDelete: Cascade)
   user User    @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -909,18 +909,18 @@ model MybarRequest {
   note              String?
   noteTr            String?     @map("note_tr")
   seenById          String?     @map("seen_by_id")
-  seenAt            DateTime?   @map("seen_at")
+  seenAt            DateTime?   @map("seen_at") @db.Timestamptz(3)
   completedById     String?     @map("completed_by_id")
-  completedAt       DateTime?   @map("completed_at")
+  completedAt       DateTime?   @map("completed_at") @db.Timestamptz(3)
   closeNote         String?     @map("close_note")
   closedWithMissing Boolean     @default(false) @map("closed_with_missing")
   cancelledById     String?     @map("cancelled_by_id")
-  cancelledAt       DateTime?   @map("cancelled_at")
+  cancelledAt       DateTime?   @map("cancelled_at") @db.Timestamptz(3)
   cancelNote        String?     @map("cancel_note")
   idempotencyKey    String      @unique @map("idempotency_key")
   clientIp          String      @map("client_ip")
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel       Hotel              @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   room        Room               @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -940,8 +940,8 @@ model MybarRequestItem {
   productId    String   @map("product_id")
   requestedQty Int      @map("requested_qty")
   deliveredQty Int      @default(0) @map("delivered_qty")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   request MybarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -961,7 +961,7 @@ model GuestRecord {
   departureDate DateTime        @map("departure_date") @db.Date
   departureTime String?         @map("departure_time")
   kind          GuestRecordKind
-  createdAt     DateTime        @default(now()) @map("created_at")
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
 
   hotel          Hotel            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   room           Room             @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -983,8 +983,8 @@ model OccupancyUpload {
   errorRows Int          @default(0) @map("error_rows")
   errors    Json         @default("[]")
   userId    String       @map("user_id")
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel        Hotel         @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -1001,8 +1001,8 @@ model UploadTask {
   kind      String
   status    UploadStatus @default(YUKLENDI)
   uploadId  String?      @map("upload_id")
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel  Hotel            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   upload OccupancyUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
@@ -1017,9 +1017,9 @@ model DailyTask {
   date        DateTime   @db.Date
   type        TaskType
   status      TaskStatus @default(BEKLIYOR)
-  completedAt DateTime?  @map("completed_at")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  completedAt DateTime?  @map("completed_at") @db.Timestamptz(3)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   items DailyTaskItem[]
@@ -1037,12 +1037,12 @@ model DailyTaskItem {
   arrivalTime   String?    @map("arrival_time")
   departureTime String?    @map("departure_time")
   priority      Int        @default(999)
-  checkedAt     DateTime?  @map("checked_at")
+  checkedAt     DateTime?  @map("checked_at") @db.Timestamptz(3)
   dndCount      Int        @default(0) @map("dnd_count")
-  lastDndAt     DateTime?  @map("last_dnd_at")
+  lastDndAt     DateTime?  @map("last_dnd_at") @db.Timestamptz(3)
   note          String?
-  createdAt     DateTime   @default(now()) @map("created_at")
-  updatedAt     DateTime   @updatedAt @map("updated_at")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   task        DailyTask       @relation(fields: [taskId], references: [id], onDelete: Cascade)
   room        Room            @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -1061,7 +1061,7 @@ model TaskStatusLog {
   to         TaskStatus
   userId     String?     @map("user_id")
   note       String?
-  createdAt  DateTime    @default(now()) @map("created_at")
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
   taskItem DailyTaskItem @relation(fields: [taskItemId], references: [id], onDelete: Cascade)
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -1078,10 +1078,10 @@ model StockRequest {
   status        StockRequestStatus @default(BEKLEMEDE)
   note          String?
   rejectReason  String?            @map("reject_reason")
-  approvedAt    DateTime?          @map("approved_at")
-  deliveredAt   DateTime?          @map("delivered_at")
-  createdAt     DateTime           @default(now()) @map("created_at")
-  updatedAt     DateTime           @updatedAt @map("updated_at")
+  approvedAt    DateTime?          @map("approved_at") @db.Timestamptz(3)
+  deliveredAt   DateTime?          @map("delivered_at") @db.Timestamptz(3)
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel       Hotel              @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   requestedBy User               @relation("StockRequestRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
@@ -1099,8 +1099,8 @@ model StockRequestItem {
   approvedQty  Int?     @map("approved_qty")
   deliveredQty Int?     @map("delivered_qty")
   urgency      Urgency  @default(NORMAL)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   request StockRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
@@ -1120,8 +1120,8 @@ model EmailSetting {
   senderEmail String   @map("sender_email")
   senderName  String   @map("sender_name")
   isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("email_settings")
 }
@@ -1137,8 +1137,8 @@ model EmailLog {
   trackingId String      @unique @map("tracking_id")
   refType    String?     @map("ref_type")
   refId      String?     @map("ref_id")
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @updatedAt @map("updated_at")
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -1162,8 +1162,8 @@ model MenuNode {
   isAvailable Boolean      @default(true) @map("is_available")
   sortOrder   Int          @default(0) @map("sort_order")
   isActive    Boolean      @default(true) @map("is_active")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet       Outlet                @relation(fields: [outletId], references: [id], onDelete: Restrict)
   parent       MenuNode?             @relation("MenuNodeTree", fields: [parentId], references: [id], onDelete: Restrict)
@@ -1181,8 +1181,8 @@ model MenuNodeTranslation {
   lang      String
   name      String
   detail    String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   node MenuNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
@@ -1198,8 +1198,8 @@ model MenuTheme {
   soft         String
   textOnAccent String   @map("text_on_accent")
   isDefault    Boolean  @default(false) @map("is_default")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlets Outlet[]
 
@@ -1222,17 +1222,17 @@ model Order {
   subtotal           Decimal?    @db.Decimal(10, 2)
   note               String?
   approvedById       String?     @map("approved_by_id")
-  approvedAt         DateTime?   @map("approved_at")
+  approvedAt         DateTime?   @map("approved_at") @db.Timestamptz(3)
   rejectReason       String?     @map("reject_reason")
   phoneConfirmedById String?     @map("phone_confirmed_by_id")
-  phoneConfirmedAt   DateTime?   @map("phone_confirmed_at")
-  readyAt            DateTime?   @map("ready_at")
-  servedAt           DateTime?   @map("served_at")
-  cancelledAt        DateTime?   @map("cancelled_at")
+  phoneConfirmedAt   DateTime?   @map("phone_confirmed_at") @db.Timestamptz(3)
+  readyAt            DateTime?   @map("ready_at") @db.Timestamptz(3)
+  servedAt           DateTime?   @map("served_at") @db.Timestamptz(3)
+  cancelledAt        DateTime?   @map("cancelled_at") @db.Timestamptz(3)
   idempotencyKey     String      @unique @map("idempotency_key")
   clientIp           String      @map("client_ip")
-  createdAt          DateTime    @default(now()) @map("created_at")
-  updatedAt          DateTime    @updatedAt @map("updated_at")
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel            Hotel        @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   outlet           Outlet       @relation(fields: [outletId], references: [id], onDelete: Restrict)
@@ -1257,7 +1257,7 @@ model OrderItem {
   qty          Int
   unitPrice    Decimal? @map("unit_price") @db.Decimal(10, 2)
   note         String?
-  createdAt    DateTime @default(now()) @map("created_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   menuNode MenuNode @relation(fields: [menuNodeId], references: [id], onDelete: Restrict)
@@ -1273,8 +1273,8 @@ model OrderEvent {
   from      OrderStatus?
   to        OrderStatus
   note      String?
-  at        DateTime     @default(now())
-  createdAt DateTime     @default(now()) @map("created_at")
+  at        DateTime     @default(now()) @db.Timestamptz(3)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -1289,8 +1289,8 @@ model OrderCounter {
   hotelId      String   @map("hotel_id")
   businessDate DateTime @map("business_date") @db.Date
   lastNo       Int      @default(0) @map("last_no")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
 
@@ -1305,9 +1305,9 @@ model WaiterCall {
   type         CallType
   status       CallStatus @default(ACIK)
   resolvedById String?    @map("resolved_by_id")
-  resolvedAt   DateTime?  @map("resolved_at")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  resolvedAt   DateTime?  @map("resolved_at") @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet     Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
   table      OutletTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
@@ -1327,10 +1327,10 @@ model Printer {
   codepage   String    @default("cp857")
   paperWidth Int       @default(80) @map("paper_width")
   isActive   Boolean   @default(true) @map("is_active")
-  lastSeenAt DateTime? @map("last_seen_at")
+  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(3)
   lastStatus String?   @map("last_status")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel             Hotel      @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   outlet            Outlet?    @relation("PrinterOutlet", fields: [outletId], references: [id], onDelete: SetNull)
@@ -1349,9 +1349,9 @@ model PrintJob {
   status    PrintJobStatus @default(KUYRUKTA)
   attempts  Int            @default(0)
   error     String?
-  printedAt DateTime?      @map("printed_at")
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
+  printedAt DateTime?      @map("printed_at") @db.Timestamptz(3)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   printer Printer @relation(fields: [printerId], references: [id], onDelete: Restrict)
   order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)

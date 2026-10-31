@@ -1,4 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
+import { pgAdapter } from "@/lib/pgAdapter";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const connectionString = process.env.DATABASE_URL_TEST;
@@ -13,7 +13,7 @@ if (connectionString === process.env.DATABASE_URL) {
 }
 
 export const testDb = new PrismaClient({
-  adapter: new PrismaPg({ connectionString }),
+  adapter: pgAdapter(connectionString),
 });
 
 /** Empties the given tables (and everything that references them) in the test database. */

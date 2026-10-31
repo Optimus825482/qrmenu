@@ -18,7 +18,7 @@ export async function saveShellPrefs(p: ShellPrefs): Promise<Result<null>> {
     await prisma.$executeRaw`
       UPDATE "users"
       SET "prefs" = jsonb_set(COALESCE("prefs", '{}'::jsonb), '{shell}', ${JSON.stringify(prefs)}::jsonb, true),
-          "updated_at" = now()
+          "updated_at" = CURRENT_TIMESTAMP
       WHERE "id" = ${ctx.user.id}`;
     return null;
   })(p);
