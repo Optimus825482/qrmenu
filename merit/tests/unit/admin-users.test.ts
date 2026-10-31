@@ -229,6 +229,55 @@ describe("users: YONETIM kapsamı", () => {
     await expect(users.setActive(m, inside.id, false)).resolves.toMatchObject({ isActive: false });
   });
 
+  it("hiyerarşi: YONETIM yönetici rolü atayamaz, başka yöneticiyi yönetemez; kendi şifresini değiştirir, kendi rol/otelini değiştiremez; SISTEM etkilenmez", async () => {
+    const s = await sys();
+    const m = await mgmt();
+    const mr = await hotelId("MR");
+    const mrp = await hotelId("MRP");
+    const otm = await roleByCode("R-OTM");
+    const gar = await roleByCode("R-GAR");
+
+    await expect(
+      users.create(m, { username: "yeni.mudur", fullName: "X", roleId: otm.id, hotelId: mr, hotelIds: [], password: GOOD }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await testDb.user.count({ where: { username: "yeni.mudur" } })).toBe(0);
+    expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThan(0);
+
+    const other = await newUser(s, "baska.mudur", { roleId: otm.id });
+    await expect(users.setPassword(m, other.id, GOOD + "x")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(users.setActive(m, other.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      users.update(m, other.id, { username: "baska.mudur", fullName: "Z", roleId: otm.id, hotelId: mr, hotelIds: [] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    // YONETIM may promote nobody: assigning a manager role in update is refused too
+    const low = await newUser(s, "alt.kisi");
+    await expect(
+      users.update(m, low.id, { username: "alt.kisi", fullName: "A", roleId: otm.id, hotelId: mr, hotelIds: [] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    // self: password allowed; profile fields allowed; role / hotels not
+    await expect(users.setPassword(m, m.user.id, "YeniSifre987")).resolves.toBeUndefined();
+    await expect(
+      users.update(m, m.user.id, { username: "otm-mr", fullName: "Yeni Ad", roleId: otm.id, hotelId: mr, hotelIds: [] }),
+    ).resolves.toMatchObject({ fullName: "Yeni Ad" });
+    await expect(
+      users.update(m, m.user.id, { username: "otm-mr", fullName: "Yeni Ad", roleId: gar.id, hotelId: mr, hotelIds: [] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      users.update(m, m.user.id, { username: "otm-mr", fullName: "Yeni Ad", roleId: otm.id, hotelId: mr, hotelIds: [mrp] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      users.update(m, m.user.id, { username: "otm-mr", fullName: "Yeni Ad", roleId: otm.id, hotelId: mrp, hotelIds: [] }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    // SISTEM unaffected
+    await expect(users.setPassword(s, other.id, GOOD + "y")).resolves.toBeUndefined();
+    await expect(
+      users.update(s, low.id, { username: "alt.kisi", fullName: "A", roleId: otm.id, hotelId: mr, hotelIds: [] }),
+    ).resolves.toMatchObject({ roleCode: "R-OTM" });
+  });
+
   it("R-GAR yetkisiz: list FORBIDDEN", async () => {
     const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
     const ctx = await ctxFor(user, { hotelCode: "MR" });

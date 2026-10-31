@@ -24,6 +24,9 @@ const SCREEN = USER_SCREEN;
 const INVALID = "Girilen bilgiler geçersiz";
 const USERNAME_TAKEN = "Bu kullanıcı adı zaten kullanılıyor";
 const SYSTEM_ROLE_FORBIDDEN = "Sistem rolleri yalnızca sistem yöneticisi tarafından atanabilir";
+const MANAGER_ROLE_FORBIDDEN = "Yönetici rolleri yalnızca sistem yöneticisi tarafından atanabilir";
+const MANAGER_TARGET_FORBIDDEN = "Yönetici kullanıcıları yalnızca sistem yöneticisi yönetebilir";
+const SELF_SCOPE_FORBIDDEN = "Kendi rolünüzü veya otel yetkinizi değiştiremezsiniz";
 const OUT_OF_SCOPE = "Bu kullanıcı yetki alanınızın dışındaki otellere bağlı";
 
 export type UserRow = {
@@ -191,10 +194,18 @@ async function assertCanManage(
   ctx: Ctx,
   target: { id: string; role: { kind: RoleKind }; hotelId: string | null; userHotels: { hotelId: string }[] },
   action: "D",
+  op: "update" | "setPassword" | "setActive",
 ): Promise<void> {
   if (isSystem(ctx)) return;
   if (target.role.kind === "SISTEM") {
     return deny(ctx, SYSTEM_ROLE_FORBIDDEN, { action, userId: target.id, reason: "SISTEM_ROLE_TARGET" });
+  }
+  if (target.role.kind === "YONETIM") {
+    // Managers are managed by SISTEM only; a manager may change their own password and profile.
+    const own = target.id === ctx.user.id && (op === "setPassword" || op === "update");
+    if (!own) {
+      return deny(ctx, MANAGER_TARGET_FORBIDDEN, { action, userId: target.id, reason: "YONETIM_TARGET" });
+    }
   }
   const hotels = hotelsOf(target);
   const scope = new Set(await scopeHotels(ctx, action));
@@ -226,6 +237,9 @@ async function assertCanAssign(
   }
   if (role.kind === "SISTEM") {
     return deny(ctx, SYSTEM_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "SISTEM_ROLE" });
+  }
+  if (role.kind === "YONETIM") {
+    return deny(ctx, MANAGER_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "YONETIM_ROLE" });
   }
   if (hotels.length === 0) {
     return deny(ctx, "Otelsiz kullanıcıyı yalnızca sistem yöneticisi oluşturabilir", { action });
@@ -389,8 +403,22 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
   try {
     return await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
       const before = await loadTarget(tx, id);
-      await assertCanManage(ctx, before, "D");
-      await assertCanAssign(ctx, tx, input.roleId, hotels, "D");
+      await assertCanManage(ctx, before, "D", "update");
+      if (!isSystem(ctx) && id === ctx.user.id) {
+        // Own role and hotel grants are SISTEM-only; unchanged values are fine.
+        const beforeExtras = hotelsOf(before).filter((h) => h !== before.hotelId);
+        const nextExtras = hotels.filter((h) => h !== input.hotelId);
+        const same =
+          input.roleId === before.roleId &&
+          (input.hotelId ?? null) === before.hotelId &&
+          nextExtras.length === beforeExtras.length &&
+          nextExtras.every((h) => beforeExtras.includes(h));
+        if (!same) {
+          return deny(ctx, SELF_SCOPE_FORBIDDEN, { action: "D", userId: id, reason: "SELF_SCOPE_CHANGE" });
+        }
+      } else {
+        await assertCanAssign(ctx, tx, input.roleId, hotels, "D");
+      }
       await assertSupervisor(tx, input.supervisorId, id);
       const extras = hotels.filter((h) => h !== input.hotelId);
       await tx.userHotel.deleteMany({ where: { userId: id, hotelId: { notIn: extras } } });
@@ -437,10 +465,10 @@ const passwordSchema = z.object({ password: passwordField });
 export async function setPassword(ctx: Ctx, id: string, newPassword: string): Promise<void> {
   const { password } = parseInput(passwordSchema, { password: newPassword });
   const anchor = await anchorHotel(id);
-  const passwordHash = await hashPassword(password);
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const target = await loadTarget(tx, id);
-    await assertCanManage(ctx, target, "D");
+    await assertCanManage(ctx, target, "D", "setPassword");
+    const passwordHash = await hashPassword(password); // only after authorisation
     await tx.user.update({ where: { id }, data: { passwordHash } });
     const sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
     await audit(tx, {
@@ -463,7 +491,7 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
   const anchor = await anchorHotel(id);
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const before = await loadTarget(tx, id);
-    await assertCanManage(ctx, before, "D");
+    await assertCanManage(ctx, before, "D", "setActive");
     if (before.isActive === isActive) return toRow(before);
     const updated = await tx.user.update({ where: { id }, data: { isActive }, select: SELECT });
     const sessionsClosed = isActive ? 0 : await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
