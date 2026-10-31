@@ -6,9 +6,9 @@ import {
   createOutletAction,
   deleteOutletAction,
   listOutletsAction,
-  setOutletOrderingAction,
   updateOutletAction,
 } from "@/modules/core/server/admin/actions/outlets";
+import { setOutletOrderingEnabledAction } from "@/modules/menu/server/actions/outletSwitches";
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
 import { alertDialog, confirm } from "@/shell/confirm";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
@@ -37,7 +37,7 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
   }, [list.total, setStatus]);
 
   const setOrdering = async (row: OutletRow, enabled: boolean) => {
-    const result = await setOutletOrderingAction({ id: row.id, enabled });
+    const result = await setOutletOrderingEnabledAction({ id: row.id, enabled });
     if (!result.ok) {
       void alertDialog({ title: "Sipariş durumu değiştirilemedi", message: result.error.message });
     }

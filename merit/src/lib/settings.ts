@@ -142,5 +142,9 @@ export async function setSetting<K extends SettingKey>(
       after: next,
     });
     await publish({ type: "settings.changed", hotelId: scope, payload: { key } }, tx);
+    // Guest menus follow price changes live.
+    if (key === "price.display" || key === "price.currency") {
+      await publish({ type: "price.display", hotelId: scope }, tx);
+    }
   });
 }
