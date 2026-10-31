@@ -25,5 +25,8 @@ export const SSE_EVENT_TYPES: readonly string[] = [
   "notification.created",
   "settings.changed",
   "session.closed",
+  "definition.changed",
+  "session.changed",
+  "audit.created",
   "reconnect",
 ];

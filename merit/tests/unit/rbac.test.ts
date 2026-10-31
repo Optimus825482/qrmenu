@@ -63,6 +63,20 @@ describe("can() (gerçek test DB)", () => {
     expect(await can(ctx, "QS-KUY", "V")).toBe(false);
   });
 
+  it("CR-TAN: R-OTM V/O/D true, A false; R-ITT yalnız V; R-GAR hiçbiri", async () => {
+    const otm = await ctxOf("R-OTM", "MR");
+    expect(await can(otm, "CR-TAN", "V")).toBe(true);
+    expect(await can(otm, "CR-TAN", "O")).toBe(true);
+    expect(await can(otm, "CR-TAN", "D")).toBe(true);
+    expect(await can(otm, "CR-TAN", "A")).toBe(false);
+    const itt = await ctxOf("R-ITT", "MR");
+    expect(await can(itt, "CR-REH", "V")).toBe(true);
+    expect(await can(itt, "CR-REH", "O")).toBe(false);
+    const gar = await ctxOf("R-GAR", "MR");
+    expect(await can(gar, "CR-TAN", "V")).toBe(false);
+    expect(await can(gar, "CR-REH", "V")).toBe(false);
+  });
+
   it("bilinmeyen ekran kodu false", async () => {
     const ctx = await ctxOf("R-SYS", "MR");
     expect(await can(ctx, "XX-YOK", "V")).toBe(false);

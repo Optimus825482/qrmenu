@@ -56,6 +56,8 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["CORE", "CR-KUL", "Kullanıcı & Rol Yönetimi", "/admin#core.kullanici"],
   ["CORE", "CR-SYS", "Sistem Ayarları", "/admin#core.ayarlar"],
   ["CORE", "CR-DEN", "Denetim Günlüğü", "/admin#core.denetim"],
+  ["CORE", "CR-TAN", "Tanımlamalar", "/admin#core.tanimlar"],
+  ["CORE", "CR-REH", "Kurulum Rehberi", "/admin#core.rehber"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({

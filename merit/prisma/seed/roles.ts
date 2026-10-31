@@ -50,6 +50,13 @@ const VIEW_REPORT: readonly Action[] = ["V", "R"];
 const CORE_ALL_ROLES = new Set(["CR-RAP"]);
 /** CORE screens open (view + report) to system and management roles only. */
 const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-ONL"]);
+/**
+ * Definition screens (Tanımlamalar, Kurulum Rehberi): R-SYS has everything (module "ALL"), the
+ * support role only views, management roles may view, create and edit; nobody else has a row.
+ */
+const CORE_DEFINITIONS = new Set(["CR-TAN", "CR-REH"]);
+const DEFINITIONS_VIEW_ONLY: readonly Action[] = ["V"];
+const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
 /** Remaining CORE screens (user/role admin, settings, audit) belong to these roles only. */
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
 
@@ -68,6 +75,10 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
 
   if (screen.moduleKey === "CORE") {
     if (CORE_ALL_ROLES.has(screen.code)) return VIEW_REPORT;
+    if (CORE_DEFINITIONS.has(screen.code)) {
+      if (role.code === "R-ITT") return DEFINITIONS_VIEW_ONLY;
+      return role.kind === "YONETIM" ? DEFINITIONS_MANAGE : [];
+    }
     if (CORE_MANAGEMENT.has(screen.code)) {
       return role.kind === "SISTEM" || role.kind === "YONETIM" ? VIEW_REPORT : [];
     }

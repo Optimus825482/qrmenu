@@ -34,12 +34,12 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 17 rol, 31 ekran, 3 oda servisi outleti ve admin üretir", async () => {
+  it("seed 3 otel, 17 rol, 33 ekran, 3 oda servisi outleti ve admin üretir", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
     expect(await db.role.count()).toBe(17);
-    expect(await db.appScreen.count()).toBe(31);
+    expect(await db.appScreen.count()).toBe(33);
     expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
     expect(await db.hotelModule.count()).toBe(12);
     expect(await db.user.count({ where: { username: "admin" } })).toBe(1);
@@ -60,7 +60,7 @@ describe("seed (gerçek test DB)", () => {
     const sysRows = await db.roleScreenPermission.findMany({
       where: { hotelId: null, role: { code: "R-SYS" } },
     });
-    expect(sysRows).toHaveLength(31);
+    expect(sysRows).toHaveLength(33);
     for (const row of sysRows) {
       expect([row.canView, row.canCreate, row.canEdit, row.canApprove, row.canReport]).toEqual([
         true,
@@ -95,6 +95,34 @@ describe("seed (gerçek test DB)", () => {
     expect(await permission("R-GAR", "CR-KOM")).toBeNull();
     expect(await permission("R-ITT", "CR-KUL")).toMatchObject({ canView: true, canReport: true, canCreate: false });
     expect(await permission("R-OTM", "CR-KUL")).toBeNull();
+  });
+
+  it("tanım ekranları CR-TAN/CR-REH: R-SYS tam, R-ITT yalnız V, yönetim rolleri V,O,D; diğer rollerde satır yok", async () => {
+    await runSeed(db);
+    for (const code of ["CR-TAN", "CR-REH"]) {
+      expect(await permission("R-SYS", code)).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: true, canReport: true });
+      expect(await permission("R-ITT", code)).toMatchObject({ canView: true, canCreate: false, canEdit: false, canApprove: false, canReport: false });
+      for (const role of ["R-OTM", "R-FBM"]) {
+        expect(await permission(role, code)).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: false, canReport: false });
+      }
+      for (const role of ["R-GAR", "R-SGF", "R-KAS", "R-MUS", "R-KAT", "R-DEP", "R-HKS"]) {
+        expect(await permission(role, code)).toBeNull();
+      }
+    }
+    const screens = await db.appScreen.findMany({ where: { code: { in: ["CR-TAN", "CR-REH"] } }, orderBy: { sortOrder: "asc" } });
+    expect(screens.map((s) => [s.code, s.name, s.path, s.moduleKey, s.sortOrder])).toEqual([
+      ["CR-TAN", "Tanımlamalar", "/admin#core.tanimlar", "CORE", 32],
+      ["CR-REH", "Kurulum Rehberi", "/admin#core.rehber", "CORE", 33],
+    ]);
+  });
+
+  it("mevcut veritabanında runSeed yeni iki ekranı ve izinlerini sonradan ekler", async () => {
+    await runSeed(db);
+    await db.appScreen.deleteMany({ where: { code: { in: ["CR-TAN", "CR-REH"] } } });
+    expect(await db.appScreen.count()).toBe(31);
+    await runSeed(db);
+    expect(await db.appScreen.count()).toBe(33);
+    expect(await permission("R-OTM", "CR-TAN")).toMatchObject({ canView: true, canCreate: true, canEdit: true });
   });
 
   it("modül erişimi: R-KAT yalnız MINIBAR, R-SYS CORE dışındaki dört modül", async () => {
