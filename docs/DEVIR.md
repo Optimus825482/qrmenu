@@ -23,9 +23,19 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (31 Ekim 2026, 20:00)
+## 1a. Kalınan yer (31 Ekim 2026, 23:05 — Fable haftalık sınır doldu)
 
-P1 bitti. Sıradaki iş: P5 uygulamasına devam (dal `p5/qr-menu`, T1 bitti; kalan T2–T14, plan `2026-10-31-p5-qr-menu.md`). P5 `main`'e birleşince sırayla **P2 → P3 → P4 → P6 → P7 → P8** (planların hepsi yazıldı; her planın başındaki "Koordinasyon notları" önce okunur; P6 P5 + P4'e dayanır, P7 P2/P3/P5/P6 verisini okur). P2 backlog (P1 dal incelemesinden): SSE kapsamı yetki/otel değişince eskiyor (users.update'te session.closed yayınla); otel pasife alma kilidi (hotels.create ile birlikte); seed CR-ONL canApprove sıfırlamasını belgele; users.ts deny hotelId SISTEM hedefte; rol kopyasında defaultScreen taşınmıyor.
+**Planlar:** P2, P3, P4, P6, P7, P8 planları yazıldı, çapraz tutarlılık turundan geçti ve commit edildi (`4d4ff5a`); P5 planı uygulanıyor. Sıra: P5 → P2 → P3 → P4 → P6 → P7 → P8.
+
+**P5 (dal `p5/qr-menu`, defter `.superpowers/sdd/2026-10-31-p5-qr-menu/progress.md`, kopyası `docs/superpowers/plans/2026-10-31-p5-qr-menu-ledger.md`):**
+- T1–T7 bitti, incelendi, kapandı. Son kod commit'i `23bc64f` (676 birim testi yeşil).
+- **T8 (misafir seçimler/sipariş/çağrı) uygulayıcısı 22:56'da başlatıldı, raporu görülmedi.** `git log` ile `feat(p5): misafir seçimler…` commit'ini ve `task-8-report.md` dosyasını kontrol et. Varsa inceleme adımına geç (review-package → Sonnet inceleme → düzeltme → gerekirse Haiku). Yoksa `git status` bak; yarım iş varsa `git stash` ile kaldırıp T8'i brief'inden (`task-8-brief.md`) taze uygulayıcıyla başlat.
+- Sonraki görevler T9–T14 (`task-N-brief.md` dosyaları hazır). T14 = eskalasyon işi + uçtan uca kabul + belgeler + defterdeki tüm "Minor T14" maddeleri.
+- Bekleyen küçük düzeltme (T8 sonrası fix round'a veya T14'e): `guestToken.ts` global limiter hiçbir geçerli tokenı reddetmemeli (yalnız per-IP engelde "yalnız imzalı" kuralı). Defterdeki son "Ruling" satırına bak; bu konu kapanmıştır, yeniden tasarlama.
+- Bağlayıcı kararlar (defterde `Ruling:`): migration 0005 (P5); "sepet" yok → "Seçimler"; misafir SSE filtresi outletId'siz olayları tüm outletlere sayar; tarama günlüğü yalnız doküman navigasyonunda; e2e'de `getByRole('combobox',{name:'Outlet'})` (getByLabel yarışı); otel NAT için `guest.ipRateMultiplier` P4 T1'de.
+- P5 sonu: Opus dal incelemesi + düzeltme dalgası + tam doğrulama (check, build, tüm e2e, migrate diff) → kullanıcı onayıyla `main`'e fast-forward.
+
+**Sonraki ajana talimat:** Bu bölümü, §3 (süreç) ve ilgili `task-N-brief.md`'yi oku; planın Global Constraints'ini her brief'e ekle; her görevde uygulayıcı → inceleme → düzeltme döngüsünü atlama; her görev sonunda `ilerleme-data.js` güncelle ve commit et; test DB paylaşımlı → aynı anda tek vitest süreci; 3001'e dokunma; `main`'e birleştirme ve push yalnız Erkan'ın onayıyla.
 
 ## 2. Çalışma ortamı
 
