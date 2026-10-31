@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { generateQrToken } from "@/lib/qr";
+import { generateQrToken, isSignedToken } from "@/lib/qr";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { testDb } from "../helpers/db";
 import { dropReferenceData, hotelId, resetReferenceData, resetTestData } from "../helpers/fixtures";
@@ -160,7 +160,7 @@ describe("resolveGuestTokenLimited", () => {
     expect((await resolveGuestTokenLimited(token, { ...meta, ip: "10.8.8.8" }, limiter)).kind).toBe("TABLE");
   });
 
-  it("sınırı aşan IP: geçerli token yine çözülür (log + scan.table), bilinmeyen RATE_LIMITED (log yok, olay yok)", async () => {
+  it("sınırı aşan IP: imzalı geçerli token çözülür (log + scan.table); bilinmeyen/biçimsiz RATE_LIMITED (log yok, olay yok)", async () => {
     const limiter = createRateLimiter({ max: 2, windowMs: 60_000 });
     const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
     for (let i = 0; i < 2; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter);
@@ -180,6 +180,51 @@ describe("resolveGuestTokenLimited", () => {
     expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter)).toMatchObject({
       reason: "RATE_LIMITED",
     });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
+  });
+
+  it("sınırı aşan IP: eski imzasız token DB'de olsa bile RATE_LIMITED, findUnique çağrılmaz", async () => {
+    const limiter = createRateLimiter({ max: 1, windowMs: 60_000 });
+    await resolveGuestTokenLimited("yok-0", meta, limiter);
+    const { table } = await tableFixture();
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: "eski-token-1" } });
+    await testDb.qrScanLog.deleteMany({});
+    const tableFind = vi.spyOn(testDb.outletTable, "findUnique");
+    const roomFind = vi.spyOn(testDb.room, "findUnique");
+    try {
+      expect(await resolveGuestTokenLimited("eski-token-1", meta, limiter)).toEqual({
+        kind: "NONE",
+        reason: "RATE_LIMITED",
+      });
+      expect(tableFind).not.toHaveBeenCalled();
+      expect(roomFind).not.toHaveBeenCalled();
+    } finally {
+      tableFind.mockRestore();
+      roomFind.mockRestore();
+    }
+    expect(await testDb.qrScanLog.count()).toBe(0);
+  });
+
+  it("sınırı aşan IP: imzalı biçimli ama bilinmeyen token RATE_LIMITED, log yok", async () => {
+    const limiter = createRateLimiter({ max: 1, windowMs: 60_000 });
+    await resolveGuestTokenLimited("yok-0", meta, limiter);
+    await testDb.qrScanLog.deleteMany({});
+    const forged = generateQrToken("TABLE", "olmayan-masa");
+    expect(isSignedToken(forged)).toBe(true);
+    expect(await resolveGuestTokenLimited(forged, meta, limiter)).toEqual({ kind: "NONE", reason: "RATE_LIMITED" });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+    expect(publishMock).not.toHaveBeenCalled();
+  });
+
+  it("sınırı aşan IP: imzalı biçimli ama HMAC'i tutmayan (DB'de var) token RATE_LIMITED, log yok", async () => {
+    const limiter = createRateLimiter({ max: 1, windowMs: 60_000 });
+    await resolveGuestTokenLimited("yok-0", meta, limiter);
+    const { table, token } = await tableFixture();
+    const bad = token.slice(0, 20) + (token.slice(20) === "A".repeat(10) ? "B" : "A").repeat(10);
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: bad } });
+    await testDb.qrScanLog.deleteMany({});
+    expect(await resolveGuestTokenLimited(bad, meta, limiter)).toEqual({ kind: "NONE", reason: "RATE_LIMITED" });
     expect(await testDb.qrScanLog.count()).toBe(0);
     expect(publishMock).not.toHaveBeenCalled();
   });
@@ -205,7 +250,7 @@ describe("resolveGuestTokenLimited", () => {
     });
   });
 
-  it("global yedek: sınır sonrası farklı IP'lerde bilinmeyen RATE_LIMITED, geçerli token çözülür, log yok", async () => {
+  it("global yedek: sınır sonrası farklı IP'lerde bilinmeyen/imzasız RATE_LIMITED, imzalı geçerli token çözülür, log yok", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
     const globalLimiter = createRateLimiter({ max: 5, windowMs: 60_000 });
     for (let i = 0; i < 5; i++) {

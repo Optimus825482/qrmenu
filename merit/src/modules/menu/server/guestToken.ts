@@ -1,5 +1,6 @@
 import { clientIp, createRateLimiter, type RateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
+import { isSignedToken, verifyQrToken } from "@/lib/qr";
 import { publish } from "@/lib/realtime";
 import { type GuestState, guestState } from "./guestState";
 
@@ -141,10 +142,11 @@ const GLOBAL_KEY = "*";
 export const rateLimitDelay = { ms: 250 };
 
 /**
- * `resolveGuestToken` with the unknown-token limits. The (cheap, unique-index) lookup always runs:
- * a valid token is never refused, even from an IP over its limit. Only unknown results count; an
- * unknown token from an IP (or a service) over the limit gets `RATE_LIMITED` after a short delay,
- * without a scan log.
+ * `resolveGuestToken` with the unknown-token limits. While under the limits behaviour is plain: an
+ * unknown token counts as a miss. When the IP (or the global backstop) is over its limit, only a signed-shaped
+ * token (30 chars) is looked up, and only proceeds (logging as usual) if it resolves to a table/room whose HMAC
+ * verifies. Anything else (unsigned/legacy, unknown, forged) is counted, delayed and answered `RATE_LIMITED`
+ * without a scan log; unsigned tokens cause no DB lookup at all while blocked.
  */
 export async function resolveGuestTokenLimited(
   token: string,
@@ -154,11 +156,26 @@ export async function resolveGuestTokenLimited(
   options: ResolveOptions = {},
 ): Promise<GuestTarget> {
   const blocked = !limiter.peek(meta.ip).allowed || !globalLimiter.peek(GLOBAL_KEY).allowed;
-  const result = await resolveGuestToken(token, meta, blocked ? { ...options, logUnknown: false } : options);
+  const refuse = async (): Promise<GuestTarget> => {
+    limiter.hit(meta.ip);
+    globalLimiter.hit(GLOBAL_KEY);
+    if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
+    return none("RATE_LIMITED");
+  };
+  if (blocked) {
+    if (!isSignedToken(token)) return refuse();
+    const probe = await resolveGuestToken(token, meta, { log: false, logUnknown: false });
+    const verified =
+      (probe.kind === "TABLE" && verifyQrToken(token, "TABLE", probe.table.id)) ||
+      (probe.kind === "ROOM" && verifyQrToken(token, "ROOM", probe.roomId));
+    if (!verified) return refuse();
+    return resolveGuestToken(token, meta, options);
+  }
+  const result = await resolveGuestToken(token, meta, options);
   if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
     const perIp = limiter.hit(meta.ip);
     const global = globalLimiter.hit(GLOBAL_KEY);
-    if (blocked || !perIp.allowed || !global.allowed) {
+    if (!perIp.allowed || !global.allowed) {
       if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
       return none("RATE_LIMITED");
     }
