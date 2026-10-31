@@ -20,12 +20,14 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "--yes",
-        "http-server",
+        "http-server@14.1.1",
         ".",
+        "-a",
+        "127.0.0.1",
         "-p",
         "3002",
         "-c-1",
-        "-s"
+        "--no-dotfiles"
       ],
       "port": 3002
     }
