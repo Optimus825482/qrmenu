@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { businessDate, businessDateStart, nowNicosia, TZ } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay, nowNicosia, TZ } from "@/lib/time";
 
 describe("businessDate (Europe/Nicosia)", () => {
   it("gece yarısından önce aynı gün", () =>
@@ -16,6 +16,9 @@ describe("businessDate (Europe/Nicosia)", () => {
 
   it("businessDateStart yaz saatinde UTC 21:00 önceki gün", () =>
     expect(businessDateStart("2026-07-16").toISOString()).toBe("2026-07-15T21:00:00.000Z"));
+
+  it("businessDay @db.Date için UTC gece yarısı döndürür", () =>
+    expect(businessDay("2026-07-16").toISOString()).toBe("2026-07-16T00:00:00.000Z"));
 
   it("nowNicosia şimdiki anı döndürür ve TZ sabiti dışa aktarılır", () => {
     const before = Date.now();

@@ -6,6 +6,12 @@ if (!connectionString) {
   throw new Error("DATABASE_URL_TEST is not set (merit/.env)");
 }
 
+if (connectionString === process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL_TEST must differ from DATABASE_URL: tests TRUNCATE tables and must never touch the dev database",
+  );
+}
+
 export const testDb = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),
 });

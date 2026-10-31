@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { businessDay } from "@/lib/time";
 import { testDb, truncate } from "../helpers/db";
 
 async function expectP2002(promise: Promise<unknown>) {
@@ -56,5 +57,14 @@ describe("şema benzersizlik kuralları (gerçek test DB)", () => {
     await expect(
       testDb.floor.create({ data: { hotelId: hotel.id, number: 1, name: "x" } }),
     ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+  });
+
+  it("@db.Date alanı businessDay ile yazılınca aynı gün olarak geri okunur", async () => {
+    const { hotel } = await hotelWithFloor("MRD");
+    const created = await testDb.orderCounter.create({
+      data: { hotelId: hotel.id, businessDate: businessDay("2026-07-16"), lastNo: 1 },
+    });
+    const stored = await testDb.orderCounter.findUniqueOrThrow({ where: { id: created.id } });
+    expect(stored.businessDate.toISOString().startsWith("2026-07-16")).toBe(true);
   });
 });
