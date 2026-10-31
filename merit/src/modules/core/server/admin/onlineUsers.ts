@@ -107,21 +107,24 @@ export async function list(ctx: Ctx, hotelId: string, filter: OnlineFilter = {})
   };
   const dayStart = businessDateStart(businessDate());
   const now = Date.now();
+  // Same hierarchy for rows and counters: non-SISTEM callers must not learn that SISTEM sessions exist.
+  const visible: Prisma.UserSessionWhereInput = isSystem(ctx) ? {} : { NOT: roleKindIn(["SISTEM"]) };
   const [listed, online, warned, autoLogoutToday, canForce] = await Promise.all([
     prisma.userSession.findMany({
       where: {
         ...scope,
         status: filter.status ?? { in: ACTIVE },
-        ...(isSystem(ctx) ? {} : { NOT: roleKindIn(["SISTEM"]) }),
+        ...visible,
       },
       select: rowSelect,
       orderBy: { loginAt: "desc" },
     }),
-    prisma.userSession.count({ where: { ...scope, status: "ONLINE" } }),
-    prisma.userSession.count({ where: { ...scope, status: "UYARI" } }),
+    prisma.userSession.count({ where: { ...scope, ...visible, status: "ONLINE" } }),
+    prisma.userSession.count({ where: { ...scope, ...visible, status: "UYARI" } }),
     prisma.userSession.count({
       where: {
         ...scope,
+        ...visible,
         status: "CIKTI",
         logoutReason: { in: [...AUTO_REASONS] },
         logoutAt: { gte: dayStart },

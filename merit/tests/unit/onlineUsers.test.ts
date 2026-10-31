@@ -211,7 +211,7 @@ describe("online kullanıcı takibi", () => {
     });
 
     it("list SISTEM oturumlarını gizler; SISTEM çağıran hepsini görür", async () => {
-      const { ctx, mgr } = await setup();
+      const { ctx } = await setup();
       const admin = await open("admin1", "R-SYS", "MR");
       await open("mudur2", "R-OTM", "MR");
       const mr = await hotelId("MR");
@@ -220,7 +220,43 @@ describe("online kullanıcı takibi", () => {
       const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
       const all = (await onlineUsers.list(sysCtx, mr)).rows.map((r) => r.user.username).sort();
       expect(all).toEqual(["admin1", "mudur", "mudur2"]);
-      expect(mgr.id).toBeTruthy();
+    });
+
+    it("sayaçlar SISTEM oturumunu YONETIM çağırana saklar; SISTEM çağıran sayar", async () => {
+      const { ctx } = await setup();
+      const admin = await open("admin1", "R-SYS", "MR");
+      await open("gar1", "R-GAR", "MR");
+      const mr = await hotelId("MR");
+      const mgrCounts = (await onlineUsers.list(ctx, mr)).counts;
+      expect(mgrCounts).toMatchObject({ total: 2, online: 2 });
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      const sysCounts = (await onlineUsers.list(sysCtx, mr)).counts;
+      expect(sysCounts).toMatchObject({ total: 3, online: 3 });
+    });
+
+    it("başka yöneticiyi kapatma denemesi YETKISIZ_DENEME yazar", async () => {
+      const { ctx, mgr } = await setup();
+      const other = await open("mudur2", "R-OTM", "MR");
+      await expect(onlineUsers.forceLogout(ctx, other.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      const rows = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME", userId: mgr.id } });
+      expect(rows).toHaveLength(1);
+    });
+
+    it("SISTEM çağıran yönetici oturumunu kapatır ve boştakileri sonlandırır", async () => {
+      const { mgrSession } = await setup();
+      const admin = await open("admin1", "R-SYS", "MR");
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      await onlineUsers.forceLogout(sysCtx, mgrSession.id);
+      expect(await status(mgrSession.id)).toBe("CIKTI");
+
+      const mgr2 = await open("mudur2", "R-OTM", "MR");
+      await testDb.userSession.update({
+        where: { id: mgr2.session.id },
+        data: { lastSeenAt: new Date(Date.now() - 120 * MIN) },
+      });
+      expect(await onlineUsers.endIdle(sysCtx, await hotelId("MR"))).toBe(1);
+      expect(await status(mgr2.session.id)).toBe("CIKTI");
+      expect(await status(admin.session.id)).toBe("ONLINE");
     });
   });
 });
