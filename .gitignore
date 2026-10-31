@@ -1,0 +1,10 @@
+node_modules/
+.next/
+merit/src/generated/
+.env
+.env.*.local
+test-results/
+playwright-report/
+*.log
+.remember/
+.superpowers/
