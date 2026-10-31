@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 17:45",
-  headline: "P1 T9 bildirim zili ve denetim günlüğü incelendi (commit yok); sıradaki T10 (docs/DEVIR.md).",
+  updatedAt: "31.10.2026 18:32",
+  headline: "P1 T1–T9 tamam ve commit'li (e2e 35/35); T10 uygulanıyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -52,7 +52,7 @@ window.ILERLEME = {
         { title: "T7 Kurulum rehberi (bağımlılık zinciri, tamamlanma yüzdesi)", status: "done", doneAt: "31.10 16:52" },
         { title: "T8 Online kullanıcı takibi (canlı liste, zorla çıkış)", status: "done", doneAt: "31.10 17:18" },
         { title: "T9 Bildirim merkezi ve denetim günlüğü pencereleri", status: "done", doneAt: "31.10 17:45" },
-        { title: "T10 Sistem ayarları penceresi (Denetim Masası → Sistem)", status: "pending" },
+        { title: "T10 Sistem ayarları penceresi (Denetim Masası → Sistem)", status: "active" },
         { title: "T11 P0'dan devreden düzeltmeler (testler, resync, bildirim rolü, iframe teması)", status: "pending" },
         { title: "T12 Kabul: tanım zinciri e2e'leri, belgeler", status: "pending" }
       ]
@@ -141,6 +141,7 @@ window.ILERLEME = {
     { at: "31.10 16:33", text: "P1 T6 incelemesi onaylandı (815a61f). Otel kapsamında tümü-false sessiz no-op ve 7 minör T12'ye ertelendi. Sıradaki: T7." },
     { at: "31.10 16:52", text: "P1 T7 kurulum rehberi uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T8." },
     { at: "31.10 17:18", text: "P1 T8 online kullanıcı takibi uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T9." },
-    { at: "31.10 17:45", text: "P1 T9 bildirim zili ve denetim günlüğü uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T10." }
+    { at: "31.10 17:45", text: "P1 T9 bildirim zili ve denetim günlüğü uygulandı ve incelemesi onaylandı. Commit yok. e2e koşulmadı. Sıradaki: T10." },
+    { at: "31.10 18:31", text: "T7–T9 e2e doğrulandı (35/35) ve commit edildi (bcaaa49, 73c21c7, ef696f4); T10 başladı." }
   ]
 };
