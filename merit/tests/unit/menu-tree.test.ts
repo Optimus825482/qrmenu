@@ -180,6 +180,48 @@ describe("menuTree tükendi ve yetki", () => {
   });
 });
 
+describe("menuTree eşzamanlılık ve kapsam", () => {
+  it("iki eşzamanlı create farklı sortOrder alır", async () => {
+    const ctx = await fbm();
+    const o = await outlet();
+    const [a, b] = await Promise.all([
+      tree.create(ctx, o.id, { kind: "KATEGORI", name: "A" }),
+      tree.create(ctx, o.id, { kind: "KATEGORI", name: "B" }),
+    ]);
+    expect(a.sortOrder).not.toBe(b.sortOrder);
+    const rows = await testDb.menuNode.findMany({ where: { outletId: o.id } });
+    expect(new Set(rows.map((r) => r.sortOrder)).size).toBe(2);
+  });
+
+  it("outlet kapsamlı oturum başka outlette create/move FORBIDDEN", async () => {
+    const admin = await fbm();
+    const own = await outlet("MR", "Havuz Bar");
+    const other = await outlet("MR", "Lobi Bar");
+    const theirs = (await chain(admin, other.id)).cat;
+    const scoped = { ...admin, session: { ...admin.session, outletId: own.id } };
+    await expect(tree.create(scoped, other.id, { kind: "KATEGORI", name: "Z" })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(tree.move(scoped, theirs.id, { newParentId: null, index: 0 })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
+
+  it("QS-KDS D (R-KDS) kendi outletinde setAvailable ok, başka outlette FORBIDDEN", async () => {
+    const admin = await fbm();
+    const own = await outlet("MR", "Havuz Bar");
+    const other = await outlet("MR", "Lobi Bar");
+    const mine = (await chain(admin, own.id)).item;
+    const theirs = (await chain(admin, other.id)).item;
+    const user = await makeUser({ username: "kds", roleCode: "R-KDS", hotelCode: "MR" });
+    const base = await ctxFor(user, { hotelCode: "MR" });
+    const kds = { ...base, session: { ...base.session, outletId: own.id } };
+    await tree.setAvailable(kds, mine.id, false);
+    expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: mine.id } })).isAvailable).toBe(false);
+    await expect(tree.setAvailable(kds, theirs.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
 describe("menuTree silme", () => {
   it("çocuklu kategori silme CONFLICT", async () => {
     const ctx = await fbm();

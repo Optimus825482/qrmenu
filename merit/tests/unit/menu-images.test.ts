@@ -60,7 +60,7 @@ describe("menuImages", () => {
   it("PNG → webp dosyası, imageUrl /uploads/menu/…webp, audit ve menu.changed", async () => {
     const { ctx, o, cat } = await setup();
     const { imageUrl } = await images.upload(ctx, cat.id, file(await png("#ff0000")));
-    expect(imageUrl).toMatch(new RegExp(`^/uploads/menu/${o.id}/${cat.id}-[0-9a-f]{8}\\.webp$`));
+    expect(imageUrl).toMatch(new RegExp(`^/uploads/menu/${o.id}/${cat.id}-[0-9a-f]{16}\\.webp$`));
     const disk = path.join(dir, imageUrl.slice("/uploads/".length));
     expect(fs.existsSync(disk)).toBe(true);
     expect((await sharp(disk).metadata()).format).toBe("webp");
@@ -96,5 +96,67 @@ describe("menuImages", () => {
     expect(fs.existsSync(path.join(dir, second.imageUrl.slice(9)))).toBe(false);
     expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } })).imageUrl).toBeNull();
     expect(await testDb.auditLog.count({ where: { action: "MENU_IMAGE_REMOVE" } })).toBe(1);
+  });
+
+  const listFiles = (d: string): string[] =>
+    fs.existsSync(d)
+      ? fs.readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+          e.isDirectory() ? listFiles(path.join(d, e.name)) : [path.join(d, e.name)],
+        )
+      : [];
+
+  it("yetkisiz (R-GAR, QM-MEN D yok) FORBIDDEN ve diske hiçbir dosya yazılmaz", async () => {
+    const { cat } = await setup();
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
+    const gar = await ctxFor(user, { hotelCode: "MR" });
+    const before = listFiles(dir);
+    await expect(images.upload(gar, cat.id, file(await png("#0000ff")))).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect(listFiles(dir)).toEqual(before);
+    expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } })).imageUrl).toBeNull();
+  });
+
+  it("outlet kapsamlı oturum başka outletin öğesine yükleyemez; dosya yazılmaz", async () => {
+    const { ctx, cat } = await setup();
+    const other = await testDb.outlet.create({
+      data: { hotelId: await hotelId("MR"), name: "Lobi Bar", type: "BAR", hasMenu: true },
+    });
+    const scoped = { ...ctx, session: { ...ctx.session, outletId: other.id } };
+    const before = listFiles(dir);
+    await expect(images.upload(scoped, cat.id, file(await png("#0000ff")))).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect(listFiles(dir)).toEqual(before);
+  });
+
+  it("MIME image/png ama gerçek biçim GIF/metin → VALIDATION", async () => {
+    const { ctx, cat } = await setup();
+    const gif = await sharp({ create: { width: 10, height: 10, channels: 3, background: "#fff" } })
+      .gif()
+      .toBuffer();
+    await expect(images.upload(ctx, cat.id, file(gif, "image/png"))).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    await expect(images.upload(ctx, cat.id, file(Buffer.from("<svg/>"), "image/png"))).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+  });
+
+  it("aynı içerik tekrar yüklenince aynı dosya yeniden kullanılır ve silinmez", async () => {
+    const { ctx, cat } = await setup();
+    const bytes = await png("#123456");
+    const a = await images.upload(ctx, cat.id, file(bytes));
+    const b = await images.upload(ctx, cat.id, file(bytes));
+    expect(b.imageUrl).toBe(a.imageUrl);
+    expect(fs.existsSync(path.join(dir, a.imageUrl.slice(9)))).toBe(true);
+  });
+
+  it("DB hatasında yeni dosya silinir", async () => {
+    const { ctx, cat } = await setup();
+    const before = listFiles(dir);
+    publishMock.mockRejectedValueOnce(new Error("db down"));
+    await expect(images.upload(ctx, cat.id, file(await png("#abcdef")))).rejects.toThrow("db down");
+    expect(listFiles(dir)).toEqual(before);
   });
 });

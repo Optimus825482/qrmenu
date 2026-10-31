@@ -104,6 +104,12 @@ function assertPlacement(kind: MenuNodeKind, parent: { kind: MenuNodeKind } | nu
   }
 }
 
+/** Serialises sibling-order changes of one parent (create/move) within the transaction. */
+async function lockSiblings(tx: Prisma.TransactionClient, outletId: string, parentIds: (string | null)[]) {
+  const keys = [...new Set(parentIds.map((p) => `${outletId}:${p ?? "root"}`))].sort();
+  for (const key of keys) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+}
+
 const NO_PRICE = "Fiyat yalnız öğelere girilebilir";
 
 async function emitChanged(
@@ -174,6 +180,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
     if (input.parentId && !parent) throw new DomainError("NOT_FOUND", "Üst öğe bulunamadı");
     assertPlacement(input.kind, parent);
     if (input.price !== null && input.kind !== "OGE") throw new DomainError("VALIDATION", NO_PRICE);
+    await lockSiblings(tx, outletId, [parent?.id ?? null]);
     const max = await tx.menuNode.aggregate({
       where: { outletId, parentId: parent?.id ?? null },
       _max: { sortOrder: true },
@@ -262,6 +269,7 @@ export async function move(ctx: Ctx, nodeId: string, raw: MenuNodeMoveInput): Pr
     if (input.newParentId && !parent) throw new DomainError("NOT_FOUND", "Üst öğe bulunamadı");
     assertPlacement(node.kind, parent);
     const newParentId = parent?.id ?? null;
+    await lockSiblings(tx, scope.outletId, [newParentId, node.parentId]);
 
     /** Renumbers the children of `parentId` 0..n-1, optionally inserting `insert` at `index`. */
     const renumber = async (parentId: string | null, insert?: string, index = 0) => {
@@ -380,6 +388,12 @@ export async function remove(ctx: Ctx, nodeId: string): Promise<{ deactivated?: 
     },
   );
   const image = imageToRemove as string | null;
-  if (image?.startsWith("/uploads/")) await removeUpload(image.slice("/uploads/".length));
+  if (image?.startsWith("/uploads/")) {
+    try {
+      await removeUpload(image.slice("/uploads/".length));
+    } catch (error) {
+      console.error("menuTree.remove: görsel dosyası silinemedi", image, error);
+    }
+  }
   return result;
 }

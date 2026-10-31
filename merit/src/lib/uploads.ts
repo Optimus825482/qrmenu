@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { env } from "@/lib/env";
@@ -34,6 +35,26 @@ export async function saveUpload(relPath: string, data: Buffer): Promise<void> {
   const full = resolveInside(relPath);
   await fs.mkdir(path.dirname(full), { recursive: true });
   await fs.writeFile(full, data);
+}
+
+const sha256 = (data: Buffer) => createHash("sha256").update(data).digest("hex");
+
+/**
+ * Creates the file without ever overwriting (`wx`). When it already exists with identical content
+ * it is reused (`created: false`); with different content the call is a CONFLICT.
+ */
+export async function saveUploadExclusive(relPath: string, data: Buffer): Promise<{ created: boolean }> {
+  const full = resolveInside(relPath);
+  await fs.mkdir(path.dirname(full), { recursive: true });
+  try {
+    await fs.writeFile(full, data, { flag: "wx" });
+    return { created: true };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+  }
+  const existing = await fs.readFile(full);
+  if (sha256(existing) !== sha256(data)) throw new DomainError("CONFLICT", "Dosya zaten var");
+  return { created: false };
 }
 
 /** A missing file is not an error. */

@@ -3,7 +3,9 @@ import sharp from "sharp";
 import type { Ctx } from "@/lib/auth";
 import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
-import { removeUpload, saveUpload } from "@/lib/uploads";
+import { prisma } from "@/lib/prisma";
+import { assertCan } from "@/lib/rbac";
+import { removeUpload, saveUploadExclusive } from "@/lib/uploads";
 import { withAdminTx } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope, loadNodeScope } from "./menuNodeAccess";
@@ -17,32 +19,43 @@ export type UploadFile = { name: string; type: string; size: number; bytes: Buff
 
 const relOf = (url: string | null) => (url?.startsWith(PREFIX) ? url.slice(PREFIX.length) : null);
 
+const MAX_INPUT_PIXELS = 40_000_000;
+const REAL_FORMATS = new Set(["jpeg", "png", "webp"]);
+
 export async function upload(ctx: Ctx, nodeId: string, file: UploadFile): Promise<{ imageUrl: string }> {
   const scope = await loadNodeScope(nodeId);
+  // All authorisation first: no CPU or disk work for callers that may not change this menu.
+  await assertCan(ctx, SCREEN, "D", scope.hotelId);
+  assertOutletScope(ctx, scope.outletId);
   if (!TYPES.has(file.type)) throw new DomainError("VALIDATION", "Yalnız JPEG, PNG veya WebP yüklenebilir");
   if (file.bytes.length > MAX_IMAGE_BYTES || file.size > MAX_IMAGE_BYTES) {
     throw new DomainError("VALIDATION", "Görsel 2 MB'ı aşamaz");
   }
   let webp: Buffer;
   try {
-    webp = await sharp(file.bytes)
+    const meta = await sharp(file.bytes, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
+    if (!meta.format || !REAL_FORMATS.has(meta.format)) {
+      throw new DomainError("VALIDATION", "Yalnız JPEG, PNG veya WebP yüklenebilir");
+    }
+    webp = await sharp(file.bytes, { limitInputPixels: MAX_INPUT_PIXELS })
       .rotate()
       .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
-  } catch {
+  } catch (error) {
+    if (error instanceof DomainError) throw error;
     throw new DomainError("VALIDATION", "Görsel okunamadı");
   }
-  const hash = createHash("sha1").update(file.bytes).digest("hex").slice(0, 8);
+  const hash = createHash("sha256").update(webp).digest("hex").slice(0, 16);
   const rel = `menu/${scope.outletId}/${nodeId}-${hash}.webp`;
   const imageUrl = PREFIX + rel;
 
   let oldUrl: string | null = null;
-  // Written before the transaction (authorisation happens inside it); removed again on failure.
-  await saveUpload(rel, webp);
+  const { created } = await saveUploadExclusive(rel, webp);
   try {
     await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: scope.hotelId }, async (tx) => {
       assertOutletScope(ctx, scope.outletId);
+      await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
       const node = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { imageUrl: true } });
       if (!node) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
       oldUrl = node.imageUrl;
@@ -67,11 +80,24 @@ export async function upload(ctx: Ctx, nodeId: string, file: UploadFile): Promis
       );
     });
   } catch (error) {
-    if (scope.imageUrl !== imageUrl) await removeUpload(rel).catch(() => undefined);
+    if (created) {
+      try {
+        const current = await prisma.menuNode.findUnique({ where: { id: nodeId }, select: { imageUrl: true } });
+        if (current?.imageUrl !== imageUrl) await removeUpload(rel);
+      } catch (cleanup) {
+        console.error("menuImages.upload: yeni dosya temizlenemedi", rel, cleanup);
+      }
+    }
     throw error;
   }
   const oldRel = relOf(oldUrl);
-  if (oldRel && oldRel !== rel) await removeUpload(oldRel);
+  if (oldRel && oldRel !== rel) {
+    try {
+      await removeUpload(oldRel);
+    } catch (cleanup) {
+      console.error("menuImages.upload: eski dosya silinemedi", oldRel, cleanup);
+    }
+  }
   return { imageUrl };
 }
 
