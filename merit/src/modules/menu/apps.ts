@@ -31,4 +31,17 @@ export function registerMenuApps(): void {
     component: () => import("./ui/ThemeManager").then((m) => ({ default: m.ThemeManager })),
     mobile: "none",
   });
+  registerApp({
+    id: "menu.masaqr",
+    title: "Masa QR Kodları",
+    icon: "qr",
+    moduleKey: "QR_MENU",
+    screenCode: "QM-MEN",
+    category: "QR_MENU",
+    needsHotel: true,
+    window: { w: 860, h: 600, minW: 640, minH: 420 },
+    kind: "component",
+    component: () => import("./ui/TableQrWindow").then((m) => ({ default: m.TableQrWindow })),
+    mobile: "none",
+  });
 }
