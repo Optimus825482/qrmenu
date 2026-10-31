@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 20:12",
-  headline: "P5 QR Menü uygulaması başladı (dal p5/qr-menu, 14 görev); T1 uygulanıyor.",
+  updatedAt: "31.10.2026 20:35",
+  headline: "P5 T1 tamam, T2 uygulanıyor; P2–P8 planları yazıldı (tutarlılık turu sürüyor).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -13,7 +13,9 @@ window.ILERLEME = {
         { title: "Anlayış notu ve karar listesi (docs/analiz)", status: "done", doneAt: "31.10 04:12" },
         { title: "Tasarım spec'i (docs/superpowers/specs)", status: "done", doneAt: "31.10 04:20" },
         { title: "P0 uygulama planı", status: "done", doneAt: "31.10 04:30" },
-        { title: "P1 uygulama planı (12 görev)", status: "done", doneAt: "31.10 14:25" }
+        { title: "P1 uygulama planı (12 görev)", status: "done", doneAt: "31.10 14:25" },
+        { title: "P5 uygulama planı (14 görev)", status: "done", doneAt: "31.10 14:40" },
+        { title: "P2, P3, P4, P6, P7, P8 uygulama planları", status: "done", doneAt: "31.10 20:33" }
       ]
     },
     {
@@ -93,9 +95,9 @@ window.ILERLEME = {
       code: "P5", title: "QR Menü ve QR Sipariş", weight: 17,
       summary: "Menü ağacı, tema, masa QR, fiyat göster/gizle, sipariş → onay → KDS + yazıcı",
       tasks: [
-        { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "active" },
+        { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "done", doneAt: "31.10 20:34" },
         { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "pending" },
-        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "pending" },
+        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "active" },
         { title: "Misafir menü, sepet, sipariş durumu, garson çağırma (T6–T8)", status: "pending" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
@@ -152,6 +154,7 @@ window.ILERLEME = {
     { at: "31.10 19:40", text: "P1 T12 tamam: tanım zinciri kabul e2e'si (9), 17 ertelenmiş minör düzeltildi, belgeler. Dal sonu incelemesi başladı." },
     { at: "31.10 20:00", text: "P1 dal sonu incelemesi (Opus) ve iki düzeltme turu tamamlandı (3a322e6, ed81bec). Birleştirme onayı bekleniyor." },
     { at: "31.10 20:08", text: "P1 main'e birleştirildi (fast-forward, 38 commit)." },
-    { at: "31.10 20:12", text: "P5 QR Menü ve Sipariş uygulaması başladı (dal p5/qr-menu); T1 uygulanıyor." }
+    { at: "31.10 20:12", text: "P5 QR Menü ve Sipariş uygulaması başladı (dal p5/qr-menu); T1 uygulanıyor." },
+    { at: "31.10 20:35", text: "P5 T1 onaylandı (6bf287e + e22bbdb). P2, P3, P4, P6, P7, P8 planları yazıldı; tutarlılık turu sürüyor." }
   ]
 };
