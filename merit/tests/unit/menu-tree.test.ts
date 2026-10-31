@@ -193,6 +193,27 @@ describe("menuTree eşzamanlılık ve kapsam", () => {
     expect(new Set(rows.map((r) => r.sortOrder)).size).toBe(2);
   });
 
+  it("aynı öğenin iki eşzamanlı taşıması kardeşlerde benzersiz sortOrder bırakır", async () => {
+    const ctx = await fbm();
+    const o = await outlet();
+    const catA = await tree.create(ctx, o.id, { kind: "KATEGORI", name: "A" });
+    const catB = await tree.create(ctx, o.id, { kind: "KATEGORI", name: "B" });
+    const moving = await tree.create(ctx, o.id, { kind: "ALT_KATEGORI", name: "M", parentId: catA.id });
+    await tree.create(ctx, o.id, { kind: "ALT_KATEGORI", name: "A2", parentId: catA.id });
+    await tree.create(ctx, o.id, { kind: "ALT_KATEGORI", name: "B1", parentId: catB.id });
+    await Promise.all([
+      tree.move(ctx, moving.id, { newParentId: catB.id, index: 0 }),
+      tree.move(ctx, moving.id, { newParentId: catA.id, index: 0 }),
+    ]);
+    const rows = await testDb.menuNode.findMany({ where: { outletId: o.id, kind: "ALT_KATEGORI" } });
+    expect(rows).toHaveLength(3);
+    for (const parentId of [catA.id, catB.id]) {
+      const orders = rows.filter((r) => r.parentId === parentId).map((r) => r.sortOrder);
+      expect(new Set(orders).size).toBe(orders.length);
+      expect([...orders].sort((x, y) => x - y)).toEqual(orders.map((_, i) => i));
+    }
+  });
+
   it("outlet kapsamlı oturum başka outlette create/move FORBIDDEN", async () => {
     const admin = await fbm();
     const own = await outlet("MR", "Havuz Bar");

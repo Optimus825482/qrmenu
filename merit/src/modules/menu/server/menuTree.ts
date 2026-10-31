@@ -255,6 +255,8 @@ export async function move(ctx: Ctx, nodeId: string, raw: MenuNodeMoveInput): Pr
   const scope = await loadNodeScope(nodeId);
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: scope.hotelId }, async (tx) => {
     assertOutletScope(ctx, scope.outletId);
+    // Row lock first: parentId must not change under us (a concurrent move of the same node).
+    await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
     const node = await tx.menuNode.findUnique({
       where: { id: nodeId },
       select: { id: true, kind: true, parentId: true },

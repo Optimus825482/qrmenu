@@ -40,8 +40,9 @@ export async function saveUpload(relPath: string, data: Buffer): Promise<void> {
 const sha256 = (data: Buffer) => createHash("sha256").update(data).digest("hex");
 
 /**
- * Creates the file without ever overwriting (`wx`). When it already exists with identical content
- * it is reused (`created: false`); with different content the call is a CONFLICT.
+ * Creates the file without ever overwriting a complete one (`wx`). An existing file with identical
+ * content is reused (`created: false`). A shorter/different-size file is a truncated earlier write
+ * and is repaired by an atomic temp-write + rename; a complete file with other content is CONFLICT.
  */
 export async function saveUploadExclusive(relPath: string, data: Buffer): Promise<{ created: boolean }> {
   const full = resolveInside(relPath);
@@ -50,11 +51,32 @@ export async function saveUploadExclusive(relPath: string, data: Buffer): Promis
     await fs.writeFile(full, data, { flag: "wx" });
     return { created: true };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "EISDIR") throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
+    if (code !== "EEXIST") throw error;
   }
-  const existing = await fs.readFile(full);
-  if (sha256(existing) !== sha256(data)) throw new DomainError("CONFLICT", "Dosya zaten var");
-  return { created: false };
+  let existing: Buffer;
+  try {
+    existing = await fs.readFile(full);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EISDIR") {
+      throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
+    }
+    throw error;
+  }
+  if (existing.length === data.length) {
+    if (sha256(existing) !== sha256(data)) throw new DomainError("CONFLICT", "Dosya zaten var");
+    return { created: false };
+  }
+  const tmp = `${full}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    await fs.writeFile(tmp, data, { flag: "wx" });
+    await fs.rename(tmp, full);
+  } catch (error) {
+    await fs.rm(tmp, { force: true }).catch(() => undefined);
+    throw error;
+  }
+  return { created: true };
 }
 
 /** A missing file is not an error. */

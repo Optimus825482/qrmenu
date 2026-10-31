@@ -19,6 +19,23 @@ export type UploadFile = { name: string; type: string; size: number; bytes: Buff
 
 const relOf = (url: string | null) => (url?.startsWith(PREFIX) ? url.slice(PREFIX.length) : null);
 
+/**
+ * Unlinks `rel` only when the node no longer references it. The check and the unlink run in one
+ * short transaction holding the node row `FOR UPDATE`, so a concurrent upload that reuses the same
+ * (hash-named) file cannot be raced. Failures are logged, never thrown.
+ */
+async function unlinkIfUnreferenced(nodeId: string, rel: string, label: string): Promise<void> {
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
+      const current = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { imageUrl: true } });
+      if (current?.imageUrl !== PREFIX + rel) await removeUpload(rel);
+    });
+  } catch (cleanup) {
+    console.error(`menuImages.${label}: dosya temizlenemedi`, rel, cleanup);
+  }
+}
+
 const MAX_INPUT_PIXELS = 40_000_000;
 const REAL_FORMATS = new Set(["jpeg", "png", "webp"]);
 
@@ -80,24 +97,11 @@ export async function upload(ctx: Ctx, nodeId: string, file: UploadFile): Promis
       );
     });
   } catch (error) {
-    if (created) {
-      try {
-        const current = await prisma.menuNode.findUnique({ where: { id: nodeId }, select: { imageUrl: true } });
-        if (current?.imageUrl !== imageUrl) await removeUpload(rel);
-      } catch (cleanup) {
-        console.error("menuImages.upload: yeni dosya temizlenemedi", rel, cleanup);
-      }
-    }
+    if (created) await unlinkIfUnreferenced(nodeId, rel, "upload");
     throw error;
   }
   const oldRel = relOf(oldUrl);
-  if (oldRel && oldRel !== rel) {
-    try {
-      await removeUpload(oldRel);
-    } catch (cleanup) {
-      console.error("menuImages.upload: eski dosya silinemedi", oldRel, cleanup);
-    }
-  }
+  if (oldRel && oldRel !== rel) await unlinkIfUnreferenced(nodeId, oldRel, "upload");
   return { imageUrl };
 }
 
@@ -106,6 +110,7 @@ export async function remove(ctx: Ctx, nodeId: string): Promise<void> {
   let oldUrl: string | null = null;
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: scope.hotelId }, async (tx) => {
     assertOutletScope(ctx, scope.outletId);
+    await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
     const node = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { imageUrl: true } });
     if (!node) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
     if (!node.imageUrl) return;
@@ -130,5 +135,5 @@ export async function remove(ctx: Ctx, nodeId: string): Promise<void> {
     );
   });
   const rel = relOf(oldUrl);
-  if (rel) await removeUpload(rel);
+  if (rel) await unlinkIfUnreferenced(nodeId, rel, "remove");
 }

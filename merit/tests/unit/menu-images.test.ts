@@ -159,4 +159,42 @@ describe("menuImages", () => {
     await expect(images.upload(ctx, cat.id, file(await png("#abcdef")))).rejects.toThrow("db down");
     expect(listFiles(dir)).toEqual(before);
   });
+
+  it("başarısız işlemde DB'nin referans verdiği dosya silinmez", async () => {
+    const { ctx, cat } = await setup();
+    const bytes = await png("#778899");
+    const first = await images.upload(ctx, cat.id, file(bytes));
+    const disk = path.join(dir, first.imageUrl.slice(9));
+    publishMock.mockRejectedValueOnce(new Error("db down"));
+    await expect(images.upload(ctx, cat.id, file(bytes))).rejects.toThrow("db down");
+    expect(fs.existsSync(disk)).toBe(true);
+    expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } })).imageUrl).toBe(first.imageUrl);
+  });
+
+  it("eşzamanlı aynı içerikli iki yükleme sonrası dosya yerinde kalır", async () => {
+    const { ctx, cat } = await setup();
+    const bytes = await png("#334455");
+    const [a, b] = await Promise.all([
+      images.upload(ctx, cat.id, file(bytes)),
+      images.upload(ctx, cat.id, file(bytes)),
+    ]);
+    expect(a.imageUrl).toBe(b.imageUrl);
+    expect(fs.existsSync(path.join(dir, a.imageUrl.slice(9)))).toBe(true);
+  });
+
+  it("kesik (kısmi) dosya atomik onarılır; aynı boyutlu farklı içerik CONFLICT", async () => {
+    const { saveUploadExclusive } = await import("@/lib/uploads");
+    const full = path.join(dir, "menu", "x", "p.webp");
+    fs.mkdirSync(path.dirname(full), { recursive: true });
+    fs.writeFileSync(full, Buffer.from("kes"));
+    const data = Buffer.from("tam-icerik");
+    expect(await saveUploadExclusive("menu/x/p.webp", data)).toEqual({ created: true });
+    expect(fs.readFileSync(full).equals(data)).toBe(true);
+    expect(await saveUploadExclusive("menu/x/p.webp", data)).toEqual({ created: false });
+    await expect(saveUploadExclusive("menu/x/p.webp", Buffer.from("TAM-ICERIK"))).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+    fs.mkdirSync(path.join(dir, "menu", "x", "d.webp"));
+    await expect(saveUploadExclusive("menu/x/d.webp", data)).rejects.toMatchObject({ code: "VALIDATION" });
+  });
 });
