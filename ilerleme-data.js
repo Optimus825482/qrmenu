@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 22:56",
-  headline: "P5 T1–T7 tamam (676 birim testi); T8 misafir seçimler/sipariş/çağrı uygulanıyor.",
+  updatedAt: "31.10.2026 23:11",
+  headline: "P5 T1–T8 tamam (684 birim testi); sıradaki T9 fiş kuyruğu ve print gateway (devir: docs/DEVIR.md §1a).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -98,7 +98,7 @@ window.ILERLEME = {
         { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "done", doneAt: "31.10 20:34" },
         { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "done", doneAt: "31.10 21:59" },
         { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "done", doneAt: "31.10 20:42" },
-        { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "active" },
+        { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "done", doneAt: "31.10 23:10" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
         { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "pending" }
@@ -160,6 +160,7 @@ window.ILERLEME = {
     { at: "31.10 21:31", text: "P5 T4 menü/tema pencereleri onaylandı (a3eba49); T3 yarış düzeltmeleri (3edac89). T5 başladı." },
     { at: "31.10 22:00", text: "P5 T5 masa QR onaylandı (28f58a5 + güvenlik düzeltmeleri e2de421). T6 başladı." },
     { at: "31.10 22:38", text: "P5 T6 misafir menü sayfası onaylandı (c57315a + db29b28). T7 sipariş çekirdeği başladı." },
-    { at: "31.10 22:56", text: "P5 T7 sipariş çekirdeği onaylandı (6e2440d); token hız sınırı nihai hali (23bc64f). T8 başladı." }
+    { at: "31.10 22:56", text: "P5 T7 sipariş çekirdeği onaylandı (6e2440d); token hız sınırı nihai hali (23bc64f). T8 başladı." },
+    { at: "31.10 23:11", text: "P5 T8 misafir seçimler/sipariş/çağrı onaylandı (accd319). Fable sınırı: T9+ devir notuyla sürdürülür." }
   ]
 };
