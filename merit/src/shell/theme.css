@@ -1,0 +1,735 @@
+/*
+ * Merit OS — Windows XP "Luna" shell theme. Every color of the shell lives here as a CSS variable;
+ * components only use the classes below. Scoped to .xp-shell so the modern staff UI is untouched.
+ */
+
+.xp-shell {
+  /* Luna palette */
+  --xp-title-1: #0058e6;
+  --xp-title-2: #3a81f3;
+  --xp-title-dark: #0040c0;
+  --xp-title-inactive-1: #7a96df;
+  --xp-title-inactive-2: #a6bcf0;
+  --xp-title-text: #ffffff;
+  --xp-body: #ece9d8;
+  --xp-body-edge: #aca899;
+  --xp-body-light: #ffffff;
+  --xp-body-shade: #d6d2c2;
+  --xp-text: #000000;
+  --xp-muted: #5a5a5a;
+  --xp-select: #316ac5;
+  --xp-select-text: #ffffff;
+  --xp-focus: #000000;
+  --xp-close-1: #e7704c;
+  --xp-close-2: #c23d17;
+  --xp-taskbar: #245edb;
+  --xp-taskbar-light: #3f8cf3;
+  --xp-taskbar-dark: #1941a5;
+  --xp-task-button: #3c81f3;
+  --xp-task-button-light: #63a0f7;
+  --xp-task-button-active: #1e52b7;
+  --xp-tray: #0c8ce9;
+  --xp-tray-light: #18a2f6;
+  --xp-tray-edge: #0a62b6;
+  --xp-start-1: #3c9b3c;
+  --xp-start-2: #61b861;
+  --xp-start-dark: #2a7a2a;
+  --xp-start-right: #d3e5fa;
+  --xp-start-right-edge: #95bdee;
+  --xp-start-group: #7a96df;
+  --xp-start-header-1: #1c5bd8;
+  --xp-start-header-2: #4f8ff0;
+  --xp-orange: #e8962c;
+  --xp-shadow: rgba(0, 0, 0, 0.45);
+  --xp-backdrop: rgba(0, 0, 0, 0.08);
+  --xp-sse-open: #3ccf3c;
+  --xp-sse-connecting: #f2c12e;
+  --xp-sse-closed: #d93a2b;
+  --xp-icon-label: #ffffff;
+  --xp-icon-label-shadow: rgba(0, 0, 0, 0.85);
+  --xp-accent: #c9a24a;
+
+  /* Icon pictogram fills (icons.tsx) */
+  --xi-frame: #3b4a63;
+  --xi-screen: #1f3f8c;
+  --xi-blue: #2f6fdc;
+  --xi-green: #3aa53a;
+  --xi-red: #d9452b;
+  --xi-gold: #e6b232;
+  --xi-light: #9cc4f5;
+  --xi-paper: #f7f6f0;
+  --xi-gray: #8a8f99;
+  --xi-skin: #f2c79a;
+  --xi-ok: #49d649;
+  --xi-white: #ffffff;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--xp-text);
+  background: var(--xp-taskbar);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.xp-shell button {
+  font: inherit;
+  color: inherit;
+}
+
+.xp-shell :focus-visible {
+  outline: 1px dotted var(--xp-focus);
+  outline-offset: 1px;
+}
+
+/* ---- wallpapers ------------------------------------------------------------------------- */
+
+[data-wallpaper="bliss"] {
+  --xp-wallpaper:
+    radial-gradient(140% 55% at 35% 100%, #5fb83a 0 60%, transparent 61%),
+    radial-gradient(90% 40% at 90% 100%, #4aa02c 0 60%, transparent 61%),
+    linear-gradient(180deg, #2f7fe0 0%, #6aaef0 38%, #b9dcf7 62%, #8cc56a 63%, #3f8f22 100%);
+}
+
+[data-wallpaper="klasik"] {
+  --xp-wallpaper: #3a6ea5;
+}
+
+[data-wallpaper="royal-gold"] {
+  --xp-wallpaper:
+    linear-gradient(180deg, transparent 72%, rgba(201, 162, 74, 0.55) 72.3%, transparent 73%),
+    radial-gradient(circle at 50% 38%, rgba(201, 162, 74, 0.18) 0 18%, transparent 40%),
+    radial-gradient(circle at 50% 40%, #1d2b52 0%, #0d1734 55%, #060b1c 100%);
+  --xp-icon-label: #f3e3b8;
+}
+
+[data-wallpaper="gumus"] {
+  --xp-wallpaper: linear-gradient(160deg, #f5f6f8 0%, #cfd2d8 45%, #9ca1aa 100%);
+  --xp-icon-label: #1c1c1c;
+  --xp-icon-label-shadow: rgba(255, 255, 255, 0.85);
+}
+
+/* ---- desktop ---------------------------------------------------------------------------- */
+
+.xp-desktop {
+  position: absolute;
+  inset: 0 0 30px 0;
+  background: var(--xp-wallpaper);
+}
+
+.xp-desktop-icon {
+  position: absolute;
+  width: 76px;
+  padding: 3px 2px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: default;
+  touch-action: none;
+}
+
+.xp-desktop-icon-label {
+  max-width: 74px;
+  padding: 0 2px;
+  color: var(--xp-icon-label);
+  text-shadow: 1px 1px 1px var(--xp-icon-label-shadow);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.xp-desktop-icon[data-selected="true"] .xp-desktop-icon-label {
+  background: var(--xp-select);
+  color: var(--xp-select-text);
+  text-shadow: none;
+}
+
+.xp-desktop-icon[data-selected="true"] .xp-icon {
+  opacity: 0.75;
+}
+
+.xp-desktop-icon.is-dragging {
+  opacity: 0.7;
+  z-index: 1;
+}
+
+/* ---- windows ---------------------------------------------------------------------------- */
+
+.xp-windows {
+  position: absolute;
+  inset: 0 0 30px 0;
+  pointer-events: none;
+}
+
+.xp-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background: var(--xp-body);
+  border: 3px solid var(--xp-title-1);
+  border-top-width: 0;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 2px 3px 10px var(--xp-shadow);
+}
+
+.xp-window.is-inactive {
+  border-color: var(--xp-title-inactive-1);
+}
+
+.xp-window.is-maximized {
+  border-width: 0;
+  border-radius: 0;
+}
+
+.xp-window[hidden] {
+  display: none;
+}
+
+.xp-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  flex: none;
+  padding: 0 4px 0 6px;
+  margin: 0 -3px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(
+    180deg,
+    var(--xp-title-2) 0%,
+    var(--xp-title-1) 18%,
+    var(--xp-title-1) 82%,
+    var(--xp-title-dark) 100%
+  );
+  color: var(--xp-title-text);
+  touch-action: none;
+}
+
+.xp-window.is-maximized .xp-titlebar {
+  margin: 0;
+  border-radius: 0;
+}
+
+.xp-window.is-inactive .xp-titlebar {
+  background: linear-gradient(
+    180deg,
+    var(--xp-title-inactive-2) 0%,
+    var(--xp-title-inactive-1) 25%,
+    var(--xp-title-inactive-1) 100%
+  );
+}
+
+.xp-titlebar-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 1px 1px 0 var(--xp-title-dark);
+}
+
+.xp-title-button {
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--xp-body-light);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--xp-title-2), var(--xp-title-1));
+  color: var(--xp-title-text);
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 1;
+  cursor: default;
+}
+
+.xp-title-button:hover {
+  filter: brightness(1.15);
+}
+
+.xp-title-button.is-close {
+  background: linear-gradient(180deg, var(--xp-close-1), var(--xp-close-2));
+}
+
+.xp-menubar {
+  display: flex;
+  flex: none;
+  border-bottom: 1px solid var(--xp-body-shade);
+  padding: 1px 2px;
+}
+
+.xp-menubar-item {
+  padding: 2px 7px;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+
+.xp-menubar-item:hover,
+.xp-menubar-item[aria-expanded="true"] {
+  background: var(--xp-select);
+  color: var(--xp-select-text);
+}
+
+.xp-window-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--xp-body-light);
+  border: 1px solid var(--xp-body-edge);
+  margin: 0 2px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.xp-statusbar {
+  flex: none;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  margin: 2px;
+  border: 1px solid var(--xp-body-shade);
+  border-top-color: var(--xp-body-edge);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--xp-muted);
+}
+
+.xp-resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  touch-action: none;
+  background:
+    linear-gradient(135deg, transparent 0 55%, var(--xp-body-edge) 55% 62%, transparent 62% 72%,
+      var(--xp-body-edge) 72% 79%, transparent 79% 89%, var(--xp-body-edge) 89% 96%, transparent 96%);
+}
+
+.xp-app-placeholder {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+
+.xp-app-placeholder p {
+  margin: 4px 0 0;
+  color: var(--xp-muted);
+}
+
+.xp-app-loading,
+.xp-app-error {
+  padding: 16px;
+  color: var(--xp-muted);
+}
+
+/* ---- hotel picker ----------------------------------------------------------------------- */
+
+.xp-hotel-picker {
+  padding: 16px;
+}
+
+.xp-hotel-picker h2 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--xp-title-1);
+}
+
+.xp-hotel-picker p {
+  margin: 0 0 12px;
+  color: var(--xp-muted);
+}
+
+.xp-hotel-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.xp-hotel-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  text-align: left;
+  border: 1px solid var(--xp-start-right-edge);
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--xp-body-light), var(--xp-start-right));
+  cursor: default;
+}
+
+.xp-hotel-card:hover {
+  border-color: var(--xp-select);
+}
+
+.xp-hotel-card strong {
+  display: block;
+  font-size: 12px;
+}
+
+.xp-hotel-card span {
+  color: var(--xp-muted);
+}
+
+/* ---- taskbar ---------------------------------------------------------------------------- */
+
+.xp-taskbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(
+    180deg,
+    var(--xp-taskbar-light) 0%,
+    var(--xp-taskbar) 12%,
+    var(--xp-taskbar) 88%,
+    var(--xp-taskbar-dark) 100%
+  );
+  z-index: 100000;
+}
+
+.xp-start-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 18px 0 8px;
+  border: 0;
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(180deg, var(--xp-start-2) 0%, var(--xp-start-1) 30%, var(--xp-start-dark) 100%);
+  color: var(--xp-title-text);
+  font-style: italic;
+  font-weight: bold;
+  font-size: 17px;
+  text-shadow: 1px 1px 1px var(--xp-start-dark);
+  box-shadow: 1px 0 3px var(--xp-shadow);
+  cursor: default;
+}
+
+.xp-start-button[aria-expanded="true"] {
+  background: linear-gradient(180deg, var(--xp-start-dark), var(--xp-start-1));
+}
+
+.xp-task-buttons {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 3px;
+  padding: 3px 6px;
+}
+
+.xp-task-button {
+  flex: 0 1 160px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--xp-taskbar-dark);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--xp-task-button-light), var(--xp-task-button));
+  color: var(--xp-title-text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.xp-task-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.xp-task-button[aria-pressed="true"] {
+  background: var(--xp-task-button-active);
+  box-shadow: inset 1px 1px 2px var(--xp-shadow);
+}
+
+.xp-tray {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, var(--xp-tray-light), var(--xp-tray));
+  border-left: 1px solid var(--xp-tray-edge);
+  color: var(--xp-title-text);
+}
+
+.xp-sse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--xp-body-light);
+  background: var(--xp-sse-closed);
+}
+
+.xp-sse-dot[data-status="open"] {
+  background: var(--xp-sse-open);
+}
+
+.xp-sse-dot[data-status="connecting"] {
+  background: var(--xp-sse-connecting);
+}
+
+/* ---- start menu ------------------------------------------------------------------------- */
+
+.xp-start {
+  position: absolute;
+  left: 0;
+  bottom: 30px;
+  width: 400px;
+  max-width: 100vw;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--xp-title-1);
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  background: var(--xp-body-light);
+  box-shadow: 2px -2px 10px var(--xp-shadow);
+  z-index: 100001;
+}
+
+.xp-start-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, var(--xp-start-header-2), var(--xp-start-header-1));
+  color: var(--xp-title-text);
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 1px var(--xp-title-dark);
+}
+
+.xp-start-avatar {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--xp-body-light);
+  border-radius: 4px;
+  background: var(--xp-start-right);
+}
+
+.xp-start-columns {
+  display: flex;
+  border-top: 2px solid var(--xp-orange);
+  max-height: min(460px, calc(100vh - 140px));
+}
+
+.xp-start-left {
+  flex: 1.2;
+  overflow: auto;
+  padding: 6px 0;
+}
+
+.xp-start-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+  background: var(--xp-start-right);
+  border-left: 1px solid var(--xp-start-right-edge);
+}
+
+.xp-start-group {
+  padding: 6px 10px 2px;
+  font-weight: bold;
+  font-size: 10px;
+  color: var(--xp-start-group);
+  letter-spacing: 0.04em;
+}
+
+.xp-start-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: default;
+}
+
+.xp-start-item:hover,
+.xp-start-item:focus-visible {
+  background: var(--xp-select);
+  color: var(--xp-select-text);
+  outline: none;
+}
+
+.xp-start-right .xp-start-item {
+  font-weight: bold;
+}
+
+.xp-start-logout-wrap {
+  margin-top: auto;
+  padding: 10px;
+  border-top: 1px solid var(--xp-start-right-edge);
+}
+
+.xp-start-logout {
+  width: 100%;
+  padding: 4px 10px;
+  border: 1px solid var(--xp-body-light);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--xp-close-1), var(--xp-close-2));
+  color: var(--xp-title-text);
+  font-weight: bold;
+  cursor: default;
+}
+
+/* ---- context / drop-down menus ---------------------------------------------------------- */
+
+.xp-menu {
+  position: fixed;
+  min-width: 170px;
+  padding: 2px;
+  margin: 0;
+  list-style: none;
+  background: var(--xp-body-light);
+  border: 1px solid var(--xp-body-edge);
+  box-shadow: 2px 2px 4px var(--xp-shadow);
+  z-index: 100002;
+}
+
+.xp-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 18px 3px 6px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.xp-menu-item:hover,
+.xp-menu-item:focus-visible,
+.xp-menu-item[aria-expanded="true"] {
+  background: var(--xp-select);
+  color: var(--xp-select-text);
+  outline: none;
+}
+
+.xp-menu-item[aria-disabled="true"] {
+  color: var(--xp-muted);
+}
+
+.xp-menu-check {
+  width: 12px;
+  text-align: center;
+}
+
+.xp-menu-arrow {
+  margin-left: auto;
+  padding-left: 12px;
+}
+
+.xp-menu-separator {
+  height: 1px;
+  margin: 3px 2px;
+  background: var(--xp-body-edge);
+}
+
+/* ---- dialogs ---------------------------------------------------------------------------- */
+
+.xp-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--xp-backdrop);
+  z-index: 100003;
+}
+
+.xp-dialog {
+  position: relative;
+  min-width: 300px;
+  max-width: min(440px, calc(100vw - 32px));
+}
+
+.xp-dialog-body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 14px 8px;
+  background: var(--xp-body);
+}
+
+.xp-dialog-body p {
+  margin: 4px 0 0;
+  white-space: pre-line;
+}
+
+.xp-dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px 12px;
+  background: var(--xp-body);
+}
+
+.xp-button {
+  min-width: 75px;
+  min-height: 23px;
+  padding: 0 10px;
+  border: 1px solid var(--xp-title-dark);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--xp-body-light), var(--xp-body));
+  cursor: default;
+}
+
+.xp-button:hover {
+  box-shadow: inset 0 0 0 2px var(--xp-orange);
+}
+
+.xp-button:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--xp-title-2);
+}
+
+/* ---- icon pictogram fills --------------------------------------------------------------- */
+
+.xp-icon {
+  flex: none;
+  filter: drop-shadow(1px 1px 1px var(--xp-shadow));
+}
+
+.xi-frame { fill: var(--xi-frame); }
+.xi-screen { fill: var(--xi-screen); }
+.xi-blue { fill: var(--xi-blue); }
+.xi-green { fill: var(--xi-green); }
+.xi-red { fill: var(--xi-red); }
+.xi-gold { fill: var(--xi-gold); }
+.xi-light { fill: var(--xi-light); }
+.xi-paper { fill: var(--xi-paper); }
+.xi-gray { fill: var(--xi-gray); }
+.xi-skin { fill: var(--xi-skin); }
+.xi-ok { fill: var(--xi-ok); }
+.xi-white { fill: var(--xi-white); }
+.xi-white-stroke {
+  fill: none;
+  stroke: var(--xi-white);
+  stroke-width: 3;
+  stroke-linecap: round;
+}

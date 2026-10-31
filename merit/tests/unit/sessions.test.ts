@@ -292,6 +292,20 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(other.ok).toBe(true); // doğru şifre, farklı IP ve kullanıcı: sınırlanmaz
   });
 
+  it("başarılı giriş kullanıcı adı sayacını sıfırlar: art arda başarılı girişler sınıra takılmaz", async () => {
+    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const deps = makeDeps();
+    // Distinct IPs so only the username key is under test (the IP key has its own budget).
+    for (const n of [1, 2, 3, 4, 5, 6]) {
+      const r = await performLogin({ ...creds("kat.mr"), ip: `20.0.0.${n}` }, deps);
+      expect(r.ok).toBe(true);
+    }
+    expect(__rateLimitInternals.userAttempts.has("kat.mr")).toBe(false);
+    const wrong = await performLogin({ ...creds("kat.mr", "yanlis"), ip: "20.0.0.7" }, deps);
+    expect(wrong).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    expect(__rateLimitInternals.userAttempts.get("kat.mr")?.count).toBe(1);
+  });
+
   it("kullanıcı adı bazlı sınır: farklı IP'lerden 6. deneme RATE_LIMITED", async () => {
     await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
     const deps = makeDeps();
@@ -345,6 +359,8 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(ipAttempts.size).toBe(1); // 49 stale entries pruned, old-0 re-inserted
     expect(ipAttempts.get("old-0")?.count).toBe(1);
 
+    expect(userAttempts.size).toBe(0); // a successful login clears its username entry
+    await performLogin({ ...creds("gar1", "yanlis"), ip: "10.3.0.1" }, makeDeps());
     expect(userAttempts.size).toBe(1);
     resetRateLimit();
     expect(ipAttempts.size).toBe(0);
@@ -357,8 +373,9 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const live = Date.now() + 60_000;
     for (let i = 0; i < 12_000; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
 
-    const fresh = await performLogin(creds("gar1"), makeDeps());
-    expect(fresh.ok).toBe(true);
+    // A failed attempt is recorded (a successful one would clear its own entry again).
+    const fresh = await performLogin(creds("gar1", "yanlis"), makeDeps());
+    expect(fresh).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
     expect(userAttempts.size).toBe(12_001); // nothing evicted, nothing refused
 
     // existing username keeps its own budget: u0 has used 1 of 5
@@ -374,7 +391,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
     const { userAttempts } = __rateLimitInternals;
     for (let i = 0; i < 100; i++) userAttempts.set(`stale${i}`, { count: 5, resetAt: Date.now() - 1 });
-    await performLogin(creds("gar1"), makeDeps());
+    await performLogin(creds("gar1", "yanlis"), makeDeps());
     expect([...userAttempts.keys()]).toEqual(["gar1"]);
   });
 

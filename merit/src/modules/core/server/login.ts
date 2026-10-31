@@ -88,6 +88,10 @@ function consumeRateLimit(ip: string, username: string): void {
   recordAttempt(userAttempts, user, now);
 }
 
+function clearUserAttempts(username: string): void {
+  userAttempts.delete(username.toLowerCase());
+}
+
 /** Test helper: forgets all attempts. */
 export function resetRateLimit(): void {
   ipAttempts.clear();
@@ -155,6 +159,9 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
   if (!user || !user.isActive || !check.ok) {
     throw new DomainError("UNAUTHORIZED", INVALID_CREDENTIALS);
   }
+  // A correct password ends the guessing window for this username: repeated successful logins
+  // (several devices, re-logins) must never trip the cap. The IP budget is left as it is.
+  clearUserAttempts(input.username);
 
   await prisma.user.update({
     where: { id: user.id },
