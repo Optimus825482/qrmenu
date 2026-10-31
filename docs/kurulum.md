@@ -1,6 +1,6 @@
 # Merit OS — Kurulum ve dağıtım rehberi
 
-Bu belge P0 iskeletinin bulut veya şirket içi (on-prem) bir sunucuya kurulumunu anlatır.
+Bu belge P0 iskeletinin ve P1 çekirdek tanımlarının bulut veya şirket içi (on-prem) bir sunucuya kurulumunu anlatır.
 Geliştirme ortamı için `merit/README.md` dosyasına bakın.
 
 ## 1. Gereksinimler
@@ -64,7 +64,44 @@ npm run build
 ```
 
 Güncellemelerde sıra: kodu çek, `npm ci`, `npm run build`, `npx prisma migrate deploy`,
-süreci yeniden başlat. Seed'i yalnız ilk kurulumda çalıştırmanız yeterlidir.
+süreci yeniden başlat. Seed'i ilk kurulumda ve yeni ekran kodu/rol yetkisi getiren sürümlerde
+(örn. P1) çalıştırın; bkz. "Var olan veritabanında güncelleme".
+
+### İlk kurulum: Kurulum Rehberi
+
+Seed yalnız roller, ekran/yetki matrisi, oteller ve `admin` kullanıcısını getirir; otelin
+kat, oda, outlet ve personel tanımları elle girilir. `admin` ile giriş yapıp
+**Başlat → Kurulum Rehberi** penceresini açın, otelinizi seçin ve adımları yukarıdan aşağıya
+izleyin. Her adımın **Aç** düğmesi Tanımlamalar penceresini doğru bölümde açar; yüzde,
+zorunlu adımlar bitince %100 olur (aynı yüzde Komuta Merkezi'ndeki Kurulum kartında görünür):
+
+1. **Otel bilgileri** — ad, adres, telefon, logo; modül anahtarları (Minibar, QR Menü, QR Sipariş, Oda Servisi).
+2. **Katlar** — kat numarası ve adı.
+3. **Oda tipleri** — örn. Standart, Suit (kabin sayısıyla). Başka bir otelden kopyalanabilir.
+4. **Odalar** ve **Odalara oda tipi atama** — **Toplu Ekle** ile numara aralığı (ön ek, atlanacak numaralar, önizleme); çakışma varsa hiçbiri yazılmaz.
+5. **Outletler** — havuz, bar, salon vb. (QR Menü/Sipariş açıksa zorunlu). Her otelde bir Oda Servisi outleti seed ile gelir.
+6. **Masalar** — sipariş alan outletlerde (QR Sipariş açıksa zorunlu).
+7. **Kullanıcılar** — Minibar açıksa bir kat sorumlusu, QR Sipariş açıksa bir garson.
+8. **Ekipler** — sipariş outletine en az bir üye.
+9. **Ürün ve minibar setup** — P2 ile gelir; zorunlu değildir.
+
+Rol ve yetkileri özelleştirmek için Tanımlamalar → Roller ve Yetki Matrisi kullanılır
+(yalnız sistem yöneticisi). Hesapların çıkış/giriş durumunu **Online Kullanıcılar**, yapılan
+her değişikliği **Denetim Günlüğü** gösterir.
+
+### Var olan veritabanında güncelleme (seed)
+
+P1 yeni ekran kodları (`CR-TAN`, `CR-REH`, `CR-ONL`, `CR-DEN`, `CR-SYS`) ve rol yetki satırları
+ekler. P0'dan yükseltilen bir veritabanında migrasyondan sonra seed'i **yeniden çalıştırın**:
+
+```bash
+npx prisma migrate deploy
+SEED_ADMIN_PASSWORD='<parola>' npm run db:seed
+```
+
+Seed idempotenttir (var olanı yinelemez); `admin` parolasını ve elle yaptığınız tanımları
+ezmez; yalnız seed'deki üç otelin **adı** koduna göre varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
+yetkisi yoktur. Rehber yüzdesi seed çalıştırıldıktan sonra anlam kazanır.
 
 ## 5. Süreç yöneticisi
 

@@ -1,10 +1,12 @@
-# Merit OS — P0 iskeleti
+# Merit OS — P0 iskeleti ve P1 çekirdek tanımlar
 
 Merit, otel operasyonları (kat hizmetleri, depo, oda servisi, kasa, mutfak) için tek
 bir Next.js uygulaması olarak geliştirilen platformdur. Bu depo **P0 iskeletini** içerir:
 kimlik doğrulama ve oturum yönetimi, rol/yetki (`can()`), denetim kaydı, bildirimler,
 gerçek zamanlı olaylar (SSE), arka plan işleri (pg-boss), Windows XP temalı masaüstü
-kabuğu ve Komuta Merkezi, mobil kabuk ve CI.
+kabuğu ve Komuta Merkezi, mobil kabuk ve CI. **P1 (çekirdek tanımlar ve oturum takibi)**
+bunun üzerine tanımlama pencerelerini, kurulum rehberini, online kullanıcı takibini,
+bildirim merkezini, denetim günlüğünü ve sistem ayarlarını ekler (aşağıda "P1 pencereleri").
 
 ## Gereksinimler
 
@@ -56,6 +58,43 @@ kabuğu ve Komuta Merkezi, mobil kabuk ve CI.
    Kullanıcı adı `admin`, parola `.env` içindeki `SEED_ADMIN_PASSWORD` değeridir.
    Girişten sonra yönetim ekranı `/admin` adresindedir.
 
+## P1 pencereleri
+
+Yönetim kabuğunda (`/admin`) Başlat menüsünden açılan pencereler. Her pencere bir
+**ekran koduna** bağlıdır; kod, rol için `V` (görüntüle), `O` (oluştur), `D` (düzenle),
+`A` (onayla) ve `R` (rapor) yetkilerinden hangilerinin açık olduğunu belirler
+(Tanımlamalar → Yetki Matrisi). Otel bağlamlı pencereler açılırken otel seçtirir
+(tek otelli kullanıcıda seçici çıkmaz); Oteller, Roller, Denetim Günlüğü ve Ayarlar
+sistem geneldir.
+
+| Ekran kodu | Pencere | Ne yapar |
+| --- | --- | --- |
+| `CR-TAN` | Tanımlamalar | Otel bilgileri ve modül anahtarları; kat, oda tipi, oda (toplu ekleme, Excel dışa aktarma), outlet, masa (toplu ekleme). Oda tipleri başka bir otelden kopyalanabilir. |
+| `CR-KUL` | Tanımlamalar → Kullanıcılar, Ekipler, Roller, Yetki Matrisi | Kullanıcı açma/düzenleme/şifre/pasife alma, outlet ekibi (üyelik), rol kataloğu ve ekran x işlem yetki matrisi (sistem geneli veya otel bazlı geçersiz kılma). |
+| `CR-REH` | Kurulum Rehberi | Otel başına kurulum adımları ve yüzde. Adımdaki **Aç** düğmesi Tanımlamalar'ı ilgili ağaç düğümünde açar; Komuta Merkezi'nde otel başına Kurulum % kartı görünür. |
+| `CR-ONL` | Online Kullanıcılar | Açık oturumlar (2 sn içinde canlı), sayaçlar, durum süzgeci ve **zorla çıkış** (`A` yetkisi). |
+| `CR-DEN` | Denetim Günlüğü | Tüm yazma işlemlerinin kaydı; kullanıcı/işlem/varlık/tarih süzgeci, before/after ayrıntısı, CSV dışa aktarma (`R` yetkisi olmayana düğme gösterilmez). Bildirim zili görev çubuğundadır. |
+| `CR-SYS` | Denetim Masası → Sistem | Sistem geneli ve otel bazlı ayarlar (oturum süreleri, MyBar, DND, stok, fiyat, e-posta, QR). Otel değeri sistem değerini geçersiz kılar; "Otel değerini kaldır" geri alır. |
+
+### Rol hiyerarşisi (YONETIM kuralı)
+
+Otel müdürü gibi **YONETIM** rolleri kendi otelleri içinde çalışır; sistem düzeyi
+işlemler yalnızca **SISTEM** rollerine (R-SYS) aittir:
+
+- Rolleri ve yetki matrisini yalnızca SISTEM değiştirir; YONETIM bunları salt okunur görür.
+- YONETIM, SISTEM ve YONETIM rollü kullanıcı oluşturamaz/atayamaz (rol listesinde de gösterilmez);
+  başka yöneticiyi yönetemez. Kendi şifresini ve profilini değiştirebilir, kendi rolünü veya
+  otel yetkisini değiştiremez, kendi hesabını pasife alamaz.
+- YONETIM yalnızca tüm otelleri kendi yetki alanında olan kullanıcıları yönetir; başka otelle
+  bağlantısı olan kullanıcıya salt okunur bakar.
+- Online Kullanıcılar'da SISTEM oturumları YONETIM'e görünmez (sayaçlar dahil) ve kapatılamaz;
+  başka bir yöneticinin oturumunu yalnızca SISTEM zorla kapatabilir.
+- Yetkisiz her deneme `YETKISIZ_DENEME` olarak denetim günlüğüne yazılır.
+
+Yeni ekran kodları (`CR-TAN`, `CR-REH`, `CR-ONL`, `CR-DEN`, `CR-SYS`) `npm run db:seed` ile
+eklenir; mevcut bir veritabanında seed'i yeniden çalıştırmak güvenlidir (yinelenen satır
+oluşturmaz).
+
 ## Komutlar
 
 | Komut | Ne yapar |
@@ -80,6 +119,11 @@ kabuğu ve Komuta Merkezi, mobil kabuk ve CI.
   zaten çalışan bir sunucu yeniden kullanılır, yoksa Playwright `npm run dev` başlatır.
 - Bu belgedeki komutlar bash sözdizimindedir; PowerShell'de ortam değişkenlerini
   `$env:NAME="değer"` ile verin.
+- `tests/e2e/definitionChain.spec.ts` P1 kabul zinciridir: oda tipi, toplu oda, outlet ve masa,
+  kullanıcı, ekip, rol kopyası, yetki matrisi, Kurulum Rehberi %100, online kullanıcı ve zorla
+  çıkış, denetim günlüğü satırları. İkinci bir tarayıcı bağlamında garson olarak giriş yapar.
+  Üretim derlemesiyle çalıştırmak için: `npx next build && npx next start -p 3000`, ardından
+  `npm run test:e2e` (3000 portundaki sunucu yeniden kullanılır).
 - Giriş hız sınırlayıcısı kullanıcı adı ve IP başına dakikada 5 denemeye izin verir.
   Başarılı girişler kullanıcı adı sayacını sıfırlar; bu yüzden testleri art arda
   çalıştırmak sorun değildir. Başarısız bir koşudan sonra "çok fazla deneme" hatası
