@@ -48,6 +48,11 @@ function AppHost({ app, props }: { app: AppDefinition; props: AppProps }) {
   return createElement(comp, props);
 }
 
+/** iframe apps are same-origin only in P0: a root-relative path ("/x"), never "//host" or a scheme. */
+function isSameOriginPath(url: string | undefined): url is string {
+  return typeof url === "string" && url.startsWith("/") && !url.startsWith("//") && !url.includes("\\");
+}
+
 const MENU_NAMES: MenuName[] = ["Dosya", "Görünüm", "Yardım"];
 
 type MenuName = "Dosya" | "Görünüm" | "Yardım";
@@ -214,8 +219,18 @@ export function Window({ id, hotels, userName }: Props) {
         </Suspense>
       </AppErrorBoundary>
     );
+  } else if (isSameOriginPath(app.url)) {
+    body = (
+      <iframe
+        key={reloadKey}
+        src={app.url}
+        title={app.title}
+        sandbox="allow-same-origin allow-scripts allow-forms"
+        className="xp-iframe"
+      />
+    );
   } else {
-    body = <div className="xp-app-error">Bu uygulama türü henüz desteklenmiyor.</div>;
+    body = <div className="xp-app-error">Bu uygulamanın adresi geçersiz.</div>;
   }
 
   const className = [

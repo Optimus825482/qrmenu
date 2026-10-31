@@ -15,16 +15,6 @@ function Placeholder({ icon, text, note }: { icon: string; text: string; note: s
   );
 }
 
-export function KomutaPlaceholder() {
-  return (
-    <Placeholder
-      icon="komuta"
-      text="Komuta Merkezi — P0 Task 12'de doldurulacak"
-      note="Canlı KPI kartları ve olay akışı bu pencerede yer alacak."
-    />
-  );
-}
-
 export function AyarlarPlaceholder() {
   return (
     <Placeholder

@@ -3,7 +3,9 @@
  * components only use the classes below. Scoped to .xp-shell so the modern staff UI is untouched.
  */
 
-.xp-shell {
+/* The palette is shared with iframe app pages (.xp-frame-page), which render outside the shell. */
+.xp-shell,
+.xp-frame-page {
   /* Luna palette */
   --xp-title-1: #0058e6;
   --xp-title-2: #3a81f3;
@@ -62,7 +64,9 @@
   --xi-skin: #f2c79a;
   --xi-ok: #49d649;
   --xi-white: #ffffff;
+}
 
+.xp-shell {
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -335,6 +339,177 @@
 .xp-app-error {
   padding: 16px;
   color: var(--xp-muted);
+}
+
+/* iframe apps fill the window body; the frame brings its own document. */
+.xp-window-body:has(> .xp-iframe) {
+  overflow: hidden;
+}
+
+.xp-iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--xp-body-light);
+}
+
+/* ---- iframe app page (/admin/hakkinda) ------------------------------------------------- */
+
+.xp-frame-page {
+  min-height: 100vh;
+  padding: 16px;
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--xp-text);
+  background: var(--xp-body-light);
+}
+
+.xp-about {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.xp-about h1 {
+  margin: 0 0 2px;
+  font-size: 18px;
+  color: var(--xp-title-1);
+}
+
+.xp-about dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 12px;
+  margin: 10px 0;
+}
+
+.xp-about dt {
+  color: var(--xp-muted);
+}
+
+.xp-about dd {
+  margin: 0;
+}
+
+.xp-about p {
+  margin: 8px 0 0;
+  color: var(--xp-muted);
+}
+
+/* ---- Komuta Merkezi --------------------------------------------------------------------- */
+
+.xp-cc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  font-size: 12px;
+  min-height: 100%;
+  background: var(--xp-body);
+}
+
+.xp-cc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.xp-cc-head h2 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--xp-title-1);
+}
+
+.xp-badge {
+  padding: 1px 8px;
+  border: 1px solid var(--xp-body-edge);
+  border-radius: 8px;
+  font-weight: bold;
+  color: var(--xp-text);
+  background: var(--xp-sse-connecting);
+}
+
+.xp-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.xp-kpi {
+  padding: 8px 10px;
+  border: 1px solid var(--xp-body-edge);
+  border-radius: 3px;
+  background: var(--xp-body-light);
+  text-align: center;
+}
+
+.xp-kpi-value {
+  display: block;
+  font-size: 26px;
+  font-weight: bold;
+  color: var(--xp-title-1);
+}
+
+.xp-kpi-label {
+  display: block;
+  color: var(--xp-muted);
+}
+
+.xp-cc-cols {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.xp-group {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-group legend {
+  padding: 0 4px;
+  color: var(--xp-title-1);
+}
+
+.xp-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+
+.xp-list li {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--xp-body-shade);
+}
+
+.xp-list .xp-list-time {
+  flex: none;
+  color: var(--xp-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-list .xp-list-count {
+  margin-left: auto;
+  font-weight: bold;
+}
+
+.xp-list .xp-list-empty {
+  color: var(--xp-muted);
+  border-bottom: 0;
 }
 
 /* ---- hotel picker ----------------------------------------------------------------------- */

@@ -54,7 +54,7 @@ test("masaüstü: Komuta Merkezi simgesi; çift tık → pencere; sürükle; gö
   await expect(win).toBeVisible();
   const titleBar = win.getByTestId("window-titlebar");
   await expect(titleBar).toHaveText(/Komuta Merkezi/);
-  await expect(win.getByText("Komuta Merkezi — P0 Task 12'de doldurulacak")).toBeVisible();
+  await expect(win.getByTestId("kpi-hotels")).toBeVisible();
   await expect(win.getByText(/Kullanıcı: Sistem Yöneticisi/)).toBeVisible();
 
   const left = () => win.evaluate((el) => parseFloat((el as HTMLElement).style.left));
