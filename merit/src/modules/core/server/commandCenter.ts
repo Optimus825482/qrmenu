@@ -1,6 +1,7 @@
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
+import { DomainError } from "@/lib/result";
 import { businessDate, businessDateStart } from "@/lib/time";
 
 export type CommandCenterKpis = {
@@ -15,14 +16,26 @@ export type CommandCenterKpis = {
 
 /**
  * Live numbers for the Komuta Merkezi window. Needs view permission on CR-KOM; `hotelId`
- * narrows everything to one hotel (assertCan rejects a hotel outside the caller's scope).
+ * narrows everything to one hotel (assertCan rejects a hotel outside the caller's scope). Without
+ * it the numbers cover only the hotels where the role may view CR-KOM (permissions can differ per
+ * hotel); none at all -> FORBIDDEN (audited as YETKISIZ_DENEME).
  */
 export async function getCommandCenterKpis(
   ctx: Ctx,
   hotelId?: string,
 ): Promise<CommandCenterKpis> {
-  await assertCan(ctx, "CR-KOM", "V", hotelId);
-  const scope = hotelId ? [hotelId] : ctx.hotelIds;
+  let scope: string[];
+  if (hotelId) {
+    await assertCan(ctx, "CR-KOM", "V", hotelId);
+    scope = [hotelId];
+  } else {
+    const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-KOM", "V", h)));
+    scope = ctx.hotelIds.filter((_, i) => allowed[i]);
+    if (scope.length === 0) {
+      await assertCan(ctx, "CR-KOM", "V", ctx.session.hotelId); // audits the denied attempt
+      throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
+    }
+  }
   const since = businessDateStart(businessDate());
 
   const [hotels, sessions, notificationsToday] = await Promise.all([
@@ -57,7 +70,7 @@ export async function getCommandCenterKpis(
   for (const s of sessions) usersByHotel.set(s.hotelId, (usersByHotel.get(s.hotelId) ?? 0) + 1);
 
   return {
-    hotels: hotelId ? 1 : hotels.length,
+    hotels: hotels.length,
     onlineUsers: new Set(sessions.map((s) => s.userId)).size,
     notificationsToday,
     openSessionsByHotel: hotels.map((h) => ({

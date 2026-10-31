@@ -144,4 +144,44 @@ describe("getCommandCenterKpis (gerçek test DB)", () => {
     const ctx = await ctxFor(kat, { hotelCode: "MR" });
     await expect(getCommandCenterKpis(ctx)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
+
+  it("otel bazlı CR-KOM yetkisi: canView=false olan otel kapsam dışı kalır; hepsi kapalıysa FORBIDDEN", async () => {
+    const user = await makeUser({
+      username: "otm1",
+      roleCode: "R-OTM",
+      hotelCode: "MR",
+      extraHotelCodes: ["MR", "MRD"],
+    });
+    const ctx = await ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRD"] });
+    const other = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "MRD" });
+    await openSession(user.id, "MR", "ONLINE", user.roleId);
+    await openSession(other.id, "MRD", "ONLINE", other.roleId);
+    await notification(user.id, "MR", new Date());
+    await notification(other.id, "MRD", new Date());
+    await notification(other.id, "MRD", new Date());
+
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-KOM" } });
+    const deny = async (code: string) =>
+      testDb.roleScreenPermission.create({
+        data: { roleId: user.roleId, screenId: screen.id, hotelId: await hotelId(code), canView: false },
+      });
+    await deny("MRD");
+    try {
+      const kpis = await getCommandCenterKpis(ctx);
+      expect(kpis.hotels).toBe(1);
+      expect(kpis.onlineUsers).toBe(1);
+      expect(kpis.notificationsToday).toBe(1);
+      expect(kpis.openSessionsByHotel.map((h) => h.code)).toEqual(["MR"]);
+
+      await expect(getCommandCenterKpis(ctx, await hotelId("MRD"))).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+
+      await deny("MR");
+      await expect(getCommandCenterKpis(ctx)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThan(0);
+    } finally {
+      await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
+    }
+  });
 });

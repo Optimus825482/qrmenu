@@ -29,18 +29,37 @@ export function CommandCenter({ hotelId, setStatus }: AppProps) {
   const counter = useRef(0);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  const inFlight = useRef(false);
+  const pending = useRef(false);
+  const latest = useRef(0);
+
   const refresh = useCallback(async () => {
+    // One request at a time; a refresh asked meanwhile runs once more afterwards.
+    if (inFlight.current) {
+      pending.current = true;
+      return;
+    }
+    inFlight.current = true;
     try {
-      const result = await commandCenterKpisAction(hotelId);
-      if (result.ok) {
-        setKpis(result.data);
-        setError(null);
-        setStatus(`Son güncelleme ${clock(new Date())}`);
-      } else {
-        setError(result.error.message);
-      }
-    } catch {
-      setError("Veriler alınamadı");
+      do {
+        pending.current = false;
+        const mine = ++latest.current;
+        try {
+          const result = await commandCenterKpisAction(hotelId);
+          if (mine !== latest.current) continue; // a newer request owns the state
+          if (result.ok) {
+            setKpis(result.data);
+            setError(null);
+            setStatus(`Son güncelleme ${clock(new Date())}`);
+          } else {
+            setError(result.error.message);
+          }
+        } catch {
+          if (mine === latest.current) setError("Veriler alınamadı");
+        }
+      } while (pending.current);
+    } finally {
+      inFlight.current = false;
     }
   }, [hotelId, setStatus]);
 
