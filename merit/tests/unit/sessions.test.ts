@@ -245,8 +245,9 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(await testDb.userSession.count()).toBe(0);
   });
 
-  it("6. deneme RATE_LIMITED; başka IP etkilenmez", async () => {
+  it("6. deneme RATE_LIMITED; başka IP + başka kullanıcı etkilenmez", async () => {
     await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
     const deps = makeDeps();
     for (let i = 0; i < 5; i++) {
       const r = await performLogin(creds("gar1", "yanlis"), deps);
@@ -254,8 +255,29 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     }
     const sixth = await performLogin(creds("gar1"), deps);
     expect(sixth).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
-    const other = await performLogin({ ...creds("gar1"), ip: "10.0.0.77" }, deps);
-    expect(other.ok).toBe(true); // doğru şifre, farklı IP: sınırlanmaz
+    // the IP is exhausted for any username too
+    const sameIp = await performLogin(creds("gar2"), deps);
+    expect(sameIp).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+    const other = await performLogin({ ...creds("gar2"), ip: "10.0.0.77" }, deps);
+    expect(other.ok).toBe(true); // doğru şifre, farklı IP ve kullanıcı: sınırlanmaz
+  });
+
+  it("kullanıcı adı bazlı sınır: farklı IP'lerden 6. deneme RATE_LIMITED", async () => {
+    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const deps = makeDeps();
+    for (const n of [1, 2, 3, 4, 5]) {
+      const r = await performLogin({ ...creds("kat.mr", "yanlis"), ip: `${n}.${n}.${n}.${n}` }, deps);
+      expect(r).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    }
+    const sixth = await performLogin({ ...creds("kat.mr"), ip: "6.6.6.6" }, deps);
+    expect(sixth).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+    expect(deps.setCookie).not.toHaveBeenCalled();
+    // other usernames from the new IP are unaffected, and resetRateLimit clears both maps
+    const other = await performLogin({ ...creds("yok"), ip: "6.6.6.6" }, deps);
+    expect(other).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    resetRateLimit();
+    const after = await performLogin({ ...creds("kat.mr"), ip: "6.6.6.6" }, deps);
+    expect(after.ok).toBe(true);
   });
 
   it("geçersiz girdi VALIDATION döner", async () => {

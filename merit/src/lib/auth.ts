@@ -1,10 +1,11 @@
 import { getIronSession, type IronSession, type SessionOptions } from "iron-session";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import type { RoleKind, SessionStatus } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
-import { touchSession } from "@/modules/core/server/sessions";
+import { closeSession, touchSession } from "@/modules/core/server/sessions";
 import { hotelScope } from "@/modules/core/server/targets";
 
 export const SESSION_COOKIE_NAME = "merit_session";
@@ -80,9 +81,11 @@ function unauthorized(): DomainError {
 
 /**
  * Resolves the signed-in user from the session cookie against the database. The cookie alone is
- * never enough: the UserSession must be open and unexpired, and user and hotel must be active.
+ * never enough: the UserSession must be open and unexpired, user and hotel must be active, and
+ * the session's target must still be one the user is entitled to (see below). Memoized per
+ * request through React cache() so layouts, pages and actions share one lookup.
  */
-export async function requireUser(): Promise<Ctx> {
+async function loadCtx(): Promise<Ctx> {
   const cookie = await getSession();
   if (!cookie.userId || !cookie.sessionId) throw unauthorized();
 
@@ -102,22 +105,47 @@ export async function requireUser(): Promise<Ctx> {
     throw unauthorized();
   }
 
+  // Privileges are re-checked on every call: memberships, roles and hotel assignments can change
+  // while a session is open. A session whose target is no longer permitted is closed (SISTEM).
+  const { user } = session;
+  const member = session.outletId
+    ? await prisma.outletMember.findFirst({
+        where: {
+          userId: user.id,
+          outletId: session.outletId,
+          isActive: true,
+          outlet: { isActive: true, hotelId: session.hotelId },
+        },
+      })
+    : null;
+  const scope = await hotelScope(user);
+  // An outlet session is authorized by its (active) membership even when the outlet's hotel is
+  // outside User.hotelId/UserHotel; every other session must be on a hotel in scope.
+  const hotelAllowed = member !== null || scope.some((h) => h.id === session.hotelId);
+  const roleAllowed =
+    session.roleId === user.roleId || (member !== null && member.roleId === session.roleId);
+  const outletAllowed = !session.outletId || member !== null;
+
+  if (!hotelAllowed || !roleAllowed || !outletAllowed) {
+    await closeSession(session.id, "SISTEM");
+    throw unauthorized();
+  }
+
   if (now.getTime() - session.lastSeenAt.getTime() > TOUCH_INTERVAL_MS) {
     await touchSession(session.id);
   }
 
-  const scope = await hotelScope(session.user);
   const hotelIds = [...new Set([...scope.map((h) => h.id), session.hotelId])];
 
   return {
     user: {
-      id: session.user.id,
-      username: session.user.username,
-      fullName: session.user.fullName,
+      id: user.id,
+      username: user.username,
+      fullName: user.fullName,
       roleId: session.role.id,
       roleCode: session.role.code,
       roleKind: session.role.kind,
-      hotelId: session.user.hotelId ?? undefined,
+      hotelId: user.hotelId ?? undefined,
     },
     session: {
       id: session.id,
@@ -127,3 +155,5 @@ export async function requireUser(): Promise<Ctx> {
     hotelIds,
   };
 }
+
+export const requireUser: () => Promise<Ctx> = cache(loadCtx);

@@ -142,6 +142,97 @@ describe("requireUser (gerçek test DB)", () => {
   });
 });
 
+describe("requireUser oturum yetkisini yeniden doğrular (gerçek test DB)", () => {
+  async function outletLogin() {
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
+    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    const member = await addMember(user.id, outlet.id);
+    const session = await createSession({
+      userId: user.id,
+      hotelId: outlet.hotelId,
+      outletId: outlet.id,
+      roleId: user.roleId,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-GAR" });
+    return { user, outlet, member, session };
+  }
+
+  async function expectClosedBySystem(sessionId: string) {
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    const row = await testDb.userSession.findUniqueOrThrow({ where: { id: sessionId } });
+    expect(row).toMatchObject({ status: "CIKTI", logoutReason: "SISTEM" });
+    expect(row.logoutAt).toBeInstanceOf(Date);
+  }
+
+  it("(c) geçerli oturum geçer ve kapatılmaz", async () => {
+    const { session } = await outletLogin();
+    await expect(requireUser()).resolves.toBeDefined();
+    expect((await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).status).toBe(
+      "ONLINE",
+    );
+  });
+
+  it("(a) OutletMember pasifleştirilince oturum CIKTI/SISTEM olur", async () => {
+    const { member, session } = await outletLogin();
+    await testDb.outletMember.update({ where: { id: member.id }, data: { isActive: false } });
+    await expectClosedBySystem(session.id);
+  });
+
+  it("outlet pasifleştirilince oturum CIKTI/SISTEM olur", async () => {
+    const { outlet, session } = await outletLogin();
+    await testDb.outlet.update({ where: { id: outlet.id }, data: { isActive: false } });
+    await expectClosedBySystem(session.id);
+  });
+
+  it("OutletMember rol geçersiz kılması değişince oturum CIKTI/SISTEM olur", async () => {
+    const user = await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "MR" });
+    const sef = await testDb.role.findUniqueOrThrow({ where: { code: "R-SGF" } });
+    const outlet = await makeOutlet("MR", "Salon", "SALON");
+    const member = await testDb.outletMember.create({
+      data: { userId: user.id, outletId: outlet.id, roleId: sef.id },
+    });
+    const session = await createSession({
+      userId: user.id,
+      hotelId: outlet.hotelId,
+      outletId: outlet.id,
+      roleId: sef.id,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-SGF" });
+    await expect(requireUser()).resolves.toMatchObject({ user: { roleCode: "R-SGF" } });
+
+    await testDb.outletMember.update({ where: { id: member.id }, data: { roleId: null } });
+    await expectClosedBySystem(session.id);
+  });
+
+  it("kullanıcının rolü değişince (oturum rolü artık uymuyor) oturum CIKTI/SISTEM olur", async () => {
+    const { user, session } = await outletLogin();
+    const bar = await testDb.role.findUniqueOrThrow({ where: { code: "R-BAR" } });
+    await testDb.user.update({ where: { id: user.id }, data: { roleId: bar.id } });
+    await expectClosedBySystem(session.id);
+  });
+
+  it("(b) depo kullanıcısının oteli UserHotel'den çıkarılınca oturum CIKTI/SISTEM olur", async () => {
+    const user = await makeUser({
+      username: "dep1",
+      roleCode: "R-DEP",
+      extraHotelCodes: ["MR", "MRP"],
+    });
+    const session = await createSession({
+      userId: user.id,
+      hotelId: await hotelId("MRP"),
+      roleId: user.roleId,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-DEP" });
+    await expect(requireUser()).resolves.toMatchObject({
+      session: { hotelId: await hotelId("MRP") },
+    });
+
+    await testDb.userHotel.deleteMany({ where: { userId: user.id, hotelId: await hotelId("MRP") } });
+    await expectClosedBySystem(session.id);
+    expect(await testDb.auditLog.count({ where: { action: "LOGOUT", userId: user.id } })).toBe(1);
+  });
+});
+
 describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
   it("requireUser: userId + pendingTargets var, geçerli sessionId yok → UNAUTHORIZED", async () => {
     const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });

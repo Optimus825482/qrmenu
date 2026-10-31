@@ -22,26 +22,45 @@ export type LoginDeps = { setCookie: SetCookie };
 const INVALID_CREDENTIALS = "Kullanıcı adı veya şifre hatalı";
 const PENDING_COOKIE_TTL_SECONDS = 300;
 
-// --- rate limit: 5 attempts per IP per minute, in memory (per server instance) -----------------
+// --- rate limit: 5 attempts per minute per IP and per username, in memory (per instance) -------
+// The IP comes from a spoofable header, so a per-username limit backs it up: guessing one
+// account's password from rotating IPs is still capped. (Side effect: an attacker can keep one
+// username locked for a minute; accepted.)
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_ATTEMPTS = 5;
-const attempts = new Map<string, { count: number; resetAt: number }>();
+const RATE_MAX_ENTRIES = 10_000;
+type Attempt = { count: number; resetAt: number };
+const attempts = new Map<string, Attempt>();
 
-function consumeRateLimit(ip: string): void {
-  const now = Date.now();
-  if (attempts.size > 1000) {
-    for (const [key, entry] of attempts) if (entry.resetAt <= now) attempts.delete(key);
-  }
-  const entry = attempts.get(ip);
-  if (!entry || entry.resetAt <= now) {
-    attempts.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+function liveAttempt(key: string, now: number): Attempt | undefined {
+  const entry = attempts.get(key);
+  return entry && entry.resetAt > now ? entry : undefined;
+}
+
+function recordAttempt(key: string, now: number): void {
+  const entry = liveAttempt(key, now);
+  if (entry) {
+    entry.count += 1;
     return;
   }
-  if (entry.count >= RATE_MAX_ATTEMPTS) {
+  attempts.delete(key); // re-insert so Map order stays oldest-first
+  if (attempts.size >= RATE_MAX_ENTRIES) {
+    for (const [k, v] of attempts) if (v.resetAt <= now) attempts.delete(k);
+    while (attempts.size >= RATE_MAX_ENTRIES) {
+      attempts.delete(attempts.keys().next().value as string);
+    }
+  }
+  attempts.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+}
+
+function consumeRateLimit(ip: string, username: string): void {
+  const now = Date.now();
+  const keys = [`ip:${ip}`, `user:${username.toLowerCase()}`];
+  if (keys.some((k) => (liveAttempt(k, now)?.count ?? 0) >= RATE_MAX_ATTEMPTS)) {
     throw new DomainError("RATE_LIMITED", "Çok fazla deneme. Bir dakika sonra tekrar deneyin.");
   }
-  entry.count += 1;
+  for (const k of keys) recordAttempt(k, now);
 }
 
 /** Test helper: forgets all attempts. */
@@ -102,7 +121,7 @@ const loginSchema = z.object({
 type LoginInput = z.infer<typeof loginSchema>;
 
 async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
-  consumeRateLimit(input.ip);
+  consumeRateLimit(input.ip, input.username);
 
   const user = await prisma.user.findUnique({ where: { username: input.username } });
   const candidate = user?.isActive ? user.passwordHash : await timingDummyHash();
