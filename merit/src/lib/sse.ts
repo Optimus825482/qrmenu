@@ -5,14 +5,18 @@ export const SSE_PING_MS = 25_000;
 /** A stream is recycled after this long so the session is re-validated on reconnect. */
 export const SSE_MAX_LIFETIME_MS = 30 * 60_000;
 
+type SseOptions = { signal: AbortSignal; pingMs?: number; maxLifetimeMs?: number };
+
 /**
- * The body of GET /api/sse, independent of HTTP: a `hello` frame, every event visible to `scope`
- * as a named frame, and a `: ping` comment every `pingMs`. When `signal` aborts (or the reader
- * cancels) the subscription and the ping interval are released and the stream closes.
+ * An SSE body over any event filter, independent of HTTP: a `hello` frame, every event `filter`
+ * accepts as a named frame, and a `: ping` comment every `pingMs`. When `signal` aborts (or the
+ * reader cancels) the subscription and the ping interval are released and the stream closes.
+ * A delivered `session.closed` frame ends the stream. The recipient list (`userIds`) is routing
+ * data and is never sent to the browser.
  */
-export function createSseStream(
-  scope: Scope,
-  opts: { signal: AbortSignal; pingMs?: number; maxLifetimeMs?: number },
+export function createFilteredSseStream(
+  filter: (e: MeritEvent) => boolean,
+  opts: SseOptions,
 ): ReadableStream<Uint8Array> {
   const { signal, pingMs = SSE_PING_MS, maxLifetimeMs = SSE_MAX_LIFETIME_MS } = opts;
   const encoder = new TextEncoder();
@@ -58,16 +62,10 @@ export function createSseStream(
 
       write(`event: hello\ndata: ${JSON.stringify({ at: new Date().toISOString() })}\n\n`);
       unsubscribe = subscribe(
-        (e) => matchesScope(e, scope),
+        filter,
         (e) => {
           if (!EVENT_TYPE_RE.test(e.type)) return;
-          // session.closed is addressed to one session: the user's other sessions neither see
-          // the frame (it would send them to the login page) nor lose their stream.
           const closing = e.type === "session.closed";
-          if (closing) {
-            const sessionId = (e.payload as { sessionId?: string } | undefined)?.sessionId;
-            if (sessionId !== scope.sessionId) return;
-          }
           // Recipient ids are routing data; the browser has no use for other users' ids.
           const visible: MeritEvent = { ...e };
           delete visible.userIds;
@@ -85,4 +83,19 @@ export function createSseStream(
       cleanup();
     },
   });
+}
+
+/**
+ * The body of GET /api/sse: every event visible to `scope`. session.closed is addressed to one
+ * session: the user's other sessions neither see the frame (it would send them to the login page)
+ * nor lose their stream.
+ */
+export function createSseStream(scope: Scope, opts: SseOptions): ReadableStream<Uint8Array> {
+  return createFilteredSseStream((e) => {
+    if (!matchesScope(e, scope)) return false;
+    if (e.type === "session.closed") {
+      return (e.payload as { sessionId?: string } | undefined)?.sessionId === scope.sessionId;
+    }
+    return true;
+  }, opts);
 }

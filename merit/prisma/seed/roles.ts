@@ -62,6 +62,57 @@ const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
 /** Remaining CORE screens (user/role admin, settings) belong to these roles only. */
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
 
+/**
+ * P5 limits on QR_MENU / QR_ORDER screens, applied BEFORE the profile rule (actions intersect limit).
+ * A limit lists the actions a screen keeps (empty = no row at all).
+ * `approve`: on these screens the A action stays only with the listed roles.
+ * Migration 0005 repeats the same rules for databases seeded earlier.
+ */
+export const P5_SCREEN_LIMITS = {
+  /** Field staff of an outlet (kind OUTLET, profile SAHA). */
+  outletField: {
+    "QM-MEN": ["V"],
+    "QM-TEM": ["V"],
+    "QM-RAP": [],
+    "QS-RAP": [],
+    "QS-KAS": [],
+    "QS-FIS": [],
+    "QS-IPT": [],
+    "QS-KDS": ["V"],
+  } as Record<string, readonly Action[]>,
+  /** Kitchen roles (kind MUTFAK). */
+  kitchen: {
+    "QS-KAS": [],
+    "QS-FIS": [],
+    "QS-IPT": [],
+    "QM-MEN": [],
+    "QM-TEM": [],
+    "QM-RAP": [],
+    "QS-KUY": ["V"],
+  } as Record<string, readonly Action[]>,
+  approve: {
+    screens: ["QS-KUY", "QS-IPT"] as readonly string[],
+    roles: ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS"] as readonly string[],
+  },
+};
+
+function applyP5Limits(role: RoleDef, screen: ScreenDef, actions: readonly Action[]): readonly Action[] {
+  let result = actions;
+  const byRole =
+    role.kind === "OUTLET" && role.profile === "SAHA"
+      ? P5_SCREEN_LIMITS.outletField
+      : role.kind === "MUTFAK"
+        ? P5_SCREEN_LIMITS.kitchen
+        : undefined;
+  const limit = byRole?.[screen.code];
+  if (limit) result = result.filter((a) => limit.includes(a));
+  const { screens, roles } = P5_SCREEN_LIMITS.approve;
+  if (screens.includes(screen.code) && !roles.includes(role.code)) {
+    result = result.filter((a) => a !== "A");
+  }
+  return result;
+}
+
 /** Concrete module list of a role; 'ALL' expands to every non-core module. */
 export function roleModules(role: RoleDef, allModules: readonly ModuleKey[]): ModuleKey[] {
   return role.modules === "ALL" ? allModules.filter((m) => m !== "CORE") : role.modules;
@@ -99,5 +150,6 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
     return CORE_ADMIN_ROLES.has(role.code) ? PROFILE_ACTIONS[role.profile] : [];
   }
 
-  return role.modules.includes(screen.moduleKey) ? PROFILE_ACTIONS[role.profile] : [];
+  if (!role.modules.includes(screen.moduleKey)) return [];
+  return applyP5Limits(role, screen, PROFILE_ACTIONS[role.profile]);
 }

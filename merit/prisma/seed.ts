@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { type PrismaClient } from "@/generated/prisma/client";
 import { SCREENS } from "@/modules/core/screens";
 import { HOTEL_MODULES, HOTELS, ROOM_SERVICE_OUTLET } from "./seed/hotels";
+import { MENU_THEMES } from "./seed/menuThemes";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
 import { DEFAULT_SETTINGS } from "../src/lib/settings-defs";
 
@@ -144,6 +145,15 @@ async function seedSettings(db: PrismaClient) {
   }
 }
 
+/** Guest menu themes: created by name when missing, never overwritten. */
+async function seedMenuThemes(db: PrismaClient) {
+  const existing = new Set((await db.menuTheme.findMany({ select: { name: true } })).map((t) => t.name));
+  for (const theme of MENU_THEMES) {
+    if (existing.has(theme.name)) continue;
+    await db.menuTheme.create({ data: { ...theme, isDefault: theme.isDefault ?? false } });
+  }
+}
+
 /** The admin password has no default: a missing or weak value must stop the seed. */
 function requireAdminPassword(): string {
   const password = process.env.SEED_ADMIN_PASSWORD;
@@ -178,6 +188,7 @@ export async function runSeed(db: PrismaClient): Promise<void> {
   await seedRoles(db);
   await seedPermissions(db);
   await seedSettings(db);
+  await seedMenuThemes(db);
   await seedAdmin(db, adminPassword);
 }
 

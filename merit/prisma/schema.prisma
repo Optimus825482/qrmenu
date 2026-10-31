@@ -244,6 +244,7 @@ model Hotel {
   orders              Order[]
   orderCounters       OrderCounter[]
   printers            Printer[]
+  printJobs           PrintJob[]
 
   @@map("hotels")
 }
@@ -419,6 +420,8 @@ model User {
   emailLogs            EmailLog[]
   ordersApproved       Order[]              @relation("OrderApprovedBy")
   ordersPhoneConfirmed Order[]              @relation("OrderPhoneConfirmedBy")
+  ordersAssigned       Order[]              @relation("OrderAssignedWaiter")
+  ordersServed         Order[]              @relation("OrderServedBy")
   orderEvents          OrderEvent[]
   waiterCallsResolved  WaiterCall[]
 
@@ -1172,6 +1175,7 @@ model MenuNode {
   orderItems   OrderItem[]
 
   @@index([outletId, parentId])
+  @@index([outletId, kind, isActive])
   @@map("menu_nodes")
 }
 
@@ -1203,6 +1207,7 @@ model MenuTheme {
 
   outlets Outlet[]
 
+  @@unique([name])
   @@map("menu_themes")
 }
 
@@ -1228,6 +1233,11 @@ model Order {
   phoneConfirmedAt   DateTime?   @map("phone_confirmed_at") @db.Timestamptz(3)
   readyAt            DateTime?   @map("ready_at") @db.Timestamptz(3)
   servedAt           DateTime?   @map("served_at") @db.Timestamptz(3)
+  assignedWaiterId   String?     @map("assigned_waiter_id")
+  servedById         String?     @map("served_by_id")
+  prepStartedAt      DateTime?   @map("prep_started_at") @db.Timestamptz(3)
+  rejectedAt         DateTime?   @map("rejected_at") @db.Timestamptz(3)
+  escalatedAt        DateTime?   @map("escalated_at") @db.Timestamptz(3)
   cancelledAt        DateTime?   @map("cancelled_at") @db.Timestamptz(3)
   idempotencyKey     String      @unique @map("idempotency_key")
   clientIp           String      @map("client_ip")
@@ -1240,6 +1250,8 @@ model Order {
   room             Room?        @relation(fields: [roomId], references: [id], onDelete: Restrict)
   approvedBy       User?        @relation("OrderApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   phoneConfirmedBy User?        @relation("OrderPhoneConfirmedBy", fields: [phoneConfirmedById], references: [id], onDelete: SetNull)
+  assignedWaiter   User?        @relation("OrderAssignedWaiter", fields: [assignedWaiterId], references: [id], onDelete: SetNull)
+  servedBy         User?        @relation("OrderServedBy", fields: [servedById], references: [id], onDelete: SetNull)
   items            OrderItem[]
   events           OrderEvent[]
   printJobs        PrintJob[]
@@ -1303,6 +1315,7 @@ model WaiterCall {
   outletId     String     @map("outlet_id")
   tableId      String     @map("table_id")
   type         CallType
+  note         String?    @db.VarChar(200)
   status       CallStatus @default(ACIK)
   resolvedById String?    @map("resolved_by_id")
   resolvedAt   DateTime?  @map("resolved_at") @db.Timestamptz(3)
@@ -1314,6 +1327,7 @@ model WaiterCall {
   resolvedBy User?       @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
 
   @@index([outletId, status])
+  @@index([tableId, status])
   @@map("waiter_calls")
 }
 
@@ -1337,11 +1351,13 @@ model Printer {
   defaultForOutlets Outlet[]   @relation("OutletDefaultPrinter")
   jobs              PrintJob[]
 
+  @@unique([hotelId, name])
   @@map("printers")
 }
 
 model PrintJob {
   id        String         @id @default(cuid())
+  hotelId   String         @map("hotel_id")
   printerId String         @map("printer_id")
   orderId   String?        @map("order_id")
   kind      PrintJobKind
@@ -1349,13 +1365,16 @@ model PrintJob {
   status    PrintJobStatus @default(KUYRUKTA)
   attempts  Int            @default(0)
   error     String?
+  startedAt DateTime?      @map("started_at") @db.Timestamptz(3)
   printedAt DateTime?      @map("printed_at") @db.Timestamptz(3)
   createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   printer Printer @relation(fields: [printerId], references: [id], onDelete: Restrict)
   order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([printerId, status])
+  @@index([hotelId, status, createdAt])
   @@map("print_jobs")
 }

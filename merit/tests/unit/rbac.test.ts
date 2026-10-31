@@ -225,12 +225,10 @@ describe("assertCan()", () => {
 });
 
 describe("visibleScreens()", () => {
-  it("R-GAR: sortOrder sırasında 12 kod", async () => {
+  it("R-GAR: sortOrder sırasında 7 kod (P5 sınırı: kasa, fiş, iptal ve raporlar yok)", async () => {
     const ctx = await ctxOf("R-GAR", "MR");
     expect(await visibleScreens(ctx)).toEqual([
-      "QM-MIS", "QM-CAG", "QM-MEN", "QM-TEM", "QM-RAP",
-      "QS-KUY", "QS-KAS", "QS-KDS", "QS-FIS", "QS-IPT", "QS-RAP",
-      "CR-RAP",
+      "QM-MIS", "QM-CAG", "QM-MEN", "QM-TEM", "QS-KUY", "QS-KDS", "CR-RAP",
     ]);
   });
 

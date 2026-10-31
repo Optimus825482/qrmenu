@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { SessionData } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
+import { createRateLimiter } from "@/lib/rate-limit";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { closeSession, createSession } from "./sessions";
@@ -40,66 +41,42 @@ const PENDING_COOKIE_TTL_SECONDS = 300;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_ATTEMPTS = 5;
 const RATE_MAX_IP_ENTRIES = 10_000;
-type Attempt = { count: number; resetAt: number };
-type AttemptMap = Map<string, Attempt>;
-const ipAttempts: AttemptMap = new Map();
-const userAttempts: AttemptMap = new Map();
+const ipLimiter = createRateLimiter({
+  max: RATE_MAX_ATTEMPTS,
+  windowMs: RATE_WINDOW_MS,
+  maxKeys: RATE_MAX_IP_ENTRIES,
+});
+const userLimiter = createRateLimiter({
+  max: RATE_MAX_ATTEMPTS,
+  windowMs: RATE_WINDOW_MS,
+  maxKeys: Number.POSITIVE_INFINITY,
+});
 
 /** Test-only hook: direct access to the two maps and the IP cap. */
 export const __rateLimitInternals = {
-  ipAttempts,
-  userAttempts,
+  ipAttempts: ipLimiter.entries,
+  userAttempts: userLimiter.entries,
   maxIpEntries: RATE_MAX_IP_ENTRIES,
 };
 
-function liveAttempt(map: AttemptMap, key: string, now: number): Attempt | undefined {
-  const entry = map.get(key);
-  return entry && entry.resetAt > now ? entry : undefined;
-}
-
-/** Entries are inserted in resetAt order (a new window always re-inserts), so expired ones lead. */
-function pruneExpired(map: AttemptMap, now: number): void {
-  for (const [key, entry] of map) {
-    if (entry.resetAt > now) break;
-    map.delete(key);
-  }
-}
-
-function recordAttempt(map: AttemptMap, key: string, now: number, maxEntries?: number): void {
-  const entry = liveAttempt(map, key, now);
-  if (entry) {
-    entry.count += 1;
-    return;
-  }
-  map.delete(key); // an expired entry of this key: re-insert at the end to keep the order
-  pruneExpired(map, now);
-  if (maxEntries !== undefined) {
-    while (map.size >= maxEntries) map.delete(map.keys().next().value as string);
-  }
-  map.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
-}
-
 function consumeRateLimit(ip: string, username: string): void {
-  const now = Date.now();
   const user = username.toLowerCase();
-  const exhausted = (map: AttemptMap, key: string) =>
-    (liveAttempt(map, key, now)?.count ?? 0) >= RATE_MAX_ATTEMPTS;
   // Both keys are checked before either is recorded.
-  if (exhausted(ipAttempts, ip) || exhausted(userAttempts, user)) {
+  if (!ipLimiter.peek(ip).allowed || !userLimiter.peek(user).allowed) {
     throw new DomainError("RATE_LIMITED", "Çok fazla deneme. Bir dakika sonra tekrar deneyin.");
   }
-  recordAttempt(ipAttempts, ip, now, RATE_MAX_IP_ENTRIES);
-  recordAttempt(userAttempts, user, now);
+  ipLimiter.hit(ip);
+  userLimiter.hit(user);
 }
 
 function clearUserAttempts(username: string): void {
-  userAttempts.delete(username.toLowerCase());
+  userLimiter.reset(username.toLowerCase());
 }
 
 /** Test helper: forgets all attempts. */
 export function resetRateLimit(): void {
-  ipAttempts.clear();
-  userAttempts.clear();
+  ipLimiter.clear();
+  userLimiter.clear();
 }
 
 // --- helpers ------------------------------------------------------------------------------------

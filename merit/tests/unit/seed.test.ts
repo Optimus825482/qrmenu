@@ -4,7 +4,7 @@ import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 214;
+const EXPECTED_PERMISSION_ROWS = 191;
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
