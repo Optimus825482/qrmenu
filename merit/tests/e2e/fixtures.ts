@@ -15,12 +15,12 @@ export const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "";
  * The work happens in seed-e2e.ts under tsx: the generated Prisma client is ESM-only and cannot
  * be imported by Playwright's CommonJS test loader.
  */
-export function resetAndSeed(): void {
+export function resetAndSeed(opts: { guestMenu?: boolean } = {}): void {
   const root = path.resolve(__dirname, "../..");
   execFileSync(
     process.execPath,
     [path.join(root, "node_modules/tsx/dist/cli.mjs"), path.join(__dirname, "seed-e2e.ts")],
-    { cwd: root, stdio: "inherit" },
+    { cwd: root, stdio: "inherit", env: { ...process.env, SEED_GUEST_MENU: opts.guestMenu ? "1" : "0" } },
   );
 }
 

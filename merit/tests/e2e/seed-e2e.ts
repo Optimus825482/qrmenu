@@ -32,6 +32,36 @@ function connectionString(): string {
   return url;
 }
 
+/** Fixed guest QR tokens of the guest menu spec (M1 usable, M2 inactive) and a small Havuz Bar menu. */
+export const GUEST_E2E = { m1: "e2e-guest-m1", m2: "e2e-guest-m2" };
+
+async function seedGuestMenu(db: PrismaClient, outletId: string): Promise<void> {
+  await db.outletTable.update({ where: { outletId_label: { outletId, label: "M1" } }, data: { qrToken: GUEST_E2E.m1 } });
+  await db.outletTable.update({
+    where: { outletId_label: { outletId, label: "M2" } },
+    data: { qrToken: GUEST_E2E.m2, isActive: false },
+  });
+  const node = (data: {
+    kind: "KATEGORI" | "ALT_KATEGORI" | "GRUP" | "OGE";
+    name: string;
+    parentId?: string;
+    price?: number;
+    sortOrder?: number;
+  }) => db.menuNode.create({ data: { outletId, ...data } });
+  const cat = await node({ kind: "KATEGORI", name: "İçecekler" });
+  const sub = await node({ kind: "ALT_KATEGORI", name: "Soğuk", parentId: cat.id });
+  const group = await node({ kind: "GRUP", name: "Kokteyller", parentId: sub.id });
+  const mojito = await node({ kind: "OGE", name: "Mojito", parentId: group.id, price: 12, sortOrder: 0 });
+  await node({ kind: "OGE", name: "Aperol Spritz", parentId: group.id, price: 10, sortOrder: 1 });
+  await db.menuNodeTranslation.createMany({
+    data: [
+      { nodeId: cat.id, lang: "en", name: "Drinks" },
+      { nodeId: cat.id, lang: "ar", name: "المشروبات" },
+      { nodeId: mojito.id, lang: "ar", name: "موخيتو" },
+    ],
+  });
+}
+
 /** Empties every application table, re-runs the seed and creates the e2e staff users. */
 async function resetAndSeed(): Promise<void> {
   const db = new PrismaClient({ adapter: pgAdapter(connectionString()) });
@@ -87,6 +117,7 @@ async function resetAndSeed(): Promise<void> {
     for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
       await db.outletTable.create({ data: { outletId: pool, label } });
     }
+    if (process.env.SEED_GUEST_MENU === "1") await seedGuestMenu(db, pool);
     // P5 staff, all members of Havuz Bar: cashier, kitchen display operator, head waiter.
     for (const [username, roleCode] of [
       ["kasa.havuz", "R-KAS"],

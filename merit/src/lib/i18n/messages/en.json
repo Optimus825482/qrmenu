@@ -1,0 +1,71 @@
+{
+  "guest": {
+    "menu": {
+      "title": "Menu",
+      "closed": "The menu is closed right now",
+      "orderingClosed": "Ordering is closed right now, feel free to browse the menu",
+      "soldOut": "Sold out",
+      "allergens": "Allergens",
+      "empty": "The menu is not ready yet"
+    },
+    "allergen": {
+      "gluten": "Gluten",
+      "sut": "Milk",
+      "yumurta": "Egg",
+      "kuruyemis": "Nuts",
+      "deniz_urunu": "Seafood",
+      "alkol": "Alcohol",
+      "soya": "Soy",
+      "susam": "Sesame"
+    },
+    "cart": {
+      "title": "My selections",
+      "empty": "You have not selected anything yet",
+      "add": "Add to selections",
+      "note": "Note",
+      "submit": "Send selections",
+      "total": "Total",
+      "unavailableItems": "Sold-out items",
+      "quantity": "Quantity"
+    },
+    "order": {
+      "status": {
+        "GONDERILDI": "Sent",
+        "ONAYLANDI": "Confirmed",
+        "HAZIR": "Ready",
+        "SERVIS_EDILDI": "Served",
+        "REDDEDILDI": "Declined",
+        "IPTAL": "Cancelled"
+      },
+      "number": "Order no: {no}",
+      "thanks": "Thank you, your order has been sent",
+      "rejected": "Your order could not be accepted"
+    },
+    "call": {
+      "waiter": "Call waiter",
+      "bill": "Ask for the bill",
+      "sent": "Your request has been sent",
+      "tooMany": "Too many requests, please wait a moment"
+    },
+    "common": {
+      "back": "Back",
+      "retry": "Please try again",
+      "offline": "No connection, reconnecting",
+      "close": "Close",
+      "language": "Language"
+    },
+    "room": {
+      "placeholder": "The room page is coming in the next stage"
+    },
+    "unavailable": {
+      "title": "This menu is not available right now",
+      "BILINMEYEN": "This QR code was not recognised. Please scan the code on your table again.",
+      "MASA_PASIF": "This table is not in use right now.",
+      "OUTLET_PASIF": "This venue is not serving right now.",
+      "OTEL_PASIF": "The menu for this hotel is not available right now.",
+      "MENU_KAPALI": "The menu is closed right now.",
+      "RATE_LIMITED": "Too many attempts. Please wait a moment and try again.",
+      "HATA": "Something went wrong. Please try again."
+    }
+  }
+}

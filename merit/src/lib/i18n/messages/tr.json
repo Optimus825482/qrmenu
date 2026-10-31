@@ -1,0 +1,71 @@
+{
+  "guest": {
+    "menu": {
+      "title": "Menü",
+      "closed": "Menü şu an kapalı",
+      "orderingClosed": "Şu an sipariş alınmıyor, menüyü inceleyebilirsiniz",
+      "soldOut": "Tükendi",
+      "allergens": "Alerjenler",
+      "empty": "Menü henüz hazır değil"
+    },
+    "allergen": {
+      "gluten": "Gluten",
+      "sut": "Süt",
+      "yumurta": "Yumurta",
+      "kuruyemis": "Kuruyemiş",
+      "deniz_urunu": "Deniz ürünü",
+      "alkol": "Alkol",
+      "soya": "Soya",
+      "susam": "Susam"
+    },
+    "cart": {
+      "title": "Seçimlerim",
+      "empty": "Henüz seçim yapmadınız",
+      "add": "Seçimlere ekle",
+      "note": "Not",
+      "submit": "Seçimleri gönder",
+      "total": "Toplam",
+      "unavailableItems": "Tükenen öğeler",
+      "quantity": "Adet"
+    },
+    "order": {
+      "status": {
+        "GONDERILDI": "Gönderildi",
+        "ONAYLANDI": "Onaylandı",
+        "HAZIR": "Hazır",
+        "SERVIS_EDILDI": "Servis edildi",
+        "REDDEDILDI": "Reddedildi",
+        "IPTAL": "İptal edildi"
+      },
+      "number": "Sipariş no: {no}",
+      "thanks": "Teşekkürler, siparişiniz iletildi",
+      "rejected": "Siparişiniz alınamadı"
+    },
+    "call": {
+      "waiter": "Garson çağır",
+      "bill": "Hesap iste",
+      "sent": "Çağrınız iletildi",
+      "tooMany": "Çok sık çağrı yaptınız, lütfen biraz bekleyin"
+    },
+    "common": {
+      "back": "Geri",
+      "retry": "Tekrar deneyin",
+      "offline": "Bağlantı yok, yeniden bağlanılıyor",
+      "close": "Kapat",
+      "language": "Dil"
+    },
+    "room": {
+      "placeholder": "Oda sayfası bir sonraki aşamada"
+    },
+    "unavailable": {
+      "title": "Bu menü şu an kullanılamıyor",
+      "BILINMEYEN": "Bu QR kodu tanınmadı. Lütfen masadaki kodu yeniden okutun.",
+      "MASA_PASIF": "Bu masa şu an kullanımda değil.",
+      "OUTLET_PASIF": "Bu bölüm şu an hizmet vermiyor.",
+      "OTEL_PASIF": "Bu otel için menü şu an kullanılamıyor.",
+      "MENU_KAPALI": "Menü şu an kapalı.",
+      "RATE_LIMITED": "Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.",
+      "HATA": "Bir sorun oluştu. Lütfen tekrar deneyin."
+    }
+  }
+}

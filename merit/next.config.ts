@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import pkg from "./package.json";
+
+// Guest (QR menu) pages only: the admin app never calls next-intl.
+const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Shown in Hakkında and Denetim Masası → Uygulama (inlined into client bundles too).
@@ -36,4 +40,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
