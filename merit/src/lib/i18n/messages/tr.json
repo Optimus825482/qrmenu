@@ -66,6 +66,21 @@
       "MENU_KAPALI": "Menü şu an kapalı.",
       "RATE_LIMITED": "Çok fazla deneme yapıldı. Lütfen biraz bekleyip tekrar deneyin.",
       "HATA": "Bir sorun oluştu. Lütfen tekrar deneyin."
+    },
+    "selections": {
+      "remove": "Kaldır",
+      "generalNote": "Siparişe not",
+      "sending": "Gönderiliyor…",
+      "failed": "Gönderilemedi, lütfen tekrar deneyin",
+      "mine": "Siparişlerim",
+      "backToMenu": "Menüye dön",
+      "reason": "Sebep: {reason}",
+      "items": "Kalemler",
+      "notFound": "Sipariş bulunamadı",
+      "optWaiter": "Garson",
+      "optBill": "Hesap",
+      "openSelections": "Seçimlerim ({count})",
+      "callFailed": "Çağrı iletilemedi, lütfen tekrar deneyin"
     }
   }
 }

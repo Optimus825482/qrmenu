@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
+import { GuestFooter } from "@/modules/menu/ui/guest/GuestFooter";
 import { GuestFrame, HtmlLangSync } from "@/modules/menu/ui/guest/GuestFrame";
 import RoomPlaceholder from "@/modules/menu/ui/guest/RoomPlaceholder";
 import "../../guest.css";
@@ -59,6 +60,15 @@ export default async function GuestLayout({
         theme={state.theme}
         outletName={state.outletName}
         tableLabel={table.label}
+        footer={
+          <GuestFooter
+            token={token}
+            locale={locale as Locale}
+            orderingOpen={state.orderingOpen}
+            pricesShown={state.pricesShown}
+            currency={state.currency}
+          />
+        }
       >
         {children}
       </GuestFrame>

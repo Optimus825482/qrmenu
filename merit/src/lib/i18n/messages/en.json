@@ -66,6 +66,21 @@
       "MENU_KAPALI": "The menu is closed right now.",
       "RATE_LIMITED": "Too many attempts. Please wait a moment and try again.",
       "HATA": "Something went wrong. Please try again."
+    },
+    "selections": {
+      "remove": "Remove",
+      "generalNote": "Note for the order",
+      "sending": "Sending…",
+      "failed": "Could not be sent, please try again",
+      "mine": "My orders",
+      "backToMenu": "Back to the menu",
+      "reason": "Reason: {reason}",
+      "items": "Items",
+      "notFound": "Order not found",
+      "optWaiter": "Waiter",
+      "optBill": "Bill",
+      "openSelections": "My selections ({count})",
+      "callFailed": "The request could not be sent, please try again"
     }
   }
 }

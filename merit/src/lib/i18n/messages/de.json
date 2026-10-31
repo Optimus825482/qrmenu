@@ -66,6 +66,21 @@
       "MENU_KAPALI": "Die Speisekarte ist derzeit geschlossen.",
       "RATE_LIMITED": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
       "HATA": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+    },
+    "selections": {
+      "remove": "Entfernen",
+      "generalNote": "Notiz zur Bestellung",
+      "sending": "Wird gesendet…",
+      "failed": "Senden fehlgeschlagen, bitte erneut versuchen",
+      "mine": "Meine Bestellungen",
+      "backToMenu": "Zurück zur Speisekarte",
+      "reason": "Grund: {reason}",
+      "items": "Positionen",
+      "notFound": "Bestellung nicht gefunden",
+      "optWaiter": "Kellner",
+      "optBill": "Rechnung",
+      "openSelections": "Meine Auswahl ({count})",
+      "callFailed": "Die Anfrage konnte nicht gesendet werden, bitte erneut versuchen"
     }
   }
 }

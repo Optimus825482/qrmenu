@@ -5,18 +5,11 @@ import { useCallback, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
+import { priceFormatter } from "./priceFormat";
+import { useSelectionStore } from "./selectionStore";
 import { useGuestEvents } from "./useGuestEvents";
 
 const NO_ORDERS: readonly string[] = [];
-
-function priceFormatter(locale: Locale, currency: string): (amount: string) => string {
-  try {
-    const fmt = new Intl.NumberFormat(locale, { style: "currency", currency });
-    return (amount) => fmt.format(Number(amount));
-  } catch {
-    return (amount) => `${amount} ${currency}`;
-  }
-}
 
 function findItem(categories: GuestMenu["categories"], id: string): GuestItem | undefined {
   for (const cat of categories)
@@ -63,6 +56,8 @@ export function MenuBrowser({ token, locale, menu }: { token: string; locale: Lo
   const active = categories.find((c) => c.id === activeId);
   const [openId, setOpenId] = useState<string | null>(null);
 
+  const store = useSelectionStore(token);
+  const addSelection = store((s) => s.add);
   const format = priceFormatter(locale, state.currency);
   const withLive = (item: GuestItem): GuestItem => ({
     ...item,
@@ -156,6 +151,15 @@ export function MenuBrowser({ token, locale, menu }: { token: string; locale: Lo
           price={openLive.price ? format(openLive.price) : undefined}
           orderingOpen={state.orderingOpen}
           onClose={() => setOpenId(null)}
+          onAdd={(item, quantity, note) =>
+            addSelection({
+              menuNodeId: item.id,
+              name: item.name,
+              qty: quantity,
+              ...(note ? { note } : {}),
+              ...(item.price ? { unitPrice: item.price } : {}),
+            })
+          }
         />
       ) : null}
     </main>
