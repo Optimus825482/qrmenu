@@ -1,7 +1,7 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 14:22",
+  updatedAt: "31.10.2026 14:44",
   headline: "P1 uygulaması başladı (dal p1/cekirdek); P5 planı paralel oturumda yazılıyor.",
   phases: [
     {
@@ -43,8 +43,8 @@ window.ILERLEME = {
       code: "P1", title: "Çekirdek tanımlar ve oturum takibi", weight: 12,
       summary: "Otel/kat/oda/oda tipi/outlet/masa/kullanıcı/rol/yetki pencereleri, kurulum rehberi, online kullanıcılar, denetim günlüğü, ayarlar",
       tasks: [
-        { title: "T1 Ortak yönetim bileşenleri: XP veri tablosu, form penceresi, CRUD action deseni", status: "active" },
-        { title: "T2 Otel, kat ve oda tipi pencereleri", status: "pending" },
+        { title: "T1 Ortak yönetim bileşenleri: XP veri tablosu, form penceresi, CRUD action deseni", status: "done", doneAt: "31.10 14:44" },
+        { title: "T2 Otel, kat ve oda tipi pencereleri", status: "active" },
         { title: "T3 Oda penceresi (toplu oda ekleme, oda tipi atama, misafir mesajı)", status: "pending" },
         { title: "T4 Outlet ve masa pencereleri; otel bazlı modül aç/kapa", status: "pending" },
         { title: "T5 Kullanıcı penceresi ve outlet ekip ataması", status: "pending" },
