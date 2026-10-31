@@ -40,7 +40,8 @@ async function authorizeOutlet(ctx: Ctx, outletId: string, action: "V" | "D"): P
 
 async function outletOfTable(tableId: string): Promise<string> {
   const table = await prisma.outletTable.findUnique({ where: { id: tableId }, select: { outletId: true } });
-  if (!table) throw new DomainError("NOT_FOUND", "Masa bulunamadı");
+  // Same code as an out-of-scope table (authorizeOutlet's FORBIDDEN): no existence oracle.
+  if (!table) throw new DomainError("FORBIDDEN", "Bu masaya erişiminiz yok");
   return table.outletId;
 }
 
@@ -171,7 +172,11 @@ export async function download(ctx: Ctx, tableId: string, format: "svg" | "png")
   };
 }
 
-const csvCell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+/** CSV cell: formula-leading values get a `'` prefix (spreadsheet injection); quoted when needed. */
+export const csvCell = (raw: string) => {
+  const value = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+};
 
 async function activeQrTables(outletId: string) {
   const tables = await prisma.outletTable.findMany({
@@ -198,7 +203,7 @@ export async function outletZip(ctx: Ctx, outletId: string): Promise<QrFile> {
     files[name] = enc.encode(await renderQrSvg(url));
     rows.push(`${csvCell(t.label)},${csvCell(url)}`);
   }
-  files["etiketler.csv"] = enc.encode(`${rows.join("\n")}\n`);
+  files["etiketler.csv"] = enc.encode(`﻿${rows.join("\n")}\n`);
   return {
     filename: `${[access.hotelCode, access.outletName].map(asciiSlug).join("_")}_QR.zip`,
     contentType: "application/zip",

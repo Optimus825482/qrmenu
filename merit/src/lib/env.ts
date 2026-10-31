@@ -8,6 +8,8 @@ const schema = z.object({
   PRINT_GATEWAY_KEY: z.string().min(1),
   /** Where uploaded files (menu images) live; defaults to <cwd>/uploads. */
   UPLOADS_DIR: z.string().min(1).optional(),
+  /** Trusted reverse proxies in front of the app; the client IP is the Nth `x-forwarded-for` entry from the right. */
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(1).default(1),
 });
 
 export type Env = z.infer<typeof schema>;

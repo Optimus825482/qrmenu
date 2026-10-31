@@ -224,3 +224,46 @@ describe("indirme route'ları", () => {
     expect(html).toContain("@media print");
   });
 });
+
+describe("csvCell ve etiketler.csv", () => {
+  it("formül başlangıçlı hücreler tek tırnakla önlenir, CR içerenler tırnaklanır", () => {
+    expect(tableQr.csvCell("=1+1")).toBe("'=1+1");
+    expect(tableQr.csvCell("+90")).toBe("'+90");
+    expect(tableQr.csvCell("-x")).toBe("'-x");
+    expect(tableQr.csvCell("@SUM(A1)")).toBe("'@SUM(A1)");
+    expect(tableQr.csvCell("\tx")).toBe("'\tx");
+    expect(tableQr.csvCell("\rx")).toBe('"\'\rx"');
+    expect(tableQr.csvCell("a\rb")).toBe('"a\rb"');
+    expect(tableQr.csvCell('a,"b"')).toBe('"a,""b"""');
+    expect(tableQr.csvCell("M1")).toBe("M1");
+  });
+
+  it("ZIP içindeki etiketler.csv UTF-8 BOM ile başlar ve formül etiketini korur", async () => {
+    const ctx = await fbm();
+    const outlet = await newOutlet();
+    await testDb.outletTable.create({ data: { outletId: outlet.id, label: "=cmd|x", qrToken: null } });
+    await tableQr.regenerateAll(ctx, outlet.id, {});
+    const zip = await tableQr.outletZip(ctx, outlet.id);
+    const csv = unzipSync(zip.body)["etiketler.csv"];
+    expect(Array.from(csv.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+    expect(new TextDecoder().decode(csv)).toContain("\n'=cmd|x,");
+  });
+});
+
+describe("masa varlık oracle'ı yok", () => {
+  it("R-FBM: başka otelin masası ile var olmayan id aynı hata kodunu alır", async () => {
+    const ctx = await fbm(); // MR
+    const other = await testDb.outlet.create({
+      data: { hotelId: await hotelId("MRP"), name: "Başka Bar", type: "BAR", hasMenu: true },
+    });
+    const [foreign] = await newTables(other.id, 1);
+    const codes: string[] = [];
+    for (const id of [foreign.id, "yok-boyle-bir-masa"]) {
+      for (const call of [() => tableQr.regenerate(ctx, id), () => tableQr.download(ctx, id, "svg")]) {
+        codes.push(await call().then(() => "OK", (e: { code?: string }) => e.code ?? "?"));
+      }
+    }
+    expect(new Set(codes).size).toBe(1);
+    expect(codes[0]).not.toBe("OK");
+  });
+});

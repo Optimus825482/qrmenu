@@ -11,7 +11,8 @@ export type NoneReason =
   | "OUTLET_PASIF"
   | "OTEL_PASIF"
   | "MENU_KAPALI"
-  | "RATE_LIMITED";
+  | "RATE_LIMITED"
+  | "HATA";
 
 export type GuestTarget =
   | { kind: "TABLE"; table: { id: string; label: string }; state: GuestState }
@@ -105,30 +106,35 @@ export async function resolveGuestToken(token: string, meta: GuestMeta): Promise
     return await resolve(token, meta, true);
   } catch (error) {
     console.error("[guest token]", error);
-    return none("BILINMEYEN");
+    return none("HATA");
   }
 }
 
 /** Unknown tokens per IP: 60 per minute. */
 export const unknownTokenLimiter: RateLimiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+/** Backstop across all IPs (the IP is spoofable behind a misconfigured proxy): 600 per minute. */
+export const globalUnknownTokenLimiter: RateLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+const GLOBAL_KEY = "*";
 
-/** `resolveGuestToken` with the per-IP unknown-token limit; refused attempts are not logged. */
+/**
+ * `resolveGuestToken` with the unknown-token limits. An IP (or the whole service) already over the
+ * limit gets `RATE_LIMITED` without any lookup; every `BILINMEYEN` result counts; refused
+ * attempts are not logged.
+ */
 export async function resolveGuestTokenLimited(
   token: string,
   meta: GuestMeta,
   limiter: RateLimiter = unknownTokenLimiter,
+  globalLimiter: RateLimiter = globalUnknownTokenLimiter,
 ): Promise<GuestTarget> {
-  try {
-    const blocked = !limiter.peek(meta.ip).allowed;
-    const result = await resolve(token, meta, !blocked);
-    if (result.kind === "NONE" && result.reason === "BILINMEYEN" && !limiter.hit(meta.ip).allowed) {
-      return none("RATE_LIMITED");
-    }
-    return result;
-  } catch (error) {
-    console.error("[guest token]", error);
-    return none("BILINMEYEN");
+  if (!limiter.peek(meta.ip).allowed || !globalLimiter.peek(GLOBAL_KEY).allowed) return none("RATE_LIMITED");
+  const result = await resolveGuestToken(token, meta);
+  if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
+    const perIp = limiter.hit(meta.ip);
+    const global = globalLimiter.hit(GLOBAL_KEY);
+    if (!perIp.allowed || !global.allowed) return none("RATE_LIMITED");
   }
+  return result;
 }
 
 /** Meta for a request: client IP (x-forwarded-for) and user agent. */

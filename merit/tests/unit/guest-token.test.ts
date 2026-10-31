@@ -112,8 +112,23 @@ describe("resolveGuestToken", () => {
   });
 });
 
+describe("resolveGuestToken iç hata", () => {
+  it("DB hatasında NONE/HATA döner, tarama logu yazmaz", async () => {
+    const spy = vi.spyOn(testDb.outletTable, "findUnique").mockRejectedValueOnce(new Error("db down"));
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect(await resolveGuestToken("gecerli-bicim", meta)).toEqual({ kind: "NONE", reason: "HATA" });
+      expect(err).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+      err.mockRestore();
+    }
+    expect(await testDb.qrScanLog.count()).toBe(0);
+  });
+});
+
 describe("resolveGuestTokenLimited", () => {
-  it("bilinmeyen 61. deneme aynı IP: RATE_LIMITED; başka IP ve geçerli token etkilenmez", async () => {
+  it("bilinmeyen 61. deneme aynı IP: RATE_LIMITED; başka IP (geçerli token dahil) etkilenmez", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
     for (let i = 0; i < 60; i++) {
       expect(await resolveGuestTokenLimited(`yok-${i}`, meta, limiter)).toEqual({
@@ -130,6 +145,39 @@ describe("resolveGuestTokenLimited", () => {
       reason: "BILINMEYEN",
     });
     const { token } = await tableFixture();
-    expect((await resolveGuestTokenLimited(token, meta, limiter)).kind).toBe("TABLE");
+    expect((await resolveGuestTokenLimited(token, { ...meta, ip: "10.8.8.8" }, limiter)).kind).toBe("TABLE");
+  });
+
+  it("sınırı aşan IP için çözümleme (DB sorgusu) yapılmaz; biçimsiz token da sayılır", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+    for (let i = 0; i < 59; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter);
+    expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter)).toMatchObject({
+      reason: "BILINMEYEN",
+    }); // 60th, malformed: still counted
+    const find = vi.spyOn(testDb.outletTable, "findUnique");
+    try {
+      expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter)).toEqual({
+        kind: "NONE",
+        reason: "RATE_LIMITED",
+      });
+      expect(find).not.toHaveBeenCalled();
+    } finally {
+      find.mockRestore();
+    }
+  });
+
+  it("global yedek: 600/dk sonrası farklı IP'ler de RATE_LIMITED; geçerli token etkilenmez", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 5, windowMs: 60_000 });
+    for (let i = 0; i < 5; i++) {
+      expect(
+        await resolveGuestTokenLimited(`yok-${i}`, { ...meta, ip: `10.2.0.${i}` }, limiter, globalLimiter),
+      ).toMatchObject({ reason: "BILINMEYEN" });
+    }
+    expect(await resolveGuestTokenLimited("yok-x", { ...meta, ip: "10.2.1.1" }, limiter, globalLimiter)).toEqual({
+      kind: "NONE",
+      reason: "RATE_LIMITED",
+    });
   });
 });

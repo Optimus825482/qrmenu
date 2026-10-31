@@ -1,3 +1,5 @@
+import { env } from "@/lib/env";
+
 export type RateLimitResult = { allowed: boolean; remaining: number; retryAfterSec: number };
 export type RateLimitEntry = { count: number; resetAt: number };
 
@@ -73,7 +75,15 @@ export function createRateLimiter(opts: {
   };
 }
 
-/** First `x-forwarded-for` value; "unknown" when absent. The header is spoofable: best-effort only. */
+/**
+ * Client IP behind `env.TRUSTED_PROXY_HOPS` trusted proxies (default 1): the entry at position
+ * (length - hops) of `x-forwarded-for`, counted from the right, i.e. what OUR proxy appended. The
+ * left-hand entries are client-supplied and spoofable. Fewer entries than hops or no header:
+ * `x-real-ip`, then "unknown".
+ */
 export function clientIp(headers: Headers): string {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const hops = env.TRUSTED_PROXY_HOPS;
+  const parts = (headers.get("x-forwarded-for") ?? "").split(",").map((p) => p.trim());
+  const entry = parts.length >= hops ? parts[parts.length - hops] : "";
+  return entry || headers.get("x-real-ip")?.trim() || "unknown";
 }

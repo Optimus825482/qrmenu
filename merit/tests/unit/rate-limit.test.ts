@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { env } from "@/lib/env";
 import { clientIp, createRateLimiter } from "@/lib/rate-limit";
 
 describe("createRateLimiter", () => {
@@ -70,10 +71,22 @@ describe("createRateLimiter", () => {
 });
 
 describe("clientIp", () => {
-  it("x-forwarded-for ilk değerini döner", () => {
-    expect(clientIp(new Headers({ "x-forwarded-for": "1.1.1.1, 2.2.2.2" }))).toBe("1.1.1.1");
+  const ip = (headers: Record<string, string>) => clientIp(new Headers(headers));
+  it("x-forwarded-for sağdan 1. girişi (nginx'in eklediği) döner", () => {
+    expect(ip({ "x-forwarded-for": "1.1.1.1, 2.2.2.2" })).toBe("2.2.2.2");
+    expect(ip({ "x-forwarded-for": "3.3.3.3" })).toBe("3.3.3.3");
   });
-  it("başlık yoksa unknown", () => {
-    expect(clientIp(new Headers())).toBe("unknown");
+  it("TRUSTED_PROXY_HOPS=2: sağdan 2. giriş", () => {
+    env.TRUSTED_PROXY_HOPS = 2;
+    try {
+      expect(ip({ "x-forwarded-for": "9.9.9.9, 1.1.1.1, 2.2.2.2" })).toBe("1.1.1.1");
+      expect(ip({ "x-forwarded-for": "2.2.2.2", "x-real-ip": "5.5.5.5" })).toBe("5.5.5.5"); // fewer entries than hops
+    } finally {
+      env.TRUSTED_PROXY_HOPS = 1;
+    }
+  });
+  it("başlık yoksa x-real-ip, o da yoksa unknown", () => {
+    expect(ip({ "x-real-ip": "4.4.4.4" })).toBe("4.4.4.4");
+    expect(ip({})).toBe("unknown");
   });
 });

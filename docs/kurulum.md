@@ -152,6 +152,10 @@ Uygulama düz HTTP dinler; HTTPS vekilde sonlanır. Aşağıdaki örnekteki iki 
   bu başlıktan okur. İstemcinin gönderdiği `X-Forwarded-For` değerinin **üzerine
   yazılmalıdır** (`$proxy_add_x_forwarded_for` kullanmayın); aksi halde saldırgan
   sahte IP ile sınırı aşabilir.
+  Uygulama `X-Forwarded-For` listesinin **sağdan** `TRUSTED_PROXY_HOPS`. girişini (varsayılan 1:
+  yalnız nginx) istemci IP'si sayar; nginx'in önünde ek bir güvenilir vekil (CDN vb.) varsa
+  `$proxy_add_x_forwarded_for` kullanın ve `.env` içinde `TRUSTED_PROXY_HOPS` değerini vekil
+  sayısına yükseltin.
 - SSE ayarları: `proxy_buffering off;` ve `proxy_read_timeout 1h;` — olay akışı
   tamponlanmamalı ve uzun süre açık kalabilmelidir.
 
