@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 21:05",
-  headline: "P5 T1–T3 tamam; T4 (menü/tema pencereleri) uygulanıyor. Tüm alt proje planları yazıldı.",
+  updatedAt: "31.10.2026 21:31",
+  headline: "P5 T1–T4 tamam (592 birim testi); T5 masa QR uygulanıyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -156,6 +156,7 @@ window.ILERLEME = {
     { at: "31.10 20:08", text: "P1 main'e birleştirildi (fast-forward, 38 commit)." },
     { at: "31.10 20:12", text: "P5 QR Menü ve Sipariş uygulaması başladı (dal p5/qr-menu); T1 uygulanıyor." },
     { at: "31.10 20:35", text: "P5 T1 onaylandı (6bf287e + e22bbdb). P2, P3, P4, P6, P7, P8 planları yazıldı; tutarlılık turu sürüyor." },
-    { at: "31.10 21:05", text: "P5 T2 ve T3 onaylandı (64707b6, ccf8b54+9efbbfd); planlar tutarlılık turuyla commit edildi (4d4ff5a). T4 başladı." }
+    { at: "31.10 21:05", text: "P5 T2 ve T3 onaylandı (64707b6, ccf8b54+9efbbfd); planlar tutarlılık turuyla commit edildi (4d4ff5a). T4 başladı." },
+    { at: "31.10 21:31", text: "P5 T4 menü/tema pencereleri onaylandı (a3eba49); T3 yarış düzeltmeleri (3edac89). T5 başladı." }
   ]
 };
