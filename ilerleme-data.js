@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 20:35",
-  headline: "P5 T1 tamam, T2 uygulanıyor; P2–P8 planları yazıldı (tutarlılık turu sürüyor).",
+  updatedAt: "31.10.2026 21:05",
+  headline: "P5 T1–T3 tamam; T4 (menü/tema pencereleri) uygulanıyor. Tüm alt proje planları yazıldı.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -96,8 +96,8 @@ window.ILERLEME = {
       summary: "Menü ağacı, tema, masa QR, fiyat göster/gizle, sipariş → onay → KDS + yazıcı",
       tasks: [
         { title: "T1 Migration 0005, tema seed'i, QR token/hız sınırı/yükleme kütüphaneleri", status: "done", doneAt: "31.10 20:34" },
-        { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "pending" },
-        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "active" },
+        { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "active" },
+        { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "done", doneAt: "31.10 20:42" },
         { title: "Misafir menü, sepet, sipariş durumu, garson çağırma (T6–T8)", status: "pending" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
@@ -155,6 +155,7 @@ window.ILERLEME = {
     { at: "31.10 20:00", text: "P1 dal sonu incelemesi (Opus) ve iki düzeltme turu tamamlandı (3a322e6, ed81bec). Birleştirme onayı bekleniyor." },
     { at: "31.10 20:08", text: "P1 main'e birleştirildi (fast-forward, 38 commit)." },
     { at: "31.10 20:12", text: "P5 QR Menü ve Sipariş uygulaması başladı (dal p5/qr-menu); T1 uygulanıyor." },
-    { at: "31.10 20:35", text: "P5 T1 onaylandı (6bf287e + e22bbdb). P2, P3, P4, P6, P7, P8 planları yazıldı; tutarlılık turu sürüyor." }
+    { at: "31.10 20:35", text: "P5 T1 onaylandı (6bf287e + e22bbdb). P2, P3, P4, P6, P7, P8 planları yazıldı; tutarlılık turu sürüyor." },
+    { at: "31.10 21:05", text: "P5 T2 ve T3 onaylandı (64707b6, ccf8b54+9efbbfd); planlar tutarlılık turuyla commit edildi (4d4ff5a). T4 başladı." }
   ]
 };
