@@ -3,7 +3,8 @@ import type { SessionData } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { DomainError, safeAction, type Result } from "@/lib/result";
-import { createSession, sessionSetting } from "./sessions";
+import { getSetting } from "@/lib/settings";
+import { createSession } from "./sessions";
 import { listTargets, type Target } from "./targets";
 
 /**
@@ -164,7 +165,7 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
   });
 
   const targets = await listTargets(user.id);
-  const auto = await sessionSetting<boolean>("session.singleTargetAuto");
+  const auto = await getSetting("session.singleTargetAuto");
   if (targets.length === 1 && auto) {
     const next = await startSession(user.id, targets[0], input, deps);
     return { next, targets };

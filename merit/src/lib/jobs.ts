@@ -1,9 +1,9 @@
 import { PgBoss } from "pg-boss";
 import { env } from "@/lib/env";
+import { getSetting } from "@/lib/settings";
 import { TZ } from "@/lib/time";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
-import { sessionSetting } from "@/modules/core/server/sessions";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 
@@ -46,8 +46,8 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(SESSION_SWEEP_QUEUE, async () => {
       // work() hands over an array of jobs; a sweep covers every open session, so one run is enough.
       await sweepSessions(new Date(), {
-        warnMinutes: await sessionSetting<number>("session.warnBeforeMinutes"),
-        idleMinutes: await sessionSetting<number>("session.idleMinutes"),
+        warnMinutes: await getSetting("session.warnBeforeMinutes"),
+        idleMinutes: await getSetting("session.idleMinutes"),
         notifier: sessionWarnNotifier,
       });
     });

@@ -1,5 +1,6 @@
 import { pbkdf2Sync } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import type { MeritEvent } from "@/lib/realtime-events";
 import { testDb } from "../helpers/db";
 import {
   addMember,
@@ -11,6 +12,11 @@ import {
   resetTestData,
 } from "../helpers/fixtures";
 
+// The SSE listener and the publisher must talk to the test database, not the dev one.
+vi.mock("@/lib/env", async (importActual) => {
+  const actual = await importActual<typeof import("@/lib/env")>();
+  return { env: { ...actual.env, DATABASE_URL: process.env.DATABASE_URL_TEST! } };
+});
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 
 const { createSession, touchSession, closeSession } = await import(
@@ -20,6 +26,7 @@ const { performLogin, performSelectTarget, resetRateLimit, __rateLimitInternals 
   "@/modules/core/server/login"
 );
 const { hashPassword } = await import("@/lib/password");
+const { startRealtimeListener, stopRealtimeListener, subscribe } = await import("@/lib/realtime");
 
 const PASSWORD = "Parola1!";
 let passwordHash: string;
@@ -31,12 +38,14 @@ async function newSession(userId: string, hotel: string, roleId: string) {
 beforeAll(async () => {
   await resetReferenceData();
   passwordHash = await hashPassword(PASSWORD);
+  await startRealtimeListener();
 });
 beforeEach(async () => {
   await resetTestData();
   resetRateLimit();
 });
 afterAll(async () => {
+  await stopRealtimeListener();
   await dropReferenceData();
   await testDb.$disconnect();
 });
@@ -57,6 +66,27 @@ describe("createSession / closeSession (gerçek test DB)", () => {
 
     const events = await testDb.sessionEvent.findMany({ where: { sessionId: first.id } });
     expect(events.map((e) => e.event).sort()).toEqual(["LOGIN", "LOGOUT"]);
+  });
+
+  it("tek cihaz kapatması kapatılan oturum için session.closed yayınlar", async () => {
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
+    const first = await newSession(user.id, "MR", user.roleId);
+    const received: MeritEvent[] = [];
+    const off = subscribe(
+      (e) => e.type === "session.closed",
+      (e) => received.push(e),
+    );
+    try {
+      await newSession(user.id, "MR", user.roleId);
+      await vi.waitFor(() => expect(received).toHaveLength(1), { timeout: 2000 });
+      expect(received[0]).toMatchObject({
+        type: "session.closed",
+        userIds: [user.id],
+        payload: { sessionId: first.id },
+      });
+    } finally {
+      off();
+    }
   });
 
   it("başka kullanıcının oturumuna dokunmaz", async () => {

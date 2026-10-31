@@ -1,18 +1,17 @@
-import type { LogoutReason, SessionStatus, UserSession } from "@/generated/prisma/client";
+import type {
+  LogoutReason,
+  Prisma,
+  SessionStatus,
+  UserSession,
+} from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
-// Interim source of the session.* settings; Task 9 replaces sessionSetting() with the real service.
-import { DEFAULT_SETTINGS } from "../../../../prisma/seed/settings";
+import { getSetting } from "@/lib/settings";
 import { audit } from "./audit";
 
 const ACTIVE_STATUSES: SessionStatus[] = ["ONLINE", "UYARI"];
 const MINUTE_MS = 60_000;
-
-/** The single place the session.* settings are read from (swapped for getSetting in Task 9). */
-export async function sessionSetting<T extends number | boolean>(key: string): Promise<T> {
-  return DEFAULT_SETTINGS[key] as T;
-}
 
 export type CreateSessionInput = {
   userId: string;
@@ -25,11 +24,15 @@ export type CreateSessionInput = {
 };
 
 /** The role's own limit, else the Minibar or general setting. */
-async function maxOnlineMinutes(role: { kind: string; maxOnlineMinutes: number | null }) {
+async function maxOnlineMinutes(
+  role: { kind: string; maxOnlineMinutes: number | null },
+  hotelId: string,
+) {
   if (role.maxOnlineMinutes != null) return role.maxOnlineMinutes;
-  return role.kind === "MINIBAR"
-    ? sessionSetting<number>("session.minibarMaxOnlineMinutes")
-    : sessionSetting<number>("session.maxOnlineMinutes");
+  return getSetting(
+    role.kind === "MINIBAR" ? "session.minibarMaxOnlineMinutes" : "session.maxOnlineMinutes",
+    hotelId,
+  );
 }
 
 /**
@@ -40,8 +43,8 @@ async function maxOnlineMinutes(role: { kind: string; maxOnlineMinutes: number |
 export async function createSession(input: CreateSessionInput): Promise<UserSession> {
   const role = await prisma.role.findUnique({ where: { id: input.roleId } });
   if (!role) throw new DomainError("NOT_FOUND", "Rol bulunamadı");
-  const minutes = await maxOnlineMinutes(role);
-  const singleDevice = await sessionSetting<boolean>("session.singleDevice");
+  const minutes = await maxOnlineMinutes(role, input.hotelId);
+  const singleDevice = await getSetting("session.singleDevice", input.hotelId);
 
   return prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<{ id: string }[]>`
@@ -53,31 +56,10 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
     if (singleDevice) {
       const open = await tx.userSession.findMany({
         where: { userId: input.userId, status: { in: ACTIVE_STATUSES } },
-        select: { id: true, hotelId: true },
+        select: { id: true },
       });
-      if (open.length > 0) {
-        await tx.userSession.updateMany({
-          where: { id: { in: open.map((s) => s.id) } },
-          data: { status: "CIKTI", logoutReason: "TEK_CIHAZ", logoutAt: now },
-        });
-        await tx.sessionEvent.createMany({
-          data: open.map((s) => ({
-            sessionId: s.id,
-            event: "LOGOUT",
-            detail: { reason: "TEK_CIHAZ" },
-          })),
-        });
-        for (const s of open) {
-          await audit(tx, {
-            userId: input.userId,
-            hotelId: s.hotelId,
-            action: "LOGOUT",
-            entity: "UserSession",
-            entityId: s.id,
-            after: { reason: "TEK_CIHAZ" },
-            ip: input.ip,
-          });
-        }
+      for (const { id } of open) {
+        await closeSessionInTx(tx, id, "TEK_CIHAZ", undefined, input.ip);
       }
     }
 
@@ -129,36 +111,50 @@ export async function closeSession(
   reason: LogoutReason,
   byUserId?: string,
 ): Promise<void> {
-  const forced = reason === "ZORUNLU";
-  await prisma.$transaction(async (tx) => {
-    const { count } = await tx.userSession.updateMany({
-      where: { id, status: { in: ACTIVE_STATUSES } },
-      data: { status: "CIKTI", logoutReason: reason, logoutAt: new Date() },
-    });
-    if (count === 0) return;
+  await prisma.$transaction((tx) => closeSessionInTx(tx, id, reason, byUserId));
+}
 
-    const session = await tx.userSession.findUniqueOrThrow({ where: { id } });
-    const event = forced ? "FORCE_LOGOUT" : "LOGOUT";
-    await tx.sessionEvent.create({
-      data: { sessionId: id, event, detail: { reason, byUserId: byUserId ?? null } },
-    });
-    await audit(tx, {
-      userId: byUserId ?? session.userId,
-      hotelId: session.hotelId,
-      action: event,
-      entity: "UserSession",
-      entityId: id,
-      after: { reason, sessionUserId: session.userId },
-    });
-    // Ends this session's SSE stream (on commit); the user's other sessions are unaffected.
-    await publish(
-      {
-        type: "session.closed",
-        userIds: [session.userId],
-        hotelId: session.hotelId,
-        payload: { sessionId: id },
-      },
-      tx,
-    );
+/**
+ * The close itself, inside the caller's transaction: status, SessionEvent, audit and the
+ * `session.closed` event (delivered on commit). Shared by closeSession and the single-device
+ * displacement in createSession. Returns false when the session was not open (no-op).
+ */
+async function closeSessionInTx(
+  tx: Prisma.TransactionClient,
+  id: string,
+  reason: LogoutReason,
+  byUserId?: string,
+  ip?: string,
+): Promise<boolean> {
+  const { count } = await tx.userSession.updateMany({
+    where: { id, status: { in: ACTIVE_STATUSES } },
+    data: { status: "CIKTI", logoutReason: reason, logoutAt: new Date() },
   });
+  if (count === 0) return false;
+
+  const session = await tx.userSession.findUniqueOrThrow({ where: { id } });
+  const event = reason === "ZORUNLU" ? "FORCE_LOGOUT" : "LOGOUT";
+  await tx.sessionEvent.create({
+    data: { sessionId: id, event, detail: { reason, byUserId: byUserId ?? null } },
+  });
+  await audit(tx, {
+    userId: byUserId ?? session.userId,
+    hotelId: session.hotelId,
+    action: event,
+    entity: "UserSession",
+    entityId: id,
+    after: { reason, sessionUserId: session.userId },
+    ip,
+  });
+  // Ends this session's SSE stream (on commit); the user's other sessions are unaffected.
+  await publish(
+    {
+      type: "session.closed",
+      userIds: [session.userId],
+      hotelId: session.hotelId,
+      payload: { sessionId: id },
+    },
+    tx,
+  );
+  return true;
 }

@@ -5,7 +5,7 @@ import { type PrismaClient } from "@/generated/prisma/client";
 import { SCREENS } from "@/modules/core/screens";
 import { HOTEL_MODULES, HOTELS, ROOM_SERVICE_OUTLET } from "./seed/hotels";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
-import { DEFAULT_SETTINGS } from "./seed/settings";
+import { DEFAULT_SETTINGS } from "../src/lib/settings-defs";
 
 const MIN_ADMIN_PASSWORD_LENGTH = 10;
 const BCRYPT_ROUNDS = 12;

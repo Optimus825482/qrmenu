@@ -5,7 +5,8 @@ import type { RoleKind, SessionStatus } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
-import { closeSession, sessionSetting, touchSession } from "@/modules/core/server/sessions";
+import { getSetting } from "@/lib/settings";
+import { closeSession, touchSession } from "@/modules/core/server/sessions";
 import { hotelScope } from "@/modules/core/server/targets";
 
 export const SESSION_COOKIE_NAME = "merit_session";
@@ -103,7 +104,7 @@ async function loadCtx(): Promise<Ctx> {
     throw unauthorized();
   }
   // Idle enforcement must not depend on the sweeper job alone: check it before lastSeenAt is touched.
-  const idleMinutes = await sessionSetting<number>("session.idleMinutes");
+  const idleMinutes = await getSetting("session.idleMinutes", session.hotelId);
   if (now.getTime() - session.lastSeenAt.getTime() >= idleMinutes * 60_000) {
     await closeSession(session.id, "HAREKETSIZLIK");
     throw unauthorized();
