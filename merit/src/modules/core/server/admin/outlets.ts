@@ -2,6 +2,7 @@ import { z } from "zod";
 import { OutletType, PriceDisplay, type Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 import { assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
@@ -196,6 +197,24 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
 }
 
 /** Replaces the editable fields; the hotel can never change. */
+/** Guest pages follow the outlet's price and ordering switches at once, whichever panel changed them. */
+async function publishSwitchChanges(
+  tx: Prisma.TransactionClient,
+  before: OutletRow,
+  after: OutletRow,
+): Promise<void> {
+  const { hotelId, id: outletId } = after;
+  if (before.priceDisplay !== after.priceDisplay) {
+    await publish({ type: "price.display", hotelId, outletId }, tx);
+  }
+  if (before.orderingEnabled !== after.orderingEnabled || before.hasOrdering !== after.hasOrdering) {
+    await publish(
+      { type: "ordering.changed", hotelId, outletId, payload: { enabled: after.orderingEnabled } },
+      tx,
+    );
+  }
+}
+
 export async function update(
   ctx: Ctx,
   hotelId: string,
@@ -235,6 +254,7 @@ export async function update(
         after: row,
       });
       await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
+      await publishSwitchChanges(tx, toRow(before), row);
       return row;
     });
   } catch (error) {
@@ -270,6 +290,7 @@ async function patchById(
       after: row,
     });
     await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
+    await publishSwitchChanges(tx, before, row);
     return row;
   });
 }

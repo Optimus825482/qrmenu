@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Menu images are uploaded through a Server Action (up to 2 MB + form overhead).
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   turbopack: {
     rules: {
       "*.css": {

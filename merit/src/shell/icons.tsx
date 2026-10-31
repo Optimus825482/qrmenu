@@ -99,6 +99,50 @@ const GLYPHS: Record<string, ReactNode> = {
       <rect className="xi-light" x="9" y="20" width="9" height="2" />
     </>
   ),
+  // Menu card with a fork: Menü Yönetimi.
+  menu: (
+    <>
+      <rect className="xi-paper" x="5" y="3" width="22" height="26" rx="2" />
+      <rect className="xi-gold" x="5" y="3" width="22" height="6" rx="2" />
+      <rect className="xi-light" x="9" y="13" width="14" height="2" />
+      <rect className="xi-light" x="9" y="18" width="10" height="2" />
+      <rect className="xi-light" x="9" y="23" width="12" height="2" />
+    </>
+  ),
+  // Palette: Tema Yönetimi.
+  tema: (
+    <>
+      <path className="xi-gold" d="M16 3C8 3 2.5 8.5 2.5 15.5S8 28 14 28c3 0 2.5-3 4-4 2-1.4 5.5 0 8-2.5C29 19 29.5 3 16 3z" />
+      <circle className="xi-red" cx="9" cy="13" r="2.5" />
+      <circle className="xi-green" cx="15" cy="9" r="2.5" />
+      <circle className="xi-blue" cx="21.5" cy="12" r="2.5" />
+    </>
+  ),
+  // QR code: Masa QR Kodları.
+  qr: (
+    <>
+      <rect className="xi-paper" x="3" y="3" width="26" height="26" rx="2" />
+      <rect className="xi-frame" x="6" y="6" width="8" height="8" />
+      <rect className="xi-paper" x="8" y="8" width="4" height="4" />
+      <rect className="xi-frame" x="18" y="6" width="8" height="8" />
+      <rect className="xi-paper" x="20" y="8" width="4" height="4" />
+      <rect className="xi-frame" x="6" y="18" width="8" height="8" />
+      <rect className="xi-paper" x="8" y="20" width="4" height="4" />
+      <rect className="xi-frame" x="18" y="18" width="3" height="3" />
+      <rect className="xi-frame" x="23" y="23" width="3" height="3" />
+    </>
+  ),
+  // Printer: Yazıcılar.
+  yazici: (
+    <>
+      <rect className="xi-paper" x="9" y="3" width="14" height="8" />
+      <rect className="xi-gray" x="3" y="10" width="26" height="12" rx="2" />
+      <rect className="xi-paper" x="9" y="18" width="14" height="10" />
+      <rect className="xi-light" x="11" y="21" width="10" height="1.5" />
+      <rect className="xi-light" x="11" y="24" width="7" height="1.5" />
+      <circle className="xi-ok" cx="25" cy="14" r="1.5" />
+    </>
+  ),
   bilgi: (
     <>
       <circle className="xi-blue" cx="16" cy="16" r="13" />

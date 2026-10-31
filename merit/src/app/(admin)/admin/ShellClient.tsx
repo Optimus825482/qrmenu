@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { registerCoreApps } from "@/modules/core/apps";
+import { registerMenuApps } from "@/modules/menu/apps";
 import { fontVariables } from "@/shell/appearance";
 import { alertDialog } from "@/shell/confirm";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
@@ -21,6 +22,7 @@ import { useShellPersistence } from "@/shell/useShellPersistence";
 import { MAX_WINDOWS, useWindowStore, windowStore } from "@/shell/windowStore";
 
 registerCoreApps();
+registerMenuApps();
 
 export type ShellClientProps = {
   user: { id: string; fullName: string; roleId: string };

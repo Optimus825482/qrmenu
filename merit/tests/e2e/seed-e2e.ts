@@ -69,10 +69,35 @@ async function resetAndSeed(): Promise<void> {
     }
 
     const garson = await makeUser("garson.havuz", "R-GAR", "MR");
+    const outlets: Record<string, string> = {};
     for (const name of ["Havuz Bar", "Beach Bar"]) {
-      const outlet = await db.outlet.create({ data: { hotelId: mr, name, type: "BAR" } });
+      const outlet = await db.outlet.create({
+        data: {
+          hotelId: mr,
+          name,
+          type: "BAR",
+          // P5: the pool bar takes table orders.
+          ...(name === "Havuz Bar" ? { hasOrdering: true, orderingEnabled: true } : {}),
+        },
+      });
+      outlets[name] = outlet.id;
       await db.outletMember.create({ data: { userId: garson.id, outletId: outlet.id } });
     }
+    const pool = outlets["Havuz Bar"];
+    for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
+      await db.outletTable.create({ data: { outletId: pool, label } });
+    }
+    // P5 staff, all members of Havuz Bar: cashier, kitchen display operator, head waiter.
+    for (const [username, roleCode] of [
+      ["kasa.havuz", "R-KAS"],
+      ["kds.havuz", "R-KDS"],
+      ["sef.havuz", "R-SGF"],
+    ] as const) {
+      const staff = await makeUser(username, roleCode, "MR");
+      await db.outletMember.create({ data: { userId: staff.id, outletId: pool } });
+    }
+    // F&B manager of the MR hotel (QR menu / order management).
+    await makeUser("fbm.mr", "R-FBM", "MR");
 
     await makeUser("bos.kullanici", "R-OUT", "MR");
     // Management role without the system screens (CR-SYS): sees Komuta Merkezi only.

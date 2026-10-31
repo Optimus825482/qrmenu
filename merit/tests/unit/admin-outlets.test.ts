@@ -56,6 +56,24 @@ const BAR = {
 } as const;
 
 describe("outlets: CRUD", () => {
+  it("fiyat gösterimi ve sipariş anahtarı değişince price.display / ordering.changed yayınlar", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("MR");
+    const bar = await outlets.create(ctx, mr, BAR);
+    publishMock.mockReset();
+    await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW" });
+    expect(publishMock.mock.calls.map((c) => c[0].type)).toContain("price.display");
+    expect(publishMock.mock.calls.map((c) => c[0].type)).not.toContain("ordering.changed");
+    publishMock.mockReset();
+    await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW", orderingEnabled: false });
+    expect(publishMock.mock.calls.map((c) => c[0].type)).toContain("ordering.changed");
+    publishMock.mockReset();
+    await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW", orderingEnabled: false, name: "Yeni Ad" });
+    const types = publishMock.mock.calls.map((c) => c[0].type);
+    expect(types).not.toContain("price.display");
+    expect(types).not.toContain("ordering.changed");
+  });
+
   it("oluşturur, günceller, aktifliği ve sipariş anahtarını değiştirir, siler; her yazma audit + definition.changed bırakır", async () => {
     const ctx = await sys();
     const mr = await hotelId("MR");
