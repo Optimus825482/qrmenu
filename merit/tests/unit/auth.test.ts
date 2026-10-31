@@ -109,29 +109,46 @@ describe("requireUser (gerçek test DB)", () => {
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
-  it("kapatılmış, süresi dolmuş oturum; pasif kullanıcı; pasif otel → UNAUTHORIZED", async () => {
-    const { user, session } = await login();
+  it("süresi dolmuş oturum UNAUTHORIZED döner (kapatma süpürücünün işi, burada ONLINE kalır)", async () => {
+    const { session } = await login();
     await testDb.userSession.update({
       where: { id: session.id },
       data: { expiresAt: new Date(Date.now() - 1000) },
     });
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect((await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).status).toBe(
+      "ONLINE",
+    );
+  });
 
-    await testDb.userSession.update({
-      where: { id: session.id },
-      data: { expiresAt: new Date(Date.now() + 3600_000) },
-    });
+  it("kapatılmış oturum UNAUTHORIZED döner", async () => {
+    const { session } = await login();
+    await expect(requireUser()).resolves.toBeDefined();
+    await closeSession(session.id, "MANUEL");
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("pasif kullanıcı: oturum CIKTI/SISTEM olur, yeniden etkinleştirmek çerezi canlandırmaz", async () => {
+    const { user, session } = await login();
     await expect(requireUser()).resolves.toBeDefined();
 
     await testDb.user.update({ where: { id: user.id }, data: { isActive: false } });
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    await testDb.user.update({ where: { id: user.id }, data: { isActive: true } });
+    const row = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(row).toMatchObject({ status: "CIKTI", logoutReason: "SISTEM" });
 
+    await testDb.user.update({ where: { id: user.id }, data: { isActive: true } });
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("pasif otel: oturum CIKTI/SISTEM olur, yeniden etkinleştirmek çerezi canlandırmaz", async () => {
+    const { session } = await login();
     await testDb.hotel.update({ where: { id: session.hotelId }, data: { isActive: false } });
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
-    await testDb.hotel.update({ where: { id: session.hotelId }, data: { isActive: true } });
+    const row = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(row).toMatchObject({ status: "CIKTI", logoutReason: "SISTEM" });
 
-    await closeSession(session.id, "MANUEL");
+    await testDb.hotel.update({ where: { id: session.hotelId }, data: { isActive: true } });
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
@@ -201,6 +218,15 @@ describe("requireUser oturum yetkisini yeniden doğrular (gerçek test DB)", () 
     await expect(requireUser()).resolves.toMatchObject({ user: { roleCode: "R-SGF" } });
 
     await testDb.outletMember.update({ where: { id: member.id }, data: { roleId: null } });
+    await expectClosedBySystem(session.id);
+  });
+
+  it("temel rolle açılmış outlet oturumu: sonradan eklenen OutletMember.roleId (R-GAR→R-OUT) oturumu kapatır", async () => {
+    const { member, session } = await outletLogin();
+    await expect(requireUser()).resolves.toMatchObject({ user: { roleCode: "R-GAR" } });
+
+    const lower = await testDb.role.findUniqueOrThrow({ where: { code: "R-OUT" } });
+    await testDb.outletMember.update({ where: { id: member.id }, data: { roleId: lower.id } });
     await expectClosedBySystem(session.id);
   });
 

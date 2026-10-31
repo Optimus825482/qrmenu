@@ -30,6 +30,19 @@ describe("hashPassword / verifyPassword", () => {
     }
   });
 
+  it("tek haneli fazla (65 karakter) veya eksik özet reddedilir", async () => {
+    const hex = pbkdf2Sync("Parola1!", "abc", 1000, 32, "sha256").toString("hex");
+    expect(await verifyPassword("Parola1!", `pbkdf2:sha256:1000$abc$${hex}`)).toMatchObject({ ok: true });
+    expect(await verifyPassword("Parola1!", `pbkdf2:sha256:1000$abc$${hex}0`)).toEqual({
+      ok: false,
+      needsRehash: false,
+    });
+    expect(await verifyPassword("Parola1!", `pbkdf2:sha256:1000$abc$${hex.slice(0, 62)}`)).toEqual({
+      ok: false,
+      needsRehash: false,
+    });
+  });
+
   it("tanınmayan biçim ok:false döner (istisna yok)", async () => {
     expect(await verifyPassword("x", "md5$x$y")).toEqual({ ok: false, needsRehash: false });
     expect(await verifyPassword("x", "$2b$bozuk")).toEqual({ ok: false, needsRehash: false });

@@ -28,10 +28,10 @@ async function verifyWerkzeug(plain: string, stored: string): Promise<boolean> {
   if (!Number.isInteger(iterations) || iterations < 1 || iterations > PBKDF2_MAX_ITERATIONS) {
     return false;
   }
-  if (!salt || !/^[0-9a-f]+$/i.test(hex)) return false;
+  // Exactly 64 hex digits; an odd-length digest would otherwise be silently truncated by Buffer.
+  if (!salt || hex.length !== PBKDF2_KEY_BYTES * 2 || !/^[0-9a-f]+$/i.test(hex)) return false;
 
   const expected = Buffer.from(hex, "hex");
-  if (expected.length !== PBKDF2_KEY_BYTES) return false;
 
   const actual = await pbkdf2Async(plain, salt, iterations, PBKDF2_KEY_BYTES, "sha256");
   return timingSafeEqual(actual, expected);

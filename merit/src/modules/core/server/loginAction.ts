@@ -53,8 +53,12 @@ export async function selectTargetAction(targetIndex: number): Promise<Result<Se
 export async function logoutAction(): Promise<Result<null>> {
   return safeAction(z.unknown(), async () => {
     const session = await getSession();
-    if (session.sessionId) await closeSession(session.sessionId, "MANUEL");
-    session.destroy();
+    try {
+      if (session.sessionId) await closeSession(session.sessionId, "MANUEL");
+    } finally {
+      // Even if closing fails, the browser must not keep a working cookie.
+      session.destroy();
+    }
     return null;
   })(undefined);
 }

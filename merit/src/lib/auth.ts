@@ -98,10 +98,13 @@ async function loadCtx(): Promise<Ctx> {
     !session ||
     session.userId !== cookie.userId ||
     !ACTIVE_STATUSES.includes(session.status) ||
-    session.expiresAt <= now ||
-    !session.user.isActive ||
-    !session.hotel.isActive
+    session.expiresAt <= now
   ) {
+    throw unauthorized();
+  }
+  // A deactivated user or hotel ends the session for good: reactivating must not revive the cookie.
+  if (!session.user.isActive || !session.hotel.isActive) {
+    await closeSession(session.id, "SISTEM");
     throw unauthorized();
   }
 
@@ -122,8 +125,9 @@ async function loadCtx(): Promise<Ctx> {
   // An outlet session is authorized by its (active) membership even when the outlet's hotel is
   // outside User.hotelId/UserHotel; every other session must be on a hotel in scope.
   const hotelAllowed = member !== null || scope.some((h) => h.id === session.hotelId);
-  const roleAllowed =
-    session.roleId === user.roleId || (member !== null && member.roleId === session.roleId);
+  // The role the user is entitled to at this target, exactly as listTargets computes it.
+  const expectedRoleId = session.outletId ? (member?.roleId ?? user.roleId) : user.roleId;
+  const roleAllowed = session.roleId === expectedRoleId;
   const outletAllowed = !session.outletId || member !== null;
 
   if (!hotelAllowed || !roleAllowed || !outletAllowed) {

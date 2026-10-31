@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const { createSession, touchSession, closeSession } = await import(
   "@/modules/core/server/sessions"
 );
-const { performLogin, performSelectTarget, resetRateLimit } = await import(
+const { performLogin, performSelectTarget, resetRateLimit, rateLimitInternals } = await import(
   "@/modules/core/server/login"
 );
 const { hashPassword } = await import("@/lib/password");
@@ -278,6 +278,46 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     resetRateLimit();
     const after = await performLogin({ ...creds("kat.mr"), ip: "6.6.6.6" }, deps);
     expect(after.ok).toBe(true);
+  });
+
+  it("IP haritası dolunca yeni IP RATE_LIMITED (fail closed), mevcut IP etkilenmez; reset ikisini de temizler", async () => {
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    const { ipAttempts, userAttempts, maxEntries } = rateLimitInternals;
+    const live = Date.now() + 60_000;
+    for (let i = 0; i < maxEntries; i++) ipAttempts.set(`fake-${i}`, { count: 1, resetAt: live });
+    expect(ipAttempts.size).toBe(maxEntries);
+
+    const deps = makeDeps();
+    const fresh = await performLogin({ ...creds("gar1"), ip: "9.9.9.9" }, deps);
+    expect(fresh).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+    expect(deps.setCookie).not.toHaveBeenCalled();
+    expect(ipAttempts.size).toBe(maxEntries); // live entries were not evicted
+    expect(ipAttempts.has("fake-0")).toBe(true);
+
+    const existing = await performLogin({ ...creds("gar1", "yanlis"), ip: "fake-0" }, deps);
+    expect(existing).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
+    expect(ipAttempts.get("fake-0")?.count).toBe(2);
+
+    // expired entries are pruned first, which makes room for a new IP again
+    for (const entry of ipAttempts.values()) entry.resetAt = Date.now() - 1;
+    const afterExpiry = await performLogin({ ...creds("gar1"), ip: "9.9.9.9" }, deps);
+    expect(afterExpiry.ok).toBe(true);
+    expect(ipAttempts.size).toBe(1);
+
+    for (let i = 0; i < maxEntries; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
+    resetRateLimit();
+    expect(ipAttempts.size).toBe(0);
+    expect(userAttempts.size).toBe(0);
+  });
+
+  it("kullanıcı adı haritası dolunca yeni kullanıcı adı RATE_LIMITED", async () => {
+    const { userAttempts, maxEntries } = rateLimitInternals;
+    const live = Date.now() + 60_000;
+    for (let i = 0; i < maxEntries; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
+    const res = await performLogin(creds("yeni.kullanici"), makeDeps());
+    expect(res).toMatchObject({ ok: false, error: { code: "RATE_LIMITED" } });
+    const known = await performLogin(creds("u0"), makeDeps());
+    expect(known).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
   });
 
   it("geçersiz girdi VALIDATION döner", async () => {

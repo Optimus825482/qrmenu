@@ -25,47 +25,56 @@ const PENDING_COOKIE_TTL_SECONDS = 300;
 // --- rate limit: 5 attempts per minute per IP and per username, in memory (per instance) -------
 // The IP comes from a spoofable header, so a per-username limit backs it up: guessing one
 // account's password from rotating IPs is still capped. (Side effect: an attacker can keep one
-// username locked for a minute; accepted.)
+// username locked for a minute; accepted.) IPs and usernames live in separate maps, each capped
+// at RATE_MAX_ENTRIES. A full map first drops expired entries; if it is still full, NEW keys are
+// refused (fail closed) and live entries are never evicted.
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_ATTEMPTS = 5;
 const RATE_MAX_ENTRIES = 10_000;
 type Attempt = { count: number; resetAt: number };
-const attempts = new Map<string, Attempt>();
+type AttemptMap = Map<string, Attempt>;
+const ipAttempts: AttemptMap = new Map();
+const userAttempts: AttemptMap = new Map();
 
-function liveAttempt(key: string, now: number): Attempt | undefined {
-  const entry = attempts.get(key);
+/** Test hook: direct access to the two maps and their cap. */
+export const rateLimitInternals = { ipAttempts, userAttempts, maxEntries: RATE_MAX_ENTRIES };
+
+function liveAttempt(map: AttemptMap, key: string, now: number): Attempt | undefined {
+  const entry = map.get(key);
   return entry && entry.resetAt > now ? entry : undefined;
 }
 
-function recordAttempt(key: string, now: number): void {
-  const entry = liveAttempt(key, now);
-  if (entry) {
-    entry.count += 1;
-    return;
+function isBlocked(map: AttemptMap, key: string, now: number): boolean {
+  const entry = liveAttempt(map, key, now);
+  if (entry) return entry.count >= RATE_MAX_ATTEMPTS;
+  if (map.size >= RATE_MAX_ENTRIES) {
+    for (const [k, v] of map) if (v.resetAt <= now) map.delete(k);
+    return map.size >= RATE_MAX_ENTRIES;
   }
-  attempts.delete(key); // re-insert so Map order stays oldest-first
-  if (attempts.size >= RATE_MAX_ENTRIES) {
-    for (const [k, v] of attempts) if (v.resetAt <= now) attempts.delete(k);
-    while (attempts.size >= RATE_MAX_ENTRIES) {
-      attempts.delete(attempts.keys().next().value as string);
-    }
-  }
-  attempts.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+  return false;
+}
+
+function recordAttempt(map: AttemptMap, key: string, now: number): void {
+  const entry = liveAttempt(map, key, now);
+  if (entry) entry.count += 1;
+  else map.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
 }
 
 function consumeRateLimit(ip: string, username: string): void {
   const now = Date.now();
-  const keys = [`ip:${ip}`, `user:${username.toLowerCase()}`];
-  if (keys.some((k) => (liveAttempt(k, now)?.count ?? 0) >= RATE_MAX_ATTEMPTS)) {
+  const user = username.toLowerCase();
+  if (isBlocked(ipAttempts, ip, now) || isBlocked(userAttempts, user, now)) {
     throw new DomainError("RATE_LIMITED", "Çok fazla deneme. Bir dakika sonra tekrar deneyin.");
   }
-  for (const k of keys) recordAttempt(k, now);
+  recordAttempt(ipAttempts, ip, now);
+  recordAttempt(userAttempts, user, now);
 }
 
 /** Test helper: forgets all attempts. */
 export function resetRateLimit(): void {
-  attempts.clear();
+  ipAttempts.clear();
+  userAttempts.clear();
 }
 
 // --- helpers ------------------------------------------------------------------------------------
