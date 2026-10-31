@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { closeSession, touchSession } from "@/modules/core/server/sessions";
-import { hotelScope } from "@/modules/core/server/targets";
+import { hotelScope, outletRoleId } from "@/modules/core/server/entitlements";
 
 export const SESSION_COOKIE_NAME = "merit_session";
 
@@ -37,11 +37,17 @@ export type Ctx = {
     hotelId?: string;
   };
   session: { id: string; hotelId: string; outletId?: string };
-  /** Active hotels the user may work in (all active hotels for SISTEM roles). */
+  /**
+   * Hotels whose data this session may touch (spec §4.1 "veri görünürlüğü"): outlet and kitchen
+   * sessions only the session hotel (the outlet's); MINIBAR, YONETIM and SISTEM sessions their
+   * scope (`User.hotelId` ∪ `UserHotel`, all active hotels for SISTEM) plus the session hotel.
+   */
   hotelIds: string[];
 };
 
 const ACTIVE_STATUSES: SessionStatus[] = ["ONLINE", "UYARI"];
+/** Session role kinds whose data visibility is the session (outlet) hotel alone. */
+const SESSION_HOTEL_ONLY: RoleKind[] = ["OUTLET", "MUTFAK"];
 const TOUCH_INTERVAL_MS = 60_000;
 
 function sessionOptions(): SessionOptions {
@@ -133,7 +139,7 @@ async function loadCtx(): Promise<Ctx> {
   // outside User.hotelId/UserHotel; every other session must be on a hotel in scope.
   const hotelAllowed = member !== null || scope.some((h) => h.id === session.hotelId);
   // The role the user is entitled to at this target, exactly as listTargets computes it.
-  const expectedRoleId = session.outletId ? (member?.roleId ?? user.roleId) : user.roleId;
+  const expectedRoleId = member ? outletRoleId(member, user) : user.roleId;
   const roleAllowed = session.roleId === expectedRoleId;
   const outletAllowed = !session.outletId || member !== null;
 
@@ -146,7 +152,9 @@ async function loadCtx(): Promise<Ctx> {
     await touchSession(session.id);
   }
 
-  const hotelIds = [...new Set([...scope.map((h) => h.id), session.hotelId])];
+  const hotelIds = SESSION_HOTEL_ONLY.includes(session.role.kind)
+    ? [session.hotelId]
+    : [...new Set([...scope.map((h) => h.id), session.hotelId])];
 
   return {
     user: {

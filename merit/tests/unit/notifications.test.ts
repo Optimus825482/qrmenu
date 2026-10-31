@@ -2,9 +2,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { MeritEvent } from "@/lib/realtime-events";
 import { testDb } from "../helpers/db";
 import {
+  addMember,
   ctxFor,
   dropReferenceData,
   hotelId,
+  makeOutlet,
   makeUser,
   resetReferenceData,
   resetTestData,
@@ -91,6 +93,44 @@ describe("notify", () => {
       title: "Başlık",
       refType: "order",
     });
+  });
+
+  it("otel+rol alıcıları etkin rolü kullanır: üyelikle R-SGF olan garson alır, otelle bağı olmayan almaz", async () => {
+    const mr = await hotelId("MR");
+    const sgf = await testDb.role.findUniqueOrThrow({ where: { code: "R-SGF" } });
+    // Base role R-GAR, assigned to MRD, but works an MR outlet as R-SGF.
+    const waiter = await makeUser({ username: "gar.sef", roleCode: "R-GAR", hotelCode: "MRD" });
+    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    await testDb.outletMember.create({
+      data: { userId: waiter.id, outletId: outlet.id, roleId: sgf.id },
+    });
+    // Base role R-SGF on an MR outlet without override: entitled through the membership.
+    const chief = await makeUser({ username: "sef.mrd", roleCode: "R-SGF", hotelCode: "MRD" });
+    await addMember(chief.id, outlet.id);
+    // R-SGF with no link to MR at all, and an R-SGF whose MR membership is inactive.
+    await makeUser({ username: "sef.baska", roleCode: "R-SGF", hotelCode: "MRD" });
+    const inactive = await makeUser({ username: "sef.pasif", roleCode: "R-SGF", hotelCode: "MRD" });
+    await addMember(inactive.id, outlet.id, false);
+    // The override replaces the base role: an R-SGF demoted to R-GAR at the MR outlet is out.
+    const gar = await testDb.role.findUniqueOrThrow({ where: { code: "R-GAR" } });
+    const demoted = await makeUser({ username: "sef.dusuk", roleCode: "R-SGF", hotelCode: "MRD" });
+    await testDb.outletMember.create({
+      data: { userId: demoted.id, outletId: outlet.id, roleId: gar.id },
+    });
+
+    const count = await notify({ ...input, recipients: { hotelId: mr, roleCodes: ["R-SGF"] } });
+
+    expect(count).toBe(2);
+    const rows = await testDb.notification.findMany();
+    expect(rows.map((r) => r.userId).sort()).toEqual([waiter.id, chief.id].sort());
+    expect(rows.every((r) => r.hotelId === mr)).toBe(true);
+  });
+
+  it("usersEntitledTo: SISTEM rolü her otel için temel rolüyle hak sahibidir", async () => {
+    const { usersEntitledTo } = await import("@/modules/core/server/entitlements");
+    const sys = await makeUser({ username: "sys9", roleCode: "R-SYS" });
+    expect(await usersEntitledTo(await hotelId("MRP"), ["R-SYS"])).toEqual([sys.id]);
+    expect(await usersEntitledTo(await hotelId("MRP"), [])).toEqual([]);
   });
 
   it("açık kimlik listesi: 2 satır (tekrarlar tekilleştirilir) ve olay yalnız onlara gider", async () => {

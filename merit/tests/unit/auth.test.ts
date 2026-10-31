@@ -61,7 +61,7 @@ describe("requireUser (gerçek test DB)", () => {
     return { user, outlet, session };
   }
 
-  it("açık oturum için Ctx üretir; hotelIds kapsam ∪ oturum oteli", async () => {
+  it("açık outlet oturumu için Ctx üretir; hotelIds yalnız oturum (outlet) oteli", async () => {
     const { user, outlet, session } = await login();
     const ctx = await requireUser();
     expect(ctx.user).toMatchObject({
@@ -72,7 +72,44 @@ describe("requireUser (gerçek test DB)", () => {
       hotelId: await hotelId("MR"),
     });
     expect(ctx.session).toEqual({ id: session.id, hotelId: outlet.hotelId, outletId: outlet.id });
-    expect([...ctx.hotelIds].sort()).toEqual([await hotelId("MR"), outlet.hotelId].sort());
+    // Spec §4.1: outlet roles see the active session's outlet only, not their base hotel.
+    expect(ctx.hotelIds).toEqual([outlet.hotelId]);
+  });
+
+  it("R-GAR (temel otel MRD) MR outletinde: hotelIds = [MR]; can(…, MRD) false", async () => {
+    const { can } = await import("@/lib/rbac");
+    const user = await makeUser({ username: "gar5", roleCode: "R-GAR", hotelCode: "MRD" });
+    const outlet = await makeOutlet("MR", "Sahil Bar", "BAR");
+    await addMember(user.id, outlet.id);
+    const session = await createSession({
+      userId: user.id,
+      hotelId: outlet.hotelId,
+      outletId: outlet.id,
+      roleId: user.roleId,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-GAR" });
+    const ctx = await requireUser();
+    expect(ctx.hotelIds).toEqual([await hotelId("MR")]);
+    expect(await can(ctx, "QS-KUY", "V", await hotelId("MR"))).toBe(true);
+    expect(await can(ctx, "QS-KUY", "V", await hotelId("MRD"))).toBe(false);
+  });
+
+  it("MINIBAR oturumunda hotelIds kapsam ∪ oturum oteli kalır", async () => {
+    const user = await makeUser({
+      username: "dep5",
+      roleCode: "R-DEP",
+      hotelCode: "MR",
+      extraHotelCodes: ["MRP"],
+    });
+    const session = await createSession({
+      userId: user.id,
+      hotelId: await hotelId("MRP"),
+      roleId: user.roleId,
+    });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-DEP" });
+    expect([...(await requireUser()).hotelIds].sort()).toEqual(
+      [await hotelId("MR"), await hotelId("MRP")].sort(),
+    );
   });
 
   it("SISTEM rolünde hotelIds tüm aktif oteller", async () => {

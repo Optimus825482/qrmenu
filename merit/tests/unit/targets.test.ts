@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { testDb } from "../helpers/db";
 import {
   addMember,
@@ -141,6 +141,106 @@ describe("listTargets (gerçek test DB)", () => {
     });
     expect(await listTargets(user.id)).toEqual([]);
     expect(await listTargets("yok")).toEqual([]);
+  });
+
+  describe("modül kapıları", () => {
+    async function setHotelModule(
+      hotelCode: string,
+      moduleKey: "MINIBAR" | "QR_MENU" | "QR_ORDER" | "ROOM_SERVICE",
+      enabled: boolean,
+    ) {
+      await testDb.hotelModule.update({
+        where: { hotelId_moduleKey: { hotelId: await hotelId(hotelCode), moduleKey } },
+        data: { enabled },
+      });
+    }
+    afterEach(async () => {
+      await testDb.hotelModule.updateMany({ data: { enabled: true } });
+      await testDb.roleModuleAccess.deleteMany({ where: { hotelId: { not: null } } });
+      await testDb.roleModuleAccess.updateMany({ data: { enabled: true } });
+    });
+
+    it("HotelModule(MR, MINIBAR) kapalıysa kat.mr MINIBAR hedefi düşer", async () => {
+      const user = await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR" });
+      await setHotelModule("MR", "MINIBAR", false);
+      expect(await listTargets(user.id)).toEqual([]);
+    });
+
+    it("RoleModuleAccess otel satırı kapalıysa yalnız o otelin MINIBAR hedefi düşer", async () => {
+      const user = await makeUser({
+        username: "dep4",
+        roleCode: "R-DEP",
+        extraHotelCodes: ["MR", "MRP"],
+      });
+      await testDb.roleModuleAccess.create({
+        data: {
+          roleId: user.roleId,
+          hotelId: await hotelId("MRP"),
+          moduleKey: "MINIBAR",
+          enabled: false,
+        },
+      });
+      const targets = await listTargets(user.id);
+      expect(targets.map((t) => t.hotelName)).toEqual(["Merit Royal"]);
+    });
+
+    it("sistem geneli RoleModuleAccess(MINIBAR) kapalıysa MINIBAR hedefi yok", async () => {
+      const user = await makeUser({ username: "kat4", roleCode: "R-KAT", hotelCode: "MR" });
+      await testDb.roleModuleAccess.updateMany({
+        where: { roleId: user.roleId, hotelId: null, moduleKey: "MINIBAR" },
+        data: { enabled: false },
+      });
+      expect(await listTargets(user.id)).toEqual([]);
+    });
+
+    it("outlet hedefi: açık en az bir modül yeter; outletin tüm modülleri kapalıysa düşer", async () => {
+      const user = await makeUser({ username: "gar4", roleCode: "R-GAR", hotelCode: "MR" });
+      const outlet = await testDb.outlet.create({
+        data: {
+          hotelId: await hotelId("MR"),
+          name: "Sipariş Bar",
+          type: "BAR",
+          hasMenu: true,
+          hasOrdering: true,
+        },
+      });
+      await addMember(user.id, outlet.id);
+      await setHotelModule("MR", "QR_MENU", false);
+      expect((await listTargets(user.id)).map((t) => t.outletId)).toEqual([outlet.id]);
+      await setHotelModule("MR", "QR_ORDER", false);
+      expect(await listTargets(user.id)).toEqual([]);
+    });
+
+    it("outlet hedefi etkin rolün modül erişimine bakar (R-ODS QR_MENU outletine giremez)", async () => {
+      const user = await makeUser({ username: "ods1", roleCode: "R-ODS", hotelCode: "MR" });
+      const salon = await makeOutlet("MR", "Salon", "SALON"); // hasMenu only → QR_MENU
+      const roomService = await testDb.outlet.findFirstOrThrow({
+        where: { hotelId: await hotelId("MR"), type: "ODA_SERVISI" },
+      });
+      await addMember(user.id, salon.id);
+      await addMember(user.id, roomService.id);
+      expect((await listTargets(user.id)).map((t) => t.outletId)).toEqual([roomService.id]);
+
+      // A membership role override with QR_MENU access opens the salon.
+      const gar = await testDb.role.findUniqueOrThrow({ where: { code: "R-GAR" } });
+      await testDb.outletMember.updateMany({
+        where: { userId: user.id, outletId: salon.id },
+        data: { roleId: gar.id },
+      });
+      expect((await listTargets(user.id)).map((t) => t.outletId).sort()).toEqual(
+        [roomService.id, salon.id].sort(),
+      );
+    });
+
+    it("ODA_SERVISI outleti ROOM_SERVICE modülüne bağlıdır", async () => {
+      const user = await makeUser({ username: "ods2", roleCode: "R-ODS", hotelCode: "MR" });
+      const roomService = await testDb.outlet.findFirstOrThrow({
+        where: { hotelId: await hotelId("MR"), type: "ODA_SERVISI" },
+      });
+      await addMember(user.id, roomService.id);
+      await setHotelModule("MR", "ROOM_SERVICE", false);
+      expect(await listTargets(user.id)).toEqual([]);
+    });
   });
 
   it("OUTLET rolünde hiç üyelik yoksa boş liste", async () => {

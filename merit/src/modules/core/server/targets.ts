@@ -1,5 +1,10 @@
-import type { RoleKind } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  hotelScope,
+  loadModuleGates,
+  outletModules,
+  outletRoleId,
+} from "@/modules/core/server/entitlements";
 
 export type Target = {
   kind: "OUTLET" | "MINIBAR" | "ADMIN";
@@ -10,33 +15,13 @@ export type Target = {
   roleId: string;
 };
 
-type ScopeUser = { id: string; hotelId: string | null; role: { kind: RoleKind } };
-
-/** Active hotels a user may work in, system default hotels first. SISTEM roles see every hotel. */
-export async function hotelScope(user: ScopeUser) {
-  if (user.role.kind === "SISTEM") {
-    return prisma.hotel.findMany({
-      where: { isActive: true },
-      orderBy: [{ isSystemDefault: "desc" }, { createdAt: "asc" }, { code: "asc" }],
-    });
-  }
-  const links = await prisma.userHotel.findMany({
-    where: { userId: user.id },
-    select: { hotelId: true },
-  });
-  const ids = new Set(links.map((l) => l.hotelId));
-  if (user.hotelId) ids.add(user.hotelId);
-  return prisma.hotel.findMany({
-    where: { isActive: true, id: { in: [...ids] } },
-    orderBy: [{ isSystemDefault: "desc" }, { createdAt: "asc" }, { code: "asc" }],
-  });
-}
-
 /**
  * The places a user can start a session in: their active outlet memberships, one Minibar target
  * per hotel for MINIBAR roles, and a single admin-panel target for SISTEM/YONETIM roles.
- * Order is deterministic (ADMIN, OUTLET by hotel then outlet name, MINIBAR) because
- * selectTargetAction picks by index.
+ * Module gates apply: a MINIBAR target needs the MINIBAR module on for the hotel and open to the
+ * role; an OUTLET target needs at least one module the outlet exposes (outletModules) on for the
+ * hotel and open to the effective role. Order is deterministic (ADMIN, OUTLET by hotel then
+ * outlet name, MINIBAR) because selectTargetAction picks by index.
  */
 export async function listTargets(userId: string): Promise<Target[]> {
   const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
@@ -63,28 +48,36 @@ export async function listTargets(userId: string): Promise<Target[]> {
     include: { outlet: { include: { hotel: true } } },
     orderBy: [{ outlet: { hotel: { name: "asc" } } }, { outlet: { name: "asc" } }],
   });
+  const minibarScope = user.role.kind === "MINIBAR" ? await hotelScope(user) : [];
+
+  const gates = await loadModuleGates(
+    [...new Set([user.roleId, ...memberships.map((m) => outletRoleId(m, user))])],
+    [...new Set([...memberships.map((m) => m.outlet.hotelId), ...minibarScope.map((h) => h.id)])],
+  );
+
   for (const m of memberships) {
+    const roleId = outletRoleId(m, user);
+    const open = outletModules(m.outlet).some((mod) => gates.isOpen(roleId, m.outlet.hotelId, mod));
+    if (!open) continue;
     targets.push({
       kind: "OUTLET",
       hotelId: m.outlet.hotelId,
       hotelName: m.outlet.hotel.name,
       outletId: m.outletId,
       label: `${m.outlet.name} · ${m.outlet.hotel.name}`,
-      roleId: m.roleId ?? user.roleId,
+      roleId,
     });
   }
 
-  if (user.role.kind === "MINIBAR") {
-    const scope = await hotelScope(user);
-    for (const hotel of scope) {
-      targets.push({
-        kind: "MINIBAR",
-        hotelId: hotel.id,
-        hotelName: hotel.name,
-        label: `Minibar · ${hotel.name}`,
-        roleId: user.roleId,
-      });
-    }
+  for (const hotel of minibarScope) {
+    if (!gates.isOpen(user.roleId, hotel.id, "MINIBAR")) continue;
+    targets.push({
+      kind: "MINIBAR",
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      label: `Minibar · ${hotel.name}`,
+      roleId: user.roleId,
+    });
   }
 
   return targets;

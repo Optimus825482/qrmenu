@@ -3,6 +3,7 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
+import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
 const RECIPIENTS_PER_EVENT = 100;
 
@@ -20,23 +21,14 @@ async function resolveRecipients(
   db: Prisma.TransactionClient,
 ): Promise<string[]> {
   if (Array.isArray(recipients)) return [...new Set(recipients)];
-  if (recipients.roleCodes.length === 0) return [];
-  const { hotelId, roleCodes } = recipients;
-  const users = await db.user.findMany({
-    where: {
-      isActive: true,
-      role: { code: { in: roleCodes } },
-      OR: [{ hotelId }, { userHotels: { some: { hotelId } } }],
-    },
-    select: { id: true },
-  });
-  return users.map((u) => u.id);
+  return usersEntitledTo(recipients.hotelId, recipients.roleCodes, db);
 }
 
 /**
  * Writes one Notification row per recipient and broadcasts `notification.created` to them.
- * Recipients are explicit user ids, or every active user holding one of `roleCodes` who works in
- * `hotelId` (assigned to it or entitled through UserHotel). Returns the number of rows written.
+ * Recipients are explicit user ids, or every active user whose effective role for `hotelId` is
+ * one of `roleCodes` (usersEntitledTo: base role in their hotel scope, or an outlet membership's
+ * role in one of the hotel's outlets). Returns the number of rows written.
  * With `tx` everything joins that transaction (rows and the NOTIFY commit or roll back together);
  * without it, rows and NOTIFY share a transaction of their own.
  */

@@ -252,6 +252,35 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(res).toMatchObject({ ok: true, data: { next: "/admin" } });
   });
 
+  it("HotelModule(MR, MINIBAR) kapalı: kat sorumlusu hedefsiz kalır, next /secim (Atama yok), oturum açılmaz", async () => {
+    const user = await makeUser({
+      username: "kat.mr",
+      roleCode: "R-KAT",
+      hotelCode: "MR",
+      passwordHash,
+    });
+    const mr = await hotelId("MR");
+    await testDb.hotelModule.update({
+      where: { hotelId_moduleKey: { hotelId: mr, moduleKey: "MINIBAR" } },
+      data: { enabled: false },
+    });
+    try {
+      const deps = makeDeps();
+      const res = await performLogin(creds("kat.mr"), deps);
+      expect(res).toMatchObject({ ok: true, data: { next: "/secim", targets: [] } });
+      expect(deps.setCookie).toHaveBeenCalledWith(
+        { userId: user.id, pendingTargets: true },
+        expect.anything(),
+      );
+      expect(await testDb.userSession.count({ where: { userId: user.id } })).toBe(0);
+    } finally {
+      await testDb.hotelModule.update({
+        where: { hotelId_moduleKey: { hotelId: mr, moduleKey: "MINIBAR" } },
+        data: { enabled: true },
+      });
+    }
+  });
+
   it("yanlış şifre, pasif kullanıcı ve bilinmeyen kullanıcı aynı UNAUTHORIZED mesajını alır", async () => {
     await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
     await makeUser({
