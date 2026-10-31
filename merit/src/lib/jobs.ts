@@ -1,10 +1,15 @@
 import { PgBoss } from "pg-boss";
 import { env } from "@/lib/env";
 import { TZ } from "@/lib/time";
-import { placeholderNotifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
+import { notify } from "@/modules/core/server/notifications";
+import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import { sessionSetting } from "@/modules/core/server/sessions";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
+
+const sessionWarnNotifier: Notifier = async (userId, title, body) => {
+  await notify({ recipients: [userId], type: "session.warn", title, body });
+};
 
 declare global {
   var __pgBoss: Promise<PgBoss> | undefined;
@@ -43,8 +48,7 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       await sweepSessions(new Date(), {
         warnMinutes: await sessionSetting<number>("session.warnBeforeMinutes"),
         idleMinutes: await sessionSetting<number>("session.idleMinutes"),
-        // Task 8 swaps this no-op for the real notify().
-        notifier: placeholderNotifier,
+        notifier: sessionWarnNotifier,
       });
     });
   } catch (err) {

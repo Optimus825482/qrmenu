@@ -8,8 +8,9 @@ export async function register(): Promise<void> {
     console.warn("MERIT_DISABLE_JOBS production ortamında yoksayıldı");
   }
 
-  // Dynamic import: the edge bundle must never pull in pg.
+  // Dynamic imports: the edge bundle must never pull in pg.
   const { getBoss, registerJobs } = await import("@/lib/jobs");
   await registerJobs(await getBoss());
-  // Task 8 adds startRealtimeListener() here.
+  const { startRealtimeListener } = await import("@/lib/realtime");
+  await startRealtimeListener();
 }

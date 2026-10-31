@@ -16,12 +16,6 @@ export type SweepDeps = {
 
 export type SweepResult = { warned: number; expired: number; idle: number };
 
-/**
- * No-op notifier used until the notification service exists. Task 8 replaces it with the real
- * `notify` in lib/jobs.ts; sweepSessions itself only ever sees the injected function.
- */
-export const placeholderNotifier: Notifier = async () => {};
-
 const ACTIVE = ["ONLINE", "UYARI"] as const;
 
 /** Closes each session on its own; one failing row is logged and skipped. Returns how many closed. */
