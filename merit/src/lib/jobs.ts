@@ -2,10 +2,12 @@ import { PgBoss } from "pg-boss";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/settings";
 import { TZ } from "@/lib/time";
+import { printJobs } from "@/modules/order/server/printJobs";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
+export const PRINT_SWEEP_QUEUE = "print.sweep";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -50,6 +52,13 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
         idleMinutes: await getSetting("session.idleMinutes"),
         notifier: sessionWarnNotifier,
       });
+    });
+    // Receipts stuck in BASILIYOR (gateway died mid-print) go back to the queue after 60 s.
+    await boss.createQueue(PRINT_SWEEP_QUEUE); // idempotent
+    await boss.schedule(PRINT_SWEEP_QUEUE, "* * * * *", null, { tz: TZ });
+    await boss.work(PRINT_SWEEP_QUEUE, async () => {
+      const swept = await printJobs.sweepStale(new Date());
+      if (swept > 0) console.log(`[print.sweep] ${swept} baskı işi kuyruğa geri alındı`);
     });
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;

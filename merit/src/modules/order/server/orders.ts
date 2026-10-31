@@ -8,8 +8,9 @@ import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { approvals, onlineAt, outletAllowed } from "./approvals";
+import { printJobs } from "./printJobs";
 
-/** Called inside the approval transaction (Task 9: enqueue the receipt print job). */
+/** Overrides the default receipt enqueuer inside the approval transaction (tests, future kinds). */
 export type PrintEnqueuer = (tx: Prisma.TransactionClient, order: Order) => Promise<void>;
 
 /** Table order state machine (Global Constraints). Anything else is CONFLICT. */
@@ -196,7 +197,12 @@ async function transition(
       before: { status: order.status },
       after: { status: to, ...(reason ? { reason } : {}) },
     });
-    if (to === "ONAYLANDI") await opts.print?.(tx, updated);
+    if (to === "ONAYLANDI") {
+      // Default hook enqueues the ESC/POS receipt (no printer → print.failed + cashier notice);
+      // an explicit opts.print (tests, future order kinds) keeps overriding it.
+      if (opts.print) await opts.print(tx, updated);
+      else await printJobs.enqueueReceipt(tx, updated);
+    }
     await publish(
       {
         type: EVENT_OF[to] as string,

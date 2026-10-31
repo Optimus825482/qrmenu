@@ -1,0 +1,23 @@
+{
+  "name": "merit-print-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Merit OS print gateway — print kuyruğunu çeker, ESC/POS fiş üretip ağ yazıcısına TCP ile basar.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.0",
+    "iconv-lite": "^0.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.5"
+  }
+}

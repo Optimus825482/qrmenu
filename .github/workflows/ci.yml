@@ -58,6 +58,9 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
       - run: npm run check
+      - name: Print gateway tests
+        run: npm ci && npm test
+        working-directory: merit/tools/print-gateway
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: End-to-end tests
