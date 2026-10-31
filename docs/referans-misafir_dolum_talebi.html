@@ -1,0 +1,1521 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
+    <title>Mybar Kişiselleştirme - Oda {{ oda.oda_no }}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --navy-blue: #0a2351;
+        --royal-blue: #1e3a8a;
+        --gold: #d4af37;
+        --light-gold: #f4e4b7;
+        --dark-gold: #b8941f;
+        /* emil-design-eng: custom easing curves */
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          var(--royal-blue) 0%,
+          var(--navy-blue) 100%
+        );
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        padding: 20px 10px 40px;
+        margin: 0;
+        overflow-x: hidden;
+      }
+
+      .card {
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        border: none;
+        overflow: hidden;
+        max-width: 500px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .card-header {
+        background: linear-gradient(
+          135deg,
+          var(--navy-blue) 0%,
+          var(--royal-blue) 100%
+        );
+        padding: 0;
+        border: none;
+      }
+
+      .card-body {
+        padding: 2rem 2rem 2.5rem;
+        background: #ffffff;
+      }
+
+      .otel-logo-container {
+        background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+        padding: 30px 20px;
+        border-radius: 0;
+        margin: 0;
+        border-bottom: 3px solid var(--gold);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+      }
+
+      .otel-logo-container img {
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+        transition: transform 0.3s ease;
+      }
+
+      .otel-logo-container img:hover {
+        transform: scale(1.05);
+      }
+
+      .page-title {
+        color: var(--navy-blue);
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 1.5rem 0 0.5rem;
+        letter-spacing: -0.5px;
+      }
+
+      .room-badge {
+        display: inline-flex;
+        align-items: center;
+        background: linear-gradient(
+          135deg,
+          var(--gold) 0%,
+          var(--dark-gold) 100%
+        );
+        color: #ffffff;
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        margin-bottom: 1.5rem;
+      }
+
+      .room-badge i {
+        margin-right: 8px;
+        font-size: 1.2rem;
+      }
+
+      .alert-info {
+        background: linear-gradient(135deg, #e8f4f8 0%, #d1ecf1 100%);
+        border: 2px solid var(--gold);
+        color: var(--navy-blue);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 1.5rem;
+      }
+
+      .alert-info i {
+        color: var(--gold);
+        font-size: 1.3rem;
+        margin-right: 8px;
+      }
+
+      .form-group label {
+        color: var(--navy-blue);
+        font-weight: 600;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+      }
+
+      .form-group label i {
+        color: var(--gold);
+        margin-right: 6px;
+      }
+
+      .form-control {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+      }
+
+      .form-control:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+      }
+
+      .form-text {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-top: 5px;
+      }
+
+      #karakterSayaci {
+        color: var(--navy-blue);
+        font-weight: 600;
+      }
+
+      .btn-primary {
+        background: linear-gradient(
+          135deg,
+          var(--gold) 0%,
+          var(--dark-gold) 100%
+        );
+        border: none;
+        padding: 14px 24px;
+        font-size: 1.15rem;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+        background: linear-gradient(
+          135deg,
+          var(--dark-gold) 0%,
+          var(--gold) 100%
+        );
+      }
+
+      .btn-primary:active {
+        transform: translateY(-1px);
+      }
+
+      .btn-primary i {
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
+
+      #successMessage {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border: 2px solid var(--gold);
+        color: var(--navy-blue);
+        border-radius: 12px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      #successMessage i {
+        color: #28a745;
+        font-size: 1.5rem;
+        margin-right: 10px;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+
+
+      /* === Minibar Kişiselleştirme: ürün grubu + ürün seçim === */
+
+      .section-title {
+        color: var(--navy-blue);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 1.75rem 0 0.75rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .section-title i {
+        color: var(--gold);
+        margin-right: 8px;
+      }
+
+      .grup-pill-listesi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 1rem;
+      }
+
+      .grup-pill {
+        background: #f1f3f8;
+        border: 2px solid #e0e0e0;
+        color: var(--navy-blue);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: transform 160ms var(--ease-out), background 200ms ease, border-color 200ms ease, color 200ms ease;
+      }
+
+      .grup-pill:active {
+        transform: scale(0.97);
+      }
+
+      .grup-pill.aktif {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        border-color: var(--dark-gold);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .grup-pill:hover {
+          transform: translateY(-1px);
+          border-color: var(--gold);
+        }
+      }
+
+      .urun-panel-listesi {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .urun-panel {
+        display: none;
+      }
+
+      .urun-panel.aktif {
+        display: block;
+        animation: panelGiris 200ms var(--ease-out);
+      }
+
+      @keyframes panelGiris {
+        from {
+          opacity: 0;
+          transform: scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .urun-kart {
+        position: relative;
+        background: #ffffff;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 14px 12px 12px 36px;
+        cursor: pointer;
+        transition: transform 160ms var(--ease-out), border-color 200ms ease, box-shadow 200ms ease;
+      }
+
+      .urun-kart:active {
+        transform: scale(0.97);
+      }
+
+      .urun-kart input[type="checkbox"] {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        accent-color: var(--dark-gold);
+        cursor: pointer;
+      }
+
+      .urun-kart .urun-adi {
+        color: var(--navy-blue);
+        font-weight: 600;
+        font-size: 0.88rem;
+        line-height: 1.3;
+        display: block;
+      }
+
+      .urun-kart .urun-meta {
+        color: #6c757d;
+        font-size: 0.78rem;
+        margin-top: 3px;
+        display: block;
+      }
+
+      .urun-kart.secili {
+        border-color: var(--gold);
+        background: linear-gradient(135deg, #fffdf5 0%, #f4e4b7 100%);
+        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+      }
+
+      @media (hover: hover) and (pointer: fine) {
+        .urun-kart:hover {
+          transform: translateY(-2px);
+          border-color: var(--gold);
+          box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+        }
+      }
+
+      .onizleme-blok {
+        background: #f8f9fa;
+        border: 2px dashed #d0d4dc;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-top: 0.5rem;
+        min-height: 56px;
+      }
+
+      .onizleme-bos {
+        color: #6c757d;
+        font-size: 0.88rem;
+        font-style: italic;
+      }
+
+      .onizleme-chip-listesi {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .onizleme-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        color: #ffffff;
+        padding: 5px 10px 5px 12px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        animation: chipGiris 160ms var(--ease-out);
+      }
+
+      @keyframes chipGiris {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .onizleme-chip .chip-kapat {
+        background: rgba(255, 255, 255, 0.25);
+        border: none;
+        color: #ffffff;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        line-height: 1;
+        cursor: pointer;
+        font-size: 0.7rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 160ms ease;
+      }
+
+      .onizleme-chip .chip-kapat:hover {
+        background: rgba(255, 255, 255, 0.45);
+      }
+
+      .bos-uyari {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 6px;
+      }
+
+      /* Reduced motion: sadece opacity/renk, transform yok */
+      @media (prefers-reduced-motion: reduce) {
+        .grup-pill,
+        .urun-kart,
+        .urun-panel.aktif,
+        .onizleme-chip {
+          transition: opacity 200ms ease, background 200ms ease, border-color 200ms ease;
+          animation: none;
+        }
+      }
+
+      /* Loading spinner animasyonu */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* === Sağ Üst Köşe Bayraklı Dil Seçici === */
+      .card {
+        position: relative;
+      }
+
+      .lang-switcher-wrapper {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        z-index: 50;
+      }
+
+      [dir="rtl"] .lang-switcher-wrapper {
+        right: auto;
+        left: 14px;
+      }
+
+      .lang-trigger-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid var(--gold);
+        border-radius: 999px;
+        padding: 5px 12px 5px 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--navy-blue);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .lang-trigger-btn:hover,
+      .lang-trigger-btn:focus {
+        background: #ffffff;
+        box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
+        outline: none;
+      }
+
+      .lang-flag-svg {
+        width: 22px;
+        height: 16px;
+        border-radius: 3px;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+        flex-shrink: 0;
+      }
+
+      .lang-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 165px;
+        background: #ffffff;
+        border: 2px solid var(--gold);
+        border-radius: 14px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        padding: 6px;
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      [dir="rtl"] .lang-dropdown-menu {
+        right: auto;
+        left: 0;
+      }
+
+      .lang-dropdown-menu.acik {
+        display: flex;
+        animation: panelGiris 160ms var(--ease-out);
+      }
+
+      .lang-option-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-radius: 9px;
+        padding: 8px 10px;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: var(--navy-blue);
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+
+      [dir="rtl"] .lang-option-btn {
+        text-align: right;
+      }
+
+      .lang-option-btn:hover {
+        background: #f4e4b7;
+      }
+
+      .lang-option-btn.secili {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--dark-gold) 100%);
+        color: #ffffff;
+      }
+
+      .lang-option-btn .lang-check {
+        margin-left: auto;
+        font-size: 0.75rem;
+      }
+
+      [dir="rtl"] .lang-option-btn .lang-check {
+        margin-left: 0;
+        margin-right: auto;
+      }
+
+      /* RTL (Arapça) hizalama desteği */
+      [dir="rtl"] .card-body {
+        text-align: right;
+      }
+
+      [dir="rtl"] .room-badge i,
+      [dir="rtl"] .alert-info i,
+      [dir="rtl"] .section-title i,
+      [dir="rtl"] .form-group label i,
+      [dir="rtl"] .btn-primary i,
+      [dir="rtl"] #successMessage i {
+        margin-right: 0;
+        margin-left: 8px;
+      }
+
+      [dir="rtl"] .urun-kart {
+        padding: 14px 36px 12px 12px;
+      }
+
+      [dir="rtl"] .urun-kart input[type="checkbox"] {
+        left: auto;
+        right: 10px;
+      }
+
+      /* ========================================================
+         MOBİL İLKELİ (MOBILE-FIRST) RESPONSIVE DÜZEN
+         ======================================================== */
+      @media (max-width: 576px) {
+        body {
+          padding: 8px 4px 32px 4px;
+        }
+
+        .container {
+          padding-left: 4px !important;
+          padding-right: 4px !important;
+        }
+
+        .col-12 {
+          padding-left: 2px !important;
+          padding-right: 2px !important;
+        }
+
+        .card {
+          border-radius: 18px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .card-body {
+          padding: 1.15rem 0.9rem 1.6rem !important;
+        }
+
+        .otel-logo-container {
+          padding: 14px 10px 12px !important;
+        }
+
+        .otel-logo-container img {
+          max-width: 200px !important;
+          max-height: 65px !important;
+        }
+
+        .lang-switcher-wrapper {
+          top: 8px !important;
+          right: 8px !important;
+        }
+
+        [dir="rtl"] .lang-switcher-wrapper {
+          right: auto !important;
+          left: 8px !important;
+        }
+
+        .lang-trigger-btn {
+          padding: 4px 9px 4px 6px;
+          font-size: 0.76rem;
+        }
+
+        .lang-dropdown-menu {
+          min-width: 145px;
+          padding: 4px;
+        }
+
+        .page-title {
+          font-size: 1.25rem !important;
+          margin: 0.6rem 0 0.3rem !important;
+          line-height: 1.3;
+        }
+
+        .room-badge {
+          font-size: 0.92rem !important;
+          padding: 5px 14px !important;
+          margin-bottom: 0.85rem !important;
+        }
+
+        .alert-info {
+          padding: 10px 12px !important;
+          font-size: 0.84rem !important;
+          line-height: 1.4 !important;
+          margin-bottom: 1rem !important;
+          border-radius: 10px !important;
+        }
+
+        .alert-info i {
+          font-size: 1.1rem !important;
+          margin-right: 6px !important;
+        }
+
+        .section-title {
+          font-size: 0.95rem !important;
+          margin: 1.15rem 0 0.5rem !important;
+        }
+
+        /* Yatay kaydırılabilir, dokunmatik dostu kategori hapları */
+        .grup-pill-listesi {
+          display: flex !important;
+          flex-wrap: nowrap !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          gap: 6px !important;
+          padding-bottom: 6px !important;
+          margin-bottom: 0.75rem !important;
+          scrollbar-width: none !important;
+        }
+
+        .grup-pill-listesi::-webkit-scrollbar {
+          display: none !important;
+        }
+
+        .grup-pill {
+          flex-shrink: 0 !important;
+          white-space: nowrap !important;
+          padding: 7px 13px !important;
+          font-size: 0.82rem !important;
+          border-radius: 16px !important;
+          min-height: 36px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+        }
+
+        /* 2 Sütunlu Dengeli ve Dokunmatik Ürün Kartları Izgarası */
+        .urun-panel-listesi {
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 8px !important;
+        }
+
+        .urun-kart {
+          padding: 10px 8px 10px 28px !important;
+          border-radius: 10px !important;
+          min-height: 52px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
+        }
+
+        .urun-kart input[type="checkbox"] {
+          left: 7px !important;
+          width: 16px !important;
+          height: 16px !important;
+        }
+
+        [dir="rtl"] .urun-kart {
+          padding: 10px 28px 10px 8px !important;
+        }
+
+        [dir="rtl"] .urun-kart input[type="checkbox"] {
+          left: auto !important;
+          right: 7px !important;
+        }
+
+        .urun-kart .urun-adi {
+          font-size: 0.82rem !important;
+          line-height: 1.25 !important;
+          word-break: break-word !important;
+        }
+
+        .urun-kart .urun-meta {
+          font-size: 0.72rem !important;
+          margin-top: 2px !important;
+        }
+
+        .onizleme-blok {
+          padding: 10px 12px !important;
+          min-height: 46px !important;
+          border-radius: 10px !important;
+        }
+
+        .onizleme-chip {
+          padding: 4px 7px 4px 10px !important;
+          font-size: 0.75rem !important;
+        }
+
+        .form-group label {
+          font-size: 0.9rem !important;
+          margin-bottom: 6px !important;
+        }
+
+        .form-control {
+          font-size: 16px !important; /* iOS Safari otomatik zoom'u önler */
+          padding: 10px 12px !important;
+          border-radius: 10px !important;
+        }
+
+        .btn-primary {
+          padding: 13px 16px !important;
+          font-size: 0.95rem !important;
+          border-radius: 12px !important;
+          width: 100% !important;
+        }
+
+        .btn-primary i {
+          margin-right: 6px !important;
+        }
+      }
+
+      /* Ekstra dar ekranlar (iPhone SE, Galaxy A serisi <= 360px) */
+      @media (max-width: 360px) {
+        .card-body {
+          padding: 1rem 0.75rem 1.4rem !important;
+        }
+
+        .urun-kart {
+          padding: 8px 6px 8px 24px !important;
+        }
+
+        .urun-kart input[type="checkbox"] {
+          left: 5px !important;
+          width: 14px !important;
+          height: 14px !important;
+        }
+
+        .urun-kart .urun-adi {
+          font-size: 0.78rem !important;
+        }
+
+        .btn-primary {
+          font-size: 0.88rem !important;
+          padding: 11px 12px !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+          <div class="card">
+            <!-- Sağ Üst Köşe Bayraklı Dil Seçici -->
+            <div class="lang-switcher-wrapper" id="langSwitcher">
+              <button
+                type="button"
+                class="lang-trigger-btn"
+                id="langTriggerBtn"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+                title="Language / Dil"
+              >
+                <span id="activeLangFlag"></span>
+                <span id="activeLangLabel">EN</span>
+                <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+              </button>
+              <div class="lang-dropdown-menu" id="langDropdownMenu" role="listbox">
+                <button type="button" class="lang-option-btn" data-lang="en">
+                  <span class="flag-holder" data-flag="en"></span>
+                  <span>English</span>
+                  <i class="fas fa-check lang-check" style="display:none;"></i>
+                </button>
+                <button type="button" class="lang-option-btn" data-lang="de">
+                  <span class="flag-holder" data-flag="de"></span>
+                  <span>Deutsch</span>
+                  <i class="fas fa-check lang-check" style="display:none;"></i>
+                </button>
+                <button type="button" class="lang-option-btn" data-lang="ru">
+                  <span class="flag-holder" data-flag="ru"></span>
+                  <span>Русский</span>
+                  <i class="fas fa-check lang-check" style="display:none;"></i>
+                </button>
+                <button type="button" class="lang-option-btn" data-lang="ar">
+                  <span class="flag-holder" data-flag="ar"></span>
+                  <span>العربية</span>
+                  <i class="fas fa-check lang-check" style="display:none;"></i>
+                </button>
+                <button type="button" class="lang-option-btn" data-lang="tr">
+                  <span class="flag-holder" data-flag="tr"></span>
+                  <span>Türkçe</span>
+                  <i class="fas fa-check lang-check" style="display:none;"></i>
+                </button>
+              </div>
+            </div>
+
+            {% if otel_logo %}
+            <!-- Otel Logosu Header -->
+            <div class="card-header">
+              <div class="otel-logo-container text-center">
+                <img
+                  src="data:image/png;base64,{{ otel_logo }}"
+                  alt="{{ otel_adi }}"
+                  class="img-fluid"
+                  style="
+                    max-width: 420px;
+                    max-height: 180px;
+                    object-fit: contain;
+                  "
+                  onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';"
+                />
+                <h4 class="text-primary mb-0" style="display: none;">{{ otel_adi }}</h4>
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="card-body">
+              {% if not otel_logo %}
+              <!-- Varsayılan Başlık (Logo yoksa) -->
+              <h4 class="text-center text-primary mb-4" id="defaultHotelTitle" data-custom-hotel="{{ '1' if otel_adi else '0' }}">
+                {{ otel_adi or 'Otel Minibar Servisi' }}
+              </h4>
+              {% endif %}
+
+              <h3 class="page-title text-center" data-i18n="pageTitle">Mybar Kişiselleştirme</h3>
+
+              <div class="text-center mb-4">
+                <div class="room-badge">
+                  <i class="fas fa-door-open"></i>
+                  <span><span data-i18n="roomLabel">Oda</span> {{ oda.oda_no }}</span>
+                </div>
+              </div>
+
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong
+                  id="guestInfoMessage"
+                  data-has-custom="{{ '1' if oda.misafir_mesaji else '0' }}"
+                  data-original-text="{{ oda.misafir_mesaji or '' }}"
+                  >{{ oda.misafir_mesaji or 'Mybar kişiselleştirme talebiniz en kısa sürede yerine getirilecektir.' }}</strong
+                >
+              </div>
+
+              <form id="dolumTalebiForm">
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
+
+                {% if urun_gruplari %}
+                <h4 class="section-title">
+                  <i class="fas fa-layer-group"></i>
+                  <span data-i18n="selectGroup">Ürün Grubu Seçin</span>
+                </h4>
+                <div class="grup-pill-listesi" id="grupPillListesi">
+                  {% for g in urun_gruplari %}
+                  <button
+                    type="button"
+                    class="grup-pill {% if loop.first %}aktif{% endif %}"
+                    data-grup-index="{{ loop.index0 }}"
+                    data-original-name="{{ g.grup_adi }}"
+                  >
+                    {{ g.grup_adi }}
+                  </button>
+                  {% endfor %}
+                </div>
+
+                <h4 class="section-title">
+                  <i class="fas fa-box-open"></i>
+                  <span data-i18n="selectProducts">Ürünleri Seçin</span>
+                </h4>
+                {% for g in urun_gruplari %}
+                <div
+                  class="urun-panel {% if loop.first %}aktif{% endif %}"
+                  data-grup-panel="{{ loop.index0 }}"
+                >
+                  <div class="urun-panel-listesi">
+                    {% for u in g.urunler %}
+                    <label
+                      class="urun-kart"
+                      data-urun-id="{{ u.urun_id }}"
+                      data-urun-adi="{{ u.urun_adi }}"
+                      data-original-name="{{ u.urun_adi }}"
+                    >
+                      <input
+                        type="checkbox"
+                        name="secili_urunler"
+                        value="{{ u.urun_id }}"
+                        data-urun-id="{{ u.urun_id }}"
+                        data-urun-adi="{{ u.urun_adi }}"
+                        data-original-name="{{ u.urun_adi }}"
+                      />
+                      <span class="urun-adi" data-original-name="{{ u.urun_adi }}">{{ u.urun_adi }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endfor %}
+
+                <h4 class="section-title">
+                  <i class="fas fa-clipboard-check"></i>
+                  <span data-i18n="selectedProducts">Seçili Ürünler</span>
+                </h4>
+                <div class="onizleme-blok" id="onizlemeBlok">
+                  <span class="onizleme-bos" id="onizlemeBos" data-i18n="noProductSelected"
+                    >Henüz ürün seçilmedi</span
+                  >
+                  <div
+                    class="onizleme-chip-listesi"
+                    id="onizlemeChipListesi"
+                  ></div>
+                </div>
+
+                {% else %}
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i>
+                  <strong data-i18n="noSetupMessage"
+                    >Bu odaya tanımlı setup içeriği bulunamadı. Aşağıya not
+                    ekleyerek talebinizi iletebilirsiniz.</strong
+                  >
+                </div>
+                {% endif %}
+
+                <div class="form-group mt-3">
+                  <label
+                    ><i class="fas fa-comment-dots"></i>
+                    <span data-i18n="additionalNoteLabel">Ek Not (Opsiyonel)</span></label
+                  >
+                  <textarea
+                    name="notlar"
+                    id="notlar"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Özel bir talebiniz varsa buraya yazabilirsiniz (örn: Ekstra su, diet içecekler, vs.)..."
+                    maxlength="500"
+                  ></textarea>
+                  <small class="form-text text-muted">
+                    <i class="fas fa-keyboard"></i>
+                    <span id="karakterSayaci">0/500</span>
+                    <span data-i18n="charactersLabel">karakter</span>
+                  </small>
+                </div>
+
+                <button
+                  type="submit"
+                  id="submitBtn"
+                  class="btn btn-primary btn-block btn-lg mt-4"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                  <span data-i18n="submitButton">Mybar Kişiselleştirme Talebi Gönder</span>
+                </button>
+                <div
+                  class="bos-uyari"
+                  id="bosUyari"
+                  style="display: none"
+                ></div>
+              </form>
+
+              <div
+                id="successMessage"
+                class="alert alert-success mt-4"
+                style="display: none"
+              >
+                <div class="text-center">
+                  <i class="fas fa-check-circle"></i>
+                  <strong class="d-block mb-2" data-i18n="successTitle"
+                    >Talebiniz Başarıyla Gönderildi!</strong
+                  >
+                  <p class="mb-0" data-i18n="successBody">
+                    En kısa sürede minibarınız kişiselleştirilecektir. Teşekkür
+                    ederiz.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // === SVG Ülke Bayrakları (Tüm işletim sistemlerinde net görünüm) ===
+      const FLAG_SVGS = {
+        en: `<svg class="lang-flag-svg" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg"><clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><g clip-path="url(#s)"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg>`,
+        de: `<svg class="lang-flag-svg" viewBox="0 0 5 3" xmlns="http://www.w3.org/2000/svg"><rect width="5" height="3" y="0" fill="#000"/><rect width="5" height="2" y="1" fill="#D00"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg>`,
+        ru: `<svg class="lang-flag-svg" viewBox="0 0 9 6" xmlns="http://www.w3.org/2000/svg"><rect fill="#fff" width="9" height="3"/><rect fill="#d52b1e" y="3" width="9" height="3"/><rect fill="#0039a6" y="2" width="9" height="2"/></svg>`,
+        ar: `<svg class="lang-flag-svg" viewBox="0 0 36 24" xmlns="http://www.w3.org/2000/svg"><rect width="36" height="24" fill="#006C35"/><path d="M10 16h16v2H10z" fill="#fff"/><text x="18" y="13" text-anchor="middle" fill="#fff" font-size="6" font-family="serif" font-weight="bold">لا إله إلا الله</text></svg>`,
+        tr: `<svg class="lang-flag-svg" viewBox="0 0 36 24" xmlns="http://www.w3.org/2000/svg"><rect width="36" height="24" fill="#E30A17"/><circle cx="13" cy="12" r="6" fill="#fff"/><circle cx="14.5" cy="12" r="4.8" fill="#E30A17"/><polygon points="21,12 17.5,13.2 19.6,10.2 19.6,13.8 17.5,10.8" fill="#fff"/></svg>`,
+      };
+
+      const LANG_LABELS = {
+        en: "EN",
+        de: "DE",
+        ru: "RU",
+        ar: "AR",
+        tr: "TR",
+      };
+
+      // === Çoklu Dil Sözlüğü (TR, EN, DE, RU, AR) ===
+      const I18N = {
+        en: {
+          docTitle: "Mybar Personalization - Room {{ oda.oda_no }}",
+          defaultHotelTitle: "Hotel Minibar Service",
+          pageTitle: "Mybar Personalization",
+          roomLabel: "Room",
+          defaultInfoMessage: "Your Mybar personalization request will be fulfilled as soon as possible.",
+          selectGroup: "Select Product Category",
+          selectProducts: "Select Products",
+          selectedProducts: "Selected Products",
+          noProductSelected: "No product selected yet",
+          noSetupMessage: "No predefined minibar setup found for this room. You may submit your request by adding a note below.",
+          additionalNoteLabel: "Additional Note (Optional)",
+          notePlaceholder: "If you have a special request, please write it here (e.g., Extra water, diet drinks, etc.)...",
+          charactersLabel: "characters",
+          submitButton: "Send Mybar Request",
+          sendingButton: "Sending...",
+          validationEmpty: "⚠️ Please select at least one product or add a note.",
+          successTitle: "Your Request Has Been Sent Successfully!",
+          successBody: "Your minibar will be personalized as soon as possible. Thank you.",
+          errGeneric: "An error occurred. Please try again.",
+          err429: "⚠️ Too many attempts. Please wait 1 minute.",
+          err404: "❌ Invalid QR code. Please scan a valid QR code.",
+          err500: "⚠️ Server error. Please try again later.",
+        },
+        de: {
+          docTitle: "Mybar Personalisierung - Zimmer {{ oda.oda_no }}",
+          defaultHotelTitle: "Hotel Minibar-Service",
+          pageTitle: "Mybar Personalisierung",
+          roomLabel: "Zimmer",
+          defaultInfoMessage: "Ihr Mybar-Personalisierungswunsch wird schnellstmöglich ausgeführt.",
+          selectGroup: "Produktkategorie wählen",
+          selectProducts: "Produkte auswählen",
+          selectedProducts: "Ausgewählte Produkte",
+          noProductSelected: "Noch kein Produkt ausgewählt",
+          noSetupMessage: "Für dieses Zimmer wurde keine Standardausstattung gefunden. Sie können Ihren Wunsch unten als Notiz senden.",
+          additionalNoteLabel: "Zusätzliche Notiz (Optional)",
+          notePlaceholder: "Falls Sie einen besonderen Wunsch haben, schreiben Sie ihn bitte hier (z. B. extra Wasser, Diätgetränke usw.)...",
+          charactersLabel: "Zeichen",
+          submitButton: "Mybar-Anfrage senden",
+          sendingButton: "Wird gesendet...",
+          validationEmpty: "⚠️ Bitte wählen Sie mindestens ein Produkt aus oder fügen Sie eine Notiz hinzu.",
+          successTitle: "Ihre Anfrage wurde erfolgreich gesendet!",
+          successBody: "Ihre Minibar wird so schnell wie möglich individuell bestückt. Vielen Dank.",
+          errGeneric: "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+          err429: "⚠️ Zu viele Versuche. Bitte warten Sie 1 Minute.",
+          err404: "❌ Ungültiger QR-Code. Bitte scannen Sie einen gültigen QR-Code.",
+          err500: "⚠️ Serverfehler. Bitte versuchen Sie es später erneut.",
+        },
+        ru: {
+          docTitle: "Персонализация Mybar - Номер {{ oda.oda_no }}",
+          defaultHotelTitle: "Мини-бар сервис отеля",
+          pageTitle: "Персонализация Mybar",
+          roomLabel: "Номер",
+          defaultInfoMessage: "Ваш запрос на персонализацию Mybar будет выполнен в кратчайшие сроки.",
+          selectGroup: "Выберите категорию",
+          selectProducts: "Выберите продукты",
+          selectedProducts: "Выбранные продукты",
+          noProductSelected: "Продукты ещё не выбраны",
+          noSetupMessage: "Для этого номера не найден стандартный набор. Вы можете отправить запрос, добавив примечание ниже.",
+          additionalNoteLabel: "Дополнительное примечание (необязательно)",
+          notePlaceholder: "Если у вас есть особые пожелания, напишите их здесь (например: дополнительная вода, диетические напитки и т.д.)...",
+          charactersLabel: "символов",
+          submitButton: "Отправить запрос Mybar",
+          sendingButton: "Отправка...",
+          validationEmpty: "⚠️ Пожалуйста, выберите хотя бы один продукт или добавьте примечание.",
+          successTitle: "Ваш запрос успешно отправлен!",
+          successBody: "Ваш мини-бар будет укомплектован в ближайшее время. Спасибо!",
+          errGeneric: "Произошла ошибка. Пожалуйста, попробуйте снова.",
+          err429: "⚠️ Слишком много попыток. Пожалуйста, подождите 1 минуту.",
+          err404: "❌ Недействительный QR-код. Пожалуйста, отсканируйте QR-код заново.",
+          err500: "⚠️ Ошибка сервера. Пожалуйста, повторите попытку позже.",
+        },
+        ar: {
+          docTitle: "تخصيص Mybar - غرفة {{ oda.oda_no }}",
+          defaultHotelTitle: "خدمة الميني بار الفندقية",
+          pageTitle: "تخصيص Mybar",
+          roomLabel: "غرفة",
+          defaultInfoMessage: "سيتم تلبية طلب تخصيص Mybar الخاص بك في أقرب وقت ممكن.",
+          selectGroup: "اختر فئة المنتجات",
+          selectProducts: "اختر المنتجات",
+          selectedProducts: "المنتجات المختارة",
+          noProductSelected: "لم يتم اختيار أي منتج بعد",
+          noSetupMessage: "لم يتم العثور على قائمة منتجات محددة لهذه الغرفة. يمكنك إرسال طلبك بإضافة ملاحظة أدناه.",
+          additionalNoteLabel: "ملاحظة إضافية (اختياري)",
+          notePlaceholder: "إذا كان لديك طلب خاص، يرجى كتابته هنا (مثل: ماء إضافي، مشروبات دايت، إلخ)...",
+          charactersLabel: "حرف",
+          submitButton: "إرسال طلب تخصيص Mybar",
+          sendingButton: "جارٍ الإرسال...",
+          validationEmpty: "⚠️ يرجى اختيار منتج واحد على الأقل أو إضافة ملاحظة.",
+          successTitle: "تم إرسال طلبك بنجاح!",
+          successBody: "سيتم تخصيص الميني بار الخاص بك في أقرب وقت ممكن. شكراً لك.",
+          errGeneric: "حدث خطأ. يرجى المحاولة مرة أخرى.",
+          err429: "⚠️ محاولات كثيرة جداً. يرجى الانتظار لمدة دقيقة.",
+          err404: "❌ رمز QR غير صالح. يرجى مسح رمز QR صالح.",
+          err500: "⚠️ خطأ في الخادم. يرجى المحاولة لاحقاً.",
+        },
+        tr: {
+          docTitle: "Mybar Kişiselleştirme - Oda {{ oda.oda_no }}",
+          defaultHotelTitle: "Otel Minibar Servisi",
+          pageTitle: "Mybar Kişiselleştirme",
+          roomLabel: "Oda",
+          defaultInfoMessage: "Mybar kişiselleştirme talebiniz en kısa sürede yerine getirilecektir.",
+          selectGroup: "Ürün Grubu Seçin",
+          selectProducts: "Ürünleri Seçin",
+          selectedProducts: "Seçili Ürünler",
+          noProductSelected: "Henüz ürün seçilmedi",
+          noSetupMessage: "Bu odaya tanımlı setup içeriği bulunamadı. Aşağıya not ekleyerek talebinizi iletebilirsiniz.",
+          additionalNoteLabel: "Ek Not (Opsiyonel)",
+          notePlaceholder: "Özel bir talebiniz varsa buraya yazabilirsiniz (örn: Ekstra su, diet içecekler, vs.)...",
+          charactersLabel: "karakter",
+          submitButton: "Mybar Kişiselleştirme Talebi Gönder",
+          sendingButton: "Gönderiliyor...",
+          validationEmpty: "⚠️ En az bir ürün seçmeli veya not eklemelisiniz.",
+          successTitle: "Talebiniz Başarıyla Gönderildi!",
+          successBody: "En kısa sürede minibarınız kişiselleştirilecektir. Teşekkür ederiz.",
+          errGeneric: "Bir hata oluştu. Lütfen tekrar deneyin.",
+          err429: "⚠️ Çok fazla deneme yaptınız. Lütfen 1 dakika bekleyin.",
+          err404: "❌ Geçersiz QR kod. Lütfen yeni bir QR kod okutun.",
+          err500: "⚠️ Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
+        },
+      };
+
+      let currentLang = "en";
+      const dynamicTranslationCache = {};
+
+      // Tarayıcı dilini otomatik algıla (Desteklenenler: en, de, ru, ar, tr -> Algılanamayan diller: en)
+      function detectBrowserLanguage() {
+        const supported = ["en", "de", "ru", "ar", "tr"];
+        const browserLangs =
+          navigator.languages && navigator.languages.length
+            ? navigator.languages
+            : [navigator.language || navigator.userLanguage || "en"];
+
+        for (let i = 0; i < browserLangs.length; i++) {
+          const raw = String(browserLangs[i] || "").toLowerCase();
+          const code = raw.split("-")[0].split("_")[0];
+          if (supported.indexOf(code) !== -1) {
+            return code;
+          }
+        }
+        return "en";
+      }
+
+      // Dinamik ürün/kategori adlarını Google Translate üzerinden çevir (cache'li)
+      async function translateDynamicText(text, targetLang) {
+        const clean = String(text || "").trim();
+        if (!clean || targetLang === "tr") return clean;
+        const cacheKey = targetLang + "::" + clean;
+        if (dynamicTranslationCache[cacheKey]) {
+          return dynamicTranslationCache[cacheKey];
+        }
+        try {
+          const url =
+            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
+            encodeURIComponent(targetLang) +
+            "&dt=t&q=" +
+            encodeURIComponent(clean);
+          const res = await fetch(url);
+          if (!res.ok) return clean;
+          const data = await res.json();
+          if (Array.isArray(data) && Array.isArray(data[0])) {
+            const translated = data[0].map((seg) => (seg && seg[0]) || "").join("").trim();
+            if (translated) {
+              dynamicTranslationCache[cacheKey] = translated;
+              return translated;
+            }
+          }
+        } catch (e) {
+          // Çeviri yapılamazsa orijinal metni koru
+        }
+        return clean;
+      }
+
+      async function applyLanguage(lang) {
+        if (!I18N[lang]) {
+          lang = "en";
+        }
+        currentLang = lang;
+        const dict = I18N[lang];
+
+        // HTML lang ve dir (Arapça için RTL)
+        document.documentElement.setAttribute("lang", lang);
+        document.documentElement.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+        document.title = dict.docTitle;
+
+        // Sağ üst bayrak ve etiket güncelle
+        $("#activeLangFlag").html(FLAG_SVGS[lang] || FLAG_SVGS.en);
+        $("#activeLangLabel").text(LANG_LABELS[lang] || "EN");
+        $("#langDropdownMenu .lang-option-btn").each(function () {
+          const btnLang = $(this).data("lang");
+          if (btnLang === lang) {
+            $(this).addClass("secili");
+            $(this).find(".lang-check").show();
+          } else {
+            $(this).removeClass("secili");
+            $(this).find(".lang-check").hide();
+          }
+        });
+
+        // Statik metinleri güncelle
+        $("[data-i18n]").each(function () {
+          const key = $(this).data("i18n");
+          if (dict[key]) {
+            $(this).text(dict[key]);
+          }
+        });
+
+        // Varsayılan otel başlığı
+        const defaultHotelEl = $("#defaultHotelTitle");
+        if (defaultHotelEl.length && String(defaultHotelEl.data("custom-hotel")) === "0") {
+          defaultHotelEl.text(dict.defaultHotelTitle);
+        }
+
+        // Misafir bilgi mesajı
+        const guestMsgEl = $("#guestInfoMessage");
+        if (guestMsgEl.length) {
+          if (String(guestMsgEl.data("has-custom")) === "1") {
+            const origMsg = guestMsgEl.data("original-text");
+            if (lang === "tr") {
+              guestMsgEl.text(origMsg);
+            } else {
+              translateDynamicText(origMsg, lang).then((trMsg) => {
+                if (currentLang === lang) guestMsgEl.text(trMsg);
+              });
+            }
+          } else {
+            guestMsgEl.text(dict.defaultInfoMessage);
+          }
+        }
+
+        // Textarea placeholder
+        $("#notlar").attr("placeholder", dict.notePlaceholder);
+
+        // Uyarı açıksa dilini güncelle
+        if ($("#bosUyari").is(":visible")) {
+          $("#bosUyari").text(dict.validationEmpty);
+        }
+
+        // Ürün gruplarını ve ürün isimlerini seçili dile çevir
+        $("#grupPillListesi .grup-pill").each(function () {
+          const $el = $(this);
+          const orig = $el.data("original-name");
+          if (lang === "tr") {
+            $el.text(orig);
+          } else {
+            translateDynamicText(orig, lang).then((translated) => {
+              if (currentLang === lang) $el.text(translated);
+            });
+          }
+        });
+
+        $(".urun-kart").each(function () {
+          const $kart = $(this);
+          const orig = $kart.data("original-name");
+          const $input = $kart.find("input[name='secili_urunler']");
+          const $span = $kart.find(".urun-adi");
+          if (lang === "tr") {
+            $span.text(orig);
+            $kart.attr("data-urun-adi", orig);
+            $input.attr("data-urun-adi", orig);
+            onizlemeYenile();
+          } else {
+            translateDynamicText(orig, lang).then((translated) => {
+              if (currentLang === lang) {
+                $span.text(translated);
+                $kart.attr("data-urun-adi", translated);
+                $input.attr("data-urun-adi", translated);
+                onizlemeYenile();
+              }
+            });
+          }
+        });
+
+        onizlemeYenile();
+      }
+
+      // Bayrak ikonlarını menüye yerleştir ve dil seçici eventlerini bağla
+      $(document).ready(function () {
+        $(".flag-holder").each(function () {
+          const f = $(this).data("flag");
+          $(this).html(FLAG_SVGS[f] || "");
+        });
+
+        // Otomatik tarayıcı dili algıla ve uygula
+        const initialLang = detectBrowserLanguage();
+        applyLanguage(initialLang);
+
+        // Dil menüsü aç/kapa
+        $("#langTriggerBtn").on("click", function (e) {
+          e.stopPropagation();
+          const menu = $("#langDropdownMenu");
+          const isOpen = menu.hasClass("acik");
+          menu.toggleClass("acik", !isOpen);
+          $(this).attr("aria-expanded", !isOpen);
+        });
+
+        // Dil seçimi
+        $("#langDropdownMenu").on("click", ".lang-option-btn", function (e) {
+          e.stopPropagation();
+          const selected = $(this).data("lang");
+          $("#langDropdownMenu").removeClass("acik");
+          $("#langTriggerBtn").attr("aria-expanded", "false");
+          applyLanguage(selected);
+        });
+
+        // Dışarı tıklayınca kapat
+        $(document).on("click", function () {
+          $("#langDropdownMenu").removeClass("acik");
+          $("#langTriggerBtn").attr("aria-expanded", "false");
+        });
+      });
+
+      // Karakter sayacı - daha smooth animasyon
+      $("#notlar").on("input", function () {
+        const len = $(this).val().length;
+        const counter = $("#karakterSayaci");
+        counter.text(len + "/500");
+
+        // Renk değişimi - limite yaklaşınca uyarı
+        if (len > 450) {
+          counter.css("color", "#dc3545"); // Kırmızı
+        } else if (len > 400) {
+          counter.css("color", "#ffc107"); // Sarı
+        } else {
+          counter.css("color", "var(--navy-blue)"); // Normal
+        }
+      });
+
+      // === Ürün grubu + ürün seçim + önizleme ===
+
+      // Ürün grubu pill değiştir
+      $("#grupPillListesi").on("click", ".grup-pill", function () {
+        var idx = $(this).data("grup-index");
+        $("#grupPillListesi .grup-pill").removeClass("aktif");
+        $(this).addClass("aktif");
+        $(".urun-panel").removeClass("aktif");
+        $('.urun-panel[data-grup-panel="' + idx + '"]').addClass("aktif");
+      });
+
+      // Ürün seçimi → kart + önizleme senkron
+      function onizlemeYenile() {
+        var secili = $("input[name='secili_urunler']:checked");
+        var chipListe = $("#onizlemeChipListesi");
+        chipListe.empty();
+        if (secili.length === 0) {
+          $("#onizlemeBos").show();
+          return;
+        }
+        $("#onizlemeBos").hide();
+        secili.each(function () {
+          var uid = $(this).data("urun-id");
+          var uadi = $(this).attr("data-urun-adi") || $(this).data("urun-adi");
+          var chip = $('<span class="onizleme-chip"></span>').attr("data-urun-id", uid);
+          chip.append($("<span></span>").text(uadi));
+          var kapatBtn = $(
+            '<button type="button" class="chip-kapat" aria-label="Remove"><i class="fas fa-times"></i></button>',
+          ).attr("data-urun-id", uid);
+          chip.append(kapatBtn);
+          chipListe.append(chip);
+        });
+      }
+
+      // Checkbox değişince kart stili + önizleme güncelle
+      $(document).on("change", "input[name='secili_urunler']", function () {
+        var kart = $(this).closest(".urun-kart");
+        if ($(this).is(":checked")) {
+          kart.addClass("secili");
+        } else {
+          kart.removeClass("secili");
+        }
+        onizlemeYenile();
+      });
+
+      // Chip kaldır butonu
+      $(document).on("click", ".chip-kapat", function () {
+        var uid = $(this).data("urun-id");
+        $(
+          'input[name="secili_urunler"][data-urun-id="' + uid + '"]',
+        ).prop("checked", false).closest(".urun-kart").removeClass("secili");
+        onizlemeYenile();
+      });
+
+      // Form submit - geliştirilmiş
+      $("#dolumTalebiForm").on("submit", function (e) {
+        e.preventDefault();
+
+        const dict = I18N[currentLang] || I18N.en;
+        const submitBtn = $(this).find('button[type="submit"]');
+        const notlar = $("#notlar").val().trim();
+        const seciliSayi = $("input[name='secili_urunler']:checked").length;
+
+        // Validasyon: en az 1 ürün veya not
+        if (seciliSayi === 0 && !notlar) {
+          $("#bosUyari")
+            .text(dict.validationEmpty)
+            .show();
+          return;
+        }
+        $("#bosUyari").hide();
+
+        // Button disable ve loading
+        submitBtn
+          .prop("disabled", true)
+          .html('<i class="fas fa-spinner fa-spin"></i> ' + dict.sendingButton);
+
+        $.ajax({
+          url: "/misafir/dolum-talebi/{{ token }}",
+          method: "POST",
+          data: $(this).serialize(),
+          headers: {
+            "X-CSRFToken": $('meta[name="csrf-token"]').attr("content"),
+          },
+          success: function (response) {
+            if (response.success) {
+              // Form'u gizle
+              $("#dolumTalebiForm").slideUp(400, function () {
+                // Başarı mesajını göster
+                $("#successMessage").slideDown(400);
+              });
+            } else {
+              alert(dict.errGeneric);
+              submitBtn
+                .prop("disabled", false)
+                .html('<i class="fas fa-paper-plane"></i> <span data-i18n="submitButton">' + dict.submitButton + "</span>");
+            }
+          },
+          error: function (xhr) {
+            let errorMsg = dict.errGeneric;
+
+            if (xhr.status === 429) {
+              errorMsg = dict.err429;
+            } else if (xhr.status === 404) {
+              errorMsg = dict.err404;
+            } else if (xhr.status === 500) {
+              errorMsg = dict.err500;
+            }
+
+            alert(errorMsg);
+            submitBtn
+              .prop("disabled", false)
+              .html('<i class="fas fa-paper-plane"></i> <span data-i18n="submitButton">' + dict.submitButton + "</span>");
+          },
+        });
+      });
+
+      // Sayfa yüklendiğinde smooth fade-in efekti
+      $(document).ready(function () {
+        $(".card").css("opacity", "0").animate({ opacity: 1 }, 600);
+      });
+    </script>
+  </body>
+</html>
