@@ -1,0 +1,78 @@
+import type { ModuleKey, RoleKind } from "@/generated/prisma/client";
+import type { ScreenDef } from "@/modules/core/screens";
+
+export type Profile = "TAM" | "ISLET" | "SAHA" | "IZLE";
+
+/** V view · O create · D edit · A approve · R report. */
+export type Action = "V" | "O" | "D" | "A" | "R";
+
+export interface RoleDef {
+  code: string;
+  name: string;
+  kind: RoleKind;
+  profile: Profile;
+  modules: ModuleKey[] | "ALL";
+  maxOnlineMinutes?: number;
+  /** Code of the screen opened after login. */
+  defaultScreen: string;
+}
+
+export const ROLES: RoleDef[] = [
+  { code: "R-SYS", name: "Sistem Yöneticisi", kind: "SISTEM", profile: "TAM", modules: "ALL", defaultScreen: "CR-KOM" },
+  { code: "R-ITT", name: "Otel IT (Destek)", kind: "SISTEM", profile: "IZLE", modules: ["CORE"], defaultScreen: "CR-SYS" },
+  { code: "R-OTM", name: "Otel Müdürü", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "MINIBAR", "QR_MENU", "QR_ORDER"], defaultScreen: "CR-RAP" },
+  { code: "R-FBM", name: "F&B Müdürü", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KUY" },
+  { code: "R-SGF", name: "Şef Garson / Süpervizör", kind: "OUTLET", profile: "ISLET", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KUY" },
+  { code: "R-GAR", name: "Garson", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KUY" },
+  { code: "R-BAR", name: "Barmen", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KUY" },
+  { code: "R-BUT", name: "Butler (VIP)", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KUY" },
+  { code: "R-OUT", name: "Outlet Görevlisi", kind: "OUTLET", profile: "SAHA", modules: ["QR_MENU"], defaultScreen: "QM-MIS" },
+  { code: "R-ODS", name: "Oda Servisi Görevlisi", kind: "OUTLET", profile: "SAHA", modules: ["ROOM_SERVICE"], defaultScreen: "RO-TAL" },
+  { code: "R-KAS", name: "Kasa", kind: "OUTLET", profile: "ISLET", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KAS" },
+  { code: "R-MUS", name: "Mutfak Şefi", kind: "MUTFAK", profile: "ISLET", modules: ["QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KDS" },
+  { code: "R-MUP", name: "Mutfak Personeli", kind: "MUTFAK", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
+  { code: "R-KDS", name: "KDS Operatörü", kind: "MUTFAK", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
+  { code: "R-KAT", name: "Kat Sorumlusu", kind: "MINIBAR", profile: "SAHA", modules: ["MINIBAR"], maxOnlineMinutes: 600, defaultScreen: "MB-KAT" },
+  { code: "R-DEP", name: "Depo Sorumlusu", kind: "MINIBAR", profile: "ISLET", modules: ["MINIBAR"], defaultScreen: "MB-ZIM" },
+  { code: "R-HKS", name: "Housekeeping Süpervizörü", kind: "MINIBAR", profile: "IZLE", modules: ["MINIBAR"], defaultScreen: "MB-RAP" },
+];
+
+export const PROFILE_ACTIONS: Record<Profile, readonly Action[]> = {
+  TAM: ["V", "O", "D", "A", "R"],
+  ISLET: ["V", "O", "D", "A"],
+  SAHA: ["V", "O", "D"],
+  IZLE: ["V", "R"],
+};
+
+const VIEW_REPORT: readonly Action[] = ["V", "R"];
+
+/** CORE screens every role may open for reporting. */
+const CORE_ALL_ROLES = new Set(["CR-RAP"]);
+/** CORE screens open (view + report) to system and management roles only. */
+const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-ONL"]);
+/** Remaining CORE screens (user/role admin, settings, audit) belong to these roles only. */
+const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
+
+/** Concrete module list of a role; 'ALL' expands to every non-core module. */
+export function roleModules(role: RoleDef, allModules: readonly ModuleKey[]): ModuleKey[] {
+  return role.modules === "ALL" ? allModules.filter((m) => m !== "CORE") : role.modules;
+}
+
+/**
+ * Actions a role is granted on a screen (empty when it has no access at all).
+ * Module screens follow the role's profile; CORE screens follow the dedicated rules above,
+ * even for roles that list CORE among their modules.
+ */
+export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] {
+  if (role.modules === "ALL") return PROFILE_ACTIONS[role.profile];
+
+  if (screen.moduleKey === "CORE") {
+    if (CORE_ALL_ROLES.has(screen.code)) return VIEW_REPORT;
+    if (CORE_MANAGEMENT.has(screen.code)) {
+      return role.kind === "SISTEM" || role.kind === "YONETIM" ? VIEW_REPORT : [];
+    }
+    return CORE_ADMIN_ROLES.has(role.code) ? PROFILE_ACTIONS[role.profile] : [];
+  }
+
+  return role.modules.includes(screen.moduleKey) ? PROFILE_ACTIONS[role.profile] : [];
+}
