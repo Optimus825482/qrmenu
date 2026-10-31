@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DomainError } from "@/lib/result";
 import { businessDate, businessDateStart, businessDay, nowNicosia, TZ } from "@/lib/time";
 
 describe("businessDate (Europe/Nicosia)", () => {
@@ -27,4 +28,24 @@ describe("businessDate (Europe/Nicosia)", () => {
     expect(now).toBeLessThanOrEqual(Date.now());
     expect(TZ).toBe("Europe/Nicosia");
   });
+});
+
+describe("geçersiz iş günü", () => {
+  const bad = ["", "2026-13-01", "2026-02-30", "26-10-31", "2026-10-31T00:00", "yarın", " 2026-10-31"];
+  for (const fn of [businessDateStart, businessDay]) {
+    it(`${fn.name}: biçimsiz veya takvimde olmayan gün DomainError('VALIDATION') fırlatır`, () => {
+      for (const day of bad) {
+        expect(() => fn(day), day).toThrow(DomainError);
+        try {
+          fn(day);
+        } catch (e) {
+          expect((e as DomainError).code).toBe("VALIDATION");
+        }
+      }
+    });
+    it(`${fn.name}: geçerli gün (artık yıl dahil) kabul edilir`, () => {
+      expect(() => fn("2028-02-29")).not.toThrow();
+      expect(() => fn("2026-10-31")).not.toThrow();
+    });
+  }
 });

@@ -156,6 +156,36 @@ describe("sseStore: sekme başına tek EventSource", () => {
 });
 
 describe("sseStore: kopma, HEAD yoklaması ve geri çekilme", () => {
+  it("durum başlangıçta 'connecting' (henüz hiç bağlanılmadı)", () => {
+    expect(status()).toBe("connecting");
+  });
+
+  it("kopmadan sonra yeniden açılınca realtime.resync iletilir; ilk açılışta iletilmez", async () => {
+    const resync = vi.fn();
+    client.subscribe(resync, ["realtime.resync"]);
+    last().open();
+    expect(resync).not.toHaveBeenCalled();
+    last().fail();
+    await vi.advanceTimersByTimeAsync(MIN_DELAY_MS);
+    expect(sources).toHaveLength(2);
+    last().open();
+    expect(resync).toHaveBeenCalledTimes(1);
+    expect(resync.mock.calls[0][0]).toMatchObject({ type: "realtime.resync" });
+    // A later open without a drop in between does not resync again.
+    last().open();
+    expect(resync).toHaveBeenCalledTimes(1);
+  });
+
+  it("sunucu 'reconnect' çerçevesiyle akışı yenilediğinde de yeni açılışta resync iletilir", () => {
+    const resync = vi.fn();
+    client.subscribe(resync, ["realtime.resync"]);
+    last().open();
+    last().emit("reconnect", {});
+    expect(sources).toHaveLength(2);
+    last().open();
+    expect(resync).toHaveBeenCalledTimes(1);
+  });
+
   it("hata → HEAD 204 → 1 sn, sonra 2 sn bekleyip yeniden bağlanır", async () => {
     client.subscribe(vi.fn());
     last().fail();

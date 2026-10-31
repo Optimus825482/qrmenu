@@ -57,6 +57,30 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
+describe("hotelId == null (null ve undefined aynı: sistem kapsamı)", () => {
+  it("getSetting/getSettings null otel ile undefined ile aynı değeri verir", async () => {
+    await testDb.setting.create({ data: { hotelId: null, key: "dnd.minChecks", value: 4 } });
+    expect(await getSetting("dnd.minChecks", null)).toBe(4);
+    expect(await getSettings(["dnd.minChecks"], null)).toEqual({ "dnd.minChecks": 4 });
+    expect(await getSettings(["dnd.minChecks"], undefined)).toEqual({ "dnd.minChecks": 4 });
+  });
+
+  it("setSetting null otel ile sistem satırını yazar (R-SYS)", async () => {
+    const ctx = await admin();
+    await setSetting(ctx, "dnd.minChecks", 6, null);
+    expect((await row("dnd.minChecks", null))?.value).toBe(6);
+  });
+
+  it("setSetting null otel ile otel yöneticisi için de FORBIDDEN (sistem geneli)", async () => {
+    const user = await makeUser({ username: "otm-null", roleCode: "R-OTM", hotelCode: "MR" });
+    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    await expect(setSetting(ctx, "dnd.minChecks", 5, null)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    expect(await row("dnd.minChecks", null)).toBeNull();
+  });
+});
+
 describe("getSetting", () => {
   it("satır yoksa varsayılan: dnd.minChecks 2", async () => {
     expect(await getSetting("dnd.minChecks")).toBe(2);

@@ -22,6 +22,8 @@ const LOGIN_PATH = "/giris";
 /** Control frames the store always handles itself. */
 const SESSION_CLOSED = "session.closed";
 const RECONNECT = "reconnect";
+/** Synthetic event after a gap in the stream: subscribers refetch what they show. */
+const RESYNC = "realtime.resync";
 
 /** The parts of EventSource the store uses (a fake stands in under Vitest). */
 export type EventSourceLike = {
@@ -49,7 +51,7 @@ export type SseClient = {
 type Subscriber = { handler: SseHandler; types: ReadonlySet<string> };
 
 export function createSseClient(deps: SseClientDeps): SseClient {
-  const store = createStore<{ status: SseStatus }>()(() => ({ status: "closed" }));
+  const store = createStore<{ status: SseStatus }>()(() => ({ status: "connecting" }));
   const setStatus = (status: SseStatus) => {
     if (store.getState().status !== status) store.setState({ status });
   };
@@ -64,6 +66,8 @@ export function createSseClient(deps: SseClientDeps): SseClient {
   let delay = MIN_DELAY_MS;
   /** A HEAD probe after a drop is in flight (it schedules the retry). */
   let probing = false;
+  /** The stream was interrupted (drop or recycle): the next open tells subscribers to resync. */
+  let gap = false;
   /** The session is over (session.closed or 401): this tab never reconnects. */
   let ended = false;
   /** Bumped on every connect and teardown: callbacks of an older connection are ignored. */
@@ -102,6 +106,7 @@ export function createSseClient(deps: SseClientDeps): SseClient {
         // The server recycled the stream (max lifetime): reconnect at once.
         es.close();
         source = undefined;
+        gap = true;
         delay = MIN_DELAY_MS;
         connect();
         return;
@@ -127,6 +132,7 @@ export function createSseClient(deps: SseClientDeps): SseClient {
   };
 
   const onDropped = (gen: number) => {
+    gap = true;
     setStatus("connecting");
     probing = true;
     deps.probe(SSE_URL).then(
@@ -159,6 +165,10 @@ export function createSseClient(deps: SseClientDeps): SseClient {
       if (es !== source) return;
       delay = MIN_DELAY_MS;
       setStatus("open");
+      if (gap) {
+        gap = false;
+        deliver(RESYNC, JSON.stringify({ type: RESYNC, at: new Date().toISOString() }));
+      }
     };
     es.onerror = () => {
       if (es !== source) return;

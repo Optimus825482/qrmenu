@@ -3,6 +3,8 @@ import { runSeed } from "../../prisma/seed";
 import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
+/** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
+const EXPECTED_PERMISSION_ROWS = 214;
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -136,6 +138,38 @@ describe("seed (gerçek test DB)", () => {
     await runSeed(db);
     expect(await db.appScreen.count()).toBe(33);
     expect(await permission("R-OTM", "CR-TAN")).toMatchObject({ canView: true, canCreate: true, canEdit: true });
+  });
+
+  it("rol ve ekran alanları: R-KAT maxOnlineMinutes 600 ve defaultScreen MB-KAT; ekran yolu ve sortOrder katalogla aynı", async () => {
+    await runSeed(db);
+    const kat = await db.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
+    expect(kat).toMatchObject({ kind: "MINIBAR", maxOnlineMinutes: 600, defaultScreen: "MB-KAT", isSystem: true });
+    const tuk = await db.appScreen.findUniqueOrThrow({ where: { code: "MB-TUK" } });
+    expect(tuk).toMatchObject({ path: "/kat/oda-kontrol", moduleKey: "MINIBAR", sortOrder: 3 });
+    const first = await db.appScreen.findFirstOrThrow({ orderBy: { sortOrder: "asc" } });
+    expect(first).toMatchObject({ code: "MB-KAT", path: "/kat", sortOrder: 1 });
+    const orders = (await db.appScreen.findMany({ orderBy: { sortOrder: "asc" } })).map((s) => s.sortOrder);
+    expect(orders).toEqual(Array.from({ length: 33 }, (_, i) => i + 1));
+  });
+
+  it("toplam sistem yetki satırı sayısı sabittir (yeniden seed artırmaz)", async () => {
+    await runSeed(db);
+    const total = await db.roleScreenPermission.count({ where: { hotelId: null } });
+    expect(total).toBe(EXPECTED_PERMISSION_ROWS);
+    await runSeed(db);
+    expect(await db.roleScreenPermission.count({ where: { hotelId: null } })).toBe(EXPECTED_PERMISSION_ROWS);
+  });
+
+  it("yeniden seed düzenlenmiş yetki satırını ezmez", async () => {
+    await runSeed(db);
+    const before = await permission("R-KAT", "MB-TUK");
+    expect(before?.canEdit).toBe(true);
+    await db.roleScreenPermission.update({
+      where: { id: before!.id },
+      data: { canEdit: false, canApprove: true },
+    });
+    await runSeed(db);
+    expect(await permission("R-KAT", "MB-TUK")).toMatchObject({ id: before!.id, canEdit: false, canApprove: true });
   });
 
   it("modül erişimi: R-KAT yalnız MINIBAR, R-SYS CORE dışındaki dört modül", async () => {

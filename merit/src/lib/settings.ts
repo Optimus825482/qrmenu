@@ -26,7 +26,11 @@ function parseStored<K extends SettingKey>(key: K, value: unknown): SettingValue
 }
 
 /** hotel row → system row (hotelId null) → default, from the rows of one query. */
-function resolve<K extends SettingKey>(key: K, rows: Row[], hotelId?: string): SettingValue<K> {
+function resolve<K extends SettingKey>(
+  key: K,
+  rows: Row[],
+  hotelId?: string | null,
+): SettingValue<K> {
   const hotelRow = hotelId ? rows.find((r) => r.key === key && r.hotelId === hotelId) : undefined;
   const systemRow = rows.find((r) => r.key === key && r.hotelId === null);
   return (
@@ -36,7 +40,10 @@ function resolve<K extends SettingKey>(key: K, rows: Row[], hotelId?: string): S
   );
 }
 
-async function loadRows(keys: readonly SettingKey[], hotelId?: string): Promise<Row[]> {
+async function loadRows(
+  keys: readonly SettingKey[],
+  hotelId?: string | null,
+): Promise<Row[]> {
   return prisma.setting.findMany({
     where: {
       key: { in: [...keys] },
@@ -57,7 +64,7 @@ const readSetting = cache(async (key: SettingKey, hotelId: string): Promise<unkn
 /** Effective value of one setting: hotel row, else system row, else the built-in default. */
 export async function getSetting<K extends SettingKey>(
   key: K,
-  hotelId?: string,
+  hotelId?: string | null,
 ): Promise<SettingValue<K>> {
   return (await readSetting(key, hotelId ?? "")) as SettingValue<K>;
 }
@@ -65,7 +72,7 @@ export async function getSetting<K extends SettingKey>(
 /** Effective values of several settings with a single query. */
 export async function getSettings<K extends SettingKey>(
   keys: readonly K[],
-  hotelId?: string,
+  hotelId?: string | null,
 ): Promise<{ [P in K]: SettingValue<P> }> {
   const rows = await loadRows(keys, hotelId);
   const out = {} as { [P in K]: SettingValue<P> };
@@ -82,12 +89,14 @@ export async function setSetting<K extends SettingKey>(
   ctx: Ctx,
   key: K,
   value: SettingValue<K>,
-  hotelId?: string,
+  hotelId?: string | null,
 ): Promise<void> {
-  await assertCan(ctx, "CR-SYS", "D", hotelId);
+  // null and undefined both mean "system scope": normalize once, use the result everywhere below.
+  const scope = hotelId ?? undefined;
+  await assertCan(ctx, "CR-SYS", "D", scope);
   // Without a hotel, assertCan falls back to the session hotel, so a hotel manager holding D on
   // CR-SYS would pass it: system-wide rows are reserved for SISTEM roles.
-  if (hotelId === undefined && ctx.user.roleKind !== "SISTEM") {
+  if (scope === undefined && ctx.user.roleKind !== "SISTEM") {
     try {
       await audit(prisma, {
         userId: ctx.user.id,
@@ -116,22 +125,22 @@ export async function setSetting<K extends SettingKey>(
   await prisma.$transaction(async (tx) => {
     // Prisma's upsert cannot target the (null, key) pair, so find-then-write for both scopes;
     // the advisory lock serializes concurrent first writes of one (hotel, key).
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`setting:${hotelId ?? ""}:${key}`}))`;
-    const existing = await tx.setting.findFirst({ where: { hotelId: hotelId ?? null, key } });
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`setting:${scope ?? ""}:${key}`}))`;
+    const existing = await tx.setting.findFirst({ where: { hotelId: scope ?? null, key } });
     if (existing) {
       await tx.setting.update({ where: { id: existing.id }, data: { value: next } });
     } else {
-      await tx.setting.create({ data: { hotelId: hotelId ?? null, key, value: next } });
+      await tx.setting.create({ data: { hotelId: scope ?? null, key, value: next } });
     }
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: hotelId ?? ctx.session.hotelId,
+      hotelId: scope ?? ctx.session.hotelId,
       action: "SETTING_UPDATE",
       entity: "Setting",
       entityId: key,
       before: existing?.value,
       after: next,
     });
-    await publish({ type: "settings.changed", hotelId, payload: { key } }, tx);
+    await publish({ type: "settings.changed", hotelId: scope, payload: { key } }, tx);
   });
 }

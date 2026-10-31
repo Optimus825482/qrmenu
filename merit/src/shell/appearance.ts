@@ -1,5 +1,12 @@
 import type { CSSProperties } from "react";
-import type { FontFamily, FontScale, Theme } from "./types";
+import {
+  DEFAULT_APPEARANCE,
+  FONT_FAMILIES,
+  THEMES,
+  type FontFamily,
+  type FontScale,
+  type Theme,
+} from "./types";
 
 /**
  * Option labels and values of the appearance settings (Denetim Masası and the mobile Ayarlar tab
@@ -62,4 +69,37 @@ export function fontVariables(
     // Color of the "Düz renk" wallpaper ([data-wallpaper="ozel"] in theme.css).
     ...(wallpaperColor ? { "--xp-wallpaper-custom": wallpaperColor } : {}),
   } as CSSProperties;
+}
+
+/** The shell appearance an iframe app page follows (`?font=&theme=`). */
+export type FrameAppearance = { fontFamily: FontFamily; theme: Theme };
+
+/**
+ * Adds the shell's current font and theme to a same-origin iframe app URL (`?font=&theme=`),
+ * keeping its own query string and hash. Existing `font`/`theme` params are replaced.
+ */
+export function appFrameUrl(url: string, appearance: FrameAppearance): string {
+  const hashAt = url.indexOf("#");
+  const hash = hashAt === -1 ? "" : url.slice(hashAt);
+  const rest = hashAt === -1 ? url : url.slice(0, hashAt);
+  const queryAt = rest.indexOf("?");
+  const path = queryAt === -1 ? rest : rest.slice(0, queryAt);
+  const params = new URLSearchParams(queryAt === -1 ? "" : rest.slice(queryAt + 1));
+  params.set("font", appearance.fontFamily);
+  params.set("theme", appearance.theme);
+  return `${path}?${params.toString()}${hash}`;
+}
+
+/** Reads `?font=&theme=` on an iframe app page; unknown or missing values fall back to the defaults. */
+export function parseFrameAppearance(params: {
+  font?: string | string[];
+  theme?: string | string[];
+}): FrameAppearance {
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+  const font = one(params.font);
+  const theme = one(params.theme);
+  return {
+    fontFamily: FONT_FAMILIES.find((f) => f === font) ?? DEFAULT_APPEARANCE.fontFamily,
+    theme: THEMES.find((t) => t === theme) ?? DEFAULT_APPEARANCE.theme,
+  };
 }

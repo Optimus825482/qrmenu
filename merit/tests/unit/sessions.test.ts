@@ -246,6 +246,35 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     );
   });
 
+  it("çerezde başka kullanıcının oturumu varsa yeni girişten önce SISTEM ile kapatılır", async () => {
+    const other = await makeUser({ username: "gar.eski", roleCode: "R-GAR", hotelCode: "MR" });
+    const stale = await newSession(other.id, "MR", other.roleId);
+    await makeUser({ username: "kat.yeni", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+
+    const deps = { ...makeDeps(), cookieSessionId: async () => stale.id };
+    const res = await performLogin(creds("kat.yeni"), deps);
+    expect(res.ok).toBe(true);
+
+    const closed = await testDb.userSession.findUniqueOrThrow({ where: { id: stale.id } });
+    expect(closed).toMatchObject({ status: "CIKTI", logoutReason: "SISTEM" });
+  });
+
+  it("çerezdeki oturum aynı kullanıcınınsa SISTEM ile kapatılmaz; bilinmeyen kimlik yok sayılır", async () => {
+    const user = await makeUser({ username: "kat.ayni", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const own = await newSession(user.id, "MR", user.roleId);
+    const where = { hotelId: null, key: "session.singleDevice" };
+    await testDb.setting.updateMany({ where, data: { value: false } });
+    try {
+      const res = await performLogin(creds("kat.ayni"), { ...makeDeps(), cookieSessionId: async () => own.id });
+      expect(res.ok).toBe(true);
+      expect((await testDb.userSession.findUniqueOrThrow({ where: { id: own.id } })).status).not.toBe("CIKTI");
+      const res2 = await performLogin(creds("kat.ayni"), { ...makeDeps(), cookieSessionId: async () => "yok-boyle-oturum" });
+      expect(res2.ok).toBe(true);
+    } finally {
+      await testDb.setting.updateMany({ where, data: { value: true } });
+    }
+  });
+
   it("R-SYS tek ADMIN hedefi: next /admin", async () => {
     await makeUser({ username: "sys1", roleCode: "R-SYS", passwordHash });
     const res = await performLogin(creds("sys1"), makeDeps());

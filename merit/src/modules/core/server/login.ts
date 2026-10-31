@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
-import { createSession } from "./sessions";
+import { closeSession, createSession } from "./sessions";
 import { listTargets, type Target } from "./targets";
 
 /**
@@ -18,7 +18,11 @@ export type LoginData = { next: string; targets: Target[] };
 export type SelectTargetData = { next: string };
 
 export type SetCookie = (data: SessionData, options?: { ttlSeconds?: number }) => Promise<void>;
-export type LoginDeps = { setCookie: SetCookie };
+export type LoginDeps = {
+  setCookie: SetCookie;
+  /** The `sessionId` the request's cookie currently carries (a stale cookie of a previous login). */
+  cookieSessionId?: () => Promise<string | undefined>;
+};
 
 const INVALID_CREDENTIALS = "Kullanıcı adı veya şifre hatalı";
 const PENDING_COOKIE_TTL_SECONDS = 300;
@@ -139,6 +143,21 @@ async function startSession(
   return screen?.path ?? "/";
 }
 
+/**
+ * The cookie is about to be replaced. When it still carries an open session of ANOTHER user (the
+ * previous person on this browser never logged out), that session would be orphaned and stay
+ * "online": close it with SISTEM. The same user's session is left to the single-device rule.
+ */
+async function closeForeignCookieSession(userId: string, deps: LoginDeps): Promise<void> {
+  const sessionId = await deps.cookieSessionId?.();
+  if (!sessionId) return;
+  const stale = await prisma.userSession.findUnique({
+    where: { id: sessionId },
+    select: { userId: true },
+  });
+  if (stale && stale.userId !== userId) await closeSession(sessionId, "SISTEM");
+}
+
 // --- login --------------------------------------------------------------------------------------
 
 const loginSchema = z.object({
@@ -170,6 +189,8 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
       ...(check.needsRehash ? { passwordHash: await hashPassword(input.password) } : {}),
     },
   });
+
+  await closeForeignCookieSession(user.id, deps);
 
   const targets = await listTargets(user.id);
   const auto = await getSetting("session.singleTargetAuto");

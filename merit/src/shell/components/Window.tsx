@@ -14,6 +14,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { appFrameUrl } from "../appearance";
 import { alertDialog, confirm } from "../confirm";
 import { XpIcon } from "../icons";
 import { getApp, type AppDefinition, type AppProps } from "../registry";
@@ -87,6 +88,9 @@ export function Window({ id, hotels, userName }: Props) {
       : "",
   );
   const app = win ? getApp(win.appId) : undefined;
+  // iframe pages render outside the shell: they follow its font and theme through the URL.
+  const fontFamily = useWindowStore((s) => s.fontFamily);
+  const theme = useWindowStore((s) => s.theme);
 
   const requestClose = useCallback(async () => {
     const current = windowStore.getState().windows[id];
@@ -247,7 +251,7 @@ export function Window({ id, hotels, userName }: Props) {
     body = (
       <iframe
         key={reloadKey}
-        src={app.url}
+        src={appFrameUrl(app.url, { fontFamily, theme })}
         title={app.title}
         sandbox="allow-same-origin allow-scripts allow-forms"
         className="xp-iframe"

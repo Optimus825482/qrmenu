@@ -92,7 +92,7 @@ test("Hakkında: iframe uygulaması 'Merit OS' sayfasını gösterir", async ({ 
   await expect(win).toBeVisible();
 
   const iframe = win.locator("iframe.xp-iframe");
-  await expect(iframe).toHaveAttribute("src", "/admin/hakkinda");
+  await expect(iframe).toHaveAttribute("src", "/admin/hakkinda?font=tahoma&theme=luna");
   await expect(iframe).toHaveAttribute("sandbox", "allow-same-origin allow-scripts allow-forms");
 
   const frame = page.frameLocator('iframe[title="Hakkında"]');

@@ -93,7 +93,7 @@ export async function loadModuleGates(
 /**
  * Active users whose EFFECTIVE role for `hotelId` is one of `roleCodes`:
  * - their base role, when the hotel is in their base scope (`User.hotelId` ∪ `UserHotel`; every
- *   hotel for SISTEM roles, as in hotelScope), or
+ *   hotel for SISTEM roles, as in hotelScope) and no active membership in the hotel overrides it, or
  * - `OutletMember.roleId ?? base role`, for an active membership in an active outlet of the hotel.
  * Ids are unique and sorted.
  */
@@ -104,6 +104,8 @@ export async function usersEntitledTo(
 ): Promise<string[]> {
   if (roleCodes.length === 0) return [];
   const inRoles = { code: { in: roleCodes } };
+  // An active membership in an active outlet of this hotel.
+  const hotelMembership = { isActive: true, outlet: { hotelId, isActive: true } };
   const users = await db.user.findMany({
     where: {
       isActive: true,
@@ -111,12 +113,15 @@ export async function usersEntitledTo(
         {
           role: inRoles,
           OR: [{ hotelId }, { userHotels: { some: { hotelId } } }, { role: { kind: "SISTEM" } }],
+          // A membership override REPLACES the base role in this hotel: the base role counts
+          // only when no active membership here overrides it (a mix is resolved by the second
+          // branch, per membership).
+          NOT: { outletMemberships: { some: { ...hotelMembership, roleId: { not: null } } } },
         },
         {
           outletMemberships: {
             some: {
-              isActive: true,
-              outlet: { hotelId, isActive: true },
+              ...hotelMembership,
               OR: [{ role: inRoles }, { roleId: null, user: { role: inRoles } }],
             },
           },

@@ -34,7 +34,10 @@ export async function loginAction(raw: {
   const input = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
   return performLogin(
     { username: input.username, password: input.password, ...(await requestContext()) },
-    { setCookie: writeSessionCookie },
+    {
+      setCookie: writeSessionCookie,
+      cookieSessionId: async () => (await getSession()).sessionId,
+    },
   );
 }
 

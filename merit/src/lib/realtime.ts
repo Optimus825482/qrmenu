@@ -11,6 +11,7 @@ export type { MeritEvent } from "@/lib/realtime-events";
 const MAX_PAYLOAD_BYTES = 7500;
 /** Hard ceiling after truncation (pg_notify rejects payloads of 8000 bytes or more). */
 const HARD_LIMIT_BYTES = 7900;
+const RESYNC_EVENT = "realtime.resync";
 const BACKOFF_MS = [1000, 2000, 4000, 8000];
 
 type Subscriber = { filter: (e: MeritEvent) => boolean; cb: (e: MeritEvent) => void };
@@ -23,6 +24,8 @@ type RealtimeState = {
   subscribers: Set<Subscriber>;
   client?: Client;
   listening: boolean;
+  /** A LISTEN connection was established at least once: later ones follow a gap. */
+  everListened: boolean;
   starting?: Promise<void>;
   stopped: boolean;
   attempt: number;
@@ -37,6 +40,7 @@ function state(): RealtimeState {
   return (globalThis.__meritRealtime ??= {
     subscribers: new Set(),
     listening: false,
+    everListened: false,
     stopped: false,
     attempt: 0,
   });
@@ -190,6 +194,11 @@ async function connect(): Promise<void> {
     }
     st.listening = true;
     st.attempt = 0;
+    if (st.everListened) {
+      // Events published while the connection was down were lost: tell subscribers to refetch.
+      dispatch(JSON.stringify({ type: RESYNC_EVENT, at: new Date().toISOString() }));
+    }
+    st.everListened = true;
   } catch (err) {
     lost(err);
   }

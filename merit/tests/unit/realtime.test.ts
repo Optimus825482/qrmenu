@@ -231,6 +231,19 @@ describe("publish / subscribe (gerçek Postgres)", () => {
     expect(cb).toHaveBeenCalled();
     expect(isListening()).toBe(true);
   }, 10_000);
+
+  it("yeniden bağlanınca abonelere realtime.resync gönderilir; ilk bağlantıda gönderilmez", async () => {
+    const seen: string[] = [];
+    const off = subscribe(() => true, (e) => seen.push(e.type));
+    await pgQuery(
+      "select pg_terminate_backend(pid) from pg_stat_activity where query = 'LISTEN merit_events'",
+    );
+    const deadline = Date.now() + 6000;
+    while (!seen.includes("realtime.resync") && Date.now() < deadline) await sleep(100);
+    off();
+    expect(seen.filter((t) => t === "realtime.resync")).toHaveLength(1);
+    expect(isListening()).toBe(true);
+  }, 10_000);
 });
 
 describe("createSseStream", () => {

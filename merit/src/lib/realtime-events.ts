@@ -28,5 +28,6 @@ export const SSE_EVENT_TYPES: readonly string[] = [
   "definition.changed",
   "session.changed",
   "audit.created",
+  "realtime.resync",
   "reconnect",
 ];

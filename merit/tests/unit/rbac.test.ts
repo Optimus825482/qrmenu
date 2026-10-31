@@ -116,6 +116,48 @@ describe("can() (gerçek test DB)", () => {
     expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(true);
   });
 
+  it("RoleModuleAccess satırı hiç yoksa modül ekranı false (satır yok = kapalı)", async () => {
+    const ctx = await ctxOf("R-KAT", "MR");
+    const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
+    const saved = await testDb.roleModuleAccess.findMany({ where: { roleId: role.id } });
+    await testDb.roleModuleAccess.deleteMany({ where: { roleId: role.id } });
+    try {
+      expect(await can(ctx, "MB-TUK", "V")).toBe(false);
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(false);
+      expect(await visibleScreens(ctx)).not.toContain("MB-TUK");
+    } finally {
+      await testDb.roleModuleAccess.createMany({ data: saved });
+    }
+  });
+
+  it("otel RoleModuleAccess true, sistem satırı false'u ezer", async () => {
+    const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
+    const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
+    const system = { roleId: role.id, hotelId: null, moduleKey: "MINIBAR" } as const;
+    await testDb.roleModuleAccess.updateMany({ where: system, data: { enabled: false } });
+    try {
+      await testDb.roleModuleAccess.create({
+        data: { roleId: role.id, hotelId: await hotelId("MR"), moduleKey: "MINIBAR", enabled: true },
+      });
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(true);
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(false);
+    } finally {
+      await testDb.roleModuleAccess.updateMany({ where: system, data: { enabled: true } });
+    }
+  });
+
+  it("pasif ekran: can false ve visibleScreens dışında", async () => {
+    const ctx = await ctxOf("R-KAT", "MR");
+    expect(await can(ctx, "MB-TUK", "V")).toBe(true);
+    await testDb.appScreen.update({ where: { code: "MB-TUK" }, data: { isActive: false } });
+    try {
+      expect(await can(ctx, "MB-TUK", "V")).toBe(false);
+      expect(await visibleScreens(ctx)).not.toContain("MB-TUK");
+    } finally {
+      await testDb.appScreen.update({ where: { code: "MB-TUK" }, data: { isActive: true } });
+    }
+  });
+
   it("HotelModule(MR, MINIBAR) kapalıyken MB-TUK V false (hotelId verilmese de oturum oteli)", async () => {
     const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
     await testDb.hotelModule.update({
