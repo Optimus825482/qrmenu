@@ -10,7 +10,7 @@
 |---|---|---|
 | A Analiz/tasarım | Bitti | `docs/analiz/2026-10-31-anlayis-notu.md`, spec: `docs/superpowers/specs/2026-10-31-merit-platform-design.md` |
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
-| P1 Çekirdek tanımlar | **Devam ediyor** — dal `p1/cekirdek`; T1–T5 ve K1 bitti ve incelemeden geçti (T5 güvenlik düzeltmesi `ee8eef7` dahil); **T6 uygulayıcısı 31.10 16:02'de başlatıldı, raporu gelmedi** (bkz. §1a); T7–T12 sırada | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md`; defter `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` |
+| P1 Çekirdek tanımlar | **Devam ediyor** — dal `p1/cekirdek`; T1–T5 ve K1 bitti ve incelemeden geçti (T5 güvenlik düzeltmesi `ee8eef7` dahil); **T6 uygulandı (`815a61f`) ama henüz İNCELENMEDİ** (bkz. §1a); T7–T12 sırada | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md`; defter `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` |
 | P5 QR Menü/Sipariş | Planı yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` (kopya `main`'e alındı; orijinal worktree dalı `worktree-quizzical-albattani-805b4d`, commit `3d3fa90`) |
 | P2, P3, P4, P6, P7, P8 | Plan yazılmadı | Bu belgenin §5'i kapsamı tarif eder; plan `superpowers:writing-plans` ile spec'ten yazılır |
 
@@ -19,7 +19,8 @@
 ## 1a. Tam olarak kalınan yer (31 Ekim 2026, 16:05 — Fable haftalık sınır doldu)
 
 - Son commit: `ee8eef7` fix(p1) rol hiyerarşisi (T5). Defter: `.superpowers/sdd/2026-10-31-p1-cekirdek/progress.md` (son satır "Task 5 CLOSED").
-- **T6 (Rol penceresi ve yetki matrisi)** Sonnet uygulayıcısına verildi; brief `.superpowers/sdd/2026-10-31-p1-cekirdek/task-6-brief.md`. Sonucu `git log` ile kontrol et: `feat(p1): Rol penceresi ve yetki matrisi` commit'i ve `task-6-report.md` varsa uygulayıcı bitmiştir → inceleme adımına geç (review-package → Sonnet inceleme → düzeltme → Haiku yeniden inceleme). Yoksa çalışma ağacında yarım iş olabilir: `git status` bak; yarımsa T6'yı taze uygulayıcıyla baştan başlat (yarım dosyaları `git stash` ile kenara al).
+- **GÜNCELLEME 16:25:** T6 uygulayıcısı bitti: commit `815a61f` (412 birim testi, e2e 11/11). Sıradaki adım T6 İNCELEMESİ (review-package `ed2e983..815a61f` → Sonnet inceleme → düzeltme → Haiku). Uygulayıcı ağaçta ikinci bir yazıcı fark etti ve çift blokları temizledi; `admin-users.test.ts`'de yabancı, commit edilmemiş bir yorum değişikliği kalmış olabilir → `git status`/`git diff` ile bak, gereksizse `git checkout -- merit/tests/unit/admin-users.test.ts`. Aşağıdaki eski not artık geçersiz:
+- (eski) **T6** Sonnet uygulayıcısına verildi; brief `.superpowers/sdd/2026-10-31-p1-cekirdek/task-6-brief.md`. Sonucu `git log` ile kontrol et: `feat(p1): Rol penceresi ve yetki matrisi` commit'i ve `task-6-report.md` varsa uygulayıcı bitmiştir → inceleme adımına geç (review-package → Sonnet inceleme → düzeltme → Haiku yeniden inceleme). Yoksa çalışma ağacında yarım iş olabilir: `git status` bak; yarımsa T6'yı taze uygulayıcıyla baştan başlat (yarım dosyaları `git stash` ile kenara al).
 - T6 brief'ine eklenen bağlayıcı karar: seed'e `CR-KUL` için YONETIM `V,O,D` satırı eklenecek (T5 kararı).
 - T12'ye ertelenen minörler defterde (T4: 5, T5: 5 + yeniden incelemeden 4).
 - Her task sonrası `ilerleme-data.js` güncelle + commit (T5 done, T6 active olarak işaretli durumda).
