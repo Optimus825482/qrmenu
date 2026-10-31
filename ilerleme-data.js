@@ -1,7 +1,7 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 15:40",
+  updatedAt: "31.10.2026 15:45",
   headline: "P1 T1–T4 tamam; T5+ devir belgesiyle (docs/DEVIR.md) sürdürülür.",
   phases: [
     {
@@ -47,7 +47,7 @@ window.ILERLEME = {
         { title: "T2 Otel, kat ve oda tipi pencereleri", status: "done", doneAt: "31.10 15:12" },
         { title: "T3 Oda penceresi (toplu oda ekleme, oda tipi atama, misafir mesajı)", status: "done", doneAt: "31.10 15:26" },
         { title: "T4 Outlet ve masa pencereleri; otel bazlı modül aç/kapa", status: "done", doneAt: "31.10 15:40" },
-        { title: "T5 Kullanıcı penceresi ve outlet ekip ataması", status: "pending" },
+        { title: "T5 Kullanıcı penceresi ve outlet ekip ataması", status: "active" },
         { title: "T6 Rol penceresi ve yetki matrisi (V/O/D/A/R, otel bazlı)", status: "pending" },
         { title: "T7 Kurulum rehberi (bağımlılık zinciri, tamamlanma yüzdesi)", status: "pending" },
         { title: "T8 Online kullanıcı takibi (canlı liste, zorla çıkış)", status: "pending" },
@@ -135,6 +135,7 @@ window.ILERLEME = {
     { at: "31.10 14:15", text: "İlerleme sayfası oluşturuldu." },
     { at: "31.10 14:25", text: "P1 planı yazıldı (docs/superpowers/plans/2026-10-31-p1-cekirdek.md)." },
     { at: "31.10 14:22", text: "P1 uygulaması subagent-driven başladı; P5 planı paralel oturumda." },
-    { at: "31.10 15:03", text: "Kabuğa alt telif bandı, marka filigranı ve düz renk duvar kağıdı eklendi (Denetim Masası)." }
+    { at: "31.10 15:03", text: "Kabuğa alt telif bandı, marka filigranı ve düz renk duvar kağıdı eklendi (Denetim Masası)." },
+    { at: "31.10 15:45", text: "P1 T4 incelemesi onaylandı (5 minör T12'ye ertelendi); T5 başladı. Devir notu docs/DEVIR.md yazıldı." }
   ]
 };
