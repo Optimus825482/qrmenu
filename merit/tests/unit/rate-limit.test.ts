@@ -39,6 +39,16 @@ describe("createRateLimiter", () => {
     expect(rl.hit("a").allowed).toBe(true);
   });
 
+  it("maxKeys <= 0 en az 1'e kelepçelenir (sonsuz döngü yok)", () => {
+    for (const maxKeys of [0, -5]) {
+      const rl = createRateLimiter({ max: 1, windowMs: 60_000, maxKeys });
+      expect(rl.hit("a").allowed).toBe(true);
+      expect(rl.hit("b").allowed).toBe(true);
+      expect(rl.entries.size).toBe(1);
+      expect(rl.entries.has("b")).toBe(true);
+    }
+  });
+
   it("maxKeys dolunca en eski anahtar düşer", () => {
     const rl = createRateLimiter({ max: 1, windowMs: 60_000, maxKeys: 2 });
     rl.hit("k1");

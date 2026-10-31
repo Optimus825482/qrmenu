@@ -32,7 +32,10 @@ export function verifyQrToken(token: string, kind: QrKind, entityId: string): bo
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-/** Shape check only (30 base64url characters); older 6-digit room codes and placeholders are not signed. */
+/**
+ * Shape check only (30 base64url characters); older 6-digit room codes and placeholders are not signed.
+ * It does NOT prove authenticity: a well-formed token may be forged. Use `verifyQrToken` for that.
+ */
 export function isSignedToken(token: string): boolean {
   return TOKEN_RE.test(token);
 }

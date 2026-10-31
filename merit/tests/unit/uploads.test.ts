@@ -57,5 +57,33 @@ describe("uploads", () => {
     expect((await GET(req("menu/o1/e.txt"), ctx("menu", "o1", "e.txt"))).status).toBe(404);
     expect((await GET(req("menu/o1/yok.webp"), ctx("menu", "o1", "yok.webp"))).status).toBe(404);
     expect((await GET(req("x"), ctx("..", "x.webp"))).status).toBe(404);
+    expect(ok.headers.get("content-security-policy")).toBeNull();
+  });
+
+  it("GET route: svg yanıtı sandbox CSP taşır", async () => {
+    await saveUpload("hotel/logo.svg", Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>"));
+    const res = await GET(req("hotel/logo.svg"), ctx("hotel", "logo.svg"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/svg+xml");
+    expect(res.headers.get("content-security-policy")).toBe("default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+  });
+
+  it("yol geçişi: ters eğik çizgi, mutlak yol, sürücü harfi ve NUL VALIDATION ile reddedilir", async () => {
+    for (const bad of ["..\\x", "a\\..\\x.webp", "/etc/x", "C:\\x", "c:/x.webp", "a\0b.webp"]) {
+      await expect(readUpload(bad)).rejects.toMatchObject({ code: "VALIDATION" });
+      await expect(saveUpload(bad, Buffer.from("1"))).rejects.toMatchObject({ code: "VALIDATION" });
+      await expect(removeUpload(bad)).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+  });
+
+  it("yol geçişi: route kötü yolları 404 yapar; çözülmüş '%2e%2e' parçası kök dışına çıkamaz", async () => {
+    expect((await GET(req("x"), ctx("..\\x.webp"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("", "etc", "x.webp"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("C:\\x.webp"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("a\0b.webp"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("%2e%2e", "x.webp"))).status).toBe(404);
+    expect(fs.existsSync(path.join(path.dirname(dir), "x.webp"))).toBe(false);
   });
 });

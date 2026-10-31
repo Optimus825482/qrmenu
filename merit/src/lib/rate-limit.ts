@@ -23,7 +23,8 @@ export function createRateLimiter(opts: {
   windowMs: number;
   maxKeys?: number;
 }): RateLimiter {
-  const { max, windowMs, maxKeys = 10_000 } = opts;
+  const { max, windowMs } = opts;
+  const maxKeys = Math.max(1, opts.maxKeys ?? 10_000); // <=0 would make the eviction loop spin forever
   const entries = new Map<string, RateLimitEntry>();
 
   const live = (key: string, now: number): RateLimitEntry | undefined => {
