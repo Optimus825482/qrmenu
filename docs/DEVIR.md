@@ -27,7 +27,7 @@
 
 **Planlar:** P2, P3, P4, P6, P7, P8 planları yazıldı, çapraz tutarlılık turundan geçti ve commit edildi (`4d4ff5a`); P5 planı uygulanıyor. Sıra: P5 → P2 → P3 → P4 → P6 → P7 → P8.
 
-**P5 (dal `p5/qr-menu`, defter `.superpowers/sdd/2026-10-31-p5-qr-menu/progress.md`, kopyası `docs/superpowers/plans/2026-10-31-p5-qr-menu-ledger.md`):**
+**P5 — `main` 31.10 23:13 itibarıyla `p5/qr-menu` ile aynı noktada (`3b8445f`, ff-merge; dal açık, T9+ burada sürer). (dal `p5/qr-menu`, defter `.superpowers/sdd/2026-10-31-p5-qr-menu/progress.md`, kopyası `docs/superpowers/plans/2026-10-31-p5-qr-menu-ledger.md`):**
 - T1–T7 bitti, incelendi, kapandı. Son kod commit'i `23bc64f` (676 birim testi yeşil).
 - **T8 bitti ve inceleme ONAYLANDI (`accd319`, 684 birim testi, e2e 9/9). Sıradaki görev T9 (`task-9-brief.md`: fiş kuyruğu, print-queue API, kuyruk süpürücü, tools/print-gateway) — taze Sonnet uygulayıcısıyla başlat.
 - Sonraki görevler T9–T14 (`task-N-brief.md` dosyaları hazır). T14 = eskalasyon işi + uçtan uca kabul + belgeler + defterdeki tüm "Minor T14" maddeleri.
