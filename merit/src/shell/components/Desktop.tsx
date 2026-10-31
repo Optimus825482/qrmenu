@@ -8,7 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { alertDialog, confirm } from "../confirm";
+import { alertDialog, confirm, confirmRemoveShortcut } from "../confirm";
 import { XpIcon } from "../icons";
 import type { AppDefinition } from "../registry";
 import type { IconPos, Wallpaper } from "../types";
@@ -97,11 +97,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
   };
 
   const removeShortcut = async (app: AppDefinition) => {
-    const yes = await confirm({
-      title: "Kısayolu kaldır",
-      message: `"${app.title}" kısayolu masaüstünden kaldırılsın mı? Uygulama Başlat menüsünde kalır.`,
-    });
-    if (yes) windowStore.getState().removeIcon(app.id);
+    if (await confirmRemoveShortcut(app.title)) windowStore.getState().removeIcon(app.id);
   };
 
   const desktopItems = (): MenuItem[] => [

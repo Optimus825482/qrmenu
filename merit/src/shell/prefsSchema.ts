@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { WALLPAPERS, type ShellPrefs } from "./types";
+import { MAX_WINDOWS, WALLPAPERS, type ShellPrefs } from "./types";
 
 /**
  * Shape check for `User.prefs.shell`. Prefs come from the browser, so sizes are capped; the store
@@ -29,7 +29,7 @@ const winState = z.object({
 export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object({
   wallpaper: z.enum(WALLPAPERS),
   icons: z.array(z.object({ appId: id, x: coord, y: coord })).max(200),
-  windows: z.array(winState).max(30),
+  windows: z.array(winState).max(MAX_WINDOWS),
 });
 
 /** Parsed prefs, or null when missing or malformed (a stale shape is ignored, not trusted). */

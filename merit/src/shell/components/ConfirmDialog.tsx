@@ -5,8 +5,9 @@ import { answer, useConfirmRequest } from "../confirm";
 import { XpIcon } from "../icons";
 
 /**
- * XP message box for confirm() / alertDialog(). Modal: Enter = Evet (or the focused button),
- * Esc = Hayır, Tab stays inside the dialog.
+ * XP message box for confirm() / alertDialog(). Modal: Enter = Evet when focus is on Evet or on
+ * the dialog itself; on Hayır or the title-bar × it means that control (= Hayır). Esc = Hayır.
+ * Tab cycles through the action buttons only.
  */
 export function ConfirmDialog() {
   const request = useConfirmRequest();
@@ -31,6 +32,7 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const yesRef = useRef<HTMLButtonElement>(null);
   const noRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -40,12 +42,22 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
     const onKeyDown = (e: KeyboardEvent) => {
       const dialog = dialogRef.current;
       if (!dialog) return;
-      if (e.key === "Enter" || e.key === "Escape") {
+      if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
-        answer(e.key === "Enter" && document.activeElement !== noRef.current);
+        answer(false);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        const focused = document.activeElement;
+        if (focused === yesRef.current || focused === dialog) answer(true);
+        else if (focused === noRef.current || focused === closeRef.current) answer(false);
+        // focus elsewhere (cannot normally happen, see onFocusIn): no answer
       } else if (e.key === "Tab") {
-        const buttons = [...dialog.querySelectorAll<HTMLButtonElement>("button")];
+        // Only the action buttons; the title-bar × (tabIndex -1) is pointer-only.
+        const buttons = [
+          ...dialog.querySelectorAll<HTMLButtonElement>('button:not([tabindex="-1"])'),
+        ];
         const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
         const next = (at + (e.shiftKey ? -1 : 1) + buttons.length) % buttons.length;
         e.preventDefault();
@@ -73,6 +85,7 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={messageId}
+        tabIndex={-1}
         className="xp-window xp-dialog"
       >
         <div className="xp-titlebar">
@@ -80,6 +93,7 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
             {title}
           </span>
           <button
+            ref={closeRef}
             type="button"
             tabIndex={-1}
             className="xp-title-button is-close"

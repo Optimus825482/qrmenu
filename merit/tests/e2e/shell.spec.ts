@@ -158,6 +158,19 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await expect(dialog).toBeHidden();
   await expect(icon(page, "Sistem Ayarları")).toBeVisible();
 
+  // Enter on the title-bar × means "close" (= Hayır), not Evet; Tab skips the ×.
+  await removeVia();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Evet" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Hayır" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Evet" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Kapat" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  await expect(icon(page, "Sistem Ayarları")).toBeVisible();
+
   await removeVia();
   await expect(dialog).toBeVisible();
   const saved = waitForPrefsSave(page);

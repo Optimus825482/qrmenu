@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { alertDialog, answer, confirm, confirmStore } from "@/shell/confirm";
+import { alertDialog, answer, confirm, confirmRemoveShortcut, confirmStore } from "@/shell/confirm";
 
 beforeEach(() => {
   answer(false);
@@ -28,6 +28,17 @@ describe("confirm()", () => {
     expect(confirmStore.getState().request?.title).toBe("Sil");
     answer(false);
     await expect(danger).resolves.toBe(false);
+  });
+
+  it("kısayol kaldırma silmedir: confirmSimpleActions kapalıyken de sorulur", async () => {
+    confirmStore.setState({ confirmSimpleActions: false });
+    const pending = confirmRemoveShortcut("Sistem Ayarları");
+    expect(confirmStore.getState().request).toMatchObject({
+      title: "Kısayolu kaldır",
+      danger: true,
+    });
+    answer(false);
+    await expect(pending).resolves.toBe(false);
   });
 
   it("yeni soru bekleyen soruyu Hayır ile kapatır; alertDialog tek düğmeli istek açar", async () => {

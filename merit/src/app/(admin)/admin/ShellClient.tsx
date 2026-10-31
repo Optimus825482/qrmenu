@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { registerCoreApps } from "@/shell/apps/coreApps";
+import { alertDialog } from "@/shell/confirm";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
 import { Desktop } from "@/shell/components/Desktop";
 import type { HotelInfo } from "@/shell/components/HotelPicker";
@@ -11,7 +12,7 @@ import { Window } from "@/shell/components/Window";
 import { getApps } from "@/shell/registry";
 import type { ShellPrefs } from "@/shell/types";
 import { useShellPersistence } from "@/shell/useShellPersistence";
-import { useWindowStore, windowStore } from "@/shell/windowStore";
+import { MAX_WINDOWS, useWindowStore, windowStore } from "@/shell/windowStore";
 
 registerCoreApps();
 
@@ -50,7 +51,13 @@ export function ShellClient({
   const [startOpen, setStartOpen] = useState(false);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const openApp = useCallback((appId: string) => {
-    windowStore.getState().open(appId);
+    const store = windowStore.getState();
+    if (store.open(appId) === null && store.order.length >= MAX_WINDOWS) {
+      void alertDialog({
+        title: "Pencere sınırı",
+        message: `En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`,
+      });
+    }
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
 

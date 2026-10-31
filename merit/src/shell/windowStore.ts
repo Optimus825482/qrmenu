@@ -2,6 +2,7 @@ import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import { getApp, type AppDefinition } from "./registry";
 import {
+  MAX_WINDOWS,
   WALLPAPERS,
   type HotelRef,
   type IconPos,
@@ -16,10 +17,15 @@ import {
  * viewport size in through setViewport(), so the store runs unchanged under Vitest (node).
  */
 
-export { WALLPAPERS };
+export { MAX_WINDOWS, WALLPAPERS };
 export type { HotelRef, IconPos, Rect, ShellPrefs, Wallpaper, WinState };
 
 export const Z_BASE = 300;
+/**
+ * z stays in [Z_BASE, Z_BASE + Z_SPAN): when focusing would pass it, every window is renumbered by
+ * rank. Taskbar, Start menu and dialogs sit far above (theme.css: 100000+).
+ */
+export const Z_SPAN = 10_000;
 export const MIN_W = 360;
 export const MIN_H = 240;
 export const TASKBAR_H = 30;
@@ -53,7 +59,8 @@ type ShellState = {
 type ShellActions = {
   configure(opts: { hotels?: HotelRef[]; appIds?: string[] | null }): void;
   setViewport(w: number, h: number): void;
-  open(appId: string, opts?: { hotelId?: string }): string;
+  /** New window id; null for an unknown / not-visible app or when MAX_WINDOWS are open. */
+  open(appId: string, opts?: { hotelId?: string }): string | null;
   close(id: string): void;
   focus(id: string): void;
   minimize(id: string): void;
@@ -115,6 +122,19 @@ function iconPosition(x: number, y: number, vp: ShellState["viewport"]) {
   };
 }
 
+/** z = Z_BASE + rank by the current z (stable for ties by `order`); returns the next free z. */
+function renumberZ(
+  windows: Record<string, WinState>,
+  order: string[],
+): { windows: Record<string, WinState>; nextZ: number } {
+  const ranked = order.filter((id) => windows[id]).sort((a, b) => windows[a].z - windows[b].z);
+  const out: Record<string, WinState> = {};
+  ranked.forEach((id, rank) => {
+    out[id] = windows[id].z === Z_BASE + rank ? windows[id] : { ...windows[id], z: Z_BASE + rank };
+  });
+  return { windows: out, nextZ: Z_BASE + ranked.length };
+}
+
 /** The window with the highest z that is not minimized. */
 export function selectActiveId(s: Pick<ShellState, "windows" | "order">): string | undefined {
   let best: WinState | undefined;
@@ -144,6 +164,12 @@ export function createWindowStore() {
     const titleFor = (app: AppDefinition, hotelId?: string): string => {
       const hotel = hotelId ? get().hotels.find((h) => h.id === hotelId) : undefined;
       return hotel ? `${app.title} · ${hotel.name}` : app.title;
+    };
+
+    /** Renumbers z before the counter would leave its band (long sessions, many focus clicks). */
+    const compactZ = () => {
+      if (get().nextZ < Z_BASE + Z_SPAN) return;
+      set(renumberZ(get().windows, get().order));
     };
 
     const update = (id: string, fn: (w: WinState) => WinState | undefined) => {
@@ -188,7 +214,8 @@ export function createWindowStore() {
 
       open(appId, opts = {}) {
         const app = allowed(appId);
-        if (!app) return "";
+        if (!app || get().order.length >= MAX_WINDOWS) return null;
+        compactZ();
         const { viewport: vp, order, cascade, seq, nextZ } = get();
         const w = Math.min(app.window.w, Math.max(minSize(app).w, vp.w));
         const h = Math.min(app.window.h, Math.max(minSize(app).h, deskHeight(vp)));
@@ -227,6 +254,8 @@ export function createWindowStore() {
       },
 
       focus(id) {
+        if (!get().windows[id]) return;
+        compactZ();
         const { nextZ } = get();
         update(id, (w) =>
           w.z === nextZ - 1 && !w.minimized ? w : { ...w, z: nextZ, minimized: false },
@@ -322,6 +351,7 @@ export function createWindowStore() {
         const order: string[] = [];
         let maxSeq = 0;
         for (const saved of p.windows) {
+          if (order.length >= MAX_WINDOWS) break;
           const app = allowed(saved.appId);
           if (!app || windows[saved.id]) continue;
           const hotelId = resolveHotel(app, saved.hotelId);
@@ -349,13 +379,14 @@ export function createWindowStore() {
           seen.add(icon.appId);
           icons.push({ appId: icon.appId, ...iconPosition(icon.x, icon.y, vp) });
         }
-        const zs = order.map((id) => windows[id].z);
+        // Stored z values are only an order: renumber from Z_BASE so they can never creep upwards.
+        const ranked = renumberZ(windows, order);
         set({
-          windows,
+          windows: ranked.windows,
+          nextZ: ranked.nextZ,
           order,
           icons,
           wallpaper: WALLPAPERS.includes(p.wallpaper) ? p.wallpaper : "bliss",
-          nextZ: Math.max(Z_BASE, ...zs.map((z) => z + 1)),
           seq: Math.max(get().seq, maxSeq + 1),
           cascade: 0,
           ready: true,

@@ -27,3 +27,6 @@ export type IconPos = { appId: string; x: number; y: number };
 export type ShellPrefs = { wallpaper: Wallpaper; icons: IconPos[]; windows: WinState[] };
 
 export type HotelRef = { id: string; name: string };
+
+/** At most this many windows are open (and persisted) at once. */
+export const MAX_WINDOWS = 30;

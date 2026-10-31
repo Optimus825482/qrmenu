@@ -36,6 +36,15 @@ export function confirm(opts: ConfirmOptions): Promise<boolean> {
   return ask({ ...opts, danger, kind: "confirm" });
 }
 
+/** Removing a desktop shortcut is a delete: always asked, whatever the setting says. */
+export function confirmRemoveShortcut(appTitle: string): Promise<boolean> {
+  return confirm({
+    title: "Kısayolu kaldır",
+    message: `"${appTitle}" kısayolu masaüstünden kaldırılsın mı? Uygulama Başlat menüsünde kalır.`,
+    danger: true,
+  });
+}
+
 /** Information box with a single "Tamam" button (Özellikler, Hakkında). */
 export function alertDialog(opts: { title: string; message: string }): Promise<boolean> {
   return ask({ ...opts, danger: false, kind: "alert" });
