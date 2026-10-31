@@ -108,14 +108,26 @@ export async function assertCan(
   hotelId?: string,
 ): Promise<void> {
   if (await can(ctx, screenCode, action, hotelId)) return;
-  await audit(prisma, {
-    userId: ctx.user.id,
-    hotelId: hotelId ?? ctx.session.hotelId,
-    action: "YETKISIZ_DENEME",
-    entity: "AppScreen",
-    entityId: screenCode,
-    after: { action },
-  });
+  // Audited against the session hotel: the caller-supplied hotelId may be garbage (FK violation)
+  // or outside the user's scope. The attempted value is recorded in `after` instead.
+  try {
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId: ctx.session.hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: "AppScreen",
+      entityId: screenCode,
+      after: hotelId === undefined ? { action } : { action, hotelId },
+    });
+  } catch (error) {
+    // A failing audit write must never mask the denial.
+    console.error("assertCan: YETKISIZ_DENEME denetim kaydı yazılamadı", {
+      userId: ctx.user.id,
+      screenCode,
+      action,
+      error,
+    });
+  }
   throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
 }
 

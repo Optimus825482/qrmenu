@@ -143,6 +143,29 @@ describe("assertCan()", () => {
     });
     expect(rows[0].after).toEqual({ action: "A" });
   });
+
+  it("bilinmeyen hotelId: FORBIDDEN, denetim satırı oturum oteliyle, denenen otel after içinde", async () => {
+    const ctx = await ctxOf("R-KAT", "MR");
+    const err = await assertCan(ctx, "MB-TUK", "V", "yok-boyle-otel").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(DomainError);
+    expect((err as InstanceType<typeof DomainError>).code).toBe("FORBIDDEN");
+    const rows = await testDb.auditLog.findMany();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].hotelId).toBe(ctx.session.hotelId);
+    expect(rows[0].after).toEqual({ action: "V", hotelId: "yok-boyle-otel" });
+  });
+
+  it("var olan ama kapsam dışı otel: FORBIDDEN, denetim satırı oturum oteliyle", async () => {
+    const ctx = await ctxOf("R-KAT", "MR");
+    const other = await hotelId("MRP");
+    const err = await assertCan(ctx, "MB-TUK", "V", other).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(DomainError);
+    expect((err as InstanceType<typeof DomainError>).code).toBe("FORBIDDEN");
+    const rows = await testDb.auditLog.findMany();
+    expect(rows).toHaveLength(1);
+    expect(rows[0].hotelId).toBe(ctx.session.hotelId);
+    expect(rows[0].after).toEqual({ action: "V", hotelId: other });
+  });
 });
 
 describe("visibleScreens()", () => {
