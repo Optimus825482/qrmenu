@@ -138,6 +138,18 @@ describe("roles: yaşam döngüsü", () => {
     expect(audit.after).toMatchObject({ copyFromRoleId: kat.id, copied: { screens: src } });
   });
 
+  it("rol yönetimi audit satırları sistem kapsamındadır (hotelId null) ve YONETIM günlüğünde görünmez", async () => {
+    const ctx = await sys();
+    const created = await roles.create(ctx, { code: "R-AUD", name: "Audit Rolü", kind: "OUTLET" });
+    await roles.update(ctx, created.id, { name: "Audit Rolü 2", kind: "OUTLET" });
+    const row = await testDb.auditLog.findFirstOrThrow({ where: { action: "ROLE_UPDATE", entityId: created.id } });
+    expect(row.hotelId).toBeNull();
+
+    const { list } = await import("@/modules/core/server/admin/auditLog");
+    const page = await list(await otm(), {});
+    expect(page.items.map((r) => r.action)).not.toContain("ROLE_UPDATE");
+  });
+
   it("YONETIM rol oluşturamaz/güncelleyemez/silemez (FORBIDDEN + YETKISIZ_DENEME); listeyi okur", async () => {
     const ctx = await otm();
     const garson = await roleByCode("R-GAR");

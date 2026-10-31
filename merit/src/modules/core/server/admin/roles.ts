@@ -116,7 +116,7 @@ export async function denyRoleAdmin(ctx: Ctx, message: string, detail: Record<st
   try {
     await audit(prisma, {
       userId: ctx.user.id,
-      hotelId: ctx.session.hotelId,
+      hotelId: undefined,
       action: "YETKISIZ_DENEME",
       entity: SCREEN,
       after: { ...detail, scope: "ROLE_ADMIN" },
@@ -258,7 +258,7 @@ export async function create(ctx: Ctx, raw: CreateRoleInput): Promise<RoleRow> {
       }
       await audit(tx, {
         userId: ctx.user.id,
-        hotelId: ctx.session.hotelId,
+        hotelId: undefined,
         action: "ROLE_CREATE",
         entity: "Role",
         entityId: row.id,
@@ -298,7 +298,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateRoleInput): Promis
     const row = toRow(updated);
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId: ctx.session.hotelId,
+      hotelId: undefined,
       action: "ROLE_UPDATE",
       entity: "Role",
       entityId: id,
@@ -321,7 +321,7 @@ export async function remove(ctx: Ctx, id: string): Promise<void> {
       await tx.role.delete({ where: { id } });
       await audit(tx, {
         userId: ctx.user.id,
-        hotelId: ctx.session.hotelId,
+        hotelId: undefined,
         action: "ROLE_DELETE",
         entity: "Role",
         entityId: id,
