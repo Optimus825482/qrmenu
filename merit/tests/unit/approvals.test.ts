@@ -97,6 +97,17 @@ describe("approvals.canApproveOrder / visibleQueue", () => {
     expect(await approvals.canApproveOrder(garX.ctx, mine)).toBe(false);
   });
 
+  it("ataması sonradan yapılan masa siparişini yalnız aktif masa garsonu onaylayabilir", async () => {
+    const s = await orderSetup();
+    const gar = await staffCtx("gar", "R-GAR", s.outlet.id);
+    const gar2 = await staffCtx("gar2", "R-GAR", s.outlet.id);
+    const free = await seedOrder(s);
+    await testDb.tableAssignment.create({ data: { tableId: s.table.id, outletId: s.outlet.id, userId: gar.user.id } });
+
+    expect(await approvals.canApproveOrder(gar.ctx, free)).toBe(true);
+    expect(await approvals.canApproveOrder(gar2.ctx, free)).toBe(false);
+  });
+
   it("visibleQueue(R-GAR): atanmış başkasına ait siparişi göstermez; atanmamış ve kendisininkini gösterir", async () => {
     const s = await orderSetup();
     const gar = await staffCtx("gar", "R-GAR", s.outlet.id);

@@ -5,7 +5,7 @@ import { can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
-export type ApprovalSubject = Pick<Order, "hotelId" | "outletId" | "assignedWaiterId">;
+export type ApprovalSubject = Pick<Order, "hotelId" | "outletId" | "assignedWaiterId"> & Partial<Pick<Order, "tableId">>;
 
 const ACTIVE_SESSION = ["ONLINE", "UYARI"] as const;
 
@@ -56,7 +56,14 @@ async function recipientsFor(tx: Prisma.TransactionClient, order: ApprovalSubjec
 async function canApproveOrder(ctx: Ctx, order: ApprovalSubject): Promise<boolean> {
   if (!outletAllowed(ctx, order.outletId)) return false;
   if (await can(ctx, "QS-KUY", "A", order.hotelId)) return true;
-  return (await can(ctx, "QS-KUY", "D", order.hotelId)) && order.assignedWaiterId === ctx.user.id;
+  if (!(await can(ctx, "QS-KUY", "D", order.hotelId))) return false;
+  if (order.assignedWaiterId) return order.assignedWaiterId === ctx.user.id;
+  if (!order.tableId) return false;
+  const assignment = await prisma.tableAssignment.findFirst({
+    where: { tableId: order.tableId, outletId: order.outletId, userId: ctx.user.id, isActive: true },
+    select: { id: true },
+  });
+  return assignment !== null;
 }
 
 const QUEUE_INCLUDE = {

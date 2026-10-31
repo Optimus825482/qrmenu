@@ -1,0 +1,6 @@
+"use client";
+import { useCallback, useState, useTransition } from "react";
+import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/calls";
+import { useSse } from "@/shell/useSse";
+type Call = { id: string; tableLabel: string; type: string; overdue: boolean };
+export default function CallsClient({ outletId, initial }: { outletId: string; initial: Call[] }) { const [calls, setCalls] = useState<Call[]>(initial); const [pending, start] = useTransition(); const load = useCallback(async () => { const r = await listOpenCallsAction(outletId); if (r.ok) setCalls(r.data as Call[]); }, [outletId]); useSse((e) => { if (e.outletId === outletId) void load(); }, ["call.created", "call.resolved"]); return <section className="space-y-3"><h1 className="text-xl font-semibold">Çağrılar</h1>{calls.length === 0 ? <p className="text-muted">Açık çağrı yok.</p> : calls.map((call) => <article key={call.id} className={`flex justify-between rounded-lg border p-3 ${call.overdue ? "border-red-500" : "border-border"}`}><span>{call.tableLabel} · {call.type}</span><button disabled={pending} className="rounded border px-2 py-1" onClick={() => start(async () => { const r = await resolveCallAction(call.id, "YANITLANDI"); if (r.ok) await load(); })}>Yanıtla</button></article>)}</section>; }

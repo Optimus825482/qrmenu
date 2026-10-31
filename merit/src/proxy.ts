@@ -9,9 +9,13 @@ const SESSION_COOKIE = "merit_session";
  * cookie exists; whether the session is still valid is decided by requireUser() on the server.
  */
 export function proxy(request: NextRequest) {
-  if (request.cookies.has(SESSION_COOKIE)) return NextResponse.next();
-
   const { pathname, search } = request.nextUrl;
+  if (request.cookies.has(SESSION_COOKIE)) {
+    const forwardedHeaders = new Headers(request.headers);
+    forwardedHeaders.set("x-merit-current-path", pathname + search);
+    return NextResponse.next({ request: { headers: forwardedHeaders } });
+  }
+
   const login = new URL("/giris", request.url);
   login.searchParams.set("next", pathname + search);
   return NextResponse.redirect(login);

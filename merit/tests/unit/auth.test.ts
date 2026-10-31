@@ -328,7 +328,7 @@ describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
     await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
 
-  it("selectTargetAction: bekleyen bayrağı olmayan çerez reddedilir, oturum açılmaz", async () => {
+  it("selectTargetAction: oturumsuz çerez reddedilir, etkin oturum başka hedef seçebilir", async () => {
     const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
 
     const noCookie = await selectTargetAction(0);
@@ -340,13 +340,27 @@ describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
     await cookieFor({ userId: user.id, pendingTargets: false });
     expect(await selectTargetAction(0)).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
 
-    // a full session cookie is not a selection ticket either
+    // An authenticated session may switch outlets without re-entering credentials.
     const session = await createSession({
       userId: user.id,
       hotelId: await hotelId("MR"),
       roleId: user.roleId,
     });
     await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-KAT" });
+    expect(await selectTargetAction(0)).toMatchObject({ ok: true, data: { next: "/kat" } });
+    expect(await testDb.userSession.count()).toBe(2);
+  });
+
+  it("selectTargetAction: süresi kapanmış tam oturum hedef seçemez", async () => {
+    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
+    const session = await createSession({
+      userId: user.id,
+      hotelId: await hotelId("MR"),
+      roleId: user.roleId,
+    });
+    await testDb.userSession.update({ where: { id: session.id }, data: { status: "CIKTI" } });
+    await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-KAT" });
+
     expect(await selectTargetAction(0)).toMatchObject({ ok: false, error: { code: "UNAUTHORIZED" } });
     expect(await testDb.userSession.count()).toBe(1);
   });

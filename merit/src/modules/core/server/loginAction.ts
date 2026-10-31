@@ -2,8 +2,8 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
-import { getSession, writeSessionCookie } from "@/lib/auth";
-import { fail, safeAction, type Result } from "@/lib/result";
+import { getSession, requireUser, writeSessionCookie } from "@/lib/auth";
+import { DomainError, fail, safeAction, type Result } from "@/lib/result";
 import {
   performLogin,
   performSelectTarget,
@@ -42,10 +42,23 @@ export async function loginAction(raw: {
 }
 
 export async function selectTargetAction(targetIndex: number): Promise<Result<SelectTargetData>> {
-  // Only the short-lived cookie written by loginAction (password already verified) may select.
+  // The short-lived post-login cookie and an existing signed-in session may both switch targets.
   const session = await getSession();
-  if (!session.userId || !session.pendingTargets) {
+  if (!session.userId || (!session.pendingTargets && !session.sessionId)) {
     return fail("UNAUTHORIZED", "Oturum bulunamadı, lütfen yeniden giriş yapın");
+  }
+  if (session.sessionId) {
+    try {
+      const ctx = await requireUser();
+      if (ctx.user.id !== session.userId) {
+        return fail("UNAUTHORIZED", "Oturum bulunamadı, lütfen yeniden giriş yapın");
+      }
+    } catch (error) {
+      if (error instanceof DomainError && error.code === "UNAUTHORIZED") {
+        return fail("UNAUTHORIZED", "Oturum bulunamadı, lütfen yeniden giriş yapın");
+      }
+      throw error;
+    }
   }
   return performSelectTarget(
     { userId: session.userId, targetIndex, ...(await requestContext()) },
