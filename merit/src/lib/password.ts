@@ -1,0 +1,59 @@
+import { pbkdf2, timingSafeEqual } from "node:crypto";
+import { promisify } from "node:util";
+import bcrypt from "bcryptjs";
+
+const pbkdf2Async = promisify(pbkdf2);
+
+const BCRYPT_ROUNDS = 12;
+const PBKDF2_PREFIX = "pbkdf2:sha256:";
+const PBKDF2_KEY_BYTES = 32;
+/** Upper bound for the iteration count read from a stored hash (guards against a hostile row). */
+const PBKDF2_MAX_ITERATIONS = 10_000_000;
+
+export type PasswordCheck = { ok: boolean; needsRehash: boolean };
+
+const REJECT: PasswordCheck = { ok: false, needsRehash: false };
+
+export async function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, BCRYPT_ROUNDS);
+}
+
+/** Werkzeug format: `pbkdf2:sha256:<iterations>$<salt>$<hex digest>`. */
+async function verifyWerkzeug(plain: string, stored: string): Promise<boolean> {
+  const parts = stored.split("$");
+  if (parts.length !== 3) return false;
+  const [method, salt, hex] = parts;
+
+  const iterations = Number(method.slice(PBKDF2_PREFIX.length));
+  if (!Number.isInteger(iterations) || iterations < 1 || iterations > PBKDF2_MAX_ITERATIONS) {
+    return false;
+  }
+  if (!salt || !/^[0-9a-f]+$/i.test(hex)) return false;
+
+  const expected = Buffer.from(hex, "hex");
+  if (expected.length !== PBKDF2_KEY_BYTES) return false;
+
+  const actual = await pbkdf2Async(plain, salt, iterations, PBKDF2_KEY_BYTES, "sha256");
+  return timingSafeEqual(actual, expected);
+}
+
+/**
+ * Checks a password against a stored hash. bcrypt hashes verify as-is; legacy Werkzeug pbkdf2
+ * hashes verify too and report `needsRehash` so the caller can upgrade them. Any other (or
+ * malformed) format is a plain mismatch, never an exception.
+ */
+export async function verifyPassword(plain: string, stored: string): Promise<PasswordCheck> {
+  if (!stored) return REJECT;
+  try {
+    if (stored.startsWith("$2")) {
+      return { ok: await bcrypt.compare(plain, stored), needsRehash: false };
+    }
+    if (stored.startsWith(PBKDF2_PREFIX)) {
+      const ok = await verifyWerkzeug(plain, stored);
+      return { ok, needsRehash: ok };
+    }
+  } catch {
+    // malformed hash: treated as a mismatch
+  }
+  return REJECT;
+}
