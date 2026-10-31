@@ -159,4 +159,68 @@ describe("online kullanıcı takibi", () => {
       }),
     ]);
   });
+
+  describe("rol hiyerarşisi (YONETIM çağıran)", () => {
+    async function setup() {
+      const mgr = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
+      const ctx = await ctxFor(mgr, { hotelCode: "MR" });
+      const mgrSession = await createSession({
+        userId: mgr.id, hotelId: await hotelId("MR"), roleId: mgr.roleId, ip: "10.0.0.8",
+      });
+      return { ctx, mgr, mgrSession };
+    }
+    const status = async (id: string) => (await testDb.userSession.findUniqueOrThrow({ where: { id } })).status;
+
+    it("SISTEM oturumunu kapatamaz: FORBIDDEN + YETKISIZ_DENEME", async () => {
+      const { ctx, mgr } = await setup();
+      const admin = await open("admin1", "R-SYS", "MR");
+      await expect(onlineUsers.forceLogout(ctx, admin.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await status(admin.session.id)).toBe("ONLINE");
+      const rows = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME", userId: mgr.id } });
+      expect(rows).toHaveLength(1);
+    });
+
+    it("başka yöneticinin oturumunu kapatamaz", async () => {
+      const { ctx } = await setup();
+      const other = await open("mudur2", "R-OTM", "MR");
+      await expect(onlineUsers.forceLogout(ctx, other.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await status(other.session.id)).toBe("ONLINE");
+    });
+
+    it("kendi oturumunu ve kat.mr oturumunu kapatabilir", async () => {
+      const { ctx, mgrSession } = await setup();
+      const kat = await open("kat.mr", "R-KAT", "MR");
+      await onlineUsers.forceLogout(ctx, kat.session.id);
+      expect(await status(kat.session.id)).toBe("CIKTI");
+      await onlineUsers.forceLogout(ctx, mgrSession.id);
+      expect(await status(mgrSession.id)).toBe("CIKTI");
+    });
+
+    it("endIdle SISTEM/YONETIM oturumlarını atlar", async () => {
+      const { ctx, mgrSession } = await setup();
+      const admin = await open("admin1", "R-SYS", "MR");
+      const kat = await open("kat.mr", "R-KAT", "MR");
+      const old = new Date(Date.now() - 120 * MIN);
+      for (const id of [admin.session.id, kat.session.id, mgrSession.id]) {
+        await testDb.userSession.update({ where: { id }, data: { lastSeenAt: old } });
+      }
+      expect(await onlineUsers.endIdle(ctx, await hotelId("MR"))).toBe(1);
+      expect(await status(kat.session.id)).toBe("CIKTI");
+      expect(await status(admin.session.id)).toBe("ONLINE");
+      expect(await status(mgrSession.id)).toBe("ONLINE");
+    });
+
+    it("list SISTEM oturumlarını gizler; SISTEM çağıran hepsini görür", async () => {
+      const { ctx, mgr } = await setup();
+      const admin = await open("admin1", "R-SYS", "MR");
+      await open("mudur2", "R-OTM", "MR");
+      const mr = await hotelId("MR");
+      const names = (await onlineUsers.list(ctx, mr)).rows.map((r) => r.user.username).sort();
+      expect(names).toEqual(["mudur", "mudur2"]);
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      const all = (await onlineUsers.list(sysCtx, mr)).rows.map((r) => r.user.username).sort();
+      expect(all).toEqual(["admin1", "mudur", "mudur2"]);
+      expect(mgr.id).toBeTruthy();
+    });
+  });
 });

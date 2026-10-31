@@ -1,10 +1,11 @@
-import type { Prisma, SessionStatus } from "@/generated/prisma/client";
+import type { Prisma, RoleKind, SessionStatus } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can, assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDateStart } from "@/lib/time";
+import { audit } from "@/modules/core/server/audit";
 import { closeSession } from "@/modules/core/server/sessions";
 
 const SCREEN = "CR-ONL";
@@ -12,6 +13,29 @@ const MINUTE_MS = 60_000;
 const ACTIVE: SessionStatus[] = ["ONLINE", "UYARI"];
 /** Closures the "today" counter treats as automatic (not a person signing out or being forced). */
 const AUTO_REASONS = ["SURE_ASIMI", "HAREKETSIZLIK"] as const;
+
+const isSystem = (ctx: Ctx) => ctx.user.roleKind === "SISTEM";
+
+/** Records the attempt (audit failures never mask the denial) and refuses. */
+async function deny(ctx: Ctx, message: string, detail: Record<string, unknown>): Promise<never> {
+  try {
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId: ctx.session.hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: SCREEN,
+      after: detail,
+    });
+  } catch (error) {
+    console.error("onlineUsers: YETKISIZ_DENEME denetim kaydı yazılamadı", { error });
+  }
+  throw new DomainError("FORBIDDEN", message);
+}
+
+/** Session rows whose user or session role is of one of `kinds` (the user's current role counts too). */
+const roleKindIn = (kinds: RoleKind[]): Prisma.UserSessionWhereInput => ({
+  OR: [{ role: { kind: { in: kinds } } }, { user: { role: { kind: { in: kinds } } } }],
+});
 
 export type OnlineStatus = "ONLINE" | "UYARI";
 
@@ -85,7 +109,11 @@ export async function list(ctx: Ctx, hotelId: string, filter: OnlineFilter = {})
   const now = Date.now();
   const [listed, online, warned, autoLogoutToday, canForce] = await Promise.all([
     prisma.userSession.findMany({
-      where: { ...scope, status: filter.status ?? { in: ACTIVE } },
+      where: {
+        ...scope,
+        status: filter.status ?? { in: ACTIVE },
+        ...(isSystem(ctx) ? {} : { NOT: roleKindIn(["SISTEM"]) }),
+      },
       select: rowSelect,
       orderBy: { loginAt: "desc" },
     }),
@@ -112,12 +140,31 @@ export async function list(ctx: Ctx, hotelId: string, filter: OnlineFilter = {})
 export async function forceLogout(ctx: Ctx, sessionId: string): Promise<void> {
   const session = await prisma.userSession.findUnique({
     where: { id: sessionId },
-    select: { hotelId: true, status: true },
+    select: {
+      hotelId: true,
+      status: true,
+      userId: true,
+      role: { select: { kind: true } },
+      user: { select: { role: { select: { kind: true } } } },
+    },
   });
   if (!session || !ACTIVE.includes(session.status)) {
     throw new DomainError("NOT_FOUND", "Açık oturum bulunamadı");
   }
   await assertCan(ctx, SCREEN, "A", session.hotelId);
+  if (!isSystem(ctx)) {
+    const kinds = [session.role.kind, session.user.role.kind];
+    if (kinds.includes("SISTEM")) {
+      return deny(ctx, "Sistem yöneticisi oturumunu kapatma yetkiniz yok", {
+        action: "A", sessionId, userId: session.userId, reason: "SISTEM_ROLE_TARGET",
+      });
+    }
+    if (kinds.includes("YONETIM") && session.userId !== ctx.user.id) {
+      return deny(ctx, "Yönetici oturumunu yalnızca sistem yöneticisi kapatabilir", {
+        action: "A", sessionId, userId: session.userId, reason: "YONETIM_TARGET",
+      });
+    }
+  }
   const closed = await closeSession(sessionId, "ZORUNLU", ctx.user.id);
   if (!closed) throw new DomainError("NOT_FOUND", "Açık oturum bulunamadı");
 }
@@ -131,7 +178,12 @@ export async function endIdle(ctx: Ctx, hotelId: string): Promise<number> {
   const idleMinutes = await getSetting("session.idleMinutes", hotelId);
   const threshold = new Date(Date.now() - idleMinutes * MINUTE_MS);
   const idle = await prisma.userSession.findMany({
-    where: { hotelId, status: { in: ACTIVE }, lastSeenAt: { lte: threshold } },
+    where: {
+      hotelId,
+      status: { in: ACTIVE },
+      lastSeenAt: { lte: threshold },
+      ...(isSystem(ctx) ? {} : { NOT: roleKindIn(["SISTEM", "YONETIM"]) }),
+    },
     select: { id: true },
   });
   let closed = 0;
