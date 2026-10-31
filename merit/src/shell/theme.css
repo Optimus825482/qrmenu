@@ -2365,3 +2365,41 @@
   flex-wrap: wrap;
   gap: 4px;
 }
+
+/* ---- Yazıcılar: kuyruk penceresi ve outlet varsayılan yazıcıları -------------------------- */
+
+.xp-printers {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.xp-printers > .xp-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+.xp-printer-defaults {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--xp-body-edge);
+}
+
+.xp-printer-defaults label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.xp-printer-defaults select {
+  min-height: 21px;
+  padding: 1px 4px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  font: inherit;
+}

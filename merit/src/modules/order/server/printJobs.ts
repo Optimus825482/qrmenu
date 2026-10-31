@@ -41,7 +41,7 @@ async function printerFor(
     select: { printerId: true },
   });
   if (outlet.printerId) {
-    const printer = await tx.printer.findUnique({ where: { id: outlet.printerId } });
+    const printer = await tx.printer.findFirst({ where: { id: outlet.printerId, isActive: true } });
     if (printer) return printer;
   }
   return tx.printer.findFirst({
@@ -298,15 +298,38 @@ async function sweepStale(now: Date): Promise<number> {
   return count;
 }
 
-/** Queue rows of one hotel for the print window (`QS-FIS V`), newest first. */
+/** One row of the queue pages (`/kasa/yazici`): the job plus its order and printer names. */
+export type QueueJob = Prisma.PrintJobGetPayload<{
+  include: {
+    order: { select: { orderNo: true; table: { select: { label: true } } } };
+    printer: { select: { name: true } };
+  };
+}>;
+
+/** The calendar day after a 'yyyy-MM-dd' day (Date.UTC rolls month and year over). */
+function nextDay(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
+/**
+ * Queue rows of one hotel for the print window (`QS-FIS V`), newest first. `status` filters by
+ * state; `day` ('yyyy-MM-dd', Nicosia business day) limits the rows to jobs created that day.
+ */
 async function listQueue(
   ctx: Ctx,
   hotelId: string,
-  opts: { status?: PrintJobStatus } = {},
-): Promise<PrintJob[]> {
+  opts: { status?: PrintJobStatus; day?: string } = {},
+): Promise<QueueJob[]> {
   await assertCan(ctx, "QS-FIS", "V", hotelId);
   return prisma.printJob.findMany({
-    where: { hotelId, ...(opts.status ? { status: opts.status } : {}) },
+    where: {
+      hotelId,
+      ...(opts.status ? { status: opts.status } : {}),
+      ...(opts.day
+        ? { createdAt: { gte: businessDateStart(opts.day), lt: businessDateStart(nextDay(opts.day)) } }
+        : {}),
+    },
     include: {
       order: { select: { orderNo: true, table: { select: { label: true } } } },
       printer: { select: { name: true } },

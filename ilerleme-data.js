@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "01.11.2026 00:40",
-  headline: "P5 T1–T9 tamam (710 birim + 16 gateway testi); sıradaki T10 Yazıcılar penceresi ve kasa yazıcı kuyruğu (devir: docs/DEVIR.md §1a).",
+  updatedAt: "01.11.2026 01:55",
+  headline: "P5 T1–T10 tamam (726 birim + 1 yeni yazıcı e2e; gateway T9: 16 test); sıradaki T11–T13 Garson, Kasa ve KDS ekranları (devir: docs/DEVIR.md §1a).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -100,7 +100,7 @@ window.ILERLEME = {
         { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "done", doneAt: "31.10 20:42" },
         { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "done", doneAt: "31.10 23:10" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
-        { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "pending" },
+        { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "done", doneAt: "01.11 01:55" },
         { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "pending" }
       ]
     },
@@ -162,6 +162,7 @@ window.ILERLEME = {
     { at: "31.10 22:38", text: "P5 T6 misafir menü sayfası onaylandı (c57315a + db29b28). T7 sipariş çekirdeği başladı." },
     { at: "31.10 22:56", text: "P5 T7 sipariş çekirdeği onaylandı (6e2440d); token hız sınırı nihai hali (23bc64f). T8 başladı." },
     { at: "31.10 23:11", text: "P5 T8 misafir seçimler/sipariş/çağrı onaylandı (accd319). Fable sınırı: T9+ devir notuyla sürdürülür." },
-    { at: "01.11 00:40", text: "P5 T9 fiş kuyruğu, print-queue API ve ESC/POS print gateway onaylandı (74e7841; 710 birim + 16 gateway testi, build yeşil). guestToken global limiter düzeltmesi kapandı (720f1e5). Sıradaki T10." }
+    { at: "01.11 00:40", text: "P5 T9 fiş kuyruğu, print-queue API ve ESC/POS print gateway onaylandı (74e7841; 710 birim + 16 gateway testi, build yeşil). guestToken global limiter düzeltmesi kapandı (720f1e5). Sıradaki T10." },
+    { at: "01.11 01:55", text: "P5 T10 Yazıcı CRUD/penceresi ve kasa yazıcı kuyruğu tamamlandı; check 726 test, build başarılı, yazıcı e2e 1/1. Sıradaki T11–T13." }
   ]
 };

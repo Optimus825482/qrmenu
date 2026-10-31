@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { User } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { generateQrToken } from "@/lib/qr";
+import { businessDate, businessDay } from "@/lib/time";
 import { testDb } from "./db";
 import { ctxFor, hotelId, makeUser, roleByCode } from "./fixtures";
 
@@ -74,7 +75,9 @@ export async function seedOrder(s: OrderSetup, over: Record<string, unknown> = {
       outletId: s.outlet.id,
       kind: "MASA",
       tableId: s.table.id,
-      businessDate: new Date("2026-10-31T00:00:00.000Z"),
+      // Today's business day, not a pinned date: today-filtered lists (orders.listForOutlet)
+      // must see this order whatever day the suite runs on.
+      businessDate: businessDay(businessDate()),
       orderNo,
       status: "GONDERILDI",
       guestLanguage: "tr",

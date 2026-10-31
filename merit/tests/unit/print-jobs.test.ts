@@ -149,7 +149,8 @@ describe("printJobs.claim", () => {
     const j1 = await makeJob(s, printer.id);
     const j2 = await makeJob(s, printer.id);
     const claimed = await printJobs.claim("MR", 10);
-    expect(claimed.map((j) => j.id)).toEqual([j1.id, j2.id]);
+    // Kuyruk sırası created_at'tir; iki iş aynı milisaniyede doğarsa eşitlik bozulur, küme karşılaştır.
+    expect([...claimed.map((j) => j.id)].sort()).toEqual([j1.id, j2.id].sort());
     expect(claimed[0]).toMatchObject({
       kind: "FIS",
       printer: { id: printer.id, ip: "192.168.1.50", port: 9100, codepage: "cp857", paperWidth: 80 },
@@ -270,5 +271,18 @@ describe("printJobs.listQueue", () => {
     const failed = await printJobs.listQueue(kas.ctx, s.hotelId, { status: "HATA" });
     expect(failed).toHaveLength(1);
     expect(failed[0].id).not.toBe(j1.id);
+  });
+
+  it("gün filtresi (day): dünkü iş bugünkü listede yok", async () => {
+    const { businessDate } = await import("@/lib/time");
+    const s = await orderSetup();
+    const printer = await makePrinter("Y1");
+    const kas = await staffCtx("kas", "R-KAS", s.outlet.id);
+    const yesterday = await makeJob(s, printer.id, { createdAt: new Date(Date.now() - 24 * 3_600_000) });
+    const today = await makeJob(s, printer.id);
+    // Gün filtresi olmadan ikisi de gelir; bugünkü listede yalnız bugünün işi var.
+    expect((await printJobs.listQueue(kas.ctx, s.hotelId, {})).map((j) => j.id)).toEqual([today.id, yesterday.id]);
+    const rows = await printJobs.listQueue(kas.ctx, s.hotelId, { day: businessDate() });
+    expect(rows.map((j) => j.id)).toEqual([today.id]);
   });
 });

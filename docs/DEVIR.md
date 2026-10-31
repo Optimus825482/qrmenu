@@ -11,7 +11,7 @@
 | A Analiz/tasarım | Bitti | `docs/analiz/2026-10-31-anlayis-notu.md`, spec: `docs/superpowers/specs/2026-10-31-merit-platform-design.md` |
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
 | P1 Çekirdek tanımlar | **Tamamlandı ve `main`'e birleştirildi** (12 görev + Opus dal incelemesi + 2 düzeltme turu) | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` (+ `-ledger.md`) |
-| P5 QR Menü/Sipariş | **Uygulanıyor** (dal `p5/qr-menu`; T1–T9 bitti ve onaylandı, sıradaki T10; son kod commit'i `74e7841`) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` |
+| P5 QR Menü/Sipariş | **Uygulanıyor** (dal `p5/qr-menu`; T1–T10 bitti, sıradaki T11–T13; T10 commit `71c5e6c`) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` |
 | P2 Minibar tanımları + veri göçü | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p2-minibar-tanimlar.md` |
 | P3 Minibar operasyonu | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p3-minibar-operasyon.md` |
 | P4 MyBar + bildirimler | Plan yazıldı (10 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
@@ -23,7 +23,7 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (1 Kasım 2026, 00:40 — GLM kontrolörü T9 devrini uyguladı)
+## 1a. Kalınan yer (1 Kasım 2026, 01:55 — Codex T10'u tamamladı)
 
 **Planlar:** P2, P3, P4, P6, P7, P8 planları yazıldı, çapraz tutarlılık turundan geçti ve commit edildi (`4d4ff5a`); P5 planı uygulanıyor. Sıra: P5 → P2 → P3 → P4 → P6 → P7 → P8.
 
@@ -35,6 +35,8 @@
 - **T9 incelemesinden bekleyen minörler (3 P3 + test boşlukları, T14'te):** (1) `printJobs.report` yalnız `BASILIYOR` durumunda kabul etmeli (geç gelen hata raporu `BASILDI` işi geri çekip mükerrer fiş basabiliyor — tek satır + route testi); (2) `print.noPrinter` günde-bir-kez tekilleştirmesi eşzamanlı onayda yarışlı (outlet advisory lock/unique önerisi); (3) global yalnız-engel dalı pasif hedefe çözünen geçerli tokenı da RATE_LIMITED yapıyor (ruling'in "çözülmeyen token" tanımı netleştirilmeli); (4) testler: eşzamanlı claim (SKIP LOCKED), per-IP+global kombine engel.
 - Bağlayıcı kararlar (defterde `Ruling:`): migration 0005 (P5); "sepet" yok → "Seçimler"; misafir SSE filtresi outletId'siz olayları tüm outletlere sayar; tarama günlüğü yalnız doküman navigasyonunda; e2e'de `getByRole('combobox',{name:'Outlet'})` (getByLabel yarışı); otel NAT için `guest.ipRateMultiplier` P4 T1'de; **T9'dan:** `/api/print-queue/heartbeat` 200 + gövde `{printers:[{id,ip,port}]}` (brief'in 204 çelişkisi çözüldü, gateway client bu biçimi bekler); tekil bildirim kodlaması `Notification.refType 'Outlet'/'PrintJob' + refId` (sonraki task'lara binding); merit kök tsconfig/eslint `tools/**`ı kapsamaz (787e9ab — yeni alt paketlere aynı desen); `listQueue` T9'da yazıldı (T10 kullanır); `ESC t 13` saha doğrulaması T14/kurulum (`CODEPAGE_TABLE` env).
 - P5 sonu: Opus dal incelemesi + düzeltme dalgası + tam doğrulama (check, build, tüm e2e, migrate diff) → kullanıcı onayıyla `main`'e fast-forward.
+- **T10 tamamlandı (1.11.2026, 01:55; değişiklik commit edildi):** `printers.ts` CRUD/list/varsayılan outlet ataması ve `QS-FIS` yetki denetimleri; `order.yazicilar` penceresi, `/kasa/yazici` bugünkü kuyruk/test fişi/yeniden bas akışı ve `printers.spec.ts`. Gateway sözleşmesi gereği yalnız `cp857` kabul edilir; pasif varsayılan yazıcı yerine aktif otel yazıcısına düşülür; varsayılan ataması aktif yazıcı ve sipariş outleti gerektirir. Kasa eylemleri `QS-FIS D/O` ile UI'da süzülür; yazıcı çevrimiçi durumu 15 sn aralıkla tazelenir. Bağımsız incelemeler: 0 önemli açık bulgu. Doğrulama: `npm run check` (68 dosya, 726 test), `npm run build` başarılı (uploads.ts için 3 mevcut Turbopack tracing uyarısı), yeni e2e 1/1. E2E için Chromium kuruldu; `3000`'deki bu görevin `next start` süreci durduruldu. `task-10-report.md` oluşturuldu. Sıradaki: T11–T13.
+- **İlerleme güncellemesi:** `ilerleme-data.js` P5 satırı “Print gateway (T9) ve Yazıcılar penceresi (T10)” `done`, `doneAt: 01.11 01:55`; başlık ve güncelleme zamanı T10 kapanışını gösterir. `ilerleme.html` bu veriyi dinamik okur.
 - **Çok ajanlı çalışma notu (1.11, işe yaradı):** T9 iki paralel uygulayıcıyla yapıldı — sunucu yarısı + devralınan fix tek ajanca, `tools/print-gateway` bağımsız ajanca (DB'siz, kendi vitest'i). Kural: merit vitest/test DB kullanan işler TEK ajanda; DB'siz alt paketler paralel olabilir; paralel ajan git'e dokunmaz, commit'i test sürecini koşan ajan yapar.
 
 **Sonraki ajana talimat:** Bu bölümü, §3 (süreç) ve ilgili `task-N-brief.md`'yi oku; planın Global Constraints'ini her brief'e ekle; her görevde uygulayıcı → inceleme → düzeltme döngüsünü atlama; her görev sonunda `ilerleme-data.js` güncelle ve commit et; test DB paylaşımlı → aynı anda tek vitest süreci; 3001'e dokunma; `main`'e birleştirme ve push yalnız Erkan'ın onayıyla.
