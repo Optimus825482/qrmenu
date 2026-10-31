@@ -11,7 +11,7 @@
 | A Analiz/tasarım | Bitti | `docs/analiz/2026-10-31-anlayis-notu.md`, spec: `docs/superpowers/specs/2026-10-31-merit-platform-design.md` |
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
 | P1 Çekirdek tanımlar | **Tamamlandı ve `main`'e birleştirildi** (12 görev + Opus dal incelemesi + 2 düzeltme turu) | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` (+ `-ledger.md`) |
-| P5 QR Menü/Sipariş | **Uygulanıyor** (dal `p5/qr-menu`; 14 görevden T1 bitti, commit `6bf287e`) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` |
+| P5 QR Menü/Sipariş | **Uygulanıyor** (dal `p5/qr-menu`; T1–T9 bitti ve onaylandı, sıradaki T10; son kod commit'i `74e7841`) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` |
 | P2 Minibar tanımları + veri göçü | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p2-minibar-tanimlar.md` |
 | P3 Minibar operasyonu | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p3-minibar-operasyon.md` |
 | P4 MyBar + bildirimler | Plan yazıldı (10 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
@@ -23,17 +23,19 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (31 Ekim 2026, 23:05 — Fable haftalık sınır doldu)
+## 1a. Kalınan yer (1 Kasım 2026, 00:40 — GLM kontrolörü T9 devrini uyguladı)
 
 **Planlar:** P2, P3, P4, P6, P7, P8 planları yazıldı, çapraz tutarlılık turundan geçti ve commit edildi (`4d4ff5a`); P5 planı uygulanıyor. Sıra: P5 → P2 → P3 → P4 → P6 → P7 → P8.
 
-**P5 — `main` 31.10 23:13 itibarıyla `p5/qr-menu` ile aynı noktada (`3b8445f`, ff-merge; dal açık, T9+ burada sürer). (dal `p5/qr-menu`, defter `.superpowers/sdd/2026-10-31-p5-qr-menu/progress.md`, kopyası `docs/superpowers/plans/2026-10-31-p5-qr-menu-ledger.md`):**
-- T1–T7 bitti, incelendi, kapandı. Son kod commit'i `23bc64f` (676 birim testi yeşil).
-- **T8 bitti ve inceleme ONAYLANDI (`accd319`, 684 birim testi, e2e 9/9). Sıradaki görev T9 (`task-9-brief.md`: fiş kuyruğu, print-queue API, kuyruk süpürücü, tools/print-gateway) — taze Sonnet uygulayıcısıyla başlat.
-- Sonraki görevler T9–T14 (`task-N-brief.md` dosyaları hazır). T14 = eskalasyon işi + uçtan uca kabul + belgeler + defterdeki tüm "Minor T14" maddeleri.
-- Bekleyen küçük düzeltme (T8 sonrası fix round'a veya T14'e): `guestToken.ts` global limiter hiçbir geçerli tokenı reddetmemeli (yalnız per-IP engelde "yalnız imzalı" kuralı). Defterdeki son "Ruling" satırına bak; bu konu kapanmıştır, yeniden tasarlama.
-- Bağlayıcı kararlar (defterde `Ruling:`): migration 0005 (P5); "sepet" yok → "Seçimler"; misafir SSE filtresi outletId'siz olayları tüm outletlere sayar; tarama günlüğü yalnız doküman navigasyonunda; e2e'de `getByRole('combobox',{name:'Outlet'})` (getByLabel yarışı); otel NAT için `guest.ipRateMultiplier` P4 T1'de.
+**P5 — `main` 31.10 23:13 itibarıyla `p5/qr-menu` ile aynı noktada (`3b8445f`, ff-merge; dal açık, T10+ burada sürer). (dal `p5/qr-menu`, defter `.superpowers/sdd/2026-10-31-p5-qr-menu/progress.md`, kopyası `docs/superpowers/plans/2026-10-31-p5-qr-menu-ledger.md`):**
+- T1–T8 bitti, incelendi, kapandı. Son kod commit'i `accd319` (684 birim testi, e2e 9/9).
+- **T9 bitti ve inceleme ONAYLANDI (1.11.2026; üç commit: `720f1e5` guestToken global limiter fix + `787e9ab` tools/** kök tsc/eslint kapsam dışı + `74e7841` feat; 710 birim testi + 16 gateway testi, `next build` yeşil). Kapsam: receipt.build, printJobs (enqueueReceipt/enqueueTest/reprint/claim SKIP LOCKED/report 3 deneme/sweepStale/listQueue), printers.heartbeat, `/api/print-queue` üç route (Bearer `PRINT_GATEWAY_KEY`), `jobs.ts` print.sweep, orders.ts ONAYLANDI varsayılan fiş kuyruğu, `merit/tools/print-gateway` (cp857 ESC/POS) ve CI gateway adımı. Sıradaki görev **T10** (`task-10-brief.md`: Yazıcılar penceresi + `/kasa/yazici`, printers CRUD) — taze uygulayıcıyla başlat.
+- Sonraki görevler T10–T14 (`task-N-brief.md` dosyaları hazır). T14 = eskalasyon işi + uçtan uca kabul + belgeler + defterdeki tüm "Minor T14" maddeleri.
+- **Kapandı (1.11):** `guestToken.ts` global limiter düzeltmesi — defter satır 32 nihai ruling `720f1e5` ile uygulandı (global aşım da DB araması yapar; geçerli token reddedilmez; bilinmeyen RATE_LIMITED +250 ms, log yok). Bu konu kesin kapalıdır, yeniden tasarlama.
+- **T9 incelemesinden bekleyen minörler (3 P3 + test boşlukları, T14'te):** (1) `printJobs.report` yalnız `BASILIYOR` durumunda kabul etmeli (geç gelen hata raporu `BASILDI` işi geri çekip mükerrer fiş basabiliyor — tek satır + route testi); (2) `print.noPrinter` günde-bir-kez tekilleştirmesi eşzamanlı onayda yarışlı (outlet advisory lock/unique önerisi); (3) global yalnız-engel dalı pasif hedefe çözünen geçerli tokenı da RATE_LIMITED yapıyor (ruling'in "çözülmeyen token" tanımı netleştirilmeli); (4) testler: eşzamanlı claim (SKIP LOCKED), per-IP+global kombine engel.
+- Bağlayıcı kararlar (defterde `Ruling:`): migration 0005 (P5); "sepet" yok → "Seçimler"; misafir SSE filtresi outletId'siz olayları tüm outletlere sayar; tarama günlüğü yalnız doküman navigasyonunda; e2e'de `getByRole('combobox',{name:'Outlet'})` (getByLabel yarışı); otel NAT için `guest.ipRateMultiplier` P4 T1'de; **T9'dan:** `/api/print-queue/heartbeat` 200 + gövde `{printers:[{id,ip,port}]}` (brief'in 204 çelişkisi çözüldü, gateway client bu biçimi bekler); tekil bildirim kodlaması `Notification.refType 'Outlet'/'PrintJob' + refId` (sonraki task'lara binding); merit kök tsconfig/eslint `tools/**`ı kapsamaz (787e9ab — yeni alt paketlere aynı desen); `listQueue` T9'da yazıldı (T10 kullanır); `ESC t 13` saha doğrulaması T14/kurulum (`CODEPAGE_TABLE` env).
 - P5 sonu: Opus dal incelemesi + düzeltme dalgası + tam doğrulama (check, build, tüm e2e, migrate diff) → kullanıcı onayıyla `main`'e fast-forward.
+- **Çok ajanlı çalışma notu (1.11, işe yaradı):** T9 iki paralel uygulayıcıyla yapıldı — sunucu yarısı + devralınan fix tek ajanca, `tools/print-gateway` bağımsız ajanca (DB'siz, kendi vitest'i). Kural: merit vitest/test DB kullanan işler TEK ajanda; DB'siz alt paketler paralel olabilir; paralel ajan git'e dokunmaz, commit'i test sürecini koşan ajan yapar.
 
 **Sonraki ajana talimat:** Bu bölümü, §3 (süreç) ve ilgili `task-N-brief.md`'yi oku; planın Global Constraints'ini her brief'e ekle; her görevde uygulayıcı → inceleme → düzeltme döngüsünü atlama; her görev sonunda `ilerleme-data.js` güncelle ve commit et; test DB paylaşımlı → aynı anda tek vitest süreci; 3001'e dokunma; `main`'e birleştirme ve push yalnız Erkan'ın onayıyla.
 

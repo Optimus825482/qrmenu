@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "31.10.2026 23:11",
-  headline: "P5 T1–T8 tamam (684 birim testi); sıradaki T9 fiş kuyruğu ve print gateway (devir: docs/DEVIR.md §1a).",
+  updatedAt: "01.11.2026 00:40",
+  headline: "P5 T1–T9 tamam (710 birim + 16 gateway testi); sıradaki T10 Yazıcılar penceresi ve kasa yazıcı kuyruğu (devir: docs/DEVIR.md §1a).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -161,6 +161,7 @@ window.ILERLEME = {
     { at: "31.10 22:00", text: "P5 T5 masa QR onaylandı (28f58a5 + güvenlik düzeltmeleri e2de421). T6 başladı." },
     { at: "31.10 22:38", text: "P5 T6 misafir menü sayfası onaylandı (c57315a + db29b28). T7 sipariş çekirdeği başladı." },
     { at: "31.10 22:56", text: "P5 T7 sipariş çekirdeği onaylandı (6e2440d); token hız sınırı nihai hali (23bc64f). T8 başladı." },
-    { at: "31.10 23:11", text: "P5 T8 misafir seçimler/sipariş/çağrı onaylandı (accd319). Fable sınırı: T9+ devir notuyla sürdürülür." }
+    { at: "31.10 23:11", text: "P5 T8 misafir seçimler/sipariş/çağrı onaylandı (accd319). Fable sınırı: T9+ devir notuyla sürdürülür." },
+    { at: "01.11 00:40", text: "P5 T9 fiş kuyruğu, print-queue API ve ESC/POS print gateway onaylandı (74e7841; 710 birim + 16 gateway testi, build yeşil). guestToken global limiter düzeltmesi kapandı (720f1e5). Sıradaki T10." }
   ]
 };
