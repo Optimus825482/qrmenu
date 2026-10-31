@@ -10,15 +10,22 @@
 |---|---|---|
 | A Analiz/tasarım | Bitti | `docs/analiz/2026-10-31-anlayis-notu.md`, spec: `docs/superpowers/specs/2026-10-31-merit-platform-design.md` |
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
-| P1 Çekirdek tanımlar | **Tamamlandı** (dal `p1/cekirdek`, HEAD `ed81bec`; 12 görev + Opus dal incelemesi + 2 düzeltme turu; `main`'e birleştirme kullanıcı onayı bekliyor) | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` (+ `-ledger.md`) |
-| P5 QR Menü/Sipariş | Planı yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` (kopya `main`'e alındı; orijinal worktree dalı `worktree-quizzical-albattani-805b4d`, commit `3d3fa90`) |
-| P2, P3, P4, P6, P7, P8 | Plan yazılmadı | Bu belgenin §5'i kapsamı tarif eder; plan `superpowers:writing-plans` ile spec'ten yazılır |
+| P1 Çekirdek tanımlar | **Tamamlandı ve `main`'e birleştirildi** (12 görev + Opus dal incelemesi + 2 düzeltme turu) | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` (+ `-ledger.md`) |
+| P5 QR Menü/Sipariş | **Uygulanıyor** (dal `p5/qr-menu`; 14 görevden T1 bitti, commit `6bf287e`) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` |
+| P2 Minibar tanımları + veri göçü | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p2-minibar-tanimlar.md` |
+| P3 Minibar operasyonu | Plan yazıldı (14 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p3-minibar-operasyon.md` |
+| P4 MyBar + bildirimler | Plan yazıldı (10 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
+| P6 QR Oda Servisi | Plan yazıldı (7 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p6-oda-servisi.md` |
+| P7 Rapor / e-posta / izleme | Plan yazıldı (12 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md` |
+| P8 Kabul / eğitim / kurulum | Plan yazıldı (8 görev), uygulanmadı | `docs/superpowers/plans/2026-10-31-p8-kabul.md` |
+
+**Çapraz tutarlılık geçişi yapıldı (31 Ekim 2026):** P2–P8 planlarının her birinde Global Constraints altında "Koordinasyon notları" vardır (havuz sahipliği `pool.ts`/P2, ortak `SCREEN_LIMITS` listesi, `IADE` anlamı, oda sayfası sahipliği P4/P6, migration numarası `ls prisma/migrations`, `guest.ipRateMultiplier`). Bir planı uygulamadan önce o bölümü oku.
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
 ## 1a. Kalınan yer (31 Ekim 2026, 20:00)
 
-P1 bitti. Sıradaki iş: kullanıcı onayıyla `p1/cekirdek` → `main` (fast-forward), sonra P5 planının uygulanması (`2026-10-31-p5-qr-menu.md`, 14 görev) veya P2 planının yazılması. P2 backlog (P1 dal incelemesinden): SSE kapsamı yetki/otel değişince eskiyor (users.update'te session.closed yayınla); otel pasife alma kilidi (hotels.create ile birlikte); seed CR-ONL canApprove sıfırlamasını belgele; users.ts deny hotelId SISTEM hedefte; rol kopyasında defaultScreen taşınmıyor.
+P1 bitti. Sıradaki iş: P5 uygulamasına devam (dal `p5/qr-menu`, T1 bitti; kalan T2–T14, plan `2026-10-31-p5-qr-menu.md`). P5 `main`'e birleşince sırayla **P2 → P3 → P4 → P6 → P7 → P8** (planların hepsi yazıldı; her planın başındaki "Koordinasyon notları" önce okunur; P6 P5 + P4'e dayanır, P7 P2/P3/P5/P6 verisini okur). P2 backlog (P1 dal incelemesinden): SSE kapsamı yetki/otel değişince eskiyor (users.update'te session.closed yayınla); otel pasife alma kilidi (hotels.create ile birlikte); seed CR-ONL canApprove sıfırlamasını belgele; users.ts deny hotelId SISTEM hedefte; rol kopyasında defaultScreen taşınmıyor.
 
 ## 2. Çalışma ortamı
 
@@ -48,14 +55,15 @@ P1 bitti. Sıradaki iş: kullanıcı onayıyla `p1/cekirdek` → `main` (fast-fo
 
 ## 5. Kalan alt projelerin kapsamı (plan yazarken kaynak)
 
-- **P1 (kalan T10–T12)**: plan dosyasında ayrıntılı; defterdeki ertelenmiş minörler T12'de ele alınır. T9 kapandı (commit yok). Sıradaki T10; bkz. §1a.
-- **P2 Minibar tanımları + göç** (spec §6.1, §6.2, §12; minibarlatest `routes/sistem_yoneticisi_routes.py` setup bölümü, `utils/qr_service.py`): ürün grubu/ürün (fiyat alanları iç rapor, misafire gösterilmez), setup (dolap içi/dışı, içerik adetleri), otel bazlı oda tipi–setup ataması, oda QR üretimi (HMAC token, SVG/PNG/ZIP, yazdırma şablonu, misafir mesajı), zimmet havuzu giriş/iade/düzeltme/kritik seviye, `scripts/migrate-from-minibarlatest` (idempotent, `legacy_id_map`, `--dry-run`, rapor; kullanıcıdan pg dump gelince).
-- **P3 Minibar operasyonu** (spec §6.3–6.5, §6.7; minibarlatest `routes/kat_sorumlusu_routes.py`, `utils/minibar_servisleri.py`, `utils/dnd_service.py`, `utils/gorev_service.py`, `utils/gorev_oncelik_service.py`, `utils/excel_service.py`, `static/js/oda_kontrol.js`): kat sorumlusu PWA (`/kat`: kat planı, kat doluluk, QR okuyucu html5-qrcode, oda kontrolü), depo ekranları (`/depo`), doluluk Excel, günlük görevler, öncelik planı, pg-boss işleri (00:01 yükleme görevleri, 10:00/18:00 uyarı, 23:59 DND gün sonu), raporlar için veri.
-- **P4 MyBar + bildirim** (spec §6.6, §9.2; referans şablon): misafir `/q/[token]` (next-intl tr/en/de/ru/ar, RTL), günlük sınır, idempotency, not çevirisi (ayarla kapatılabilir), kat sorumlusu zorunlu onay penceresi, karşılama/kapatma/iptal, Web Push (VAPID).
-- **P5** planı hazır (`2026-10-31-p5-qr-menu.md`); P1 T4 (outlet/masa CRUD) ön koşul.
-- **P6 Oda servisi** (spec §8): otel başına ODA_SERVISI outleti, misafir akışı, `/oda-servisi` ekranı, teyit adımı, SLA.
-- **P7 Rapor/e-posta/izleme** (spec §6.7, §9, §11): rapor merkezi (Excel/PDF), SMTP + 08:00/08:05 e-postaları, Komuta Merkezi radar.
-- **P8 Kabul** (spec §13.2, §15): e2e paket, yük denemesi, kılavuzlar, kurulum, GitHub'a push + CI'ın gerçek koşusu.
+- **Uygulama sırası ve bağımlılıklar:** P5 (uygulanıyor) → P2 → P3 → P4 → P6 → P7 → P8. P2, P5 T1 kütüphanelerine (`qr.ts`, `rate-limit.ts`, `uploads.ts`) dayanır; P3 P2'nin `pool.ts`/`checklist.ts`/`stockStatus.ts`'ine; P4 P2 + P3 (slotlar `AckHostSlot`/`MybarSlot`) + P5 T5/T6'ya; **P6 P5 + P4'e** (oda sayfası `RoomServiceSlot`); **P7 P2/P3/P5/P6 verisini okur** (kodlarına bağlanmaz); P8 hepsine. Migration numarası her planda `ls prisma/migrations` ile alınır; ekran yetki sınırları `prisma/seed/roles.ts`'te ortak `SCREEN_LIMITS` listesine P5 → P2 → P3 → P7 sırasıyla eklenir.
+- **P1**: tamamlandı ve `main`'de (bkz. §1).
+- **P2 Minibar tanımları + göç** (spec §6.1, §6.2, §12; minibarlatest `routes/sistem_yoneticisi_routes.py` setup bölümü, `utils/qr_service.py`): ürün grubu/ürün (fiyat alanları iç rapor, misafire gösterilmez), setup (dolap içi/dışı, içerik adetleri), otel bazlı oda tipi–setup ataması, oda QR üretimi (HMAC token, SVG/PNG/ZIP, yazdırma şablonu, misafir mesajı), zimmet havuzu giriş/iade/düzeltme/kritik seviye, `scripts/migrate-from-minibarlatest` (idempotent, `legacy_id_map`, `--dry-run`, rapor; kullanıcıdan pg dump gelince). **Plan yazıldı (14 görev): `docs/superpowers/plans/2026-10-31-p2-minibar-tanimlar.md`.**
+- **P3 Minibar operasyonu** (spec §6.3–6.5, §6.7; minibarlatest `routes/kat_sorumlusu_routes.py`, `utils/minibar_servisleri.py`, `utils/dnd_service.py`, `utils/gorev_service.py`, `utils/gorev_oncelik_service.py`, `utils/excel_service.py`, `static/js/oda_kontrol.js`): kat sorumlusu PWA (`/kat`: kat planı, kat doluluk, QR okuyucu html5-qrcode, oda kontrolü), depo ekranları (`/depo`), doluluk Excel, günlük görevler, öncelik planı, pg-boss işleri (00:01 yükleme görevleri, 10:00/18:00 uyarı, 23:59 DND gün sonu), raporlar için veri. **Plan yazıldı (14 görev): `docs/superpowers/plans/2026-10-31-p3-minibar-operasyon.md`.**
+- **P4 MyBar + bildirim** (spec §6.6, §9.2; referans şablon): misafir `/q/[token]` (next-intl tr/en/de/ru/ar, RTL), günlük sınır, idempotency, not çevirisi (ayarla kapatılabilir), kat sorumlusu zorunlu onay penceresi, karşılama/kapatma/iptal, Web Push (VAPID). **Plan yazıldı (10 görev): `docs/superpowers/plans/2026-10-31-p4-mybar.md`.**
+- **P5** planı hazır ve uygulanıyor (`2026-10-31-p5-qr-menu.md`, dal `p5/qr-menu`); P1 T4 (outlet/masa CRUD) ön koşul.
+- **P6 Oda servisi** (spec §8): otel başına ODA_SERVISI outleti, misafir akışı, `/oda-servisi` ekranı, teyit adımı, SLA. **Plan yazıldı (7 görev): `docs/superpowers/plans/2026-10-31-p6-oda-servisi.md`.**
+- **P7 Rapor/e-posta/izleme** (spec §6.7, §9, §11): rapor merkezi (Excel/PDF), SMTP + 08:00/08:05 e-postaları, Komuta Merkezi radar. **Plan yazıldı (12 görev): `docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md`.**
+- **P8 Kabul** (spec §13.2, §15): e2e paket, yük denemesi, kılavuzlar, kurulum, GitHub'a push + CI'ın gerçek koşusu. **Plan yazıldı (8 görev): `docs/superpowers/plans/2026-10-31-p8-kabul.md`.**
 
 ## 6. Pazartesi (Fable) son kontrol listesi
 
