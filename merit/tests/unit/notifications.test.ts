@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { MeritEvent } from "@/lib/realtime-events";
 import { testDb } from "../helpers/db";
 import {
+  ctxFor,
   dropReferenceData,
   hotelId,
   makeUser,
@@ -16,7 +17,9 @@ vi.mock("@/lib/env", async (importActual) => {
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 
 const { startRealtimeListener, stopRealtimeListener, subscribe } = await import("@/lib/realtime");
-const { notify } = await import("@/modules/core/server/notifications");
+const { listMyNotifications, markAllRead, markNotificationRead, notify } = await import(
+  "@/modules/core/server/notifications"
+);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const input = { type: "test.note", title: "Başlık", body: "Gövde", refType: "order", refId: "o1" };
@@ -151,5 +154,82 @@ describe("notify", () => {
     await sleep(300);
     expect(await testDb.notification.count()).toBe(0);
     expect(received).toHaveLength(0);
+  });
+});
+
+describe("okuma API'si (yalnız çağıranın satırları)", () => {
+  async function seedRows(userId: string, count: number, base = Date.parse("2026-10-31T10:00:00Z")) {
+    for (let i = 0; i < count; i++) {
+      await testDb.notification.create({
+        data: {
+          userId,
+          type: "test.note",
+          title: `N${i}`,
+          body: "Gövde",
+          createdAt: new Date(base + i * 60_000),
+        },
+      });
+    }
+  }
+
+  it("listMyNotifications: yalnız kendi satırları, en yeni önce, limit uygulanır", async () => {
+    const me = await makeUser({ username: "okur", roleCode: "R-GAR", hotelCode: "MR" });
+    const other = await makeUser({ username: "baskasi", roleCode: "R-GAR", hotelCode: "MR" });
+    await seedRows(me.id, 25);
+    await seedRows(other.id, 3);
+    const ctx = await ctxFor(me, { hotelCode: "MR" });
+
+    const rows = await listMyNotifications(ctx);
+    expect(rows).toHaveLength(20); // default limit
+    expect(rows[0]).toMatchObject({ title: "N24", isRead: false, type: "test.note", body: "Gövde" });
+    expect(rows[19].title).toBe("N5");
+    expect(rows.every((r) => r.createdAt instanceof Date)).toBe(true);
+
+    const three = await listMyNotifications(ctx, 3);
+    expect(three.map((r) => r.title)).toEqual(["N24", "N23", "N22"]);
+  });
+
+  it("markNotificationRead: kendi satırı okundu olur (isRead + readAt)", async () => {
+    const me = await makeUser({ username: "okur2", roleCode: "R-GAR", hotelCode: "MR" });
+    await seedRows(me.id, 1);
+    const row = await testDb.notification.findFirstOrThrow({ where: { userId: me.id } });
+
+    await markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), row.id);
+
+    const after = await testDb.notification.findUniqueOrThrow({ where: { id: row.id } });
+    expect(after.isRead).toBe(true);
+    expect(after.readAt).toBeInstanceOf(Date);
+  });
+
+  it("markNotificationRead: başkasının satırı → NOT_FOUND, değişiklik yok", async () => {
+    const me = await makeUser({ username: "okur3", roleCode: "R-GAR", hotelCode: "MR" });
+    const other = await makeUser({ username: "sahip", roleCode: "R-GAR", hotelCode: "MR" });
+    await seedRows(other.id, 1);
+    const row = await testDb.notification.findFirstOrThrow({ where: { userId: other.id } });
+
+    await expect(
+      markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), row.id),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), "olmayan-id"),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    const after = await testDb.notification.findUniqueOrThrow({ where: { id: row.id } });
+    expect(after.isRead).toBe(false);
+    expect(after.readAt).toBeNull();
+  });
+
+  it("markAllRead: yalnız çağıranın okunmamışlarını işaretler, sayıyı döner", async () => {
+    const me = await makeUser({ username: "okur4", roleCode: "R-GAR", hotelCode: "MR" });
+    const other = await makeUser({ username: "sahip2", roleCode: "R-GAR", hotelCode: "MR" });
+    await seedRows(me.id, 4);
+    await seedRows(other.id, 2);
+    const mine = await testDb.notification.findFirstOrThrow({ where: { userId: me.id } });
+    await testDb.notification.update({ where: { id: mine.id }, data: { isRead: true, readAt: new Date() } });
+
+    expect(await markAllRead(await ctxFor(me, { hotelCode: "MR" }))).toBe(3);
+
+    expect(await testDb.notification.count({ where: { userId: me.id, isRead: false } })).toBe(0);
+    expect(await testDb.notification.count({ where: { userId: other.id, isRead: false } })).toBe(2);
   });
 });

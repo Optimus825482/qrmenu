@@ -1,0 +1,509 @@
+/*
+ * Merit OS — Android shell (narrow screens). A cleaner, Material-style look than the XP desktop;
+ * the wallpaper tokens (--xp-wallpaper, set by [data-wallpaper] in theme.css) tint the app bar.
+ * Everything is scoped to .mb-shell.
+ */
+
+.mb-shell {
+  --mb-bg: #f3f5f9;
+  --mb-surface: #ffffff;
+  --mb-text: #14181f;
+  --mb-muted: #5b6472;
+  --mb-line: #e1e5ec;
+  --mb-primary: #1c4fd8;
+  --mb-primary-soft: #e3ebff;
+  --mb-danger: #b3261e;
+  --mb-warn: #b26a00;
+  --mb-ok: #1e7d32;
+  --mb-bar: 56px;
+  --mb-tab: 64px;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--mb-bg);
+  color: var(--mb-text);
+  font-family: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mb-shell button {
+  font: inherit;
+  color: inherit;
+}
+
+.mb-shell :focus-visible {
+  outline: 2px solid var(--mb-primary);
+  outline-offset: 2px;
+}
+
+/* ---- app bar ---------------------------------------------------------------------------- */
+
+.mb-appbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--mb-bar);
+  padding: 8px 16px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  color: #ffffff;
+  background:
+    linear-gradient(rgba(8, 14, 30, 0.45), rgba(8, 14, 30, 0.6)),
+    var(--xp-wallpaper, #1c2a4a);
+  background-size: cover;
+  background-position: center;
+}
+
+.mb-appbar-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mb-appbar-sub {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.mb-sse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+}
+
+.mb-sse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f2c12e;
+}
+
+.mb-sse[data-status="open"] .mb-sse-dot {
+  background: #53d769;
+}
+
+.mb-sse[data-status="closed"] .mb-sse-dot {
+  background: #ff6b5e;
+}
+
+/* ---- content ---------------------------------------------------------------------------- */
+
+.mb-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mb-panel {
+  padding: 16px;
+}
+
+.mb-panel:focus-visible {
+  outline-offset: -2px;
+}
+
+.mb-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mb-heading {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.mb-subheading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mb-muted);
+}
+
+.mb-hint {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--mb-muted);
+}
+
+.mb-card {
+  padding: 14px 16px;
+  border: 1px solid var(--mb-line);
+  border-radius: 16px;
+  background: var(--mb-surface);
+  box-shadow: 0 1px 2px rgba(20, 24, 31, 0.06);
+}
+
+.mb-error {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fdecea;
+  color: var(--mb-danger);
+}
+
+.mb-empty {
+  padding: 32px 16px;
+  border: 1px dashed var(--mb-line);
+  border-radius: 16px;
+  text-align: center;
+  color: var(--mb-muted);
+}
+
+.mb-empty p {
+  margin: 0;
+}
+
+.mb-empty-title {
+  margin-bottom: 4px !important;
+  font-weight: 600;
+  color: var(--mb-text);
+}
+
+.mb-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mb-text-button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mb-primary);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.mb-text-button:disabled {
+  color: var(--mb-muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---- İzleme ----------------------------------------------------------------------------- */
+
+.mb-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mb-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 6px;
+  text-align: center;
+}
+
+.mb-kpi-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--mb-primary);
+}
+
+.mb-kpi-label {
+  font-size: 12px;
+  color: var(--mb-muted);
+}
+
+.mb-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mb-rows li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  border-top: 1px solid var(--mb-line);
+}
+
+.mb-rows li:first-child {
+  border-top: 0;
+}
+
+.mb-count {
+  min-width: 28px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--mb-primary-soft);
+  color: var(--mb-primary);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---- Bildirimler ------------------------------------------------------------------------ */
+
+.mb-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mb-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 1px solid var(--mb-line);
+  border-radius: 16px;
+  background: var(--mb-surface);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mb-note[data-read="true"] {
+  background: transparent;
+  color: var(--mb-muted);
+  cursor: default;
+}
+
+.mb-note-dot-slot {
+  flex: none;
+  width: 10px;
+  padding-top: 6px;
+}
+
+.mb-note-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mb-primary);
+}
+
+.mb-note-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mb-note-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mb-note[data-read="true"] .mb-note-title {
+  font-weight: 500;
+}
+
+.mb-note-body {
+  font-size: 14px;
+  color: var(--mb-muted);
+  overflow-wrap: anywhere;
+}
+
+.mb-note-time {
+  flex: none;
+  font-size: 12px;
+  color: var(--mb-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Ayarlar ---------------------------------------------------------------------------- */
+
+.mb-wallpapers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.mb-wallpaper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 2px solid var(--mb-line);
+  border-radius: 14px;
+  background: var(--mb-surface);
+  min-height: 44px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mb-wallpaper[aria-checked="true"] {
+  border-color: var(--mb-primary);
+  background: var(--mb-primary-soft);
+  font-weight: 600;
+}
+
+.mb-wallpaper-swatch {
+  display: block;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--xp-wallpaper);
+  background-size: cover;
+}
+
+.mb-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.mb-switch-text {
+  font-weight: 500;
+}
+
+.mb-switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mb-switch::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: #aab2c0;
+  transition: background 0.15s;
+}
+
+.mb-switch[aria-checked="true"]::before {
+  background: var(--mb-primary);
+}
+
+.mb-switch-thumb {
+  position: absolute;
+  left: 4px;
+  top: 11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s;
+}
+
+.mb-switch[aria-checked="true"] .mb-switch-thumb {
+  transform: translateX(22px);
+}
+
+.mb-logout {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--mb-danger);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mb-danger);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mb-logout:hover {
+  background: #fdecea;
+}
+
+/* ---- bottom tabs ------------------------------------------------------------------------ */
+
+.mb-nav {
+  flex: none;
+  border-top: 1px solid var(--mb-line);
+  background: var(--mb-surface);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.mb-tabs {
+  display: flex;
+}
+
+.mb-tab {
+  flex: 1 1 0;
+  min-width: 44px;
+  min-height: var(--mb-tab);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--mb-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.mb-tab[aria-selected="true"] {
+  color: var(--mb-primary);
+  font-weight: 600;
+}
+
+.mb-tab-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+}
+
+.mb-tab[aria-selected="true"] .mb-tab-icon {
+  background: var(--mb-primary-soft);
+}
+
+.mb-badge {
+  position: absolute;
+  top: -2px;
+  right: 8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--mb-danger);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-switch::before,
+  .mb-switch-thumb {
+    transition: none;
+  }
+}

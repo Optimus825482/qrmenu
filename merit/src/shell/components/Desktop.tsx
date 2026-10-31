@@ -11,7 +11,7 @@ import {
 import { alertDialog, confirm, confirmRemoveShortcut } from "../confirm";
 import { XpIcon } from "../icons";
 import type { AppDefinition } from "../registry";
-import type { IconPos, Wallpaper } from "../types";
+import { WALLPAPER_LABELS, type IconPos } from "../types";
 import {
   deskHeight,
   ICON_CELL_H,
@@ -22,13 +22,6 @@ import {
 } from "../windowStore";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { APP_DRAG_TYPE } from "./StartMenu";
-
-const WALLPAPER_LABEL: Record<Wallpaper, string> = {
-  bliss: "Bliss",
-  klasik: "Klasik",
-  "royal-gold": "Royal Gold",
-  gumus: "Gümüş",
-};
 
 const CATEGORY_LABEL: Record<AppDefinition["category"], string> = {
   GENEL: "Genel",
@@ -105,7 +98,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
     {
       label: "Duvar kağıdı",
       submenu: WALLPAPERS.map((w) => ({
-        label: WALLPAPER_LABEL[w],
+        label: WALLPAPER_LABELS[w],
         checked: w === wallpaper,
         onSelect: () => windowStore.getState().setWallpaper(w),
       })),
@@ -118,7 +111,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
         const s = windowStore.getState();
         void alertDialog({
           title: "Masaüstü Özellikleri",
-          message: `Duvar kağıdı: ${WALLPAPER_LABEL[s.wallpaper]}\nKısayol sayısı: ${s.icons.length}\nAçık pencere: ${s.order.length}`,
+          message: `Duvar kağıdı: ${WALLPAPER_LABELS[s.wallpaper]}\nKısayol sayısı: ${s.icons.length}\nAçık pencere: ${s.order.length}`,
         });
       },
     },

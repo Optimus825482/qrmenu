@@ -1,6 +1,8 @@
 import type { Prisma } from "@/generated/prisma/client";
+import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
+import { DomainError } from "@/lib/result";
 
 const RECIPIENTS_PER_EVENT = 100;
 
@@ -75,5 +77,50 @@ export async function notify(input: NotifyInput, tx?: Prisma.TransactionClient):
       tx,
     );
   }
+  return count;
+}
+
+export type MyNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: Date;
+};
+
+const MAX_LIST = 100;
+
+/** The caller's own notifications, newest first (`limit` is clamped to 1..100). */
+export async function listMyNotifications(ctx: Ctx, limit = 20): Promise<MyNotification[]> {
+  const take = Math.min(MAX_LIST, Math.max(1, Math.trunc(limit) || 1));
+  return prisma.notification.findMany({
+    where: { userId: ctx.user.id },
+    select: { id: true, type: true, title: true, body: true, isRead: true, createdAt: true },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take,
+  });
+}
+
+/** Marks one of the caller's own notifications read. Someone else's (or no such row) -> NOT_FOUND. */
+export async function markNotificationRead(ctx: Ctx, id: string): Promise<void> {
+  const row = await prisma.notification.findFirst({
+    where: { id, userId: ctx.user.id },
+    select: { isRead: true },
+  });
+  if (!row) throw new DomainError("NOT_FOUND", "Bildirim bulunamadı");
+  if (row.isRead) return;
+  await prisma.notification.updateMany({
+    where: { id, userId: ctx.user.id, isRead: false },
+    data: { isRead: true, readAt: new Date() },
+  });
+}
+
+/** Marks every unread notification of the caller read; returns how many changed. */
+export async function markAllRead(ctx: Ctx): Promise<number> {
+  const { count } = await prisma.notification.updateMany({
+    where: { userId: ctx.user.id, isRead: false },
+    data: { isRead: true, readAt: new Date() },
+  });
   return count;
 }

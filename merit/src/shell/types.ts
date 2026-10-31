@@ -3,6 +3,13 @@
 export const WALLPAPERS = ["bliss", "klasik", "royal-gold", "gumus"] as const;
 export type Wallpaper = (typeof WALLPAPERS)[number];
 
+export const WALLPAPER_LABELS: Record<Wallpaper, string> = {
+  bliss: "Bliss",
+  klasik: "Klasik",
+  "royal-gold": "Royal Gold",
+  gumus: "Gümüş",
+};
+
 export type Rect = { x: number; y: number; w: number; h: number };
 
 export type WinState = {

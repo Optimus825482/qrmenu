@@ -1,4 +1,5 @@
 import "@/shell/theme.css";
+import "@/shell/mobile.css";
 import { redirect } from "next/navigation";
 import { requireUser, type Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -25,7 +26,7 @@ export default async function AdminPage() {
   if (!ctx) redirect("/giris?next=%2Fadmin");
   if (!SHELL_ROLE_KINDS.has(ctx.user.roleKind)) redirect("/secim");
 
-  const [screens, hotels, prefs, confirmSimpleActions] = await Promise.all([
+  const [screens, hotels, prefs, confirmSimpleActions, mobileDefinitions] = await Promise.all([
     visibleScreens(ctx),
     prisma.hotel.findMany({
       where: { id: { in: ctx.hotelIds }, isActive: true },
@@ -34,6 +35,7 @@ export default async function AdminPage() {
     }),
     loadShellPrefs(),
     getSetting("shell.confirmSimpleActions", ctx.session.hotelId),
+    getSetting("shell.mobileDefinitions", ctx.session.hotelId),
   ]);
 
   return (
@@ -43,6 +45,7 @@ export default async function AdminPage() {
       screens={screens}
       prefs={prefs}
       confirmSimpleActions={confirmSimpleActions}
+      mobileDefinitions={mobileDefinitions}
     />
   );
 }

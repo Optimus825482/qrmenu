@@ -5,12 +5,14 @@ import { registerCoreApps } from "@/modules/core/apps";
 import { alertDialog } from "@/shell/confirm";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
 import { Desktop } from "@/shell/components/Desktop";
+import { MobileShell } from "@/shell/components/MobileShell";
 import type { HotelInfo } from "@/shell/components/HotelPicker";
 import { StartMenu } from "@/shell/components/StartMenu";
 import { Taskbar } from "@/shell/components/Taskbar";
 import { Window } from "@/shell/components/Window";
 import { getApps } from "@/shell/registry";
 import type { ShellPrefs } from "@/shell/types";
+import { useShellMode } from "@/shell/useShellMode";
 import { useShellPersistence } from "@/shell/useShellPersistence";
 import { MAX_WINDOWS, useWindowStore, windowStore } from "@/shell/windowStore";
 
@@ -23,15 +25,21 @@ export type ShellClientProps = {
   screens: string[];
   prefs: ShellPrefs | null;
   confirmSimpleActions: boolean;
+  /** Setting shell.mobileDefinitions: default of the mobile "Tanımlamaları mobilde aç" switch. */
+  mobileDefinitions: boolean;
 };
 
-/** Client root of Merit OS: wires the store to the page and composes the shell parts. */
+/**
+ * Client root of Merit OS: wires the store to the page and shows the XP desktop, or the Android
+ * shell on narrow screens (see useShellMode).
+ */
 export function ShellClient({
   user,
   hotels,
   screens,
   prefs,
   confirmSimpleActions,
+  mobileDefinitions,
 }: ShellClientProps) {
   const apps = useMemo(
     () => getApps().filter((a) => screens.includes(a.screenCode)),
@@ -46,6 +54,7 @@ export function ShellClient({
     confirmSimpleActions,
   });
 
+  const mode = useShellMode();
   const ready = useWindowStore((s) => s.ready);
   const order = useWindowStore((s) => s.order);
   const [startOpen, setStartOpen] = useState(false);
@@ -60,6 +69,12 @@ export function ShellClient({
     }
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
+
+  // Same persistence for both shells (wallpaper, layout); only one shell is mounted at a time, so
+  // there is one SSE connection either way.
+  if (mode === "mobile") {
+    return ready ? <MobileShell user={user} mobileDefinitions={mobileDefinitions} /> : null;
+  }
 
   return (
     <div className="xp-shell">
