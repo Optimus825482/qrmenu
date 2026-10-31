@@ -53,6 +53,27 @@ describe("marka tercihleri (alt telif bandı, filigran)", () => {
       expect(s().windows[a]).toMatchObject({ maximized: true, h: 800 - TASKBAR_H });
     });
 
+    it("setFooterHeight: ölçülen yükseklik (güvenli alan dahil) maksimize ve kırpmada kullanılır", () => {
+      const a = s().open("brand.app")!;
+      s().toggleMaximize(a);
+      s().setFooterHeight(40);
+      expect(s().windows[a].h).toBe(800 - TASKBAR_H - 40);
+      s().toggleMaximize(a);
+      s().toggleMaximize(a);
+      expect(s().windows[a].h).toBe(800 - TASKBAR_H - 40);
+      s().setFooterHeight(-5);
+      s().setFooterHeight(Number.NaN);
+      s().setFooterHeight(5000);
+      expect(s().footerHeight).toBe(40);
+      s().setFooterBand(false);
+      expect(s().windows[a].h).toBe(800 - TASKBAR_H);
+      s().setFooterHeight(30); // band off: remembered, nothing resized
+      expect(s().windows[a].h).toBe(800 - TASKBAR_H);
+      s().setFooterBand(true);
+      expect(s().windows[a].h).toBe(800 - TASKBAR_H - 30);
+      expect(s().snapshot()).not.toHaveProperty("footerHeight");
+    });
+
     it("footer açılıp kapanınca büyütülmüş pencere yeniden oturur, serbest pencere içeri kırpılır", () => {
       const a = s().open("brand.app")!;
       s().toggleMaximize(a);

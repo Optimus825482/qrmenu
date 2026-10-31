@@ -37,8 +37,14 @@ export const Z_SPAN = 10_000;
 export const MIN_W = 360;
 export const MIN_H = 240;
 export const TASKBAR_H = 30;
-/** Height of the copyright band below the taskbar (theme.css: .xp-footer-band), when enabled. */
+/**
+ * Default height of the copyright band below the taskbar (theme.css: .xp-footer-band), when
+ * enabled. The rendered band reports its real height (it adds the PWA safe-area inset) through
+ * setFooterHeight().
+ */
 export const FOOTER_HEIGHT = 22;
+/** Bounds for a measured footer height (px); anything else is ignored. */
+const FOOTER_HEIGHT_MAX = 200;
 export const CASCADE_STEP = 24;
 export const CASCADE_ORIGIN = 32;
 /** Desktop icon grid used by "Simgeleri hizala" and the default layout. */
@@ -62,6 +68,8 @@ type ShellState = {
   fontFamily: FontFamily;
   theme: Theme;
   footerBand: boolean;
+  /** Measured height of the footer band in px (not persisted); FOOTER_HEIGHT until reported. */
+  footerHeight: number;
   brandWatermark: boolean;
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
@@ -104,6 +112,8 @@ type ShellActions = {
   setTheme(theme: Theme): void;
   /** Shows/hides the footer band; the desktop area (and maximized windows) shrink with it. */
   setFooterBand(on: boolean): void;
+  /** Real rendered height of the footer band (px), reported by FooterBand. */
+  setFooterHeight(px: number): void;
   setBrandWatermark(on: boolean): void;
   /** Wallpaper, font, theme and brand switches back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
   resetAppearance(): void;
@@ -134,9 +144,9 @@ export const deskHeight = (vp: { h: number }) => Math.max(0, vp.h - TASKBAR_H);
  * shown. Everything that positions or clamps goes through this, never through `viewport` directly.
  */
 export function effectiveViewport(
-  s: Pick<ShellState, "viewport" | "footerBand">,
+  s: Pick<ShellState, "viewport" | "footerBand" | "footerHeight">,
 ): ShellState["viewport"] {
-  return { w: s.viewport.w, h: Math.max(0, s.viewport.h - (s.footerBand ? FOOTER_HEIGHT : 0)) };
+  return { w: s.viewport.w, h: Math.max(0, s.viewport.h - (s.footerBand ? s.footerHeight : 0)) };
 }
 
 export function minSize(app: AppDefinition | undefined): { w: number; h: number } {
@@ -280,6 +290,7 @@ export function createWindowStore() {
       cascade: 0,
       viewport: { w: 1920, h: 1080 },
       ...DEFAULT_APPEARANCE,
+      footerHeight: FOOTER_HEIGHT,
       icons: [],
       hotels: [],
       appIds: null,
@@ -300,7 +311,7 @@ export function createWindowStore() {
         if (old.w === vp.w && old.h === vp.h) return;
         set({
           viewport: vp,
-          windows: fitWindows(effectiveViewport({ viewport: vp, footerBand: get().footerBand })),
+          windows: fitWindows(effectiveViewport({ ...get(), viewport: vp })),
         });
       },
 
@@ -425,9 +436,25 @@ export function createWindowStore() {
 
       setFooterBand(on) {
         if (typeof on !== "boolean" || on === get().footerBand) return;
-        const vp = effectiveViewport({ viewport: get().viewport, footerBand: on });
+        const vp = effectiveViewport({ ...get(), footerBand: on });
         set({
           footerBand: on,
+          windows: fitWindows(vp),
+          icons: get().icons.map((i) => ({ appId: i.appId, ...iconPosition(i.x, i.y, vp) })),
+        });
+      },
+
+      setFooterHeight(px) {
+        if (!Number.isFinite(px) || px < 0 || px > FOOTER_HEIGHT_MAX) return;
+        const footerHeight = Math.round(px);
+        if (footerHeight === get().footerHeight) return;
+        if (!get().footerBand) {
+          set({ footerHeight });
+          return;
+        }
+        const vp = effectiveViewport({ ...get(), footerHeight });
+        set({
+          footerHeight,
           windows: fitWindows(vp),
           icons: get().icons.map((i) => ({ appId: i.appId, ...iconPosition(i.x, i.y, vp) })),
         });
@@ -492,7 +519,7 @@ export function createWindowStore() {
 
       restore(p) {
         const footerBand = bool(p.footerBand, DEFAULT_APPEARANCE.footerBand);
-        const vp = effectiveViewport({ viewport: get().viewport, footerBand });
+        const vp = effectiveViewport({ ...get(), footerBand });
         const windows: Record<string, WinState> = {};
         const order: string[] = [];
         let maxSeq = 0;

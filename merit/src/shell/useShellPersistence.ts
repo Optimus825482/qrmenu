@@ -86,7 +86,7 @@ export function useShellPersistence({
     const { serverPrefs: fromServer, appIds: visible } = initial.current;
     const fallback: ShellPrefs = {
       ...DEFAULT_APPEARANCE,
-      icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, effectiveViewport({ viewport: store.viewport, footerBand: DEFAULT_APPEARANCE.footerBand })) })),
+      icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, effectiveViewport({ ...store, footerBand: DEFAULT_APPEARANCE.footerBand })) })),
       windows: [],
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);

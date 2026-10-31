@@ -329,7 +329,7 @@
 
 .xp-brand-title {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(32px, 4.5vw, 60px);
+  font-size: clamp(48px, 4.5vw, 64px);
   font-weight: 400;
   letter-spacing: 0.3em;
   /* The trailing letter-space would push the centered text off-center. */
