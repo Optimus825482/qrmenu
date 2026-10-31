@@ -1611,3 +1611,68 @@
   background: var(--xp-body);
   color: var(--xp-muted);
 }
+
+/* ---- Odalar: filtre çubuğu, QR rozeti, toplu ekleme önizlemesi ---------------------------- */
+
+.xp-defs-filters {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 4px 6px 0;
+}
+
+.xp-defs-filters label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.xp-defs-filters select {
+  min-height: 21px;
+  padding: 1px 4px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  font: inherit;
+}
+
+.xp-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  color: var(--xp-muted);
+  line-height: 15px;
+}
+
+.xp-badge[data-on="true"] {
+  border-color: var(--xp-select);
+  color: var(--xp-select);
+  font-weight: bold;
+}
+
+.xp-bulk-note {
+  margin: 0;
+}
+
+.xp-bulk-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.xp-bulk-preview {
+  margin: 0;
+  max-height: 84px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+  overflow-wrap: anywhere;
+}
+
+.xp-bulk-warning {
+  margin: 0;
+  color: var(--xp-close-2);
+}

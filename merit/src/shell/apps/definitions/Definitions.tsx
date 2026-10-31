@@ -5,6 +5,7 @@ import { XpIcon } from "../../icons";
 import type { AppProps } from "../../registry";
 import { FloorsPanel } from "./panels/FloorsPanel";
 import { HotelPanel } from "./panels/HotelPanel";
+import { RoomsPanel } from "./panels/RoomsPanel";
 import { RoomTypesPanel } from "./panels/RoomTypesPanel";
 
 type NodeDef = {
@@ -21,7 +22,7 @@ export const DEFINITION_NODES: readonly NodeDef[] = [
   { id: "otel", label: "Otel", level: 1 },
   { id: "katlar", label: "Katlar", level: 2 },
   { id: "oda-tipleri", label: "Oda Tipleri", level: 2 },
-  { id: "odalar", label: "Odalar", level: 2, task: 3 },
+  { id: "odalar", label: "Odalar", level: 2 },
   { id: "outletler", label: "Outletler", level: 1, task: 4 },
   { id: "masalar", label: "Masalar", level: 2, task: 4 },
   { id: "kullanicilar", label: "Kullanıcılar", level: 1, task: 5 },
@@ -81,6 +82,8 @@ export function Definitions({ hotelId, initialPanel, setStatus }: AppProps) {
     body = <FloorsPanel hotelId={hotelId} setStatus={setStatus} />;
   } else if (node.id === "oda-tipleri") {
     body = <RoomTypesPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "odalar") {
+    body = <RoomsPanel hotelId={hotelId} setStatus={setStatus} />;
   } else {
     body = <HotelPanel hotelId={hotelId} setStatus={setStatus} />;
   }

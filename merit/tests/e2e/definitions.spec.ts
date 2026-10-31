@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { Locator, Page } from "@playwright/test";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
@@ -96,8 +97,8 @@ test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve henüz yapılmay
   await expect(win.getByRole("status").filter({ hasText: "Otel bilgileri kaydedildi" })).toBeVisible();
 
   // Not-yet-built sections say which task adds them.
-  await node(win, "Odalar").click();
-  await expect(win.getByText("Bu bölüm P1 Task 3'te eklenecek.")).toBeVisible();
+  await node(win, "Outletler").click();
+  await expect(win.getByText("Bu bölüm P1 Task 4'te eklenecek.")).toBeVisible();
   await node(win, "Roller").click();
   await expect(win.getByText("Bu bölüm P1 Task 6'te eklenecek.")).toBeVisible();
 
@@ -215,6 +216,112 @@ test("Oda Tipleri: Yeni Test Suit (2 kabin) → listede; negatif kabin alan hata
   const ask = page.getByRole("dialog", { name: "Oda tipini sil" });
   await ask.getByRole("button", { name: "Evet" }).click();
   await expect(row(win, "Test Suit")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapasite 3; kat filtresi; Excel; sil", async ({
+  page,
+}) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  const win = await definitionsWindow(page, MR);
+
+  // Rooms need floors: add two through the Katlar panel.
+  await node(win, "Katlar").click();
+  for (const [number, name] of [
+    ["5", "5. Kat"],
+    ["6", "6. Kat"],
+  ]) {
+    await win.getByRole("button", { name: "Yeni kayıt" }).click();
+    const floor = page.getByRole("dialog", { name: "Yeni kat" });
+    await floor.getByLabel("Kat numarası").fill(number);
+    await floor.getByLabel("Kat adı").fill(name);
+    await floor.getByRole("button", { name: "Kaydet" }).click();
+    await expect(row(win, name)).toBeVisible();
+  }
+
+  await node(win, "Odalar").click();
+  await expect(win.getByText("Bu filtreyle kayıtlı oda yok")).toBeVisible();
+  const filters = win.getByRole("group", { name: "Oda filtreleri" });
+
+  // Toplu Ekle 901–903: the preview lists the numbers before anything is written.
+  await win.getByRole("button", { name: "Toplu Ekle" }).click();
+  const bulk = page.getByRole("dialog", { name: "Toplu oda ekle" });
+  await bulk.getByLabel("Kat", { exact: true }).selectOption({ label: "5. Kat" });
+  await bulk.getByLabel("Başlangıç numarası").fill("901");
+  await bulk.getByLabel("Bitiş numarası").fill("903");
+  const preview = bulk.getByRole("status", { name: "Önizleme" });
+  await expect(preview).toContainText("3 oda eklenecek");
+  await expect(preview).toContainText("901, 902, 903");
+  await bulk.getByRole("button", { name: "Ekle" }).click();
+  const added = page.getByRole("alertdialog", { name: "Odalar eklendi" });
+  await expect(added).toContainText("3 oda eklendi.");
+  await added.getByRole("button", { name: "Tamam" }).click();
+  for (const number of ["901", "902", "903"]) await expect(row(win, number)).toBeVisible();
+  await expect(win.getByText("3 kayıt")).toBeVisible();
+  await expect(row(win, "901").getByRole("gridcell").nth(5)).toHaveText("yok");
+
+  // The same range again: the preview warns and nothing is written.
+  await win.getByRole("button", { name: "Toplu Ekle" }).click();
+  await bulk.getByLabel("Başlangıç numarası").fill("902");
+  await bulk.getByLabel("Bitiş numarası").fill("905");
+  await expect(bulk.getByRole("status", { name: "Önizleme" })).toContainText(
+    "2 numara zaten kayıtlı (902, 903)",
+  );
+  await bulk.getByRole("button", { name: "Ekle" }).click();
+  await expect(bulk.getByRole("alert")).toContainText("Hiçbir oda eklenmedi");
+  // An unreadable skip list is a field error.
+  await bulk.getByLabel("Atlanacak numaralar").fill("abc");
+  await bulk.getByRole("button", { name: "Ekle" }).click();
+  await expect(bulk.getByText("Atlanacak numaraları virgülle ayırarak")).toBeVisible();
+  await bulk.getByRole("button", { name: "Vazgeç" }).click();
+  await expect(win.getByText("3 kayıt")).toBeVisible();
+
+  // Edit 901: capacity 3.
+  await row(win, "901").click();
+  await win.getByRole("button", { name: "Seçili kaydı düzenle" }).click();
+  const edit = page.getByRole("dialog", { name: "Odayı düzenle" });
+  await expect(edit.getByLabel("Oda numarası")).toHaveValue("901");
+  await edit.getByLabel("Kapasite").fill("x");
+  await edit.getByRole("button", { name: "Kaydet" }).click();
+  await expect(edit.getByText("Kapasite sayı olmalıdır")).toBeVisible();
+  await edit.getByLabel("Kapasite").fill("3");
+  await edit.getByLabel("Misafir mesajı").fill("Hoş geldiniz");
+  await edit.getByRole("button", { name: "Kaydet" }).click();
+  await expect(edit).toHaveCount(0);
+  await expect(row(win, "901").getByRole("gridcell").nth(3)).toHaveText("3");
+
+  // A room on the other floor; the floor filter tells them apart.
+  await win.getByRole("button", { name: "Yeni kayıt" }).click();
+  const fresh = page.getByRole("dialog", { name: "Yeni oda" });
+  await fresh.getByLabel("Oda numarası").fill("601");
+  await fresh.getByLabel("Kat", { exact: true }).selectOption({ label: "6. Kat" });
+  await fresh.getByRole("button", { name: "Kaydet" }).click();
+  await expect(row(win, "601")).toBeVisible();
+  await expect(win.getByText("4 kayıt")).toBeVisible();
+  await filters.getByLabel("Kat").selectOption({ label: "6. Kat" });
+  await expect(win.getByText("1 kayıt")).toBeVisible();
+  await expect(row(win, "901")).toHaveCount(0);
+  await filters.getByLabel("Kat").selectOption({ label: "5. Kat" });
+  await expect(win.getByText("3 kayıt")).toBeVisible();
+  await filters.getByLabel("Kat").selectOption({ label: "Tümü" });
+  await expect(win.getByText("4 kayıt")).toBeVisible();
+
+  // Excel export downloads odalar-MR.xlsx.
+  const download = page.waitForEvent("download");
+  await win.getByRole("button", { name: "Excel'e aktar" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("odalar-MR.xlsx");
+  const bytes = readFileSync((await file.path()) as string);
+  expect(bytes.subarray(0, 2).toString()).toBe("PK"); // an .xlsx is a zip archive
+
+  // Delete asks first.
+  await row(win, "601").click();
+  await win.getByRole("button", { name: "Seçili kaydı sil" }).click();
+  const ask = page.getByRole("dialog", { name: "Odayı sil" });
+  await ask.getByRole("button", { name: "Evet" }).click();
+  await expect(row(win, "601")).toHaveCount(0);
+  await expect(win.getByText("3 kayıt")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
