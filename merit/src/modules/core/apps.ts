@@ -19,6 +19,20 @@ export function registerCoreApps(): void {
     mobile: "readonly",
   });
   registerApp({
+    id: "core.tanimlar",
+    title: "Tanımlamalar",
+    icon: "otel",
+    moduleKey: "CORE",
+    screenCode: "CR-TAN",
+    category: "GENEL",
+    needsHotel: true,
+    window: { w: 960, h: 640, minW: 640, minH: 420 },
+    kind: "component",
+    component: () =>
+      import("@/shell/apps/definitions/Definitions").then((m) => ({ default: m.Definitions })),
+    mobile: "none",
+  });
+  registerApp({
     id: "core.online",
     title: "Online Kullanıcılar",
     icon: "online",

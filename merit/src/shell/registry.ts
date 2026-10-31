@@ -17,6 +17,12 @@ export type AppCategory =
  */
 export type AppProps = {
   hotelId?: string;
+  /**
+   * Sub-view the opener asked for (`windowStore.open(appId, { initialPanel })`), e.g. a Tanımlamalar
+   * tree node. Only the opening request carries it: it is not persisted and a reload shows the
+   * app's default view.
+   */
+  initialPanel?: string;
   windowId: string;
   close(): void;
   setStatus(text: string): void;

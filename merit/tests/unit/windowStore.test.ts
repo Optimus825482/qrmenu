@@ -154,6 +154,14 @@ describe("windowStore", () => {
     expect(s().windows[auto]).toMatchObject({ hotelId: "h1", title: "Otel Uyg · Merit Royal" });
   });
 
+  it("open: initialPanel pencerede durur ama snapshot'a girmez (geçici)", () => {
+    const id = open("t.a");
+    expect(s().windows[id].initialPanel).toBeUndefined();
+    const withPanel = s().open("t.a", { initialPanel: "katlar" }) as string;
+    expect(s().windows[withPanel].initialPanel).toBe("katlar");
+    expect(s().snapshot().windows.every((w) => !("initialPanel" in w))).toBe(true);
+  });
+
   it("snapshot/restore gidiş-dönüş eşit; yeni pencere id'si çakışmaz", () => {
     s().configure({ hotels: TWO_HOTELS });
     s().setWallpaper("royal-gold");

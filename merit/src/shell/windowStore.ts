@@ -96,7 +96,7 @@ type ShellActions = {
    * New window id; null for an unknown / not-visible app, an app not visible in the requested
    * hotel, or when MAX_WINDOWS are open.
    */
-  open(appId: string, opts?: { hotelId?: string }): string | null;
+  open(appId: string, opts?: { hotelId?: string; initialPanel?: string }): string | null;
   close(id: string): void;
   focus(id: string): void;
   minimize(id: string): void;
@@ -332,6 +332,7 @@ export function createWindowStore() {
           id,
           appId,
           hotelId,
+          ...(opts.initialPanel !== undefined ? { initialPanel: opts.initialPanel } : {}),
           title: titleFor(app, hotelId),
           ...clampWindowPosition(at(step), at(step), w, h, vp),
           w,
@@ -513,7 +514,12 @@ export function createWindowStore() {
           footerBand,
           brandWatermark,
           icons: icons.map((i) => ({ ...i })),
-          windows: order.map((id) => ({ ...windows[id] })),
+          // initialPanel is a one-off opening request: it is never saved.
+          windows: order.map((id) => {
+            const win = { ...windows[id] };
+            delete win.initialPanel;
+            return win;
+          }),
         };
       },
 

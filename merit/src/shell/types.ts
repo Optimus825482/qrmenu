@@ -58,6 +58,8 @@ export type WinState = {
   id: string;
   appId: string;
   hotelId?: string;
+  /** Opening request for the app (`AppProps.initialPanel`); transient, dropped by `snapshot()`. */
+  initialPanel?: string;
   title: string;
   x: number;
   y: number;

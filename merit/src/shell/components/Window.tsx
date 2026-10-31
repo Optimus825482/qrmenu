@@ -228,7 +228,7 @@ export function Window({ id, hotels, userName }: Props) {
     body = (
       <AppErrorBoundary key={reloadKey}>
         <Suspense fallback={<div className="xp-app-loading">Yükleniyor…</div>}>
-          <AppHost app={app} props={{ ...appProps, hotelId: win.hotelId }} />
+          <AppHost app={app} props={{ ...appProps, hotelId: win.hotelId, initialPanel: win.initialPanel }} />
         </Suspense>
       </AppErrorBoundary>
     );

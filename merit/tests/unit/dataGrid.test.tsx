@@ -178,4 +178,22 @@ describe("DataGrid", () => {
     expect(props.onSearch).toHaveBeenLastCalledWith("201");
     expect(screen.getByRole("button", { name: "Özel" })).toBeTruthy();
   });
+
+  it("başlığa fare tıkından sonra odak tabloda: ↓ seçimi ilerletir", () => {
+    const props = setup({ selectedId: "a", sort: { field: "name", dir: "asc" } });
+    const header = screen.getByRole("columnheader", { name: /Ad/ });
+    header.focus(); // gerçek tarayıcıda tık başlığa odaklar
+    fireEvent.click(header);
+    expect(document.activeElement).toBe(screen.getByRole("grid"));
+    fireEvent.keyDown(document.activeElement as Element, { key: "ArrowDown" });
+    expect(props.onSelect).toHaveBeenCalledWith(ROWS[1]);
+  });
+
+  it("başlıkta Enter ile sıralama odağı başlıkta bırakır", () => {
+    setup();
+    const header = screen.getByRole("columnheader", { name: /Ad/ });
+    header.focus();
+    fireEvent.keyDown(header, { key: "Enter" });
+    expect(document.activeElement).toBe(header);
+  });
 });

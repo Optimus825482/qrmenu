@@ -2,9 +2,11 @@ import { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { DomainError } from "@/lib/result";
+import type { ZodType } from "zod";
+import { DomainError, fromZod } from "@/lib/result";
 import { type Action, assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
+import type { SortSpec } from "./listQuery";
 
 export {
   type ListQuery,
@@ -98,4 +100,27 @@ export async function publishDefinition(
     },
     tx,
   );
+}
+
+/**
+ * Parses service input with `schema`; a failure becomes a `VALIDATION` DomainError carrying
+ * `fieldErrors`, so direct service calls (tests, jobs) fail the same way the Server Actions do.
+ */
+export function parseInput<T>(schema: ZodType<T>, raw: unknown): T {
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) throw fromZod(parsed.error);
+  return parsed.data;
+}
+
+/**
+ * Prisma `orderBy` of a list query: the requested sort when its field is in `allowed` (client
+ * field name → Prisma orderBy builder), else `fallback`; `id` breaks ties so paging is stable.
+ */
+export function orderByFor<O>(
+  sort: SortSpec | undefined,
+  allowed: Record<string, (dir: "asc" | "desc") => O>,
+  fallback: O,
+): (O | { id: "asc" })[] {
+  const build = sort ? allowed[sort.field] : undefined;
+  return [build && sort ? build(sort.dir) : fallback, { id: "asc" }];
 }

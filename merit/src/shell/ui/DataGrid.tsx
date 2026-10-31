@@ -48,9 +48,11 @@ function cell<T>(column: Column<T>, row: T): ReactNode {
 
 /**
  * Windows XP style data table: grey header row, blue selected row, 1px borders. Generic: it knows
- * nothing about entities. The grid element is the one tab stop; focus stays on it and the selected
- * row is exposed through aria-activedescendant. Keys: ↑/↓ move the selection, Home/End jump,
- * Enter activates.
+ * nothing about entities. Focus stays on the grid element while rows are selected (it is the tab
+ * stop for the rows; sortable column headers are tab stops of their own) and the selected row is
+ * exposed through aria-activedescendant. Keys: ↑/↓ move the selection, Home/End jump, Enter
+ * activates. Clicking a row or a sortable header hands focus to the grid, so the arrow keys keep
+ * working after a mouse sort (Enter/Space on a header keeps focus on the header).
  */
 export function DataGrid<T extends { id: string }>({
   columns,
@@ -158,7 +160,11 @@ export function DataGrid<T extends { id: string }>({
                 data-sortable={column.sortable ? "true" : undefined}
                 aria-sort={sorted ? (sorted === "asc" ? "ascending" : "descending") : undefined}
                 tabIndex={column.sortable ? 0 : undefined}
-                onClick={() => toggleSort(column)}
+                onClick={() => {
+                  // Like a row click: the grid keeps the keyboard, so ↑/↓ work after a mouse sort.
+                  if (column.sortable) gridRef.current?.focus();
+                  toggleSort(column);
+                }}
                 onKeyDown={(e) => {
                   if (column.sortable && (e.key === "Enter" || e.key === " ")) {
                     e.preventDefault();
