@@ -48,7 +48,7 @@ Başarı ölçütleri:
 | `typography` | `CLASSIC`, `EDITORIAL`, `MODERN`, `HUMANIST`, `COASTAL`, `SYSTEM` | `SYSTEM` (bugünkü görünüm) |
 | `density` | `AIRY`, `BALANCED`, `COMPACT` | `BALANCED` |
 | `hero` | `NONE`, `TITLE`, `PHOTO` | `TITLE` (bugünkü karşılama bloğu) |
-| `heroImageUrl` | mevcut menü görsel yükleme hattıyla yüklenen URL, en çok bir tane | boş |
+| `heroImageUrl` | outletin **kendi menü ürünlerinden birinin** görsel URL'si (stüdyoda ürün görselleri arasından seçilir; yeni yükleme hattı yok). Sunucu, URL'nin `/uploads/` ile başladığını ve outletin aktif bir ürününe ait olduğunu doğrular | boş |
 | `curatedPhotos` | `true/false`. Açıkken fotoğraf yalnızca `SEFIN_SECIMI` etiketli, görseli olan en çok 3 üründe büyük gösterilir; diğerleri yazı satırı olur | `false` |
 | `showSearch` | `true/false` | `true` |
 | `showFilters` | `true/false` | `true` |
@@ -56,11 +56,11 @@ Başarı ölçütleri:
 Notlar:
 - Tipografi çiftleri sistem fontlarından oluşur (yeni web fontu indirilmez, yükleme hızı korunur): ör. `CLASSIC` = Georgia + sistem sans. Arapça (`ar`) için gövde yazısı her durumda mevcut Noto Sans Arabic yığınına düşer.
 - Dokunma hedefleri (düğme, etiket, kategori sekmesi) CSS'te en az 44×44 px olarak sabitlenir ve seçenek olarak sunulmaz.
-- Şablonlar kendi varsayılan tipografi, yoğunluk ve karşılama değerlerini taşır; şablon seçmek bunları uygular, sonra elle değiştirilebilir.
+- Şablonlar kendi tipografi, yoğunluk ve karşılama değerlerini taşır; şablon seçmek bunları uygular, sonra elle değiştirilebilir. `options` alanı boş (`{}`) kayıt şablonun hazır ayarını kullanır (bugünkü davranış). Kayıtlı ve boş olmayan `options` içinde **eksik yeni anahtarlar** şablondan değil nötr varsayılandan gelir (`SYSTEM`, `BALANCED`, `TITLE`, kapalı/açık yukarıdaki tabloya göre); böylece daha önce kaydedilmiş bir tasarımın görünümü kendiliğinden değişmez.
 - `heroImageUrl` yalnızca `hero = PHOTO` iken kullanılır; görsel yoksa `TITLE` gibi çizilir.
 
 ### 3.1 Renk paketleri
-`prisma/seed/menuThemes.ts`'e üç tema eklenir: **Krem** (sıcak nötr zemin), **Koyu lüks**, **Deniz**. Mevcut temalar ve varsayılan tema değişmez. Seed idempotent çalışır (ad bazlı upsert).
+`prisma/seed/menuThemes.ts`'te Royal Gold, **Deniz** ve Zeytin zaten var. İki tema eklenir: **Krem** (sıcak nötr, açık zemin) ve **Koyu Lüks** (antrasit zemin, bakır vurgu). Mevcut temalar ve varsayılan tema değişmez; seed yalnız eksik adı oluşturur. Tüm yerleşik temalar kalite kontrolündeki kontrast eşiklerini (§4) geçmek zorundadır ve bir birim testi bunu doğrular.
 
 ## 4. Kalite kontrolü
 
@@ -96,10 +96,10 @@ Yeni tablo `outlet_call_options` (`OutletCallOption`):
 
 İndeks `(outletId, sortOrder)`. Outlet başına en çok 8 aktif seçenek. **"Sadece çağır" tabloda tutulmaz**: istemcide sabit, her zaman son sırada, etiketi i18n anahtarıdır (`guest.call.justCall`), tipi `GARSON`'dur.
 
-Varsayılanlar: outlet oluşturulurken ve mevcut outletler için migrasyon/seed ile **Peçete istiyorum**, **Sipariş vereceğim**, **Su istiyorum**, **Hesap** (HESAP) eklenir, beş dilde çevirileriyle. Yönetici bunları düzenleyip silebilir.
+Varsayılanlar: **Peçete istiyorum**, **Sipariş vereceğim**, **Su istiyorum**, **Hesap** (HESAP), beş dilde çevirileriyle. Yeni oluşturulan her outlete eklenir; mevcut outletlere migrasyondaki **tek seferlik doldurma** ile eklenir. Yönetici bunları düzenleyip silebilir; boşaltılmış bir outlete hiçbir yol varsayılanları geri getirmez.
 
 ### 5.2 Servis ve eylemler
-- `src/modules/menu/server/callOptions.ts`: `list(outletId)` (yönetim, QM-TEM okuma), `listForGuest(outletId, locale)` (etiketi dile göre çözülmüş aktif seçenekler), `save(...)`, `reorder(...)`, `remove(...)` (QM-TEM yazma, `ctx.hotelIds` ve outlet erişimi kontrolü, denetim günlüğü). Girdi `zod` ile doğrulanır; etiketler HTML ve kontrol karakterlerinden temizlenir (mevcut `note` temizleme kuralıyla aynı).
+- `src/modules/menu/server/callOptions.ts`: `list(outletId)` (yönetim, QM-TEM okuma), `listActive(outletId)` (oturumsuz; aktif seçenekler çevirileriyle, etiketi dile göre çözme istemcide `callOptionLabel` ile yapılır, Türkçeye düşer), `save(...)`, `reorder(...)`, `remove(...)` (QM-TEM yazma, `ctx.hotelIds` ve outlet erişimi kontrolü, denetim günlüğü). Girdi `zod` ile doğrulanır; etiketler HTML ve kontrol karakterlerinden temizlenir (mevcut `note` temizleme kuralıyla aynı).
 - Misafir uç noktası `POST /api/q/[token]/call` gövdesine isteğe bağlı `optionId` eklenir. Sunucu seçeneği **token'ın outlet'inde** arar (başka outletin seçeneği reddedilir), `callType`'ı ve etiketi kendisi belirler; istemci tip dayatamaz. Etiket çağrının `note`'una **o anki Türkçe etiket olarak** kopyalanır (anlık görüntü: sonradan düzenleme eski çağrıları değiştirmez; personel ekranları Türkçedir).
 - `optionId` yoksa davranış bugünküyle aynıdır (geriye dönük uyum; "Sadece çağır" ve eski istemciler).
 - Tekrar kuralı: aynı masada, aynı tip ve aynı not ile açık çağrı varsa yenisi açılmaz; farklı seçenekler yan yana açık olabilir. Masa başına dakikada 3 çağrı sınırı korunur.
@@ -108,7 +108,7 @@ Varsayılanlar: outlet oluşturulurken ve mevcut outletler için migrasyon/seed 
 ### 5.3 Misafir arayüzü
 `CallWaiterButton` bir **alt sayfa (bottom sheet)** açar: başlık, aktif seçenekler (dile göre), en altta "Sadece çağır". Seçime dokununca çağrı gider, sayfa kapanır, mevcut 3 saniyelik "iletildi" mesajı gösterilir. Sayfa klavye ile kullanılabilir, `Esc` ile kapanır, odak yönetimi ve `aria` rolleri vardır, RTL'de ayna düzen çalışır. Sipariş modülü (`orderingOpen`) kapalıysa "Sipariş vereceğim" seçeneği de listede kalır (garsonu çağırma isteği, sipariş gönderimi değil).
 
-Misafir sayfa verisi `guestState`'e `callOptions` (çözülmüş etiketlerle) eklenerek taşınır; ek istek gerekmez. Stüdyo önizlemesi de aynı veriyi kullanır.
+Misafir sayfa verisi `guestState`'e `callOptions` (çevirileriyle) eklenerek taşınır; ek istek gerekmez. Stüdyo önizlemesi de aynı veriyi kullanır.
 
 ## 6. Stüdyo arayüzü
 
