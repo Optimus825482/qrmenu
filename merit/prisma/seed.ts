@@ -164,16 +164,22 @@ function requireAdminPassword(): string {
   return password;
 }
 
-/** Creates the admin user once; an existing admin (and its password) is left untouched. */
+/** Creates the admin user or updates password to match SEED_ADMIN_PASSWORD. */
 async function seedAdmin(db: PrismaClient, password: string) {
-  if (await db.user.findUnique({ where: { username: "admin" } })) return;
-
   const role = await db.role.findUniqueOrThrow({ where: { code: "R-SYS" } });
-  await db.user.create({
-    data: {
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  await db.user.upsert({
+    where: { username: "admin" },
+    create: {
       username: "admin",
       fullName: "Sistem Yöneticisi",
-      passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS),
+      passwordHash,
+      roleId: role.id,
+      isActive: true,
+    },
+    update: {
+      passwordHash,
+      isActive: true,
       roleId: role.id,
     },
   });
