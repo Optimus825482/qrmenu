@@ -9,6 +9,11 @@ echo "=================================================="
 UPLOADS_PATH="${UPLOADS_DIR:-/app/uploads}"
 mkdir -p "$UPLOADS_PATH"
 
+# DATABASE_URL boş ise bileşenlerden otomatik oluştur
+if [ -z "$DATABASE_URL" ]; then
+  export DATABASE_URL="postgresql://${POSTGRES_USER:-merit_admin}:${POSTGRES_PASSWORD:-merit_secure_pass_2026}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-merit}?schema=public"
+fi
+
 # Veritabanı bağlantısını bekle ve migrasyonları uygula
 if [ -n "$DATABASE_URL" ]; then
   echo "⏳ Veritabanı bağlantısı test ediliyor..."
