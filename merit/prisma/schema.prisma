@@ -38,6 +38,11 @@ enum PriceDisplay {
   HIDE
 }
 
+enum OutletArea {
+  ACIK
+  KAPALI
+}
+
 enum RoleKind {
   SISTEM
   YONETIM
@@ -189,6 +194,7 @@ enum CallStatus {
 
 enum PrintJobKind {
   FIS
+  MUTFAK
   TEST
 }
 
@@ -339,21 +345,26 @@ model Outlet {
   printerId            String?      @map("printer_id")
   kdsEnabled           Boolean      @default(false) @map("kds_enabled")
   phoneConfirmRequired Boolean      @default(false) @map("phone_confirm_required")
+  autoPrintReceipt     Boolean      @default(true) @map("auto_print_receipt")
+  autoPrintKitchen     Boolean      @default(false) @map("auto_print_kitchen")
   isActive             Boolean      @default(true) @map("is_active")
   createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  hotel          Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  theme          MenuTheme?        @relation(fields: [themeId], references: [id], onDelete: SetNull)
-  defaultPrinter Printer?          @relation("OutletDefaultPrinter", fields: [printerId], references: [id], onDelete: SetNull)
-  ownedPrinters  Printer[]         @relation("PrinterOutlet")
+  hotel          Hotel                  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  theme          MenuTheme?             @relation(fields: [themeId], references: [id], onDelete: SetNull)
+  defaultPrinter Printer?               @relation("OutletDefaultPrinter", fields: [printerId], references: [id], onDelete: SetNull)
+  ownedPrinters  Printer[]              @relation("PrinterOutlet")
   tables         OutletTable[]
+  areas          OutletAreaDefinition[]
+  menuDesign     OutletMenuDesign?
   members        OutletMember[]
   assignments    TableAssignment[]
   sessions       UserSession[]
   menuNodes      MenuNode[]
   orders         Order[]
   waiterCalls    WaiterCall[]
+  callOptions    OutletCallOption[]
 
   @@unique([hotelId, name])
   @@map("outlets")
@@ -362,37 +373,63 @@ model Outlet {
 model OutletTable {
   id        String   @id @default(cuid())
   outletId  String   @map("outlet_id")
+  number    Int?
+  name      String?  @db.VarChar(80)
+  capacity  Int?
+  areaId    String   @map("area_id")
   label     String
   qrToken   String?  @unique @map("qr_token")
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  outlet      Outlet            @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  outlet      Outlet               @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  area        OutletAreaDefinition @relation(fields: [areaId], references: [id], onDelete: Restrict)
   assignments TableAssignment[]
   qrScanLogs  QrScanLog[]
   orders      Order[]
   waiterCalls WaiterCall[]
 
   @@unique([outletId, label])
+  @@unique([outletId, number])
   @@map("outlet_tables")
 }
 
+model OutletAreaDefinition {
+  id              String        @id @default(cuid())
+  outletId        String        @map("outlet_id")
+  type            OutletArea
+  name            String?       @db.VarChar(60)
+  orderingEnabled Boolean?      @map("ordering_enabled")
+  priceDisplay    PriceDisplay? @map("price_display")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  outlet Outlet        @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  tables OutletTable[]
+
+  @@unique([outletId, type, name])
+  @@index([outletId])
+  @@map("outlet_areas")
+}
+
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  passwordHash String    @map("password_hash")
-  fullName     String    @map("full_name")
-  email        String?
-  phone        String?
-  roleId       String    @map("role_id")
-  hotelId      String?   @map("hotel_id")
-  supervisorId String?   @map("supervisor_id")
-  isActive     Boolean   @default(true) @map("is_active")
-  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(3)
-  prefs        Json?
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  passwordHash       String    @map("password_hash")
+  fullName           String    @map("full_name")
+  jobTitle           String?   @map("job_title")
+  email              String?
+  phone              String?
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  roleId             String    @map("role_id")
+  hotelId            String?   @map("hotel_id")
+  supervisorId       String?   @map("supervisor_id")
+  isActive           Boolean   @default(true) @map("is_active")
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz(3)
+  lastLoginAt        DateTime? @map("last_login_at") @db.Timestamptz(3)
+  prefs              Json?
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   role                 Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
   hotel                Hotel?               @relation(fields: [hotelId], references: [id], onDelete: Restrict)
@@ -1150,7 +1187,7 @@ model EmailLog {
 
 // ───────────────────────────── §3.3 Menu & orders ─────────────────────────────
 
-// Hierarchy rule (OGE under GRUP, GRUP under ALT_KATEGORI, ...) is enforced in the service layer.
+// Hierarchy rules (items under categories, subcategories, or legacy groups) are enforced in the service layer.
 model MenuNode {
   id          String       @id @default(cuid())
   outletId    String       @map("outlet_id")
@@ -1162,6 +1199,7 @@ model MenuNode {
   price       Decimal?     @db.Decimal(10, 2)
   currency    String       @default("EUR")
   allergens   String[]     @default([])
+  tags        String[]     @default([])
   isAvailable Boolean      @default(true) @map("is_available")
   sortOrder   Int          @default(0) @map("sort_order")
   isActive    Boolean      @default(true) @map("is_active")
@@ -1185,6 +1223,7 @@ model MenuNodeTranslation {
   lang      String
   name      String
   detail    String?
+  isVerified Boolean @default(true) @map("is_verified")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -1209,6 +1248,21 @@ model MenuTheme {
 
   @@unique([name])
   @@map("menu_themes")
+}
+
+model OutletMenuDesign {
+  id        String   @id @default(cuid())
+  outletId  String   @unique @map("outlet_id")
+  ambience  String   @default("RESORT") @db.VarChar(32)
+  concept   String   @default("LUXURY") @db.VarChar(32)
+  template  String   @default("ROYAL") @db.VarChar(32)
+  layout    Json     @default("[\"hero\",\"categories\",\"items\"]")
+  options   Json     @default("{}")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@map("outlet_menu_designs")
 }
 
 model Order {
@@ -1377,4 +1431,21 @@ model PrintJob {
   @@index([printerId, status])
   @@index([hotelId, status, createdAt])
   @@map("print_jobs")
+}
+
+model OutletCallOption {
+  id           String    @id @default(cuid())
+  outletId     String    @map("outlet_id")
+  label        String    @db.VarChar(60)
+  translations Json      @default("{}")
+  callType     CallType  @map("call_type")
+  sortOrder    Int       @default(0) @map("sort_order")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@index([outletId, sortOrder])
+  @@map("outlet_call_options")
 }
