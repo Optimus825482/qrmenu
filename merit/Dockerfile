@@ -20,6 +20,12 @@ RUN npx prisma generate
 # Next.js production build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ENV SESSION_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef"
+ENV QR_HMAC_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef"
+ENV APP_BASE_URL="http://localhost:3000"
+ENV PRINT_GATEWAY_KEY="build_print_gateway_key"
+
 RUN npm run build
 
 FROM node:22-alpine AS runner
