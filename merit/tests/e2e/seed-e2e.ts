@@ -107,7 +107,7 @@ async function resetAndSeed(): Promise<void> {
           name,
           type: "BAR",
           // P5: the pool bar takes table orders.
-          ...(name === "Havuz Bar" ? { hasOrdering: true, orderingEnabled: true } : {}),
+          ...(name === "Havuz Bar" ? { hasOrdering: true, orderingEnabled: true, kdsEnabled: true } : {}),
         },
       });
       outlets[name] = outlet.id;

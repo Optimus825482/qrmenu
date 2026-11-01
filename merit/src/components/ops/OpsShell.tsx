@@ -22,7 +22,7 @@ const cashierTabs = [
 export function OpsShell({ children, outletName, hotelName, fullName, targets }: { children: React.ReactNode; outletName: string; hotelName: string; fullName: string; targets: OutletTarget[] }) {
   const path = usePathname();
   const search = useSearchParams();
-  const tabs = path.startsWith("/kasa") ? cashierTabs : waiterTabs;
+  const tabs = path.startsWith("/kasa") ? cashierTabs : path.startsWith("/kds") ? [] : waiterTabs;
   return <div className="min-h-dvh bg-bg text-text">
     <header className="sticky top-0 z-20 border-b border-border bg-surface/95 px-4 py-3 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
@@ -31,9 +31,9 @@ export function OpsShell({ children, outletName, hotelName, fullName, targets }:
       </div>
     </header>
     <main className="mx-auto max-w-5xl p-4 pb-20">{children}</main>
-    <nav aria-label="Personel bölümleri" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface"><div className="mx-auto flex max-w-5xl justify-around">{tabs.map((tab) => {
+    {tabs.length > 0 ? <nav aria-label="Personel bölümleri" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface"><div className="mx-auto flex max-w-5xl justify-around">{tabs.map((tab) => {
       const active = path === tab.path && search.get("sekme") === tab.query;
       return <Link key={tab.href} href={tab.href} aria-current={active ? "page" : undefined} className={`min-h-12 px-3 py-3 text-xs font-medium ${active ? "text-accent" : "text-muted"}`}>{tab.label}</Link>;
-    })}</div></nav>
+    })}</div></nav> : null}
   </div>;
 }

@@ -56,6 +56,14 @@ async function actors(s: OrderSetup, tag = "") {
 }
 
 describe("orders.transition", () => {
+  it("KDS HAZIR öncesi Başla gerekir", async () => {
+    const s = await orderSetup();
+    const { kds } = await actors(s);
+    const order = await seedOrder(s, { status: "ONAYLANDI", approvedAt: new Date() });
+    await expect(orders.transition(kds.ctx, order.id, "HAZIR", {})).rejects.toMatchObject({ code: "CONFLICT" });
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("ONAYLANDI");
+  });
+
   it("GONDERILDI -> HAZIR geçersiz: CONFLICT 'Sipariş zaten işlendi'", async () => {
     const s = await orderSetup();
     const { kds } = await actors(s);
@@ -173,6 +181,7 @@ describe("orders.transition", () => {
     expect(publishMock).not.toHaveBeenCalled();
     const ev = await testDb.orderEvent.findFirstOrThrow({ where: { orderId: order.id } });
     expect(ev).toMatchObject({ from: "ONAYLANDI", to: "ONAYLANDI", note: "HAZIRLANIYOR" });
+    expect(await testDb.auditLog.count({ where: { action: "ORDER_PREP", entityId: order.id } })).toBe(1);
   });
 
   it("KDS HAZIR (atama yok: online garsonlara bildirim); HAZIR -> SERVIS_EDILDI R-GAR servedById", async () => {
@@ -180,6 +189,7 @@ describe("orders.transition", () => {
     const { kds, gar } = await actors(s);
     await openSession(gar.user.id, s.outlet.id, "R-GAR");
     const order = await seedOrder(s, { status: "ONAYLANDI", approvedAt: new Date() });
+    await orders.startPrep(kds.ctx, order.id);
     await orders.transition(kds.ctx, order.id, "HAZIR", {});
     expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).readyAt).not.toBeNull();
     expect((await testDb.notification.findMany({ where: { type: "order.ready" } })).map((n) => n.userId)).toEqual([

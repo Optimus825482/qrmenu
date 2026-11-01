@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { safeAction, type Result } from "@/lib/result";
 import { approvals } from "../server/approvals";
+import { kds } from "../server/kds";
 import { orders } from "../server/orders";
 
 const id = z.string().min(1);
@@ -26,6 +27,9 @@ export async function startPrepAction(orderId: string): Promise<Result<null>> {
 }
 export async function markReadyAction(orderId: string): Promise<Result<null>> {
   return safeAction(id, async (input) => { await orders.transition(await requireUser(), input, "HAZIR"); return null; })(orderId);
+}
+export async function kdsBoardAction(outletId: string) {
+  return safeAction(id, async (input) => kds.board(await requireUser(), input))(outletId);
 }
 export async function listQueueAction(outletId: string) {
   return safeAction(id, async (input) => {

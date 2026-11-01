@@ -178,6 +178,9 @@ async function transition(
     if (order.kind !== "MASA" || !TRANSITIONS[order.status]?.includes(to)) {
       throw new DomainError("CONFLICT", ALREADY);
     }
+    if (to === "HAZIR" && !order.prepStartedAt) {
+      throw new DomainError("CONFLICT", "Sipariş hazırlanmaya başlanmadan hazır yapılamaz");
+    }
     await authorize(ctx, order, to);
 
     const now = new Date();
@@ -235,6 +238,15 @@ async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
         note: "HAZIRLANIYOR",
         at: now,
       },
+    });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "ORDER_PREP",
+      entity: "Order",
+      entityId: order.id,
+      before: { status: order.status, prepStartedAt: order.prepStartedAt },
+      after: { status: updated.status, prepStartedAt: now },
     });
     await publish(
       { type: "order.prep", hotelId: order.hotelId, outletId: order.outletId, payload: payload(updated) },
