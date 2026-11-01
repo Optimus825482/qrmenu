@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
   },
   // Menu images are uploaded through a Server Action (up to 2 MB + form overhead).
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
+  typescript: {
+    // Docker / VPS build optimizasyonu: Tip denetimi npm run typecheck ile zaten yapılıyor.
+    // Docker build sırasında sunucu RAM'ini tüketip OOM / timeout olmasını önler.
+    ignoreBuildErrors: true,
+  },
   turbopack: {
     rules: {
       "*.css": {

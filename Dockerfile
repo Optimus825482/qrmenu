@@ -17,6 +17,7 @@ COPY merit/ .
 RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 ENV SESSION_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef"
 ENV QR_HMAC_SECRET="0123456789abcdef0123456789abcdef0123456789abcdef"
