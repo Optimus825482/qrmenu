@@ -25,6 +25,6 @@ export default async function GuestMenuPage({
   if (target.kind !== "TABLE") return null; // the layout already shows the unavailable / room page
 
   const locale = (await getLocale()) as Locale;
-  const menu = await getMenu(target.state.outletId, locale);
+  const menu = await getMenu(target.state.outletId, locale, target.table.areaId);
   return <MenuBrowser token={token} locale={locale} menu={menu} />;
 }

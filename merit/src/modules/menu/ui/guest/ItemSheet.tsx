@@ -9,11 +9,18 @@ export const ALLERGEN_ICON: Record<AllergenKey, string> = {
   gluten: "🌾",
   sut: "🥛",
   yumurta: "🥚",
-  kuruyemis: "🥜",
+  kuruyemis: "🌰",
+  yerfistigi: "🥜",
   deniz_urunu: "🦐",
+  yumusakca: "🐚",
+  balik: "🐟",
   alkol: "🍷",
   soya: "🫘",
   susam: "🌱",
+  kereviz: "🥬",
+  hardal: "🟡",
+  sulfit: "🍇",
+  acibakla: "🌸",
 };
 
 export const MAX_QUANTITY = 20;

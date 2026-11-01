@@ -20,7 +20,7 @@ const LIVE_EVENTS = [
 
 type Notice = { tone: "ok" | "error"; text: string } | null;
 
-const jobLabel = (job: QueueJob): string => (job.kind === "TEST" ? "Test fişi" : job.order ? `#${job.order.orderNo}` : "Fiş");
+const jobLabel = (job: QueueJob): string => job.kind === "TEST" ? "Test fişi" : job.kind === "MUTFAK" ? `Mutfak fişi · #${job.order?.orderNo ?? "—"}` : job.order ? `#${job.order.orderNo}` : "Fiş";
 
 const jobTable = (job: QueueJob): string => job.order?.table?.label ?? "-";
 

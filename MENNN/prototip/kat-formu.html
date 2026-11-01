@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Kat Sorumlusu Mobil Prototipi (Kat Formu)</title>
+<style>
+:root{
+  --navy:#0d2740; --navy2:#153b5e; --gold:#a97c33; --gold2:#c9a45c;
+  --ink:#182533; --muted:#647488; --line:#e2e9f1; --soft:#f5f9fc; --bg:#eef2f7;
+  --blue:#1d6fb8; --blue-soft:#eaf3fb; --ok:#18855a; --ok-soft:#e9f7f0;
+  --warn:#b8791a; --warn-soft:#fdf4e3; --err:#b6382c; --err-soft:#fdeeec; --violet:#6d4bb5; --violet-soft:#f1ecfb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Tahoma,Verdana,sans-serif;display:flex;gap:28px;padding:26px;align-items:flex-start;flex-wrap:wrap}
+.side{max-width:330px}
+.side h1{font-size:19px;margin:0 0 6px;color:var(--navy)}
+.side p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.side .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:11px}
+.side .card b{display:block;font-size:12.8px;margin-bottom:5px;color:var(--navy)}
+.side .card span{font-size:12.4px;color:var(--muted)}
+.side .sbtn{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 11px;font:inherit;font-size:13px;cursor:pointer;margin-bottom:7px;color:#2b3f57}
+.side .sbtn:hover{background:var(--soft)}
+.side .sbtn.on{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d;font-weight:600}
+.phone{width:392px;flex:0 0 392px;height:792px;border:11px solid #0c2038;border-radius:38px;background:#f7fafc;overflow:hidden;position:relative;box-shadow:0 18px 50px rgba(12,32,56,.32)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:22px;background:#0c2038;border-radius:0 0 14px 14px;z-index:5}
+.pstat{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:11.5px;color:#54697f;background:#fff;border-bottom:1px solid var(--line)}
+.pbar{background:var(--navy);color:#fff;padding:11px 15px;display:flex;align-items:center;gap:10px}
+.pbar b{font-size:14.5px;font-weight:600}
+.pbar .sp{flex:1}
+.pbar .tag{font-size:10.5px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px}
+.pbody{height:calc(100% - 34px - 92px);overflow:auto;padding:13px 14px 18px}
+.pnav{height:58px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);position:absolute;left:0;right:0;bottom:0}
+.pnav button{background:none;border:none;font:inherit;font-size:10.6px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.pnav button .ic{font-size:17px}
+.pnav button.on{color:var(--navy);font-weight:600}
+.card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:11px}
+.ct{font-size:13.4px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.kpi{display:flex;gap:9px;margin-bottom:11px}
+.kpi div{flex:1;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px}
+.kpi .k{font-size:10.4px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-size:19px;font-weight:700;color:var(--navy)}
+.tag{display:inline-block;font-size:10.6px;border-radius:6px;padding:2px 7px;border:1px solid var(--line);background:var(--soft);color:#42566d;white-space:nowrap}
+.tag.ok{border-color:#bfe3d1;background:var(--ok-soft);color:#0f6a45}
+.tag.warn{border-color:#f0dcb2;background:var(--warn-soft);color:#8c5c12}
+.tag.err{border-color:#f3cdc7;background:var(--err-soft);color:#93291e}
+.tag.blue{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d}
+.tag.violet{border-color:#d9cdf5;background:var(--violet-soft);color:#543a92}
+.tag.gold{border-color:#ecdcb6;background:#fbf6ea;color:#8a6519}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 13px;font:inherit;font-size:13px;cursor:pointer;color:#2b3f57;width:100%;margin-bottom:8px}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.warn{background:var(--warn);border-color:var(--warn);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;width:auto;margin:0}
+.btn.half{width:48%;display:inline-block;margin-right:2%}
+input,select{font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff}
+label.f{display:block;font-size:11.4px;color:var(--muted);margin-bottom:4px}
+.qrbox{aspect-ratio:1;background:#0d2740;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#cfe0ee;position:relative;overflow:hidden;margin-bottom:12px}
+.qrbox .scan{position:absolute;left:8%;right:8%;height:2px;background:var(--gold2);animation:sc 2s infinite;box-shadow:0 0 12px var(--gold2)}
+@keyframes sc{0%{top:12%}50%{top:86%}100%{top:12%}}
+.qrbox .frame{width:56%;aspect-ratio:1;border:2px dashed #7fa8c9;border-radius:12px}
+.roomrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;background:#fff}
+.roomrow.done{border-color:#bfe3d1;background:var(--ok-soft)}
+.roomrow.dnd{border-color:#f0dcb2;background:var(--warn-soft)}
+.roomrow.pers{border-color:#d9cdf5;background:var(--violet-soft)}
+.roomrow b{font-size:15px}
+.roomrow .sp{flex:1}
+.item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.item:last-child{border-bottom:none}
+.item .nm{flex:1;font-size:13px}
+.item .nm .sub{font-size:11px;color:var(--muted)}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:15px;cursor:pointer;color:var(--navy)}
+.qty span{min-width:22px;text-align:center;font-weight:600}
+.steps{display:flex;flex-wrap:wrap;gap:6px;font-size:11.4px}
+.steps .s{border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--soft)}
+.steps .s.on{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d;font-weight:600}
+.note{border-left:3px solid var(--blue);background:var(--blue-soft);padding:8px 10px;border-radius:0 8px 8px 0;font-size:12.2px;margin:0 0 11px}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.note.ok{border-color:var(--ok);background:var(--ok-soft)}
+.note.violet{border-color:var(--violet);background:var(--violet-soft)}
+.note.err{border-color:var(--err);background:var(--err-soft)}
+.notif{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:9px;padding:10px;background:#fff;margin-bottom:9px}
+.notif.err{border-left-color:var(--err)} .notif.warn{border-left-color:var(--warn)}
+.notif.violet{border-left-color:var(--violet)} .notif.ok{border-left-color:var(--ok)}
+.mono{font-family:Consolas,monospace;font-size:11.4px}
+.pill{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 9px;background:var(--soft);color:var(--muted)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="side">
+  <h1>MENNN · Kat Sorumlusu (Kat Formu)</h1>
+  <p>Minibar tüketim takibi, DND ara kaydı ve kişiselleştirme karşılama akışının mobil prototipi. Ekranları sırayla gezebilirsiniz.</p>
+  <div class="card">
+    <b>Senaryo</b>
+    <span>Kat sorumlusu <b>Elif Demir</b> · Merit Royal · 1–2. kat · vardiya 08:00–16:00. Zimmetinde 9 ürün grubu, 4 odada DND/kişiselleştirme kaydı var.</span>
+  </div>
+  <div id="screens"></div>
+  <div class="card">
+    <b>Akış özeti</b>
+    <span>Oda QR okutulur → kapı formu açılır → eksik ürün girilir → zimmetten düşülür → oda/kat/otel kaydı oluşur. Oda DND ise ara kayıt + otomatik uyarı.</span>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pstat"><span>09:14</span><span>◍ Kat Formu · MENNN</span><span>▮▮ 84%</span></div>
+  <div class="pbar"><b id="sTitle">Kat Planı</b><span class="sp"></span><span class="tag" id="sTag">1–2. kat</span></div>
+  <div class="pbody" id="screen"></div>
+  <div class="pnav">
+    <button data-s="plan" class="on"><span class="ic">▤</span>Kat Planı</button>
+    <button data-s="qr"><span class="ic">◫</span>QR Oku</button>
+    <button data-s="stock"><span class="ic">⚖</span>Zimmetim</button>
+    <button data-s="notif"><span class="ic">🔔</span>Bildirim<span id="ncount"></span></button>
+  </div>
+</div>
+
+<script>
+/* ---------------- durum ---------------- */
+const ME = {name:'Elif Demir', role:'Kat Sorumlusu', hotel:'Merit Royal', floors:[1,2], shift:'08:00–16:00'};
+const ROOMTYPE = {RT1:'Standart', RT2:'Deluxe', RT4:'Suit', RT5:'VIP Suit'};
+const CONCEPT = {
+  RT1:{name:'Temel Konsept',      items:[['Doğal Su 0,5 L',2],['Maden Suyu',2],['Kola',2],['Şekersiz Kola',2],['Meyve Suyu',1],['Sütlü Çikolata',1],['Patates Cipsi',1],['Espresso Kapsülü',2]]},
+  RT2:{name:'Yükseltilmiş Konsept',items:[['Doğal Su 0,5 L',2],['Maden Suyu',2],['Kola',3],['Şekersiz Kola',3],['Meyve Suyu',2],['Sütlü Çikolata',2],['Antep Fıstığı',1]]},
+  RT4:{name:'Suit Konsepti',      items:[['Maden Suyu',4],['Yerli Bira',2],['Kırmızı Şarap',1],['Prosecco',1],['Antep Fıstığı',2],['Sütlü Çikolata',2]]},
+  RT5:{name:'VIP / Diamond Konsepti',items:[['Maden Suyu',4],['Prosecco',2],['Şampanya 375',1],['Yerli Bira',2],['Antep Fıstığı',2],['Kuru Meyve',2]]}
+};
+const ROOMS = [
+  {no:101,type:'RT1',st:'DONE'},{no:102,type:'RT2',st:'OPEN'},{no:103,type:'RT2',st:'OPEN'},
+  {no:104,type:'RT1',st:'OPEN'},{no:105,type:'RT2',st:'PERS'},{no:106,type:'RT1',st:'OPEN'},
+  {no:107,type:'RT2',st:'DND'},{no:108,type:'RT4',st:'OPEN'},
+  {no:201,type:'RT1',st:'OPEN'},{no:202,type:'RT2',st:'OPEN'},{no:203,type:'RT5',st:'OPEN'},
+  {no:204,type:'RT2',st:'DONE'},{no:205,type:'RT5',st:'OPEN'},{no:206,type:'RT1',st:'OPEN'},
+  {no:207,type:'RT2',st:'DONE'},{no:208,type:'RT4',st:'OPEN'}
+];
+const PERS = [{id:'K-3312',room:105,when:'08:40',lang:'RU',plus:[['Kola',2]],minus:[['Şekersiz Kola',2]],status:'BEKLIYOR'}];
+const STOCK = [['Doğal Su 0,5 L',120,48],['Maden Suyu',80,36],['Kola',90,52],['Şekersiz Kola',70,44],
+  ['Meyve Suyu',60,22],['Sütlü Çikolata',50,31],['Antep Fıstığı',40,12],['Patates Cipsi',45,18],['Espresso Kapsülü',30,9]];
+const NOTIF = [
+  {k:'err',  t:'DND uyarısı',          d:'Oda 107 · ara kayıt 120 dakikayı doldurdu, yeniden kontrol edin.', tm:'11:02'},
+  {k:'violet',t:'Yeni kişiselleştirme talebi', d:'Oda 105 · misafir 2 ürün artırmak, 1 ürün azaltmak istiyor (RU).', tm:'08:40'},
+  {k:'warn', t:'Kritik zimmet bakiyesi',d:'Espresso Kapsülü: 21 adet kaldı. Depodan ikmal talebi oluşturabilirsiniz.', tm:'07:55'},
+  {k:'ok',   t:'Zimmet dağıtımı',       d:'Hakan Yıldız 3 ürün grubunda zimmet dağıtımını onayladı.', tm:'07:40'}
+];
+const S = {scr:'plan', room:null, dnd:false, cons:{}, sent:null};
+
+/* ---------------- yardımcı ---------------- */
+const el  = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cn  = t => CONCEPT[t] || CONCEPT.RT1;
+const roomOf = no => ROOMS.find(r=>r.no===no);
+const stTag = st => st==='DONE'?'<span class="tag ok">kontrol edildi</span>'
+                  : st==='DND'?'<span class="tag warn">DND · ara kayıt</span>'
+                  : st==='PERS'?'<span class="tag violet">kişiselleştirme</span>'
+                  : '<span class="tag">bekliyor</span>';
+function toast(msg){ const t=el('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400); }
+function go(s, room){ S.scr=s; if(room!==undefined) S.room=room; render(); }
+function zero(){ const z={}; return z; }
+
+/* ---------------- ekranlar ---------------- */
+function scPlan(){
+  const done=ROOMS.filter(r=>r.st==='DONE').length, open=ROOMS.filter(r=>r.st==='OPEN').length;
+  const dnd=ROOMS.filter(r=>r.st==='DND').length, pers=ROOMS.filter(r=>r.st==='PERS').length;
+  return `
+  <div class="kpi">
+    <div><div class="k">Kontrol</div><div class="v">${done}/${ROOMS.length}</div></div>
+    <div><div class="k">Bekleyen</div><div class="v">${open}</div></div>
+    <div><div class="k">DND</div><div class="v">${dnd}</div></div>
+    <div><div class="k">Talep</div><div class="v">${pers}</div></div>
+  </div>
+  <div class="note"><b>Günaydın Elif.</b> Bugün 1–2. katta 16 oda kontrolün var. Odaya girmeden önce QR'ı okut; sistem odayı ve konsepti otomatik getirir.</div>
+  <button class="btn pri" onclick="go('qr')">◫ Oda QR'ı Okut</button>
+  <div class="bar"><div class="ct" style="margin:0">1. KAT</div><span class="pill">8 oda</span></div>
+  ${ROOMS.filter(r=>r.no<200).map(r=>`
+    <div class="roomrow ${r.st==='DONE'?'done':r.st==='DND'?'dnd':r.st==='PERS'?'pers':''}" onclick="openRoom(${r.no})">
+      <b>${r.no}</b><div class="sp"><div style="font-size:12px">${ROOMTYPE[r.type]}</div>
+      <div class="mono" style="color:var(--muted)">${cn(r.type).name}</div></div>${stTag(r.st)}<span style="color:#a9b8c8">›</span>
+    </div>`).join('')}
+  <div class="bar" style="margin-top:14px"><div class="ct" style="margin:0">2. KAT</div><span class="pill">8 oda</span></div>
+  ${ROOMS.filter(r=>r.no>=200).map(r=>`
+    <div class="roomrow ${r.st==='DONE'?'done':r.st==='DND'?'dnd':r.st==='PERS'?'pers':''}" onclick="openRoom(${r.no})">
+      <b>${r.no}</b><div class="sp"><div style="font-size:12px">${ROOMTYPE[r.type]}</div>
+      <div class="mono" style="color:var(--muted)">${cn(r.type).name}</div></div>${stTag(r.st)}<span style="color:#a9b8c8">›</span>
+    </div>`).join('')}`;
+}
+function scQr(){
+  return `
+  ${S.room? '' : `
+  <div class="qrbox"><div class="frame"></div><div class="scan"></div>
+    <div style="position:absolute;bottom:14px;font-size:12px">Oda kapısındaki QR kodu okutun</div>
+  </div>
+  <div class="note">Okutulan QR iki amaçla çalışır: <b>senin</b> tüketim girişin ve <b>misafirin</b> minibar kişiselleştirmesi. Aynı kod, farklı yetki.</div>
+  <label class="f">Prototipte oda seçerek QR okutmayı simüle et</label>
+  <select id="qrRoom" onchange="openRoom(parseInt(this.value,10))">
+    <option value="">— oda seç —</option>
+    ${ROOMS.map(r=>'<option value="'+r.no+'">Oda '+r.no+' · '+ROOMTYPE[r.type]+' · '+stTag(r.st).replace(/<[^>]+>/g,'')+'</option>').join('')}
+  </select>`}
+  ${S.room? roomCard() : ''}`;
+}
+function openRoom(no){
+  const r=roomOf(no); if(!r) return;
+  S.room=no; S.cons={}; S.dnd=(r.st==='DND'); S.scr='qr'; render();
+}
+function roomCard(){
+  const r=roomOf(S.room), c=cn(r.type);
+  const per=PERS.find(p=>p.room===r.no && p.status==='BEKLIYOR');
+  const tuk=Object.values(S.cons).reduce((a,b)=>a+b,0);
+  return `
+  <div class="card" style="border-color:#c5ddf3">
+    <div class="ct">Oda ${r.no} · ${ROOMTYPE[r.type]} <span class="tag blue">QR okundu</span></div>
+    <div class="mono" style="color:var(--muted);margin-bottom:8px">Merit Royal · ${r.no<200?'1':'2'}. kat · ${c.name} · ${c.items.length} ürün</div>
+    ${S.dnd?'<div class="note warn" style="margin-bottom:9px"><b>Oda DND modunda.</b> Tüketim girilemez; ara kayıt oluşturulur ve sistem 120 dakika sonra yeniden kontrol uyarısı üretir.</div>':''}
+    ${per?'<div class="note violet" style="margin-bottom:9px"><b>Kişiselleştirme talebi var (K-3312).</b> Misafir RU dilinde 2 ürün artırmak, 1 ürün azaltmak istiyor.</div>':''}
+    <div class="ct" style="margin-top:4px">Minibar kontrolü — eksik ürünleri gir</div>
+    ${c.items.map(([nm,qty])=>{
+      const k=S.cons[nm]||0;
+      return `<div class="item"><div class="nm">${esc(nm)}<div class="sub">Konsept adedi: ${qty} · eksik/ikame gir</div></div>
+        <div class="qty"><button onclick="q('${esc(nm)}',-1)">−</button><span>${k}</span><button onclick="q('${esc(nm)}',1)">+</button></div></div>`;
+    }).join('')}
+    <div class="item" style="border-top:1px solid var(--line);margin-top:6px">
+      <div class="nm"><b>Zimmetten düşülecek toplam</b></div><div style="font-weight:700;font-size:16px">${tuk} adet</div>
+    </div>
+  </div>
+  ${per?`<button class="btn" style="background:var(--violet-soft);border-color:#d9cdf5;color:#543a92" onclick="go('pers')">✨ Kişiselleştirme Talebini Aç (K-3312)</button>`:''}
+  ${S.dnd
+    ? `<button class="btn warn" onclick="saveDnd()">⏱ Ara Kayıt Oluştur ve Uyarı Planla</button>`
+    : `<button class="btn ok" onclick="saveCons()">✓ Tüketimi Kaydet (${Object.values(S.cons).reduce((a,b)=>a+b,0)} adet)</button>
+       <button class="btn warn" onclick="S.dnd=true;render()">⏱ Oda DND — Tüketim Girilemedi</button>`}
+  <button class="btn" onclick="S.room=null;S.cons={};render()">İptal / Geri</button>
+  ${S.sent? sentCard() : ''}`;
+}
+function sentCard(){
+  return `<div class="card" style="border-color:#bfe3d1;background:var(--ok-soft)">
+    <div class="ct">✓ Kayıt oluşturuldu</div>
+    <table style="width:100%;font-size:12.2px">
+      <tr><td class="mono">Kayıt no</td><td style="text-align:right" class="mono">${S.sent.no}</td></tr>
+      <tr><td class="mono">Otel / kat / oda</td><td style="text-align:right" class="mono">MR / ${S.sent.floor} / ${S.sent.room}</td></tr>
+      <tr><td class="mono">Personel</td><td style="text-align:right" class="mono">${esc(ME.name)}</td></tr>
+      <tr><td class="mono">Zaman</td><td style="text-align:right" class="mono">${S.sent.tm}</td></tr>
+      <tr><td class="mono">Zimmetten düşülen</td><td style="text-align:right"><b>${S.sent.qty} adet</b></td></tr>
+    </table>
+    <div class="mono" style="margin-top:8px;color:#0f6a45">→ oda · kat · otel kırılımlı tüketim kaydı ve zimmet hareketi yazıldı</div>
+  </div>`;
+}
+function q(nm,d){
+  const r=roomOf(S.room), c=cn(r.type); const max=Math.max(...c.items.map(i=>i[1]));
+  S.cons[nm]=Math.min(Math.max((S.cons[nm]||0)+d,0), max+2);
+  render();
+}
+function saveCons(){
+  const qty=Object.values(S.cons).reduce((a,b)=>a+b,0);
+  if(!qty){ toast('Eksik/ikame ürün girilmedi.'); return; }
+  const r=roomOf(S.room);
+  S.sent={no:'C-88'+(410+ROOMS.filter(x=>x.st==='DONE').length), floor:r.no<200?1:2, room:r.no, qty:qty,
+          tm:new Date().toLocaleTimeString('tr-TR').slice(0,5)};
+  r.st='DONE';
+  STOCK.forEach(s=>{ if(S.cons[s[0]]) s[1]=Math.max(0,s[1]-S.cons[s[0]]); });
+  render(); toast('Tüketim kaydedildi · zimmetten düşüldü.');
+}
+function saveDnd(){
+  const r=roomOf(S.room);
+  S.sent=null; r.st='DND';
+  NOTIF.unshift({k:'warn',t:'DND ara kaydı oluşturuldu',d:'Oda '+r.no+' · 120 dakika sonra yeniden kontrol uyarısı planlandı.',tm:new Date().toLocaleTimeString('tr-TR').slice(0,5)});
+  render(); toast('Ara kayıt oluşturuldu, uyarı planlandı.');
+}
+function scPers(){
+  const p=PERS[0];
+  return `
+  <div class="card" style="border-color:#d9cdf5;background:var(--violet-soft)">
+    <div class="ct">${p.id} · Oda ${p.room} <span class="tag violet">misafir talebi</span></div>
+    <div class="mono" style="font-size:11.6px">${p.when} · dil: ${p.lang} · günde 1 hak (kullanıldı)</div>
+  </div>
+  <div class="card">
+    <div class="ct">Artırılacak ürünler</div>
+    ${p.plus.map(([n,v])=>`<div class="item"><div class="nm">${esc(n)}</div><div style="font-weight:700">+${v}</div></div>`).join('')}
+    <div class="ct" style="margin-top:10px">Azaltılacak (stoktan alınacak)</div>
+    ${p.minus.map(([n,v])=>`<div class="item"><div class="nm">${esc(n)}</div><div style="font-weight:700;color:var(--warn)">−${v}</div></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="ct">Karşılama</div>
+    <label class="f">Karşılanan adetler (zimmetten düşülecek)</label>
+    <input value="Kola 2 adet · Şekersiz Kola −2 adet" disabled>
+    <div class="note ok" style="margin-top:9px">Talep karşılandığında adetler <b>odanın kaydına</b>, eksiltilen ürünler <b>zimmetinden</b> düşülür; depo sorumlusu ve sistem yöneticisi bilgilendirilir.</div>
+    <button class="btn ok" onclick="finishPers()">Talebi Karşılandı Olarak Kapat</button>
+    <button class="btn" onclick="go('qr')">Geri</button>
+  </div>`;
+}
+function finishPers(){
+  PERS[0].status='TAMAM';
+  const r=roomOf(PERS[0].room); if(r) r.st='DONE';
+  render(); toast('Kişiselleştirme talebi karşılandı · kayıt oluşturuldu.');
+}
+function scStock(){
+  return `
+  <div class="note"><b>Zimmetim.</b> Depo sorumlusu Hakan Yıldız tarafından tarafına zimmetlenen ürünler. Odalarda kullandığın her ürün bu bakiyeden düşer.</div>
+  ${STOCK.map(s=>{
+    const k=s[1]-s[2], pc=Math.round(100*k/s[1]);
+    return `<div class="card" style="padding:10px 11px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-weight:600;font-size:13.2px">${esc(s[0])}</div>
+        <div class="mono" style="color:var(--muted);font-size:11.2px">zimmet ${s[1]} · tüketilen ${s[2]}</div></div>
+        <div style="text-align:right">
+          <div style="font-size:17px;font-weight:700;color:${k<20?'var(--warn)':'var(--navy)'}">${k}</div>
+          <div class="mono" style="font-size:10.6px;color:var(--muted)">%${pc}</div>
+        </div>
+      </div>
+      <div style="height:6px;background:#e9eff6;border-radius:4px;overflow:hidden;margin-top:8px">
+        <i style="display:block;height:100%;width:${pc}%;background:${k<20?'var(--warn)':'var(--ok)'}"></i>
+      </div>
+      ${k<20?'<button class="btn sm warn" style="margin-top:8px" onclick="toast(\'İkmal talebi depo sorumlusuna gönderildi.\')">Depodan İkmal Talebi</button>':''}
+    </div>`;
+  }).join('')}`;
+}
+function scNotif(){
+  return `
+  <div class="note">Bildirimler; DND uyarıları, yeni talepler, kritik zimmet seviyeleri ve eskalasyonları içerir. Uyarılar akıllı saate ve kat ekranına da gönderilir.</div>
+  ${NOTIF.map(n=>`<div class="notif ${n.k}">
+    <div style="display:flex;justify-content:space-between"><b style="font-size:13px">${esc(n.t)}</b><span class="mono">${esc(n.tm)}</span></div>
+    <div style="font-size:12.4px;color:#42566d;margin-top:4px">${esc(n.d)}</div>
+  </div>`).join('')}`;
+}
+/* ---------------- yönlendirici ---------------- */
+const SCREENS = {
+  plan:{t:'Kat Planı', f:scPlan}, qr:{t:'Oda Kapı Formu', f:scQr}, pers:{t:'Kişiselleştirme', f:scPers},
+  stock:{t:'Zimmetim', f:scStock}, notif:{t:'Bildirimler', f:scNotif}
+};
+function render(){
+  const s=SCREENS[S.scr]||SCREENS.plan;
+  el('sTitle').textContent = S.scr==='qr' && S.room ? 'Oda '+S.room+' · Kapı Formu' : s.t;
+  el('sTag').textContent = S.scr==='stock' ? 'Depo: H. Yıldız' : S.scr==='pers' ? 'K-3312' : '1–2. kat';
+  el('screen').innerHTML = s.f();
+  document.querySelectorAll('.pnav button').forEach(b=>b.classList.toggle('on', b.dataset.s===S.scr));
+  const open=NOTIF.filter(n=>n.k==='err'||n.k==='violet').length;
+  el('ncount').innerHTML = open? ' <span class="tag err">'+open+'</span>' : '';
+  document.querySelectorAll('.side .sbtn').forEach(b=>b.classList.toggle('on', b.dataset.go===S.scr));
+}
+document.querySelectorAll('.pnav button').forEach(b=>b.onclick=()=>go(b.dataset.s));
+el('screens').innerHTML = `<div class="card"><b>Ekranlar</b></div>` +
+  Object.entries(SCREENS).map(([k,v])=>'<button class="sbtn" data-go="'+k+'" onclick="go(\''+k+'\')">'+v.t+'</button>').join('') +
+  '<button class="sbtn" data-go="pers" onclick="finishPers();go(\'pers\')">Kişiselleştirme (karşılama akışı)</button>';
+render();
+</script>
+<div id="toast" style="position:fixed;right:22px;bottom:22px;background:#0d2740;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;box-shadow:0 10px 26px rgba(0,0,0,.3);max-width:340px"></div>
+<style>#toast.show{opacity:1;transform:none}</style>
+</body>
+</html>

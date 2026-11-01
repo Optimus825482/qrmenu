@@ -8,7 +8,7 @@ import {
   setOutletPriceDisplayAction,
 } from "../../server/actions/outletSwitches";
 
-const PRICE_LABELS = { INHERIT: "Menü ayarı", SHOW: "Göster", HIDE: "Gizle" } as const;
+const PRICE_LABELS = { SHOW: "Açık (Gösterilir)", HIDE: "Kapalı (Gizlenir)", INHERIT: "Menü şablonuna göre" } as const;
 
 type Props = {
   outlet: MenuOutletInfo;
@@ -26,7 +26,7 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
       message: enabled
         ? `"${outlet.name}" için masa siparişi açılsın mı?`
         : `"${outlet.name}" için masa siparişi kapatılsın mı? Misafirler menüyü görmeye devam eder.`,
-      danger: false,
+      danger: true,
     });
     if (!yes) return;
     setBusy(true);
@@ -34,7 +34,9 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
     setBusy(false);
     if (!result.ok) {
       void alertDialog({ title: "Sipariş durumu değiştirilemedi", message: result.error.message });
+      return;
     }
+    await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” sipariş durumu güncellendi.` });
     onChanged();
   };
 
@@ -42,7 +44,7 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
     const yes = await confirm({
       title: "Fiyat gösterimi",
       message: `"${outlet.name}" için fiyat gösterimi "${PRICE_LABELS[value]}" olarak değiştirilsin mi?`,
-      danger: false,
+      danger: true,
     });
     if (!yes) return;
     setBusy(true);
@@ -50,7 +52,9 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
     setBusy(false);
     if (!result.ok) {
       void alertDialog({ title: "Fiyat gösterimi değiştirilemedi", message: result.error.message });
+      return;
     }
+    await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” fiyat gösterimi güncellendi.` });
     onChanged();
   };
 
@@ -66,14 +70,14 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
               disabled={!canSwitch || busy}
               onChange={(e) => void setOrdering(e.target.checked)}
             />
-            Sipariş açık
+            QR sipariş açık
           </label>
           <span className="xp-badge" data-on={outlet.orderingEnabled}>
-            {outlet.orderingEnabled ? "siparişe açık" : "sipariş kapalı"}
+            {outlet.orderingEnabled ? "QR siparişe açık" : "QR sipariş kapalı"}
           </span>
         </>
       ) : (
-        <span className="xp-badge">sipariş modülü yok</span>
+        <span className="xp-badge">sipariş modülü pasif</span>
       )}
       <label className="xp-module-switch">
         Fiyat gösterimi

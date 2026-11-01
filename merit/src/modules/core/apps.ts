@@ -33,6 +33,32 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
   registerApp({
+    id: "core.ekipler",
+    title: "Ekip Yönetimi",
+    icon: "ekipler",
+    moduleKey: "CORE",
+    screenCode: "CR-KUL",
+    category: "GENEL",
+    needsHotel: true,
+    window: { w: 900, h: 600, minW: 640, minH: 420 },
+    kind: "component",
+    component: () => import("@/shell/apps/TeamManagement").then((m) => ({ default: m.TeamManagement })),
+    mobile: "none",
+  });
+  registerApp({
+    id: "core.kullanici",
+    title: "Kullanıcı Yönetimi",
+    icon: "kullanicilar",
+    moduleKey: "CORE",
+    screenCode: "CR-KUL",
+    category: "SISTEM",
+    needsHotel: false,
+    window: { w: 960, h: 640, minW: 640, minH: 420 },
+    kind: "component",
+    component: () => import("@/shell/apps/UserManagement").then((m) => ({ default: m.UserManagement })),
+    mobile: "none",
+  });
+  registerApp({
     id: "core.rehber",
     title: "Kurulum Rehberi",
     icon: "soru",

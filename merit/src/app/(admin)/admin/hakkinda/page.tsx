@@ -1,6 +1,6 @@
 import "@/shell/theme.css";
 import { redirect } from "next/navigation";
-import { FONT_STACKS, parseFrameAppearance } from "@/shell/appearance";
+import { FONT_STACKS, FONT_WEIGHTS, parseFrameAppearance } from "@/shell/appearance";
 import { XpIcon } from "@/shell/icons";
 import pkg from "../../../../../package.json";
 import { currentUser, permits } from "../guard";
@@ -29,7 +29,7 @@ export default async function AboutPage({
     <main
       className="xp-frame-page"
       data-theme={theme}
-      style={{ fontFamily: FONT_STACKS[fontFamily] }}
+      style={{ fontFamily: FONT_STACKS[fontFamily], fontWeight: FONT_WEIGHTS[fontFamily] }}
     >
       <div className="xp-about">
         <XpIcon name="bilgi" size={48} />

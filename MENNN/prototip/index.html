@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Merit Royal Servis Platformu · Prototip Paketi</title>
+<style>
+:root{--navy:#0d2740;--navy2:#153b5e;--gold:#a97c33;--gold2:#c9a45c;--ink:#182533;--muted:#647488;--line:#e2e9f1;--soft:#f6f9fc;--bg:#eef2f7;--blue:#1d6fb8;--ok:#18855a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.6 "Segoe UI",Tahoma,Verdana,sans-serif}
+header{background:linear-gradient(135deg,#0b2137,#12385c 55%,#1b4d76);color:#fff;padding:34px 40px 30px;border-bottom:4px solid var(--gold)}
+header .brand{font-size:12px;letter-spacing:.24em;color:var(--gold2)}
+header h1{margin:8px 0 6px;font-size:26px;line-height:1.2}
+header p{margin:0;color:#cfe0ee;max-width:900px;font-size:14.6px}
+main{max-width:1180px;margin:0 auto;padding:26px 40px 60px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h3{margin:0 0 6px;font-size:16px;color:var(--navy)}
+.card p{margin:0 0 10px;font-size:13.4px;color:var(--muted)}
+a.btn{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;border-radius:9px;padding:8px 15px;font-size:13.4px;font-weight:600}
+a.btn:hover{background:#13324f}
+a.btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line);font-weight:500;margin-left:7px}
+h2{font-size:19px;color:var(--navy);margin:32px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th{background:var(--soft);text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);font-size:12px;color:#33475f;white-space:nowrap}
+td{padding:8px 11px;border-bottom:1px solid #eef3f8;vertical-align:top}
+tr:last-child td{border-bottom:none}
+code,.mono{font-family:Consolas,monospace;font-size:12.2px;background:#f2f6fa;border-radius:5px;padding:1px 5px}
+ul{margin:0;padding-left:20px}
+li{margin-bottom:5px;font-size:13.6px}
+.note{border-left:3px solid var(--blue);background:#eaf3fb;padding:11px 14px;border-radius:0 10px 10px 0;font-size:13.6px;margin:16px 0}
+.note.gold{border-color:var(--gold2);background:#fbf6ea}
+.tag{display:inline-block;font-size:11.4px;border:1px solid var(--line);background:var(--soft);border-radius:6px;padding:2px 8px;color:#42566d;margin-right:5px}
+.tag.ok{border-color:#bfe3d1;background:#e9f7f0;color:#0f6a45}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">MENNN · MERIT ROYAL DIAMOND · MERIT ROYAL · MERIT ROYAL PREMIUM</div>
+  <h1>Servis Platformu — Arayüz Prototipleri</h1>
+  <p>Minibar Takip, QR Menü, QR Sipariş ve QR Oda Servisi sistemlerinin ön arayüz tasarımları. Prototipler statik HTML'dir, örnek (seed) veriyle çalışır;
+  gerçek sistem <b>Next.js + PostgreSQL + Prisma</b> üzerinde modüler olarak geliştirilecektir (bkz. PLAN.md).</p>
+</header>
+<main>
+
+<div class="grid">
+  <div class="card">
+    <h3>1 · Yönetim Paneli</h3>
+    <p>36 ekran: 3 otelin standart kaydı, <b>üç kademeli akordeon menü</b>, <b>otel altında outlet tanımları ve kullanıcı ataması</b>, <b>outletlere opsiyonel fiyatlı QR Menü / QR Sipariş modülü ataması</b>, <b>outlete özel menü tanımlama (görsel · detay · alerjen · opsiyonel fiyat)</b> ve <b>adisyon toplamları ile adisyon çıktısı</b>, tanımlama akışı ve kurulum rehberi, rol tanımları ve yetki matrisi,
+    merkezi yönetim hiyerarşisi (otel → modül → outlet), outlet ekipleri ve kullanıcı atamaları, oturum/süre ayarları, online kullanıcı takibi,
+    minibar tanımlar akışı (otel → kat → oda → oda tipi → konsept → ürün grubu → ürün → personel), zimmet &amp; stok, tüketim kayıtları,
+    kişiselleştirme talepleri, DND ara kayıtları, QR menü kurgusu, garson onay kuyruğu, mutfak ekranı, komuta merkezi ve raporlar.</p>
+    <a class="btn" href="yonetim-paneli.html">Aç</a>
+    <span class="tag ok">masaüstü</span>
+  </div>
+  <div class="card">
+    <h3>2 · Kat Sorumlusu Mobil (Kat Formu)</h3>
+    <p>Oda QR okutma, kapı formu ile tüketim girişi, zimmetten düşme, DND ara kaydı ve otomatik uyarı, kişiselleştirme talebi karşılama,
+    zimmet bakiyesi ve ikmal talebi, bildirim merkezi.</p>
+    <a class="btn" href="kat-formu.html">Aç</a>
+    <span class="tag ok">mobil</span>
+  </div>
+  <div class="card">
+    <h3>3 · Misafir Arayüzü</h3>
+    <p>Çok dilli (TR/EN/DE/FR/IT/AR + otomatik dil algılama, Arapça RTL), minibar kişiselleştirme (günde 1 hak),
+    oda servisi menüsü ve talep takibi, ambiyans temalı QR menü, QR sipariş ve garson ön onayı durumu.</p>
+    <a class="btn" href="misafir.html">Aç</a>
+    <a class="btn ghost" href="misafir.html?lang=ar">Arapça (RTL)</a>
+    <a class="btn ghost" href="misafir.html?lang=en">EN</a>
+  </div>
+  <div class="card">
+    <h3>4 · Personel Giriş &amp; Oturum</h3>
+    <p>7 ekran: giriş + MFA, <b>otel seçimi</b>, <b>outlet seçimi</b>, çevrimiçi oturum ve süre sayacı, oturum kapandı özeti,
+    ataması olmayan kullanıcı ekranı, <b>süre aşımı / otomatik çıkış</b>. Gösterim hızı 600× seçilerek maksimum süre davranışı canlı izlenebilir.</p>
+    <a class="btn" href="oturum.html">Aç</a>
+    <span class="tag ok">mobil</span>
+  </div>
+  <div class="card">
+    <h3>5 · Yönetici Kabuğu (XP masaüstü / Android)</h3>
+    <p>Alternatif sistem yöneticisi arayüzü. Masaüstü ve tablette Windows XP masaüstü: çift tıklamayla pencere, modül ve otel ayrı sistem, formlar pencere içinde, kayıtlarda ekle / düzenle / sil ve her işlemde onay. Sağ tık: yenile, arka plan, renk rejimi. Başlat menüsünden sürüklenen kısayol masaüstüne alınır, masaüstünden kaldırılır. Mobilde Android görünümü: izleme ve rapor; tanımlar ayardan açılıp kapanır.</p>
+    <a class="btn" href="xp-masa.html">Aç</a>
+    <span class="tag ok">masaüstü · tablet · mobil</span>
+  </div>
+</div>
+
+<div class="note gold"><b>Standart kayıtlar:</b> yönetici paneli açıldığında <b>Merit Royal</b>, <b>Merit Royal Diamond</b> ve <b>Merit Royal Premium</b>
+üç tesis varsayılan kayıt olarak yüklüdür. Tüm modüller bu kayıtların altında açılır; silinemez, yalnızca güncellenebilir.</div>
+
+<h2>Ekran envanteri (prototipte gezilebilir)</h2>
+<table>
+  <tr><th>Kod</th><th>Ekran</th><th>Modül</th><th>Prototip</th></tr>
+  <tr><td class="mono">ADM-01</td><td>Genel bakış / modül haritası</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-01</td><td>Otel tanımla (3 standart kayıt)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-02</td><td>Kat tanımla (otel seç → kat)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-03</td><td>Oda tanımla (oda tipi + konsept otomatik içerik)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-04</td><td>Oda tipi tanımla</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-05</td><td>Konsept tanımla (oda tipine özel minibar içeriği)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-06</td><td>Ürün grubu tanımla</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-07</td><td>Ürün tanımla</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-DEF-08</td><td>Kat sorumlusu &amp; depo sorumlusu tanımla</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-OPS-01</td><td>Zimmet &amp; stok (depo → kat sorumlusu)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-OPS-02</td><td>Tüketim kayıtları (oda/kat/otel kırılımı)</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-OPS-03</td><td>Kişiselleştirme talepleri ve karşılama</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-OPS-04</td><td>DND / ara kayıtlar ve otomatik uyarılar</td><td>Minibar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">MB-MOB-01</td><td>Kat planı (oda durumları)</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">MB-MOB-02</td><td>Oda QR okutma (kamera simülasyonu)</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">MB-MOB-03</td><td>Kapı formu: tüketim girişi + zimmetten düşme</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">MB-MOB-04</td><td>DND ara kaydı ve uyarı planlama</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">MB-MOB-05</td><td>Kişiselleştirme talebini karşılama</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">MB-MOB-06</td><td>Zimmetim + ikmal talebi + bildirimler</td><td>Minibar</td><td>kat-formu.html</td></tr>
+  <tr><td class="mono">GST-01</td><td>Dil algılama ve ana ekran</td><td>Misafir</td><td>misafir.html</td></tr>
+  <tr><td class="mono">GST-02</td><td>Minibar kişiselleştirme (günde 1 hak)</td><td>Misafir</td><td>misafir.html</td></tr>
+  <tr><td class="mono">GST-03</td><td>Talep durumu (kat sorumlusu bilgilendirildi)</td><td>Misafir</td><td>misafir.html</td></tr>
+  <tr><td class="mono">GST-04</td><td>Oda servisi menüsü + talep takibi</td><td>QR Oda Servisi</td><td>misafir.html</td></tr>
+  <tr><td class="mono">GST-05</td><td>Ambiyans temalı QR menü (alerjen bilgisi)</td><td>QR Menü</td><td>misafir.html</td></tr>
+  <tr><td class="mono">GST-06</td><td>QR sipariş + garson ön onayı durumu</td><td>QR Sipariş</td><td>misafir.html</td></tr>
+  <tr><td class="mono">QRM-DEF-01</td><td>Outlet tanımla + QR üretimi</td><td>QR Menü</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">QRM-DEF-02</td><td>Menü / kategori / alt kategori / grup / öğe / tema</td><td>QR Menü</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">QRM-DEF-03</td><td>Outlet’e QR Menü / QR Sipariş atama, opsiyonel fiyat, görsel, alerjen</td><td>QR Menü</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">QRS-OPS-01</td><td>Garson onay kuyruğu</td><td>QR Sipariş</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">QRS-OPS-02</td><td>Mutfak ekranı (KDS) + fiş yazıcı</td><td>QR Sipariş</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">QRS-OPS-03</td><td>Fiyat gösterimi açıkken adisyon toplamı ve yazdırma</td><td>QR Sipariş</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">RS-OPS-01</td><td>Oda servisi talepleri + telefon teyidi</td><td>QR Oda Servisi</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-02</td><td>Komuta merkezi (canlı izleme)</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-03</td><td>Raporlar (oda/kat/otel/ürün kırılımı)</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-04</td><td>Kullanıcılar &amp; rol yetki matrisi</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-05</td><td>Sistem, varsayılan kayıtlar, denetim günlüğü, kara liste</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-06</td><td>Modül girişi: otel → modül (QR Menü / Sipariş / Oda Servisi / Minibar)</td><td>Merkezi yönetim</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-07</td><td>Modül bazlı outlet tanımları (modüle özel alanlarla)</td><td>Merkezi yönetim</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-08</td><td>Modül bazlı rol tanımları (yetki, varsayılan ekran, rol süresi)</td><td>Merkezi yönetim</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-09</td><td>Outlet ekipleri ve kullanıcı–outlet–rol atamaları</td><td>Merkezi yönetim</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-10</td><td>Kullanıcı takip sistemi: animasyonlu online izleme (otel/outlet bazlı)</td><td>Oturum</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-11</td><td>Oturum &amp; süre ayarları (maksimum online süre, otomatik çıkış)</td><td>Oturum</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-12</td><td>Yönetim menüsü haritası (akordeon bilgi mimarisi)</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-13</td><td>Rol tanımları — 16 rol, 5 tip (Sistem/Yönetim/Outlet/Mutfak/Minibar)</td><td>Kullanıcı</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-14</td><td>Yetki tanımları — rol × otel × modül × ekran × işlem (V/O/D/A/R)</td><td>Kullanıcı</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-15</td><td>Tanımlama akışı &amp; kurulum rehberi (bağımlılık kuralları + sıradaki adım)</td><td>Çekirdek</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-16</td><td>Otel altında outlet tanımları · kullanıcı–outlet / minibar bölgesi ataması · giriş davranışı</td><td>Tanımlar</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-17</td><td>Outlet Menüsü · modül ataması (opsiyonel fiyatlı QR Menü / QR Sipariş) · kategori/alt kategori/grup/öğe + görsel · alerjen · fiyat gösterim anahtarı</td><td>QR Menü</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-18</td><td>Adisyon &amp; fiyat toplamı (fiyat gösterimi açık outletler, adisyon çıktısı)</td><td>QR Sipariş</td><td>yonetim-paneli.html</td></tr>
+  <tr><td class="mono">ADM-19</td><td>XP masaüstü / tablet kabuğu ve Android mobil kabuk (modül = sistem, otel = sistem, CRUD onay, kısayol)</td><td>Çekirdek</td><td>xp-masa.html</td></tr>
+  <tr><td class="mono">AUTH-01</td><td>Personel girişi (kullanıcı adı, şifre, MFA)</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-02</td><td>Otel seçimi (atamalı oteller, çoklu otel)</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-03</td><td>Outlet seçimi (modül + rol; tek outlette otomatik)</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-04</td><td>Çevrimiçi oturum ekranı: kalan süre, bildirimler, outlet değiştirme</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-05</td><td>Süre aşımı / otomatik çıkış kaydı</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-06</td><td>Outlet ataması olmayan kullanıcı ekranı</td><td>Oturum</td><td>oturum.html</td></tr>
+  <tr><td class="mono">AUTH-07</td><td>Manuel çıkış ve oturum özeti</td><td>Oturum</td><td>oturum.html</td></tr>
+</table>
+
+<h2>Değişmez kurallar (prototipte uygulanmıştır)</h2>
+<ul>
+  <li><b>Opsiyonel fiyat:</b> tutar kaydı girilebilir; gösterim outlet bazında kapalı başlar ve istendiğinde açılır. Açık QR Sipariş outletinde adisyon toplamı görünür ve yazdırılır. Ödeme adımı yoktur.</li>
+  <li><b>Çift kademeli onay:</b> sipariş önce garsonun cihazına ve ana kasaya düşer; garson onayından sonra mutfak fiş yazıcısına ve KDS ekranına iletilir. Mutfağa doğrudan gönderim yoktur.</li>
+  <li><b>QR kimliği:</b> masa/şezlong/oda bilgisi sabit QR kodundadır; konum yalnızca tesis içinde bulunma doğrulaması için kullanılır.</li>
+  <li><b>Wi‑Fi / konum esnekliği:</b> otel Wi‑Fi'sinde masa doğrudan DOLU; mobil veride konum izni reddedilirse masa BEKLEMEDE kalır ve garson teyidiyle açılır.</li>
+  <li><b>Kara liste ve veri minimizasyonu:</b> tesis dışı sahte talepler 30 gün engellenir; misafir kişisel verisi sunucuda tutulmaz, lezzet tercihleri yalnızca cihazda saklanır.</li>
+  <li><b>Zimmet zinciri:</b> depo sorumlusu → kat sorumlusu → oda. Bakiye eksiye düşemez; her hareket denetim günlüğüne yazılır.</li>
+  <li><b>Merkezi hiyerarşi:</b> otel → outlet tanımı → modül rolü → kullanıcı ataması → ekip. Ekipsiz outlet canlıya alınamaz; modüller birbirinden bağımsız açılıp kapanır.</li>
+  <li><b>Atama ve giriş:</b> kullanıcı birden fazla outlete veya minibar bölgesine atanabilir; girişte oturum açacağı outleti seçmesi zorunludur.</li>
+  <li><b>Oturum kuralı:</b> outletler otel tanımının altındadır. Kullanıcı bu outletlere veya minibar sistemine yazılır. Girişten hemen sonra oturum açacağı hedefi seçer. Süre dolunca sistem otomatik çıkış yaptırır.</li>
+  <li><b>Menü ve tanımlama düzeni:</b> menü üç kademeli akordeondur; tanımlama zinciri (otel → kat → oda ve oda tipi → ürün grubu → ürün → konsept) atlanamaz, eksik adım kurulum rehberinde gösterilir.</li>
+  <li><b>Yetki kuralı:</b> erişim rol × otel × modül × ekran × işlem düzeyinde verilir; onay yetkisi olmayan kullanıcı siparişi mutfağa iletemez, yetkisiz erişim denetim günlüğüne yazılır.</li>
+  <li><b>Opsiyonel fiyatlı modüller:</b> QR Menü ve QR Sipariş outlet bazında atanır; atanmadan o outlette menü tanımlanamaz. Menü ağacı (kategori → alt kategori → grup → öğe) outlete özeldir; görsel, detay, alerjen ve opsiyonel fiyat kaydedilir.</li>
+  <li><b>Fiyat gösterimi ve adisyon:</b> fiyat kaydı outlete girilebilir; gösterim kapalıyken tutar gizlenir, açıldığında menüde, sepette ve adisyonda görünür. Fiyat gösterimi açık outletlerde adisyon toplamı oluşur ve fiş çıktısı alınabilir.</li>
+</ul>
+
+<div class="card" style="margin-top:16px;border-top:3px solid #a97c33">
+    <h3>5 · Alternatif: Windows XP Masaüstü Arayüzü</h3>
+    <p>Aynı sistemin alternatif kabuğu: simgelere <b>çift tıklayarak</b> pencere açılır (her modül ayrı pencere, pencere içinde <b>otel seçimi</b>),
+    kategorili <b>Başlat menüsü</b>, sağ tuş menüsü (yenile · arka plan rengi · kısayol), <b>sürükle-bırak</b> kısayol yönetimi, her işlemde onay penceresi.
+    Dar ekranda <b>Android mobil kabuğu</b>: yalnızca izleme ve raporlama; tanımlamalar Ayarlar'dan açılıp kapatılır. (<code>?mobil=1</code> ile mobil görünüm zorlanabilir.)</p>
+    <a class="btn" href="yonetim-xp.html">Aç</a>
+    <a class="btn ghost" href="yonetim-xp.html?mobil=1">Mobil (Android) görünüm</a>
+    <a class="btn ghost" href="xp-masa.html">2. varyant (xp-masa.html)</a>
+  </div>
+  <div class="note"><b>Teknoloji hedefi:</b> <span class="mono">Next.js (App Router)</span> · <span class="mono">PostgreSQL</span> · <span class="mono">Prisma</span> ·
+modül başına bağımsız klasör ve servis katmanı; misafir ekranları çok dilli (next-intl), gerçek zamanlı akış için WebSocket/SSE, bildirimler için Web Push + FCM + Wear OS.
+Ayrıntılı yol haritası, veri modeli ve sprint planı: <span class="mono">PLAN.md</span> · veri modeli taslağı: <span class="mono">docs/veri-modeli.prisma</span></div>
+
+</main>
+</body>
+</html>

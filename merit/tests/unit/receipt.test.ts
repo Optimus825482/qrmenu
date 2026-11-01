@@ -56,7 +56,7 @@ describe("receipt.build", () => {
     const order = await receiptOrder(s);
     const payload = await receipt.build(testDb, order.id);
     expect(payload.v).toBe(1);
-    expect(payload.header).toMatchObject({ hotel: (await testDb.hotel.findUniqueOrThrow({ where: { code: "MR" } })).name, outlet: "Havuz Bar" });
+    expect(payload.header).toMatchObject({ hotel: (await testDb.hotel.findUniqueOrThrow({ where: { code: "ROYAL" } })).name, outlet: "Havuz Bar" });
     expect(payload.orderNo).toBe(order.orderNo);
     expect(payload.table).toBe("M1");
     expect(payload.items).toHaveLength(1);

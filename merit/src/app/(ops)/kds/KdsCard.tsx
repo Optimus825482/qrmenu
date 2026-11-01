@@ -12,13 +12,15 @@ const elapsedLabel = (approvedAt: Date | string, now: number) => {
   return `${Math.floor(seconds / 60)} dk ${String(seconds % 60).padStart(2, "0")} sn`;
 };
 
-export default function KdsCard({ order, now, action, pending, canEdit, onAction }: {
+export default function KdsCard({ order, now, action, pending, canEdit, canPrint, onAction, onPrint }: {
   order: KdsOrder;
   now: number;
   action?: "start" | "ready";
   pending: boolean;
   canEdit: boolean;
+  canPrint: boolean;
   onAction: (order: KdsOrder, action: "start" | "ready") => void;
+  onPrint: (order: KdsOrder) => void;
 }) {
   const actionLabel = action === "start" ? "Başla" : action === "ready" ? "Hazır" : undefined;
   return <article className="rounded-xl border border-border bg-bg p-4 shadow-sm">
@@ -26,5 +28,6 @@ export default function KdsCard({ order, now, action, pending, canEdit, onAction
     <ul className="mt-3 space-y-1 text-sm">{order.items.map((item, index) => <li key={`${item.name}-${index}`}><span className="font-medium">{item.name} × {item.qty}</span>{item.note ? <span className="block text-muted">Kalem notu: {item.note}</span> : null}</li>)}</ul>
     {order.note ? <p className="mt-3 rounded-lg bg-surface p-2 text-sm text-muted">Not: {order.note}</p> : null}
     {action && actionLabel ? <button type="button" disabled={!canEdit || pending} onClick={() => onAction(order, action)} className="mt-4 min-h-14 w-full rounded-lg bg-accent px-4 py-3 text-base font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">{actionLabel}</button> : null}
+    <button type="button" disabled={!canPrint || pending} onClick={() => onPrint(order)} className="mt-2 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-45">Fiyatsız mutfak fişini yazdır</button>
   </article>;
 }

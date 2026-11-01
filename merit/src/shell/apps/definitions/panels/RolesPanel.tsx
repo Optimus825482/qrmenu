@@ -32,7 +32,7 @@ const COLUMNS: Column<RoleRow>[] = [
   { key: "code", title: "Kod", width: 90, sortable: true },
   { key: "name", title: "Ad", sortable: true },
   { key: "kind", title: "Tür", width: 90, sortable: true, render: (row) => ROLE_KIND_LABELS[row.kind] },
-  { key: "defaultScreen", title: "Açılış ekranı", width: 110, render: (row) => row.defaultScreen ?? "—" },
+  { key: "defaultScreen", title: "Açılış ekranı", width: 200, render: (row) => row.defaultScreen ?? "—" },
   {
     key: "maxOnlineMinutes",
     title: "Azami süre (dk)",
@@ -65,6 +65,12 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
   const [dialog, setDialog] = useState<Dialog>(null);
   const selected = list.rows.find((r) => r.id === selectedId);
   const canEdit = options?.canEdit === true;
+  const columns = COLUMNS.map((column) => column.key === "defaultScreen"
+    ? {
+        ...column,
+        render: (row: RoleRow) => options?.screens.find((screen) => screen.code === row.defaultScreen)?.name ?? "—",
+      }
+    : column);
 
   useEffect(() => {
     setStatus(`${list.total} rol${canEdit ? "" : " (salt okunur)"}`);
@@ -102,9 +108,10 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
   };
 
   const remove = async (row: RoleRow) => {
+    if (row.code === "R-SYS") return;
     const yes = await confirm({
       title: "Rolü sil",
-      message: `"${row.code} — ${row.name}" rolü ve yetki satırları silinsin mi?`,
+      message: `“${row.code} — ${row.name}” rolü silinsin mi? Kullanımda olan roller silinemez.`,
       danger: true,
     });
     if (!yes) return;
@@ -113,6 +120,7 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
       void alertDialog({ title: "Rol silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.code} — ${row.name}” rolü silindi.` });
     setSelectedId(undefined);
     list.reload();
   };
@@ -125,7 +133,7 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
         </p>
       ) : null}
       <DataGrid<RoleRow>
-        columns={COLUMNS}
+        columns={columns}
         rows={list.rows}
         total={list.total}
         page={list.page}
@@ -139,6 +147,10 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
         onActivate={canEdit ? (row) => setDialog({ mode: "edit", row }) : undefined}
+        rowContextActions={canEdit ? (row) => [
+          { label: "Düzenle", onSelect: () => setDialog({ mode: "edit", row }) },
+          { label: "Sil", disabled: row.code === "R-SYS", onSelect: () => void remove(row) },
+        ] : undefined}
         emptyText="Rol bulunamadı"
         toolbar={
           <Toolbar
@@ -147,7 +159,7 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
             onDelete={canEdit ? () => selected && void remove(selected) : undefined}
             onRefresh={list.reload}
             editDisabled={!selected}
-            deleteDisabled={!selected || selected.isSystem}
+            deleteDisabled={!selected || selected.code === "R-SYS"}
           />
         }
       />
@@ -157,6 +169,7 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
         <Field name="code" label="Kod">
           {editing ? (
@@ -181,9 +194,7 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
           <select defaultValue={editing?.defaultScreen ?? ""}>
             <option value="">Yok</option>
             {(options?.screens ?? []).map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.code} — {s.name}
-              </option>
+              <option key={s.code} value={s.code}>{s.name}</option>
             ))}
           </select>
         </Field>

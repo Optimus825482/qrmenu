@@ -4,6 +4,7 @@ import path from "node:path";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { hashPassword } from "../../src/lib/password";
 import { runSeed } from "../../prisma/seed";
+import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 
 // Run through tsx (see fixtures.ts): the generated Prisma client is ESM-only and cannot be loaded
 // by Playwright's CommonJS test loader.
@@ -88,18 +89,19 @@ async function resetAndSeed(): Promise<void> {
         },
       });
 
-    const mr = await hotel("MR");
-    const mrp = await hotel("MRP");
+    const mr = await hotel("ROYAL");
+    const mrp = await hotel("PREMIUM");
 
-    await makeUser("kat.mr", "R-KAT", "MR");
+    await makeUser("kat.mr", "R-KAT", "ROYAL");
 
-    const depo = await makeUser("depo.cok", "R-DEP", "MR");
+    const depo = await makeUser("depo.cok", "R-DEP", "ROYAL");
     for (const hotelId of [mr, mrp]) {
       await db.userHotel.create({ data: { userId: depo.id, hotelId } });
     }
 
-    const garson = await makeUser("garson.havuz", "R-GAR", "MR");
+    const garson = await makeUser("garson.havuz", "R-GAR", "ROYAL");
     const outlets: Record<string, string> = {};
+    const areaIds: Record<string, string> = {};
     for (const name of ["Havuz Bar", "Beach Bar"]) {
       const outlet = await db.outlet.create({
         data: {
@@ -111,11 +113,15 @@ async function resetAndSeed(): Promise<void> {
         },
       });
       outlets[name] = outlet.id;
+      // Outlets made through the admin service get the default call options; mirror that here.
+      await ensureDefaultCallOptions(db, outlet.id);
+      const area = await db.outletAreaDefinition.create({ data: { outletId: outlet.id, type: "KAPALI" } });
+      areaIds[name] = area.id;
       await db.outletMember.create({ data: { userId: garson.id, outletId: outlet.id } });
     }
     const pool = outlets["Havuz Bar"];
     for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
-      await db.outletTable.create({ data: { outletId: pool, label } });
+      await db.outletTable.create({ data: { outletId: pool, areaId: areaIds["Havuz Bar"], label } });
     }
     if (process.env.SEED_GUEST_MENU === "1") await seedGuestMenu(db, pool);
     // P5 staff, all members of Havuz Bar: cashier, kitchen display operator, head waiter.
@@ -124,17 +130,17 @@ async function resetAndSeed(): Promise<void> {
       ["kds.havuz", "R-KDS"],
       ["sef.havuz", "R-SGF"],
     ] as const) {
-      const staff = await makeUser(username, roleCode, "MR");
+      const staff = await makeUser(username, roleCode, "ROYAL");
       await db.outletMember.create({ data: { userId: staff.id, outletId: pool } });
     }
     // F&B manager of the MR hotel (QR menu / order management).
-    await makeUser("fbm.mr", "R-FBM", "MR");
+    await makeUser("fbm.mr", "R-FBM", "ROYAL");
 
-    await makeUser("bos.kullanici", "R-OUT", "MR");
+    await makeUser("bos.kullanici", "R-OUT", "ROYAL");
     // Management role without the system screens (CR-SYS): sees Komuta Merkezi only.
-    await makeUser("mudur.mr", "R-OTM", "MR");
+    await makeUser("mudur.mr", "R-OTM", "ROYAL");
     // Management role that may edit the MR hotel settings (CR-SYS V,D for MR only): no system scope.
-    await makeUser("ayar.mr", "R-FBM", "MR");
+    await makeUser("ayar.mr", "R-FBM", "ROYAL");
     await db.roleScreenPermission.create({
       data: {
         roleId: await role("R-FBM"),

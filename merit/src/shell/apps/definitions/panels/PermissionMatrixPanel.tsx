@@ -1,22 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  copyPermissionsAction,
   permissionMatrixAction,
-  resetHotelOverridesAction,
-  setPermissionModuleAction,
   setPermissionScreenAction,
 } from "@/modules/core/server/admin/actions/permissions";
-import { roleOptionsAction } from "@/modules/core/server/admin/actions/roles";
+import { roleOptionsAction, updateRoleAction } from "@/modules/core/server/admin/actions/roles";
 import type { Flags, PermissionMatrix, ScreenCell } from "@/modules/core/server/admin/permissions";
 import type { RoleOptions } from "@/modules/core/server/admin/roles";
 import { alertDialog, confirm } from "@/shell/confirm";
-import { useSse } from "@/shell/useSse";
-import { MODULE_LABELS } from "./values";
 
 type Props = { hotelId: string; setStatus(text: string): void };
-
 const ACTIONS = ["V", "O", "D", "A", "R"] as const;
 const ACTION_TITLES: Record<(typeof ACTIONS)[number], string> = {
   V: "Görüntüle",
@@ -25,262 +19,245 @@ const ACTION_TITLES: Record<(typeof ACTIONS)[number], string> = {
   A: "Onayla",
   R: "Rapor",
 };
-const DEFINITION_EVENTS = ["definition.changed"] as const;
-const SYSTEM_SCOPE = "";
 
-/**
- * Yetki Matrisi: screen x action grid of one role, system-wide or for one hotel. In a hotel,
- * faded cells are inherited from the system-wide rows and bold ones are hotel overrides. Each
- * click saves at once; non-SISTEM users see the grid read-only.
- */
+const FLOWS = {
+  "QS-KUY": {
+    title: "Outlet Garson Ekranı",
+    steps: [
+      ["Outlet seçimi", "Kullanıcı erişimindeki outleti seçer."],
+      ["Masalar ve menü", "Seçilen outletin aktif masaları ve açık ürünleri yüklenir."],
+      ["Garson siparişi", "Sipariş açıksa masadan ürün seçip adisyon kaydeder."],
+      ["Çağrı ve QR", "Sipariş kapalıysa çağrıları görür; QR siparişleri aynı outlet akışına düşer."],
+      ["Adisyon durumu", "Adisyon kasaya gider; garson kendi ekranından hazırlanma ve servis durumunu izler."],
+    ],
+    screens: ["QS-KUY", "QM-CAG"],
+  },
+  "QS-KAS": {
+    title: "Outlet Kasa Ekranı",
+    steps: [
+      ["Outlet seçimi", "Kasiyer çalışacağı outleti seçer."],
+      ["Masa panosu", "Masaların durumu, açık adisyonlar ve çağrılar görünür."],
+      ["Sipariş kuyruğu", "Garson ve QR siparişleri bu outlette toplanır."],
+      ["Onay", "Sipariş onaylanır ve KDS açıksa mutfağa gönderilir."],
+      ["Fiş", "Adisyon yazdırılır; gerektiğinde yeniden yazdırılır."],
+    ],
+    screens: ["QS-KAS", "QS-FIS", "QS-IPT"],
+  },
+  "QS-KDS": {
+    title: "Outlet Mutfak Ekranı",
+    steps: [
+      ["Onaylı sipariş", "Kasa/garson onayından geçen adisyon mutfağa gelir."],
+      ["Sıralı kuyruk", "Yeni, hazırlanıyor ve hazır siparişler sırayla gösterilir."],
+      ["Hazırlık", "Mutfak siparişi hazırlamaya alır ve hazır olarak işaretler."],
+      ["Servis", "Garson hazır bilgisini görür; mutfak fişi yazdırılabilir."],
+    ],
+    screens: ["QS-KDS"],
+  },
+} as const;
+
+const FLOW_FALLBACK: (typeof FLOWS)[keyof typeof FLOWS] = FLOWS["QS-KUY"];
+
+const ROLE_SCREEN_CODES: Record<string, readonly string[]> = {
+  "R-GAR": ["QS-KUY"],
+  "R-BAR": ["QS-KUY"],
+  "R-BUT": ["QS-KUY"],
+  "R-SGF": ["QS-KUY"],
+  "R-KAS": ["QS-KAS"],
+  "R-KDS": ["QS-KDS"],
+  "R-MUS": ["QS-KDS"],
+  "R-MUP": ["QS-KDS"],
+};
+
+function screensForRole(options: RoleOptions | null, roleCode?: string) {
+  const screens = options?.screens ?? [];
+  const allowed = roleCode ? ROLE_SCREEN_CODES[roleCode] : undefined;
+  return allowed ? screens.filter((screen) => allowed.includes(screen.code)) : screens;
+}
+
+/** Rolün açılış ekranını seçer; QR operasyon ekranlarında akış ve ekran izinlerini de gösterir. */
 export function PermissionMatrixPanel({ setStatus }: Props) {
   const [options, setOptions] = useState<RoleOptions | null>(null);
   const [roleId, setRoleId] = useState("");
-  const [scope, setScope] = useState(SYSTEM_SCOPE);
-  const [data, setData] = useState<PermissionMatrix | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [screenCode, setScreenCode] = useState("");
+  const [matrix, setMatrix] = useState<PermissionMatrix | null>(null);
+  const [error, setError] = useState("");
+  const [savingScreen, setSavingScreen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [tick, setTick] = useState(0);
-  const [copyFrom, setCopyFrom] = useState("");
-  const canEdit = options?.canEdit === true;
-  const hotelScope = scope || null;
-  const role = options?.roles.find((r) => r.id === roleId);
+  const role = options?.roles.find((item) => item.id === roleId);
+  const currentFlow = screenCode in FLOWS ? FLOWS[screenCode as keyof typeof FLOWS] : null;
+  const flow = currentFlow ?? FLOW_FALLBACK;
   const locked = role?.code === "R-SYS";
-  const editable = canEdit && !locked;
 
   useEffect(() => {
     let live = true;
     void roleOptionsAction().then((result) => {
       if (!live) return;
-      if (result.ok) {
-        setOptions(result.data);
-        const initial = result.data.roles.find((r) => r.code === "R-OTM") ?? result.data.roles[0];
-        setRoleId((current) => current || initial?.id || "");
-      } else {
+      if (!result.ok) {
         setError(result.error.message);
+        return;
+      }
+      setOptions(result.data);
+      const initial = result.data.roles.find((item) => item.code === "R-OTM") ?? result.data.roles[0];
+      if (initial) {
+        setRoleId(initial.id);
+        const screenOptions = screensForRole(result.data, initial.code);
+        const initialScreen = screenOptions.some((screen) => screen.code === initial.defaultScreen)
+          ? initial.defaultScreen ?? ""
+          : screenOptions[0]?.code ?? "";
+        setScreenCode(initialScreen);
       }
     });
-    return () => {
-      live = false;
-    };
+    return () => { live = false; };
   }, []);
 
   useEffect(() => {
     if (!roleId) return;
     let live = true;
-    void permissionMatrixAction({ roleId, hotelId: hotelScope }).then((result) => {
+    void permissionMatrixAction({ roleId }).then((result) => {
       if (!live) return;
       if (result.ok) {
-        setData(result.data);
-        setError(null);
+        setMatrix(result.data);
+        setError("");
       } else {
         setError(result.error.message);
       }
     });
-    return () => {
-      live = false;
-    };
-  }, [roleId, hotelScope, tick]);
+    return () => { live = false; };
+  }, [roleId]);
 
   useEffect(() => {
-    const count = data?.screens.length ?? 0;
-    setStatus(`${count} ekran${editable ? "" : " (salt okunur)"}`);
-  }, [data, editable, setStatus]);
+    setStatus(role ? `${role.name} · açılış ekranı` : "Rol ve açılış ekranı seçin");
+  }, [role, setStatus]);
 
-  const reloadTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useSse((e) => {
-    const payload = e.payload as { entity?: unknown; roleId?: unknown } | undefined;
-    if (payload?.entity !== "permission" || payload.roleId !== roleId) return;
-    clearTimeout(reloadTimer.current);
-    reloadTimer.current = setTimeout(() => setTick((t) => t + 1), 300);
-  }, DEFINITION_EVENTS);
-  useEffect(() => () => clearTimeout(reloadTimer.current), []);
-
-  /**
-   * Role or scope picked: drop the grid at once. Until the new matrix arrives the old flags
-   * would still be on screen, and a click would write them onto the newly chosen role/scope.
-   */
-  const changeScope = (nextRoleId: string, nextScope: string) => {
-    if (nextRoleId === roleId && nextScope === scope) return;
-    setData(null);
-    setCopyFrom("");
-    setRoleId(nextRoleId);
-    setScope(nextScope);
+  const chooseRole = (id: string) => {
+    const next = options?.roles.find((item) => item.id === id);
+    setRoleId(id);
+    const screenOptions = screensForRole(options, next?.code);
+    const nextScreen = screenOptions.some((screen) => screen.code === next?.defaultScreen)
+      ? next?.defaultScreen ?? ""
+      : screenOptions[0]?.code ?? "";
+    setScreenCode(nextScreen);
+    setMatrix(null);
   };
 
-  const fail = useCallback((title: string, message: string) => void alertDialog({ title, message }), []);
+  const saveOpeningScreen = async () => {
+    if (!role || savingScreen) return;
+    const selected = options?.screens.find((item) => item.code === screenCode);
+    const yes = await confirm({
+      title: "Açılış ekranını kaydet",
+      message: `${role.name} rolü girişte ${selected?.name ?? "varsayılan ekranda"} açılsın mı?`,
+      danger: false,
+    });
+    if (!yes) return;
+    setSavingScreen(true);
+    try {
+      const result = await updateRoleAction({
+        id: role.id,
+        data: {
+          name: role.name,
+          kind: role.kind,
+          maxOnlineMinutes: role.maxOnlineMinutes ?? undefined,
+          defaultScreen: screenCode || undefined,
+        },
+      });
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setOptions((current) => current ? {
+        ...current,
+        roles: current.roles.map((item) => item.id === result.data.id
+          ? { ...item, defaultScreen: result.data.defaultScreen }
+          : item),
+      } : current);
+      setError("");
+      await alertDialog({ title: "Kaydedildi", message: `${role.name} rolünün açılış ekranı güncellendi.` });
+    } finally {
+      setSavingScreen(false);
+    }
+  };
 
-  const toggleCell = async (cell: ScreenCell, action: (typeof ACTIONS)[number], value: boolean) => {
+  const togglePermission = async (cell: ScreenCell, action: (typeof ACTIONS)[number], value: boolean) => {
+    const yes = await confirm({ title: "Ekran yetkisini güncelle", message: `${cell.name} için “${ACTION_TITLES[action]}” yetkisi ${value ? "açılsın" : "kapatılsın"} mı?`, danger: !value });
+    if (!yes) return;
     const flags: Flags = { V: cell.V, O: cell.O, D: cell.D, A: cell.A, R: cell.R, [action]: value };
     setBusy(true);
     try {
-      const result = await setPermissionScreenAction({ roleId, hotelId: hotelScope, screenCode: cell.code, flags });
-      if (result.ok) setTick((t) => t + 1);
-      else fail("Yetki değiştirilemedi", result.error.message);
+      const result = await setPermissionScreenAction({ roleId, hotelId: null, screenCode: cell.code, flags });
+      if (!result.ok) {
+        setError(result.error.message);
+        return;
+      }
+      setMatrix((current) => current ? {
+        ...current,
+        screens: current.screens.map((item) => item.code === result.data.code ? result.data : item),
+      } : current);
+      setError("");
     } finally {
       setBusy(false);
-    }
-  };
-
-  const toggleModule = async (moduleKey: string, enabled: boolean) => {
-    if (!enabled) {
-      const label = MODULE_LABELS[moduleKey as keyof typeof MODULE_LABELS] ?? moduleKey;
-      const yes = await confirm({
-        title: `${label} modülünü kapat`,
-        message: `${label} modülü "${role?.name ?? ""}" rolü için ${hotelScope ? "bu otelde" : "sistem genelinde"} kapatılsın mı? Rolün bu modüldeki ekranları kullanılamaz.`,
-        danger: true,
-      });
-      if (!yes) return;
-    }
-    setBusy(true);
-    try {
-      const result = await setPermissionModuleAction({ roleId, hotelId: hotelScope, moduleKey, enabled });
-      if (result.ok) setTick((t) => t + 1);
-      else fail("Modül değiştirilemedi", result.error.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const reset = async () => {
-    if (!hotelScope || !role) return;
-    const yes = await confirm({
-      title: "Otel override'larını sıfırla",
-      message: `"${role.name}" rolünün bu otele özel tüm yetki ve modül ayarları silinsin mi? Sistem geneli ayarlar geçerli olur.`,
-      danger: true,
-    });
-    if (!yes) return;
-    const result = await resetHotelOverridesAction({ roleId, hotelId: hotelScope });
-    if (result.ok) setTick((t) => t + 1);
-    else fail("Sıfırlanamadı", result.error.message);
-  };
-
-  const copy = async () => {
-    const source = options?.roles.find((r) => r.id === copyFrom);
-    if (!source || !role) return;
-    const yes = await confirm({
-      title: "Rolden kopyala",
-      message: `"${role.name}" rolünün ${hotelScope ? "bu otele özel" : "sistem geneli"} yetkileri, "${source.name}" rolünün yetkileriyle değiştirilsin mi?`,
-      danger: true,
-    });
-    if (!yes) return;
-    const result = await copyPermissionsAction({ roleId, sourceRoleId: copyFrom, hotelId: hotelScope });
-    if (result.ok) {
-      setTick((t) => t + 1);
-      setStatus(`${result.data.screens} ekran, ${result.data.modules} modül satırı kopyalandı`);
-    } else {
-      fail("Kopyalanamadı", result.error.message);
     }
   };
 
   return (
-    <div className="xp-matrix">
-      <div className="xp-defs-filters">
-        <label>
-          Rol
-          <select aria-label="Rol" value={roleId} onChange={(e) => changeScope(e.target.value, scope)}>
-            {(options?.roles ?? []).map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.code} — {r.name}
-              </option>
-            ))}
+    <div className="xp-matrix xp-role-screen">
+      <div className="xp-defs-filters xp-role-screen-selectors">
+        <label>Rol
+          <select aria-label="Rol" value={roleId} onChange={(event) => chooseRole(event.target.value)}>
+            {(options?.roles ?? []).map((item) => <option key={item.id} value={item.id}>{item.code} — {item.name}</option>)}
           </select>
         </label>
-        <label>
-          Kapsam
-          <select aria-label="Otel" value={scope} onChange={(e) => changeScope(roleId, e.target.value)}>
-            <option value={SYSTEM_SCOPE}>Sistem geneli</option>
-            {(options?.hotels ?? []).map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.name}
-              </option>
-            ))}
+        <label>Açılış ekranı
+          <select aria-label="Açılış ekranı" value={screenCode} onChange={(event) => setScreenCode(event.target.value)}>
+            <option value="">Seçilmedi</option>
+            {screensForRole(options, role?.code).map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}
           </select>
         </label>
-        {editable ? (
-          <>
-            <button type="button" className="xp-button" disabled={!hotelScope || busy} onClick={() => void reset()}>
-              Otel override&apos;larını sıfırla
-            </button>
-            <label>
-              <select aria-label="Kaynak rol" value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
-                <option value="">Kaynak rol</option>
-                {(options?.roles ?? [])
-                  .filter((r) => r.id !== roleId)
-                  .map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.code} — {r.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <button type="button" className="xp-button" disabled={!copyFrom || busy} onClick={() => void copy()}>
-              Rolden kopyala
-            </button>
-          </>
-        ) : null}
+        <button type="button" className="xp-button" disabled={!role || !options?.canEdit || savingScreen || role.defaultScreen === (screenCode || null)} onClick={() => void saveOpeningScreen()}>
+          Açılış ekranını kaydet
+        </button>
       </div>
-      {error ? (
-        <p role="alert" className="xp-defs-error">
-          {error}
-        </p>
-      ) : null}
-      {locked ? <p className="xp-defs-note">R-SYS rolünün yetkileri kilitlidir.</p> : null}
-      {!canEdit && options ? (
-        <p className="xp-defs-note">Yetki matrisini yalnızca sistem yöneticisi değiştirebilir.</p>
-      ) : null}
-      {data ? (
-        <>
-          <fieldset className="xp-group xp-matrix-modules" aria-label="Modüller">
-            <legend>Modüller</legend>
-            {data.modules.map((m) => (
-              <label key={m.moduleKey} className="xp-module-switch" data-inherited={hotelScope ? String(m.inherited) : undefined}>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={m.enabled}
-                  disabled={!editable || busy}
-                  onChange={(e) => void toggleModule(m.moduleKey, e.target.checked)}
-                />
-                {MODULE_LABELS[m.moduleKey]}
-              </label>
+
+      {error ? <p role="alert" className="xp-defs-error">{error}</p> : null}
+      {options && !options.canEdit ? <p className="xp-defs-note">Rolün açılış ekranını yalnızca sistem yöneticisi değiştirebilir.</p> : null}
+      {locked ? <p className="xp-defs-note">Sistem Yöneticisi rolünün ekran yetkileri kilitlidir.</p> : null}
+
+      {currentFlow ? (
+        <section className="xp-workflow" aria-label={`${flow.title} iş akışı`}>
+          <h2>{flow.title} iş akışı</h2>
+          <div className="xp-workflow-track">
+            {flow.steps.map(([title, description], index) => (
+              <article className="xp-workflow-step" key={title}>
+                <span className="xp-workflow-number">{index + 1}</span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </article>
             ))}
-          </fieldset>
-          <div className="xp-matrix-scroll">
-            <table className="xp-matrix-grid" aria-label="Yetki matrisi" data-hotel={hotelScope ? "true" : undefined}>
-              <thead>
-                <tr>
-                  <th scope="col">Ekran</th>
-                  {ACTIONS.map((a) => (
-                    <th key={a} scope="col" title={ACTION_TITLES[a]}>
-                      {a}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.screens.map((s) => (
-                  <tr key={s.code} data-inherited={hotelScope ? String(s.inherited) : undefined}>
-                    <th scope="row">
-                      {s.code} <span className="xp-matrix-name">{s.name}</span>
-                    </th>
-                    {ACTIONS.map((a) => (
-                      <td key={a}>
-                        <input
-                          type="checkbox"
-                          aria-label={`${s.code} ${ACTION_TITLES[a]}`}
-                          checked={s[a]}
-                          disabled={!editable || busy}
-                          onChange={(e) => void toggleCell(s, a, e.target.checked)}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
-        </>
+          <div className="xp-workflow-permissions">
+            {flow.screens.map((code) => {
+              const cell = matrix?.screens.find((item) => item.code === code);
+              if (!cell) return null;
+              return (
+                <fieldset className="xp-workflow-access" key={code} disabled={!options?.canEdit || locked || busy}>
+                  <legend>{cell.name}</legend>
+                  <div className="xp-workflow-actions">
+                    {ACTIONS.map((action) => (
+                      <label key={action} title={ACTION_TITLES[action]}>
+                        <input type="checkbox" aria-label={`${cell.name} · ${ACTION_TITLES[action]}`} checked={cell[action]} onChange={(event) => void togglePermission(cell, action, event.target.checked)} />
+                        {action}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              );
+            })}
+          </div>
+          <div className="xp-action-legend" aria-label="Yetki harflerinin açıklaması">
+            {ACTIONS.map((action) => <span key={action}><strong>{action}</strong> {ACTION_TITLES[action]}</span>)}
+          </div>
+        </section>
+      ) : screenCode ? (
+        <p className="xp-defs-note">Seçilen ekran için açılış hedefi kaydedilir. QR sipariş ekranlarında iş akışı ve ekran yetkileri ayrıca gösterilir.</p>
       ) : null}
     </div>
   );

@@ -76,6 +76,7 @@ export function FloorsPanel({ hotelId, setStatus }: Props) {
       void alertDialog({ title: "Kat silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” katı silindi.` });
     setSelectedId(undefined);
     list.reload();
   };
@@ -105,6 +106,10 @@ export function FloorsPanel({ hotelId, setStatus }: Props) {
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
         onActivate={edit}
+        rowContextActions={(row) => [
+          { label: "Düzenle", onSelect: () => edit(row) },
+          { label: "Sil", onSelect: () => void remove(row) },
+        ]}
         emptyText="Bu otelde kayıtlı kat yok"
         toolbar={
           <Toolbar
@@ -123,6 +128,7 @@ export function FloorsPanel({ hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
         <Field name="number" label="Kat numarası">
           <input type="text" inputMode="numeric" defaultValue={editing?.number ?? ""} />

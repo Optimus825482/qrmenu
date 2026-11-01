@@ -23,6 +23,8 @@ export type AppProps = {
    * app's default view.
    */
   initialPanel?: string;
+  /** Outlet selected by the opener; transient just like initialPanel. */
+  initialOutletId?: string;
   windowId: string;
   close(): void;
   setStatus(text: string): void;
@@ -31,7 +33,7 @@ export type AppProps = {
    * Opens another app in a new window (`panel` = the app's `initialPanel`, e.g. a Tanımlamalar tree
    * node). Does nothing for an app the user may not open; at the window limit it says so.
    */
-  openApp(appId: string, opts?: { hotelId?: string; panel?: string }): void;
+  openApp(appId: string, opts?: { hotelId?: string; panel?: string; outletId?: string }): void;
 };
 
 /** App registration contract (spec §5.2). Modules add their apps with registerApp(). */

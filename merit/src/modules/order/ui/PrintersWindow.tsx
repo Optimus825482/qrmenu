@@ -134,15 +134,28 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
       void alertDialog({ title: "Yazıcı silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” yazıcısı silindi.` });
     setSelectedId(undefined);
     list.reload();
     void loadOutlets();
   };
 
   const setDefault = async (outlet: OrderingOutlet, printerId: string | null) => {
+    const selectedPrinter = list.rows.find((printer) => printer.id === printerId);
+    const approved = await confirm({
+      title: "Varsayılan yazıcıyı güncelle",
+      message: `“${outlet.name}” outletinin varsayılan yazıcısı ${selectedPrinter ? `“${selectedPrinter.name}” yapılsın` : "kaldırılsın"} mı?`,
+      danger: true,
+    });
+    if (!approved) {
+      void loadOutlets();
+      return;
+    }
     const result = await setOutletDefaultPrinterAction({ outletId: outlet.id, printerId });
     if (!result.ok) {
       void alertDialog({ title: "Varsayılan yazıcı kaydedilemedi", message: result.error.message });
+    } else {
+      await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” outletinin varsayılan yazıcısı güncellendi.` });
     }
     // The server state is the truth (also restores the shown value after a failure).
     void loadOutlets();
@@ -229,6 +242,7 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
         <Field name="name" label="Ad">
           <input type="text" defaultValue={editing?.name ?? ""} maxLength={80} />

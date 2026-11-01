@@ -8,7 +8,8 @@ import { MENU_THEMES } from "./seed/menuThemes";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
 import { DEFAULT_SETTINGS } from "../src/lib/settings-defs";
 import { SEED_OUTLETS } from "./seed/outlets";
-import { sampleMenuForOutlet } from "./seed/sampleMenus";
+import { isLegacySampleCategory, sampleMenuForOutlet } from "./seed/sampleMenus";
+import { seedOutletMenuDesigns } from "./seed/menuDesigns";
 import type { MenuNodeKind, OutletType } from "@/generated/prisma/client";
 import { suggestedUsername } from "../src/modules/core/usernames";
 import { ensureDefaultCallOptions } from "../src/modules/menu/server/callOptionDefaults";
@@ -243,12 +244,13 @@ export async function seedSampleMenus(db: PrismaClient) {
   }) => {
     const existing = await db.menuNode.findFirst({
       where: { outletId: input.outletId, parentId: input.parentId, kind: input.kind, name: input.name },
-      select: { id: true, tags: true },
+      select: { id: true },
     });
     if (existing) {
-      if ((input.tags?.length ?? 0) > 0 && existing.tags.length === 0) {
-        await db.menuNode.update({ where: { id: existing.id }, data: { tags: input.tags } });
-      }
+      await db.menuNode.update({ where: { id: existing.id }, data: {
+        detail: input.detail ?? null, price: input.price ?? null, imageUrl: input.imageUrl ?? null,
+        allergens: input.allergens ?? [], tags: input.tags ?? [],
+      } });
       return existing.id;
     }
     const siblings = await db.menuNode.aggregate({
@@ -275,47 +277,34 @@ export async function seedSampleMenus(db: PrismaClient) {
 
   for (const outlet of outlets) {
     const categories = sampleMenuForOutlet(outlet.type as OutletType, outlet.name);
-    for (const category of categories) {
-      const categoryId = await ensureNode({
-        outletId: outlet.id,
-        parentId: null,
-        kind: "KATEGORI",
-        name: category.name,
-      });
-      for (const item of category.items ?? []) {
-        await ensureNode({
-          outletId: outlet.id,
-          parentId: categoryId,
-          kind: "OGE",
-          name: item.name,
-          detail: item.detail,
-          price: item.price,
-          imageUrl: item.image,
-          allergens: item.allergens,
-          tags: item.tags,
-        });
+    const roots = await db.menuNode.findMany({ where: { outletId: outlet.id, parentId: null, kind: "KATEGORI", isActive: true }, orderBy: { sortOrder: "asc" }, select: { id: true, name: true } });
+    const managedRoots = roots.filter((node) => isLegacySampleCategory(node.name) || categories.some((category) => category.name === node.name));
+    const usedRootIds = new Set<string>();
+    for (const [index, category] of categories.entries()) {
+      // Keep the ids of the existing demo tree; replace only roots known to be generated samples.
+      const categoryId = managedRoots.find((node) => node.name === category.name)?.id ?? managedRoots[index]?.id ?? await ensureNode({ outletId: outlet.id, parentId: null, kind: "KATEGORI", name: category.name });
+      usedRootIds.add(categoryId);
+      await db.menuNode.update({ where: { id: categoryId }, data: { name: category.name, detail: null, sortOrder: index, isActive: true } });
+      const existingDirectItems = await db.menuNode.findMany({ where: { outletId: outlet.id, parentId: categoryId, kind: "OGE" }, orderBy: { sortOrder: "asc" }, select: { id: true } });
+      for (const [itemIndex, menuItem] of (category.items ?? []).entries()) {
+        const nodeInput = { outletId: outlet.id, parentId: categoryId, kind: "OGE" as const, name: menuItem.name, detail: menuItem.detail, price: menuItem.price, imageUrl: menuItem.image, allergens: menuItem.allergens, tags: menuItem.tags };
+        if (existingDirectItems[itemIndex]) await db.menuNode.update({ where: { id: existingDirectItems[itemIndex].id }, data: { name: menuItem.name, detail: menuItem.detail, price: menuItem.price, imageUrl: menuItem.image, allergens: menuItem.allergens ?? [], tags: menuItem.tags ?? [], sortOrder: itemIndex } });
+        else await ensureNode(nodeInput);
       }
-      for (const subcategory of category.subcategories ?? []) {
-        const subcategoryId = await ensureNode({
-          outletId: outlet.id,
-          parentId: categoryId,
-          kind: "ALT_KATEGORI",
-          name: subcategory.name,
-        });
-        for (const item of subcategory.items) {
-          await ensureNode({
-            outletId: outlet.id,
-            parentId: subcategoryId,
-            kind: "OGE",
-            name: item.name,
-            detail: item.detail,
-            price: item.price,
-            imageUrl: item.image,
-            allergens: item.allergens,
-            tags: item.tags,
-          });
+      const existingSubs = await db.menuNode.findMany({ where: { outletId: outlet.id, parentId: categoryId, kind: "ALT_KATEGORI" }, orderBy: { sortOrder: "asc" }, select: { id: true } });
+      for (const [subIndex, subcategory] of (category.subcategories ?? []).entries()) {
+        const subcategoryId = existingSubs[subIndex]?.id ?? await ensureNode({ outletId: outlet.id, parentId: categoryId, kind: "ALT_KATEGORI", name: subcategory.name });
+        await db.menuNode.update({ where: { id: subcategoryId }, data: { name: subcategory.name, sortOrder: subIndex } });
+        const existingItems = await db.menuNode.findMany({ where: { outletId: outlet.id, parentId: subcategoryId, kind: "OGE" }, orderBy: { sortOrder: "asc" }, select: { id: true } });
+        for (const [itemIndex, menuItem] of subcategory.items.entries()) {
+          if (existingItems[itemIndex]) await db.menuNode.update({ where: { id: existingItems[itemIndex].id }, data: { name: menuItem.name, detail: menuItem.detail, price: menuItem.price, imageUrl: menuItem.image, allergens: menuItem.allergens ?? [], tags: menuItem.tags ?? [], sortOrder: itemIndex } });
+          else await ensureNode({ outletId: outlet.id, parentId: subcategoryId, kind: "OGE", name: menuItem.name, detail: menuItem.detail, price: menuItem.price, imageUrl: menuItem.image, allergens: menuItem.allergens, tags: menuItem.tags });
         }
       }
+    }
+    for (const obsolete of managedRoots) {
+      if (usedRootIds.has(obsolete.id)) continue;
+      await db.menuNode.update({ where: { id: obsolete.id }, data: { isActive: false } });
     }
   }
 }
@@ -449,12 +438,13 @@ export async function runSeed(db: PrismaClient): Promise<void> {
   await seedScreens(db);
   await seedRoles(db);
   await seedOutlets(db);
+  await seedMenuThemes(db);
   await seedSampleMenus(db);
+  await seedOutletMenuDesigns(db);
   await seedSampleStaff(db);
   await cleanLegacyDemoNames(db);
   await seedPermissions(db);
   await seedSettings(db);
-  await seedMenuThemes(db);
   await seedAdmin(db, adminPassword);
 }
 

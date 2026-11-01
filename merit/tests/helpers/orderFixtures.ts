@@ -10,7 +10,7 @@ import { ctxFor, hotelId, makeUser, roleByCode } from "./fixtures";
 export async function orderSetup(over: { outlet?: Record<string, unknown> } = {}) {
   const outlet = await testDb.outlet.create({
     data: {
-      hotelId: await hotelId("MR"),
+      hotelId: await hotelId("ROYAL"),
       name: "Havuz Bar",
       type: "BAR",
       hasMenu: true,
@@ -19,7 +19,8 @@ export async function orderSetup(over: { outlet?: Record<string, unknown> } = {}
       ...over.outlet,
     },
   });
-  const created = await testDb.outletTable.create({ data: { outletId: outlet.id, label: "M1" } });
+  const area = await testDb.outletAreaDefinition.create({ data: { outletId: outlet.id, type: "KAPALI" } });
+  const created = await testDb.outletTable.create({ data: { outletId: outlet.id, areaId: area.id, label: "M1" } });
   const token = generateQrToken("TABLE", created.id);
   const table = await testDb.outletTable.update({ where: { id: created.id }, data: { qrToken: token } });
   const node = (name: string, price: string | null, extra: Record<string, unknown> = {}) =>
@@ -39,8 +40,8 @@ export async function staffCtx(
   roleCode: string,
   outletId?: string,
 ): Promise<{ user: User; ctx: Ctx }> {
-  const user = await makeUser({ username, roleCode, hotelCode: "MR" });
-  const ctx = await ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username, roleCode, hotelCode: "ROYAL" });
+  const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
   if (outletId) ctx.session.outletId = outletId;
   return { user, ctx };
 }
@@ -55,7 +56,7 @@ export async function openSession(
   return testDb.userSession.create({
     data: {
       userId,
-      hotelId: await hotelId("MR"),
+      hotelId: await hotelId("ROYAL"),
       outletId,
       roleId: role.id,
       status,

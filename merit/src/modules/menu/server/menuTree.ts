@@ -9,6 +9,7 @@ import { removeUpload } from "@/lib/uploads";
 import { parseInput, withAdminTx } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import { ALLERGENS } from "../allergens";
+import { ITEM_TAG_IDS } from "../design";
 import { assertOutletScope, loadNodeScope, outletHotel } from "./menuNodeAccess";
 
 const SCREEN = "QM-MEN";
@@ -23,12 +24,13 @@ export type MenuTreeNode = {
   price: string | null;
   currency: string;
   allergens: string[];
+  tags: string[];
   isAvailable: boolean;
   isActive: boolean;
   sortOrder: number;
   hasImage: boolean;
   imageUrl: string | null;
-  translations: { lang: string; name: string; detail?: string }[];
+  translations: { lang: string; name: string; detail?: string; isVerified: boolean }[];
   children: MenuTreeNode[];
 };
 
@@ -63,6 +65,10 @@ const allergens = z
   .array(z.enum(ALLERGENS, "Geçersiz alerjen"))
   .max(ALLERGENS.length)
   .transform((list) => [...new Set(list)]);
+const tags = z
+  .array(z.enum(ITEM_TAG_IDS, "Geçersiz etiket"))
+  .max(ITEM_TAG_IDS.length)
+  .transform((list) => [...new Set(list)]);
 
 const createSchema = z.object({
   parentId: z.string().min(1).nullish(),
@@ -71,6 +77,7 @@ const createSchema = z.object({
   detail: detail.nullish().transform((v) => v || null),
   price: price.nullish().transform((v) => v ?? null),
   allergens: allergens.optional(),
+  tags: tags.optional(),
   isAvailable: z.boolean().optional(),
 });
 export type MenuNodeCreateInput = z.input<typeof createSchema>;
@@ -80,6 +87,7 @@ const updateSchema = z.object({
   detail: detail.nullish().transform((v) => (v === undefined ? undefined : v || null)),
   price: price.nullish(),
   allergens: allergens.optional(),
+  tags: tags.optional(),
   isActive: z.boolean().optional(),
 });
 export type MenuNodeUpdateInput = z.input<typeof updateSchema>;
@@ -91,6 +99,12 @@ const moveSchema = z.object({
 export type MenuNodeMoveInput = z.input<typeof moveSchema>;
 
 function assertPlacement(kind: MenuNodeKind, parent: { kind: MenuNodeKind } | null): void {
+  // New menus can place items directly under a subcategory. Keep the legacy group
+  // layer valid so existing menus remain editable and continue to render.
+  if (
+    kind === "OGE" &&
+    (parent?.kind === "KATEGORI" || parent?.kind === "ALT_KATEGORI" || parent?.kind === "GRUP")
+  ) return;
   const required = PARENT_KIND[kind];
   if (required === null) {
     if (parent) throw new DomainError("VALIDATION", "Kategori yalnız en üst düzeye eklenebilir");
@@ -135,13 +149,14 @@ function toNode(row: NodeRow): MenuTreeNode {
     price: row.price === null ? null : row.price.toFixed(2),
     currency: row.currency,
     allergens: row.allergens,
+    tags: row.tags,
     isAvailable: row.isAvailable,
     isActive: row.isActive,
     sortOrder: row.sortOrder,
     hasImage: row.imageUrl !== null,
     imageUrl: row.imageUrl,
     translations: row.translations
-      .map((t) => ({ lang: t.lang, name: t.name, ...(t.detail ? { detail: t.detail } : {}) }))
+      .map((t) => ({ lang: t.lang, name: t.name, isVerified: t.isVerified, ...(t.detail ? { detail: t.detail } : {}) }))
       .sort((a, b) => a.lang.localeCompare(b.lang)),
     children: [],
   };
@@ -149,7 +164,9 @@ function toNode(row: NodeRow): MenuTreeNode {
 
 export async function list(ctx: Ctx, outletId: string): Promise<MenuTreeNode[]> {
   const hotelId = await outletHotel(outletId);
-  await assertCan(ctx, SCREEN, "V", hotelId);
+  const menuAccess = await can(ctx, SCREEN, "V", hotelId);
+  const cashierAccess = ctx.session.outletId === outletId && (await can(ctx, "QS-KAS", "V", hotelId));
+  if (!menuAccess && !cashierAccess) await assertCan(ctx, SCREEN, "V", hotelId);
   assertOutletScope(ctx, outletId);
   const rows = await prisma.menuNode.findMany({
     where: { outletId },
@@ -180,6 +197,9 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
     if (input.parentId && !parent) throw new DomainError("NOT_FOUND", "Üst öğe bulunamadı");
     assertPlacement(input.kind, parent);
     if (input.price !== null && input.kind !== "OGE") throw new DomainError("VALIDATION", NO_PRICE);
+    if ((input.tags?.length ?? 0) > 0 && input.kind !== "OGE") {
+      throw new DomainError("VALIDATION", "Etiket yalnız öğelere girilebilir");
+    }
     await lockSiblings(tx, outletId, [parent?.id ?? null]);
     const max = await tx.menuNode.aggregate({
       where: { outletId, parentId: parent?.id ?? null },
@@ -194,6 +214,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
         detail: input.detail,
         price: input.price,
         allergens: input.allergens ?? [],
+        tags: input.kind === "OGE" ? (input.tags ?? []) : [],
         isAvailable: input.isAvailable ?? true,
         sortOrder: (max._max.sortOrder ?? -1) + 1,
       },
@@ -222,18 +243,23 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
     if (input.price !== undefined && input.price !== null && before.kind !== "OGE") {
       throw new DomainError("VALIDATION", NO_PRICE);
     }
+    if (input.tags !== undefined && before.kind !== "OGE") {
+      throw new DomainError("VALIDATION", "Etiket yalnız öğelere girilebilir");
+    }
     const data: Prisma.MenuNodeUpdateInput = {};
     if (input.name !== undefined) data.name = input.name;
     if (input.detail !== undefined) data.detail = input.detail;
     if (input.price !== undefined) data.price = input.price;
     if (input.allergens !== undefined) data.allergens = input.allergens;
+    if (input.tags !== undefined) data.tags = input.tags;
     if (input.isActive !== undefined) data.isActive = input.isActive;
     const row = await tx.menuNode.update({ where: { id: nodeId }, data, include: { translations: true } });
-    const snap = (n: { name: string; detail: string | null; price: Prisma.Decimal | null; allergens: string[]; isActive: boolean }) => ({
+    const snap = (n: { name: string; detail: string | null; price: Prisma.Decimal | null; allergens: string[]; tags: string[]; isActive: boolean }) => ({
       name: n.name,
       detail: n.detail,
       price: n.price?.toFixed(2) ?? null,
       allergens: n.allergens,
+      tags: n.tags,
       isActive: n.isActive,
     });
     await audit(tx, {
@@ -316,7 +342,9 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
   const allowed =
     (await can(ctx, SCREEN, "D", scope.hotelId)) ||
     (ownOutlet &&
-      ((await can(ctx, "QS-KUY", "D", scope.hotelId)) || (await can(ctx, "QS-KDS", "D", scope.hotelId))));
+      ((await can(ctx, "QS-KUY", "D", scope.hotelId)) ||
+        (await can(ctx, "QS-KAS", "D", scope.hotelId)) ||
+        (await can(ctx, "QS-KDS", "D", scope.hotelId))));
   if (!allowed) await assertCan(ctx, SCREEN, "D", scope.hotelId);
   assertOutletScope(ctx, scope.outletId);
   await prisma.$transaction(async (tx) => {

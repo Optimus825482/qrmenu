@@ -16,11 +16,11 @@ export const WALLPAPER_LABELS: Record<Wallpaper, string> = {
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
 /** Base text size of the shell (`--xp-font-size`). */
-export const FONT_SCALES = ["S", "M", "L", "XL"] as const;
+export const FONT_SCALES = ["S", "M", "L", "XL", "XXL", "XXXL"] as const;
 export type FontScale = (typeof FONT_SCALES)[number];
 
 /** Shell typeface (`--xp-font-family`). */
-export const FONT_FAMILIES = ["tahoma", "segoe", "verdana", "arial", "system"] as const;
+export const FONT_FAMILIES = ["tahoma", "segoe", "verdana", "arial", "system", "microsoftSans", "robotoMedium"] as const;
 export type FontFamily = (typeof FONT_FAMILIES)[number];
 
 /** Color scheme of title bars, taskbar and Start menu (theme.css: `[data-theme="…"]`). */
@@ -60,6 +60,8 @@ export type WinState = {
   hotelId?: string;
   /** Opening request for the app (`AppProps.initialPanel`); transient, dropped by `snapshot()`. */
   initialPanel?: string;
+  /** Opening request for a preselected outlet; transient, dropped by snapshot(). */
+  initialOutletId?: string;
   title: string;
   x: number;
   y: number;
@@ -75,7 +77,7 @@ export type WinState = {
 export type IconPos = { appId: string; x: number; y: number };
 
 /** What is persisted per user in `User.prefs.shell` (and cached in localStorage). */
-export type ShellPrefs = Appearance & { icons: IconPos[]; windows: WinState[] };
+export type ShellPrefs = Appearance & { icons: IconPos[]; windows: WinState[]; shortcutVersion?: number };
 
 export type HotelRef = { id: string; name: string };
 

@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proje Şartnamesi ve Fiyat Teklifi (Proforma) - Merit International Hotels & Resorts</title>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --corporate-slate: #334155;
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --border-light: #cbd5e1;
+            --border-subtle: #e2e8f0;
+            --bg-light: #f8fafc;
+            --accent-gold: #8d702d;
+            --accent-gold-light: #a9893d;
+            --accent-gold-bg: rgba(141, 112, 45, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            line-height: 1.5;
+            font-size: 13.5px;
+        }
+
+        /* Ekran Önizleme Düzeni */
+        .page-container {
+            max-width: 1080px;
+            margin: 20px auto;
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+
+        /* Üst Kontrol & Navigasyon Barı (Ekranda görünür, baskıda gizlenir) */
+        .top-action-bar {
+            background: var(--primary);
+            color: #ffffff;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-gold);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .action-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .action-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: all 0.2s ease;
+        }
+
+        .action-links a:hover {
+            color: #ffffff;
+            border-color: #cbd5e1;
+            background: rgba(255,255,255,0.12);
+        }
+
+        .btn-print {
+            background: var(--primary-light);
+            color: #ffffff;
+            font-weight: 700;
+            border: 1px solid var(--accent-gold);
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s ease;
+        }
+
+        .btn-print:hover {
+            background: #28374f;
+        }
+
+        /* Doküman İç Sayfaları */
+        .doc-page {
+            padding: 40px 50px;
+            background: #ffffff;
+            position: relative;
+        }
+
+        .page-divider {
+            border: none;
+            border-top: 1px solid var(--border-subtle);
+            margin: 0;
+        }
+
+        /* Proforma / Şartname Anteti */
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--corporate-slate);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .company-brand h1 {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--primary);
+            letter-spacing: -0.3px;
+            text-transform: uppercase;
+        }
+
+        .company-brand p {
+            font-size: 11.5px;
+            color: var(--accent-gold);
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            margin-top: 3px;
+        }
+
+        .company-brand .meta-address {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .proforma-meta-box {
+            text-align: right;
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 12px 18px;
+            min-width: 250px;
+        }
+
+        .proforma-meta-box .doc-type {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .proforma-meta-box .doc-no {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+        }
+
+        .proforma-meta-box table {
+            width: 100%;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .proforma-meta-box table td {
+            padding: 2px 0;
+            color: var(--text-dark);
+        }
+
+        .proforma-meta-box table td:first-child {
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        /* Müşteri ve Proje Bilgi Kartları */
+        .client-project-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 14px 18px;
+            background: #ffffff;
+        }
+
+        .info-card h3 {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--corporate-slate);
+            margin-bottom: 8px;
+            font-weight: 800;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 4px;
+        }
+
+        .info-card p {
+            font-size: 12px;
+            margin-bottom: 3px;
+            color: var(--text-dark);
+        }
+
+        .info-card strong {
+            color: var(--primary);
+        }
+
+        /* Başlıklar ve Metin Blokları */
+        .section-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 24px 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 3px solid var(--corporate-slate);
+            padding-left: 10px;
+        }
+
+        .section-title .badge-num {
+            background: var(--corporate-slate);
+            color: #ffffff;
+            font-size: 10.5px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        p.lead-text {
+            font-size: 12.5px;
+            color: #334155;
+            margin-bottom: 12px;
+            line-height: 1.55;
+        }
+
+        /* Mimari Çerçeve ve Modül Kartları */
+        .module-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .module-card {
+            border: 1px solid var(--border-light);
+            border-top: 3px solid var(--corporate-slate);
+            border-radius: 4px;
+            padding: 14px 16px;
+            background: #ffffff;
+        }
+
+        .module-card h4 {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .module-card p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.45;
+        }
+
+        .module-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .module-features li {
+            font-size: 11px;
+            color: #1e293b;
+            margin-bottom: 3px;
+            position: relative;
+            padding-left: 14px;
+        }
+
+        .module-features li::before {
+            content: "•";
+            color: var(--corporate-slate);
+            font-weight: 800;
+            position: absolute;
+            left: 2px;
+        }
+
+        /* Akış Şeması / Process Flow Box */
+        .flow-container {
+            background: #f8fafc;
+            color: var(--text-dark);
+            border-radius: 4px;
+            padding: 14px 18px;
+            margin: 16px 0;
+            border: 1px solid var(--border-light);
+        }
+
+        .flow-title {
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .flow-step {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 8px 10px;
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .flow-step strong {
+            display: block;
+            font-size: 11px;
+            color: var(--primary);
+            margin-bottom: 2px;
+        }
+
+        .flow-step span {
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1.25;
+            display: block;
+        }
+
+        .flow-arrow {
+            color: var(--corporate-slate);
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        /* Tablolar (Fiyat & Karşılaştırma) */
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            margin: 14px 0 20px 0;
+            background: #ffffff;
+        }
+
+        .table-custom th {
+            background: var(--primary);
+            color: #ffffff;
+            text-align: left;
+            padding: 9px 12px;
+            font-weight: 700;
+            font-size: 11px;
+            border: 1px solid var(--primary);
+        }
+
+        .table-custom th.text-right, .table-custom td.text-right {
+            text-align: right;
+        }
+
+        .table-custom td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-subtle);
+            color: #1e293b;
+            vertical-align: middle;
+        }
+
+        .table-custom tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .table-custom tr.highlight-row td {
+            background-color: var(--accent-gold-bg);
+            font-weight: 700;
+        }
+
+        .table-custom tfoot td {
+            background-color: #f1f5f9;
+            font-weight: 800;
+            font-size: 12px;
+            border-top: 2px solid var(--primary);
+        }
+
+        .tag-free, .tag-sla, .tag-promo {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border-light);
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        /* Not & Uyarı Kutusu */
+        .callout-box {
+            background: #f8fafc;
+            border-left: 3px solid var(--corporate-slate);
+            padding: 12px 16px;
+            border-radius: 0 4px 4px 0;
+            margin: 14px 0;
+            font-size: 11.5px;
+            color: #334155;
+            border-top: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .callout-box strong {
+            color: var(--primary);
+        }
+
+        /* Şartname Maddeleri */
+        .spec-list {
+            padding-left: 18px;
+            margin: 10px 0 16px 0;
+        }
+
+        .spec-list li {
+            font-size: 11.5px;
+            color: #334155;
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .spec-list li strong {
+            color: var(--primary);
+        }
+
+        /* Doküman Alt Bilgi (Footer) */
+        .doc-footer {
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10.5px;
+            color: #64748b;
+        }
+
+        /* PRINT (YAZDIRMA / PDF ÇIKTISI) ÖZEL STİLLERİ - PROFESYONEL VE SADE */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                box-sizing: border-box !important;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                font-size: 9.5px !important;
+                line-height: 1.35 !important;
+                color: #0f172a !important;
+                width: 210mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .top-action-bar {
+                display: none !important;
+            }
+
+            .page-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+
+            .doc-page {
+                padding: 8mm 14mm 6mm 14mm !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                height: 297mm !important;
+                max-height: 297mm !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+            }
+
+            .doc-page:last-child {
+                page-break-after: avoid !important;
+            }
+
+            .page-divider {
+                display: none !important;
+            }
+
+            .btn-print, .action-links {
+                display: none !important;
+            }
+
+            .doc-header {
+                padding-bottom: 6px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .company-brand h1 { font-size: 16px !important; }
+            .company-brand p { font-size: 9px !important; color: #475569 !important; }
+            .company-brand .meta-address { font-size: 8.5px !important; margin-top: 2px !important; }
+            .proforma-meta-box { padding: 6px 10px !important; min-width: 200px !important; }
+            .proforma-meta-box .doc-type { font-size: 11px !important; }
+            .proforma-meta-box .doc-no { font-size: 9.5px !important; margin-bottom: 2px !important; color: #334155 !important; }
+            .proforma-meta-box table { font-size: 8.5px !important; margin-top: 2px !important; }
+
+            .client-project-grid {
+                gap: 8px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .info-card {
+                padding: 6px 10px !important;
+            }
+
+            .info-card h3 { font-size: 9.5px !important; margin-bottom: 3px !important; padding-bottom: 2px !important; }
+            .info-card p { font-size: 9px !important; margin-bottom: 1.5px !important; }
+
+            .section-title {
+                font-size: 11.5px !important;
+                margin: 6px 0 4px 0 !important;
+                padding-left: 8px !important;
+                border-left-width: 3px !important;
+            }
+
+            p.lead-text {
+                font-size: 9px !important;
+                margin-bottom: 4px !important;
+                line-height: 1.3 !important;
+            }
+
+            .callout-box {
+                padding: 5px 8px !important;
+                margin: 5px 0 !important;
+                font-size: 8.5px !important;
+                line-height: 1.3 !important;
+            }
+
+            .module-grid {
+                gap: 6px !important;
+                margin-bottom: 4px !important;
+            }
+
+            .module-card {
+                padding: 6px 8px !important;
+            }
+
+            .module-card h4 { font-size: 10.5px !important; margin-bottom: 2px !important; }
+            .module-card p { font-size: 8.5px !important; margin-bottom: 3px !important; line-height: 1.2 !important; }
+            .module-features li { font-size: 8px !important; margin-bottom: 1.5px !important; }
+
+            .flow-container {
+                padding: 6px 8px !important;
+                margin: 5px 0 !important;
+                background: #f8fafc !important;
+                color: #0f172a !important;
+            }
+
+            .flow-title { font-size: 10px !important; margin-bottom: 4px !important; color: #0f172a !important; }
+            .flow-step { padding: 4px 6px !important; background: #ffffff !important; }
+            .flow-step strong { font-size: 9px !important; margin-bottom: 1px !important; color: #0f172a !important; }
+            .flow-step span { font-size: 7.5px !important; line-height: 1.15 !important; }
+
+            .table-custom {
+                margin: 4px 0 6px 0 !important;
+                font-size: 8.5px !important;
+            }
+
+            .table-custom th, .table-custom td {
+                padding: 4px 6px !important;
+            }
+
+            .spec-list {
+                margin: 3px 0 5px 0 !important;
+                padding-left: 12px !important;
+            }
+
+            .spec-list li {
+                font-size: 8.5px !important;
+                margin-bottom: 2.5px !important;
+                line-height: 1.25 !important;
+            }
+
+            .doc-footer {
+                margin-top: auto !important;
+                padding-top: 4px !important;
+                font-size: 8px !important;
+            }
+        }
+
+        /* Responsive Mobil */
+        @media (max-width: 768px) {
+            .doc-page { padding: 20px 16px; }
+            .client-project-grid, .module-grid { grid-template-columns: 1fr; }
+            .doc-header { flex-direction: column; gap: 16px; }
+            .proforma-meta-box { text-align: left; width: 100%; }
+            .flow-steps { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); margin: 4px 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÜST KONTROL BAR (PDF / YAZDIR / DİĞER RAPORLAR) - SADECE EKRANDA GÖRÜNÜR -->
+    <div class="top-action-bar">
+        <div class="action-links">
+            <span style="color:#ffffff; font-weight:800; font-size:12.5px;">MERIT INTERNATIONAL HOTELS & RESORTS</span>
+            <a href="index.html">📑 Pazar Raporu</a>
+            <a href="merit_resort_qr.html">🏖️ Dış Outletler QR</a>
+            <a href="merit_room_service_qr.html">🚪 Oda Servisi QR</a>
+            <a href="merit_triple_hotels_matrix.html">🏨 3 Otel Matrisi</a>
+        </div>
+        <button class="btn-print" onclick="window.print()">
+            🖨️ PDF Olarak Kaydet / Yazdır (Ctrl + P)
+        </button>
+    </div>
+
+    <div class="page-container">
+
+        <!-- ==================== SAYFA 1: TEKLİF & PROJE ÖZETİ ==================== -->
+        <div class="doc-page">
+            
+            <!-- Doküman Anteti -->
+            <div class="doc-header">
+                <div class="company-brand">
+                    <h1>MERIT INTERNATIONAL HOTELS & RESORTS</h1>
+                    <p>MERİT ROYAL KOMPLEKSİ MERKEZİ DİJİTAL MİSAFİR & OPERASYON YÖNETİM SİSTEMİ</p>
+                    <div class="meta-address">
+                        Zephyros Koyu, Alsancak / Girne - Kuzey Kıbrıs Türk Cumhuriyeti (KKTC)<br>
+                        Merit Royal Diamond Hotel • Merit Royal Hotel • Merit Royal Premium Hotel
+                    </div>
+                </div>
+                <div class="proforma-meta-box">
+                    <div class="doc-type">PROFORMA TEKLİF & ŞARTNAME</div>
+                    <div class="doc-no">REF NO: PRO-MR-2026-088</div>
+                    <table>
+                        <tr>
+                            <td>Teklif Tarihi:</td>
+                            <td><strong>30 Ekim 2026</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Geçerlilik Süresi:</td>
+                            <td><strong>30 Gün</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Kapsam:</td>
+                            <td><strong>3 Otel (529 Oda + 18 Outlet)</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Lisans Türü:</td>
+                            <td><strong>Yazılım Lisansı, Kurulum & Eğitim</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Müşteri ve Proje Bilgileri -->
+            <div class="client-project-grid">
+                <div class="info-card">
+                    <h3>MÜŞTERİ / PROJE SAHİBİ</h3>
+                    <p><strong>Kurum:</strong> Merit International Hotels & Resorts</p>
+                    <p><strong>Yerleşke:</strong> Merit Royal Kompleksi (Diamond, Royal, Premium)</p>
+                    <p><strong>Muhatap:</strong> F&B Direktörlüğü, Housekeeping & Bilgi Teknolojileri (IT)</p>
+                    <p><strong>Toplam Kapasite:</strong> 529 Lüks Oda & Suit + 18 Açık/Kapalı Dinlenme Alanı</p>
+                </div>
+                <div class="info-card">
+                    <h3>YÜKLENİCİ</h3>
+                    <p><strong>Yüklenici:</strong> Erkan Erdem</p>
+                    <p><strong>Unvan:</strong> Yazılım Geliştirici</p>
+                </div>
+            </div>
+
+            <!-- Yönetici Özeti -->
+            <div class="section-title">
+                <span class="badge-num">1</span> YÖNETİCİ ÖZETİ & PROJE AMACI
+            </div>
+            <p class="lead-text">
+                Bu proje; KKTC Girne Zephyros Koyu'ndaki <strong>Merit Royal Diamond (273 oda)</strong>, <strong>Merit Royal Hotel (125 oda)</strong> ve <strong>Merit Royal Premium Hotel (131 oda)</strong> yerleşkesinde toplam <strong>529 oda ve 18 açık/kapalı dinlenme outletinin</strong> tüm operasyonlarını tek bir merkezi <strong>Sistem Yöneticisi Paneli</strong> üzerinden yönetmek amacıyla yapılandırılmıştır. Sistem; misafirlerin minibar içeriklerini günde bir defaya mahsus kişiselleştirebilmelerini, kat sorumlularının minibar dolumlarını oda/kat/ürün bazında anlık kaydedebilmelerini, alakart harici alanlarda QR menü açıldığı anda görevli garsonun akıllı saatine/telefonuna proaktif bildirim gitmesini, masadan verilen siparişlerin garson onayıyla doğrudan <strong>mutfak termal yazıcısına ve KDS ekranına</strong> anlık basılmasını ve oda servisi taleplerinin hızlıca karşılanmasını sağlar.
+            </p>
+
+            <div class="callout-box">
+                <strong>Donanım Bağımsız Yazılım Mimarisi:</strong> Sistem; Teklif <strong>sadece yazılım lisansı, kurulum ve personel eğitimini</strong> kapsamaktadır; herhangi bir donanım içermez.
+            </div>
+
+            <!-- Modül Haritası Özeti -->
+            <div class="section-title">
+                <span class="badge-num">2</span> 4 ENTEGRE ALT SİSTEMİN MİMARİSİ
+            </div>
+
+            <div class="module-grid">
+                <div class="module-card">
+                    <h4>
+                        <span>1. Merkezi Sistem Yöneticisi Paneli</span>
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">SUPER ADMIN</span>
+                    </h4>
+                    <p>3 Otel (Diamond, Royal, Premium) tek merkezden yönetim, sınırsız kullanıcı ve rol yetkilendirmesi.</p>
+                    <ul class="module-features">
+                        <li>3 Otel bağımsız kat, oda ve outlet veritabanı</li>
+                        <li>Sınırsız kullanıcı tanımlama (Otel & Departman bazlı)</li>
+                        <li>Sınırsız kategori, ürün, yüksek çözünürlüklü görsel</li>
+                        <li>Konsolide veya otel bazlı anlık operasyon raporları</li>
+                    </ul>
+                </div>
+
+                <div class="module-card">
+                    <h4>
+                        <span>2. Minibar Takip & Kişiselleştirme</span>
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">HOUSEKEEPING</span>
+                    </h4>
+                    <p>Oda tiplerine göre minibar konseptleri, misafir QR kişiselleştirmesi ve kat personeli dolum kaydı.</p>
+                    <ul class="module-features">
+                        <li>Oda tipine göre şablonlar (King Suit, Royal, Standart)</li>
+                        <li><strong>Misafir günde 1 defa minibarını kişiselleştirebilir</strong></li>
+                        <li>Kat personeli için oda/kat/ürün bazlı hızlı dolum girişi</li>
+                        <li>Tüketim, eksik ve zayiat anlık analitik raporları</li>
+                    </ul>
+                </div>
+
+                <div class="module-card">
+                    <h4>
+                        <span>3. QR Menü - QR Sipariş & Akıllı Çağrı</span>
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">GARSON & MUTFAK</span>
+                    </h4>
+                    <p>Alakart harici dinlenme alanlarında proaktif garson bildirimi ve garson onaylı mutfak yazıcısı.</p>
+                    <ul class="module-features">
+                        <li><strong>QR okutulduğu an garson telefonuna/saatine bildirim</strong></li>
+                        <li>Tek dokunuşla "Garson Çağır" butonu ve titreşimli saat uyarısı</li>
+                        <li>Masadan ürün seçimi ve garson onay mekanizması</li>
+                        <li><strong>Garson onayıyla mutfak termal yazıcısına ve KDS'ye anlık iletim</strong></li>
+                    </ul>
+                </div>
+
+                <div class="module-card">
+                    <h4>
+                        <span>4. QR Oda Servisi (IRD) ve Butler</span>
+                        <span style="font-size:10px; color:var(--text-muted); font-weight:700;">IN-ROOM DINING</span>
+                    </h4>
+                    <p>Oda QR'ı ile odaya özel kilitli, 24 saat kesintisiz oda servisi ve butler hizmet talepleri.</p>
+                    <ul class="module-features">
+                        <li>QR okutulduğunda oda numarası otomatik doğrulanır</li>
+                        <li>Sipariş doğrudan In-Room Dining mutfak konsoluna düşer</li>
+                        <li>İsteğe bağlı (opsiyonel) telefonla misafir teyidi akışı</li>
+                        <li>Hızlı hazırlık ve odaya özel servis takip sistemi</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sayfa Altı Bilgi -->
+            <div class="doc-footer">
+                <span>Merit International Hotels & Resorts • Proforma Şartname No: PRO-MR-2026-088</span>
+                <span>Sayfa 1 / 4</span>
+            </div>
+        </div>
+
+        <hr class="page-divider">
+
+        <!-- ==================== SAYFA 2: DETAYLI İŞLEYİŞ & MERKEZİ PANEL ==================== -->
+        <div class="doc-page">
+            
+            <div class="section-title">
+                <span class="badge-num">3</span> MERKEZİ SİSTEM YÖNETİCİSİ PANELİ VE İŞ AKIŞLARI
+            </div>
+
+            <p class="lead-text">
+                Tek bir süper yönetici (Super Admin) kontrol panelinden tüm operasyonel parametreler merkezi olarak yönetilir:
+            </p>
+
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th style="width:25%;">Yönetim Katmanı</th>
+                        <th style="width:35%;">Sistemdeki Tanımlama Yetkileri</th>
+                        <th style="width:40%;">Operasyonel Etki ve Kurallar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Çoklu Otel Yönetimi</strong></td>
+                        <td>
+                            • Merit Royal Diamond<br>
+                            • Merit Royal Hotel<br>
+                            • Merit Royal Premium
+                        </td>
+                        <td>Her otel kendi kat, oda ve outlet yapısına sahiptir; tek tıkla oteller arası geçiş veya konsolide raporlama yapılabilir.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Sınırsız Kullanıcı & Rol Tanımlama</strong></td>
+                        <td>
+                            • Süper Admin, Otel Müdürü<br>
+                            • F&B Direktörü, Şef Garson, Garson<br>
+                            • Housekeeping Şefi, Kat Görevlisi<br>
+                            • Mutfak/Bar Şefi, Oda Servisi Şefi
+                        </td>
+                        <td>Sınırsız sayıda kullanıcı açılabilir. Kullanıcılar hem otel bazında hem de spesifik outlet/kat bazında yetkilendirilir.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Sınırsız Kat, Oda & Outletler</strong></td>
+                        <td>
+                            • 529 Oda & Suit veritabanı<br>
+                            • Tüm kat hiyerarşisi<br>
+                            • 18 Farklı açık/kapalı outlet
+                        </td>
+                        <td>Oda numaraları ve masa/şezlong/cabana kimlikleri QR kodlarına kriptografik olarak kilitlenir.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Sınırsız Menü & Ürün & Görsel</strong></td>
+                        <td>
+                            • Çok dilli menü (TR, EN, RU, AR)<br>
+                            • Yüksek çözünürlüklü ürün görselleri<br>
+                            • Alerjen, kalori ve reçete açıklamaları
+                        </td>
+                        <td>Tüm menü ve minibar ürünleri anlık güncellenir. "Tükendi" durumu anında tüm misafir ekranlarına yansır.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Minibar Akış Şeması -->
+            <div class="flow-container">
+                <div class="flow-title">
+                    <span>MİNİBAR TAKİP VE MİSAFİR KİŞİSELLEŞTİRME SİSTEMİ İŞ AKIŞI</span>
+                </div>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <strong>1. Konsept Belirleme</strong>
+                        <span>Oda tiplerine göre minibar şablonları panele kaydedilir.</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>2. Misafir QR Kişiselleştirme</strong>
+                        <span>Misafir QR okutur. Günde 1 kez tercihini seçer (Fit, Şekersiz vb.).</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>3. Kat Görevlisi Ekranı</strong>
+                        <span>Kat görevlisinin mobil paneline odaya özel dolum emri düşer.</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>4. Dolum Kaydı & Rapor</strong>
+                        <span>Eklenen ürünler işaretlenir. Tüketim anlık raporlanır.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Sipariş Mutfak Yazıcısı Akışı -->
+            <div class="flow-container">
+                <div class="flow-title">
+                    <span>QR SİPARİŞ VE MUTFAK YAZICISI / KDS ANLIK İLETİM AKIŞI</span>
+                </div>
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <strong>1. Misafir Seçimi</strong>
+                        <span>Misafir QR menüden ürünleri seçer ve siparişi gönderir.</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>2. Garson Telefon/Saat Uyarısı</strong>
+                        <span>Görevli garsonun saatine titreşimli sipariş bildirimi gider.</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>3. Garson Onay Süzgeci</strong>
+                        <span>Garson masayı fiziksel teyit eder ve telefondan ONAY verir.</span>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <strong>4. Mutfak Yazıcısı & KDS</strong>
+                        <span>Sipariş mutfak termal yazıcısından basılır ve KDS'ye düşer.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Menü & Oda Servisi Karşılaştırmalı Çalışma Prensipleri -->
+            <div class="section-title">
+                <span class="badge-num">4</span> OPERASYONEL ÇALIŞMA PRENSİPLERİ VE GÜVENLİK
+            </div>
+
+            <div class="client-project-grid" style="margin-bottom:0;">
+                <div class="info-card" style="padding:8px 12px;">
+                    <p><strong>• Proaktif Garson Saati Uyarısı:</strong> Alakart harici alanlarda misafir QR'ı okuttuğu an garsonun saatine bildirim gider; garson misafir çağırmadan masaya yönelebilir.</p>
+                    <p style="margin-top:4px;"><strong>• Fiyatsız Misafir Deneyimi:</strong> Ultra Her Şey Dahil lüks konseptine uygun olarak misafir ekranlarında sıfır fiyat ve sıfır para birimi gösterilir.</p>
+                </div>
+                <div class="info-card" style="padding:8px 12px;">
+                    <p><strong>• Opsiyonel Telefon Teyidi:</strong> Misafirin oda servisi talebi doğrudan mutfak konsoluna ulaşır; işletme isteğine göre telefonla teyit alınabilir veya doğrudan hazırlanır.</p>
+                    <p style="margin-top:4px;"><strong>• Günde 1 Kez Minibar Kişiselleştirme:</strong> Her oda günde bir defa minibar konseptini güncelleyebilir; kontrolsüz tüketim önlenir.</p>
+                </div>
+            </div>
+
+            <!-- Sayfa Altı Bilgi -->
+            <div class="doc-footer">
+                <span>Merit International Hotels & Resorts • Proforma Şartname No: PRO-MR-2026-088</span>
+                <span>Sayfa 2 / 4</span>
+            </div>
+        </div>
+
+        <hr class="page-divider">
+
+        <!-- ==================== SAYFA 3: F&B MUTABAKATI & TEKNİK ŞARTNAME ==================== -->
+        <div class="doc-page">
+            
+            <div class="section-title">
+                <span class="badge-num">5</span> F&B ORTAK ÇALIŞMA ÇERÇEVESİ, KAPSAM VE SÖZLEŞME ESASLARI
+            </div>
+
+            <p class="lead-text">
+                Yazılımın Merit Royal operasyonlarına %100 uyum sağlaması ve ileride herhangi bir boşluğa veya yanlış anlaşılmaya mahal vermemek amacıyla taraflar arasında aşağıdaki ilkeler uygulanacaktır:
+            </p>
+
+            <ul class="spec-list">
+                <li><strong>1. F&B Departmanı ile Ortak Çerçeve Belirleme:</strong> Gerekli anlaşma sağlandığı takdirde tarafların karşılıklı mutabık kalması ve yapılacak olan yazılımların genel çerçevelerinin belirlenmesi amacıyla F&B (Food and Beverage) departmanı ile kapsamlı görüşmeler gerçekleştirilecektir. Belirlenen ana başlıklar doğrultusunda gerekli yazılım mimarisi oluşturulacaktır.</li>
+                <li><strong>2. Canlı Kullanıma Alınana Kadar Sınırsız Revizyon Hakkı:</strong> Yapılan görüşmeler sonucunda, yazılım geliştirme sürecindeyken ve sistem henüz sahada canlı kullanıma alınana kadar; sistemin ana kullanıcısı olan F&B departmanının ekran tasarımları, sipariş akışları, kategori düzenleri ve kurallar üzerinde <strong>sınırsız değişiklik ve revizyon talep etme hakkı</strong> bulunmaktadır.</li>
+                <li><strong>3. Güvenlik, Hata Düzeltmeleri ve Mevcut Özellik Güncellemeleri (Kesinlikle Ücretsiz):</strong> Sistemde yapılacak güvenlik güncellemeleri, hata düzeltmeleri (bug fixes) ve sistemin mevcut özelliklerindeki değişiklik ile güncelleme talepleri, ilk yıl promosyon olarak sunulan servis-bakım hizmeti kapsamında değerlendirilecek olup, bu işlemler için <strong>kesinlikle hiçbir ek ücret talep edilmeyecektir</strong>.</li>
+                <li><strong>4. Yeni Özellik, Ekstra Modül ve Diğer Otellere Kurulum Şartları:</strong> Mevcut sistemlerde bulunmayan tamamen yeni özelliklerin sisteme eklenme talebi, ekstra yeni modül talepleri ya da mevcut sistemlerin belirtilen 3 otelin (Diamond, Royal, Premium) dışındaki diğer otellere kurulması/kullanılmak istenmesi durumunda; talep edilen ekstra özellik, modül veya yeni kurulumlar <strong>o günkü şartlara göre ayrıca fiyatlandırılacaktır</strong>. Oluşturulacak yeni fiyat teklifinde anlaşma sağlanması halinde söz konusu talepler ivedilikle yerine getirilecektir.</li>
+                <li><strong>5. İş Sözleşmesinde Net Sınırların Belirlenmesi:</strong> Bu teklifte karşılıklı mutabık kalınması halinde, herhangi bir boşluğa mahal bırakmamak adına; hangi taleplerin "yeni özellik", hangi taleplerin "ekstra modül" ve hangi taleplerin "mevcut özellikler / ücretsiz bakım" sayılacağı, her iki tarafın mutabık kalacağı resmi <strong>İş Sözleşmesinde detaylı olarak belirtilecektir</strong>.</li>
+            </ul>
+
+            <div class="section-title">
+                <span class="badge-num">6</span> TEKNİK ŞARTNAME, KURULUM, SUNUCU VE ULAŞIM/BARINMA
+            </div>
+
+            <ul class="spec-list">
+                <li><strong>1. Ulaşım ve Konaklama/Barınma:</strong> Sistemin geliştirme, yerinde kurulum ve canlıya alma süreçleri ile 1 yıl boyunca verilecek servis-bakım hizmeti kapsamında; zorunlu yerinde müdahale gerektiğinde yazılım ekibinin (maksimum 2 kişi) Kuzey Kıbrıs Türk Cumhuriyeti'ne (KKTC) olan ulaşım ve oradaki barınma/konaklama giderleri <strong>ALICI (Merit International) tarafından sağlanacaktır.</strong></li>
+                <li><strong>2. Yazılım Lisans, Kurulum ve Eğitim Kapsamı:</strong> Teklif edilen modül bedelleri; Merit Royal Diamond, Merit Royal Hotel ve Merit Royal Premium otellerindeki 529 oda ve 18 outlet için yazılım lisansını, 3 oteldeki sistem kurulumlarını ve ilgili personeller için uygulamalı eğitimleri içerir. Herhangi bir donanım içermez.</li>
+                <li><strong>3. Bulut Sunucu / On-Premise Kurulum Esnekliği:</strong>
+                    <ul style="padding-left:18px; margin-top:2px;">
+                        <li>Sistem varsayılan olarak yüksek erişilebilirlikli güvenli bulut sunucu üzerinde barındırılır (Yıllık 1.000 USD).</li>
+                        <li><strong>Merit Royal'in Kendi Sunucusunu Temin Etmesi Durumu:</strong> Merit Royal'in talep etmesi ve sunucuyu temin etmesi halinde yıllık 1.000 USD olan bulut sunucu ücreti tekliften tamamen kaldırılacaktır.</li>
+                        <li>Merit Royal'in talebi üzerine otel için özel olarak oluşturulmuş bu uygulamalar doğrudan Merit Royal'in kendi yerel sunucularına (On-Premise) kurulabilir.</li>
+                    </ul>
+                </li>
+                <li><strong>4. Mutfak Termal Yazıcı Gateway & 7/24 SLA Teknik Destek:</strong> Garson onaylı siparişlerin mutfaktaki mevcut ESC/POS ağ termal yazıcılarından otomatik adisyon basımı için yerel ağ köprüsü teslim edilir. Kritik arızalarda en geç <strong>15 dakika</strong> içinde müdahale garantisi verilir.</li>
+            </ul>
+
+            <div class="callout-box">
+                <strong>Donanım Sorumluluğu Hatırlatması:</strong> Teklif yalnızca <strong>yazılım lisansları, kurulum, personel eğitimi ve bulut barındırma</strong> hizmetini içermektedir. Personel akıllı telefonları/saatleri, mutfak termal yazıcıları ve ağ bağlantıları Merit Royal bünyesindeki mevcut kurumsal altyapıdan karşılanacaktır.
+            </div>
+
+            <!-- Sayfa Altı Bilgi -->
+            <div class="doc-footer">
+                <span>Merit International Hotels & Resorts • Proforma Şartname No: PRO-MR-2026-088</span>
+                <span>Sayfa 3 / 4</span>
+            </div>
+        </div>
+
+        <hr class="page-divider">
+
+        <!-- ==================== SAYFA 4: FİYAT TEKLİFİ (PROFORMA FATURA) & ONAY ==================== -->
+        <div class="doc-page">
+            
+            <div class="section-title">
+                <span class="badge-num">7</span> FİYAT TEKLİFİ VE PROFORMA TABLOSU
+            </div>
+
+            <p class="lead-text">
+                Merit Royal Oteller Kompleksi (Diamond, Royal, Premium) için hazırlanan yazılım lisansı, kurulum, eğitim ve opsiyonel sunucu hizmet dökümü aşağıdadır:
+            </p>
+
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">No</th>
+                        <th style="width:48%;">Hizmet / Modül Açıklaması</th>
+                        <th style="width:14%;">Kapsam Tipi</th>
+                        <th style="width:15%;">Birim / Süre</th>
+                        <th style="width:18%;" class="text-right">Tutar (USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>01</strong></td>
+                        <td>
+                            <strong>Merkezi Sistem Yöneticisi Paneli (Super Admin)</strong><br>
+                            <small>3 Otel (Diamond, Royal, Premium) Tek Ekrandan Yönetim, Sınırsız Kullanıcı & Rol Tanımlama, Sınırsız Kat/Oda Veritabanı, Konsolide Raporlama. Kurulum ve eğitim dahildir.</small>
+                        </td>
+                        <td><span class="tag-free">Merkezi Lisans</span></td>
+                        <td>1 Kompleks (3 Otel)</td>
+                        <td class="text-right"><strong>$1.500,00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>02</strong></td>
+                        <td>
+                            <strong>Minibar Takip & Misafir Kişiselleştirme Modülü</strong><br>
+                            <small>529 Oda Sınırsız Lisans, Oda Tiplerine Göre Minibar Konseptleri, Misafir Günde 1 Kez QR Kişiselleştirme, Kat Görevlisi Dolum Ekranı, Tüketim Raporları. Kurulum ve eğitim dahildir.</small>
+                        </td>
+                        <td><span class="tag-free">Sınırsız Oda</span></td>
+                        <td>529 Oda / Suit</td>
+                        <td class="text-right"><strong>$2.300,00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>03</strong></td>
+                        <td>
+                            <strong>QR Menü - QR Sipariş & Akıllı Garson Çağrı Sistemi</strong><br>
+                            <small>18 Dış Outlet. Ambiyansa Özel Dijital Menü, QR Okutulduğu An Garson Saatine/Telefonuna Bildirim, Masadan Sipariş, Garson Onayıyla Mutfak Termal Yazıcısına & KDS'ye Anlık İletim.</small>
+                        </td>
+                        <td><span class="tag-free">Sınırsız Outlet</span></td>
+                        <td>18 Dinlenme Alanı</td>
+                        <td class="text-right"><strong>$2.700,00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>04</strong></td>
+                        <td>
+                            <strong>QR Oda Servisi (IRD) ve Butler Sistemi</strong><br>
+                            <small>Oda Numarasına Kilitli QR Menü ve Sipariş Sistemi, IRD Mutfak Konsoluna Anlık Bildirim, İsteğe Bağlı (Opsiyonel) Telefonla Misafir Teyidi Akışı. Kurulum ve eğitim dahildir.</small>
+                        </td>
+                        <td><span class="tag-free">Sınırsız Oda</span></td>
+                        <td>529 Oda / Suit</td>
+                        <td class="text-right"><strong>$2.000,00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>05</strong></td>
+                        <td>
+                            <strong>Bulut Sunucu Barındırma & Güvenlik Altyapısı (Yıllık)</strong><br>
+                            <small>Yüksek erişilebilirlikli güvenli bulut sunucu barındırma, günlük otomatik yedekleme ve SSL güvenlik sertifikası. <em>(Merit Royal sunucuyu temin ederse bu ücret kaldırılacaktır).</em></small>
+                        </td>
+                        <td><span class="tag-sla">Yıllık Bulut</span></td>
+                        <td>12 Ay Kesintisiz</td>
+                        <td class="text-right"><strong>$1.000,00</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>06</strong></td>
+                        <td>
+                            <strong>Yıllık Servis, Bakım & 7/24 Kesintisiz SLA Teknik Destek</strong><br>
+                            <small>Güvenlik güncellemeleri, hata düzeltmeleri ve 7/24 acil müdahale (15 dk SLA). Normal bedeli yıllık $1.500 USD olup, <strong>İLK YIL PROMOSYON OLARAK TALEP EDİLMEZ</strong>.</small>
+                        </td>
+                        <td><span class="tag-promo">1. YIL PROMOSYON</span></td>
+                        <td>12 Ay Promosyon</td>
+                        <td class="text-right"><strong style="color:var(--primary);">$0,00</strong><br><small style="text-decoration:line-through; color:var(--text-muted);">$1.500,00</small></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f8fafc;">
+                        <td colspan="4" class="text-right">YAZILIM LİSANS, KURULUM, EĞİTİM & BULUT SUNUCU TOPLAMI:</td>
+                        <td class="text-right"><strong style="font-size:13.5px; color:var(--primary);">$9.500,00 USD</strong></td>
+                    </tr>
+                    <tr style="background:#f8fafc;">
+                        <td colspan="4" class="text-right" style="color:var(--text-muted); font-weight:700;">1. YIL SERVİS VE BAKIM HİZMETİ PROMOSYONU (İNDİRİM):</td>
+                        <td class="text-right" style="color:var(--text-muted); font-weight:700;">- $1.500,00 USD (Hediye)</td>
+                    </tr>
+                    <tr style="background:var(--accent-gold-bg); font-size:13px;">
+                        <td colspan="4" class="text-right" style="color:var(--primary); font-weight:900;">NET TEKLİF BEDELİ (BULUT SUNUCU DAHİL):</td>
+                        <td class="text-right" style="color:var(--primary); font-weight:900; font-size:14.5px;">$9.500,00 USD</td>
+                    </tr>
+                    <tr style="background:#f8fafc; font-size:11.5px;">
+                        <td colspan="4" class="text-right" style="color:var(--text-muted); font-weight:700;">* MERIT ROYAL KENDİ SUNUCUSUNU TEMİN EDERSE NET BEDEL:</td>
+                        <td class="text-right" style="color:var(--primary); font-weight:800;">$8.500,00 USD</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="callout-box" style="margin-top:14px;">
+                <strong>Ticari ve Mali Koşullar:</strong>
+                Fiyatlara KDV dahil değildir. Yıllık $1.500 USD olan servis ve bakım ücreti 1. yıl promosyon olarak talep edilmeyecek olup, 1 YILIN SONUNDA talep olması halinde yeniden fiyatlandırılacaktır. Yıllık $1.000 USD olan bulut sunucu ücreti Merit Royal'in kendi sunucusunu temin etmesi durumunda tekliften düşülecektir. Ödeme planı: Sözleşme imzalanmasında %50 peşin, sistemin 3 otelde tam faal canlıya alınması ve personel eğitimlerinin tamamlanmasının ardından %50 bakiye olarak tahsil edilecektir.
+            </div>
+
+            <!-- Sayfa Altı Bilgi -->
+            <div class="doc-footer">
+                <span>Merit International Hotels & Resorts • Proforma Şartname No: PRO-MR-2026-088</span>
+                <span>Sayfa 4 / 4 (Son Sayfa)</span>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

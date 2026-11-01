@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merit Royal Standartlarında Çok Alanlı Lüks Resort QR & Servis Ekosistemi</title>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #fef9e7;
+            --gold-dark: #aa820a;
+            --dark-bg: #090d16;
+            --card-bg: #111827;
+            --card-border: #1f2937;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #2563eb;
+            --emerald: #10b981;
+            --cyan: #06b6d4;
+            --purple: #8b5cf6;
+            --amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1240px; margin: 0 auto; padding: 0 1.25rem; }
+
+        /* Header */
+        header.hero {
+            background: linear-gradient(135deg, #040711 0%, #0f172a 50%, #1e1b4b 100%);
+            padding: 3.5rem 1rem 4rem;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .badge-luxury {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--gold);
+            color: #fef08a;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            max-width: 880px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .hero-meta strong { color: #f8fafc; }
+
+        /* Sticky Navigation */
+        .nav-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.65rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.35rem 0.8rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            background: #1f2937;
+            border: 1px solid #374151;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        main { padding: 3rem 0 5rem; }
+        section { margin-bottom: 4.5rem; scroll-margin-top: 5rem; }
+
+        .section-header { margin-bottom: 2rem; }
+        .section-header span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+        }
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.25rem;
+        }
+        .section-header p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        /* Area Grid */
+        .outlets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .outlet-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .outlet-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gold);
+        }
+
+        .outlet-card.beach::before { background: var(--cyan); }
+        .outlet-card.spa::before { background: var(--emerald); }
+        .outlet-card.sports::before { background: var(--primary); }
+        .outlet-card.kids::before { background: #ec4899; }
+        .outlet-card.lounge::before { background: var(--purple); }
+
+        .outlet-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .outlet-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .outlet-badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            background: #1f2937;
+            color: var(--gold);
+            border: 1px solid #374151;
+        }
+
+        .outlet-features {
+            list-style: none;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .outlet-features li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        .outlet-features li span.icon { font-size: 1.1rem; }
+
+        .outlet-hardware-tag {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border: 1px solid #334155;
+            margin-top: auto;
+        }
+
+        /* Screen Simulation Showcase */
+        .showcase-dual {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .phone-frame-dark {
+            background: #000;
+            border: 8px solid #1e293b;
+            border-radius: 36px;
+            height: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .phone-top-bar {
+            background: #0f172a;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .phone-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #090d16;
+            font-size: 0.85rem;
+        }
+
+        .phone-body::-webkit-scrollbar { width: 3px; }
+        .phone-body::-webkit-scrollbar-thumb { background: #374151; }
+
+        .service-action-item {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .service-action-item strong { font-size: 0.85rem; color: #f8fafc; }
+        .service-action-item p { font-size: 0.7rem; color: var(--text-muted); }
+
+        .btn-call-gold {
+            background: linear-gradient(135deg, #d4af37 0%, #b45309 100%);
+            color: #000;
+            border: none;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* Matrix Table */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        table.luxury-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        table.luxury-table th {
+            background: #161e2e;
+            padding: 1rem 1.2rem;
+            color: var(--gold);
+            font-weight: 800;
+            border-bottom: 2px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        table.luxury-table td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--card-border);
+            vertical-align: top;
+        }
+
+        table.luxury-table tr:hover { background: #131c2e; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 1.85rem; }
+            .section-header h2 { font-size: 1.5rem; }
+            .outlets-grid { grid-template-columns: 1fr; }
+            .showcase-dual { grid-template-columns: 1fr; }
+            .phone-frame-dark { height: 520px; }
+            table.luxury-table th, table.luxury-table td { padding: 0.75rem 0.6rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="hero">
+        <div class="container">
+            <div class="badge-luxury">💎 Ultra-Lüks Resort Açık/Kapalı Alan Ekosistemi</div>
+            <h1>Merit Royal Standartlarında<br>Tüm Resort Alanları QR Menü & Çağrı Mimarisi</h1>
+            <p>A La Carte restoranlar haricinde Merit Royal kompleksinin tüm devasa yaşam alanlarını (Zephyros Koyu Plaj Kabanaları, İskele, Lagün Havuz Bar, Olive Spa & Wellness, 24/7 Lobby Bar, Tenis & Fitness ve Meritta Kids Club Bahçesi) kapsayan; fiyatsız, GPS korumalı ve garson akıllı saat entegreli bütünleşik servis ekosistemi.</p>
+            
+            <div class="hero-meta">
+                <div>Tesis: <strong>Merit Royal Diamond & Zephyros Cove Kompleksi</strong></div>
+                <div>Kapsam: <strong>Plaj, İskele, Havuz, Spa, 24/7 Lobby, Spor Alanları & Meritta Park</strong></div>
+                <div>Konsept: <strong>Fiyatsız All-Inclusive + Çift Onaylı Garson Akıllı Saat Akışı</strong></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-sticky">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#alanlar">Resort Alanları Haritası</a>
+                <a href="#ekran-simulasyonlari">Örnek Ekran Akışları</a>
+                <a href="#karsilastirma-matrisi">Alan Bazlı Kural Matrisi</a>
+                <a href="#sikayetler-ve-cozumler">Lüks Segment Şikayet Çözümleri</a>
+                <a href="index.html" style="color:#6366f1; border-color:#6366f1;">📑 Ana Pazar Raporu</a>
+                <a href="merit_triple_hotels_matrix.html" style="color:#ec4899; border-color:#ec4899;">🏨 3 Merit Oteli Matrisi</a>
+                <a href="merit_proforma_teklif_sartname.html" style="color:#10b981; border-color:#10b981;">📜 Fiyat Teklifi & Şartname (Proforma)</a>
+                <a href="merit_room_service_qr.html" style="color:#38bdf8; border-color:#38bdf8;">🚪 Oda Servisi Raporu</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- Section 1: Non-AlaCarte Resort Outlets -->
+        <section id="alanlar">
+            <div class="section-header">
+                <span>01. Kapsam Haritası</span>
+                <h2>A La Carte Haricindeki 6 Temel Resort Yaşam Alanı</h2>
+                <p>Merit Royal misafirinin gün boyu vakit geçirdiği her açık/kapalı lokasyonun kendine özgü bir servis dili, dijital menüsü ve donanım protokolü vardır.</p>
+            </div>
+
+            <div class="outlets-grid">
+
+                <!-- 1. Beach Cabanas & Pier -->
+                <div class="outlet-card beach">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">🏖️ Zephyros Plajı, İskele & Kabanalar</span>
+                            <span class="outlet-badge" style="color:#38bdf8; border-color:#0284c7;">Su Geçirmez • Geniş Alan</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Deniz kenarında kabanada dinlenen veya iskelede güneşlenen misafirin garson aramadan anında soğuk ikram talep etmesi.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">🍾</span> <strong>Şezlong Numaralı QR:</strong> Her şezlongun sehpasında hava koşullarına dayanıklı döküm akrilik QR plaka (Örn: İskele Cabana 04).</li>
+                            <li><span class="icon">🍇</span> <strong>Lüks İkramlar:</strong> Buzlu şampanya kovası, tropikal meyve kuleleri, dondurma ve buzlu soğuk havlu çağrısı.</li>
+                            <li><span class="icon">📍</span> <strong>GPS Geofencing:</strong> İskele sınırları dışındakilerin sipariş göndermesi sistem tarafından otomatik engellenir.</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: UV Korumalı Su Geçirmez Akrilik QR • Cabana Butler El Terminali & Akıllı Saati
+                    </div>
+                </div>
+
+                <!-- 2. Pool Bar & Lagoon Deck -->
+                <div class="outlet-card">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">🏊 Lagün Havuz Başı & Aqua Bar</span>
+                            <span class="outlet-badge" style="color:#34d399; border-color:#059669;">Hızlı İçecek & Snack</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Devasa lagün havuz terasında şezlongda uzanan misafirlerin imza kokteyl, smoothie ve hafif atıştırmalık istekleri.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">🍹</span> <strong>Görsel Kokteyl Kataloğu:</strong> Barmen özel sunumları, alkolsüz detox mocktail'ler ve buzlu kahveler.</li>
+                            <li><span class="icon">⏱️</span> <strong>Akıllı Hazırlık Takibi:</strong> Müşteri telefonunda barmenin hazırlık durumunu canlı adım adım izler.</li>
+                            <li><span class="icon">🔔</span> <strong>Şemsiye & Havlu İsteği:</strong> "Kuru Havlu Getir", "Şemsiyeyi Ayarla" gibi tek dokunuşluk servis butonları.</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: Sehpa İçi Gömülü Lazer QR • Havuz Barı KDS Ekranı
+                    </div>
+                </div>
+
+                <!-- 3. 24/7 Royal Lobby & Patisserie -->
+                <div class="outlet-card lounge">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">☕ 24/7 Royal Lobby Bar & Patisserie</span>
+                            <span class="outlet-badge" style="color:#c084fc; border-color:#7c3aed;">Kesintisiz Zarafet</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Günün her saati açık olan lobide dünya kahveleri, el yapımı çikolatalar ve taze pastane lezzetleri.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">🍰</span> <strong>Canlı Vitrin Yönetimi:</strong> Saatlik tükenen makaron veya taze pasta kasadan tek tıkla QR menüden kapatılır.</li>
+                            <li><span class="icon">🍵</span> <strong>Gurme Çay Seremonisi:</strong> Dünya çaylarının demleme süreleri ve bitkisel özellikleri görsel anlatılır.</li>
+                            <li><span class="icon">🛎️</span> <strong>Garson Çağırma:</strong> "Garson Masaya Çağır", "Su / Peçete İsteği".</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: Deri Kaplama Masa Standı QR • Dokunmatik Kasa Paneli
+                    </div>
+                </div>
+
+                <!-- 4. Spa & Wellness Center -->
+                <div class="outlet-card spa">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">🌿 Olive Spa & Dinlenme Alanı</span>
+                            <span class="outlet-badge" style="color:#10b981; border-color:#065f46;">Huzur & Sessiz Servis</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Masaj sonrası dinlenme odasında, tuz odasında veya kapalı havuzda sessizliği bozmadan ikram seçimi.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">🫖</span> <strong>Detoks & Bitki Çayları:</strong> Dinlendirici papatya, zencefil-limon, yeşil çay ve taze detoks suları.</li>
+                            <li><span class="icon">💆</span> <strong>Bakım & Ritüel Kataloğu:</strong> Fiyat baskısı olmadan Bali masajı, hamam ve cilt bakımı ritüellerinin detayları.</li>
+                            <li><span class="icon">🤫</span> <strong>Sıfır Ses Protokolü:</strong> Sipariş verildiğinde personele sadece titreşimli akıllı saatle bildirim gider; sıfır gürültü.</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: Bambu Ahşap Kazıma QR • Spa Resepsiyon Tableti
+                    </div>
+                </div>
+
+                <!-- 5. Tennis Courts & Fitness Garden -->
+                <div class="outlet-card sports">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">🎾 Tenis Kortları & Fitness Garden</span>
+                            <span class="outlet-badge" style="color:#60a5fa; border-color:#2563eb;">Spor & Enerji Barı</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Tenis kortu bench'lerinde veya açık hava fitness alanında spor yapan misafirlerin hidrasyon ve enerji talepleri.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">⚡</span> <strong>Sporcu İkramları:</strong> Elektrolitli sporcu içecekleri, protein shake'ler, buzlu havlular ve taze muz tabağı.</li>
+                            <li><span class="icon">🎾</span> <strong>Ekipman Çağrısı:</strong> "Yeni Top Seti İste", "Kort Işıklandırmasını Aç", "Eğitmen Çağır".</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: Metal Kort Yanı QR Plaka • Spor Barı PWA Bildirimi
+                    </div>
+                </div>
+
+                <!-- 6. Meritta Club Garden (Kids & Family Zone) -->
+                <div class="outlet-card kids">
+                    <div>
+                        <div class="outlet-top">
+                            <span class="outlet-title">🎠 Meritta Club Park & Aile Bahçesi</span>
+                            <span class="outlet-badge" style="color:#f472b6; border-color:#db2777;">Aile & Çocuk Konsepti</span>
+                        </div>
+                        <p style="font-size:0.85rem; color:var(--text-muted);">Çocukları Meritta Club'da oynarken bahçedeki dinlenme alanında bekleyen ebeveynlerin servis istekleri.</p>
+                        <ul class="outlet-features">
+                            <li><span class="icon">🍦</span> <strong>Çocuk Menüsü & Dondurma:</strong> Taze sıkma meyve suları, organik bebek püreleri, el yapımı dondurmalar.</li>
+                            <li><span class="icon">🧸</span> <strong>Alerjen Duyarlılığı:</strong> Fıstık, laktoz ve gluten gibi çocuklarda kritik olan alerjenlerin şeffaf filtrelenmesi.</li>
+                            <li><span class="icon">👩‍👧</span> <strong>Ebeveyn İkramı:</strong> Anne-babalar için soğuk kahveler ve taze atıştırmalıklar.</li>
+                        </ul>
+                    </div>
+                    <div class="outlet-hardware-tag">
+                        Donanım: Renkli Korumalı Ahşap QR Sehpa • Çocuk Kulübü Bar Ekranı
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 2: UI Visual Screen Showcase -->
+        <section id="ekran-simulasyonlari">
+            <div class="section-header">
+                <span>02. Arayüz Simülasyonları</span>
+                <h2>Plaj Kabanası ve Tenis Kortu Örnek Ekranları</h2>
+                <p>Misafirin telefonunda beliren fiyatsız lüks arayüz ve personelin saatine düşen akıllı bildirimler.</p>
+            </div>
+
+            <div class="showcase-dual">
+                
+                <!-- Screen 1: Beach Cabana Phone -->
+                <div class="phone-frame-dark">
+                    <div class="phone-top-bar">
+                        <span style="color:#38bdf8;">🏖️ Merit Zephyros Beach</span>
+                        <span style="color:#d4af37;">İskele Cabana: 04</span>
+                    </div>
+                    <div class="phone-body">
+                        <div style="background:linear-gradient(135deg, #082f49 0%, #031e30 100%); border:1px solid #0284c7; border-radius:12px; padding:0.85rem; margin-bottom:1rem;">
+                            <h4 style="color:#7dd3fc; font-size:0.9rem;">🌊 Özel Cabana Butik Servis</h4>
+                            <p style="font-size:0.75rem; color:#cbd5e1; margin-top:0.2rem;">Özel kabananıza ait sorumlu butler: <strong>Mehmet T.</strong> (Akıllı Saati Bağlı)</p>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem;">
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.6rem; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                ❄️ Soğuk Havlu İste
+                            </button>
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.6rem; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                🧊 Ekstra Buz & Su
+                            </button>
+                        </div>
+
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--gold); margin-bottom:0.5rem; text-transform:uppercase;">
+                            Şampanyalar & Meyve Sunumları
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Moët & Chandon Ice Impérial</strong>
+                                <p>Buzlu kova ve taze nane dilimleriyle</p>
+                            </div>
+                            <button class="btn-call-gold">+ Kabanaya İste</button>
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Egzotik Tropikal Meyve Kulesi</strong>
+                                <p>Ananas, mango, ejder meyvesi, çilek</p>
+                            </div>
+                            <button class="btn-call-gold">+ Kabanaya İste</button>
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Buzlu Karpuz & Hellim Tabağı</strong>
+                                <p>Geleneksel Kıbrıs yaz lezzeti</p>
+                            </div>
+                            <button class="btn-call-gold">+ Kabanaya İste</button>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Action -->
+                    <div style="background:#0f172a; padding:0.6rem; border-top:1px solid #1f2937;">
+                        <button style="width:100%; background:var(--gold); color:#000; border:none; padding:0.6rem; border-radius:8px; font-weight:800; font-size:0.75rem; cursor:pointer;">
+                            🔔 Butler Çağır (Kabanaya Servis)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Screen 2: Tennis Court & Fitness Garden Phone -->
+                <div class="phone-frame-dark">
+                    <div class="phone-top-bar">
+                        <span style="color:#60a5fa;">🎾 Royal Tennis Courts</span>
+                        <span style="color:#d4af37;">Kort No: 02</span>
+                    </div>
+                    <div class="phone-body">
+                        <div style="background:linear-gradient(135deg, #172554 0%, #0f172a 100%); border:1px solid #2563eb; border-radius:12px; padding:0.85rem; margin-bottom:1rem;">
+                            <h4 style="color:#93c5fd; font-size:0.9rem;">⚡ Sporcu Hidrasyon & Destek</h4>
+                            <p style="font-size:0.75rem; color:#cbd5e1; margin-top:0.2rem;">Maç sırasında kort kenarına anında servis talebi gönderebilirsiniz.</p>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem;">
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.6rem; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                🎾 Yeni Top Seti İste
+                            </button>
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.6rem; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:700; cursor:pointer;">
+                                ❄️ Buzlu Baş Havlusu
+                            </button>
+                        </div>
+
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--gold); margin-bottom:0.5rem; text-transform:uppercase;">
+                            Sporcu İçecekleri & Smoothie
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Elektrolitli Hindistan Cevizi Suyu</strong>
+                                <p>Taze hindistan cevizinde pipetle servis</p>
+                            </div>
+                            <button class="btn-call-gold">+ Korta İste</button>
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Whey Protein & Fıstık Ezmeli Shake</strong>
+                                <p>Badem sütü, muz ve chia tohumlu</p>
+                            </div>
+                            <button class="btn-call-gold">+ Korta İste</button>
+                        </div>
+
+                        <div class="service-action-item">
+                            <div>
+                                <strong>Soğuk Alkali Limonlu Su Sürahisi</strong>
+                                <p>Nane yaprakları ve mineral takviyeli</p>
+                            </div>
+                            <button class="btn-call-gold">+ Korta İste</button>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Action -->
+                    <div style="background:#0f172a; padding:0.6rem; border-top:1px solid #1f2937;">
+                        <button style="width:100%; background:#2563eb; color:#fff; border:none; padding:0.6rem; border-radius:8px; font-weight:800; font-size:0.75rem; cursor:pointer;">
+                            🛎️ Korta Servis Gönder (Kort 02)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: Operational Matrix Table -->
+        <section id="karsilastirma-matrisi">
+            <div class="section-header">
+                <span>03. Operasyonel Yönetim</span>
+                <h2>Alan Bazlı Teknik ve Servis Kural Matrisi</h2>
+                <p>Her alanın donanımı, bildirim iletim şekli ve sipariş doğrulama parametreleri.</p>
+            </div>
+
+            <div class="table-wrap">
+                <table class="luxury-table">
+                    <thead>
+                        <tr>
+                            <th>Hizmet Alanı</th>
+                            <th>Fiyat Durumu</th>
+                            <th>Güvenlik / Varlık Doğrulama</th>
+                            <th>Bildirim Kanalı</th>
+                            <th>Sipariş Onay Mekanizması</th>
+                            <th>Fiziksel QR Malzemesi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Plaj, İskele & Kabanalar</strong></td>
+                            <td>Fiyatsız (VIP İkram)</td>
+                            <td>GPS Geofencing (İskele Sınırı)</td>
+                            <td>Cabana Butler Tableti + Akıllı Saat</td>
+                            <td>Garson el terminalinden <em>"Onayla"</em> butonuna basar.</td>
+                            <td>Güneşe & tuza dayanıklı döküm akrilik</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Lagün Havuz Başı & Deck</strong></td>
+                            <td>Fiyatsız</td>
+                            <td>Wi-Fi veya GPS Hibrit</td>
+                            <td>Pool Bar KDS Ekranı</td>
+                            <td>Barmen hazırlayınca runner personele görev düşer.</td>
+                            <td>Sehpa üzerine gömülü su geçirmez sticker</td>
+                        </tr>
+                        <tr>
+                            <td><strong>24/7 Royal Lobby Bar</strong></td>
+                            <td>Fiyatsız İkram & Özel İthalat</td>
+                            <td>Mekan Wi-Fi / Mobil Data</td>
+                            <td>Dokunmatik Kasa Paneli + Garson PWA</td>
+                            <td>Garson veya kasa görevlisi onaylar.</td>
+                            <td>Deri kaplama lüks pirinç ayaklı stand</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Olive Spa & Dinlenme</strong></td>
+                            <td>Fiyatsız (Çay/Meyve) • Masaj Kataloğu</td>
+                            <td>Spa İçi Bluetooth / Wi-Fi</td>
+                            <td>Spa Resepsiyon Ekranı (Sessiz)</td>
+                            <td>Terapist veya karşılama görevlisi onaylar.</td>
+                            <td>Organik bambu ahşap blok</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tenis Kortları & Fitness Garden</strong></td>
+                            <td>Fiyatsız Sporcu İkramları</td>
+                            <td>Kort Alanı Geofence</td>
+                            <td>Spor Barı KDS + Görevli Saati</td>
+                            <td>Görevli kort kenarına intikal edip onaylar.</td>
+                            <td>Hava koşullarına dayanıklı metal plaka</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Meritta Club Park & Bahçe</strong></td>
+                            <td>Fiyatsız Çocuk & Ebeveyn Menüsü</td>
+                            <td>Kulüp Bahçesi Wi-Fi</td>
+                            <td>Kids Club Bar Ekranı</td>
+                            <td>Bar personeli tepsiyi masaya yönlendirir.</td>
+                            <td>Renkli çocuk emniyetli ahşap sehpa QR</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Complaints & Luxury Solutions -->
+        <section id="sikayetler-ve-cozumler">
+            <div class="section-header">
+                <span>04. Kalite Standartları</span>
+                <h2>5 Yıldızlı Lüks Resort Segmentinde Karşılaşılan Şikayetler & İlaç Reçeteleri</h2>
+                <p>Merit Royal ayarındaki tesislerde açık alanlarda yaşanan krizler ve qrmenu projesinin getirdiği kusursuz çözümler.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+                
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #f59e0b; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#fde68a; font-size:0.95rem;">1. Plajda Islak Telefon ve Güneş Yansıması</div>
+                    <p style="font-size:0.85rem; color:#94a3b8; margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Parlak güneş altında beyaz zeminli QR menüler okunamaz; ıslak parmaklarla karmaşık kategorilerde gezmek misafiri çıldırtır.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> Plaj QR'ı okutulduğunda otomatik <strong>"Yüksek Kontrastlı Plaj Modu (Koyu Zemin & Büyük Butonlar)"</strong> açılır. Tek tıkla "Soğuk Su", "Buz", "Bira" gibi dev ikonlu hızlı istekler sunulur.
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #38bdf8; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#7dd3fc; font-size:0.95rem;">2. Şezlong Değiştiren Misafir Karmaşası</div>
+                    <p style="font-size:0.85rem; color:#94a3b8; margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Misafir önce Şezlong 14'te otururken öğleden sonra gölgeye geçip Şezlong 22'ye geçer. Eski QR'dan sipariş verirse servis yanlış şezlonga gider.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> Misafir yeni şezlongun QR'ını okuttuğu an sistem: <em>"Şezlong 22'ye geçiş yaptınız, konumunuz güncellendi"</em> diyerek eski oturumu anında sonlandırır.
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #ec4899; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#f472b6; font-size:0.95rem;">3. Çocuk Kulübünde Alerjen Belirsizliği Korkusu</div>
+                    <p style="font-size:0.85rem; color:#94a3b8; margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Meritta Kids Club çevresinde dondurma veya aperitif seçerken ebeveynlerin çocuğun fıstık/gluten alerjisi konusunda endişe yaşaması.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> Meritta Club QR menüsünde zorunlu <strong>"Alerjen Filtresi"</strong> bulunur. Anne-baba tek tıkla "Glutensiz" veya "Fıstıksız" seçtiğinde uygun olmayan ürünler menüde anında gizlenir.
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="background:#040711; border-top:1px solid #1f2937; padding:2.5rem 0; font-size:0.85rem; color:#64748b;">
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <strong style="color:#d4af37;">Merit Royal Kompleksi Çok Alanlı Lüks QR Ekosistemi</strong>
+                <p>Resort Servis ve Deneyim Otomasyonu Raporu © 2026</p>
+            </div>
+            <div>
+                <p>Geliştiren: <strong>Antigravity Research & Deepmind Intelligence</strong></p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

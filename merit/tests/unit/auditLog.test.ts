@@ -22,20 +22,20 @@ afterAll(async () => {
 
 describe("denetim günlüğü", () => {
   it("R-OTM yalnız kendi otelinin satırlarını ve kendi kullanıcılarının otelsiz satırlarını görür", async () => {
-    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
-    const ctx = await ctxFor(otm, { hotelCode: "MR" });
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
-    const staff = await makeUser({ username: "gar-mr", roleCode: "R-GAR", hotelCode: "MR" });
-    const other = await makeUser({ username: "gar-mrp", roleCode: "R-GAR", hotelCode: "MRP" });
+    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(otm, { hotelCode: "ROYAL" });
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
+    const staff = await makeUser({ username: "gar-mr", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const other = await makeUser({ username: "gar-mrp", roleCode: "R-GAR", hotelCode: "PREMIUM" });
     const sys = await makeUser({ username: "sys-root", roleCode: "R-SYS" });
-    const sysOnMr = await makeUser({ username: "sys-mr", roleCode: "R-SYS", hotelCode: "MR" });
-    const outsider = await makeUser({ username: "gar-dis", roleCode: "R-GAR", hotelCode: "MR" });
+    const sysOnMr = await makeUser({ username: "sys-mr", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const outsider = await makeUser({ username: "gar-dis", roleCode: "R-GAR", hotelCode: "ROYAL" });
 
     await testDb.auditLog.createMany({
       data: [
         { action: "MR_ROW", entity: "Hotel", hotelId: mr, userId: sysOnMr.id },
-        { action: "MRP_ROW", entity: "Hotel", hotelId: mrp, userId: other.id },
+        { action: "PREMIUM_ROW", entity: "Hotel", hotelId: mrp, userId: other.id },
         { action: "OWN_NULL", entity: "X", hotelId: null, userId: staff.id },
         { action: "OTHER_NULL", entity: "X", hotelId: null, userId: other.id },
         { action: "SYS_NULL", entity: "X", hotelId: null, userId: sys.id },
@@ -49,36 +49,36 @@ describe("denetim günlüğü", () => {
     const actions = page.items.map((row) => row.action).sort();
     expect(actions).toEqual(["MR_ROW", "OWN_NULL", "SYS_ON_MR"]);
 
-    const sysCtx = await ctxFor(sys, { hotelCode: "MR" });
+    const sysCtx = await ctxFor(sys, { hotelCode: "ROYAL" });
     const all = await auditLog.list(sysCtx, {});
     expect(all.total).toBe(8);
-    expect(all.items.map((row) => row.action)).toContain("MRP_ROW");
+    expect(all.items.map((row) => row.action)).toContain("PREMIUM_ROW");
 
-    await expect(auditLog.list(await ctxFor(outsider, { hotelCode: "MR" }), {})).rejects.toMatchObject({
+    await expect(auditLog.list(await ctxFor(outsider, { hotelCode: "ROYAL" }), {})).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
 
   it("sistem kapsamlı yazımların hotelId'siz satırları YONETIM listesinde görünmez", async () => {
-    const otm = await makeUser({ username: "mudur2", roleCode: "R-OTM", hotelCode: "MR" });
-    const sysUser = await makeUser({ username: "sys-ayar", roleCode: "R-SYS", hotelCode: "MR" });
-    const sysCtx = await ctxFor(sysUser, { hotelCode: "MR" });
+    const otm = await makeUser({ username: "mudur2", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const sysUser = await makeUser({ username: "sys-ayar", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const sysCtx = await ctxFor(sysUser, { hotelCode: "ROYAL" });
     const { set } = await import("@/modules/core/server/admin/settingsAdmin");
     await set(sysCtx, null, "dnd.minChecks", 3);
     expect(await testDb.auditLog.count({ where: { action: "SETTING_SET", hotelId: null } })).toBe(1);
 
-    const page = await auditLog.list(await ctxFor(otm, { hotelCode: "MR" }), {});
+    const page = await auditLog.list(await ctxFor(otm, { hotelCode: "ROYAL" }), {});
     expect(page.items.map((r) => r.action)).not.toContain("SETTING_SET");
     const all = await auditLog.list(sysCtx, {});
     expect(all.items.map((r) => r.action)).toContain("SETTING_SET");
   });
 
   it("işlem, varlık, kullanıcı ve tarih aralığı birlikte süzer", async () => {
-    const sys = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "MR" });
-    const ctx = await ctxFor(sys, { hotelCode: "MR" });
-    const mr = await hotelId("MR");
-    const someone = await makeUser({ username: "ayse", roleCode: "R-GAR", hotelCode: "MR" });
-    const other = await makeUser({ username: "ali", roleCode: "R-GAR", hotelCode: "MR" });
+    const sys = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(sys, { hotelCode: "ROYAL" });
+    const mr = await hotelId("ROYAL");
+    const someone = await makeUser({ username: "ayse", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const other = await makeUser({ username: "ali", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await testDb.auditLog.create({
       data: {
         action: "SETTING_UPDATE",
@@ -125,9 +125,9 @@ describe("denetim günlüğü", () => {
   });
 
   it("CSV başlık ve satır üretir; virgüllü alanı tırnaklar", async () => {
-    const sys = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "MR" });
-    const ctx = await ctxFor(sys, { hotelCode: "MR" });
-    const mr = await hotelId("MR");
+    const sys = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(sys, { hotelCode: "ROYAL" });
+    const mr = await hotelId("ROYAL");
     await testDb.auditLog.create({
       data: {
         action: "CSV_ROW",
@@ -149,33 +149,33 @@ describe("denetim günlüğü", () => {
     expect(lines[1]).toContain("CSV_ROW");
     expect(lines[1]).toContain("admin1");
     expect(lines[1]).toContain('"a,b"');
-    expect(lines[1]).toContain("MR");
+    expect(lines[1]).toContain("ROYAL");
     expect(lines[1]).not.toContain("DIGER");
   });
 
   it("capabilities: CSV yetkisi (R) yoksa canExport false; yetki varken true", async () => {
-    const sys = await makeUser({ username: "cap-sys", roleCode: "R-SYS", hotelCode: "MR" });
-    expect(await auditLog.capabilities(await ctxFor(sys, { hotelCode: "MR" }))).toEqual({ canExport: true });
+    const sys = await makeUser({ username: "cap-sys", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    expect(await auditLog.capabilities(await ctxFor(sys, { hotelCode: "ROYAL" }))).toEqual({ canExport: true });
 
-    const otm = await makeUser({ username: "cap-otm", roleCode: "R-OTM", hotelCode: "MR" });
-    const ctx = await ctxFor(otm, { hotelCode: "MR" });
+    const otm = await makeUser({ username: "cap-otm", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(otm, { hotelCode: "ROYAL" });
     expect(await auditLog.capabilities(ctx)).toEqual({ canExport: true });
     const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-DEN" } });
     await testDb.roleScreenPermission.updateMany({
       where: { roleId: otm.roleId, screenId: screen.id },
       data: { canReport: false },
     });
-    expect(await auditLog.capabilities(await ctxFor(otm, { hotelCode: "MR" }))).toEqual({ canExport: false });
-    await expect(auditLog.exportCsv(await ctxFor(otm, { hotelCode: "MR" }))).rejects.toMatchObject({
+    expect(await auditLog.capabilities(await ctxFor(otm, { hotelCode: "ROYAL" }))).toEqual({ canExport: false });
+    await expect(auditLog.exportCsv(await ctxFor(otm, { hotelCode: "ROYAL" }))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
 
   it("get başka otelin satırını NOT_FOUND döner, kendi satırında before/after durur", async () => {
-    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
-    const ctx = await ctxFor(otm, { hotelCode: "MR" });
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
+    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(otm, { hotelCode: "ROYAL" });
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
     const own = await testDb.auditLog.create({
       data: { action: "SETTING_UPDATE", entity: "Setting", hotelId: mr, before: { n: "eski" }, after: { n: "yeni" } },
     });
@@ -191,7 +191,7 @@ describe("denetim günlüğü", () => {
   });
 
   it("audit() audit.created yayınlar, alıcı yalnız SISTEM, gövde before/after taşımaz", async () => {
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     publishMock.mockClear();
     await audit(testDb, { action: "PING", entity: "Thing", hotelId: mr, entityId: "e1", before: { secret: true } });
     expect(publishMock).toHaveBeenCalledWith(

@@ -154,12 +154,13 @@ async function listForOutlet(ctx: Ctx, outletId: string): Promise<AssignmentRow[
 async function myTables(ctx: Ctx): Promise<AssignmentRow[]> {
   if (!ctx.session.outletId) return [];
   await assertCan(ctx, "QS-KUY", "V", ctx.session.hotelId);
-  const rows = await prisma.tableAssignment.findMany({
-    where: { outletId: ctx.session.outletId, userId: ctx.user.id, isActive: true },
-    select: { table: { select: { id: true, label: true } } },
-    orderBy: { table: { label: "asc" } },
+  if (!outletAllowed(ctx, ctx.session.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  const rows = await prisma.outletTable.findMany({
+    where: { outletId: ctx.session.outletId, isActive: true },
+    select: { id: true, label: true },
+    orderBy: [{ label: "asc" }, { id: "asc" }],
   });
-  return rows.map((row) => ({ tableId: row.table.id, label: row.table.label }));
+  return rows.map((row) => ({ tableId: row.id, label: row.label }));
 }
 
 export const tableAssignments = { assign, unassign, bulkAssign, listForOutlet, myTables };

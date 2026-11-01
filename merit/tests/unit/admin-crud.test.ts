@@ -37,7 +37,7 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function ctxOf(roleCode: string, hotelCode = "MR") {
+async function ctxOf(roleCode: string, hotelCode = "ROYAL") {
   const user = await makeUser({ username: `u-${roleCode}-${hotelCode}`, roleCode, hotelCode });
   return ctxFor(user, { hotelCode });
 }
@@ -121,7 +121,7 @@ describe("withAdminTx (gerçek test DB)", () => {
 
   it("yönetim rolü R-OTM kendi otelinde CR-TAN için V/O/D yapabilir, onaylayamaz", async () => {
     const ctx = await ctxOf("R-OTM");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     for (const action of ["V", "O", "D"] as const) {
       await expect(
         withAdminTx(ctx, { screen: "CR-TAN", action, hotelId: mr }, async () => action),

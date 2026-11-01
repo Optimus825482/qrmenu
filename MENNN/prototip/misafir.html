@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Misafir Arayüzü Prototipi (Minibar Kişiselleştirme · QR Menü · QR Sipariş · Oda Servisi)</title>
+<style>
+:root{
+  --navy:#0d2740; --gold:#a97c33; --gold2:#c9a45c;
+  --ink:#182533; --muted:#647488; --line:#e2e9f1; --soft:#f5f9fc; --bg:#eef2f7;
+  --ok:#18855a; --ok-soft:#e9f7f0; --warn:#b8791a; --warn-soft:#fdf4e3; --violet:#6d4bb5; --violet-soft:#f1ecfb;
+  --th:#0e4c63; --tha:#7fd4d0; --ths:#e6f6f5;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Tahoma,Verdana,sans-serif;display:flex;gap:26px;padding:26px;align-items:flex-start;flex-wrap:wrap}
+.side{max-width:344px}
+.side h1{font-size:19px;margin:0 0 6px;color:var(--navy)}
+.side p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.side .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:11px}
+.side .card b{display:block;font-size:12.8px;margin-bottom:5px;color:var(--navy)}
+.side .card span{font-size:12.4px;color:var(--muted)}
+.side .sbtn{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 11px;font:inherit;font-size:13px;cursor:pointer;margin-bottom:7px;color:#2b3f57}
+.side .sbtn.on{border-color:#c5ddf3;background:#eaf3fb;color:#14568d;font-weight:600}
+.langbar{display:flex;flex-wrap:wrap;gap:6px}
+.langbar button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 11px;font:inherit;font-size:12.4px;cursor:pointer}
+.langbar button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.phone{width:392px;flex:0 0 392px;height:792px;border:11px solid #0c2038;border-radius:38px;background:#fff;overflow:hidden;position:relative;box-shadow:0 18px 50px rgba(12,32,56,.32)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:22px;background:#0c2038;border-radius:0 0 14px 14px;z-index:5}
+.pstat{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;font-size:11.4px;color:#54697f;background:#fff;position:relative;z-index:4}
+.ghead{background:linear-gradient(135deg,var(--th),#0a3a4d);color:#fff;padding:16px 16px 18px}
+.ghead .hotel{font-size:10.6px;letter-spacing:.16em;color:var(--tha)}
+.ghead h2{margin:6px 0 2px;font-size:18px;font-weight:700}
+.ghead .sub{font-size:12.2px;opacity:.9}
+.gbody{height:calc(100% - 32px - 58px);overflow:auto;padding:14px 15px 20px}
+.pnav{height:58px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);position:absolute;left:0;right:0;bottom:0}
+.pnav button{background:none;border:none;font:inherit;font-size:10.4px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.pnav button .ic{font-size:17px}
+.pnav button.on{color:var(--navy);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:11px;background:#fff}
+.card.acc{border-color:var(--tha);background:var(--ths)}
+.ct{font-size:13.4px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.tag{display:inline-block;font-size:10.6px;border-radius:6px;padding:2px 7px;border:1px solid var(--line);background:var(--soft);color:#42566d}
+.tag.ok{border-color:#bfe3d1;background:var(--ok-soft);color:#0f6a45}
+.tag.warn{border-color:#f0dcb2;background:var(--warn-soft);color:#8c5c12}
+.tag.violet{border-color:#d9cdf5;background:var(--violet-soft);color:#543a92}
+.tag.blue{border-color:#c5ddf3;background:#eaf3fb;color:#14568d}
+.tag.gold{border-color:#ecdcb6;background:#fbf6ea;color:#8a6519}
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 13px;font:inherit;font-size:13.4px;cursor:pointer;color:#2b3f57;width:100%;margin-bottom:8px}
+.btn.pri{background:var(--th);border-color:var(--th);color:#fff;font-weight:600}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.btn.ghost{background:transparent}
+.btn.sm{width:auto;padding:6px 11px;font-size:12.2px;margin:0}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.item:last-child{border-bottom:none}
+.item .nm{flex:1;font-size:13.2px}
+.item .sub{font-size:11.2px;color:var(--muted)}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:29px;height:29px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:15px;cursor:pointer;color:var(--navy)}
+.qty span{min-width:20px;text-align:center;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{display:flex;gap:10px;align-items:flex-start}
+.step .dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11.4px;color:var(--muted);flex:0 0 22px;background:#fff}
+.step.on .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.step .tx{font-size:12.6px}
+.step .tx b{display:block;font-size:12.8px}
+.note{border-left:3px solid var(--th);background:var(--ths);padding:9px 11px;border-radius:0 9px 9px 0;font-size:12.2px;margin:0 0 11px}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.note.ok{border-color:var(--ok);background:var(--ok-soft)}
+.note.violet{border-color:var(--violet);background:var(--violet-soft)}
+.mono{font-family:Consolas,monospace;font-size:11.4px}
+.hint{font-size:11.6px;color:var(--muted);margin-top:6px}
+.cat{display:flex;gap:10px;overflow:auto;padding-bottom:6px;margin-bottom:10px}
+.cat button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font:inherit;font-size:12.4px;cursor:pointer;white-space:nowrap}
+.cat button.on{background:var(--th);border-color:var(--th);color:#fff}
+.mitem{display:flex;gap:11px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:9px;margin-bottom:9px}
+.mitem .ph{width:52px;height:52px;border-radius:9px;background:linear-gradient(135deg,var(--tha),var(--th));opacity:.65;flex:0 0 52px}
+.mitem .nm{flex:1}
+.mitem .nm b{font-size:13.2px}
+.mitem .nm div{font-size:11.4px;color:var(--muted)}
+.traybar{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 0 0;margin-top:10px}
+.tot{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+[dir="rtl"] .item,[dir="rtl"] .mitem,[dir="rtl"] .step{flex-direction:row-reverse}
+[dir="rtl"] .ghead{text-align:right}
+#toast{position:fixed;right:22px;bottom:22px;background:#0d2740;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;box-shadow:0 10px 26px rgba(0,0,0,.3);max-width:340px}
+#toast.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="side">
+  <h1>MENNN · Misafir Arayüzü</h1>
+  <p>Misafirin QR okuttuğunda gördüğü ekranlar: minibar kişiselleştirme, oda servisi, QR menü ve QR sipariş. Kullanıcı arayüzü <b>çok dilli</b>; dil tarayıcıdan otomatik algılanır, eşleşmezse İngilizce açılır.</p>
+  <div class="card">
+    <b>Dil desteği</b>
+    <div class="langbar" id="langbar"></div>
+    <div class="hint">Otomatik algılama: <span class="mono" id="autolang"></span></div>
+  </div>
+  <div class="card">
+    <b>Giriş modu</b>
+    <span>Tarayıcı dili <b>navigator.language</b> üzerinden okunur; TR/EN/DE/FR/IT/AR desteklenir, eşleşme yoksa EN uygulanır.</span>
+  </div>
+  <div class="card">
+    <b>Outlet fiyat gösterimi · QR Sipariş modülü ayarı</b>
+    <span>Outlet bazlı anahtardır: açıkken menü öğelerinde fiyat, sepette ara toplam ve adisyon toplamı görünür; kapalıyken ekran fiyatsız (her şey dahil) modda kalır. Adisyon tutarı yalnızca açıkken oluşur.</span>
+    <div class="langbar" style="margin-top:7px">
+      <button id="pmOn" onclick="setPriceMode(true)">FİYAT GÖSTERİMİ AÇIK</button>
+      <button id="pmOff" onclick="setPriceMode(false)">KAPALI</button>
+    </div>
+  </div>
+  <div id="screens"></div>
+  <div class="card">
+    <b>Kural hatırlatması</b>
+    <span>Fiyat kaydı outlete girilebilir. Gösterim kapalıyken tutar gizlenir; üstteki anahtar açılınca menüde, sepette ve adisyon toplamında görünür. Ödeme adımı yoktur. Sipariş önce garson onayına düşer.</span>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pstat"><span id="pTime">21:04</span><span class="mono" id="pRoom">ODA 105 · QR OKUNDU</span><span>▮▮ 84%</span></div>
+  <div id="gheadBox"></div>
+  <div class="gbody" id="screen"></div>
+  <div class="pnav">
+    <button data-s="home" class="on"><span class="ic">⌂</span><span data-t="navHome">Ana</span></button>
+    <button data-s="rs" ><span class="ic">🛏</span><span data-t="navRoom">Oda Servisi</span></button>
+    <button data-s="menu"><span class="ic">🍽</span><span data-t="navMenu">Menü &amp; Sipariş</span></button>
+  </div>
+</div>
+
+<script>
+/* =============== ÇOKLU DİL =============== */
+const DICT = {
+  tr:{navHome:'Ana',navRoom:'Oda Servisi',navMenu:'Menü & Sipariş',
+      hotel:'MERIT ROYAL HOTEL',roomQr:'Oda 105 · QR okundu',welcome:'Hoş geldiniz',
+      subWelcome:'Odadaki hizmetler cihazınızdan yönetilir.',
+      langAuto:'Arayüz diliniz otomatik algılandı',
+      minibar:'Minibar Kişiselleştirme',minibarSub:'Minibar içeriğini isteğinize göre artırın veya azaltın.',
+      oncePerDay:'Bu ayrıcalık oda başına günde en fazla bir kez kullanılabilir.',usedToday:'Bugünkü hakkınız kullanıldı',
+      increase:'Artır',decrease:'Azalt',sendReq:'Talebi Gönder',cancel:'Vazgeç',
+      sentTitle:'Talebiniz iletildi',sentSub:'Kat sorumlusu talebinizi en kısa sürede karşılayacak.',
+      st1:'Talep alındı',st2:'Kat sorumlusu bilgilendirildi',st3:'Hazırlanıyor',st4:'Odanıza bırakıldı',
+      rsTitle:'Oda Servisi',rsSub:'Seçtiğiniz ürünler mutfağa ve oda servisi birimine anında iletilir.',
+      tray:'Sepet',emptyTray:'Sepetiniz boş',send:'Gönder',phoneOpt:'Telefonla teyit opsiyoneldir',
+      rs1:'Talep alındı',rs2:'Mutfağa iletildi',rs3:'Hazırlanıyor',rs4:'Yolda',rs5:'Teslim edildi',
+      menuTitle:'Havuz & Snack Menüsü',menuSub:'Zephyros sahil şeridi · fiyatsız servis',
+      callWaiter:'Garsona Bildir',addOrder:'Siparişe Ekle',allergen:'Alerjen',noAllergen:'Alerjen içermez',
+      orderSent:'Siparişiniz garsona iletildi',orderWait:'Garson masanıza gelip onaylayacak; onaydan sonra mutfağa iletilir.',
+      o1:'Gönderildi',o2:'Garson onayı bekleniyor',o3:'Mutfağa iletildi',o4:'Servis edildi',
+      free:'Fiyatsız · her şey dahil',note1:'Masaya garson çağırabilir veya sipariş verebilirsiniz.'},
+  en:{navHome:'Home',navRoom:'Room Service',navMenu:'Menu & Order',
+      hotel:'MERIT ROYAL HOTEL',roomQr:'ROOM 105 · QR SCANNED',welcome:'Welcome',
+      subWelcome:'All in-room services are managed from this device.',
+      langAuto:'Your language was detected automatically',
+      minibar:'Minibar Personalisation',minibarSub:'Increase or reduce the minibar items to your preference.',
+      oncePerDay:'This privilege may be used once per room per day at most.',usedToday:'Today’s privilege is used',
+      increase:'Increase',decrease:'Reduce',sendReq:'Send Request',cancel:'Cancel',
+      sentTitle:'Request sent',sentSub:'The floor supervisor will fulfil your request shortly.',
+      st1:'Request received',st2:'Floor supervisor notified',st3:'Being prepared',st4:'Delivered to your room',
+      rsTitle:'Room Service',rsSub:'Your selection is sent instantly to the kitchen and the room service unit.',
+      tray:'Tray',emptyTray:'Your tray is empty',send:'Send',phoneOpt:'Phone confirmation is optional',
+      rs1:'Request received',rs2:'Sent to kitchen',rs3:'Preparing',rs4:'On the way',rs5:'Delivered',
+      menuTitle:'Pool & Snack Menu',menuSub:'Zephyros beach line · complimentary service',
+      callWaiter:'Call Waiter',addOrder:'Add to Order',allergen:'Allergens',noAllergen:'No allergens',
+      orderSent:'Your order has been sent to the waiter',orderWait:'A waiter will come to confirm; only then is it sent to the kitchen.',
+      o1:'Sent',o2:'Awaiting waiter approval',o3:'Sent to kitchen',o4:'Served',
+      free:'Complimentary · all inclusive',note1:'Call a waiter to your table or place an order.'},
+  de:{navHome:'Start',navRoom:'Zimmerservice',navMenu:'Karte & Bestellung',
+      hotel:'MERIT ROYAL HOTEL',roomQr:'ZIMMER 105 · QR GELESEN',welcome:'Willkommen',
+      subWelcome:'Alle Leistungen im Zimmer steuern Sie über dieses Gerät.',
+      langAuto:'Ihre Sprache wurde automatisch erkannt',
+      minibar:'Minibar-Personalisierung',minibarSub:'Erhöhen oder reduzieren Sie die Minibar-Inhalte nach Wunsch.',
+      oncePerDay:'Dieses Privileg gilt höchstens einmal pro Zimmer und Tag.',usedToday:'Heutiges Privileg genutzt',
+      increase:'Erhöhen',decrease:'Reduzieren',sendReq:'Anfrage senden',cancel:'Abbrechen',
+      sentTitle:'Anfrage gesendet',sentSub:'Der Etagenverantwortliche erfüllt Ihre Anfrage in Kürze.',
+      st1:'Anfrage erhalten',st2:'Etage informiert',st3:'In Vorbereitung',st4:'Auf Ihr Zimmer gebracht',
+      rsTitle:'Zimmerservice',rsSub:'Ihre Auswahl geht sofort an die Küche und den Zimmerservice.',
+      tray:'Tablett',emptyTray:'Ihr Tablett ist leer',send:'Senden',phoneOpt:'Telefonische Bestätigung ist optional',
+      rs1:'Anfrage erhalten',rs2:'An Küche gesendet',rs3:'In Zubereitung',rs4:'Unterwegs',rs5:'Geliefert',
+      menuTitle:'Pool- & Snackkarte',menuSub:'Zephyros Strandbereich · inklusive Service',
+      callWaiter:'Kellner rufen',addOrder:'Zur Bestellung',allergen:'Allergene',noAllergen:'Keine Allergene',
+      orderSent:'Ihre Bestellung wurde gesendet',orderWait:'Ein Kellner bestätigt; erst dann geht sie an die Küche.',
+      o1:'Gesendet',o2:'Warte auf Bestätigung',o3:'An Küche gesendet',o4:'Serviert',
+      free:'Inklusive · All inclusive',note1:'Rufen Sie einen Kellner oder bestellen Sie direkt.'},
+  fr:{navHome:'Accueil',navRoom:'Service en chambre',navMenu:'Carte & Commande',
+      hotel:'MERIT ROYAL HOTEL',roomQr:'CHAMBRE 105 · QR LU',welcome:'Bienvenue',
+      subWelcome:'Tous les services en chambre se gèrent depuis cet appareil.',
+      langAuto:'Votre langue a été détectée automatiquement',
+      minibar:'Personnalisation du minibar',minibarSub:'Augmentez ou réduisez le contenu du minibar selon votre goût.',
+      oncePerDay:'Ce privilège est valable une fois par chambre et par jour.',usedToday:'Privilège du jour utilisé',
+      increase:'Augmenter',decrease:'Réduire',sendReq:'Envoyer la demande',cancel:'Annuler',
+      sentTitle:'Demande envoyée',sentSub:'Le responsable d’étage va traiter votre demande.',
+      st1:'Demande reçue',st2:'Étage informé',st3:'En préparation',st4:'Déposé dans votre chambre',
+      rsTitle:'Service en chambre',rsSub:'Votre sélection part immédiatement en cuisine et au service en chambre.',
+      tray:'Plateau',emptyTray:'Votre plateau est vide',send:'Envoyer',phoneOpt:'La confirmation téléphonique est facultative',
+      rs1:'Demande reçue',rs2:'Envoyée en cuisine',rs3:'En préparation',rs4:'En route',rs5:'Livrée',
+      menuTitle:'Carte Piscine & Snacks',menuSub:'Ligne de plage Zephyros · service offert',
+      callWaiter:'Appeler le serveur',addOrder:'Ajouter',allergen:'Allergènes',noAllergen:'Sans allergènes',
+      orderSent:'Votre commande a été envoyée',orderWait:'Un serveur viendra confirmer avant l’envoi en cuisine.',
+      o1:'Envoyée',o2:'Attente validation',o3:'Envoyée en cuisine',o4:'Servie',
+      free:'Offert · tout inclus',note1:'Appelez un serveur ou commandez directement.'},
+  it:{navHome:'Home',navRoom:'Servizio in camera',navMenu:'Menù & Ordine',
+      hotel:'MERIT ROYAL HOTEL',roomQr:'CAMERA 105 · QR LETTO',welcome:'Benvenuto',
+      subWelcome:'Tutti i servizi in camera si gestiscono da questo dispositivo.',
+      langAuto:'La tua lingua è stata rilevata automaticamente',
+      minibar:'Personalizzazione del minibar',minibarSub:'Aumenta o riduci il contenuto del minibar secondo le tue preferenze.',
+      oncePerDay:'Questo privilegio vale una volta per camera al giorno.',usedToday:'Privilegio di oggi utilizzato',
+      increase:'Aumenta',decrease:'Riduci',sendReq:'Invia richiesta',cancel:'Annulla',
+      sentTitle:'Richiesta inviata',sentSub:'Il responsabile del piano evaderà la richiesta a breve.',
+      st1:'Richiesta ricevuta',st2:'Responsabile informato',st3:'In preparazione',st4:'Consegnato in camera',
+      rsTitle:'Servizio in camera',rsSub:'La selezione va subito in cucina e al servizio in camera.',
+      tray:'Vassoio',emptyTray:'Il vassoio è vuoto',send:'Invia',phoneOpt:'La conferma telefonica è opzionale',
+      rs1:'Richiesta ricevuta',rs2:'Inviata in cucina',rs3:'In preparazione',rs4:'In consegna',rs5:'Consegnata',
+      menuTitle:'Menù Piscina & Snack',menuSub:'Tratto di spiaggia Zephyros · servizio incluso',
+      callWaiter:'Chiama il cameriere',addOrder:'Aggiungi',allergen:'Allergeni',noAllergen:'Senza allergeni',
+      orderSent:'Il tuo ordine è stato inviato',orderWait:'Un cameriere confermerà prima dell’invio in cucina.',
+      o1:'Inviato',o2:'In attesa di conferma',o3:'Inviato in cucina',o4:'Servito',
+      free:'Incluso · all inclusive',note1:'Chiama un cameriere o ordina direttamente.'},
+  ar:{navHome:'الرئيسية',navRoom:'خدمة الغرف',navMenu:'القائمة والطلب',
+      hotel:'ميريت رويال هوتل',roomQr:'الغرفة 105 · تم قراءة الرمز',welcome:'مرحباً',
+      subWelcome:'يتم إدارة جميع خدمات الغرفة من هذا الجهاز.',
+      langAuto:'تم التعرف على لغتك تلقائياً',
+      minibar:'تخصيص الميني بار',minibarSub:'يمكنك زيادة أو تقليل محتويات الميني بار حسب رغبتك.',
+      oncePerDay:'هذا الامتياز متاح مرة واحدة لكل غرفة يومياً.',usedToday:'تم استخدام امتياز اليوم',
+      increase:'زيادة',decrease:'تقليل',sendReq:'إرسال الطلب',cancel:'إلغاء',
+      sentTitle:'تم إرسال طلبك',sentSub:'سيتولى مسؤول الطابق تنفيذ طلبك قريباً.',
+      st1:'تم استلام الطلب',st2:'تم إبلاغ مسؤول الطابق',st3:'قيد التحضير',st4:'تم التوصيل إلى غرفتك',
+      rsTitle:'خدمة الغرف',rsSub:'يتم إرسال اختيارك فوراً إلى المطبخ وقسم خدمة الغرف.',
+      tray:'سلة الطلبات',emptyTray:'سلتك فارغة',send:'إرسال',phoneOpt:'التأكيد الهاتفي اختياري',
+      rs1:'تم استلام الطلب',rs2:'أُرسل إلى المطبخ',rs3:'قيد التحضير',rs4:'في الطريق',rs5:'تم التوصيل',
+      menuTitle:'قائمة المسبح والوجبات الخفيفة',menuSub:'شاطئ زيفيروس · خدمة مجانية',
+      callWaiter:'استدعاء النادل',addOrder:'أضف إلى الطلب',allergen:'مسببات الحساسية',noAllergen:'خالٍ من مسببات الحساسية',
+      orderSent:'تم إرسال طلبك',orderWait:'سيأتي النادل للتأكيد قبل إرساله إلى المطبخ.',
+      o1:'تم الإرسال',o2:'بانتظار موافقة النادل',o3:'أُرسل إلى المطبخ',o4:'تم التقديم',
+      free:'مجاني · شامل',note1:'يمكنك استدعاء النادل أو تقديم طلب مباشرة.'}
+};
+const LANGS = ['tr','en','de','fr','it','ar'];
+const detect = () => { const l=(navigator.language||'en').slice(0,2).toLowerCase(); return LANGS.includes(l)? l : 'en'; };
+const S = {lang:(new URLSearchParams(location.search).get('lang')||detect()), autolang:(navigator.language||'en'), scr:'home', pers:{}, persSent:false, priceMode:false,
+           tray:{}, orderSent:false, cat:'Soğuk İçecekler'};
+const t = k => (DICT[S.lang]||DICT.en)[k] || DICT.en[k] || k;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const el = id => document.getElementById(id);
+function toast(m){ const x=el('toast'); x.textContent=m; x.classList.add('show'); clearTimeout(x._t); x._t=setTimeout(()=>x.classList.remove('show'),2400); }
+
+/* =============== VERİ (oda konsepti + mutfak menüsü) =============== */
+const ROOM = {no:105, type:'Deluxe Oda', concept:'Yükseltilmiş Konsept',
+  items:[['Doğal Su 0,5 L',2],['Maden Suyu',2],['Kola',3],['Şekersiz Kola',3],['Meyve Suyu',2],['Sütlü Çikolata',2],['Antep Fıstığı',1]]};
+const RS_MENU = [
+  {c:'Kahvaltı', items:[['Serpme Kahvaltı Tabağı','2 kişilik · 07:00–11:00','yumurta, süt, gluten'],['Menemen','domates, biber, yumurta','yumurta'],['Taze Sıkılmış Portakal Suyu','300 ml','yok']]},
+  {c:'Ana Yemek', items:[['Club Sandviç','tavuk, pastırma, patates','gluten, yumurta'],['Izgara Somon','sebze garnitür','balık'],['Penne Arrabbiata','acı domates sos','gluten']]},
+  {c:'Tatlı', items:[['Cheesecake','frambuaz sos','gluten, süt'],['Mevsim Meyveleri','taze kesim','yok']]},
+  {c:'Gece Menüsü', items:[['Mercimek Çorbası','23:00–07:00','yok'],['Kaşarlı Tost','patates cipsi ile','gluten, süt']]}
+];
+const TABLE = {
+  outlet:'Royal Ana Havuz & Pool Bar', hotel:'MERIT ROYAL', table:'Ş-14', theme:{bg:'#0e4c63',accent:'#7fd4d0',soft:'#e6f6f5'},
+  cats:{
+    'Soğuk İçecekler':[['Royal Akik','böğürtlen, nane, limon','yok',240],['Zephyros Cooler','salatalık, tonik, misket limonu','yok',180],['Buzlu Türk Kahvesi','soğuk demleme','süt',160]],
+    'Atıştırmalık':[['Mini Burger Tabağı','dana köfte, cheddar','gluten, süt',320],['Karpuz & Beyaz Peynir','nane yağı, soğuk servis','süt',220],['Nachos & Guacamole','cheddar sos','gluten, süt',190]]
+  }
+};
+
+/* =============== EKRANLAR =============== */
+function ghead(){
+  const room = S.scr!=='menu';
+  const h = room
+    ? {k:t('hotel'), n:ROOM.no+' · '+ROOM.type, s:t('subWelcome')}
+    : {k:TABLE.hotel, n:TABLE.outlet, s:t('menuSub')};
+  return `<div class="ghead"><div class="hotel">${esc(h.k)}</div><h2>${esc(h.n)}</h2><div class="sub">${esc(h.s)}</div></div>`;
+}
+function scHome(){
+  return `
+  <div class="card acc">
+    <div class="ct">${esc(t('welcome'))} <span class="tag">${S.lang.toUpperCase()}</span></div>
+    <div style="font-size:12.6px">${esc(t('langAuto'))} · <span class="mono">${esc(S.autolang)}</span></div>
+    <div class="hint">Menü öğeleri ve açıklamalar seçilen dilde gösterilir; dil üstteki menüden değiştirilebilir.</div>
+  </div>
+  <div class="card" onclick="go('pers')" style="cursor:pointer">
+    <div class="ct">✨ ${esc(t('minibar'))} <span class="tag violet">${esc(ROOM.concept)}</span></div>
+    <div style="font-size:12.6px">${esc(t('minibarSub'))}</div>
+    <div class="hint">${esc(t('oncePerDay'))}</div>
+  </div>
+  <div class="card" onclick="go('rs')" style="cursor:pointer">
+    <div class="ct">🛏 ${esc(t('rsTitle'))}</div>
+    <div style="font-size:12.6px">${esc(t('rsSub'))}</div>
+  </div>
+  <div class="card" onclick="go('menu')" style="cursor:pointer">
+    <div class="ct">🍽 ${esc(t('menuTitle'))} <span class="tag gold">${S.priceMode?esc(S.lang==='tr'?'Fiyat gösterimi açık':'Prices on'):esc(t('free'))}</span></div>
+    <div style="font-size:12.6px">${esc(t('menuSub'))}</div>
+    <div class="hint">${esc(t('note1'))}</div>
+  </div>
+  <div class="note">Siparişler önce <b>${esc(S.lang==='tr'?'garsonun ön onayına':'the waiter’s approval')}</b> düşer; onaylanmadan mutfağa iletilmez.</div>`;
+}
+function scPers(){
+  const total=Object.values(S.pers).reduce((a,b)=>a+b,0);
+  return `
+  <div class="card acc">
+    <div class="ct">✨ ${esc(t('minibar'))}</div>
+    <div style="font-size:12.6px">${esc(ROOM.concept)} · ${ROOM.no} · ${esc(t('oncePerDay'))}</div>
+  </div>
+  ${S.persSent? persStatus() : `
+  <div class="card">
+    <div class="ct">${esc(t('minibarSub'))}</div>
+    ${ROOM.items.map(([nm,q])=>`
+      <div class="item"><div class="nm">${esc(nm)}<div class="sub">${esc(S.lang==='tr'?'konsept adedi':'concept qty')}: ${q}</div></div>
+        <div class="qty"><button onclick="pq('${esc(nm)}',-1)">−</button><span>${S.pers[nm]>0?'+':''}${S.pers[nm]||0}</span><button onclick="pq('${esc(nm)}',1)">+</button></div>
+      </div>`).join('')}
+    <div class="hint">“−” ürünü konseptten çıkarır, “+” adedi artırır. Toplam değişiklik: <b>${total}</b></div>
+  </div>
+  <button class="btn pri" onclick="sendPers()">${esc(t('sendReq'))}</button>
+  <button class="btn ghost" onclick="S.pers={};render()">${esc(t('cancel'))}</button>
+  <div class="note violet">Talebiniz gönderildiğinde <b>kat sorumlusu, depo sorumlusu ve yönetici</b> ekranına anında bildirim düşer.</div>`}`;
+}
+function pq(nm,d){ S.pers[nm]=(S.pers[nm]||0)+d; if(!S.pers[nm]) delete S.pers[nm]; render(); }
+function sendPers(){
+  if(!Object.keys(S.pers).length){ toast(S.lang==='tr'?'Değişiklik seçmediniz.':'No changes selected.'); return; }
+  S.persSent=true; render(); toast(S.lang==='tr'?'Talebiniz gönderildi.':'Request sent.');
+}
+function persStatus(){
+  const st=[t('st1'),t('st2'),t('st3'),t('st4')];
+  return `
+  <div class="card" style="border-color:#bfe3d1;background:var(--ok-soft)">
+    <div class="ct">✓ ${esc(t('sentTitle'))}</div>
+    <div style="font-size:12.6px">${esc(t('sentSub'))}</div>
+  </div>
+  <div class="card">
+    <div class="ct">${esc(S.lang==='tr'?'Talep durumu':'Request status')}</div>
+    <div class="steps">
+      ${st.map((s,i)=>`<div class="step ${i<2?'on':''}"><div class="dot">${i<2?'✓':i+1}</div>
+        <div class="tx"><b>${esc(s)}</b>${i===0?'<span class="mono">08:41</span>':i===1?'<span class="mono">08:41</span>':''}</div></div>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">${esc(S.lang==='tr'?'Gönderdiğiniz değişiklikler':'Your changes')}</div>
+    ${Object.entries(S.pers).map(([n,v])=>`<div class="item"><div class="nm">${esc(n)}</div>
+      <div style="font-weight:700;color:${v>0?'var(--ok)':'var(--warn)'}">${v>0?'+':''}${v}</div></div>`).join('')}
+    <div class="hint">${esc(t('usedToday'))} · ${esc(S.lang==='tr'?'günde 1 hak':'once per day')}</div>
+  </div>
+  <button class="btn ghost" onclick="S.persSent=false;S.pers={};render()">${esc(t('navHome'))}</button>`;
+}
+function scRs(){
+  const total=Object.values(S.tray).reduce((a,b)=>a+b,0);
+  return `
+  <div class="card acc"><div class="ct">🛏 ${esc(t('rsTitle'))}</div>
+    <div style="font-size:12.6px">${esc(t('rsSub'))}</div>
+    <div class="hint">${esc(t('phoneOpt'))}</div></div>
+  ${RS_MENU.map(g=>`<div class="card">
+    <div class="ct">${esc(g.c)}</div>
+    ${g.items.map(([n,d,a])=>`<div class="item"><div class="nm"><b>${esc(n)}</b><div class="sub">${esc(d)} · ${esc(t('allergen'))}: ${esc(a)}</div></div>
+      <div class="qty"><button onclick="tq('${esc(n)}',-1)">−</button><span>${S.tray[n]||0}</span><button onclick="tq('${esc(n)}',1)">+</button></div></div>`).join('')}
+  </div>`).join('')}
+  <div class="traybar">
+    <div class="tot"><span>${esc(t('tray'))}</span><b>${total} ${esc(S.lang==='ar'?'عنصر':'adet')}</b></div>
+    ${total?`<button class="btn ok" onclick="sendRs()">${esc(t('send'))} · ${total}</button>`:`<div class="hint">${esc(t('emptyTray'))}</div>`}
+  </div>
+  ${S.orderSent? rsStatus() : ''}`;
+}
+function tq(nm,d){ S.tray[nm]=(S.tray[nm]||0)+d; if(!S.tray[nm]) delete S.tray[nm]; render(); }
+function sendRs(){ S.orderSent=true; render(); toast(S.lang==='tr'?'Oda servisi talebi iletildi.':'Room service request sent.'); }
+function rsStatus(){
+  const st=[t('rs1'),t('rs2'),t('rs3'),t('rs4'),t('rs5')];
+  return `<div class="card">
+    <div class="ct">✓ ${esc(t('sentTitle'))}</div>
+    <div class="steps">
+      ${st.map((s,i)=>`<div class="step ${i<2?'on':''}"><div class="dot">${i<2?'✓':i+1}</div><div class="tx"><b>${esc(s)}</b></div></div>`).join('')}
+    </div>
+    <div class="hint">${esc(S.lang==='tr'?'Talep mutfak yazıcısına ve oda servisi ekranına anlık iletildi.':'Sent instantly to the kitchen printer and room-service screen.')}</div>
+  </div>`;
+}
+function itemPrice(name){
+  const lists=Object.values(TABLE.cats);
+  for(let i=0;i<lists.length;i++){
+    const hit=lists[i].find(x=>x[0]===name);
+    if(hit) return hit[3]||0;
+  }
+  return 0;
+}
+function trayTotal(){
+  return Object.entries(S.tray).reduce((a,kv)=>a+itemPrice(kv[0])*(kv[1]||0),0);
+}
+function scMenu(){
+  const cats=Object.keys(TABLE.cats);
+  const items=TABLE.cats[S.cat]||[];
+  const trayN=Object.values(S.tray).reduce((a,b)=>a+b,0);
+  return `
+  <div class="cat">${cats.map(c=>`<button class="${c===S.cat?'on':''}" onclick="S.cat='${esc(c)}';render()">${esc(c)}</button>`).join('')}</div>
+  ${items.map(([n,d,a,p])=>`<div class="mitem">
+    <div class="ph"></div>
+    <div class="nm"><b>${esc(n)}</b><div>${esc(d)}</div>
+      <div style="margin-top:4px">${a==='yok'?'<span class="tag ok">'+esc(t('noAllergen'))+'</span>':'<span class="tag warn">'+esc(t('allergen'))+': '+esc(a)+'</span>'}
+      ${S.priceMode?'<span class="tag">'+Number(p).toLocaleString('tr-TR')+' EUR</span>':'<span class="tag gold">'+esc(t('free'))+'</span>'}</div></div>
+    <div class="qty"><button onclick="tq('${esc(n)}',1)">+</button></div>
+  </div>`).join('')}
+  <button class="btn" onclick="toast(S.lang==='tr'?'Garson masanıza yönlendirildi.':'A waiter has been dispatched to your table.')">🛎 ${esc(t('callWaiter'))}</button>
+  <div class="traybar">
+    <div class="tot"><span>${esc(t('tray'))}</span><b>${trayN} ${esc(S.lang==='ar'?'عنصر':'adet')}${S.priceMode&&trayN?' · '+trayTotal().toLocaleString('tr-TR')+' EUR':''}</b></div>
+    ${trayN?`<button class="btn pri" onclick="sendOrder()">${esc(t('addOrder'))} → ${esc(t('send'))}</button>`:''}
+  </div>
+  ${S.orderSent? orderStatus() : ''}`;
+}
+function sendOrder(){
+  S.orderSent=true; render();
+  toast(S.lang==='tr'?'Sipariş garsona iletildi · ön onay bekleniyor.':'Order sent to waiter · awaiting approval.');
+}
+function orderStatus(){
+  const st=[t('o1'),t('o2'),t('o3'),t('o4')];
+  return `<div class="card" style="border-color:#c5ddf3;background:#eaf3fb">
+    <div class="ct">✓ ${esc(t('orderSent'))}</div>
+    <div style="font-size:12.6px">${esc(t('orderWait'))}</div>
+    <div class="steps" style="margin-top:9px">
+      ${st.map((s,i)=>`<div class="step ${i<2?'on':''}"><div class="dot">${i<2?'✓':i+1}</div><div class="tx"><b>${esc(s)}</b></div></div>`).join('')}
+    </div>
+    ${S.priceMode&&trayTotal()?`<div style="margin-top:10px;border-top:1px dashed #b9d3e6;padding-top:9px">
+      <div class="tot"><span>${S.lang==='tr'?'Adisyon toplamı':'Bill total'}</span><b>${trayTotal().toLocaleString('tr-TR')} EUR</b></div>
+      <div class="hint">${S.lang==='tr'?'Gösterim açıkken adisyon toplamı basılır. Bu tutar ödeme değildir.':'The bill total is shown while price display is on. It is not a payment.'}</div>
+    </div>`:''}
+  </div>`;
+}
+/* =============== YÖNLENDİRİCİ =============== */
+const SCREENS={home:{t:'',f:scHome},pers:{t:'',f:scPers},rs:{t:'',f:scRs},menu:{t:'',f:scMenu}};
+function go(s){ S.scr=s; render(); }
+function setPriceMode(v){ S.priceMode=v; render(); toast(v ? 'Fiyat gösterimi AÇIK · fiyatlar, ara toplam ve adisyon toplamı görünür' : 'Fiyat gösterimi KAPALI · fiyatsız (her şey dahil) mod'); }
+function render(){
+  document.documentElement.lang=S.lang;
+  document.documentElement.dir = S.lang==='ar' ? 'rtl' : 'ltr';
+  el('gheadBox').innerHTML = ghead();
+  el('screen').innerHTML = (SCREENS[S.scr]||SCREENS.home).f();
+  el('pRoom').textContent = S.scr==='menu' ? (S.lang==='tr'?'MASA Ş-14 · QR OKUNDU':'TABLE Ş-14 · QR SCANNED') : t('roomQr');
+  document.querySelectorAll('.pnav button').forEach(b=>b.classList.toggle('on', (b.dataset.s===S.scr) || (b.dataset.s==='rs'&&S.scr==='rs')));
+  document.querySelectorAll('.pnav button span[data-t]').forEach(sp=>sp.textContent=t(sp.dataset.t));
+  el('langbar').innerHTML = LANGS.map(l=>`<button class="${l===S.lang?'on':''}" onclick="S.lang='${l}';render()">${l.toUpperCase()}</button>`).join('');
+  el('autolang').textContent = S.autolang + ' → ' + S.lang.toUpperCase();
+  document.body.setAttribute('data-scr', S.scr);
+  var pm=document.getElementById('pmOn'), pf=document.getElementById('pmOff');
+  if(pm&&pf){ pm.classList.toggle('on',S.priceMode); pf.classList.toggle('on',!S.priceMode); }
+}
+document.querySelectorAll('.pnav button').forEach(b=>b.onclick=()=>go(b.dataset.s));
+el('screens').innerHTML = '<div class="card"><b>Ekranlar</b></div>' + [
+  ['home','Ana ekran (dil algılama)'], ['pers','Minibar kişiselleştirme'],
+  ['rs','Oda servisi menüsü'], ['menu','QR menü + QR sipariş']
+].map(([k,v])=>'<button class="sbtn'+(k==='home'?' on':'')+'" onclick="go(\''+k+'\')">'+v+'</button>').join('');
+render();
+</script>
+<div id="toast"></div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+import { describe, expect, it } from "vitest";
+import { AMBIENCES, DESIGN_TEMPLATES, designFromStored, NEUTRAL_NEW_OPTIONS, templatePreset } from "@/modules/menu/design";
+
+describe("yeni tasarım seçenekleri", () => {
+  it("boş seçenekli kayıt şablonun yeni alanlarını kullanır", () => {
+    expect(designFromStored({ template: "GOURMET", options: {} }).options).toMatchObject({
+      typography: "EDITORIAL",
+      density: "AIRY",
+    });
+  });
+
+  it("kayıtlı eski seçenekte eksik yeni anahtarlar nötr varsayılana düşer", () => {
+    const { options } = designFromStored({ template: "GRANDE", options: { cardStyle: "LIST", showPrices: false } });
+    expect(options).toMatchObject(NEUTRAL_NEW_OPTIONS);
+    expect(options.showPrices).toBe(false);
+  });
+
+  it("bozuk yeni değerler nötre düşer", () => {
+    const { options } = designFromStored({
+      template: "GOURMET",
+      options: { cardStyle: "LIST", typography: "COMIC", density: 7, hero: "X", heroImageUrl: 42, curatedPhotos: "yes" },
+    });
+    expect(options).toMatchObject(NEUTRAL_NEW_OPTIONS);
+  });
+
+  it("heroImageUrl yalnız /uploads/ ile başlıyorsa korunur", () => {
+    const stored = (heroImageUrl: unknown) =>
+      designFromStored({ template: "ROYAL", options: { cardStyle: "LIST", heroImageUrl } }).options.heroImageUrl;
+    expect(stored("/uploads/menu/a.webp")).toBe("/uploads/menu/a.webp");
+    expect(stored("https://evil.example/x.png")).toBe("");
+    expect(stored(`/uploads/${"a".repeat(300)}`)).toBe("");
+  });
+});
+
+describe("designFromStored", () => {
+  it("boş kayıt Royal şablonuna düşer", () => {
+    expect(designFromStored(null)).toMatchObject({
+      template: "ROYAL",
+      layout: ["hero", "categories", "items"],
+      options: { cardStyle: "LIST", showImages: true, showAllergens: true },
+    });
+  });
+
+  it("boş seçenekler şablonun hazır ayarını kullanır", () => {
+    expect(designFromStored({ template: "GOURMET", options: {} }).options).toMatchObject({
+      cardStyle: "LIST",
+      showImages: false,
+      uppercaseCategories: true,
+    });
+  });
+
+  it("kayıtlı geçerli düzeni korur, bozuk değeri şablona düşürür", () => {
+    const design = designFromStored({
+      template: "POOL_CLUB",
+      layout: ["categories", "hero", "items"],
+      options: { cardStyle: "NOPE", showPrices: false, featuredTitle: "  Şef  " },
+    });
+    expect(design.layout).toEqual(["categories", "hero", "items"]);
+    expect(design.options.cardStyle).toBe("PHOTO");
+    expect(design.options.showPrices).toBe(false);
+    expect(design.options.featuredTitle).toBe("Şef");
+  });
+
+  it("kategori gezintisi ürünlerin altına düşerse otomatik olarak başa alınır", () => {
+    const design = designFromStored({
+      template: "POOL_CLUB",
+      layout: ["items", "hero", "categories"],
+    });
+    expect(design.layout).toEqual(["hero", "categories", "items"]);
+  });
+
+  it("şablon hazır düzeni kategori gezintisini üste koyar", () => {
+    expect(templatePreset("PATISSERIE")).toMatchObject({
+      ambience: "CAFE",
+      template: "PATISSERIE",
+      options: { cardStyle: "PHOTO" },
+      layout: ["hero", "categories", "items"],
+    });
+  });
+
+  it("tüm ambiyanslar en az 3 farklı tasarım şablonuna sahiptir", () => {
+    for (const amb of AMBIENCES) {
+      const matching = DESIGN_TEMPLATES.filter((t) => t.ambience === amb.id);
+      expect(
+        matching.length,
+        `Ambiyans "${amb.label}" (${amb.id}) en az 3 şablona sahip olmalı, bulunan: ${matching.length}`,
+      ).toBeGreaterThanOrEqual(3);
+
+      // Farklı yerleşim ve görsel seçenekleri kontrolü
+      const styles = new Set(matching.map((t) => t.options.cardStyle));
+      expect(styles.size, `Ambiyans "${amb.label}" birden fazla kart stili sunmalı`).toBeGreaterThanOrEqual(2);
+    }
+  });
+});

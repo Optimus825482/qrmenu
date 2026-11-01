@@ -7,7 +7,7 @@ test.describe.configure({ mode: "serial" });
 test.use({ locale: "tr-TR" });
 
 const M1 = "/q/e2e-guest-m1";
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 
 test.beforeAll(() => {
   resetAndSeed({ guestMenu: true });
@@ -87,7 +87,8 @@ test("seçim ekle, gönder, durum sayfası, yenile ve garson çağır", async ({
   await page.getByRole("link", { name: "Menüye dön" }).click();
   await expect(page).toHaveURL(new RegExp(`${M1}$`));
   await page.getByRole("button", { name: "Garson çağır" }).click();
-  await page.getByRole("button", { name: "Garson", exact: true }).click();
+  const callSheet = page.getByRole("dialog", { name: "Size nasıl yardımcı olalım?" });
+  await callSheet.getByRole("button", { name: "Sadece çağır" }).click();
   await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toHaveCount(0, { timeout: 6_000 }); // gone after ~3 s
 });

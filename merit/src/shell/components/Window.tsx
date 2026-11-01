@@ -61,6 +61,8 @@ const MENU_NAMES: MenuName[] = ["Dosya", "Görünüm", "Yardım"];
 
 type MenuName = "Dosya" | "Görünüm" | "Yardım";
 
+type ResizeDirection = "e" | "w" | "s" | "n" | "se" | "sw" | "ne" | "nw";
+
 type Props = { id: string; hotels: HotelInfo[]; userName: string };
 
 /**
@@ -112,9 +114,9 @@ export function Window({ id, hotels, userName }: Props) {
       close: () => windowStore.getState().close(id),
       setStatus: (text: string) => setStatusText(text),
       setDirty: (value: boolean) => setDirty(value),
-      openApp: (appId: string, opts?: { hotelId?: string; panel?: string }) => {
+      openApp: (appId: string, opts?: { hotelId?: string; panel?: string; outletId?: string }) => {
         const store = windowStore.getState();
-        const opened = store.open(appId, { hotelId: opts?.hotelId, initialPanel: opts?.panel });
+        const opened = store.open(appId, { hotelId: opts?.hotelId, initialPanel: opts?.panel, initialOutletId: opts?.outletId });
         if (opened === null && store.order.length >= MAX_WINDOWS) {
           void alertDialog({
             title: "Pencere sınırı",
@@ -171,44 +173,69 @@ export function Window({ id, hotels, userName }: Props) {
     bar.addEventListener("pointercancel", onUp);
   };
 
-  const startResize = (e: ReactPointerEvent<HTMLDivElement>) => {
+  const startResize = (e: ReactPointerEvent<HTMLDivElement>, dir: ResizeDirection = "se") => {
     if (e.button !== 0) return;
     const el = ref.current;
     if (!el) return;
     e.preventDefault();
     e.stopPropagation();
-    const grip = e.currentTarget;
-    grip.setPointerCapture(e.pointerId);
+    const handle = e.currentTarget;
+    handle.setPointerCapture(e.pointerId);
     const vp = effectiveViewport(windowStore.getState());
     const min = minSize(app);
-    const start = { px: e.clientX, py: e.clientY, w: win.w, h: win.h };
-    let next = { w: win.w, h: win.h };
+    const start = { px: e.clientX, py: e.clientY, w: win.w, h: win.h, x: win.x, y: win.y };
+    let next = { w: win.w, h: win.h, x: win.x, y: win.y };
     let frame = 0;
     const onMove = (ev: PointerEvent) => {
-      next = {
-        w: Math.max(min.w, Math.min(start.w + ev.clientX - start.px, vp.w - win.x)),
-        h: Math.max(min.h, Math.min(start.h + ev.clientY - start.py, deskHeight(vp) - win.y)),
-      };
+      const dx = ev.clientX - start.px;
+      const dy = ev.clientY - start.py;
+      let nw = start.w;
+      let nh = start.h;
+      let nx = start.x;
+      let ny = start.y;
+
+      if (dir.includes("e")) {
+        nw = Math.max(min.w, Math.min(start.w + dx, vp.w - start.x));
+      }
+      if (dir.includes("w")) {
+        const proposedW = start.w - dx;
+        nw = Math.max(min.w, Math.min(proposedW, start.x + start.w));
+        nx = start.x + (start.w - nw);
+      }
+      if (dir.includes("s")) {
+        nh = Math.max(min.h, Math.min(start.h + dy, deskHeight(vp) - start.y));
+      }
+      if (dir.includes("n")) {
+        const proposedH = start.h - dy;
+        nh = Math.max(min.h, Math.min(proposedH, start.y + start.h));
+        ny = start.y + (start.h - nh);
+      }
+
+      next = { w: nw, h: nh, x: nx, y: ny };
       if (!frame) {
         frame = requestAnimationFrame(() => {
           frame = 0;
           el.style.width = `${next.w}px`;
           el.style.height = `${next.h}px`;
+          el.style.left = `${next.x}px`;
+          el.style.top = `${next.y}px`;
         });
       }
     };
     const onUp = () => {
       cancelAnimationFrame(frame);
-      grip.removeEventListener("pointermove", onMove);
-      grip.removeEventListener("pointerup", onUp);
-      grip.removeEventListener("pointercancel", onUp);
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onUp);
+      handle.removeEventListener("pointercancel", onUp);
       el.style.width = `${next.w}px`;
       el.style.height = `${next.h}px`;
-      windowStore.getState().resize(id, next.w, next.h);
+      el.style.left = `${next.x}px`;
+      el.style.top = `${next.y}px`;
+      windowStore.getState().setBounds(id, next.x, next.y, next.w, next.h);
     };
-    grip.addEventListener("pointermove", onMove);
-    grip.addEventListener("pointerup", onUp);
-    grip.addEventListener("pointercancel", onUp);
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
+    handle.addEventListener("pointercancel", onUp);
   };
 
   const menus: Record<MenuName, MenuItem[]> = {
@@ -243,7 +270,7 @@ export function Window({ id, hotels, userName }: Props) {
     body = (
       <AppErrorBoundary key={reloadKey}>
         <Suspense fallback={<div className="xp-app-loading">Yükleniyor…</div>}>
-          <AppHost app={app} props={{ ...appProps, hotelId: win.hotelId, initialPanel: win.initialPanel }} />
+          <AppHost app={app} props={{ ...appProps, hotelId: win.hotelId, initialPanel: win.initialPanel, initialOutletId: win.initialOutletId }} />
         </Suspense>
       </AppErrorBoundary>
     );
@@ -334,7 +361,17 @@ export function Window({ id, hotels, userName }: Props) {
         Otel: {hotel?.name ?? "—"} · Kullanıcı: {userName} · {status}
       </div>
       {resizable && !win.maximized ? (
-        <div className="xp-resize-grip" aria-hidden="true" onPointerDown={startResize} />
+        <>
+          <div className="xp-resize-handle is-e" data-testid="resize-handle-e" aria-hidden="true" onPointerDown={(e) => startResize(e, "e")} />
+          <div className="xp-resize-handle is-w" data-testid="resize-handle-w" aria-hidden="true" onPointerDown={(e) => startResize(e, "w")} />
+          <div className="xp-resize-handle is-s" data-testid="resize-handle-s" aria-hidden="true" onPointerDown={(e) => startResize(e, "s")} />
+          <div className="xp-resize-handle is-n" data-testid="resize-handle-n" aria-hidden="true" onPointerDown={(e) => startResize(e, "n")} />
+          <div className="xp-resize-handle is-se" aria-hidden="true" onPointerDown={(e) => startResize(e, "se")} />
+          <div className="xp-resize-handle is-sw" aria-hidden="true" onPointerDown={(e) => startResize(e, "sw")} />
+          <div className="xp-resize-handle is-ne" aria-hidden="true" onPointerDown={(e) => startResize(e, "ne")} />
+          <div className="xp-resize-handle is-nw" aria-hidden="true" onPointerDown={(e) => startResize(e, "nw")} />
+          <div className="xp-resize-grip" aria-hidden="true" onPointerDown={(e) => startResize(e, "se")} />
+        </>
       ) : null}
       {menu ? (
         <ContextMenu

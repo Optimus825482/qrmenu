@@ -47,14 +47,14 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
 
   const toggle = async (item: HotelModuleState, enabled: boolean) => {
     const label = MODULE_LABELS[item.moduleKey];
-    if (!enabled) {
-      const yes = await confirm({
-        title: `${label} modülünü kapat`,
-        message: `${label} bu otelde kapatılsın mı? Modülü kullanan personel ve ekranlar erişimini kaybeder.`,
-        danger: true,
-      });
-      if (!yes) return;
-    }
+    const yes = await confirm({
+      title: `${label} modülünü güncelle`,
+      message: enabled
+        ? `${label} modülü bu otelde açılsın mı?`
+        : `${label} bu otelde kapatılsın mı? Modülü kullanan personel ve ekranlar erişimini kaybeder.`,
+      danger: true,
+    });
+    if (!yes) return;
     setBusy(item.moduleKey);
     try {
       const result = await setHotelModuleAction({ hotelId, moduleKey: item.moduleKey, enabled });
@@ -62,6 +62,7 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
         setModules((current) =>
           current.map((m) => (m.moduleKey === item.moduleKey ? result.data : m)),
         );
+        await alertDialog({ title: "İşlem tamamlandı", message: `“${label}” modülü güncellendi.` });
       } else {
         void alertDialog({ title: "Modül değiştirilemedi", message: result.error.message });
       }

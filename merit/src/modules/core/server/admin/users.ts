@@ -7,6 +7,8 @@ import { DomainError } from "@/lib/result";
 import { assertCan, can } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
+import { USER_JOB_TITLES } from "@/modules/core/jobTitles";
+import { suggestedUsername } from "@/modules/core/usernames";
 import {
   uniqueConflictFromPrisma,
   listQuerySchema,
@@ -33,6 +35,7 @@ export type UserRow = {
   id: string;
   username: string;
   fullName: string;
+  jobTitle: string | null;
   email: string | null;
   phone: string | null;
   roleId: string;
@@ -47,6 +50,7 @@ export type UserRow = {
   hotelNames: string[];
   supervisorId: string | null;
   isActive: boolean;
+  mustChangePassword: boolean;
   lastLoginAt: string | null;
 };
 
@@ -55,6 +59,7 @@ const SELECT = {
   id: true,
   username: true,
   fullName: true,
+  jobTitle: true,
   email: true,
   phone: true,
   roleId: true,
@@ -67,6 +72,8 @@ const SELECT = {
   },
   supervisorId: true,
   isActive: true,
+  mustChangePassword: true,
+  deletedAt: true,
   lastLoginAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -78,6 +85,7 @@ function toRow(user: UserWithRelations): UserRow {
     id: user.id,
     username: user.username,
     fullName: user.fullName,
+    jobTitle: user.jobTitle,
     email: user.email,
     phone: user.phone,
     roleId: user.roleId,
@@ -89,6 +97,7 @@ function toRow(user: UserWithRelations): UserRow {
     hotelNames: [...(user.hotel ? [user.hotel.name] : []), ...extras.map((l) => l.hotel.name)],
     supervisorId: user.supervisorId,
     isActive: user.isActive,
+    mustChangePassword: user.mustChangePassword,
     lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
   };
 }
@@ -126,6 +135,7 @@ const profileFields = {
     .max(40, "En fazla 40 karakter olabilir")
     .regex(/^[A-Za-z0-9._-]+$/, "Yalnızca harf, rakam, nokta, tire ve alt çizgi kullanın"),
   fullName: z.string("Ad soyad gerekli").trim().min(1, "Ad soyad gerekli").max(100, "En fazla 100 karakter olabilir"),
+  jobTitle: z.string().trim().max(100, "En fazla 100 karakter olabilir").default(""),
   email: optionalText(120).refine(
     (v) => v === undefined || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
     "Geçerli bir e-posta girin",
@@ -139,12 +149,25 @@ const profileFields = {
 
 export const createUserSchema = z.object({ ...profileFields, password: passwordField });
 export const updateUserSchema = z.object(profileFields);
+const onboardingSchema = z.object({
+  username: profileFields.username.optional(),
+  fullName: profileFields.fullName,
+  jobTitle: z.string().trim().min(1, "Görev gerekli").max(100, "En fazla 100 karakter olabilir"),
+  email: z.string().trim().min(1, "E-posta adresi gerekli").max(120).refine((v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "Geçerli bir e-posta girin"),
+  phone: optionalText(30).refine((v) => v === undefined || (v.match(/\d/g)?.length ?? 0) >= 7, "Geçerli bir telefon numarası girin"),
+  roleId: profileFields.roleId,
+  hotelId: profileFields.hotelId,
+  hotelIds: profileFields.hotelIds,
+});
 export type CreateUserInput = z.input<typeof createUserSchema>;
 export type UpdateUserInput = z.input<typeof updateUserSchema>;
+export type OnboardingUserInput = z.input<typeof onboardingSchema>;
+export type CreatedUserCredentials = { user: UserRow; temporaryPassword: string };
 
 export const userListQuerySchema = listQuerySchema.extend({
   roleId: z.string().min(1).optional(),
   hotelId: z.string().min(1).optional(),
+  jobTitle: z.string().min(1).optional(),
   active: z.boolean().optional(),
 });
 export type UserListQuery = z.input<typeof userListQuerySchema>;
@@ -152,7 +175,11 @@ export type UserListQuery = z.input<typeof userListQuerySchema>;
 const ORDER = {
   username: (dir: "asc" | "desc") => ({ username: dir }),
   fullName: (dir: "asc" | "desc") => ({ fullName: dir }),
+  jobTitle: (dir: "asc" | "desc") => ({ jobTitle: dir }),
+  phone: (dir: "asc" | "desc") => ({ phone: dir }),
+  email: (dir: "asc" | "desc") => ({ email: dir }),
   role: (dir: "asc" | "desc") => ({ role: { name: dir } }),
+  hotels: (dir: "asc" | "desc") => ({ hotel: { name: dir } }),
   isActive: (dir: "asc" | "desc") => ({ isActive: dir }),
   lastLoginAt: (dir: "asc" | "desc") => ({ lastLoginAt: dir }),
 };
@@ -194,7 +221,7 @@ async function assertCanManage(
   ctx: Ctx,
   target: { id: string; role: { kind: RoleKind }; hotelId: string | null; userHotels: { hotelId: string }[] },
   action: "D",
-  op: "update" | "setPassword" | "setActive",
+  op: "update" | "setPassword" | "setActive" | "delete",
 ): Promise<void> {
   if (isSystem(ctx)) return;
   if (target.role.kind === "SISTEM") {
@@ -279,6 +306,7 @@ export async function list(ctx: Ctx, rawQuery: UserListQuery): Promise<Page<User
     OR: [{ hotelId: { in: ids } }, { userHotels: { some: { hotelId: { in: ids } } } }],
   });
   const and: Prisma.UserWhereInput[] = [];
+  and.push({ deletedAt: null });
   if (scope) and.push(inHotels(scope), { role: { kind: { not: "SISTEM" } } });
   if (query.hotelId) and.push(inHotels([query.hotelId]));
   if (query.q) {
@@ -286,11 +314,14 @@ export async function list(ctx: Ctx, rawQuery: UserListQuery): Promise<Page<User
       OR: [
         { username: { contains: query.q, mode: "insensitive" } },
         { fullName: { contains: query.q, mode: "insensitive" } },
+        { jobTitle: { contains: query.q, mode: "insensitive" } },
         { email: { contains: query.q, mode: "insensitive" } },
+        { phone: { contains: query.q, mode: "insensitive" } },
       ],
     });
   }
   if (query.roleId) and.push({ roleId: query.roleId });
+  if (query.jobTitle) and.push({ jobTitle: query.jobTitle });
   if (query.active !== undefined) and.push({ isActive: query.active });
   const where: Prisma.UserWhereInput = and.length > 0 ? { AND: and } : {};
 
@@ -307,19 +338,20 @@ export async function list(ctx: Ctx, rawQuery: UserListQuery): Promise<Page<User
 }
 
 export type UserOptions = {
-  roles: { id: string; code: string; name: string; kind: RoleKind }[];
+  roles: { id: string; code: string; name: string; kind: RoleKind; defaultScreen: string | null; defaultScreenName: string | null }[];
   hotels: { id: string; code: string; name: string }[];
+  jobTitles: string[];
 };
 
 /** The roles the actor may assign and the hotels the actor may grant: the form's select lists. */
 export async function options(ctx: Ctx): Promise<UserOptions> {
   await assertCan(ctx, SCREEN, "V");
   const scope = await scopeHotels(ctx, "O");
-  const [roles, hotels] = await Promise.all([
+  const [roles, hotels, savedJobTitles] = await Promise.all([
     prisma.role.findMany({
       // Only SISTEM may assign SISTEM and YONETIM roles (assertCanAssign): do not offer what is refused.
       where: isSystem(ctx) ? {} : { kind: { notIn: ["SISTEM", "YONETIM"] } },
-      select: { id: true, code: true, name: true, kind: true },
+      select: { id: true, code: true, name: true, kind: true, defaultScreen: true },
       orderBy: [{ name: "asc" }],
     }),
     prisma.hotel.findMany({
@@ -327,14 +359,73 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
       select: { id: true, code: true, name: true },
       orderBy: [{ isSystemDefault: "desc" }, { createdAt: "asc" }, { code: "asc" }],
     }),
+    prisma.user.findMany({
+      where: {
+        jobTitle: { not: "" },
+        deletedAt: null,
+        role: { kind: { not: "SISTEM" } },
+        ...(scope ? { OR: [{ hotelId: { in: scope } }, { userHotels: { some: { hotelId: { in: scope } } } }] } : {}),
+      },
+      select: { jobTitle: true },
+      distinct: ["jobTitle"],
+      orderBy: { jobTitle: "asc" },
+    }),
   ]);
-  return { roles, hotels };
+  const screens = await prisma.appScreen.findMany({
+    where: { code: { in: roles.flatMap((role) => role.defaultScreen ? [role.defaultScreen] : []) } },
+    select: { code: true, name: true },
+  });
+  const screenNames = new Map(screens.map((screen) => [screen.code, screen.name]));
+  return {
+    roles: roles.map((role) => ({ ...role, defaultScreenName: role.defaultScreen ? screenNames.get(role.defaultScreen) ?? role.defaultScreen : null })),
+    hotels,
+    jobTitles: [...new Set([...USER_JOB_TITLES, ...savedJobTitles.map(({ jobTitle }) => jobTitle).filter((title): title is string => !!title)])].sort((a, b) => a.localeCompare(b, "tr")),
+  };
 }
 
 // --- writes -------------------------------------------------------------------------------------
 
-export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
-  const input = parseInput(createUserSchema, raw);
+function generatedUsernameBase(fullName: string): string {
+  return suggestedUsername(fullName);
+}
+
+async function nextUsername(tx: Prisma.TransactionClient, fullName: string): Promise<string> {
+  const base = generatedUsernameBase(fullName);
+  for (let sequence = 0; sequence < 100_000; sequence += 1) {
+    const suffix = sequence === 0 ? "" : String(sequence);
+    const username = `${base.slice(0, 40 - suffix.length)}${suffix}`;
+    const used = await tx.user.findFirst({
+      where: { username: { equals: username, mode: "insensitive" } },
+      select: { id: true },
+    });
+    if (!used) return username;
+  }
+  throw new DomainError("CONFLICT", "Otomatik kullanıcı adı oluşturulamadı");
+}
+
+function temporaryPassword(): string {
+  return "123456";
+}
+
+type NewUserInput = {
+  username?: string;
+  autoUsername?: boolean;
+  password: string;
+  fullName: string;
+  jobTitle: string;
+  email?: string;
+  phone?: string;
+  roleId: string;
+  hotelId?: string;
+  hotelIds: string[];
+  supervisorId?: string;
+};
+
+async function createRecord(
+  ctx: Ctx,
+  input: NewUserInput,
+  mustChangePassword: boolean,
+): Promise<UserRow> {
   const hotels = [...new Set([...(input.hotelId ? [input.hotelId] : []), ...input.hotelIds])];
   try {
     return await withAdminTx(
@@ -343,18 +434,21 @@ export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
       async (tx) => {
         await assertCanAssign(ctx, tx, input.roleId, hotels, "O");
         await assertSupervisor(tx, input.supervisorId);
-        if (await tx.user.findUnique({ where: { username: input.username }, select: { id: true } })) {
+        const username = input.autoUsername || !input.username ? await nextUsername(tx, input.fullName) : input.username;
+        if (await tx.user.findFirst({ where: { username: { equals: username, mode: "insensitive" } }, select: { id: true } })) {
           throw new DomainError("CONFLICT", USERNAME_TAKEN, { fieldErrors: { username: [USERNAME_TAKEN] } });
         }
         const passwordHash = await hashPassword(input.password); // only after authorisation
         const extras = hotels.filter((h) => h !== input.hotelId);
         const created = await tx.user.create({
           data: {
-            username: input.username,
+            username,
             passwordHash,
             fullName: input.fullName,
+            jobTitle: input.jobTitle,
             email: input.email,
             phone: input.phone,
+            mustChangePassword,
             roleId: input.roleId,
             hotelId: input.hotelId,
             supervisorId: input.supervisorId,
@@ -380,10 +474,30 @@ export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
   }
 }
 
+export async function create(ctx: Ctx, raw: CreateUserInput): Promise<UserRow> {
+  const input = parseInput(createUserSchema, raw);
+  return createRecord(ctx, { ...input, jobTitle: input.jobTitle ?? "" }, false);
+}
+
+/** Creates a profile and access assignment with a one-time temporary credential. */
+export async function createOnboarding(ctx: Ctx, raw: OnboardingUserInput): Promise<CreatedUserCredentials> {
+  const input = parseInput(onboardingSchema, raw);
+  const temporary = temporaryPassword();
+  const suggested = generatedUsernameBase(input.fullName);
+  const username = input.username ?? suggested;
+  const autoUsername = username.toLocaleLowerCase("tr-TR") === suggested.toLocaleLowerCase("tr-TR");
+  const user = await createRecord(ctx, { ...input, username, autoUsername, password: temporary, jobTitle: input.jobTitle }, true);
+  return { user, temporaryPassword: temporary };
+}
+
 async function loadTarget(tx: Prisma.TransactionClient, id: string) {
   const user = await tx.user.findUnique({ where: { id }, select: SELECT });
   if (!user) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
   return user;
+}
+
+function assertNotDeleted(target: { deletedAt: Date | null }) {
+  if (target.deletedAt) throw new DomainError("NOT_FOUND", "Kullanıcı sistemden silinmiş");
 }
 
 /** Hotel an existing user is authorised against (the first one; system users have none). */
@@ -404,6 +518,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
   try {
     return await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
       const before = await loadTarget(tx, id);
+      assertNotDeleted(before);
       await assertCanManage(ctx, before, "D", "update");
       if (!isSystem(ctx) && id === ctx.user.id) {
         // Own role and hotel grants are SISTEM-only; unchanged values are fine.
@@ -436,6 +551,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         data: {
           username: input.username,
           fullName: input.fullName,
+          jobTitle: input.jobTitle ?? "",
           email: input.email ?? null,
           phone: input.phone ?? null,
           roleId: input.roleId,
@@ -475,9 +591,10 @@ export async function setPassword(ctx: Ctx, id: string, newPassword: string): Pr
   const anchor = await anchorHotel(id);
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const target = await loadTarget(tx, id);
+    assertNotDeleted(target);
     await assertCanManage(ctx, target, "D", "setPassword");
     const passwordHash = await hashPassword(password); // only after authorisation
-    await tx.user.update({ where: { id }, data: { passwordHash } });
+    await tx.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
     const sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
     await audit(tx, {
       userId: ctx.user.id,
@@ -491,7 +608,7 @@ export async function setPassword(ctx: Ctx, id: string, newPassword: string): Pr
   });
 }
 
-/** Users are never deleted: deactivating ends their open sessions (reason SISTEM). */
+/** Deactivates a user and closes their open sessions (reason SISTEM). */
 export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<UserRow> {
   if (!isActive && id === ctx.user.id) {
     throw new DomainError("VALIDATION", "Kendi hesabınızı pasife alamazsınız");
@@ -499,7 +616,11 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
   const anchor = await anchorHotel(id);
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const before = await loadTarget(tx, id);
+    assertNotDeleted(before);
     await assertCanManage(ctx, before, "D", "setActive");
+    if (!isActive && (before.role.kind === "SISTEM" || before.username.toLocaleLowerCase("tr-TR") === "admin")) {
+      throw new DomainError("FORBIDDEN", "Admin kullanıcıları pasife alınamaz");
+    }
     if (before.isActive === isActive) return toRow(before);
     const updated = await tx.user.update({ where: { id }, data: { isActive }, select: SELECT });
     const sessionsClosed = isActive ? 0 : await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
@@ -515,5 +636,34 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
     });
     await publishUser(tx, id, hotelsOf(updated), "update");
     return row;
+  });
+}
+
+/** Removes an account from login and management lists while keeping its historical references. */
+export async function deleteUser(ctx: Ctx, id: string): Promise<void> {
+  if (id === ctx.user.id) {
+    throw new DomainError("VALIDATION", "Kendi hesabınızı silemezsiniz");
+  }
+  const anchor = await anchorHotel(id);
+  await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
+    const before = await loadTarget(tx, id);
+    await assertCanManage(ctx, before, "D", "delete");
+    if (before.role.kind === "SISTEM" || before.username.toLocaleLowerCase("tr-TR") === "admin") {
+      throw new DomainError("FORBIDDEN", "Admin kullanıcıları sistemden silinemez");
+    }
+    if (before.deletedAt) return;
+    const deletedAt = new Date();
+    const sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
+    await tx.user.update({ where: { id }, data: { isActive: false, deletedAt } });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: anchor,
+      action: "USER_DELETED",
+      entity: "User",
+      entityId: id,
+      before: { isActive: before.isActive },
+      after: { deletedAt: deletedAt.toISOString(), sessionsClosed },
+    });
+    await publishUser(tx, id, hotelsOf(before), "delete");
   });
 }

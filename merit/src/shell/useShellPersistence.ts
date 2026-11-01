@@ -88,9 +88,29 @@ export function useShellPersistence({
       ...DEFAULT_APPEARANCE,
       icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, effectiveViewport({ ...store, footerBand: DEFAULT_APPEARANCE.footerBand })) })),
       windows: [],
+      shortcutVersion: 2,
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
     store.restore(chosen);
+    let migratedShortcuts = false;
+    // Existing saved desktops predate the standalone user window. Add its shortcut once; after
+    // this version is persisted, deliberately removing the shortcut stays removed.
+    if ((chosen.shortcutVersion ?? 0) < 1) {
+      if (visible.includes("core.kullanici") && !store.icons.some((icon) => icon.appId === "core.kullanici")) {
+        const pos = gridPosition(store.icons.length, effectiveViewport(store));
+        store.addIcon("core.kullanici", pos.x, pos.y);
+      }
+      migratedShortcuts = true;
+    }
+    // Menü Tasarım Merkezi is a separate app; add its own desktop icon to existing desktops once.
+    if ((chosen.shortcutVersion ?? 0) < 2) {
+      if (visible.includes("menu.tema") && !store.icons.some((icon) => icon.appId === "menu.tema")) {
+        const pos = gridPosition(store.icons.length, effectiveViewport(store));
+        store.addIcon("menu.tema", pos.x, pos.y);
+      }
+      store.setShortcutVersion(2);
+      migratedShortcuts = true;
+    }
 
     // Desktop layout as restored (and kept current while on the desktop). While the mobile shell is
     // showing, saves send exactly this and only the appearance (wallpaper, font, theme, brand switches) may change.
@@ -102,23 +122,25 @@ export function useShellPersistence({
       buildPersistSnapshot(mode, layout, windowStore.getState().snapshot());
 
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let saveQueue = Promise.resolve();
     let last = JSON.stringify(persistSnapshot());
 
     const flush = () => {
       if (timer) clearTimeout(timer);
       timer = undefined;
-      const snap = persistSnapshot();
-      const json = JSON.stringify(snap);
-      saveShellPrefs(snap)
-        .then((result) => {
-          // Only a save of the current layout clears the pending mark.
-          if (result.ok && JSON.stringify(persistSnapshot()) === json) {
-            writeLocal(userId, { prefs: snap, pending: false });
-          }
-        })
-        .catch(() => {
-          // offline or unloading: the pending local copy is pushed on the next visit
-        });
+      // Serialize writes and read the latest snapshot when each write reaches the queue. This
+      // prevents a slower, older request from overwriting newer appearance settings in the DB.
+      saveQueue = saveQueue.then(async () => {
+        const snap = persistSnapshot();
+        const json = JSON.stringify(snap);
+        const result = await saveShellPrefs(snap);
+        // Only a save of the current layout clears the pending mark.
+        if (result.ok && JSON.stringify(persistSnapshot()) === json) {
+          writeLocal(userId, { prefs: snap, pending: false });
+        }
+      }).catch(() => {
+        // offline or unloading: the pending local copy is pushed on the next visit
+      });
     };
     const schedule = () => {
       if (timer) clearTimeout(timer);
@@ -134,7 +156,7 @@ export function useShellPersistence({
       writeLocal(userId, { prefs: snap, pending: true });
       schedule();
     });
-    if (local?.pending) schedule();
+    if (local?.pending || migratedShortcuts) schedule();
 
     // Mode changes (resize across 760 px, ?mobil=1 via history) are handled here, not through the
     // effect deps: re-running the effect would restore the layout again on every such change.

@@ -20,7 +20,7 @@ export type ReportResult = { ok: true } | { ok: false; error: string };
 
 export type ClaimedJob = {
   id: string;
-  kind: "FIS" | "TEST";
+  kind: "FIS" | "MUTFAK" | "TEST";
   payload: Prisma.JsonValue;
   printer: { id: string; ip: string; port: number; codepage: string; paperWidth: number };
 };
@@ -58,7 +58,12 @@ async function printerFor(
 async function createReceiptJob(
   tx: Prisma.TransactionClient,
   order: Pick<Order, "id" | "hotelId" | "outletId">,
+  force = false,
 ): Promise<PrintJob | null> {
+  if (!force) {
+    const outlet = await tx.outlet.findUniqueOrThrow({ where: { id: order.outletId }, select: { autoPrintReceipt: true } });
+    if (!outlet.autoPrintReceipt) return null;
+  }
   const printer = await printerFor(tx, order);
   if (!printer) {
     await publish(
@@ -115,9 +120,45 @@ async function createReceiptJob(
   return job;
 }
 
+/** Optional automatic, always price-free kitchen ticket. */
+async function createKitchenJob(
+  tx: Prisma.TransactionClient,
+  order: Pick<Order, "id" | "hotelId" | "outletId">,
+  force = false,
+): Promise<PrintJob | null> {
+  if (!force) {
+    const outlet = await tx.outlet.findUniqueOrThrow({
+      where: { id: order.outletId },
+      select: { kdsEnabled: true, autoPrintKitchen: true },
+    });
+    if (!outlet.kdsEnabled || !outlet.autoPrintKitchen) return null;
+  }
+  const printer = await printerFor(tx, order);
+  if (!printer) {
+    await publish(
+      { type: "print.failed", hotelId: order.hotelId, outletId: order.outletId, payload: { orderId: order.id, reason: "YAZICI_YOK", kind: "MUTFAK" } },
+      tx,
+    );
+    return null;
+  }
+  const payload = await receipt.buildKitchen(tx, order.id);
+  const job = await tx.printJob.create({
+    data: { hotelId: order.hotelId, printerId: printer.id, orderId: order.id, kind: "MUTFAK", payload: payload as Prisma.InputJsonValue },
+  });
+  await publish(
+    { type: "print.queued", hotelId: order.hotelId, outletId: order.outletId, payload: { jobId: job.id, orderId: order.id, printerId: printer.id, kind: "MUTFAK" } },
+    tx,
+  );
+  return job;
+}
+
 /** Approval-hook shape (`orders.transition`); a no-printer outlet answers with print.failed. */
 async function enqueueReceipt(tx: Prisma.TransactionClient, order: Order): Promise<void> {
   await createReceiptJob(tx, order);
+}
+
+async function enqueueKitchen(tx: Prisma.TransactionClient, order: Order): Promise<void> {
+  await createKitchenJob(tx, order);
 }
 
 /** Test receipt of one printer (Task 10 window and cashier page send it). */
@@ -164,11 +205,31 @@ async function reprint(ctx: Ctx, orderId: string): Promise<PrintJob | null> {
   if (!outletAllowed(ctx, order.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   await assertCan(ctx, "QS-FIS", "O", order.hotelId);
   return prisma.$transaction(async (tx) => {
-    const job = await createReceiptJob(tx, order);
+    const job = await createReceiptJob(tx, order, true);
     await audit(tx, {
       userId: ctx.user.id,
       hotelId: order.hotelId,
       action: "PRINT_REPRINT",
+      entity: "Order",
+      entityId: order.id,
+      after: { jobId: job?.id ?? null },
+    });
+    return job;
+  });
+}
+
+/** Manually prints a price-free kitchen ticket from the KDS. */
+async function reprintKitchen(ctx: Ctx, orderId: string): Promise<PrintJob | null> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || !ctx.hotelIds.includes(order.hotelId)) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
+  if (!outletAllowed(ctx, order.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  await assertCan(ctx, "QS-KDS", "O", order.hotelId);
+  return prisma.$transaction(async (tx) => {
+    const job = await createKitchenJob(tx, order, true);
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "PRINT_KITCHEN_REPRINT",
       entity: "Order",
       entityId: order.id,
       after: { jobId: job?.id ?? null },
@@ -187,7 +248,7 @@ async function claim(hotelCode: string, limit = DEFAULT_CLAIM_LIMIT): Promise<Cl
   const take = Math.min(MAX_CLAIM_LIMIT, Math.max(1, Math.trunc(limit) || DEFAULT_CLAIM_LIMIT));
   const rows = await prisma.$queryRaw<{
     id: string;
-    kind: "FIS" | "TEST";
+    kind: "FIS" | "MUTFAK" | "TEST";
     payload: Prisma.JsonValue;
     printer_id: string;
   }[]>`
@@ -355,4 +416,4 @@ async function listQueue(
   });
 }
 
-export const printJobs = { enqueueReceipt, enqueueTest, reprint, claim, report, sweepStale, listQueue };
+export const printJobs = { enqueueReceipt, enqueueKitchen, enqueueTest, reprint, reprintKitchen, claim, report, sweepStale, listQueue };

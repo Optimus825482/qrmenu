@@ -44,7 +44,7 @@ async function screenId(code: string) {
 
 describe("can() (gerçek test DB)", () => {
   it("R-SYS her ekranda her işlemde true", async () => {
-    const ctx = await ctxOf("R-SYS", "MR", ["MRD", "MRP"]);
+    const ctx = await ctxOf("R-SYS", "ROYAL", ["DIAMOND", "PREMIUM"]);
     const screens = await testDb.appScreen.findMany();
     expect(screens.length).toBeGreaterThan(0);
     for (const s of screens) {
@@ -55,7 +55,7 @@ describe("can() (gerçek test DB)", () => {
   });
 
   it("R-KAT MB-TUK: V/O/D true, A false; QS-KUY V false", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     expect(await can(ctx, "MB-TUK", "V")).toBe(true);
     expect(await can(ctx, "MB-TUK", "O")).toBe(true);
     expect(await can(ctx, "MB-TUK", "D")).toBe(true);
@@ -64,66 +64,66 @@ describe("can() (gerçek test DB)", () => {
   });
 
   it("CR-TAN: R-OTM V/O/D true, A false; R-ITT yalnız V; R-GAR hiçbiri", async () => {
-    const otm = await ctxOf("R-OTM", "MR");
+    const otm = await ctxOf("R-OTM", "ROYAL");
     expect(await can(otm, "CR-TAN", "V")).toBe(true);
     expect(await can(otm, "CR-TAN", "O")).toBe(true);
     expect(await can(otm, "CR-TAN", "D")).toBe(true);
     expect(await can(otm, "CR-TAN", "A")).toBe(false);
-    const itt = await ctxOf("R-ITT", "MR");
+    const itt = await ctxOf("R-ITT", "ROYAL");
     expect(await can(itt, "CR-REH", "V")).toBe(true);
     expect(await can(itt, "CR-REH", "O")).toBe(false);
-    const gar = await ctxOf("R-GAR", "MR");
+    const gar = await ctxOf("R-GAR", "ROYAL");
     expect(await can(gar, "CR-TAN", "V")).toBe(false);
     expect(await can(gar, "CR-REH", "V")).toBe(false);
   });
 
   it("bilinmeyen ekran kodu false", async () => {
-    const ctx = await ctxOf("R-SYS", "MR");
+    const ctx = await ctxOf("R-SYS", "ROYAL");
     expect(await can(ctx, "XX-YOK", "V")).toBe(false);
   });
 
   it("kapsam dışı otel false; kapsamdaki otel true", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(false);
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(true);
+    const ctx = await ctxOf("R-KAT", "ROYAL");
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("PREMIUM"))).toBe(false);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(true);
   });
 
-  it("otel satırı sistem satırını ezer: MR'de D false, MRP'de true", async () => {
-    const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
+  it("otel satırı sistem satırını ezer: MR'de D false, PREMIUM'de true", async () => {
+    const ctx = await ctxOf("R-KAT", "ROYAL", ["PREMIUM"]);
     const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
     await testDb.roleScreenPermission.create({
       data: {
         roleId: role.id,
         screenId: await screenId("MB-TUK"),
-        hotelId: await hotelId("MR"),
+        hotelId: await hotelId("ROYAL"),
         canView: true,
         canCreate: true,
         canEdit: false,
       },
     });
-    expect(await can(ctx, "MB-TUK", "D", await hotelId("MR"))).toBe(false);
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(true);
-    expect(await can(ctx, "MB-TUK", "D", await hotelId("MRP"))).toBe(true);
+    expect(await can(ctx, "MB-TUK", "D", await hotelId("ROYAL"))).toBe(false);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(true);
+    expect(await can(ctx, "MB-TUK", "D", await hotelId("PREMIUM"))).toBe(true);
   });
 
   it("otel bazlı RoleModuleAccess kapalıysa modül ekranları false", async () => {
-    const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
+    const ctx = await ctxOf("R-KAT", "ROYAL", ["PREMIUM"]);
     const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
     await testDb.roleModuleAccess.create({
-      data: { roleId: role.id, hotelId: await hotelId("MR"), moduleKey: "MINIBAR", enabled: false },
+      data: { roleId: role.id, hotelId: await hotelId("ROYAL"), moduleKey: "MINIBAR", enabled: false },
     });
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(false);
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(true);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(false);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("PREMIUM"))).toBe(true);
   });
 
   it("RoleModuleAccess satırı hiç yoksa modül ekranı false (satır yok = kapalı)", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
     const saved = await testDb.roleModuleAccess.findMany({ where: { roleId: role.id } });
     await testDb.roleModuleAccess.deleteMany({ where: { roleId: role.id } });
     try {
       expect(await can(ctx, "MB-TUK", "V")).toBe(false);
-      expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(false);
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(false);
       expect(await visibleScreens(ctx)).not.toContain("MB-TUK");
     } finally {
       await testDb.roleModuleAccess.createMany({ data: saved });
@@ -131,23 +131,23 @@ describe("can() (gerçek test DB)", () => {
   });
 
   it("otel RoleModuleAccess true, sistem satırı false'u ezer", async () => {
-    const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
+    const ctx = await ctxOf("R-KAT", "ROYAL", ["PREMIUM"]);
     const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
     const system = { roleId: role.id, hotelId: null, moduleKey: "MINIBAR" } as const;
     await testDb.roleModuleAccess.updateMany({ where: system, data: { enabled: false } });
     try {
       await testDb.roleModuleAccess.create({
-        data: { roleId: role.id, hotelId: await hotelId("MR"), moduleKey: "MINIBAR", enabled: true },
+        data: { roleId: role.id, hotelId: await hotelId("ROYAL"), moduleKey: "MINIBAR", enabled: true },
       });
-      expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(true);
-      expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(false);
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(true);
+      expect(await can(ctx, "MB-TUK", "V", await hotelId("PREMIUM"))).toBe(false);
     } finally {
       await testDb.roleModuleAccess.updateMany({ where: system, data: { enabled: true } });
     }
   });
 
   it("pasif ekran: can false ve visibleScreens dışında", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     expect(await can(ctx, "MB-TUK", "V")).toBe(true);
     await testDb.appScreen.update({ where: { code: "MB-TUK" }, data: { isActive: false } });
     try {
@@ -159,18 +159,18 @@ describe("can() (gerçek test DB)", () => {
   });
 
   it("HotelModule(MR, MINIBAR) kapalıyken MB-TUK V false (hotelId verilmese de oturum oteli)", async () => {
-    const ctx = await ctxOf("R-KAT", "MR", ["MRP"]);
+    const ctx = await ctxOf("R-KAT", "ROYAL", ["PREMIUM"]);
     await testDb.hotelModule.update({
-      where: { hotelId_moduleKey: { hotelId: await hotelId("MR"), moduleKey: "MINIBAR" } },
+      where: { hotelId_moduleKey: { hotelId: await hotelId("ROYAL"), moduleKey: "MINIBAR" } },
       data: { enabled: false },
     });
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MR"))).toBe(false);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("ROYAL"))).toBe(false);
     expect(await can(ctx, "MB-TUK", "V")).toBe(false);
-    expect(await can(ctx, "MB-TUK", "V", await hotelId("MRP"))).toBe(true);
+    expect(await can(ctx, "MB-TUK", "V", await hotelId("PREMIUM"))).toBe(true);
   });
 
   it("CORE ekranları modül kapısından geçmez", async () => {
-    const ctx = await ctxOf("R-GAR", "MR");
+    const ctx = await ctxOf("R-GAR", "ROYAL");
     expect(await can(ctx, "CR-RAP", "V")).toBe(true);
     expect(await can(ctx, "CR-RAP", "O")).toBe(false);
   });
@@ -178,13 +178,13 @@ describe("can() (gerçek test DB)", () => {
 
 describe("assertCan()", () => {
   it("izin varsa sessizce döner ve denetim kaydı yazmaz", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     await expect(assertCan(ctx, "MB-TUK", "V")).resolves.toBeUndefined();
     expect(await testDb.auditLog.count()).toBe(0);
   });
 
   it("izin yoksa YETKISIZ_DENEME yazar ve FORBIDDEN fırlatır", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     const err = await assertCan(ctx, "MB-TUK", "A").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(DomainError);
     expect((err as InstanceType<typeof DomainError>).code).toBe("FORBIDDEN");
@@ -201,7 +201,7 @@ describe("assertCan()", () => {
   });
 
   it("bilinmeyen hotelId: FORBIDDEN, denetim satırı oturum oteliyle, denenen otel after içinde", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
     const err = await assertCan(ctx, "MB-TUK", "V", "yok-boyle-otel").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(DomainError);
     expect((err as InstanceType<typeof DomainError>).code).toBe("FORBIDDEN");
@@ -212,8 +212,8 @@ describe("assertCan()", () => {
   });
 
   it("var olan ama kapsam dışı otel: FORBIDDEN, denetim satırı oturum oteliyle", async () => {
-    const ctx = await ctxOf("R-KAT", "MR");
-    const other = await hotelId("MRP");
+    const ctx = await ctxOf("R-KAT", "ROYAL");
+    const other = await hotelId("PREMIUM");
     const err = await assertCan(ctx, "MB-TUK", "V", other).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(DomainError);
     expect((err as InstanceType<typeof DomainError>).code).toBe("FORBIDDEN");
@@ -226,16 +226,16 @@ describe("assertCan()", () => {
 
 describe("visibleScreens()", () => {
   it("R-GAR: sortOrder sırasında 7 kod (P5 sınırı: kasa, fiş, iptal ve raporlar yok)", async () => {
-    const ctx = await ctxOf("R-GAR", "MR");
+    const ctx = await ctxOf("R-GAR", "ROYAL");
     expect(await visibleScreens(ctx)).toEqual([
       "QM-MIS", "QM-CAG", "QM-MEN", "QM-TEM", "QS-KUY", "QS-KDS", "CR-RAP",
     ]);
   });
 
   it("modülü kapalı otelde o modülün ekranları listelenmez", async () => {
-    const ctx = await ctxOf("R-GAR", "MR");
+    const ctx = await ctxOf("R-GAR", "ROYAL");
     await testDb.hotelModule.update({
-      where: { hotelId_moduleKey: { hotelId: await hotelId("MR"), moduleKey: "QR_ORDER" } },
+      where: { hotelId_moduleKey: { hotelId: await hotelId("ROYAL"), moduleKey: "QR_ORDER" } },
       data: { enabled: false },
     });
     const codes = await visibleScreens(ctx);
@@ -245,7 +245,7 @@ describe("visibleScreens()", () => {
   });
 
   it("kapsam dışı otel için boş liste", async () => {
-    const ctx = await ctxOf("R-GAR", "MR");
-    expect(await visibleScreens(ctx, await hotelId("MRP"))).toEqual([]);
+    const ctx = await ctxOf("R-GAR", "ROYAL");
+    expect(await visibleScreens(ctx, await hotelId("PREMIUM"))).toEqual([]);
   });
 });

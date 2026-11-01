@@ -34,20 +34,20 @@ afterAll(async () => {
 });
 
 async function sys() {
-  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP", "MRD"] });
+  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM", "DIAMOND"] });
 }
 
 /** Hotel manager of MR holding CR-SYS V,D for MR only. */
 async function mgmt() {
-  const mr = await hotelId("MR");
+  const mr = await hotelId("ROYAL");
   const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-OTM" } });
   const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-SYS" } });
   await testDb.roleScreenPermission.create({
     data: { roleId: role.id, screenId: screen.id, hotelId: mr, canView: true, canEdit: true },
   });
-  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL" });
 }
 afterEach(async () => {
   await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
@@ -125,7 +125,7 @@ describe("listGrouped", () => {
 
   it("kaynak: sistem satırı 'system', otel satırı 'hotel'; geçersiz saklı değer yok sayılır", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await settingsAdmin.set(ctx, null, "dnd.minChecks", 3);
     expect((await find(ctx, null, "dnd.minChecks")).source).toBe("system");
     expect(await find(ctx, mr, "dnd.minChecks")).toMatchObject({ source: "system", value: 3 });
@@ -142,9 +142,9 @@ describe("listGrouped", () => {
   it("sistem kapsamını YONETIM okuyamaz; kendi oteli okunur", async () => {
     const ctx = await mgmt();
     await expect(settingsAdmin.listGrouped(ctx, null)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    const groups = await settingsAdmin.listGrouped(ctx, await hotelId("MR"));
+    const groups = await settingsAdmin.listGrouped(ctx, await hotelId("ROYAL"));
     expect(groups).toHaveLength(SETTING_GROUPS.length);
-    await expect(settingsAdmin.listGrouped(ctx, await hotelId("MRD"))).rejects.toMatchObject({
+    await expect(settingsAdmin.listGrouped(ctx, await hotelId("DIAMOND"))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
@@ -153,7 +153,7 @@ describe("listGrouped", () => {
 describe("set", () => {
   it("otel satırı yazar: audit SETTING_SET (önce/sonra) + settings.changed yayını; okuyucu yeni değeri görür", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await settingsAdmin.set(ctx, mr, "dnd.minChecks", 4);
     const item = await settingsAdmin.set(ctx, mr, "dnd.minChecks", 6);
     expect(item).toMatchObject({ key: "dnd.minChecks", value: 6, source: "hotel" });
@@ -216,11 +216,11 @@ describe("set", () => {
 
   it("YONETIM kendi oteli için yazar, başka otel için FORBIDDEN", async () => {
     const ctx = await mgmt();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await settingsAdmin.set(ctx, mr, "dnd.minChecks", 3);
     expect(await getSetting("dnd.minChecks", mr)).toBe(3);
     await expect(
-      settingsAdmin.set(ctx, await hotelId("MRD"), "dnd.minChecks", 3),
+      settingsAdmin.set(ctx, await hotelId("DIAMOND"), "dnd.minChecks", 3),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
@@ -246,7 +246,7 @@ describe("set", () => {
     try {
       const ctx = await sys();
       await expect(
-        settingsAdmin.set(ctx, await hotelId("MR"), "qr.baseUrl", "https://a.example.com"),
+        settingsAdmin.set(ctx, await hotelId("ROYAL"), "qr.baseUrl", "https://a.example.com"),
       ).rejects.toMatchObject({ code: "VALIDATION" });
       await settingsAdmin.set(ctx, null, "qr.baseUrl", "https://a.example.com");
     } finally {
@@ -274,7 +274,7 @@ describe("set", () => {
 describe("clearHotelOverride", () => {
   it("otel satırını siler: sistem değerine ya da varsayılana döner; audit SETTING_CLEAR + yayın", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await settingsAdmin.set(ctx, mr, "dnd.minChecks", 5);
     expect(await settingsAdmin.clearHotelOverride(ctx, mr, "dnd.minChecks")).toMatchObject({
       source: "default",
@@ -309,11 +309,11 @@ describe("clearHotelOverride", () => {
 
   it("override yoksa işlem yapmaz (audit yok); yetkisiz otelde FORBIDDEN", async () => {
     const ctx = await mgmt();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await settingsAdmin.clearHotelOverride(ctx, mr, "dnd.minChecks");
     expect(await testDb.auditLog.count({ where: { action: "SETTING_CLEAR" } })).toBe(0);
     await expect(
-      settingsAdmin.clearHotelOverride(ctx, await hotelId("MRD"), "dnd.minChecks"),
+      settingsAdmin.clearHotelOverride(ctx, await hotelId("DIAMOND"), "dnd.minChecks"),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
@@ -322,9 +322,9 @@ describe("scopes", () => {
   it("SISTEM: sistem geneli + tüm oteller; YONETIM: yalnız yazma yetkili kendi otelleri", async () => {
     const s = await settingsAdmin.scopes(await sys());
     expect(s.system).toBe(true);
-    expect(s.hotels.map((h) => h.code).sort()).toEqual(["MR", "MRD", "MRP"]);
+    expect(s.hotels.map((h) => h.code).sort()).toEqual(["ROYAL", "DIAMOND", "PREMIUM"]);
     const m = await settingsAdmin.scopes(await mgmt());
     expect(m.system).toBe(false);
-    expect(m.hotels.map((h) => h.code)).toEqual(["MR"]);
+    expect(m.hotels.map((h) => h.code)).toEqual(["ROYAL"]);
   });
 });

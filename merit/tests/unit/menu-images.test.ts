@@ -42,10 +42,10 @@ afterAll(async () => {
 });
 
 async function setup() {
-  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "MR" });
-  const ctx = await ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "ROYAL" });
+  const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
   const o = await testDb.outlet.create({
-    data: { hotelId: await hotelId("MR"), name: "Havuz Bar", type: "BAR", hasMenu: true },
+    data: { hotelId: await hotelId("ROYAL"), name: "Havuz Bar", type: "BAR", hasMenu: true },
   });
   const cat = await tree.create(ctx, o.id, { kind: "KATEGORI", name: "İçecekler" });
   return { ctx, o, cat };
@@ -107,8 +107,8 @@ describe("menuImages", () => {
 
   it("yetkisiz (R-GAR, QM-MEN D yok) FORBIDDEN ve diske hiçbir dosya yazılmaz", async () => {
     const { cat } = await setup();
-    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const gar = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const gar = await ctxFor(user, { hotelCode: "ROYAL" });
     const before = listFiles(dir);
     await expect(images.upload(gar, cat.id, file(await png("#0000ff")))).rejects.toMatchObject({
       code: "FORBIDDEN",
@@ -120,7 +120,7 @@ describe("menuImages", () => {
   it("outlet kapsamlı oturum başka outletin öğesine yükleyemez; dosya yazılmaz", async () => {
     const { ctx, cat } = await setup();
     const other = await testDb.outlet.create({
-      data: { hotelId: await hotelId("MR"), name: "Lobi Bar", type: "BAR", hasMenu: true },
+      data: { hotelId: await hotelId("ROYAL"), name: "Lobi Bar", type: "BAR", hasMenu: true },
     });
     const scoped = { ...ctx, session: { ...ctx.session, outletId: other.id } };
     const before = listFiles(dir);

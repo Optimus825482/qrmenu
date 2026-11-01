@@ -54,6 +54,7 @@ export default async function TargetPickerPage() {
   const cards: TargetCard[] = targets.map((t, index) => ({
     index,
     hotelName: t.hotelName,
+    hotelCode: t.hotelCode,
     label: t.label,
     roleName: roleName.get(t.roleId) ?? "",
   }));

@@ -8,7 +8,7 @@ test.use({ locale: "en-US" });
 
 const M1 = "/q/e2e-guest-m1";
 const M2_INACTIVE = "/q/e2e-guest-m2";
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 
 test.beforeAll(() => {
   resetAndSeed({ guestMenu: true });
@@ -155,4 +155,77 @@ test("bilinmeyen ve pasif masa tokenı: 'kullanılamıyor' sayfası", async ({ p
 test("misafir olay akışı: bilinmeyen ve pasif masa tokenı 404", async ({ request }) => {
   expect((await request.get("/api/q/bogus-token-123/events")).status()).toBe(404);
   expect((await request.get("/api/q/e2e-guest-m2/events")).status()).toBe(404);
+});
+
+// ---------------------------------------------------------------------------------------------
+// Garson çağrı alt sayfası (Menü Tasarım Merkezi planı, Task 7)
+// ---------------------------------------------------------------------------------------------
+
+const CALL_TITLE = "Size nasıl yardımcı olalım?";
+
+async function openCallSheet(page: Page) {
+  await page.goto(`${M1}?lang=tr`);
+  await page.getByRole("button", { name: "Garson çağır" }).click();
+  const sheet = page.getByRole("dialog", { name: CALL_TITLE });
+  await expect(sheet).toBeVisible();
+  return sheet;
+}
+
+test("çağrı alt sayfası seçenekleri ve Sadece çağır'ı gösterir", async ({ page }) => {
+  const sheet = await openCallSheet(page);
+  const options = sheet.locator("button.g-call-option");
+  await expect(options).toHaveText(["Peçete istiyorum", "Sipariş vereceğim", "Su istiyorum", "Hesap", "Sadece çağır"]);
+  // Every option is a comfortable touch target.
+  for (const box of await options.evaluateAll((nodes) => nodes.map((n) => n.getBoundingClientRect().height))) {
+    expect(box).toBeGreaterThanOrEqual(44);
+  }
+  // Esc closes the sheet and focus returns to the call button.
+  await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+  await expect(page.getByRole("button", { name: "Garson çağır" })).toBeFocused();
+
+  // The sheet speaks the guest's language: English falls back per option from the stored translations.
+  await page.goto(`${M1}?lang=en`);
+  await page.getByRole("button", { name: "Call waiter" }).click();
+  const en = page.getByRole("dialog", { name: "How can we help?" });
+  await expect(en.locator("button.g-call-option")).toHaveText([
+    "Napkins, please",
+    "I'd like to order",
+    "Water, please",
+    "The bill, please",
+    "Just call",
+  ]);
+});
+
+test("Peçete istiyorum çağrı notunu yazar (kasa çağrı listesinde Türkçe etiket)", async ({ page, browser }) => {
+  const sheet = await openCallSheet(page);
+  await sheet.getByRole("button", { name: "Peçete istiyorum" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toBeVisible();
+
+  const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
+  const context = await browser.newContext({
+    locale: "tr-TR",
+    baseURL: "http://localhost:3000",
+    extraHTTPHeaders: { "x-forwarded-for": ip },
+  });
+  const cashier = await context.newPage();
+  await login(cashier, "kasa.havuz");
+  await expect(cashier).toHaveURL(/\/kasa$/);
+  await cashier.goto("/kasa?sekme=cagrilar");
+  const calls = cashier.getByRole("region", { name: "Açık çağrılar" });
+  await expect(calls).toContainText("M1");
+  await expect(calls).toContainText("Peçete istiyorum");
+  await context.close();
+});
+
+test("çift dokunuşta tek çağrı gider", async ({ page }) => {
+  let posts = 0;
+  await page.route("**/api/q/*/call", async (route) => {
+    if (route.request().method() === "POST") posts += 1;
+    await route.continue();
+  });
+  const sheet = await openCallSheet(page);
+  await sheet.getByRole("button", { name: "Su istiyorum" }).dblclick();
+  await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toBeVisible();
+  expect(posts).toBe(1);
 });

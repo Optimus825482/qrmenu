@@ -69,6 +69,7 @@ export default async function GuestLayout({
             pricesShown={state.pricesShown}
             currency={state.currency}
             callOptions={state.callOptions}
+            callWaiterText={state.design?.options?.callWaiterText}
           />
         }
       >

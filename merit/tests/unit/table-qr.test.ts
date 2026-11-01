@@ -42,18 +42,21 @@ afterAll(async () => {
 const meta = { ip: "10.0.0.1", userAgent: "vitest" };
 
 async function fbm() {
-  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL" });
 }
 async function newOutlet(name = "Havuz Bar") {
-  return testDb.outlet.create({
-    data: { hotelId: await hotelId("MR"), name, type: "BAR", hasMenu: true },
+  const outlet = await testDb.outlet.create({
+    data: { hotelId: await hotelId("ROYAL"), name, type: "BAR", hasMenu: true },
   });
+  await testDb.outletAreaDefinition.create({ data: { outletId: outlet.id, type: "KAPALI" } });
+  return outlet;
 }
 async function newTables(outletId: string, n = 5, qrToken: (i: number) => string | null = (i) => `placeholder-token-${i}-xx`) {
+  const area = await testDb.outletAreaDefinition.findFirstOrThrow({ where: { outletId } });
   const out = [];
   for (let i = 1; i <= n; i++) {
-    out.push(await testDb.outletTable.create({ data: { outletId, label: `M${i}`, qrToken: qrToken(i) } }));
+    out.push(await testDb.outletTable.create({ data: { outletId, areaId: area.id, label: `M${i}`, qrToken: qrToken(i) } }));
   }
   return out;
 }
@@ -82,8 +85,8 @@ describe("tableQr.regenerate", () => {
   it("R-GAR FORBIDDEN", async () => {
     const outlet = await newOutlet();
     const [table] = await newTables(outlet.id, 1);
-    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(tableQr.regenerate(ctx, table.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(tableQr.regenerateAll(ctx, outlet.id, {})).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect((await testDb.outletTable.findUniqueOrThrow({ where: { id: table.id } })).qrToken).toBe(table.qrToken);
@@ -124,7 +127,7 @@ describe("tableQr.list", () => {
     const outlet = await newOutlet();
     const tables = await newTables(outlet.id, 10, () => null);
     await tableQr.regenerate(ctx, tables[1].id);
-    const waiter = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
+    const waiter = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await testDb.tableAssignment.create({
       data: { outletId: outlet.id, tableId: tables[1].id, userId: waiter.id },
     });
@@ -223,6 +226,29 @@ describe("indirme route'ları", () => {
     expect(html).toContain("Havuz Bar");
     expect(html).toContain("@media print");
   });
+
+  it("yazdırma şablonu: alan filtresi, template ve theme seçeneklerini destekler", async () => {
+    const ctx = await fbm();
+    requireUser.mockResolvedValue(ctx);
+    const outlet = await newOutlet("Teras Lounge");
+    const terasArea = await testDb.outletAreaDefinition.create({
+      data: { outletId: outlet.id, type: "ACIK", name: "Teras" },
+    });
+    const t1 = await testDb.outletTable.create({
+      data: { outletId: outlet.id, areaId: terasArea.id, label: "T1", qrToken: null },
+    });
+    await tableQr.regenerate(ctx, t1.id);
+    const res = await printRoute.GET(
+      new Request(`http://localhost/api/qr/outlet/${outlet.id}/print?areaId=${terasArea.id}&template=compact&theme=royal`),
+      params({ outletId: outlet.id }),
+    );
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain('data-template="compact"');
+    expect(html).toContain('data-theme="royal"');
+    expect(html).toContain("Teras");
+    expect(html).toContain("T1");
+  });
 });
 
 describe("csvCell ve etiketler.csv", () => {
@@ -241,7 +267,8 @@ describe("csvCell ve etiketler.csv", () => {
   it("ZIP içindeki etiketler.csv UTF-8 BOM ile başlar ve formül etiketini korur", async () => {
     const ctx = await fbm();
     const outlet = await newOutlet();
-    await testDb.outletTable.create({ data: { outletId: outlet.id, label: "=cmd|x", qrToken: null } });
+    const area = await testDb.outletAreaDefinition.findFirstOrThrow({ where: { outletId: outlet.id } });
+    await testDb.outletTable.create({ data: { outletId: outlet.id, areaId: area.id, label: "=cmd|x", qrToken: null } });
     await tableQr.regenerateAll(ctx, outlet.id, {});
     const zip = await tableQr.outletZip(ctx, outlet.id);
     const csv = unzipSync(zip.body)["etiketler.csv"];
@@ -254,8 +281,9 @@ describe("masa varlık oracle'ı yok", () => {
   it("R-FBM: başka otelin masası ile var olmayan id aynı hata kodunu alır", async () => {
     const ctx = await fbm(); // MR
     const other = await testDb.outlet.create({
-      data: { hotelId: await hotelId("MRP"), name: "Başka Bar", type: "BAR", hasMenu: true },
+      data: { hotelId: await hotelId("PREMIUM"), name: "Başka Bar", type: "BAR", hasMenu: true },
     });
+    await testDb.outletAreaDefinition.create({ data: { outletId: other.id, type: "KAPALI" } });
     const [foreign] = await newTables(other.id, 1);
     const codes: string[] = [];
     for (const id of [foreign.id, "yok-boyle-bir-masa"]) {

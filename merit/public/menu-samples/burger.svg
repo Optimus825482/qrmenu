@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+ <defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#ddd9c7"/><stop offset="1" stop-color="#7b8d73"/></linearGradient><linearGradient id="bun" x2="0" y2="1"><stop stop-color="#f4ca78"/><stop offset="1" stop-color="#bd703b"/></linearGradient></defs>
+ <rect width="800" height="600" fill="url(#b)"/><circle cx="666" cy="91" r="90" fill="#fff" opacity=".17"/><ellipse cx="403" cy="475" rx="245" ry="39" fill="#273d2c" opacity=".24"/><ellipse cx="400" cy="443" rx="235" ry="73" fill="#f8f4e8"/>
+ <path d="M246 333q13-139 154-139t154 139z" fill="url(#bun)"/><path d="M250 339h300l-17 39H267z" fill="#72a64e"/><path d="M263 379q135-54 274 0l-18 43H282z" fill="#573322"/><path d="M270 422q130 31 260 0l-23 35H293z" fill="#f1c247"/><path d="M278 456h244q-31 47-122 48t-122-48z" fill="url(#bun)"/><g fill="#fff3cb"><ellipse cx="340" cy="232" rx="6" ry="3"/><ellipse cx="401" cy="218" rx="6" ry="3"/><ellipse cx="451" cy="243" rx="6" ry="3"/></g>
+</svg>

@@ -16,7 +16,7 @@ export type NoneReason =
   | "HATA";
 
 export type GuestTarget =
-  | { kind: "TABLE"; table: { id: string; label: string }; state: GuestState }
+  | { kind: "TABLE"; table: { id: string; label: string; areaId: string }; state: GuestState }
   | { kind: "ROOM"; roomId: string; hotelId: string }
   | { kind: "NONE"; reason: NoneReason };
 
@@ -63,7 +63,7 @@ async function resolve(
 
   const table = await prisma.outletTable.findUnique({
     where: { qrToken: token },
-    select: { id: true, label: true, isActive: true, outletId: true },
+    select: { id: true, label: true, isActive: true, outletId: true, areaId: true },
   });
   if (table) {
     const fail = async (reason: NoneReason): Promise<GuestTarget> => {
@@ -71,7 +71,7 @@ async function resolve(
       return none(reason);
     };
     if (!table.isActive) return fail("MASA_PASIF");
-    const state = await guestState(table.outletId);
+    const state = await guestState(table.outletId, table.areaId);
     if (!state.menuOpen) {
       const reason = state.reason;
       return fail(reason === "OUTLET_PASIF" || reason === "OTEL_PASIF" ? reason : "MENU_KAPALI");
@@ -89,7 +89,7 @@ async function resolve(
         console.error("[guest token] scan.table", error);
       }
     }
-    return { kind: "TABLE", table: { id: table.id, label: table.label }, state };
+    return { kind: "TABLE", table: { id: table.id, label: table.label, areaId: table.areaId }, state };
   }
 
   const room = await prisma.room.findUnique({

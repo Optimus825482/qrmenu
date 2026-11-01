@@ -17,7 +17,7 @@ afterAll(async () => {
 });
 
 async function outlet(priceDisplay: "INHERIT" | "SHOW" | "HIDE") {
-  return { hotelId: await hotelId("MR"), priceDisplay };
+  return { hotelId: await hotelId("ROYAL"), priceDisplay };
 }
 
 describe("resolvePriceDisplay", () => {
@@ -33,14 +33,14 @@ describe("resolvePriceDisplay", () => {
   it("otel satırı sistem satırını ezer", async () => {
     await testDb.setting.create({ data: { hotelId: null, key: "price.display", value: "SHOW" } });
     await testDb.setting.create({
-      data: { hotelId: await hotelId("MR"), key: "price.display", value: "HIDE" },
+      data: { hotelId: await hotelId("ROYAL"), key: "price.display", value: "HIDE" },
     });
     expect(await resolvePriceDisplay(await outlet("INHERIT"))).toBe("HIDE");
   });
 
   it("outlet SHOW, ayar HIDE olsa da SHOW; outlet HIDE, ayar SHOW olsa da HIDE", async () => {
     await testDb.setting.create({
-      data: { hotelId: await hotelId("MR"), key: "price.display", value: "HIDE" },
+      data: { hotelId: await hotelId("ROYAL"), key: "price.display", value: "HIDE" },
     });
     expect(await resolvePriceDisplay(await outlet("SHOW"))).toBe("SHOW");
     await testDb.setting.updateMany({ where: { key: "price.display" }, data: { value: "SHOW" } });
@@ -50,7 +50,7 @@ describe("resolvePriceDisplay", () => {
 
 describe("resolveCurrency", () => {
   it("varsayılan EUR; otel ayarı varsa o", async () => {
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     expect(await resolveCurrency(mr)).toBe("EUR");
     await testDb.setting.create({ data: { hotelId: mr, key: "price.currency", value: "USD" } });
     expect(await resolveCurrency(mr)).toBe("USD");

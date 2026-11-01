@@ -41,7 +41,7 @@ test("Denetim Günlüğü SETTING_UPDATE satırında before/after; zil rozeti 1,
   const noteId = randomUUID();
   const auditId = randomUUID();
   await withDb(async (client) => {
-    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'MR'");
+    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'ROYAL'");
     await client.query(
       `INSERT INTO notifications (id, user_id, type, title, body, created_at, updated_at)
        VALUES ($1, $2, 'test.note', 'Deneme bildirimi', 'Zil denemesi', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,

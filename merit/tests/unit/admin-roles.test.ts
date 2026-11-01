@@ -37,16 +37,16 @@ afterAll(async () => {
 });
 
 async function sys() {
-  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP", "MRD"] });
+  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM", "DIAMOND"] });
 }
 async function itt() {
-  const user = await makeUser({ username: "it-destek", roleCode: "R-ITT", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP"] });
+  const user = await makeUser({ username: "it-destek", roleCode: "R-ITT", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM"] });
 }
 async function otm() {
-  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP"] });
+  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM"] });
 }
 const events = (type: string) => publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === type);
 const permissionEvents = () => events("definition.changed").filter((e) => e.payload.entity === "permission");
@@ -109,7 +109,7 @@ describe("roles: yaşam döngüsü", () => {
   it("kullanıcısı olan rol silinemez (Türkçe CONFLICT); sistem rolü silinemez; boş rol silinir", async () => {
     const ctx = await sys();
     const created = await roles.create(ctx, { code: "R-TST", name: "Test", kind: "OUTLET" });
-    await makeUser({ username: "test.kullanici", roleCode: "R-TST", hotelCode: "MR" });
+    await makeUser({ username: "test.kullanici", roleCode: "R-TST", hotelCode: "ROYAL" });
     await expect(roles.remove(ctx, created.id)).rejects.toMatchObject({
       code: "CONFLICT",
       message: expect.stringContaining("kullanıcılar var"),
@@ -162,11 +162,11 @@ describe("roles: yaşam döngüsü", () => {
 });
 
 describe("permissions: matris ve canlı etki", () => {
-  it("R-OTM için MR'de MB-TUK D=false: MR'de can false, MRP'de true; audit + herkese yayın", async () => {
+  it("R-OTM için MR'de MB-TUK D=false: MR'de can false, PREMIUM'de true; audit + herkese yayın", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
     const ctxOtm = await otm();
     expect(await can(ctxOtm, "MB-TUK", "D", mr)).toBe(true);
 
@@ -175,7 +175,7 @@ describe("permissions: matris ve canlı etki", () => {
     expect(await can(ctxOtm, "MB-TUK", "D", mr)).toBe(false);
     expect(await can(ctxOtm, "MB-TUK", "V", mr)).toBe(true);
     expect(await can(ctxOtm, "MB-TUK", "D", mrp)).toBe(true);
-    expect(await permRow("R-OTM", "MB-TUK", "MR")).toMatchObject({ canEdit: false, canView: true });
+    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toMatchObject({ canEdit: false, canView: true });
     expect(await testDb.auditLog.count({ where: { action: "PERM_SET_SCREEN", hotelId: mr } })).toBe(1);
     const changed = permissionEvents();
     expect(changed).toHaveLength(1);
@@ -186,8 +186,8 @@ describe("permissions: matris ve canlı etki", () => {
   it("sistem geneli değişiklik bir sonraki istekte görünen ekran listesine yansır", async () => {
     const admin = await sys();
     const role = await roleByCode("R-GAR");
-    const mr = await hotelId("MR");
-    const ctxGar = await ctxFor(await makeUser({ username: "garson1", roleCode: "R-GAR", hotelCode: "MR" }), { hotelCode: "MR" });
+    const mr = await hotelId("ROYAL");
+    const ctxGar = await ctxFor(await makeUser({ username: "garson1", roleCode: "R-GAR", hotelCode: "ROYAL" }), { hotelCode: "ROYAL" });
     expect(await visibleScreens(ctxGar, mr)).not.toContain("CR-KOM");
     await permissions.setScreen(admin, role.id, null, "CR-KOM", ONLY_V);
     expect(await visibleScreens(ctxGar, mr)).toContain("CR-KOM");
@@ -197,11 +197,11 @@ describe("permissions: matris ve canlı etki", () => {
   it("tüm bayraklar false: satır silinir; sistem satırı etkilenmez", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await permissions.setScreen(admin, role.id, mr, "MB-TUK", ONLY_V);
-    expect(await permRow("R-OTM", "MB-TUK", "MR")).not.toBeNull();
+    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).not.toBeNull();
     await permissions.setScreen(admin, role.id, mr, "MB-TUK", NONE);
-    expect(await permRow("R-OTM", "MB-TUK", "MR")).toBeNull();
+    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toBeNull();
     await permissions.setScreen(admin, role.id, mr, "MB-TUK", NONE);
     expect(await permRow("R-OTM", "MB-TUK", null)).not.toBeNull();
   });
@@ -221,7 +221,7 @@ describe("permissions: matris ve canlı etki", () => {
   it("matrix: otel satırı yoksa sistem satırı inherited:true; override inherited:false", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const system = await permissions.matrix(admin, role.id, null);
     expect(system.screens.every((s) => !s.inherited)).toBe(true);
     expect(system.modules.map((m) => m.moduleKey)).toEqual(["MINIBAR", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"]);
@@ -242,7 +242,7 @@ describe("permissions: matris ve canlı etki", () => {
   it("modül override'ı can()'i etkiler; CORE modülü kapatılamaz", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const ctxOtm = await otm();
     await permissions.setModule(admin, role.id, mr, "MINIBAR", false);
     expect(await can(ctxOtm, "MB-TUK", "V", mr)).toBe(false);
@@ -252,13 +252,13 @@ describe("permissions: matris ve canlı etki", () => {
   it("resetHotelOverrides yalnız o otelin satırlarını siler, sistem satırı kalır", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await permissions.setScreen(admin, role.id, mr, "MB-TUK", ONLY_V);
-    await permissions.setScreen(admin, role.id, await hotelId("MRP"), "MB-TUK", ONLY_V);
+    await permissions.setScreen(admin, role.id, await hotelId("PREMIUM"), "MB-TUK", ONLY_V);
     await permissions.setModule(admin, role.id, mr, "MINIBAR", false);
     expect(await permissions.resetHotelOverrides(admin, role.id, mr)).toEqual({ screens: 1, modules: 1 });
-    expect(await permRow("R-OTM", "MB-TUK", "MR")).toBeNull();
-    expect(await permRow("R-OTM", "MB-TUK", "MRP")).not.toBeNull();
+    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toBeNull();
+    expect(await permRow("R-OTM", "MB-TUK", "PREMIUM")).not.toBeNull();
     expect(await permRow("R-OTM", "MB-TUK", null)).not.toBeNull();
     expect(await testDb.auditLog.count({ where: { action: "PERM_RESET_HOTEL" } })).toBe(1);
   });
@@ -288,13 +288,13 @@ describe("permissions: matris ve canlı etki", () => {
   it("YONETIM yazamaz (CR-KUL D olsa da): FORBIDDEN + YETKISIZ_DENEME; matris okunur", async () => {
     const ctx = await otm();
     const role = await roleByCode("R-GAR");
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     expect(await can(ctx, "CR-KUL", "D", mr)).toBe(true);
     await expect(permissions.setScreen(ctx, role.id, mr, "QS-KAS", ALL)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(permissions.setScreen(ctx, role.id, null, "QS-KAS", ALL)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(permissions.setModule(ctx, role.id, mr, "QR_MENU", false)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(permissions.resetHotelOverrides(ctx, role.id, mr)).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(await permRow("R-GAR", "QS-KAS", "MR")).toBeNull();
+    expect(await permRow("R-GAR", "QS-KAS", "ROYAL")).toBeNull();
     expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBe(4);
     expect((await permissions.matrix(ctx, role.id, mr)).screens.length).toBeGreaterThan(20);
   });

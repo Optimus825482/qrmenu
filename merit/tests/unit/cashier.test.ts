@@ -28,7 +28,7 @@ afterAll(async () => {
 describe("cashier.tableBoard", () => {
   it("masaları, açık siparişleri, çağrıları ve bugünün KPI'larını döndürür", async () => {
     const s = await orderSetup();
-    const second = await testDb.outletTable.create({ data: { outletId: s.outlet.id, label: "M2" } });
+    const second = await testDb.outletTable.create({ data: { outletId: s.outlet.id, areaId: s.table.areaId, label: "M2" } });
     const cashierUser = await staffCtx("kasa", "R-KAS", s.outlet.id);
     const waiter = await staffCtx("garson", "R-GAR", s.outlet.id);
     await addMember(waiter.user.id, s.outlet.id);

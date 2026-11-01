@@ -23,16 +23,19 @@ const cashierTabs = [
 export function OpsShell({ children, outletName, hotelName, fullName, targets }: { children: React.ReactNode; outletName: string; hotelName: string; fullName: string; targets: OutletTarget[] }) {
   const path = usePathname();
   const search = useSearchParams();
-  const tabs = path.startsWith("/kasa") ? cashierTabs : path.startsWith("/kds") ? [] : waiterTabs;
+  const isKiosk = path.startsWith("/kasa");
+  const tabs = isKiosk ? cashierTabs : path.startsWith("/kds") ? [] : waiterTabs;
+  const containerClass = isKiosk ? "mx-auto w-full max-w-[1700px] px-3 sm:px-6" : "mx-auto max-w-5xl px-4";
+
   return <div className="min-h-dvh bg-bg text-text">
     <header className="sticky top-0 z-20 border-b border-border bg-surface/95 px-4 py-3 shadow-sm backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
+      <div className={`flex flex-wrap items-center gap-2 ${containerClass}`}>
         <strong className="mr-auto text-sm">{outletName} <span className="text-muted">· {hotelName}</span></strong>
         <span className="hidden text-xs text-muted sm:inline">{fullName}</span><NotificationBell /><LiveBadge /><OutletSwitcher targets={targets} /><LogoutButton className="rounded-lg border border-border px-2 py-1 text-xs" />
       </div>
     </header>
-    <main className="mx-auto max-w-5xl p-4 pb-20">{children}</main>
-    {tabs.length > 0 ? <nav aria-label="Personel bölümleri" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface"><div className="mx-auto flex max-w-5xl justify-around">{tabs.map((tab) => {
+    <main className={`${containerClass} py-4 pb-20`}>{children}</main>
+    {tabs.length > 0 ? <nav aria-label="Personel bölümleri" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface"><div className={`flex justify-around ${containerClass}`}>{tabs.map((tab) => {
       const active = path === tab.path && search.get("sekme") === tab.query;
       return <Link key={tab.href} href={tab.href} aria-current={active ? "page" : undefined} className={`min-h-12 px-3 py-3 text-xs font-medium ${active ? "text-accent" : "text-muted"}`}>{tab.label}</Link>;
     })}</div></nav> : null}

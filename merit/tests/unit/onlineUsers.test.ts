@@ -43,8 +43,8 @@ async function open(username: string, roleCode: string, hotelCode: string) {
 
 describe("online kullanıcı takibi", () => {
   it("createSession session.changed yayınlar (ONLINE, SISTEM/YONETIM)", async () => {
-    const mr = await hotelId("MR");
-    const { user, session } = await open("gar1", "R-GAR", "MR");
+    const mr = await hotelId("ROYAL");
+    const { user, session } = await open("gar1", "R-GAR", "ROYAL");
 
     const changed = publishMock.mock.calls
       .map((call) => call[0] as { type: string; hotelId?: string; roleKinds?: string[]; payload?: { status?: string; sessionId?: string; fullName?: string; roleCode?: string } })
@@ -67,9 +67,9 @@ describe("online kullanıcı takibi", () => {
   });
 
   it("forceLogout oturumu CIKTI/ZORUNLU kapatır, FORCE_LOGOUT ve audit byUserId yazar", async () => {
-    const admin = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "MR" });
-    const { user, session } = await open("gar1", "R-GAR", "MR");
-    await onlineUsers.forceLogout(await ctxFor(admin, { hotelCode: "MR" }), session.id);
+    const admin = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const { user, session } = await open("gar1", "R-GAR", "ROYAL");
+    await onlineUsers.forceLogout(await ctxFor(admin, { hotelCode: "ROYAL" }), session.id);
 
     const closed = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
     expect(closed.status).toBe("CIKTI");
@@ -84,10 +84,10 @@ describe("online kullanıcı takibi", () => {
   });
 
   it("R-OTM kendi otelinin oturumunu kapatır, başka otelin oturumunda FORBIDDEN", async () => {
-    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
-    const ctx = await ctxFor(otm, { hotelCode: "MR" });
-    const own = await open("gar1", "R-GAR", "MR");
-    const other = await open("gar2", "R-GAR", "MRP");
+    const otm = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(otm, { hotelCode: "ROYAL" });
+    const own = await open("gar1", "R-GAR", "ROYAL");
+    const other = await open("gar2", "R-GAR", "PREMIUM");
 
     await expect(onlineUsers.forceLogout(ctx, other.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: other.session.id } })).status).toBe("ONLINE");
@@ -97,11 +97,11 @@ describe("online kullanıcı takibi", () => {
   });
 
   it("endIdle yalnız eşiği aşanları kapatır", async () => {
-    const admin = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "MR" });
-    const ctx = await ctxFor(admin, { hotelCode: "MR" });
-    const stale = await open("gar1", "R-GAR", "MR");
-    const fresh = await open("gar2", "R-GAR", "MR");
-    const other = await open("gar3", "R-GAR", "MRP");
+    const admin = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(admin, { hotelCode: "ROYAL" });
+    const stale = await open("gar1", "R-GAR", "ROYAL");
+    const fresh = await open("gar2", "R-GAR", "ROYAL");
+    const other = await open("gar3", "R-GAR", "PREMIUM");
     const now = Date.now();
     const idleMin = 45;
     await testDb.userSession.update({
@@ -117,21 +117,21 @@ describe("online kullanıcı takibi", () => {
       data: { lastSeenAt: new Date(now - 120 * MIN) },
     });
 
-    expect(await onlineUsers.endIdle(ctx, await hotelId("MR"))).toBe(1);
+    expect(await onlineUsers.endIdle(ctx, await hotelId("ROYAL"))).toBe(1);
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: stale.session.id } })).logoutReason).toBe(
       "HAREKETSIZLIK",
     );
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: fresh.session.id } })).status).toBe("ONLINE");
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: other.session.id } })).status).toBe("ONLINE");
 
-    const listed = await onlineUsers.list(ctx, await hotelId("MR"));
+    const listed = await onlineUsers.list(ctx, await hotelId("ROYAL"));
     expect(listed.counts.autoLogoutToday).toBe(1);
     expect(listed.rows.map((row) => row.user.username)).toEqual(["gar2"]);
   });
 
   it("süpürücü UYARI session.changed status UYARI yayınlar", async () => {
     const now = new Date("2026-06-15T12:00:00.000Z");
-    const { session } = await open("gar1", "R-GAR", "MR");
+    const { session } = await open("gar1", "R-GAR", "ROYAL");
     await testDb.userSession.update({
       where: { id: session.id },
       data: {
@@ -162,10 +162,10 @@ describe("online kullanıcı takibi", () => {
 
   describe("rol hiyerarşisi (YONETIM çağıran)", () => {
     async function setup() {
-      const mgr = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "MR" });
-      const ctx = await ctxFor(mgr, { hotelCode: "MR" });
+      const mgr = await makeUser({ username: "mudur", roleCode: "R-OTM", hotelCode: "ROYAL" });
+      const ctx = await ctxFor(mgr, { hotelCode: "ROYAL" });
       const mgrSession = await createSession({
-        userId: mgr.id, hotelId: await hotelId("MR"), roleId: mgr.roleId, ip: "10.0.0.8",
+        userId: mgr.id, hotelId: await hotelId("ROYAL"), roleId: mgr.roleId, ip: "10.0.0.8",
       });
       return { ctx, mgr, mgrSession };
     }
@@ -173,7 +173,7 @@ describe("online kullanıcı takibi", () => {
 
     it("SISTEM oturumunu kapatamaz: FORBIDDEN + YETKISIZ_DENEME", async () => {
       const { ctx, mgr } = await setup();
-      const admin = await open("admin1", "R-SYS", "MR");
+      const admin = await open("admin1", "R-SYS", "ROYAL");
       await expect(onlineUsers.forceLogout(ctx, admin.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
       expect(await status(admin.session.id)).toBe("ONLINE");
       const rows = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME", userId: mgr.id } });
@@ -182,14 +182,14 @@ describe("online kullanıcı takibi", () => {
 
     it("başka yöneticinin oturumunu kapatamaz", async () => {
       const { ctx } = await setup();
-      const other = await open("mudur2", "R-OTM", "MR");
+      const other = await open("mudur2", "R-OTM", "ROYAL");
       await expect(onlineUsers.forceLogout(ctx, other.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
       expect(await status(other.session.id)).toBe("ONLINE");
     });
 
     it("kendi oturumunu ve kat.mr oturumunu kapatabilir", async () => {
       const { ctx, mgrSession } = await setup();
-      const kat = await open("kat.mr", "R-KAT", "MR");
+      const kat = await open("kat.mr", "R-KAT", "ROYAL");
       await onlineUsers.forceLogout(ctx, kat.session.id);
       expect(await status(kat.session.id)).toBe("CIKTI");
       await onlineUsers.forceLogout(ctx, mgrSession.id);
@@ -198,13 +198,13 @@ describe("online kullanıcı takibi", () => {
 
     it("endIdle SISTEM/YONETIM oturumlarını atlar", async () => {
       const { ctx, mgrSession } = await setup();
-      const admin = await open("admin1", "R-SYS", "MR");
-      const kat = await open("kat.mr", "R-KAT", "MR");
+      const admin = await open("admin1", "R-SYS", "ROYAL");
+      const kat = await open("kat.mr", "R-KAT", "ROYAL");
       const old = new Date(Date.now() - 120 * MIN);
       for (const id of [admin.session.id, kat.session.id, mgrSession.id]) {
         await testDb.userSession.update({ where: { id }, data: { lastSeenAt: old } });
       }
-      expect(await onlineUsers.endIdle(ctx, await hotelId("MR"))).toBe(1);
+      expect(await onlineUsers.endIdle(ctx, await hotelId("ROYAL"))).toBe(1);
       expect(await status(kat.session.id)).toBe("CIKTI");
       expect(await status(admin.session.id)).toBe("ONLINE");
       expect(await status(mgrSession.id)).toBe("ONLINE");
@@ -212,31 +212,31 @@ describe("online kullanıcı takibi", () => {
 
     it("list SISTEM oturumlarını gizler; SISTEM çağıran hepsini görür", async () => {
       const { ctx } = await setup();
-      const admin = await open("admin1", "R-SYS", "MR");
-      await open("mudur2", "R-OTM", "MR");
-      const mr = await hotelId("MR");
+      const admin = await open("admin1", "R-SYS", "ROYAL");
+      await open("mudur2", "R-OTM", "ROYAL");
+      const mr = await hotelId("ROYAL");
       const names = (await onlineUsers.list(ctx, mr)).rows.map((r) => r.user.username).sort();
       expect(names).toEqual(["mudur", "mudur2"]);
-      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "ROYAL" });
       const all = (await onlineUsers.list(sysCtx, mr)).rows.map((r) => r.user.username).sort();
       expect(all).toEqual(["admin1", "mudur", "mudur2"]);
     });
 
     it("sayaçlar SISTEM oturumunu YONETIM çağırana saklar; SISTEM çağıran sayar", async () => {
       const { ctx } = await setup();
-      const admin = await open("admin1", "R-SYS", "MR");
-      await open("gar1", "R-GAR", "MR");
-      const mr = await hotelId("MR");
+      const admin = await open("admin1", "R-SYS", "ROYAL");
+      await open("gar1", "R-GAR", "ROYAL");
+      const mr = await hotelId("ROYAL");
       const mgrCounts = (await onlineUsers.list(ctx, mr)).counts;
       expect(mgrCounts).toMatchObject({ total: 2, online: 2 });
-      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "ROYAL" });
       const sysCounts = (await onlineUsers.list(sysCtx, mr)).counts;
       expect(sysCounts).toMatchObject({ total: 3, online: 3 });
     });
 
     it("başka yöneticiyi kapatma denemesi YETKISIZ_DENEME yazar", async () => {
       const { ctx, mgr } = await setup();
-      const other = await open("mudur2", "R-OTM", "MR");
+      const other = await open("mudur2", "R-OTM", "ROYAL");
       await expect(onlineUsers.forceLogout(ctx, other.session.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
       const rows = await testDb.auditLog.findMany({ where: { action: "YETKISIZ_DENEME", userId: mgr.id } });
       expect(rows).toHaveLength(1);
@@ -244,17 +244,17 @@ describe("online kullanıcı takibi", () => {
 
     it("SISTEM çağıran yönetici oturumunu kapatır ve boştakileri sonlandırır", async () => {
       const { mgrSession } = await setup();
-      const admin = await open("admin1", "R-SYS", "MR");
-      const sysCtx = await ctxFor(admin.user, { hotelCode: "MR" });
+      const admin = await open("admin1", "R-SYS", "ROYAL");
+      const sysCtx = await ctxFor(admin.user, { hotelCode: "ROYAL" });
       await onlineUsers.forceLogout(sysCtx, mgrSession.id);
       expect(await status(mgrSession.id)).toBe("CIKTI");
 
-      const mgr2 = await open("mudur2", "R-OTM", "MR");
+      const mgr2 = await open("mudur2", "R-OTM", "ROYAL");
       await testDb.userSession.update({
         where: { id: mgr2.session.id },
         data: { lastSeenAt: new Date(Date.now() - 120 * MIN) },
       });
-      expect(await onlineUsers.endIdle(sysCtx, await hotelId("MR"))).toBe(1);
+      expect(await onlineUsers.endIdle(sysCtx, await hotelId("ROYAL"))).toBe(1);
       expect(await status(mgr2.session.id)).toBe("CIKTI");
       expect(await status(admin.session.id)).toBe("ONLINE");
     });

@@ -80,4 +80,18 @@ async function build(tx: Prisma.TransactionClient, orderId: string): Promise<Rec
   };
 }
 
-export const receipt = { build };
+/** Kitchen tickets are intentionally price-free regardless of the guest menu price setting. */
+async function buildKitchen(tx: Prisma.TransactionClient, orderId: string): Promise<ReceiptPayload> {
+  const payload = await build(tx, orderId);
+  const kitchenPayload: ReceiptPayload = {
+    ...payload,
+    items: payload.items.map(({ name, qty, note }) => ({ name, qty, ...(note ? { note } : {}) })),
+    pricesShown: false,
+    footer: [],
+  };
+  delete kitchenPayload.subtotal;
+  delete kitchenPayload.currency;
+  return kitchenPayload;
+}
+
+export const receipt = { build, buildKitchen };

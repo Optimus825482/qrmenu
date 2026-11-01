@@ -1,0 +1,110 @@
+{
+  "guest": {
+    "menu": {
+      "title": "Menu",
+      "closed": "Le menu est actuellement fermé",
+      "orderingClosed": "Les commandes sont fermées, vous pouvez consulter le menu",
+      "soldOut": "Épuisé",
+      "allergens": "Allergènes",
+      "empty": "Le menu n’est pas encore prêt",
+      "featured": "Sélection",
+      "search": "Rechercher dans le menu",
+      "noResults": "Aucun plat ne correspond à votre recherche",
+      "filters": "Mentions",
+      "allergenNote": "Les allergènes suivent le règlement européen 1169/2011. Demandez à notre équipe avant de commander."
+    },
+    "allergen": {
+      "gluten": "Gluten",
+      "sut": "Lait",
+      "yumurta": "Œuf",
+      "kuruyemis": "Fruits à coque",
+      "deniz_urunu": "Crustacés",
+      "alkol": "Alcool",
+      "soya": "Soja",
+      "susam": "Sésame",
+      "yerfistigi": "Arachides",
+      "yumusakca": "Mollusques",
+      "balik": "Poisson",
+      "kereviz": "Céleri",
+      "hardal": "Moutarde",
+      "sulfit": "Sulfites",
+      "acibakla": "Lupin"
+    },
+    "cart": {
+      "title": "Ma sélection",
+      "empty": "Vous n’avez encore rien sélectionné",
+      "add": "Ajouter à la sélection",
+      "note": "Note",
+      "submit": "Envoyer la sélection",
+      "total": "Total",
+      "unavailableItems": "Articles épuisés",
+      "quantity": "Quantité"
+    },
+    "order": {
+      "status": {
+        "GONDERILDI": "Envoyée",
+        "ONAYLANDI": "Confirmée",
+        "HAZIR": "Prête",
+        "SERVIS_EDILDI": "Servie",
+        "REDDEDILDI": "Refusée",
+        "IPTAL": "Annulée"
+      },
+      "number": "Commande n° : {no}",
+      "thanks": "Merci, votre commande a été envoyée",
+      "rejected": "Votre commande n’a pas pu être acceptée"
+    },
+    "call": {
+      "waiter": "Appeler un serveur",
+      "bill": "Demander l’addition",
+      "sent": "Votre demande a été envoyée",
+      "tooMany": "Trop de demandes, veuillez patienter",
+      "title": "Comment pouvons-nous vous aider ?",
+      "justCall": "Appelez simplement",
+      "close": "Fermer"
+    },
+    "common": {
+      "back": "Retour",
+      "retry": "Veuillez réessayer",
+      "offline": "Connexion indisponible, reconnexion en cours",
+      "close": "Fermer",
+      "language": "Langue"
+    },
+    "room": {
+      "placeholder": "La page de la chambre sera disponible lors d’une prochaine étape"
+    },
+    "unavailable": {
+      "title": "Ce menu est actuellement indisponible",
+      "BILINMEYEN": "Ce code QR n’a pas été reconnu. Veuillez scanner à nouveau le code de votre table.",
+      "MASA_PASIF": "Cette table n’est pas utilisée actuellement.",
+      "OUTLET_PASIF": "Cet établissement ne sert pas actuellement.",
+      "OTEL_PASIF": "Le menu de cet hôtel est actuellement indisponible.",
+      "MENU_KAPALI": "Le menu est actuellement fermé.",
+      "RATE_LIMITED": "Trop de tentatives. Veuillez patienter un instant.",
+      "HATA": "Une erreur s’est produite. Veuillez réessayer."
+    },
+    "selections": {
+      "remove": "Supprimer",
+      "generalNote": "Note pour la commande",
+      "sending": "Envoi…",
+      "failed": "Échec de l’envoi, veuillez réessayer",
+      "mine": "Mes commandes",
+      "backToMenu": "Retour au menu",
+      "reason": "Motif : {reason}",
+      "items": "Articles",
+      "notFound": "Commande introuvable",
+      "optWaiter": "Serveur",
+      "optBill": "Addition",
+      "openSelections": "Ma sélection ({count})",
+      "callFailed": "La demande n’a pas pu être envoyée, veuillez réessayer"
+    },
+    "tag": {
+      "VEGAN": "Végan",
+      "VEJETARYEN": "Végétarien",
+      "GLUTENSIZ": "Sans gluten",
+      "SEFIN_SECIMI": "Choix du chef",
+      "POPULER": "Populaire",
+      "YENI": "Nouveau",
+      "ACILI": "Épicé"
+    }
+  }
+}

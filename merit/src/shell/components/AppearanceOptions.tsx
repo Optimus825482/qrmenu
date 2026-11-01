@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type CSSProperties, type ReactNode } from "react";
-import { FONT_FAMILY_LABELS, FONT_SCALE_LABELS, FONT_STACKS, THEME_LABELS } from "../appearance";
+import { FONT_FAMILY_LABELS, FONT_SCALE_LABELS, FONT_STACKS, FONT_WEIGHTS, THEME_LABELS } from "../appearance";
 import {
   FONT_FAMILIES,
   FONT_SCALES,
@@ -230,7 +230,7 @@ export function AppearanceOptions({ variant }: { variant: Variant }) {
         labels={FONT_FAMILY_LABELS}
         value={fontFamily}
         onChange={(v) => store().setFontFamily(v)}
-        optionStyle={(f) => ({ fontFamily: FONT_STACKS[f] })}
+        optionStyle={(f) => ({ fontFamily: FONT_STACKS[f], fontWeight: FONT_WEIGHTS[f] })}
       />
       <ChoiceGroup
         variant={variant}

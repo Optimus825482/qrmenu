@@ -36,13 +36,13 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 17 rol, 33 ekran, 3 oda servisi outleti ve admin üretir", async () => {
+  it("seed 3 otel, 17 rol, 33 ekran ve admin üretir; outlet oluşturmaz", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
     expect(await db.role.count()).toBe(17);
     expect(await db.appScreen.count()).toBe(33);
-    expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
+    expect(await db.outlet.count()).toBe(0);
     expect(await db.hotelModule.count()).toBe(12);
     expect(await db.user.count({ where: { username: "admin" } })).toBe(1);
   });
@@ -218,11 +218,13 @@ describe("seed (gerçek test DB)", () => {
     }
   });
 
-  it("oda servisi outleti yeniden adlandırılsa bile ikinci seed onu türüne göre bulur", async () => {
+  it("önceden eklenmiş outletleri ikinci seed çalıştırmasında korur", async () => {
     await runSeed(db);
-    await db.outlet.updateMany({ where: { type: "ODA_SERVISI" }, data: { name: "IRD" } });
+    const hotel = await db.hotel.findFirstOrThrow({ where: { code: "ROYAL" } });
+    await db.outlet.create({
+      data: { hotelId: hotel.id, name: "IRD", type: "ODA_SERVISI", hasMenu: true, hasOrdering: true },
+    });
     await runSeed(db);
-    expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
-    expect(await db.outlet.count({ where: { type: "ODA_SERVISI", name: "IRD" } })).toBe(3);
+    expect(await db.outlet.count({ where: { type: "ODA_SERVISI", name: "IRD" } })).toBe(1);
   });
 });

@@ -10,6 +10,7 @@ export type Target = {
   kind: "OUTLET" | "MINIBAR" | "ADMIN";
   hotelId: string;
   hotelName: string;
+  hotelCode: string;
   outletId?: string;
   label: string;
   roleId: string;
@@ -37,6 +38,7 @@ export async function listTargets(userId: string): Promise<Target[]> {
         kind: "ADMIN",
         hotelId: hotel.id,
         hotelName: hotel.name,
+        hotelCode: hotel.code,
         label: `Yönetim · ${hotel.name}`,
         roleId: user.roleId,
       });
@@ -63,6 +65,7 @@ export async function listTargets(userId: string): Promise<Target[]> {
       kind: "OUTLET",
       hotelId: m.outlet.hotelId,
       hotelName: m.outlet.hotel.name,
+      hotelCode: m.outlet.hotel.code,
       outletId: m.outletId,
       label: `${m.outlet.name} · ${m.outlet.hotel.name}`,
       roleId,
@@ -75,6 +78,7 @@ export async function listTargets(userId: string): Promise<Target[]> {
       kind: "MINIBAR",
       hotelId: hotel.id,
       hotelName: hotel.name,
+      hotelCode: hotel.code,
       label: `Minibar · ${hotel.name}`,
       roleId: user.roleId,
     });

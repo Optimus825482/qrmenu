@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiyatsız & Coğrafi Konum Korumalı QR Menü Mimarisi - Kapsamlı Küresel Rapor</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --secondary: #0f172a;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f97316;
+            --purple: #8b5cf6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.07);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+            --radius-md: 12px;
+            --radius-lg: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+        }
+
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Hero */
+        header.hero {
+            background: linear-gradient(135deg, #090d16 0%, #1e293b 50%, #0369a1 100%);
+            color: #ffffff;
+            padding: 4rem 1.5rem 5rem;
+            position: relative;
+            border-bottom: 4px solid var(--accent);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 158, 11, 0.25);
+            backdrop-filter: blur(8px);
+            padding: 0.4rem 1.1rem;
+            border-radius: 9999px;
+            font-size: 0.825rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fde68a;
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 1.2rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            max-width: 900px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+        }
+
+        .hero-meta strong {
+            color: #f8fafc;
+        }
+
+        /* Nav */
+        .nav-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.6rem;
+            overflow-x: auto;
+            padding: 0.25rem 0;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.825rem;
+            font-weight: 600;
+            padding: 0.4rem 0.85rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            background: var(--bg);
+            border: 1px solid var(--border);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            background: var(--primary-light);
+            border-color: #bfdbfe;
+        }
+
+        main {
+            padding: 3rem 0 5rem;
+        }
+
+        section {
+            margin-bottom: 5rem;
+            scroll-margin-top: 5rem;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--primary);
+            letter-spacing: 0.1em;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--secondary);
+            font-weight: 800;
+            margin-top: 0.25rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-top: 0.4rem;
+        }
+
+        /* UI Showcases / Mockups Grid */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.75rem;
+            margin-top: 2rem;
+        }
+
+        .device-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .device-badge {
+            background: #f1f5f9;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .device-badge span.tag {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        /* Phone Screen Mockup */
+        .phone-mockup {
+            background: #ffffff;
+            margin: 1.25rem;
+            border: 6px solid #1e293b;
+            border-radius: 28px;
+            overflow: hidden;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .phone-top-bar {
+            background: #ffffff;
+            padding: 0.6rem 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .screen-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.85rem;
+            background: #fcfdfe;
+            font-size: 0.8rem;
+        }
+
+        .screen-scroll::-webkit-scrollbar { width: 3px; }
+        .screen-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
+
+        /* Wide POS Terminal Showcase Styles */
+        .pos-wide-container {
+            background: #0b0f19;
+            border: 12px solid #1e293b;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+            margin: 2.5rem 0 3.5rem;
+            overflow: hidden;
+            color: #f1f5f9;
+        }
+
+        .pos-top-bar {
+            background: #111827;
+            padding: 0.9rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1f2937;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pos-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+
+        .pos-brand span.live-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .pos-top-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .pos-toggle-group {
+            display: flex;
+            align-items: center;
+            background: #1f2937;
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            border: 1px solid #374151;
+        }
+
+        .toggle-switch-sim {
+            width: 40px;
+            height: 22px;
+            background: #10b981;
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .toggle-switch-sim::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border-radius: 50%;
+        }
+
+        .pos-main-body {
+            display: grid;
+            grid-template-columns: 280px 1fr 340px;
+            min-height: 580px;
+            background: #0f172a;
+        }
+
+        @media (max-width: 1100px) {
+            .pos-main-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* POS Left Sidebar - Sections & Quick Filters */
+        .pos-left-panel {
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .salon-tab-btn {
+            background: #1f2937;
+            color: #cbd5e1;
+            border: 1px solid #374151;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .salon-tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #3b82f6;
+        }
+
+        .printer-status-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 1rem;
+            font-size: 0.8rem;
+            margin-top: auto;
+        }
+
+        .printer-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+
+        /* POS Center - Floor Plan & Table Grid */
+        .pos-center-hall {
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #0f172a;
+        }
+
+        .hall-stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .hall-stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dot-stat { width: 10px; height: 10px; border-radius: 50%; }
+
+        .hall-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .table-tile {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 125px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .table-tile:hover {
+            transform: translateY(-2px);
+            border-color: #64748b;
+        }
+
+        .table-tile.status-order {
+            border-color: #10b981;
+            background: linear-gradient(180deg, #13271f 0%, #111e18 100%);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+        }
+
+        .table-tile.status-alert {
+            border-color: #ef4444;
+            background: linear-gradient(180deg, #2a1619 0%, #1f1113 100%);
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #ef4444; }
+            50% { border-color: #7f1d1d; }
+            100% { border-color: #ef4444; }
+        }
+
+        .tile-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .tile-number {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .tile-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-green { background: #065f46; color: #34d399; }
+        .badge-red { background: #7f1d1d; color: #f87171; }
+        .badge-blue { background: #1e3a8a; color: #93c5fd; }
+        .badge-gray { background: #374151; color: #9ca3af; }
+
+        .tile-bottom {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.75rem;
+        }
+
+        /* POS Right Sidebar - Selected Table Active Ticket & Actions */
+        .pos-right-panel {
+            background: #111827;
+            border-left: 1px solid #1f2937;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .ticket-header {
+            border-bottom: 1px solid #1f2937;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .ticket-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-items-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .ticket-item {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.8rem;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .ticket-item.alert-item {
+            border-left-color: #ef4444;
+            background: #23181c;
+        }
+
+        .pos-action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .btn-pos-primary {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-pos-secondary {
+            background: #1f2937;
+            color: #cbd5e1;
+            border: 1px solid #374151;
+            padding: 0.7rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Tablet/POS Screen Mockup */
+        .pos-mockup {
+            background: #111827;
+            margin: 1.25rem;
+            border: 8px solid #1f2937;
+            border-radius: 16px;
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+            color: #f3f4f6;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .pos-header {
+            background: #1f2937;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-bottom: 1px solid #374151;
+        }
+
+        .pos-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            overflow: hidden;
+        }
+
+        .pos-tables-grid {
+            padding: 0.85rem;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .pos-table-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 0.6rem;
+            font-size: 0.75rem;
+        }
+
+        .pos-table-card.active-alert {
+            border-color: #ef4444;
+            background: #27171a;
+        }
+
+        .pos-table-card.active-order {
+            border-color: #10b981;
+            background: #13241e;
+        }
+
+        .pos-sidebar-ticket {
+            background: #1e293b;
+            border-left: 1px solid #374151;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.75rem;
+        }
+
+        /* Components Simulation */
+        .geo-prompt {
+            background: #ffffff;
+            border: 1px solid #93c5fd;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 2rem 0.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .geo-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .geo-btn {
+            background: var(--primary);
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-top: 0.75rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .food-item-noprice {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .food-item-noprice img, .food-thumb-sim {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .food-item-noprice .info {
+            flex: 1;
+        }
+
+        .food-item-noprice .title {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 0.8rem;
+        }
+
+        .food-item-noprice .desc {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin: 0.15rem 0;
+            line-height: 1.3;
+        }
+
+        .btn-order-add {
+            background: #eff6ff;
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            float: right;
+            cursor: pointer;
+        }
+
+        /* Concept Theme Swatches */
+        .theme-swatches {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 0 0 1px #cbd5e1;
+        }
+
+        /* Feature Matrix */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-box h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-box p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Comparison Table */
+        .table-wrap {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        table.data-table th {
+            background: #f8fafc;
+            padding: 1rem 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        table.data-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        table.data-table tr:hover {
+            background: #fbfcfe;
+        }
+
+        /* Complaints Dual */
+        .complaints-dual {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 868px) {
+            .complaints-dual { grid-template-columns: 1fr; }
+        }
+
+        .complaint-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .complaint-card.customer { border-top: 4px solid var(--danger); }
+        .complaint-card.business { border-top: 4px solid var(--warning); }
+
+        .complaint-card h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        .issue-row {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .issue-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .issue-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.35rem;
+        }
+
+        .issue-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        .solution-tag {
+            background: #ecfdf5;
+            border-left: 3px solid #10b981;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            color: #065f46;
+            margin-top: 0.5rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Comprehensive Mobile Responsiveness Media Queries */
+        @media (max-width: 900px) {
+            header.hero {
+                padding: 2.5rem 1rem 3rem;
+            }
+
+            .hero h1 {
+                font-size: 1.85rem;
+                line-height: 1.3;
+            }
+
+            .hero p {
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                gap: 0.6rem;
+                padding-top: 1rem;
+            }
+
+            .section-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .section-header p {
+                font-size: 0.9rem;
+            }
+
+            .pos-wide-container {
+                border-width: 6px;
+                border-radius: 16px;
+                margin: 1.5rem 0 2.5rem;
+            }
+
+            .pos-top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+                padding: 0.75rem 1rem;
+            }
+
+            .pos-top-controls {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .pos-main-body {
+                grid-template-columns: 1fr;
+            }
+
+            .pos-left-panel {
+                border-right: none;
+                border-bottom: 1px solid #1f2937;
+            }
+
+            .pos-right-panel {
+                border-left: none;
+                border-top: 1px solid #1f2937;
+            }
+
+            .hall-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 0.6rem;
+            }
+
+            .table-tile {
+                min-height: 100px;
+                padding: 0.75rem;
+            }
+
+            .tile-number {
+                font-size: 0.95rem;
+            }
+
+            .complaints-dual {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+
+            .complaint-card {
+                padding: 1.25rem;
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .phone-mockup {
+                margin: 0.75rem;
+                height: 480px;
+            }
+
+            .table-wrap {
+                margin: 0 -0.5rem;
+                border-radius: 10px;
+            }
+
+            table.data-table th, table.data-table td {
+                padding: 0.75rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .feature-box {
+                padding: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.85rem;
+            }
+
+            .hero h1 {
+                font-size: 1.55rem;
+            }
+
+            .hero-badge {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.75rem;
+            }
+
+            .nav-links a {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.7rem;
+            }
+
+            .pos-wide-container {
+                border-width: 3px;
+                border-radius: 12px;
+            }
+
+            .pos-brand {
+                font-size: 0.95rem;
+            }
+
+            .hall-stats-bar {
+                flex-wrap: wrap;
+                gap: 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .btn-pos-primary {
+                font-size: 0.8rem;
+                padding: 0.7rem;
+            }
+        }
+
+        /* Footer */
+        footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 3rem 0;
+            font-size: 0.875rem;
+            border-top: 1px solid #1e293b;
+        }
+
+        footer strong { color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-badge">🌐 Tam Kapsamlı Küresel Sistem Mimarisi</div>
+            <h1>Dinamik Fiyat Modlu & Coğrafi Konum Korumalı<br>QR Menü, Sipariş ve Oda Servisi Ekosistemi</h1>
+            <p>Ana yönetici modülünden tek tuşla açılıp kapatılabilen <strong>"Fiyat Gösterme / Gizleme"</strong> sistemiyle; müşterinin dilerse tamamen fiyatsız all-inclusive lüks deneyim yaşadığı, dilerse standart fiyatlı menüye geçebildiği; konum doğrulamasıyla güvenliğe alınan, QR Menü, QR Sipariş ve QR Oda Servisi (IRD) operasyonlarını tek merkezden yöneten yeni nesil otel ve restoran mimarisi.</p>
+            
+            <div class="hero-meta">
+                <div>Model: <strong>Ana Yönetici Panelli Fiyat Göster / Gizle Toggle Anahtarı</strong></div>
+                <div>Güvenlik: <strong>HTML5 Browser Geofencing (GPS Doğrulama)</strong></div>
+                <div>Donanım: <strong>Dokunmatik Kasa Paneli + Opsiyonel Adisyon Yazıcısı + Garson PWA</strong></div>
+                <div>Özelleştirme: <strong>Dinamik Renk Paletleri & Sonsuz Alt Kategori Motoru</strong></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-sticky">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#ekosistem-mimarisi">Ekosistem Mimarisi</a>
+                <a href="#ornek-uygulama-gorselleri">Örnek Ekran Görselleri</a>
+                <a href="#kategori-tema-yonetimi">Sonsuz Kategori & Renk Yönetimi</a>
+                <a href="#cografi-konum">GPS Geofencing Güvenliği</a>
+                <a href="#benzer-global-ornekler">Dünyadaki Benzer Uygulamalar</a>
+                <a href="#intelity-inceleme" style="color:#6366f1; font-weight:700;">🔍 INTELITY GEMS İncelemesi</a>
+                <a href="merit_resort_qr.html" style="color:#d4af37; font-weight:700; border-color:#d4af37;">💎 Çok Alanlı Lüks Resort QR Raporu</a>
+                <a href="merit_room_service_qr.html" style="color:#38bdf8; font-weight:700; border-color:#38bdf8;">🚪 Oda Servisi (IRD) & Butler QR Raporu</a>
+                <a href="merit_triple_hotels_matrix.html" style="color:#ec4899; font-weight:700; border-color:#ec4899;">🏨 3 Merit Oteli Karşılaştırma Matrisi</a>
+                <a href="merit_proforma_teklif_sartname.html" style="color:#10b981; font-weight:700; border-color:#10b981;">📜 Fiyat Teklifi & Şartname (Proforma)</a>
+                <a href="#sikayetler-ve-cozumler">Saha Şikayetleri & Çözümler</a>
+                <a href="#yonetici-kontrolu">Dokunmatik Ana Kasa & Garson PWA</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- System Architecture Overview -->
+        <section id="ekosistem-mimarisi">
+            <div class="section-header">
+                <span>01. Sistem Mimarisi</span>
+                <h2>Mimari Bileşenler ve Çalışma Prensibi</h2>
+                <p>Kullanıcı hiçbir bilgi girmeden sadece QR okutur; güvenlik GPS ile sağlanır, sipariş ve çağrılar dokunmatik ana ekrana ve garson telefonlarına anlık akar.</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-box">
+                    <h4>📍 1. Sıfır Bilgi Girişi & GPS Koruması</h4>
+                    <p>Kullanıcıdan ad, soyad, telefon veya üyelik asla istenmez. Tek talep: <em>"Masa 14 menüsünü açmak için konumunuza izin verin"</em>. Kullanıcı mekandaysa menü 0.8 saniyede açılır; uzaktaysa sahte sipariş vermesi engellenir.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🏷️ 2. Ana Yönetici Modülünden Açılıp Kapanabilen Fiyat Sistemi (Göster / Gizle)</h4>
+                    <p><strong>QR Menü, QR Sipariş ve QR Oda Servisi (IRD)</strong> sistemlerinde fiyat gösterimi, <strong>Ana Yönetici Paneli (Super Admin)</strong> üzerinden tek tuşla (Toggle Switch) açılıp kapatılabilir:</p>
+                    <p style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+                        • <strong>Fiyatları Gizle Modu:</strong> All-inclusive (her şey dahil) oteller, VIP lounge'lar ve özel kulüpler için sıfır fiyat etiketi ve sıfır para birimi ile saf prestij deneyimi sunar.<br>
+                        • <strong>Fiyatları Göster Modu:</strong> A la carte, harici misafirler veya ücretli servis alanları için tek tıkla aktif edilerek fiyatlar ve döviz seçenekleri (TL, USD, EUR, GBP) anında görünür hale gelir.<br>
+                        • <strong>Bölge / Outlet Bazlı Yönetim:</strong> Fiyat gösterimi ister otel genelinde, ister sadece oda servisinde veya spesifik bir havuz/bar alanında bağımsız olarak açılıp kapatılabilir.
+                    </p>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🛎️ 3. Akıllı Garson Çağırma Modülü</h4>
+                    <p>Müşteri tek tıkla masaya çağrı gönderebilir: <em>"Su İsteği", "Peçete/Çatal", "Soru Sor", "Hesap İste (Nakit)", "Hesap İste (POS)"</em>. Garson masaya ne gerektiğini bilerek hazırlıklı gelir.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🤝 4. Masalara Garson Atama & Akıllı Saat (Wearable)</h4>
+                    <p>Yönetici kasa panelinden masaları garsonlara atar (Örn: Masa 08, 09, 14 ➔ Ali V.). Bu masalardan gelen çağrı ve siparişler doğrudan o garsonun <strong>telefonuna ve akıllı saatine (titreşimli)</strong> ve aynı anda ana kasa dokunmatik paneline bildirim olarak düşer.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🛡️ 5. Çift Onaylı Sipariş Akışı (Mutfağa Otomatik Gitmez!)</h4>
+                    <p>Masadan verilen sipariş asla doğrudan mutfağa veya adisyona yazılmaz. İstek önce <strong>atanmış garsonun telefonuna veya ana kasa paneline</strong> düşer. Personel ekrandan <em>"Onayla"</em> butonuna bastığı an sipariş masanın açık adisyonuna işlenir.</p>
+                </div>
+
+                <div class="feature-box">
+                    <h4>🧾 6. Fiyatsız İsteğe Bağlı Kasa Adisyon Baskısı</h4>
+                    <p>Sistemde herhangi bir mutfak yazıcı yönlendirmesi yoktur. Masadan gelen ve garson/kasa tarafından onaylanan siparişler, istendiği takdirde kasa başındaki termal yazıcıdan <strong>fiyatsız ürün dökümü fişi</strong> olarak basılabilir.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- UI Screen Mockups (Detailed) -->
+        <section id="ornek-uygulama-gorselleri">
+            <div class="section-header">
+                <span>02. Arayüz Simülasyonları</span>
+                <h2>Örnek Uygulama Görselleri & Ekran Akışları</h2>
+                <p>Müşteri telefonundaki Fiyatsız Menü + GPS Onayı, Garson PWA Mobil Arayüzü ve Kasa Dokunmatik Ana Yönetim Paneli.</p>
+            </div>
+
+            <div class="showcase-grid">
+
+                <!-- 1. Customer Mobile Screen (GPS & No-Price Menu) -->
+                <div class="device-card">
+                    <div class="device-badge">
+                        <span>📱 Müşteri Telefonu (PWA)</span>
+                        <span class="tag">Fiyatsız & Konum Korumalı</span>
+                    </div>
+
+                    <div class="phone-mockup">
+                        <div class="phone-top-bar">
+                            <span>Boutique Brasserie</span>
+                            <span style="color:var(--primary);">Masa: 08</span>
+                        </div>
+                        <div class="screen-scroll">
+
+                            <!-- GPS Prompt Sim -->
+                            <div class="geo-prompt">
+                                <div class="geo-icon">📍</div>
+                                <div style="font-weight:700; font-size:0.8rem; color:var(--secondary);">Masa 08 Menüsü Açılıyor</div>
+                                <div style="font-size:0.65rem; color:var(--text-muted); margin-top:0.25rem;">
+                                    Sipariş güvenliği için restoran içinde olduğunuz doğrulanıyor.
+                                </div>
+                                <div style="font-size:0.65rem; color:#16a34a; font-weight:700; margin-top:0.4rem;">
+                                    ✅ Mekan İçi Doğrulandı
+                                </div>
+                            </div>
+
+                            <div style="font-weight:800; font-size:0.85rem; margin-bottom:0.4rem; color:var(--secondary);">Şefin Spesiyalleri</div>
+
+                            <!-- Food Item 1 (NO PRICE) -->
+                            <div class="food-item-noprice">
+                                <div class="food-thumb-sim">🥩</div>
+                                <div class="info">
+                                    <div class="title">T-Bone Steak & Kuşkonmaz</div>
+                                    <div class="desc">Kuru dinlendirilmiş dana eti, taze kekikli tereyağı sosu ile.</div>
+                                    <div style="font-size:0.65rem; color:#059669; font-weight:600;">Glutensiz • Şef Tavsiyesi</div>
+                                </div>
+                                <button class="btn-order-add">+ İsteğe Ekle</button>
+                            </div>
+
+                            <!-- Food Item 2 (NO PRICE) -->
+                            <div class="food-item-noprice">
+                                <div class="food-thumb-sim">🍝</div>
+                                <div class="info">
+                                    <div class="title">Trüf Mantarlı Taze Tagliolini</div>
+                                    <div class="desc">El açması İtalyan makarnası, parmesan krema ve trüf dilimleri.</div>
+                                    <div style="font-size:0.65rem; color:#059669; font-weight:600;">Vejetaryen</div>
+                                </div>
+                                <button class="btn-order-add">+ İsteğe Ekle</button>
+                            </div>
+
+                            <!-- Smart Suggestion (Upsell without price) -->
+                            <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:0.6rem; margin-top:0.75rem;">
+                                <div style="font-weight:700; font-size:0.7rem; color:#92400e;">💡 Akıllı Öneri: Şefin Eşleşmesi</div>
+                                <div style="font-size:0.65rem; color:#78350f; margin-top:0.2rem;">
+                                    T-Bone Steak yanına <strong>Cabernet Sauvignon Reserve</strong> içeceğimizi denemek ister misiniz?
+                                </div>
+                                <button style="background:#b45309; color:#fff; border:none; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.65rem; font-weight:700; margin-top:0.4rem; cursor:pointer;">
+                                    + İçeceği İsteğe Ekle
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sticky Action Bar -->
+                        <div style="background:#ffffff; border-top:1px solid var(--border); padding:0.6rem; display:flex; flex-direction:column; gap:0.35rem;">
+                            <button style="background:var(--primary); color:#fff; border:none; padding:0.5rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer;">
+                                🛎️ Sipariş İsteğini İlet (2 Ürün)
+                            </button>
+                            <button style="background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:0.4rem; border-radius:6px; font-weight:600; font-size:0.7rem; cursor:pointer;">
+                                🔔 Garson Çağır (Su / Servis / Soru)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Waiter PWA Mobile & Smartwatch -->
+                <div class="device-card">
+                    <div class="device-badge">
+                        <span>📲 Garson Ekranı & Akıllı Saat</span>
+                        <span class="tag" style="background:#fef3c7; color:#b45309;">Atanmış Masa Onayı</span>
+                    </div>
+
+                    <div class="phone-mockup" style="border-color:#334155; height: 550px;">
+                        <div class="phone-top-bar" style="background:#1e293b; color:#fff;">
+                            <span>Garson: <strong>Ali V.</strong> (Masa 08, 09, 14)</span>
+                            <span style="background:#10b981; color:#fff; font-size:0.6rem; padding:0.1rem 0.3rem; border-radius:4px;">Saat Bağlı ⌚</span>
+                        </div>
+                        <div class="screen-scroll">
+                            
+                            <!-- Smartwatch Quick Preview Widget -->
+                            <div style="background:#0f172a; border:2px solid #38bdf8; border-radius:16px; padding:0.65rem; color:#fff; text-align:center; margin-bottom:0.75rem;">
+                                <div style="font-size:0.65rem; color:#38bdf8; font-weight:800; text-transform:uppercase;">⌚ Akıllı Saat Bildirimi (Titreşim)</div>
+                                <div style="font-size:0.85rem; font-weight:800; margin-top:0.2rem; color:#f87171;">🚨 MASA 14 ÇAĞRISI</div>
+                                <div style="font-size:0.7rem; color:#cbd5e1;">"Buz & İlave Çatal"</div>
+                                <div style="display:flex; justify-content:center; gap:0.4rem; margin-top:0.4rem;">
+                                    <span style="background:#10b981; color:#fff; padding:0.15rem 0.5rem; border-radius:9999px; font-size:0.65rem; font-weight:700;">✓ Gidiyorum</span>
+                                </div>
+                            </div>
+
+                            <div style="font-size:0.75rem; font-weight:700; color:var(--secondary); margin-bottom:0.4rem;">Sorumlu Olduğum Masalar</div>
+
+                            <!-- Assigned Table Pending Order -->
+                            <div style="background:#fefce8; border:1px solid #fef08a; border-radius:8px; padding:0.65rem; margin-bottom:0.6rem;">
+                                <div style="display:flex; justify-content:space-between; font-weight:800; color:#854d0e; font-size:0.75rem;">
+                                    <span>🍽️ Masa 08 (Onay Bekliyor)</span>
+                                    <span style="background:#eab308; color:#fff; padding:0.1rem 0.35rem; border-radius:4px; font-size:0.6rem;">ONAY GEREKLİ</span>
+                                </div>
+                                <div style="font-size:0.7rem; color:#713f12; margin-top:0.3rem; line-height:1.4;">
+                                    • 1x T-Bone Steak & Kuşkonmaz<br>
+                                    • 1x Trüf Mantarlı Tagliolini<br>
+                                    • 1x Cabernet Sauvignon
+                                </div>
+                                <div style="font-size:0.65rem; color:#a16207; margin-top:0.3rem; font-style:italic;">
+                                    *Onaylarsanız masanın adisyonuna eklenecektir.
+                                </div>
+                                <div style="display:flex; gap:0.4rem; margin-top:0.45rem;">
+                                    <button style="flex:1; background:#16a34a; color:#fff; border:none; padding:0.35rem; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                                        ✅ Onayla (Adisyona Yaz)
+                                    </button>
+                                    <button style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; padding:0.35rem 0.5rem; border-radius:6px; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                                        Reddet
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Table Call Alert -->
+                            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.6rem;">
+                                <div style="display:flex; justify-content:space-between; font-weight:700; color:#b91c1c; font-size:0.75rem;">
+                                    <span>🚨 Masa 14 Çağrısı</span>
+                                    <span>45 sn önce</span>
+                                </div>
+                                <div style="font-size:0.7rem; color:#7f1d1d; margin-top:0.15rem;">
+                                    Talep: "Buz ve İlave Çatal İstendi"
+                                </div>
+                                <button style="background:#ef4444; color:#fff; border:none; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.65rem; font-weight:700; margin-top:0.35rem; width:100%; cursor:pointer;">
+                                    Masaya Ulaştım (Kapat)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="background:#f8fafc; border-top:1px solid var(--border); padding:0.45rem; text-align:center; font-size:0.65rem; color:var(--text-muted);">
+                            Bluetooth Akıllı Saat & WebSocket Canlı Eşzamanlı
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ULTRA WIDE 21-INCH TOUCHSCREEN POS DASHBOARD (FULL WIDTH) -->
+            <div style="margin-top: 3.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #10b981; letter-spacing: 0.1em;">ANA DONANIM SİMÜLASYONU</span>
+                        <h3 style="font-size: 1.6rem; color: var(--secondary); font-weight: 800; margin-top: 0.2rem;">🖥️ Kasa Dokunmatik Ana Paneli (Geniş Ekran Konsolu)</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-muted);">Kasadaki 15.6" / 21.5" dokunmatik hepsi-bir-arada (All-in-One) terminalde canlı salon, anlık siparişler, garson alarmları ve opsiyonel adisyon yazıcı kontrolü.</p>
+                    </div>
+                    <div style="background: #e2e8f0; padding: 0.4rem 0.9rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 700; color: #334155;">
+                        1920x1080 Full HD Dokunmatik Görünüm
+                    </div>
+                </div>
+
+                <div class="pos-wide-container">
+                    <!-- Top Status Bar -->
+                    <div class="pos-top-bar">
+                        <div class="pos-brand">
+                            <span class="live-dot"></span>
+                            <span>BOUTIQUE POS MASTER v4.2</span>
+                            <span style="font-size: 0.75rem; background: #1e293b; color: #94a3b8; padding: 0.2rem 0.6rem; border-radius: 6px; font-weight: 600;">Kasa 01 • Salon Sorumlusu: Kemal B.</span>
+                        </div>
+
+                        <div class="pos-top-controls">
+                            <!-- Toggle Button for Mobile Table Ordering -->
+                            <div class="pos-toggle-group">
+                                <span style="color: #94a3b8; font-weight: 600;">Masadan QR Sipariş:</span>
+                                <div class="toggle-switch-sim" title="Tıklayarak Masadan Siparişi Anında Durdurabilirsiniz"></div>
+                                <span style="color: #34d399; font-weight: 800;">AÇIK (AKTİF)</span>
+                            </div>
+
+                            <!-- Clock & Date -->
+                            <div style="font-size: 0.85rem; font-weight: 700; color: #e2e8f0; background: #1e293b; padding: 0.35rem 0.85rem; border-radius: 8px;">
+                                🕒 20:45:12 • Cuma (Pik Saat)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Split Body (3 Panels) -->
+                    <div class="pos-main-body">
+
+                        <!-- Left Panel: Salon Navigation & Quick Settings -->
+                        <div class="pos-left-panel">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Bölümler & Katlar</div>
+                            
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <div class="salon-tab-btn active">
+                                    <span>🏛️ Ana Salon (İç Mekan)</span>
+                                    <span style="background: rgba(255,255,255,0.2); font-size:0.7rem; padding:0.15rem 0.45rem; border-radius:4px;">12 Masa</span>
+                                </div>
+                                <div class="salon-tab-btn">
+                                    <span>🌿 Bahçe & Teras</span>
+                                    <span style="background: #374151; font-size:0.7rem; padding:0.15rem 0.45rem; border-radius:4px;">18 Masa</span>
+                                </div>
+                                <div class="salon-tab-btn">
+                                    <span>🍸 VIP Lounge & Bar</span>
+                                    <span style="background: #374151; font-size:0.7rem; padding:0.15rem 0.45rem; border-radius:4px;">6 Masa</span>
+                                </div>
+                            </div>
+
+                            <!-- Thermal Printer Status Card -->
+                            <div class="printer-status-box">
+                                <div class="printer-status-header">
+                                    <span>🖨️ Adisyon Yazıcısı</span>
+                                    <span style="color:#10b981; font-weight:800;">HAZIR</span>
+                                </div>
+                                <div style="color: #cbd5e1; font-size: 0.75rem;">Model: Epson TM-T88VI (USB/LAN)</div>
+                                <div style="color: #94a3b8; font-size: 0.7rem; margin-top: 0.2rem;">Kağıt Rulosu: %85 Dolu</div>
+                                <button style="background: #334155; color: #fff; border: none; padding: 0.4rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; width: 100%; margin-top: 0.6rem; cursor: pointer;">
+                                    Kağıt Besle & Test Fişi
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Center Panel: The Table Floor Map -->
+                        <div class="pos-center-hall">
+                            <div class="hall-stats-bar">
+                                <div class="hall-stat-pill"><span class="dot-stat" style="background:#10b981;"></span> <strong>2</strong> Yeni Sipariş</div>
+                                <div class="hall-stat-pill"><span class="dot-stat" style="background:#ef4444;"></span> <strong>1</strong> Garson Çağrısı</div>
+                                <div class="hall-stat-pill"><span class="dot-stat" style="background:#f59e0b;"></span> <strong>1</strong> İzin Beklemede</div>
+                                <div class="hall-stat-pill"><span class="dot-stat" style="background:#3b82f6;"></span> <strong>4</strong> Dolu Masa</div>
+                                <div class="hall-stat-pill"><span class="dot-stat" style="background:#475569;"></span> <strong>4</strong> Boş Masa</div>
+                            </div>
+
+                            <div class="hall-grid">
+                                <!-- Table 01 -->
+                                <div class="table-tile">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 01</span>
+                                        <span class="tile-badge badge-blue">Dolu</span>
+                                    </div>
+                                    <div class="tile-bottom">Garson: Zeynep • 35 dk</div>
+                                </div>
+
+                                <!-- Table 02 (EMPTY) -->
+                                <div class="table-tile" style="opacity: 0.65;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 02</span>
+                                        <span class="tile-badge badge-gray">Boş</span>
+                                    </div>
+                                    <div class="tile-bottom">Hazır (Temizlendi)</div>
+                                </div>
+
+                                <!-- Table 08 (NEW INCOMING ORDER - HIGHLIGHTED) -->
+                                <div class="table-tile status-order" style="border-width: 3px;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 08</span>
+                                        <span class="tile-badge badge-green">YENİ SİPARİŞ</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:#34d399; font-weight:700; margin-top:0.4rem;">
+                                        ⚡ 2 Yemek, 1 İçecek
+                                    </div>
+                                    <div class="tile-bottom">GPS Onaylı • 1 dk önce</div>
+                                </div>
+
+                                <!-- Table 04 (WAITING - PERMISSION DENIED SCENARIO) -->
+                                <div class="table-tile" style="border-color:#f59e0b; background: linear-gradient(180deg, #251e12 0%, #1c160e 100%);">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 04</span>
+                                        <span class="tile-badge" style="background:#78350f; color:#fde68a;">BEKLEMEDE</span>
+                                    </div>
+                                    <div style="font-size:0.7rem; color:#fbbf24; font-weight:700; margin-top:0.35rem;">
+                                        ✋ Konum İzni Reddedildi
+                                    </div>
+                                    <div class="tile-bottom" style="color:#d97706;">Garson Ali • Masaya Gidiyor</div>
+                                </div>
+
+                                <!-- Table 05 -->
+                                <div class="table-tile" style="opacity: 0.65;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 05</span>
+                                        <span class="tile-badge badge-gray">Boş</span>
+                                    </div>
+                                    <div class="tile-bottom">Hazır (Temizlendi)</div>
+                                </div>
+
+                                <!-- Table 14 (URGENT CALL - FLASHING RED) -->
+                                <div class="table-tile status-alert" style="border-width: 3px;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 14</span>
+                                        <span class="tile-badge badge-red">GARSON ÇAĞRISI</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:#f87171; font-weight:700; margin-top:0.4rem;">
+                                        🚨 "Buz & Çatal İsteği"
+                                    </div>
+                                    <div class="tile-bottom" style="color:#fca5a5;">Bekliyor: 52 sn</div>
+                                </div>
+
+                                <!-- Table 07 -->
+                                <div class="table-tile">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 07</span>
+                                        <span class="tile-badge badge-blue">Dolu</span>
+                                    </div>
+                                    <div class="tile-bottom">Garson: Zeynep • 18 dk</div>
+                                </div>
+
+                                <!-- Table 09 (SECOND ORDER) -->
+                                <div class="table-tile status-order">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 09</span>
+                                        <span class="tile-badge badge-green">EK SİPARİŞ</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:#34d399; font-weight:600; margin-top:0.4rem;">
+                                        2x Türk Kahvesi
+                                    </div>
+                                    <div class="tile-bottom">3 dk önce</div>
+                                </div>
+
+                                <!-- Table 10 -->
+                                <div class="table-tile" style="opacity: 0.65;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 10</span>
+                                        <span class="tile-badge badge-gray">Boş</span>
+                                    </div>
+                                    <div class="tile-bottom">Hazır</div>
+                                </div>
+
+                                <!-- Table 11 -->
+                                <div class="table-tile">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 11</span>
+                                        <span class="tile-badge badge-blue">Dolu</span>
+                                    </div>
+                                    <div class="tile-bottom">Garson: Ali • 40 dk</div>
+                                </div>
+
+                                <!-- Table 12 -->
+                                <div class="table-tile" style="opacity: 0.65;">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 12</span>
+                                        <span class="tile-badge badge-gray">Boş</span>
+                                    </div>
+                                    <div class="tile-bottom">Hazır</div>
+                                </div>
+
+                                <!-- Table 15 -->
+                                <div class="table-tile">
+                                    <div class="tile-top">
+                                        <span class="tile-number">Masa 15</span>
+                                        <span class="tile-badge badge-blue">Dolu</span>
+                                    </div>
+                                    <div class="tile-bottom">Garson: Zeynep • 22 dk</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Live Detailed Ticket of Selected Table (Masa 08) -->
+                        <div class="pos-right-panel">
+                            <div>
+                                <div class="ticket-header">
+                                    <div class="ticket-title">
+                                        <span>Masa 08 İstek Dökümü</span>
+                                        <span style="font-size:0.75rem; background:#eab308; color:#fff; padding:0.2rem 0.5rem; border-radius:4px;">ONAY BEKLİYOR</span>
+                                    </div>
+                                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.35rem;">
+                                        Atanmış Garson: <strong>Ali V.</strong> • Konum: <strong>Restoran İçi (Doğrulandı)</strong>
+                                    </div>
+                                </div>
+
+                                <div class="ticket-items-list">
+                                    <div class="ticket-item" style="border-left-color: #eab308;">
+                                        <div style="display:flex; justify-content:space-between; font-weight:700; color:#f8fafc;">
+                                            <span>1x T-Bone Steak & Kuşkonmaz</span>
+                                            <span style="color:#eab308;">Masadan İstendi</span>
+                                        </div>
+                                        <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.2rem;">
+                                            Pişme: Orta (Medium) • Not: <em>"Tuzsuz lütfen"</em>
+                                        </div>
+                                    </div>
+
+                                    <div class="ticket-item" style="border-left-color: #eab308;">
+                                        <div style="display:flex; justify-content:space-between; font-weight:700; color:#f8fafc;">
+                                            <span>1x Trüf Mantarlı Tagliolini</span>
+                                            <span style="color:#eab308;">Masadan İstendi</span>
+                                        </div>
+                                        <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.2rem;">
+                                            Özel Not: Ekstra taze parmesan ile servis.
+                                        </div>
+                                    </div>
+
+                                    <div class="ticket-item" style="border-left-color: #eab308;">
+                                        <div style="display:flex; justify-content:space-between; font-weight:700; color:#f8fafc;">
+                                            <span>1x Cabernet Sauvignon Reserve</span>
+                                            <span style="color:#eab308;">Masadan İstendi</span>
+                                        </div>
+                                        <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.2rem;">
+                                            Kadeh Servis • Şef Önerisi
+                                        </div>
+                                    </div>
+
+                                    <!-- Table 14 Urgent Alert Banner -->
+                                    <div class="ticket-item alert-item">
+                                        <div style="font-weight:700; color:#f87171;">⚠️ Yanıp Sönen Çağrı: Masa 14</div>
+                                        <div style="font-size:0.7rem; color:#fca5a5; margin-top:0.15rem;">
+                                            "Buz ve İlave Çatal İstendi" (Garson Ali V.'nin saatine iletildi)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Action Buttons for Touchscreen -->
+                            <div class="pos-action-btns">
+                                <button class="btn-pos-primary" style="background:#16a34a;">
+                                    <span>✅ Masanın Siparişini Onayla (Adisyona Yaz)</span>
+                                </button>
+                                <button class="btn-pos-secondary" style="border-color:#3b82f6; color:#93c5fd;">
+                                    🖨️ Fiyatsız Ürün Dökümü Fişi Bas (İsteğe Bağlı)
+                                </button>
+                                <button class="btn-pos-secondary" style="border-color:#dc2626; color:#f87171;">
+                                    ❌ İsteği Reddet / Masayı Uyar
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Category & Infinite Nesting & Theming -->
+        <section id="kategori-tema-yonetimi">
+            <div class="section-header">
+                <span>03. Sistem Yönetim Modülü</span>
+                <h2>Sonsuz Alt Kategori & Mekana Özel Renk / Ahenk Yönetimi</h2>
+                <p>Restoranın ruhuna göre özelleştirilebilen renk paletleri ve sınırsız derinlikte hiyerarşik kategori ağacı.</p>
+            </div>
+
+            <div class="feature-grid">
+                <!-- Infinite Categories -->
+                <div class="feature-box">
+                    <h4>🌳 Sonsuz Alt Kategori (N-Tier Tree Structure)</h4>
+                    <p>Sistem sabit bir "Yemekler/İçecekler" tablosuna sıkışmaz. Yönetici panelinden limitsiz derinlikte kırılım oluşturulabilir:</p>
+                    <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:0.85rem; margin-top:0.75rem; font-family:monospace; font-size:0.8rem;">
+                        📁 İçecekler (Görsel Destekli)<br>
+                        &nbsp;&nbsp;└── 📁 Soğuk İçecekler (Görsel Destekli)<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── 📁 Alkollü İçecekler<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;├── 📁 Kokteyller ➔ [Mojito, Negroni]<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;└── 📁 Şaraplar ➔ Kırmızı, Beyaz<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📁 Alkolsüz İçecekler<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── 📁 Ev Yapımı Limonatalar
+                    </div>
+                    <p style="font-size:0.8rem; color:#059669; font-weight:600; margin-top:0.5rem;">
+                        * Her bir alt kategori ve her bir menü öğesi için ayrı fotoğraf yükleme desteği zorunludur.
+                    </p>
+                </div>
+
+                <!-- Theme & Color Engine -->
+                <div class="feature-box">
+                    <h4>🎨 Mekana Özel Renk ve Ahenk Motoru</h4>
+                    <p>Her restoranın mimari tarzı farklıdır. Yönetici panelinden seçilen renk paleti, müşterinin telefonundaki PWA arayüzünü anında dönüştürür (CSS Variables):</p>
+                    
+                    <div style="margin-top:0.75rem;">
+                        <div style="font-size:0.8rem; font-weight:700;">1. Lüks & Fine-Dining (Black Gold)</div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0;">
+                            <div class="swatch" style="background:#0f172a;"></div>
+                            <div class="swatch" style="background:#d97706;"></div>
+                            <div class="swatch" style="background:#f8fafc;"></div>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Koyu Gece & Şampanya Altını</span>
+                        </div>
+
+                        <div style="font-size:0.8rem; font-weight:700; margin-top:0.6rem;">2. Organik & Ege / Akdeniz Kafe (Olive Breeze)</div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0;">
+                            <div class="swatch" style="background:#365314;"></div>
+                            <div class="swatch" style="background:#fef08a;"></div>
+                            <div class="swatch" style="background:#f7fee7;"></div>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Zeytin Yeşili & Taş Keten</span>
+                        </div>
+
+                        <div style="font-size:0.8rem; font-weight:700; margin-top:0.6rem;">3. Canlı & Dinamik Bistro (Crimson Punch)</div>
+                        <div style="display:flex; align-items:center; gap:0.5rem; margin:0.25rem 0;">
+                            <div class="swatch" style="background:#991b1b;"></div>
+                            <div class="swatch" style="background:#fbbf24;"></div>
+                            <div class="swatch" style="background:#ffffff;"></div>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Sıcak Kırmızı & Amber</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Recommendation Engine -->
+                <div class="feature-box">
+                    <h4>🧠 Fiyatsız Akıllı Öneri Algoritması</h4>
+                    <p>Fiyat baskısı olmadan lezzet ve gastronomi eşleşmesi yapan kural motoru:</p>
+                    <ul style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem; padding-left:1.2rem;">
+                        <li><strong>Et Grubu Seçildiğinde:</strong> Eşlikçi meşe fıçılı kırmızı şarap veya trüflü patates önerisi.</li>
+                        <li><strong>Kahve Seçildiğinde:</strong> Günün taze fırından yeni çıkmış sıcak çikolatalı suflesi önerisi.</li>
+                        <li><strong>Saat Odaklı Öneri:</strong> Sabah 09:00'da soğuk içecekler yerine taze sıkma portakal suyu ve granola önerilmesi.</li>
+                    </ul>
+                </div>
+
+                <!-- Price Display / Hide Toggle Controller -->
+                <div class="feature-box" style="border: 2px solid #6366f1; background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%);">
+                    <h4 style="color:#4338ca;">🎚️ Ana Yönetici Panelinden Açılıp Kapanabilen "Fiyat Göster / Gizle" Sistemi</h4>
+                    <p><strong>QR Menü, QR Sipariş ve QR Oda Servisi (IRD)</strong> sistemlerinin tamamında, fiyatların misafire gösterilip gösterilmeyeceği <strong>Ana Yönetici Paneli (Super Admin)</strong> üzerinden tek bir anahtarla (Toggle Switch) yönetilir:</p>
+                    
+                    <div style="background:#ffffff; border:1px solid #e0e7ff; border-radius:8px; padding:0.85rem; margin-top:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:0.4rem; margin-bottom:0.4rem;">
+                            <span style="font-size:0.8rem; font-weight:700; color:#1e293b;">🏨 Tesis Geneli Fiyat Modu (Global Switch):</span>
+                            <span style="background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:999px; font-size:0.75rem; font-weight:800;">[FİYATLAR GİZLİ - All-Inclusive]</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:0.4rem; margin-bottom:0.4rem;">
+                            <span style="font-size:0.8rem; color:#475569;">🏖️ Sahil, İskele, Havuzlar & Cabanalar QR Menü:</span>
+                            <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700;">Fiyatsız Prestij Sunumu</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:0.4rem; margin-bottom:0.4rem;">
+                            <span style="font-size:0.8rem; color:#475569;">🍽️ Masadan QR Sipariş Modülü:</span>
+                            <span style="background:#dcfce7; color:#166534; padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700;">Fiyatsız Garson Onaylı Sipariş</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:0.8rem; color:#475569;">🚪 QR Oda Servisi (IRD) & VIP Puro/Şarap Salonu:</span>
+                            <span style="background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:999px; font-size:0.7rem; font-weight:700;">İsteğe Bağlı Fiyat Açık / Kapalı Toggle</span>
+                        </div>
+                    </div>
+
+                    <p style="font-size:0.8rem; color:#4f46e5; font-weight:700; margin-top:0.6rem;">
+                        ⚡ Yönetici panelinde anahtar "Fiyatları Göster" konumuna alındığı an sistem; TL, USD, EUR, GBP döviz birimleriyle ürün bazlı fiyatları otomatik devreye alır. "Fiyatları Gizle" konumunda ise tüm fiyat etiketleri ve para birimleri sistemden anında tamamen kaybolur.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Geofencing & GPS Security -->
+        <section id="cografi-konum">
+            <div class="section-header">
+                <span>04. Güvenlik, Bağlantı ve İtibar Koruması</span>
+                <h2>Wi-Fi, Mobil Data, Konum İzni Reddi ve Cihaz Güvenliği Mimarisi</h2>
+                <p>Misafirin haklarına saygı duyan; izin reddinde dahi operasyonu aksatmayan, kötüye kullanımlarda ise 30 günlük cihaz/IP bazlı kara liste uygulayan hibrit güvenlik yapısı.</p>
+            </div>
+
+            <!-- Workflow Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 1.25rem;">
+                    <div style="font-weight: 800; color: #166534; font-size: 0.95rem; margin-bottom: 0.4rem;">
+                        📶 1. Durum: Mekanın Wi-Fi Ağına Bağlıysa
+                    </div>
+                    <p style="font-size: 0.825rem; color: #15803d; line-height: 1.55;">
+                        Sistem misafirin mekan içi yerel Wi-Fi'da olduğunu algılar. <strong>Konum izni istemez (Sıfır İzin).</strong> Masa QR okutulduğu an masa otomatik olarak <em>DOLU</em> konumuna geçer. Garsona ve ana kasaya <em>"Masa QR Okutuldu (Wi-Fi Doğrulandı)"</em> bildirimi gider.
+                    </p>
+                </div>
+
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 1.25rem;">
+                    <div style="font-weight: 800; color: #1d4ed8; font-size: 0.95rem; margin-bottom: 0.4rem;">
+                        📍 2. Durum: Mobil Data + Konum İzni Verilirse
+                    </div>
+                    <p style="font-size: 0.825rem; color: #1e40af; line-height: 1.55;">
+                        Wi-Fi bağlı değilse konum izni talep edilir. Misafir onaylarsa, masa anında <strong>DOLU</strong> durumuna geçer. Atanmış garsonun akıllı saatine/telefonuna ve ana kasaya bildirim düşer. Garson sipariş verileceğini bilir; modül kapalıysa sipariş almak için masaya yönelir.
+                    </p>
+                </div>
+
+                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 1.25rem;">
+                    <div style="font-weight: 800; color: #b45309; font-size: 0.95rem; margin-bottom: 0.4rem;">
+                        ✋ 3. Durum: Mobil Data + Konum İzni REDDEDİLİRSE
+                    </div>
+                    <p style="font-size: 0.825rem; color: #92400e; line-height: 1.55;">
+                        Misafirin en doğal hakkıdır! Menüyü engelsizce inceler. Sistem masayı <strong>"BEKLEMEDE"</strong> durumuna alır; garsona ve kasaya <em>"Masa 14: Konum İzni Reddedildi"</em> uyarısı gider. Garson masaya intikal ederek gözüyle doğrular ve ekrandan tek tıkla masayı <strong>DOLU</strong> yapar.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Detailed Architecture Matrix -->
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Senaryo / Ağ Durumu</th>
+                            <th>Müşteri Ekranı</th>
+                            <th>Kasa & Garson Bildirimi</th>
+                            <th>Masa Durumu</th>
+                            <th>Operasyonel Süreç</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Mekan Wi-Fi Ağına Bağlı</strong></td>
+                            <td>İzin sormadan doğrudan fiyatsız menü açılır.</td>
+                            <td>🔔 <em>"Masa QR Okutuldu (Wi-Fi)"</em> bildirimi düşer.</td>
+                            <td><span style="background:#166534; color:#fff; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700;">DOLU</span></td>
+                            <td>Sipariş modülü açıksa misafir sipariş verebilir. Kapalıysa garson masaya intikal eder.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mobil Data (4.5G/5G) + İzin Verildi</strong></td>
+                            <td>GPS doğrulamasıyla menü açılır.</td>
+                            <td>🔔 <em>"Masa QR Okutuldu (GPS)"</em> bildirimi düşer.</td>
+                            <td><span style="background:#166534; color:#fff; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700;">DOLU</span></td>
+                            <td>Misafirin masada olduğu kesinleşir, servis personeli hazırlıklı bekler.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mobil Data + İzin REDDEDİLDİ</strong></td>
+                            <td>Tüm menüyü rahatça görüntüler. Sipariş butonu teyit bekler.</td>
+                            <td>⚠️ <em>"Masa 14: Konum İzni Reddedildi"</em> bildirimi düşer.</td>
+                            <td><span style="background:#d97706; color:#fff; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700;">BEKLEMEDE</span></td>
+                            <td>Garson masaya fiziken gider. Kasadan/telefondan doluluk onayını girer, sipariş kilidi açılır.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uzaktan / Sahte QR Girişimi (Fotoğraftan Okutma)</strong></td>
+                            <td>⛔ <em>"Mekan dışından işlem yapılamaz! Güvenlik Uyarısı"</em></td>
+                            <td>🚨 <em>"Masa 14: Lokasyon Dışı Kötüye Kullanım Girişimi"</em></td>
+                            <td><span style="background:#dc2626; color:#fff; padding:0.15rem 0.5rem; border-radius:4px; font-size:0.75rem; font-weight:700;">KİLİTLİ</span></td>
+                            <td>Sistem cihaz parmak izini alır (Fingerprint) ve <strong>30 Günlük Kara Liste</strong>'ye ekler.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Fraud Prevention, 30-Day Blacklist & Client-side Smart Cookies -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                
+                <!-- 30-Day Blacklist Protection Box -->
+                <div style="background: #ffffff; border: 2px solid #fca5a5; border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                        <span style="font-size:1.5rem;">🛡️</span>
+                        <h4 style="font-size:1.05rem; color:#991b1b; font-weight:800;">30 Günlük Akıllı Kara Liste (Blacklist Güvenliği)</h4>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55;">
+                        Bir kişi masadaki QR kodun fotoğrafını çekip evine gittiğinde veya uzaktan mekana asılsız istekler göndermeye kalktığında devreye giren caydırıcı kalkan:
+                    </p>
+                    <ul style="font-size:0.8rem; color:#7f1d1d; margin:0.75rem 0 0.75rem 1.2rem; line-height:1.6;">
+                        <li><strong>Koşullu Veri Kaydı:</strong> Normal misafirlerden <em>kesinlikle hiçbir veri kaydedilmez</em>. Yalnızca kötüye kullanım ve fraud teşebbüsü anında cihazın IP, User-Agent, tarayıcı ve işletim sistemi parmak izi (fingerprint) alınır.</li>
+                        <li><strong>30 Gün Sistem Blokajı:</strong> Kara listeye alınan bu cihaz/IP kombinasyonu eşleştiğinde, sistem bildirim üretmez ve istekleri sessizce imha eder.</li>
+                        <li><strong>İsteğe Bağlı İşletme Kuralı:</strong> Bu modül restoran sahibinin talebine göre kasa panelinden tek tıkla aktif veya pasif edilebilir.</li>
+                    </ul>
+                </div>
+
+                <!-- Client-Side Cookie-Based Recommendation Box -->
+                <div style="background: #ffffff; border: 2px solid #93c5fd; border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-sm);">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
+                        <span style="font-size:1.5rem;">🍪</span>
+                        <h4 style="font-size:1.05rem; color:#1e40af; font-weight:800;">Gizlilik Dostu Çerezler (Cihaz İçi Akıllı Öneri)</h4>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55;">
+                        Misafirin gizliliğine %100 saygı duyan, sunucu veritabanına hiçbir profil kaydetmeyen yerel (Local/Cookie) akıllı zeka motoru:
+                    </p>
+                    <ul style="font-size:0.8rem; color:#1e3a8a; margin:0.75rem 0 0.75rem 1.2rem; line-height:1.6;">
+                        <li><strong>Sunucusuz Hatırlama:</strong> Misafirin önceki sipariş tercihleri (Örn: Hamburger yanında daima Zero Kola istemesi) sadece kendi telefonunun tarayıcı çerezinde (Local Storage) saklanır. Sunucuda müşteri profili tutulmaz.</li>
+                        <li><strong>Kişiye Özel Lezzet Karşılaması:</strong> Misafir haftalar sonra aynı mekana tekrar geldiğinde, menü açıldığında: <em>"Tekrar hoş geldiniz! Şefimizin özel burgeri yanına her zamanki gibi Zero Kola ister misiniz?"</em> akıllı önerisi belirir.</li>
+                        <li><strong>KVKK & GDPR Tam Uyum:</strong> Kişisel veri sunucuya gitmediği için hiçbir regülasyon engeline takılmaz.</li>
+                    </ul>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Complaints & Field Solutions -->
+        <section id="sikayetler-ve-cozumler">
+            <div class="section-header">
+                <span>05. Saha Şikayetleri & Çözümler</span>
+                <h2>Bu Modele Özgü Dünya Genelindeki Şikayetler ve İlaç Reçeteleri</h2>
+                <p>Fiyatsız ve konum korumalı sistemlerde restoran sahiplerinin ve müşterilerin karşılaştığı 6 büyük problem ve çözümleri.</p>
+            </div>
+
+            <div class="complaints-dual">
+
+                <!-- Customer Complaints -->
+                <div class="complaint-card customer">
+                    <h3>👥 Müşteri Şikayetleri</h3>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>1. "Konum İznine Neden İhtiyaç Duyulduğu Açıklanmıyor"</span>
+                        </div>
+                        <div class="issue-desc">
+                            Müşteri menüyü görmek için QR okuttuğunda ekranda birdenbire soğuk bir tarayıcı konum uyarısı görünce <em>"Verilerimi mi takip ediyorlar?"</em> endişesine kapılıyor ve izni reddediyor.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Çözüm:</strong> Tarayıcı izninden önce şık bir karşılama ekranı gösterilmeli: <em>"Masa 14'e siparişinizin güvenle iletilebilmesi için mekan içi konum doğrulaması yapılacaktır."</em>
+                        </div>
+                    </div>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>2. "Garson Çağırdım Ama Gelip Gelmeyeceğini Bilmiyorum"</span>
+                        </div>
+                        <div class="issue-desc">
+                            Klasik QR menülerde "Garson Çağır" butonuna basınca buton grileşiyor ve hiçbir geri bildirim verilmiyor. Müşteri garsonun görüp görmediğini bilmediği için 5 kere daha butona basıyor.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Çözüm:</strong> Canlı geri bildirim: <em>"Çağrınız iletildi. Servis personelimiz Ali masanıza yönlendirildi (~45 sn)"</em> yazısı ve sesli geri onay gösterilmelidir.
+                        </div>
+                    </div>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>3. Görselsiz Menü Öğelerinde Yaşanan Hayal Kırıklığı</span>
+                        </div>
+                        <div class="issue-desc">
+                            Fiyat olmadığı için müşteri sadece isme bakarak karar vermek zorunda kalıyor. Görseli olmayan bir kokteyl veya yemek sipariş ettiğinde gelen sunum beklentisini karşılamıyor.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Çözüm:</strong> Sistem yönetim modülünden fotoğrafı yüklenmemiş hiçbir ana veya alt kategori öğesinin siparişe açılmasına izin verilmemelidir.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Complaints -->
+                <div class="complaint-card business">
+                    <h3>🏢 İşletmeci & Garson Şikayetleri</h3>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>1. Mekan İçi Varlık Tespiti vs. Masa Eşleşmesi (Bina İçi Konum Doğrulaması)</span>
+                        </div>
+                        <div class="issue-desc">
+                            <strong>Önemli Mimari Netlik:</strong> GPS/Geofencing asla masayı tespit etmek için <em>kullanılmaz</em>. Hangi masada oturulduğu zaten o <strong>masaya özel basılmış benzersiz dinamik QR kod (Örn: Masa 14)</strong> ile %100 net olarak belirlenir. GPS'in tek ve yegane görevi; sipariş veren kişinin <strong>fiziksel olarak o an restoranda bulunup bulunmadığını (Varlık Tespiti)</strong> doğrulamaktır. Bodrum katlarda veya kalın beton binalarda GPS sinyali 50-60 metre sapma yaparsa müşteri haksız yere dışarıda sanılabilir.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Doğru Mimari Çözüm:</strong> Geofence yarıçapı masa hassasiyetinde (1-2 metre) değil, tüm mekan parselini kapsayacak şekilde <strong>geniş (50-70 metre tampon paylı)</strong> tutulmalıdır. GPS bodrumda hiç çekmiyorsa sistem otomatik olarak restoranın <em>yerel Wi-Fi ağına bağlantıyı</em> mekan içi varlık kanıtı kabul ederek sipariş kilidini açmalıdır.
+                        </div>
+                    </div>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>2. Garsonların Bildirimleri Kaçırması (Gürültülü Mekan)</span>
+                        </div>
+                        <div class="issue-desc">
+                            Yoğun ve müzikli mekanlarda garsonlar ceplerindeki telefonun hafif zil sesini veya titreşimini duymuyor. Kasa panelinde bekleyen çağrılar birikiyor.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Çözüm:</strong> Garson PWA ekranı akıllı saat entegrasyonu (WearOS/Apple Watch) veya ana kasa dokunmatik panelinde 60 saniyeyi geçen çağrıların kırmızı yanıp sönmesi kuralı.
+                        </div>
+                    </div>
+
+                    <div class="issue-row">
+                        <div class="issue-title">
+                            <span>3. Adisyon Yazıcısında Kağıt Bitmesi Krizi</span>
+                        </div>
+                        <div class="issue-desc">
+                            Masadan gelen sipariş doğrudan ana kasa yazıcısına bağlıysa ve yazıcının rulosu bittiyse sipariş basılamıyor ve mutfak habersiz kalıyor.
+                        </div>
+                        <div class="solution-tag">
+                            <strong>Çözüm:</strong> Dokunmatik kasa panelinde çift yönlü kontrol: Sipariş yazıcıdan fiziksel olarak çıkana kadar masanın kartı yeşil renkte alarm verir ve personelden ekrana dokunarak "Fiş Alındı" teyidi ister.
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Global Similar Implementations -->
+        <section id="benzer-global-ornekler">
+            <div class="section-header">
+                <span>06. Global Pazar Karşılaştırması</span>
+                <h2>Dünyadaki Benzer Sistemler Neler Yapıyor?</h2>
+                <p>Bu özellik setine en yakın çalışan uluslararası platformların analizi.</p>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Fiyatsız Mod</th>
+                            <th>GPS / Geofencing</th>
+                            <th>Garson Çağrı</th>
+                            <th>Sonsuz Kategori & Renk</th>
+                            <th>Kasa & Donanım</th>
+                            <th style="color:#2563eb;">Yıllık Lisans Maliyeti (USD / Yıl)</th>
+                            <th style="color:#dc2626;">Tahmini Yıllık Komisyon Kesintisi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>FineDine (Global Lüks & Otel)</strong></td>
+                            <td>✅ Var (Menüden gizlenebilir)</td>
+                            <td>⚠️ Kısmi (IP tabanlı)</td>
+                            <td>✅ Mükemmel (Akıllı filtreler)</td>
+                            <td>✅ Geniş hiyerarşi & tema</td>
+                            <td>Tablet & Web panel odaklı</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">348$ - 1.620$ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">
+                                    • Starter: <strong>348$ / yıl</strong> (29$/ay)<br>
+                                    • Growth: <strong>828$ / yıl</strong> (69$/ay)<br>
+                                    • Premium: <strong>1.620$ / yıl</strong> (135$/ay)
+                                </small>
+                            </td>
+                            <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>Yıllık ödemede net sabit ücret</small></td>
+                        </tr>
+                        <tr>
+                            <td><strong>me&u / Mr Yum (Global Bar & Pub)</strong></td>
+                            <td>⚠️ Fiyat zorunlu (Sipariş/Öde)</td>
+                            <td>⚠️ Kısmi konum kontrolü</td>
+                            <td>✅ Var (Temel düzey)</td>
+                            <td>✅ Görsel zengin arayüz</td>
+                            <td>Harici POS köprüsü (Bridge)</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">936$ - 3.000$+ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">Mekan büyüklüğüne göre yıllık sabit SaaS</small>
+                            </td>
+                            <td>
+                                <strong style="color:#dc2626;">~3.600$ - 9.000$+ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">(Yıllık 300.000$ ciroda %1.5 - %2.9 kesinti)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sunday (Avrupa & FSR Masada Öde)</strong></td>
+                            <td>❌ Yok (Doğrudan hesap ödeme)</td>
+                            <td>❌ Yok (Masa QR sabit)</td>
+                            <td>⚠️ Kısıtlı (Garsona çağrı yok)</td>
+                            <td>⚠️ Sade liste formatı</td>
+                            <td>Oracle/Micros/Lightspeed köprüsü</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">2.388$ - 3.588$ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">
+                                    • Standart: <strong>2.388$ / yıl</strong><br>
+                                    • Premium: <strong>3.588$ / yıl</strong>
+                                </small>
+                            </td>
+                            <td>
+                                <strong style="color:#dc2626;">~2.000$ - 7.000$+ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">(İşlem başı %0.5 - %3.5 ciro payı)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Toast Mobile (ABD & Global FSR)</strong></td>
+                            <td>⚠️ Fiyat gizlenemiyor</td>
+                            <td>❌ Yok</td>
+                            <td>✅ Var (POS el terminali)</td>
+                            <td>⚠️ Standart menü şablonu</td>
+                            <td>Toast Özel Donanım & KDS</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">828$ - 2.268$+ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">POS + Mobile Order & Pay modülü</small>
+                            </td>
+                            <td>
+                                <strong style="color:#dc2626;">~4.500$ - 8.500$+ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">(%2.49 + 15¢ / sipariş işlem bedeli)</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Menulux (Bölgesel Restoran & POS)</strong></td>
+                            <td>✅ Ayarla kapatılabilir</td>
+                            <td>❌ Yok (Masa QR sabit)</td>
+                            <td>✅ Var (Temel çağrı)</td>
+                            <td>✅ POS uyumlu alt kategoriler</td>
+                            <td>✅ Dokunmatik Kasa + Adisyon Yazıcısı</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">~3.000 ₺ - 9.000 ₺ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">(Masa & terminal sayısına göre yıllık paket)</small>
+                            </td>
+                            <td><strong style="color:#16a34a;">0 ₺ (Sıfır Komisyon)</strong><br><small>Yıllık lisanslama modeli</small></td>
+                        </tr>
+                        <tr>
+                            <td><strong>EatApp (Körfez & Lüks Lounge)</strong></td>
+                            <td>✅ Var (VIP Lounge modu)</td>
+                            <td>✅ GPS & Wi-Fi hibrit</td>
+                            <td>✅ Var (Gelişmiş servis)</td>
+                            <td>✅ Çok dilli & görsel ağırlıklı</td>
+                            <td>Kasa konsolu & Garson saatleri</td>
+                            <td>
+                                <strong style="color:#2563eb; font-size:0.95rem;">1.428$ - 2.988$ / yıl</strong><br>
+                                <small style="color:var(--text-muted);">Yıllık kurumsal sözleşme (119$ - 249$/ay)</small>
+                            </td>
+                            <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>Kurumsal yıllık sabit paket</small></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Ultra Luxury Resort & 5-Star Hotel Enterprise Solutions (Merit Royal Segment) -->
+            <div style="margin-top: 3rem;">
+                <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.4rem;">
+                    <span style="font-size:1.5rem;">👑</span>
+                    <h3 style="font-size:1.35rem; color:var(--secondary); font-weight:800;">
+                        5 Yıldızlı Ultra-Lüks Resort & Otel Çözümleri (Merit Royal Standartları)
+                    </h3>
+                </div>
+                <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                    Merit Royal, Rixos Premium, Mandarin Oriental ve Four Seasons gibi dünya çapındaki 5 yıldızlı resort otellerde; VIP cabana/plaj siparişi, oda içi yemek (In-Room Dining), lüks spa/lounge konsiyerj ve çoklu restoran yönetimi sunan <strong>kurumsal enterprise</strong> sistemlerin yıllık lisans ve kurulum maliyetleri:
+                </p>
+
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ultra-Lüks Platform</th>
+                                <th>Kullanım Alanı</th>
+                                <th>Referans Otel Zincirleri</th>
+                                <th>Kurulum & PMS Entegrasyon</th>
+                                <th style="color:#2563eb;">Yıllık Enterprise Lisans (USD)</th>
+                                <th>Komisyon & Lisans Modeli</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>IRIS Hospitality (Global Lüks Lideri)</strong><br>
+                                    <small style="color:var(--text-muted);">IRIS F&B + Guest Web PWA</small>
+                                </td>
+                                <td>Plaj/Cabana, Havuz Başı QR, Oda Servisi, Restoranlar</td>
+                                <td>Marriott Luxury, Mandarin Oriental, Jumeirah, Kempinski</td>
+                                <td><strong>3.000$ - 8.000$</strong><br><small>(Opera PMS / Simphony POS entegrasyonu)</small></td>
+                                <td>
+                                    <strong style="color:#2563eb; font-size:0.95rem;">4.500$ - 12.000$ / yıl</strong><br>
+                                    <small style="color:var(--text-muted);">(Oda/Cabana sayısına göre: 1.5$ - 3.5$ PRPM)</small>
+                                </td>
+                                <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>Yıllık kurumsal sabit sözleşme</small></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>Crave Interactive (Lüks Tablet & QR)</strong><br>
+                                    <small style="color:var(--text-muted);">Crave In-Room + Mobile QR</small>
+                                </td>
+                                <td>VIP Süitler, Lüks Kabanalar, Fiyatsız All-Inclusive Menü</td>
+                                <td>Cheval Blanc, Ritz-Carlton, Atlantis The Palm</td>
+                                <td><strong>5.000$ - 15.000$</strong><br><small>(Özel tasarım & donanım dock paketleri)</small></td>
+                                <td>
+                                    <strong style="color:#2563eb; font-size:0.95rem;">6.000$ - 18.000$+ / yıl</strong><br>
+                                    <small style="color:var(--text-muted);">(Yazılım lisansı + tablet donanım kiralama)</small>
+                                </td>
+                                <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>Enterprise seviye hizmet</small></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>INTELITY (Enterprise Hospitality)</strong><br>
+                                    <small style="color:var(--text-muted);">GEMS Platform + F&B Module</small>
+                                </td>
+                                <td>Casino Resort, VIP Lounge, Özel Kulüpler, Vale/Oda</td>
+                                <td>Wynn Resorts, Hard Rock Casino, Fairmont</td>
+                                <td><strong>8.000$ - 20.000$</strong><br><small>(Özel API, KDS ve Güvenlik Altyapısı)</small></td>
+                                <td>
+                                    <strong style="color:#2563eb; font-size:0.95rem;">8.000$ - 24.000$+ / yıl</strong><br>
+                                    <small style="color:var(--text-muted);">(Büyük resort & casino ölçeği)</small>
+                                </td>
+                                <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>7/24 Özel mühendis desteği</small></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <strong>FineDine Enterprise (Hotel Edition)</strong><br>
+                                    <small style="color:var(--text-muted);">FineDine Multi-Venue Hotel</small>
+                                </td>
+                                <td>Resort İçi 5 Farklı Restoran + Havuz Başı + Çok Dilli</td>
+                                <td>Hilton Curio, Raffles, Rixos ve Butik Oteller</td>
+                                <td><strong>1.000$ - 2.500$</strong><br><small>(Menü dijitalleştirme & kurulum)</small></td>
+                                <td>
+                                    <strong style="color:#2563eb; font-size:0.95rem;">2.400$ - 5.000$ / yıl</strong><br>
+                                    <small style="color:var(--text-muted);">(Tüm F&B mekanları dahil paket)</small>
+                                </td>
+                                <td><strong style="color:#16a34a;">0$ (Sıfır Komisyon)</strong><br><small>SaaS abonelik modeli</small></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Strategic Note for Merit Royal Segment -->
+                <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; margin-top: 1.25rem; color: #f8fafc;">
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-weight:800; font-size:1rem; color:#fde68a;">
+                        <span>💎</span> Merit Royal Gibi Tesisler İçin Kritik Gereksinimler:
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-top:1rem; font-size:0.85rem; color:#cbd5e1;">
+                        <div>
+                            <strong style="color:#fff;">1. All-Inclusive Fiyatsız Zarafet:</strong><br>
+                            Ultra her şey dahil konseptte misafire fiyat gösterilmez; sunum Michelin kalitesinde gastronomi hikayesi ve zengin fotoğraflarla yapılır.
+                        </div>
+                        <div>
+                            <strong style="color:#fff;">2. Şezlong / Cabana GPS Hassasiyeti:</strong><br>
+                            Plajda veya iskelede şezlong numarasına özel basılmış QR kodlar ile garsonun elindeki akıllı saate anlık içecek/meyve siparişi düşer.
+                        </div>
+                        <div>
+                            <strong style="color:#fff;">3. Çok Dilli (Rusça, Arapça, İngilizce):</strong><br>
+                            Merit Royal profilindeki uluslararası VIP misafirler için sıfır gecikmeli kusursuz anadil desteği zorunludur.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SPECIAL DEEP DIVE: INTELITY GEMS & F&B MODULE ANALYSIS -->
+        <section id="intelity-inceleme">
+            <div class="section-header">
+                <span style="color:#6366f1;">🔬 Özel İnceleme & Derin Vaka Analizi</span>
+                <h2>INTELITY GEMS + F&B Modülü Mercek Altında</h2>
+                <p>Las Vegas Casinoları, Wynn Resorts ve Fairmont gibi ultra-lüks zincirlerin omurgası olan INTELITY ekosisteminin güçlü yönleri, operasyonel sancıları, kullanıcı/işletmeci tecrübeleri ve görsel mimari dökümü.</p>
+            </div>
+
+            <!-- INTELITY Overview Banner -->
+            <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 2px solid #6366f1; border-radius: var(--radius-lg); padding: 2rem; color: #fff; margin-bottom: 2.5rem; box-shadow: var(--shadow-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <div style="display:inline-block; background:rgba(99, 102, 241, 0.25); color:#a5b4fc; font-size:0.75rem; font-weight:800; padding:0.25rem 0.75rem; border-radius:9999px; text-transform:uppercase; margin-bottom:0.75rem; border:1px solid rgba(99, 102, 241, 0.4);">
+                            Dünya Çapında 500.000+ Lüks Oda & Suite
+                        </div>
+                        <h3 style="font-size:1.6rem; font-weight:800; color:#fff;">INTELITY Enterprise Hospitality</h3>
+                        <p style="font-size:0.95rem; color:#cbd5e1; max-width:800px; margin-top:0.4rem;">
+                            <strong>GEMS (Guest Experience Management System)</strong>, misafirin mobil uygulaması ve oda içi tabletinden gelen tüm F&B (Yiyecek & İçecek), oda servisi, konsiyerj ve servis taleplerini otelin arka ofis operasyonuna bağlayan merkezi sinir merkezidir.
+                        </p>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.8rem; color:#94a3b8;">Yıllık Lisans Ölçeği</div>
+                        <div style="font-size:1.5rem; font-weight:800; color:#38bdf8;">8.000$ - 24.000$+</div>
+                        <div style="font-size:0.75rem; color:#34d399;">Enterprise Sabit (Sıfır Komisyon)</div>
+                    </div>
+                </div>
+
+                <!-- 3 Pillars of INTELITY -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-top:1.5rem; border-top:1px solid #334155; padding-top:1.25rem;">
+                    <div>
+                        <strong style="color:#fde68a;">1. Misafir Arayüzü (Guest Web/App & Tablet):</strong>
+                        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Fiyatsız veya folyoya yansıyan lüks dijital menü, şezlong/oda QR tarama, tek tıkla oda servisi siparişi.</p>
+                    </div>
+                    <div>
+                        <strong style="color:#fde68a;">2. GEMS Merkezi Operasyon Motoru:</strong>
+                        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Gelen siparişi yapay zeka ile otomatik departmanlara (Mutfak, Bar, Kat Hizmetleri) yönlendirme ve SLA süre takibi.</p>
+                    </div>
+                    <div>
+                        <strong style="color:#fde68a;">3. Oracle OPERA & POS Entegrasyonu:</strong>
+                        <p style="font-size:0.8rem; color:#94a3b8; margin-top:0.25rem;">Siparişi doğrudan misafirin oda hesabına (Folio) yazma ve mutfak KDS ekranlarına hatasız aktarma.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUAL ARCHITECTURE MOCKUP: INTELITY GEMS CONSOLE -->
+            <div style="margin-bottom: 3rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+                    <h4 style="font-size:1.2rem; font-weight:800; color:var(--secondary);">
+                        🖥️ INTELITY GEMS 2.0 Operasyon Konsolu & F&B Akış Simülasyonu
+                    </h4>
+                    <span style="font-size:0.75rem; background:#ede9fe; color:#6366f1; padding:0.25rem 0.6rem; border-radius:6px; font-weight:700;">Arka Ofis Personel Arayüzü</span>
+                </div>
+
+                <div style="background:#090d16; border:8px solid #1e293b; border-radius:18px; overflow:hidden; color:#f1f5f9; box-shadow:var(--shadow-lg);">
+                    <!-- GEMS Top Navigation -->
+                    <div style="background:#111827; padding:0.75rem 1.25rem; border-bottom:2px solid #1f2937; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <span style="background:#6366f1; color:#fff; font-weight:900; font-size:0.75rem; padding:0.2rem 0.5rem; border-radius:4px;">GEMS 2.0</span>
+                            <span style="font-weight:700; font-size:0.9rem;">INTELITY Control Center • <strong>Merit Royal Resort & Spa</strong></span>
+                        </div>
+                        <div style="display:flex; gap:1rem; font-size:0.75rem; color:#94a3b8;">
+                            <span>Aktif Siparişler: <strong style="color:#10b981;">14</strong></span>
+                            <span>Bekleyen Talepler: <strong style="color:#f59e0b;">5</strong></span>
+                            <span>SLA Başarı Oranı: <strong style="color:#38bdf8;">%98.4</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- GEMS Split View -->
+                    <div style="display:grid; grid-template-columns: 240px 1fr 320px; min-height:480px; background:#0b1120;">
+                        
+                        <!-- Left: Department Queues -->
+                        <div style="background:#0f172a; border-right:1px solid #1e293b; padding:1rem; display:flex; flex-direction:column; gap:0.5rem; font-size:0.8rem;">
+                            <div style="font-size:0.7rem; font-weight:800; color:#64748b; text-transform:uppercase;">Departman Akışları</div>
+                            <div style="background:#1e293b; border-left:3px solid #6366f1; padding:0.5rem 0.75rem; border-radius:4px; font-weight:700; color:#fff;">
+                                🍽️ F&B In-Room Dining (8)
+                            </div>
+                            <div style="background:#111827; padding:0.5rem 0.75rem; border-radius:4px; color:#94a3b8;">
+                                🏖️ VIP Cabana / Pool (4)
+                            </div>
+                            <div style="background:#111827; padding:0.5rem 0.75rem; border-radius:4px; color:#94a3b8;">
+                                🍸 Lobby Lounge Bar (2)
+                            </div>
+                            <div style="background:#111827; padding:0.5rem 0.75rem; border-radius:4px; color:#94a3b8;">
+                                🧹 Kat Hizmetleri / Butler (3)
+                            </div>
+
+                            <div style="margin-top:auto; background:#1e1b4b; border:1px solid #4338ca; border-radius:8px; padding:0.75rem;">
+                                <div style="font-weight:700; color:#c7d2fe; font-size:0.75rem;">OPERA PMS Sync</div>
+                                <div style="color:#34d399; font-size:0.7rem; margin-top:0.2rem;">● İki Yönlü Senkron Aktif</div>
+                            </div>
+                        </div>
+
+                        <!-- Center: Live Order Board -->
+                        <div style="padding:1.25rem; overflow-y:auto; background:#0b1120;">
+                            <div style="font-size:0.85rem; font-weight:800; margin-bottom:1rem; display:flex; justify-content:space-between;">
+                                <span>Gelen Sipariş & Servis Kuyruğu</span>
+                                <span style="font-size:0.7rem; color:#94a3b8;">Yapay Zeka Otomatik Dağıtım Aktif</span>
+                            </div>
+
+                            <!-- Ticket 1: King Suite Room Service -->
+                            <div style="background:#1e293b; border:1px solid #334155; border-left:4px solid #10b981; border-radius:8px; padding:0.85rem; margin-bottom:0.75rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <strong style="color:#fff; font-size:0.85rem;">👑 Kral Dairesi (Suite 801) • Bay Alexander P. (VIP Platinum)</strong>
+                                    <span style="background:#065f46; color:#34d399; font-size:0.65rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:4px;">HAZIRLANIYOR (8 dk)</span>
+                                </div>
+                                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:0.4rem; line-height:1.4;">
+                                    • 1x Beluga Havyarı & Blini Tabağı<br>
+                                    • 1x Dom Pérignon Vintage Champagne (Kovada Bol Buzlu)<br>
+                                    • 2x Wagyu Ribeye Steak (Medium-Rare)
+                                </div>
+                                <div style="font-size:0.7rem; color:#38bdf8; margin-top:0.4rem;">
+                                    Sorumlu Butler: <strong>Ahmet K.</strong> • Folio: <strong>Oda Hesabına Yansıtıldı (PMS Onaylı)</strong>
+                                </div>
+                            </div>
+
+                            <!-- Ticket 2: Beach Cabana Order -->
+                            <div style="background:#1e293b; border:1px solid #334155; border-left:4px solid #f59e0b; border-radius:8px; padding:0.85rem; margin-bottom:0.75rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <strong style="color:#fff; font-size:0.85rem;">🏖️ VIP İskele Cabana 04 • Misafir QR Girişi</strong>
+                                    <span style="background:#78350f; color:#fde68a; font-size:0.65rem; font-weight:800; padding:0.15rem 0.4rem; border-radius:4px;">SERVİS YOLDA (3 dk)</span>
+                                </div>
+                                <div style="font-size:0.75rem; color:#cbd5e1; margin-top:0.4rem;">
+                                    • 1x Egzotik Tropikal Meyve Tabağı • 2x Detox Green Cooler
+                                </div>
+                                <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.3rem;">
+                                    Garson Saati: <strong>Mehmet T. (Bildirim Alındı)</strong> • Konum: İskele GPS Doğrulandı
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Real-time Analytics & SLA -->
+                        <div style="background:#0f172a; border-left:1px solid #1e293b; padding:1.25rem; font-size:0.8rem; display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <div style="font-weight:800; border-bottom:1px solid #334155; padding-bottom:0.5rem; margin-bottom:0.75rem; color:#fff;">
+                                    Performans & SLA Metrikleri
+                                </div>
+                                <div style="margin-bottom:0.75rem;">
+                                    <div style="display:flex; justify-content:space-between; color:#94a3b8; font-size:0.75rem;">
+                                        <span>Ortalama Sipariş Hazırlığı:</span>
+                                        <strong style="color:#fff;">16.4 dk</strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; color:#94a3b8; font-size:0.75rem; margin-top:0.35rem;">
+                                        <span>Garson Masaya Ulaşım:</span>
+                                        <strong style="color:#10b981;">1.2 dk</strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; color:#94a3b8; font-size:0.75rem; margin-top:0.35rem;">
+                                        <span>Oda Başı Harcama Artışı:</span>
+                                        <strong style="color:#38bdf8;">+%34.2</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button style="background:#4f46e5; color:#fff; border:none; padding:0.6rem; border-radius:8px; font-weight:700; font-size:0.75rem; cursor:pointer; width:100%;">
+                                📊 Vardiya & F&B Raporu Al
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Deep-Dive: Pros, Cons, User & Hotelier Experience -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2rem;">
+                
+                <!-- Strengths -->
+                <div class="feature-box" style="border-top: 4px solid #10b981;">
+                    <h4 style="color:#065f46;">🌟 Öne Çıkan Üstün Özellikleri</h4>
+                    <ul style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; padding-left:1.2rem; margin-top:0.5rem;">
+                        <li><strong>Kusursuz PMS (Opera) Entegrasyonu:</strong> Sipariş tutarı veya servis talepleri misafirin oda folyosuna sıfır personelle, otomatik ve anında yansıtılır.</li>
+                        <li><strong>Oda İçi Tablet + QR Hibrit Deneyimi:</strong> İster odadaki lüks şarj standlı iPad/Android tabletten, ister plajdaki şezlong QR kodundan aynı menüye erişim.</li>
+                        <li><strong>Yapay Zeka Servis Yönlendirme (GEMS):</strong> F&B talebi mutfağa, şampanya isteği bara, ekstra yastık isteği doğrudan kat şefine gider; resepsiyon telefon trafiği %70 azalır.</li>
+                        <li><strong>Lüks Görsel Katalog:</strong> Michelin yıldızlı şef tabaklarının yüksek çözünürlüklü fotoğrafları, şarap yıllanma detayları ve alerjen eşleşmeleri kusursuzdur.</li>
+                    </ul>
+                </div>
+
+                <!-- Weaknesses / Cons -->
+                <div class="feature-box" style="border-top: 4px solid #ef4444;">
+                    <h4 style="color:#991b1b;">⚠️ Kötü Yanları & Zayıf Noktaları</h4>
+                    <ul style="font-size:0.85rem; color:var(--text-muted); line-height:1.6; padding-left:1.2rem; margin-top:0.5rem;">
+                        <li><strong>Aşırı Uzun ve Ağır Kurulum Süreci:</strong> Otelin mevcut PMS ve POS sistemine entegrasyonu ortalama <strong>3 ila 6 ay</strong> sürmekte, IT ekiplerini aşırı yormaktadır.</li>
+                        <li><strong>Yüksek Giriş & Donanım Maliyeti:</strong> Sadece yazılım değil, oda başına tablet, dock istasyonu ve kurulum için tek seferde <strong>15.000$ - 30.000$</strong> arası başlangıç yatırımı gerektirir.</li>
+                        <li><strong>Karmaşık Personel Paneli:</strong> Eski GEMS sürümlerinde arayüz çok karmaşık olduğu için kat personeli ve garsonlar siparişleri atlayabilmekteydi (GEMS 2.0 ile sadeleştirilmeye çalışıldı).</li>
+                        <li><strong>Yüksek Destek Bağımlılığı:</strong> Menüde küçük bir fiyat veya departman kuralı değiştirmek dahi bazen INTELITY destek ekibine bilet (ticket) açmayı gerektirebiliyor.</li>
+                    </ul>
+                </div>
+
+                <!-- User (Guest) Experience -->
+                <div class="feature-box" style="border-top: 4px solid #3b82f6;">
+                    <h4 style="color:#1d4ed8;">👥 Misafir (Kullanıcı) Deneyimleri</h4>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55;">
+                        <strong>Pozitif Geri Bildirimler:</strong> Misafirler resepsiyonu aramadan, telefon başında dakikalarca beklemeden gecenin 02:00'sinde dahi tek tıkla oda servisi veya plajda şezlongdan kokteyl söyleyebilmekten son derece memnun. Çoklu dil desteği sayesinde yabancı turistler kendi dillerinde sipariş veriyor.
+                    </p>
+                    <p style="font-size:0.85rem; color:#991b1b; line-height:1.55; margin-top:0.5rem;">
+                        <strong>Negatif Deneyimler:</strong> Bazı misafirler odadaki tabletin şarjının bitmiş olmasından veya plajda güneş altında tablet ekranının parlamasından şikayetçi.
+                    </p>
+                </div>
+
+                <!-- Hotelier Experience -->
+                <div class="feature-box" style="border-top: 4px solid #8b5cf6;">
+                    <h4 style="color:#6d28d9;">🏨 İşletmeci (Otel Yönetimi) Deneyimleri</h4>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.55;">
+                        <strong>HotelTechReport Verileri:</strong> Otel yöneticileri oda içi yemek (In-Room Dining) cirolarında ortalama <strong>+%25 ile +%35 arasında net ciro artışı</strong> raporluyor. Telefonla sipariş alırken yapılan "yanlış sipariş / eksik not" insan hataları %80 azalıyor.
+                    </p>
+                    <p style="font-size:0.85rem; color:#92400e; line-height:1.55; margin-top:0.5rem;">
+                        <strong>Yönetici Sancıları:</strong> En büyük şikayet yıllık sözleşme bedellerinin yüksekliği ve otel bünyesinde sistemi sürekli güncel tutacak bir IT personeli istihdam etme gerekliliği.
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Takeaway for qrmenu Project -->
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:1.5rem;">
+                <h4 style="color:#1e40af; font-size:1.05rem; font-weight:800; margin-bottom:0.4rem;">
+                    💡 `qrmenu` Projenizin INTELITY Karşısındaki Benzersiz Avantajı:
+                </h4>
+                <p style="font-size:0.875rem; color:#1e3a8a; line-height:1.6;">
+                    INTELITY devasa, hantal ve 20.000$ maliyetli bir monolitik yapıdır. Sizin kurguladığınız <strong>"Fiyatsız + GPS Korumalı + Garson Akıllı Saat Entegreli + Sıfır Kurulum PWA"</strong> sistemi; Merit Royal gibi lüks otellere INTELITY'nin sunduğu tüm prestiji, zarafeti ve F&B akışını <strong>aylarca süren entegrasyon çilesi olmadan, dakikalar içinde devreye alma gücü</strong> sağlamaktadır!
+                </p>
+            </div>
+        </section>
+
+        <!-- Final Architectural Blueprint -->
+        <section id="yonetici-kontrolu">
+            <div class="section-header">
+                <span>07. Projenin Yol Haritası</span>
+                <h2>`qrmenu` Projeniz İçin Kusursuz Mimari Özet</h2>
+                <p>Tüm gereksinimlerinizi tek çatı altında toplayan ideal teknik altyapı.</p>
+            </div>
+
+            <div style="background:linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); border:2px solid #bfdbfe; border-radius:var(--radius-lg); padding:2rem;">
+                <h3 style="color:#1d4ed8; font-size:1.3rem; margin-bottom:1rem;">🚀 Başarı Formülü: "Sıfır Sürtünme, Tam Güvenlik ve Şık Yönetim"</h3>
+                <ol style="padding-left:1.5rem; line-height:1.8; font-size:0.95rem; color:#334155;">
+                    <li><strong>Müşteri Tarafı:</strong> QR taranır ➔ Yalnızca konum izni sorulur ➔ Sıfır form girişi ➔ <strong>Ana yönetici panelinden açılıp kapatılabilen dinamik fiyat/fiyatsız lüks menü</strong> ➔ İştah kabartan yüksek çözünürlüklü görseller ➔ Akıllı lezzet önerileri ➔ Siparişi garson onayına yolla ➔ İhtiyaç anında "Garson Çağır" butonuna bas.</li>
+                    <li><strong>Mekan İçi Güvenlik:</strong> Geofencing (40m yarıçap) dışındakiler sipariş veremez, yalnızca menüye bakabilir.</li>
+                    <li><strong>Ana Yönetim & Dokunmatik Kasa:</strong> Masadan gelen istekler anlık dokunmatik ekrana düşer. Opsiyonel termal adisyon yazıcısından şef için fiş çıkar. Yönetici istediğinde tek tuşla sipariş alımını durdurabilir ya da fiyat görünürlüğünü değiştirebilir.</li>
+                    <li><strong>Garson PWA:</strong> Personel cebindeki web tabanlı uygulamayla kendi sorumlu olduğu masaların çağrılarını sesli/titreşimli bildirimle yönetir.</li>
+                    <li><strong>Sistem Yönetimi:</strong> Sonsuz kategori/alt kategori ağacı, her öğeye resim yükleme, tek tıkla mekana özel renk/ahenk paleti seçimi ve <strong>QR Menü, QR Sipariş ile QR Oda Servisi (IRD) sistemlerinin tamamında geçerli tek tuşla "Fiyat Göster / Gizle" kontrol anahtarı</strong>.</li>
+                </ol>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;">
+            <div>
+                <strong>Global QR Menü Sistemleri - Fiyatsız, Konum Korumalı & Çağrı Mimarisi</strong>
+                <p>Restoran Teknolojileri Özel Araştırma Raporu © 2026</p>
+            </div>
+            <div>
+                <p>Hazırlayan: <strong>Antigravity Research & Deepmind Intelligence</strong></p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

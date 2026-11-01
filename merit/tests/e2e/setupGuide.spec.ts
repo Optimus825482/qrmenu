@@ -24,7 +24,7 @@ async function openAdmin(page: Page) {
   await expect(desktop(page)).toBeVisible();
 }
 
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 
 /** Başlat → Kurulum Rehberi, then the hotel card (admin has three hotels: a picker shows). */
 async function openGuide(page: Page, hotel: { name: string; code: string }): Promise<Locator> {

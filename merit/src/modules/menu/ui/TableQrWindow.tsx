@@ -5,6 +5,8 @@ import type { MeritEvent } from "@/lib/realtime-events";
 import type { AppProps } from "@/shell/registry";
 import { alertDialog, confirm } from "@/shell/confirm";
 import { useSse } from "@/shell/useSse";
+import { listOutletAreasAction } from "@/modules/core/server/admin/actions/outletAreas";
+import type { OutletAreaRow } from "@/modules/core/server/admin/outletAreas";
 import { menuContextAction } from "../server/actions/menuAdmin";
 import { listTableQrAction, regenerateAllTableQrAction, regenerateTableQrAction } from "../server/actions/tableQr";
 import type { MenuContext } from "../server/menuContext";
@@ -17,6 +19,8 @@ const RELOAD_MS = 300;
 export function TableQrWindow({ hotelId, setStatus }: AppProps) {
   const [context, setContext] = useState<MenuContext | null>(null);
   const [outletId, setOutletId] = useState<string | undefined>();
+  const [areas, setAreas] = useState<OutletAreaRow[]>([]);
+  const [areaId, setAreaId] = useState<string | undefined>();
   const [rows, setRows] = useState<TableQrRow[]>([]);
   const [onlyUnsigned, setOnlyUnsigned] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -36,24 +40,41 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
     );
   }, [hotelId]);
 
+  const loadAreas = useCallback(async () => {
+    if (!outletId) {
+      setAreas([]);
+      setAreaId(undefined);
+      return;
+    }
+    const result = await listOutletAreasAction({ outletId });
+    if (result.ok) {
+      setAreas(result.data);
+      setAreaId((curr) => (curr && result.data.some((a) => a.id === curr) ? curr : undefined));
+    }
+  }, [outletId]);
+
   const loadRows = useCallback(async () => {
     if (!outletId) {
       setRows([]);
       return;
     }
-    const result = await listTableQrAction({ outletId });
+    const result = await listTableQrAction({ outletId, areaId });
     if (!result.ok) {
       setError(result.error.message);
       return;
     }
     setError(null);
     setRows(result.data);
-  }, [outletId]);
+  }, [outletId, areaId]);
 
   useEffect(() => {
     const t = setTimeout(() => void loadContext(), 0);
     return () => clearTimeout(t);
   }, [loadContext]);
+  useEffect(() => {
+    const t = setTimeout(() => void loadAreas(), 0);
+    return () => clearTimeout(t);
+  }, [loadAreas]);
   useEffect(() => {
     const t = setTimeout(() => void loadRows(), 0);
     return () => clearTimeout(t);
@@ -69,8 +90,9 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
 
   useEffect(() => {
     const signed = rows.filter((r) => r.signed).length;
-    setStatus(`${rows.length} masa, ${signed} imzalı QR`);
-  }, [rows, setStatus]);
+    const areaName = areas.find((a) => a.id === areaId)?.name;
+    setStatus(`${rows.length} masa${areaName ? ` (${areaName})` : ""}, ${signed} imzalı QR`);
+  }, [rows, areas, areaId, setStatus]);
 
   const canEdit = context?.canEdit ?? false;
   const outlet = context?.outlets.find((o) => o.id === outletId);
@@ -86,24 +108,32 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
     const result = await regenerateTableQrAction({ tableId: row.id });
     setBusy(false);
     if (!result.ok) void alertDialog({ title: "Yenilenemedi", message: result.error.message });
+    else await alertDialog({ title: "İşlem tamamlandı", message: `“${row.label}” masasının QR kodu yenilendi.` });
     await loadRows();
   };
 
   const regenerateAll = async () => {
     if (!outletId) return;
+    const selectedArea = areas.find((a) => a.id === areaId);
+    const areaTitle = selectedArea?.name || (selectedArea ? (selectedArea.type === "ACIK" ? "Açık alan" : "Kapalı alan") : null);
     const yes = await confirm({
       title: "Toplu QR üret/yenile",
-      message: onlyUnsigned
-        ? "İmzasız ya da QR kodu olmayan masaların kodları üretilsin mi? Bu masaların eski basılı kodları çalışmayı bırakır."
-        : "Outletin tüm masalarının QR kodları yenilensin mi? Tüm eski basılı kodlar çalışmayı bırakır.",
+      message: areaTitle
+        ? `"${areaTitle}" alanındaki masaların QR kodları ${onlyUnsigned ? "üretilsin" : "yenilensin"} mi? Eski basılı kodlar çalışmayı bırakır.`
+        : onlyUnsigned
+          ? "İmzasız ya da QR kodu olmayan masaların kodları üretilsin mi? Bu masaların eski basılı kodları çalışmayı bırakır."
+          : "Outletin tüm masalarının QR kodları yenilensin mi? Tüm eski basılı kodlar çalışmayı bırakır.",
       danger: true,
     });
     if (!yes) return;
     setBusy(true);
-    const result = await regenerateAllTableQrAction({ outletId, onlyUnsigned });
+    const result = await regenerateAllTableQrAction({ outletId, onlyUnsigned, areaId });
     setBusy(false);
     if (!result.ok) void alertDialog({ title: "Üretilemedi", message: result.error.message });
-    else setStatus(`${result.data.count} masanın QR kodu üretildi`);
+    else {
+      setStatus(`${result.data.count} masanın QR kodu üretildi`);
+      await alertDialog({ title: "İşlem tamamlandı", message: `${result.data.count} masanın QR kodu güncellendi.` });
+    }
     await loadRows();
   };
 
@@ -119,41 +149,103 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
     return <p className="xp-defs-note">Bu otelde menüsü olan bir outlet yok.</p>;
   }
 
+  const signedCount = rows.filter((r) => r.signed).length;
+
+  const printParams = new URLSearchParams();
+  if (areaId) printParams.set("areaId", areaId);
+  const printUrl = `/api/qr/outlet/${outletId}/print${printParams.toString() ? `?${printParams.toString()}` : ""}`;
+  const zipUrl = `/api/qr/outlet/${outletId}/zip${areaId ? `?areaId=${areaId}` : ""}`;
+
   return (
     <div className="xp-mm xp-tq">
-      <div className="xp-mm-top">
+      <div className="xp-tq-toolbar">
         {context?.fixedOutlet ? (
-          <strong>{outlet?.name}</strong>
+          <div className="xp-tq-field">
+            <span>Outlet:</span>
+            <strong>{outlet?.name}</strong>
+          </div>
         ) : (
-          <label className="xp-module-switch">
-            Outlet
-            <select value={outletId ?? ""} onChange={(e) => setOutletId(e.target.value)}>
+          <div className="xp-tq-field">
+            <span>Outlet:</span>
+            <select
+              className="xp-tq-select"
+              value={outletId ?? ""}
+              onChange={(e) => {
+                setOutletId(e.target.value);
+                setAreaId(undefined);
+              }}
+              aria-label="Outlet seçimi"
+            >
               {context?.outlets.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.name}
+                  {o.name} ({o.tableCount ?? 0} masa{o.areaCount ? ` · ${o.areaCount} alan` : ""})
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         )}
+        {areas.length > 0 ? (
+          <div className="xp-tq-field">
+            <span>Alan:</span>
+            <select
+              className="xp-tq-select"
+              value={areaId ?? ""}
+              onChange={(e) => setAreaId(e.target.value || undefined)}
+              aria-label="Alan seçimi"
+            >
+              <option value="">Tüm Alanlar ({areas.length} alan · {rows.length} masa)</option>
+              {areas.map((a) => {
+                const count = rows.filter((r) => r.areaId === a.id).length;
+                return (
+                  <option key={a.id} value={a.id}>
+                    {a.name || (a.type === "ACIK" ? "Açık alan" : "Kapalı alan")} ({count} masa)
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        ) : null}
+
+        {/* Seçili Outlet Masa Sayısı & Durum Çipi */}
+        <div className="xp-tq-stats-chip" title="Aktif masa sayısı ve imzalı QR durumu">
+          <span>🪑 <strong>{rows.length}</strong> masa</span>
+          {areas.length > 0 ? <span>&bull; {areas.length} alan</span> : null}
+          <span>&bull;</span>
+          <span style={{ color: signedCount === rows.length && rows.length > 0 ? "#15803d" : "#b45309" }}>
+            {signedCount} imzalı QR
+          </span>
+        </div>
+
         {canEdit ? (
           <>
-            <label className="xp-module-switch">
+            <label className="xp-tq-checkbox">
               <input type="checkbox" checked={onlyUnsigned} onChange={(e) => setOnlyUnsigned(e.target.checked)} />
-              Yalnız imzasızları
+              <span>Yalnız imzasızları</span>
             </label>
-            <button type="button" className="xp-button" disabled={busy || !outletId} onClick={() => void regenerateAll()}>
+            <button
+              type="button"
+              className="xp-button"
+              disabled={busy || !outletId || rows.length === 0}
+              onClick={() => void regenerateAll()}
+            >
               Toplu üret/yenile
             </button>
           </>
         ) : null}
         {outletId ? (
           <>
-            <a className="xp-button" href={`/api/qr/outlet/${outletId}/zip`} download>
+            <a className="xp-button" href={zipUrl} download>
               ZIP indir
             </a>
-            <a className="xp-button" href={`/api/qr/outlet/${outletId}/print`} target="_blank" rel="noopener">
-              Yazdır
+            <a
+              className="xp-button"
+              href={printUrl}
+              target="_blank"
+              rel="noopener"
+              style={{ fontWeight: "bold", color: "#1e3a8a" }}
+              title="Önizle ve Stand / Kart Formatında Yazdır"
+            >
+              🖨️ Yazdır
             </a>
           </>
         ) : null}
@@ -166,16 +258,31 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
       <div className="xp-tq-grid" role="table" aria-label="Masalar">
         <div className="xp-tq-row xp-tq-head" role="row">
           <span role="columnheader">Masa</span>
+          <span role="columnheader">Alan</span>
           <span role="columnheader">QR</span>
           <span role="columnheader">Garson</span>
           <span role="columnheader">İşlemler</span>
         </div>
-        {rows.length === 0 ? <p className="xp-defs-note">Bu outletin masası yok.</p> : null}
+        {rows.length === 0 ? (
+          <div className="xp-tq-empty">
+            <p style={{ fontSize: "12px", fontWeight: "bold", color: "#333333", margin: "0 0 4px 0" }}>
+              Bu outletin kayıtlı masası bulunmuyor.
+            </p>
+            <p style={{ margin: 0, fontSize: "11px" }}>
+              Masa eklemek veya düzenlemek için lütfen <strong>Tanımlamalar &gt; Masalar</strong> bölümünü kullanın.
+            </p>
+          </div>
+        ) : null}
         {rows.map((row) => (
           <div key={row.id} className="xp-tq-row" role="row" data-inactive={!row.isActive || undefined}>
             <span role="cell">
-              {row.label}
+              <strong>{row.label}</strong>
               {row.isActive ? "" : " (pasif)"}
+            </span>
+            <span role="cell">
+              <span className="xp-badge" style={{ fontSize: "11px" }}>
+                {row.areaLabel}
+              </span>
             </span>
             <span role="cell">
               <span className="xp-badge" data-on={row.signed} data-testid={`tq-badge-${row.label}`}>
@@ -186,6 +293,17 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
             <span role="cell" className="xp-tq-actions">
               {row.url ? (
                 <>
+                  <a
+                    className="xp-button"
+                    href={`/api/qr/outlet/${outletId}/print?tableId=${row.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label={`${row.label} Kart Yazdır`}
+                    title="Masa Standı / Pleksi Kartı Yazdır"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Kart
+                  </a>
                   <a className="xp-button" href={`/api/qr/table/${row.id}?format=svg`} download aria-label={`${row.label} SVG indir`}>
                     SVG
                   </a>

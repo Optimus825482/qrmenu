@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lüks Otel Oda Servisi (In-Room Dining) & Butik Butler QR Mimarisi</title>
+    <style>
+        :root {
+            --gold: #c5a059;
+            --gold-light: #fdfbf7;
+            --dark-navy: #0b1120;
+            --card-navy: #131b2e;
+            --border-navy: #1e293b;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--dark-navy);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1240px; margin: 0 auto; padding: 0 1.25rem; }
+
+        /* Hero */
+        header.hero {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 60%, #1e1b4b 100%);
+            padding: 3.5rem 1rem 4rem;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .vip-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(197, 160, 89, 0.15);
+            border: 1px solid var(--gold);
+            color: #fef08a;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            max-width: 880px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .hero-meta strong { color: #f8fafc; }
+
+        /* Nav */
+        .nav-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 17, 32, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-navy);
+            padding: 0.65rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.35rem 0.8rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+            border-color: var(--gold);
+            background: rgba(197, 160, 89, 0.2);
+        }
+
+        main { padding: 3rem 0 5rem; }
+        section { margin-bottom: 4.5rem; scroll-margin-top: 5rem; }
+
+        .section-header { margin-bottom: 2rem; }
+        .section-header span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+        }
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.25rem;
+        }
+        .section-header p {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-top: 0.35rem;
+        }
+
+        /* Room Service Cards */
+        .ird-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .ird-card {
+            background: var(--card-navy);
+            border: 1px solid var(--border-navy);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .ird-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gold);
+        }
+
+        .ird-card h3 { font-size: 1.25rem; color: #fff; margin-bottom: 0.5rem; }
+        .ird-card p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.55; }
+
+        .ird-features {
+            list-style: none;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .ird-features li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+
+        /* Room Service Screen Mockups */
+        .phone-frame-luxury {
+            background: #000;
+            border: 8px solid #1e293b;
+            border-radius: 36px;
+            height: 620px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .phone-top {
+            background: #0f172a;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .phone-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #070b14;
+            font-size: 0.85rem;
+        }
+
+        .phone-scroll::-webkit-scrollbar { width: 3px; }
+        .phone-scroll::-webkit-scrollbar-thumb { background: #374151; }
+
+        .room-dish-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .room-dish-card .dish-img {
+            width: 65px;
+            height: 65px;
+            border-radius: 8px;
+            background: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .room-dish-card .dish-info { flex: 1; }
+        .room-dish-card .dish-title { font-weight: 800; font-size: 0.85rem; color: #fff; }
+        .room-dish-card .dish-desc { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; line-height: 1.35; }
+
+        .time-select-pill {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            display: inline-block;
+            margin-right: 0.3rem;
+            margin-top: 0.4rem;
+        }
+
+        .time-select-pill.active {
+            background: var(--gold);
+            color: #000;
+            font-weight: 800;
+            border-color: var(--gold);
+        }
+
+        /* Comparison Table */
+        .table-wrap {
+            background: var(--card-navy);
+            border: 1px solid var(--border-navy);
+            border-radius: 16px;
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        table.luxury-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        table.luxury-table th {
+            background: #162035;
+            padding: 1rem 1.2rem;
+            color: var(--gold);
+            font-weight: 800;
+            border-bottom: 2px solid var(--border-navy);
+            white-space: nowrap;
+        }
+
+        table.luxury-table td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--border-navy);
+            vertical-align: top;
+        }
+
+        table.luxury-table tr:hover { background: #1a253e; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 1.85rem; }
+            .section-header h2 { font-size: 1.5rem; }
+            .ird-grid { grid-template-columns: 1fr; }
+            .phone-frame-luxury { height: 530px; }
+            table.luxury-table th, table.luxury-table td { padding: 0.75rem 0.6rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="hero">
+        <div class="container">
+            <div class="vip-badge">👑 5 Yıldızlı Otel & Süit İçi Yemek Mimarisi</div>
+            <h1>Lüks Oda Servisi (In-Room Dining)<br>& 24/7 Dijital Butler QR Ekosistemi</h1>
+            <p>Otel odalarındaki hantal deri menü klasörlerini ve telefonla sipariş karmaşasını tamamen tarihe gömen; misafirin yatağından veya balkonundaki jakuzisinden tek dokunuşla fiyatsız gurme yemek, zaman ayarlı kahvaltı ve butler hizmeti sipariş edebildiği özel PWA mimarisi.</p>
+            
+            <div class="hero-meta">
+                <div>Kapsam: <strong>Deluxe Odalar, Kral Daireleri (Royal Suites), Özel Havuzlu Villalar</strong></div>
+                <div>Modül Türü: <strong>In-Room Dining (IRD) + Dijital Konsiyerj & Butler Çağrı</strong></div>
+                <div>Güvenlik & Doğrulama: <strong>Oda Numarası Şifreli QR + Otel İçi Wi-Fi Doğrulaması</strong></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-sticky">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#ird-felsefesi">Oda Servisinin Farkı</a>
+                <a href="#ekran-akisi">Oda Servisi Canlı Ekranı</a>
+                <a href="#butler-ozellikleri">Butler & Temizlik Talepleri</a>
+                <a href="#zamanli-kahvalti">Zaman Ayarlı Gece Siparişi</a>
+                <a href="#karsilastirma-ve-emsaller">Emsal Karşılaştırması</a>
+                <a href="#cozumler">Saha Sancıları & Çözüm Reçeteleri</a>
+                <a href="index.html" style="color:#6366f1; border-color:#6366f1;">📑 Ana Pazar Raporu</a>
+                <a href="merit_resort_qr.html" style="color:var(--gold); border-color:var(--gold);">🏖️ Resort QR Raporu</a>
+                <a href="merit_triple_hotels_matrix.html" style="color:#ec4899; border-color:#ec4899;">🏨 3 Merit Oteli Matrisi</a>
+                <a href="merit_proforma_teklif_sartname.html" style="color:#10b981; border-color:#10b981;">📜 Fiyat Teklifi & Şartname (Proforma)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- Section 1: Philosophy of Luxury In-Room Dining -->
+        <section id="ird-felsefesi">
+            <div class="section-header">
+                <span>01. Mimari Temeller</span>
+                <h2>Neden Restoran Menüsünden Tamamen Ayrı Olmalı?</h2>
+                <p>Bir restoranda masa devir hızı esasken; otel odasında mahremiyet, teslimat zamanı seçimi, tepsi/araba sunumu ve odaya servis protokolü esastır.</p>
+            </div>
+
+            <div class="ird-grid">
+                <div class="ird-card">
+                    <h3>🚪 1. Mahremiyet & Sessiz İletişim</h3>
+                    <p>Gece 01:30'da odaya yemek veya içecek söylemek isteyen misafir, telefonda dakikalarca operatörün açmasını beklemek veya uyuyan eşini uyandırmamak için konuşmak istemez. QR'ı sessizce okutup siparişini saniyeler içinde iletir.</p>
+                    <ul class="ird-features">
+                        <li>• "Zili Çalmayın, Kapıyı Tıklatın" teslimat tercihi.</li>
+                        <li>• "Masaya Kurun" veya "Kapıda Teslim Edin" seçeneği.</li>
+                    </ul>
+                </div>
+
+                <div class="ird-card">
+                    <h3>🥐 2. Önceden Saatli Sipariş (Scheduled Breakfast)</h3>
+                    <p>Misafir gece yatmadan önce ertesi sabah saat 08:30 için taze sıcak kruvasan, omlet ve filtre kahve siparişini planlar. Mutfak ekibi sabah saat 08:15'te hazırlığa başlar ve tam 08:30'da servis eder.</p>
+                    <ul class="ird-features">
+                        <li>• 15'er dakikalık teslimat saat dilimleri (07:00 - 11:30).</li>
+                        <li>• Kaç kişilik servis açılacağı tercihi.</li>
+                    </ul>
+                </div>
+
+                <div class="ird-card">
+                    <h3>👔 3. Tek Tıkla Butler & Kat Hizmetleri</h3>
+                    <p>Sadece yemek değil; odada ihtiyaç duyulan tüm konfor unsurları tek menüdedir: <em>Yastık Menüsü (Ortopedik/Kuş Tüyü), Ekstra Şampuan, Ütü/Kuru Temizleme, Valiz Taşıma ve Odayı Temizle</em> butonları.</p>
+                    <ul class="ird-features">
+                        <li>• Resepsiyonu aramadan doğrudan kat şefine bildirim.</li>
+                        <li>• Akıllı saate düşen anlık görev atamaları.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: UI Visual Screen Simulation -->
+        <section id="ekran-akisi">
+            <div class="section-header">
+                <span>02. Arayüz Simülasyonu</span>
+                <h2>Süit İçi Misafir Ekranı & Zaman Ayarlı Sipariş</h2>
+                <p>Kral Dairesi (Suite 801) komodini üzerindeki deri standlı QR kod okutulduğunda açılan fiyatsız lüks arayüz.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:2rem; align-items:flex-start;">
+                
+                <!-- Phone Screen Mockup -->
+                <div class="phone-frame-luxury">
+                    <div class="phone-top">
+                        <span style="color:var(--gold);">👑 Suite 801 (Kral Dairesi)</span>
+                        <span style="color:#10b981;">Wi-Fi Doğrulandı ●</span>
+                    </div>
+
+                    <div class="phone-scroll">
+                        <div style="background:linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border:1px solid #4338ca; border-radius:10px; padding:0.75rem; margin-bottom:1rem;">
+                            <div style="font-size:0.75rem; font-weight:800; color:#c7d2fe;">MERIT ROYAL VIP ODA SERVİSİ</div>
+                            <div style="font-size:0.7rem; color:#94a3b8; margin-top:0.2rem;">
+                                Sayın <strong>Alexander P.</strong>, odanıza özel şef servisine hoş geldiniz. Fiyatsız ultra all-inclusive ikramımızdır.
+                            </div>
+                        </div>
+
+                        <!-- Delivery Time Selector -->
+                        <div style="margin-bottom:1rem;">
+                            <div style="font-size:0.75rem; font-weight:800; color:var(--gold); text-transform:uppercase;">
+                                Teslimat Zamanı Seçiniz:
+                            </div>
+                            <div>
+                                <span class="time-select-pill active">⚡ Hemen (~25 dk)</span>
+                                <span class="time-select-pill">Sabah 08:30</span>
+                                <span class="time-select-pill">Sabah 09:15</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size:0.75rem; font-weight:800; color:#f8fafc; margin-bottom:0.5rem; text-transform:uppercase;">
+                            Şefin Gece Spesiyalleri (24/7)
+                        </div>
+
+                        <!-- Dish 1 -->
+                        <div class="room-dish-card">
+                            <div class="dish-img">🥩</div>
+                            <div class="dish-info">
+                                <div class="dish-title">Dana Madalyon & Yaban Mantarları</div>
+                                <div class="dish-desc">Patates graten ve fırınlanmış kuşkonmaz ile servis arabasında sıcak sunum.</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+                                    <span style="font-size:0.65rem; color:#10b981; font-weight:700;">Şef Tavsiyesi</span>
+                                    <button style="background:var(--gold); color:#000; border:none; padding:0.2rem 0.6rem; border-radius:4px; font-weight:800; font-size:0.7rem; cursor:pointer;">+ Odaya İste</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dish 2 -->
+                        <div class="room-dish-card">
+                            <div class="dish-img">🥘</div>
+                            <div class="dish-info">
+                                <div class="dish-title">Geleneksel Kıbrıs Meze & Şarap Tepsisi</div>
+                                <div class="dish-desc">Hellim ızgara, şeftali kebabı, fava, humus ve taze tandır ekmeği.</div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
+                                    <span style="font-size:0.65rem; color:#38bdf8; font-weight:700;">2 Kişilik Tepsi</span>
+                                    <button style="background:var(--gold); color:#000; border:none; padding:0.2rem 0.6rem; border-radius:4px; font-weight:800; font-size:0.7rem; cursor:pointer;">+ Odaya İste</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Butler Services Group -->
+                        <div style="font-size:0.75rem; font-weight:800; color:var(--gold); margin:1rem 0 0.5rem; text-transform:uppercase;">
+                            Süit İçi Butler Talepleri
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.5rem; border-radius:8px; color:#cbd5e1; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                                🛏️ Yastık Menüsü Seç
+                            </button>
+                            <button style="background:#1e293b; border:1px solid #334155; padding:0.5rem; border-radius:8px; color:#cbd5e1; font-size:0.7rem; font-weight:700; cursor:pointer;">
+                                🍾 Buz Kovası & Kadeh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Bottom -->
+                    <div style="background:#0f172a; padding:0.6rem 1rem; border-top:1px solid #1f2937;">
+                        <button style="width:100%; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none; padding:0.65rem; border-radius:8px; font-weight:800; font-size:0.8rem; cursor:pointer;">
+                            🛎️ Odaya Servisi Onayla (Suite 801)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Explanation Panel -->
+                <div style="display:flex; flex-direction:column; gap:1.25rem;">
+                    <div style="background:var(--card-navy); border:1px solid var(--border-navy); border-radius:12px; padding:1.5rem;">
+                        <h4 style="color:var(--gold); font-size:1.1rem; font-weight:800; margin-bottom:0.5rem;">
+                            🛎️ Oda Servisi Sipariş Akışı Nasıl İşler?
+                        </h4>
+                        <ol style="padding-left:1.2rem; font-size:0.85rem; color:#cbd5e1; line-height:1.7;">
+                            <li><strong>Özel Oda QR'ı:</strong> Misafir odasındaki komodinde yer alan sabit QR kodu okutur. Kodun içinde `suite_id=801&token=...` şifreli kimliği yer alır.</li>
+                            <li><strong>Doğrulama:</strong> Misafir otelin Wi-Fi ağına bağlı olduğu için tek bir form dahi doldurmaz; oda numarası otomatik algılanır.</li>
+                            <li><strong>Mutfak & Butler Onayı:</strong> Sipariş doğrudan Oda Servisi Hazırlık Ekranına ve katın sorumlu Butler'ının akıllı saatine düşer.</li>
+                            <li><strong>Sıcak Servis Arabası:</strong> Yemekler sıcak tutucu cloche (kapak) altında tekerlekli lüks servis arabasıyla tam zamanında kapıya getirilir.</li>
+                        </ol>
+                    </div>
+
+                    <div style="background:#111827; border:1px solid #334155; border-left:4px solid #38bdf8; border-radius:12px; padding:1.25rem;">
+                        <div style="font-weight:800; color:#38bdf8; font-size:0.9rem;">🍽️ "Tepsiyi Kapıdan Al" Butonu (Çığır Açan Çözüm)</div>
+                        <p style="font-size:0.8rem; color:var(--text-dim); margin-top:0.3rem; line-height:1.5;">
+                            Misafir yemeğini bitirdikten sonra boş tepsi veya masayı koridora çıkarmak ya da odada koku yapmaması için telefondan tek tıkla <strong>"Tepsiyi Odadan Al"</strong> butonuna basar. Koridor görevlisine anında bildirim gider ve oda tertemiz kalır.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section 3: In-Room Dining vs. Restaurant Table Comparison -->
+        <section id="karsilastirma-ve-emsaller">
+            <div class="section-header">
+                <span>03. Emsal ve Fark Analizi</span>
+                <h2>Restoran Masa QR'ı ile Oda Servisi QR'ı Arasındaki 5 Temel Fark</h2>
+                <p>Neden restoran yazılımları otel odalarında başarısız oluyor?</p>
+            </div>
+
+            <div class="table-wrap">
+                <table class="luxury-table">
+                    <thead>
+                        <tr>
+                            <th>Parametre</th>
+                            <th>Klasik Restoran QR Menüsü</th>
+                            <th>Lüks Oda Servisi (IRD) QR Menüsü</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Teslimat Zamanı</strong></td>
+                            <td>Hemen servis edilmek zorundadır.</td>
+                            <td><strong>Zaman Ayarlıdır:</strong> Hemen teslim veya ertesi sabah 08:30 kahvaltısı gibi ileri saat seçilebilir.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mahremiyet ve Protokol</strong></td>
+                            <td>Garson masaya her dakika uğrar.</td>
+                            <td><strong>Sıfır Rahatsızlık:</strong> "Kapıya bırak", "Masaya kur", "Zili çalma" gibi özel protokoller içerir.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sunum Ekipmanı</strong></td>
+                            <td>Tabak masaya konur.</td>
+                            <td>Servis arabası, sıcak tutucu cloche kapak, özel kumaş peçete ve çiçek vazosuyla gelir.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Temizlik Döngüsü</strong></td>
+                            <td>Garson kalkınca masayı temizler.</td>
+                            <td>Yemek bitince misafir ekrandan <em>"Tepsiyi Kapıdan Alın"</em> çağrısı oluşturur.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kombine Hizmetler</strong></td>
+                            <td>Sadece yiyecek ve içecek içerir.</td>
+                            <td><strong>Hibrit Konsiyerj:</strong> Yemekle beraber ekstra yastık, diş seti, ütü ve butler çağrısı yapılabilir.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 4: Complaints & Resolutions -->
+        <section id="cozumler">
+            <div class="section-header">
+                <span>04. Kalite Standartları</span>
+                <h2>Dünyadaki Lüks Otellerde Oda Servisi Şikayetleri ve Çözüm Reçeteleri</h2>
+                <p>HotelTechReport ve TripAdvisor verilerine göre oda servisinde en çok şikayet edilen 3 kriz ve çözümü.</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem;">
+                
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #ef4444; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#f87171; font-size:0.95rem;">1. "Yemek Geldiğinde Ilımış / Soğumuştu" Krizi</div>
+                    <p style="font-size:0.85rem; color:var(--text-dim); margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Mutfak yemeği hazırladıktan sonra servis arabası asansör beklerken veya butler meşgulken 20 dakika bekler ve biftek soğur.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> Sistem mutfakta yemek pişmeden <strong>5 dakika önce</strong> katın servis arabasını ve butler'ını asansör katına çağırır. Yemek tabağa konduğu an araba hareket eder.
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #f59e0b; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#fde68a; font-size:0.95rem;">2. Koridorda Kalan Kirli Tepsilerin Kötü Görüntüsü</div>
+                    <p style="font-size:0.85rem; color:var(--text-dim); margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Misafirler yedikten sonra tepsileri kapı önüne koyar ve koridorda 3 saat boyunca yemek artıkları kalarak 5 yıldızlı lüks ambiyansı mahveder.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> QR menüde sipariş teslim edildikten 45 dakika sonra ekranda nazik bir buton parlar: <em>"Yemeğiniz bittiyse tepsiyi görevlimiz 5 dakikada teslim alabilir [Tepsiyi Al]".</em>
+                    </div>
+                </div>
+
+                <div style="background:#111827; border:1px solid #1f2937; border-left:4px solid #38bdf8; border-radius:12px; padding:1.25rem;">
+                    <div style="font-weight:800; color:#7dd3fc; font-size:0.95rem;">3. Sabah Kahvaltı Siparişinde Eksik Çatal / Şeker</div>
+                    <p style="font-size:0.85rem; color:var(--text-dim); margin-top:0.4rem; line-height:1.5;">
+                        <strong>Şikayet:</strong> Telefonda sipariş alan personelin "şekersiz" veya "glutensiz ekmek" notunu mutfağa eksik iletmesi sebebiyle misafirin sabah keyfinin kaçması.
+                    </p>
+                    <div style="background:#1e293b; border-radius:6px; padding:0.5rem 0.75rem; font-size:0.8rem; color:#34d399; margin-top:0.6rem;">
+                        <strong>Çözüm:</strong> QR arayüzünde zorunlu seçimli kontrol listesi: <em>Ekmek Türü (Glutensiz/Çavdar), Yumurta Pişme Şekli, Süt Tercihi (Badem/Yulaf)</em>. Sıfır insan hatası!
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="background:#020617; border-top:1px solid var(--border-navy); padding:2.5rem 0; font-size:0.85rem; color:#64748b;">
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <strong style="color:var(--gold);">Lüks Otel Oda Servisi (In-Room Dining) & Butler Ekosistemi</strong>
+                <p>VIP Misafir Deneyimi ve Servis Standartları Raporu © 2026</p>
+            </div>
+            <div>
+                <p>Geliştiren: <strong>Antigravity Research & Deepmind Intelligence</strong></p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

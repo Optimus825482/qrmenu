@@ -29,9 +29,10 @@ const meta = { ip: "10.1.1.1", userAgent: "vitest" };
 
 async function tableFixture(over: { outlet?: Record<string, unknown>; table?: Record<string, unknown> } = {}) {
   const outlet = await testDb.outlet.create({
-    data: { hotelId: await hotelId("MR"), name: "Havuz Bar", type: "BAR", hasMenu: true, ...over.outlet },
+    data: { hotelId: await hotelId("ROYAL"), name: "Havuz Bar", type: "BAR", hasMenu: true, ...over.outlet },
   });
-  const created = await testDb.outletTable.create({ data: { outletId: outlet.id, label: "M1", ...over.table } });
+  const area = await testDb.outletAreaDefinition.create({ data: { outletId: outlet.id, type: "KAPALI" } });
+  const created = await testDb.outletTable.create({ data: { outletId: outlet.id, areaId: area.id, label: "M1", ...over.table } });
   const token = generateQrToken("TABLE", created.id);
   const table = await testDb.outletTable.update({ where: { id: created.id }, data: { qrToken: token } });
   return { outlet, table, token };
@@ -82,11 +83,11 @@ describe("resolveGuestToken", () => {
     const a = await tableFixture({ outlet: { isActive: false } });
     expect(await resolveGuestToken(a.token, meta)).toEqual({ kind: "NONE", reason: "OUTLET_PASIF" });
     await testDb.outlet.update({ where: { id: a.outlet.id }, data: { isActive: true } });
-    await testDb.hotel.update({ where: { code: "MR" }, data: { isActive: false } });
+    await testDb.hotel.update({ where: { code: "ROYAL" }, data: { isActive: false } });
     expect(await resolveGuestToken(a.token, meta)).toEqual({ kind: "NONE", reason: "OTEL_PASIF" });
-    await testDb.hotel.update({ where: { code: "MR" }, data: { isActive: true } });
+    await testDb.hotel.update({ where: { code: "ROYAL" }, data: { isActive: true } });
     await testDb.hotelModule.updateMany({
-      where: { hotelId: await hotelId("MR"), moduleKey: "QR_MENU" },
+      where: { hotelId: await hotelId("ROYAL"), moduleKey: "QR_MENU" },
       data: { enabled: false },
     });
     expect(await resolveGuestToken(a.token, meta)).toEqual({ kind: "NONE", reason: "MENU_KAPALI" });
@@ -100,7 +101,7 @@ describe("resolveGuestToken", () => {
   });
 
   it("oda tokenı: ROOM", async () => {
-    const hid = await hotelId("MR");
+    const hid = await hotelId("ROYAL");
     const floor = await testDb.floor.create({ data: { hotelId: hid, number: 1, name: "1. Kat" } });
     const room = await testDb.room.create({
       data: { hotelId: hid, floorId: floor.id, number: "101", qrToken: "123456" },

@@ -127,7 +127,7 @@ describe("orders.transition", () => {
     const s = await orderSetup();
     const { gar } = await actors(s);
     const order = await seedOrder(s);
-    gar.ctx.session.hotelId = await hotelId("MRP");
+    gar.ctx.session.hotelId = await hotelId("PREMIUM");
     gar.ctx.hotelIds.push(s.hotelId);
 
     await expect(orders.transition(gar.ctx, order.id, "ONAYLANDI", {})).rejects.toMatchObject({ code: "FORBIDDEN" });

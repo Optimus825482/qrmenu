@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { alertDialog, confirm } from "@/shell/confirm";
 import { removeMenuImageAction, uploadMenuImageAction } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 
@@ -22,7 +23,10 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
     try {
       const result = await uploadMenuImageAction(form);
       if (!result.ok) setError(result.error.message);
-      else onChanged();
+      else {
+        await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” görseli kaydedildi.` });
+        onChanged();
+      }
     } catch {
       setError("Görsel yüklenemedi");
     } finally {
@@ -32,12 +36,21 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
   };
 
   const remove = async () => {
+    const approved = await confirm({
+      title: "Görseli kaldır",
+      message: `“${node.name}” görseli silinsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     setBusy(true);
     setError(null);
     const result = await removeMenuImageAction({ nodeId: node.id });
     setBusy(false);
     if (!result.ok) setError(result.error.message);
-    else onChanged();
+    else {
+      await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” görseli silindi.` });
+      onChanged();
+    }
   };
 
   return (

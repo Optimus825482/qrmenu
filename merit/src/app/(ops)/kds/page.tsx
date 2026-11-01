@@ -10,5 +10,6 @@ export default async function KdsPage() {
   const outletId = ctx.session.outletId;
   const board = await kds.board(ctx, outletId);
   const canEdit = await can(ctx, "QS-KDS", "D", ctx.session.hotelId);
-  return <KdsClient key={outletId} outletId={outletId} board={board} canEdit={canEdit} />;
+  const canPrint = await can(ctx, "QS-KDS", "O", ctx.session.hotelId);
+  return <KdsClient key={outletId} outletId={outletId} board={board} canEdit={canEdit} canPrint={canPrint} />;
 }

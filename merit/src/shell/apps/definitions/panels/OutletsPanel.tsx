@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { OutletType, PriceDisplay } from "@/generated/prisma/enums";
+import { OutletArea, OutletType, PriceDisplay } from "@/generated/prisma/enums";
 import {
   createOutletAction,
   deleteOutletAction,
   listOutletsAction,
   updateOutletAction,
 } from "@/modules/core/server/admin/actions/outlets";
-import { setOutletOrderingEnabledAction } from "@/modules/menu/server/actions/outletSwitches";
+import { createOutletAreaAction } from "@/modules/core/server/admin/actions/outletAreas";
+import { OutletAreaPanel } from "./OutletAreaPanel";
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
 import { alertDialog, confirm } from "@/shell/confirm";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
@@ -16,93 +17,69 @@ import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
 import { Toolbar } from "@/shell/ui/Toolbar";
 import { useLiveList } from "@/shell/ui/useLiveList";
-import { OUTLET_TYPE_LABELS, PRICE_DISPLAY_LABELS } from "./values";
+import { OUTLET_AREA_LABELS, OUTLET_TYPE_LABELS, PRICE_DISPLAY_LABELS } from "./values";
 
 type Props = { hotelId: string; setStatus(text: string): void };
 
 type Dialog = { mode: "new" } | { mode: "edit"; row: OutletRow } | null;
+type OutletGridRow =
+  | { id: string; kind: "OUTLET"; outlet: OutletRow }
+  | { id: string; kind: "AREA"; outlet: OutletRow; area: OutletRow["areas"][number] };
 
-/** Outletler: outlets of the window's hotel; the row switch opens / closes ordering at once. */
+/** Outletler: outlets of the window's hotel; operational settings live in the edit forms. */
 export function OutletsPanel({ hotelId, setStatus }: Props) {
   const list = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query }), {
     hotelId,
-    entities: ["outlet"],
+    entities: ["outlet", "outletArea"],
   });
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [dialog, setDialog] = useState<Dialog>(null);
-  const selected = list.rows.find((r) => r.id === selectedId);
+  const [areaDialog, setAreaDialog] = useState(false);
+  const [areaSettings, setAreaSettings] = useState<{ outletId: string; areaId: string } | null>(null);
+  const gridRows: OutletGridRow[] = list.rows.flatMap((outlet) => [
+    { id: `outlet:${outlet.id}`, kind: "OUTLET" as const, outlet },
+    ...outlet.areas.map((area) => ({ id: `area:${area.id}`, kind: "AREA" as const, outlet, area })),
+  ]);
+  const selectedRow = gridRows.find((row) => row.id === selectedId);
+  const selected = selectedRow?.outlet;
 
   useEffect(() => {
     setStatus(`${list.total} outlet`);
   }, [list.total, setStatus]);
 
-  const setOrdering = async (row: OutletRow, enabled: boolean) => {
-    const result = await setOutletOrderingEnabledAction({ id: row.id, enabled });
-    if (!result.ok) {
-      void alertDialog({ title: "Sipariş durumu değiştirilemedi", message: result.error.message });
-    }
-    list.reload();
-  };
-
-  const columns: Column<OutletRow>[] = [
-    { key: "name", title: "Outlet", sortable: true },
+  const columns: Column<OutletGridRow>[] = [
+    {
+      key: "name",
+      title: "Outlet",
+      sortable: true,
+      render: (row) => row.kind === "OUTLET" ? row.outlet.name : (
+        <span className="xp-outlet-area-child">
+          <span aria-hidden="true">└</span>
+          <span>{row.area.name || OUTLET_AREA_LABELS[row.area.type]}</span>
+        </span>
+      ),
+    },
     {
       key: "type",
       title: "Tür",
       width: 110,
       sortable: true,
-      render: (row) => OUTLET_TYPE_LABELS[row.type],
+      render: (row) => row.kind === "OUTLET" ? OUTLET_TYPE_LABELS[row.outlet.type] : OUTLET_AREA_LABELS[row.area.type],
     },
     {
       key: "modules",
       title: "Modüller",
-      width: 230,
-      render: (row) => (
+      width: 300,
+      render: (row) => row.kind === "AREA" ? null : (
         <span className="xp-badges">
-          {row.hasMenu ? (
-            <span className="xp-badge" data-on="true">
-              Menü
-            </span>
-          ) : null}
-          {row.hasOrdering ? (
-            <span className="xp-badge" data-on={row.orderingEnabled}>
-              {row.orderingEnabled ? "Sipariş" : "Sipariş kapalı"}
-            </span>
-          ) : null}
-          {row.kdsEnabled ? (
-            <span className="xp-badge" data-on="true">
-              KDS
-            </span>
-          ) : null}
-          {!row.isActive ? <span className="xp-badge">Pasif</span> : null}
+          {row.outlet.hasMenu ? <span className="xp-outlet-module-badge" data-module="menu">QR Menü</span> : null}
+          {row.outlet.hasOrdering ? <span className="xp-outlet-module-badge" data-module="ordering">QR Sipariş</span> : null}
+          {row.outlet.kdsEnabled ? <span className="xp-outlet-module-badge" data-module="kds">KDS</span> : null}
+          {!row.outlet.isActive ? <span className="xp-badge">Pasif</span> : null}
         </span>
       ),
     },
-    {
-      key: "priceDisplay",
-      title: "Fiyat",
-      width: 90,
-      sortable: true,
-      render: (row) => PRICE_DISPLAY_LABELS[row.priceDisplay],
-    },
-    {
-      key: "orderingEnabled",
-      title: "Sipariş aç/kapa",
-      width: 120,
-      sortable: true,
-      render: (row) =>
-        row.hasOrdering ? (
-          <input
-            type="checkbox"
-            role="switch"
-            aria-label={`Sipariş aç/kapa: ${row.name}`}
-            checked={row.orderingEnabled}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => void setOrdering(row, e.target.checked)}
-          />
-        ) : null,
-    },
-    { key: "tableCount", title: "Masa", width: 60, sortable: true },
+    { key: "tableCount", title: "Masa", width: 60, sortable: true, render: (row) => row.kind === "OUTLET" ? row.outlet.tableCount : row.area.tableCount },
   ];
 
   const submit = async (values: FormValues) => {
@@ -116,6 +93,8 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       priceDisplay: values.priceDisplay ?? "INHERIT",
       kdsEnabled: flag("kdsEnabled"),
       phoneConfirmRequired: flag("phoneConfirmRequired"),
+      autoPrintReceipt: flag("autoPrintReceipt"),
+      autoPrintKitchen: flag("autoPrintKitchen"),
       isActive: flag("isActive"),
     };
     const result =
@@ -123,9 +102,21 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
         ? await updateOutletAction({ hotelId, id: dialog.row.id, data })
         : await createOutletAction({ hotelId, data });
     if (result.ok) {
-      setSelectedId(result.data.id);
+      setSelectedId(`outlet:${result.data.id}`);
       list.reload();
     }
+    return result;
+  };
+
+  const submitArea = async (values: FormValues) => {
+    if (!selected) {
+      return { ok: false as const, error: { code: "VALIDATION" as const, message: "Önce bir outlet seçin" } };
+    }
+    const result = await createOutletAreaAction({
+      outletId: selected.id,
+      data: { type: values.type ?? "", name: values.name ?? "" },
+    });
+    if (result.ok) list.reload();
     return result;
   };
 
@@ -141,6 +132,7 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       void alertDialog({ title: "Outlet silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” outleti silindi.` });
     setSelectedId(undefined);
     list.reload();
   };
@@ -155,9 +147,11 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
           {list.error}
         </p>
       ) : null}
-      <DataGrid<OutletRow>
+      <DataGrid<OutletGridRow>
+        className="xp-outlets-grid"
+        rowClassName={(row) => row.kind === "OUTLET" ? "xp-outlet-start" : undefined}
         columns={columns}
-        rows={list.rows}
+        rows={gridRows}
         total={list.total}
         page={list.page}
         pageSize={list.pageSize}
@@ -169,17 +163,36 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
         q={list.q}
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
-        onActivate={edit}
+        onActivate={(row) => row.kind === "AREA"
+          ? setAreaSettings({ outletId: row.outlet.id, areaId: row.area.id })
+          : edit(row.outlet)}
+        rowContextActions={(row) => row.kind === "AREA" ? [
+          { label: "Alan ayarları", onSelect: () => setAreaSettings({ outletId: row.outlet.id, areaId: row.area.id }) },
+        ] : [
+          { label: "Düzenle", onSelect: () => edit(row.outlet) },
+          { label: "Sil", onSelect: () => void remove(row.outlet) },
+        ]}
         emptyText="Bu otelde kayıtlı outlet yok"
         toolbar={
           <Toolbar
             onNew={() => setDialog({ mode: "new" })}
-            onEdit={() => selected && edit(selected)}
-            onDelete={() => selected && void remove(selected)}
+            onEdit={() => selectedRow?.kind === "AREA"
+              ? setAreaSettings({ outletId: selectedRow.outlet.id, areaId: selectedRow.area.id })
+              : selected && edit(selected)}
+            onDelete={() => selectedRow?.kind === "OUTLET" && void remove(selectedRow.outlet)}
             onRefresh={list.reload}
             editDisabled={!selected}
-            deleteDisabled={!selected}
-          />
+            deleteDisabled={selectedRow?.kind !== "OUTLET"}
+          >
+            <button
+              type="button"
+              className="xp-button"
+              disabled={!selected}
+              onClick={() => setAreaDialog(true)}
+            >
+              Alan Ekle
+            </button>
+          </Toolbar>
         }
       />
       <FormDialog
@@ -188,47 +201,96 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
-        <Field name="name" label="Outlet adı">
-          <input type="text" defaultValue={editing?.name ?? ""} maxLength={80} />
+        <OutletFields editing={editing} />
+      </FormDialog>
+      {areaSettings ? (() => {
+        const outlet = list.rows.find((row) => row.id === areaSettings.outletId);
+        return outlet?.areas.some((area) => area.id === areaSettings.areaId) ? (
+          <OutletAreaPanel
+            outlet={outlet}
+            areaId={areaSettings.areaId}
+            setStatus={setStatus}
+            dialogOnly
+            open
+            onClose={() => setAreaSettings(null)}
+          />
+        ) : null;
+      })() : null}
+      <FormDialog
+        title="Outlet alanı ekle"
+        open={areaDialog}
+        onClose={() => setAreaDialog(false)}
+        onSubmit={submitArea}
+        submitText="Ekle"
+      >
+        <Field name="outletName" label="Outlet">
+          <input type="text" value={selected?.name ?? ""} readOnly />
         </Field>
-        <Field name="type" label="Tür">
-          <select defaultValue={editing?.type ?? "GENEL"}>
-            {Object.values(OutletType).map((t) => (
-              <option key={t} value={t}>
-                {OUTLET_TYPE_LABELS[t]}
-              </option>
+        <Field name="type" label="Alan türü">
+          <select defaultValue="KAPALI">
+            {Object.values(OutletArea).map((area) => (
+              <option key={area} value={area}>{OUTLET_AREA_LABELS[area]}</option>
             ))}
           </select>
         </Field>
-        <Field name="hasMenu" label="Menü">
-          <input type="checkbox" defaultChecked={editing?.hasMenu ?? true} />
-        </Field>
-        <Field name="hasOrdering" label="Sipariş alır">
-          <input type="checkbox" defaultChecked={editing?.hasOrdering ?? false} />
-        </Field>
-        <Field name="orderingEnabled" label="Sipariş açık">
-          <input type="checkbox" defaultChecked={editing?.orderingEnabled ?? true} />
-        </Field>
-        <Field name="priceDisplay" label="Fiyat gösterimi">
-          <select defaultValue={editing?.priceDisplay ?? "INHERIT"}>
-            {Object.values(PriceDisplay).map((p) => (
-              <option key={p} value={p}>
-                {PRICE_DISPLAY_LABELS[p]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field name="kdsEnabled" label="Mutfak ekranı (KDS)">
-          <input type="checkbox" defaultChecked={editing?.kdsEnabled ?? false} />
-        </Field>
-        <Field name="phoneConfirmRequired" label="Telefon onayı gerekli">
-          <input type="checkbox" defaultChecked={editing?.phoneConfirmRequired ?? false} />
-        </Field>
-        <Field name="isActive" label="Aktif">
-          <input type="checkbox" defaultChecked={editing?.isActive ?? true} />
+        <Field name="name" label="Alan adı (isteğe bağlı)">
+          <input type="text" maxLength={60} placeholder="Örn. Teras, Balkon" />
         </Field>
       </FormDialog>
+    </>
+  );
+}
+
+function OutletFields({ editing }: { editing?: OutletRow }) {
+  return (
+    <>
+      <Field name="name" label="Outlet adı">
+        <input type="text" defaultValue={editing?.name ?? ""} maxLength={80} />
+      </Field>
+      <Field name="type" label="Tür">
+        <select defaultValue={editing?.type ?? "GENEL"}>
+          {Object.values(OutletType).map((t) => (
+            <option key={t} value={t}>
+              {OUTLET_TYPE_LABELS[t]}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field name="hasMenu" label="Menü">
+        <input type="checkbox" defaultChecked={editing?.hasMenu ?? true} />
+      </Field>
+      <Field name="hasOrdering" label="Sipariş modülü (garson / kasa)">
+        <input type="checkbox" defaultChecked={editing?.hasOrdering ?? false} />
+      </Field>
+      <Field name="orderingEnabled" label="QR sipariş açık">
+        <input type="checkbox" defaultChecked={editing?.orderingEnabled ?? true} />
+      </Field>
+      <Field name="priceDisplay" label="Fiyat gösterimi">
+        <select defaultValue={editing?.priceDisplay ?? "INHERIT"}>
+          {Object.values(PriceDisplay).map((price) => (
+            <option key={price} value={price}>
+              {PRICE_DISPLAY_LABELS[price]}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field name="kdsEnabled" label="Mutfak ekranı (KDS)">
+        <input type="checkbox" defaultChecked={editing?.kdsEnabled ?? false} />
+      </Field>
+      <Field name="autoPrintReceipt" label="Adisyonu otomatik yazdır">
+        <input type="checkbox" defaultChecked={editing?.autoPrintReceipt ?? true} />
+      </Field>
+      <Field name="autoPrintKitchen" label="Mutfak fişini otomatik yazdır (fiyatsız)">
+        <input type="checkbox" defaultChecked={editing?.autoPrintKitchen ?? false} />
+      </Field>
+      <Field name="phoneConfirmRequired" label="Telefon onayı gerekli">
+        <input type="checkbox" defaultChecked={editing?.phoneConfirmRequired ?? false} />
+      </Field>
+      <Field name="isActive" label="Aktif">
+        <input type="checkbox" defaultChecked={editing?.isActive ?? true} />
+      </Field>
     </>
   );
 }

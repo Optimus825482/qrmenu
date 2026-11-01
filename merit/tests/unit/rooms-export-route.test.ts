@@ -16,7 +16,7 @@ describe("GET /api/admin/rooms/export", () => {
   beforeEach(() => {
     requireUser.mockReset().mockResolvedValue({ user: { id: "u1" } });
     exportExcel.mockReset().mockResolvedValue(Buffer.from("xlsx-bytes"));
-    findHotel.mockReset().mockResolvedValue({ code: "MR" });
+    findHotel.mockReset().mockResolvedValue({ code: "ROYAL" });
   });
 
   it("dosyayı odalar-<otelKodu>.xlsx olarak indirtir", async () => {

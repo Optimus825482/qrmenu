@@ -25,6 +25,8 @@ export const FONT_SCALE_LABELS: Record<FontScale, string> = {
   M: "Orta",
   L: "Büyük",
   XL: "Çok büyük",
+  XXL: "İri",
+  XXXL: "Çok iri",
 };
 
 export const FONT_SCALE_PX: Record<FontScale, string> = {
@@ -32,6 +34,17 @@ export const FONT_SCALE_PX: Record<FontScale, string> = {
   M: "12px",
   L: "13px",
   XL: "14px",
+  XXL: "16px",
+  XXXL: "18px",
+};
+
+const FONT_SCALE_UI: Record<FontScale, number> = {
+  S: 0.917,
+  M: 1,
+  L: 1.083,
+  XL: 1.167,
+  XXL: 1.333,
+  XXXL: 1.5,
 };
 
 export const FONT_FAMILY_LABELS: Record<FontFamily, string> = {
@@ -40,6 +53,8 @@ export const FONT_FAMILY_LABELS: Record<FontFamily, string> = {
   verdana: "Verdana",
   arial: "Arial",
   system: "Sistem yazı tipi",
+  microsoftSans: "Microsoft Sans Serif",
+  robotoMedium: "Roboto Medium",
 };
 
 export const FONT_STACKS: Record<FontFamily, string> = {
@@ -48,6 +63,18 @@ export const FONT_STACKS: Record<FontFamily, string> = {
   verdana: "Verdana, Geneva, sans-serif",
   arial: "Arial, Helvetica, sans-serif",
   system: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+  microsoftSans: '"Microsoft Sans Serif", Arial, sans-serif',
+  robotoMedium: 'Roboto, "Segoe UI", sans-serif',
+};
+
+export const FONT_WEIGHTS: Record<FontFamily, number> = {
+  tahoma: 400,
+  segoe: 400,
+  verdana: 400,
+  arial: 400,
+  system: 400,
+  microsoftSans: 400,
+  robotoMedium: 500,
 };
 
 export const THEME_LABELS: Record<Theme, string> = {
@@ -65,7 +92,9 @@ export function fontVariables(
 ): CSSProperties {
   return {
     "--xp-font-size": FONT_SCALE_PX[scale],
+    "--xp-ui-scale": FONT_SCALE_UI[scale],
     "--xp-font-family": FONT_STACKS[family],
+    "--xp-font-weight": FONT_WEIGHTS[family],
     // Color of the "Düz renk" wallpaper ([data-wallpaper="ozel"] in theme.css).
     ...(wallpaperColor ? { "--xp-wallpaper-custom": wallpaperColor } : {}),
   } as CSSProperties;

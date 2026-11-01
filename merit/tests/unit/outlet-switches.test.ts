@@ -33,7 +33,7 @@ afterAll(async () => {
 async function newOutlet(over: Record<string, unknown> = {}) {
   return testDb.outlet.create({
     data: {
-      hotelId: await hotelId("MR"),
+      hotelId: await hotelId("ROYAL"),
       name: `Bar ${Math.random().toString(36).slice(2, 8)}`,
       type: "BAR",
       hasMenu: true,
@@ -44,8 +44,8 @@ async function newOutlet(over: Record<string, unknown> = {}) {
 }
 
 async function fbm() {
-  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "fbm", roleCode: "R-FBM", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL" });
 }
 
 describe("setOrderingEnabled", () => {
@@ -74,8 +74,8 @@ describe("setOrderingEnabled", () => {
   });
 
   it("R-GAR FORBIDDEN ve YETKISIZ_DENEME", async () => {
-    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     const outlet = await newOutlet();
     await expect(switches.setOrderingEnabled(ctx, outlet.id, false)).rejects.toMatchObject({
       code: "FORBIDDEN",
@@ -118,9 +118,9 @@ describe("setPriceDisplay", () => {
 
 describe("setSetting price.display", () => {
   it("price.display olayı yayımlar", async () => {
-    const user = await makeUser({ username: "sys", roleCode: "R-SYS", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
-    const mr = await hotelId("MR");
+    const user = await makeUser({ username: "sys", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
+    const mr = await hotelId("ROYAL");
     await setSetting(ctx, "price.display", "SHOW", mr);
     expect(publishMock).toHaveBeenCalledWith({ type: "price.display", hotelId: mr }, expect.anything());
   });

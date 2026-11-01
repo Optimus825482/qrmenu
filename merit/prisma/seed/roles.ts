@@ -21,7 +21,7 @@ export const ROLES: RoleDef[] = [
   { code: "R-SYS", name: "Sistem Yöneticisi", kind: "SISTEM", profile: "TAM", modules: "ALL", defaultScreen: "CR-KOM" },
   { code: "R-ITT", name: "Otel IT (Destek)", kind: "SISTEM", profile: "IZLE", modules: ["CORE"], defaultScreen: "CR-SYS" },
   { code: "R-OTM", name: "Otel Müdürü", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "MINIBAR", "QR_MENU", "QR_ORDER"], defaultScreen: "CR-RAP" },
-  { code: "R-FBM", name: "F&B Müdürü", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KUY" },
+  { code: "R-FBM", name: "F&B Müdürü", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"], defaultScreen: "CR-KOM" },
   { code: "R-SGF", name: "Şef Garson / Süpervizör", kind: "OUTLET", profile: "ISLET", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KUY" },
   { code: "R-GAR", name: "Garson", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KUY" },
   { code: "R-BAR", name: "Barmen", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KUY" },
@@ -92,7 +92,7 @@ export const P5_SCREEN_LIMITS = {
   } as Record<string, readonly Action[]>,
   approve: {
     screens: ["QS-KUY", "QS-IPT"] as readonly string[],
-    roles: ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS"] as readonly string[],
+    roles: ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS", "R-GAR"] as readonly string[],
   },
 };
 

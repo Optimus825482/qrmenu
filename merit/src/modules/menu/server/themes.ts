@@ -12,6 +12,18 @@ import {
   withAdminTx,
 } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
+import {
+  AMBIENCES,
+  CONCEPTS,
+  DENSITIES,
+  DESIGN_BLOCKS,
+  DESIGN_TEMPLATES,
+  designFromStored,
+  HERO_STYLES,
+  TYPOGRAPHIES,
+  type OutletDesign,
+} from "../design";
+import { blockingFindings } from "../quality";
 import { assertOutletScope } from "./menuNodeAccess";
 
 const SCREEN = "QM-TEM";
@@ -193,8 +205,90 @@ export async function assign(ctx: Ctx, outletId: string, themeId: string | null)
 export type AssignTarget = {
   hotelId: string;
   hotelName: string;
-  outlets: { id: string; name: string; themeId: string | null }[];
+  outlets: { id: string; name: string; themeId: string | null; design: OutletDesign }[];
 };
+
+const designSchema = z.object({
+  ambience: z.enum(AMBIENCES.map((item) => item.id)),
+  concept: z.enum(CONCEPTS.map((item) => item.id)),
+  template: z.enum(DESIGN_TEMPLATES.map((item) => item.id)),
+  layout: z.array(z.enum(DESIGN_BLOCKS.map((item) => item.id))).length(DESIGN_BLOCKS.length),
+  options: z.object({
+    cardStyle: z.enum(["LIST", "CARD", "PHOTO"]),
+    showImages: z.boolean(),
+    showAllergens: z.boolean(),
+    showTags: z.boolean(),
+    showPrices: z.boolean(),
+    uppercaseCategories: z.boolean(),
+    featuredTitle: z.string().trim().max(40, "Öne çıkan başlığı en fazla 40 karakter olabilir"),
+    typography: z.enum(TYPOGRAPHIES.map((item) => item.id)),
+    density: z.enum(DENSITIES.map((item) => item.id)),
+    hero: z.enum(HERO_STYLES.map((item) => item.id)),
+    heroImageUrl: z.string().max(300),
+    curatedPhotos: z.boolean(),
+    showSearch: z.boolean(),
+    showFilters: z.boolean(),
+    callWaiterText: z.string().trim().max(40, "Garson çağır butonu metni en fazla 40 karakter olabilir").optional().default(""),
+  }),
+});
+
+/** Atomically saves outlet ambience, concept, visual template, block order and palette. */
+export async function saveOutletDesign(
+  ctx: Ctx,
+  outletId: string,
+  themeId: string,
+  raw: OutletDesign,
+): Promise<void> {
+  const design = parseInput(designSchema, raw);
+  if (new Set(design.layout).size !== DESIGN_BLOCKS.length) {
+    throw new DomainError("VALIDATION", "Tasarım bölümlerini bir kez kullanın");
+  }
+  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hotelId: true } });
+  if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+  assertOutletScope(ctx, outletId);
+  const screen = (await can(ctx, SCREEN, "D", outlet.hotelId)) ? SCREEN : "QM-MEN";
+  await withAdminTx(ctx, { screen, action: "D", hotelId: outlet.hotelId }, async (tx) => {
+    const theme = await tx.menuTheme.findUnique({
+      where: { id: themeId },
+      select: { bg: true, accent: true, soft: true, textOnAccent: true },
+    });
+    if (!theme) throw new DomainError("NOT_FOUND", "Renk teması bulunamadı");
+    const [blocked] = blockingFindings(design, theme);
+    if (blocked) throw new DomainError("VALIDATION", blocked.message);
+    if (
+      design.options.heroImageUrl !== "" &&
+      (!design.options.heroImageUrl.startsWith("/uploads/") ||
+        !(await tx.menuNode.findFirst({
+          where: { outletId, imageUrl: design.options.heroImageUrl, isActive: true },
+          select: { id: true },
+        })))
+    ) {
+      throw new DomainError("VALIDATION", "Karşılama fotoğrafı bu outletin ürünlerinden biri olmalı");
+    }
+    const before = await tx.outlet.findUnique({
+      where: { id: outletId },
+      select: { themeId: true, menuDesign: true },
+    });
+    if (!before) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+    await tx.outlet.update({ where: { id: outletId }, data: { themeId } });
+    await tx.outletMenuDesign.upsert({
+      where: { outletId },
+      create: { outletId, ...design },
+      update: design,
+    });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: outlet.hotelId,
+      action: "OUTLET_MENU_DESIGN_UPDATE",
+      entity: "Outlet",
+      entityId: outletId,
+      before: { themeId: before.themeId, design: before.menuDesign },
+      after: { themeId, design },
+    });
+    await publish({ type: "menu.changed", hotelId: outlet.hotelId, outletId, payload: { op: "design" } }, tx);
+    await publishDefinition(tx, { hotelId: outlet.hotelId, entity: "outlet", id: outletId, op: "update" });
+  });
+}
 
 /** Hotels (with their menu outlets) whose outlet theme the user may set; outlet sessions see their own outlet only. */
 export async function assignTargets(ctx: Ctx): Promise<AssignTarget[]> {
@@ -215,9 +309,18 @@ export async function assignTargets(ctx: Ctx): Promise<AssignTarget[]> {
         ...(ctx.session.outletId ? { id: ctx.session.outletId } : {}),
       },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, themeId: true },
+      select: { id: true, name: true, themeId: true, menuDesign: true },
     });
-    if (outlets.length > 0) result.push({ hotelId: hotel.id, hotelName: hotel.name, outlets });
+    if (outlets.length > 0) {
+      result.push({
+        hotelId: hotel.id,
+        hotelName: hotel.name,
+        outlets: outlets.map(({ menuDesign, ...outlet }) => ({
+          ...outlet,
+          design: designFromStored(menuDesign),
+        })),
+      });
+    }
   }
   return result;
 }

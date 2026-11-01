@@ -24,6 +24,16 @@ export const hotelModuleSchema = z.object({
 /** The four switchable modules of the hotel with their state, in a fixed order. */
 export async function list(ctx: Ctx, hotelId: string): Promise<HotelModuleState[]> {
   await assertCan(ctx, SCREEN, "V", hotelId);
+  return listStates(hotelId);
+}
+
+/** Team view needs module visibility but does not require Tanımlamalar access. */
+export async function listForTeam(ctx: Ctx, hotelId: string): Promise<HotelModuleState[]> {
+  await assertCan(ctx, "CR-KUL", "V", hotelId);
+  return listStates(hotelId);
+}
+
+async function listStates(hotelId: string): Promise<HotelModuleState[]> {
   const rows = await prisma.hotelModule.findMany({ where: { hotelId } });
   const enabled = new Map(rows.map((r) => [r.moduleKey, r.enabled]));
   return SWITCHABLE_MODULES.map((moduleKey) => ({ moduleKey, enabled: enabled.get(moduleKey) === true }));

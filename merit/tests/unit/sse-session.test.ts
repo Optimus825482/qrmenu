@@ -55,8 +55,8 @@ afterAll(async () => {
 
 describe("oturum kapanınca SSE akışı", () => {
   async function twoSessions() {
-    const user = await makeUser({ username: "sse1", roleCode: "R-GAR", hotelCode: "MR" });
-    const hid = await hotelId("MR");
+    const user = await makeUser({ username: "sse1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const hid = await hotelId("ROYAL");
     const mine = await createSession({ userId: user.id, hotelId: hid, roleId: user.roleId });
     const other = await createSession({ userId: user.id, hotelId: hid, roleId: user.roleId });
     // Single-device mode closed `mine` when `other` opened; revive it so both are open at once.

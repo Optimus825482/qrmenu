@@ -7,7 +7,7 @@ gerçek zamanlı olaylar (SSE), arka plan işleri (pg-boss), Windows XP temalı 
 kabuğu ve Komuta Merkezi, mobil kabuk ve CI. **P1 (çekirdek tanımlar ve oturum takibi)**
 bunun üzerine tanımlama pencerelerini, kurulum rehberini, online kullanıcı takibini,
 bildirim merkezini, denetim günlüğünü ve sistem ayarlarını ekler (aşağıda "P1 pencereleri").
-**P5** masa QR menüsünü, beş dilli misafir siparişini, kasa/garson onayını, KDS'yi ve
+**P5** masa QR menüsünü, çok dilli misafir siparişini, kasa/garson onayını, KDS'yi ve
 yerel ağdaki ESC/POS yazdırma geçidini ekler.
 
 ## Gereksinimler
@@ -110,6 +110,22 @@ oluşturmaz).
   garsonlarına ve otelin F&B müdürlerine bildirim gönderilir.
 - Menü görselleri `UPLOADS_DIR` altında saklanır ve `/uploads/...` ile sunulur. Bu dizini kalıcı
   bir disk/birimde tutun, web kökü ya da Git altında tutmayın.
+
+### Menü Tasarım Merkezi
+
+Tema Yönetimi içindeki Menü Tasarım Merkezi'nde outletin canlı mobil menüsü düzenlenir. Tasarım
+ayarları (tipografi, yoğunluk, karşılama, görsel seçimi ve gösterim tercihleri) outletin mevcut
+`OutletMenuDesign.options` kaydında saklanır. Kalite panelindeki kontrast engelleri sunucuda da
+denetlenir ve yayını durdurur. Renkler ve şablonlar tema kataloğundan yönetilir.
+
+Garson çağrı seçenekleri aynı stüdyonun Garson çağrısı sekmesindedir. Outlet başına en çok sekiz
+aktif seçenek bulunabilir; Türkçe etiket zorunlu, İngilizce/Almanca/Rusça/Arapça çeviriler isteğe
+bağlıdır. Mevcut outletlerin ilk seçenekleri migration tarafından tek sefer eklenir. Yeni outlet
+oluşturulurken dört varsayılan seçenek sağlanır; bir outletin seçenekleri yönetici tarafından
+silinirse seed varsayılanları geri getirmez.
+
+Misafir menüsü şu dilleri destekler: Türkçe, İngilizce, Almanca, Rusça, Arapça, Fransızca,
+Yunanca ve İtalyanca (`tr`, `en`, `de`, `ru`, `ar`, `fr`, `el`, `it`).
 
 ### Yazdırma geçidi
 

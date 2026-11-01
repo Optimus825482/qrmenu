@@ -71,6 +71,7 @@ type ShellState = {
   /** Measured height of the footer band in px (not persisted); FOOTER_HEIGHT until reported. */
   footerHeight: number;
   brandWatermark: boolean;
+  shortcutVersion: number;
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
@@ -96,14 +97,16 @@ type ShellActions = {
    * New window id; null for an unknown / not-visible app, an app not visible in the requested
    * hotel, or when MAX_WINDOWS are open.
    */
-  open(appId: string, opts?: { hotelId?: string; initialPanel?: string }): string | null;
+  open(appId: string, opts?: { hotelId?: string; initialPanel?: string; initialOutletId?: string }): string | null;
   close(id: string): void;
   focus(id: string): void;
   minimize(id: string): void;
   toggleMaximize(id: string): void;
   move(id: string, x: number, y: number): void;
   resize(id: string, w: number, h: number): void;
+  setBounds(id: string, x: number, y: number, w: number, h: number): void;
   setHotel(id: string, hotelId: string): void;
+  clearHotel(id: string): void;
   setWallpaper(wallpaper: Wallpaper): void;
   /** `#rrggbb` color of the "Düz renk" wallpaper; anything else is ignored. */
   setWallpaperColor(hex: string): void;
@@ -115,6 +118,7 @@ type ShellActions = {
   /** Real rendered height of the footer band (px), reported by FooterBand. */
   setFooterHeight(px: number): void;
   setBrandWatermark(on: boolean): void;
+  setShortcutVersion(version: number): void;
   /** Wallpaper, font, theme and brand switches back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
   resetAppearance(): void;
   addIcon(appId: string, x: number, y: number): void;
@@ -291,6 +295,7 @@ export function createWindowStore() {
       viewport: { w: 1920, h: 1080 },
       ...DEFAULT_APPEARANCE,
       footerHeight: FOOTER_HEIGHT,
+      shortcutVersion: 0,
       icons: [],
       hotels: [],
       appIds: null,
@@ -333,6 +338,7 @@ export function createWindowStore() {
           appId,
           hotelId,
           ...(opts.initialPanel !== undefined ? { initialPanel: opts.initialPanel } : {}),
+          ...(opts.initialOutletId !== undefined ? { initialOutletId: opts.initialOutletId } : {}),
           title: titleFor(app, hotelId),
           ...clampWindowPosition(at(step), at(step), w, h, vp),
           w,
@@ -407,11 +413,34 @@ export function createWindowStore() {
         });
       },
 
+      setBounds(id, x, y, width, height) {
+        const vp = effectiveViewport(get());
+        update(id, (w) => {
+          const app = getApp(w.appId);
+          if (w.maximized || app?.window.resizable === false) return w;
+          const min = minSize(app);
+          const nw = Math.max(min.w, Math.min(Math.round(width), vp.w));
+          const nh = Math.max(min.h, Math.min(Math.round(height), deskHeight(vp)));
+          const pos = clampWindowPosition(x, y, nw, nh, vp);
+          return nw === w.w && nh === w.h && pos.x === w.x && pos.y === w.y
+            ? w
+            : { ...w, w: nw, h: nh, x: pos.x, y: pos.y };
+        });
+      },
+
       setHotel(id, hotelId) {
         update(id, (w) => {
           const app = getApp(w.appId);
           if (!app || !appVisibleInHotel(get(), app, hotelId)) return w;
           return { ...w, hotelId, title: titleFor(app, hotelId) };
+        });
+      },
+
+      clearHotel(id) {
+        update(id, (w) => {
+          const app = getApp(w.appId);
+          if (!app?.needsHotel) return w;
+          return { ...w, hotelId: undefined, title: titleFor(app) };
         });
       },
 
@@ -465,6 +494,10 @@ export function createWindowStore() {
         if (typeof on === "boolean") set({ brandWatermark: on });
       },
 
+      setShortcutVersion(version) {
+        if (Number.isInteger(version) && version >= 0) set({ shortcutVersion: version });
+      },
+
       resetAppearance() {
         get().setFooterBand(DEFAULT_APPEARANCE.footerBand);
         set({ ...DEFAULT_APPEARANCE });
@@ -501,6 +534,7 @@ export function createWindowStore() {
           theme,
           footerBand,
           brandWatermark,
+          shortcutVersion,
           icons,
           order,
           windows,
@@ -513,11 +547,13 @@ export function createWindowStore() {
           theme,
           footerBand,
           brandWatermark,
+          shortcutVersion,
           icons: icons.map((i) => ({ ...i })),
-          // initialPanel is a one-off opening request: it is never saved.
+          // Opening sub-view/outlet are one-off requests and are not saved in window preferences.
           windows: order.map((id) => {
             const win = { ...windows[id] };
             delete win.initialPanel;
+            delete win.initialOutletId;
             return win;
           }),
         };
@@ -575,6 +611,7 @@ export function createWindowStore() {
           theme: oneOf(THEMES, p.theme, DEFAULT_APPEARANCE.theme),
           footerBand,
           brandWatermark: bool(p.brandWatermark, DEFAULT_APPEARANCE.brandWatermark),
+          shortcutVersion: Number.isInteger(p.shortcutVersion) ? p.shortcutVersion : 0,
           seq: Math.max(get().seq, maxSeq + 1),
           cascade: 0,
           ready: true,

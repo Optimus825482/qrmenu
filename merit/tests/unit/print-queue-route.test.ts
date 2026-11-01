@@ -51,7 +51,7 @@ afterAll(async () => {
 
 async function setupPrinter() {
   return testDb.printer.create({
-    data: { hotelId: await hotelId("MR"), name: "Kasa Yazici", ip: "192.168.1.50", port: 9100 },
+    data: { hotelId: await hotelId("ROYAL"), name: "Kasa Yazici", ip: "192.168.1.50", port: 9100 },
   });
 }
 
@@ -144,10 +144,10 @@ describe("POST /api/print-queue/{id} (report)", () => {
 describe("POST /api/print-queue/heartbeat", () => {
   it("anahtarsız 401; bilinmeyen otel 404; geçerli → 200 { printers: [{ id, ip, port }] } ve lastSeenAt/lastStatus dolar", async () => {
     const printer = await setupPrinter();
-    expect((await heartbeat({ hotel: "MR", printers: [{ id: printer.id, ok: true }] }, null)).status).toBe(401);
+    expect((await heartbeat({ hotel: "ROYAL", printers: [{ id: printer.id, ok: true }] }, null)).status).toBe(401);
     expect((await heartbeat({ hotel: "XX", printers: [] })).status).toBe(404);
 
-    const res = await heartbeat({ hotel: "MR", printers: [{ id: printer.id, ok: true }] });
+    const res = await heartbeat({ hotel: "ROYAL", printers: [{ id: printer.id, ok: true }] });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ printers: [{ id: printer.id, ip: "192.168.1.50", port: 9100 }] });
     const row = await testDb.printer.findUniqueOrThrow({ where: { id: printer.id } });
@@ -164,9 +164,9 @@ describe("POST /api/print-queue/heartbeat", () => {
 
   it("hata mesajı lastStatus'e yazılır; durum değişmezse olay yok", async () => {
     const printer = await setupPrinter();
-    await heartbeat({ hotel: "MR", printers: [{ id: printer.id, ok: true }] });
+    await heartbeat({ hotel: "ROYAL", printers: [{ id: printer.id, ok: true }] });
     publishMock.mockReset();
-    const res = await heartbeat({ hotel: "MR", printers: [{ id: printer.id, ok: false, message: "kağıt bitti" }] });
+    const res = await heartbeat({ hotel: "ROYAL", printers: [{ id: printer.id, ok: false, message: "kağıt bitti" }] });
     expect(res.status).toBe(200);
     expect((await testDb.printer.findUniqueOrThrow({ where: { id: printer.id } })).lastStatus).toBe("kağıt bitti");
     expect(publishMock).toHaveBeenCalledWith(
@@ -174,7 +174,7 @@ describe("POST /api/print-queue/heartbeat", () => {
       expect.anything(),
     );
     publishMock.mockReset();
-    await heartbeat({ hotel: "MR", printers: [{ id: printer.id, ok: false, message: "hâlâ yok" }] });
+    await heartbeat({ hotel: "ROYAL", printers: [{ id: printer.id, ok: false, message: "hâlâ yok" }] });
     expect(publishMock).not.toHaveBeenCalled();
   });
 
@@ -183,7 +183,7 @@ describe("POST /api/print-queue/heartbeat", () => {
     const other = await testDb.printer.create({
       data: { hotelId: await hotelId("ZZ"), name: "Z Yazici", ip: "10.0.0.9" },
     });
-    const res = await heartbeat({ hotel: "MR", printers: [{ id: other.id, ok: true }] });
+    const res = await heartbeat({ hotel: "ROYAL", printers: [{ id: other.id, ok: true }] });
     expect(res.status).toBe(200);
     const row = await testDb.printer.findUniqueOrThrow({ where: { id: other.id } });
     expect(row.lastSeenAt).toBeNull();

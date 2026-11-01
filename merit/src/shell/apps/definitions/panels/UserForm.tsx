@@ -26,6 +26,9 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
       <Field name="fullName" label="Ad soyad">
         <input type="text" defaultValue={editing?.fullName ?? ""} maxLength={100} />
       </Field>
+      <Field name="jobTitle" label="Görev">
+        <input type="text" defaultValue={editing?.jobTitle ?? ""} maxLength={100} />
+      </Field>
       <Field name="email" label="E-posta">
         <input type="text" defaultValue={editing?.email ?? ""} maxLength={120} />
       </Field>
@@ -82,6 +85,7 @@ export function userInputFromValues(values: FormValues, includePassword: boolean
   return {
     username: values.username ?? "",
     fullName: values.fullName ?? "",
+    jobTitle: values.jobTitle ?? "",
     email: values.email ?? "",
     phone: values.phone ?? "",
     roleId: values.roleId ?? "",

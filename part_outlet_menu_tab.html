@@ -1,0 +1,300 @@
+<!-- ==================== YENİ ALT SEKME: OUTLET MODÜL & MENÜ YÖNETİMİ ==================== -->
+<div id="admin-tab-outlet-menu" class="admin-tab-content">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h2 style="font-size:18px; font-weight:800;">📜 Outlet Modül &amp; Özel Menü Mimarisi Konsolu</h2>
+                    <span class="pill pill-gold">QR Menü / QR Sipariş</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                    Seçilen tesise ait outletlere QR Menü (Opsiyonel Fiyatlı) veya QR Sipariş (Opsiyonel Fiyatlı) modülü atayın; kategori, alt kategori, grup ve ürün detaylarını (görsel, alerjen, fiyat) yönetin.
+                </p>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-primary" style="background:#2563eb;" onclick="openAddMenuItemModal()">
+                    + Yeni Menü Kalemi / Ürün Ekle
+                </button>
+                <button class="btn-outline" onclick="openAddCategoryModal()">
+                    + Yeni Kategori / Grup Ekle
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. Adım: Otel ve Outlet Seçimi Çubuğu -->
+        <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:8px; padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div>
+                    <span style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:2px;">1. Otel Seçimi:</span>
+                    <select id="menu-builder-hotel" onchange="changeMenuBuilderHotel(this.value)" style="padding:6px 12px; border-radius:6px; border:1px solid var(--border-strong); font-size:12px; font-weight:800; background:#fffdf7;">
+                        <option value="DIAMOND">👑 Merit Royal Diamond Hotel</option>
+                        <option value="ROYAL">💎 Merit Royal Hotel</option>
+                        <option value="PREMIUM">🌺 Merit Royal Premium Hotel</option>
+                    </select>
+                </div>
+                <div>
+                    <span style="font-size:11px; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:2px;">2. Yönetilecek Outlet:</span>
+                    <select id="menu-builder-outlet" onchange="changeMenuBuilderOutlet(this.value)" style="padding:6px 12px; border-radius:6px; border:1.5px solid var(--royal-gold); font-size:12px; font-weight:800;">
+                        <option value="beach">👑 Royal Beach Club &amp; Cabana Lounge</option>
+                        <option value="zephyros">🍽️ Zephyros Pool &amp; Sun Lounge</option>
+                        <option value="diamond_main">💎 Diamond Ana Restoran</option>
+                        <option value="steakhouse">🥩 Merit Royal Steakhouse A la Carte</option>
+                        <option value="lobby_bar">☕ Diamond Lobby Patisserie &amp; Bar</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-outline" style="font-size:11px; padding:6px 10px;" onclick="previewOutletGuestMenu()">📱 Misafir Ekranında Gör</button>
+                <button class="btn-primary" style="font-size:11px; padding:6px 10px; background:#15803d;" onclick="saveOutletMenuSettings()">✓ Değişiklikleri Canlıya Al</button>
+            </div>
+        </div>
+
+        <!-- 2. Adım: Outlete Modül Atama & Fiyat Gösterim Ayarları Kartı -->
+        <div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:10px; padding:16px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                    <h3 style="font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                        <span>⚙️</span> Outlete Atanan Modüller ve Fiyat Gösterim Politikası
+                    </h3>
+                    <p style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">
+                        Bu outlette misafirlerin dijital deneyimi nasıl olacak? Fiyat bilgisi girilmiş olsa dahi dilediğiniz zaman tek tıkla fiyat görünümünü açıp kapatabilirsiniz.
+                    </p>
+                </div>
+                <span class="pill pill-gold" id="outlet-active-badge">Aktif: QR Sipariş (Fiyatlar Görünür)</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:16px;">
+                <!-- Sol: Modül Seçimi -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+                    <span style="font-size:12px; font-weight:700; color:#0f172a; display:block; margin-bottom:8px;">1. Outlet Modül Ataması:</span>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+                        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; background:#ffffff; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <input type="radio" name="outlet_module_type" value="QR_ORDER" checked onchange="updateOutletModuleConfig(this.value)" style="margin-top:2px;" />
+                            <div>
+                                <strong style="color:#1e40af;">🛒 QR Sipariş Modülü (Sipariş + Çağrı + Ön Onay)</strong>
+                                <div style="font-size:11px; color:var(--text-muted);">Misafir masadan/şezlongdan sipariş verir, garson onaylar, mutfak KDS ve termal yazıcıya iletilir.</div>
+                            </div>
+                        </label>
+                        <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer; background:#ffffff; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <input type="radio" name="outlet_module_type" value="QR_MENU" onchange="updateOutletModuleConfig(this.value)" style="margin-top:2px;" />
+                            <div>
+                                <strong style="color:#0f172a;">📱 QR Menü Modülü (Yalnızca Dijital Katalog)</strong>
+                                <div style="font-size:11px; color:var(--text-muted);">Misafir yalnızca menüyü, görselleri ve alerjenleri inceler; sepet ve masadan sipariş kapalıdır.</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sağ: Fiyat Gösterim & Adisyon Politikası -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+                    <span style="font-size:12px; font-weight:700; color:#0f172a; display:block; margin-bottom:8px;">2. Outlete Özel Fiyat &amp; Adisyon Ayarı:</span>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <div>
+                                <strong>Fiyat Bilgisi Gösterimi:</strong>
+                                <div style="font-size:10.5px; color:var(--text-muted);" id="outlet-price-mode-desc">Fiyatlar misafir menüsünde aktif olarak görünür.</div>
+                            </div>
+                            <select id="outlet-price-visibility" onchange="changeOutletPriceVisibility(this.value)" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border-strong); font-weight:700; font-size:11px;">
+                                <option value="VISIBLE">🟢 Fiyatlar Açık ($/€/₺)</option>
+                                <option value="HIDDEN">🔴 Fiyatlar Gizli (All-Inclusive)</option>
+                                <option value="HYBRID">🟡 Hibrit (Sadece Ekstralar)</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#ffffff; padding:8px 10px; border-radius:6px; border:1px solid #cbd5e1;">
+                            <div>
+                                <strong>Termal Adisyon / Çıktı Düzeni:</strong>
+                                <div style="font-size:10.5px; color:var(--text-muted);">Sipariş fişinde genel fiyat toplamı basılsın mı?</div>
+                            </div>
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-weight:700; font-size:11px;">
+                                <input type="checkbox" id="outlet-receipt-price-total" checked onchange="toggleReceiptPriceTotals(this.checked)" />
+                                <span>Fiyat Toplamlı Adisyon Bas</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Adım: Outlete Özel Hiyerarşik Menü Ağacı (Kategori -> Alt Kategori -> Grup -> Kalemler) -->
+        <div style="display:grid; grid-template-columns:1fr 2.5fr; gap:16px;">
+            <!-- Sol: Kategori & Grup Ağacı -->
+            <div style="background:#f8fafc; border:1px solid var(--border-light); border-radius:8px; padding:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="font-size:13px; font-weight:800;">Menü Kategorileri</h3>
+                    <button class="btn-outline" style="padding:3px 7px; font-size:10.5px;" onclick="openAddCategoryModal()">+ Ekle</button>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:6px; font-size:12px;" id="outlet-cat-tree">
+                    <div class="def-acc-subitem-btn active" style="width:100%; justify-content:space-between;" onclick="selectMenuCategory('cocktails', this)">
+                        <span>🍸 İmza Kokteyller &amp; Spritz</span>
+                        <span class="badge" style="background:#ffffff; color:#0f172a; font-size:10px;">6 Ürün</span>
+                    </div>
+                    <div class="def-acc-subitem-btn" style="width:100%; justify-content:space-between;" onclick="selectMenuCategory('champagne', this)">
+                        <span>🍾 Şampanyalar &amp; Prosecco</span>
+                        <span class="badge" style="background:#ffffff; color:#0f172a; font-size:10px;">4 Ürün</span>
+                    </div>
+                    <div class="def-acc-subitem-btn" style="width:100%; justify-content:space-between;" onclick="selectMenuCategory('snacks', this)">
+                        <span>🦞 Soğuk Deniz Mahsulleri</span>
+                        <span class="badge" style="background:#ffffff; color:#0f172a; font-size:10px;">5 Ürün</span>
+                    </div>
+                    <div class="def-acc-subitem-btn" style="width:100%; justify-content:space-between;" onclick="selectMenuCategory('sushi', this)">
+                        <span>🍣 Sushi &amp; Sashimi Rolls</span>
+                        <span class="badge" style="background:#ffffff; color:#0f172a; font-size:10px;">8 Ürün</span>
+                    </div>
+                    <div class="def-acc-subitem-btn" style="width:100%; justify-content:space-between;" onclick="selectMenuCategory('beers', this)">
+                        <span>🍺 Yerli &amp; İthal Biralar</span>
+                        <span class="badge" style="background:#ffffff; color:#0f172a; font-size:10px;">7 Ürün</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:14px; padding-top:12px; border-top:1px solid #cbd5e1; font-size:11px; color:var(--text-secondary);">
+                    ℹ️ Menü ağacı hiyerarşisi: <strong>Kategori ➔ Alt Kategori ➔ Menü Grupları</strong> şeklinde sınırsız derinlikte yapılandırılabilir.
+                </div>
+            </div>
+
+            <!-- Sağ: Seçili Kategorideki Ürünler Tablosu (Görsel, Alerjen, Detay, Opsiyonel Fiyat) -->
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>
+                        <h3 style="font-size:13.5px; font-weight:800;" id="current-cat-title">🍸 İmza Kokteyller &amp; Spritz Grubu Kalemleri</h3>
+                        <span style="font-size:11px; color:var(--text-muted);">Görsel, Açıklama, Alerjen Etiketleri ve Opsiyonel Fiyat Yönetimi</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-primary" style="font-size:11px; padding:6px 10px;" onclick="openAddMenuItemModal()">+ Yeni Ürün Ekle</button>
+                    </div>
+                </div>
+
+                <table class="ui-table" id="outlet-menu-items-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">Görsel</th>
+                            <th>Ürün Adı &amp; Detay Açıklaması</th>
+                            <th>Alerjen Bilgisi</th>
+                            <th>Opsiyonel Fiyat</th>
+                            <th>Canlı Görünüm</th>
+                            <th style="text-align:right;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Ürün 1 -->
+                        <tr>
+                            <td>
+                                <div style="width:44px; height:44px; border-radius:6px; background:#eff6ff; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #cbd5e1;">
+                                    🍹
+                                </div>
+                            </td>
+                            <td>
+                                <strong>Royal Passion Spritz</strong>
+                                <div style="font-size:11px; color:var(--text-secondary); line-height:1.3;">
+                                    Taze çarkıfelek meyvesi, Prosecco, nane, lime, ev yapımı passion puree.
+                                </div>
+                                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; margin-top:2px;">Grup: Spritz Collection</span>
+                            </td>
+                            <td>
+                                <span class="pill pill-warning" style="font-size:10px;">Sülfit İçerir</span>
+                            </td>
+                            <td>
+                                <strong style="color:#15803d; font-size:13px;">$22 USD</strong>
+                                <div style="font-size:10px; color:var(--text-muted);">Opsiyonel Kayıtlı</div>
+                            </td>
+                            <td>
+                                <span class="pill pill-success" style="font-size:10.5px;">✓ Menüde Açık</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <button class="btn-outline" style="padding:2px 6px; font-size:11px;" onclick="editMenuItem('Royal Passion Spritz', 22)">Düzenle</button>
+                            </td>
+                        </tr>
+
+                        <!-- Ürün 2 -->
+                        <tr>
+                            <td>
+                                <div style="width:44px; height:44px; border-radius:6px; background:#fef3c7; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #cbd5e1;">
+                                    🍾
+                                </div>
+                            </td>
+                            <td>
+                                <strong>Moët &amp; Chandon Brut Impérial (75cl)</strong>
+                                <div style="font-size:11px; color:var(--text-secondary); line-height:1.3;">
+                                    Fransız Şampanyası, narenciye ve elma aromaları, buz kovasında servis.
+                                </div>
+                                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; margin-top:2px;">Grup: Prestige Champagne</span>
+                            </td>
+                            <td>
+                                <span class="pill pill-warning" style="font-size:10px;">Sülfit (Alkol %12)</span>
+                            </td>
+                            <td>
+                                <strong style="color:#15803d; font-size:13px;">$180 USD</strong>
+                                <div style="font-size:10px; color:var(--text-muted);">Opsiyonel Kayıtlı</div>
+                            </td>
+                            <td>
+                                <span class="pill pill-success" style="font-size:10.5px;">✓ Menüde Açık</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <button class="btn-outline" style="padding:2px 6px; font-size:11px;" onclick="editMenuItem('Moet Chandon', 180)">Düzenle</button>
+                            </td>
+                        </tr>
+
+                        <!-- Ürün 3 -->
+                        <tr>
+                            <td>
+                                <div style="width:44px; height:44px; border-radius:6px; background:#f0fdf4; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #cbd5e1;">
+                                    🥥
+                                </div>
+                            </td>
+                            <td>
+                                <strong>Taze Hindistan Cevizi Mocktail (Non-Alcoholic)</strong>
+                                <div style="font-size:11px; color:var(--text-secondary); line-height:1.3;">
+                                    Özel açılmış taze hindistan cevizi suyu, ananas, hindistan cevizi sütü.
+                                </div>
+                                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; margin-top:2px;">Grup: Alkolsüz İkram</span>
+                            </td>
+                            <td>
+                                <span class="pill pill-success" style="font-size:10px;">Alerjensiz (Vegan)</span>
+                            </td>
+                            <td>
+                                <strong style="color:#15803d; font-size:13px;">$14 USD</strong>
+                                <div style="font-size:10px; color:var(--text-muted);">Opsiyonel Kayıtlı</div>
+                            </td>
+                            <td>
+                                <span class="pill pill-success" style="font-size:10.5px;">✓ Menüde Açık</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <button class="btn-outline" style="padding:2px 6px; font-size:11px;" onclick="editMenuItem('Taze Hindistan Cevizi', 14)">Düzenle</button>
+                            </td>
+                        </tr>
+
+                        <!-- Ürün 4 -->
+                        <tr>
+                            <td>
+                                <div style="width:44px; height:44px; border-radius:6px; background:#fdf2f8; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #cbd5e1;">
+                                    🍸
+                                </div>
+                            </td>
+                            <td>
+                                <strong>Diamond Signature Smoked Old Fashioned</strong>
+                                <div style="font-size:11px; color:var(--text-secondary); line-height:1.3;">
+                                    Meşe talaşıyla tütsülenmiş Woodford Reserve Bourbon, Angostura bitter, portakal kabuğu.
+                                </div>
+                                <span class="badge" style="background:#f1f5f9; color:#475569; font-size:9.5px; margin-top:2px;">Grup: Craft Cocktails</span>
+                            </td>
+                            <td>
+                                <span class="pill pill-warning" style="font-size:10px;">Sülfit / Gluten</span>
+                            </td>
+                            <td>
+                                <strong style="color:#15803d; font-size:13px;">$26 USD</strong>
+                                <div style="font-size:10px; color:var(--text-muted);">Opsiyonel Kayıtlı</div>
+                            </td>
+                            <td>
+                                <span class="pill pill-success" style="font-size:10.5px;">✓ Menüde Açık</span>
+                            </td>
+                            <td style="text-align:right;">
+                                <button class="btn-outline" style="padding:2px 6px; font-size:11px;" onclick="editMenuItem('Smoked Old Fashioned', 26)">Düzenle</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

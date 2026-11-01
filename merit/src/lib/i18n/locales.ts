@@ -1,6 +1,24 @@
-export const LOCALES = ["tr", "en", "de", "ru", "ar"] as const;
+export const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
+
+export interface LocaleMeta {
+  name: string;
+  nativeName: string;
+  flag: string;
+  label: string;
+}
+
+export const LOCALE_META: Record<Locale, LocaleMeta> = {
+  tr: { name: "Türkçe", nativeName: "Türkçe", flag: "🇹🇷", label: "TR" },
+  en: { name: "İngilizce", nativeName: "English", flag: "🇬🇧", label: "EN" },
+  de: { name: "Almanca", nativeName: "Deutsch", flag: "🇩🇪", label: "DE" },
+  ru: { name: "Rusça", nativeName: "Русский", flag: "🇷🇺", label: "RU" },
+  ar: { name: "Arapça", nativeName: "العربية", flag: "🇸🇦", label: "AR" },
+  fr: { name: "Fransızca", nativeName: "Français", flag: "🇫🇷", label: "FR" },
+  el: { name: "Yunanca", nativeName: "Ελληνικά", flag: "🇬🇷", label: "EL" },
+  it: { name: "İtalyanca", nativeName: "Italiano", flag: "🇮🇹", label: "IT" },
+};
 /** Cookie that remembers the guest's language choice. */
 export const LANG_COOKIE = "merit_lang";
 

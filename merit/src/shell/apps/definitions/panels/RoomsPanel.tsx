@@ -165,6 +165,7 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
       void alertDialog({ title: "Oda silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.number}” numaralı oda silindi.` });
     setSelectedId(undefined);
     list.reload();
   };
@@ -230,6 +231,10 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
         onActivate={edit}
+        rowContextActions={(row) => [
+          { label: "Düzenle", onSelect: () => edit(row) },
+          { label: "Sil", onSelect: () => void remove(row) },
+        ]}
         emptyText="Bu filtreyle kayıtlı oda yok"
         toolbar={
           <Toolbar
@@ -267,6 +272,7 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
         <Field name="number" label="Oda numarası">
           <input type="text" defaultValue={editing?.number ?? ""} maxLength={20} />
@@ -309,7 +315,7 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onDone={({ created }) => {
           list.reload();
-          void alertDialog({ title: "Odalar eklendi", message: `${created} oda eklendi.` });
+          setStatus(`${created} oda eklendi`);
         }}
       />
     </>

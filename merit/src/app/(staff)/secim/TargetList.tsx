@@ -3,9 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useHydrated } from "@/components/useHydrated";
+import { HotelLogo } from "@/components/HotelLogo";
 import { selectTargetAction } from "@/modules/core/server/loginAction";
 
-export type TargetCard = { index: number; hotelName: string; label: string; roleName: string };
+export type TargetCard = { index: number; hotelName: string; hotelCode: string; label: string; roleName: string };
 
 type PickState =
   | { status: "idle" }
@@ -47,13 +48,14 @@ export function TargetList({ targets }: { targets: TargetCard[] }) {
           name="targetIndex"
           value={t.index}
           disabled={!hydrated || busy}
-          className="flex min-h-14 flex-col items-start gap-0.5 rounded-xl border border-border bg-surface px-4 py-3 text-left transition-colors hover:border-accent hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+          className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-left transition-colors hover:border-accent hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
         >
-          <span className="text-xs font-medium uppercase tracking-wide text-gold">
-            {t.hotelName}
+          <HotelLogo hotelCode={t.hotelCode} size={52} />
+          <span className="flex flex-col items-start gap-0.5">
+            <span className="text-xs font-medium uppercase tracking-wide text-gold">{t.hotelName}</span>
+            <span className="text-base font-semibold text-text">{t.label}</span>
+            <span className="text-sm text-muted">{t.roleName}</span>
           </span>
-          <span className="text-base font-semibold text-text">{t.label}</span>
-          <span className="text-sm text-muted">{t.roleName}</span>
         </button>
       ))}
     </form>

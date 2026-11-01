@@ -17,6 +17,13 @@ export const CHILD_KIND: Record<MenuNodeKind, MenuNodeKind | null> = {
   OGE: null,
 };
 
+function allowedChildren(kind: MenuNodeKind): MenuNodeKind[] {
+  if (kind === "KATEGORI") return ["ALT_KATEGORI", "OGE"];
+  if (kind === "ALT_KATEGORI") return ["OGE"];
+  const child = CHILD_KIND[kind];
+  return child ? [child] : [];
+}
+
 type Flat = { node: MenuTreeNode; depth: number; siblings: MenuTreeNode[] };
 
 function flatten(nodes: MenuTreeNode[], depth = 0, out: Flat[] = []): Flat[] {
@@ -46,9 +53,9 @@ type Props = {
   onToggleAvailable(node: MenuTreeNode): void;
 };
 
-const KINDS: MenuNodeKind[] = ["KATEGORI", "ALT_KATEGORI", "GRUP", "OGE"];
+const KINDS: MenuNodeKind[] = ["KATEGORI", "ALT_KATEGORI", "OGE"];
 
-/** Menu tree (Kategori > Alt Kategori > Grup > Öğe) with up / down move buttons and a context menu. */
+/** Menu tree (Kategori > Alt Kategori > Menü Öğesi) with legacy groups still visible and editable. */
 export function TreePane({
   nodes,
   selectedId,
@@ -77,9 +84,9 @@ export function TreePane({
     };
   }, [menu]);
 
-  const childKind = selected ? CHILD_KIND[selected.node.kind] : null;
+  const selectedChildren = selected ? allowedChildren(selected.node.kind) : [];
   const index = selected ? selected.siblings.indexOf(selected.node) : -1;
-  const canCreate = (kind: MenuNodeKind) => kind === "KATEGORI" || childKind === kind;
+  const canCreate = (kind: MenuNodeKind) => kind === "KATEGORI" || selectedChildren.includes(kind);
 
   return (
     <div className="xp-mm-tree">
@@ -93,7 +100,7 @@ export function TreePane({
               disabled={!canCreate(kind)}
               onClick={() => onNew(kind, kind === "KATEGORI" ? null : (selected?.node ?? null))}
             >
-              {`Yeni ${KIND_LABEL[kind]}`}
+              {kind === "OGE" ? "Yeni Menü Öğesi" : `Yeni ${KIND_LABEL[kind]}`}
             </button>
           ))}
           <button
@@ -159,15 +166,11 @@ export function TreePane({
       </ul>
       {menu ? (
         <div role="menu" aria-label="Menü öğesi" className="xp-mm-context" style={{ left: menu.x, top: menu.y }}>
-          {CHILD_KIND[menu.node.kind] ? (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => onNew(CHILD_KIND[menu.node.kind] as MenuNodeKind, menu.node)}
-            >
-              Yeni alt öğe
+          {allowedChildren(menu.node.kind).map((kind) => (
+            <button key={kind} type="button" role="menuitem" onClick={() => onNew(kind, menu.node)}>
+              {kind === "OGE" ? "Yeni Menü Öğesi" : `Yeni ${KIND_LABEL[kind]}`}
             </button>
-          ) : null}
+          ))}
           <button type="button" role="menuitem" onClick={() => onToggleAvailable(menu.node)}>
             {menu.node.isAvailable ? "Tükendi yap" : "Mevcut yap"}
           </button>

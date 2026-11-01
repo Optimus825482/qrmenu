@@ -1,0 +1,307 @@
+export const AMBIENCES = [
+  { id: "RESORT", label: "Otel & Resort" },
+  { id: "BEACH", label: "Sahil & Beach Club" },
+  { id: "POOL", label: "Havuz" },
+  { id: "LOUNGE", label: "Lounge & Bar" },
+  { id: "GOURMET", label: "Fine Dining" },
+  { id: "CAFE", label: "Kafe & Patisserie" },
+  { id: "SPA", label: "Spa & Wellness" },
+  { id: "GARDEN", label: "Aile & Bahçe" },
+  { id: "SPORT", label: "Spor & Aktivite" },
+  { id: "ROOFTOP", label: "Teras & Sky Bar" },
+  { id: "NIGHTCLUB", label: "Gece Kulübü & Canlı Müzik" },
+  { id: "CABANA", label: "Özel Kabana & VIP Loca" },
+  { id: "PATIO", label: "Avlu & Kış Bahçesi" },
+] as const;
+
+export const CONCEPTS = [
+  { id: "LUXURY", label: "Modern lüks" },
+  { id: "CLASSIC", label: "Klasik zarafet" },
+  { id: "MEDITERRANEAN", label: "Akdeniz" },
+  { id: "NATURAL", label: "Doğal ve sakin" },
+  { id: "CONTEMPORARY", label: "Çağdaş" },
+  { id: "BOHEMIAN", label: "Bohem & Ege" },
+  { id: "MINIMALIST", label: "Zen & Minimalist" },
+  { id: "ART_DECO", label: "Art Deco & Gatsby" },
+  { id: "RUSTIC", label: "Rustik & Taş Fırın" },
+] as const;
+
+/** Dietary and merchandising marks a dish can carry. Labels for guests live in i18n under guest.tag. */
+export const ITEM_TAG_IDS = ["VEGAN", "VEJETARYEN", "GLUTENSIZ", "SEFIN_SECIMI", "POPULER", "YENI", "ACILI"] as const;
+
+export const ITEM_TAGS: { id: (typeof ITEM_TAG_IDS)[number]; label: string }[] = [
+  { id: "VEGAN", label: "Vegan" },
+  { id: "VEJETARYEN", label: "Vejetaryen" },
+  { id: "GLUTENSIZ", label: "Glutensiz" },
+  { id: "SEFIN_SECIMI", label: "Şefin seçimi" },
+  { id: "POPULER", label: "En çok tercih edilen" },
+  { id: "YENI", label: "Yeni" },
+  { id: "ACILI", label: "Acılı" },
+];
+
+export type CardStyle = "LIST" | "CARD" | "PHOTO";
+
+export const TYPOGRAPHIES = [
+  { id: "SYSTEM", label: "Sistem (varsayılan)" },
+  { id: "CLASSIC", label: "Klasik serif" },
+  { id: "EDITORIAL", label: "Editoryal" },
+  { id: "MODERN", label: "Modern sans" },
+  { id: "HUMANIST", label: "Sıcak hümanist" },
+  { id: "COASTAL", label: "Akdeniz serif" },
+  { id: "SERENITY", label: "Zarif modern grotesk" },
+] as const;
+
+export const DENSITIES = [
+  { id: "AIRY", label: "Ferah" },
+  { id: "BALANCED", label: "Dengeli" },
+  { id: "COMPACT", label: "Kompakt" },
+] as const;
+
+export const HERO_STYLES = [
+  { id: "NONE", label: "Yok" },
+  { id: "TITLE", label: "Başlık" },
+  { id: "PHOTO", label: "Fotoğraf" },
+] as const;
+
+export type TypographyId = (typeof TYPOGRAPHIES)[number]["id"];
+export type DensityId = (typeof DENSITIES)[number]["id"];
+export type HeroStyle = (typeof HERO_STYLES)[number]["id"];
+
+export type DesignOptions = {
+  cardStyle: CardStyle;
+  showImages: boolean;
+  showAllergens: boolean;
+  showTags: boolean;
+  showPrices: boolean;
+  uppercaseCategories: boolean;
+  featuredTitle: string;
+  typography: TypographyId;
+  density: DensityId;
+  hero: HeroStyle;
+  /** Image of one of the outlet's own dishes; only used when hero is PHOTO. */
+  heroImageUrl: string;
+  /** Large photos only on up to three chef's picks; every other dish is a text row. */
+  curatedPhotos: boolean;
+  showSearch: boolean;
+  showFilters: boolean;
+  /** Customizable label for the Call Waiter button; empty falls back to the localized default. */
+  callWaiterText: string;
+};
+
+/** Values for the options added after the first designs were saved; a saved design without them looks as before. */
+export const NEUTRAL_NEW_OPTIONS = {
+  typography: "SYSTEM",
+  density: "BALANCED",
+  hero: "TITLE",
+  heroImageUrl: "",
+  curatedPhotos: false,
+  showSearch: true,
+  showFilters: true,
+  callWaiterText: "",
+} as const satisfies Pick<
+  DesignOptions,
+  "typography" | "density" | "hero" | "heroImageUrl" | "curatedPhotos" | "showSearch" | "showFilters" | "callWaiterText"
+>;
+
+const options = (partial: Partial<DesignOptions> = {}): DesignOptions => ({
+  cardStyle: "LIST",
+  showImages: true,
+  showAllergens: true,
+  showTags: true,
+  showPrices: true,
+  uppercaseCategories: false,
+  featuredTitle: "",
+  ...NEUTRAL_NEW_OPTIONS,
+  ...partial,
+});
+
+export const DESIGN_TEMPLATES = [
+  // 1. RESORT (Otel & Resort)
+  { id: "ROYAL", name: "Royal Signature", ambience: "RESORT", concept: "LUXURY", style: "royal", options: options() },
+  { id: "GRANDE", name: "Grande Palace", ambience: "RESORT", concept: "CLASSIC", style: "grande", options: options({ cardStyle: "LIST", showImages: false, uppercaseCategories: true, typography: "CLASSIC" }) },
+  { id: "ARTISAN_GRILL", name: "Artisan Smoke & Grill", ambience: "RESORT", concept: "RUSTIC", style: "artisan", options: options({ cardStyle: "CARD", typography: "CLASSIC" }) },
+  { id: "RESORT_PRESTIGE", name: "Resort Prestige Gallery", ambience: "RESORT", concept: "LUXURY", style: "prestige", options: options({ cardStyle: "PHOTO", typography: "MODERN", density: "BALANCED" }) },
+
+  // 2. BEACH (Sahil & Beach Club)
+  { id: "COASTAL", name: "Coastal Breeze", ambience: "BEACH", concept: "MEDITERRANEAN", style: "coastal", options: options({ cardStyle: "CARD", typography: "COASTAL" }) },
+  { id: "TROPIC", name: "Tropic Escape", ambience: "BEACH", concept: "NATURAL", style: "tropic", options: options({ cardStyle: "CARD", typography: "COASTAL" }) },
+  { id: "MYKONOS_CLUB", name: "Mykonos Sun & Beats", ambience: "BEACH", concept: "BOHEMIAN", style: "mykonos", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "COMPACT" }) },
+  { id: "AEGEAN_BREEZE", name: "Aegean Minimalist List", ambience: "BEACH", concept: "MEDITERRANEAN", style: "aegean", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+
+  // 3. POOL (Havuz)
+  { id: "POOL_CLUB", name: "Pool Club", ambience: "POOL", concept: "CONTEMPORARY", style: "pool", options: options({ cardStyle: "PHOTO", typography: "MODERN", density: "COMPACT" }) },
+  { id: "AQUA_GOLD", name: "Aqua & Gold", ambience: "POOL", concept: "LUXURY", style: "aqua", options: options({ cardStyle: "CARD", typography: "MODERN" }) },
+  { id: "LAGOON_DECK", name: "Lagoon Deck Bar", ambience: "POOL", concept: "CONTEMPORARY", style: "lagoon", options: options({ cardStyle: "LIST", typography: "HUMANIST", density: "BALANCED" }) },
+  { id: "CABANA_POOL", name: "Poolside Riviera", ambience: "POOL", concept: "MEDITERRANEAN", style: "riviera", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "AIRY" }) },
+
+  // 4. LOUNGE (Lounge & Bar)
+  { id: "NOIR_LOUNGE", name: "Noir Lounge", ambience: "LOUNGE", concept: "CLASSIC", style: "noir", options: options({ cardStyle: "LIST", uppercaseCategories: true, typography: "EDITORIAL" }) },
+  { id: "VELVET", name: "Velvet Room", ambience: "LOUNGE", concept: "LUXURY", style: "velvet", options: options({ cardStyle: "CARD", typography: "CLASSIC" }) },
+  { id: "ATRIUM_SOCIAL", name: "Atrium Social", ambience: "LOUNGE", concept: "CONTEMPORARY", style: "atrium", options: options({ cardStyle: "CARD", typography: "MODERN" }) },
+  { id: "CRYSTAL_BAR", name: "Crystal Champagne Bar", ambience: "LOUNGE", concept: "ART_DECO", style: "crystal", options: options({ cardStyle: "CARD", uppercaseCategories: true, typography: "EDITORIAL", density: "AIRY" }) },
+
+  // 5. GOURMET (Fine Dining)
+  { id: "GOURMET", name: "Gourmet Editorial", ambience: "GOURMET", concept: "LUXURY", style: "editorial", options: options({ cardStyle: "LIST", showImages: false, uppercaseCategories: true, typography: "EDITORIAL", density: "AIRY" }) },
+  { id: "CHEF_TABLE", name: "Chef's Table", ambience: "GOURMET", concept: "CONTEMPORARY", style: "chef", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+  { id: "ZEN_ASIAN", name: "Zen Minimalist Lounge", ambience: "GOURMET", concept: "MINIMALIST", style: "zen", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+  { id: "SOMMELIER_CELLAR", name: "Sommelier Grand Cru", ambience: "GOURMET", concept: "CLASSIC", style: "cellar", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "BALANCED" }) },
+  { id: "MICHELIN_ATELIER", name: "Michelin Degustation", ambience: "GOURMET", concept: "LUXURY", style: "degustation", options: options({ cardStyle: "PHOTO", typography: "EDITORIAL", density: "AIRY" }) },
+
+  // 6. CAFE (Kafe & Patisserie)
+  { id: "CAFE_ATELIER", name: "Café Atelier", ambience: "CAFE", concept: "NATURAL", style: "atelier", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
+  { id: "PATISSERIE", name: "Pâtisserie Moderne", ambience: "CAFE", concept: "CLASSIC", style: "patisserie", options: options({ cardStyle: "PHOTO", typography: "HUMANIST" }) },
+  { id: "VIENNA_HERITAGE", name: "Vienna Grand Café", ambience: "CAFE", concept: "CLASSIC", style: "vienna", options: options({ cardStyle: "LIST", typography: "CLASSIC", uppercaseCategories: true }) },
+  { id: "ROASTERY_SPECIAL", name: "Artisan Roastery", ambience: "CAFE", concept: "CONTEMPORARY", style: "roastery", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT" }) },
+
+  // 7. SPA (Spa & Wellness)
+  { id: "SPA_RITUAL", name: "Diamond Wellness Ritual", ambience: "SPA", concept: "NATURAL", style: "spa", options: options({ cardStyle: "CARD", typography: "HUMANIST", density: "AIRY", showPrices: false }) },
+  { id: "HAMAM_HERITAGE", name: "Hamam Heritage", ambience: "SPA", concept: "CLASSIC", style: "hamam", options: options({ cardStyle: "LIST", typography: "CLASSIC", density: "AIRY", showPrices: false }) },
+  { id: "THERMAL_HOLISTIC", name: "Holistic Thermal Spa", ambience: "SPA", concept: "NATURAL", style: "holistic", options: options({ cardStyle: "PHOTO", typography: "SERENITY", density: "AIRY", showPrices: false }) },
+  { id: "ZEN_SANCTUARY", name: "Zen Sanctuary Ritual", ambience: "SPA", concept: "MINIMALIST", style: "sanctuary", options: options({ cardStyle: "CARD", typography: "MODERN", density: "AIRY", showPrices: false }) },
+
+  // 8. GARDEN (Aile & Bahçe)
+  { id: "FAMILY_GARDEN", name: "Meritta Family Garden", ambience: "GARDEN", concept: "NATURAL", style: "garden", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
+  { id: "ORCHARD_BREEZE", name: "Citrus Orchard & Lawn", ambience: "GARDEN", concept: "NATURAL", style: "orchard", options: options({ cardStyle: "LIST", typography: "HUMANIST", density: "BALANCED" }) },
+  { id: "PICNIC_GOURMET", name: "Garden Pergola & Grill", ambience: "GARDEN", concept: "RUSTIC", style: "pergola", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "BALANCED" }) },
+
+  // 9. SPORT (Spor & Aktivite)
+  { id: "ACTIVE_HYDRATION", name: "Active Hydration", ambience: "SPORT", concept: "CONTEMPORARY", style: "active", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT" }) },
+  { id: "COURT_CLUB", name: "Tennis & Court Clubhouse", ambience: "SPORT", concept: "CONTEMPORARY", style: "clubhouse", options: options({ cardStyle: "LIST", typography: "MODERN", density: "BALANCED" }) },
+  { id: "POWER_SMOOTHIE", name: "Power Vitality Bar", ambience: "SPORT", concept: "NATURAL", style: "vitality", options: options({ cardStyle: "PHOTO", typography: "HUMANIST", density: "BALANCED" }) },
+
+  // 10. ROOFTOP (Teras & Sky Bar)
+  { id: "MIDNIGHT_ROOF", name: "Midnight Sky Lounge", ambience: "ROOFTOP", concept: "LUXURY", style: "midnight", options: options({ cardStyle: "CARD", typography: "SERENITY", density: "COMPACT" }) },
+  { id: "SUNSET_SKY_TERRACE", name: "Sunset Golden Hour", ambience: "ROOFTOP", concept: "BOHEMIAN", style: "goldenhour", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "BALANCED" }) },
+  { id: "STARLIGHT_DECK", name: "Starlight Panorama Deck", ambience: "ROOFTOP", concept: "CONTEMPORARY", style: "starlight", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+
+  // 11. NIGHTCLUB (Gece Kulübü & Canlı Müzik)
+  { id: "ELECTRIC_VIP", name: "Electric VIP Club", ambience: "NIGHTCLUB", concept: "LUXURY", style: "electric", options: options({ cardStyle: "PHOTO", typography: "MODERN", density: "COMPACT" }) },
+  { id: "LIVE_STAGE_JAZZ", name: "Live Stage & Jazz Speakeasy", ambience: "NIGHTCLUB", concept: "CLASSIC", style: "jazz", options: options({ cardStyle: "LIST", typography: "EDITORIAL", uppercaseCategories: true }) },
+  { id: "NEON_PULSE", name: "Neon Pulse High-Energy", ambience: "NIGHTCLUB", concept: "CONTEMPORARY", style: "pulse", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT" }) },
+
+  // 12. CABANA (Özel Kabana & VIP Loca)
+  { id: "SUNSET_CABANA", name: "Sunset VIP Cabana", ambience: "CABANA", concept: "BOHEMIAN", style: "cabana", options: options({ cardStyle: "PHOTO", typography: "COASTAL" }) },
+  { id: "PRIVATE_ISLAND", name: "Private Island Gazebo", ambience: "CABANA", concept: "LUXURY", style: "gazebo", options: options({ cardStyle: "CARD", typography: "SERENITY", density: "AIRY" }) },
+  { id: "MOET_CABANA", name: "Dom Pérignon Cabana Club", ambience: "CABANA", concept: "ART_DECO", style: "moet", options: options({ cardStyle: "LIST", typography: "EDITORIAL", uppercaseCategories: true }) },
+
+  // 13. PATIO (Avlu & Kış Bahçesi)
+  { id: "BOTANICAL_BISTRO", name: "Botanical Glasshouse", ambience: "PATIO", concept: "NATURAL", style: "botanical", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
+  { id: "COURTYARD_TAPAS", name: "Courtyard Olive Grove", ambience: "PATIO", concept: "RUSTIC", style: "courtyard", options: options({ cardStyle: "LIST", typography: "HUMANIST", density: "BALANCED" }) },
+  { id: "WINTER_ORANGERIE", name: "Winter Orangerie Salon", ambience: "PATIO", concept: "CLASSIC", style: "orangerie", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "AIRY" }) },
+] as const;
+
+export const DESIGN_BLOCKS = [
+  { id: "hero", label: "Karşılama alanı", description: "Otel ve outlet girişi" },
+  { id: "categories", label: "Kategori gezintisi", description: "Yapışkan kategori sekmeleri, arama ve etiket süzgeci" },
+  { id: "items", label: "Menü içerikleri", description: "Öne çıkanlar, alt kategoriler ve ürünler" },
+] as const;
+
+export const CARD_STYLES: { id: CardStyle; label: string }[] = [
+  { id: "LIST", label: "Liste" },
+  { id: "CARD", label: "Kart" },
+  { id: "PHOTO", label: "Fotoğraf" },
+];
+
+export type AmbienceId = (typeof AMBIENCES)[number]["id"];
+export type ConceptId = (typeof CONCEPTS)[number]["id"];
+export type TemplateId = (typeof DESIGN_TEMPLATES)[number]["id"];
+export type DesignBlockId = (typeof DESIGN_BLOCKS)[number]["id"];
+export type ItemTagId = (typeof ITEM_TAG_IDS)[number];
+
+export type OutletDesign = {
+  ambience: AmbienceId;
+  concept: ConceptId;
+  template: TemplateId;
+  layout: DesignBlockId[];
+  options: DesignOptions;
+};
+
+export const DEFAULT_OUTLET_DESIGN: OutletDesign = {
+  ambience: "RESORT",
+  concept: "LUXURY",
+  template: "ROYAL",
+  layout: ["hero", "categories", "items"],
+  options: options(),
+};
+
+const CARD_STYLE_IDS = new Set<CardStyle>(["LIST", "CARD", "PHOTO"]);
+const AMBIENCE_IDS = new Set<string>(AMBIENCES.map((item) => item.id));
+const CONCEPT_IDS = new Set<string>(CONCEPTS.map((item) => item.id));
+const BLOCK_IDS = new Set<string>(DESIGN_BLOCKS.map((item) => item.id));
+const TYPOGRAPHY_IDS = new Set<string>(TYPOGRAPHIES.map((item) => item.id));
+const DENSITY_IDS = new Set<string>(DENSITIES.map((item) => item.id));
+const HERO_IDS = new Set<string>(HERO_STYLES.map((item) => item.id));
+const UPLOAD_PREFIX = "/uploads/";
+const MAX_HERO_URL = 300;
+
+function heroUrl(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const url = value.trim();
+  return url.startsWith(UPLOAD_PREFIX) && url.length <= MAX_HERO_URL ? url : "";
+}
+
+function normalizeLayout(value: unknown): DesignBlockId[] {
+  if (!Array.isArray(value) || value.length !== DESIGN_BLOCKS.length) return [...DEFAULT_OUTLET_DESIGN.layout];
+  if (new Set(value).size !== value.length) return [...DEFAULT_OUTLET_DESIGN.layout];
+  if (!value.every((item) => typeof item === "string" && BLOCK_IDS.has(item))) return [...DEFAULT_OUTLET_DESIGN.layout];
+  const list = value as DesignBlockId[];
+  // Kategori gezintisi (sekmeler, arama ve filtreler) daima menü içeriklerinin (ürünlerin) üzerinde yer almalıdır.
+  if (list.indexOf("categories") > list.indexOf("items")) {
+    return ["hero", "categories", "items"];
+  }
+  return list;
+}
+
+function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return { ...preset };
+  const raw = value as Partial<DesignOptions>;
+  if (Object.keys(raw).length === 0) return { ...preset };
+  const featured = typeof raw.featuredTitle === "string" ? raw.featuredTitle.trim().slice(0, 40) : preset.featuredTitle;
+  return {
+    cardStyle: raw.cardStyle && CARD_STYLE_IDS.has(raw.cardStyle) ? raw.cardStyle : preset.cardStyle,
+    showImages: typeof raw.showImages === "boolean" ? raw.showImages : preset.showImages,
+    showAllergens: typeof raw.showAllergens === "boolean" ? raw.showAllergens : preset.showAllergens,
+    showTags: typeof raw.showTags === "boolean" ? raw.showTags : preset.showTags,
+    showPrices: typeof raw.showPrices === "boolean" ? raw.showPrices : preset.showPrices,
+    uppercaseCategories: typeof raw.uppercaseCategories === "boolean" ? raw.uppercaseCategories : preset.uppercaseCategories,
+    featuredTitle: featured,
+    typography: raw.typography && TYPOGRAPHY_IDS.has(raw.typography) ? raw.typography : NEUTRAL_NEW_OPTIONS.typography,
+    density: raw.density && DENSITY_IDS.has(raw.density) ? raw.density : NEUTRAL_NEW_OPTIONS.density,
+    hero: raw.hero && HERO_IDS.has(raw.hero) ? raw.hero : NEUTRAL_NEW_OPTIONS.hero,
+    heroImageUrl: heroUrl(raw.heroImageUrl),
+    curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
+    showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
+    showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
+    callWaiterText: typeof raw.callWaiterText === "string" ? raw.callWaiterText.trim().slice(0, 40) : preset.callWaiterText,
+  };
+}
+
+/** Turns a stored outlet design into a complete, safe design. Unknown values fall back to the template. */
+export function designFromStored(row: {
+  ambience?: string | null;
+  concept?: string | null;
+  template?: string | null;
+  layout?: unknown;
+  options?: unknown;
+} | null | undefined): OutletDesign {
+  const template = DESIGN_TEMPLATES.find((item) => item.id === row?.template) ?? DESIGN_TEMPLATES[0];
+  return {
+    ambience: row?.ambience && AMBIENCE_IDS.has(row.ambience) ? (row.ambience as AmbienceId) : template.ambience,
+    concept: row?.concept && CONCEPT_IDS.has(row.concept) ? (row.concept as ConceptId) : template.concept,
+    template: template.id,
+    layout: normalizeLayout(row?.layout),
+    options: normalizeOptions(row?.options, template.options),
+  };
+}
+
+/** A template's starting design. Category navigation stays above the dishes; the editor can reorder it. */
+export function templatePreset(id: TemplateId): OutletDesign {
+  const template = DESIGN_TEMPLATES.find((item) => item.id === id) ?? DESIGN_TEMPLATES[0];
+  return designFromStored({
+    ambience: template.ambience,
+    concept: template.concept,
+    template: template.id,
+    layout: ["hero", "categories", "items"],
+    options: template.options,
+  });
+}

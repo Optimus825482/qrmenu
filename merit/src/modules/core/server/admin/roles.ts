@@ -24,7 +24,7 @@ const CODE_TAKEN = "Bu rol kodu zaten kullanılıyor";
 const SYSTEM_ONLY = "Rolleri ve yetkileri yalnızca sistem yöneticisi düzenleyebilir";
 const SYSTEM_KIND_ONLY = "Sistem türündeki rolleri yalnızca R-SYS oluşturabilir";
 const SYSTEM_ROLE_KIND = "Sistem rollerinin türü değiştirilemez";
-const SYSTEM_ROLE_DELETE = "Sistem rolleri silinemez";
+const SYSTEM_ROLE_DELETE = "Sistem Yöneticisi rolü silinemez";
 const ROLE_IN_USE = "Bu role bağlı kullanıcılar var; önce kullanıcıların rolünü değiştirin";
 
 export const ROLE_KINDS = ["SISTEM", "YONETIM", "OUTLET", "MUTFAK", "MINIBAR"] as const satisfies readonly RoleKind[];
@@ -157,7 +157,8 @@ export async function list(ctx: Ctx, rawQuery: RoleListQuery): Promise<Page<Role
     });
   }
   if (query.kind) and.push({ kind: query.kind });
-  const where: Prisma.RoleWhereInput = and.length > 0 ? { AND: and } : {};
+  and.push({ code: { not: "R-SYS" } });
+  const where: Prisma.RoleWhereInput = { AND: and };
   const [items, total] = await Promise.all([
     prisma.role.findMany({
       where,
@@ -171,7 +172,7 @@ export async function list(ctx: Ctx, rawQuery: RoleListQuery): Promise<Page<Role
 }
 
 export type RoleOptions = {
-  roles: { id: string; code: string; name: string; kind: RoleKind }[];
+  roles: { id: string; code: string; name: string; kind: RoleKind; defaultScreen: string | null; maxOnlineMinutes: number | null }[];
   screens: { code: string; name: string }[];
   hotels: { id: string; code: string; name: string }[];
   /** Whether the actor may edit roles and permissions (SISTEM roles with CR-KUL edit). */
@@ -182,7 +183,7 @@ export type RoleOptions = {
 export async function options(ctx: Ctx): Promise<RoleOptions> {
   await assertCan(ctx, SCREEN, "V");
   const [roles, screens, hotels] = await Promise.all([
-    prisma.role.findMany({ select: { id: true, code: true, name: true, kind: true }, orderBy: { code: "asc" } }),
+    prisma.role.findMany({ select: { id: true, code: true, name: true, kind: true, defaultScreen: true, maxOnlineMinutes: true }, orderBy: { code: "asc" } }),
     prisma.appScreen.findMany({ where: { isActive: true }, select: { code: true, name: true }, orderBy: { sortOrder: "asc" } }),
     prisma.hotel.findMany({
       where: { id: { in: ctx.hotelIds }, isActive: true },
@@ -316,7 +317,7 @@ export async function remove(ctx: Ctx, id: string): Promise<void> {
   try {
     await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
       const before = await load(tx, id);
-      if (before.isSystem) throw new DomainError("FORBIDDEN", SYSTEM_ROLE_DELETE);
+      if (before.code === "R-SYS") throw new DomainError("FORBIDDEN", SYSTEM_ROLE_DELETE);
       if (before.userCount > 0) throw new DomainError("CONFLICT", ROLE_IN_USE);
       await tx.role.delete({ where: { id } });
       await audit(tx, {

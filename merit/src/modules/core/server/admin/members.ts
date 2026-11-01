@@ -153,14 +153,15 @@ export async function list(
 
 export type MemberCandidate = { id: string; username: string; fullName: string; roleName: string };
 
-/** Active users of the outlet's hotel that are not on its team yet (the "Kullanıcı ekle" search). */
-export async function candidates(ctx: Ctx, outletId: string, q?: string): Promise<MemberCandidate[]> {
+/** Active users of the outlet's hotel that are not on its team yet. */
+export async function candidates(ctx: Ctx, outletId: string, q?: string, jobTitle?: string): Promise<MemberCandidate[]> {
   const hotelId = await outletHotel(outletId);
   await assertCan(ctx, SCREEN, "O", hotelId);
   const term = q?.trim();
   const users = await prisma.user.findMany({
     where: {
       isActive: true,
+      ...(jobTitle ? { jobTitle } : {}),
       role: { kind: { notIn: ctx.user.roleKind === "SISTEM" ? ["SISTEM"] : PROTECTED_KINDS } },
       OR: [{ hotelId }, { userHotels: { some: { hotelId } } }],
       outletMemberships: { none: { outletId } },
@@ -179,7 +180,7 @@ export async function candidates(ctx: Ctx, outletId: string, q?: string): Promis
     },
     select: { id: true, username: true, fullName: true, role: { select: { name: true } } },
     orderBy: { username: "asc" },
-    take: 20,
+    ...(jobTitle ? {} : { take: 20 }),
   });
   return users.map((u) => ({ id: u.id, username: u.username, fullName: u.fullName, roleName: u.role.name }));
 }

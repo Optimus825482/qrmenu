@@ -16,8 +16,8 @@ export async function listMembersAction(raw: unknown): Promise<Result<Page<membe
 }
 
 export async function memberCandidatesAction(raw: unknown): Promise<Result<members.MemberCandidate[]>> {
-  return safeAction(z.object({ outletId, q: z.string().max(100).optional() }), async (input) =>
-    members.candidates(await requireUser(), input.outletId, input.q),
+  return safeAction(z.object({ outletId, q: z.string().max(100).optional(), jobTitle: z.string().max(100).optional() }), async (input) =>
+    members.candidates(await requireUser(), input.outletId, input.q, input.jobTitle),
   )(raw);
 }
 

@@ -24,7 +24,7 @@ async function openAdmin(page: Page) {
   await expect(desktop(page)).toBeVisible();
 }
 
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 
 /** Başlat → Online Kullanıcılar, then the hotel card. */
 async function openOnline(page: Page, hotel: { name: string; code: string }) {

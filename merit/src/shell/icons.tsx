@@ -42,6 +42,27 @@ const GLYPHS: Record<string, ReactNode> = {
       <circle className="xi-ok" cx="27" cy="6" r="3" />
     </>
   ),
+  // Staff directory: a small group of users.
+  kullanicilar: (
+    <>
+      <circle className="xi-skin" cx="16" cy="9" r="5" />
+      <path className="xi-blue" d="M6 28c0-7 4-11 10-11s10 4 10 11z" />
+      <circle className="xi-skin" cx="5.5" cy="14" r="3.5" />
+      <path className="xi-green" d="M1 27c0-5 1.8-8 5-9.5 1.8.9 3 2.4 3.7 4.5L8 27z" />
+      <circle className="xi-skin" cx="26.5" cy="14" r="3.5" />
+      <path className="xi-gold" d="M24.3 22c.7-2.1 1.9-3.6 3.7-4.5 3.2 1.5 5 4.5 5 9.5h-7z" />
+    </>
+  ),
+  ekipler: (
+    <>
+      <circle className="xi-skin" cx="12" cy="10" r="4.5" />
+      <path className="xi-blue" d="M3 27c0-6 3.5-10 9-10s9 4 9 10z" />
+      <circle className="xi-skin" cx="24" cy="12" r="3.5" />
+      <path className="xi-green" d="M20 26c.2-4.7 1.7-7.4 4.5-8.5 3.8 1.4 5.5 4.2 5.5 8.5z" />
+      <circle className="xi-gold" cx="25" cy="6" r="4" />
+      <path className="xi-white-stroke" d="M25 4v4M23 6h4" />
+    </>
+  ),
   // Generic window.
   pencere: (
     <>
@@ -109,7 +130,7 @@ const GLYPHS: Record<string, ReactNode> = {
       <rect className="xi-light" x="9" y="23" width="12" height="2" />
     </>
   ),
-  // Palette: Tema Yönetimi.
+  // Palette: Menü Tasarım Merkezi.
   tema: (
     <>
       <path className="xi-gold" d="M16 3C8 3 2.5 8.5 2.5 15.5S8 28 14 28c3 0 2.5-3 4-4 2-1.4 5.5 0 8-2.5C29 19 29.5 3 16 3z" />
@@ -158,6 +179,7 @@ export function XpIcon({ name, size = 32 }: { name: string; size?: number }) {
       className="xp-icon"
       width={size}
       height={size}
+      style={{ width: `calc(${size}px * var(--xp-ui-scale, 1))`, height: `calc(${size}px * var(--xp-ui-scale, 1))` }}
       viewBox="0 0 32 32"
       aria-hidden="true"
       focusable="false"

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merit 3'lü Kompleksi (Diamond, Royal, Premium) QR Menü ve Çağrı Alanları Matrisi</title>
+    <style>
+        :root {
+            --diamond: #38bdf8;
+            --royal-gold: #d4af37;
+            --premium-ruby: #e11d48;
+            --dark-bg: #070b14;
+            --card-bg: #0f172a;
+            --card-border: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --emerald: #10b981;
+            --amber: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        .container { max-width: 1260px; margin: 0 auto; padding: 0 1.25rem; }
+
+        /* Header */
+        header.hero {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e1b4b 100%);
+            padding: 3.5rem 1rem 4rem;
+            border-bottom: 3px solid var(--royal-gold);
+        }
+
+        .badge-triple {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--royal-gold);
+            color: #fef08a;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: #cbd5e1;
+            max-width: 920px;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .hero-meta strong { color: #f8fafc; }
+
+        /* Hotel Badge Pills */
+        .hotel-pills {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .pill-hotel {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .pill-diamond { background: rgba(56, 189, 248, 0.15); border: 1px solid var(--diamond); color: #7dd3fc; }
+        .pill-royal { background: rgba(212, 175, 55, 0.15); border: 1px solid var(--royal-gold); color: #fde047; }
+        .pill-premium { background: rgba(225, 29, 72, 0.15); border: 1px solid var(--premium-ruby); color: #fda4af; }
+
+        /* Sticky Navigation */
+        .nav-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 0.65rem 0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.35rem 0.8rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+            border-color: var(--royal-gold);
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        main { padding: 3rem 0 5rem; }
+        section { margin-bottom: 4.5rem; scroll-margin-top: 5rem; }
+
+        .section-header { margin-bottom: 2rem; }
+        .section-header span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--royal-gold);
+        }
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 0.25rem;
+        }
+        .section-header p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 0.35rem;
+        }
+
+        /* 3 Hotel Dedicated Grids */
+        .hotel-section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+        }
+
+        .hotel-section-title.diamond { border-color: var(--diamond); color: var(--diamond); }
+        .hotel-section-title.royal { border-color: var(--royal-gold); color: var(--royal-gold); }
+        .hotel-section-title.premium { border-color: var(--premium-ruby); color: var(--premium-ruby); }
+
+        .zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .zone-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.35rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .zone-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+        }
+
+        .zone-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+        }
+
+        .zone-features {
+            list-style: none;
+            margin: 0.75rem 0;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .zone-features li {
+            margin-bottom: 0.4rem;
+            display: flex;
+            gap: 0.4rem;
+            align-items: flex-start;
+        }
+
+        .zone-hardware {
+            background: #090d16;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        /* Matrix Table */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        table.comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        table.comparison-table th {
+            background: #1e293b;
+            padding: 1rem;
+            color: var(--royal-gold);
+            font-weight: 800;
+            border-bottom: 2px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        table.comparison-table td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+            vertical-align: middle;
+        }
+
+        table.comparison-table tr:hover { background: #131d33; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 1.8rem; }
+            .section-header h2 { font-size: 1.5rem; }
+            .zones-grid { grid-template-columns: 1fr; }
+            table.comparison-table th, table.comparison-table td { padding: 0.65rem 0.5rem; font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="hero">
+        <div class="container">
+            <div class="badge-triple">👑 Kıbrıs Zephyros Koyu 3'lü Dev Kompleks</div>
+            <h1>Merit Royal Diamond, Merit Royal & Merit Royal Premium<br>A La Carte Harici QR Menü ve Çağrı Alanları Matrisi</h1>
+            <p>Kıbrıs Alsancak Zephyros Koyu'nda yan yana ve entegre çalışan Merit 3'lü lüks kümesinde; A La Carte restoranlar tamamen hariç tutularak, misafirlerin gün boyu vakit geçirdiği plaj, iskele, havuz, lobi, spa, spor ve çocuk alanlarının eksiksiz dijital haritası.</p>
+            
+            <div class="hotel-pills">
+                <span class="pill-hotel pill-diamond">💎 Merit Royal Diamond (Modern Ultra-Lüks & VIP)</span>
+                <span class="pill-hotel pill-royal">👑 Merit Royal Hotel (Klasik Zarafet & Marina Ruhu)</span>
+                <span class="pill-hotel pill-premium">💎 Merit Royal Premium (Geniş Aile & Dinamik Resort)</span>
+            </div>
+
+            <div class="hero-meta">
+                <div>Konum: <strong>Zephyros Koyu, Alsancak / Girne (KKTC)</strong></div>
+                <div>Konsept: <strong>Fiyatsız All-Inclusive + Canlı Garson Akıllı Saat Akışı</strong></div>
+                <div>Filtreleme: <strong>A La Carte Restoranlar Tamamen Hariç Tutulmuştur</strong></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <div class="nav-sticky">
+        <div class="container">
+            <div class="nav-links">
+                <a href="#diamond-alanlari">1. Merit Royal Diamond Alanları</a>
+                <a href="#royal-alanlari">2. Merit Royal Hotel Alanları</a>
+                <a href="#premium-alanlari">3. Merit Royal Premium Alanları</a>
+                <a href="#ortak-zephyros">4. Ortak Zephyros Sahil & İskele</a>
+                <a href="#karsilastirma-matrisi">Toplu Karşılaştırma Matrisi</a>
+                <a href="index.html" style="color:#6366f1; border-color:#6366f1;">📑 Ana Pazar Raporu</a>
+                <a href="merit_resort_qr.html" style="color:var(--royal-gold); border-color:var(--royal-gold);">🏖️ Genel Resort QR Raporu</a>
+                <a href="merit_room_service_qr.html" style="color:var(--diamond); border-color:var(--diamond);">🚪 Oda Servisi Raporu</a>
+                <a href="merit_proforma_teklif_sartname.html" style="color:#10b981; border-color:#10b981;">📜 Fiyat Teklifi & Şartname (Proforma)</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- 1. MERIT ROYAL DIAMOND HOTEL -->
+        <section id="diamond-alanlari">
+            <div class="hotel-section-title diamond">
+                <span style="font-size:1.6rem;">💎</span>
+                <h2 style="font-size:1.5rem; font-weight:800;">1. Merit Royal Diamond Hotel (VIP & Modern Lüks)</h2>
+            </div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Kompleksin en yeni ve en prestijli halkası. A La Carte (Ruby Steak vb.) haricinde QR menü ile donatılacak özel dinlenme ve ikram noktaları:
+            </p>
+
+            <div class="zones-grid">
+                <!-- Diamond Outlet 1 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">💎 Diamond 24/7 Lobby Lounge</span>
+                            <span class="zone-tag" style="color:var(--diamond);">24 Saat Açık</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Yüksek tavanlı modern lobi alanında kesintisiz yerli/yabancı premium içecek servisi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Dijital İkram Menüsü:</strong> Fiyatsız ithal viskiler, konyaklar ve soğuk kahveler.</li>
+                            <li>• <strong>Garson Çağırma:</strong> Masadaki QR üzerinden tek tıkla servis personeline bildirim.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Pirinç Ayaklı Akrilik QR Standı • Dokunmatik Kasa Paneli</div>
+                </div>
+
+                <!-- Diamond Outlet 2 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🏊 Diamond Lagoon Pool Bar & Deck</span>
+                            <span class="zone-tag" style="color:var(--diamond);">Havuz Terasi</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Geniş lagün havuzunu çevreleyen lüks şezlong ve localara özel servis.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Şezlong Numaralı QR:</strong> Şezlong sehpasına gömülü su geçirmez QR.</li>
+                            <li>• <strong>İçerik:</strong> İmza kokteyller, detoks suları, dondurma ve buzlu soğuk havlu isteği.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Sehpa İçi Su Geçirmez QR Plaka • Pool Bar KDS Ekranı</div>
+                </div>
+
+                <!-- Diamond Outlet 3 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🍰 Diamond Royal Tea & Patisserie</span>
+                            <span class="zone-tag" style="color:var(--diamond);">Gurme Tatlı</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Öğleden sonra çay saatleri, taze makaronlar ve Belçika çikolataları.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Canlı Vitrin Takibi:</strong> Tükenen günlük pasta anında menüden gizlenir.</li>
+                            <li>• <strong>Çay Seremonisi:</strong> Dünya çaylarının bitkisel özellikleri ve demleme bilgileri.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Ahşap Masa QR Blokları • Pastane Kasa Ekranı</div>
+                </div>
+
+                <!-- Diamond Outlet 4 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🥃 Diamond Exclusive Whiskey House</span>
+                            <span class="zone-tag" style="color:var(--diamond);">Özel Mahzen</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Şömine başında seçkin yıllanmış malt viskiler ve puro eşlikçileri.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Tadım Notları Kataloğu:</strong> İskoç, İrlanda ve Japon viskilerinin rekolte ve koku profilleri.</li>
+                            <li>• <strong>Sommelier Çağrısı:</strong> "Viski Uzmanı Masaya Çağır" butonu.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Lüks Deri Menü Standı • Bar Akıllı Saati</div>
+                </div>
+
+                <!-- Diamond Outlet 5 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">💨 Shisha & Sunset Terrace</span>
+                            <span class="zone-tag" style="color:var(--diamond);">Açık Hava</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Deniz manzaralı açık terasta nargile ve akşam içecekleri.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>"Köz İste" Butonu:</strong> Masadan tek dokunuşla közcüye titreşimli çağrı gider.</li>
+                            <li>• <strong>Tütün Karışım Rehberi:</strong> Meyve aromaları ve tütün yoğunluk dereceleri.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Döküm Ağır Metal QR Plaka • Közcü PWA Bildirimi</div>
+                </div>
+
+                <!-- Diamond Outlet 6 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🌿 Diamond Royal Spa & Wellness</span>
+                            <span class="zone-tag" style="color:var(--diamond);">Sessiz Alan</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Masaj sonrası dinlenme yatakları, hamam ve kapalı ısıtmalı havuz.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Sıfır Ses Protokolü:</strong> Sadece personele saat titreşimiyle bildirim gider.</li>
+                            <li>• <strong>Menü:</strong> Bitki çayları, taze detoks suları ve bakım ritüelleri rehberi.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Bambu Ahşap Blok QR • Spa Resepsiyon Tableti</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. MERIT ROYAL HOTEL -->
+        <section id="royal-alanlari">
+            <div class="hotel-section-title royal">
+                <span style="font-size:1.6rem;">👑</span>
+                <h2 style="font-size:1.5rem; font-weight:800;">2. Merit Royal Hotel (Klasik Zarafet & Marina Teması)</h2>
+            </div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Kompleksin denizle bütünleşen ikonik ana oteli. A La Carte restoranlar (Bella Merit, Blue Sea vb.) haricinde QR menü alanları:
+            </p>
+
+            <div class="zones-grid">
+                <!-- Royal Outlet 1 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">⚓ Captain’s Lounge Bar</span>
+                            <span class="zone-tag" style="color:var(--royal-gold);">Deniz Temalı</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Zemin katta Akdeniz manzarasına hakim denizci konseptli dinlenme barı.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Menü:</strong> Klasik kokteyller, soğuk biralar, şarap kadehleri ve aperitif kuruyemişler.</li>
+                            <li>• <strong>Garson Çağırma:</strong> Masadan personele anlık çağrı.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Pirinç Çerçeveli Masa QR • Bar El Terminali</div>
+                </div>
+
+                <!-- Royal Outlet 2 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🍇 Dionysos Wine House (Şarap Evi)</span>
+                            <span class="zone-tag" style="color:var(--royal-gold);">Gurme Mahzen</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Yerli ve seçkin uluslararası şarapların sergilendiği butik şarap köşesi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Şarap Rehberi:</strong> Rekolte yılları, üzüm cinsleri, peynir tabağı eşleşmeleri.</li>
+                            <li>• <strong>Tadım Talebi:</strong> "Kadeh Tadım İste" ve "Sommelier Çağır".</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Mantar Tabanlı Lüks Ahşap QR • Şarap Sorumlusu Tableti</div>
+                </div>
+
+                <!-- Royal Outlet 3 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">☕ Vienna Cafe (Viyana Kahvesi)</span>
+                            <span class="zone-tag" style="color:var(--royal-gold);">Klasik Kafe</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Klasik Viyana tarzı zengin kahve çeşitleri ve sıcak tatlılar.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Kahve Kataloğu:</strong> Melange, Einspänner, taze çekilmiş filtre kahveler ve strudel.</li>
+                            <li>• <strong>Sipariş Onayı:</strong> Garson masaya intikal ederek ikramı teslim eder.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Porselen Tabanlı QR Plaka • Kafe POS Konsolu</div>
+                </div>
+
+                <!-- Royal Outlet 4 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🏊 Royal Sea View Pool Bar</span>
+                            <span class="zone-tag" style="color:var(--royal-gold);">Açık Havuz</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Denize sıfır açık havuz şezlonglarında güneşlenen misafirler için içecek servisi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Hızlı Servis:</strong> Bira, şarap, taze meyve kokteylleri ve çocuk içecekleri.</li>
+                            <li>• <strong>Havlu Talebi:</strong> Tek tıkla "Kuru Havlu İste".</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Su Geçirmez Şezlong QR • Havuz Barı Ekranı</div>
+                </div>
+
+                <!-- Royal Outlet 5 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🌿 Royal Spa & Hamam Dinlenme</span>
+                            <span class="zone-tag" style="color:var(--royal-gold);">3.500 m² Spa</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Tarihi Türk hamamı, tuz odaları ve kapalı jakuzili havuz alanı.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Menü:</strong> Geleneksel nane-limon, kış çayları, soğuk soda ve elma dilimleri.</li>
+                            <li>• <strong>Sessiz Görev Bildirimi:</strong> Personele sadece akıllı saat titreşimi.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Bambu Ahşap Blok QR • Spa Resepsiyonu</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. MERIT ROYAL PREMIUM HOTEL -->
+        <section id="premium-alanlari">
+            <div class="hotel-section-title premium">
+                <span style="font-size:1.6rem;">💎</span>
+                <h2 style="font-size:1.5rem; font-weight:800;">3. Merit Royal Premium Hotel (Dinamik Aile & Aktivite)</h2>
+            </div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Daha geniş ailelerin ve sosyal aktivitelerin merkezi. A La Carte (Le Merit vb.) harici QR alanları:
+            </p>
+
+            <div class="zones-grid">
+                <!-- Premium Outlet 1 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🍸 Premium Lobby & Atrium Bar</span>
+                            <span class="zone-tag" style="color:var(--premium-ruby);">24 Saat Açık</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Geniş atriyum alanında günün her saati canlı ve sosyal buluşma noktası.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Menü:</strong> Zengin alkollü/alkolsüz içecekler, sıcak çikolatalar ve çerezler.</li>
+                            <li>• <strong>Garson Çağır:</strong> Masadan sorumlu garsonun saatine anlık çağrı.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Deri Stand QR • Kasa Dokunmatik Paneli</div>
+                </div>
+
+                <!-- Premium Outlet 2 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🎠 Meritta Club Park & Aile Bahçesi</span>
+                            <span class="zone-tag" style="color:var(--premium-ruby);">Çocuk & Aile</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Çocuk kulübü oyun alanını çevreleyen açık hava dinlenme bahçesi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Alerjen Korumalı Menü:</strong> Fıstık, laktoz ve gluten filtreli dondurma ve organik meyve suları.</li>
+                            <li>• <strong>Ebeveyn İkramları:</strong> Soğuk kahveler ve sandviçler.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Çocuk Emniyetli Ahşap Sehpa QR • Kids Club Barı</div>
+                </div>
+
+                <!-- Premium Outlet 3 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🎾 Tenis Kortları & Açık Hava Fitness</span>
+                            <span class="zone-tag" style="color:var(--premium-ruby);">Spor Alanı</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Açık hava kortlarında maç yapan misafirlerin hidrasyon ve servis alanı.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Sporcu İçecekleri:</strong> Hindistan cevizi suyu, protein shake, buzlu kova.</li>
+                            <li>• <strong>Ekipman Çağrısı:</strong> "Yeni Top İste", "Kort Işıklarını Aç", "Eğitmen Çağır".</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Metal Kort Yanı QR Plaka • Spor Barı PWA Ekranı</div>
+                </div>
+
+                <!-- Premium Outlet 4 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🏊 Premium Lagoon & Kids Pool Bar</span>
+                            <span class="zone-tag" style="color:var(--premium-ruby);">Havuz & Çocuk</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Aile havuzları ve çocuk kaydırakları çevresindeki şezlong servisi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Sipariş:</strong> Alkolsüz kokteyller, dondurmalar, buzlu meyve tabakları.</li>
+                            <li>• <strong>Güvenli Servis:</strong> Cam bardak yerine kırılmaz şık polikarbon kadehlerle servis protokolü.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Şezlong Gömülü QR • Pool Snack Bar KDS</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ORTAK ZEPHYROS SAHİL & İSKELE ALANLARI -->
+        <section id="ortak-zephyros">
+            <div class="hotel-section-title" style="border-color:#06b6d4; color:#06b6d4;">
+                <span style="font-size:1.6rem;">🌊</span>
+                <h2 style="font-size:1.5rem; font-weight:800;">4. Ortak Zephyros Koyu, Plaj & İskele Alanları (3 Otelin Ortak Sahili)</h2>
+            </div>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Zephyros Koyu sahil şeridinde üç otel misafirinin de ortak kullandığı devasa açık hava sahil platformları:
+            </p>
+
+            <div class="zones-grid">
+                <!-- Sahil Outlet 1 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🏖️ Zephyros Cove VIP Cabanas</span>
+                            <span class="zone-tag" style="color:#06b6d4;">Özel Kabanalar</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Özel ahşap localar ve kabanalar için kişiye özel butler servisi.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Fiyatsız VIP İkramlar:</strong> Moët şampanya kovası, tropikal meyve kulesi, soğuk havlu.</li>
+                            <li>• <strong>Butler Çağır:</strong> Kabanadan sorumlu personelin akıllı saatine doğrudan çağrı.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Döküm Akrilik Cabana QR • Butler El Terminali</div>
+                </div>
+
+                <!-- Sahil Outlet 2 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🪵 Ahşap İskele & Güneşlenme Platformu</span>
+                            <span class="zone-tag" style="color:#06b6d4;">Deniz Üstü</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Denizin üzerine uzanan ahşap iskeledeki şezlonglar.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>GPS Koruması:</strong> İskele sınırları içinde konum doğrulaması.</li>
+                            <li>• <strong>Menü:</strong> Bira, şarap, soğuk kahveler ve karpuz-hellim tabağı.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Tuza Dayanıklı Lazer Plaka • Beach Bar Runner Ekranı</div>
+                </div>
+
+                <!-- Sahil Outlet 3 -->
+                <div class="zone-card">
+                    <div>
+                        <div class="zone-header">
+                            <span class="zone-title">🍹 Zephyros Beach Bar & Snack Lounge</span>
+                            <span class="zone-tag" style="color:#06b6d4;">Sahil Barı</span>
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted);">Kumsalın hemen arkasında konumlanan açık hava sahil barı oturma alanları.</p>
+                        <ul class="zone-features">
+                            <li>• <strong>Hızlı İçecek:</strong> Masadan verilen sipariş barmene anında düşer.</li>
+                            <li>• <strong>Hazırlık Sayacı:</strong> Misafir ekrandan içeceğinin hazırlanışını izler.</li>
+                        </ul>
+                    </div>
+                    <div class="zone-hardware">Donanım: Döküm Metal Masa QR • Beach Bar KDS Konsolu</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Matrix Comparison Table -->
+        <section id="karsilastirma-matrisi">
+            <div class="section-header">
+                <span>05. Toplu Karşılaştırma Matrisi</span>
+                <h2>3 Otelin A La Carte Harici Tüm Alanlarının Donanım ve İşleyiş Özeti</h2>
+                <p>Hangi otelde hangi alan var, nasıl çalışır ve donanımı nedir?</p>
+            </div>
+
+            <div class="table-wrap">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Otel</th>
+                            <th>Hizmet Alanı</th>
+                            <th>Konsept & Servis Türü</th>
+                            <th>Fiyat Durumu</th>
+                            <th>Doğrulama Kanalı</th>
+                            <th>Bildirim Cihazı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Diamond -->
+                        <tr>
+                            <td rowspan="6"><strong style="color:var(--diamond);">Merit Royal Diamond</strong></td>
+                            <td>Diamond 24/7 Lobby Lounge</td>
+                            <td>Kesintisiz İthal İçecek & Kahve</td>
+                            <td>Fiyatsız (All-Inc)</td>
+                            <td>Mekan Wi-Fi / Mobil Data</td>
+                            <td>Kasa Paneli + Garson Saati</td>
+                        </tr>
+                        <tr>
+                            <td>Diamond Lagoon Pool Bar</td>
+                            <td>Havuz Başı Şezlong Kokteyl</td>
+                            <td>Fiyatsız</td>
+                            <td>GPS & Wi-Fi Hibrit</td>
+                            <td>Pool Bar KDS Ekranı</td>
+                        </tr>
+                        <tr>
+                            <td>Royal Tea & Patisserie</td>
+                            <td>Gurme Tatlı & Dünya Çayları</td>
+                            <td>Fiyatsız</td>
+                            <td>Lobi Wi-Fi</td>
+                            <td>Pastane Kasa Konsolu</td>
+                        </tr>
+                        <tr>
+                            <td>Exclusive Whiskey House</td>
+                            <td>Şömineli Mahzen & Puro Eşlikçisi</td>
+                            <td>Fiyatsız / Özel İkram</td>
+                            <td>Lokal Wi-Fi</td>
+                            <td>Sommelier Akıllı Saati</td>
+                        </tr>
+                        <tr>
+                            <td>Shisha & Sunset Terrace</td>
+                            <td>Açık Hava Nargile & İçecek</td>
+                            <td>Menü Kataloğu</td>
+                            <td>Teras Geofence</td>
+                            <td>Közcü & Garson PWA Ekranı</td>
+                        </tr>
+                        <tr>
+                            <td>Diamond Royal Spa</td>
+                            <td>Sessiz Dinlenme & Detoks Çayı</td>
+                            <td>Fiyatsız (Sıfır Ses)</td>
+                            <td>Spa Bluetooth/Wi-Fi</td>
+                            <td>Spa Resepsiyonu + Titreşimli Saat</td>
+                        </tr>
+
+                        <!-- Royal Hotel -->
+                        <tr style="border-top:2px solid #334155;">
+                            <td rowspan="5"><strong style="color:var(--royal-gold);">Merit Royal Hotel</strong></td>
+                            <td>Captain’s Lounge Bar</td>
+                            <td>Marina Konseptli Deniz Barı</td>
+                            <td>Fiyatsız</td>
+                            <td>Mekan Wi-Fi</td>
+                            <td>Bar KDS + Garson Saati</td>
+                        </tr>
+                        <tr>
+                            <td>Dionysos Wine House</td>
+                            <td>Butik Mahzen & Şarap Tadımı</td>
+                            <td>Katalog & Özel İkram</td>
+                            <td>Otel Wi-Fi</td>
+                            <td>Şarap Sorumlusu Tableti</td>
+                        </tr>
+                        <tr>
+                            <td>Vienna Cafe</td>
+                            <td>Geleneksel Viyana Kahvesi & Pasta</td>
+                            <td>Fiyatsız</td>
+                            <td>Kafe Wi-Fi</td>
+                            <td>Kafe Kasa Ekranı</td>
+                        </tr>
+                        <tr>
+                            <td>Royal Sea View Pool Bar</td>
+                            <td>Denize Sıfır Açık Havuz Şezlong</td>
+                            <td>Fiyatsız</td>
+                            <td>GPS & Wi-Fi</td>
+                            <td>Havuz Bar Ekranı</td>
+                        </tr>
+                        <tr>
+                            <td>Royal Spa & Hamam Dinlenme</td>
+                            <td>Tarihi Hamam & Jakuzili Havuz</td>
+                            <td>Fiyatsız (Sessiz)</td>
+                            <td>Spa İçi Wi-Fi</td>
+                            <td>Terapist Akıllı Saati</td>
+                        </tr>
+
+                        <!-- Royal Premium -->
+                        <tr style="border-top:2px solid #334155;">
+                            <td rowspan="4"><strong style="color:var(--premium-ruby);">Merit Royal Premium</strong></td>
+                            <td>Premium Lobby & Atrium Bar</td>
+                            <td>24 Saat Sosyal Lobi Barı</td>
+                            <td>Fiyatsız</td>
+                            <td>Lobi Wi-Fi</td>
+                            <td>Kasa Paneli + Garson PWA</td>
+                        </tr>
+                        <tr>
+                            <td>Meritta Club Park & Bahçe</td>
+                            <td>Alerjen Korumalı Çocuk & Aile Menüsü</td>
+                            <td>Fiyatsız</td>
+                            <td>Bahçe Wi-Fi</td>
+                            <td>Kids Club Bar Ekranı</td>
+                        </tr>
+                        <tr>
+                            <td>Tenis Kortları & Fitness Garden</td>
+                            <td>Sporcu Hidrasyon & Ekipman İsteği</td>
+                            <td>Fiyatsız</td>
+                            <td>Kort Geofence</td>
+                            <td>Spor Barı Görevli Saati</td>
+                        </tr>
+                        <tr>
+                            <td>Lagoon & Kids Pool Bar</td>
+                            <td>Aile Havuzu & Polikarbon Güvenli Servis</td>
+                            <td>Fiyatsız</td>
+                            <td>Havuz Geofence</td>
+                            <td>Pool Snack KDS</td>
+                        </tr>
+
+                        <!-- Ortak Zephyros Sahil -->
+                        <tr style="border-top:2px solid #334155; background:#081f2d;">
+                            <td rowspan="3"><strong style="color:#06b6d4;">Ortak Zephyros Sahil</strong></td>
+                            <td>Zephyros VIP Cabanas</td>
+                            <td>Özel Loca & Butler Şampanya Servisi</td>
+                            <td>Fiyatsız (VIP)</td>
+                            <td>GPS İskele Sınırı</td>
+                            <td>Cabana Butler Tableti & Saati</td>
+                        </tr>
+                        <tr style="background:#081f2d;">
+                            <td>Ahşap İskele Platformu</td>
+                            <td>Deniz Üstü Şezlong Servisi</td>
+                            <td>Fiyatsız</td>
+                            <td>İskele GPS Geofence</td>
+                            <td>Beach Bar Runner Saati</td>
+                        </tr>
+                        <tr style="background:#081f2d;">
+                            <td>Beach Bar & Snack Lounge</td>
+                            <td>Kumsal Arkası Açık Hava Barı</td>
+                            <td>Fiyatsız</td>
+                            <td>Sahil Wi-Fi</td>
+                            <td>Beach Bar KDS Konsolu</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="background:#020617; border-top:1px solid var(--card-border); padding:2.5rem 0; font-size:0.85rem; color:#64748b;">
+        <div class="container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <strong style="color:var(--royal-gold);">Merit 3'lü Otel Kompleksi Çok Alanlı QR & Çağrı Mimarisi</strong>
+                <p>KKTC Girne Alsancak Zephyros Koyu Kapsamlı Alan Araştırması © 2026</p>
+            </div>
+            <div>
+                <p>Geliştiren: <strong>Antigravity Research & Deepmind Intelligence</strong></p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

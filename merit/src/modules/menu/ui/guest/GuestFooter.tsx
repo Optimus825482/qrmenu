@@ -17,6 +17,7 @@ export function GuestFooter({
   pricesShown,
   currency,
   callOptions = [],
+  callWaiterText,
 }: {
   token: string;
   locale: Locale;
@@ -24,6 +25,7 @@ export function GuestFooter({
   pricesShown: boolean;
   currency: string;
   callOptions?: GuestCallOption[];
+  callWaiterText?: string;
 }) {
   const t = useTranslations("guest");
   const store = useSelectionStore(token);
@@ -53,7 +55,7 @@ export function GuestFooter({
         </nav>
       ) : null}
       <div className="g-footer-actions">
-        <CallWaiterButton token={token} locale={locale} options={callOptions} />
+        <CallWaiterButton token={token} locale={locale} options={callOptions} customText={callWaiterText} />
         {showSelections ? (
           <button type="button" className="g-button" onClick={() => setOpen(true)}>
             {t("cart.title")}

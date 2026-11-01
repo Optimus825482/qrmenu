@@ -31,7 +31,7 @@ export type SetupStep = {
   /** Counts towards `percent`; false when the step does not apply to this hotel (yet). */
   required: boolean;
   /** Where "Aç" goes: an app and, for Tanımlamalar, the tree node. */
-  openApp: { appId: string; panel: string };
+  openApp: { appId: string; panel?: string };
 };
 
 export type SetupStatus = {
@@ -138,7 +138,7 @@ async function compute(hotelId: string): Promise<SetupStatus> {
       done: staffNeeds.length > 0 && staffNeeds.every((n) => n >= 1),
       count: staffNeeds.reduce((sum, n) => sum + n, 0),
       required: staffNeeds.length > 0,
-      openApp: tanimlar("kullanicilar"),
+      openApp: { appId: "core.kullanici", panel: "users" },
     },
     {
       key: "ekipler",
@@ -146,7 +146,7 @@ async function compute(hotelId: string): Promise<SetupStatus> {
       done: members >= 1,
       count: members,
       required: qrOrder,
-      openApp: tanimlar("ekipler"),
+      openApp: { appId: "core.ekipler" },
     },
     // Added with the product module (P2); not a registered app yet, so the guide cannot open it.
     {

@@ -76,8 +76,11 @@ export function CallOptionsPanel({
   const full = activeCount >= MAX_ACTIVE_OPTIONS;
 
   async function persist(result: Result<unknown>) {
-    if (!result.ok) setError(result.error.message);
-    else setError(null);
+    if (!result.ok) {
+      setError(result.error.message);
+      return;
+    }
+    setError(null);
     await load();
   }
 

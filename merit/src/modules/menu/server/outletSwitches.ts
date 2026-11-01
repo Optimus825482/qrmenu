@@ -21,10 +21,11 @@ async function hotelOf(outletId: string): Promise<string> {
   return found.hotelId;
 }
 
-/** QM-MEN D or CR-TAN D is enough; when neither holds, the QM-MEN denial is raised (and audited). */
+/** QM-MEN D, CR-TAN D or QS-KAS D is enough; when none holds, the QM-MEN denial is raised (and audited). */
 async function authorize(ctx: Ctx, hotelId: string): Promise<void> {
   if (await can(ctx, "QM-MEN", "D", hotelId)) return;
   if (await can(ctx, "CR-TAN", "D", hotelId)) return;
+  if (await can(ctx, "QS-KAS", "D", hotelId)) return;
   await assertCan(ctx, "QM-MEN", "D", hotelId);
 }
 

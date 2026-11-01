@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MENNN XP · Sistem Yöneticisi (Alternatif Arayüz)</title>
+<style>
+*{box-sizing:border-box;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font:11px Tahoma,'Segoe UI',Verdana,sans-serif;color:#000}
+/* ---------- masaüstü ---------- */
+#desktop{position:absolute;inset:0;overflow:hidden;
+  background:linear-gradient(180deg,#245edb 0%,#3f8cf3 38%,#63a8e8 48%,#5aa02c 54%,#3d7a1e 100%)}
+#desktop.theme-green{background:linear-gradient(180deg,#1f6f4a 0%,#2f9e63 40%,#7dbb4a 52%,#3d7a1e 100%)}
+#desktop.theme-slate{background:linear-gradient(180deg,#3b4a5a 0%,#5a7186 45%,#6b7f92 52%,#42525f 100%)}
+#desktop.theme-dark{background:linear-gradient(180deg,#101821 0%,#22303e 50%,#1c2a36 100%)}
+#wallpaperText{position:absolute;right:18px;bottom:38px;color:rgba(255,255,255,.75);font-size:11px;letter-spacing:.08em;text-shadow:1px 1px 2px rgba(0,0,0,.4)}
+/* ---------- simgeler ---------- */
+.dicon{position:absolute;width:86px;padding:6px 2px;text-align:center;cursor:pointer;border:1px dotted transparent}
+.dicon .ic{font-size:30px;line-height:1;filter:drop-shadow(1px 2px 2px rgba(0,0,0,.45))}
+.dicon .lb{color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,.65);margin-top:4px;font-size:11px;line-height:1.25;word-break:break-word}
+.dicon.sel .lb{background:#316ac5;outline:1px dotted #fff}
+.dicon:hover .lb{background:rgba(49,106,197,.55)}
+.dicon.short:after{content:"↗";position:absolute;left:14px;top:12px;font-size:11px;color:#fff;text-shadow:0 0 3px #000}
+.dicon.dragging{opacity:.5}
+/* ---------- pencereler ---------- */
+.win{position:absolute;min-width:320px;background:#ece9d8;border:1px solid #0831d9;border-radius:7px 7px 3px 3px;
+  box-shadow:3px 4px 14px rgba(0,0,0,.45);display:flex;flex-direction:column}
+.win.max{border-radius:0}
+.tbar{height:26px;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:6px;padding:0 4px 0 6px;cursor:move;
+  background:linear-gradient(180deg,#0997ff 0%,#0053ee 10%,#0050ee 45%,#003bd8 90%,#0030c0 100%);color:#fff;font-weight:bold;font-size:11px;text-shadow:1px 1px 1px #0f1089}
+.tbar .ic{font-size:13px}
+.tbar .sp{flex:1}
+.tbtn{width:21px;height:19px;border-radius:3px;border:1px solid #fff;color:#fff;background:linear-gradient(180deg,#7da5ec,#2a5cd0);
+  font:bold 10px Tahoma;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.tbtn:hover{filter:brightness(1.2)}
+.tbtn.x{background:linear-gradient(180deg,#f19b7f,#d6491f)}
+.wbody{flex:1 1 auto;overflow:auto;background:#fff;border:1px solid #8ba0c8;margin:2px;padding:8px;user-select:text}
+.wfoot{height:20px;display:flex;align-items:center;gap:8px;padding:0 8px;font-size:10px;color:#444;background:#ece9d8;border-top:1px solid #d4d0c8}
+.win.min{display:none}
+.win .resize{position:absolute;right:0;bottom:0;width:14px;height:14px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#9aa7bd 50%)}
+/* ---------- xp kontrolleri ---------- */
+.xbtn{font:11px Tahoma;padding:3px 12px;border:1px solid #003c74;border-radius:3px;cursor:pointer;
+  background:linear-gradient(180deg,#fff,#ecebe5 86%,#d8d0c4)}
+.xbtn:hover{box-shadow:inset 0 0 0 2px #fff8cf}
+.xbtn.pri{font-weight:bold}
+.xbtn:disabled{color:#97948f;border-color:#a0a0a0;cursor:default}
+table.xt{width:100%;border-collapse:collapse;font-size:11px}
+table.xt th{background:#ece9d8;border:1px solid #d4d0c8;padding:3px 5px;text-align:left;font-weight:bold;color:#3a3a3a}
+table.xt td{border:1px solid #e4e1da;padding:3px 5px;background:#fff}
+table.xt tr:hover td{background:#e8f0fb}
+input.xin,select.xin{font:11px Tahoma;padding:2px 4px;border:1px solid #7f9db9;background:#fff;width:100%}
+.fld{margin-bottom:7px}
+label.fl{display:block;color:#3a3a3a;margin-bottom:2px}
+.chip{display:inline-block;border:1px solid #a9b7cf;background:#eef3fb;border-radius:2px;padding:1px 5px;margin:1px 2px 1px 0;font-size:10px;color:#1c3f7a}
+.tag{display:inline-block;font-size:10px;border:1px solid #c9c4b8;background:#f3f1e7;padding:1px 5px;border-radius:2px;color:#4a463c}
+.tag.ok{border-color:#7fbf7f;background:#e6f6e6;color:#1c6b1c}
+.tag.warn{border-color:#e2c46b;background:#fdf4dc;color:#7a5a10}
+.tag.err{border-color:#e2a09b;background:#fdeae8;color:#8c2318}
+.note{border:1px solid #c8d4e8;background:#eef4fd;padding:5px 7px;margin-bottom:8px;font-size:11px}
+.muted{color:#6b6b6b}
+.h3{font:bold 12px Tahoma;color:#0a246a;margin:10px 0 5px}
+.h3:first-child{margin-top:0}
+/* ---------- görev çubuğu ---------- */
+#taskbar{position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;align-items:center;gap:4px;padding:0 4px;
+  background:linear-gradient(180deg,#3168d5 0%,#4993e6 8%,#2157c8 45%,#1941a5 100%);z-index:5000}
+#startBtn{height:24px;padding:0 22px 0 8px;border:none;border-radius:0 12px 12px 0;cursor:pointer;color:#fff;font:bold italic 13px Tahoma;
+  display:flex;align-items:center;gap:5px;background:linear-gradient(180deg,#5eac56 0%,#3c873c 45%,#2f6e2f 100%);text-shadow:1px 1px 1px #17421a}
+#startBtn:hover{filter:brightness(1.1)}
+#tasks{flex:1;display:flex;gap:3px;overflow:hidden}
+.task{height:22px;min-width:120px;max-width:190px;border:1px solid #1c3f94;border-radius:2px;padding:0 6px;color:#fff;font-size:10.5px;
+  display:flex;align-items:center;gap:5px;cursor:pointer;background:linear-gradient(180deg,#4a83e0,#2b5bc4);white-space:nowrap;overflow:hidden}
+.task.on{background:linear-gradient(180deg,#1c3f94,#16347e);font-weight:bold}
+#tray{height:24px;display:flex;align-items:center;gap:6px;padding:0 8px;border-left:1px solid #16408f;color:#fff;font-size:10.5px;
+  background:linear-gradient(180deg,#1290e9 0%,#0b64c8 100%);border-radius:2px}
+/* ---------- başlat menüsü ---------- */
+#startMenu{position:absolute;left:0;bottom:30px;width:400px;display:none;z-index:6000;border:1px solid #0831d9;border-radius:6px 6px 0 0;overflow:hidden;box-shadow:3px -2px 14px rgba(0,0,0,.45)}
+#startMenu.open{display:block}
+.smHead{height:44px;display:flex;align-items:center;gap:8px;padding:0 10px;color:#fff;font-size:12px;
+  background:linear-gradient(180deg,#1868d6,#0b3fa8);border-bottom:2px solid #f8b62c}
+.smHead .av{width:28px;height:28px;border-radius:3px;background:#fff;color:#0b3fa8;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.smBody{display:flex;background:#fff}
+.smLeft{width:58%;padding:6px 0;max-height:380px;overflow:auto;border-right:1px solid #d4d0c8}
+.smRight{width:42%;background:linear-gradient(180deg,#d3e5fa,#b6d0f0);padding:6px 0}
+.smItem{display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;font-size:11.5px}
+.smItem:hover{background:#316ac5;color:#fff}
+.smItem .ic{width:18px;text-align:center;font-size:14px}
+.smItem .pin{margin-left:auto;font-size:9px;color:#7a8aa8;border:1px solid #c6d2e4;border-radius:2px;padding:0 4px;background:#f2f6fc}
+.smItem:hover .pin{background:rgba(255,255,255,.25);color:#fff}
+.smCat{font:bold 10.5px Tahoma;color:#0a246a;padding:6px 10px 2px;background:#f2f6fc;border-top:1px solid #e2e8f2}
+.smRight .smItem{color:#12346e}
+.smFoot{height:26px;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 12px;color:#fff;font-size:11px;
+  background:linear-gradient(180deg,#1868d6,#0b3fa8)}
+/* ---------- sağ tuş menüsü ---------- */
+#ctxMenu{position:absolute;display:none;z-index:7000;background:#fff;border:1px solid #8ba0c8;box-shadow:2px 2px 8px rgba(0,0,0,.35);min-width:190px;padding:2px}
+#ctxMenu .ci{padding:5px 10px;cursor:pointer;font-size:11px;display:flex;gap:7px;align-items:center}
+#ctxMenu .ci:hover{background:#316ac5;color:#fff}
+#ctxMenu .sep{height:1px;background:#d4d0c8;margin:2px 4px}
+#ctxMenu .ci.dis{color:#a0a0a0;cursor:default}
+#ctxMenu .ci.dis:hover{background:none;color:#a0a0a0}
+/* ---------- onay penceresi ---------- */
+#dlgWrap{position:absolute;inset:0;display:none;z-index:9000;background:rgba(0,0,0,.18)}
+#dlg{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);min-width:340px;background:#ece9d8;border:1px solid #0831d9;border-radius:7px 7px 3px 3px;box-shadow:4px 5px 18px rgba(0,0,0,.5)}
+#dlg .tbar{cursor:default}
+#dlg .bd{padding:14px;display:flex;gap:12px;font-size:11.5px;background:#fff;border:1px solid #8ba0c8;margin:2px}
+#dlg .bd .ic{font-size:28px}
+#dlg .ft{padding:8px;display:flex;justify-content:flex-end;gap:8px;background:#ece9d8}
+/* ---------- Android görünümü ---------- */
+#android{position:absolute;inset:0;display:none;flex-direction:column;background:#eef1f5;z-index:8000}
+#android.on{display:flex}
+.aTop{height:24px;background:#0b1929;color:#cfe0ee;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:10px}
+.aBar{background:#0b57d0;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.aBar b{font-size:15px}
+.aBar .sp{flex:1}
+.aSearch{margin:10px 12px;background:#fff;border:1px solid #d7dee8;border-radius:22px;padding:7px 14px;color:#6b7a8c;font-size:11.5px}
+.aBody{flex:1 1 auto;overflow:auto;padding:0 12px 80px}
+.aCard{background:#fff;border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(16,42,67,.14)}
+.aCard b{font-size:12.6px;color:#12314f}
+.aCard .kpi2{display:flex;gap:10px;margin-top:8px}
+.aCard .kpi2 div{flex:1;background:#f2f6fb;border-radius:9px;padding:7px 9px}
+.aCard .kpi2 .k{font-size:9.6px;color:#63788e;text-transform:uppercase;letter-spacing:.05em}
+.aCard .kpi2 .v{font-size:17px;font-weight:bold;color:#0b2f56}
+.aList{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #edf1f6;font-size:11.6px}
+.aList:last-child{border-bottom:none}
+.aList .ic{width:30px;height:30px;border-radius:8px;background:#e8f0fb;display:flex;align-items:center;justify-content:center;font-size:15px}
+.aList .sp{flex:1}
+.aNav{position:absolute;left:0;right:0;bottom:0;height:56px;background:#fff;border-top:1px solid #dfe5ec;display:flex}
+.aNav button{flex:1;border:none;background:none;font:11px Tahoma;color:#5b6c7e;cursor:pointer;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center}
+.aNav button .ic{font-size:18px}
+.aNav button.on{color:#0b57d0;font-weight:bold}
+.aFab{position:absolute;right:14px;bottom:66px;width:44px;height:44px;border-radius:50%;border:none;background:#0b57d0;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 10px rgba(11,87,208,.4)}
+.aChip{display:inline-block;font-size:10px;border-radius:12px;padding:2px 8px;margin-right:4px}
+@media (max-width:760px){ #desktop,#taskbar{display:none} #android{display:flex} }
+</style>
+</head>
+<body>
+
+<div id="desktop">
+  <div id="wallpaperText">MENNN · Merit Royal Servis Platformu · Sistem Yöneticisi (XP Masaüstü Görünümü)</div>
+</div>
+
+<div id="startMenu">
+  <div class="smHead"><div class="av">SY</div><div>Sistem Yöneticisi<div style="font-size:10px;font-weight:normal;color:#cfe0f5">Merit Royal · Kompleks</div></div></div>
+  <div class="smBody"><div class="smLeft" id="smLeft"></div><div class="smRight" id="smRight"></div></div>
+  <div class="smFoot"><span>⚙ Oturumu Kapat</span></div>
+</div>
+
+<div id="ctxMenu"></div>
+
+<div id="dlgWrap"><div id="dlg">
+  <div class="tbar"><span class="ic">❓</span><span id="dlgTitle">Onay</span><span class="sp"></span></div>
+  <div class="bd"><div class="ic" id="dlgIco">❓</div><div id="dlgMsg"></div></div>
+  <div class="ft"><button class="xbtn" id="dlgNo">Hayır</button><button class="xbtn pri" id="dlgYes">Evet</button></div>
+</div></div>
+
+<div id="android">
+  <div class="aTop"><span>▮▮ 87%</span><span>MENNN · Sistem Yöneticisi</span><span id="aClock">00:00</span></div>
+  <div class="aBar"><span style="font-size:18px">🛰</span><b id="aTitle">İzleme</b><span class="sp"></span><span class="aChip" style="background:#cfe3ff;color:#0b3f8f" id="aHotel">Merit Royal</span></div>
+  <div class="aSearch" id="aSearch">🔍 Ara: oda, outlet, kullanıcı, rapor…</div>
+  <div class="aBody" id="aBody"></div>
+  <button class="aFab" onclick="xAndroidFab()">＋</button>
+  <div class="aNav" id="aNav"></div>
+</div>
+
+<div id="taskbar">
+  <button id="startBtn" onclick="xStartToggle()">🪟 başlat</button>
+  <div id="tasks"></div>
+  <div id="tray"><span>🔊</span><span>📡</span><span id="xClock">--:--</span></div>
+</div>
+
+<script>
+/* ============================================================================
+   MENNN XP · Alternatif Sistem Yöneticisi Arayüzü
+   - Windows XP masaüstü: çift tıkla açılan pencereler, Başlat menüsü, sağ tuş
+     menüsü (yenile, arka plan rengi, kısayol), sürükle-bırak kısayolları
+   - Her modül ayrı sistem; her modül içinde seçilen otel ayrı sistem
+   - Tüm CRUD işlemlerinde onay penceresi
+   - Mobil (dar ekran veya ?mobil=1): Android görünümü — yalnızca izleme ve
+     raporlama; tanımlamalar Ayarlar'dan açılıp kapatılabilir
+   ========================================================================= */
+
+/* ---------------- otel + modül verisi (modül → otel iç içe) ---------------- */
+const HOTELS = [
+  {id:'H1', name:'Merit Royal',         code:'MR',  rooms:300, floors:4, outlets:4,  theme:'#0d2740'},
+  {id:'H2', name:'Merit Royal Diamond', code:'MRD', rooms:180, floors:3, outlets:2,  theme:'#8a6519'},
+  {id:'H3', name:'Merit Royal Premium', code:'MRP', rooms:420, floors:5, outlets:2,  theme:'#1c6b52'}
+];
+const ROOMTYPES = [
+  {id:'RT1', name:'Standart Oda', cap:2, concept:'Temel Konsept'},
+  {id:'RT2', name:'Deluxe Oda',   cap:2, concept:'Yükseltilmiş Konsept'},
+  {id:'RT3', name:'Aile Odası',   cap:4, concept:'Aile Konsepti'},
+  {id:'RT4', name:'Suit',         cap:3, concept:'Suit Konsepti'},
+  {id:'RT5', name:'VIP / Diamond Suit', cap:4, concept:'VIP Konsepti'},
+  {id:'RT6', name:'Engelsiz Oda', cap:2, concept:'Erişilebilir Konsept'}
+];
+const GROUPS = ['Alkolsüz İçecekler','Alkollü İçecekler','Tuzlu Atıştırmalık','Kuruyemiş & Kuru Meyve','Tatlı & Çikolata','Bebek & Çocuk','Kahve & Çay'];
+const PRODUCTS = [
+  {id:'P01', name:'Doğal Kaynak Suyu 0,5 L', grp:'Alkolsüz İçecekler', unit:'adet'},
+  {id:'P02', name:'Maden Suyu (Sade)',       grp:'Alkolsüz İçecekler', unit:'adet'},
+  {id:'P03', name:'Kola 330 ml',             grp:'Alkolsüz İçecekler', unit:'adet'},
+  {id:'P04', name:'Şekersiz Kola 330 ml',    grp:'Alkolsüz İçecekler', unit:'adet'},
+  {id:'P05', name:'Meyve Suyu 250 ml',       grp:'Alkolsüz İçecekler', unit:'adet'},
+  {id:'P07', name:'Yerli Bira 330 ml',       grp:'Alkollü İçecekler',  unit:'adet'},
+  {id:'P08', name:'Kırmızı Şarap 187 ml',    grp:'Alkollü İçecekler',  unit:'adet'},
+  {id:'P09', name:'Prosecco 200 ml',         grp:'Alkollü İçecekler',  unit:'adet'},
+  {id:'P11', name:'Sütlü Çikolata 80 g',     grp:'Tatlı & Çikolata',   unit:'adet'},
+  {id:'P12', name:'Antep Fıstığı 40 g',      grp:'Kuruyemiş & Kuru Meyve', unit:'adet'},
+  {id:'P15', name:'Patates Cipsi 40 g',      grp:'Tuzlu Atıştırmalık', unit:'adet'},
+  {id:'P19', name:'Çocuk Meyve Suyu 200 ml', grp:'Bebek & Çocuk',      unit:'adet'},
+  {id:'P20', name:'Espresso Kapsülü',        grp:'Kahve & Çay',        unit:'adet'}
+];
+const CONCEPTS = [
+  {id:'CN1', name:'Temel Konsept',        type:'Standart Oda',  items:'Su 2 · Kola 2 · Çikolata 1'},
+  {id:'CN2', name:'Yükseltilmiş Konsept', type:'Deluxe Oda',    items:'Su 2 · Kola 3 · Kuruyemiş 1'},
+  {id:'CN3', name:'Aile Konsepti',        type:'Aile Odası',    items:'Çocuk suyu 2 · Süt 2 · Cips 2'},
+  {id:'CN4', name:'Suit Konsepti',        type:'Suit',          items:'Bira 2 · Şarap 1 · Fıstık 2'},
+  {id:'CN5', name:'VIP / Diamond Konsepti', type:'VIP / Diamond Suit', items:'Prosecco 2 · Şampanya 1 · Kuruyemiş 2'},
+  {id:'CN6', name:'Erişilebilir Konsept', type:'Engelsiz Oda',  items:'Su 2 · Meyve suyu 2 · Çay 2'}
+];
+const ROOMS = [];
+(function(){ const plan={H1:[1,2,3,4],H2:[1,2,3],H3:[1,2,3,4,5]};
+  Object.keys(plan).forEach(h=>plan[h].forEach(f=>{
+    for(let i=1;i<=6;i++){
+      const no=f*100+i; const t=ROOMTYPES[i%ROOMTYPES.length];
+      ROOMS.push({id:h+'-'+no, hotel:h, floor:f, no:no, type:t.name, concept:t.concept, status: i===6?'DND':'OK'});
+    }
+  }));
+})();
+const FLOORS = []; Object.keys(plan_()).forEach(h=>plan_()[h].forEach(f=>FLOORS.push({id:h+'-F'+f, hotel:h, no:f, name:f+'. Kat', rooms:6})));
+function plan_(){ return {H1:[1,2,3,4],H2:[1,2,3],H3:[1,2,3,4,5]}; }
+const USERS = [
+  {u:'erkan',      name:'Erkan Erdem',   role:'Sistem Yöneticisi', scope:'Kompleks'},
+  {u:'elif.demir', name:'Elif Demir',    role:'Kat Sorumlusu',     scope:'Merit Royal · 1–2. kat'},
+  {u:'hakan.y',    name:'Hakan Yıldız',  role:'Depo Sorumlusu',    scope:'Merit Royal · Depo'},
+  {u:'deniz.y',    name:'Deniz Yücel',   role:'Şef Garson',        scope:'Merit Royal · Havuz Bar'},
+  {u:'zeynep.a',   name:'Zeynep Arslan', role:'Kat Sorumlusu',     scope:'Premium · 1–5. kat'}
+];
+const ROLES = ['Sistem Yöneticisi','Otel Müdürü','F&B Müdürü','Şef Garson','Garson','Barmen','Butler','Outlet Görevlisi','Oda Servisi Görevlisi','Mutfak Şefi','KDS Operatörü','Kat Sorumlusu','Depo Sorumlusu','Housekeeping Süpervizörü','Otel IT'];
+/* modül → otel bazlı izleme verisi */
+const MODULE_DATA = {
+  minibar:{H1:{cons:212, zimm:86, pers:2, dnd:1}, H2:{cons:141, zimm:52, pers:1, dnd:0}, H3:{cons:166, zimm:74, pers:1, dnd:1}},
+  qrmenu: {H1:{outlet:4, item:38, cat:6}, H2:{outlet:2, item:22, cat:4}, H3:{outlet:2, item:19, cat:4}},
+  qrsiparis:{H1:{open:3, kitchen:2, served:41, adisyon:38}, H2:{open:1, kitchen:1, served:28, adisyon:26}, H3:{open:2, kitchen:1, served:33, adisyon:31}},
+  oda:    {H1:{talep:3, sla:'%94'}, H2:{talep:1, sla:'%97'}, H3:{talep:2, sla:'%92'}}
+};
+const CONSUMPTION = [
+  {id:'C-88410', hotel:'H1', floor:2, room:207, staff:'Elif Demir',  items:3, when:'31.10.2026 09:12', src:'Kat Formu QR', note:'Rutin tüketim'},
+  {id:'C-88411', hotel:'H1', floor:2, room:211, staff:'Elif Demir',  items:1, when:'31.10.2026 09:18', src:'Kat Formu QR', note:'Rutin tüketim'},
+  {id:'C-88412', hotel:'H1', floor:4, room:405, staff:'Murat Aksoy', items:5, when:'31.10.2026 10:04', src:'Kat Formu QR', note:'VIP konsept ikmali'},
+  {id:'C-88413', hotel:'H3', floor:3, room:302, staff:'Zeynep Arslan', items:2, when:'31.10.2026 10:22', src:'Kat Formu QR', note:'Aile konsepti'},
+  {id:'C-88414', hotel:'H3', floor:5, room:507, staff:'Kerem Doğan', items:0, when:'31.10.2026 10:41', src:'Kat Formu QR', note:'DND — ara kayıt'}
+];
+const ORDERS = [
+  {id:'SP-5521', hotel:'H1', outlet:'Royal Ana Havuz',      table:'Ş-14',  items:'Zephyros Cooler ×2 · Karpuz & Beyaz Peynir ×1', status:'GARSON ONAYI', adisyon:'AD-1041', total:'24,00 EUR'},
+  {id:'SP-5522', hotel:'H1', outlet:'Kaptan Köşkü Piano Bar', table:'M-06', items:'Martini ×2',                                   status:'MUTFAKTA',    adisyon:'AD-1043', total:'36,00 EUR'},
+  {id:'SP-5524', hotel:'H2', outlet:'Diamond Infinity Pool',  table:'Ş-08',  items:'Şampanya 375 ×1 · Kuruyemiş ×1',               status:'SERVİS EDİLDİ', adisyon:'AD-1052', total:'51,00 EUR'},
+  {id:'SP-5525', hotel:'H3', outlet:'Lagoon Aile Havuzu',      table:'Ş-31',  items:'Mini Burger ×2 · Çocuk Meyve Suyu ×2',         status:'GARSON ONAYI', adisyon:'AD-1061', total:'62,00 EUR'}
+];
+const RSREQ = [
+  {id:'RS-901', hotel:'H1', room:312, when:'11:20', items:'Kulüp Sandviç ×1 · Ayran ×1', status:'TALEP',        phone:'teyit bekliyor'},
+  {id:'RS-902', hotel:'H3', room:508, when:'11:05', items:'Gece Çorbası ×1',             status:'HAZIRLANIYOR', phone:'teyit alındı'},
+  {id:'RS-903', hotel:'H2', room:204, when:'10:48', items:'Kahvaltı Tabağı ×2',          status:'YOLDA',        phone:'teyit alındı'}
+];
+/* ---------------- durum ---------------- */
+const S = {hotel:'H1', seq:100};
+const SETTINGS = {mobileDefs:false, theme:'xp', confirm:true};
+let ICONS = [
+  {id:'i1', v:'dashboard',  label:'Komuta Merkezi',  ic:'🛰'},
+  {id:'i2', v:'tanimlar',   label:'Tanımlar',        ic:'📁'},
+  {id:'i3', v:'minibar',    label:'Minibar Takip',   ic:'📦'},
+  {id:'i4', v:'qrmenu',     label:'QR Menü',         ic:'🍽'},
+  {id:'i5', v:'qrsiparis',  label:'QR Sipariş',      ic:'🛎'},
+  {id:'i6', v:'oda',        label:'QR Oda Servisi',  ic:'🛏'},
+  {id:'i7', v:'raporlar',   label:'Raporlar',        ic:'📈'},
+  {id:'i8', v:'ayarlar',    label:'Ayarlar',         ic:'⚙'}
+];
+const WINS = []; let zTop = 100;
+const isMobile = () => new URLSearchParams(location.search).get('mobil')==='1' || window.innerWidth<760;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const HN = id => (HOTELS.find(h=>h.id===id)||{}).name || '—';
+const el = id => document.getElementById(id);
+</script>
+</body>
+</html>
+<script>
+/* ============================================================================
+   Pencere yöneticisi, onay pencereleri ve görünümler (Tanımlar + CRUD)
+   ========================================================================= */
+function xConfirm(title, msg, cb, ico){
+  el('dlgTitle').textContent = title;
+  el('dlgIco').textContent = ico || '❓';
+  el('dlgMsg').innerHTML = msg;
+  el('dlgWrap').style.display = 'block';
+  el('dlgYes').onclick = function(){ el('dlgWrap').style.display='none'; cb(); };
+  el('dlgNo').onclick  = function(){ el('dlgWrap').style.display='none'; };
+}
+function xToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:absolute;right:12px;bottom:40px;background:#ffffe1;border:1px solid #000;padding:8px 12px;font:11px Tahoma;z-index:9500;box-shadow:2px 2px 6px rgba(0,0,0,.4)';
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2600);
+}
+/* ---------------- pencere yöneticisi ---------------- */
+function openWin(v){
+  const def = VIEWS[v];
+  if(!def){ xToast('Bu bileşen tanımlı değil.'); return; }
+  if(isMobile()){ androidOpen(v); return; }
+  let w = WINS.find(x=>x.v===v);
+  if(w){ if(w.min) w.min=false; focusWin(w.id); renderWins(); return; }
+  const id = 'w'+(++S.seq);
+  WINS.push({id:id, v:v, x:40+((WINS.length%5)*26), y:34+((WINS.length%4)*22), w:def.w||640, h:def.h||440, min:false, max:false, z:++zTop});
+  focusWin(id); renderWins();
+}
+function focusWin(id){ const w=WINS.find(x=>x.id===id); if(!w) return; w.z=++zTop; renderWins(); }
+function closeWin(id){ const w=WINS.find(x=>x.id===id); xConfirm('Pencere kapat', '<b>'+esc(VIEWS[w.v].t)+'</b> penceresi kapatılacak. Kaydedilmemiş form girdileri kaybolur.', function(){ const i=WINS.findIndex(x=>x.id===id); if(i>=0) WINS.splice(i,1); renderWins(); xToast('Pencere kapatıldı.'); }, '✖'); }
+function minWin(id){ const w=WINS.find(x=>x.id===id); if(w){ w.min=true; renderWins(); } }
+function maxWin(id){ const w=WINS.find(x=>x.id===id); if(w){ w.max=!w.max; renderWins(); } }
+function refreshWin(v){ const w=WINS.find(x=>x.v===v); if(w) renderWins(); }
+function refreshAll(){ renderWins(); }
+function renderWins(){
+  const d = el('desktop');
+  d.querySelectorAll('.win').forEach(function(x){ x.remove(); });
+  let tasks = '';
+  WINS.forEach(function(w){
+    const def = VIEWS[w.v]; if(!def) return;
+    const st = w.max ? 'left:0;top:0;width:100%;height:calc(100% - 30px);' :
+      'left:'+w.x+'px;top:'+w.y+'px;width:'+w.w+'px;height:'+w.h+'px;';
+    const div = document.createElement('div');
+    div.className = 'win' + (w.min?' min':'') + (w.max?' max':'');
+    div.id = w.id;
+    div.style.cssText = st + 'z-index:' + w.z + ';';
+    div.innerHTML =
+      '<div class="tbar" onmousedown="dragStart(event,\''+w.id+'\')" ondblclick="maxWin(\''+w.id+'\')">'+
+        '<span class="ic">'+def.ic+'</span><span>'+esc(def.t)+'</span><span class="sp"></span>'+
+        '<button class="tbtn" onclick="minWin(\''+w.id+'\')">_</button>'+
+        '<button class="tbtn" onclick="maxWin(\''+w.id+'\')">▢</button>'+
+        '<button class="tbtn x" onclick="closeWin(\''+w.id+'\')">✕</button></div>'+
+      '<div class="wbody" id="wb-'+w.id+'">'+def.r()+'</div>'+
+      '<div class="wfoot"><span>'+esc(def.t)+'</span><span class="sp" style="flex:1"></span><span>otel: <b>'+esc(HN(S.hotel))+'</b></span><span>MENNN XP</span></div>'+
+      (w.max?'':'<div class="resize" onmousedown="rsStart(event,\''+w.id+'\')"></div>');
+    d.appendChild(div);
+    if(def.after) def.after(div);
+    tasks += '<div class="task'+(!w.min?' on':'')+'" onclick="taskClick(\''+w.id+'\')"><span>'+def.ic+'</span>'+esc(def.t)+'</div>';
+  });
+  el('tasks').innerHTML = tasks;
+}
+function taskClick(id){ const w=WINS.find(x=>x.id===id); if(!w) return; if(w.min){ w.min=false; focusWin(id); } else { w.min=true; renderWins(); } }
+let drag=null, rsz=null;
+function dragStart(e,id){
+  const w=WINS.find(x=>x.id===id); if(!w || w.max) return;
+  focusWin(id);
+  drag={id:id, dx:e.clientX-w.x, dy:e.clientY-w.y};
+  document.addEventListener('mousemove',dragMove); document.addEventListener('mouseup',dragEnd);
+  e.preventDefault();
+}
+function dragMove(e){ if(!drag) return; const w=WINS.find(x=>x.id===drag.id); if(!w) return;
+  w.x=Math.max(0,Math.min(window.innerWidth-120, e.clientX-drag.dx));
+  w.y=Math.max(0,Math.min(window.innerHeight-70, e.clientY-drag.dy)); renderWins(); }
+function dragEnd(){ drag=null; document.removeEventListener('mousemove',dragMove); document.removeEventListener('mouseup',dragEnd); }
+function rsStart(e,id){ const w=WINS.find(x=>x.id===id); if(!w) return;
+  rsz={id:id, x:e.clientX, y:e.clientY, w:w.w, h:w.h}; focusWin(id);
+  document.addEventListener('mousemove',rsMove); document.addEventListener('mouseup',rsEnd); e.preventDefault(); e.stopPropagation(); }
+function rsMove(e){ if(!rsz) return; const w=WINS.find(x=>x.id===rsz.id); if(!w) return;
+  w.w=Math.max(340, rsz.w+(e.clientX-rsz.x)); w.h=Math.max(220, rsz.h+(e.clientY-rsz.y)); renderWins(); }
+function rsEnd(){ rsz=null; document.removeEventListener('mousemove',rsMove); document.removeEventListener('mouseup',rsEnd); }
+
+/* ---------------- ortak parçalar ---------------- */
+function xHotelSel(id){
+  return '<select class="xin" id="'+id+'">'+HOTELS.map(h=>'<option value="'+h.id+'"'+(h.id===S.hotel?' selected':'')+'>'+esc(h.name)+'</option>').join('')+'</select>';
+}
+function xHotelBar(fn){
+  return '<div class="fld" style="display:flex;gap:8px;align-items:center;margin-bottom:9px">'+
+    '<label class="fl" style="margin:0">Otel:</label><div style="width:200px">'+xHotelSel('xhSel')+'</div>'+
+    '<button class="xbtn" onclick="'+fn+'">Getir</button>'+
+    '<span class="tag">modül içinde otel seçimi — her otel ayrı sistem</span></div>';
+}
+function xReadHotel(){ const s=el('xhSel'); if(s) S.hotel=s.value; }
+function xSetupWarn(){
+  const ok = FLOORS.filter(f=>f.hotel===S.hotel).length>0 && ROOMS.filter(r=>r.hotel===S.hotel).length>0;
+  return ok? '' : '<div class="note warn">⚠ Bu otelde <b>kat/oda tanımı eksik</b>. Tanımlar penceresinden önce tanımlamalar tamamlanmalıdır.</div>';
+}
+
+/* ---------------- görünümler ---------------- */
+const VIEWS = {};
+VIEWS['dashboard'] = {t:'Komuta Merkezi — Sistem Yöneticisi', ic:'🛰', w:700, h:460, r:function(){
+  const chk = [
+    ['Otel tanımları (3 standart kayıt)', HOTELS.length>=3],
+    ['Kat ve oda tanımları', FLOORS.length>0 && ROOMS.length>0],
+    ['Oda tipi ve konseptler', CONCEPTS.length>0],
+    ['Ürün grubu ve ürünler', PRODUCTS.length>0],
+    ['Kullanıcı ve roller', USERS.length>0]
+  ];
+  return `
+  <div class="note"><b>Sistem mimarisi:</b> her <b>modül</b> ayrı bir sistem, her modülün içinde seçilen <b>otel</b> ayrı bir sistem olarak çalışır.
+  Modülleri kullanmadan önce <b>Tanımlar</b> penceresinden otel → kat → oda, oda tipi → konsept ve ürün tanımları tamamlanır.</div>
+  ${HOTELS.map(h=>`
+    <div class="h3"><span class="swatch2" style="display:inline-block;width:10px;height:10px;background:${h.theme};margin-right:5px"></span>${esc(h.name)} <span class="tag">${h.code}</span></div>
+    <table class="xt">
+      <tr><th>Minibar Takip</th><th>QR Menü</th><th>QR Sipariş</th><th>QR Oda Servisi</th><th>Kullanıcı</th></tr>
+      <tr>
+        <td>tüketim ${MODULE_DATA.minibar[h.id].cons} · zimmet ${MODULE_DATA.minibar[h.id].zimm}</td>
+        <td>${MODULE_DATA.qrmenu[h.id].outlet} outlet · ${MODULE_DATA.qrmenu[h.id].item} öğe</td>
+        <td>açık sipariş ${MODULE_DATA.qrsiparis[h.id].open} · adisyon ${MODULE_DATA.qrsiparis[h.id].adisyon}</td>
+        <td>talep ${MODULE_DATA.oda[h.id].talep} · SLA ${MODULE_DATA.oda[h.id].sla}</td>
+        <td>${USERS.filter(u=>u.scope.indexOf(h.name)>=0 || u.scope==='Kompleks').length}</td>
+      </tr>
+    </table>`).join('')}
+  <div class="h3">Kurulum durumu</div>
+  <table class="xt">${chk.map(c=>`<tr><td style="width:18px">${c[1]?'<b style="color:#1c6b1c">✓</b>':'<b style="color:#8c2318">•</b>'}</td><td>${esc(c[0])}</td>
+    <td style="width:90px">${c[1]?'<span class="tag ok">tamam</span>':'<span class="tag warn">eksik</span>'}</td></tr>`).join('')}</table>
+  <div style="margin-top:10px"><button class="xbtn pri" onclick="openWin('tanimlar')">📁 Tanımlar penceresini aç</button></div>`;
+}};
+/* ---------------- Tanımlar (gezgin) ---------------- */
+const TANIM_TABS = [
+  {k:'otel',   t:'Otel Tanımla',        ic:'🏨'},
+  {k:'kat',    t:'Kat Tanımla',         ic:'▤'},
+  {k:'oda',    t:'Oda Tanımla',         ic:'🚪'},
+  {k:'odati',  t:'Oda Tipi Tanımla',    ic:'🏷'},
+  {k:'konsept',t:'Konsept Tanımla',     ic:'📋'},
+  {k:'grup',   t:'Ürün Grubu Tanımla',  ic:'🗂'},
+  {k:'urun',   t:'Ürün Tanımla',        ic:'📦'},
+  {k:'kullanici', t:'Kullanıcı Tanımla',ic:'🔐'},
+  {k:'rol',    t:'Rol & Yetki',         ic:'🎭'}
+];
+VIEWS['tanimlar'] = {t:'Tanımlar', ic:'📁', w:740, h:470, r:function(){
+  const tab = S.tanimTab || 'otel';
+  let content = '';
+  if(tab==='otel') content = tanimOtel();
+  if(tab==='kat')  content = tanimKat();
+  if(tab==='oda')  content = tanimOda();
+  if(tab==='odati') content = tanimOdaTipi();
+  if(tab==='konsept') content = tanimKonsept();
+  if(tab==='grup') content = tanimGrup();
+  if(tab==='urun') content = tanimUrun();
+  if(tab==='kullanici') content = tanimKullanici();
+  if(tab==='rol') content = tanimRol();
+  return `
+  <div style="display:flex;gap:8px;align-items:flex-start">
+    <div style="width:170px;flex:0 0 170px;border:1px solid #8ba0c8;background:#f6f9fc;height:${Math.max(300,0)}px;overflow:auto">
+      ${TANIM_TABS.map(t=>`<div style="padding:5px 8px;cursor:pointer;font-size:11px;${tab===t.k?'background:#316ac5;color:#fff;font-weight:bold':''}" onclick="S.tanimTab='${t.k}';refreshWin('tanimlar')">${t.ic} ${esc(t.t)}</div>`).join('')}
+      <div style="padding:6px 8px;font-size:10px;color:#6b7a8c;border-top:1px solid #dfe5ee">Sıra: otel → kat → oda tipi/konsept → oda → ürün → kullanıcı</div>
+    </div>
+    <div style="flex:1 1 auto;min-width:0">${content}</div>
+  </div>`;
+}};
+function tanimOtel(){
+  return `
+  <div class="note ok"><b>Standart (varsayılan) kayıtlar:</b> Merit Royal, Merit Royal Diamond, Merit Royal Premium — silinemez, yalnızca güncellenebilir.
+  Tüm modüller bu üç oteli otomatik kullanır.</div>
+  <table class="xt">
+    <tr><th>Kod</th><th>Otel</th><th>Oda</th><th>Kat</th><th>Durum</th><th></th></tr>
+    ${HOTELS.map(h=>`<tr><td class="muted">${h.code}</td><td><b>${esc(h.name)}</b></td><td>${h.rooms}</td><td>${h.floors}</td>
+      <td><span class="tag ok">varsayılan</span></td>
+      <td><button class="xbtn" onclick="otelEdit('${h.id}')">Düzenle</button></td></tr>`).join('')}
+  </table>
+  <div class="h3">Yeni otel (lisans kapsamı dışı)</div>
+  <div class="fld"><label class="fl">Otel adı</label><input class="xin" id="hName" placeholder="Örn. Merit Royal Marina" disabled></div>
+  <button class="xbtn" disabled>Otel Ekle</button>`;
+}
+function otelEdit(id){
+  const h = HOTELS.find(x=>x.id===id);
+  xConfirm('Otel düzenleme', '<b>'+esc(h.name)+'</b> bilgileri güncellenecek. Değişiklik tüm modüllere yansır.', function(){
+    xToast(h.name+' güncellendi.');
+  }, '✏');
+}
+function tanimKat(){
+  const list = FLOORS.filter(f=>f.hotel===S.hotel);
+  return `
+  ${xSetupWarn()}
+  <div class="note">Kat tanımları <b>seçili otel</b> için yapılır: ${esc(HN(S.hotel))}</div>
+  <table class="xt">
+    <tr><th>Kat</th><th>Ad</th><th>Oda sayısı</th><th></th></tr>
+    ${list.map(f=>`<tr><td>${f.no}</td><td>${esc(f.name)}</td><td>${f.rooms}</td>
+      <td><button class="xbtn" onclick="katDel('${f.id}')">Sil</button></td></tr>`).join('') || '<tr><td colspan="4" class="muted">Kat yok.</td></tr>'}
+  </table>
+  <div class="h3">Kat ekle</div>
+  <div class="fld"><label class="fl">Kat numarası</label><input class="xin" id="kNo" type="number"></div>
+  <div class="fld"><label class="fl">Kat adı</label><input class="xin" id="kName" placeholder="5. Kat"></div>
+  <button class="xbtn pri" onclick="katAdd()">Kat Ekle</button>`;
+}
+function katAdd(){
+  const no = parseInt(el('kNo').value,10), nm = el('kName').value || (no+'. Kat');
+  if(!no){ xToast('Kat numarası giriniz.'); return; }
+  if(FLOORS.some(f=>f.hotel===S.hotel && f.no===no)){ xToast('Bu kat zaten tanımlı.'); return; }
+  xConfirm('Kat ekleme', '<b>'+esc(HN(S.hotel))+'</b> oteline <b>'+no+'. Kat</b> eklenecek. Onaylıyor musunuz?', function(){
+    FLOORS.push({id:S.hotel+'-F'+no, hotel:S.hotel, no:no, name:nm, rooms:0});
+    refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '➕');
+}
+function katDel(id){
+  const f = FLOORS.find(x=>x.id===id);
+  xConfirm('Kat silme', '<b>'+esc(f.name)+'</b> ve bağlı oda kayıtları silinecek. Bu işlem geri alınamaz. Onaylıyor musunuz?', function(){
+    const i=FLOORS.findIndex(x=>x.id===id); if(i>=0) FLOORS.splice(i,1);
+    for(let j=ROOMS.length-1;j>=0;j--){ if(ROOMS[j].hotel===f.hotel && ROOMS[j].floor===f.no) ROOMS.splice(j,1); }
+    refreshWin('tanimlar'); xToast(f.name+' silindi.');
+  }, '🗑');
+}
+function tanimOda(){
+  const list = ROOMS.filter(r=>r.hotel===S.hotel);
+  return `
+  ${xSetupWarn()}
+  <div class="note">Oda tanımı: <b>kat seçilir</b>, oda numarası girilir ve <b>oda tipi</b> seçilir — odanın minibar içeriği oda tipinin konseptinden otomatik gelir.</div>
+  <table class="xt">
+    <tr><th>Oda</th><th>Kat</th><th>Oda Tipi</th><th>Konsept (otomatik)</th><th>Durum</th><th></th></tr>
+    ${list.slice(0,14).map(r=>`<tr><td><b>${r.no}</b></td><td>${r.floor}</td><td>${esc(r.type)}</td><td class="muted">${esc(r.concept)}</td>
+      <td>${r.status==='DND'?'<span class="tag warn">DND</span>':'<span class="tag ok">uygun</span>'}</td>
+      <td><button class="xbtn" onclick="odaDel('${r.id}')">Sil</button></td></tr>`).join('')}
+    ${list.length>14?`<tr><td colspan="6" class="muted">… ${list.length-14} oda daha (prototip ilk 14 satırı gösterir)</td></tr>`:''}
+  </table>
+  <div class="h3">Oda ekle</div>
+  <div class="fld"><label class="fl">Kat</label><select class="xin" id="rFloor">${FLOORS.filter(f=>f.hotel===S.hotel).map(f=>'<option value="'+f.no+'">'+esc(f.name)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Oda numarası</label><input class="xin" id="rNo" type="number"></div>
+  <div class="fld"><label class="fl">Oda tipi</label><select class="xin" id="rType">${ROOMTYPES.map(t=>'<option value="'+t.name+'">'+esc(t.name)+' — '+esc(t.concept)+'</option>').join('')}</select></div>
+  <button class="xbtn pri" onclick="odaAdd()">Odayı Tanımla</button>`;
+}
+function odaAdd(){
+  const f=parseInt(el('rFloor').value,10), no=parseInt(el('rNo').value,10), t=el('rType').value;
+  if(!no){ xToast('Oda numarası giriniz.'); return; }
+  if(ROOMS.some(r=>r.hotel===S.hotel && r.no===no)){ xToast('Bu oda numarası zaten tanımlı.'); return; }
+  const c = (ROOMTYPES.find(x=>x.name===t)||{}).concept;
+  xConfirm('Oda tanımlama', 'Oda <b>'+no+'</b> · oda tipi <b>'+esc(t)+'</b> · minibar içeriği <b>'+esc(c)+'</b> olarak tanımlanacak ve odaya özel QR üretilecek. Onaylıyor musunuz?', function(){
+    ROOMS.push({id:S.hotel+'-'+no, hotel:S.hotel, floor:f, no:no, type:t, concept:c, status:'OK'});
+    refreshWin('tanimlar'); xToast('Oda '+no+' tanımlandı · QR üretildi.');
+  }, '🚪');
+}
+function odaDel(id){
+  const r = ROOMS.find(x=>x.id===id);
+  xConfirm('Oda silme', '<b>Oda '+r.no+'</b> silinecek. Minibar ve tüketim geçmişi korunur. Onaylıyor musunuz?', function(){
+    const i=ROOMS.findIndex(x=>x.id===id); if(i>=0) ROOMS.splice(i,1);
+    refreshWin('tanimlar'); xToast('Oda '+r.no+' silindi.');
+  }, '🗑');
+}
+function tanimOdaTipi(){
+  return `
+  <div class="note">Oda tipine <b>konsept ataması zorunludur</b>; konsepti olmayan oda tipiyle oda açılamaz.</div>
+  <table class="xt"><tr><th>Oda tipi</th><th>Kapasite</th><th>Konsept</th><th></th></tr>
+    ${ROOMTYPES.map(t=>`<tr><td><b>${esc(t.name)}</b></td><td>${t.cap} kişi</td><td>${esc(t.concept)}</td>
+      <td><button class="xbtn" onclick="odatiDel('${t.id}')">Sil</button></td></tr>`).join('')}</table>
+  <div class="h3">Oda tipi ekle</div>
+  <div class="fld"><label class="fl">Oda tipi adı</label><input class="xin" id="rtName" placeholder="Örn. Bahçe Suit"></div>
+  <div class="fld"><label class="fl">Konsept</label><select class="xin" id="rtConcept">${CONCEPTS.map(c=>'<option>'+esc(c.name)+'</option>').join('')}</select></div>
+  <button class="xbtn pri" onclick="odatiAdd()">Oda Tipi Ekle</button>`;
+}
+function odatiAdd(){
+  const nm=el('rtName').value.trim(); if(!nm){ xToast('Oda tipi adı giriniz.'); return; }
+  xConfirm('Oda tipi ekleme', '<b>'+esc(nm)+'</b> · konsept <b>'+esc(el('rtConcept').value)+'</b> olarak eklenecek.', function(){
+    ROOMTYPES.push({id:'RT'+(ROOMTYPES.length+1), name:nm, cap:2, concept:el('rtConcept').value});
+    refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '🏷');
+}
+function odatiDel(id){
+  const t=ROOMTYPES.find(x=>x.id===id);
+  if(ROOMS.some(r=>r.type===t.name)){ xToast('Bu oda tipini kullanan odalar var; önce odaları değiştirin.'); return; }
+  xConfirm('Oda tipi silme', '<b>'+esc(t.name)+'</b> silinecek. Onaylıyor musunuz?', function(){
+    const i=ROOMTYPES.findIndex(x=>x.id===id); if(i>=0) ROOMTYPES.splice(i,1);
+    refreshWin('tanimlar'); xToast(t.name+' silindi.');
+  }, '🗑');
+}
+function tanimKonsept(){
+  return `
+  <div class="note">Konsept, <b>oda tipine özel minibar içeriğini</b> belirler (ürün + adet). Oda tanımında oda tipi seçildiğinde içerik otomatik gelir.</div>
+  <table class="xt"><tr><th>Konsept</th><th>Oda tipi</th><th>İçerik</th><th></th></tr>
+    ${CONCEPTS.map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.type)}</td><td class="muted">${esc(c.items)}</td>
+      <td><button class="xbtn" onclick="konseptDel('${c.id}')">Sil</button></td></tr>`).join('')}</table>
+  <div class="h3">Konsept ekle</div>
+  <div class="fld"><label class="fl">Konsept adı</label><input class="xin" id="cnName" placeholder="Örn. Balayı Konsepti"></div>
+  <div class="fld"><label class="fl">Oda tipi</label><select class="xin" id="cnType">${ROOMTYPES.map(t=>'<option>'+esc(t.name)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">İçerik (ürün + adet)</label><input class="xin" id="cnItems" placeholder="Su 2 · Kola 2 · Çikolata 1"></div>
+  <button class="xbtn pri" onclick="konseptAdd()">Konsept Ekle</button>`;
+}
+function konseptAdd(){
+  const nm=el('cnName').value.trim(); if(!nm){ xToast('Konsept adı giriniz.'); return; }
+  xConfirm('Konsept ekleme', '<b>'+esc(nm)+'</b> · oda tipi <b>'+esc(el('cnType').value)+'</b> olarak kaydedilecek.', function(){
+    CONCEPTS.push({id:'CN'+(CONCEPTS.length+1), name:nm, type:el('cnType').value, items:el('cnItems').value});
+    refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '📋');
+}
+function konseptDel(id){
+  const c=CONCEPTS.find(x=>x.id===id);
+  if(ROOMTYPES.some(t=>t.concept===c.name)){ xToast('Bu konsept bir oda tipine atanmış; önce eşleştirmeyi kaldırın.'); return; }
+  xConfirm('Konsept silme', '<b>'+esc(c.name)+'</b> silinecek. Onaylıyor musunuz?', function(){
+    const i=CONCEPTS.findIndex(x=>x.id===id); if(i>=0) CONCEPTS.splice(i,1);
+    refreshWin('tanimlar'); xToast(c.name+' silindi.');
+  }, '🗑');
+}
+function tanimGrup(){
+  return `
+  <table class="xt"><tr><th>Ürün grubu</th><th class="ctr">Ürün</th></tr>
+    ${GROUPS.map(g=>`<tr><td><b>${esc(g)}</b></td><td class="ctr">${PRODUCTS.filter(p=>p.grp===g).length}</td></tr>`).join('')}</table>
+  <div class="h3">Grup ekle</div>
+  <div class="fld"><label class="fl">Grup adı</label><input class="xin" id="gName" placeholder="Örn. Kişisel Bakım"></div>
+  <button class="xbtn pri" onclick="grupAdd()">Grup Ekle</button>`;
+}
+function grupAdd(){
+  const nm=el('gName').value.trim(); if(!nm){ xToast('Grup adı giriniz.'); return; }
+  xConfirm('Ürün grubu ekleme', '<b>'+esc(nm)+'</b> grubu eklenecek.', function(){ GROUPS.push(nm); refreshWin('tanimlar'); xToast(nm+' eklendi.'); }, '🗂');
+}
+function tanimUrun(){
+  return `
+  <table class="xt"><tr><th>Ürün</th><th>Grup</th><th>Birim</th><th></th></tr>
+    ${PRODUCTS.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.grp)}</td><td>${esc(p.unit)}</td>
+      <td><button class="xbtn" onclick="urunDel('${p.id}')">Sil</button></td></tr>`).join('')}</table>
+  <div class="h3">Ürün ekle</div>
+  <div class="fld"><label class="fl">Ürün adı</label><input class="xin" id="pName" placeholder="Örn. Bitki Çayı Poşeti"></div>
+  <div class="fld"><label class="fl">Grup</label><select class="xin" id="pGrp">${GROUPS.map(g=>'<option>'+esc(g)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Birim</label><input class="xin" id="pUnit" value="adet"></div>
+  <button class="xbtn pri" onclick="urunAdd()">Ürün Ekle</button>`;
+}
+function urunAdd(){
+  const nm=el('pName').value.trim(); if(!nm){ xToast('Ürün adı giriniz.'); return; }
+  xConfirm('Ürün ekleme', '<b>'+esc(nm)+'</b> · grup <b>'+esc(el('pGrp').value)+'</b> olarak eklenecek.', function(){
+    PRODUCTS.push({id:'P'+(PRODUCTS.length+1), name:nm, grp:el('pGrp').value, unit:el('pUnit').value});
+    refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '📦');
+}
+function urunDel(id){
+  const p=PRODUCTS.find(x=>x.id===id);
+  xConfirm('Ürün silme', '<b>'+esc(p.name)+'</b> pasife alınacak (geçmiş kayıtlar korunur). Onaylıyor musunuz?', function(){
+    const i=PRODUCTS.findIndex(x=>x.id===id); if(i>=0) PRODUCTS.splice(i,1);
+    refreshWin('tanimlar'); xToast(p.name+' silindi.');
+  }, '🗑');
+}
+function tanimKullanici(){
+  return `
+  <table class="xt"><tr><th>Kullanıcı</th><th>Rol</th><th>Kapsam</th><th></th></tr>
+    ${USERS.map(u=>`<tr><td><b>${esc(u.name)}</b><div class="muted">${esc(u.u)}</div></td><td><span class="tag blue">${esc(u.role)}</span></td><td>${esc(u.scope)}</td>
+      <td><button class="xbtn" onclick="kulDel('${u.u}')">Sil</button></td></tr>`).join('')}</table>
+  <div class="h3">Kullanıcı ekle</div>
+  <div class="fld"><label class="fl">Ad Soyad</label><input class="xin" id="kuName" placeholder="Örn. Deniz Yücel"></div>
+  <div class="fld"><label class="fl">Rol</label><select class="xin" id="kuRole">${ROLES.map(r=>'<option>'+esc(r)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Kapsam (otel / outlet / kat)</label><input class="xin" id="kuScope" placeholder="Merit Royal · 1–2. kat"></div>
+  <button class="xbtn pri" onclick="kulAdd()">Kullanıcı Ekle</button>`;
+}
+function kulAdd(){
+  const nm=el('kuName').value.trim(); if(!nm){ xToast('Ad Soyad giriniz.'); return; }
+  xConfirm('Kullanıcı ekleme', '<b>'+esc(nm)+'</b> · rol <b>'+esc(el('kuRole').value)+'</b> · kapsam <b>'+esc(el('kuScope').value||'—')+'</b> olarak eklenecek.', function(){
+    USERS.push({u:nm.toLowerCase().replace(/\s+/g,'.'), name:nm, role:el('kuRole').value, scope:el('kuScope').value});
+    refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '🔐');
+}
+function kulDel(u){
+  const usr=USERS.find(x=>x.u===u);
+  xConfirm('Kullanıcı silme', '<b>'+esc(usr.name)+'</b> kullanıcısı silinecek. Onaylıyor musunuz?', function(){
+    const i=USERS.findIndex(x=>x.u===u); if(i>=0) USERS.splice(i,1);
+    refreshWin('tanimlar'); xToast(usr.name+' silindi.');
+  }, '🗑');
+}
+function tanimRol(){
+  return `
+  <div class="note">Roller kullanıcıdan <b>önce</b> tanımlanır. Yetki: rol × otel × modül × ekran × işlem (V/O/D/A/R).</div>
+  <table class="xt"><tr><th>Rol</th><th>Tip</th><th></th></tr>
+    ${ROLES.map((r,i)=>`<tr><td>${esc(r)}</td><td>${i<2?'<span class="tag ok">sistem</span>':'<span class="tag blue">operasyon</span>'}</td>
+      <td><button class="xbtn" onclick="rolDel('${r}')">Sil</button></td></tr>`).join('')}</table>
+  <div class="h3">Rol ekle</div>
+  <div class="fld"><label class="fl">Rol adı</label><input class="xin" id="roName" placeholder="Örn. Teras Görevlisi"></div>
+  <button class="xbtn pri" onclick="rolAdd()">Rol Ekle</button>`;
+}
+function rolAdd(){
+  const nm=el('roName').value.trim(); if(!nm){ xToast('Rol adı giriniz.'); return; }
+  xConfirm('Rol ekleme', '<b>'+esc(nm)+'</b> rolü eklenecek; yetkileri Yetki Tanımları\'ndan verilecek.', function(){
+    ROLES.push(nm); refreshWin('tanimlar'); xToast(nm+' eklendi.');
+  }, '🎭');
+}
+function rolDel(r){
+  if(USERS.some(u=>u.role===r)){ xToast('Bu role bağlı kullanıcılar var.'); return; }
+  xConfirm('Rol silme', '<b>'+esc(r)+'</b> silinecek. Onaylıyor musunuz?', function(){
+    const i=ROLES.indexOf(r); if(i>=0) ROLES.splice(i,1);
+    refreshWin('tanimlar'); xToast(r+' silindi.');
+  }, '🗑');
+}
+</script>
+<script>
+/* ============================================================================
+   Modül pencereleri (her modül ayrı sistem, içinde otel seçimi) + Raporlar +
+   Ayarlar + Başlat menüsü + sağ tuş + sürükle-bırak + Android görünümü
+   ========================================================================= */
+VIEWS['minibar'] = {t:'Minibar Takip — Modül Sistemi', ic:'📦', w:700, h:470, r:function(){
+  const d = MODULE_DATA.minibar[S.hotel];
+  const cons = CONSUMPTION.filter(c=>c.hotel===S.hotel);
+  return `
+  ${xHotelBar('xHotelRefresh')}
+  ${xSetupWarn()}
+  <div class="note"><b>Modül sistemi:</b> bu pencere yalnızca <b>${esc(HN(S.hotel))}</b> otelinin minibar verisini gösterir.</div>
+  <table class="xt"><tr><th>Bugün tüketim kaydı</th><th>Zimmet bakiyesi (adet)</th><th>Kişiselleştirme talebi</th><th>DND / ara kayıt</th></tr>
+    <tr><td><b>${d.cons}</b></td><td>${d.zimm}</td><td>${d.pers}</td><td>${d.dnd}</td></tr></table>
+  <div class="h3">Tüketim kayıtları</div>
+  <table class="xt"><tr><th>Kayıt</th><th>Kat/Oda</th><th>Personel</th><th class="ctr">Ürün</th><th>Kaynak</th><th>Not</th><th></th></tr>
+    ${cons.map(c=>`<tr><td class="muted">${c.id}</td><td>${c.floor} / <b>${c.room}</b></td><td>${esc(c.staff)}</td>
+      <td class="ctr">${c.items}</td><td><span class="tag blue">${esc(c.src)}</span></td>
+      <td class="muted">${esc(c.note)}</td>
+      <td><button class="xbtn" onclick="consDel('${c.id}')">Sil</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted">Kayıt yok.</td></tr>'}
+  </table>
+  <div class="h3">Tüketim kaydı gir</div>
+  <div class="fld"><label class="fl">Oda</label><select class="xin" id="mbRoom">${ROOMS.filter(r=>r.hotel===S.hotel).map(r=>'<option value="'+r.id+'">Oda '+r.no+' · '+esc(r.type)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Ürün</label><select class="xin" id="mbProd">${PRODUCTS.map(p=>'<option>'+esc(p.name)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Adet (zimmetten düşülecek)</label><input class="xin" id="mbQty" type="number" value="1"></div>
+  <button class="xbtn pri" onclick="consAdd()">Tüketimi Kaydet</button>`;
+}};
+function xHotelRefresh(){ xReadHotel(); refreshAll(); }
+function consAdd(){
+  const rid=el('mbRoom').value, prod=el('mbProd').value, qty=parseInt(el('mbQty').value,10)||1;
+  const r=ROOMS.find(x=>x.id===rid);
+  xConfirm('Tüketim kaydı', 'Oda <b>'+r.no+'</b> · <b>'+esc(prod)+' ×'+qty+'</b> kaydedilecek ve kat sorumlusunun zimmetinden düşülecek. Onaylıyor musunuz?', function(){
+    CONSUMPTION.unshift({id:'C-'+(++S.seq), hotel:S.hotel, floor:r.floor, room:r.no, staff:'Elif Demir', items:qty, when:'31.10.2026 11:50', src:'Kat Formu QR', note:'Elle giriş'});
+    MODULE_DATA.minibar[S.hotel].cons += 1;
+    refreshAll(); xToast('Tüketim kaydedildi · zimmet güncellendi.');
+  }, '📝');
+}
+function consDel(id){
+  const c=CONSUMPTION.find(x=>x.id===id);
+  xConfirm('Kayıt silme', '<b>'+c.id+'</b> tüketim kaydı silinecek; zimmet bakiyesi geri yüklenecek. Onaylıyor musunuz?', function(){
+    const i=CONSUMPTION.findIndex(x=>x.id===id); if(i>=0) CONSUMPTION.splice(i,1);
+    MODULE_DATA.minibar[S.hotel].cons = Math.max(0, MODULE_DATA.minibar[S.hotel].cons-1);
+    refreshAll(); xToast('Kayıt silindi.');
+  }, '🗑');
+}
+/* ---------------- QR Menü ---------------- */
+const OUTLET_NAMES = {H1:['Royal Ana Havuz & Pool Bar','Kaptan Köşkü Piano Bar','Kış Bahçesi','Zephyros Cabanas'],
+  H2:['Diamond Infinity Pool','Cigar Lounge'], H3:['Lagoon Aile Havuzu','Meritta Club Park']};
+const MENU_ITEMS = [
+  {outlet:'Royal Ana Havuz & Pool Bar', name:'Royal Akik',           detail:'Böğürtlen, nane, limon', allerg:'yok',        price:12, show:true},
+  {outlet:'Royal Ana Havuz & Pool Bar', name:'Zephyros Cooler',      detail:'Salatalık, tonik',       allerg:'yok',        price:10, show:true},
+  {outlet:'Kaptan Köşkü Piano Bar',     name:'Martini',              detail:'Klasik, zeytin',         allerg:'yok',        price:18, show:false},
+  {outlet:'Diamond Infinity Pool',      name:'Şampanya 375 ml',      detail:'Brut',                   allerg:'alkol',      price:45, show:true},
+  {outlet:'Lagoon Aile Havuzu',         name:'Mini Burger Tabağı',   detail:'Dana köfte, cheddar',    allerg:'gluten, süt', price:24, show:true}
+];
+VIEWS['qrmenu'] = {t:'QR Menü — Modül Sistemi', ic:'🍽', w:720, h:470, r:function(){
+  const outs = OUTLET_NAMES[S.hotel]||[];
+  const items = MENU_ITEMS.filter(m=>outs.indexOf(m.outlet)>=0);
+  return `
+  ${xHotelBar('xHotelRefresh')}
+  <div class="note"><b>QR Menü modülü:</b> seçili otelin outletlerine menü tanımlanır. Fiyat opsiyoneldir; gösterim outlet bazında açılıp kapatılır.</div>
+  <table class="xt"><tr><th>Outlet</th><th>Menü öğesi</th><th>Detay</th><th>Alerjen</th><th class="num">Fiyat</th><th>Gösterim</th><th></th></tr>
+    ${items.map((m,i)=>`<tr><td><b>${esc(m.outlet)}</b></td><td>${esc(m.name)}</td><td class="muted">${esc(m.detail)}</td>
+      <td>${m.allerg==='yok'?'<span class="tag ok">alerjen yok</span>':'<span class="tag err">'+esc(m.allerg)+'</span>'}</td>
+      <td class="num">${m.price?m.price.toFixed(2)+' EUR':'—'}</td>
+      <td>${m.show?'<span class="tag ok">açık</span>':'<span class="tag warn">kapalı</span>'}</td>
+      <td><button class="xbtn" onclick="menuShow(${i})">${m.show?'Gizle':'Göster'}</button></td></tr>`).join('') || '<tr><td colspan="7" class="muted">Bu otelde QR Menü outleti yok.</td></tr>'}
+  </table>
+  <div class="h3">Menü öğesi ekle</div>
+  <div class="fld"><label class="fl">Outlet</label><select class="xin" id="qmOutlet">${outs.map(o=>'<option>'+esc(o)+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">Öğe adı</label><input class="xin" id="qmName" placeholder="Örn. Royal Akik"></div>
+  <div class="fld"><label class="fl">Detay bilgisi</label><input class="xin" id="qmDetail" placeholder="İçindekiler / servis notu"></div>
+  <div class="fld"><label class="fl">Alerjen</label><input class="xin" id="qmAllerg" placeholder="gluten, süt (veya: yok)"></div>
+  <div class="fld"><label class="fl">Fiyat (EUR · opsiyonel)</label><input class="xin" id="qmPrice" type="number" step="0.01" value="12"></div>
+  <button class="xbtn pri" onclick="menuAdd()">Menü Öğesini Kaydet</button>`;
+}};
+function menuShow(i){
+  const m = MENU_ITEMS.filter(x=>(OUTLET_NAMES[S.hotel]||[]).indexOf(x.outlet)>=0)[i];
+  if(!m) return;
+  xConfirm('Fiyat gösterimi', '<b>'+esc(m.name)+'</b> öğesinin fiyat gösterimi <b>'+(m.show?'kapatılacak':'açılacak')+'</b>. Onaylıyor musunuz?', function(){
+    m.show=!m.show; refreshAll(); xToast(m.name+' fiyat gösterimi: '+(m.show?'açık':'kapalı'));
+  }, '👁');
+}
+function menuAdd(){
+  const nm=el('qmName').value.trim(); if(!nm){ xToast('Öğe adı giriniz.'); return; }
+  xConfirm('Menü öğesi ekleme', '<b>'+esc(nm)+'</b> · outlet <b>'+esc(el('qmOutlet').value)+'</b> · fiyat <b>'+(parseFloat(el('qmPrice').value)||0)+' EUR</b> olarak kaydedilecek. Onaylıyor musunuz?', function(){
+    MENU_ITEMS.unshift({outlet:el('qmOutlet').value, name:nm, detail:el('qmDetail').value, allerg:el('qmAllerg').value||'yok', price:parseFloat(el('qmPrice').value)||0, show:true});
+    refreshAll(); xToast(nm+' eklendi (görsel yüklendi).');
+  }, '🍽');
+}
+/* ---------------- QR Sipariş + Adisyon ---------------- */
+VIEWS['qrsiparis'] = {t:'QR Sipariş — Modül Sistemi', ic:'🛎', w:720, h:460, r:function(){
+  const list = ORDERS.filter(o=>o.hotel===S.hotel);
+  const d = MODULE_DATA.qrsiparis[S.hotel];
+  return `
+  ${xHotelBar('xHotelRefresh')}
+  <div class="note"><b>QR Sipariş modülü:</b> sipariş önce <b>garson onayına</b> düşer; onaylanınca fiş yazıcısına ve mutfak ekranına gider. Fiyat gösterimi açık outletlerde adisyon tutarı oluşur.</div>
+  <table class="xt"><tr><th>Açık sipariş</th><th>Mutfakta</th><th>Servis edilen</th><th>Adisyon</th></tr>
+    <tr><td><b>${d.open}</b></td><td>${d.kitchen}</td><td>${d.served}</td><td>${d.adisyon}</td></tr></table>
+  <div class="h3">Siparişler ve adisyonlar</div>
+  <table class="xt"><tr><th>Sipariş</th><th>Outlet / Masa</th><th>İçerik</th><th>Durum</th><th>Adisyon</th><th></th></tr>
+    ${list.map(o=>`<tr><td class="muted">${o.id}</td><td>${esc(o.outlet)} · ${esc(o.table)}</td><td class="muted">${esc(o.items)}</td>
+      <td><span class="tag ${o.status==='GARSON ONAYI'?'warn':'ok'}">${esc(o.status)}</span></td>
+      <td>${o.adisyon?esc(o.adisyon)+'<div class="muted">'+esc(o.total)+'</div>':'—'}</td>
+      <td>${o.status==='GARSON ONAYI'
+        ? '<button class="xbtn" onclick="orderApprove(\''+o.id+'\')">Onayla</button>'
+        : '<button class="xbtn" onclick="adisyonPrint(\''+o.id+'\')">Adisyon Çıktısı</button>'}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">Sipariş yok.</td></tr>'}
+  </table>
+  <div class="note" style="margin-top:10px">Fiyat gösterimi kapalı outletlerde adisyon yalnızca ürün + adet içerir; tutar satırı oluşmaz.</div>`;
+}};
+function orderApprove(id){
+  const o=ORDERS.find(x=>x.id===id);
+  xConfirm('Sipariş onayı', '<b>'+o.id+'</b> · '+esc(o.items)+' siparişi onaylanıp <b>mutfak fiş yazıcısına ve mutfak ekranına</b> gönderilecek. Adisyon: <b>'+esc(o.total)+'</b>. Onaylıyor musunuz?', function(){
+    o.status='MUTFAKTA'; const m=MODULE_DATA.qrsiparis[o.hotel]; m.open=Math.max(0,m.open-1); m.kitchen++; m.adisyon++;
+    refreshAll(); xToast(o.id+' mutfağa iletildi · adisyon yazdırıldı.');
+  }, '🛎');
+}
+function adisyonPrint(id){
+  const o=ORDERS.find(x=>x.id===id);
+  xConfirm('Adisyon çıktısı', '<b>'+esc(o.adisyon||'AD')+'</b> adisyonu yazdırılacak. Toplam: <b>'+esc(o.total)+'</b>. Onaylıyor musunuz?', function(){
+    xToast('Adisyon fiş yazıcı kuyruğuna eklendi: '+id);
+  }, '🧾');
+}
+/* ---------------- QR Oda Servisi ---------------- */
+VIEWS['oda'] = {t:'QR Oda Servisi — Modül Sistemi', ic:'🛏', w:660, h:420, r:function(){
+  const list = RSREQ.filter(r=>r.hotel===S.hotel);
+  return `
+  ${xHotelBar('xHotelRefresh')}
+  <div class="note">Talep, oda servisi birimi ekranına düşer; <b>telefon teyidi opsiyoneldir</b>. SLA: 30 dk.</div>
+  <table class="xt"><tr><th>Talep</th><th>Oda</th><th>İçerik</th><th>Telefon teyidi</th><th>Durum</th><th></th></tr>
+    ${list.map(r=>`<tr><td class="muted">${r.id}</td><td><b>${r.room}</b></td><td class="muted">${esc(r.items)}</td>
+      <td><span class="tag ${r.phone.indexOf('bekliyor')>=0?'warn':'ok'}">${esc(r.phone)}</span></td>
+      <td><span class="tag">${esc(r.status)}</span></td>
+      <td><button class="xbtn" onclick="rsNext('${r.id}')">Durumu İlerlet</button></td></tr>`).join('') || '<tr><td colspan="6" class="muted">Talep yok.</td></tr>'}
+  </table>
+  <div class="h3">Elle talep oluştur</div>
+  <div class="fld"><label class="fl">Oda</label><select class="xin" id="rsRoom">${ROOMS.filter(r=>r.hotel===S.hotel).map(r=>'<option value="'+r.no+'">Oda '+r.no+'</option>').join('')}</select></div>
+  <div class="fld"><label class="fl">İçerik</label><input class="xin" id="rsItems" placeholder="Örn. Kulüp Sandviç ×1"></div>
+  <button class="xbtn pri" onclick="rsAdd()">Talep Oluştur</button>`;
+}};
+const RS_FLOW = ['TALEP','HAZIRLANIYOR','YOLDA','TESLİM'];
+function rsNext(id){
+  const r=RSREQ.find(x=>x.id===id);
+  const i=RS_FLOW.indexOf(r.status);
+  if(i>=RS_FLOW.length-1){ xToast('Talep zaten teslim edildi.'); return; }
+  xConfirm('Durum güncelleme', '<b>'+r.id+'</b> · Oda '+r.room+' talebi <b>'+RS_FLOW[i+1]+'</b> durumuna alınacak. Onaylıyor musunuz?', function(){
+    r.status=RS_FLOW[i+1]; refreshAll(); xToast(r.id+' → '+r.status);
+  }, '🛏');
+}
+function rsAdd(){
+  const room=el('rsRoom').value, items=el('rsItems').value.trim();
+  if(!items){ xToast('İçerik giriniz.'); return; }
+  xConfirm('Oda servisi talebi', 'Oda <b>'+room+'</b> için <b>'+esc(items)+'</b> talebi oluşturulacak. Onaylıyor musunuz?', function(){
+    RSREQ.unshift({id:'RS-'+(++S.seq), hotel:S.hotel, room:room, when:'11:55', items:items, status:'TALEP', phone:'teyit bekliyor'});
+    refreshAll(); xToast('Talep oluşturuldu.');
+  }, '🛏');
+}
+/* ---------------- Raporlar ---------------- */
+VIEWS['raporlar'] = {t:'Raporlar — Modül & Otel Kırılımlı', ic:'📈', w:700, h:440, r:function(){
+  const mb = MODULE_DATA.minibar[S.hotel];
+  const perRoom = ROOMS.filter(r=>r.hotel===S.hotel).slice(0,8).map(r=>({r:r, v:(r.no*7)%23+3}));
+  return `
+  ${xHotelBar('xHotelRefresh')}
+  <div class="h3">Oda bazlı tüketim (${esc(HN(S.hotel))})</div>
+  <table class="xt"><tr><th>Oda</th><th>Oda tipi</th><th class="num">Aylık tüketim</th><th class="num">Konaklama</th></tr>
+    ${perRoom.map(x=>`<tr><td><b>${x.r.no}</b></td><td>${esc(x.r.type)}</td><td class="num">${x.v}</td><td class="num">${Math.ceil(x.v/6)}</td></tr>`).join('')}
+  </table>
+  <div class="h3">Modül özetleri</div>
+  <table class="xt">
+    <tr><th>Modül</th><th>Özet</th></tr>
+    <tr><td>📦 Minibar Takip</td><td>tüketim ${mb.cons} · zimmet ${mb.zimm} · kişiselleştirme ${mb.pers} · DND ${mb.dnd}</td></tr>
+    <tr><td>🍽 QR Menü</td><td>${MODULE_DATA.qrmenu[S.hotel].outlet} outlet · ${MODULE_DATA.qrmenu[S.hotel].item} öğe · ${MODULE_DATA.qrmenu[S.hotel].cat} kategori</td></tr>
+    <tr><td>🛎 QR Sipariş</td><td>served ${MODULE_DATA.qrsiparis[S.hotel].served} · adisyon ${MODULE_DATA.qrsiparis[S.hotel].adisyon}</td></tr>
+    <tr><td>🛏 QR Oda Servisi</td><td>talep ${MODULE_DATA.oda[S.hotel].talep} · SLA ${MODULE_DATA.oda[S.hotel].sla}</td></tr>
+  </table>
+  <div style="margin-top:10px"><button class="xbtn pri" onclick="xConfirm('Rapor çıktısı','Seçili otelin raporu PDF olarak dışa aktarılacak. Onaylıyor musunuz?',function(){xToast('Rapor dışa aktarıldı.')},'📄')">Raporu Dışa Aktar (PDF)</button></div>`;
+}};
+/* ---------------- Ayarlar ---------------- */
+VIEWS['ayarlar'] = {t:'Ayarlar — Sistem & Görünüm', ic:'⚙', w:640, h:420, r:function(){
+  return `
+  <div class="h3">Mobil görünüm</div>
+  <table class="xt">
+    <tr><td style="width:70%"><b>Mobilde tanımlama ekranları</b><div class="muted">Kapalıyken mobilde yalnızca izleme ve raporlama kullanılır (Android görünümü).</div></td>
+      <td><button class="xbtn" onclick="setMobileDefs()">${SETTINGS.mobileDefs?'AKTİF — kapat':'PASİF — aç'}</button></td></tr>
+    <tr><td><b>Her işlemde onay penceresi</b><div class="muted">CRUD işlemlerinde confirm dialog gösterimi.</div></td>
+      <td><button class="xbtn" onclick="setConfirm()">${SETTINGS.confirm?'AÇIK':'KAPALI'}</button></td></tr>
+  </table>
+  <div class="h3">Masaüstü arka plan rengi (tema)</div>
+  <table class="xt"><tr><th>Tema</th><th>Önizleme</th><th></th></tr>
+    ${[['xp','Windows XP Mavi'],['green','Yeşil Tepeler'],['slate','Kurumsal Gri'],['dark','Koyu']].map(t=>`
+      <tr><td>${t[1]}</td><td><span style="display:inline-block;width:60px;height:14px;background:${t[0]==='xp'?'#3f8cf3':t[0]==='green'?'#2f9e63':t[0]==='slate'?'#5a7186':'#22303e'}"></span></td>
+      <td><button class="xbtn" onclick="setTheme('${t[0]}')">${SETTINGS.theme===t[0]?'uygulanıyor':'Uygula'}</button></td></tr>`).join('')}
+  </table>
+  <div class="h3">Kısayollar</div>
+  <div class="note">Başlat menüsündeki öğeleri <b>sürükleyip masaüstüne bırakarak</b> kısayol ekleyebilirsiniz; masaüstü simgesine sağ tıklayıp <b>Masaüstünden Kaldır</b> ile silebilirsiniz.</div>
+  <div class="h3">Sistem</div>
+  <table class="xt">
+    <tr><td>Standart oteller</td><td>${HOTELS.map(h=>esc(h.name)).join(' · ')} (silinemez)</td></tr>
+    <tr><td>Modül yapısı</td><td>Her modül ayrı sistem · modül içinde seçilen otel ayrı sistem</td></tr>
+    <tr><td>Onay kuralı</td><td>Tüm CRUD işlemlerinde onay penceresi</td></tr>
+  </table>`;
+}};
+function setMobileDefs(){
+  xConfirm('Mobilde tanımlamalar', SETTINGS.mobileDefs
+    ? 'Mobilde tanımlama ekranları <b>pasif</b> yapılacak; mobilde yalnızca izleme ve raporlama kalacak.'
+    : 'Mobilde tanımlama ekranları <b>aktif</b> yapılacak.', function(){
+    SETTINGS.mobileDefs=!SETTINGS.mobileDefs;
+    refreshWin('ayarlar'); xToast('Mobilde tanımlamalar: '+(SETTINGS.mobileDefs?'aktif':'pasif'));
+  }, '📱');
+}
+function setConfirm(){
+  xConfirm('Onay penceresi ayarı', SETTINGS.confirm?'Onay pencereleri kapatılacak; işlemler tek tıkla yapılacak.':'Onay pencereleri açılacak.', function(){
+    SETTINGS.confirm=!SETTINGS.confirm; refreshWin('ayarlar'); xToast('Onay pencereleri: '+(SETTINGS.confirm?'açık':'kapalı'));
+  }, '❓');
+}
+function setTheme(t){
+  xConfirm('Tema değişikliği', 'Masaüstü arka plan rengi değiştirilecek.', function(){
+    SETTINGS.theme=t; applyTheme(); refreshWin('ayarlar'); xToast('Tema uygulandı: '+t);
+  }, '🎨');
+}
+function applyTheme(){ const d=el('desktop'); d.className=''; if(SETTINGS.theme!=='xp') d.classList.add('theme-'+SETTINGS.theme); }
+</script>
+<script>
+/* ============================================================================
+   Masaüstü simgeleri · Başlat menüsü · sağ tuş menüsü · sürükle-bırak ·
+   Android mobil görünümü · başlatma
+   ========================================================================= */
+/* ---------------- masaüstü simgeleri ---------------- */
+function renderIcons(){
+  const d = el('desktop');
+  d.querySelectorAll('.dicon').forEach(x=>x.remove());
+  ICONS.forEach(function(ic, i){
+    const div = document.createElement('div');
+    div.className = 'dicon' + (ic.short?' short':'');
+    div.id = ic.id;
+    div.style.left = (10 + (i%2)*96) + 'px';
+    div.style.top  = (10 + Math.floor(i/2)*84) + 'px';
+    div.setAttribute('draggable','false');
+    div.innerHTML = '<div class="ic">'+ic.ic+'</div><div class="lb">'+esc(ic.label)+'</div>';
+    div.onclick = function(){ selectIcon(ic.id); };
+    div.ondblclick = function(){ openWin(ic.v); };
+    div.oncontextmenu = function(e){ e.preventDefault(); selectIcon(ic.id); iconMenu(e, ic); };
+    d.appendChild(div);
+  });
+}
+function selectIcon(id){
+  document.querySelectorAll('.dicon').forEach(x=>x.classList.remove('sel'));
+  const d = el(id); if(d) d.classList.add('sel');
+}
+function addShortcut(v, label, ic){
+  if(ICONS.some(x=>x.v===v)){ xToast('Bu kısayol masaüstünde zaten var.'); return; }
+  xConfirm('Kısayol ekleme', '<b>'+esc(label)+'</b> masaüstüne kısayol olarak eklenecek. Onaylıyor musunuz?', function(){
+    ICONS.push({id:'i'+(++S.seq), v:v, label:label, ic:ic, short:true});
+    renderIcons(); xToast('Kısayol eklendi: '+label);
+  }, '🔗');
+}
+function removeShortcut(id){
+  const ic = ICONS.find(x=>x.id===id);
+  xConfirm('Kısayol kaldırma', '<b>'+esc(ic.label)+'</b> kısayolu masaüstünden kaldırılacak (pencere Başlat menüsünde kalır). Onaylıyor musunuz?', function(){
+    ICONS = ICONS.filter(x=>x.id!==id);
+    renderIcons(); xToast('Kısayol kaldırıldı: '+ic.label);
+  }, '🗑');
+}
+/* ---------------- Başlat menüsü ---------------- */
+const START = [
+  {cat:'GENEL', items:[
+    {v:'dashboard', t:'Komuta Merkezi', ic:'🛰'},
+    {v:'tanimlar',  t:'Tanımlar',       ic:'📁'},
+    {v:'raporlar',  t:'Raporlar',       ic:'📈'},
+    {v:'ayarlar',   t:'Ayarlar',        ic:'⚙'}
+  ]},
+  {cat:'MİNİBAR TAKİP (MODÜL SİSTEMİ)', items:[{v:'minibar', t:'Minibar Takip', ic:'📦'}]},
+  {cat:'QR MENÜ (MODÜL SİSTEMİ)',       items:[{v:'qrmenu', t:'QR Menü', ic:'🍽'}]},
+  {cat:'QR SİPARİŞ (MODÜL SİSTEMİ)',    items:[{v:'qrsiparis', t:'QR Sipariş', ic:'🛎'}]},
+  {cat:'QR ODA SERVİSİ (MODÜL SİSTEMİ)',items:[{v:'oda', t:'QR Oda Servisi', ic:'🛏'}]}
+];
+const START_RIGHT = [
+  {v:'dashboard', t:'Komuta Merkezi', ic:'🛰'},
+  {v:'raporlar',  t:'Raporlar',       ic:'📈'},
+  {v:'ayarlar',   t:'Ayarlar',        ic:'⚙'},
+  {v:'tanimlar',  t:'Tanımlar',       ic:'📁'}
+];
+function buildStart(){
+  el('smLeft').innerHTML = START.map(g=>
+    '<div class="smCat">'+g.cat+'</div>' +
+    g.items.map(it=>
+      '<div class="smItem" draggable="true" ondragstart="smDrag(event,\''+it.v+'\',\''+esc(it.t)+'\',\''+it.ic+'\')" '+
+      'onclick="openWin(\''+it.v+'\');xStartClose()">'+
+      '<span class="ic">'+it.ic+'</span><span>'+esc(it.t)+'</span>'+
+      (ICONS.some(x=>x.v===it.v)?'<span class="pin">masaüstünde</span>':'')+'</div>').join('')
+  ).join('');
+  el('smRight').innerHTML = '<div class="smCat">YER İMLERİ</div>' + START_RIGHT.map(it=>
+    '<div class="smItem" onclick="openWin(\''+it.v+'\');xStartClose()"><span class="ic">'+it.ic+'</span><span>'+esc(it.t)+'</span></div>').join('');
+}
+function smDrag(e, v, label, ic){ e.dataTransfer.setData('text/plain', v+'|'+label+'|'+ic); }
+function xStartToggle(){ const m=el('startMenu'); m.classList.toggle('open'); if(m.classList.contains('open')) buildStart(); }
+function xStartClose(){ el('startMenu').classList.remove('open'); el('ctxMenu').style.display='none'; }
+/* ---------------- sağ tuş menüsü ---------------- */
+function ctxShow(e, items){
+  const m = el('ctxMenu');
+  m.innerHTML = items.map(it=> it.sep ? '<div class="sep"></div>' :
+    '<div class="ci'+(it.dis?' dis':'')+'" onclick="'+(it.fn||'')+'">'+(it.ic||'')+' '+esc(it.t)+'</div>').join('');
+  m.style.display='block';
+  m.style.left = Math.min(e.clientX, window.innerWidth-200) + 'px';
+  m.style.top  = Math.min(e.clientY, window.innerHeight-200) + 'px';
+}
+function desktopMenu(e){
+  e.preventDefault();
+  ctxShow(e, [
+    {t:'Yenile', ic:'🔄', fn:'xRefreshDesktop()'},
+    {sep:true},
+    {t:'Arka plan rengi — Windows XP Mavi', ic:'🎨', fn:'setTheme(\'xp\')'},
+    {t:'Arka plan rengi — Yeşil Tepeler', ic:'🎨', fn:'setTheme(\'green\')'},
+    {t:'Arka plan rengi — Kurumsal Gri', ic:'🎨', fn:'setTheme(\'slate\')'},
+    {t:'Arka plan rengi — Koyu', ic:'🎨', fn:'setTheme(\'dark\')'},
+    {sep:true},
+    {t:'Simgeleri hizala (sol üst)', ic:'📐', fn:'renderIcons();xToast(\'Simgeler hizalandı.\')'},
+    {t:'Yeni kısayol — Başlat menüsünden sürükleyin', ic:'🔗', dis:true}
+  ]);
+}
+function iconMenu(e, ic){
+  ctxShow(e, [
+    {t:'Aç', ic:ic.ic, fn:'openWin(\''+ic.v+'\');xStartClose()'},
+    {sep:true},
+    {t:'Masaüstünden Kaldır', ic:'🗑', fn:'removeShortcut(\''+ic.id+'\')'},
+    {t:'Özellikler', ic:'ℹ', fn:'xToast(\''+esc(ic.label)+' · MENNN kısayolu\')'}
+  ]);
+}
+function xRefreshDesktop(){
+  xConfirm('Masaüstünü yenile', 'Masaüstü simgeleri ve açık pencereler yenilenecek. Onaylıyor musunuz?', function(){
+    renderIcons(); renderWins(); xToast('Masaüstü yenilendi.');
+  }, '🔄');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('#startMenu') && !e.target.closest('#startBtn')) xStartClose();
+  if(!e.target.closest('#ctxMenu')) el('ctxMenu').style.display='none';
+  if(!e.target.closest('.dicon')) document.querySelectorAll('.dicon.sel').forEach(x=>x.classList.remove('sel'));
+});
+document.addEventListener('contextmenu', function(e){
+  if(e.target.closest('#desktop') && !e.target.closest('.win') && !e.target.closest('.dicon')) desktopMenu(e);
+});
+/* masaüstüne sürükle-bırak */
+window.addEventListener('DOMContentLoaded', function(){
+  const d = el('desktop');
+  d.addEventListener('dragover', function(e){ e.preventDefault(); });
+  d.addEventListener('drop', function(e){
+    e.preventDefault();
+    const data = (e.dataTransfer.getData('text/plain')||'').split('|');
+    if(data.length>=3) addShortcut(data[0], data[1], data[2]);
+  });
+});
+/* ---------------- Android mobil görünümü ---------------- */
+const A_TABS = [
+  {k:'izleme',  t:'İzleme',   ic:'📡'},
+  {k:'rapor',   t:'Raporlar', ic:'📈'},
+  {k:'tanim',   t:'Tanımlar', ic:'📁'},
+  {k:'ayar',    t:'Ayarlar',  ic:'⚙'}
+];
+S.aTab = 'izleme';
+function androidInit(){
+  if(!isMobile()) return;
+  el('android').classList.add('on');
+  el('desktop').style.display='none'; el('taskbar').style.display='none';
+  androidRender();
+}
+function androidRender(){
+  el('aNav').innerHTML = A_TABS.map(t=>'<button class="'+(S.aTab===t.k?'on':'')+'" onclick="S.aTab=\''+t.k+'\';androidRender()"><span class="ic">'+t.ic+'</span>'+t.t+'</button>').join('');
+  el('aHotel').textContent = HN(S.hotel);
+  const b = el('aBody');
+  if(S.aTab==='izleme') b.innerHTML = aIzleme();
+  else if(S.aTab==='rapor') b.innerHTML = aRapor();
+  else if(S.aTab==='tanim') b.innerHTML = aTanim();
+  else b.innerHTML = aAyar();
+}
+function aHotelChip(){
+  return '<div style="margin-bottom:10px">'+HOTELS.map(h=>'<span class="aChip" style="cursor:pointer;background:'+(h.id===S.hotel?'#0b57d0;color:#fff':'#e3eaf3;color:#33506e')+'" onclick="S.hotel=\''+h.id+'\';androidRender()">'+esc(h.name)+'</span>').join('')+'</div>';
+}
+function aIzleme(){
+  const mb=MODULE_DATA.minibar[S.hotel], qs=MODULE_DATA.qrsiparis[S.hotel], od=MODULE_DATA.oda[S.hotel];
+  return aHotelChip() + `
+  <div class="aCard"><b>📦 Minibar Takip — ${esc(HN(S.hotel))}</b>
+    <div class="kpi2"><div><div class="k">Tüketim</div><div class="v">${mb.cons}</div></div>
+    <div><div class="k">Zimmet</div><div class="v">${mb.zimm}</div></div>
+    <div><div class="k">Talep</div><div class="v">${mb.pers}</div></div></div></div>
+  <div class="aCard"><b>🛎 QR Sipariş</b>
+    <div class="kpi2"><div><div class="k">Açık</div><div class="v">${qs.open}</div></div>
+    <div><div class="k">Mutfakta</div><div class="v">${qs.kitchen}</div></div>
+    <div><div class="k">Adisyon</div><div class="v">${qs.adisyon}</div></div></div></div>
+  <div class="aCard"><b>🛏 Oda Servisi & DND</b>
+    <div class="aList"><span class="ic">🛏</span><span>Açık talep</span><span class="sp"></span><b>${od.talep}</b></div>
+    <div class="aList"><span class="ic">⏱</span><span>DND ara kayıt</span><span class="sp"></span><b>${mb.dnd}</b></div>
+    <div class="aList"><span class="ic">✅</span><span>SLA</span><span class="sp"></span><b>${od.sla}</b></div></div>
+  <div class="aCard"><b>📡 Çevrimiçi personel</b>
+    <div class="aList"><span class="ic">👤</span><span>elif.demir · Merit Royal · 1–2. kat</span><span class="sp"></span><span class="tag ok">online</span></div>
+    <div class="aList"><span class="ic">👤</span><span>deniz.y · Havuz Bar</span><span class="sp"></span><span class="tag ok">online</span></div></div>`;
+}
+function aRapor(){
+  const mb=MODULE_DATA.minibar[S.hotel], qs=MODULE_DATA.qrsiparis[S.hotel];
+  return aHotelChip() + `
+  <div class="aCard"><b>📈 Oda bazlı tüketim — ${esc(HN(S.hotel))}</b>
+    ${ROOMS.filter(r=>r.hotel===S.hotel).slice(0,5).map(r=>'<div class="aList"><span class="ic">🚪</span><span>Oda '+r.no+' · '+esc(r.type)+'</span><span class="sp"></span><b>'+((r.no*7)%23+3)+'</b></div>').join('')}
+    <div class="hint" style="color:#63788e;font-size:10.6px;margin-top:6px">Oda/kat/otel kırılımlı tüketim; mobilde salt okunur.</div></div>
+  <div class="aCard"><b>🛎 Sipariş & adisyon</b>
+    <div class="aList"><span class="ic">🧾</span><span>Adisyon (fiyat gösterimi açık outlet)</span><span class="sp"></span><b>${qs.adisyon}</b></div>
+    <div class="aList"><span class="ic">🛎</span><span>Servis edilen</span><span class="sp"></span><b>${qs.served}</b></div></div>
+  <div class="aCard"><b>📄 Rapor çıktısı</b>
+    <div class="aList"><span class="ic">📄</span><span>Günlük özet PDF</span><span class="sp"></span><button class="xbtn" onclick="xConfirm('Rapor çıktısı','Günlük özet raporu dışa aktarılacak. Onaylıyor musunuz?',function(){xToast(\'Rapor dışa aktarıldı.\')},\'📄\')">Al</button></div></div>`;
+}
+function aTanim(){
+  if(!SETTINGS.mobileDefs){
+    return aHotelChip() + `
+    <div class="aCard" style="border-left:4px solid #d6491f"><b>🔒 Mobilde tanımlamalar kapalı</b>
+      <div style="font-size:11.6px;color:#4a5a6a;margin-top:6px">Tanımlama ekranları masaüstünde kullanılır. Gerekirse <b>Ayarlar → Mobilde tanımlamalar</b> anahtarından geçici olarak açabilirsiniz.</div>
+      <button class="xbtn pri" style="margin-top:9px" onclick="S.aTab='ayar';androidRender()">⚙ Ayarlar'a git</button></div>`;
+  }
+  return aHotelChip() + `
+  <div class="aCard" style="border-left:4px solid #2f9e63"><b>🔓 Mobilde tanımlamalar geçici olarak açık</b>
+    <div style="font-size:11.6px;color:#4a5a6a;margin-top:5px">Kapatmak için Ayarlar sekmesini kullanın.</div></div>
+  <div class="aCard"><b>🏨 Oteller</b>${HOTELS.map(h=>'<div class="aList"><span class="ic">🏨</span><span>'+esc(h.name)+'</span><span class="sp"></span><b>'+h.rooms+' oda</b></div>').join('')}</div>
+  <div class="aCard"><b>🚪 Odalar (seçili otel, ilk 5)</b>${ROOMS.filter(r=>r.hotel===S.hotel).slice(0,5).map(r=>'<div class="aList"><span class="ic">🚪</span><span>Oda '+r.no+' · '+esc(r.type)+'</span><span class="sp"></span><span class="tag">'+esc(r.concept)+'</span></div>').join('')}</div>`;
+}
+function aAyar(){
+  return aHotelChip() + `
+  <div class="aCard"><b>📱 Mobilde tanımlama ekranları</b>
+    <div style="font-size:11.6px;color:#4a5a6a;margin:6px 0">Kapalıyken mobilde yalnızca izleme ve raporlama kullanılır.</div>
+    <button class="xbtn" onclick="setMobileDefs();androidRender()">${SETTINGS.mobileDefs?'AKTİF — kapat':'PASİF — aç'}</button></div>
+  <div class="aCard"><b>🏨 Otel seçimi</b>${HOTELS.map(h=>'<div class="aList"><span class="ic">🏨</span><span>'+esc(h.name)+'</span><span class="sp"></span>'+(h.id===S.hotel?'<span class="tag ok">seçili</span>':'<button class="xbtn" onclick="S.hotel=\''+h.id+'\';androidRender()">Seç</button>')+'</div>').join('')}</div>
+  <div class="aCard"><b>❓ Onay pencereleri</b><div style="font-size:11.6px;color:#4a5a6a;margin:6px 0">Tüm CRUD işlemlerinde onay penceresi gösterilir (masaüstü ve mobil).</div></div>`;
+}
+function androidOpen(v){
+  const map = {minibar:'izleme', qrmenu:'izleme', qrsiparis:'izleme', oda:'izleme', raporlar:'rapor', ayarlar:'ayar', dashboard:'izleme'};
+  if(v==='tanimlar' || !map[v]){ S.aTab='tanim'; androidRender(); return; }
+  S.aTab = map[v]; androidRender();
+}
+function xAndroidFab(){ xConfirm('Hızlı yenileme', 'İzleme verileri yenilenecek. Onaylıyor musunuz?', function(){ androidRender(); xToast('Veriler yenilendi.'); }, '🔄'); }
+/* ---------------- başlatma ---------------- */
+(function(){
+  applyTheme();
+  renderIcons();
+  buildStart();
+  renderWins();
+  function tick(){ const d=new Date(); const t=d.toTimeString().slice(0,5);
+    el('xClock').textContent=t; const a=el('aClock'); if(a) a.textContent=t; }
+  tick(); setInterval(tick, 15000);
+  androidInit();
+  window.addEventListener('resize', function(){ if(isMobile() && !el('android').classList.contains('on')) androidInit(); });
+  xToast('MENNN XP hazır — simgelere çift tıklayın veya Başlat menüsünü kullanın.');
+})();
+</script>
+</body>
+</html>

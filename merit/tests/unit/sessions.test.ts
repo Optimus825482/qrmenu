@@ -52,9 +52,9 @@ afterAll(async () => {
 
 describe("createSession / closeSession (gerçek test DB)", () => {
   it("ikinci oturum ilkini CIKTI/TEK_CIHAZ ile kapatır ve olay yazar", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const first = await newSession(user.id, "MR", user.roleId);
-    const second = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const first = await newSession(user.id, "ROYAL", user.roleId);
+    const second = await newSession(user.id, "ROYAL", user.roleId);
 
     const closed = await testDb.userSession.findUniqueOrThrow({ where: { id: first.id } });
     expect(closed.status).toBe("CIKTI");
@@ -69,15 +69,15 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("tek cihaz kapatması kapatılan oturum için session.closed yayınlar", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const first = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const first = await newSession(user.id, "ROYAL", user.roleId);
     const received: MeritEvent[] = [];
     const off = subscribe(
       (e) => e.type === "session.closed",
       (e) => received.push(e),
     );
     try {
-      await newSession(user.id, "MR", user.roleId);
+      await newSession(user.id, "ROYAL", user.roleId);
       await vi.waitFor(() => expect(received).toHaveLength(1), { timeout: 2000 });
       expect(received[0]).toMatchObject({
         type: "session.closed",
@@ -90,16 +90,16 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("session.changed: SISTEM oturumu yalnız SISTEM'e, KAT oturumu SISTEM ve YONETIM'e yayınlanır", async () => {
-    const sysUser = await makeUser({ username: "sys-ses", roleCode: "R-SYS", hotelCode: "MR" });
-    const kat = await makeUser({ username: "kat-ses", roleCode: "R-KAT", hotelCode: "MR" });
+    const sysUser = await makeUser({ username: "sys-ses", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const kat = await makeUser({ username: "kat-ses", roleCode: "R-KAT", hotelCode: "ROYAL" });
     const received: MeritEvent[] = [];
     const off = subscribe(
       (e) => e.type === "session.changed",
       (e) => received.push(e),
     );
     try {
-      const sysSession = await newSession(sysUser.id, "MR", sysUser.roleId);
-      const katSession = await newSession(kat.id, "MR", kat.roleId);
+      const sysSession = await newSession(sysUser.id, "ROYAL", sysUser.roleId);
+      const katSession = await newSession(kat.id, "ROYAL", kat.roleId);
       await vi.waitFor(() => expect(received).toHaveLength(2), { timeout: 2000 });
       const kindsOf = (id: string) => received.find((e) => (e.payload as { sessionId: string }).sessionId === id)?.roleKinds;
       expect(kindsOf(sysSession.id)).toEqual(["SISTEM"]);
@@ -112,18 +112,18 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("başka kullanıcının oturumuna dokunmaz", async () => {
-    const a = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const b = await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "MR" });
-    const sa = await newSession(a.id, "MR", a.roleId);
-    await newSession(b.id, "MR", b.roleId);
+    const a = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const b = await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const sa = await newSession(a.id, "ROYAL", a.roleId);
+    await newSession(b.id, "ROYAL", b.roleId);
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: sa.id } })).status).toBe(
       "ONLINE",
     );
   });
 
   it("5 eşzamanlı createSession sonunda tek ONLINE oturum kalır", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const hid = await hotelId("MR");
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const hid = await hotelId("ROYAL");
     await Promise.all(
       Array.from({ length: 5 }, () =>
         createSession({ userId: user.id, hotelId: hid, roleId: user.roleId, ip: "10.0.0.1" }),
@@ -138,11 +138,11 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("expiresAt: R-KAT 600 dk (rol), R-GAR 480 dk (ayar), R-DEP 600 dk (minibar ayarı)", async () => {
-    const kat = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
-    const gar = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const dep = await makeUser({ username: "dep1", roleCode: "R-DEP", hotelCode: "MR" });
+    const kat = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    const gar = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const dep = await makeUser({ username: "dep1", roleCode: "R-DEP", hotelCode: "ROYAL" });
     const minutes = async (userId: string, roleId: string) => {
-      const s = await newSession(userId, "MR", roleId);
+      const s = await newSession(userId, "ROYAL", roleId);
       return (s.expiresAt.getTime() - s.loginAt.getTime()) / 60000;
     };
     expect(await minutes(kat.id, kat.roleId)).toBe(600);
@@ -151,10 +151,10 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("LOGIN audit satırı yazar; ip/userAgent kaydedilir", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
     const s = await createSession({
       userId: user.id,
-      hotelId: await hotelId("MR"),
+      hotelId: await hotelId("ROYAL"),
       roleId: user.roleId,
       ip: "10.1.2.3",
       userAgent: "UA/1.0",
@@ -169,10 +169,10 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     const user = await makeUser({
       username: "gar1",
       roleCode: "R-GAR",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       isActive: false,
     });
-    await expect(newSession(user.id, "MR", user.roleId)).rejects.toMatchObject({
+    await expect(newSession(user.id, "ROYAL", user.roleId)).rejects.toMatchObject({
       code: "UNAUTHORIZED",
     });
     expect(await testDb.userSession.count()).toBe(0);
@@ -180,8 +180,8 @@ describe("createSession / closeSession (gerçek test DB)", () => {
 
   it("closeSession(ZORUNLU, adminId) oturumu CIKTI yapar ve audit satırı yazar; ikinci çağrı etkisiz", async () => {
     const admin = await makeUser({ username: "sys1", roleCode: "R-SYS" });
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const s = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const s = await newSession(user.id, "ROYAL", user.roleId);
 
     await closeSession(s.id, "ZORUNLU", admin.id);
     await closeSession(s.id, "ZORUNLU", admin.id);
@@ -203,8 +203,8 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   it("closeSession hiçbir nedenle DUSURULDU üretmez: her LogoutReason CIKTI", async () => {
     const reasons = ["MANUEL", "SURE_ASIMI", "HAREKETSIZLIK", "ZORUNLU", "TEK_CIHAZ", "SISTEM"] as const;
     for (const reason of reasons) {
-      const user = await makeUser({ username: `gar-${reason}`, roleCode: "R-GAR", hotelCode: "MR" });
-      const s = await newSession(user.id, "MR", user.roleId);
+      const user = await makeUser({ username: `gar-${reason}`, roleCode: "R-GAR", hotelCode: "ROYAL" });
+      const s = await newSession(user.id, "ROYAL", user.roleId);
       await closeSession(s.id, reason);
       const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
       expect(row).toMatchObject({ status: "CIKTI", logoutReason: reason });
@@ -212,8 +212,8 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("closeSession(MANUEL) CIKTI yapar ve LOGOUT olayı/audit yazar", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const s = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const s = await newSession(user.id, "ROYAL", user.roleId);
     await closeSession(s.id, "MANUEL");
     const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
     expect(row).toMatchObject({ status: "CIKTI", logoutReason: "MANUEL" });
@@ -221,8 +221,8 @@ describe("createSession / closeSession (gerçek test DB)", () => {
   });
 
   it("touchSession lastSeenAt değerini ilerletir", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const s = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const s = await newSession(user.id, "ROYAL", user.roleId);
     await testDb.userSession.update({
       where: { id: s.id },
       data: { lastSeenAt: new Date(Date.now() - 3600_000) },
@@ -242,7 +242,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "kat1",
       roleCode: "R-KAT",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       passwordHash,
     });
     const deps = makeDeps();
@@ -259,7 +259,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
       expect.objectContaining({
         userId: user.id,
         sessionId: session.id,
-        hotelId: await hotelId("MR"),
+        hotelId: await hotelId("ROYAL"),
         roleCode: "R-KAT",
       }),
     );
@@ -269,9 +269,9 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("çerezde başka kullanıcının oturumu varsa yeni girişten önce SISTEM ile kapatılır", async () => {
-    const other = await makeUser({ username: "gar.eski", roleCode: "R-GAR", hotelCode: "MR" });
-    const stale = await newSession(other.id, "MR", other.roleId);
-    await makeUser({ username: "kat.yeni", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    const other = await makeUser({ username: "gar.eski", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const stale = await newSession(other.id, "ROYAL", other.roleId);
+    await makeUser({ username: "kat.yeni", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
 
     const deps = { ...makeDeps(), cookieSessionId: async () => stale.id };
     const res = await performLogin(creds("kat.yeni"), deps);
@@ -282,8 +282,8 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("çerezdeki oturum aynı kullanıcınınsa SISTEM ile kapatılmaz; bilinmeyen kimlik yok sayılır", async () => {
-    const user = await makeUser({ username: "kat.ayni", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
-    const own = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "kat.ayni", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
+    const own = await newSession(user.id, "ROYAL", user.roleId);
     const where = { hotelId: null, key: "session.singleDevice" };
     await testDb.setting.updateMany({ where, data: { value: false } });
     try {
@@ -298,8 +298,8 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("çerezdeki oturum aynı kullanıcınınsa ve singleDevice açıksa TEK_CIHAZ ile kapanır, yenisi açık kalır", async () => {
-    const user = await makeUser({ username: "kat.tek", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
-    const own = await newSession(user.id, "MR", user.roleId);
+    const user = await makeUser({ username: "kat.tek", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
+    const own = await newSession(user.id, "ROYAL", user.roleId);
     const res = await performLogin(creds("kat.tek"), { ...makeDeps(), cookieSessionId: async () => own.id });
     expect(res.ok).toBe(true);
     expect(await testDb.userSession.findUniqueOrThrow({ where: { id: own.id } })).toMatchObject({
@@ -310,7 +310,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("çerez oturumu kapatılamazsa (hata) geçerli giriş yine de başarılı olur", async () => {
-    await makeUser({ username: "kat.hata", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "kat.hata", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     try {
       const deps = {
@@ -337,10 +337,10 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "kat.mr",
       roleCode: "R-KAT",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       passwordHash,
     });
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await testDb.hotelModule.update({
       where: { hotelId_moduleKey: { hotelId: mr, moduleKey: "MINIBAR" } },
       data: { enabled: false },
@@ -363,11 +363,11 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("yanlış şifre, pasif kullanıcı ve bilinmeyen kullanıcı aynı UNAUTHORIZED mesajını alır", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     await makeUser({
       username: "gar2",
       roleCode: "R-GAR",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       passwordHash,
       isActive: false,
     });
@@ -386,8 +386,8 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("6. deneme RATE_LIMITED; başka IP + başka kullanıcı etkilenmez", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
-    await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
+    await makeUser({ username: "gar2", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     const deps = makeDeps();
     for (let i = 0; i < 5; i++) {
       const r = await performLogin(creds("gar1", "yanlis"), deps);
@@ -403,7 +403,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("başarılı giriş kullanıcı adı sayacını sıfırlar: art arda başarılı girişler sınıra takılmaz", async () => {
-    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
     const deps = makeDeps();
     // Distinct IPs so only the username key is under test (the IP key has its own budget).
     for (const n of [1, 2, 3, 4, 5, 6]) {
@@ -417,7 +417,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("kullanıcı adı bazlı sınır: farklı IP'lerden 6. deneme RATE_LIMITED", async () => {
-    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
     const deps = makeDeps();
     for (const n of [1, 2, 3, 4, 5]) {
       const r = await performLogin({ ...creds("kat.mr", "yanlis"), ip: `${n}.${n}.${n}.${n}` }, deps);
@@ -435,7 +435,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("IP haritası dolunca en eski IP atılır, yeni IP geçer; mevcut IP bütçesini korur", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     const { ipAttempts, maxIpEntries } = __rateLimitInternals;
     const live = Date.now() + 60_000;
     for (let i = 0; i < maxIpEntries; i++) ipAttempts.set(`fake-${i}`, { count: 1, resetAt: live });
@@ -461,7 +461,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("süresi dolan IP kayıtları temizlenir; resetRateLimit iki haritayı da boşaltır", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     const { ipAttempts, userAttempts } = __rateLimitInternals;
     for (let i = 0; i < 50; i++) ipAttempts.set(`old-${i}`, { count: 5, resetAt: Date.now() - 1 });
     const res = await performLogin({ ...creds("gar1"), ip: "old-0" }, makeDeps());
@@ -478,7 +478,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("kullanıcı adı haritasında sınır yok: çok sayıda kullanıcı adı varken yeni ad reddedilmez", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     const { userAttempts } = __rateLimitInternals;
     const live = Date.now() + 60_000;
     for (let i = 0; i < 12_000; i++) userAttempts.set(`u${i}`, { count: 1, resetAt: live });
@@ -498,7 +498,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("süresi dolan kullanıcı adı kayıtları yeni girişte temizlenir", async () => {
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR", passwordHash });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
     const { userAttempts } = __rateLimitInternals;
     for (let i = 0; i < 100; i++) userAttempts.set(`stale${i}`, { count: 5, resetAt: Date.now() - 1 });
     await performLogin(creds("gar1", "yanlis"), makeDeps());
@@ -515,7 +515,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "kat1",
       roleCode: "R-KAT",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       passwordHash: `pbkdf2:sha256:1000$tuz$${hex}`,
     });
     const res = await performLogin(creds("kat1"), makeDeps());
@@ -531,11 +531,11 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "gar1",
       roleCode: "R-GAR",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       passwordHash,
     });
-    const o1 = await makeOutlet("MR", "Havuz Bar", "BAR");
-    const o2 = await makeOutlet("MR", "Ana Salon", "SALON");
+    const o1 = await makeOutlet("ROYAL", "Havuz Bar", "BAR");
+    const o2 = await makeOutlet("ROYAL", "Ana Salon", "SALON");
     await addMember(user.id, o1.id);
     await addMember(user.id, o2.id);
 
@@ -563,7 +563,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
   });
 
   it("geçersiz hedef indeksi reddedilir ve oturum açılmaz", async () => {
-    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
+    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
     const res = await performSelectTarget({ userId: user.id, targetIndex: 5, ...ctx }, makeDeps());
     expect(res).toMatchObject({ ok: false, error: { code: "NOT_FOUND" } });
     expect(await testDb.userSession.count()).toBe(0);
@@ -573,7 +573,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "kat1",
       roleCode: "R-KAT",
-      hotelCode: "MR",
+      hotelCode: "ROYAL",
       isActive: false,
     });
     const res = await performSelectTarget({ userId: user.id, targetIndex: 0, ...ctx }, makeDeps());
@@ -584,22 +584,22 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const user = await makeUser({
       username: "dep1",
       roleCode: "R-DEP",
-      extraHotelCodes: ["MR", "MRP"],
+      extraHotelCodes: ["ROYAL", "PREMIUM"],
       passwordHash,
     });
-    await testDb.hotel.update({ where: { code: "MRP" }, data: { isActive: false } });
+    await testDb.hotel.update({ where: { code: "PREMIUM" }, data: { isActive: false } });
     const res = await performLogin(creds("dep1"), makeDeps());
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data.targets.map((t) => t.hotelName)).toEqual(["Merit Royal"]);
     expect(res.data.next).toBe("/depo/havuz");
     const session = await testDb.userSession.findFirstOrThrow({ where: { userId: user.id } });
-    expect(session.hotelId).toBe(await hotelId("MR"));
+    expect(session.hotelId).toBe(await hotelId("ROYAL"));
   });
 
   it("hedef yok: next /secim, boş liste, oturum yok", async () => {
-    await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR", passwordHash });
-    await testDb.hotel.update({ where: { code: "MR" }, data: { isActive: false } });
+    await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL", passwordHash });
+    await testDb.hotel.update({ where: { code: "ROYAL" }, data: { isActive: false } });
     const res = await performLogin(creds("kat1"), makeDeps());
     expect(res).toEqual({ ok: true, data: { next: "/secim", targets: [] } });
     expect(await testDb.userSession.count()).toBe(0);

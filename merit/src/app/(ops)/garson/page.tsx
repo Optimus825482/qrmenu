@@ -5,6 +5,7 @@ import { can } from "@/lib/rbac";
 import { approvals } from "@/modules/order/server/approvals";
 import { orders } from "@/modules/order/server/orders";
 import { tableAssignments } from "@/modules/order/server/tableAssignments";
+import { prisma } from "@/lib/prisma";
 import { waiterCalls } from "@/modules/order/server/waiterCalls";
 import GarsonClient from "./GarsonClient";
 
@@ -14,6 +15,8 @@ export default async function GarsonPage() {
   const ctx = await requireUser();
   if (!ctx.session.outletId || !(await can(ctx, "QS-KUY", "V", ctx.session.hotelId))) redirect("/secim");
   const outletId = ctx.session.outletId;
+  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } });
+  const canCreateOrder = Boolean(outlet?.hasOrdering) && await can(ctx, "QS-KUY", "O", ctx.session.hotelId);
   const [queue, tables, calls, openOrders] = await Promise.all([
     approvals.visibleQueue(ctx, outletId),
     tableAssignments.myTables(ctx),
@@ -22,5 +25,5 @@ export default async function GarsonPage() {
   ]);
   const cards = queue.map((order) => ({ ...order, canApprove: false }));
   for (const card of cards) card.canApprove = await approvals.canApproveOrder(ctx, card);
-  return <GarsonClient outletId={outletId} queue={cards} tables={tables} calls={calls} openOrders={openOrders.filter((order) => tables.some((table) => table.tableId === order.tableId))} />;
+  return <GarsonClient outletId={outletId} queue={cards} tables={tables} calls={calls} canCreateOrder={canCreateOrder} openOrders={openOrders.filter((order) => tables.some((table) => table.tableId === order.tableId))} />;
 }

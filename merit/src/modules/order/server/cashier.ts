@@ -17,13 +17,24 @@ const recentOptionsSchema = z.object({
 });
 
 export type TableBoard = {
+  areas?: { id: string; label: string }[];
   tables: {
     id: string;
     label: string;
+    areaId?: string;
+    areaLabel?: string;
     isActive: boolean;
     waiter?: { id: string; fullName: string };
-    openOrders: { id: string; orderNo: number; status: OrderStatus; ageSec: number }[];
+    openOrders: {
+      id: string;
+      orderNo: number;
+      status: OrderStatus;
+      ageSec: number;
+      totalPrice?: number;
+      itemsCount?: number;
+    }[];
     openCalls: number;
+    callDetail?: { type: string; ageSec: number; note: string | null };
     lastScanAt?: Date;
   }[];
   kpis: {
@@ -56,13 +67,15 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
   const outlet = await outletScope(ctx, outletId, "QS-KAS");
   const today = businessDay(businessDate());
   const now = new Date();
-  const [tables, todayOrders, calls, scans, printer] = await Promise.all([
+  const [tables, todayOrders, calls, scans, printer, areaDefs] = await Promise.all([
     prisma.outletTable.findMany({
       where: { outletId },
       select: {
         id: true,
         label: true,
         isActive: true,
+        areaId: true,
+        area: { select: { id: true, name: true, type: true } },
         assignments: {
           where: { isActive: true },
           orderBy: { createdAt: "desc" },
@@ -74,12 +87,23 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
     }),
     prisma.order.findMany({
       where: { outletId, businessDate: today },
-      select: { id: true, tableId: true, orderNo: true, status: true, createdAt: true, approvedAt: true, prepStartedAt: true, readyAt: true },
+      select: {
+        id: true,
+        tableId: true,
+        orderNo: true,
+        status: true,
+        createdAt: true,
+        approvedAt: true,
+        prepStartedAt: true,
+        readyAt: true,
+        items: { select: { qty: true, unitPrice: true } },
+      },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     prisma.waiterCall.findMany({
       where: { outletId, status: "ACIK" },
-      select: { tableId: true },
+      select: { tableId: true, type: true, createdAt: true, note: true },
+      orderBy: { createdAt: "desc" },
     }),
     prisma.qrScanLog.findMany({
       where: { table: { outletId }, ok: true },
@@ -91,17 +115,42 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       select: { lastSeenAt: true, lastStatus: true },
       orderBy: [{ outletId: "asc" }, { createdAt: "asc" }, { id: "asc" }],
     }),
+    prisma.outletAreaDefinition.findMany({
+      where: { outletId },
+      select: { id: true, name: true, type: true },
+      orderBy: { createdAt: "asc" },
+    }),
   ]);
 
   const callsByTable = new Map<string, number>();
-  for (const call of calls) callsByTable.set(call.tableId, (callsByTable.get(call.tableId) ?? 0) + 1);
+  const callDetailByTable = new Map<string, { type: string; ageSec: number; note: string | null }>();
+  for (const call of calls) {
+    callsByTable.set(call.tableId, (callsByTable.get(call.tableId) ?? 0) + 1);
+    if (!callDetailByTable.has(call.tableId)) {
+      callDetailByTable.set(call.tableId, {
+        type: call.type,
+        ageSec: seconds(call.createdAt, now),
+        note: call.note,
+      });
+    }
+  }
+
   const scanByTable = new Map<string, Date>();
   for (const scan of scans) if (scan.tableId && !scanByTable.has(scan.tableId)) scanByTable.set(scan.tableId, scan.createdAt);
   const ordersByTable = new Map<string, TableBoard["tables"][number]["openOrders"]>();
   for (const order of todayOrders) {
     if (!order.tableId || !OPEN_STATUSES.some((status) => status === order.status)) continue;
     const rows = ordersByTable.get(order.tableId) ?? [];
-    rows.push({ id: order.id, orderNo: order.orderNo, status: order.status, ageSec: seconds(order.createdAt, now) });
+    const totalPrice = order.items.reduce((sum, item) => sum + (Number(item.unitPrice ?? 0) * item.qty), 0);
+    const itemsCount = order.items.reduce((sum, item) => sum + item.qty, 0);
+    rows.push({
+      id: order.id,
+      orderNo: order.orderNo,
+      status: order.status,
+      ageSec: seconds(order.createdAt, now),
+      totalPrice: totalPrice > 0 ? totalPrice : undefined,
+      itemsCount: itemsCount > 0 ? itemsCount : undefined,
+    });
     ordersByTable.set(order.tableId, rows);
   }
   const approvalTimes = todayOrders.flatMap((order) => order.approvedAt ? [seconds(order.createdAt, order.approvedAt)] : []);
@@ -113,14 +162,24 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
   const printerOnline = printer
     ? printer.lastStatus === "OK" && printer.lastSeenAt !== null && now.getTime() - printer.lastSeenAt.getTime() <= printerOnlineAfterMs
     : null;
+
+  const areas = areaDefs.map((a) => ({
+    id: a.id,
+    label: a.name?.trim() || (a.type === "ACIK" ? "Açık alan" : "Kapalı alan"),
+  }));
+
   return {
+    areas,
     tables: tables.map((table) => ({
       id: table.id,
       label: table.label,
+      areaId: table.areaId,
+      areaLabel: table.area?.name?.trim() || (table.area?.type === "ACIK" ? "Açık alan" : "Kapalı alan"),
       isActive: table.isActive,
       ...(table.assignments[0] ? { waiter: table.assignments[0].user } : {}),
       openOrders: ordersByTable.get(table.id) ?? [],
       openCalls: callsByTable.get(table.id) ?? 0,
+      ...(callDetailByTable.has(table.id) ? { callDetail: callDetailByTable.get(table.id)! } : {}),
       ...(scanByTable.has(table.id) ? { lastScanAt: scanByTable.get(table.id)! } : {}),
     })),
     kpis: {

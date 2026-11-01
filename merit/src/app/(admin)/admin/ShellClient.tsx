@@ -122,6 +122,7 @@ export function ShellClient({
               <Window key={id} id={id} hotels={hotels} userName={user.fullName} />
             ))}
           </div>
+          <div id="xp-dialog-root" className="xp-dialog-root" />
           <Taskbar
             startOpen={startOpen}
             onToggleStart={() => setStartOpen((o) => !o)}

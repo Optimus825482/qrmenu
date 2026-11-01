@@ -16,7 +16,7 @@ import { orderNo } from "./orderNo";
 /** Guest orders: 10 per minute per IP. */
 export const orderLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
 
-const LOCALES = ["tr", "en", "de", "ru", "ar"] as const;
+const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
 const UNKNOWN_ITEM = "Bilinmeyen öğe";
 
 /** Strips HTML tags and control characters (line breaks become spaces), then trims. */

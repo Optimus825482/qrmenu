@@ -204,7 +204,10 @@ async function transition(
       // Default hook enqueues the ESC/POS receipt (no printer → print.failed + cashier notice);
       // an explicit opts.print (tests, future order kinds) keeps overriding it.
       if (opts.print) await opts.print(tx, updated);
-      else await printJobs.enqueueReceipt(tx, updated);
+      else {
+        await printJobs.enqueueReceipt(tx, updated);
+        await printJobs.enqueueKitchen(tx, updated);
+      }
     }
     await publish(
       {

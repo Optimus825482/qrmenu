@@ -31,7 +31,7 @@ afterAll(async () => {
 });
 
 async function makePrinter(name: string, over: Record<string, unknown> = {}) {
-  return testDb.printer.create({ data: { hotelId: await hotelId("MR"), name, ip: "192.168.1.50", port: 9100, ...over } });
+  return testDb.printer.create({ data: { hotelId: await hotelId("ROYAL"), name, ip: "192.168.1.50", port: 9100, ...over } });
 }
 
 async function makeJob(s: OrderSetup, printerId: string, over: Record<string, unknown> = {}) {
@@ -161,7 +161,7 @@ describe("printJobs.claim", () => {
     const printer = await makePrinter("Y1");
     const j1 = await makeJob(s, printer.id);
     const j2 = await makeJob(s, printer.id);
-    const claimed = await printJobs.claim("MR", 10);
+    const claimed = await printJobs.claim("ROYAL", 10);
     // Kuyruk sırası created_at'tir; iki iş aynı milisaniyede doğarsa eşitlik bozulur, küme karşılaştır.
     expect([...claimed.map((j) => j.id)].sort()).toEqual([j1.id, j2.id].sort());
     expect(claimed[0]).toMatchObject({
@@ -173,7 +173,7 @@ describe("printJobs.claim", () => {
       ["BASILIYOR", 1, true],
       ["BASILIYOR", 1, true],
     ]);
-    expect(await printJobs.claim("MR", 10)).toEqual([]);
+    expect(await printJobs.claim("ROYAL", 10)).toEqual([]);
   });
 
   it("bilinmeyen otel kodu NOT_FOUND", async () => {
@@ -186,7 +186,7 @@ describe("printJobs.report", () => {
     const s = await orderSetup();
     const printer = await makePrinter("Y1");
     const job = await makeJob(s, printer.id);
-    await printJobs.claim("MR");
+    await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: true });
     const row = await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } });
     expect(row).toMatchObject({ status: "BASILDI" });
@@ -206,19 +206,19 @@ describe("printJobs.report", () => {
     await openSession(kas.user.id, s.outlet.id, "R-KAS");
     const job = await makeJob(s, printer.id);
 
-    await printJobs.claim("MR");
+    await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: false, error: "yazıcı kapalı" });
     expect(await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).toMatchObject({
       status: "KUYRUKTA",
       error: "yazıcı kapalı",
     });
 
-    await printJobs.claim("MR");
+    await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: false, error: "yazıcı kapalı" });
     expect((await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).status).toBe("KUYRUKTA");
     expect(await testDb.notification.count({ where: { type: "print.failed" } })).toBe(0);
 
-    await printJobs.claim("MR");
+    await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: false, error: "yazıcı kapalı" });
     const failed = await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } });
     expect(failed).toMatchObject({ status: "HATA", attempts: 3 });

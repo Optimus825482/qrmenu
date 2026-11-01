@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Kullanıcı Giriş &amp; Oturum Prototipi (Otel → Outlet → Online)</title>
+<style>
+:root{--navy:#0d2740;--navy2:#153b5e;--gold:#a97c33;--gold2:#c9a45c;--ink:#182533;--muted:#647488;--line:#e2e9f1;--soft:#f5f9fc;--bg:#eef2f7;
+  --blue:#1d6fb8;--blue-soft:#eaf3fb;--ok:#18855a;--ok-soft:#e9f7f0;--warn:#b8791a;--warn-soft:#fdf4e3;--err:#b6382c;--err-soft:#fdeeec;--violet:#6d4bb5;--violet-soft:#f1ecfb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "Segoe UI",Tahoma,Verdana,sans-serif;display:flex;gap:26px;padding:26px;align-items:flex-start;flex-wrap:wrap}
+.side{max-width:340px}
+.side h1{font-size:19px;margin:0 0 6px;color:var(--navy)}
+.side p{font-size:13px;color:var(--muted);margin:0 0 14px}
+.side .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:13px;margin-bottom:11px}
+.side .card b{display:block;font-size:12.8px;margin-bottom:5px;color:var(--navy)}
+.side .card span{font-size:12.4px;color:var(--muted)}
+.side .sbtn{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 11px;font:inherit;font-size:13px;cursor:pointer;margin-bottom:7px;color:#2b3f57}
+.side .sbtn.on{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d;font-weight:600}
+.phone{width:392px;flex:0 0 392px;height:792px;border:11px solid #0c2038;border-radius:38px;background:#fff;overflow:hidden;position:relative;box-shadow:0 18px 50px rgba(12,32,56,.32)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:22px;background:#0c2038;border-radius:0 0 14px 14px;z-index:6}
+.pstat{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;font-size:11.4px;color:#54697f}
+.pbar{background:var(--navy);color:#fff;padding:11px 15px;display:flex;align-items:center;gap:10px;position:relative;z-index:4}
+.pbar b{font-size:14.5px;font-weight:600}
+.pbar .sp{flex:1}
+.pbar .tag{font-size:10.4px;background:rgba(255,255,255,.15);border-radius:20px;padding:2px 8px}
+.pbody{height:calc(100% - 32px - 54px);overflow:auto;padding:15px}
+.pnav{height:54px;border-top:1px solid var(--line);position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;background:#fff}
+.pnav button{background:none;border:none;font:inherit;font-size:12px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.pnav button.on{color:var(--navy);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:11px}
+.ct{font-size:13.4px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+label.f{display:block;font-size:11.4px;color:var(--muted);margin-bottom:4px}
+input,select{font:inherit;font-size:13.6px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;width:100%;background:#fff}
+.fld{margin-bottom:11px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 13px;font:inherit;font-size:13.6px;cursor:pointer;color:#2b3f57;width:100%;margin-bottom:8px}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.btn.err{background:var(--err);border-color:var(--err);color:#fff;font-weight:600}
+.btn.sm{width:auto;padding:6px 11px;font-size:12.2px;margin:0}
+.tag{display:inline-block;font-size:10.6px;border-radius:6px;padding:2px 7px;border:1px solid var(--line);background:var(--soft);color:#42566d}
+.tag.ok{border-color:#bfe3d1;background:var(--ok-soft);color:#0f6a45}
+.tag.warn{border-color:#f0dcb2;background:var(--warn-soft);color:#8c5c12}
+.tag.err{border-color:#f3cdc7;background:var(--err-soft);color:#93291e}
+.tag.blue{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d}
+.tag.violet{border-color:#d9cdf5;background:var(--violet-soft);color:#543a92}
+.tag.gold{border-color:#ecdcb6;background:#fbf6ea;color:#8a6519}
+.note{border-left:3px solid var(--blue);background:var(--blue-soft);padding:9px 11px;border-radius:0 9px 9px 0;font-size:12.2px;margin:0 0 11px}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.note.ok{border-color:var(--ok);background:var(--ok-soft)}
+.note.err{border-color:var(--err);background:var(--err-soft)}
+.note.violet{border-color:var(--violet);background:var(--violet-soft)}
+.opt{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:9px;cursor:pointer;background:#fff}
+.opt:hover{border-color:#c5ddf3}
+.opt.sel{border-color:var(--ok);background:var(--ok-soft)}
+.opt .ic{width:36px;height:36px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;font-size:17px}
+.opt .nm{flex:1}
+.opt .nm b{font-size:13.4px;display:block}
+.opt .nm div{font-size:11.6px;color:var(--muted)}
+.big{font-size:26px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.prog{height:9px;background:#e9eff6;border-radius:6px;overflow:hidden;margin:9px 0 5px}
+.prog i{display:block;height:100%;background:var(--ok);transition:width .6s linear}
+.mono{font-family:Consolas,monospace;font-size:11.6px}
+.feed div{font-size:11.8px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.feed div:last-child{border-bottom:none}
+.steps{display:flex;gap:6px;font-size:11.2px;flex-wrap:wrap}
+.steps .s{border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--soft)}
+.steps .s.on{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d;font-weight:600}
+.pill{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 9px;background:var(--soft);color:var(--muted)}
+.live{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;animation:pul 1.4s infinite}
+@keyframes pul{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}
+#toast{position:fixed;right:22px;bottom:22px;background:#0d2740;color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none;box-shadow:0 10px 26px rgba(0,0,0,.3);max-width:340px}
+#toast.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="side">
+  <h1>MENNN · Kullanıcı Giriş &amp; Oturum</h1>
+  <p>Personel giriş akışının prototipi: şifreden <b>hemen sonra</b> oturum açılacak outlet veya minibar sistemi seçilir. Seçim yapılmadan oturum başlamaz.</p>
+  <div class="card">
+    <b>Demo kullanıcılar</b>
+    <span>• <b>deniz.yucel</b> (şifre 1234) — 4 outlet, 2 otel; girişten sonra birini seçer<br>
+    • <b>elif.demir</b> (şifre 1234) — Merit Royal minibar sistemi<br>
+    • <b>zeynep.arslan</b> (şifre 1234) — Premium minibar sisteminde iki bölge; birini seçer<br>
+    • <b>burak.tuna</b> (şifre 1234) — hiç atama yok</span>
+  </div>
+  <div class="card">
+    <b>Gösterim hızı</b>
+    <select id="speed" onchange="setSpeed(this.value)">
+      <option value="1">1× · gerçek zamanlı (480 dk)</option>
+      <option value="600" selected>600× · 480 dk → 48 sn</option>
+      <option value="3600">3600× · 480 dk → 8 sn</option>
+    </select>
+    <div style="font-size:12.2px;color:var(--muted);margin-top:7px">Maksimum süre ve uyarı eşiği komuta merkezi <b>Ayarlar</b> bölümünden değiştirilir.</div>
+  </div>
+  <div id="screens"></div>
+  <div class="card">
+    <b>Oturum kuralları</b>
+    <span>Tek cihaz kuralı açık · süre bitmeden 60 dk önce uyarı · süre aşımında otomatik çıkış ·
+    vardiya sonunda zorunlu çıkış · tüm oturum hareketleri denetim günlüğünde.</span>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="pstat"><span id="pClock">08:58</span><span class="mono" id="pWho">MENNN · PERSONEL GİRİŞİ</span><span>▮▮ 84%</span></div>
+  <div class="pbar"><b id="sTitle">Giriş</b><span class="sp"></span><span class="tag" id="sTag">—</span></div>
+  <div class="pbody" id="screen"></div>
+  <div class="pnav">
+    <button id="btnHome" onclick="reset()">⟲ Baştan Başlat</button>
+    <button id="btnOut" class="on" onclick="manualLogout()">⏻ Çıkış Yap</button>
+  </div>
+</div>
+
+<script>
+/* ==================== veri ==================== */
+const MODN = {QR_MENU:'QR Menü', QR_ORDER:'QR Sipariş', QR_ROOM_SERVICE:'QR Oda Servisi', MINIBAR:'Minibar Takip'};
+const MODI = {QR_MENU:'🍽', QR_ORDER:'🛎', QR_ROOM_SERVICE:'🛏', MINIBAR:'📦'};
+const HOTELN = {H1:'Merit Royal', H2:'Merit Royal Diamond', H3:'Merit Royal Premium'};
+const OUTLETN = {
+  MO5:{n:'Havuz Bar İstasyonu', mod:'QR_ORDER', h:'H1'},
+  MO6:{n:'Piano Bar İstasyonu', mod:'QR_ORDER', h:'H1'},
+  MO8:{n:'Oda Servisi Birimi (MR)', mod:'QR_ROOM_SERVICE', h:'H1'},
+  MO11:{n:'Merit Royal · 1–2. Kat', mod:'MINIBAR', h:'H1'},
+  MO3:{n:'Diamond Infinity Pool', mod:'QR_MENU', h:'H2'},
+  MO13:{n:'Premium · Merkez Depo', mod:'MINIBAR', h:'H3'},
+  MO14:{n:'Premium · 1–5. Kat', mod:'MINIBAR', h:'H3'}
+};
+const DEMO = {
+  'deniz.yucel':{name:'Deniz Yücel', pass:'1234', mfa:true, role:'Şef Garson / Süpervizör',
+    assign:[{h:'H1',o:'MO5',r:'Şef Garson / Süpervizör'},{h:'H1',o:'MO6',r:'Şef Garson / Süpervizör'},
+            {h:'H1',o:'MO8',r:'Oda Servisi Görevlisi'},{h:'H2',o:'MO3',r:'Garson'}]},
+  'elif.demir':{name:'Elif Demir', pass:'1234', mfa:false, role:'Kat Sorumlusu',
+    assign:[{h:'H1',o:'MO11',r:'Kat Sorumlusu'}]},
+  'zeynep.arslan':{name:'Zeynep Arslan', pass:'1234', mfa:false, role:'Kat Sorumlusu',
+    assign:[{h:'H3',o:'MO14',r:'Kat Sorumlusu'},{h:'H3',o:'MO13',r:'Depo Sorumlusu'}]},
+  'burak.tuna':{name:'Burak Tuna', pass:'1234', mfa:false, role:'—', assign:[]}
+};
+const CFG = {maxMin:480, warnMin:60, singleOutletAuto:false, singleDevice:true};   // tek hedefte de seçim ekranı zorunlu
+const NOTIFS = {
+  QR_ORDER:[{k:'ok',t:'Yeni sipariş onayı bekliyor',d:'Ş-14 · Zephyros Cooler ×2, Karpuz & Beyaz Peynir ×1'},
+            {k:'warn',t:'Eskalasyon',d:'M-06 masası 90 saniyedir yanıtsız — süpervizör hedefi'},
+            {k:'violet',t:'VIP cabana talebi',d:'CAB-03 · butler öncelikli akış'}],
+  MINIBAR:[{k:'violet',t:'Kişiselleştirme talebi',d:'Oda 105 · günde 1 hak · 2 ürün artır / 1 azalt'},
+           {k:'warn',t:'DND uyarısı',d:'Oda 107 · ara kayıt 120 dk doldu, yeniden kontrol'},
+           {k:'ok',t:'Zimmet onayı',d:'Hakan Yıldız zimmet dağıtımını onayladı'}],
+  QR_ROOM_SERVICE:[{k:'ok',t:'Yeni oda servisi talebi',d:'Oda 312 · Kulüp Sandviç ×1, Ayran ×1'},
+                   {k:'warn',t:'SLA yaklaşıyor',d:'Oda 508 · 27/30 dk'},
+                   {k:'violet',t:'Telefon teyidi bekliyor',d:'Oda 312 · opsiyonel adım'}],
+  QR_MENU:[{k:'ok',t:'Garson çağrısı',d:'Ş-31 · Lagoon Aile Havuzu'},
+           {k:'blue',t:'QR okutuldu',d:'Ş-08 · masaya yönlendirme yapıldı'}]
+};
+/* ==================== durum ==================== */
+const S = {scr:'login', user:null, hotel:null, outlet:null, online:false, sec:0, speed:600,
+           expired:false, feed:[], warnShown:false, sessions:0};
+const el = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function toast(m){ const x=el('toast'); if(!x) return; x.textContent=m; x.classList.add('show'); clearTimeout(x._t); x._t=setTimeout(()=>x.classList.remove('show'),2400); }
+function mmss(s){ const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
+function nowHm(){ return new Date().toTimeString().slice(0,5); }
+function setSpeed(v){ S.speed=parseInt(v,10); render(); }
+function feedPush(t){ S.feed.unshift({t:nowHm(), x:t}); if(S.feed.length>7) S.feed.pop(); }
+
+/* ==================== ekranlar ==================== */
+function scLogin(){
+  return `
+  <div class="card">
+    <div class="ct">Personel girişi</div>
+    <div class="fld"><label class="f">Kullanıcı adı</label><input id="lu" value="deniz.yucel"></div>
+    <div class="fld"><label class="f">Şifre</label><input id="lp" type="password" value="1234"></div>
+    <div class="fld"><label class="f">MFA doğrulama kodu (yalnızca MFA açık kullanıcılarda)</label><input id="lm" value="482 913" inputmode="numeric"></div>
+    <button class="btn pri" onclick="doLogin()">Giriş Yap</button>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn sm" onclick="quick('deniz.yucel')">deniz.yucel · 4 outlet</button>
+      <button class="btn sm" onclick="quick('elif.demir')">elif.demir · tek outlet</button>
+      <button class="btn sm" onclick="quick('zeynep.arslan')">zeynep.arslan · 2 minibar bölgesi</button>
+      <button class="btn sm" onclick="quick('burak.tuna')">burak.tuna · atamasız</button>
+    </div>
+  </div>
+  <div class="note">Girişten hemen sonra size yazılmış outletler ve minibar sistemi listelenir. Oturum, birini seçene kadar açılmaz. Otel, seçtiğiniz hedefin bağlı olduğu tesistir; ayrı bir otel adımı yoktur.</div>
+  <div class="steps">
+    <span class="s on">1 · Giriş</span><span class="s">2 · Outlet veya minibar seç</span><span class="s">3 · Çevrimiçi</span>
+  </div>`;
+}
+function quick(u){ el('lu').value=u; el('lp').value='1234'; doLogin(); }
+function doLogin(){
+  const u=el('lu').value.trim(), p=el('lp').value.trim();
+  const d=DEMO[u];
+  if(!d || d.pass!==p){ toast('Kullanıcı adı veya şifre hatalı.'); return; }
+  if(d.mfa && !el('lm').value.trim()){ toast('MFA kodu gerekli.'); return; }
+  S.user=u; S.hotel=null; S.outlet=null; S.online=false; S.sec=0; S.expired=false; S.warnShown=false;
+  S.feed=[]; S.sessions++;
+  if(d.assign.length===0){ S.scr='noassign'; feedPush('Giriş yapıldı: '+u); render(); return; }
+  S.scr='outlet'; S.choice=null; render(); toast('Hoş geldiniz '+d.name+' · oturum açacağınız outleti seçin.');
+}
+function scHotel(){
+  const d=DEMO[S.user], hotels=[...new Set(d.assign.map(a=>a.h))];
+  return `
+  <div class="note ok"><b>${esc(d.name)}</b> · ${hotels.length} otel · ${d.assign.length} outlet ataması · MFA ${d.mfa?'açık':'kapalı'}</div>
+  <div class="ct">Adım 1 · Otel seçimi</div>
+  ${hotels.map(h=>{
+    const c=d.assign.filter(a=>a.h===h).length;
+    return `<div class="opt ${S.hotel===h?'sel':''}" onclick="pickHotel('${h}')">
+      <div class="ic">🏨</div>
+      <div class="nm"><b>${esc(HOTELN[h])}</b><div>${c} outlet ataması · ${[...new Set(d.assign.filter(a=>a.h===h).map(a=>OUTLETN[a.o].mod))].map(m=>MODN[m]).join(', ')}</div></div>
+      <span class="tag">${S.hotel===h?'seçildi':'seç'}</span></div>`;
+  }).join('')}
+  <div class="note">Otel seçimi zorunludur; kullanıcı yalnızca o oteldeki atamalarını görür. Diğer otelin verisi görünmez.</div>`;
+}
+function pickHotel(h){ S.hotel=h; S.outlet=null; S.scr='outlet'; render(); toast('Otel seçildi: '+HOTELN[h]); }
+function scOutlet(){
+  const d=DEMO[S.user];
+  const hotels=[...new Set(d.assign.map(a=>a.h))];
+  return `
+  <div class="steps" style="margin-bottom:12px">
+    <span class="s on">1 · Giriş</span><span class="s on">2 · Outlet veya minibar seç</span><span class="s">3 · Çevrimiçi</span>
+  </div>
+  <div class="note warn"><b>Seçim zorunludur.</b> Girişten hemen sonra oturum açacağınız hedefi seçin. Otel, seçtiğiniz kaydın bağlı olduğu tesistir.</div>
+  ${hotels.map(h=>{
+    const rows=d.assign.map((a,i)=>({a,i})).filter(x=>x.a.h===h);
+    const outlets=rows.filter(x=>OUTLETN[x.a.o].mod!=='MINIBAR');
+    const minibar=rows.filter(x=>OUTLETN[x.a.o].mod==='MINIBAR');
+    const row=(x,kind)=>`<div class="opt" onclick="pickSession(${x.i})">
+      <div class="ic">${kind==='MINIBAR'?'📦':MODI[OUTLETN[x.a.o].mod]}</div>
+      <div class="nm"><b>${esc(OUTLETN[x.a.o].n)}</b><div>${kind==='MINIBAR'?'Minibar sistemi':'Outlet'} · rol: ${esc(x.a.r)}</div></div>
+      <span class="tag">oturum aç</span></div>`;
+    return `<div class="ct">${esc(HOTELN[h])}</div>
+      ${outlets.map(x=>row(x,'OUTLET')).join('')}
+      ${minibar.length?`<div class="mono" style="margin:4px 0 6px;color:var(--muted)">Minibar sistemi</div>${minibar.map(x=>row(x,'MINIBAR')).join('')}`:''}`;
+  }).join('')}`;
+}
+function pickSession(i){
+  const a=DEMO[S.user].assign[i];
+  if(!a){ toast('Outlet seçiniz.'); return; }
+  S.choice=a; S.hotel=a.h; S.outlet=a.o;
+  goOnline();
+}
+function pickOutlet(o){
+  const i=DEMO[S.user].assign.findIndex(a=>a.o===o);
+  pickSession(i<0?0:i);
+}
+function goOnline(){
+  if(!S.outlet){ toast('Outlet seçiniz.'); return; }
+  S.online=true; S.sec=0; S.warnShown=false; S.scr='online';
+  const a=DEMO[S.user].assign.find(x=>x.o===S.outlet);
+  feedPush('Oturum açıldı · '+OUTLETN[S.outlet].n+' · rol: '+a.r);
+  render(); toast('Çevrimiçisiniz · bildirimler açık.');
+}
+function scOnline(){
+  const a=DEMO[S.user].assign.find(x=>x.o===S.outlet), o=OUTLETN[S.outlet];
+  const maxSec=CFG.maxMin*60, remain=Math.max(0,maxSec-S.sec), pc=Math.min(100,(S.sec/maxSec)*100);
+  const notifs=NOTIFS[o.mod]||[];
+  return `
+  <div class="card" style="border-color:#bfe3d1;background:var(--ok-soft)">
+    <div class="ct"><span class="live"></span> Çevrimiçisiniz</div>
+    <div style="font-size:12.6px"><b>${esc(DEMO[S.user].name)}</b> · ${esc(a.r)}</div>
+    <div class="mono" style="margin-top:4px">${esc(HOTELN[S.hotel])} · ${MODI[o.mod]} ${esc(o.n)}</div>
+    <div class="mono" style="font-size:11.2px;margin-top:2px">giriş saati ${nowHm()} · oturum #${S.sessions} · cihaz: bu cihaz</div>
+  </div>
+  <div class="card">
+    <div class="ct">Oturum süresi</div>
+    <div class="big">${mmss(remain)}</div>
+    <div class="mono" style="color:var(--muted)">kalan süre · maksimum ${CFG.maxMin} dk · uyarı ${CFG.warnMin} dk önce</div>
+    <div class="prog"><i style="width:${pc}%;background:${pc>85?'var(--warn)':'var(--ok)'}"></i></div>
+    <div class="mono" style="font-size:11.2px;color:var(--muted)">geçen süre ${mmss(S.sec)} · sistemde kalma süreniz otomatik izleniyor</div>
+    <div style="display:flex;gap:7px;margin-top:9px">
+      <button class="btn sm" onclick="S.sec=Math.max(0,CFG.maxMin*60-CFG.warnMin*60-5);render();toast('Demo: uyarı eşiğine getirildi.')">Uyarı eşiğine getir</button>
+      <button class="btn sm" onclick="S.sec=CFG.maxMin*60-1;render();toast('Demo: süre bitmek üzere.')">Süreyi bitir</button>
+    </div>
+  </div>
+  ${S.sec>=maxSec-CFG.warnMin*60?`<div class="note warn"><b>Oturum süresi uyarısı.</b> Süreniz dolmak üzere; çalışmanızı kaydedin.
+  Süre dolarsa sistem otomatik çıkış yapacaktır.</div>`:''}
+  <div class="card">
+    <div class="ct">Bildirimler <span class="tag blue">${esc(MODN[o.mod])}</span></div>
+    <div class="feed">
+      ${notifs.map(n=>`<div><span class="tag ${n.k==='ok'?'ok':n.k==='warn'?'warn':n.k==='blue'?'blue':'violet'}">${n.k==='ok'?'yeni':n.k==='warn'?'uyarı':n.k==='blue'?'bilgi':'talep'}</span>
+        &nbsp;<b>${esc(n.t)}</b><div class="mono" style="color:var(--muted)">${esc(n.d)}</div></div>`).join('')}
+    </div>
+    <div class="note" style="margin-top:10px;margin-bottom:0">Bildirimler yalnızca <b>çevrimiçi olduğunuz outlete</b> göre gelir; akıllı saate ve ekranınıza da iletilir.</div>
+  </div>
+  <div class="card">
+    <div class="ct">Oturum hareketleri</div>
+    <div class="feed">${S.feed.map(f=>`<div><span class="mono">${esc(f.t)}</span> · ${esc(f.x)}</div>`).join('')||'<div class="muted">kayıt yok</div>'}</div>
+  </div>
+  <button class="btn err" onclick="manualLogout()">Çıkış Yap (manuel)</button>
+  <button class="btn" onclick="switchOutlet()">Başka outlet seç (oturum yeniden açılır)</button>`;
+}
+function switchOutlet(){
+  if(DEMO[S.user].assign.length<2){ toast('Başka outlet atamanız yok.'); return; }
+  S.online=false; S.choice=null; S.outlet=null; S.sec=0; S.warnShown=false; S.scr='outlet';
+  feedPush('Oturum kapatıldı · yeni outlet seçimi bekleniyor');
+  render(); toast('Oturum açacağınız outleti seçin.');
+}
+function manualLogout(){
+  if(S.online){ feedPush('Kullanıcı manuel çıkış yaptı'); }
+  S.online=false;
+  if(S.user){ S.scr='closed'; render(); toast('Oturum kapatıldı. Çevrimdışısınız.'); } else { reset(); }
+}
+function scClosed(){
+  return `
+  <div class="card" style="border-color:#bfe3d1;background:var(--ok-soft)">
+    <div class="ct">⏻ Oturum kapatıldı</div>
+    <div style="font-size:12.6px">Çevrimdışı durumdasınız. Komuta merkezi kullanıcı takip ekranında bu oturum <b>kapandı</b> olarak görünür.</div>
+  </div>
+  <div class="card">
+    <div class="ct">Son oturum özeti</div>
+    <div class="feed">${S.feed.map(f=>`<div><span class="mono">${esc(f.t)}</span> · ${esc(f.x)}</div>`).join('')||'<div class="muted">kayıt yok</div>'}</div>
+  </div>
+  <button class="btn pri" onclick="reset()">Yeniden Giriş Yap</button>`;
+}
+function scNoassign(){
+  return `
+  <div class="note err"><b>Hiç outlet ataması yok.</b> Kullanıcı sistemde kayıtlı fakat hiçbir modülde outlet ekibine atanmamış;
+  bu nedenle otel/outlet seçimi ve operasyonel yetkiler görünmez.</div>
+  <div class="card">
+    <div class="ct">Ne yapılmalı?</div>
+    <ul style="margin:0;padding-left:18px;font-size:12.6px">
+      <li>Komuta merkezi → <b>Outlet Ekipleri &amp; Kullanıcı Atama</b> ekranından kullanıcı seçilir.</li>
+      <li>Modül ve outlet seçilip <b>modül rolü</b> atanır (ör. QR Sipariş · Garson).</li>
+      <li>Atama sonrası kullanıcı giriş yaptığında otel → outlet seçimi ekranını görür.</li>
+    </ul>
+  </div>
+  <button class="btn" onclick="reset()">Başka kullanıcıyla giriş</button>`;
+}
+function scExpired(){
+  return `
+  <div class="note err"><b>Oturum otomatik kapatıldı — süre aşımı.</b>
+  Maksimum online süre (${CFG.maxMin} dk) aşıldığı için sistem çıkış yaptırdı ve kullanıcı <b>çevrimdışı</b> duruma alındı.</div>
+  <div class="card">
+    <div class="ct">Oturum kaydı</div>
+    <div class="feed">
+      ${S.feed.map(f=>`<div><span class="mono">${esc(f.t)}</span> · ${esc(f.x)}</div>`).join('')}
+      <div><span class="mono">${nowHm()}</span> · sebep: <b>SURE_ASIMI</b> · kaynak: sistem (otomatik)</div>
+    </div>
+    <div class="note" style="margin-top:10px;margin-bottom:0">Bu kayıt komuta merkezinde "otomatik çıkış" olarak raporlanır;
+    tekrarlayan süre aşımları vardiya planı optimizasyonunda kullanılır.</div>
+  </div>
+  <button class="btn pri" onclick="S.expired=false;reset()">Tekrar Giriş Yap</button>`;
+}
+/* ==================== yönlendirici + sayaç ==================== */
+const SCREENS={login:{t:'Giriş',g:'—',f:scLogin}, hotel:{t:'Outlet Seçimi',g:'adım 2/3',f:scOutlet},
+  outlet:{t:'Outlet Seçimi',g:'adım 2/3',f:scOutlet}, online:{t:'Çevrimiçi Oturum',g:'adım 3/3',f:scOnline},
+  closed:{t:'Oturum Kapandı',g:'çevrimdışı',f:scClosed}, noassign:{t:'Atama Yok',g:'yetki yok',f:scNoassign},
+  expired:{t:'Süre Aşımı',g:'otomatik çıkış',f:scExpired}};
+function render(){
+  const s=SCREENS[S.scr]||SCREENS.login;
+  el('sTitle').textContent=s.t; el('sTag').textContent=s.g;
+  el('screen').innerHTML=s.f();
+  el('pWho').textContent = S.user ? (DEMO[S.user].name+' · '+DEMO[S.user].user).toUpperCase() : 'MENNN · PERSONEL GİRİŞİ';
+  el('btnOut').textContent = S.online? '⏻ Çıkış Yap' : '⏻ Kapat';
+}
+function reset(){ S.scr='login'; S.user=null; S.hotel=null; S.outlet=null; S.online=false; S.sec=0;
+  S.feed=[]; S.warnShown=false; S.expired=false; render(); }
+/* saniye sayacı — gösterim hızına göre ilerler */
+setInterval(function(){
+  el('pClock').textContent = nowHm();
+  if(!S.online) return;
+  S.sec += 1*S.speed;                       // 1 sn'de 'speed' saniyelik oturum ilerlemesi
+  const maxSec=CFG.maxMin*60, warnAt=maxSec-CFG.warnMin*60;
+  if(S.sec>=warnAt && !S.warnShown){ S.warnShown=true; feedPush('Süre uyarısı gönderildi ('+CFG.warnMin+' dk kaldı)'); }
+  if(S.sec>=maxSec){
+    S.online=false; feedPush('Maksimum online süre aşıldı · otomatik çıkış');
+    S.sec=maxSec; S.scr='expired'; render(); toast('Süre aşımı: oturum otomatik kapatıldı.'); return;
+  }
+  if(S.scr==='online') render();
+}, 1000);
+el('screens').innerHTML = '<div class="card"><b>Ekranlar</b></div>' + [
+  ['login','Giriş ekranı'],['outlet','Outlet veya minibar seçimi'],['online','Çevrimiçi oturum (süre sayacı)']
+].map(([k,v])=>'<button class="sbtn" onclick="jump(\''+k+'\')">'+v+'</button>').join('');
+function jump(k){
+  if(k==='login'){ reset(); return; }
+  if(!S.user) { S.user='deniz.yucel'; S.sessions++; }
+  if(k==='outlet' || k==='hotel'){ S.choice=null; S.online=false; S.scr='outlet'; }
+  if(k==='online'){ S.choice=DEMO[S.user].assign[0]; S.hotel=S.choice.h; S.outlet=S.choice.o; S.online=true; S.sec=0; S.warnShown=false; S.scr='online'; }
+  render();
+}
+render();
+
+/* ---- hızlı demo: ?auto=1 → doğrudan çevrimiçi oturum, hızlandırılmış süre ----
+   Örnek: oturum.html?auto=1&kullanici=elif.demir&hiz=3600  (480 dk → 8 sn)   */
+(function(){
+  const P = new URLSearchParams(location.search);
+  if(P.get('auto')!=='1') return;
+  const u = DEMO[P.get('kullanici')] ? P.get('kullanici') : 'elif.demir';
+  S.user=u; S.sessions++;
+  const first=DEMO[u].assign[0];
+  if(!first){ S.scr='noassign'; render(); return; }
+  S.choice=first; S.hotel=first.h; S.outlet=first.o;
+  S.speed=parseInt(P.get('hiz')||'3600',10);
+  const s=el('speed'); if(s) s.value=String(S.speed);
+  goOnline();
+  toast('Hızlı demo: '+DEMO[u].name+' · '+OUTLETN[first.o].n+' · hız '+S.speed+'×');
+})();
+</script>
+</body>
+</html>

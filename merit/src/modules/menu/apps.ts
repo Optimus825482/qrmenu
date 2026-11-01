@@ -20,13 +20,13 @@ export function registerMenuApps(): void {
   });
   registerApp({
     id: "menu.tema",
-    title: "Tema Yönetimi",
+    title: "Menü Tasarım Merkezi",
     icon: "tema",
     moduleKey: "QR_MENU",
     screenCode: "QM-TEM",
     category: "QR_MENU",
     needsHotel: false,
-    window: { w: 760, h: 520, minW: 600, minH: 420 },
+    window: { w: 1480, h: 900, minW: 880, minH: 580 },
     kind: "component",
     component: () => import("./ui/ThemeManager").then((m) => ({ default: m.ThemeManager })),
     mobile: "none",

@@ -175,9 +175,17 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
 
   await closeForeignCookieSession(user.id, deps);
 
+  if (user.mustChangePassword) {
+    await deps.setCookie({ userId: user.id, pendingPasswordChange: true }, { ttlSeconds: PENDING_COOKIE_TTL_SECONDS });
+    return { next: "/sifre-degistir", targets: [] };
+  }
+
   const targets = await listTargets(user.id);
   const auto = await getSetting("session.singleTargetAuto");
-  if (targets.length === 1 && auto) {
+  // Outlet staff explicitly choose their work outlet on the login screen, even if they currently
+  // have only one assignment. This keeps kiosk and waiter sessions unambiguous when assignments
+  // change and makes the outlet context visible before opening the operational screen.
+  if (targets.length === 1 && auto && targets[0].kind !== "OUTLET") {
     const next = await startSession(user.id, targets[0], input, deps);
     return { next, targets };
   }

@@ -19,9 +19,14 @@ export const OUTLET_TYPE_LABELS = {
 } as const;
 
 export const PRICE_DISPLAY_LABELS = {
-  INHERIT: "Menü ayarı",
-  SHOW: "Göster",
-  HIDE: "Gizle",
+  SHOW: "Açık (Fiyatlar menüde gösterilir)",
+  HIDE: "Kapalı (Fiyatlar gizlenir)",
+  INHERIT: "Menü şablonuna göre",
+} as const;
+
+export const OUTLET_AREA_LABELS = {
+  ACIK: "Açık alan",
+  KAPALI: "Kapalı alan",
 } as const;
 
 export const MODULE_LABELS = {

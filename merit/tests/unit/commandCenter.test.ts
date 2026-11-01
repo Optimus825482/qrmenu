@@ -25,14 +25,14 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function sysCtx(extraHotelCodes: string[] = ["MRD", "MRP"]) {
+async function sysCtx(extraHotelCodes: string[] = ["DIAMOND", "PREMIUM"]) {
   const user = await makeUser({
     username: "sys1",
     roleCode: "R-SYS",
-    hotelCode: "MR",
+    hotelCode: "ROYAL",
     extraHotelCodes,
   });
-  return { user, ctx: await ctxFor(user, { hotelCode: "MR", extraHotelCodes }) };
+  return { user, ctx: await ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes }) };
 }
 
 async function openSession(
@@ -70,78 +70,78 @@ async function notification(userId: string, hotel: string | null, createdAt: Dat
 describe("getCommandCenterKpis (gerçek test DB)", () => {
   it("3 otel; 2 ONLINE/UYARI + 1 CIKTI oturum → onlineUsers 2 (tekil kullanıcı)", async () => {
     const { user, ctx } = await sysCtx();
-    const u2 = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "MR" });
-    const u3 = await makeUser({ username: "u3", roleCode: "R-GAR", hotelCode: "MRD" });
+    const u2 = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const u3 = await makeUser({ username: "u3", roleCode: "R-GAR", hotelCode: "DIAMOND" });
     // The same user is online in two hotels: counted once overall, once per hotel.
-    await openSession(user.id, "MR", "ONLINE", user.roleId);
-    await openSession(user.id, "MRD", "UYARI", user.roleId);
-    await openSession(u2.id, "MR", "ONLINE", u2.roleId);
-    await openSession(u3.id, "MRD", "CIKTI", u3.roleId);
+    await openSession(user.id, "ROYAL", "ONLINE", user.roleId);
+    await openSession(user.id, "DIAMOND", "UYARI", user.roleId);
+    await openSession(u2.id, "ROYAL", "ONLINE", u2.roleId);
+    await openSession(u3.id, "DIAMOND", "CIKTI", u3.roleId);
 
     const kpis = await getCommandCenterKpis(ctx);
 
     expect(kpis.hotels).toBe(3);
     expect(kpis.onlineUsers).toBe(2);
     const byCode = new Map(kpis.openSessionsByHotel.map((h) => [h.code, h]));
-    expect(byCode.get("MR")).toMatchObject({ name: "Merit Royal", online: 2 });
-    expect(byCode.get("MRD")?.online).toBe(1);
-    expect(byCode.get("MRP")?.online).toBe(0);
+    expect(byCode.get("ROYAL")).toMatchObject({ name: "Merit Royal", online: 2 });
+    expect(byCode.get("DIAMOND")?.online).toBe(1);
+    expect(byCode.get("PREMIUM")?.online).toBe(0);
     expect(kpis.openSessionsByHotel).toHaveLength(3);
   });
 
   it("bugün (Nicosia) 2, dün 1 bildirim → notificationsToday 2", async () => {
     const { user, ctx } = await sysCtx();
     const startOfToday = businessDateStart(businessDate());
-    await notification(user.id, "MR", new Date());
+    await notification(user.id, "ROYAL", new Date());
     await notification(user.id, null, new Date());
-    await notification(user.id, "MR", new Date(startOfToday.getTime() - 60 * 60_000));
+    await notification(user.id, "ROYAL", new Date(startOfToday.getTime() - 60 * 60_000));
 
     expect((await getCommandCenterKpis(ctx)).notificationsToday).toBe(2);
   });
 
   it("hotelId verilince yalnız o otel sayılır", async () => {
     const { user, ctx } = await sysCtx();
-    const u2 = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "MRD" });
-    await openSession(user.id, "MR", "ONLINE", user.roleId);
-    await openSession(u2.id, "MRD", "ONLINE", u2.roleId);
-    await notification(user.id, "MR", new Date());
-    await notification(u2.id, "MRD", new Date());
-    await notification(u2.id, "MRD", new Date());
+    const u2 = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "DIAMOND" });
+    await openSession(user.id, "ROYAL", "ONLINE", user.roleId);
+    await openSession(u2.id, "DIAMOND", "ONLINE", u2.roleId);
+    await notification(user.id, "ROYAL", new Date());
+    await notification(u2.id, "DIAMOND", new Date());
+    await notification(u2.id, "DIAMOND", new Date());
 
-    const mr = await getCommandCenterKpis(ctx, await hotelId("MR"));
+    const mr = await getCommandCenterKpis(ctx, await hotelId("ROYAL"));
     expect(mr.hotels).toBe(1);
     expect(mr.onlineUsers).toBe(1);
     expect(mr.notificationsToday).toBe(1);
     expect(mr.openSessionsByHotel).toEqual([
-      { hotelId: await hotelId("MR"), code: "MR", name: "Merit Royal", online: 1 },
+      { hotelId: await hotelId("ROYAL"), code: "ROYAL", name: "Merit Royal", online: 1 },
     ]);
 
-    const mrd = await getCommandCenterKpis(ctx, await hotelId("MRD"));
+    const mrd = await getCommandCenterKpis(ctx, await hotelId("DIAMOND"));
     expect(mrd.onlineUsers).toBe(1);
     expect(mrd.notificationsToday).toBe(2);
   });
 
   it("ctx kapsamı dışındaki oteller sayılmaz; kapsam dışı hotelId FORBIDDEN", async () => {
     const { user, ctx } = await sysCtx([]); // scope: MR only
-    const other = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "MRP" });
-    await openSession(user.id, "MR", "ONLINE", user.roleId);
-    await openSession(other.id, "MRP", "ONLINE", other.roleId);
-    await notification(other.id, "MRP", new Date());
+    const other = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "PREMIUM" });
+    await openSession(user.id, "ROYAL", "ONLINE", user.roleId);
+    await openSession(other.id, "PREMIUM", "ONLINE", other.roleId);
+    await notification(other.id, "PREMIUM", new Date());
 
     const kpis = await getCommandCenterKpis(ctx);
     expect(kpis.hotels).toBe(1);
     expect(kpis.onlineUsers).toBe(1);
     expect(kpis.notificationsToday).toBe(0);
-    expect(kpis.openSessionsByHotel.map((h) => h.code)).toEqual(["MR"]);
+    expect(kpis.openSessionsByHotel.map((h) => h.code)).toEqual(["ROYAL"]);
 
-    await expect(getCommandCenterKpis(ctx, await hotelId("MRP"))).rejects.toMatchObject({
+    await expect(getCommandCenterKpis(ctx, await hotelId("PREMIUM"))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
 
   it("CR-KOM görme yetkisi olmayan rol (R-KAT) → FORBIDDEN", async () => {
-    const kat = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
-    const ctx = await ctxFor(kat, { hotelCode: "MR" });
+    const kat = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(kat, { hotelCode: "ROYAL" });
     await expect(getCommandCenterKpis(ctx)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
@@ -149,35 +149,35 @@ describe("getCommandCenterKpis (gerçek test DB)", () => {
     const user = await makeUser({
       username: "otm1",
       roleCode: "R-OTM",
-      hotelCode: "MR",
-      extraHotelCodes: ["MR", "MRD"],
+      hotelCode: "ROYAL",
+      extraHotelCodes: ["ROYAL", "DIAMOND"],
     });
-    const ctx = await ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRD"] });
-    const other = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "MRD" });
-    await openSession(user.id, "MR", "ONLINE", user.roleId);
-    await openSession(other.id, "MRD", "ONLINE", other.roleId);
-    await notification(user.id, "MR", new Date());
-    await notification(other.id, "MRD", new Date());
-    await notification(other.id, "MRD", new Date());
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["DIAMOND"] });
+    const other = await makeUser({ username: "u2", roleCode: "R-GAR", hotelCode: "DIAMOND" });
+    await openSession(user.id, "ROYAL", "ONLINE", user.roleId);
+    await openSession(other.id, "DIAMOND", "ONLINE", other.roleId);
+    await notification(user.id, "ROYAL", new Date());
+    await notification(other.id, "DIAMOND", new Date());
+    await notification(other.id, "DIAMOND", new Date());
 
     const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-KOM" } });
     const deny = async (code: string) =>
       testDb.roleScreenPermission.create({
         data: { roleId: user.roleId, screenId: screen.id, hotelId: await hotelId(code), canView: false },
       });
-    await deny("MRD");
+    await deny("DIAMOND");
     try {
       const kpis = await getCommandCenterKpis(ctx);
       expect(kpis.hotels).toBe(1);
       expect(kpis.onlineUsers).toBe(1);
       expect(kpis.notificationsToday).toBe(1);
-      expect(kpis.openSessionsByHotel.map((h) => h.code)).toEqual(["MR"]);
+      expect(kpis.openSessionsByHotel.map((h) => h.code)).toEqual(["ROYAL"]);
 
-      await expect(getCommandCenterKpis(ctx, await hotelId("MRD"))).rejects.toMatchObject({
+      await expect(getCommandCenterKpis(ctx, await hotelId("DIAMOND"))).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
 
-      await deny("MR");
+      await deny("ROYAL");
       await expect(getCommandCenterKpis(ctx)).rejects.toMatchObject({ code: "FORBIDDEN" });
       expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThan(0);
     } finally {

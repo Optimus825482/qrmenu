@@ -18,7 +18,7 @@ describe("mesaj dosyaları", () => {
   const sets = LOCALES.map((l) => [l, flatten(load(l))] as const);
   const base = sets[0][1].map(([k]) => k).sort();
 
-  it("5 dilin anahtar kümeleri eşit", () => {
+  it("desteklenen dillerin anahtar kümeleri eşit", () => {
     for (const [locale, entries] of sets) {
       expect(entries.map(([k]) => k).sort(), locale).toEqual(base);
     }
@@ -66,7 +66,9 @@ describe("pickLocale", () => {
     expect(pickLocale({ query: "de" })).toBe("de");
     expect(pickLocale({ cookie: "ar" })).toBe("ar");
     expect(pickLocale({ acceptLanguage: "ru-RU,ru;q=0.9" })).toBe("ru");
-    expect(pickLocale({ acceptLanguage: "fr" })).toBe("en");
+    expect(pickLocale({ acceptLanguage: "fr" })).toBe("fr");
+    expect(pickLocale({ acceptLanguage: "el" })).toBe("el");
+    expect(pickLocale({ acceptLanguage: "it" })).toBe("it");
     expect(pickLocale({ query: "tr", cookie: "ar", acceptLanguage: "de" })).toBe("tr");
     expect(pickLocale({ query: "xx", cookie: "ar" })).toBe("ar");
     expect(pickLocale({ cookie: "zz", acceptLanguage: "de-DE,en;q=0.8" })).toBe("de");
@@ -74,7 +76,7 @@ describe("pickLocale", () => {
   });
 
   it("Accept-Language q değerine göre sıralanır; bozuk girdi en'e düşer", () => {
-    expect(pickLocale({ acceptLanguage: "fr;q=0.9,tr;q=0.5,de;q=0.7" })).toBe("de");
+    expect(pickLocale({ acceptLanguage: "fr;q=0.9,tr;q=0.5,de;q=0.7" })).toBe("fr");
     expect(pickLocale({ acceptLanguage: ";;;,q=x" })).toBe("en");
     expect(pickLocale({ acceptLanguage: "AR-sa" })).toBe("ar");
   });

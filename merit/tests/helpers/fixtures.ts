@@ -12,6 +12,8 @@ export async function resetReferenceData(): Promise<void> {
 /** Removes everything a test creates (users and what hangs off them, extra outlets) and reactivates hotels. */
 export async function resetTestData(): Promise<void> {
   await truncate("users");
+  // Seeded demo outlets own tables and menu nodes; outlets cannot be removed while those reference them.
+  await truncate("outlet_tables", "menu_nodes");
   await testDb.outlet.deleteMany({ where: { type: { not: "ODA_SERVISI" } } });
   await testDb.hotel.updateMany({ data: { isActive: true } });
 }
@@ -54,7 +56,9 @@ export async function makeUser(opts: {
 }
 
 export async function makeOutlet(hotelCode: string, name: string, type: OutletType = "SALON") {
-  return testDb.outlet.create({ data: { hotelId: await hotelId(hotelCode), name, type } });
+  const outlet = await testDb.outlet.create({ data: { hotelId: await hotelId(hotelCode), name, type } });
+  await testDb.outletAreaDefinition.create({ data: { outletId: outlet.id, type: "KAPALI" } });
+  return outlet;
 }
 
 export async function addMember(userId: string, outletId: string, isActive = true) {

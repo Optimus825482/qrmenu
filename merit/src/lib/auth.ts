@@ -13,8 +13,8 @@ export const SESSION_COOKIE_NAME = "merit_session";
 
 /**
  * Sealed cookie payload. After target selection it carries a full session (`sessionId`,
- * `roleCode`, ...). Between password check and target choice on /secim it carries only
- * `userId` + `pendingTargets` (short-lived); requireUser() rejects such a cookie.
+ * `roleCode`, ...). Before a target is chosen it carries only `userId` plus either `pendingTargets`
+ * or `pendingPasswordChange` (both short-lived); requireUser() rejects either challenge cookie.
  */
 export type SessionData = {
   userId: string;
@@ -23,6 +23,8 @@ export type SessionData = {
   outletId?: string;
   roleCode?: string;
   pendingTargets?: boolean;
+  /** Short-lived credential proof before mandatory first-login password replacement. */
+  pendingPasswordChange?: boolean;
 };
 
 /** The acting user as seen by server code. Role fields are the *session's* (target's) role. */

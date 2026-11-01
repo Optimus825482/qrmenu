@@ -2,24 +2,33 @@
 
 import { type FormEvent, useState } from "react";
 import type { FieldErrors } from "@/lib/result";
+import { alertDialog, confirm } from "@/shell/confirm";
 import { FieldErrorsContext } from "@/shell/ui/formContext";
 import { Field } from "@/shell/ui/Field";
 import { ALLERGENS } from "../../allergens";
-import { setMenuAvailabilityAction, updateMenuNodeAction } from "../../server/actions/menuTree";
+import { ITEM_TAGS } from "../../design";
+import { autoTranslateMenuNodeAction, setMenuAvailabilityAction, updateMenuNodeAction } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 import { ImageField } from "./ImageField";
 import { KIND_LABEL } from "./TreePane";
 import { TranslationsTab } from "./TranslationsTab";
 
 const ALLERGEN_LABEL: Record<(typeof ALLERGENS)[number], string> = {
-  gluten: "Gluten",
+  gluten: "Gluten içeren tahıl",
   sut: "Süt",
   yumurta: "Yumurta",
-  kuruyemis: "Kuruyemiş",
-  deniz_urunu: "Deniz ürünü",
+  kuruyemis: "Sert kabuklu meyve",
+  yerfistigi: "Yer fıstığı",
+  deniz_urunu: "Kabuklu deniz ürünü",
+  yumusakca: "Yumuşakça",
+  balik: "Balık",
   alkol: "Alkol",
   soya: "Soya",
   susam: "Susam",
+  kereviz: "Kereviz",
+  hardal: "Hardal",
+  sulfit: "Sülfit",
+  acibakla: "Acı bakla",
 };
 
 type Props = {
@@ -38,6 +47,12 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const approved = await confirm({
+      title: "Menü kaydını güncelle",
+      message: `“${node.name}” kaydındaki değişiklikler kaydedilsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const form = new FormData(e.currentTarget);
     const data: Record<string, unknown> = {
       name: String(form.get("name") ?? ""),
@@ -48,13 +63,18 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
       const raw = String(form.get("price") ?? "").trim().replace(",", ".");
       data.price = raw === "" ? null : Number(raw);
       data.allergens = form.getAll("allergens").map(String);
+      data.tags = form.getAll("tags").map(String);
     }
     setMessage(null);
     setErrors({});
     const result = await updateMenuNodeAction({ nodeId: node.id, data });
     if (result.ok) {
+      const translations = await autoTranslateMenuNodeAction({ nodeId: node.id });
       setDirty(false);
-      setMessage({ ok: true, text: "Kaydedildi" });
+      setMessage(translations.ok
+        ? { ok: true, text: `Bilgiler kaydedildi; ${translations.data.languages.length} dilde otomatik çeviri oluşturuldu. Çevirileri yayından önce gözden geçirin.` }
+        : { ok: false, text: `Bilgiler kaydedildi ancak çeviriler oluşturulamadı: ${translations.error.message}` });
+      if (translations.ok) await alertDialog({ title: "Kayıt ve çeviriler tamamlandı", message: `“${node.name}” bilgileri kaydedildi. ${translations.data.languages.length} dil için DeepL çevirisi oluşturuldu ve yanıtların eksiksiz olduğu doğrulandı. Menü terimlerini kullanmadan önce kontrol edin.` });
       onChanged();
     } else {
       setMessage({ ok: false, text: result.error.message });
@@ -63,8 +83,18 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
   };
 
   const toggleAvailable = async (soldOut: boolean) => {
+    const approved = await confirm({
+      title: "Menü durumunu güncelle",
+      message: `“${node.name}” için tükenme durumu değiştirilsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const result = await setMenuAvailabilityAction({ nodeId: node.id, available: !soldOut });
-    if (!result.ok) setMessage({ ok: false, text: result.error.message });
+    if (!result.ok) {
+      setMessage({ ok: false, text: result.error.message });
+      return;
+    }
+    await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü durumu güncellendi.` });
     onChanged();
   };
 
@@ -147,6 +177,23 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
                       disabled={!canEdit}
                     />
                     {ALLERGEN_LABEL[a]}
+                  </label>
+                ))}
+              </fieldset>
+            ) : null}
+            {isItem ? (
+              <fieldset className="xp-mm-allergens">
+                <legend>Etiketler</legend>
+                {ITEM_TAGS.map((tag) => (
+                  <label key={tag.id} className="xp-module-switch">
+                    <input
+                      type="checkbox"
+                      name="tags"
+                      value={tag.id}
+                      defaultChecked={node.tags.includes(tag.id)}
+                      disabled={!canEdit}
+                    />
+                    {tag.label}
                   </label>
                 ))}
               </fieldset>

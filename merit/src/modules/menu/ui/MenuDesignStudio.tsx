@@ -3,9 +3,18 @@
 import { NextIntlClientProvider } from "next-intl";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import tr from "@/lib/i18n/messages/tr.json";
+import en from "@/lib/i18n/messages/en.json";
+import de from "@/lib/i18n/messages/de.json";
+import ru from "@/lib/i18n/messages/ru.json";
+import ar from "@/lib/i18n/messages/ar.json";
+import fr from "@/lib/i18n/messages/fr.json";
+import el from "@/lib/i18n/messages/el.json";
+import it from "@/lib/i18n/messages/it.json";
+import type { Locale } from "@/lib/i18n/locales";
 import { useSse } from "@/shell/useSse";
 import {
   AMBIENCES,
+  CONCEPTS,
   CARD_STYLES,
   DENSITIES,
   DESIGN_BLOCKS,
@@ -34,13 +43,37 @@ import { CallWaiterButton } from "./guest/CallWaiterButton";
 import { GuestFrame } from "./guest/GuestFrame";
 import { MenuView } from "./guest/MenuView";
 
+export interface StudioContext {
+  activeOutletId: string;
+  activeOutletName: string;
+  selectOutlet(id: string): void;
+  activeHotelId: string;
+  selectHotel(id: string): void;
+  previewThemeId: string;
+  selectTheme(id: string): void;
+  clearThemeOverride(): void;
+  themeOverride: string | null;
+}
+
 type Props = {
   hotelId?: string;
+  initialOutletId?: string;
   rows: ThemeRow[];
   targets: AssignTarget[];
   onSaved(): void;
   /** Renk kütüphanesi ve outlet ataması. Önizlemenin yüksekliğini paylaşmaz. */
-  library?: ReactNode;
+  library?: ReactNode | ((studio: StudioContext) => ReactNode);
+};
+
+const PREVIEW_MESSAGES: Record<Locale, Record<string, unknown>> = {
+  tr,
+  en,
+  de,
+  ru,
+  ar,
+  fr,
+  el,
+  it,
 };
 
 const FALLBACK_THEME: ThemeRow = {
@@ -61,6 +94,10 @@ function reorder(items: DesignBlockId[], from: DesignBlockId, to: DesignBlockId)
   if (source < 0 || target < 0 || source === target) return items;
   result.splice(source, 1);
   result.splice(target, 0, from);
+  // Kategori gezintisi (sekmeler, arama) daima menü içeriklerinin (ürünlerin) üzerinde kalmalıdır
+  if (result.indexOf("categories") > result.indexOf("items")) {
+    return ["hero", "categories", "items"];
+  }
   return result;
 }
 
@@ -98,20 +135,22 @@ function photoChoices(nodes: MenuTreeNode[]): { url: string; name: string }[] {
   return [...seen].map(([url, name]) => ({ url, name }));
 }
 
-export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: Props) {
+export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSaved, library }: Props) {
   const availableHotels = useMemo(
     () => targets.filter((target) => !hotelId || target.hotelId === hotelId),
     [hotelId, targets],
   );
   const [selectedHotelId, setSelectedHotelId] = useState(hotelId ?? availableHotels[0]?.hotelId ?? "");
   const selectedHotel = availableHotels.find((target) => target.hotelId === selectedHotelId) ?? availableHotels[0];
-  const availableTargets =
-    selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName })) ?? [];
-  const [outletId, setOutletId] = useState(availableTargets[0]?.id ?? "");
+  const availableTargets = useMemo(
+    () => selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName })) ?? [],
+    [selectedHotel],
+  );
+  const [outletId, setOutletId] = useState(initialOutletId ?? "");
   const [draft, setDraft] = useState<{ outletId: string; design: OutletDesign; themeId: string } | null>(null);
   const [nodes, setNodes] = useState<MenuTreeNode[]>([]);
   const [dragging, setDragging] = useState<DesignBlockId | null>(null);
-  const [device, setDevice] = useState<StudioDeviceId>("iphone-x");
+  const [device, setDevice] = useState<StudioDeviceId>("iphone-promax");
   const [rail, setRail] = useState<"tasarim" | "renk" | "cagri">("tasarim");
   const [callOptions, setCallOptions] = useState<GuestCallOption[]>([]);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -119,23 +158,66 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
   const [zoomLock, setZoomLock] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [themeOverride, setThemeOverride] = useState<string | null>(null);
+  const [previewLocale, setPreviewLocale] = useState<Locale>("tr");
+  const [allTemplatesView, setAllTemplatesView] = useState(false);
 
   const outlet = availableTargets.find((item) => item.id === outletId) ?? availableTargets[0];
   const activeOutletId = outlet?.id ?? "";
   const design = draft?.outletId === activeOutletId ? draft.design : (outlet?.design ?? DEFAULT_OUTLET_DESIGN);
   const themeId =
-    draft?.outletId === activeOutletId
+    themeOverride ??
+    (draft?.outletId === activeOutletId
       ? draft.themeId
-      : (outlet?.themeId ?? rows.find((row) => row.isDefault)?.id ?? rows[0]?.id ?? "");
+      : (outlet?.themeId ?? rows.find((row) => row.isDefault)?.id ?? rows[0]?.id ?? ""));
   const selectedTheme = rows.find((item) => item.id === themeId) ?? rows.find((row) => row.isDefault) ?? rows[0] ?? FALLBACK_THEME;
   const zoom = zoomLock ?? fitZoom;
+  const ambienceLabel = AMBIENCES.find((item) => item.id === design.ambience)?.label ?? "Ambiyans";
+  const ambienceTemplates = useMemo(
+    () => DESIGN_TEMPLATES.filter((template) => template.ambience === design.ambience),
+    [design.ambience],
+  );
+  const templatesToShow = allTemplatesView ? DESIGN_TEMPLATES : ambienceTemplates;
+
+  const studioContext: StudioContext = useMemo(
+    () => ({
+      activeOutletId,
+      activeOutletName: outlet?.name ?? "",
+      selectOutlet: (id: string) => {
+        setOutletId(id);
+        setThemeOverride(null);
+        setNotice(null);
+      },
+      activeHotelId: selectedHotelId,
+      selectHotel: (id: string) => {
+        setSelectedHotelId(id);
+        const nextHotel = availableHotels.find((item) => item.hotelId === id);
+        const firstOutlet = nextHotel?.outlets[0]?.id ?? "";
+        setOutletId(firstOutlet);
+        setThemeOverride(null);
+        setNotice(null);
+      },
+      previewThemeId: themeId,
+      selectTheme: (id: string) => {
+        setThemeOverride(id);
+      },
+      clearThemeOverride: () => {
+        setThemeOverride(null);
+      },
+      themeOverride,
+    }),
+    [activeOutletId, outlet?.name, selectedHotelId, availableHotels, themeId, themeOverride],
+  );
 
   useEffect(() => {
     const node = canvasRef.current;
     if (!node) return;
     const measure = () => {
       const box = DEVICE_BOX[device];
-      const next = Math.min((node.clientWidth - 32) / box.w, (node.clientHeight - 32) / box.h);
+      const width = node.clientWidth - 40;
+      const height = node.clientHeight - 56;
+      if (width <= 0 || height <= 0) return;
+      const next = Math.min(width / box.w, height / box.h);
       setFitZoom(Math.max(0.3, Math.min(1.15, Math.round(next * 100) / 100)));
     };
     measure();
@@ -175,6 +257,7 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
     hotelName: outlet?.hotelName ?? "Merit Royal",
     outletName: outlet?.name ?? "Menü",
     callOptions,
+    locale: previewLocale,
   });
 
   const findings = evaluateQuality({ design, theme: selectedTheme, items: qualityItems(nodes) });
@@ -224,15 +307,17 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
       </header>
       <div className="xp-design-workspace">
         <aside className="xp-design-tools">
-          <div className="xp-design-library">{library}</div>
+          <div className="xp-design-library">{typeof library === "function" ? library(studioContext) : library}</div>
           <div className="xp-design-controls">
             <label>
-              Otel
+              <span>Otel</span>
               <select
+                aria-label="Otel"
                 value={selectedHotel?.hotelId ?? ""}
                 onChange={(event) => {
                   setSelectedHotelId(event.target.value);
                   setOutletId(availableHotels.find((item) => item.hotelId === event.target.value)?.outlets[0]?.id ?? "");
+                  setThemeOverride(null);
                   setNotice(null);
                 }}
               >
@@ -243,8 +328,17 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
               </select>
             </label>
             <label>
-              Outlet
-              <select value={activeOutletId} disabled={!selectedHotel} onChange={(event) => { setOutletId(event.target.value); setNotice(null); }}>
+              <span>Outlet</span>
+              <select
+                aria-label="Outlet"
+                value={activeOutletId}
+                disabled={!selectedHotel}
+                onChange={(event) => {
+                  setOutletId(event.target.value);
+                  setThemeOverride(null);
+                  setNotice(null);
+                }}
+              >
                 <option value="">Outlet seçin</option>
                 {availableTargets.map((item) => (
                   <option key={item.id} value={item.id}>{item.name}</option>
@@ -252,11 +346,46 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
               </select>
             </label>
             <label>
-              Renk teması
+              <span>Ambiyans</span>
               <select
+                aria-label="Ambiyans"
+                value={design.ambience}
+                onChange={(event) => {
+                  const ambience = event.target.value as OutletDesign["ambience"];
+                  const template = DESIGN_TEMPLATES.find((item) => item.ambience === ambience) ?? DESIGN_TEMPLATES[0];
+                  if (template) commit(templatePreset(template.id as TemplateId));
+                }}
+              >
+                {AMBIENCES.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Konsept</span>
+              <select
+                aria-label="Konsept"
+                value={design.concept}
+                onChange={(event) => {
+                  const concept = event.target.value as OutletDesign["concept"];
+                  const template =
+                    DESIGN_TEMPLATES.find((item) => item.ambience === design.ambience && item.concept === concept) ??
+                    DESIGN_TEMPLATES.find((item) => item.concept === concept) ??
+                    DESIGN_TEMPLATES[0];
+                  if (template) commit(templatePreset(template.id as TemplateId));
+                }}
+              >
+                {CONCEPTS.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+              </select>
+            </label>
+            <label>
+              <span>Renk teması</span>
+              <select
+                aria-label="Renk teması"
                 value={themeId}
                 disabled={rows.length === 0}
-                onChange={(event) => commit(design, event.target.value)}
+                onChange={(event) => {
+                  setThemeOverride(null);
+                  commit(design, event.target.value);
+                }}
               >
                 {rows.map((item) => (
                   <option key={item.id} value={item.id}>{item.name}</option>
@@ -266,33 +395,88 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
           </div>
 
           <div className="xp-design-calls" hidden={rail !== "cagri"}>
-            <CallOptionsPanel outletId={activeOutletId} onChanged={setCallOptions} />
+            <div className="xp-call-button-config">
+              <label className="xp-design-field">
+                <strong>Garson Çağır Buton Metni</strong>
+                <input
+                  type="text"
+                  maxLength={35}
+                  value={design.options.callWaiterText ?? ""}
+                  placeholder="Varsayılan: Garson çağır"
+                  onChange={(e) => patchOptions({ callWaiterText: e.target.value })}
+                />
+              </label>
+              <small>Boş bırakıldığında misafirin diline göre otomatik gösterilir (TR: Garson çağır, EN: Call waiter vb.).</small>
+            </div>
+            <CallOptionsPanel
+              outletId={activeOutletId}
+              onChanged={(options) => setCallOptions(options.filter((option) => option.isActive))}
+            />
           </div>
 
           <div className="xp-design-template-list">
-            <div className="xp-design-side-title">
-              <strong>Hazır şablonlar</strong>
-              <span>{DESIGN_TEMPLATES.length}</span>
-            </div>
-            <p>Şablon; kart düzenini, fotoğrafı ve başlık stilini bir arada uygular. Sonra elle değiştirebilirsiniz.</p>
-            {AMBIENCES.map((ambience) => (
-              <div key={ambience.id} className="xp-design-ambience">
-                <b>{ambience.label}</b>
-                {DESIGN_TEMPLATES.filter((item) => item.ambience === ambience.id).map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    className="xp-design-template"
-                    data-selected={design.template === template.id || undefined}
-                    onClick={() => commit({ ...templatePreset(template.id as TemplateId), layout: design.layout })}
-                  >
-                    <span className={`xp-design-template-art is-${template.style}`}><i /><i /><i /></span>
-                    <strong>{template.name}</strong>
-                    <small>{CARD_STYLES.find((item) => item.id === template.options.cardStyle)?.label} · {template.options.showImages ? "fotoğraflı" : "yazı menüsü"}</small>
-                  </button>
-                ))}
+            <div className="xp-design-side-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <strong>{allTemplatesView ? "Tüm Şablonlar" : `${ambienceLabel} Şablonları`}</strong>
+              <div style={{ display: "inline-flex", gap: 3 }}>
+                <button
+                  type="button"
+                  className="xp-btn"
+                  style={{
+                    padding: "2px 6px",
+                    fontSize: 10,
+                    fontWeight: !allTemplatesView ? 700 : 400,
+                    backgroundColor: !allTemplatesView ? "#d9e2ec" : undefined,
+                  }}
+                  onClick={() => setAllTemplatesView(false)}
+                >
+                  Bu Ambiyans ({ambienceTemplates.length})
+                </button>
+                <button
+                  type="button"
+                  className="xp-btn"
+                  style={{
+                    padding: "2px 6px",
+                    fontSize: 10,
+                    fontWeight: allTemplatesView ? 700 : 400,
+                    backgroundColor: allTemplatesView ? "#d9e2ec" : undefined,
+                  }}
+                  onClick={() => setAllTemplatesView(true)}
+                >
+                  Tümü ({DESIGN_TEMPLATES.length})
+                </button>
               </div>
-            ))}
+            </div>
+            <p>
+              {allTemplatesView
+                ? "Dünya çapındaki 44 lüks şablon arasından dilediğinizi seçin."
+                : `${ambienceLabel} için hazır en az 3 farklı yerleşim ve ambiyans şablonu.`}
+            </p>
+            <div className="xp-design-ambience">
+                {templatesToShow.map((template) => {
+                  const isSelected = design.template === template.id;
+                  return (
+                    <button
+                      key={template.id}
+                      type="button"
+                      className="xp-design-template"
+                      data-selected={isSelected || undefined}
+                      onClick={() => commit(templatePreset(template.id as TemplateId))}
+                    >
+                      <div className="xp-design-template-art-wrap">
+                        <span className={`xp-design-template-art is-${template.style}`}><i /><i /><i /></span>
+                        {isSelected ? <span className="xp-design-selected-pill">✓ SEÇİLİ</span> : null}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                        <strong>{template.name}</strong>
+                        <span style={{ fontSize: 9, opacity: 0.75, fontWeight: 500 }}>
+                          {CONCEPTS.find((c) => c.id === template.concept)?.label}
+                        </span>
+                      </div>
+                      <small>{CARD_STYLES.find((item) => item.id === template.options.cardStyle)?.label} · {template.options.showImages ? "fotoğraflı" : "yazı menüsü"} · {template.options.typography}</small>
+                    </button>
+                  );
+                })}
+            </div>
           </div>
 
           <div className="xp-design-inspector">
@@ -389,13 +573,37 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
                 onChange={(event) => patchOptions({ featuredTitle: event.target.value })}
               />
             </label>
+            <label className="xp-design-field">
+              Garson çağır butonu metni
+              <input
+                type="text"
+                maxLength={35}
+                value={design.options.callWaiterText ?? ""}
+                placeholder="Varsayılan: Garson çağır"
+                onChange={(event) => patchOptions({ callWaiterText: event.target.value })}
+              />
+            </label>
             <div className="xp-design-inspector-palette">
               <span>Arka plan<i style={{ background: selectedTheme.bg }} /></span>
               <span>Vurgu<i style={{ background: selectedTheme.accent }} /></span>
               <span>Yüzey<i style={{ background: selectedTheme.soft }} /></span>
             </div>
             <div className="xp-design-blocks">
-              <b>Bölüm sırası</b>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <b>Bölüm sırası</b>
+                <button
+                  type="button"
+                  className="xp-btn"
+                  style={{ padding: "1px 6px", fontSize: 10 }}
+                  onClick={() => commit({ ...design, layout: ["hero", "categories", "items"] })}
+                  title="Standart bölüm düzenine sıfırla"
+                >
+                  Sıfırla
+                </button>
+              </div>
+              <small style={{ display: "block", color: "#64748b", fontSize: 10, marginBottom: 6 }}>
+                Kategori gezintisi her zaman ürün listesinin üstünde yer alır.
+              </small>
               {design.layout.map((block, index) => (
                 <div
                   key={block}
@@ -419,7 +627,15 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
 
         <div className="xp-design-canvas-wrap">
           <div className="xp-design-canvas-toolbar">
-            <span><i />{preview.sample ? "ÖRNEK MENÜ" : "CANLI MENÜ"}</span>
+            <div className="xp-design-canvas-status">
+              <span><i />{preview.sample ? "ÖRNEK MENÜ" : "CANLI MENÜ"}</span>
+              {themeOverride ? (
+                <span className="xp-theme-override-pill">
+                  Önizlenen Tema: <strong>{selectedTheme.name}</strong>
+                  <button type="button" onClick={() => setThemeOverride(null)} title="Orijinal temaya dön">×</button>
+                </span>
+              ) : null}
+            </div>
             <div className="xp-design-zoom" aria-label="Önizleme">
               {STUDIO_DEVICES.map((item) => (
                 <button
@@ -445,10 +661,11 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
               <div className="xp-design-stage-scale" style={{ width: DEVICE_BOX[device].w, height: DEVICE_BOX[device].h, transform: `scale(${zoom})` }}>
                 <StudioDevice device={device}>
               <DesignPreviewFrame>
-                <NextIntlClientProvider locale="tr" messages={tr}>
+                <NextIntlClientProvider locale={previewLocale} messages={PREVIEW_MESSAGES[previewLocale]}>
                   <GuestFrame
                     token="onizleme"
-                    locale="tr"
+                    locale={previewLocale}
+                    onLocaleChange={setPreviewLocale}
                     preview
                     theme={selectedTheme}
                     design={design}
@@ -456,11 +673,17 @@ export function MenuDesignStudio({ hotelId, rows, targets, onSaved, library }: P
                     tableLabel="Masa 12"
                     footer={
                       <div className="g-footer-actions">
-                        <CallWaiterButton token="onizleme" locale="tr" options={callOptions} preview />
+                        <CallWaiterButton
+                          token="onizleme"
+                          locale={previewLocale}
+                          options={callOptions}
+                          preview
+                          customText={design.options.callWaiterText}
+                        />
                       </div>
                     }
                   >
-                    <MenuView menu={preview.menu} locale="tr" />
+                    <MenuView menu={preview.menu} locale={previewLocale} />
                   </GuestFrame>
                 </NextIntlClientProvider>
               </DesignPreviewFrame>

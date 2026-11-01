@@ -53,6 +53,17 @@ export async function setTranslationAction(
   )(raw);
 }
 
+export async function autoTranslateMenuNodeAction(raw: unknown): Promise<Result<{ languages: string[] }>> {
+  return safeAction(z.object({ nodeId: id }), async (i) => translations.autoGenerate(await requireUser(), i.nodeId))(raw);
+}
+
+export async function verifyTranslationAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ nodeId: id, lang: z.string() }), async (i) => {
+    await translations.verify(await requireUser(), i.nodeId, i.lang);
+    return null;
+  })(raw);
+}
+
 export async function removeTranslationAction(raw: unknown): Promise<Result<null>> {
   return safeAction(z.object({ nodeId: id, lang: z.string() }), async (i) => {
     await translations.remove(await requireUser(), i.nodeId, i.lang);

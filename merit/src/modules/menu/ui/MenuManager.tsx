@@ -12,6 +12,7 @@ import { menuContextAction } from "../server/actions/menuAdmin";
 import type { MenuContext } from "../server/menuContext";
 import {
   createMenuNodeAction,
+  autoTranslateMenuNodeAction,
   deleteMenuNodeAction,
   listMenuTreeAction,
   moveMenuNodeAction,
@@ -28,7 +29,7 @@ const RELOAD_MS = 300;
 type Creating = { kind: MenuNodeKind; parent: MenuTreeNode | null } | null;
 
 /** Menü Yönetimi (QM-MEN): outlet menu tree on the left, node form on the right. */
-export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
+export function MenuManager({ hotelId, setStatus, setDirty, openApp }: AppProps) {
   const [context, setContext] = useState<MenuContext | null>(null);
   const [outletId, setOutletId] = useState<string | undefined>();
   const [tree, setTree] = useState<MenuTreeNode[]>([]);
@@ -109,6 +110,12 @@ export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
     const result = await createMenuNodeAction({ outletId, data });
     if (result.ok) {
       setSelectedId(result.data.id);
+      const translated = await autoTranslateMenuNodeAction({ nodeId: result.data.id });
+      if (!translated.ok) {
+        void alertDialog({ title: "Kayıt yapıldı; çeviri oluşturulamadı", message: translated.error.message });
+      } else {
+        void alertDialog({ title: "Kayıt ve çeviriler tamamlandı", message: `${translated.data.languages.length} dil için DeepL çevirisi oluşturuldu. Menü terimlerini kullanmadan önce gözden geçirin.` });
+      }
       await loadTree();
     }
     return result;
@@ -117,11 +124,18 @@ export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
   const move = async (node: MenuTreeNode, direction: -1 | 1) => {
     const siblings = node.parentId ? (findNode(tree, node.parentId)?.children ?? []) : tree;
     const index = siblings.findIndex((s) => s.id === node.id) + direction;
+    const approved = await confirm({
+      title: "Menü sırasını güncelle",
+      message: `“${node.name}” menü kaydının sırası değiştirilsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const result = await moveMenuNodeAction({
       nodeId: node.id,
       data: { newParentId: node.parentId, index },
     });
     if (!result.ok) void alertDialog({ title: "Taşınamadı", message: result.error.message });
+    else await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü sırası güncellendi.` });
     await loadTree();
   };
 
@@ -137,13 +151,21 @@ export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
       void alertDialog({ title: "Silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${node.name}” silindi.` });
     setSelectedId(undefined);
     await loadTree();
   };
 
   const toggleAvailable = async (node: MenuTreeNode) => {
+    const approved = await confirm({
+      title: "Menü durumunu güncelle",
+      message: `“${node.name}” ${node.isAvailable ? "pasife alınsın" : "yeniden aktifleştirilsin"} mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const result = await setMenuAvailabilityAction({ nodeId: node.id, available: !node.isAvailable });
     if (!result.ok) void alertDialog({ title: "Değiştirilemedi", message: result.error.message });
+    else await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü durumu güncellendi.` });
     await loadTree();
   };
 
@@ -162,6 +184,7 @@ export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
   return (
     <div className="xp-mm">
       <div className="xp-mm-top">
+        <span className="xp-mm-hotel"><strong>Otel:</strong> {context?.hotelName ?? "Yükleniyor…"}</span>
         {context?.fixedOutlet ? (
           <strong>{outlet?.name}</strong>
         ) : (
@@ -182,6 +205,9 @@ export function MenuManager({ hotelId, setStatus, setDirty }: AppProps) {
         {outlet && context ? (
           <OutletSwitchBar outlet={outlet} canSwitch={context.canSwitch} onChanged={reload} />
         ) : null}
+        <button type="button" className="xp-button" disabled={!outletId} onClick={() => openApp("menu.tema", { hotelId, outletId })}>
+          Menü Tasarımı
+        </button>
       </div>
       {error ? (
         <p role="alert" className="xp-defs-error">

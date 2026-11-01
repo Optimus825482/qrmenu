@@ -4,7 +4,7 @@ import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.use({ locale: "tr-TR" });
 
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 
 test.beforeAll(() => resetAndSeed());
 

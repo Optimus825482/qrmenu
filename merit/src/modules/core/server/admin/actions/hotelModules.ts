@@ -15,6 +15,14 @@ export async function listHotelModulesAction(
   )(raw);
 }
 
+export async function listTeamHotelModulesAction(
+  raw: unknown,
+): Promise<Result<hotelModules.HotelModuleState[]>> {
+  return safeAction(z.object({ hotelId }), async (input) =>
+    hotelModules.listForTeam(await requireUser(), input.hotelId),
+  )(raw);
+}
+
 export async function setHotelModuleAction(
   raw: unknown,
 ): Promise<Result<hotelModules.HotelModuleState>> {

@@ -28,8 +28,8 @@ type S = { s: OrderSetup; ctx: Awaited<ReturnType<typeof adminCtx>> };
 
 /** System context for hotel-wide printer administration. Outlet scope is tested separately. */
 async function adminCtx() {
-  const user = await makeUser({ username: "printer-admin", roleCode: "R-SYS", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "printer-admin", roleCode: "R-SYS", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL" });
 }
 
 async function setup(): Promise<S> {
@@ -94,7 +94,7 @@ describe("printers.create", () => {
   it("outletId başka otelden VALIDATION", async () => {
     const { s, ctx } = await setup();
     const other = await testDb.outlet.create({
-      data: { hotelId: await hotelId("MRP"), name: "Premium Bar", type: "BAR" },
+      data: { hotelId: await hotelId("PREMIUM"), name: "Premium Bar", type: "BAR" },
     });
     await expect(printers.create(ctx, s.hotelId, { ...CREATE, outletId: other.id })).rejects.toMatchObject({
       code: "VALIDATION",
@@ -159,11 +159,11 @@ describe("printers.setOutletDefault", () => {
   it("başka otelin yazıcısı VALIDATION (iki oteli kapsayan yöneticiyle)", async () => {
     const { s, ctx } = await setup();
     const otherOutlet = await testDb.outlet.create({
-      data: { hotelId: await hotelId("MRP"), name: "Premium Bar", type: "BAR" },
+      data: { hotelId: await hotelId("PREMIUM"), name: "Premium Bar", type: "BAR" },
     });
     const row = await printers.create(ctx, s.hotelId, CREATE);
-    const otom = await makeUser({ username: "otom", roleCode: "R-OTM", hotelCode: "MR", extraHotelCodes: ["MRP"] });
-    const otomCtx = await ctxFor(otom, { hotelCode: "MR", extraHotelCodes: ["MRP"] });
+    const otom = await makeUser({ username: "otom", roleCode: "R-OTM", hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM"] });
+    const otomCtx = await ctxFor(otom, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM"] });
     await expect(printers.setOutletDefault(otomCtx, otherOutlet.id, row.id)).rejects.toMatchObject({
       code: "VALIDATION",
     });
@@ -240,7 +240,7 @@ describe("printers.list", () => {
   it("heartbeat sonrası online true (lastStatus 'OK'); 91 sn sonra online false", async () => {
     const { s, ctx } = await setup();
     const row = await printers.create(ctx, s.hotelId, CREATE);
-    await printers.heartbeat("MR", [{ id: row.id, ok: true }]);
+    await printers.heartbeat("ROYAL", [{ id: row.id, ok: true }]);
     let rows = await printers.list(ctx, s.hotelId);
     expect(rows[0]).toMatchObject({ online: true, lastStatus: "OK" });
     expect(rows[0].lastSeenAt).not.toBeNull();

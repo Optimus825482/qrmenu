@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "01.11.2026 05:20",
-  headline: "P5 T1–T14 tamamlandı ve doğrulandı: seri 751 birim testi, Playwright 83/83, build ve gateway başarılı. Dal main'e merge için hazır.",
+  updatedAt: "01.11.2026 15:25",
+  headline: "Menü Tasarım Merkezi uygulandı; hedefli kontroller yeşil. Güvenli E2E kabulinde çağrı seçeneği pasife alma hatası ve izole test sunucusu kurulumu kaldı; ledger'da.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -101,7 +101,8 @@ window.ILERLEME = {
         { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "done", doneAt: "31.10 23:10" },
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "done", doneAt: "01.11 04:10" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "done", doneAt: "01.11 01:55" },
-        { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "done", doneAt: "01.11 04:41" }
+        { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "done", doneAt: "01.11 04:41" },
+        { title: "Menü Tasarım Merkezi: mobil canlı önizleme, kalite denetimi ve çağrı seçenekleri", status: "active" }
       ]
     },
     {
@@ -167,6 +168,7 @@ window.ILERLEME = {
     { at: "01.11 02:49", text: "P5 T11 personel kabuğu, garson ekranı ve masa ataması tamamlandı (b4469f4; check 733 test; garson sipariş/atama/onay e2e 1/1; build yeşil). İnceleme düzeltmeleri kapandı. Sıradaki T12 kasa ekranları." },
     { at: "01.11 03:25", text: "P5 T12 kasa masa panosu, kuyruk, çağrılar, atama ve iptal ekranları tamamlandı (7d22158; check 737 test; e2e 1/1; build yeşil). İptal listesi Nicosia iş günü devrinde de açık işleri koruyor. Sıradaki T13 KDS." },
     { at: "01.11 04:10", text: "P5 T13 KDS Yeni/Hazırlanıyor/Hazır ekranı tamamlandı (b88b6c2; seri 743 birim testi, KDS e2e 1/1, build yeşil). Review fixleri kapandı; sıradaki T14 eskalasyon ve kabul." },
-    { at: "01.11 05:20", text: "P5 T14 ve dal sonu incelemesi tamamlandı. Gateway geç rapor koruması, outlet yazıcı kapsamı, günlük bildirim yarış kilidi ve audit otel atfı düzeltildi. Lint/typecheck/build, seri Vitest 751, gateway 16/16 ve Playwright 83/83 geçti. Dal main'e birleştirme onayını bekliyor." }
+    { at: "01.11 05:20", text: "P5 T14 ve dal sonu incelemesi tamamlandı. Gateway geç rapor koruması, outlet yazıcı kapsamı, günlük bildirim yarış kilidi ve audit otel atfı düzeltildi. Lint/typecheck/build, seri Vitest 751, gateway 16/16 ve Playwright 83/83 geçti. Dal main'e birleştirme onayını bekliyor." },
+    { at: "01.11 16:11", text: "Konsept raporuna göre mevcut 17 Royal/Diamond/Premium outletine 102 adet konsept odaklı örnek menü ürünü ve eşleşen ambiyans/konsept/tema tasarımı işlendi. Menü seed'i örnek ağacı uzlaştırıyor ve operatörün tükenme durumunu koruyor. Typecheck + hedefli ESLint geçti; geliştirme DB'sinde 17/17 tasarım doğrulandı. Ortak Zephyros alanları DB'de outlet kaydı olmadığı için atama uydurulmadı; yeni raster görsel üretimi oturumda imagegen aracı bulunmadığından yapılmadı." }
   ]
 };

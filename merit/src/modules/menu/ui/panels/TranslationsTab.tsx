@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { removeTranslationAction, setTranslationAction } from "../../server/actions/menuTree";
+import { alertDialog, confirm } from "@/shell/confirm";
+import { removeTranslationAction, setTranslationAction, verifyTranslationAction } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 
 const LANGS = [
@@ -9,6 +10,9 @@ const LANGS = [
   { code: "de", label: "DE" },
   { code: "ru", label: "RU" },
   { code: "ar", label: "AR" },
+  { code: "fr", label: "FR" },
+  { code: "el", label: "EL" },
+  { code: "it", label: "IT" },
 ] as const;
 
 type Props = { node: MenuTreeNode; canEdit: boolean; onChanged(): void };
@@ -21,6 +25,12 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
   const existing = node.translations.find((t) => t.lang === lang);
 
   const save = async (form: HTMLFormElement) => {
+    const approved = await confirm({
+      title: "Çeviriyi kaydet",
+      message: `${current.label} dili için “${node.name}” çevirisi kaydedilsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const values = new FormData(form);
     const result = await setTranslationAction({
       nodeId: node.id,
@@ -28,6 +38,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
       data: { name: String(values.get("name") ?? ""), detail: String(values.get("detail") ?? "") },
     });
     if (result.ok) {
+      await alertDialog({ title: "İşlem tamamlandı", message: `${current.label} çevirisi güncellendi.` });
       setMessage({ ok: true, text: `${current.label} çevirisi kaydedildi` });
       onChanged();
     } else {
@@ -36,12 +47,29 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
   };
 
   const remove = async () => {
+    const approved = await confirm({
+      title: "Çeviriyi sil",
+      message: `${current.label} dilindeki “${node.name}” çevirisi silinsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const result = await removeTranslationAction({ nodeId: node.id, lang });
+    if (result.ok) {
+      await alertDialog({ title: "İşlem tamamlandı", message: `${current.label} çevirisi silindi.` });
+    }
     setMessage(
       result.ok
         ? { ok: true, text: `${current.label} çevirisi silindi` }
         : { ok: false, text: result.error.message },
     );
+    if (result.ok) onChanged();
+  };
+
+  const verify = async () => {
+    const approved = await confirm({ title: "Çeviriyi onayla", message: `${current.label} çevirisini kontrol ettiniz mi? Onaylanan çeviri misafir menüsünde gösterilir.` });
+    if (!approved) return;
+    const result = await verifyTranslationAction({ nodeId: node.id, lang });
+    setMessage(result.ok ? { ok: true, text: `${current.label} çevirisi onaylandı ve misafir menüsünde gösterilecek.` } : { ok: false, text: result.error.message });
     if (result.ok) onChanged();
   };
 
@@ -75,6 +103,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
         }}
       >
         <p className="xp-defs-note">{`Türkçe: ${node.name}`}</p>
+        {existing ? <p role="status" className="xp-defs-note">{existing.isVerified ? "Onaylı çeviri · misafir menüsünde gösteriliyor" : "Otomatik çeviri · kontrol ve onay bekliyor; misafir menüsünde gösterilmiyor"}</p> : null}
         <div className="xp-field">
           <label className="xp-field-label" htmlFor={`tr-name-${lang}`}>
             {`Ad (${current.label})`}
@@ -113,8 +142,13 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
         {canEdit ? (
           <div className="xp-dialog-actions">
             <button type="submit" className="xp-button">
-              Çeviriyi kaydet
+              Düzenle ve onayla
             </button>
+            {existing ? (
+              <button type="button" className="xp-button" disabled={existing.isVerified} onClick={() => void verify()}>
+                Çeviriyi onayla
+              </button>
+            ) : null}
             {existing ? (
               <button type="button" className="xp-button" onClick={() => void remove()}>
                 Çeviriyi sil

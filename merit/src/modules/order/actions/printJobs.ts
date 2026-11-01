@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { type Result, safeAction } from "@/lib/result";
+import { DomainError, type Result, safeAction } from "@/lib/result";
 import { businessDate } from "@/lib/time";
 import { printJobs, type QueueJob } from "../server/printJobs";
 
@@ -17,7 +17,16 @@ export async function enqueueTestPrintAction(raw: unknown): Promise<Result<null>
 
 export async function reprintAction(raw: unknown): Promise<Result<null>> {
   return safeAction(z.object({ orderId: id }), async (input) => {
-    await printJobs.reprint(await requireUser(), input.orderId);
+    const job = await printJobs.reprint(await requireUser(), input.orderId);
+    if (!job) throw new DomainError("CONFLICT", "Aktif yazıcı bulunamadı; fiş yazdırılmadı.");
+    return null;
+  })(raw);
+}
+
+export async function reprintKitchenAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ orderId: id }), async (input) => {
+    const job = await printJobs.reprintKitchen(await requireUser(), input.orderId);
+    if (!job) throw new DomainError("CONFLICT", "Aktif yazıcı bulunamadı; mutfak fişi yazdırılmadı.");
     return null;
   })(raw);
 }

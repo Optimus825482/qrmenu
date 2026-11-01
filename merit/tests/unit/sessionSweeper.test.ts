@@ -30,10 +30,10 @@ async function openSession(patch: {
   warnedAt?: Date | null;
   status?: "ONLINE" | "UYARI";
 }) {
-  const user = await makeUser({ username: `sw${++seq}`, roleCode: "R-GAR", hotelCode: "MR" });
+  const user = await makeUser({ username: `sw${++seq}`, roleCode: "R-GAR", hotelCode: "ROYAL" });
   const session = await createSession({
     userId: user.id,
-    hotelId: await hotelId("MR"),
+    hotelId: await hotelId("ROYAL"),
     roleId: user.roleId,
   });
   return testDb.userSession.update({

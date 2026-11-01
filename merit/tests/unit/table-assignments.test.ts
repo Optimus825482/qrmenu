@@ -68,7 +68,7 @@ describe("tableAssignments", () => {
 
   it("myTables yalnız oturum garsonunun aktif masalarını döndürür", async () => {
     const { s, cashier, waiter, waiter2 } = await setup();
-    const second = await testDb.outletTable.create({ data: { outletId: s.outlet.id, label: "M2" } });
+    const second = await testDb.outletTable.create({ data: { outletId: s.outlet.id, areaId: s.table.areaId, label: "M2" } });
     await tableAssignments.assign(cashier.ctx, { tableId: s.table.id, userId: waiter.user.id });
     await tableAssignments.assign(cashier.ctx, { tableId: second.id, userId: waiter2.user.id });
     await expect(tableAssignments.myTables(waiter.ctx)).resolves.toEqual([
@@ -83,7 +83,7 @@ describe("tableAssignments", () => {
     });
     const tables = await Promise.all(
       Array.from({ length: 4 }, (_, index) =>
-        testDb.outletTable.create({ data: { outletId: s.outlet.id, label: `M${index + 2}` } }),
+        testDb.outletTable.create({ data: { outletId: s.outlet.id, areaId: s.table.areaId, label: `M${index + 2}` } }),
       ),
     );
     const pairs = [s.table, ...tables].map((table) => ({ tableId: table.id, userId: waiter.user.id }));

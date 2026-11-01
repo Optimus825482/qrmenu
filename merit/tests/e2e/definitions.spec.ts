@@ -55,8 +55,8 @@ async function definitionsWindow(page: Page, hotel: { name: string; code: string
 const node = (win: Locator, name: string) => win.getByRole("treeitem", { name, exact: true });
 const row = (win: Locator, text: string) => win.getByRole("row").filter({ hasText: text });
 
-const MR = { name: "Merit Royal", code: "MR" };
-const MRP = { name: "Merit Royal Premium", code: "MRP" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
+const PREMIUM = { name: "Merit Royal Premium", code: "PREMIUM" };
 
 test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve Roller listesi", async ({
   page,
@@ -83,7 +83,7 @@ test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve Roller listesi",
 
   // Otel paneli: the code is fixed, the rest saves and survives a reload.
   const form = win.getByRole("form", { name: "Otel bilgileri" });
-  await expect(form.getByLabel("Otel kodu")).toHaveValue("MR");
+  await expect(form.getByLabel("Otel kodu")).toHaveValue("ROYAL");
   await expect(form.getByLabel("Otel kodu")).toHaveAttribute("readonly", "");
   await expect(form.getByLabel("Aktif", { exact: true })).toBeDisabled(); // sistem oteli
   await form.getByLabel("Adres", { exact: true }).fill("Girne, KKTC");
@@ -206,7 +206,7 @@ test("Oda Tipleri: Yeni Test Suit (2 kabin) → listede; negatif kabin alan hata
   await expect(created.getByRole("gridcell").nth(1)).toHaveText("2");
 
   // The second hotel starts empty and copies the type over.
-  const other = await openDefinitions(page, MRP);
+  const other = await openDefinitions(page, PREMIUM);
   await node(other, "Oda Tipleri").click();
   await expect(other.getByText("Bu otelde kayıtlı oda tipi yok")).toBeVisible();
   await other.getByRole("button", { name: "Başka otelden kopyala" }).click();

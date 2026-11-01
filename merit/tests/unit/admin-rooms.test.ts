@@ -41,12 +41,12 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function sys(hotelCode = "MR") {
+async function sys(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `sys-${hotelCode}`, roleCode: "R-SYS", hotelCode });
-  return ctxFor(user, { hotelCode, extraHotelCodes: ["MRP", "MRD"].filter((c) => c !== hotelCode) });
+  return ctxFor(user, { hotelCode, extraHotelCodes: ["PREMIUM", "DIAMOND"].filter((c) => c !== hotelCode) });
 }
 
-async function mgmt(hotelCode = "MR") {
+async function mgmt(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `otm-${hotelCode}`, roleCode: "R-OTM", hotelCode });
   return ctxFor(user, { hotelCode });
 }
@@ -56,7 +56,7 @@ async function auditRows(action: string) {
 }
 
 /** A floor (and optionally a room type) of `hotelCode`, made through the services. */
-async function setup(ctx: Awaited<ReturnType<typeof sys>>, hotelCode = "MR", floorNumber = 1) {
+async function setup(ctx: Awaited<ReturnType<typeof sys>>, hotelCode = "ROYAL", floorNumber = 1) {
   const id = await hotelId(hotelCode);
   const floor = await floors.create(ctx, id, { number: floorNumber, name: `${floorNumber}. Kat` });
   return { hotelId: id, floor };
@@ -137,7 +137,7 @@ describe("rooms: CRUD", () => {
   it("aynı otelde aynı numara CONFLICT (Türkçe mesaj); başka otelde serbest; güncellemede de CONFLICT", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const { hotelId: mrp, floor: floorP } = await setup(ctx, "MRP");
+    const { hotelId: mrp, floor: floorP } = await setup(ctx, "PREMIUM");
     await rooms.create(ctx, mr, { floorId: floor.id, number: "101" });
     await expect(rooms.create(ctx, mr, { floorId: floor.id, number: "101" })).rejects.toMatchObject({
       code: "CONFLICT",
@@ -153,7 +153,7 @@ describe("rooms: CRUD", () => {
   it("geçersiz girdi VALIDATION (alan hatalarıyla); başka otelin katı/tipi kabul edilmez", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const { hotelId: mrp, floor: floorP } = await setup(ctx, "MRP");
+    const { hotelId: mrp, floor: floorP } = await setup(ctx, "PREMIUM");
     const typeP = await roomTypes.create(ctx, mrp, { name: "Suit", cabinetCount: 1 });
 
     await expect(rooms.create(ctx, mr, { floorId: floor.id, number: "  " })).rejects.toMatchObject({
@@ -182,7 +182,7 @@ describe("rooms: CRUD", () => {
   it("işlem / talep / kontrol kaydı olan oda silinemez (CONFLICT), oda yerinde kalır", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
+    const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
     const withTx = await rooms.create(ctx, mr, { floorId: floor.id, number: "201" });
     const withMybar = await rooms.create(ctx, mr, { floorId: floor.id, number: "202" });
     const withCheck = await rooms.create(ctx, mr, { floorId: floor.id, number: "203" });
@@ -274,7 +274,7 @@ describe("rooms: bulkCreate", () => {
   it("başka otelde aynı numara serbest", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const { hotelId: mrp, floor: floorP } = await setup(ctx, "MRP");
+    const { hotelId: mrp, floor: floorP } = await setup(ctx, "PREMIUM");
     await rooms.bulkCreate(ctx, mr, { floorId: floor.id, from: 101, to: 103 });
     await expect(
       rooms.bulkCreate(ctx, mrp, { floorId: floorP.id, from: 101, to: 103 }),
@@ -285,7 +285,7 @@ describe("rooms: bulkCreate", () => {
   it("geçersiz aralık VALIDATION; başka otelin katı VALIDATION; hiçbir şey yazılmaz", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const { floor: floorP } = await setup(ctx, "MRP");
+    const { floor: floorP } = await setup(ctx, "PREMIUM");
     await expect(rooms.bulkCreate(ctx, mr, { floorId: floor.id, from: 10, to: 5 })).rejects.toMatchObject({
       code: "VALIDATION",
       fieldErrors: { to: expect.any(Array) },
@@ -356,12 +356,12 @@ describe("rooms: list", () => {
   it("başka otelin odaları listelenmez; YONETIM başka otelde FORBIDDEN; yetkisiz rol FORBIDDEN", async () => {
     const ctx = await sys();
     const { hotelId: mr, floor } = await setup(ctx);
-    const { hotelId: mrp, floor: floorP } = await setup(ctx, "MRP");
+    const { hotelId: mrp, floor: floorP } = await setup(ctx, "PREMIUM");
     await rooms.create(ctx, mr, { floorId: floor.id, number: "101" });
     await rooms.create(ctx, mrp, { floorId: floorP.id, number: "901" });
     expect((await rooms.list(ctx, mr, Q)).items.map((r) => r.number)).toEqual(["101"]);
 
-    const manager = await mgmt("MR");
+    const manager = await mgmt("ROYAL");
     await expect(rooms.create(manager, mr, { floorId: floor.id, number: "102" })).resolves.toBeTruthy();
     await expect(rooms.list(manager, mrp, Q)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(
@@ -371,8 +371,8 @@ describe("rooms: list", () => {
     await expect(rooms.setActive(manager, target.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect((await testDb.room.findUniqueOrThrow({ where: { id: target.id } })).isActive).toBe(true);
 
-    const garson = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const garCtx = await ctxFor(garson, { hotelCode: "MR" });
+    const garson = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const garCtx = await ctxFor(garson, { hotelCode: "ROYAL" });
     await expect(rooms.list(garCtx, mr, Q)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(rooms.exportExcel(garCtx, mr)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });

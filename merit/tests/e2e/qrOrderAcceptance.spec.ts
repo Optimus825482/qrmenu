@@ -20,7 +20,7 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
 
 async function createReceiptPrinter(): Promise<void> {
   await withDb(async (client) => {
-    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'MR'");
+    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'ROYAL'");
     const printer = await client.query<{ id: string }>(
       `INSERT INTO printers (id, hotel_id, name, ip, port, codepage, paper_width, is_active, created_at, updated_at)
        VALUES ($1, $2, 'Kabul yazıcısı', '127.0.0.1', 9100, 'cp857', 80, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id`,
@@ -145,7 +145,7 @@ test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay e
   // Exercise the job entry point directly: the clock is advanced two minutes after an unapproved order.
   await sendOrder(page);
   await withDb(async (client) => {
-    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'MR'");
+    const hotel = await client.query<{ id: string }>("SELECT id FROM hotels WHERE code = 'ROYAL'");
     const sgf = await client.query<{ id: string }>("SELECT id FROM users WHERE username = 'sef.havuz'");
     await client.query("DELETE FROM settings WHERE hotel_id = $1 AND key = 'order.approvalEscalationMinutes'", [hotel.rows[0].id]);
     await client.query(

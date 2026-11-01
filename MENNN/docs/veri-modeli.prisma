@@ -1,0 +1,1152 @@
+// ============================================================================
+//  MENNN · Merit Royal Servis Platformu — Prisma Şema TASLAĞI
+//  Sürüm: 31.10.2026 (draft v0.1) · Veritabanı: PostgreSQL
+//  Not: Bu dosya taslaktır. Migration üretmeden önce taraflarla gözden
+//  geçirilecek; alan adları ve enum değerleri Türkçe iş diline göre seçildi.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+//  1. TESİS YAPISI — standart (varsayılan) otel kayıtları seed ile yüklenir
+// ============================================================================
+
+model Hotel {
+  id              String   @id @default(cuid())
+  code            String   @unique              // MR, MRD, MRP
+  name            String                        // Merit Royal, Merit Royal Diamond, ...
+  location        String?
+  themeColor      String?
+  isSystemDefault Boolean  @default(false)      // true → silinemez (3 varsayılan tesis)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  floors        Floor[]
+  outlets       Outlet[]
+  modules       HotelModule[]
+  rooms         Room[]
+  employees     Employee[]
+  products      Product[]
+  concepts      Concept[]
+  stockRecords  StockAssignment[]
+  stockMoves    StockMovement[]
+  consumptions  ConsumptionRecord[]
+  persRequests  PersonalizationRequest[]
+  roomServices  RoomServiceRequest[]
+  scans         ScanEvent[]
+  orders        Order[]
+  users         UserScope[]
+  settings      Setting[]
+
+  sessions      UserSession[]
+  bills         Bill[]
+
+  @@map("hotels")
+}
+
+model Outlet {
+  id        String  @id @default(cuid())
+  hotelId   String
+  moduleKey ModuleKey                           // outlet HANGİ MODÜLE ait (her modülün outletleri kendine özel)
+  name      String                              // Royal Ana Havuz & Pool Bar
+  type      OutletType
+  qrCount   Int     @default(0)
+  themeName String?
+  priceShow Boolean @default(false)   // outlet fiyat gösterimi: kapalı başlar, outlet bazında açılır
+  isActive  Boolean @default(true)
+  /// QR Menü ve QR Sipariş outletlerinde fiyat KAYDI gösterimden bağımsızdır.
+  /// false iken tutarlar saklanır ama menüde ve adisyonda basılmaz; outlet bazında açılır.
+  priceDisplay Boolean @default(false)
+
+  hotel   Hotel     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  menus   Menu[]
+  tables  TableQr[]
+  orders  Order[]
+  printers Printer[]
+  members OutletMember[]
+  bills   Bill[]
+
+  @@unique([hotelId, moduleKey, name])
+  @@index([hotelId, moduleKey])
+  @@map("outlets")
+}
+
+enum ModuleKey {
+  QR_MENU
+  QR_ORDER
+  QR_ROOM_SERVICE
+  MINIBAR
+}
+
+enum OutletType {
+  HAVUZ
+  BAR
+  SALON
+  BAHCE
+  SAHIL
+  SPA
+  DEPO      // minibar modülü: merkez depo
+  KAT       // minibar modülü: kat bölgesi
+  GENEL
+}
+
+/// Otel bazlı modül açma/kapama (bir modül kapalıysa diğerleri çalışmaya devam eder)
+model HotelModule {
+  id         String    @id @default(cuid())
+  hotelId    String
+  moduleKey  ModuleKey
+  isEnabled  Boolean   @default(true)
+  enabledAt  DateTime  @default(now())
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+
+  @@unique([hotelId, moduleKey])
+  @@map("hotel_modules")
+}
+
+/// Outlet ekibi: kayıtlı kullanıcı ↔ outlet ↔ modül rolü
+/// Aynı kullanıcı birden fazla outlette farklı rollerle yer alabilir.
+model OutletMember {
+  id         String   @id @default(cuid())
+  userId     String
+  outletId   String
+  roleId     String
+  assignedById String?
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outlet     Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  role       Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  assignedBy User?  @relation("AtamayiYapan", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, outletId])
+  @@index([outletId])
+  @@map("outlet_members")
+}
+
+model Floor {
+  id        String  @id @default(cuid())
+  hotelId   String
+  number    Int
+  name      String                              // "1. Kat"
+  isActive  Boolean @default(true)
+
+  hotel   Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  rooms   Room[]
+  staff   EmployeeFloor[]
+
+  @@unique([hotelId, number])
+  @@map("floors")
+}
+
+model RoomType {
+  id        String @id @default(cuid())
+  name      String @unique                      // Standart Oda, Deluxe Oda, VIP Suit ...
+  capacity  Int    @default(2)
+  conceptId String                              // minibar konsepti bağlantısı zorunlu
+
+  concept Concept      @relation(fields: [conceptId], references: [id], onDelete: Restrict)
+  rooms   Room[]
+
+  @@map("room_types")
+}
+
+model Room {
+  id         String   @id @default(cuid())
+  hotelId    String
+  floorId    String
+  typeId     String
+  number     Int
+  qrToken    String   @unique                   // HMAC ile imzalı, tahmin edilemez
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  hotel      Hotel      @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  floor      Floor      @relation(fields: [floorId], references: [id], onDelete: Restrict)
+  type       RoomType   @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  consumptions ConsumptionRecord[]
+  persRequests PersonalizationRequest[]
+  roomServices RoomServiceRequest[]
+  scans        ScanEvent[]
+  dndFollowUps DndFollowUp[]
+
+  @@unique([hotelId, number])
+  @@index([hotelId, floorId])
+  @@map("rooms")
+}
+
+// ============================================================================
+//  2. MİNİBAR TANIMLARI — ürün grubu, ürün, konsept
+// ============================================================================
+
+model ProductGroup {
+  id     String  @id @default(cuid())
+  name   String  @unique                        // Alkolsüz İçecekler, Kuruyemiş & Kuru Meyve ...
+  code   String  @unique                        // ALKOLSUZ, KURUYEMIS
+  isActive Boolean @default(true)
+
+  products Product[]
+
+  @@map("product_groups")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  hotelId       String?                         // null → tüm otellerde ortak ürün
+  groupId       String
+  name          String
+  unit          String   @default("adet")
+  internalValue Decimal? @db.Decimal(10, 2)     // iç rapor/maliyet analizi; misafire gösterilmez
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  hotel        Hotel?         @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  group        ProductGroup   @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  conceptItems ConceptItem[]
+  stockAssign  StockAssignment[]
+  stockMoves   StockMovement[]
+  consumptionItems ConsumptionItem[]
+
+  @@unique([hotelId, name])
+  @@map("products")
+}
+
+model Concept {
+  id          String   @id @default(cuid())
+  hotelId     String?
+  name        String                            // Temel / Yükseltilmiş / Aile / Suit / VIP
+  isActive    Boolean  @default(true)
+  isTemplate  Boolean  @default(false)          // oteller arası ortak şablon
+  createdAt   DateTime @default(now())
+
+  hotel     Hotel?        @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  items     ConceptItem[]
+  roomTypes RoomType[]
+
+  @@unique([hotelId, name])
+  @@map("concepts")
+}
+
+model ConceptItem {
+  id        String @id @default(cuid())
+  conceptId String
+  productId String
+  quantity  Int    @default(1)
+
+  concept Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([conceptId, productId])
+  @@map("concept_items")
+}
+
+// ============================================================================
+//  3. İNSAN — personel, kullanıcı, rol, kapsam, cihaz
+// ============================================================================
+
+enum StaffRole {
+  KAT_SORUMLUSU
+  DEPO_SORUMLUSU
+}
+
+model Employee {
+  id        String    @id @default(cuid())
+  hotelId   String
+  fullName  String
+  role      StaffRole
+  shift     String?                             // "08:00–16:00"
+  phone     String?
+  isActive  Boolean   @default(true)
+  userId    String?   @unique                   // personel kartı ↔ sistem kullanıcısı
+
+  hotel     Hotel           @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  user      User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  floors    EmployeeFloor[]
+  stockAsg  StockAssignment[]  @relation("ZimmetSahibi")
+  stockMoves StockMovement[]
+  consumptions ConsumptionRecord[]
+  fulfilledPers PersonalizationRequest[] @relation("PersKarsilayan")
+  dnd       DndFollowUp[]
+  servedOrders Order[]          @relation("SiparisOnaylayan")
+  approvals OrderApproval[]
+  servedRoomService RoomServiceRequest[] @relation("OdaServisTeslim")
+
+  @@map("employees")
+}
+
+model EmployeeFloor {
+  employeeId String
+  floorId    String
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  floor    Floor    @relation(fields: [floorId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, floorId])
+  @@map("employee_floors")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  fullName      String
+  email         String?  @unique
+  passwordHash  String
+  mfaEnabled    Boolean  @default(false)
+  roleId        String
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  role         Role          @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  scopes       UserScope[]
+  employee     Employee?
+  devices      Device[]
+  consumptions ConsumptionRecord[] @relation("KaydiGiren")
+  persCreated  PersonalizationRequest[] @relation("PersTalebi")
+  auditLogs    AuditLog[]
+  notifications Notification[]
+  outletMembers OutletMember[]
+  sessions     UserSession[]
+  assignedMembers OutletMember[] @relation("AtamayiYapan")
+
+  @@map("users")
+}
+
+model Role {
+  id               String     @id @default(cuid())
+  name             String     @unique          // Sistem Yöneticisi, Kat Sorumlusu, Şef Garson ...
+  description      String?
+  moduleKey        ModuleKey?                  // rol hangi modüle ait (null → çekirdek/global rol)
+  isOutletRole     Boolean    @default(false)  // true → outlet ekibinde atanabilir
+  maxOnlineMinutes Int?                        // rol bazlı maksimum online süre (boşsa sistem ayarı)
+  kind             RoleKind   @default(OUTLET)  // Sistem | Yönetim | Outlet | Mutfak | Minibar
+  defaultScreen    String?                     // giriş sonrası açılacak varsayılan ekran
+  isSystem         Boolean    @default(false)
+
+  users         User[]
+  permissions   RolePermission[]
+  outletMembers OutletMember[]
+  moduleAccess  RoleModuleAccess[]
+  screenPerms   RoleScreenPermission[]
+
+  @@index([moduleKey])
+  @@index([kind])
+  @@map("roles")
+}
+
+model Permission {
+  id       String @id @default(cuid())
+  code     String @unique                       // minibar.def.room.create, qrorder.approve ...
+  module   String                               // minibar | qr-menu | qr-order | qr-room-service | core
+  label    String
+
+  roles    RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  allowed      Boolean @default(true)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserScope {
+  userId  String
+  hotelId String
+  outletId String?                              // null → otelin tamamı
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel  Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@id([userId, hotelId, outletId])
+  @@map("user_scopes")
+}
+
+enum DeviceType {
+  TELEFON
+  TABLET
+  AKILLI_SAAT
+  KASA_EKRANI
+  KDS_EKRANI
+}
+
+model Device {
+  id            String     @id @default(cuid())
+  userId        String
+  type          DeviceType
+  label         String?
+  pushToken     String?
+  fingerprint   String?                        // anonim cihaz izi (kara liste eşleşmesi)
+  isBlocked     Boolean    @default(false)
+  lastSeenAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([fingerprint])
+  @@map("devices")
+}
+
+// ============================================================================
+//  4. STOK — zimmet (depo → kat sorumlusu), hareketler, sayım
+// ============================================================================
+
+model StockAssignment {
+  id          String   @id @default(cuid())
+  hotelId     String
+  employeeId  String                            // zimmeti tutan kat sorumlusu
+  productId   String
+  assignedQty Int      @default(0)              // zimmetlenen
+  usedQty     Int      @default(0)              // odalarda kullanılan
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hotel    Hotel    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  employee Employee @relation("ZimmetSahibi", fields: [employeeId], references: [id], onDelete: Restrict)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([employeeId, productId])
+  @@map("stock_assignments")
+}
+
+enum StockMoveType {
+  ZIMMET_VERME      // depo → kat sorumlusu
+  ODA_IKAMESI       // kat sorumlusu → oda (tüketim/ikame)
+  IADE              // kat sorumlusu → depo
+  DUZELTME          // sayım/düzeltme
+  KISISELLESTIRME   // misafir talebi karşılama
+}
+
+model StockMovement {
+  id         String        @id @default(cuid())
+  hotelId    String
+  productId  String
+  employeeId String?
+  roomId     String?
+  type       StockMoveType
+  quantity   Int                                // + / −
+  reason     String?
+  createdAt  DateTime      @default(now())
+  createdById String?
+
+  hotel    Hotel     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([hotelId, createdAt])
+  @@index([productId, createdAt])
+  @@map("stock_movements")
+}
+
+// ============================================================================
+//  5. TÜKETİM ve TARAMA — append-only kayıtlar
+// ============================================================================
+
+model ScanEvent {
+  id          String   @id @default(cuid())
+  hotelId     String
+  roomId      String?
+  tableQrId   String?
+  actorType   String                            // KAT_SORUMLUSU | MISAFIR | GARSON
+  employeeId  String?
+  source      String                            // qr_kat_formu | qr_misafir | qr_masa
+  geoLat      Decimal? @db.Decimal(9, 6)
+  geoLng      Decimal? @db.Decimal(9, 6)
+  wifiSsid    String?
+  deviceFingerprint String?
+  occurredAt  DateTime @default(now())
+
+  hotel Hotel  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room  Room?  @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([hotelId, occurredAt])
+  @@map("scan_events")
+}
+
+model ConsumptionRecord {
+  id         String   @id @default(cuid())
+  hotelId    String
+  roomId     String
+  employeeId String                              // kaydı giren kat sorumlusu
+  createdById String?
+  source     String   @default("qr_kat_formu")
+  status     ConsumptionStatus @default(TAMAMLANDI)
+  note       String?
+  occurredAt DateTime @default(now())
+
+  hotel    Hotel             @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room     Room              @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  employee Employee          @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  createdBy User?            @relation("KaydiGiren", fields: [createdById], references: [id], onDelete: SetNull)
+  items    ConsumptionItem[]
+
+  @@index([hotelId, occurredAt])
+  @@index([roomId, occurredAt])
+  @@map("consumption_records")
+}
+
+enum ConsumptionStatus {
+  TAMAMLANDI
+  ARA_KAYIT        // DND veya erişilemedi
+  DUZELTILDI
+}
+
+model ConsumptionItem {
+  id          String @id @default(cuid())
+  recordId    String
+  productId   String
+  quantity    Int    @default(1)
+  isPersonalization Boolean @default(false)     // kişiselleştirmeden mi geldi
+
+  record  ConsumptionRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  product Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("consumption_items")
+}
+
+// ============================================================================
+//  6. MİSAFİR TALEPLERİ — kişiselleştirme ve oda servisi
+// ============================================================================
+
+model PersonalizationRequest {
+  id            String   @id @default(cuid())
+  hotelId       String
+  roomId        String
+  requestedById String?                          // misafir oturumu yoksa null (anonim QR)
+  fulfilledById String?                          // kat sorumlusu
+  status        RequestStatus @default(BEKLIYOR)
+  language      String   @default("en")          // algılanan dil
+  requestDay    DateTime @db.Date                // günde 1 hak kontrolü
+  note          String?
+  createdAt     DateTime @default(now())
+  fulfilledAt   DateTime?
+
+  hotel       Hotel    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  requestedBy User?    @relation("PersTalebi", fields: [requestedById], references: [id], onDelete: SetNull)
+  fulfilledBy Employee? @relation("PersKarsilayan", fields: [fulfilledById], references: [id], onDelete: SetNull)
+  items       PersonalizationItem[]
+
+  @@unique([roomId, requestDay])                 // günde en fazla 1 talep
+  @@map("personalization_requests")
+}
+
+enum RequestStatus {
+  BEKLIYOR
+  KISMEN
+  TAMAM
+  IPTAL
+}
+
+model PersonalizationItem {
+  id          String @id @default(cuid())
+  requestId   String
+  productId   String
+  delta       Int                                // + artır, − azalt
+  fulfilledQty Int @default(0)
+
+  request PersonalizationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  product Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("personalization_items")
+}
+
+model RoomServiceRequest {
+  id            String   @id @default(cuid())
+  hotelId       String
+  roomId        String
+  status        RoomServiceStatus @default(TALEP)
+  phoneConfirmed Boolean @default(false)         // opsiyonel adım
+  slaMinutes    Int      @default(30)
+  note          String?
+  createdAt     DateTime @default(now())
+  deliveredById String?
+  deliveredAt   DateTime?
+
+  hotel       Hotel     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room        Room      @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  deliveredBy Employee? @relation("OdaServisTeslim", fields: [deliveredById], references: [id], onDelete: SetNull)
+  items       RoomServiceItem[]
+
+  @@index([hotelId, status])
+  @@map("room_service_requests")
+}
+
+enum RoomServiceStatus {
+  TALEP
+  HAZIRLANIYOR
+  YOLDA
+  TESLIM
+  IPTAL
+}
+
+model RoomServiceItem {
+  id        String @id @default(cuid())
+  requestId String
+  menuItemId String
+  quantity  Int    @default(1)
+
+  request  RoomServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  menuItem MenuItem           @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@map("room_service_items")
+}
+
+// ============================================================================
+//  7. DND TAKİBİ ve BİLDİRİM
+// ============================================================================
+
+model DndFollowUp {
+  id            String   @id @default(cuid())
+  hotelId       String
+  roomId        String
+  employeeId    String
+  firstTryAt    DateTime @default(now())
+  alarmAt       DateTime                         // ilkTryAt + tanımlı süre (varsayılan 120 dk)
+  status        DndStatus @default(BEKLIYOR)
+  attempts      Int      @default(1)
+  lastAttemptAt DateTime?
+  resolvedAt    DateTime?
+  note          String?
+
+  hotel    Hotel    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@index([status, alarmAt])
+  @@map("dnd_follow_ups")
+}
+
+enum DndStatus {
+  BEKLIYOR
+  ALARM
+  TAMAM
+  IPTAL
+}
+
+enum NotificationChannel {
+  WEB_PUSH
+  MOBIL_PUSH
+  AKILLI_SAAT
+  EKRAN
+  ESKALASYON
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  hotelId   String?
+  channel   NotificationChannel
+  title     String
+  body      String
+  refType   String?                              // order | pers | dnd | stock
+  refId     String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  sentAt    DateTime?
+  failReason String?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model EscalationRule {
+  id            String @id @default(cuid())
+  hotelId       String?
+  scene         String                           // garson_cagrisi | siparis_onayi | oda_servisi
+  firstTargetRole String
+  thresholdSec  Int
+  secondTargetRole String
+  isActive      Boolean @default(true)
+
+  @@map("escalation_rules")
+}
+
+// ============================================================================
+//  8. MENÜ ve SİPARİŞ
+// ============================================================================
+
+model Menu {
+  id       String @id @default(cuid())
+  outletId String
+  name     String
+  languages String @default("tr,en,ru,de")
+  isActive Boolean @default(true)
+
+  outlet     Outlet          @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  categories MenuCategory[]
+  items      MenuItem[]
+  themes     MenuTheme[]
+
+  @@map("menus")
+}
+
+model MenuCategory {
+  id       String  @id @default(cuid())
+  menuId   String
+  parentId String?                               // alt kategori / alt-alt kategori
+  groupName String?                              // grup (alt kategori altında)
+  name      String
+  detail    String?                               // kategori özelliği / kısa açıklama
+  allergenNote String?                           // kategori / grup alerjen notu
+  imageUrl  String?
+  /// Kayıtlı tutar (minor unit). Gösterim Outlet.priceDisplay ile açılır.
+  priceCents Int?
+  sortOrder  Int    @default(0)
+
+  menu     Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent   MenuCategory?  @relation("KategoriAgaci", fields: [parentId], references: [id])
+  children MenuCategory[] @relation("KategoriAgaci")
+  items    MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  menuId      String
+  categoryId  String
+  name        String
+  description String?
+  imageUrl    String?
+  /// Opsiyonel birim fiyat. Outlet.priceDisplay kapalıyken misafir ve adisyonda gizlenir.
+  priceCents  Int?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  menu         Menu               @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  category     MenuCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  allergens    MenuItemAllergen[]
+  translations MenuItemTranslation[]
+  orderLines   OrderLine[]
+  roomService  RoomServiceItem[]
+
+  @@map("menu_items")
+}
+
+model MenuItemAllergen {
+  id         String @id @default(cuid())
+  menuItemId String
+  allergen   String                             // gluten, süt, yumurta, kuruyemiş, deniz ürünü, alkol
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, allergen])
+  @@map("menu_item_allergens")
+}
+
+model MenuItemTranslation {
+  id         String @id @default(cuid())
+  menuItemId String
+  language   String                             // tr | en | de | fr | it | ar
+  name       String
+  description String?
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([menuItemId, language])
+  @@map("menu_item_translations")
+}
+
+model MenuTheme {
+  id        String @id @default(cuid())
+  menuId    String
+  name      String                              // Deniz mavisi / akik ...
+  bgColor   String
+  accentColor String
+  softColor String
+  isDefault Boolean @default(false)
+
+  menu Menu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@map("menu_themes")
+}
+
+model TableQr {
+  id        String  @id @default(cuid())
+  outletId  String
+  code      String  @unique                     // OTEL-OUTLET-MASA biçiminde imzalı kimlik
+  label     String                              // "Ş-14", "CAB-03"
+  isActive  Boolean @default(true)
+
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@map("table_qrs")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  hotelId     String
+  outletId    String
+  tableQrId   String?
+  roomId      String?
+  status      OrderStatus @default(GONDERILDI)
+  guestLanguage String    @default("en")
+  isVipPriority Boolean   @default(false)
+  approvedById String?                          // garson
+  approvedAt  DateTime?
+  servedAt    DateTime?
+  priceShown  Boolean     @default(false)      // outlet fiyat gösterimi açıkken üretilen sipariş
+  billId      String?                          // oluşan adisyon
+  createdAt   DateTime    @default(now())
+
+  hotel     Hotel      @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  outlet    Outlet     @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  approvedBy Employee? @relation("SiparisOnaylayan", fields: [approvedById], references: [id], onDelete: SetNull)
+  lines     OrderLine[]
+  approvals OrderApproval[]
+
+  @@index([hotelId, status, createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  GONDERILDI          // misafir gönderdi, garson onayı bekliyor
+  ONAYLANDI           // garson onayladı
+  MUTFAKTA            // KDS + fiş yazıcıya iletildi
+  SERVIS_EDILDI
+  IPTAL
+}
+
+model OrderLine {
+  id         String @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity       Int    @default(1)
+  /// Sipariş anındaki birim fiyat kopyası. Adisyon toplamı yalnızca outlet.priceDisplay açıkken basılır.
+  unitPriceCents Int?
+  note           String?
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
+
+  @@map("order_lines")
+}
+
+model OrderApproval {
+  id         String   @id @default(cuid())
+  orderId    String
+  employeeId String
+  action     String                             // ONAY | DUZELTME | IPTAL
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+
+  @@map("order_approvals")
+}
+
+model KitchenStation {
+  id       String @id @default(cuid())
+  hotelId  String
+  name     String                               // Ana Mutfak, Havuz Bar, Piano Bar
+  kind     String                               // MUTFAK | BAR
+  isActive Boolean @default(true)
+
+  @@map("kitchen_stations")
+}
+
+model Printer {
+  id        String  @id @default(cuid())
+  hotelId   String
+  outletId  String?
+  name      String
+  ipAddress String?
+  protocol  String  @default("escpos")
+  isActive  Boolean @default(true)
+
+  hotel  Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  outlet Outlet? @relation(fields: [outletId], references: [id], onDelete: SetNull)
+
+  @@map("printers")
+}
+
+// ============================================================================
+//  9. YÖNETİM — ayarlar, kara liste, denetim
+// ============================================================================
+
+model Setting {
+  id      String @id @default(cuid())
+  hotelId String?
+  key     String                                // dnd.sure.dk, kisiselestirme.gunlukHak ...
+  value   String
+
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@unique([hotelId, key])
+  @@map("settings")
+}
+
+model BlacklistEntry {
+  id            String   @id @default(cuid())
+  deviceFingerprint String
+  reason        String
+  outletOrArea  String?
+  blockedAt     DateTime @default(now())
+  expiresAt     DateTime                        // blockedAt + 30 gün
+  isActive      Boolean  @default(true)
+
+  @@index([deviceFingerprint, isActive])
+  @@map("blacklist_entries")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  actorName String?
+  action    String
+  objectType String?
+  objectId  String?
+  detail    Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================================================
+//  SEED NOTU
+//  prisma/seed.ts aşağıdaki kayıtları oluşturur:
+//   1) Hotel: Merit Royal (MR), Merit Royal Diamond (MRD), Merit Royal Premium (MRP)
+//      — isSystemDefault = true, silinemez
+//   2) 7 ürün grubu, 22 ürün, 6 oda tipi, 6 konsept (oda tipi ↔ konsept zorunlu)
+//   3) Rol ve izin seti, ilk sistem yöneticisi kullanıcısı
+//   4) Örnek kat/oda ve iki personel (kat + depo sorumlusu) — yalnızca dev ortamı
+//  Canlı kurulumda 3 otel + roller + ürün/konsept iskeleti yüklenir; oda ve
+//  personel kayıtları otel tarafından panelden girilir.
+// ============================================================================
+
+// ============================================================================
+//  10. OTURUM & ONLINE KULLANICI TAKİBİ
+//      Giriş akışı: kullanıcı → hemen OUTLET veya MİNİBAR sistemi seçimi
+//      → oturum ONLINE. Otel, seçilen hedefin bağlı olduğu tesistir.
+//      Kullanıcı çıkış yapmazsa maksimum süre sonunda
+//      sistem otomatik çıkış yaptırır (Setting: session.maxOnlineMinutes).
+// ============================================================================
+
+enum SessionStatus {
+  ONLINE
+  UYARI       // süre bitmeden uyarı gönderildi
+  CIKTI       // kullanıcı veya sistem tarafından kapatıldı
+  DUSURULDU   // bağlantı koptu / cihaz düştü
+}
+
+enum LogoutReason {
+  MANUEL          // kullanıcı kendi çıkış yaptı
+  SURE_ASIMI      // maksimum online süre aşıldı
+  HAREKETSIZLIK   // boşta kalma süresi aşıldı
+  VARDIYA_SONU    // vardiya sonu zorunlu çıkış
+  ZORUNLU         // yönetici çıkış yaptırdı
+  TEK_CIHAZ       // aynı kullanıcı başka cihazdan giriş yaptı
+  SISTEM
+}
+
+model UserSession {
+  id          String        @id @default(cuid())
+  userId      String
+  hotelId     String
+  outletId    String?                           // outlet seçilmeden oturum açılamaz (minibar için kat bölgesi)
+  roleId      String?
+  deviceId    String?
+  status      SessionStatus @default(ONLINE)
+  loginAt     DateTime      @default(now())
+  lastSeenAt  DateTime      @default(now())
+  expiresAt   DateTime                          // loginAt + maxOnlineMinutes
+  warnSentAt  DateTime?
+  logoutAt    DateTime?
+  logoutReason LogoutReason?
+  ipAddress   String?
+  userAgent   String?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel  Hotel  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+
+  @@index([status, expiresAt])
+  @@index([hotelId, outletId, status])
+  @@index([userId, status])
+  @@map("user_sessions")
+}
+
+/// Oturum hareketleri (giriş/çıkış/uyarı/zorunlu çıkış) — denetim ve raporlama
+model SessionEvent {
+  id        String   @id @default(cuid())
+  sessionId String
+  event     String                              // LOGIN | OTEL_SECIM | OUTLET_SECIM | WARN | LOGOUT | FORCE_LOGOUT
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([sessionId, createdAt])
+  @@map("session_events")
+}
+
+// ============================================================================
+//  11. EKRAN KATALOĞU ve ROL–YETKİ MATRİSİ
+//      Yetki zinciri:  rol × otel × modül × ekran × işlem
+//      (V görüntüle · O oluştur · D düzenle · A onayla · R rapor)
+// ============================================================================
+
+enum RoleKind {
+  SISTEM      // Sistem Yöneticisi, Otel IT
+  YONETIM     // Otel Müdürü, F&B Müdürü
+  OUTLET      // Şef Garson, Garson, Barmen, Butler, Outlet Görevlisi, Oda Servisi Görevlisi
+  MUTFAK      // Mutfak Şefi, Mutfak Personeli, KDS Operatörü
+  MINIBAR     // Kat Sorumlusu, Depo Sorumlusu, Housekeeping Süpervizörü
+}
+
+/// Ekran kataloğu — yetkilendirme bu kayıtlar üzerinden yapılır (seed ~28 ekran)
+model AppScreen {
+  id        String    @id @default(cuid())
+  code      String    @unique                  // MB-KF, QS-KUY, RO-TAL, CR-ONL ...
+  moduleKey ModuleKey
+  name      String                             // Kat Formu — QR okutma
+  path      String?                            // /minibar/kat-formu
+  groupName String?                            // ekran grubu (rapor, operasyon, tanım)
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+
+  perms RoleScreenPermission[]
+
+  @@index([moduleKey])
+  @@map("app_screens")
+}
+
+/// Rolün hangi otelde hangi modüle erişebileceği
+model RoleModuleAccess {
+  id        String    @id @default(cuid())
+  roleId    String
+  hotelId   String?                            // null → tüm oteller
+  moduleKey ModuleKey
+  isEnabled Boolean   @default(true)
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, hotelId, moduleKey])
+  @@map("role_module_access")
+}
+
+/// Ekran ve işlem bazlı yetki
+model RoleScreenPermission {
+  id         String @id @default(cuid())
+  roleId     String
+  screenId   String
+  hotelId    String?                            // null → tüm oteller
+  canView    Boolean @default(true)             // V
+  canCreate  Boolean @default(false)            // O
+  canEdit    Boolean @default(false)            // D
+  canApprove Boolean @default(false)            // A
+  canReport  Boolean @default(false)            // R
+
+  role   Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  screen AppScreen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, screenId, hotelId])
+  @@index([roleId])
+  @@map("role_screen_permissions")
+}
+
+// ============================================================================
+//  SEED EKLERİ (yetki modeli)
+//   1) AppScreen: 28 ekran (MINIBAR 8 · QR_MENU 5 · QR_ORDER 5 · QR_ROOM_SERVICE 4 · CORE 6)
+//   2) Role: 16 başlangıç rolü (kind alanı ile tipe ayrılmış) + R-SYS tam yetkili
+//   3) RoleModuleAccess + RoleScreenPermission: rol tipine göre varsayılan yetki profilleri
+//      (TAM: V,O,D,A,R · ISLET: V,O,D,A · SAHA: V,O,D · IZLE: V,R)
+//   4) Onay yetkisi (canApprove) yalnızca şef garson ve üzeri rollere verilir
+// ============================================================================
+
+// ============================================================================
+//  12. OUTLETE ÖZEL MENÜ AĞACI ve ADİSYON
+//     Outlet'e atanan QR Menü / QR Sipariş (opsiyonel fiyatlı) modülü için
+//     menü, düğüm (node) ağacı olarak tutulur: kategori → alt kategori →
+//     grup → menü öğesi. Her düğümün görseli, öğenin detay/alerjen/fiyatı
+//     ve outlet bazlı fiyat gösterim anahtarı (Outlet.priceShow) vardır.
+// ============================================================================
+
+enum MenuNodeKind {
+  KAT    // kategori
+  ALT    // alt kategori
+  GRUP   // grup
+  OGE    // menü öğesi
+}
+
+model MenuNode {
+  id        String        @id @default(cuid())
+  outletId  String
+  parentId  String?                            // null → kök (kategori)
+  kind      MenuNodeKind
+  name      String
+  detail    String?                            // öğe detay bilgisi
+  allergens String[]                           // alerjen listesi (yalnızca OGE)
+  price     Decimal?      @db.Decimal(10, 2)   // opsiyonel fiyat; gösterim Outlet.priceShow ile
+  currency  String        @default("EUR")
+  imgUrl    String?                            // düğüm görseli (kategori/alt/grup/öğe)
+  imgName   String?
+  sortOrder Int           @default(0)
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  outlet  Outlet     @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  parent  MenuNode?  @relation("MenuAgaci", fields: [parentId], references: [id])
+  children MenuNode[] @relation("MenuAgaci")
+
+  @@index([outletId, kind])
+  @@index([parentId])
+  @@map("menu_nodes")
+}
+
+enum BillStatus {
+  ACIK         // adisyon açık (siparişler ekleniyor)
+  YAZDIRILDI   // fiş çıktısı alındı
+  IPTAL
+}
+
+/// Adisyon: fiyat gösterimi açık outletlerde siparişlerin toplamları ve fiş çıktısı
+model Bill {
+  id        String     @id @default(cuid())
+  outletId  String
+  hotelId   String
+  tableRef  String?                          // masa / şezlong / cabana kodu
+  orderRef  String?                          // kaynak sipariş (Order)
+  currency  String     @default("EUR")
+  subtotal  Decimal    @default(0) @db.Decimal(12, 2)
+  total     Decimal    @default(0) @db.Decimal(12, 2)
+  lines     Json                             // [{name, qty, unitPrice, lineTotal}]
+  status    BillStatus @default(ACIK)
+  printedAt DateTime?
+  printedById String?
+  createdAt DateTime   @default(now())
+
+  outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  hotel  Hotel  @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+
+  @@index([outletId, status])
+  @@index([hotelId, createdAt])
+  @@map("bills")
+}
+
+//  SEED EKLERİ:
+//   - Outlet.priceShow: QR Sipariş atanan outletlerde kapalı başlar (kural),
+//     yalnızca yönetici açar. Örnek: Havuz Bar (açık) · Piano Bar (kapalı).
+//   - MenuNode: her QR outlet için en az bir kategori + öğe şablonu ile açılır.
+//   - Bill: yalnızca priceShow=true outletlerde Order kapanışında üretilir.

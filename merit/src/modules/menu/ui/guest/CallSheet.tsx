@@ -28,6 +28,8 @@ export function CallSheet({
 
   useEffect(() => {
     if (!open) return;
+    // The studio preview renders inside an iframe: keys are heard on the sheet's own document.
+    const doc = sheetRef.current?.ownerDocument ?? document;
     const timer = setTimeout(() => {
       firstButtonRef.current?.focus();
     }, 50);
@@ -45,20 +47,20 @@ export function CallSheet({
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
+        if (event.shiftKey && doc.activeElement === first) {
           event.preventDefault();
           last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
+        } else if (!event.shiftKey && doc.activeElement === last) {
           event.preventDefault();
           first.focus();
         }
       }
     };
 
-    document.addEventListener("keydown", onKey);
+    doc.addEventListener("keydown", onKey);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener("keydown", onKey);
+      doc.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
 

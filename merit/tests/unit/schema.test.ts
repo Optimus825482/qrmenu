@@ -26,14 +26,14 @@ describe("şema benzersizlik kuralları (gerçek test DB)", () => {
   }
 
   it("aynı otelde aynı kat numarası P2002 verir", async () => {
-    const { hotel } = await hotelWithFloor("MRD");
+    const { hotel } = await hotelWithFloor("DIAMOND");
     await expectP2002(
       testDb.floor.create({ data: { hotelId: hotel.id, number: 1, name: "Kat 1 (tekrar)" } }),
     );
   });
 
   it("aynı otelde aynı oda numarası P2002 verir", async () => {
-    const { hotel, floor } = await hotelWithFloor("MRD");
+    const { hotel, floor } = await hotelWithFloor("DIAMOND");
     await testDb.room.create({ data: { hotelId: hotel.id, floorId: floor.id, number: "101" } });
     await expectP2002(
       testDb.room.create({ data: { hotelId: hotel.id, floorId: floor.id, number: "101" } }),
@@ -41,8 +41,8 @@ describe("şema benzersizlik kuralları (gerçek test DB)", () => {
   });
 
   it("farklı otelde aynı oda numarası kabul edilir", async () => {
-    const a = await hotelWithFloor("MRD");
-    const b = await hotelWithFloor("MR");
+    const a = await hotelWithFloor("DIAMOND");
+    const b = await hotelWithFloor("ROYAL");
     await testDb.room.create({
       data: { hotelId: a.hotel.id, floorId: a.floor.id, number: "101" },
     });
@@ -53,14 +53,14 @@ describe("şema benzersizlik kuralları (gerçek test DB)", () => {
   });
 
   it("P2002 hatası Prisma istemci hatası olarak gelir", async () => {
-    const { hotel } = await hotelWithFloor("MRD");
+    const { hotel } = await hotelWithFloor("DIAMOND");
     await expect(
       testDb.floor.create({ data: { hotelId: hotel.id, number: 1, name: "x" } }),
     ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
   });
 
   it("@db.Date alanı businessDay ile yazılınca aynı gün olarak geri okunur", async () => {
-    const { hotel } = await hotelWithFloor("MRD");
+    const { hotel } = await hotelWithFloor("DIAMOND");
     const created = await testDb.orderCounter.create({
       data: { hotelId: hotel.id, businessDate: businessDay("2026-07-16"), lastNo: 1 },
     });

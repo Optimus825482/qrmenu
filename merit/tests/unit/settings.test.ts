@@ -23,9 +23,9 @@ const { DEFAULT_SETTINGS } = await import("@/lib/settings-defs");
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function admin(hotelCode = "MR") {
+async function admin(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `sys-${hotelCode}`, roleCode: "R-SYS", hotelCode });
-  return ctxFor(user, { hotelCode, extraHotelCodes: ["MRD", "MRP"].filter((c) => c !== hotelCode) });
+  return ctxFor(user, { hotelCode, extraHotelCodes: ["DIAMOND", "PREMIUM"].filter((c) => c !== hotelCode) });
 }
 
 async function row(key: string, hotel: string | null) {
@@ -72,8 +72,8 @@ describe("hotelId == null (null ve undefined aynı: sistem kapsamı)", () => {
   });
 
   it("setSetting null otel ile otel yöneticisi için de FORBIDDEN (sistem geneli)", async () => {
-    const user = await makeUser({ username: "otm-null", roleCode: "R-OTM", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "otm-null", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(setSetting(ctx, "dnd.minChecks", 5, null)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
@@ -84,18 +84,18 @@ describe("hotelId == null (null ve undefined aynı: sistem kapsamı)", () => {
 describe("getSetting", () => {
   it("satır yoksa varsayılan: dnd.minChecks 2", async () => {
     expect(await getSetting("dnd.minChecks")).toBe(2);
-    expect(await getSetting("session.idleMinutes", await hotelId("MR"))).toBe(45);
+    expect(await getSetting("session.idleMinutes", await hotelId("ROYAL"))).toBe(45);
   });
 
   it("sistem satırı varsayılanı ezer", async () => {
     await testDb.setting.create({ data: { hotelId: null, key: "dnd.minChecks", value: 3 } });
     expect(await getSetting("dnd.minChecks")).toBe(3);
-    expect(await getSetting("dnd.minChecks", await hotelId("MR"))).toBe(3);
+    expect(await getSetting("dnd.minChecks", await hotelId("ROYAL"))).toBe(3);
   });
 
   it("otel satırı yalnız o otelde sistem satırını ezer", async () => {
-    const mr = await hotelId("MR");
-    const mrd = await hotelId("MRD");
+    const mr = await hotelId("ROYAL");
+    const mrd = await hotelId("DIAMOND");
     await testDb.setting.create({ data: { hotelId: null, key: "dnd.minChecks", value: 3 } });
     await testDb.setting.create({ data: { hotelId: mr, key: "dnd.minChecks", value: 4 } });
     expect(await getSetting("dnd.minChecks", mr)).toBe(4);
@@ -118,7 +118,7 @@ describe("getSetting", () => {
 
 describe("getSettings", () => {
   it("birden çok anahtarı otel > sistem > varsayılan sırasıyla çözer", async () => {
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await testDb.setting.create({ data: { hotelId: null, key: "dnd.minChecks", value: 3 } });
     await testDb.setting.create({ data: { hotelId: mr, key: "dnd.recheckMinutes", value: 90 } });
     const got = await getSettings(
@@ -136,15 +136,15 @@ describe("getSettings", () => {
 
 describe("setSetting", () => {
   it("yetkisiz rolde FORBIDDEN ve satır yazılmaz", async () => {
-    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(setSetting(ctx, "dnd.minChecks", 5)).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(await row("dnd.minChecks", null)).toBeNull();
   });
 
   it("salt-okunur sistem rolü (R-ITT) da FORBIDDEN", async () => {
-    const user = await makeUser({ username: "itt1", roleCode: "R-ITT", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "itt1", roleCode: "R-ITT", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(setSetting(ctx, "dnd.minChecks", 5)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
@@ -204,24 +204,24 @@ describe("setSetting", () => {
 
   it("otel değeri: o otelde geçerli, diğer otelde sistem değeri", async () => {
     const ctx = await admin();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await setSetting(ctx, "dnd.minChecks", 3);
     await setSetting(ctx, "dnd.minChecks", 4, mr);
     expect(await getSetting("dnd.minChecks", mr)).toBe(4);
-    expect(await getSetting("dnd.minChecks", await hotelId("MRD"))).toBe(3);
+    expect(await getSetting("dnd.minChecks", await hotelId("DIAMOND"))).toBe(3);
     expect(await testDb.setting.count({ where: { key: "dnd.minChecks" } })).toBe(2);
   });
 
   describe("sistem geneli yazım yalnız SISTEM rolüne açık", () => {
     async function managerWithCrSysEdit() {
-      const mr = await hotelId("MR");
+      const mr = await hotelId("ROYAL");
       const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-OTM" } });
       const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-SYS" } });
       await testDb.roleScreenPermission.create({
         data: { roleId: role.id, screenId: screen.id, hotelId: mr, canView: true, canEdit: true },
       });
-      const user = await makeUser({ username: "otm1", roleCode: "R-OTM", hotelCode: "MR" });
-      return ctxFor(user, { hotelCode: "MR" });
+      const user = await makeUser({ username: "otm1", roleCode: "R-OTM", hotelCode: "ROYAL" });
+      return ctxFor(user, { hotelCode: "ROYAL" });
     }
     afterEach(async () => {
       await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
@@ -245,7 +245,7 @@ describe("setSetting", () => {
 
     it("aynı kullanıcı kendi oteli için yazabilir", async () => {
       const ctx = await managerWithCrSysEdit();
-      const mr = await hotelId("MR");
+      const mr = await hotelId("ROYAL");
       await setSetting(ctx, "dnd.minChecks", 3, mr);
       expect(await getSetting("dnd.minChecks", mr)).toBe(3);
       expect(await row("dnd.minChecks", null)).toBeNull();
@@ -258,16 +258,16 @@ describe("setSetting", () => {
   });
 
   it("kapsam dışı otel için FORBIDDEN", async () => {
-    const user = await makeUser({ username: "sys1", roleCode: "R-SYS", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" }); // only MR in scope
-    await expect(setSetting(ctx, "dnd.minChecks", 4, await hotelId("MRD"))).rejects.toMatchObject({
+    const user = await makeUser({ username: "sys1", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" }); // only MR in scope
+    await expect(setSetting(ctx, "dnd.minChecks", 4, await hotelId("DIAMOND"))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
 
   it("settings.changed yayınlar (otel ve sistem kapsamı)", async () => {
     const ctx = await admin();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await setSetting(ctx, "dnd.minChecks", 3);
     await setSetting(ctx, "dnd.minChecks", 4, mr);
     await vi.waitFor(() => expect(received).toHaveLength(2), { timeout: 2000 });

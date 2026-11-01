@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+test-results
+playwright-report
+coverage
+tests
+merit/uploads
+*.log
+merit/prisma/dev.db*
+.claude
+.remember
+.superpowers

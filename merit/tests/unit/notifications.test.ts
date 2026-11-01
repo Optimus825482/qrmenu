@@ -51,19 +51,19 @@ afterAll(async () => {
 
 describe("notify", () => {
   it("otel+rol alıcıları: o oteldeki o rollerdeki aktif kullanıcılar kadar satır", async () => {
-    const mr = await hotelId("MR");
-    const kat1 = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "MR" });
-    const dep1 = await makeUser({ username: "dep1", roleCode: "R-DEP", hotelCode: "MR" });
+    const mr = await hotelId("ROYAL");
+    const kat1 = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    const dep1 = await makeUser({ username: "dep1", roleCode: "R-DEP", hotelCode: "ROYAL" });
     // Assigned to another hotel but also entitled to MR through UserHotel: still a recipient.
     const kat2 = await makeUser({
       username: "kat2",
       roleCode: "R-KAT",
-      hotelCode: "MRD",
-      extraHotelCodes: ["MR"],
+      hotelCode: "DIAMOND",
+      extraHotelCodes: ["ROYAL"],
     });
-    await makeUser({ username: "katPasif", roleCode: "R-KAT", hotelCode: "MR", isActive: false });
-    await makeUser({ username: "katBaska", roleCode: "R-KAT", hotelCode: "MRD" });
-    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "MR" }); // other role
+    await makeUser({ username: "katPasif", roleCode: "R-KAT", hotelCode: "ROYAL", isActive: false });
+    await makeUser({ username: "katBaska", roleCode: "R-KAT", hotelCode: "DIAMOND" });
+    await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" }); // other role
 
     const count = await notify({
       ...input,
@@ -96,24 +96,24 @@ describe("notify", () => {
   });
 
   it("otel+rol alıcıları etkin rolü kullanır: üyelikle R-SGF olan garson alır, otelle bağı olmayan almaz", async () => {
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const sgf = await testDb.role.findUniqueOrThrow({ where: { code: "R-SGF" } });
-    // Base role R-GAR, assigned to MRD, but works an MR outlet as R-SGF.
-    const waiter = await makeUser({ username: "gar.sef", roleCode: "R-GAR", hotelCode: "MRD" });
-    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    // Base role R-GAR, assigned to DIAMOND, but works an MR outlet as R-SGF.
+    const waiter = await makeUser({ username: "gar.sef", roleCode: "R-GAR", hotelCode: "DIAMOND" });
+    const outlet = await makeOutlet("ROYAL", "Havuz Bar", "BAR");
     await testDb.outletMember.create({
       data: { userId: waiter.id, outletId: outlet.id, roleId: sgf.id },
     });
     // Base role R-SGF on an MR outlet without override: entitled through the membership.
-    const chief = await makeUser({ username: "sef.mrd", roleCode: "R-SGF", hotelCode: "MRD" });
+    const chief = await makeUser({ username: "sef.mrd", roleCode: "R-SGF", hotelCode: "DIAMOND" });
     await addMember(chief.id, outlet.id);
     // R-SGF with no link to MR at all, and an R-SGF whose MR membership is inactive.
-    await makeUser({ username: "sef.baska", roleCode: "R-SGF", hotelCode: "MRD" });
-    const inactive = await makeUser({ username: "sef.pasif", roleCode: "R-SGF", hotelCode: "MRD" });
+    await makeUser({ username: "sef.baska", roleCode: "R-SGF", hotelCode: "DIAMOND" });
+    const inactive = await makeUser({ username: "sef.pasif", roleCode: "R-SGF", hotelCode: "DIAMOND" });
     await addMember(inactive.id, outlet.id, false);
     // The override replaces the base role: an R-SGF demoted to R-GAR at the MR outlet is out.
     const gar = await testDb.role.findUniqueOrThrow({ where: { code: "R-GAR" } });
-    const demoted = await makeUser({ username: "sef.dusuk", roleCode: "R-SGF", hotelCode: "MRD" });
+    const demoted = await makeUser({ username: "sef.dusuk", roleCode: "R-SGF", hotelCode: "DIAMOND" });
     await testDb.outletMember.create({
       data: { userId: demoted.id, outletId: outlet.id, roleId: gar.id },
     });
@@ -129,13 +129,13 @@ describe("notify", () => {
   it("usersEntitledTo: SISTEM rolü her otel için temel rolüyle hak sahibidir", async () => {
     const { usersEntitledTo } = await import("@/modules/core/server/entitlements");
     const sys = await makeUser({ username: "sys9", roleCode: "R-SYS" });
-    expect(await usersEntitledTo(await hotelId("MRP"), ["R-SYS"])).toEqual([sys.id]);
-    expect(await usersEntitledTo(await hotelId("MRP"), [])).toEqual([]);
+    expect(await usersEntitledTo(await hotelId("PREMIUM"), ["R-SYS"])).toEqual([sys.id]);
+    expect(await usersEntitledTo(await hotelId("PREMIUM"), [])).toEqual([]);
   });
 
   it("açık kimlik listesi: 2 satır (tekrarlar tekilleştirilir) ve olay yalnız onlara gider", async () => {
-    const a = await makeUser({ username: "a1", roleCode: "R-GAR", hotelCode: "MR" });
-    const b = await makeUser({ username: "b1", roleCode: "R-GAR", hotelCode: "MR" });
+    const a = await makeUser({ username: "a1", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const b = await makeUser({ username: "b1", roleCode: "R-GAR", hotelCode: "ROYAL" });
 
     const count = await notify({ ...input, recipients: [a.id, b.id, a.id] });
 
@@ -153,7 +153,7 @@ describe("notify", () => {
     expect(
       await notify({
         ...input,
-        recipients: { hotelId: await hotelId("MR"), roleCodes: ["R-KAT"] },
+        recipients: { hotelId: await hotelId("ROYAL"), roleCodes: ["R-KAT"] },
       }),
     ).toBe(0);
     await sleep(300);
@@ -184,7 +184,7 @@ describe("notify", () => {
   });
 
   it("tx verilirse satırlar ve olay transaction'la birlikte geri alınır", async () => {
-    const a = await makeUser({ username: "tx1", roleCode: "R-GAR", hotelCode: "MR" });
+    const a = await makeUser({ username: "tx1", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await expect(
       testDb.$transaction(async (tx) => {
         expect(await notify({ ...input, recipients: [a.id] }, tx)).toBe(1);
@@ -213,11 +213,11 @@ describe("okuma API'si (yalnız çağıranın satırları)", () => {
   }
 
   it("listMyNotifications: yalnız kendi satırları, en yeni önce, limit uygulanır", async () => {
-    const me = await makeUser({ username: "okur", roleCode: "R-GAR", hotelCode: "MR" });
-    const other = await makeUser({ username: "baskasi", roleCode: "R-GAR", hotelCode: "MR" });
+    const me = await makeUser({ username: "okur", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const other = await makeUser({ username: "baskasi", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await seedRows(me.id, 25);
     await seedRows(other.id, 3);
-    const ctx = await ctxFor(me, { hotelCode: "MR" });
+    const ctx = await ctxFor(me, { hotelCode: "ROYAL" });
 
     const rows = await listMyNotifications(ctx);
     expect(rows).toHaveLength(20); // default limit
@@ -230,11 +230,11 @@ describe("okuma API'si (yalnız çağıranın satırları)", () => {
   });
 
   it("markNotificationRead: kendi satırı okundu olur (isRead + readAt)", async () => {
-    const me = await makeUser({ username: "okur2", roleCode: "R-GAR", hotelCode: "MR" });
+    const me = await makeUser({ username: "okur2", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await seedRows(me.id, 1);
     const row = await testDb.notification.findFirstOrThrow({ where: { userId: me.id } });
 
-    await markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), row.id);
+    await markNotificationRead(await ctxFor(me, { hotelCode: "ROYAL" }), row.id);
 
     const after = await testDb.notification.findUniqueOrThrow({ where: { id: row.id } });
     expect(after.isRead).toBe(true);
@@ -242,16 +242,16 @@ describe("okuma API'si (yalnız çağıranın satırları)", () => {
   });
 
   it("markNotificationRead: başkasının satırı → NOT_FOUND, değişiklik yok", async () => {
-    const me = await makeUser({ username: "okur3", roleCode: "R-GAR", hotelCode: "MR" });
-    const other = await makeUser({ username: "sahip", roleCode: "R-GAR", hotelCode: "MR" });
+    const me = await makeUser({ username: "okur3", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const other = await makeUser({ username: "sahip", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await seedRows(other.id, 1);
     const row = await testDb.notification.findFirstOrThrow({ where: { userId: other.id } });
 
     await expect(
-      markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), row.id),
+      markNotificationRead(await ctxFor(me, { hotelCode: "ROYAL" }), row.id),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(
-      markNotificationRead(await ctxFor(me, { hotelCode: "MR" }), "olmayan-id"),
+      markNotificationRead(await ctxFor(me, { hotelCode: "ROYAL" }), "olmayan-id"),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 
     const after = await testDb.notification.findUniqueOrThrow({ where: { id: row.id } });
@@ -260,14 +260,14 @@ describe("okuma API'si (yalnız çağıranın satırları)", () => {
   });
 
   it("markAllRead: yalnız çağıranın okunmamışlarını işaretler, sayıyı döner", async () => {
-    const me = await makeUser({ username: "okur4", roleCode: "R-GAR", hotelCode: "MR" });
-    const other = await makeUser({ username: "sahip2", roleCode: "R-GAR", hotelCode: "MR" });
+    const me = await makeUser({ username: "okur4", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const other = await makeUser({ username: "sahip2", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await seedRows(me.id, 4);
     await seedRows(other.id, 2);
     const mine = await testDb.notification.findFirstOrThrow({ where: { userId: me.id } });
     await testDb.notification.update({ where: { id: mine.id }, data: { isRead: true, readAt: new Date() } });
 
-    expect(await markAllRead(await ctxFor(me, { hotelCode: "MR" }))).toBe(3);
+    expect(await markAllRead(await ctxFor(me, { hotelCode: "ROYAL" }))).toBe(3);
 
     expect(await testDb.notification.count({ where: { userId: me.id, isRead: false } })).toBe(0);
     expect(await testDb.notification.count({ where: { userId: other.id, isRead: false } })).toBe(2);

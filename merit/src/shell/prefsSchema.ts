@@ -47,6 +47,8 @@ export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object({
   brandWatermark: z.boolean().default(DEFAULT_APPEARANCE.brandWatermark),
   icons: z.array(z.object({ appId: id, x: coord, y: coord })).max(200),
   windows: z.array(winState).max(MAX_WINDOWS),
+  /** One-time shortcut migrations; absent in layouts saved before this field was introduced. */
+  shortcutVersion: z.number().int().min(0).default(0),
 });
 
 /** Parsed prefs, or null when missing or malformed (a stale shape is ignored, not trusted). */

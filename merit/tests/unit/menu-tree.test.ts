@@ -33,13 +33,13 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function outlet(hotelCode = "MR", name = "Havuz Bar") {
+async function outlet(hotelCode = "ROYAL", name = "Havuz Bar") {
   return testDb.outlet.create({
     data: { hotelId: await hotelId(hotelCode), name, type: "BAR", hasMenu: true, hasOrdering: true },
   });
 }
 
-async function fbm(hotelCode = "MR") {
+async function fbm(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `fbm-${hotelCode}`, roleCode: "R-FBM", hotelCode });
   return ctxFor(user, { hotelCode });
 }
@@ -97,8 +97,8 @@ describe("menuTree hiyerarşi", () => {
 
   it("ebeveyn başka outletin ise NOT_FOUND", async () => {
     const ctx = await fbm();
-    const a = await outlet("MR", "Havuz Bar");
-    const b = await outlet("MR", "Lobi Bar");
+    const a = await outlet("ROYAL", "Havuz Bar");
+    const b = await outlet("ROYAL", "Lobi Bar");
     const cat = await tree.create(ctx, a.id, { kind: "KATEGORI", name: "X" });
     await expect(
       tree.create(ctx, b.id, { kind: "ALT_KATEGORI", name: "Y", parentId: cat.id }),
@@ -152,12 +152,12 @@ describe("menuTree tükendi ve yetki", () => {
 
   it("R-GAR kendi outletinde setAvailable ok; başka outlette FORBIDDEN; update FORBIDDEN", async () => {
     const admin = await fbm();
-    const own = await outlet("MR", "Havuz Bar");
-    const other = await outlet("MR", "Lobi Bar");
+    const own = await outlet("ROYAL", "Havuz Bar");
+    const other = await outlet("ROYAL", "Lobi Bar");
     const mine = (await chain(admin, own.id)).item;
     const theirs = (await chain(admin, other.id)).item;
-    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const base = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const base = await ctxFor(user, { hotelCode: "ROYAL" });
     const gar = { ...base, session: { ...base.session, outletId: own.id } };
 
     await tree.setAvailable(gar, mine.id, false);
@@ -168,11 +168,11 @@ describe("menuTree tükendi ve yetki", () => {
   });
 
   it("başka otelin outletinde R-OTM (MR) FORBIDDEN", async () => {
-    const admin = await fbm("MRP");
-    const foreign = await outlet("MRP", "Plaj Bar");
+    const admin = await fbm("PREMIUM");
+    const foreign = await outlet("PREMIUM", "Plaj Bar");
     await chain(admin, foreign.id);
-    const user = await makeUser({ username: "otm", roleCode: "R-OTM", hotelCode: "MR" });
-    const otm = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "otm", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const otm = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(tree.list(otm, foreign.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(tree.create(otm, foreign.id, { kind: "KATEGORI", name: "Z" })).rejects.toMatchObject({
       code: "FORBIDDEN",
@@ -216,8 +216,8 @@ describe("menuTree eşzamanlılık ve kapsam", () => {
 
   it("outlet kapsamlı oturum başka outlette create/move FORBIDDEN", async () => {
     const admin = await fbm();
-    const own = await outlet("MR", "Havuz Bar");
-    const other = await outlet("MR", "Lobi Bar");
+    const own = await outlet("ROYAL", "Havuz Bar");
+    const other = await outlet("ROYAL", "Lobi Bar");
     const theirs = (await chain(admin, other.id)).cat;
     const scoped = { ...admin, session: { ...admin.session, outletId: own.id } };
     await expect(tree.create(scoped, other.id, { kind: "KATEGORI", name: "Z" })).rejects.toMatchObject({
@@ -230,12 +230,12 @@ describe("menuTree eşzamanlılık ve kapsam", () => {
 
   it("QS-KDS D (R-KDS) kendi outletinde setAvailable ok, başka outlette FORBIDDEN", async () => {
     const admin = await fbm();
-    const own = await outlet("MR", "Havuz Bar");
-    const other = await outlet("MR", "Lobi Bar");
+    const own = await outlet("ROYAL", "Havuz Bar");
+    const other = await outlet("ROYAL", "Lobi Bar");
     const mine = (await chain(admin, own.id)).item;
     const theirs = (await chain(admin, other.id)).item;
-    const user = await makeUser({ username: "kds", roleCode: "R-KDS", hotelCode: "MR" });
-    const base = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "kds", roleCode: "R-KDS", hotelCode: "ROYAL" });
+    const base = await ctxFor(user, { hotelCode: "ROYAL" });
     const kds = { ...base, session: { ...base.session, outletId: own.id } };
     await tree.setAvailable(kds, mine.id, false);
     expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: mine.id } })).isAvailable).toBe(false);

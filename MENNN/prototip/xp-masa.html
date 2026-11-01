@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Yönetici Kabuğu · Masaüstü / Tablet / Mobil</title>
+<style>
+:root{--bar1:#245edc;--bar2:#1941a5;--title1:#0a5adf;--title2:#3d95ff;--title3:#0054e3;--winbrd:#0831d9;--titleInk:#fff;--start:#3c8c2e;--deskink:#fff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font:11px/1.35 Tahoma,"Segoe UI",sans-serif;color:#102033}
+button,input,select{font:inherit}
+button{cursor:pointer}
+#os{position:relative;height:100%;display:flex;flex-direction:column}
+#desk{position:relative;flex:1;overflow:hidden;user-select:none}
+body.bg-tepe #desk{background:
+  radial-gradient(circle at 82% 16%, #fff4c2 0 14px, #ffe28a 16px, transparent 46px),
+  linear-gradient(#5aa0e6 0 38%, #b7ddf2 46%, #d7ecc0 47%, #7cb34e 68%, #3f7d34 100%)}
+body.bg-gece #desk{background:
+  radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 70% 20%, #fff 0 1px, transparent 2px),
+  radial-gradient(circle at 40% 60%, #fff 0 1px, transparent 2px),
+  linear-gradient(#0b1c3a, #1a3d78 70%, #0e2a22)}
+body.bg-deniz #desk{background:linear-gradient(#7ec8ea 0 42%, #1c7c9c 43% 70%, #c2a36a 71%)}
+body.bg-mavi #desk{background:#245edc}
+body.bg-yesil #desk{background:#3d7a32}
+.hintline{position:absolute;left:96px;bottom:14px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.45);font-size:12px;pointer-events:none;max-width:520px}
+#icons{position:absolute;inset:0}
+.icon{position:absolute;width:76px;text-align:center;color:var(--deskink);text-shadow:0 1px 2px rgba(0,0,0,.55);padding:4px 2px;border:1px solid transparent;border-radius:3px}
+.icon.on{background:rgba(11,60,140,.35);border-color:rgba(255,255,255,.7)}
+.icon .gl{width:36px;height:36px;margin:0 auto 3px;border-radius:6px;display:grid;place-items:center;font-size:20px;background:linear-gradient(#fff,#d9e6f5);box-shadow:1px 1px 0 rgba(0,0,0,.25);color:#14315c;text-shadow:none}
+.icon span{display:block;font-size:11px;line-height:1.2}
+#recycle{position:absolute;right:18px;bottom:16px;width:78px}
+#taskbar{height:34px;display:flex;align-items:center;gap:6px;padding:3px 6px;background:linear-gradient(var(--bar1),var(--bar2));color:#fff;flex:0 0 34px}
+#startBtn{border:1px solid #fff6;border-radius:14px;background:linear-gradient(#67c15a,var(--start));color:#fff;font-weight:700;padding:3px 12px 3px 8px;letter-spacing:.02em}
+.tbtn{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:linear-gradient(#4f86ef,#2a62d0);color:#fff;padding:3px 8px;border-radius:3px}
+.tbtn.on{background:linear-gradient(#1d4eaf,#163e8c);box-shadow:inset 0 0 0 1px #fff6}
+#tasks{display:flex;gap:4px;flex:1;min-width:0}
+#tray{display:flex;align-items:center;gap:8px;background:linear-gradient(#2f6ae0,#1c4eaa);border:1px solid rgba(255,255,255,.25);border-radius:3px;padding:2px 8px;font-size:11px}
+.modes button{border:0;background:transparent;color:#fff;padding:0 4px}
+.modes button.on{text-decoration:underline}
+#status{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.95}
+#start{position:absolute;left:4px;bottom:36px;width:392px;display:none;z-index:40;border:2px solid #0831d9;box-shadow:4px 4px 10px rgba(0,0,0,.35);background:#fff}
+#start.open{display:block}
+.shead{background:linear-gradient(#1f56c2,#0d3f9e);color:#fff;padding:10px 12px;font-weight:700;font-size:13px}
+.scols{display:grid;grid-template-columns:1.15fr .85fr;min-height:280px}
+.scol{padding:6px}
+.scol.r{background:#d3e5fa}
+.scat{font-size:10px;letter-spacing:.08em;color:#5c7190;margin:8px 4px 3px;text-transform:uppercase}
+.sitem{display:flex;gap:6px;width:100%;text-align:left;border:0;background:transparent;padding:4px 6px;border-radius:3px;align-items:center}
+.sitem:hover{background:#2f71d6;color:#fff}
+.sitem b{font-weight:600}
+#ctx{position:fixed;z-index:50;display:none;min-width:190px;background:#fff;border:1px solid #8aa4c8;box-shadow:3px 3px 8px rgba(0,0,0,.28);padding:3px}
+#ctx.open{display:block}
+.citem,.csub>summary{padding:5px 10px;cursor:pointer;list-style:none}
+.citem:hover,.csub>summary:hover{background:#2f71d6;color:#fff}
+.csub{border-top:1px solid #e4eaf2}
+.csub summary{display:block}
+.csub div{padding:4px 10px 4px 18px;cursor:pointer}
+.csub div:hover{background:#e7f0fb}
+#wins{position:absolute;inset:0 0 34px 0;pointer-events:none;z-index:5}
+.win{position:absolute;width:640px;height:430px;display:flex;flex-direction:column;pointer-events:auto;background:#ece9d8;border:3px solid var(--winbrd);box-shadow:4px 4px 0 rgba(0,0,0,.18)}
+.win.min{display:none}
+.win.max{left:0!important;top:0!important;width:100%!important;height:100%!important}
+.title{height:28px;display:flex;align-items:center;gap:6px;padding:0 4px 0 8px;color:var(--titleInk);background:linear-gradient(180deg,var(--title2),var(--title1) 45%,var(--title3));font-weight:700;cursor:default}
+.title b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.wb{width:21px;height:21px;border:1px solid #fff;border-radius:3px;color:#fff;background:#d84a3a;font-weight:700;padding:0;line-height:1}
+.wb.min,.wb.max{background:linear-gradient(#4f8fe8,#1d5ec4)}
+.wbody{flex:1;overflow:auto;padding:10px;background:#fff;color:#102033}
+.wstat{height:20px;background:#ece9d8;border-top:1px solid #fff;color:#333;padding:2px 8px;font-size:10.5px}
+.lead{margin:0 0 8px;color:#34506c}
+.split{display:grid;grid-template-columns:168px 1fr;gap:10px;min-height:280px}
+.sub button{display:block;width:100%;text-align:left;border:1px solid transparent;background:#f4f7fb;margin-bottom:3px;padding:6px 8px;border-radius:3px}
+.sub button.on{background:#d6e6fb;border-color:#7aa2d4;font-weight:700}
+.hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hcard{border:1px solid #c5d4e8;background:linear-gradient(#fff,#f3f7fc);padding:10px;border-radius:4px}
+.hcard b{display:block;font-size:13px;margin-bottom:4px}
+.hcard p{margin:0 0 8px;color:#5c7190}
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar b{flex:1}
+.btn{border:1px solid #7aa2d4;background:linear-gradient(#fff,#e5eef8);padding:4px 8px;border-radius:3px}
+.btn.pri{background:linear-gradient(#4f8fe8,#1d5ec4);color:#fff;border-color:#0d3f9e}
+.btn.bad{border-color:#e0b4ae;background:#fdecea}
+.btn:disabled{opacity:.45;cursor:default}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{text-align:left;background:#e7f0fb;padding:5px 6px;border-bottom:1px solid #c5d4e8}
+td{padding:5px 6px;border-bottom:1px solid #eef3f8;vertical-align:top}
+.formg{display:grid;grid-template-columns:140px 1fr;gap:6px 8px;max-width:520px}
+.formg label{padding-top:4px;color:#34506c}
+.formg input,.formg select{width:100%;padding:4px 6px;border:1px solid #9db4d0}
+.note{background:#f4f8e8;border:1px solid #d5e2a8;padding:7px 8px;margin:8px 0}
+#ask{position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:80;display:none;align-items:center;justify-content:center}
+#ask.open{display:flex}
+.dlg{width:360px;background:#ece9d8;border:2px solid #0831d9;box-shadow:6px 6px 0 rgba(0,0,0,.2)}
+.dlg h3{margin:0;padding:7px 10px;background:linear-gradient(#3d95ff,#0a5adf);color:#fff;font-size:12px}
+.dlg .inn{display:flex;gap:10px;padding:14px;background:#fff;align-items:flex-start}
+.q{width:32px;height:32px;border-radius:50%;background:#2f71d6;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 32px}
+.dlg p{margin:0;white-space:pre-wrap}
+.dlg .act{display:flex;justify-content:flex-end;gap:8px;padding:8px;background:#ece9d8}
+#paper{display:none}
+body.printing *{visibility:hidden}
+body.printing #paper,body.printing #paper *{visibility:visible}
+body.printing #paper{display:block;position:absolute;left:0;top:0;width:72mm;padding:8px;font:12px/1.4 Tahoma,sans-serif}
+#android{display:none;height:100%;background:#eef1f6;color:#1b1b1f;font:14px/1.4 "Segoe UI",Tahoma,sans-serif}
+body.is-mobile #os{display:none}
+body.is-mobile #android{display:flex;flex-direction:column}
+body.phone-frame{background:#1a1c20}
+body.phone-frame #android{width:390px;height:min(780px,calc(100% - 32px));margin:16px auto;border-radius:28px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.45);border:8px solid #111}
+.astat{height:28px;background:#1b1b1f;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:0 14px;font-size:12px}
+.ahead{padding:14px 16px 6px}
+.ahead h1{margin:0;font-size:22px}
+.ahead p{margin:2px 0 0;color:#5c6570;font-size:13px}
+.chips{display:flex;gap:6px;padding:0 16px 8px;overflow:auto}
+.chips button{border:0;background:#fff;border-radius:16px;padding:6px 10px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.chips button.on{background:#1a73e8;color:#fff}
+#mbody{flex:1;overflow:auto;padding:0 16px 12px}
+.abot{height:62px;display:flex;background:#fff;border-top:1px solid #e4e7ee}
+.abot button{flex:1;border:0;background:transparent;color:#5c6570;font-size:11px}
+.abot button.on{color:#1a73e8;font-weight:700}
+.acard{background:#fff;border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.acard h3{margin:0 0 6px;font-size:15px}
+.arow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #f0f2f6;font-size:13px}
+.switch{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #f0f2f6}
+.switch input{width:18px;height:18px}
+body.is-tablet .icon{width:88px}
+body.is-tablet .title{height:34px}
+body.is-tablet .btn{padding:7px 10px}
+body.theme-zeytin{--bar1:#7d8c2e;--bar2:#55631c;--title1:#6d7c28;--title2:#c5d47a;--title3:#4e5b16;--winbrd:#4e5b16;--titleInk:#1c2410;--start:#6d7c28}
+body.theme-gumus{--bar1:#d7d7d7;--bar2:#9a9a9a;--title1:#8ea0b8;--title2:#eef3f8;--title3:#6d829c;--winbrd:#7d8b9c;--titleInk:#1c2430;--start:#8d8d8d}
+body.theme-gumus #tray,body.theme-gumus .tbtn{color:#1c2430}
+body.theme-zeytin #tray{color:#1c2410}
+</style>
+</head>
+<body class="theme-mavi bg-tepe">
+<div id="os">
+  <div id="desk">
+    <div id="icons"></div>
+    <div class="icon" id="recycle" data-icon="cop"><div class="gl">🗑</div><span>Geri Dönüşüm</span></div>
+    <div class="hintline" id="hint">Çift tıklayınca pencere açılır. Başlat menüsünden kısayolu masaüstüne sürükleyin. Sağ tık: yenile, arka plan, renk rejimi.</div>
+  </div>
+  <div id="wins"></div>
+  <div id="taskbar">
+    <button id="startBtn" type="button">başlat</button>
+    <div id="tasks"></div>
+    <div id="tray">
+      <span id="status">Hazır</span>
+      <span class="modes">
+        <button type="button" data-act="mode" data-mode="desktop">Masaüstü</button>
+        <button type="button" data-act="mode" data-mode="tablet">Tablet</button>
+        <button type="button" data-act="mode" data-mode="mobile">Mobil</button>
+      </span>
+      <span id="clock">--:--</span>
+    </div>
+  </div>
+  <div id="start"></div>
+</div>
+<div id="ctx"></div>
+<div id="android"></div>
+<div id="ask"><div class="dlg" role="dialog" aria-modal="true">
+  <h3>Onay</h3>
+  <div class="inn"><div class="q">?</div><p id="askText"></p></div>
+  <div class="act">
+    <button class="btn pri" type="button" data-act="ask-yes">Evet</button>
+    <button class="btn" type="button" data-act="ask-no">Hayır</button>
+  </div>
+</div></div>
+<div id="paper"></div>
+<script>
+const APPS = {
+  minibar:{name:'Minibar Sistemi', ic:'📦', cat:'Modüller', mod:'Minibar',
+    blurb:'Minibar ayrı bir sistemdir. İçindeki her otel kendi kat, oda ve tüketim kaydıyla ayrı durur.',
+    sections:[{id:'floors',t:'Katlar'},{id:'rooms',t:'Odalar'},{id:'cons',t:'Tüketim kayıtları'}]},
+  qrmenu:{name:'QR Menü Sistemi', ic:'🍽', cat:'Modüller', mod:'QR Menü',
+    blurb:'QR Menü ayrı bir sistemdir. Menü, kategori ve fiyat bu otelin QR Menü outletine aittir.',
+    sections:[{id:'outlets',t:'Outletler'},{id:'cats',t:'Kategori / alt kategori / grup'},{id:'items',t:'Menü öğeleri'}]},
+  qrorder:{name:'QR Sipariş Sistemi', ic:'🛎', cat:'Modüller', mod:'QR Sipariş',
+    blurb:'QR Sipariş ayrı bir sistemdir. Adisyon toplamı yalnızca fiyat gösterimi açık outlette basılır.',
+    sections:[{id:'outlets',t:'Sipariş outletleri'},{id:'orders',t:'Siparişler'},{id:'bills',t:'Adisyonlar'}]},
+  qrrs:{name:'QR Oda Servisi', ic:'🛏', cat:'Modüller', mod:'QR Oda Servisi',
+    blurb:'Oda servisi ayrı bir sistemdir. Talepler seçilen otelin dışında görünmez.',
+    sections:[{id:'outlets',t:'Servis birimleri'},{id:'rs',t:'Talepler'}]},
+  izleme:{name:'Canlı İzleme', ic:'📡', cat:'İzleme',
+    blurb:'İzleme, seçilen oteli ayrı bir sistem gibi okur.',
+    sections:[{id:'sessions',t:'Çevrimiçi oturumlar'},{id:'alerts',t:'Uyarılar'}]},
+  kuyruk:{name:'Sipariş Kuyruğu', ic:'🧾', cat:'İzleme',
+    blurb:'Onay bekleyen siparişler otel sistemine göredir. Onaysız kayıt mutfağa geçmez.',
+    sections:[{id:'queue',t:'Garson onayı'}]},
+  rapor:{name:'Günlük Rapor', ic:'📈', cat:'Raporlar',
+    blurb:'Rapor seçilen otelin kendi sayılarıdır.',
+    sections:[{id:'report',t:'Özet'}]},
+  tanim:{name:'Tanım Sistemi', ic:'📋', cat:'Tanımlar',
+    blurb:'Tanımlar otelin altında kurulur. Modüller bu kayıtlardan beslenir.',
+    sections:[{id:'hotelcard',t:'Otel bilgisi'},{id:'outlets',t:'Outlet tanımları'},{id:'users',t:'Kullanıcılar'}]},
+  ayar:{name:'Ayarlar', ic:'⚙', cat:'Ayarlar', solo:true,
+    blurb:'Masaüstü ve tablette tüm özellikler açıktır. Mobilde tanımlar buradan açılıp kapanır.',
+    sections:[]},
+  cop:{name:'Geri Dönüşüm Kutusu', ic:'🗑', solo:true, sections:[{id:'trash',t:'Kaldırılan kısayollar'}]}
+};
+const CATS = ['Modüller','İzleme','Raporlar','Tanımlar','Ayarlar'];
+let HOTELS = [
+  {id:'H1', name:'Merit Royal', code:'MR', rooms:'412', lock:true},
+  {id:'H2', name:'Merit Royal Diamond', code:'MRD', rooms:'186', lock:true},
+  {id:'H3', name:'Merit Royal Premium', code:'MRP', rooms:'420', lock:true}
+];
+let seq = 100;
+const DB = {
+  floors:[
+    {id:'F1', hotel:'H1', no:'1', name:'1. Kat'},
+    {id:'F2', hotel:'H1', no:'2', name:'2. Kat'},
+    {id:'F3', hotel:'H2', no:'3', name:'3. Kat'},
+    {id:'F4', hotel:'H3', no:'1', name:'1. Kat'}
+  ],
+  rooms:[
+    {id:'R1', hotel:'H1', no:'105', type:'Deluxe'},
+    {id:'R2', hotel:'H1', no:'211', type:'Suite'},
+    {id:'R3', hotel:'H2', no:'308', type:'Diamond Suite'},
+    {id:'R4', hotel:'H3', no:'507', type:'Aile Odası'}
+  ],
+  cons:[
+    {id:'C1', hotel:'H1', room:'211', note:'Su 2, kola 1 — zimmetten düşüldü'},
+    {id:'C2', hotel:'H3', room:'507', note:'DND ara kayıt, tüketim girilmedi'}
+  ],
+  outlets:[
+    {id:'O1', hotel:'H1', name:'Royal Ana Havuz & Pool Bar', mod:'QR Menü', price:'Kapalı'},
+    {id:'O2', hotel:'H1', name:'Havuz Bar İstasyonu', mod:'QR Sipariş', price:'Açık'},
+    {id:'O3', hotel:'H1', name:'Piano Bar İstasyonu', mod:'QR Sipariş', price:'Kapalı'},
+    {id:'O4', hotel:'H2', name:'Diamond Infinity Pool', mod:'QR Menü', price:'Açık'},
+    {id:'O5', hotel:'H1', name:'Oda Servisi Birimi', mod:'QR Oda Servisi', price:'Kapalı'},
+    {id:'O6', hotel:'H3', name:'Premium Merkez Depo', mod:'Minibar', price:'Kapalı'},
+    {id:'O7', hotel:'H3', name:'Lagoon Aile Havuzu', mod:'QR Menü', price:'Kapalı'}
+  ],
+  cats:[
+    {id:'K1', hotel:'H1', outlet:'O1', level:'Kategori', name:'Soğuk İçecekler', detail:'Havuz serinleticileri', allergen:'yok', price:''},
+    {id:'K2', hotel:'H1', outlet:'O1', level:'Alt kategori', name:'Kokteyller', detail:'İmza bardaklar', allergen:'yok', price:''},
+    {id:'K3', hotel:'H1', outlet:'O1', level:'Grup', name:'İmza', detail:'Otele özel tarif', allergen:'yok', price:''}
+  ],
+  items:[
+    {id:'I1', hotel:'H1', outlet:'O1', name:'Royal Akik', detail:'Böğürtlen, nane, limon', allergen:'yok', price:'240'},
+    {id:'I2', hotel:'H1', outlet:'O1', name:'Zephyros Cooler', detail:'Salatalık, tonik', allergen:'yok', price:'180'}
+  ],
+  orders:[
+    {id:'SP-5521', hotel:'H1', outlet:'Havuz Bar İstasyonu', table:'Ş-14', items:'Zephyros Cooler x2, Karpuz x1', total:'580', status:'Garson onayı', priceShow:'Açık'},
+    {id:'SP-5522', hotel:'H1', outlet:'Piano Bar İstasyonu', table:'M-06', items:'Martini x2', total:'520', status:'Garson onayı', priceShow:'Kapalı'},
+    {id:'SP-5524', hotel:'H2', outlet:'Diamond Infinity Pool', table:'Ş-08', items:'Şampanya, kuruyemiş', total:'1030', status:'Servis edildi', priceShow:'Açık'}
+  ],
+  rs:[
+    {id:'RS-901', hotel:'H1', room:'312', items:'Kulüp sandviç, ayran', phone:'Bekliyor'},
+    {id:'RS-902', hotel:'H3', room:'508', items:'Gece çorbası', phone:'Alındı'}
+  ],
+  users:[
+    {id:'U1', hotel:'H1', name:'Deniz Yücel', user:'deniz.yucel'},
+    {id:'U2', hotel:'H1', name:'Elif Demir', user:'elif.demir'},
+    {id:'U4', hotel:'H3', name:'Zeynep Arslan', user:'zeynep.arslan'}
+  ],
+  sessions:[
+    {id:'S1', hotel:'H1', name:'Deniz Yücel', place:'Havuz Bar İstasyonu', status:'Çevrimiçi'},
+    {id:'S2', hotel:'H1', name:'Elif Demir', place:'Minibar 1–2. Kat', status:'Çevrimiçi'},
+    {id:'S3', hotel:'H2', name:'Ayşe Bozkurt', place:'Diamond Infinity', status:'Çevrimiçi'}
+  ],
+  alerts:[
+    {id:'D1', hotel:'H1', room:'107', note:'DND ara kayıt, uyarı zamanı doldu', status:'Açık'},
+    {id:'D2', hotel:'H3', room:'404', note:'Yeniden kontrol bekliyor', status:'Açık'}
+  ]
+};
+const STORE = {floors:'floors',rooms:'rooms',cons:'cons',outlets:'outlets',cats:'cats',items:'items',orders:'orders',bills:'orders',rs:'rs',users:'users',sessions:'sessions',alerts:'alerts',queue:'orders'};
+const COLS = {
+  floors:[['no','No'],['name','Kat']],
+  rooms:[['no','Oda'],['type','Tip']],
+  cons:[['room','Oda'],['note','Kayıt']],
+  outlets:[['name','Outlet'],['mod','Modül'],['price','Fiyat gösterimi']],
+  cats:[['level','Seviye'],['name','Ad'],['detail','Detay'],['allergen','Alerjen'],['price','Fiyat']],
+  items:[['name','Öğe'],['detail','Detay'],['allergen','Alerjen'],['price','Fiyat EUR']],
+  orders:[['id','Fiş'],['outlet','Outlet'],['table','Masa'],['items','İçerik'],['status','Durum'],['total','Toplam']],
+  bills:[['id','Fiş'],['outlet','Outlet'],['table','Masa'],['items','İçerik'],['total','Toplam']],
+  rs:[['id','Talep'],['room','Oda'],['items','İçerik'],['phone','Telefon']],
+  users:[['name','Ad'],['user','Kullanıcı']],
+  sessions:[['name','Kişi'],['place','Yer'],['status','Durum']],
+  alerts:[['room','Oda'],['note','Uyarı'],['status','Durum']],
+  queue:[['id','Fiş'],['outlet','Outlet'],['table','Masa'],['items','İçerik'],['status','Durum']]
+};
+const FIELDS = {
+  floors:[{k:'no',t:'Kat no',req:1},{k:'name',t:'Kat adı',req:1}],
+  rooms:[{k:'no',t:'Oda no',req:1},{k:'type',t:'Oda tipi',req:1}],
+  cons:[{k:'room',t:'Oda',req:1},{k:'note',t:'Kayıt',req:1}],
+  outlets:[{k:'name',t:'Outlet adı',req:1},{k:'mod',t:'Modül',req:1,sel:['QR Menü','QR Sipariş','QR Oda Servisi','Minibar']},{k:'price',t:'Fiyat gösterimi',sel:['Kapalı','Açık']}],
+  cats:[{k:'outlet',t:'Outlet',req:1,outlet:1},{k:'level',t:'Seviye',sel:['Kategori','Alt kategori','Grup']},{k:'name',t:'Ad',req:1},{k:'detail',t:'Detay'},{k:'allergen',t:'Alerjen'},{k:'price',t:'Fiyat EUR (opsiyonel)'}],
+  items:[{k:'outlet',t:'Outlet',req:1,outlet:1},{k:'name',t:'Öğe',req:1},{k:'detail',t:'Detay'},{k:'allergen',t:'Alerjen'},{k:'price',t:'Fiyat EUR (opsiyonel)'}],
+  orders:[{k:'outlet',t:'Outlet adı',req:1},{k:'table',t:'Masa',req:1},{k:'items',t:'İçerik',req:1},{k:'total',t:'Toplam EUR'},{k:'status',t:'Durum',sel:['Garson onayı','Mutfakta','Servis edildi']},{k:'priceShow',t:'Fiyat gösterimi',sel:['Kapalı','Açık']}],
+  rs:[{k:'room',t:'Oda',req:1},{k:'items',t:'İçerik',req:1},{k:'phone',t:'Telefon teyidi',sel:['Bekliyor','Alındı']}],
+  users:[{k:'name',t:'Ad soyad',req:1},{k:'user',t:'Kullanıcı adı',req:1}],
+  sessions:[{k:'name',t:'Kişi',req:1},{k:'place',t:'Yer',req:1},{k:'status',t:'Durum',sel:['Çevrimiçi','Çıktı']}],
+  alerts:[{k:'room',t:'Oda',req:1},{k:'note',t:'Uyarı',req:1},{k:'status',t:'Durum',sel:['Açık','Kapalı']}]
+};
+const DEFS = [
+  {k:'otel', t:'Otel tanımları'},
+  {k:'outlet', t:'Outlet tanımları'},
+  {k:'menu', t:'Menü tanımları'},
+  {k:'kullanici', t:'Kullanıcı tanımları'},
+  {k:'minibar', t:'Minibar tanımları'}
+];
+const THEMES = [['mavi','Luna mavi'],['zeytin','Zeytin yeşili'],['gumus','Gümüş']];
+const BGS = [['tepe','Tepe'],['gece','Gece'],['deniz','Deniz'],['mavi','Düz mavi'],['yesil','Düz yeşil']];
+const S = {
+  force:null, theme:'mavi', bg:'tepe',
+  icons:[], trash:[], wins:[], z:10, sel:null,
+  pending:null, phone:{tab:'izleme', hotel:'H1', form:null, section:'sessions'},
+  defs:{otel:false, outlet:false, menu:false, kullanici:false, minibar:false}
+};
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function hn(id){ return (HOTELS.find(h=>h.id===id)||{}).name || id; }
+function appOf(id){ return APPS[id]; }
+function task(msg){ const el=document.getElementById('status'); if(el) el.textContent=msg; }
+function save(){
+  try{ localStorage.setItem('mennn-xp', JSON.stringify({force:S.force, theme:S.theme, bg:S.bg, icons:S.icons, trash:S.trash, defs:S.defs})); }catch(e){}
+}
+function load(){
+  try{
+    const p=JSON.parse(localStorage.getItem('mennn-xp')||'null');
+    if(!p) return false;
+    if(p.theme) S.theme=p.theme;
+    if(p.bg) S.bg=p.bg;
+    if('force' in p) S.force=p.force;
+    if(Array.isArray(p.icons)) S.icons=p.icons.filter(i=>APPS[i.app]);
+    if(Array.isArray(p.trash)) S.trash=p.trash.filter(i=>APPS[i.app]);
+    if(p.defs) DEFS.forEach(d=>{ if(typeof p.defs[d.k]==='boolean') S.defs[d.k]=p.defs[d.k]; });
+    return true;
+  }catch(e){ return false; }
+}
+function seedIcons(){
+  ['minibar','qrmenu','qrorder','qrrs','izleme','rapor'].forEach((id,i)=>{
+    S.icons.push({id:'ic'+i, app:id, x:14, y:12+i*78});
+  });
+}
+function mode(){
+  if(S.force) return S.force;
+  if(innerWidth<720) return 'mobile';
+  if(innerWidth<1100) return 'tablet';
+  return 'desktop';
+}
+function applyChrome(){
+  const m=mode();
+  document.body.className='theme-'+S.theme+' bg-'+S.bg+(m==='mobile'?' is-mobile':'')+(m==='tablet'?' is-tablet':'')+(m==='mobile'&&innerWidth>=720?' phone-frame':'');
+  document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('on', b.dataset.mode===(S.force||m) && (S.force?b.dataset.mode===S.force:b.dataset.mode===m && !S.force)));
+  document.querySelectorAll('.modes button').forEach(b=>b.classList.toggle('on', (S.force|| (m))===b.dataset.mode && (S.force?true:b.dataset.mode===m)));
+  if(m==='mobile') renderPhone();
+}
+function records(section, hotel, mod){
+  const key=STORE[section];
+  if(!key) return [];
+  let rows=DB[key].slice();
+  if(hotel) rows=rows.filter(r=>r.hotel===hotel);
+  if(mod && section==='outlets') rows=rows.filter(r=>r.mod===mod);
+  if(mod && (section==='cats'||section==='items')){
+    const ids=new Set(DB.outlets.filter(o=>o.hotel===hotel && o.mod===mod).map(o=>o.id));
+    rows=rows.filter(r=>ids.has(r.outlet));
+  }
+  if(section==='queue') rows=rows.filter(r=>r.status==='Garson onayı');
+  if(section==='sessions') rows=rows.filter(r=>r.status==='Çevrimiçi');
+  if(section==='alerts') rows=rows.filter(r=>r.status==='Açık');
+  return rows;
+}
+function cell(section, row, key){
+  if(key==='outlet' && row.outlet && DB.outlets.some(o=>o.id===row.outlet)){
+    const o=DB.outlets.find(x=>x.id===row.outlet); return o?o.name:row.outlet;
+  }
+  if(key==='total') return row.priceShow==='Açık' ? (row.total+' EUR') : 'gizli';
+  if(key==='price' && row.price==='' ) return '—';
+  return row[key]==null?'':row[key];
+}
+function fieldsOf(section, hotel, mod){
+  return (FIELDS[section]||[]).map(f=>{
+    if(!f.outlet) return f;
+    const opts=DB.outlets.filter(o=>o.hotel===hotel && (!mod || o.mod===mod)).map(o=>({v:o.id,t:o.name}));
+    return Object.assign({}, f, {sel:opts});
+  });
+}
+function emptyDraft(section, hotel, mod){
+  const d={hotel:hotel};
+  fieldsOf(section, hotel, mod).forEach(f=>{
+    d[f.k]= f.sel ? (typeof f.sel[0]==='string'?f.sel[0]:(f.sel[0]?f.sel[0].v:'')) : '';
+  });
+  if(mod && section==='outlets') d.mod=mod;
+  if(section==='orders'){ d.status=d.status||'Garson onayı'; d.priceShow=d.priceShow||'Kapalı'; }
+  return d;
+}
+function ask(text, yes){
+  S.pending=yes;
+  document.getElementById('askText').textContent=text;
+  document.getElementById('ask').classList.add('open');
+}
+function askClose(run){
+  document.getElementById('ask').classList.remove('open');
+  const fn=S.pending; S.pending=null;
+  if(run && fn) fn();
+}
+function findRow(section, id){
+  const key=STORE[section];
+  return key ? DB[key].find(r=>r.id===id) : null;
+}
+function crudNew(ctx){
+  const fields=fieldsOf(ctx.section, ctx.hotel, ctx.mod);
+  if((ctx.section==='cats'||ctx.section==='items') && !fields.find(f=>f.k==='outlet').sel.length){
+    task('Önce bu otelde outlet tanımlayın.'); return;
+  }
+  ask('Yeni kayıt formu açılsın mı?', ()=>{
+    ctx.setForm({mode:'new', draft:emptyDraft(ctx.section, ctx.hotel, ctx.mod)});
+    ctx.repaint();
+  });
+}
+function crudEdit(ctx, id){
+  const row=findRow(ctx.section, id); if(!row) return;
+  ask('Düzenleme formu açılsın mı?', ()=>{
+    ctx.setForm({mode:'edit', id:id, draft:Object.assign({}, row)});
+    ctx.repaint();
+  });
+}
+function crudView(ctx, id){
+  const row=findRow(ctx.section, id); if(!row) return;
+  ctx.setForm({mode:'view', id:id, draft:Object.assign({}, row)});
+  ctx.repaint();
+}
+function crudSave(ctx){
+  const form=ctx.getForm(); if(!form) return;
+  const fields=fieldsOf(ctx.section, ctx.hotel, ctx.mod);
+  const miss=fields.filter(f=>f.req && !String(form.draft[f.k]||'').trim());
+  if(miss.length){ task('Zorunlu alan boş: '+miss[0].t); return; }
+  ask(form.mode==='new'?'Bu kayıt oluşturulsun mu?':'Bu kayıt güncellensin mi?', ()=>{
+    const key=STORE[ctx.section];
+    if(form.mode==='new'){
+      DB[key].push(Object.assign({id:'N'+(++seq), hotel:ctx.hotel}, form.draft));
+    }else{
+      const row=DB[key].find(r=>r.id===form.id);
+      if(row) Object.assign(row, form.draft);
+    }
+    ctx.setForm(null); ctx.repaint(); task('Kayıt yazıldı.');
+  });
+}
+function crudDel(ctx, id){
+  const row=findRow(ctx.section, id); if(!row) return;
+  ask('Bu kayıt silinsin mi?\n'+(row.name||row.id||row.room||''), ()=>{
+    const key=STORE[ctx.section];
+    const i=DB[key].findIndex(r=>r.id===id);
+    if(i>=0) DB[key].splice(i,1);
+    ctx.setForm(null); ctx.repaint(); task('Kayıt silindi.');
+  });
+}
+function winCtx(w){
+  return {
+    section:w.section, hotel:w.hotel, mod:appOf(w.app).mod||null,
+    getForm:()=>w.form,
+    setForm:f=>{ w.form=f; },
+    repaint:()=>paintBody(w)
+  };
+}
+function openApp(id){
+  const app=appOf(id); if(!app) return;
+  const exist=S.wins.find(w=>w.app===id && !w.hotel);
+  if(exist && app.solo){ focusWin(exist.id); return; }
+  const n=S.wins.length;
+  const w={id:'w'+(++seq), app:id, hotel:null, section:app.sections[0]?app.sections[0].id:null, form:null,
+    x:70+ (n%6)*26, y:36+(n%6)*24, w:680, h:450, z:++S.z, min:false, max:false};
+  S.wins.push(w);
+  mountWin(w);
+  task(app.name+' açıldı.');
+  document.getElementById('start').classList.remove('open');
+}
+function mountWin(w){
+  const el=document.createElement('div');
+  el.className='win'; el.dataset.id=w.id;
+  el.style.left=w.x+'px'; el.style.top=w.y+'px'; el.style.width=w.w+'px'; el.style.height=w.h+'px'; el.style.zIndex=w.z;
+  const app=appOf(w.app);
+  el.innerHTML='<div class="title"><span>'+app.ic+'</span><b></b><button class="wb min" type="button" data-act="min">_</button><button class="wb max" type="button" data-act="max">□</button><button class="wb close" type="button" data-act="close">×</button></div><div class="wbody"></div><div class="wstat"></div>';
+  document.getElementById('wins').appendChild(el);
+  paintBody(w); paintTasks();
+}
+function winEl(id){ return document.querySelector('.win[data-id="'+id+'"]'); }
+function focusWin(id){
+  const w=S.wins.find(x=>x.id===id); if(!w) return;
+  w.z=++S.z; w.min=false;
+  const el=winEl(id); if(!el) return;
+  el.classList.remove('min'); el.style.zIndex=w.z;
+  paintTasks();
+}
+function paintBody(w){
+  const el=winEl(w.id); if(!el) return;
+  const app=appOf(w.app);
+  const title=w.hotel ? app.name+' · '+hn(w.hotel) : app.name;
+  el.querySelector('.title b').textContent=title;
+  el.querySelector('.wstat').textContent=w.hotel? 'Ayrı otel sistemi · '+hn(w.hotel) : 'Modül sistemi';
+  el.querySelector('.wbody').innerHTML=bodyHTML(w);
+  el.classList.toggle('min', w.min);
+  el.classList.toggle('max', w.max);
+}
+function bodyHTML(w){
+  const app=appOf(w.app);
+  if(w.app==='ayar') return settingsHTML();
+  if(w.app==='cop') return trashHTML();
+  if(!w.hotel){
+    return '<p class="lead">'+esc(app.blurb)+' Devam etmek için oteli seçin. Seçilmeden diğer otelin kaydı açılmaz.</p><div class="hgrid">'+
+      HOTELS.map(h=>{
+        const n=w.app==='minibar'? records('rooms', h.id).length : records('outlets', h.id, app.mod).length;
+        return '<div class="hcard"><b>'+esc(h.name)+'</b><p>'+esc(h.code)+' · '+esc(h.rooms)+' oda · bu modülde '+n+' kayıt</p><button class="btn pri" type="button" data-act="enter" data-hotel="'+h.id+'">Sisteme gir</button></div>';
+      }).join('')+'</div>';
+  }
+  if(w.form && w.section!=='hotelcard') return formHTML(w);
+  const sec=(app.sections||[]).map(s=>'<button type="button" data-act="sec" data-sec="'+s.id+'" class="'+(w.section===s.id?'on':'')+'">'+esc(s.t)+'</button>').join('');
+  return '<p class="lead">'+esc(app.name)+' içinde <b>'+esc(hn(w.hotel))+'</b> ayrı bir sistemdir. Başka otelin satırı burada listelenmez.</p>'+
+    '<div class="split"><nav class="sub">'+sec+'<button type="button" data-act="back">‹ Otellere dön</button></nav><div>'+sectionHTML(w)+'</div></div>';
+}
+function sectionHTML(w){
+  if(w.section==='hotelcard') return hotelCardHTML(w);
+  if(w.section==='report') return reportHTML(w.hotel);
+  if(w.section==='trash') return trashHTML();
+  const rows=records(w.section, w.hotel, appOf(w.app).mod);
+  const cols=COLS[w.section]||[];
+  const store=STORE[w.section];
+  const head='<tr>'+cols.map(c=>'<th>'+esc(c[1])+'</th>').join('')+'<th></th></tr>';
+  const body=rows.map(r=>{
+    const tds=cols.map(c=>'<td>'+esc(cell(w.section, r, c[0]))+'</td>').join('');
+    let btns='<button class="btn" type="button" data-act="view" data-id="'+r.id+'">Görüntüle</button> <button class="btn" type="button" data-act="edit" data-id="'+r.id+'">Düzenle</button> <button class="btn bad" type="button" data-act="del" data-id="'+r.id+'">Sil</button>';
+    if(w.section==='queue') btns='<button class="btn pri" type="button" data-act="approve" data-id="'+r.id+'">Onayla</button> '+btns;
+    if(w.section==='bills') btns=(r.priceShow==='Açık'?'<button class="btn pri" type="button" data-act="print" data-id="'+r.id+'">Adisyon yazdır</button> ':'<button class="btn" type="button" disabled>Tutar gizli</button> ')+btns;
+    if(w.section==='sessions') btns='<button class="btn bad" type="button" data-act="kick" data-id="'+r.id+'">Oturumu kapat</button>';
+    if(w.section==='alerts') btns='<button class="btn" type="button" data-act="done" data-id="'+r.id+'">Kapat</button>';
+    return '<tr>'+tds+'<td>'+btns+'</td></tr>';
+  }).join('') || '<tr><td colspan="'+(cols.length+1)+'">Bu otelde kayıt yok.</td></tr>';
+  const canNew = store && !['queue','bills','sessions','alerts','report'].includes(w.section);
+  return '<div class="bar"><b>'+esc((appOf(w.app).sections.find(s=>s.id===w.section)||{}).t||'')+'</b>'+
+    (canNew?'<button class="btn pri" type="button" data-act="new">Yeni kayıt</button>':'')+'</div><table>'+head+body+'</table>';
+}
+function formHTML(w){
+  const f=w.form;
+  const fields=fieldsOf(w.section==='bills'?'orders':w.section, w.hotel, appOf(w.app).mod);
+  const lockMod=appOf(w.app).mod && w.section==='outlets';
+  const read=f.mode==='view';
+  const inputs=fields.map(field=>{
+    const val=f.draft[field.k]==null?'':f.draft[field.k];
+    let ctrl;
+    if(field.sel){
+      const opts=field.sel.map(o=> typeof o==='string'
+        ? '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>'
+        : '<option value="'+esc(o.v)+'"'+(o.v===val?' selected':'')+'>'+esc(o.t)+'</option>').join('');
+      const dis=(read||(lockMod&&field.k==='mod'))?' disabled':'';
+      ctrl='<select data-k="'+field.k+'"'+dis+'>'+opts+'</select>';
+    }else{
+      ctrl='<input data-k="'+field.k+'" value="'+esc(val)+'"'+(read?' disabled':'')+'>';
+    }
+    return '<label>'+esc(field.t)+(field.req?' *':'')+'</label>'+ctrl;
+  }).join('');
+  const acts=read
+    ? '<button class="btn" type="button" data-act="cancel">Kapat</button>'
+    : '<button class="btn pri" type="button" data-act="save">Kaydet</button> <button class="btn" type="button" data-act="cancel">Vazgeç</button>';
+  let extra='';
+  if(w.section==='bills' || (w.section==='orders' && f.draft.priceShow==='Açık' && f.mode==='view')){
+    extra='<div class="note"><b>Adisyon.</b> '+esc(f.draft.table||'')+' · toplam '+(f.draft.priceShow==='Açık'?esc(f.draft.total)+' EUR':'gizli')+'</div>';
+  }
+  return '<div class="bar"><b>'+(f.mode==='new'?'Yeni kayıt':f.mode==='edit'?'Düzenle':'Görüntüle')+'</b></div><div class="formg">'+inputs+'</div><div class="bar" style="margin-top:10px">'+acts+'</div>'+extra;
+}
+function hotelCardHTML(w){
+  const h=HOTELS.find(x=>x.id===w.hotel);
+  return '<div class="bar"><b>Otel bilgisi</b><span>Standart kayıt silinemez</span></div><div class="formg">'+
+    '<label>Ad *</label><input id="hcName" value="'+esc(h.name)+'">'+
+    '<label>Kod *</label><input id="hcCode" value="'+esc(h.code)+'">'+
+    '<label>Oda</label><input value="'+esc(h.rooms)+'" disabled>'+
+    '</div><div class="bar" style="margin-top:10px"><button class="btn pri" type="button" data-act="save-hotel">Kaydet</button></div>';
+}
+function reportHTML(hotel){
+  const o=records('orders', hotel).length;
+  const on=records('sessions', hotel).length;
+  const c=records('cons', hotel).length;
+  const a=records('alerts', hotel).length;
+  return '<div class="hgrid"><div class="hcard"><b>'+o+'</b><p>Sipariş</p></div><div class="hcard"><b>'+on+'</b><p>Çevrimiçi</p></div><div class="hcard"><b>'+c+'</b><p>Tüketim</p></div><div class="hcard"><b>'+a+'</b><p>Açık uyarı</p></div></div>'+
+    '<div class="note">Rapor yalnızca '+esc(hn(hotel))+' sayılarıdır. Fiyat gösterimi kapalı adisyonlarda tutar bu kabukta da gizli kalır.</div>';
+}
+function settingsHTML(){
+  return '<p class="lead">Masaüstü ve tablette modüllerin tamamı görünür. Mobil Android görünümünde tanımlama kapalı başlar; aşağıdaki anahtarlar yalnız mobil listeye bölüm ekler.</p>'+
+    '<div class="bar"><b>Renk rejimi</b></div>'+THEMES.map(t=>'<button class="btn" type="button" data-act="theme" data-v="'+t[0]+'">'+t[1]+'</button> ').join('')+
+    '<div class="bar" style="margin-top:10px"><b>Arka plan</b></div>'+BGS.map(t=>'<button class="btn" type="button" data-act="bg" data-v="'+t[0]+'">'+t[1]+'</button> ').join('')+
+    '<div class="bar" style="margin-top:10px"><b>Mobil tanım anahtarları</b></div>'+
+    DEFS.map(d=>'<label class="switch" style="border:0;display:flex;gap:8px;padding:4px 0"><input type="checkbox" data-act="def" data-k="'+d.k+'"'+(S.defs[d.k]?' checked':'')+'> '+esc(d.t)+'</label>').join('');
+}
+function trashHTML(){
+  if(!S.trash.length) return '<p class="lead">Geri dönüşüm kutusu boş. Masaüstünden kaldırılan kısayollar burada durur.</p>';
+  return '<table><tr><th>Kısayol</th><th></th></tr>'+S.trash.map(t=>'<tr><td>'+esc(appOf(t.app).name)+'</td><td><button class="btn" type="button" data-act="restore" data-id="'+t.id+'">Geri yükle</button></td></tr>').join('')+'</table>';
+}
+function readForm(win){
+  const draft=Object.assign({}, win.form.draft);
+  winEl(win.id).querySelectorAll('[data-k]').forEach(el=>{ draft[el.dataset.k]=el.value; });
+  win.form.draft=draft;
+}
+function paintTasks(){
+  document.getElementById('tasks').innerHTML=S.wins.map(w=>{
+    const app=appOf(w.app);
+    const t=w.hotel? app.name+' · '+hn(w.hotel) : app.name;
+    return '<button type="button" class="tbtn'+(w.min?'':' on')+'" data-act="task" data-id="'+w.id+'">'+esc(t)+'</button>';
+  }).join('');
+}
+function renderIcons(){
+  document.getElementById('icons').innerHTML=S.icons.map(ic=>{
+    const a=appOf(ic.app);
+    return '<div class="icon'+(S.sel===ic.id?' on':'')+'" data-icon="'+ic.id+'" style="left:'+ic.x+'px;top:'+ic.y+'px"><div class="gl">'+a.ic+'</div><span>'+esc(a.name)+'</span></div>';
+  }).join('');
+}
+function renderStart(){
+  const left=CATS.filter(c=>c!=='Ayarlar').map(cat=>{
+    const items=Object.keys(APPS).filter(k=>APPS[k].cat===cat).map(k=>{
+      const a=APPS[k];
+      return '<button class="sitem" type="button" draggable="true" data-drag="'+k+'" data-act="launch" data-app="'+k+'"><span>'+a.ic+'</span><b>'+esc(a.name)+'</b></button>';
+    }).join('');
+    return '<div class="scat">'+cat+'</div>'+items;
+  }).join('');
+  const right=Object.keys(APPS).filter(k=>APPS[k].cat==='Ayarlar'||k==='rapor'||k==='izleme').map(k=>{
+    const a=APPS[k];
+    return '<button class="sitem" type="button" draggable="true" data-drag="'+k+'" data-act="launch" data-app="'+k+'"><span>'+a.ic+'</span><b>'+esc(a.name)+'</b></button>';
+  }).join('');
+  document.getElementById('start').innerHTML='<div class="shead">Sistem Yöneticisi</div><div class="scols"><div class="scol">'+left+'</div><div class="scol r"><div class="scat">Hızlı</div>'+right+'</div></div>';
+}
+function openCtx(x,y, iconId){
+  const box=document.getElementById('ctx');
+  let html='';
+  if(iconId && iconId!=='cop'){
+    html='<div class="citem" data-act="ctx-open" data-id="'+iconId+'">Aç</div><div class="citem" data-act="ctx-del" data-id="'+iconId+'">Kısayolu kaldır</div><hr>';
+  }else if(iconId==='cop'){
+    html='<div class="citem" data-act="ctx-open" data-id="cop">Aç</div><hr>';
+  }
+  html+='<div class="citem" data-act="refresh">Yenile</div><div class="citem" data-act="tidy">Simgeleri sırala</div>'+
+    '<details class="csub"><summary>Arka plan rengi</summary>'+BGS.map(b=>'<div data-act="bg" data-v="'+b[0]+'">'+b[1]+'</div>').join('')+'</details>'+
+    '<details class="csub"><summary>Renk rejimi</summary>'+THEMES.map(t=>'<div data-act="theme" data-v="'+t[0]+'">'+t[1]+'</div>').join('')+'</details>';
+  box.innerHTML=html;
+  box.style.left=Math.min(x, innerWidth-210)+'px';
+  box.style.top=Math.min(y, innerHeight-180)+'px';
+  box.classList.add('open');
+}
+function addShortcut(app,x,y){
+  if(S.icons.some(i=>i.app===app)){ task('Bu kısayol zaten masaüstünde.'); return; }
+  S.icons.push({id:'ic'+(++seq), app:app, x:Math.max(8,x-30), y:Math.max(8,y-20)});
+  save(); renderIcons(); task(appOf(app).name+' masaüstüne alındı.');
+}
+function removeShortcut(iconId){
+  const ic=S.icons.find(i=>i.id===iconId); if(!ic) return;
+  ask(appOf(ic.app).name+' masaüstünden kaldırılsın mı?', ()=>{
+    S.icons=S.icons.filter(i=>i.id!==iconId);
+    S.trash.push({id:'t'+(++seq), app:ic.app});
+    save(); renderIcons();
+    S.wins.filter(w=>w.app==='cop').forEach(paintBody);
+    task('Kısayol geri dönüşüme alındı.');
+  });
+}
+function tidy(){
+  S.icons.forEach((ic,i)=>{ ic.x=14; ic.y=12+i*78; });
+  save(); renderIcons(); task('Simgeler sıralandı.');
+}
+function refreshDesk(){
+  renderIcons(); renderStart(); task('Masaüstü yenilendi.');
+}
+function setTheme(v){ S.theme=v; save(); applyChrome(); task('Renk rejimi: '+(THEMES.find(t=>t[0]===v)||['',v])[1]); }
+function setBg(v){ S.bg=v; save(); applyChrome(); task('Arka plan değişti.'); }
+function currentWin(el){
+  const node=el.closest('.win'); if(!node) return null;
+  return S.wins.find(w=>w.id===node.dataset.id)||null;
+}
+function onAct(e){
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const act=t.dataset.act;
+  if(act==='ask-yes'){ askClose(true); return; }
+  if(act==='ask-no'){ askClose(false); return; }
+  if(act==='mode'){
+    S.force = S.force===t.dataset.mode ? null : t.dataset.mode;
+    save(); applyChrome(); task(S.force? 'Görünüm: '+t.dataset.mode : 'Görünüm pencereye göre');
+    return;
+  }
+  if(act==='launch'){ openApp(t.dataset.app); return; }
+  if(act==='theme'){ setTheme(t.dataset.v); document.getElementById('ctx').classList.remove('open'); return; }
+  if(act==='bg'){ setBg(t.dataset.v); document.getElementById('ctx').classList.remove('open'); return; }
+  if(act==='refresh'){ refreshDesk(); document.getElementById('ctx').classList.remove('open'); return; }
+  if(act==='tidy'){ tidy(); document.getElementById('ctx').classList.remove('open'); return; }
+  if(act==='ctx-open'){
+    const id=t.dataset.id;
+    document.getElementById('ctx').classList.remove('open');
+    if(id==='cop') openApp('cop');
+    else { const ic=S.icons.find(i=>i.id===id); if(ic) openApp(ic.app); }
+    return;
+  }
+  if(act==='ctx-del'){ document.getElementById('ctx').classList.remove('open'); removeShortcut(t.dataset.id); return; }
+  if(act==='task'){
+    const w=S.wins.find(x=>x.id===t.dataset.id); if(!w) return;
+    w.min=!w.min; if(!w.min) focusWin(w.id); else { winEl(w.id).classList.add('min'); paintTasks(); }
+    return;
+  }
+  if(act==='def'){
+    const k=t.dataset.k; const next=!S.defs[k];
+    t.checked=S.defs[k];
+    ask((DEFS.find(d=>d.k===k)||{}).t+' mobil görünümde '+(next?'açılsın mı?':'kapatılsın mı?'), ()=>{
+      S.defs[k]=next; save(); applyChrome();
+      S.wins.filter(w=>w.app==='ayar').forEach(paintBody);
+      task('Mobil tanım ayarı güncellendi.');
+    });
+    return;
+  }
+  const w=currentWin(t);
+  if(!w){ phoneAct(act, t); return; }
+  if(act==='min'){ w.min=true; winEl(w.id).classList.add('min'); paintTasks(); return; }
+  if(act==='max'){ w.max=!w.max; paintBody(w); return; }
+  if(act==='close'){
+    const shut=()=>{ S.wins=S.wins.filter(x=>x.id!==w.id); const n=winEl(w.id); if(n) n.remove(); paintTasks(); };
+    if(w.form && w.form.mode!=='view') ask('Kayıt bitmeden pencere kapatılsın mı?', shut);
+    else shut();
+    return;
+  }
+  if(act==='enter'){ w.hotel=t.dataset.hotel; w.section=appOf(w.app).sections[0].id; w.form=null; paintBody(w); paintTasks(); return; }
+  if(act==='back'){ w.hotel=null; w.form=null; paintBody(w); paintTasks(); return; }
+  if(act==='sec'){ w.section=t.dataset.sec; w.form=null; paintBody(w); return; }
+  if(act==='new'){ crudNew(winCtx(w)); return; }
+  if(act==='edit'){ crudEdit(winCtx(w), t.dataset.id); return; }
+  if(act==='view'){ crudView(winCtx(w), t.dataset.id); return; }
+  if(act==='del'){ crudDel(winCtx(w), t.dataset.id); return; }
+  if(act==='cancel'){ w.form=null; paintBody(w); return; }
+  if(act==='save'){ readForm(w); crudSave(winCtx(w)); return; }
+  if(act==='save-hotel'){
+    const name=document.getElementById('hcName').value.trim();
+    const code=document.getElementById('hcCode').value.trim();
+    if(!name||!code){ task('Ad ve kod zorunlu.'); return; }
+    ask('Otel bilgisi güncellensin mi? Standart kayıt silinmez.', ()=>{
+      const h=HOTELS.find(x=>x.id===w.hotel); h.name=name; h.code=code; paintBody(w); paintTasks(); task('Otel güncellendi.');
+    });
+    return;
+  }
+  if(act==='approve'){
+    ask('Sipariş onaylansın mı? Onaydan sonra mutfak kaydına geçer.', ()=>{
+      const row=DB.orders.find(r=>r.id===t.dataset.id); if(row) row.status='Mutfakta'; paintBody(w); task('Sipariş mutfağa alındı.');
+    });
+    return;
+  }
+  if(act==='print'){
+    const row=DB.orders.find(r=>r.id===t.dataset.id);
+    if(!row || row.priceShow!=='Açık'){ task('Fiyat gösterimi kapalı. Tutarlı adisyon basılmaz.'); return; }
+    ask('Adisyon yazdırılsın mı?\nToplam '+row.total+' EUR', ()=>{
+      document.getElementById('paper').innerHTML='<b>MENNN · ADİSYON</b><br>'+esc(hn(row.hotel))+'<br>'+esc(row.outlet)+' · '+esc(row.table)+'<hr>'+esc(row.items)+'<hr><b>TOPLAM '+esc(row.total)+' EUR</b><br>Gösterim tutarıdır. Ödeme belgesi değildir.';
+      document.body.classList.add('printing'); window.print();
+    });
+    return;
+  }
+  if(act==='kick'){
+    ask('Oturum kapatılsın mı?', ()=>{
+      const row=DB.sessions.find(r=>r.id===t.dataset.id); if(row) row.status='Çıktı'; paintBody(w); task('Oturum kapatıldı.');
+    });
+    return;
+  }
+  if(act==='done'){
+    ask('Uyarı kapatılsın mı?', ()=>{
+      const row=DB.alerts.find(r=>r.id===t.dataset.id); if(row) row.status='Kapalı'; paintBody(w); task('Uyarı kapatıldı.');
+    });
+    return;
+  }
+  if(act==='restore'){
+    const item=S.trash.find(x=>x.id===t.dataset.id); if(!item) return;
+    ask(appOf(item.app).name+' masaüstüne geri yüklensin mi?', ()=>{
+      S.trash=S.trash.filter(x=>x.id!==item.id);
+      addShortcut(item.app, 120, 80);
+      paintBody(w);
+    });
+  }
+}
+function phoneSections(){
+  const list=[];
+  if(S.defs.otel) list.push({id:'hotelcard', t:'Otel bilgisi'});
+  if(S.defs.outlet) list.push({id:'outlets', t:'Outletler'});
+  if(S.defs.menu) list.push({id:'items', t:'Menü öğeleri'});
+  if(S.defs.kullanici) list.push({id:'users', t:'Kullanıcılar'});
+  if(S.defs.minibar) list.push({id:'floors', t:'Katlar'});
+  return list;
+}
+function renderPhone(){
+  const p=S.phone;
+  const tabs=[{id:'izleme',t:'İzleme'},{id:'rapor',t:'Raporlar'},{id:'ayar',t:'Ayarlar'}];
+  if(phoneSections().length) tabs.push({id:'tanim',t:'Tanımlar'});
+  if(p.tab==='tanim' && !phoneSections().length) p.tab='ayar';
+  const chips=HOTELS.map(h=>'<button type="button" data-act="ph-hotel" data-hotel="'+h.id+'" class="'+(p.hotel===h.id?'on':'')+'">'+esc(h.name.replace('Merit Royal ','').replace('Merit Royal','Royal'))+'</button>').join('');
+  let body='';
+  if(p.tab==='izleme'){
+    const ses=records('sessions', p.hotel);
+    const ord=records('queue', p.hotel);
+    const al=records('alerts', p.hotel);
+    body='<div class="acard"><h3>'+esc(hn(p.hotel))+' · canlı</h3><div class="arow"><span>Çevrimiçi</span><b>'+ses.length+'</b></div><div class="arow"><span>Onay bekleyen</span><b>'+ord.length+'</b></div><div class="arow"><span>Açık uyarı</span><b>'+al.length+'</b></div></div>'+
+      '<div class="acard"><h3>Oturumlar</h3>'+(ses.map(s=>'<div class="arow"><span>'+esc(s.name)+'<br><small>'+esc(s.place)+'</small></span><button class="btn bad" type="button" data-act="kick" data-id="'+s.id+'">Kapat</button></div>').join('')||'<p>Çevrimiçi kullanıcı yok.</p>')+'</div>'+
+      '<div class="acard"><h3>Sipariş kuyruğu</h3>'+(ord.map(s=>'<div class="arow"><span>'+esc(s.id)+' · '+esc(s.table)+'<br><small>'+esc(s.items)+'</small></span><button class="btn pri" type="button" data-act="approve" data-id="'+s.id+'">Onayla</button></div>').join('')||'<p>Bekleyen sipariş yok.</p>')+'</div>';
+  }else if(p.tab==='rapor'){
+    body='<div class="acard"><h3>'+esc(hn(p.hotel))+'</h3>'+reportHTML(p.hotel)+'</div><div class="acard"><h3>Adisyonlar</h3>'+
+      records('orders', p.hotel).map(r=>'<div class="arow"><span>'+esc(r.id)+' · '+esc(r.table)+'</span><b>'+(r.priceShow==='Açık'?esc(r.total)+' EUR':'gizli')+'</b></div>').join('')+'</div>';
+  }else if(p.tab==='ayar'){
+    body='<div class="acard"><h3>Mobil tanımlar</h3><p>Kapalıyken bu telefonda yalnız izleme ve rapor vardır. Masaüstü ve tablet bu anahtardan etkilenmez.</p>'+
+      DEFS.map(d=>'<label class="switch">'+esc(d.t)+'<input type="checkbox" data-act="def" data-k="'+d.k+'"'+(S.defs[d.k]?' checked':'')+'></label>').join('')+'</div>';
+  }else{
+    const secs=phoneSections();
+    if(!secs.some(s=>s.id===p.section)) p.section=secs[0]?secs[0].id:'outlets';
+    if(p.form) body=phoneFormHTML();
+    else {
+      body='<div class="chips">'+secs.map(s=>'<button type="button" data-act="ph-sec" data-sec="'+s.id+'" class="'+(p.section===s.id?'on':'')+'">'+esc(s.t)+'</button>').join('')+'</div>';
+      if(p.section==='hotelcard') body+=hotelCardHTML({hotel:p.hotel});
+      else {
+        const rows=records(p.section, p.hotel, null);
+        const cols=(COLS[p.section]||[]).slice(0,3);
+        body+='<div class="acard"><div class="bar"><b>Kayıtlar</b><button class="btn pri" type="button" data-act="new">Yeni</button></div>'+
+          (rows.map(r=>'<div class="arow"><span>'+esc(cols.map(c=>cell(p.section,r,c[0])).join(' · '))+'</span><span><button class="btn" type="button" data-act="edit" data-id="'+r.id+'">Düzenle</button> <button class="btn bad" type="button" data-act="del" data-id="'+r.id+'">Sil</button></span></div>').join('')||'<p>Kayıt yok.</p>')+'</div>';
+      }
+    }
+  }
+  document.getElementById('android').innerHTML=
+    '<div class="astat"><span id="aclock">--:--</span><span>MENNN</span><span>84%</span></div>'+
+    '<div class="ahead"><h1>'+esc((tabs.find(t=>t.id===p.tab)||tabs[0]).t)+'</h1><p>'+esc(hn(p.hotel))+' ayrı izlenir</p></div>'+
+    (p.tab!=='ayar'?'<div class="chips">'+chips+'</div>':'')+
+    '<div id="mbody">'+body+'</div><nav class="abot">'+tabs.map(t=>'<button type="button" data-act="ph-tab" data-tab="'+t.id+'" class="'+(p.tab===t.id?'on':'')+'">'+esc(t.t)+'</button>').join('')+'</nav>';
+  tick();
+}
+function phoneCtx(){
+  const p=S.phone;
+  return {section:p.section, hotel:p.hotel, mod:null, getForm:()=>p.form, setForm:f=>{p.form=f;}, repaint:renderPhone};
+}
+function phoneFormHTML(){
+  const f=S.phone.form;
+  const fields=fieldsOf(S.phone.section, S.phone.hotel, null);
+  const inputs=fields.map(field=>{
+    const val=f.draft[field.k]==null?'':f.draft[field.k];
+    const ctrl=field.sel
+      ? '<select data-k="'+field.k+'">'+field.sel.map(o=>typeof o==='string'?'<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>':'<option value="'+esc(o.v)+'"'+(o.v===val?' selected':'')+'>'+esc(o.t)+'</option>').join('')+'</select>'
+      : '<input data-k="'+field.k+'" value="'+esc(val)+'">';
+    return '<label>'+esc(field.t)+'</label>'+ctrl;
+  }).join('');
+  return '<div class="acard"><h3>'+(f.mode==='new'?'Yeni kayıt':'Düzenle')+'</h3><div class="formg">'+inputs+'</div><div class="bar" style="margin-top:8px"><button class="btn pri" type="button" data-act="save">Kaydet</button> <button class="btn" type="button" data-act="cancel">Vazgeç</button></div></div>';
+}
+function phoneAct(act, t){
+  const p=S.phone;
+  if(act==='ph-tab'){ p.tab=t.dataset.tab; p.form=null; renderPhone(); return; }
+  if(act==='ph-hotel'){ p.hotel=t.dataset.hotel; p.form=null; renderPhone(); return; }
+  if(act==='ph-sec'){ p.section=t.dataset.sec; p.form=null; renderPhone(); return; }
+  if(act==='new'){ crudNew(phoneCtx()); return; }
+  if(act==='edit'){ crudEdit(phoneCtx(), t.dataset.id); return; }
+  if(act==='del'){ crudDel(phoneCtx(), t.dataset.id); return; }
+  if(act==='cancel'){ p.form=null; renderPhone(); return; }
+  if(act==='save'){
+    if(p.form){
+      document.querySelectorAll('#android [data-k]').forEach(el=>{ p.form.draft[el.dataset.k]=el.value; });
+      crudSave(phoneCtx());
+    }
+    return;
+  }
+  if(act==='save-hotel'){
+    const name=document.getElementById('hcName').value.trim();
+    const code=document.getElementById('hcCode').value.trim();
+    if(!name||!code){ task('Ad ve kod zorunlu.'); return; }
+    ask('Otel bilgisi güncellensin mi?', ()=>{
+      const h=HOTELS.find(x=>x.id===p.hotel); h.name=name; h.code=code; renderPhone();
+    });
+    return;
+  }
+  if(act==='approve'){
+    ask('Sipariş onaylansın mı?', ()=>{
+      const row=DB.orders.find(r=>r.id===t.dataset.id); if(row) row.status='Mutfakta'; renderPhone();
+    });
+    return;
+  }
+  if(act==='kick'){
+    ask('Oturum kapatılsın mı?', ()=>{
+      const row=DB.sessions.find(r=>r.id===t.dataset.id); if(row) row.status='Çıktı'; renderPhone();
+    });
+  }
+}
+let drag=null, tap=null;
+document.getElementById('icons').addEventListener('pointerdown', e=>{
+  const el=e.target.closest('[data-icon]'); if(!el || e.button===2) return;
+  const ic=S.icons.find(i=>i.id===el.dataset.icon); if(!ic) return;
+  drag={id:ic.id, x:e.clientX, y:e.clientY, ox:ic.x, oy:ic.y, moved:false, el:el};
+  el.setPointerCapture && el.setPointerCapture(e.pointerId);
+});
+document.getElementById('recycle').addEventListener('pointerdown', e=>{
+  if(e.button===2) return;
+  const now=Date.now();
+  if(tap && tap.id==='cop' && now-tap.t<450) openApp('cop');
+  tap={id:'cop', t:now};
+});
+window.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  if(Math.abs(dx)+Math.abs(dy)>5) drag.moved=true;
+  const ic=S.icons.find(i=>i.id===drag.id); if(!ic) return;
+  ic.x=drag.ox+dx; ic.y=drag.oy+dy;
+  drag.el.style.left=ic.x+'px'; drag.el.style.top=ic.y+'px';
+});
+window.addEventListener('pointerup', e=>{
+  if(!drag) return;
+  const ic=S.icons.find(i=>i.id===drag.id);
+  const over=document.elementFromPoint(e.clientX, e.clientY);
+  const moved=drag.moved;
+  const id=drag.id;
+  drag=null;
+  if(moved && over && over.closest('#recycle')){ removeShortcut(id); return; }
+  if(moved){ save(); return; }
+  const now=Date.now();
+  if(tap && tap.id===id && now-tap.t<450){ openApp(ic.app); tap=null; S.sel=id; renderIcons(); return; }
+  tap={id:id, t:now}; S.sel=id; renderIcons();
+});
+document.getElementById('wins').addEventListener('pointerdown', e=>{
+  const bar=e.target.closest('.title');
+  const win=e.target.closest('.win');
+  if(win) focusWin(win.dataset.id);
+  if(!bar || e.target.closest('.wb')) return;
+  const w=S.wins.find(x=>x.id===win.dataset.id); if(!w || w.max) return;
+  const sx=e.clientX, sy=e.clientY, ox=w.x, oy=w.y;
+  function mv(ev){ w.x=ox+ev.clientX-sx; w.y=Math.max(0, oy+ev.clientY-sy); win.style.left=w.x+'px'; win.style.top=w.y+'px'; }
+  function up(){ window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); }
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+});
+document.getElementById('desk').addEventListener('dragover', e=>{ if(e.dataTransfer.types.length) e.preventDefault(); });
+document.getElementById('desk').addEventListener('drop', e=>{
+  const app=e.dataTransfer.getData('text/app'); if(!app) return;
+  e.preventDefault();
+  const r=document.getElementById('desk').getBoundingClientRect();
+  ask(appOf(app).name+' masaüstüne kısayol olarak eklensin mi?', ()=>addShortcut(app, e.clientX-r.left, e.clientY-r.top));
+});
+document.getElementById('start').addEventListener('dragstart', e=>{
+  const b=e.target.closest('[data-drag]'); if(!b) return;
+  e.dataTransfer.setData('text/app', b.dataset.drag);
+  e.dataTransfer.effectAllowed='copy';
+});
+document.getElementById('desk').addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  const icon=e.target.closest('[data-icon]');
+  openCtx(e.clientX, e.clientY, icon?icon.dataset.icon:null);
+});
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('start').classList.toggle('open');
+  document.getElementById('ctx').classList.remove('open');
+});
+document.body.addEventListener('click', e=>{
+  if(!e.target.closest('#ctx')) document.getElementById('ctx').classList.remove('open');
+  if(!e.target.closest('#start') && !e.target.closest('#startBtn')) document.getElementById('start').classList.remove('open');
+  onAct(e);
+});
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){ askClose(false); document.getElementById('start').classList.remove('open'); document.getElementById('ctx').classList.remove('open'); }
+  if(e.key==='Enter' && document.getElementById('ask').classList.contains('open')) askClose(true);
+});
+window.addEventListener('afterprint', ()=>document.body.classList.remove('printing'));
+window.addEventListener('resize', applyChrome);
+function tick(){
+  const t=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  const c=document.getElementById('clock'); if(c) c.textContent=t;
+  const a=document.getElementById('aclock'); if(a) a.textContent=t;
+}
+if(!load()) seedIcons();
+renderIcons(); renderStart(); applyChrome(); tick(); setInterval(tick, 10000);
+</script>
+</body>
+</html>

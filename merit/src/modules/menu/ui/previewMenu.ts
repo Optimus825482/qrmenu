@@ -3,6 +3,7 @@ import type { GuestCallOption } from "../callOptions";
 import { DEFAULT_CALL_OPTIONS } from "../server/callOptionDefaults";
 import type { GuestCategory, GuestItem, GuestMenu } from "../server/guestMenu";
 import type { MenuTreeNode } from "../server/menuTree";
+import type { Locale } from "@/lib/i18n/locales";
 
 export type PreviewTheme = { bg: string; accent: string; soft: string; textOnAccent: string };
 
@@ -83,11 +84,13 @@ function activeNodes(nodes: MenuTreeNode[]): MenuTreeNode[] {
   return nodes.filter((node) => node.isActive);
 }
 
-function toItem(node: MenuTreeNode): GuestItem {
+function toItem(node: MenuTreeNode, locale?: Locale): GuestItem {
+  const trans = locale ? node.translations.find((t) => t.lang === locale) : null;
+  const detail = trans?.detail?.trim() || node.detail || undefined;
   return {
     id: node.id,
-    name: node.name,
-    ...(node.detail ? { detail: node.detail } : {}),
+    name: trans?.name?.trim() || node.name,
+    ...(detail ? { detail } : {}),
     imageUrl: node.imageUrl,
     allergens: node.allergens,
     tags: node.tags,
@@ -96,28 +99,36 @@ function toItem(node: MenuTreeNode): GuestItem {
   };
 }
 
-function categoriesFromTree(nodes: MenuTreeNode[]): GuestCategory[] {
+function categoriesFromTree(nodes: MenuTreeNode[], locale?: Locale): GuestCategory[] {
   const categories: GuestCategory[] = [];
   for (const category of activeNodes(nodes).filter((node) => node.kind === "KATEGORI")) {
-    const items = activeNodes(category.children).filter((node) => node.kind === "OGE").map(toItem);
+    const trCat = locale ? category.translations.find((t) => t.lang === locale) : null;
+    const catName = trCat?.name?.trim() || category.name;
+    const items = activeNodes(category.children).filter((node) => node.kind === "OGE").map((n) => toItem(n, locale));
     const subcategories = activeNodes(category.children)
       .filter((node) => node.kind === "ALT_KATEGORI")
       .map((sub) => {
-        const subItems = activeNodes(sub.children).filter((node) => node.kind === "OGE").map(toItem);
+        const trSub = locale ? sub.translations.find((t) => t.lang === locale) : null;
+        const subName = trSub?.name?.trim() || sub.name;
+        const subItems = activeNodes(sub.children).filter((node) => node.kind === "OGE").map((n) => toItem(n, locale));
         const groups = activeNodes(sub.children)
           .filter((node) => node.kind === "GRUP")
-          .map((group) => ({
-            id: group.id,
-            name: group.name,
-            ...(group.detail ? { detail: group.detail } : {}),
-            items: activeNodes(group.children).filter((node) => node.kind === "OGE").map(toItem),
-          }))
+          .map((group) => {
+            const trGroup = locale ? group.translations.find((t) => t.lang === locale) : null;
+            const groupDetail = trGroup?.detail?.trim() || group.detail || undefined;
+            return {
+              id: group.id,
+              name: trGroup?.name?.trim() || group.name,
+              ...(groupDetail ? { detail: groupDetail } : {}),
+              items: activeNodes(group.children).filter((node) => node.kind === "OGE").map((n) => toItem(n, locale)),
+            };
+          })
           .filter((group) => group.items.length > 0);
-        return { id: sub.id, name: sub.name, items: subItems, groups };
+        return { id: sub.id, name: subName, items: subItems, groups };
       })
       .filter((sub) => sub.items.length > 0 || sub.groups.length > 0);
     if (items.length > 0 || subcategories.length > 0) {
-      categories.push({ id: category.id, name: category.name, items, subcategories });
+      categories.push({ id: category.id, name: catName, items, subcategories });
     }
   }
   return categories;
@@ -130,8 +141,9 @@ export function previewMenu(input: {
   hotelName: string;
   outletName: string;
   callOptions?: GuestCallOption[];
+  locale?: Locale;
 }): { menu: GuestMenu; sample: boolean } {
-  const categories = categoriesFromTree(input.nodes);
+  const categories = categoriesFromTree(input.nodes, input.locale);
   const sampleMenu = categories.length === 0;
   return {
     sample: sampleMenu,
@@ -144,7 +156,7 @@ export function previewMenu(input: {
         hotelName: input.hotelName,
         menuOpen: true,
         orderingOpen: false,
-        pricesShown: true,
+        pricesShown: input.design.options.showPrices,
         currency: "EUR",
         theme: input.theme,
         design: input.design,

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merit Royal — Yazılım Lisans Projesi ve Proforma</title>
+<style>
+  :root {
+    --ink: #1c1915;
+    --navy: #142033;
+    --navy-2: #243044;
+    --gold: #8d6e3c;
+    --gold-soft: #f6f0e6;
+    --line: #e4ddd2;
+    --muted: #5e584f;
+    --paper: #f4f0ea;
+    --white: #fffcf8;
+    --diamond: #1e2a3a;
+    --royal: #6e2e38;
+    --premium: #1f5c57;
+    --beach: #8a6232;
+    --ok: #1e6b45;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", Calibri, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 22px;
+    background: var(--navy);
+    color: #f6f1e8;
+  }
+  .bar strong { font-weight: 650; letter-spacing: .02em; }
+  .bar span { color: #d9c7a4; font-size: 13px; }
+  .bar button {
+    background: #e8d7b4;
+    color: #1c1915;
+    border: 0;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .bar button:hover { background: #f3e6cc; }
+
+  .wrap {
+    max-width: 980px;
+    margin: 28px auto 48px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 40px rgba(28, 25, 21, .06);
+  }
+
+  .sheet { padding: 42px 48px 28px; }
+  .rule { height: 0; border: 0; border-top: 1px solid var(--line); margin: 0; }
+
+  header.doc {
+    display: grid;
+    grid-template-columns: 1.4fr .8fr;
+    gap: 28px;
+    padding-bottom: 22px;
+    border-bottom: 2px solid var(--navy);
+  }
+  .brand-kicker {
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--navy);
+  }
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  .meta {
+    background: var(--gold-soft);
+    border: 1px solid #e6d8c2;
+    padding: 14px 16px;
+    font-size: 13px;
+  }
+  .meta div { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-weight: 700; text-align: right; }
+
+  h2 {
+    font-family: Georgia, "Palatino Linotype", Palatino, serif;
+    font-size: 22px;
+    color: var(--navy);
+    margin: 34px 0 12px;
+    padding-top: 6px;
+    scroll-margin-top: 84px;
+  }
+  h3 {
+    font-size: 15px;
+    margin: 18px 0 8px;
+    color: var(--navy);
+  }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; color: var(--muted); }
+
+  .toc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 28px;
+    margin: 18px 0 6px;
+    padding: 14px 16px;
+    background: #faf7f2;
+    border: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+  .toc a { color: var(--navy); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  .callout {
+    border-left: 3px solid var(--gold);
+    background: var(--gold-soft);
+    padding: 12px 14px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .split-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .card {
+    border: 1px solid var(--line);
+    padding: 14px 14px 12px;
+    background: #fff;
+    break-inside: avoid;
+  }
+  .card h3 { margin-top: 0; }
+  .card ul, .plain ul { margin: 6px 0 0; padding-left: 18px; }
+  .card li, .plain li { margin: 3px 0; }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 99px;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .tag.d { background: var(--diamond); }
+  .tag.r { background: var(--royal); }
+  .tag.p { background: var(--premium); }
+  .tag.b { background: var(--beach); }
+
+  .beach {
+    border: 1px solid #e2d0b6;
+    background: linear-gradient(180deg, #fbf6ee, #f7f1e6);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .beach h3 { text-align: center; margin: 0 0 10px; letter-spacing: .04em; }
+  .beach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .beach-grid div, .hotel article {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+  .hotels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .hotels h3 {
+    margin: 0 0 8px;
+    font-size: 13.5px;
+    color: #fff;
+    padding: 8px 10px;
+  }
+  .hotels article { padding: 0; overflow: hidden; }
+  .hotels ul { margin: 8px 12px 12px; padding-left: 16px; font-size: 13px; }
+  .hotels .d h3 { background: var(--diamond); }
+  .hotels .r h3 { background: var(--royal); }
+  .hotels .p h3 { background: var(--premium); }
+  .stem {
+    text-align: center;
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: .12em;
+    margin: 4px 0 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 8px 0 14px;
+  }
+  th, td {
+    border: 1px solid #ddd4c8;
+    padding: 6px 7px;
+    vertical-align: top;
+    text-align: left;
+  }
+  th {
+    background: var(--navy);
+    color: #f6f1e8;
+    font-weight: 650;
+    font-size: 11.5px;
+  }
+  tr { break-inside: avoid; }
+  tbody tr:nth-child(even) td { background: #fbf8f3; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tfoot td {
+    background: var(--navy);
+    color: #fff;
+    font-weight: 700;
+    border-color: var(--navy);
+  }
+  .src { font-size: 12px; color: var(--muted); }
+  .src a { color: var(--navy); }
+
+  ol.kabuller { padding-left: 20px; }
+  ol.kabuller li { margin: 6px 0; }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin: 10px 0 14px;
+  }
+  .flow div {
+    background: var(--navy);
+    color: #f6f1e8;
+    padding: 10px;
+    font-size: 12.5px;
+    break-inside: avoid;
+  }
+  .flow strong { display: block; color: #e8d7b4; margin-bottom: 4px; }
+
+  .sign {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+  }
+  .sign article {
+    border: 1px solid var(--line);
+    min-height: 168px;
+    padding: 12px 14px;
+  }
+  .sign h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+  .line { border-bottom: 1px solid #cfc6ba; height: 28px; margin-top: 8px; }
+
+  footer.page {
+    margin-top: 26px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media screen and (max-width: 860px) {
+    .sheet { padding: 22px 16px; }
+    header.doc, .split, .split-3, .hotels, .beach-grid, .flow, .sign, .toc { grid-template-columns: 1fr; }
+    .bar { flex-wrap: wrap; }
+    h1 { font-size: 26px; }
+  }
+
+  @media print {
+    body { background: #fff; font-size: 10.5pt; }
+    .bar { display: none !important; }
+    .wrap {
+      margin: 0;
+      max-width: none;
+      border: 0;
+      box-shadow: none;
+    }
+    .sheet { padding: 0 0 12mm; }
+    a { color: inherit; text-decoration: none; }
+    h2 { break-after: avoid; }
+    .card, .beach, .callout, .meta, .flow div, .sign article { break-inside: avoid; }
+    table { font-size: 8.5pt; }
+    th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tfoot td, .hotels h3, .flow div, .tag, .meta, .callout, .beach {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @page { size: A4; margin: 12mm 12mm 14mm; }
+  }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div>
+    <strong>Merit Royal — yazılım lisansı proforması</strong><br>
+    <span>Yazdırmak için düğmeye basın. Hedef olarak “PDF olarak kaydet”i seçin. Arka plan grafikleri açık kalsın.</span>
+  </div>
+  <button type="button" onclick="window.print()">PDF / Yazdır</button>
+</div>
+
+<main class="wrap">
+  <section class="sheet">
+    <header class="doc">
+      <div>
+        <p class="brand-kicker">Proje mimarisi ve fiyat teklifi</p>
+        <h1>Merit Royal dijital servis lisansı</h1>
+        <p class="sub">Minibar takip, QR menü, QR sipariş ve QR oda servisi. Üç otel, tek yönetici paneli, a la carte harici alanlar ve bir yıllık bakım.</p>
+      </div>
+      <dl class="meta">
+        <div><dt>Belge no</dt><dd>MR-QR-PF-2026-103</dd></div>
+        <div><dt>Tarih</dt><dd>30 Ekim 2026</dd></div>
+        <div><dt>Geçerlilik</dt><dd>29 Kasım 2026</dd></div>
+        <div><dt>Para birimi</dt><dd>USD, KDV hariç</dd></div>
+        <div><dt>Teklif bedeli</dt><dd>19.500,00</dd></div>
+      </dl>
+    </header>
+
+    <div class="split" style="margin-top:18px;">
+      <article class="card">
+        <h3>Teklif edilen yer</h3>
+        <p><strong>Merit Royal Hotels</strong><br>
+        Merit Royal Diamond Hotel<br>
+        Merit Royal Hotel<br>
+        Merit Royal Premium Hotel<br>
+        Zephyros koyu sahil şeridi (ortak alan)<br>
+        Girne, Kuzey Kıbrıs</p>
+      </article>
+      <article class="card">
+        <h3>Teklifi hazırlayan</h3>
+        <p><strong>Erkan</strong><br>
+        Yazılım lisans ve bakım hizmeti<br>
+        Ticari unvan, vergi dairesi ve hesap bilgisi sözleşme ekinde yazılır.<br>
+        Kapsam: yalnızca yazılım lisansı ve 12 ay servis/bakım.</p>
+      </article>
+    </div>
+
+    <nav class="toc" aria-label="İçindekiler">
+      <a href="#ozet">1. Yönetici özeti</a>
+      <a href="#dagilim">2. Üç otelin karakteri ve alan dağılımı</a>
+      <a href="#alanlar">3. Alan incelemesi</a>
+      <a href="#matris">4. Operasyonel kural matrisi</a>
+      <a href="#ilkeler">5. Değişmez mimari ilkeler</a>
+      <a href="#sistemler">6. Dört sistem ve merkez panel</a>
+      <a href="#piyasa">7. Piyasa emsalleri</a>
+      <a href="#proforma">8. Proforma, bakım ve kabul</a>
+    </nav>
+
+    <h2 id="ozet">1. Yönetici özeti</h2>
+    <p>Bu proje, üç Merit Royal otelini ve ortak Zephyros sahilini tek yönetici panelinden işleten dört yazılımı kapsar: minibar takip, a la carte harici QR menü, QR sipariş ve QR oda servisi. Misafir ekranında fiyat, para birimi ve ödeme yoktur. Masa veya şezlong kimliği QR kodun içindedir. Konum, masayı bulmak için değil; misafirin otel arazisinde olduğunu doğrulamak için kullanılır.</p>
+    <p>Sipariş mutfağa doğrudan düşmez. Talep önce görevli garsonun telefonuna veya akıllı saatine ve ana kasaya gider. Garson fiziksel teyidi verince kayıt servis fişine işlenir, mutfak yazıcısından fiş çıkar ve mutfak ekranına yansır. Minibarda kat, oda ve oda tipine bağlı konsept tanımlanır. Misafir, odadaki QR ile içeriği günde bir kez kişiselleştirir. Kat sorumlusu ilave ettiği ürünü oda, kat ve ürün bazında kaydeder.</p>
+    <div class="callout">
+      <strong>Teklif bedeli 19.500,00 USD, KDV hariçtir.</strong>
+      Buna üç otel için sınırsız kullanıcı, oda, kat, menü ve ürün lisansı ile canlıya alma tarihinden itibaren 12 aylık uzaktan bakım, barındırma, yedekleme ve eğitim dahildir. Telefon, saat, yazıcı, QR plaka ve ağ donanımı dahil değildir. İkinci yıldan itibaren bakım, istenirse yıllık 2.800,00 USD ile yenilenir.
+    </div>
+
+    <h2 id="dagilim">2. Üç otelin karakteri ve a la carte harici alanlar</h2>
+    <p>A la carte restoranlar bu lisansın dışındadır. QR alanları, misafirin bulunduğu yerin atmosferine göre açılan dinlenme, havuz, sahil, spa ve atıştırmalık noktalarıdır.</p>
+
+    <div class="beach">
+      <h3>Zephyros koyu sahil şeridi — üç otelin ortak alanı</h3>
+      <div class="beach-grid">
+        <div><strong>Zephyros VIP Cabanas</strong><br>Beach Bar ve Snack Lounge ile aynı sahil bandında, özel deniz kabanaları.</div>
+        <div><strong>Ahşap iskele platformu</strong><br>Deniz üstü şezlonglar ve deniz içi loca servisi.</div>
+      </div>
+    </div>
+    <p class="stem">ÜÇ OTEL AYNI KOYDA BULUŞUR</p>
+    <div class="hotels">
+      <article class="d">
+        <h3>Merit Royal Diamond<br><span style="font-weight:500;font-size:12px;">Modern ultra lüks ve VIP</span></h3>
+        <ul>
+          <li>Diamond Infinity Pool</li>
+          <li>24 saat Diamond Atrium Lounge</li>
+          <li>Cigar Lounge ve Cognac Salonu</li>
+          <li>Diamond VIP Spa ve buhar odası</li>
+          <li>Diamond teras seyir alanı</li>
+        </ul>
+      </article>
+      <article class="r">
+        <h3>Merit Royal Hotel<br><span style="font-weight:500;font-size:12px;">Klasik zarafet ve marina</span></h3>
+        <ul>
+          <li>Royal ana havuz ve Pool Bar</li>
+          <li>Kaptan Köşkü / Piano Bar</li>
+          <li>Zephyros Şarap Evi</li>
+          <li>Royal Spa ve Türk hamamı</li>
+          <li>Kış bahçesi ve çay saati</li>
+        </ul>
+      </article>
+      <article class="p">
+        <h3>Merit Royal Premium<br><span style="font-weight:500;font-size:12px;">Geniş aile ve dinamik resort</span></h3>
+        <ul>
+          <li>Lagoon aile havuzu ve bar</li>
+          <li>Meritta Club park ve bahçe</li>
+          <li>Tenis kortları ve Fitness Garden</li>
+          <li>Premium çocuk havuzu ve Vitamin Bar</li>
+          <li>Premium fuaye, gece atıştırmalık</li>
+        </ul>
+      </article>
+    </div>
+    <p class="small">Sahilde ayrıca Beach Bar ve Snack Lounge vardır. Toplam lisans kapsamı 18 hizmet noktasıdır. Yeni bir a la carte harici nokta, ek lisans bedeli olmadan aynı panele eklenir.</p>
+
+    <h2 id="alanlar">3. Otel bazında alan incelemesi</h2>
+    <p>Her noktada menü, o noktanın ritmine göre kurulur. Yönetici panelinde outlet bazında ürün, görsel, servis notu ve bildirimin gideceği görev tanımı ayrı tutulur.</p>
+
+    <h3><span class="tag d">Diamond</span> Modern VIP ve ultra lüks</h3>
+    <div class="split">
+      <article class="card">
+        <h3>Infinity Pool ve Bar</h3>
+        <p>İthal şampanya, dondurulmuş tropikal meyve püreleri, yüz misti ve polikarbon bardakta miksoloji.</p>
+        <p class="small">Rüzgar ve suya dayanıklı şezlong plakası. Sipariş, havuz barı runner personeline ve saatine düşer.</p>
+      </article>
+      <article class="card">
+        <h3>24 saat Atrium Lounge</h3>
+        <p>Üçüncü nesil kahve, premium çay seremonisi, el yapımı Belçika çikolatası, gece atıştırmalığı.</p>
+        <p class="small">Sessiz servis. Misafir masadan kalkmadan garsonu masasına çağırır. Bildirim lobi bar ekranına ve şef garsona gider.</p>
+      </article>
+      <article class="card">
+        <h3>Cigar Lounge ve nadir konyak</h3>
+        <p>Küba puro listesi, yıllanmış viski ve konyak, bitter çikolata ve kuru meyve eşleştirmesi.</p>
+        <p class="small">Puro giyotini, çakmak, kadeh yenileme ve havalandırma talebi sommelier veya barmen tabletine düşer.</p>
+      </article>
+      <article class="card">
+        <h3>VIP Spa, termal alan ve hamam</h3>
+        <p>Taze detoks suyu, alkali su, bitki çayı, soğuk havlu ve aromaterapi buz isteği.</p>
+        <p class="small">Islak hacme uygun plaka. Dinlenme locasından spa resepsiyonuna ve görevliye sessiz bildirim.</p>
+      </article>
+    </div>
+    <article class="card">
+      <h3>Diamond teras seyir alanı</h3>
+      <p>Gün batımı aperitifi, prosecco ve hafif ordövr. Bildirim teras servisinin saatine gider. Salon içi Wi-Fi ile masa doluluğu doğrulanır.</p>
+    </article>
+
+    <h3><span class="tag r">Royal</span> Klasik zarafet ve marina</h3>
+    <div class="split">
+      <article class="card">
+        <h3>Royal ana havuz ve Pool Bar</h3>
+        <p>Buzlu kokteyl, dondurma kupası, dilim karpuz ve meyve tabağı.</p>
+        <p class="small">Havuz sınırı geofence ile doğrulanır. Şezlong kimliği QR’dadır; garson ekranında plaka numarası görünür.</p>
+      </article>
+      <article class="card">
+        <h3>Kaptan Köşkü / Piano Bar</h3>
+        <p>Canlı müzik eşliğinde Martini, Negroni, fındık, fıstık ve lüks çerez.</p>
+        <p class="small">Performans sırasında sesli çağrı yerine tek dokunuşla sessiz sipariş. Barmen ekranı ve garson saati.</p>
+      </article>
+      <article class="card">
+        <h3>Zephyros Şarap Evi ve mahzen</h3>
+        <p>Yerli ve uluslararası rekolte listeleri, gravyer, parmesan ve grissini.</p>
+        <p class="small">Dijital eşleştirme kartı. Misafir damak zevkine göre sommelier desteği çağırır. Şarap evi geofence.</p>
+      </article>
+      <article class="card">
+        <h3>Royal Spa ve Türk hamamı dinlenme</h3>
+        <p>Osmanlı şerbeti, adaçayı, yeşil çay ve kurutulmuş meyve.</p>
+        <p class="small">Fısıltı ortamında seslenmek yerine tek tuşla sipariş. Görevliye sessiz bildirim.</p>
+      </article>
+    </div>
+    <article class="card">
+      <h3>Kış bahçesi ve İngiliz ikindi çayı</h3>
+      <p>Günün makaronu, scones, mini sandviç ve İngiliz çay seçkisi. Salon içi Wi-Fi. Servis personelinin saatine düşer.</p>
+    </article>
+
+    <h3><span class="tag p">Premium</span> Geniş aile ve dinamik yaşam</h3>
+    <div class="split">
+      <article class="card">
+        <h3>Lagoon aile havuzu ve snack bar</h3>
+        <p>Aile boyu meyve suyu, mocktail, mini burger, dondurma, krep ve waffle.</p>
+        <p class="small">Polikarbon servis notu outlet kartında durur. Kalabalıkta şezlong numarası görevli saatinde görünür. Havuz geofence.</p>
+      </article>
+      <article class="card">
+        <h3>Meritta Club park ve çocuk bahçesi</h3>
+        <p>Alerjen filtreli çocuk ikramı: glutensiz ve laktozsuz kraker, organik püre, sütsüz meyve buzu.</p>
+        <p class="small">Ebeveyn, banktaki QR ile çocuk kulübü barından ister. Bahçe Wi-Fi ile otomatik doluluk.</p>
+      </article>
+      <article class="card">
+        <h3>Tenis kortları ve Fitness Garden</h3>
+        <p>BCAA içeceği, protein karışımı, elektrolitli su ve buzlu havlu.</p>
+        <p class="small">Maç veya antrenman arasında dinlenme bankından kort görevlisine talep. Kort geofence.</p>
+      </article>
+      <article class="card">
+        <h3>Premium çocuk havuzu ve Vitamin Bar</h3>
+        <p>Taze portakal ve nar suyu, meyve şişi, çocuk dondurması. Havuz geofence. Vitamin Bar ekranı ve görevli saati.</p>
+      </article>
+    </div>
+    <article class="card">
+      <h3>Premium fuaye ve gece atıştırmalık</h3>
+      <p>24 saat çay ve kahve, gece çorbası, sandviç. Fuaye Wi-Fi. Servis ekranına düşer.</p>
+    </article>
+
+    <h3><span class="tag b">Ortak sahil</span> Zephyros</h3>
+    <div class="split-3">
+      <article class="card">
+        <h3>VIP Cabanas</h3>
+        <p>Buz kovasında premium şampanya, egzotik meyve kulesi, deniz ürünü atıştırmalık, gün boyu butler içeceği.</p>
+        <p class="small">Kabana butler’ının tabletine ve saatine öncelikli çağrı. İskele ve sahil geofence.</p>
+      </article>
+      <article class="card">
+        <h3>Ahşap iskele</h3>
+        <p>Soğuk bira, spritz, dondurma, buzlu maden suyu. Kırılmaz akrilik servis notu.</p>
+        <p class="small">Deniz üstü geofence. Beach Bar runner saatine düşer.</p>
+      </article>
+      <article class="card">
+        <h3>Beach Bar ve Snack Lounge</h3>
+        <p>Kumsal arkası açık hava kokteyl, smoothie ve alkolsüz istasyon.</p>
+        <p class="small">Beach Bar ekranı ve runner saati. Sahil Wi-Fi veya geofence.</p>
+      </article>
+    </div>
+
+    <h2 id="matris">4. Operasyonel ve teknik kural matrisi</h2>
+    <p>Fiyatlandırma sütununun tamamı fiyatsızdır. Doğrulama, masayı aramak için değil arazide bulunmayı teyit içindir. Bildirim hedefi, o anda görevli ve çevrimiçi olan personele gider.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Bölge</th>
+          <th>Alan</th>
+          <th>QR menü içeriği</th>
+          <th>Doğrulama</th>
+          <th>Bildirim</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Diamond</td><td>Infinity Pool ve Bar</td><td>Premium miksoloji ve şampanya</td><td>Havuz geofence</td><td>Havuz barı ve garson saati</td></tr>
+        <tr><td>Diamond</td><td>24 saat Atrium Lounge</td><td>Üçüncü nesil kahve ve Belçika çikolatası</td><td>Lobi Wi-Fi</td><td>Lobi bar ekranı ve şef garson</td></tr>
+        <tr><td>Diamond</td><td>Cigar Lounge</td><td>Puro, konyak ve aksesuar talebi</td><td>Salon Wi-Fi</td><td>Sommelier veya barmen tableti</td></tr>
+        <tr><td>Diamond</td><td>VIP Spa ve buhar odası</td><td>Detoks içeceği ve buzlu havlu</td><td>Islak alan geofence</td><td>Spa resepsiyonu ve görevli</td></tr>
+        <tr><td>Diamond</td><td>Teras seyir</td><td>Gün batımı aperitifi ve ordövr</td><td>Teras Wi-Fi</td><td>Teras servis saati</td></tr>
+        <tr><td>Royal</td><td>Ana havuz ve Pool Bar</td><td>Buzlu kokteyl, dondurma, meyve</td><td>Havuz geofence</td><td>Pool Bar ve garson saati</td></tr>
+        <tr><td>Royal</td><td>Kaptan Köşkü Piano Bar</td><td>Canlı müzik kokteyli ve çerez</td><td>Bar Wi-Fi</td><td>Barmen ekranı ve garson saati</td></tr>
+        <tr><td>Royal</td><td>Zephyros Şarap Evi</td><td>Rekolte şarap ve peynir tabağı</td><td>Şarap evi geofence</td><td>Şarap garsonu tableti</td></tr>
+        <tr><td>Royal</td><td>Spa ve hamam dinlenme</td><td>Şerbet, adaçayı, yeşil çay</td><td>Spa Wi-Fi</td><td>Spa görevlisi</td></tr>
+        <tr><td>Royal</td><td>Kış bahçesi çay saati</td><td>Makaron, scones, İngiliz çayı</td><td>Salon Wi-Fi</td><td>Servis personeli saati</td></tr>
+        <tr><td>Premium</td><td>Lagoon aile havuzu</td><td>Polikarbon servisli aile içecekleri</td><td>Havuz geofence</td><td>Pool snack ekranı ve garson saati</td></tr>
+        <tr><td>Premium</td><td>Meritta Club bahçesi</td><td>Alerjen korumalı çocuk ikramı</td><td>Bahçe Wi-Fi</td><td>Kids Club bar ekranı</td></tr>
+        <tr><td>Premium</td><td>Tenis ve fitness</td><td>Sporcu içeceği ve buzlu havlu</td><td>Kort geofence</td><td>Spor barı görevli saati</td></tr>
+        <tr><td>Premium</td><td>Çocuk havuzu ve Vitamin Bar</td><td>Taze sıkım, meyve şişi, dondurma</td><td>Havuz geofence</td><td>Vitamin Bar ve görevli saati</td></tr>
+        <tr><td>Premium</td><td>Fuaye gece noktası</td><td>24 saat çay, kahve, çorba, sandviç</td><td>Fuaye Wi-Fi</td><td>Fuaye servis ekranı</td></tr>
+        <tr><td>Ortak sahil</td><td>Zephyros VIP Cabanas</td><td>Loca ikramı ve şampanya butler</td><td>Sahil ve iskele geofence</td><td>Cabana butler tableti ve saati</td></tr>
+        <tr><td>Ortak sahil</td><td>Ahşap iskele</td><td>Deniz üstü şezlong içeceği</td><td>İskele geofence</td><td>Beach Bar runner saati</td></tr>
+        <tr><td>Ortak sahil</td><td>Beach Bar ve Snack Lounge</td><td>Açık hava kokteyl ve smoothie</td><td>Kumsal Wi-Fi veya geofence</td><td>Beach Bar ekranı ve runner saati</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Teras, Royal ana havuz, Royal spa, çocuk havuzu, fuaye ve Beach Bar satırları, alan incelemesindeki servis kuralıyla tamamlanmıştır. Diğer satırlar verilen operasyon matrisinin aynısıdır. Hepsi fiyatsızdır.</p>
+
+    <h2 id="ilkeler">5. Değişmez mimari ilkeler</h2>
+    <div class="split">
+      <article class="card">
+        <h3>Fiyatsız akış</h3>
+        <p>Ultra her şey dahil düzene uygun olarak misafir arayüzünde fiyat, para birimi ve online ödeme ekranı bulunmaz. Ürün kartında görsel, ad, kısa anlatım ve alerjen işareti yer alır.</p>
+      </article>
+      <article class="card">
+        <h3>Çift kademeli onay</h3>
+        <p>Şezlongdan, masadan veya odadan gelen talep doğrudan bara veya mutfağa gitmez. Önce görevli garsonun saatine veya telefonuna ve ana kasaya düşer. Fiziksel teyit ve garson onayından sonra servis fişine işlenir.</p>
+      </article>
+      <article class="card">
+        <h3>Kimlik QR’da, konum arazide</h3>
+        <p>Masa, şezlong, kabana ve oda kimliği sabit QR kodundadır. GPS masayı aramaz. Yalnızca misafirin tanımlı alanın içinde olduğunu doğrular.</p>
+      </article>
+      <article class="card">
+        <h3>Wi-Fi ve mobil veri</h3>
+        <p>Otel Wi-Fi’sına bağlı misafirden konum izni istenmez. Masa anında dolu olur. Kendi mobil verisini kullanan ve konum iznini reddeden misafir menüyü inceler; masa beklemede kalır. Garson yerinde doluluğu onaylayınca sipariş düğmesi açılır.</p>
+      </article>
+      <article class="card">
+        <h3>Otuz gün kara liste</h3>
+        <p>QR’ı arazinin dışından sahte talep için kullanan cihaz otuz gün engellenir. Normal misafirin kişisel verisi sunucuda tutulmaz. Lezzet önerisi yalnızca cihazdaki çerezde kalır.</p>
+      </article>
+      <article class="card">
+        <h3>Sınırsız tanım</h3>
+        <p>Sistem yöneticisi otel, outlet, kullanıcı ve rol ekler. Menü, görsel ve ürün sayısında lisans sınırı yoktur. Kullanıcılar otel ve outlet bazında yetkilendirilir.</p>
+      </article>
+    </div>
+
+    <h2 id="sistemler">6. Dört sistem ve merkez panel</h2>
+    <p>Dört sistem aynı panele bağlıdır. Önce otel kaydı açılır. Sonra outlet, kat, oda, oda tipi, menü ve personel bu otelin altına bağlanır. Diamond, Royal ve Premium birbirinin menüsünü görmez; yönetici üçünü birden görür. Zephyros sahili ortak outlet grubudur ve üç otelin yetkili personeline açılabilir.</p>
+
+    <h3>Merkez panel ve roller</h3>
+    <ul class="plain">
+      <li><strong>Sistem yöneticisi:</strong> otel, outlet, kat, oda, oda tipi, minibar konsepti, menü, görsel, kullanıcı, rol ve geofence sınırı.</li>
+      <li><strong>Outlet sorumlusu:</strong> kendi menüsü, vardiya ve o an çevrimiçi garson listesi.</li>
+      <li><strong>Garson, barmen, sommelier, butler:</strong> telefon veya saatten çağrı, sipariş onayı ve servis notu.</li>
+      <li><strong>Kasa:</strong> onay bekleyen talebi görür; fiş, garson teyidinden sonra işlenir.</li>
+      <li><strong>Kat sorumlusu:</strong> minibar ilavesini oda bazında girer.</li>
+      <li><strong>Mutfak ve bar ekranı:</strong> yalnızca onaylanmış işi görür. Yazıcı aynı anda fiş basar.</li>
+    </ul>
+
+    <h3>Minibar takip</h3>
+    <p>Kat ve oda sınırsız tanımlanır. Oda tipine göre minibar konsepti seçilir. Odadaki QR, misafire o konsepti açar. Misafir içeriği günde bir kez kişiselleştirir; hak ertesi gün yenilenir. Kat sorumlusu doluma eklediği ürünü kaydeder. Raporlar oda, kat ve ürün kırılımında, ekranda ve Excel veya CSV olarak alınır. Tüketim kaydı operasyon içindir; muhasebe fişi bu lisansın dışındadır.</p>
+
+    <h3>QR menü</h3>
+    <p>Misafir, bulunduğu noktanın QR’ını telefon kamerasıyla okutur. Ekran o alanın atmosferine göre açılır: infinity pool başka, kış bahçesi başka, çocuk bahçesi başkadır. Misafir ürün seçer ve garsona bildirir. QR okunduğu anda, henüz çağrı düğmesine basılmasa bile görevli ve çevrimiçi garsonun telefonuna ve varsa saatine “bu plaka menüyü açtı” uyarısı gider. Böylece personel masaya yönelebilir. Ayrı bir garson çağır düğmesi de vardır. Servisi garson yapar.</p>
+
+    <h3>QR sipariş</h3>
+    <p>Menü deneyimi QR menü ile aynıdır. Fark, gönder düğmesindedir. Misafir seçimini gönderince bildirim önce görevliye, çevrimiçi garsona ve kasaya gider. Garson onay verince iş, mutfak yazılımına değil mutfaktaki yazıcıya ve mutfak ekranına anlık yansır. Garson çağırma adımı QR menü ile aynıdır.</p>
+    <div class="flow">
+      <div><strong>1. Seçim</strong>Misafir ürünü seçer ve gönderir. Ekranda fiyat yoktur.</div>
+      <div><strong>2. Garson ve kasa</strong>Görevli saati veya telefonu ile kasa ekranı talebi görür.</div>
+      <div><strong>3. Fiziksel teyit</strong>Garson masada veya şezlongda onay verir. Beklemedeki masa bu adımda açılır.</div>
+      <div><strong>4. Yazıcı ve ekran</strong>Onaydan sonra termal fiş basılır ve mutfak veya bar ekranı güncellenir.</div>
+    </div>
+
+    <h3>QR oda servisi</h3>
+    <p>QR menü ile QR siparişin odadaki birleşik halidir. Odadaki QR oda numarasına kilitlidir. Talep, ilgili birimin ekranına düşer. Telefonla teyit işletmenin seçimine bağlıdır: açık bırakılırsa birim misafiri arar, kapalıysa hazırlık onay akışıyla ilerler. Amaç talebi kısa sürede yerine getirmektir. Oda servisi de fiyatsızdır ve mutfağa ancak görevli onayıyla gider.</p>
+
+    <h3>Outlet servis notları</h3>
+    <p>Yazılım, sahanın fiziksel kuralını personel ekranında hatırlatır. Infinity Pool, Lagoon ve iskelede kırılmaz servis; Meritta’da alerjen filtresi; spa, puro salonu ve piano barda sessiz bildirim; VIP cabanada butler önceliği bu notlarla taşınır. Not, siparişin mutfağa gidiş şartını değiştirmez.</p>
+
+    <h2 id="piyasa">7. Piyasa emsalleri ve bedelin dayanağı</h2>
+    <p>Fiyat, 30 Ekim 2026 tarihinde kamuya açık listelerden okunmuştur. Liste fiyatları değişebilir. Aşağıdaki hesap, bu projenin kapsamını o listelerle aynı kefeye koymak için yapılmıştır. Emsal firmalardan alınmış bir Merit teklifi değildir.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Emsal</th>
+          <th>Ne işe yarar</th>
+          <th>Okunan liste</th>
+          <th class="num">Bu kompleks için karşılık</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>FineDine</td>
+          <td>Otel ve fine dining dijital menü aboneliği. Minibar, geofence ve saat bildirimi bu listeye dahil değil. Lisans mülkiyeti yok.</td>
+          <td>Lokasyon başı ayda 82 USD, yıllık faturalama.</td>
+          <td class="num">18 alan × 984 USD = 17.712 USD / yıl</td>
+        </tr>
+        <tr>
+          <td>Menujo Business</td>
+          <td>Tek işletme dijital menüsü.</td>
+          <td>Yılda 120 USD.</td>
+          <td class="num">Üç otel operasyonunu karşılamaz</td>
+        </tr>
+        <tr>
+          <td>AKINSOFT Wolvox Restoran Yönetimi 2</td>
+          <td>Restoran satışı. Hazır paket 1 kullanıcı. QR lüks akış, minibar kişiselleştirme ve oda servisi yok.</td>
+          <td>1.168 USD, KDV hariç. PDA modülü ayrıca 123 USD.</td>
+          <td class="num">3 otel × (1.168 + 123) = 3.873 USD</td>
+        </tr>
+        <tr>
+          <td>Arısu QR menü</td>
+          <td>Tek işletmeye vitrin menüsü. Sipariş, garson ve minibar yok. Aboneliksiz.</td>
+          <td>6.000 TL, tek sefer.</td>
+          <td class="num">Kapsam dışı bırakıldı</td>
+        </tr>
+        <tr>
+          <td>Otel POS aboneliği</td>
+          <td>Lokasyon başı yazılım kirası. Donanım hariç.</td>
+          <td>Ayda 69–200 USD / lokasyon.</td>
+          <td class="num">18 × 134,50 × 12 ≈ 29.052 USD / yıl</td>
+        </tr>
+        <tr>
+          <td>Sıfırdan özel sipariş platformu</td>
+          <td>Çok birimli marka için markalı sipariş ve operasyon yazılımı.</td>
+          <td>Birinci yıl tipik bant 150.000–600.000 USD.</td>
+          <td class="num">Bu teklifin konusu değil</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="src">Kaynaklar:
+      <a href="https://menujo.com/menus-for/hotels">Menujo otel menü karşılaştırması, 2026</a> (FineDine ve Menujo);
+      <a href="https://www.akinsoft.com/tr/programs/detail/wolvox-restoran-programi-pda-siparis--woa9">AKINSOFT Wolvox Restoran</a>;
+      <a href="https://www.hepsiburada.com/arisu-yazilim-teknolojileri-qr-kod-online-menu-kafe-lokanta-restoran-oteller-kare-kod-pm-HBC00008YUQUV">Arısu QR menü listesi</a>;
+      <a href="https://www.prostay.com/blog/7-top-hotel-point-of-sale-systems/">ProStay otel POS bandı</a>;
+      <a href="https://ztabs.co/industries/restaurants-hospitality">Ztabs hospitality maliyet bandı, 2026</a>.
+      Intelity, SuitePad ve Bartech kurumsal tekliflerini kamuya açık liste olarak yayımlamadığı için bu tabloya rakam yazılmamıştır.
+    </p>
+    <div class="callout">
+      Birinci yıl bedeli 19.500 USD’dir. Bu, 18 alanlık FineDine menü aboneliğinin (17.712 USD) hemen üzerindedir; buna karşılık minibar, oda servisi, garson onayı, mutfak yazıcısı, geofence, Wi-Fi doluluk ve lisansın işletmede kalması dahildir. Üçüncü yıl sonunda, bakım iki kez yenilenirse toplam 25.100 USD olur. Yalnızca menü aboneliği aynı sürede 53.136 USD tutar ve yazılım işletmenin malı olmaz. Sıfırdan özel geliştirme bandının alt sınırı olan 150.000 USD, bu işin yaklaşık sekiz katıdır. Bu teklif o bandın ürünü değildir; tanımlı dört modülün lisansı, kurulumu ve ilk yıl bakımıdır.
+    </div>
+
+    <h2 id="proforma">8. Proforma, bakım ve kabul</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Kalem</th>
+          <th>Lisans</th>
+          <th class="num">Tutar (USD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>01</td>
+          <td><strong>Merkezi sistem yöneticisi paneli.</strong> Üç otel ve ortak sahil, tek ekran. Sınırsız kullanıcı, rol, otel ve outlet yetkisi.</td>
+          <td>1 kompleks</td>
+          <td class="num">2.600,00</td>
+        </tr>
+        <tr>
+          <td>02</td>
+          <td><strong>Minibar takip.</strong> Sınırsız kat, oda ve ürün. Oda tipine göre konsept. Günde bir kişiselleştirme. Kat sorumlusu ilave kaydı. Oda, kat ve ürün raporu, Excel/CSV.</td>
+          <td>Sınırsız oda</td>
+          <td class="num">4.400,00</td>
+        </tr>
+        <tr>
+          <td>03</td>
+          <td><strong>QR menü ve garson çağrı.</strong> 18 a la carte harici alan, alana özel ekran, QR okununca personele uyarı, garson çağır düğmesi, geofence ve Wi-Fi doluluk.</td>
+          <td>Sınırsız outlet</td>
+          <td class="num">3.800,00</td>
+        </tr>
+        <tr>
+          <td>04</td>
+          <td><strong>QR sipariş.</strong> Gönder, garson ve kasa onayı, fiziksel teyit, mutfak veya bar yazıcısı ve ekranı. Çift kademe olmadan mutfağa düşmez.</td>
+          <td>Tüm servis barları</td>
+          <td class="num">3.400,00</td>
+        </tr>
+        <tr>
+          <td>05</td>
+          <td><strong>QR oda servisi.</strong> Odaya kilitli QR, birim ekranı, isteğe bağlı telefon teyidi, onaydan sonra hazırlık.</td>
+          <td>Sınırsız oda</td>
+          <td class="num">2.500,00</td>
+        </tr>
+        <tr>
+          <td>06</td>
+          <td><strong>12 ay servis ve bakım.</strong> Canlıya alma gününde başlar. Barındırma, günlük yedek, güvenlik yaması, uzaktan destek, yönetici ve saha eğitimi.</td>
+          <td>12 ay</td>
+          <td class="num">2.800,00</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">Yazılım lisansı ve birinci yıl bakım toplamı</td>
+          <td class="num">19.500,00</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p class="small">Kalemler toplanınca teklif bedelini verir. Ayrıca bir indirim satırı yoktur. Paylaşılan panel bir kez fiyatlanmıştır.</p>
+
+    <h3>Ödeme ve yenileme</h3>
+    <ul class="plain">
+      <li>Bedel KDV hariçtir. Fatura USD kesilir. Alıcı TL isterse, fatura günündeki TCMB döviz satış kuru uygulanır.</li>
+      <li>Yüzde 50 sözleşme imzasında ve kurulum başlangıcında, yüzde 50 üç otelde canlı kullanım ve eğitim tutanağından sonra ödenir.</li>
+      <li>Birinci yıl bakım bu bedelin içindedir. Sonraki her yıl, canlıya alma yıldönümünden otuz gün önce yazılı olarak yenilenirse 2.800,00 USD’dir.</li>
+      <li>Yenilenmeyen yılda lisans kullanıma devam eder; barındırma, yama, yedek ve destek durur. Verinin dışa aktarımı yenilememe bildiriminin ardından 30 gün açıktır.</li>
+    </ul>
+
+    <h3>Bakım sınırı</h3>
+    <ul class="plain">
+      <li>Kritik kesinti, sistemin üç otelde sipariş alamaması demektir. Bildirim günün her saatinde alınır. İlk dönüş 15 dakika, geçici veya kalıcı çözüm hedefi 4 saattir.</li>
+      <li>Tek bir outlet veya tek bir oda kaydını etkileyen hata: her gün 08.00–20.00 arasında 2 saat içinde müdahale.</li>
+      <li>Menü, görsel, kullanıcı ve oda tanımı: bir iş günü.</li>
+      <li>Eğitim, canlıya alma haftasında yönetici paneli, kat sorumlusu, kasa ve birer outlet provası olarak verilir. Yerinde konaklama ve yol, ayrıca yazılır.</li>
+    </ul>
+
+    <h3>Hedef takvim</h3>
+    <p>Sözleşme imzasından itibaren hedef pencere 10 haftadır. Sıra şöyledir: merkez panel ve üç otel iskeleti, minibar, QR menü ve çağrı, QR sipariş ile yazıcı, oda servisi, eğitim ve canlıya alma. Süre, otelin oda listesini, outlet adlarını ve geofence sınırlarını üçüncü haftaya kadar teslim etmesine bağlıdır.</p>
+
+    <h3>Kapsam dışı</h3>
+    <ul class="plain">
+      <li>A la carte restoranlar, banket menüleri ve mevcut restoran POS’unun değiştirilmesi.</li>
+      <li>PMS, muhasebe ve folio entegrasyonu. Servis fişi bu yazılımın içindedir.</li>
+      <li>Telefon, akıllı saat, tablet, mutfak yazıcısı, ağ, güneş enerjili plaka ve QR baskı.</li>
+      <li>Misafirden tahsilat, fiyat gösterimi ve online ödeme.</li>
+      <li>Kapalı alanda santimetre hassasiyetinde konum. Kapalı salonlarda doğrulama Wi-Fi iledir. GPS havuz, kort, sahil ve iskele içindir.</li>
+    </ul>
+
+    <h3>Teklifin dayandığı kabuller</h3>
+    <ol class="kabuller">
+      <li>Lisans, Diamond, Royal, Premium ve Zephyros ortak sahili için geçerlidir. Oda, kat, kullanıcı ve ürün adedine tavan konmaz.</li>
+      <li>Personel kendi telefonunu ve varsa kendi saatini kullanır. Mutfakta ağ üzerinden erişilen mevcut bir termal yazıcı vardır. Yazıcının ESC/POS veya eşdeğer ağ baskısını desteklediği kabul edilir.</li>
+      <li>Otel Wi-Fi’sı misafir alanlarında ve personel cihazlarında çalışır. Geofence çokgenleri otel ile birlikte sahada işaretlenir.</li>
+      <li>Misafir kişisel verisi sunucuda saklanmaz. Otuz günlük engel, cihazın teknik izi üzerinden tutulur; ad, telefon ve pasaport tutulmaz.</li>
+      <li>Emsal rakamlar 30 Ekim 2026 tarihli açık listelerdir. Karşılaştırma yöntemini gösterir, üçüncü parti bir indirim taahhüdü değildir.</li>
+      <li>Kuzey Kıbrıs veya Türkiye katma değer vergisi, stopaj ve damga, faturanın kesildiği ülkenin kuralına göre ayrıca hesaplanır.</li>
+    </ol>
+
+    <div class="sign">
+      <article>
+        <h3>Teklifi veren</h3>
+        <p>Ad: Erkan<br>Hizmet: yazılım lisansı ve bakım<br>Tarih: 30 Ekim 2026</p>
+        <div class="line"></div>
+        <p class="small">İmza. Ticari unvan ve kaşe sözleşme nüshasına basılır.</p>
+      </article>
+      <article>
+        <h3>Kabul eden</h3>
+        <p>Merit Royal Hotels<br>Diamond, Royal, Premium ve Zephyros sahili<br>Tarih: ____ / ____ / 2026</p>
+        <div class="line"></div>
+        <p class="small">Yetkili imza ve kaşe. Kabul, bu belgedeki kapsam dışı maddelerle birlikte geçerlidir.</p>
+      </article>
+    </div>
+
+    <footer class="page">
+      <span>MR-QR-PF-2026-103 · Merit Royal yazılım lisansı · 30 Ekim 2026</span>
+      <span>KDV hariç 19.500,00 USD · 12 ay bakım dahil</span>
+    </footer>
+  </section>
+</main>
+</body>
+</html>

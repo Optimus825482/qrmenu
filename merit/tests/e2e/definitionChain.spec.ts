@@ -11,7 +11,7 @@ import { expect, login, resetAndSeed, test } from "./fixtures";
 test.describe.configure({ mode: "serial" });
 
 const BASE_URL = "http://localhost:3000";
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 const GARSON = "kabul.garson";
 const GARSON_PASSWORD = "Kabul2026Pw";
 
@@ -85,7 +85,7 @@ async function canView(roleCode: string, screenCode: string): Promise<boolean> {
          JOIN roles r ON r.id = p.role_id
          JOIN app_screens s ON s.id = p.screen_id
          LEFT JOIN hotels h ON h.id = p.hotel_id
-        WHERE r.code = $1 AND s.code = $2 AND (p.hotel_id IS NULL OR h.code = 'MR')
+        WHERE r.code = $1 AND s.code = $2 AND (p.hotel_id IS NULL OR h.code = 'ROYAL')
         ORDER BY (p.hotel_id IS NULL) ASC
         LIMIT 1`,
       [roleCode, screenCode],

@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MENNN · Yönetim Paneli Prototipi · Merit Royal QR & Minibar Platformu</title>
+<style>
+:root{
+  --navy:#0c2038; --side:#0d2740; --side2:#153b5e; --gold:#c9a45c; --gold2:#a97c33;
+  --ink:#1a2634; --muted:#62748a; --line:#dfe7f0; --soft:#f6f9fc; --bg:#eef2f7;
+  --blue:#1d6fb8; --blue-soft:#eaf3fb; --ok:#18855a; --ok-soft:#e9f7f0;
+  --warn:#b8791a; --warn-soft:#fdf4e3; --err:#b6382c; --err-soft:#fdeeec;
+  --violet:#6d4bb5; --violet-soft:#f1ecfb;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 "Segoe UI",Tahoma,Verdana,sans-serif}
+a{color:var(--blue);text-decoration:none}
+.app{display:flex;min-height:100vh}
+/* ---------- sidebar ---------- */
+.side{width:264px;flex:0 0 264px;background:linear-gradient(180deg,var(--side),#0a1e33);color:#c9d8e6;display:flex;flex-direction:column}
+.side .brand{padding:16px 16px 14px;border-bottom:1px solid rgba(255,255,255,.09)}
+.side .brand b{display:block;color:#fff;font-size:16px;letter-spacing:.16em}
+.side .brand span{font-size:11px;color:var(--gold);letter-spacing:.1em}
+.side nav{padding:10px 8px 24px;overflow:auto}
+.side .grp{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#7d97b1;padding:12px 10px 5px}
+.side a.nav{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;color:#c9d8e6;font-size:12.8px}
+.side a.nav:hover{background:rgba(255,255,255,.07);color:#fff}
+.side a.nav.on{background:var(--side2);color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+.side a.nav .ic{width:16px;text-align:center;opacity:.9;font-size:12px}
+.side a.nav .n{margin-left:auto;background:rgba(255,255,255,.14);border-radius:9px;padding:0 6px;font-size:10.5px}
+/* ---------- main ---------- */
+.main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.top{background:#fff;border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+.top h1{font-size:15.5px;margin:0;font-weight:600}
+.crumb{font-size:11.5px;color:var(--muted)}
+.top .sp{flex:1}
+.pill{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:var(--muted);background:var(--soft);white-space:nowrap}
+.pill.ok{border-color:#bfe3d1;background:var(--ok-soft);color:#0f6a45}
+.pill.warn{border-color:#f0dcb2;background:var(--warn-soft);color:#8c5c12}
+.pill.err{border-color:#f3cdc7;background:var(--err-soft);color:#93291e}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600}
+.wrap{padding:18px 20px 40px;max-width:1500px}
+/* ---------- blocks ---------- */
+.h2{font-size:14px;font-weight:600;margin:0 0 4px}
+.h3{font-size:12.5px;font-weight:600;margin:16px 0 8px;color:#2b3f57}
+.sub{color:var(--muted);font-size:11.8px;margin:0 0 14px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px}
+.card.tight{padding:11px 12px}
+.card .ct{font-size:12.5px;font-weight:600;margin:0 0 8px;display:flex;align-items:center;gap:7px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .v{font-size:22px;font-weight:700;color:var(--navy);line-height:1.15;margin-top:3px}
+.kpi .u{font-size:11px;color:var(--muted)}
+.kpi{border-top:3px solid var(--blue)}
+.kpi.gold{border-top-color:var(--gold2)} .kpi.ok{border-top-color:var(--ok)}
+.kpi.violet{border-top-color:var(--violet)} .kpi.warn{border-top-color:var(--warn)}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{background:var(--soft);text-align:left;font-weight:600;color:#33475f;padding:7px 9px;border-bottom:1px solid var(--line);font-size:11.2px;letter-spacing:.02em;white-space:nowrap}
+table.t td{padding:7px 9px;border-bottom:1px solid #eef3f8;vertical-align:middle}
+table.t tr:hover td{background:#fbfdff}
+table.t td.num,table.t th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.t td.ctr{text-align:center}
+.tag{display:inline-block;font-size:10.6px;border-radius:5px;padding:2px 7px;border:1px solid var(--line);background:var(--soft);color:#42566d;white-space:nowrap}
+.tag.ok{border-color:#bfe3d1;background:var(--ok-soft);color:#0f6a45}
+.tag.warn{border-color:#f0dcb2;background:var(--warn-soft);color:#8c5c12}
+.tag.err{border-color:#f3cdc7;background:var(--err-soft);color:#93291e}
+.tag.blue{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d}
+.tag.violet{border-color:#d9cdf5;background:var(--violet-soft);color:#543a92}
+.tag.gold{border-color:#ecdcb6;background:#fbf6ea;color:#8a6519}
+.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 12px;font:inherit;font-size:12px;cursor:pointer;color:#2b3f57}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.pri:hover{background:#13324f}
+.btn.gold{background:var(--gold2);border-color:var(--gold2);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.sm{padding:3px 9px;font-size:11.2px}
+.btn.link{border:none;background:none;color:var(--blue);padding:2px 4px}
+input,select,textarea{font:inherit;font-size:12.2px;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);width:100%}
+label.f{display:block;font-size:11.2px;color:var(--muted);margin-bottom:3px}
+.fld{margin-bottom:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 0;min-width:130px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.bar .fld{margin:0}
+.bar .fld select,.bar .fld input{min-width:170px}
+.note{border-left:3px solid var(--blue);background:var(--blue-soft);padding:9px 12px;border-radius:0 7px 7px 0;font-size:12px;margin:0 0 12px}
+.note.warn{border-color:var(--warn);background:var(--warn-soft)}
+.note.ok{border-color:var(--ok);background:var(--ok-soft)}
+.note.violet{border-color:var(--violet);background:var(--violet-soft)}
+.note.gold{border-color:var(--gold2);background:#fbf6ea}
+.note b{color:var(--navy)}
+ul.ck{list-style:none;padding:0;margin:0}
+ul.ck li{position:relative;padding-left:20px;margin-bottom:6px;font-size:12.2px}
+ul.ck li:before{content:"✓";position:absolute;left:0;top:0;color:var(--ok);font-weight:700}
+ul.ck.no li:before{content:"✕";color:var(--err)}
+.tree{font-size:12.4px}
+.tree div{padding:5px 8px;border-radius:6px;display:flex;gap:8px;align-items:center}
+.tree div:hover{background:var(--soft)}
+.tree .l1{font-weight:600}
+.tree .l2{padding-left:22px;color:#3b5068}
+.tree .l3{padding-left:44px;color:#54697f}
+.tree .l4{padding-left:66px;color:#68798d}
+.steps{display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:11.8px}
+.steps .s{border:1px solid var(--line);background:var(--soft);border-radius:6px;padding:4px 9px}
+.steps .s.on{border-color:#c5ddf3;background:var(--blue-soft);color:#14568d;font-weight:600}
+.steps .ar{color:#a9b8c8}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.12);vertical-align:-2px}
+.prog{height:7px;background:#e9eff6;border-radius:5px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--blue)}
+.mono{font-family:Consolas,monospace;font-size:11.5px}
+.hidden{display:none!important}
+.foot{color:var(--muted);font-size:11.2px;padding:14px 20px;border-top:1px solid var(--line);background:#fff}
+.live{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;animation:pul 1.4s infinite}
+@keyframes pul{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:7px}
+.room{border:1px solid var(--line);border-radius:7px;padding:7px 8px;font-size:11.4px;background:#fff}
+.room b{font-size:12px}
+.room.done{border-color:#bfe3d1;background:var(--ok-soft)}
+.room.act{border-color:#c5ddf3;background:var(--blue-soft);box-shadow:0 0 0 2px #dbeaf8 inset}
+.room.dnd{border-color:#f0dcb2;background:var(--warn-soft)}
+.room.pers{border-color:#d9cdf5;background:var(--violet-soft)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.4px;color:var(--muted);margin-top:10px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px}
+@media (max-width:1150px){.g4,.g5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div id="ovf" style="display:none"></div>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><b>MENNN</b><span>MERIT ROYAL · SERVİS PLATFORMU</span></div>
+    <nav id="nav"></nav>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <div>
+        <h1 id="vtitle">Genel Bakış</h1>
+        <div class="crumb" id="vcrumb">Sistem Yöneticisi Paneli · prototip</div>
+      </div>
+      <div class="sp"></div>
+      <span class="pill" id="clock"></span>
+      <span class="pill ok"><span class="live"></span> &nbsp;Canlı</span>
+      <span class="pill">Sistem Yöneticisi</span>
+      <div class="avatar">SY</div>
+    </header>
+    <div class="wrap" id="view"></div>
+    <div class="foot">MENNN · Yönetim Paneli HTML Prototipi · Bu ekran tasarım örneğidir; veriler örnek (seed) verisidir, gerçek sistemde PostgreSQL + Prisma üzerinden okunur.</div>
+  </div>
+</div>
+<script>
+/* =========================================================
+   MENNN · Prototip çekirdeği
+   Standart (varsayılan) otel kayıtları: Merit Royal, Diamond, Premium
+   ========================================================= */
+const HOTELS = [
+  {id:'H1', name:'Merit Royal',         code:'MR',  loc:'Girne / KKTC', rooms:300, std:true,  theme:'#0d2740'},
+  {id:'H2', name:'Merit Royal Diamond', code:'MRD', loc:'Girne / KKTC', rooms:180, std:true,  theme:'#8a6519'},
+  {id:'H3', name:'Merit Royal Premium', code:'MRP', loc:'Girne / KKTC', rooms:420, std:true,  theme:'#1c6b52'}
+];
+const ROOMTYPES = [
+  {id:'RT1', name:'Standart Oda',       cap:2, concept:'CN1'},
+  {id:'RT2', name:'Deluxe Oda',         cap:2, concept:'CN2'},
+  {id:'RT3', name:'Aile Odası',         cap:4, concept:'CN3'},
+  {id:'RT4', name:'Suit',               cap:3, concept:'CN4'},
+  {id:'RT5', name:'VIP / Diamond Suit', cap:4, concept:'CN5'},
+  {id:'RT6', name:'Engelsiz Oda',       cap:2, concept:'CN6'}
+];
+const PRODUCTS = [
+  {id:'P01', name:'Doğal Kaynak Suyu 0,5 L', grp:'G1', unit:'adet', par:2},
+  {id:'P02', name:'Maden Suyu (Sade)',       grp:'G1', unit:'adet', par:2},
+  {id:'P03', name:'Kola 330 ml',             grp:'G1', unit:'adet', par:3},
+  {id:'P04', name:'Şekersiz Kola 330 ml',    grp:'G1', unit:'adet', par:3},
+  {id:'P05', name:'Meyve Suyu 250 ml',       grp:'G1', unit:'adet', par:4},
+  {id:'P06', name:'Enerji İçeceği 250 ml',   grp:'G1', unit:'adet', par:8},
+  {id:'P07', name:'Yerli Bira 330 ml',       grp:'G2', unit:'adet', par:6},
+  {id:'P08', name:'Kırmızı Şarap 187 ml',    grp:'G2', unit:'adet', par:12},
+  {id:'P09', name:'Prosecco 200 ml',         grp:'G2', unit:'adet', par:15},
+  {id:'P10', name:'Şampanya 375 ml',         grp:'G2', unit:'adet', par:45},
+  {id:'P11', name:'Sütlü Çikolata 80 g',     grp:'G5', unit:'adet', par:4},
+  {id:'P12', name:'Antep Fıstığı 40 g',      grp:'G4', unit:'adet', par:7},
+  {id:'P13', name:'Karışık Kuruyemiş 60 g',  grp:'G4', unit:'adet', par:6},
+  {id:'P14', name:'Kuru Meyve Karışımı 50 g',grp:'G4', unit:'adet', par:5},
+  {id:'P15', name:'Patates Cipsi 40 g',      grp:'G3', unit:'adet', par:3},
+  {id:'P16', name:'Glutensiz Kraker',        grp:'G3', unit:'adet', par:4},
+  {id:'P17', name:'Meyveli Buz (Sütsüz)',    grp:'G6', unit:'adet', par:3},
+  {id:'P18', name:'Organik Bebek Püresi',    grp:'G6', unit:'kavanoz', par:18},
+  {id:'P19', name:'Çocuk Meyve Suyu 200 ml', grp:'G6', unit:'adet', par:4},
+  {id:'P20', name:'Espresso Kapsülü',        grp:'G7', unit:'adet', par:5},
+  {id:'P21', name:'Bitki Çayı Poşeti',       grp:'G7', unit:'adet', par:2},
+  {id:'P22', name:'UHT Süt 200 ml',          grp:'G6', unit:'adet', par:4}
+];
+const GROUPS = [
+  {id:'G1', name:'Alkolsüz İçecekler',        code:'ALKOLSUZ',  items:6},
+  {id:'G2', name:'Alkollü İçecekler',         code:'ALKOL',     items:4},
+  {id:'G3', name:'Tuzlu Atıştırmalık',        code:'TUZLU',     items:2},
+  {id:'G4', name:'Kuruyemiş & Kuru Meyve',    code:'KURUYEMIS', items:3},
+  {id:'G5', name:'Tatlı & Çikolata',          code:'TATLI',     items:1},
+  {id:'G6', name:'Bebek & Çocuk',             code:'COCUK',     items:4},
+  {id:'G7', name:'Kahve & Çay',               code:'SICAKICECEK',items:2}
+];
+/* konsept = oda tipine atanan minibar içeriği (ürün + adet) */
+const CONCEPTS = [
+  {id:'CN1', name:'Temel Konsept',        type:'RT1', items:{P01:2,P02:2,P03:2,P04:2,P05:1,P11:1,P15:1,P20:2,P21:2}},
+  {id:'CN2', name:'Yükseltilmiş Konsept', type:'RT2', items:{P01:2,P02:2,P03:3,P04:3,P05:2,P11:2,P12:1,P13:1,P20:2,P21:2}},
+  {id:'CN3', name:'Aile Konsepti',        type:'RT3', items:{P01:4,P02:2,P05:2,P19:2,P17:2,P18:1,P22:2,P16:1,P15:2,P11:2}},
+  {id:'CN4', name:'Suit Konsepti',        type:'RT4', items:{P01:2,P02:4,P07:2,P08:1,P09:1,P12:2,P13:1,P14:1,P11:2,P20:4}},
+  {id:'CN5', name:'VIP / Diamond Konsepti',type:'RT5',items:{P02:4,P09:2,P10:1,P07:2,P08:2,P12:2,P13:2,P14:2,P11:3,P20:4}},
+  {id:'CN6', name:'Erişilebilir Konsept', type:'RT6', items:{P01:2,P02:2,P05:2,P15:1,P11:1,P21:2}}
+];
+const STAFF = [
+  {id:'S01', name:'Hakan Yıldız',  role:'DEPO',  hotel:'H1', shift:'08:00–17:00'},
+  {id:'S02', name:'Elif Demir',    role:'KAT',   hotel:'H1', floors:[1,2], shift:'08:00–16:00'},
+  {id:'S03', name:'Murat Aksoy',   role:'KAT',   hotel:'H1', floors:[3,4], shift:'10:00–18:00'},
+  {id:'S04', name:'Selin Kaya',    role:'DEPO',  hotel:'H2', shift:'08:00–17:00'},
+  {id:'S05', name:'Ayşe Bozkurt',  role:'KAT',   hotel:'H2', floors:[1,2,3], shift:'09:00–17:00'},
+  {id:'S06', name:'Emre Şahin',    role:'DEPO',  hotel:'H3', shift:'07:00–16:00'},
+  {id:'S07', name:'Zeynep Arslan', role:'KAT',   hotel:'H3', floors:[1,2,3], shift:'08:00–16:00'},
+  {id:'S08', name:'Kerem Doğan',   role:'KAT',   hotel:'H3', floors:[4,5], shift:'12:00–20:00'}
+];
+/* kat ve oda verisi (örnek) */
+const FLOORS = [];
+const ROOMS  = [];
+(function seedFloorsRooms(){
+  const plan = {H1:[1,2,3,4], H2:[1,2,3], H3:[1,2,3,4,5]};
+  const rt = {H1:['RT1','RT2','RT4','RT5'], H2:['RT5','RT4','RT2'], H3:['RT1','RT3','RT2','RT6']};
+  Object.keys(plan).forEach(h=>{
+    plan[h].forEach(f=>{
+      FLOORS.push({id:h+'-F'+f, hotel:h, no:f, name:f+'. Kat', sup:(h==='H1'?(f<3?'S02':'S03'):h==='H2'?'S05':'S07')});
+      for(let i=1;i<=8;i++){
+        const no = f*100+i;
+        const t = rt[h][i%rt[h].length];
+        const c = ROOMTYPES.find(x=>x.id===t).concept;
+        const st = (i===7)?'DND':(i===5?'PERS':'OK');
+        ROOMS.push({id:h+'-'+no, hotel:h, floor:f, no:no, type:t, concept:c, status:st,
+          guest: (i===7?'Misafir uyuyor (DND)':i===5?'Kişiselleştirme talebi var':'Konaklıyor')});
+      }
+    });
+  });
+})();
+const CONSUMPTION = [
+  {id:'C-88410', hotel:'H1', floor:2, room:207, staff:'S02', items:3, when:'31.10.2026 09:12', src:'Kat Formu QR', note:'Rutin tüketim'},
+  {id:'C-88411', hotel:'H1', floor:2, room:211, staff:'S02', items:1, when:'31.10.2026 09:18', src:'Kat Formu QR', note:'Rutin tüketim'},
+  {id:'C-88412', hotel:'H1', floor:4, room:405, staff:'S03', items:5, when:'31.10.2026 10:04', src:'Kat Formu QR', note:'VIP konsept ikmali'},
+  {id:'C-88413', hotel:'H3', floor:3, room:302, staff:'S07', items:2, when:'31.10.2026 10:22', src:'Kat Formu QR', note:'Aile konsepti'},
+  {id:'C-88414', hotel:'H3', floor:5, room:507, staff:'S08', items:0, when:'31.10.2026 10:41', src:'Kat Formu QR', note:'DND — ara kayıt, tüketim girilmedi'}
+];
+const PERSREQ = [
+  {id:'K-3312', hotel:'H1', floor:1, room:105, when:'31.10.2026 08:40', lang:'RU',
+   plus:[{p:'P03',n:2}], minus:[{p:'P04',n:2}], status:'BEKLIYOR', staff:null},
+  {id:'K-3313', hotel:'H3', floor:2, room:205, when:'31.10.2026 09:05', lang:'EN',
+   plus:[{p:'P05',n:3}], minus:[{p:'P09',n:1}], status:'KISMEN', staff:'S07'},
+  {id:'K-3314', hotel:'H2', floor:3, room:308, when:'31.10.2026 09:31', lang:'DE',
+   plus:[{p:'P10',n:1}], minus:[], status:'TAMAM', staff:'S05'}
+];
+const DND = [
+  {id:'D-771', hotel:'H1', floor:1, room:107, staff:'S02', first:'31.10.2026 09:02', alarm:'31.10.2026 11:02', status:'ALARM', tries:2},
+  {id:'D-772', hotel:'H3', floor:4, room:404, staff:'S08', first:'31.10.2026 10:15', alarm:'31.10.2026 12:15', status:'BEKLIYOR', tries:1},
+  {id:'D-770', hotel:'H2', floor:2, room:203, staff:'S05', first:'31.10.2026 08:20', alarm:'31.10.2026 10:20', status:'TAMAM', tries:2}
+];
+const OUTLETS = [
+  {id:'O1', hotel:'H1', name:'Royal Ana Havuz & Pool Bar', type:'Havuz', theme:'Deniz mavisi / akik', qr:14},
+  {id:'O2', hotel:'H1', name:'Kaptan Köşkü Piano Bar',     type:'Bar',   theme:'Koyu ceviz / altın', qr:22},
+  {id:'O3', hotel:'H1', name:'Kış Bahçesi Çay Saati',      type:'Salon', theme:'Fildişi / yeşil',    qr:18},
+  {id:'O4', hotel:'H2', name:'Diamond Infinity Pool',      type:'Havuz', theme:'Obsidyen / şampanya',qr:16},
+  {id:'O5', hotel:'H2', name:'Cigar Lounge & Cognac',      type:'Salon', theme:'Tütün kahve / bakır',qr:10},
+  {id:'O6', hotel:'H3', name:'Lagoon Aile Havuzu',         type:'Havuz', theme:'Turkuaz / kum',      qr:26},
+  {id:'O7', hotel:'H3', name:'Meritta Club Park',          type:'Bahçe', theme:'Nane yeşili / beyaz', qr:12},
+  {id:'O8', hotel:'H1', name:'Zephyros VIP Cabanas',       type:'Sahil', theme:'Krem / gül kurusu',  qr:8}
+];
+const MENU = [
+  {id:'M1', hotel:'H1', outlet:'O1', name:'Royal Havuz Menüsü', langs:'TR/EN/RU/DE',
+   cats:[
+     {id:'K1', name:'Soğuk İçecekler', img:true, subs:[{id:'A1',name:'Kokteyller',groups:['İmza','Klasik']},{id:'A2',name:'Alkolsüz',groups:['Serinletici']}], items:14},
+     {id:'K2', name:'Atıştırmalık',    img:true, subs:[{id:'A3',name:'Sıcak',groups:['Izgara']},{id:'A4',name:'Soğuk',groups:['Meze']}], items:11}
+   ]}
+];
+const MENUITEMS = [
+  {id:'MI-01', menu:'M1', cat:'Soğuk İçecekler › Kokteyller', name:'Royal Akik', img:true, allerg:'yok', price:'fiyatsız', desc:'Böğürtlen, nane, limon; alkolsüz versiyonu mevcut'},
+  {id:'MI-02', menu:'M1', cat:'Soğuk İçecekler › Alkolsüz',   name:'Zephyros Cooler', img:true, allerg:'yok', price:'fiyatsız', desc:'Salatalık, tonik, misket limonu'},
+  {id:'MI-03', menu:'M1', cat:'Atıştırmalık › Izgara',        name:'Mini Burger Tabağı', img:true, allerg:'gluten, süt', price:'fiyatsız', desc:'Dana köfte, cheddar, brioche'},
+  {id:'MI-04', menu:'M1', cat:'Atıştırmalık › Meze',          name:'Karpuz & Beyaz Peynir', img:true, allerg:'süt', price:'fiyatsız', desc:'Soğuk servis, nane yağı'}
+];
+const ORDERS = [
+  {id:'SP-5521', hotel:'H1', outlet:'Royal Ana Havuz', table:'Ş-14', lines:3, when:'11:42',
+   items:'Zephyros Cooler ×2, Karpuz & Beyaz Peynir ×1', status:'GARSON_ONAYI', staff:'—'},
+  {id:'SP-5522', hotel:'H1', outlet:'Kaptan Köşkü Piano Bar', table:'M-06', lines:2, when:'11:44',
+   items:'Martini ×2', status:'GARSON_ONAYI', staff:'—'},
+  {id:'SP-5523', hotel:'H3', outlet:'Lagoon Aile Havuzu', table:'Ş-31', lines:4, when:'11:40',
+   items:'Mini Burger ×2, Çocuk Meyve Suyu ×2', status:'MUTFAKTA', staff:'S07'},
+  {id:'SP-5524', hotel:'H2', outlet:'Diamond Infinity Pool', table:'Ş-08', lines:2, when:'11:38',
+   items:'Şampanya 375 ×1, Kuruyemiş ×1', status:'SERVIS_EDILDI', staff:'S05'},
+  {id:'SP-5525', hotel:'H1', outlet:'Zephyros VIP Cabanas', table:'CAB-03', lines:3, when:'11:45',
+   items:'Butler ikramı', status:'VIP_ONCELIK', staff:'—'}
+];
+const ROOMSVC = [
+  {id:'RS-901', hotel:'H1', room:312, when:'11:20', items:'Kulüp Sandviç ×1, Ayran ×1', status:'TALEP', phone:'teyit bekliyor'},
+  {id:'RS-902', hotel:'H3', room:508, when:'11:05', items:'Gece Çorbası ×1', status:'HAZIRLANIYOR', phone:'teyit alındı'},
+  {id:'RS-903', hotel:'H2', room:204, when:'10:48', items:'Kahvaltı Tabağı ×2', status:'YOLDA', phone:'teyit alındı'}
+];
+const AUDIT = [
+  {t:'31.10.2026 11:45:12', user:'system', act:'Varsayılan otel kayıtları doğrulandı (3 tesis)', obj:'HOTEL/SEED', ip:'10.20.0.5'},
+  {t:'31.10.2026 11:42:08', user:'elif.demir', act:'Kat formu QR okutuldu — oda 211', obj:'ROOM/H1-211', ip:'10.20.4.31'},
+  {t:'31.10.2026 11:41:55', user:'elif.demir', act:'Tüketim kaydı: 3 ürün zimmetten düşüldü', obj:'CONS/C-88410', ip:'10.20.4.31'},
+  {t:'31.10.2026 11:39:02', user:'misafir', act:'Minibar kişiselleştirme talebi (günde 1 hak)', obj:'PERS/K-3312', ip:'10.20.9.77'},
+  {t:'31.10.2026 11:35:40', user:'hakan.yildiz', act:'Kat sorumlusuna zimmet dağıtımı onaylandı', obj:'STOCK/S02', ip:'10.20.2.10'}
+];
+</script>
+<script>
+/* =========================================================
+   Yönetici paneli — görünümler (minibar takip modülü)
+   ========================================================= */
+const NAV = [
+  {grp:'GENEL'},
+  {v:'dashboard', t:'Genel Bakış', ic:'▦'},
+  {grp:'MİNİBAR TAKİP · TANIMLAMALAR'},
+  {v:'mb-hotel', t:'Otel Tanımla', ic:'🏨', n:'3'},
+  {v:'mb-floor', t:'Kat Tanımla', ic:'▤'},
+  {v:'mb-room', t:'Oda Tanımla', ic:'🚪'},
+  {v:'mb-roomtype', t:'Oda Tipi Tanımla', ic:'🏷'},
+  {v:'mb-concept', t:'Konsept Tanımla', ic:'📋'},
+  {v:'mb-productgroup', t:'Ürün Grubu Tanımla', ic:'🗂'},
+  {v:'mb-product', t:'Ürün Tanımla', ic:'📦'},
+  {v:'mb-staff', t:'Kat / Depo Sorumlusu', ic:'👤'},
+  {grp:'MİNİBAR TAKİP · OPERASYON'},
+  {v:'mb-stock', t:'Zimmet & Stok', ic:'⚖'},
+  {v:'mb-consumption', t:'Tüketim Kayıtları', ic:'📝'},
+  {v:'mb-pers', t:'Kişiselleştirme Talepleri', ic:'✨', n:'2'},
+  {v:'mb-dnd', t:'DND / Ara Kayıtlar', ic:'⏱', n:'1'},
+  {grp:'QR MENÜ'},
+  {v:'qrm-outlet', t:'Outlet Tanımla', ic:'📍'},
+  {v:'qrm-menu', t:'Menü / Kategori / Öğe', ic:'🍽'},
+  {v:'qrm-theme', t:'Ambiyans & Tema', ic:'🎨'},
+  {grp:'QR SİPARİŞ'},
+  {v:'qrs-queue', t:'Garson Onay Kuyruğu', ic:'🛎', n:'3'},
+  {v:'qrs-kds', t:'Mutfak Ekranı (KDS)', ic:'👨‍🍳'},
+  {grp:'QR ODA SERVİSİ'},
+  {v:'rs-queue', t:'Oda Servisi Talepleri', ic:'🛏'},
+  {grp:'YÖNETİM'},
+  {v:'command', t:'Komuta Merkezi', ic:'🛰'},
+  {v:'reports', t:'Raporlar', ic:'📈'},
+  {v:'users', t:'Kullanıcılar & Roller', ic:'🔐'},
+  {v:'system', t:'Sistem & Denetim', ic:'⚙'}
+];
+const TITLES = {};
+NAV.forEach(x=>{ if(x.v) TITLES[x.v]=x.t; });
+
+const S = { hotel:'H1', floor:1, staff:'S02', concept:'CN1', group:'G1', menu:'M1', outlet:'O1',
+            persReq:null, toast:'', theme:'akik', step:0 };
+
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const H  = id => HOTELS.find(h=>h.id===id);
+const HN = id => (H(id)||{}).name || '—';
+const P  = id => PRODUCTS.find(p=>p.id===id);
+const PN = id => (P(id)||{}).name || id;
+const GN = id => (GROUPS.find(g=>g.id===id)||{}).name || '—';
+const RN = id => (ROOMTYPES.find(r=>r.id===id)||{}).name || '—';
+const SN = id => (STAFF.find(s=>s.id===id)||{}).name || '—';
+const SROLE = id => {const s=STAFF.find(x=>x.id===id); return s? (s.role==='KAT'?'Kat Sorumlusu':'Depo Sorumlusu') : '—';};
+const roomLabel = r => HN(r.hotel)+' · '+r.no;
+const floorsOf = h => FLOORS.filter(f=>f.hotel===h).sort((a,b)=>a.no-b.no);
+const roomsOf  = (h,f) => ROOMS.filter(r=>r.hotel===h && (!f || r.floor===f)).sort((a,b)=>a.no-b.no);
+const conceptOf = cid => CONCEPTS.find(c=>c.id===cid);
+const itemsCount = cid => Object.keys((conceptOf(cid)||{items:{}}).items).length;
+const totalUnits = cid => Object.values((conceptOf(cid)||{items:{}}).items).reduce((a,b)=>a+b,0);
+const prodNameOfType = type => (ROOMTYPES.find(r=>r.id===type)||{}).concept;
+
+function sel(id, arr, val, lab){
+  return '<select id="'+id+'">'+arr.map(o=>'<option value="'+o.v+'"'+(String(o.v)===String(val)?' selected':'')+'>'+esc(o.t)+'</option>').join('')+'</select>';
+}
+function hotelSel(id, val){ return sel(id, HOTELS.map(h=>({v:h.id,t:h.name})), val); }
+function toast(msg){
+  const el=document.getElementById('toast');
+  if(!el) return;
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2600);
+}
+/* ------------------------- GENEL BAKIŞ ------------------------- */
+function vDashboard(){
+  const totRooms = HOTELS.reduce((a,h)=>a+h.rooms,0);
+  const persOpen = PERSREQ.filter(p=>p.status!=='TAMAM').length;
+  const dndOpen  = DND.filter(d=>d.status!=='TAMAM').length;
+  const todayCons = CONSUMPTION.filter(c=>c.items>0).length;
+  return `
+  <p class="sub">Sistem yöneticisi tek panelden üç otelin tamamını yönetir. Aşağıdaki üç tesis <b>standart (varsayılan) kayıt</b> olarak sistemle birlikte gelir.</p>
+  <div class="grid g3" style="margin-bottom:16px">
+  ${HOTELS.map(h=>`
+    <div class="card">
+      <div class="ct"><span class="swatch" style="background:${h.theme}"></span> ${esc(h.name)}
+        ${h.std?'<span class="tag gold">STD</span>':''}</div>
+      <div class="row" style="gap:12px">
+        <div><div class="kpi k" style="border:none;padding:0"><div class="k" >Oda</div><div class="v" style="font-size:18px">${h.rooms}</div></div></div>
+        <div><div><div class="k" style="font-size:11px;color:var(--muted);text-transform:uppercase">Kat</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${floorsOf(h.id).length}</div></div></div>
+        <div><div><div class="k" style="font-size:11px;color:var(--muted);text-transform:uppercase">Outlet</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${OUTLETS.filter(o=>o.hotel===h.id).length}</div></div></div>
+        <div><div><div class="k" style="font-size:11px;color:var(--muted);text-transform:uppercase">Kat Sorumlusu</div><div style="font-size:18px;font-weight:700;color:var(--navy)">${STAFF.filter(s=>s.hotel===h.id&&s.role==='KAT').length}</div></div></div>
+      </div>
+      <div style="margin-top:8px" class="mono">${h.code} · ${esc(h.loc)}</div>
+    </div>`).join('')}
+  </div>
+  <div class="grid g5">
+    <div class="card kpi"><div class="k">Tanımlı Oda</div><div class="v">${totRooms}</div><div class="u">3 otel toplamı</div></div>
+    <div class="card kpi gold"><div class="k">Bugün Tüketim Kaydı</div><div class="v">${todayCons}</div><div class="u">kat formu QR ile</div></div>
+    <div class="card kpi violet"><div class="k">Kişiselleştirme Talebi</div><div class="v">${persOpen}</div><div class="u">açık talep</div></div>
+    <div class="card kpi warn"><div class="k">DND / Ara Kayıt</div><div class="v">${dndOpen}</div><div class="u">yeniden kontrol bekliyor</div></div>
+    <div class="card kpi ok"><div class="k">Onay Bekleyen Sipariş</div><div class="v">${ORDERS.filter(o=>o.status==='GARSON_ONAYI').length}</div><div class="u">garson ön onayı</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card">
+      <div class="ct">Modül haritası</div>
+      <table class="t">
+        <tr><th>Modül</th><th>Tanımlar</th><th>Operasyon</th><th class="num">Kayıt</th></tr>
+        <tr><td><b>Minibar Takip</b></td><td>Otel, kat, oda, oda tipi, konsept, ürün grubu, ürün, personel</td><td>Zimmet, tüketim, kişiselleştirme, DND</td><td class="num">14</td></tr>
+        <tr><td><b>QR Menü</b></td><td>Outlet, menü, kategori, alt kategori, grup, öğe, tema</td><td>Canlı masa görünümü</td><td class="num">8</td></tr>
+        <tr><td><b>QR Sipariş</b></td><td>Outlet, istasyon, yazıcı</td><td>Garson onayı, KDS, fiş yazıcı</td><td class="num">5</td></tr>
+        <tr><td><b>QR Oda Servisi</b></td><td>Oda, menü saatleri</td><td>Talep, telefon teyidi, teslim</td><td class="num">3</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Son hareketler <span class="tag blue">denetim günlüğü</span></div>
+      <table class="t">
+        ${AUDIT.slice(0,5).map(a=>`<tr><td class="mono" style="white-space:nowrap">${a.t.slice(11)}</td><td>${esc(a.act)}</td><td class="mono">${esc(a.user)}</td></tr>`).join('')}
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="ct">Merkezi otel ve operasyon yönetimi</div>
+    <p class="sub">Üç otel standart kayıttır. Her otelin altında outlet tanımlanır; kayıtlı kullanıcı bu outlete veya o otelin minibar sistemine yazılır. Birden fazla outleti olan kişi girişten hemen sonra oturum açacağı outleti seçer.</p>
+    <div class="steps" style="margin-bottom:12px">
+      <span class="s on">1 · Üç otel</span><span class="ar">→</span>
+      <span class="s on">2 · Otel seç</span><span class="ar">→</span>
+      <span class="s">3 · Modül</span><span class="ar">→</span>
+      <span class="s">4 · Outlet ve rol</span><span class="ar">→</span>
+      <span class="s">5 · Ekip</span><span class="ar">→</span>
+      <span class="s">6 · Çevrimiçi</span>
+    </div>
+    <button class="btn" onclick="go('mod-giris')">Modül girişi</button>
+    <button class="btn" onclick="go('qrm-outlet-mod')">Modül outletleri</button>
+    <button class="btn" onclick="go('rol-tanim')">Modül rolleri</button>
+    <button class="btn" onclick="go('ekip-ata')">Outlet ekipleri</button>
+    <button class="btn" onclick="go('online-takip')">Kullanıcı takibi</button>
+    <button class="btn" onclick="go('ayarlar')">Oturum süresi</button>
+  </div>`;
+}
+/* ------------------------- OTEL TANIMLA ------------------------- */
+function vMbHotel(){
+  return `
+  <p class="sub">Sistem kurulumunda <b>üç otel standart kayıt olarak yüklenir</b>. Bu kayıtlar silinemez; yalnızca ad, kod, lokasyon ve tema bilgileri güncellenebilir.</p>
+  <div class="note gold"><b>Varsayılan kayıtlar:</b> Merit Royal · Merit Royal Diamond · Merit Royal Premium — kurulum betiği (Prisma seed) ile otomatik oluşturulur ve tüm modüller bu üç tesisi otomatik olarak kullanır.</div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">Tanımlı tesisler</div>
+    <table class="t">
+      <tr><th>Kod</th><th>Otel</th><th>Lokasyon</th><th>Oda</th><th>Kat</th><th>Outlet</th><th>Tema</th><th>Durum</th><th></th></tr>
+      ${HOTELS.map(h=>`<tr>
+        <td class="mono">${h.code}</td><td><b>${esc(h.name)}</b></td><td>${esc(h.loc)}</td>
+        <td class="num">${h.rooms}</td><td class="num">${floorsOf(h.id).length}</td><td class="num">${OUTLETS.filter(o=>o.hotel===h.id).length}</td>
+        <td><span class="swatch" style="background:${h.theme}"></span> <span class="mono">${h.theme}</span></td>
+        <td>${h.std?'<span class="tag gold">VARSAYILAN</span>':'<span class="tag">eklendi</span>'}</td>
+        <td><button class="btn sm" onclick="toast('Prototip: otel bilgisi düzenleme ekranı')">Düzenle</button></td>
+      </tr>`).join('')}
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Yeni otel ekleme (bu teklifin kapsamı dışında)</div>
+      <div class="note warn">Bu sözleşmede lisans üç tesisi kapsar. Dördüncü tesis eklenmesi ayrı teklif konusudur; ekran yine de hazırdır.</div>
+      <div class="row"><div class="fld"><label class="f">Otel adı</label><input placeholder="Örn. Merit Royal Marina" disabled></div>
+      <div class="fld"><label class="f">Kod</label><input placeholder="MRM" disabled></div></div>
+      <button class="btn" disabled>Otel Ekle</button>
+    </div>
+    <div class="card">
+      <div class="ct">Tanım akışı</div>
+      <div class="steps">
+        <span class="s on">1 · Otel tanımla</span><span class="ar">→</span>
+        <span class="s">2 · Kat tanımla</span><span class="ar">→</span>
+        <span class="s">3 · Oda tipi & konsept</span><span class="ar">→</span>
+        <span class="s">4 · Oda tanımla</span><span class="ar">→</span>
+        <span class="s">5 · Personel & zimmet</span>
+      </div>
+      <div class="note" style="margin-top:12px">Sıra otelin altından ilerler: önce otel, hemen altında outlet, ardından kat, oda ve personel. Kullanıcı outletlerden birine ya da minibar sistemine yazılır.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="ct">${esc(HN(S.hotel))} · otelin altındaki outletler ve minibar sistemi</div>
+    <p class="sub">Outlet kaydı bu otelin altındadır. Kayıtlı kullanıcı bu outletlerden birine veya otelin minibar sistemine atanır. Aynı kişi birden fazla outlete yazılabilir. Girişten hemen sonra oturum açacağı hedefi seçmeden ekran açılmaz.</p>
+    <div class="bar">
+      <div class="fld"><label class="f">Otel</label>${hotelSel('hxHotel', S.hotel)}</div>
+      <button class="btn pri" onclick="S.hotel=document.getElementById('hxHotel').value;render()">Outletleri getir</button>
+      <button class="btn" onclick="go('otel-outlet')">Outlet tanımla ve kullanıcı ata</button>
+    </div>
+    <table class="t">
+      <tr><th>Hedef</th><th>Bağlı olduğu otel</th><th>Tür</th></tr>
+      <tr><td><b>Minibar sistemi</b></td><td>${esc(HN(S.hotel))}</td><td><span class="tag gold">minibar sistemi</span></td></tr>
+      ${(typeof MOD_OUTLETS!=='undefined'?MOD_OUTLETS:OUTLETS).filter(o=>o.hotel===S.hotel && o.mod!=='MINIBAR' && !String(o.id).startsWith('MB-')).map(o=>`<tr>
+        <td><b>${esc(o.name)}</b></td><td>${esc(HN(o.hotel))}</td><td><span class="tag blue">outlet</span></td></tr>`).join('') ||
+        OUTLETS.filter(o=>o.hotel===S.hotel).map(o=>`<tr><td><b>${esc(o.name)}</b></td><td>${esc(HN(o.hotel))}</td><td><span class="tag blue">${esc(o.type)}</span></td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+/* ------------------------- KAT TANIMLA ------------------------- */
+function vMbFloor(){
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Otel seç</label>${hotelSel('flHotel', S.hotel)}</div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('flHotel').value;S.floor=1;render()">Getir</button>
+    <span class="pill">${floorsOf(S.hotel).length} kat tanımlı</span>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">${esc(HN(S.hotel))} · kat listesi</div>
+      <table class="t">
+        <tr><th>Kat</th><th>Ad</th><th class="num">Oda</th><th>Kat Sorumlusu</th><th></th></tr>
+        ${floorsOf(S.hotel).map(f=>`<tr>
+          <td class="num">${f.no}</td><td>${esc(f.name)}</td>
+          <td class="num">${roomsOf(f.hotel,f.no).length}</td>
+          <td>${esc(SN(f.sup))} <span class="tag">${SROLE(f.sup)}</span></td>
+          <td><button class="btn sm" onclick="toast('Prototip: kat düzenleme')">Düzenle</button></td>
+        </tr>`).join('')}
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Kat ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Otel</label><input value="${esc(HN(S.hotel))}" disabled></div>
+        <div class="fld"><label class="f">Kat no</label><input id="nfNo" type="number" placeholder="5"></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Kat adı</label><input id="nfName" placeholder="5. Kat"></div>
+        <div class="fld"><label class="f">Kat sorumlusu</label>
+          ${sel('nfSup', STAFF.filter(s=>s.hotel===S.hotel&&s.role==='KAT').map(s=>({v:s.id,t:s.name})), '', '')}
+        </div>
+      </div>
+      <button class="btn pri" onclick="addFloor()">Kat Ekle</button>
+      <div class="note" style="margin-top:12px">Kat silinemez; oda taşıma veya kat kapatma işlemi denetim günlüğüne işlenir.</div>
+    </div>
+  </div>`;
+}
+function addFloor(){
+  const no=parseInt(document.getElementById('nfNo').value,10);
+  const nm=document.getElementById('nfName').value || (no+'. Kat');
+  const sup=document.getElementById('nfSup').value;
+  if(!no){ toast('Kat numarası giriniz.'); return; }
+  if(FLOORS.some(f=>f.hotel===S.hotel && f.no===no)){ toast('Bu kat numarası zaten tanımlı.'); return; }
+  FLOORS.push({id:S.hotel+'-F'+no, hotel:S.hotel, no:no, name:nm, sup:sup});
+  S.floor=no; S.toast='Kat eklendi'; render(); toast(nm+' eklendi.');
+}
+/* ------------------------- ODA TİPİ TANIMLA ------------------------- */
+function vMbRoomType(){
+  return `
+  <p class="sub">Oda tipi, odaya atanacak <b>minibar konseptini</b> belirler. Oda tanımlanırken yalnızca oda tipi seçilir; minibar içeriği konseptten otomatik gelir.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Oda tipleri</div>
+      <table class="t">
+        <tr><th>Kod</th><th>Oda tipi</th><th class="num">Kapasite</th><th>Bağlı konsept</th><th class="num">İçerik</th><th></th></tr>
+        ${ROOMTYPES.map(t=>`<tr>
+          <td class="mono">${t.id}</td><td><b>${esc(t.name)}</b></td><td class="num">${t.cap} kişi</td>
+          <td>${esc((conceptOf(t.concept)||{}).name||'—')}</td>
+          <td class="num">${itemsCount(t.concept)} ürün / ${totalUnits(t.concept)} adet</td>
+          <td><button class="btn sm" onclick="S.concept='${t.concept}';go('mb-concept')">Konsept</button></td>
+        </tr>`).join('')}
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Oda tipi ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Oda tipi adı</label><input id="ntName" placeholder="Örn. Bahçe Suit"></div>
+        <div class="fld"><label class="f">Kapasite (kişi)</label><input id="ntCap" type="number" value="2"></div>
+      </div>
+      <div class="fld"><label class="f">Varsayılan minibar konsepti</label>
+        ${sel('ntConcept', CONCEPTS.map(c=>({v:c.id,t:c.name})), 'CN1','')}
+      </div>
+      <button class="btn pri" onclick="addRoomType()">Oda Tipi Ekle</button>
+      <div class="note blue" style="margin-top:12px">Yeni oda tipi eklendiğinde <b>konsept ataması zorunludur</b>; konsepti olmayan oda tipiyle oda tanımlanamaz. Böylece minibarsız oda oluşması engellenir.</div>
+    </div>
+  </div>`;
+}
+function addRoomType(){
+  const nm=document.getElementById('ntName').value.trim();
+  const cap=document.getElementById('ntCap').value;
+  const c=document.getElementById('ntConcept').value;
+  if(!nm){ toast('Oda tipi adı giriniz.'); return; }
+  ROOMTYPES.push({id:'RT'+(ROOMTYPES.length+1), name:nm, cap:cap, concept:c});
+  render(); toast('Oda tipi eklendi: '+nm);
+}
+/* ------------------------- ODA TANIMLA ------------------------- */
+function vMbRoom(){
+  const fl = floorsOf(S.hotel).some(f=>f.no===S.floor) ? S.floor : (floorsOf(S.hotel)[0]||{}).no;
+  S.floor = fl;
+  const list = roomsOf(S.hotel, fl);
+  const t = ROOMTYPES.find(x=>x.id==='RT2') || ROOMTYPES[0];
+  const c = conceptOf(t.concept);
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Otel seç</label>${hotelSel('rmHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Kat seç</label>${sel('rmFloor', floorsOf(S.hotel).map(f=>({v:f.no,t:f.name})), S.floor,'')}</div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('rmHotel').value;S.floor=parseInt(document.getElementById('rmFloor').value,10);render()">Getir</button>
+    <span class="pill">${list.length} oda</span>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">${esc(HN(S.hotel))} · ${S.floor}. kat · oda listesi</div>
+    <table class="t">
+      <tr><th class="num">Oda No</th><th>Oda Tipi</th><th>Konsept</th><th class="num">Minibar İçeriği</th><th>Kapı QR</th><th>Durum</th><th></th></tr>
+      ${list.map(r=>`<tr>
+        <td class="num"><b>${r.no}</b></td>
+        <td>${esc(RN(r.type))}</td>
+        <td>${esc((conceptOf(r.concept)||{}).name||'—')}</td>
+        <td class="num">${itemsCount(r.concept)} / ${totalUnits(r.concept)}</td>
+        <td class="mono">${esc(r.hotel)}-${r.no}-Q</td>
+        <td>${r.status==='DND'?'<span class="tag warn">DND · ara kayıt</span>':r.status==='PERS'?'<span class="tag violet">kişiselleştirme</span>':'<span class="tag ok">uygun</span>'}</td>
+        <td><button class="btn sm" onclick="toast('Prototip: oda kartı + QR önizleme')">QR / Kart</button></td>
+      </tr>`).join('')}
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Oda ekle <span class="tag blue">oda tipi + konsept otomatik</span></div>
+      <div class="row">
+        <div class="fld"><label class="f">Oda numarası</label><input id="nrNo" type="number" placeholder="${S.floor}09"></div>
+        <div class="fld"><label class="f">Oda tipi</label>
+          ${sel('nrType', ROOMTYPES.map(t=>({v:t.id,t:t.name})), 'RT2','')}
+        </div>
+      </div>
+      <div class="fld"><label class="f">Konsept (oda tipinden otomatik gelir)</label>
+        <input id="nrConcept" value="${esc(c.name)}" disabled>
+      </div>
+      <div class="note violet"><b>Odaya atanan minibar içeriği:</b> oda tipi seçildiğinde konsept ve ürün listesi otomatik belirlenir; odaya ayrıca ürün girişi yapılmaz.</div>
+      <table class="t" style="margin-bottom:10px">
+        <tr><th>Ürün</th><th>Grup</th><th class="num">Adet</th></tr>
+        ${Object.entries(c.items).map(([pid,n])=>`<tr><td>${esc(PN(pid))}</td><td>${esc(GN((P(pid)||{}).grp))}</td><td class="num">${n}</td></tr>`).join('')}
+      </table>
+      <button class="btn pri" onclick="addRoom()">Odayı Tanımla ve QR Üret</button>
+    </div>
+    <div class="card">
+      <div class="ct">Oda tanımlama kuralları</div>
+      <ul class="ck">
+        <li>Oda numarası otel içinde tekil olmalıdır.</li>
+        <li>Oda tipi olmadan oda açılamaz; oda tipi olmadan konsept, konsept olmadan minibar içeriği oluşmaz.</li>
+        <li>Odaya özel QR kod otomatik üretilir: <span class="mono">OTEL-ODA-Q</span> biçiminde, tahmin edilemez imzalı kimlik.</li>
+        <li>Aynı QR iki amaçla çalışır: <b>kat sorumlusu</b> tüketim girişi · <b>misafir</b> minibar kişiselleştirme.</li>
+        <li>Oda tipi veya konsept değiştirilirse mevcut stok farkı "düzeltme hareketi" olarak kaydedilir.</li>
+      </ul>
+    </div>
+  </div>`;
+}
+function addRoom(){
+  const no=parseInt(document.getElementById('nrNo').value,10);
+  const type=document.getElementById('nrType').value;
+  if(!no){ toast('Oda numarası giriniz.'); return; }
+  if(ROOMS.some(r=>r.hotel===S.hotel && r.no===no)){ toast('Bu oda numarası zaten tanımlı.'); return; }
+  const c=(ROOMTYPES.find(t=>t.id===type)||{}).concept;
+  ROOMS.push({id:S.hotel+'-'+no, hotel:S.hotel, floor:S.floor, no:no, type:type, concept:c, status:'OK', guest:'Yeni tanım'});
+  render(); toast('Oda '+no+' tanımlandı · QR üretildi ('+itemsCount(c)+' ürünlük konsept).');
+}
+/* ------------------------- KONSEPT TANIMLA ------------------------- */
+function vMbConcept(){
+  const c = conceptOf(S.concept) || CONCEPTS[0];
+  S.concept=c.id;
+  return `
+  <p class="sub">Konsept, <b>oda tipine özel minibar içeriğini</b> tanımlar: hangi ürün, kaç adet. Oda tanımlandığında bu listeden otomatik beslenir.</p>
+  <div class="bar">
+    <div class="fld"><label class="f">Konsept</label>${sel('cnSel', CONCEPTS.map(x=>({v:x.id,t:x.name+'  ('+RN(x.type)+')'})), c.id,'')}</div>
+    <button class="btn pri" onclick="S.concept=document.getElementById('cnSel').value;render()">Getir</button>
+    <span class="pill">${esc(RN(c.type))}</span>
+    <span class="pill">${Object.keys(c.items).length} ürün · ${totalUnits(c.id)} adet</span>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">${esc(c.name)} · içerik listesi</div>
+      <table class="t">
+        <tr><th>Ürün</th><th>Ürün grubu</th><th class="num">Adet</th><th class="num">Birim fiyat</th><th></th></tr>
+        ${Object.entries(c.items).map(([pid,n])=>`<tr>
+          <td>${esc(PN(pid))}</td><td>${esc(GN((P(pid)||{}).grp))}</td>
+          <td class="num"><b>${n}</b></td>
+          <td class="num mono">${((P(pid)||{}).par||0).toFixed(2)}</td>
+          <td><button class="btn sm" onclick="cnt('${pid}',1)">+</button> <button class="btn sm" onclick="cnt('${pid}',-1)">−</button></td>
+        </tr>`).join('')}
+      </table>
+      <div class="note ok">Konsept değişikliği yalnızca <b>yeni veya yeniden tanımlanan</b> odaları etkiler; mevcut odalar "konsept güncellemesi" onayı ile taşınır.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Konsepte ürün ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Ürün grubu</label>${sel('cpg', GROUPS.map(g=>({v:g.id,t:g.name})), 'G1','')}</div>
+        <div class="fld"><label class="f">Ürün</label>${sel('cpu', PRODUCTS.filter(p=>p.grp==='G1').map(p=>({v:p.id,t:p.name})), 'P01','')}</div>
+      </div>
+      <div class="fld"><label class="f">Adet</label><input id="cpq" type="number" value="1" min="1"></div>
+      <button class="btn pri" onclick="toast('Prototip: konsepte ürün ekleme kaydedildi (Prisma ConceptItem)')">Konsepte Ekle</button>
+      <div class="rule"></div>
+      <div class="ct">Konsept karşılaştırma</div>
+      <table class="t">
+        <tr><th>Konsept</th><th>Oda tipi</th><th class="num">Ürün</th><th class="num">Adet</th><th class="num">Minibar değeri*</th></tr>
+        ${CONCEPTS.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(RN(x.type))}</td>
+          <td class="num">${Object.keys(x.items).length}</td><td class="num">${totalUnits(x.id)}</td>
+          <td class="num mono">${Object.entries(x.items).reduce((a,[p,n])=>a+((P(p)||{}).par||0)*n,0).toFixed(2)}</td></tr>`).join('')}
+      </table>
+      <div class="muted" style="font-size:11px;margin-top:6px">* Ürün tanımındaki "birim değer" alanı üzerinden; davranış raporlarında (maliyet/doluluk) kullanılır, misafire hiçbir ekranda gösterilmez.</div>
+    </div>
+  </div>`;
+}
+function cnt(pid,d){
+  const c=conceptOf(S.concept); c.items[pid]=(c.items[pid]||0)+d;
+  if(c.items[pid]<=0) delete c.items[pid];
+  render();
+}
+/* ------------------------- ÜRÜN GRUBU / ÜRÜN ------------------------- */
+function vMbProductGroup(){
+  return `
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Ürün grupları</div>
+      <table class="t">
+        <tr><th>Kod</th><th>Grup</th><th>Kısa ad</th><th class="num">Ürün</th><th></th></tr>
+        ${GROUPS.map(g=>`<tr><td class="mono">${g.id}</td><td><b>${esc(g.name)}</b></td><td class="mono">${esc(g.code)}</td>
+          <td class="num">${PRODUCTS.filter(p=>p.grp===g.id).length}</td>
+          <td><button class="btn sm" onclick="S.group='${g.id}';go('mb-product')">Ürünler</button></td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Ürün grubu ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Grup adı</label><input id="ngName" placeholder="Örn. Kişisel Bakım"></div>
+        <div class="fld"><label class="f">Kısa kod</label><input id="ngCode" placeholder="BAKIM"></div>
+      </div>
+      <button class="btn pri" onclick="addGroup()">Grup Ekle</button>
+      <div class="note blue" style="margin-top:12px">Gruplar; tüketim raporlarında kırılım, misafir ekranında filtre ve kişiselleştirme talebinde toplu değişiklik için kullanılır.</div>
+    </div>
+  </div>`;
+}
+function addGroup(){
+  const nm=document.getElementById('ngName').value.trim();
+  const cd=document.getElementById('ngCode').value.trim().toUpperCase() || 'GRUP';
+  if(!nm){ toast('Grup adı giriniz.'); return; }
+  GROUPS.push({id:'G'+(GROUPS.length+1), name:nm, code:cd, items:0});
+  render(); toast('Ürün grubu eklendi: '+nm);
+}
+function vMbProduct(){
+  const g=S.group, list=PRODUCTS.filter(p=>p.grp===g);
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Ürün grubu</label>${sel('prGrp', GROUPS.map(x=>({v:x.id,t:x.name})), g,'')}</div>
+    <button class="btn pri" onclick="S.group=document.getElementById('prGrp').value;render()">Getir</button>
+    <span class="pill">${list.length} ürün</span>
+    <span class="pill">${esc(GN(g))}</span>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">${esc(GN(g))} · ürün listesi</div>
+    <table class="t">
+      <tr><th>Kod</th><th>Ürün</th><th>Birim</th><th class="num">Birim değer</th><th>Konseptlerde</th><th>Durum</th><th></th></tr>
+      ${list.map(p=>{
+        const inC = CONCEPTS.filter(c=>c.items[p.id]).map(c=>c.name);
+        return `<tr><td class="mono">${p.id}</td><td><b>${esc(p.name)}</b></td><td>${esc(p.unit)}</td>
+          <td class="num mono">${p.par.toFixed(2)}</td>
+          <td>${inC.length?inC.map(n=>'<span class="tag">'+esc(n)+'</span>').join(' '):'<span class="muted">kullanılmıyor</span>'}</td>
+          <td><span class="tag ok">aktif</span></td>
+          <td><button class="btn sm" onclick="toast('Prototip: ürün güncelleme')">Düzenle</button></td></tr>`;
+      }).join('')}
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Ürün ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Ürün adı</label><input id="npName" placeholder="Örn. Bitki Çayı Poşeti"></div>
+        <div class="fld"><label class="f">Birim</label>${sel('npUnit',[{v:'adet',t:'adet'},{v:'şişe',t:'şişe'},{v:'kutu',t:'kutu'},{v:'kavanoz',t:'kavanoz'},{v:'paket',t:'paket'}],'adet','')}</div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Ürün grubu</label>${sel('npGrp', GROUPS.map(x=>({v:x.id,t:x.name})), g,'')}</div>
+        <div class="fld"><label class="f">Birim değer</label><input id="npPar" type="number" step="0.01" value="3.00"></div>
+      </div>
+      <button class="btn pri" onclick="addProduct()">Ürün Ekle</button>
+    </div>
+    <div class="card">
+      <div class="ct">Kurallar</div>
+      <ul class="ck">
+        <li>Ürün silinmez, <b>pasife alınır</b>; geçmiş tüketim kayıtları korunur.</li>
+        <li>Ürün adı ve grup değişikliği tüm konseptlere anında yansır.</li>
+        <li>"Birim değer" alanı yalnızca iç rapor ve maliyet analizinde kullanılır; misafir arayüzünde hiçbir tutar gösterilmez (fiyatsız akış).</li>
+        <li>Konseptten çıkarılan ürün, oda stok düzeltmesi (ikame) kaydı üretir.</li>
+      </ul>
+    </div>
+  </div>`;
+}
+function addProduct(){
+  const nm=document.getElementById('npName').value.trim();
+  if(!nm){ toast('Ürün adı giriniz.'); return; }
+  const grp=document.getElementById('npGrp').value;
+  PRODUCTS.push({id:'P'+(PRODUCTS.length+1), name:nm, grp:grp, unit:document.getElementById('npUnit').value, par:parseFloat(document.getElementById('npPar').value)||0});
+  S.group=grp; render(); toast('Ürün eklendi: '+nm);
+}
+/* ------------------------- PERSONEL ------------------------- */
+function vMbStaff(){
+  const kat=STAFF.filter(s=>s.role==='KAT'), dep=STAFF.filter(s=>s.role==='DEPO');
+  return `
+  <p class="sub">Minibar operasyonunda iki rol tanımlanır: <b>depo sorumlusu</b> ürünü zimmetler, <b>kat sorumlusu</b> zimmetindeki ürünü odaların minibarına ikame eder. Her iki rolü de sistem yöneticisi tanımlar.</p>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Kat sorumluları <span class="tag">${kat.length}</span></div>
+      <table class="t">
+        <tr><th>Ad</th><th>Otel</th><th>Atanan katlar</th><th>Vardiya</th><th class="num">Zimmet bakiye</th><th></th></tr>
+        ${kat.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(HN(s.hotel))}</td>
+          <td>${(s.floors||[]).map(f=>'<span class="tag">'+f+'. kat</span>').join(' ')}</td>
+          <td class="mono">${esc(s.shift)}</td>
+          <td class="num">${(s.floors||[]).length*72}</td>
+          <td><button class="btn sm" onclick="S.staff='${s.id}';go('mb-stock')">Zimmet</button></td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Depo sorumluları <span class="tag">${dep.length}</span></div>
+      <table class="t">
+        <tr><th>Ad</th><th>Otel</th><th>Vardiya</th><th class="num">Depo stoğu</th><th></th></tr>
+        ${dep.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${esc(HN(s.hotel))}</td>
+          <td class="mono">${esc(s.shift)}</td><td class="num">1.240</td>
+          <td><button class="btn sm" onclick="toast('Prototip: depo stok hareketleri')">Hareketler</button></td></tr>`).join('')}
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="ct">Personel tanımla</div>
+    <div class="row">
+      <div class="fld"><label class="f">Ad Soyad</label><input id="nsName" placeholder="Örn. Deniz Yücel"></div>
+      <div class="fld"><label class="f">Rol</label>${sel('nsRole',[{v:'KAT',t:'Kat Sorumlusu'},{v:'DEPO',t:'Depo Sorumlusu'}],'KAT','')}</div>
+      <div class="fld"><label class="f">Otel</label>${hotelSel('nsHotel', S.hotel)}</div>
+      <div class="fld"><label class="f">Vardiya</label><input id="nsShift" value="08:00–16:00"></div>
+      <div class="fld"><label class="f">Atanan katlar (kat sorumlusu)</label><input id="nsFloors" placeholder="1,2"></div>
+    </div>
+    <button class="btn pri" onclick="addStaff()">Personeli Tanımla</button>
+    <div class="note blue" style="margin-top:12px">Personel kartı <b>otel + rol + kat</b> ile tanımlanır; bu üçlü, bildirimlerin kime ve hangi cihaza gideceğini belirler. Kullanıcı girişi ve rol yetkileri "Kullanıcılar &amp; Roller" ekranında verilir.</div>
+  </div>`;
+}
+function addStaff(){
+  const nm=document.getElementById('nsName').value.trim();
+  if(!nm){ toast('Ad Soyad giriniz.'); return; }
+  const role=document.getElementById('nsRole').value;
+  const h=document.getElementById('nsHotel').value;
+  const fl=document.getElementById('nsFloors').value.split(',').map(x=>parseInt(x,10)).filter(Boolean);
+  STAFF.push({id:'S'+(STAFF.length+1), name:nm, role:role, hotel:h, floors:fl, shift:document.getElementById('nsShift').value});
+  render(); toast((role==='KAT'?'Kat':'Depo')+' sorumlusu eklendi: '+nm);
+}
+</script>
+<script>
+/* =========================================================
+   Yönetici paneli — operasyon, QR modülleri, komuta merkezi
+   ========================================================= */
+const STOCK = [
+  {pid:'P01', asg:120, tuk:48}, {pid:'P02', asg:80, tuk:36}, {pid:'P03', asg:90, tuk:52},
+  {pid:'P04', asg:70, tuk:44}, {pid:'P05', asg:60, tuk:22}, {pid:'P11', asg:50, tuk:31},
+  {pid:'P12', asg:40, tuk:12}, {pid:'P15', asg:45, tuk:18}, {pid:'P20', asg:30, tuk:9}
+];
+function vMbStock(){
+  const kat = STAFF.filter(s=>s.role==='KAT' && s.hotel===S.hotel);
+  if(!kat.some(s=>s.id===S.staff)) S.staff=(kat[0]||{}).id;
+  const dep = STAFF.filter(s=>s.role==='DEPO' && s.hotel===S.hotel);
+  return `
+  <p class="sub">Depo sorumlusu, ürünü <b>kat sorumlusuna zimmetler</b>. Kat sorumlusu odadaki eksik ürünü kendi zimmetinden düşerek ikame eder; kayıt oda + kat + otel kırılımında tutulur.</p>
+  <div class="bar">
+    <div class="fld"><label class="f">Otel</label>${hotelSel('stHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Depo sorumlusu</label>${sel('stDep', dep.map(s=>({v:s.id,t:s.name})), (dep[0]||{}).id,'')}</div>
+    <div class="fld"><label class="f">Kat sorumlusu (zimmet alıcı)</label>${sel('stKat', kat.map(s=>({v:s.id,t:s.name+' · '+((s.floors||[]).join('-')||'-')+'. kat'})), S.staff,'')}</div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('stHotel').value;S.staff=document.getElementById('stKat').value;render()">Getir</button>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="k">Zimmetlenen</div><div class="v">${STOCK.reduce((a,x)=>a+x.asg,0)}</div><div class="u">adet · ${esc(SN(S.staff))}</div></div>
+    <div class="card kpi gold"><div class="k">Tüketilen (bugün)</div><div class="v">${STOCK.reduce((a,x)=>a+x.tuk,0)}</div><div class="u">oda ikamesinden düşülen</div></div>
+    <div class="card kpi ok"><div class="k">Kalan bakiye</div><div class="v">${STOCK.reduce((a,x)=>a+(x.asg-x.tuk),0)}</div><div class="u">zimmet bakiyesi</div></div>
+    <div class="card kpi warn"><div class="k">Kritik ürün</div><div class="v">${STOCK.filter(x=>(x.asg-x.tuk)<20).length}</div><div class="u">ikmal talebi gerekli</div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Zimmet defteri — ${esc(SN(S.staff))} <span class="tag blue">${esc(SROLE(S.staff))}</span></div>
+      <table class="t">
+        <tr><th>Ürün</th><th class="num">Zimmetlenen</th><th class="num">Tüketilen</th><th class="num">Kalan</th><th style="width:110px">Doluluk</th></tr>
+        ${STOCK.map(x=>{const k=x.asg-x.tuk; const pc=Math.round(100*k/x.asg);
+          return `<tr><td>${esc(PN(x.pid))}</td><td class="num">${x.asg}</td><td class="num">${x.tuk}</td>
+          <td class="num"><b>${k}</b></td>
+          <td><div class="prog"><i style="width:${pc}%;background:${pc<25?'var(--warn)':'var(--ok)'}"></i></div>
+          <span class="mono" style="font-size:10.5px">${pc}%</span></td></tr>`;}).join('')}
+      </table>
+    </div>
+    <div class="card">
+      <div class="ct">Zimmet dağıt</div>
+      <div class="row">
+        <div class="fld"><label class="f">Ürün grubu</label>${sel('stGrp', GROUPS.map(g=>({v:g.id,t:g.name})), 'G1','')}</div>
+        <div class="fld"><label class="f">Ürün</label>${sel('stPrd', PRODUCTS.filter(p=>p.grp==='G1').map(p=>({v:p.id,t:p.name})), 'P01','')}</div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Adet</label><input id="stQty" type="number" value="20"></div>
+        <div class="fld"><label class="f">Onay</label><input value="Depo sorumlusu imzası (PIN)" disabled></div>
+      </div>
+      <button class="btn pri" onclick="toast('Prototip: zimmet hareketi kaydedildi (StockAssignment)')">Zimmete Ekle</button>
+      <div class="rule"></div>
+      <div class="ct">Akış</div>
+      <div class="steps">
+        <span class="s on">Depo stoğu</span><span class="ar">→</span>
+        <span class="s on">Zimmet (kat sorumlusu)</span><span class="ar">→</span>
+        <span class="s">Oda ikamesi</span><span class="ar">→</span>
+        <span class="s">Oda/kat/otel tüketim kaydı</span><span class="ar">→</span>
+        <span class="s">Rapor</span>
+      </div>
+      <div class="note" style="margin-top:12px">Zimmet bakiyesi eksiye düşemez: yeterli bakiye yoksa oda ikamesi <b>engellenir</b> ve kat sorumlusuna "ikmal talebi" açılır.</div>
+    </div>
+  </div>`;
+}
+function vMbConsumption(){
+  const list = CONSUMPTION.filter(c=>!S.hotel || c.hotel===S.hotel);
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Otel</label>${hotelSel('csHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Kat</label><input placeholder="tümü" style="min-width:110px"></div>
+    <div class="fld"><label class="f">Kaynak</label>${sel('csSrc',[{v:'',t:'tümü'},{v:'KF',t:'Kat Formu QR'},{v:'PR',t:'Kişiselleştirme'},{v:'RS',t:'Oda Servisi'}],'','')}</div>
+    <div class="fld"><label class="f">Tarih</label><input type="date" value="2026-10-31"></div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('csHotel').value;render()">Filtrele</button>
+    <button class="btn" onclick="toast('Prototip: Excel/CSV dışa aktarma')">Dışa Aktar</button>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="k">Kayıt</div><div class="v">${list.length}</div><div class="u">bugün · ${esc(HN(S.hotel))}</div></div>
+    <div class="card kpi gold"><div class="k">Toplam ürün</div><div class="v">${list.reduce((a,c)=>a+c.items,0)}</div><div class="u">adet ikame</div></div>
+    <div class="card kpi violet"><div class="k">Zimmetten düşülen</div><div class="v">${list.reduce((a,c)=>a+c.items,0)}</div><div class="u">kat sorumlusu bakiyesi</div></div>
+    <div class="card kpi warn"><div class="k">Ara kayıt (DND)</div><div class="v">${DND.filter(d=>d.status!=='TAMAM').length}</div><div class="u">yeniden kontrol bekliyor</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Tüketim kayıtları <span class="tag">oda · kat · otel kırılımlı</span></div>
+    <table class="t">
+      <tr><th>Kayıt No</th><th>Otel</th><th class="num">Kat</th><th class="num">Oda</th><th>Kat Sorumlusu</th><th class="num">Ürün</th><th>Kaynak</th><th>Zaman</th><th>Not</th></tr>
+      ${list.map(c=>`<tr>
+        <td class="mono">${c.id}</td><td>${esc(HN(c.hotel))}</td><td class="num">${c.floor}</td><td class="num"><b>${c.room}</b></td>
+        <td>${esc(SN(c.staff))}</td><td class="num">${c.items}</td><td><span class="tag blue">${esc(c.src)}</span></td>
+        <td class="mono">${esc(c.when)}</td>
+        <td>${c.items===0?'<span class="tag warn">'+esc(c.note)+'</span>':esc(c.note)}</td>
+      </tr>`).join('')}
+    </table>
+    <div class="note violet" style="margin-top:12px"><b>Veri birikimi → karar destek:</b> her kayıt oda, kat, otel, ürün, personel ve zaman boyutuyla saklanır.
+    Belirli bir veri hacminden sonra bu kayıtlar üzerinde doluluk tahmini, ürün sarf hızı, personel iş yükü ve maliyet analizi raporları üretilir.</div>
+  </div>`;
+}
+function vMbPers(){
+  const r = PERSREQ.find(x=>x.id===S.persReq);
+  return `
+  <p class="sub">Misafir, odasındaki QR ile <b>günde en fazla bir kez</b> minibar kişiselleştirme talebi gönderir. Talep anında kat sorumlusu, depo sorumlusu ve sistem yöneticisi ekranına düşer.</p>
+  <div class="grid ${r?'g2':'g3'}">
+    ${PERSREQ.map(x=>`<div class="card">
+      <div class="ct">${x.id} <span class="tag ${x.status==='TAMAM'?'ok':x.status==='KISMEN'?'warn':'violet'}">${x.status}</span></div>
+      <div class="mono" style="margin-bottom:8px">${esc(HN(x.hotel))} · ${x.floor}. kat · oda <b>${x.room}</b> · ${esc(x.when)} · dil: ${x.lang}</div>
+      <div style="font-size:12.2px;margin-bottom:6px"><b>Artırılacak:</b> ${x.plus.length?x.plus.map(i=>esc(PN(i.p))+' ×'+i.n).join(', '):'—'}</div>
+      <div style="font-size:12.2px;margin-bottom:10px"><b>Azaltılacak:</b> ${x.minus.length?x.minus.map(i=>esc(PN(i.p))+' ×'+i.n).join(', '):'—'}</div>
+      <button class="btn pri sm" onclick="S.persReq='${x.id}';render()">Talebi Aç ve Karşıla</button>
+      <button class="btn sm" onclick="toast('Prototip: talebe not eklendi')">Not</button>
+    </div>`).join('')}
+    ${r?`<div class="card" style="border-color:#d9cdf5">
+      <div class="ct">${r.id} · talep detayı ve karşılama <span class="tag violet">misafir onaylı liste</span></div>
+      <div class="note violet" style="font-size:11.6px">Kat sorumlusu odaya gidip QR'ı okuttuğunda bu ekran açılır; sistem ekranı otomatik yeniler (kat formu ile aynı QR).</div>
+      <table class="t">
+        <tr><th>İstenen ürün</th><th class="num">Talep</th><th class="num">Karşılanan</th><th>Zimmetten düş</th><th>Durum</th></tr>
+        ${r.plus.map((i,ix)=>`<tr><td>${esc(PN(i.p))}</td><td class="num">${i.n}</td>
+          <td class="num"><input type="number" value="${i.n}" style="width:70px" id="pf${ix}"></td>
+          <td><input type="checkbox" checked style="width:auto"></td>
+          <td><span class="tag ok">karşılandı</span></td></tr>`).join('')}
+        ${r.minus.map((i,ix)=>`<tr><td>${esc(PN(i.p))} <span class="muted">(çıkarılacak)</span></td><td class="num">−${i.n}</td>
+          <td class="num"><input type="number" value="${i.n}" style="width:70px" id="pm${ix}"></td>
+          <td><input type="checkbox" checked style="width:auto"></td>
+          <td><span class="tag warn">stoktan alınacak</span></td></tr>`).join('')}
+      </table>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ok" onclick="finishPers('TAMAM')">Talebi Karşılandı Olarak Kapat</button>
+        <button class="btn" onclick="finishPers('KISMEN')">Kısmen Karşılandı</button>
+        <button class="btn" onclick="S.persReq=null;render()">Kapat</button>
+      </div>
+      <div class="note ok" style="margin-top:12px">Kapanışta: karşılanan adetler <b>odanın kaydına</b>, eksiltilen ürünler <b>kat sorumlusunun zimmetinden</b> düşülür ve oda/kat/otel bazlı kişiselleştirme kaydı oluşur.</div>
+    </div>`:''}
+  </div>`;
+}
+function finishPers(st){
+  const r=PERSREQ.find(x=>x.id===S.persReq); if(r){ r.status=st; r.staff=S.staff; }
+  S.persReq=null; render(); toast('Talep güncellendi: '+st);
+}
+function vMbDnd(){
+  return `
+  <p class="sub">Kat sorumlusu odaya girdiğinde oda <b>"rahatsız etmeyin" (DND)</b> modundaysa tüketim girilmez; sistem otomatik olarak <b>ara kayıt</b> oluşturur ve
+  belirlenen süre sonunda <b>yeniden kontrol uyarısı</b> üretir. Süre geçtiğinde uyarı ekranda bildirim olarak görünür.</p>
+  <div class="grid g3" style="margin-bottom:16px">
+    <div class="card kpi warn"><div class="k">Açık Ara Kayıt</div><div class="v">${DND.filter(d=>d.status!=='TAMAM').length}</div><div class="u">yeniden kontrol bekliyor</div></div>
+    <div class="card kpi"><div class="k">Uyarı Verilen</div><div class="v">${DND.filter(d=>d.status==='ALARM').length}</div><div class="u">süre doldu, bildirim gönderildi</div></div>
+    <div class="card kpi ok"><div class="k">Tamamlanan</div><div class="v">${DND.filter(d=>d.status==='TAMAM').length}</div><div class="u">kontrol edildi</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Ara kayıtlar ve otomatik uyarılar</div>
+    <table class="t">
+      <tr><th>Kayıt</th><th>Otel</th><th class="num">Kat / Oda</th><th>Kat Sorumlusu</th><th>İlk deneme</th><th>Uyarı zamanı</th><th class="num">Deneme</th><th>Durum</th><th></th></tr>
+      ${DND.map(d=>`<tr>
+        <td class="mono">${d.id}</td><td>${esc(HN(d.hotel))}</td><td class="num">${d.floor} / <b>${d.room}</b></td>
+        <td>${esc(SN(d.staff))}</td><td class="mono">${esc(d.first)}</td><td class="mono">${esc(d.alarm)}</td>
+        <td class="num">${d.tries}</td>
+        <td>${d.status==='ALARM'?'<span class="tag err">UYARI GÖNDERİLDİ</span>':d.status==='TAMAM'?'<span class="tag ok">kontrol edildi</span>':'<span class="tag warn">bekliyor</span>'}</td>
+        <td><button class="btn sm" onclick="dndDone('${d.id}')">Yeniden Kontrol</button></td></tr>`).join('')}
+    </table>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="note warn" style="margin:0"><b>Varsayılan kural:</b> DND ara kaydı 120 dakika sonra uyarıya döner (otel bazlı değiştirilebilir).</div>
+      <div class="note" style="margin:0"><b>Bildirim hedefi:</b> kat sorumlusu tableti + akıllı saati, kat ekranı ve housekeeping süpervizörü.</div>
+      <div class="note violet" style="margin:0"><b>Kayıt:</b> her deneme zaman damgasıyla saklanır; "kaç kez girilemedi" raporu operasyon optimizasyonunda kullanılır.</div>
+    </div>
+  </div>`;
+}
+function dndDone(id){
+  const d=DND.find(x=>x.id===id); if(d){ d.status='TAMAM'; d.tries++; }
+  render(); toast('Ara kayıt kapatıldı: '+id);
+}
+/* ------------------------- QR MENÜ ------------------------- */
+function vQrmOutlet(){
+  return `
+  <p class="sub">QR menü, otel tanımından sonra <b>outlet</b> bazlı kurgulanır: her outletin kendi menüsü, kendi QR noktaları ve kendi ambiyans teması olur.</p>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">Outlet listesi</div>
+    <table class="t">
+      <tr><th>Kod</th><th>Otel</th><th>Outlet</th><th>Tip</th><th>Ambiyans teması</th><th class="num">QR Noktası</th><th></th></tr>
+      ${OUTLETS.map(o=>`<tr><td class="mono">${o.id}</td><td>${esc(HN(o.hotel))}</td><td><b>${esc(o.name)}</b></td>
+        <td><span class="tag">${esc(o.type)}</span></td><td>${esc(o.theme)}</td><td class="num">${o.qr}</td>
+        <td><button class="btn sm" onclick="S.outlet='${o.id}';go('qrm-menu')">Menü</button>
+            <button class="btn sm" onclick="S.outlet='${o.id}';go('qrm-theme')">Tema</button></td></tr>`).join('')}
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Outlet ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Otel</label>${hotelSel('noHotel', S.hotel)}</div>
+        <div class="fld"><label class="f">Outlet adı</label><input id="noName" placeholder="Örn. Diamond Teras"></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Tip</label>${sel('noType',[{v:'Havuz',t:'Havuz'},{v:'Bar',t:'Bar'},{v:'Salon',t:'Salon'},{v:'Bahçe',t:'Bahçe'},{v:'Sahil',t:'Sahil'},{v:'Spa',t:'Spa'}],'Havuz','')}</div>
+        <div class="fld"><label class="f">QR noktası sayısı</label><input id="noQr" type="number" value="10"></div>
+      </div>
+      <button class="btn pri" onclick="addOutlet()">Outlet Ekle</button>
+    </div>
+    <div class="card">
+      <div class="ct">QR üretim ve baskı</div>
+      <table class="t">
+        <tr><th>Nokta tipi</th><th>Kimlik biçimi</th><th class="num">Adet</th></tr>
+        <tr><td>Masa / şezlong</td><td class="mono">OTEL-OUTLET-MASA</td><td class="num">96</td></tr>
+        <tr><td>Cabana</td><td class="mono">OTEL-CAB-NO</td><td class="num">8</td></tr>
+        <tr><td>Oda (menü + oda servisi)</td><td class="mono">OTEL-ODA-Q</td><td class="num">${HOTELS.reduce((a,h)=>a+h.rooms,0)}</td></tr>
+      </table>
+      <div class="note blue" style="margin-top:12px">QR kimlikleri <b>imzalı ve tahmin edilemez</b> üretilir; kopyalanan bir QR başka tesiste çalışmaz (30 gün kara liste kuralı).</div>
+    </div>
+  </div>`;
+}
+function addOutlet(){
+  const nm=document.getElementById('noName').value.trim();
+  if(!nm){ toast('Outlet adı giriniz.'); return; }
+  OUTLETS.push({id:'O'+(OUTLETS.length+1), hotel:document.getElementById('noHotel').value, name:nm,
+    type:document.getElementById('noType').value, theme:'Varsayılan', qr:parseInt(document.getElementById('noQr').value,10)||0});
+  render(); toast('Outlet eklendi: '+nm);
+}
+function vQrmMenu(){
+  const m = MENU[0];
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Otel</label>${hotelSel('mnHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Outlet</label>${sel('mnOutlet', OUTLETS.map(o=>({v:o.id,t:o.name})), S.outlet,'')}</div>
+    <button class="btn pri" onclick="S.outlet=document.getElementById('mnOutlet').value;S.hotel=document.getElementById('mnHotel').value;render()">Getir</button>
+    <span class="pill">${esc((OUTLETS.find(o=>o.id===S.outlet)||{}).theme||'—')}</span>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Menü ağacı <span class="tag">kategori → alt kategori → grup → öğe</span></div>
+      <div class="tree">
+        <div class="l1">🍽 ${esc(m.name)} <span class="tag blue">${m.langs}</span></div>
+        ${m.cats.map(c=>`
+          <div class="l2">📂 ${esc(c.name)} ${c.img?'<span class="tag ok">görsel ✓</span>':'<span class="tag warn">görsel yok</span>'}</div>
+          ${c.subs.map(s=>`
+            <div class="l3">📁 ${esc(s.name)}</div>
+            ${s.groups.map(g=>`<div class="l4">🏷 ${esc(g)} grubu</div>`).join('')}
+          `).join('')}
+        `).join('')}
+      </div>
+      <button class="btn" style="margin-top:10px" onclick="toast('Prototip: yeni alt kategori ekleme')">+ Alt Kategori / Grup Ekle</button>
+      <div class="note blue" style="margin-top:12px">Sınırsız sayıda kategori, alt kategori ve alt-alt kategori açılabilir; her seviyeye <b>görsel</b> yüklenir ve her seviye gruplara bağlanabilir.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Menü öğesi ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Öğe adı</label><input id="miName" placeholder="Örn. Royal Akik"></div>
+        <div class="fld"><label class="f">Kategori yolu</label>
+          ${sel('miCat', [{v:'Soğuk İçecekler › Kokteyller',t:'Soğuk İçecekler › Kokteyller'},
+                          {v:'Soğuk İçecekler › Alkolsüz',t:'Soğuk İçecekler › Alkolsüz'},
+                          {v:'Atıştırmalık › Izgara',t:'Atıştırmalık › Izgara'},
+                          {v:'Atıştırmalık › Meze',t:'Atıştırmalık › Meze'}], 'Soğuk İçecekler › Kokteyller','')}
+        </div>
+      </div>
+      <div class="fld"><label class="f">Kısa açıklama (detay bilgisi)</label><input id="miDesc" placeholder="İçindekiler kısa açıklama"></div>
+      <div class="fld"><label class="f">Alerjenler</label>
+        <div>${['gluten','süt','yumurta','kuruyemiş','deniz ürünü','alkol'].map(a=>'<span class="tag">'+a+'</span>').join(' ')}</div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Öğe görseli</label><input type="file" disabled></div>
+        <div class="fld"><label class="f">Fiyat alanı</label><input value="Fiyatsız (her şey dahil)" disabled></div>
+      </div>
+      <button class="btn pri" onclick="addMenuItem()">Öğeyi Ekle</button>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="ct">Menü öğeleri</div>
+    <table class="t">
+      <tr><th>Kod</th><th>Öğe</th><th>Kategori</th><th>Görsel</th><th>Alerjen</th><th>Fiyat</th><th>Açıklama</th><th></th></tr>
+      ${MENUITEMS.filter(i=>i.menu==='M1').map(i=>`<tr>
+        <td class="mono">${i.id}</td><td><b>${esc(i.name)}</b></td><td>${esc(i.cat)}</td>
+        <td>${i.img?'<span class="tag ok">✓</span>':'<span class="tag warn">—</span>'}</td>
+        <td>${i.allerg==='yok'?'<span class="tag">alerjen yok</span>':'<span class="tag err">'+esc(i.allerg)+'</span>'}</td>
+        <td><span class="tag gold">fiyatsız</span></td><td class="muted">${esc(i.desc)}</td>
+        <td><button class="btn sm" onclick="toast('Prototip: öğe düzenleme + görsel değiştirme')">Düzenle</button></td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+function addMenuItem(){
+  const nm=document.getElementById('miName').value.trim();
+  if(!nm){ toast('Öğe adı giriniz.'); return; }
+  MENUITEMS.push({id:'MI-'+(MENUITEMS.length+1), menu:'M1', cat:document.getElementById('miCat').value,
+    name:nm, img:true, allerg:'yok', price:'fiyatsız', desc:document.getElementById('miDesc').value});
+  render(); toast('Menü öğesi eklendi: '+nm);
+}
+function vQrmTheme(){
+  const o = OUTLETS.find(x=>x.id===S.outlet) || OUTLETS[0];
+  const themes = {
+    akik:{bg:'#0e4c63',accent:'#7fd4d0',soft:'#e6f6f5',name:'Deniz mavisi / akik'},
+    altin:{bg:'#2b1f14',accent:'#d8b877',soft:'#f7f0e2',name:'Koyu ceviz / altın'},
+    obsidyen:{bg:'#141821',accent:'#c9a45c',soft:'#efefe9',name:'Obsidyen / şampanya'},
+    kum:{bg:'#1a6b6f',accent:'#ffd79a',soft:'#eef8f6',name:'Turkuaz / kum'},
+    nane:{bg:'#1e5c46',accent:'#cfe9a8',soft:'#eef7ea',name:'Nane yeşili / beyaz'},
+    fiskiye:{bg:'#0b3352',accent:'#e9c46a',soft:'#e9f2fa',name:'Fildişi / deniz'}
+  };
+  const t = themes[S.theme] || themes.akik;
+  return `
+  <p class="sub">Her outletin menüsü kendi <b>ambiyansına uygun tema</b> ile açılır; tema misafirin QR okuttuğu andaki görsel deneyimi belirler.</p>
+  <div class="bar">
+    <div class="fld"><label class="f">Outlet</label>${sel('thOutlet', OUTLETS.map(x=>({v:x.id,t:x.name+'  ('+HN(x.hotel)+')'})), S.outlet,'')}</div>
+    <button class="btn pri" onclick="S.outlet=document.getElementById('thOutlet').value;render()">Getir</button>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Tema seçimi — ${esc(o.name)}</div>
+      <table class="t">
+        <tr><th>Tema</th><th>Zemin</th><th>Vurgu</th><th>Önizleme</th><th></th></tr>
+        ${Object.entries(themes).map(([k,v])=>`<tr>
+          <td><b>${esc(v.name)}</b></td>
+          <td><span class="swatch" style="background:${v.bg}"></span> <span class="mono">${v.bg}</span></td>
+          <td><span class="swatch" style="background:${v.accent}"></span> <span class="mono">${v.accent}</span></td>
+          <td><span class="swatch" style="background:${v.soft};width:34px"></span></td>
+          <td>${S.theme===k?'<span class="tag ok">uygulanıyor</span>':'<button class="btn sm" onclick="S.theme=\''+k+'\';render()">Uygula</button>'}</td>
+        </tr>`).join('')}
+      </table>
+      <div class="note blue" style="margin-top:12px">Tema; başlık görseli, kategori kartları ve öğe sunumunu birlikte değiştirir. Renkler kontrast (WCAG AA) kontrolünden geçirilir.</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="background:${t.bg};color:#fff;padding:18px 16px">
+        <div class="mono" style="color:${t.accent};font-size:11px;letter-spacing:.14em">${esc(HN(o.hotel)).toUpperCase()}</div>
+        <div style="font-size:19px;font-weight:700;margin-top:6px">${esc(o.name)}</div>
+        <div style="font-size:12.4px;opacity:.85;margin-top:4px">${esc(t.name)} teması · ${esc(o.type)} · fiyatsız servis</div>
+      </div>
+      <div style="padding:14px 16px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Misafir görünümü önizlemesi</div>
+        <div style="border:1px solid ${t.soft};border-radius:9px;padding:10px;background:${t.soft}">
+          <div style="font-weight:600;color:${t.bg}">Soğuk İçecekler</div>
+          <div style="font-size:12px;color:#5a6b7c;margin-top:5px">Kokteyller · Alkolsüz · Serinletici</div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:9px;padding:10px;margin-top:10px;display:flex;gap:10px;align-items:center">
+          <div style="width:44px;height:44px;border-radius:8px;background:${t.accent};opacity:.55"></div>
+          <div><div style="font-weight:600">Royal Akik</div>
+          <div style="font-size:11.6px;color:var(--muted)">Böğürtlen, nane, limon · alerjen yok</div></div>
+        </div>
+        <button class="btn pri" style="width:100%;margin-top:12px;background:${t.bg};border-color:${t.bg}">Garsona Bildir</button>
+      </div>
+    </div>
+  </div>`;
+}
+/* ------------------------- QR SİPARİŞ ------------------------- */
+const STAT = {GARSON_ONAYI:['warn','Garson ön onayı bekliyor'], MUTFAKTA:['blue','Mutfakta'],
+              SERVIS_EDILDI:['ok','Servis edildi'], VIP_ONCELIK:['violet','VIP öncelikli']};
+function vQrsQueue(){
+  return `
+  <div class="note gold"><b>Kural:</b> misafirin gönderdiği sipariş <b>doğrudan mutfağa düşmez</b>. Önce garson ve ana kasa bildirimi alır; garson fiziksel onay verdiğinde fiş yazıcıya ve
+  mutfak dokunmatik ekranına (KDS) aktarılır. Ödeme entegrasyonu yoktur.</div>
+  <div class="bar">
+    <div class="fld"><label class="f">Otel</label>${hotelSel('oqHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Outlet</label>${sel('oqOutlet', [{v:'',t:'tümü'}].concat(OUTLETS.map(o=>({v:o.id,t:o.name}))), '','')}</div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('oqHotel').value;render()">Filtrele</button>
+    <span class="pill warn">${ORDERS.filter(o=>o.status==='GARSON_ONAYI'||o.status==='VIP_ONCELIK').length} onay bekleyen</span>
+  </div>
+  <div class="grid g3">
+    ${ORDERS.filter(o=>o.hotel===S.hotel).map(o=>{
+      const st=STAT[o.status]||['',''];
+      return `<div class="card">
+        <div class="ct">${o.id} <span class="tag ${st[0]}">${st[1]}</span></div>
+        <div class="mono" style="font-size:11.4px;margin-bottom:6px">${esc(o.outlet)} · ${esc(o.table)} · ${o.when}</div>
+        <div style="font-size:12.4px;margin-bottom:10px">${esc(o.items)}</div>
+        <div class="steps" style="margin-bottom:10px">
+          <span class="s ${o.status!=='GARSON_ONAYI'?'on':''}">Misafir gönderdi</span><span class="ar">→</span>
+          <span class="s ${o.status==='GARSON_ONAYI'?'on':''}">Garson onayı</span><span class="ar">→</span>
+          <span class="s ${o.status==='MUTFAKTA'||o.status==='SERVIS_EDILDI'?'on':''}">KDS + yazıcı</span>
+        </div>
+        ${o.status==='GARSON_ONAYI'?`<button class="btn ok" onclick="approveOrder('${o.id}')">Onayla → Mutfağa Gönder</button>
+          <button class="btn sm" onclick="toast('Prototip: sipariş düzeltme (garson adet/adet değiştirebilir)')">Düzelt</button>
+          <button class="btn sm" onclick="toast('Prototip: iptal — şef garson ikinci onayı istenir')">İptal</button>`
+        :o.status==='VIP_ONCELIK'?`<button class="btn gold" onclick="approveOrder('${o.id}')">VIP Öncelikli Onayla</button>`
+        :`<span class="tag ok">mutfağa iletildi</span>`}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+function approveOrder(id){
+  const o=ORDERS.find(x=>x.id===id); if(o){ o.status='MUTFAKTA'; o.staff=S.staff; }
+  render(); toast(id+' onaylandı · mutfak fiş yazıcısına ve KDS ekranına gönderildi.');
+}
+function vQrsKds(){
+  const st = {H1:['Havuz Bar','Piano Bar','Ana Mutfak'], H2:['Infinity Pool Bar','Cigar Lounge','Ana Mutfak'], H3:['Lagoon Bar','Kids Club Bar','Ana Mutfak']};
+  const stations = st[S.hotel]||[];
+  return `
+  <div class="bar">
+    <div class="fld"><label class="f">Otel</label>${hotelSel('kdHotel', S.hotel)}</div>
+    <button class="btn pri" onclick="S.hotel=document.getElementById('kdHotel').value;render()">Getir</button>
+    <span class="pill ok">yazıcı: bağlı · 2 istasyon</span>
+    <button class="btn" onclick="toast('Prototip: tekrar fiş baskısı kuyruğa alındı')">Tekrar Fiş</button>
+  </div>
+  <div class="grid g3">
+    ${stations.map((s,i)=>{
+      const tickets = ORDERS.filter(o=>o.hotel===S.hotel && (o.status==='MUTFAKTA'||o.status==='SERVIS_EDILDI')).slice(0,i+1);
+      return `<div class="card" style="background:${i===2?'#fbfbfd':'#fff'}">
+        <div class="ct">${esc(s)} <span class="tag ${i===2?'ok':'blue'}">${i===2?'fiş yazıcı':'ekran'}</span></div>
+        ${tickets.length?tickets.map(t=>`<div style="border:1px solid var(--line);border-radius:8px;padding:9px;margin-bottom:9px">
+          <div style="display:flex;justify-content:space-between"><b class="mono">${t.id}</b><span class="tag">${esc(t.table)}</span></div>
+          <div style="font-size:12.2px;margin-top:5px">${esc(t.items)}</div>
+          <div class="steps" style="margin-top:8px">
+            <span class="s ${t.status==='MUTFAKTA'?'on':''}">Hazırlanıyor</span>
+            <span class="s ${t.status==='SERVIS_EDILDI'?'on':''}">Servis edildi</span>
+          </div>
+          ${i===2?`<button class="btn sm" style="margin-top:8px" onclick="toast('Prototip: yeniden fiş basıldı')">Fiş Bas</button>`:
+                  `<button class="btn sm ok" style="margin-top:8px" onclick="served('${t.id}')">Hazır</button>`}
+        </div>`).join(''):'<div class="muted" style="font-size:12.2px">Aktif fiş yok.</div>'}
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="note blue" style="margin-top:14px">KDS ve yazıcı katmanı, internet/sunucu kesintisinde yerel kuyrukta tamponlanır; bağlantı geldiğinde eksik fişler otomatik basılır.</div>`;
+}
+function served(id){
+  const o=ORDERS.find(x=>x.id===id); if(o) o.status='SERVIS_EDILDI';
+  render(); toast(id+' servis edildi olarak işaretlendi.');
+}
+/* ------------------------- QR ODA SERVİSİ ------------------------- */
+function vRsQueue(){
+  return `
+  <p class="sub">Oda QR'ı okutulduğunda oda servisi talebi <b>oda servisi birimi ekranına</b> düşer; talep alındıktan sonra misafirden telefonla teyit alınması <b>opsiyoneldir</b>.</p>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="k">Açık Talep</div><div class="v">${ROOMSVC.filter(r=>r.status!=='TESLIM').length}</div><div class="u">bugün</div></div>
+    <div class="card kpi warn"><div class="k">Ort. Yanıt</div><div class="v">11</div><div class="u">dakika</div></div>
+    <div class="card kpi violet"><div class="k">Telefon Teyidi</div><div class="v">2/3</div><div class="u">opsiyonel adım</div></div>
+    <div class="card kpi ok"><div class="k">SLA İçinde</div><div class="v">%94</div><div class="u">hedef 30 dk</div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Oda servisi talepleri</div>
+    <table class="t">
+      <tr><th>Talep</th><th>Otel</th><th class="num">Oda</th><th>Saat</th><th>İçerik</th><th>Telefon Teyidi</th><th>Durum</th><th></th></tr>
+      ${ROOMSVC.map(r=>`<tr>
+        <td class="mono">${r.id}</td><td>${esc(HN(r.hotel))}</td><td class="num"><b>${r.room}</b></td><td class="mono">${r.when}</td>
+        <td>${esc(r.items)}</td>
+        <td><span class="tag ${r.phone.includes('bekliyor')?'warn':'ok'}">${esc(r.phone)}</span></td>
+        <td><span class="tag ${r.status==='TALEP'?'warn':r.status==='YOLDA'?'blue':'violet'}">${esc(r.status)}</span></td>
+        <td><button class="btn sm" onclick="toast('Prototip: oda servisi durumu güncellendi')">Durum</button></td></tr>`).join('')}
+    </table>
+    <div class="note" style="margin-top:12px">Talepler mutfak yazıcısı + oda servisi ekranına <b>anlık</b> iletilir; teslim, teslim eden personel ve süre kaydıyla kapatılır.</div>
+  </div>`;
+}
+</script>
+<script>
+/* =========================================================
+   Komuta merkezi, raporlar, kullanıcılar, sistem + yönlendirici
+   ========================================================= */
+function vCommand(){
+  const sup='S02';
+  const mapRooms = roomsOf('H1',1).concat(roomsOf('H1',2));
+  return `
+  <p class="sub">Tüm iş akışı en üstteki <b>yönetim komuta merkezinde</b> adım adım izlenir: hangi kat sorumlusu hangi odada, hangi kontrol tamamlandı, hangi talep açık.</p>
+  <div class="grid g5" style="margin-bottom:16px">
+    <div class="card kpi"><div class="k">İzlenen Personel</div><div class="v" id="cmdSup">${esc(SN(sup))}</div><div class="u">Kat Sorumlusu · 1–2. kat</div></div>
+    <div class="card kpi ok"><div class="k">Kontrol Edilen Oda</div><div class="v" id="cmdCount">0</div><div class="u">bu oturumda</div></div>
+    <div class="card kpi gold"><div class="k">Aktif Konum</div><div class="v" id="cmdPos" style="font-size:15px;padding-top:5px">— oda —</div><div class="u">dinamik konum</div></div>
+    <div class="card kpi violet"><div class="k">Açık Talep</div><div class="v">${PERSREQ.filter(p=>p.status!=='TAMAM').length + ROOMSVC.filter(r=>r.status!=='TESLIM').length}</div><div class="u">kişiselleştirme + oda servisi</div></div>
+    <div class="card kpi warn"><div class="k">Otomatik Uyarı</div><div class="v">${DND.filter(d=>d.status==='ALARM').length}</div><div class="u">arka plan alarmı</div></div>
+  </div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="ct">Canlı oda haritası <span class="tag blue">kat sorumlusu konumu</span></div>
+      <div class="mapgrid" id="cmdmap">
+        ${mapRooms.map((r,i)=>`<div class="room ${r.status==='DND'?'dnd':r.status==='PERS'?'pers':''} ${i===0?'done':''} ${i===1?'act':''}" data-no="${r.no}">
+          <b>${r.no}</b><div style="font-size:10.6px;color:var(--muted)">${esc(RN(r.type)).split(' ')[0]}</div></div>`).join('')}
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--blue-soft);border:1px solid #c5ddf3"></i>şu an burada</span>
+        <span><i style="background:var(--ok-soft);border:1px solid #bfe3d1"></i>kontrol edildi</span>
+        <span><i style="background:var(--warn-soft);border:1px solid #f0dcb2"></i>DND · ara kayıt</span>
+        <span><i style="background:var(--violet-soft);border:1px solid #d9cdf5"></i>kişiselleştirme talebi</span>
+        <span><i style="background:#fff;border:1px solid var(--line)"></i>bekliyor</span>
+      </div>
+      <div class="note blue" style="margin-top:12px">Konum, oda QR'ının okutulduğu andan itibaren <b>dinamik olarak</b> işlenir; her okutma zaman damgasıyla kaydedilir.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Canlı akış <span class="live"></span></div>
+      <div id="cmdlog" style="font-size:11.6px;background:#0d2740;color:#cfe0ee;border-radius:8px;padding:10px;min-height:150px;font-family:Consolas,monospace">
+        <div>11:45:02 · sistem · komuta merkezi izlemeye alındı</div>
+        <div>11:44:58 · hakan.yildiz · zimmet dağıtımı (S02) onaylandı</div>
+        <div>11:43:10 · elif.demir · oda 211 · tüketim kaydı (3 ürün)</div>
+      </div>
+      <div class="ct" style="margin-top:14px">İş akışı adımları</div>
+      <table class="t">
+        <tr><th>Adım</th><th>Aktör</th><th>Kayıt</th></tr>
+        <tr><td>1 · Oda QR okutuldu (kat formu)</td><td>Kat sorumlusu</td><td class="mono">ScanEvent</td></tr>
+        <tr><td>2 · Minibar kontrolü / eksik ürün tespiti</td><td>Kat sorumlusu</td><td class="mono">ConsumptionRecord</td></tr>
+        <tr><td>3 · Eksik ürünler zimmetten düşüldü</td><td>Kat sorumlusu</td><td class="mono">StockMovement</td></tr>
+        <tr><td>4 · Oda/kat/otel kırılımlı kayıt oluştu</td><td>Sistem</td><td class="mono">Aggregation</td></tr>
+        <tr><td>5 · DND ise ara kayıt + otomatik uyarı</td><td>Sistem (arka plan)</td><td class="mono">DndFollowUp</td></tr>
+        <tr><td>6 · Talep varsa kişiselleştirme karşılama</td><td>Kat sorumlusu</td><td class="mono">PersonalizationLog</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Arka planda üretilen otomatik uyarılar</div>
+    <table class="t">
+      <tr><th>Uyarı tipi</th><th>Koşul</th><th>Hedef</th><th>Durum</th></tr>
+      <tr><td>DND yeniden kontrol</td><td>Ara kayıttan 120 dk sonra</td><td>Kat sorumlusu + kat ekranı</td><td><span class="tag err">1 aktif</span></td></tr>
+      <tr><td>Zimmet kritik seviye</td><td>Bakiye &lt; 20 adet</td><td>Kat sorumlusu + depo sorumlusu</td><td><span class="tag warn">3 ürün</span></td></tr>
+      <tr><td>Yanıtsız talep eskalasyonu</td><td>90 sn yanıt yok</td><td>Süpervizör → şef garson</td><td><span class="tag ok">0</span></td></tr>
+      <tr><td>Kişiselleştirme karşılanmadı</td><td>Talep 4 saat açık</td><td>Housekeeping süpervizörü</td><td><span class="tag warn">1</span></td></tr>
+    </table>
+  </div>`;
+}
+let liveT=null, cmdIdx=0;
+function nowStr(){ const d=new Date(); return d.toTimeString().slice(0,8); }
+function startLive(){
+  stopLive(); cmdIdx=0;
+  const map=document.getElementById('cmdmap'); if(!map) return;
+  const rooms=[...map.querySelectorAll('.room')];
+  liveT=setInterval(()=>{
+    const cur=rooms[cmdIdx%rooms.length], nxt=rooms[(cmdIdx+1)%rooms.length];
+    rooms.forEach(x=>x.classList.remove('act'));
+    cur.classList.add('done'); nxt.classList.add('act');
+    const no=cur.dataset.no;
+    const pos=document.getElementById('cmdPos'); if(pos) pos.textContent='oda '+no;
+    const cnt=document.getElementById('cmdCount'); if(cnt) cnt.textContent=(cmdIdx+1);
+    const log=document.getElementById('cmdlog');
+    if(log){ const d=document.createElement('div');
+      d.textContent=nowStr()+' · '+SROLE('S02').toLowerCase()+' · oda '+no+' · kontrol tamamlandı';
+      log.prepend(d); while(log.children.length>7) log.lastChild.remove(); }
+    cmdIdx++;
+  },1500);
+}
+function stopLive(){ if(liveT){ clearInterval(liveT); liveT=null; } }
+/* ------------------------- RAPORLAR ------------------------- */
+const REPORTS = [
+  {id:'R1', n:'Oda Bazlı Tüketim', d:'oda · ürün · gün kırılımı, konaklama başına tüketim'},
+  {id:'R2', n:'Kat Bazlı Yoğunluk ve İş Yükü', d:'kat · personel · vardiya'},
+  {id:'R3', n:'Ürün Sarf Hızı ve Stok Projeksiyonu', d:'ürün · grup · tedarik önerisi'},
+  {id:'R4', n:'DND ve Deneme Sayısı', d:'oda · kaç kez girilemedi · gecikme'},
+  {id:'R5', n:'Kişiselleştirme Karşılama', d:'talep · karşılama süresi · dil'},
+  {id:'R6', n:'Sipariş Yanıt Süresi', d:'outlet · garson · onay süresi'},
+  {id:'R7', n:'Outlet Yoğunluk ve Saat Kırılımı', d:'outlet · saat · ürün grubu'},
+  {id:'R8', n:'Oda Servisi SLA', d:'talep · yanıt · teslim süresi'}
+];
+function vReports(){
+  const r=S.rep||'R1';
+  const body = {
+    R1:`<tr><th>Oda</th><th>Oda Tipi</th><th>Kat</th><th class="num">Tüketim (ay)</th><th class="num">Konaklama</th><th class="num">Ort./konaklama</th></tr>
+        <tr><td>105</td><td>Deluxe</td><td class="num">1</td><td class="num">38</td><td class="num">6</td><td class="num">6,3</td></tr>
+        <tr><td>207</td><td>Standart</td><td class="num">2</td><td class="num">21</td><td class="num">7</td><td class="num">3,0</td></tr>
+        <tr><td>405</td><td>VIP Suit</td><td class="num">4</td><td class="num">72</td><td class="num">4</td><td class="num">18,0</td></tr>
+        <tr><td>507</td><td>Aile</td><td class="num">5</td><td class="num">44</td><td class="num">5</td><td class="num">8,8</td></tr>`,
+    R2:`<tr><th>Kat</th><th>Kat Sorumlusu</th><th class="num">Kontrol</th><th class="num">Tüketim</th><th class="num">Ort. süre</th><th class="num">Verim</th></tr>
+        <tr><td>1</td><td>Elif Demir</td><td class="num">118</td><td class="num">212</td><td class="num">4,2 dk</td><td class="num">%96</td></tr>
+        <tr><td>2</td><td>Elif Demir</td><td class="num">104</td><td class="num">189</td><td class="num">4,6 dk</td><td class="num">%92</td></tr>
+        <tr><td>3</td><td>Murat Aksoy</td><td class="num">92</td><td class="num">141</td><td class="num">5,1 dk</td><td class="num">%88</td></tr>
+        <tr><td>4</td><td>Murat Aksoy</td><td class="num">87</td><td class="num">166</td><td class="num">5,4 dk</td><td class="num">%85</td></tr>`,
+    R3:`<tr><th>Ürün</th><th>Grup</th><th class="num">Aylık sarf</th><th class="num">Günlük ort.</th><th class="num">Stok günü</th><th>Tedarik</th></tr>
+        <tr><td>Kola 330 ml</td><td>Alkolsüz</td><td class="num">1.240</td><td class="num">41</td><td class="num">12</td><td><span class="tag ok">yeterli</span></td></tr>
+        <tr><td>Doğal Su 0,5 L</td><td>Alkolsüz</td><td class="num">2.180</td><td class="num">73</td><td class="num">9</td><td><span class="tag warn">sipariş</span></td></tr>
+        <tr><td>Şampanya 375 ml</td><td>Alkollü</td><td class="num">42</td><td class="num">1,4</td><td class="num">31</td><td><span class="tag ok">yeterli</span></td></tr>
+        <tr><td>Sütlü Çikolata</td><td>Tatlı</td><td class="num">610</td><td class="num">20</td><td class="num">18</td><td><span class="tag ok">yeterli</span></td></tr>`,
+    R4:`<tr><th>Oda</th><th>Kat</th><th class="num">Deneme</th><th>İlk deneme</th><th>Kapanış</th><th class="num">Gecikme</th></tr>
+        <tr><td>107</td><td class="num">1</td><td class="num">2</td><td class="mono">09:02</td><td class="mono">11:20</td><td class="num">138 dk</td></tr>
+        <tr><td>404</td><td class="num">4</td><td class="num">1</td><td class="mono">10:15</td><td>—</td><td class="num">açık</td></tr>
+        <tr><td>203</td><td class="num">2</td><td class="num">2</td><td class="mono">08:20</td><td class="mono">10:35</td><td class="num">135 dk</td></tr>`
+  }[r] || '';
+  return `
+  <p class="sub">Tüm modüllerin raporları tek merkezden alınır. Kayıtlar oda, kat, otel, ürün, personel ve zaman boyutlarıyla biriktirilir; veri hacmi arttıkça
+  <b>karar destek</b> çıktıları (stok projeksiyonu, personel planlama, doluluk tahmini) üretilir.</p>
+  <div class="bar">
+    <div class="fld"><label class="f">Rapor</label>${sel('repSel', REPORTS.map(x=>({v:x.id,t:x.n})), r,'')}</div>
+    <div class="fld"><label class="f">Otel</label>${hotelSel('repHotel', S.hotel)}</div>
+    <div class="fld"><label class="f">Dönem</label><input value="31.10.2026" style="min-width:130px"></div>
+    <button class="btn pri" onclick="S.rep=document.getElementById('repSel').value;S.hotel=document.getElementById('repHotel').value;render()">Raporla</button>
+    <button class="btn" onclick="toast('Prototip: PDF/Excel çıktısı')">Dışa Aktar</button>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    ${REPORTS.slice(0,4).map(x=>`<div class="card tight" style="border-left:3px solid ${x.id===r?'var(--gold2)':'var(--line)'}">
+      <div style="font-weight:600;font-size:12.2px">${esc(x.n)}</div>
+      <div class="muted" style="font-size:11.4px">${esc(x.d)}</div>
+      <button class="btn sm" style="margin-top:7px" onclick="S.rep='${x.id}';render()">${x.id===r?'Görüntüleniyor':'Aç'}</button></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="ct">${esc((REPORTS.find(x=>x.id===r)||{}).n)} <span class="tag blue">${esc(HN(S.hotel))}</span></div>
+    <table class="t">${body}</table>
+    <div class="note violet" style="margin-top:12px">Veri ambarlama katmanı (ileri faz): aynı kayıtlar üzerinden <b>öngörücü</b> raporlar — hafta sonu tüketim tahmini,
+    ürün bazlı tedarik önerisi, personel vardiya optimizasyonu — oluşturulur. Bu katman lisans kapsamına dahildir; model eğitimi ayrı iş kalemidir.</div>
+  </div>`;
+}
+/* ------------------------- KULLANICILAR ------------------------- */
+const USERS = [
+  {n:'Erkan Erdem', u:'erkan', r:'Sistem Yöneticisi', sc:'Kompleks', on:'31.10.2026 09:40', st:'aktif'},
+  {n:'Eren Bey', u:'eren.fb', r:'F&B Müdürü', sc:'3 otel', on:'31.10.2026 08:10', st:'aktif'},
+  {n:'Elif Demir', u:'elif.demir', r:'Kat Sorumlusu', sc:'MR · 1–2. kat', on:'31.10.2026 09:02', st:'aktif'},
+  {n:'Hakan Yıldız', u:'hakan.yildiz', r:'Depo Sorumlusu', sc:'MR · Depo', on:'31.10.2026 08:00', st:'aktif'},
+  {n:'Şef Garson', u:'sef.garson', r:'Şef Garson', sc:'MR · tüm outlet', on:'30.10.2026 22:14', st:'aktif'},
+  {n:'Mutfak Ekranı 1', u:'kds1', r:'KDS Operatörü', sc:'MR · Ana Mutfak', on:'31.10.2026 11:44', st:'aktif'}
+];
+const ROLES = ['Sistem Yöneticisi','Otel Müdürü','F&B Müdürü','Şef Garson','Garson','Butler','Kat Sorumlusu','Depo Sorumlusu','Housekeeping Süp.','KDS Operatörü','Otel IT'];
+const RIGHTS = [
+  ['Minibar tanımları',            '✓','–','–','–','–','–','–','–','–','–','–'],
+  ['Oda/kat/oda tipi tanımı',      '✓','✓','–','–','–','–','–','–','–','–','–'],
+  ['Zimmet dağıtımı',              '✓','–','–','–','–','–','✓','✓','✓','–','–'],
+  ['Tüketim kaydı girme',          '✓','–','–','–','–','–','✓','–','–','–','–'],
+  ['Kişiselleştirme karşılama',    '✓','–','–','–','–','✓','✓','–','✓','–','–'],
+  ['Sipariş onayı',                '✓','–','✓','✓','✓','✓','–','–','–','–','–'],
+  ['KDS / fiş yazıcı',             '✓','–','–','✓','–','–','–','–','–','✓','–'],
+  ['Rapor alma',                   '✓','✓','✓','✓','–','–','–','–','✓','–','✓'],
+  ['Kullanıcı & rol yönetimi',     '✓','–','–','–','–','–','–','–','–','–','–'],
+  ['Denetim günlüğü',              '✓','✓','–','–','–','–','–','–','–','–','✓']
+];
+function vUsers(){
+  return `
+  <p class="sub">Sistem yöneticisi sınırsız sayıda kullanıcı ekler; her kullanıcı <b>otel/outlet bazlı</b> kapsam ve <b>rol</b> ile tanımlanır.</p>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">Kullanıcılar</div>
+    <table class="t">
+      <tr><th>Ad Soyad</th><th>Kullanıcı</th><th>Rol</th><th>Kapsam</th><th>Son giriş</th><th>Durum</th><th></th></tr>
+      ${USERS.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td class="mono">${esc(u.u)}</td><td><span class="tag blue">${esc(u.r)}</span></td>
+        <td>${esc(u.sc)}</td><td class="mono">${esc(u.on)}</td><td><span class="tag ok">${esc(u.st)}</span></td>
+        <td><button class="btn sm" onclick="toast('Prototip: kullanıcı düzenleme / cihaz eşleştirme')">Düzenle</button></td></tr>`).join('')}
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="ct">Rol – yetki matrisi</div>
+    <table class="t">
+      <tr><th>Yetki</th>${ROLES.map(r=>'<th class="ctr" style="font-size:9.6px;white-space:normal;min-width:52px">'+r+'</th>').join('')}</tr>
+      ${RIGHTS.map(row=>`<tr><td><b>${esc(row[0])}</b></td>${row.slice(1).map(c=>'<td class="ctr">'+(c==='✓'?'<span style="color:var(--ok);font-weight:700">✓</span>':'<span style="color:#c6d1dc">–</span>')+'</td>').join('')}</tr>`).join('')}
+    </table>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="ct">Kullanıcı ekle</div>
+      <div class="row">
+        <div class="fld"><label class="f">Ad Soyad</label><input placeholder="Örn. Deniz Yücel"></div>
+        <div class="fld"><label class="f">Kullanıcı adı</label><input placeholder="deniz.yucel"></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Rol</label>${sel('nuRole', ROLES.map(r=>({v:r,t:r})), 'Kat Sorumlusu','')}</div>
+        <div class="fld"><label class="f">Kapsam</label>${sel('nuScope',[{v:'H1',t:'Merit Royal'},{v:'H2',t:'Merit Royal Diamond'},{v:'H3',t:'Merit Royal Premium'},{v:'ALL',t:'Kompleks (3 otel)'}],'H1','')}</div>
+      </div>
+      <button class="btn pri" onclick="toast('Prototip: kullanıcı oluşturuldu + davet bağlantısı üretildi')">Kullanıcı Ekle</button>
+    </div>
+    <div class="card">
+      <div class="ct">Güvenlik</div>
+      <ul class="ck">
+        <li>Çok faktörlü doğrulama zorunlu (yönetici ve müdür rolleri).</li>
+        <li>Cihaz eşleştirme: garson ve kat sorumlusu cihazı tanıtılır, kayıp cihaz uzaktan kapatılır.</li>
+        <li>Oturum süresi 12 saat; vardiya sonunda otomatik kapanış.</li>
+        <li>Yetkisiz erişim denemeleri denetim günlüğüne işlenir.</li>
+      </ul>
+    </div>
+  </div>`;
+}
+/* ------------------------- SİSTEM ------------------------- */
+function vSystem(){
+  return `
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card">
+      <div class="ct">Standart (varsayılan) otel kayıtları</div>
+      <table class="t">
+        <tr><th>#</th><th>Otel</th><th>Kod</th><th>Kaynak</th><th>Durum</th></tr>
+        ${HOTELS.map((h,i)=>`<tr><td class="num">${i+1}</td><td><b>${esc(h.name)}</b></td><td class="mono">${h.code}</td>
+          <td class="mono">prisma/seed.ts</td><td><span class="tag gold">VARSAYILAN</span></td></tr>`).join('')}
+      </table>
+      <div class="note gold" style="margin-top:12px">Kurulum betiği (<span class="mono">seed</span>) üç oteli <b>standart kayıt</b> olarak yükler;
+      minibar, QR menü, QR sipariş ve QR oda servisi modülleri bu kayıtlarla açılır. Silinemez, yalnızca güncellenebilir.</div>
+    </div>
+    <div class="card">
+      <div class="ct">Kötüye kullanım / kara liste</div>
+      <table class="t">
+        <tr><th>Cihaz izi</th><th>Neden</th><th>Alan</th><th>Kalan süre</th><th></th></tr>
+        <tr><td class="mono">d7f2…9a1c</td><td>Tesis dışından QR okutma</td><td>Ortak Sahil</td><td class="num">27 gün</td><td><button class="btn sm" onclick="toast('Prototip: kara liste kaydı kaldırıldı')">Kaldır</button></td></tr>
+        <tr><td class="mono">b31e…44d0</td><td>Otomatik talep (bot)</td><td>H2 Infinity Pool</td><td class="num">12 gün</td><td><button class="btn sm" onclick="toast('Prototip: kara liste kaydı kaldırıldı')">Kaldır</button></td></tr>
+      </table>
+      <div class="grid g3" style="margin-top:12px">
+        <div class="card tight"><div class="ct" style="font-size:11.6px">Yedekleme</div><div style="font-size:11.8px">Günlük 02:00 otomatik + haftalık harici kopya</div></div>
+        <div class="card tight"><div class="ct" style="font-size:11.6px">Diller</div><div style="font-size:11.8px">TR · EN · RU · DE (misafir: + FR · IT · AR)</div></div>
+        <div class="card tight"><div class="ct" style="font-size:11.6px">Teknoloji</div><div style="font-size:11.8px">Next.js · PostgreSQL · Prisma (modüler)</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">Denetim günlüğü <span class="tag">değiştirilemez kayıt</span></div>
+    <table class="t">
+      <tr><th>Zaman</th><th>Kullanıcı</th><th>İşlem</th><th>Nesne</th><th>IP</th></tr>
+      ${AUDIT.map(a=>`<tr><td class="mono">${esc(a.t)}</td><td class="mono">${esc(a.user)}</td><td>${esc(a.act)}</td>
+        <td class="mono">${esc(a.obj)}</td><td class="mono">${esc(a.ip)}</td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+/* ------------------------- YÖNLENDİRİCİ ------------------------- */
+const VIEWS = {
+  'dashboard':vDashboard, 'mb-hotel':vMbHotel, 'mb-floor':vMbFloor, 'mb-room':vMbRoom,
+  'mb-roomtype':vMbRoomType, 'mb-concept':vMbConcept, 'mb-productgroup':vMbProductGroup,
+  'mb-product':vMbProduct, 'mb-staff':vMbStaff, 'mb-stock':vMbStock, 'mb-consumption':vMbConsumption,
+  'mb-pers':vMbPers, 'mb-dnd':vMbDnd, 'qrm-outlet':vQrmOutlet, 'qrm-menu':vQrmMenu, 'qrm-theme':vQrmTheme,
+  'qrs-queue':vQrsQueue, 'qrs-kds':vQrsKds, 'rs-queue':vRsQueue, 'command':vCommand,
+  'reports':vReports, 'users':vUsers, 'system':vSystem
+};
+function buildNav(){
+  document.getElementById('nav').innerHTML = NAV.map(x=> x.grp
+    ? '<div class="grp">'+x.grp+'</div>'
+    : '<a class="nav" data-v="'+x.v+'" href="#/'+x.v+'"><span class="ic">'+x.ic+'</span>'+x.t+(x.n?'<span class="n">'+x.n+'</span>':'')+'</a>'
+  ).join('');
+}
+function go(v){ location.hash='#/'+v; }
+function current(){ return (location.hash||'').replace('#/','') || 'dashboard'; }
+function render(){
+  const v=current(), fn=VIEWS[v]||vDashboard;
+  stopLive();
+  document.getElementById('view').innerHTML = fn();
+  document.getElementById('vtitle').textContent = (NAV.find(x=>x.v===v)||{t:'Genel Bakış'}).t;
+  document.getElementById('vcrumb').textContent = 'Sistem Yöneticisi Paneli · prototip · '+HN(S.hotel)+' bağlamı';
+  document.querySelectorAll('#nav a.nav').forEach(a=>a.classList.toggle('on', a.dataset.v===v));
+  window.scrollTo(0,0);
+  if(v==='command') startLive();
+  var _o=document.getElementById('ovf'); if(_o) _o.setAttribute('data-view', v+' ok');
+}
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent = d.toLocaleDateString('tr-TR')+' '+d.toTimeString().slice(0,5);
+}
+buildNav();
+window.addEventListener('hashchange', render);
+render();
+tickClock(); setInterval(tickClock, 20000);
+</script>
+<style>
+.rule{height:1px;background:var(--line);margin:10px 0}
+#toast{position:fixed;right:20px;bottom:20px;background:var(--navy);color:#fff;padding:11px 16px;border-radius:9px;
+  font-size:12.6px;box-shadow:0 10px 26px rgba(0,0,0,.28);opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;z-index:60;max-width:440px}
+#toast.show{opacity:1;transform:none}
+</style>
+<script src="yonetim-ek.js"></script>
+<script src="yonetim-menu.js"></script>
+<script src="yonetim-tanim.js"></script>
+<script src="yonetim-outlet-menu.js"></script>
+</body>
+</html>

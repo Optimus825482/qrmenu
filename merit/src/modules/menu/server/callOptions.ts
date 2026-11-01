@@ -109,6 +109,8 @@ export async function save(ctx: Ctx, outletId: string, raw: SaveCallOptionInput)
   const { outlet, screen } = await authorizeCallOptionOutlet(ctx, outletId, "D");
 
   return await withAdminTx(ctx, { screen, action: "D", hotelId: outlet.hotelId }, async (tx) => {
+    // Serialize active-count checks (including simultaneous create/reactivation) per outlet.
+    await tx.$queryRaw<{ id: string }[]>`SELECT id FROM outlets WHERE id = ${outletId} FOR UPDATE`;
     if (input.isActive) {
       const activeCount = await tx.outletCallOption.count({
         where: {

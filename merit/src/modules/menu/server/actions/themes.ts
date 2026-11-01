@@ -49,6 +49,25 @@ export async function assignThemeAction(raw: unknown): Promise<Result<null>> {
   })(raw);
 }
 
+export async function saveOutletMenuDesignAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(
+    z.object({
+      outletId: id,
+      themeId: id,
+      design: z.record(z.string(), z.unknown()),
+    }),
+    async (i) => {
+      await themes.saveOutletDesign(
+        await requireUser(),
+        i.outletId,
+        i.themeId,
+        i.design as Parameters<typeof themes.saveOutletDesign>[3],
+      );
+      return null;
+    },
+  )(raw);
+}
+
 export async function themeAssignTargetsAction(): Promise<Result<themes.AssignTarget[]>> {
   return safeAction(z.undefined(), async () => themes.assignTargets(await requireUser()))(undefined);
 }

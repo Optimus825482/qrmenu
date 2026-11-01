@@ -17,11 +17,15 @@ import type { UserOptions } from "@/modules/core/server/admin/users";
 import { alertDialog, confirm } from "@/shell/confirm";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
-import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
 import { Toolbar } from "@/shell/ui/Toolbar";
 import { useLiveList } from "@/shell/ui/useLiveList";
 
-type Props = { hotelId: string; setStatus(text: string): void };
+type Props = {
+  hotelId: string;
+  setStatus(text: string): void;
+  selectedOutletId?: string;
+  showOutletPicker?: boolean;
+};
 
 const COLUMNS: Column<MemberRow>[] = [
   { key: "username", title: "Kullanıcı adı", width: 160, sortable: true },
@@ -40,60 +44,17 @@ const COLUMNS: Column<MemberRow>[] = [
   },
 ];
 
-type PickerProps = {
-  id?: string;
-  name?: string;
-  outletId: string;
-  "aria-invalid"?: boolean;
-  "aria-describedby"?: string;
-};
-
-/** Search box + result list of the users that can still join the outlet; the list is the form control. */
-function CandidateSelect({ outletId, ...control }: PickerProps) {
-  const [term, setTerm] = useState("");
-  const [found, setFound] = useState<MemberCandidate[]>([]);
-  useEffect(() => {
-    let live = true;
-    const timer = setTimeout(() => {
-      void memberCandidatesAction({ outletId, q: term }).then((result) => {
-        if (live && result.ok) setFound(result.data);
-      });
-    }, 250);
-    return () => {
-      live = false;
-      clearTimeout(timer);
-    };
-  }, [outletId, term]);
-  return (
-    <div className="xp-candidate">
-      <input
-        type="search"
-        aria-label="Kullanıcı ara"
-        placeholder="Kullanıcı ara"
-        value={term}
-        onChange={(e) => setTerm(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-      />
-      <select size={6} {...control}>
-        {found.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.username} · {u.fullName} ({u.roleName})
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 /** Ekipler: the team of one outlet of the window's hotel. */
-export function MembersPanel({ hotelId, setStatus }: Props) {
+export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletPicker = true }: Props) {
   const outlets = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query }), {
     hotelId,
     entities: ["outlet"],
     pageSize: 100,
   });
   const [chosen, setChosen] = useState("");
-  const outletId = outlets.rows.some((o) => o.id === chosen) ? chosen : (outlets.rows[0]?.id ?? "");
+  const outletId = selectedOutletId !== undefined
+    ? selectedOutletId
+    : outlets.rows.some((o) => o.id === chosen) ? chosen : (outlets.rows[0]?.id ?? "");
 
   const list = useLiveList<MemberRow>(
     async (query) =>
@@ -104,7 +65,12 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
   );
   const [options, setOptions] = useState<UserOptions | null>(null);
   const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [adding, setAdding] = useState(false);
+  const [quickAdding, setQuickAdding] = useState(false);
+  const [jobTitle, setJobTitle] = useState("");
+  const [candidates, setCandidates] = useState<MemberCandidate[]>([]);
+  const [candidateLoading, setCandidateLoading] = useState(false);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [addingUserId, setAddingUserId] = useState<string | null>(null);
   const selected = list.rows.find((r) => r.id === selectedId);
 
   useEffect(() => {
@@ -132,17 +98,31 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
     reload();
   }, [outletId, setPage, reload]);
 
-  const submit = async (values: FormValues) => {
-    const result = await assignMemberAction({
-      userId: values.userId ?? "",
-      outletId,
-      roleId: values.roleId || undefined,
+  useEffect(() => {
+    if (!quickAdding || !outletId || !jobTitle) return;
+    let live = true;
+    void memberCandidatesAction({ outletId, jobTitle }).then((result) => {
+      if (!live) return;
+      if (result.ok) setCandidates(result.data);
+      else setCandidateError(result.error.message);
+      setCandidateLoading(false);
     });
-    if (result.ok) {
-      setSelectedId(result.data.id);
-      list.reload();
+    return () => { live = false; };
+  }, [quickAdding, outletId, jobTitle]);
+
+  const addCandidate = async (candidate: MemberCandidate) => {
+    if (addingUserId) return;
+    setAddingUserId(candidate.id);
+    const result = await assignMemberAction({ userId: candidate.id, outletId });
+    setAddingUserId(null);
+    if (!result.ok) {
+      void alertDialog({ title: "Ekip üyesi eklenemedi", message: result.error.message });
+      return;
     }
-    return result;
+    setCandidates((current) => current.filter((user) => user.id !== candidate.id));
+    setSelectedId(result.data.id);
+    setStatus(`${candidate.fullName} ekibe eklendi`);
+    list.reload();
   };
 
   const remove = async (row: MemberRow) => {
@@ -157,25 +137,32 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
       void alertDialog({ title: "Üye çıkarılamadı", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” ekipten çıkarıldı.` });
     setSelectedId(undefined);
     list.reload();
   };
 
   const toggle = async (row: MemberRow) => {
+    const approved = await confirm({
+      title: "Üye durumunu güncelle",
+      message: `“${row.username}” için üyelik durumu ${row.isActive ? "pasife alınsın" : "aktifleştirilsin"} mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     const result = await setMemberActiveAction({ id: row.id, isActive: !row.isActive });
     if (!result.ok) {
       void alertDialog({ title: "Durum değiştirilemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” üyelik durumu güncellendi.` });
     list.reload();
   };
 
-  const teamRoles = (options?.roles ?? []).filter((r) => r.kind === "OUTLET" || r.kind === "MUTFAK");
   const noOutlets = !outlets.loading && outlets.rows.length === 0;
 
   return (
     <>
-      <div role="group" aria-label="Ekip filtreleri" className="xp-defs-filters">
+      {showOutletPicker ? <div role="group" aria-label="Ekip filtreleri" className="xp-defs-filters">
         <label>
           Outlet
           <select value={outletId} onChange={(e) => setChosen(e.target.value)}>
@@ -186,7 +173,7 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
             ))}
           </select>
         </label>
-      </div>
+      </div> : null}
       {list.error ? (
         <p role="alert" className="xp-defs-error">
           {list.error}
@@ -209,11 +196,15 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
         q={list.q}
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
+        rowContextActions={(row) => [
+          { label: row.isActive ? "Pasife al" : "Aktifleştir", onSelect: () => void toggle(row) },
+          { label: "Ekipten çıkar", onSelect: () => void remove(row) },
+        ]}
         emptyText="Bu outletin ekibinde kimse yok"
         toolbar={
           <Toolbar onRefresh={list.reload}>
-            <button type="button" className="xp-button" disabled={!outletId} onClick={() => setAdding(true)}>
-              Kullanıcı ekle
+            <button type="button" className="xp-button" disabled={!outletId || !options} onClick={() => { setJobTitle(""); setCandidates([]); setCandidateError(null); setCandidateLoading(false); setQuickAdding(true); }}>
+              Hızlı kullanıcı ekle
             </button>
             <button
               type="button"
@@ -234,27 +225,39 @@ export function MembersPanel({ hotelId, setStatus }: Props) {
           </Toolbar>
         }
       />
-      <FormDialog
-        title="Kullanıcı ekle"
-        open={adding}
-        onClose={() => setAdding(false)}
-        onSubmit={submit}
-        submitText="Ekle"
-      >
-        <Field name="userId" label="Kullanıcı">
-          <CandidateSelect outletId={outletId} />
-        </Field>
-        <Field name="roleId" label="Rol (isteğe bağlı)">
-          <select defaultValue="">
-            <option value="">Kullanıcının kendi rolü</option>
-            {teamRoles.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </FormDialog>
+      {quickAdding ? (
+        <div className="xp-form-backdrop">
+          <section role="dialog" aria-modal="true" aria-labelledby="quick-member-title" className="xp-window xp-dialog xp-form-dialog xp-quick-member-dialog">
+            <header className="xp-titlebar">
+              <span id="quick-member-title" className="xp-titlebar-text">Hızlı kullanıcı ekle</span>
+              <button type="button" className="xp-title-button is-close" aria-label="Kapat" onClick={() => setQuickAdding(false)}>×</button>
+            </header>
+            <div className="xp-form-fields">
+              <Field name="jobTitle" label="Görev seçin">
+                <select value={jobTitle} onChange={(event) => { setCandidates([]); setCandidateError(null); setCandidateLoading(Boolean(event.target.value)); setJobTitle(event.target.value); }}>
+                  <option value="">Görev seçin</option>
+                  {(options?.jobTitles ?? []).map((title) => <option key={title} value={title}>{title}</option>)}
+                </select>
+              </Field>
+              {candidateLoading ? <p className="xp-defs-note">Kullanıcılar yükleniyor…</p> : null}
+              {candidateError ? <p role="alert" className="xp-defs-error">{candidateError}</p> : null}
+              {jobTitle && !candidateLoading && !candidateError ? (
+                candidates.length > 0 ? (
+                  <div className="xp-quick-member-list" aria-label={`${jobTitle} görevindeki kullanıcılar`}>
+                    {candidates.map((candidate) => (
+                      <button key={candidate.id} type="button" className="xp-quick-member-option" disabled={addingUserId !== null} onClick={() => void addCandidate(candidate)}>
+                        <span><strong>{candidate.fullName}</strong><small>{candidate.username} · {candidate.roleName}</small></span>
+                        <span aria-hidden="true">Ekle</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : <p className="xp-defs-note">Bu görevde eklenebilecek kullanıcı yok.</p>
+              ) : null}
+            </div>
+            <footer className="xp-dialog-actions"><button type="button" className="xp-button" onClick={() => setQuickAdding(false)}>Kapat</button></footer>
+          </section>
+        </div>
+      ) : null}
     </>
   );
 }

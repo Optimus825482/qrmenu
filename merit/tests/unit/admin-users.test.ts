@@ -52,8 +52,8 @@ afterAll(async () => {
 });
 
 async function sys() {
-  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR", extraHotelCodes: ["MRP", "MRD"] });
+  const user = await makeUser({ username: "sys-admin", roleCode: "R-SYS", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["PREMIUM", "DIAMOND"] });
 }
 
 /** Hotel manager of MR. Seed already grants YONETIM CR-KUL V,O,D; reset so this test owns the flags. */
@@ -73,8 +73,8 @@ async function mgmt() {
       canReport: false,
     },
   });
-  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "MR" });
-  return ctxFor(user, { hotelCode: "MR" });
+  const user = await makeUser({ username: "otm-mr", roleCode: "R-OTM", hotelCode: "ROYAL" });
+  return ctxFor(user, { hotelCode: "ROYAL" });
 }
 
 async function newUser(ctx: Awaited<ReturnType<typeof sys>>, username: string, extra = {}) {
@@ -83,7 +83,7 @@ async function newUser(ctx: Awaited<ReturnType<typeof sys>>, username: string, e
     username,
     fullName: `Test ${username}`,
     roleId: garson.id,
-    hotelId: await hotelId("MR"),
+    hotelId: await hotelId("ROYAL"),
     hotelIds: [],
     password: GOOD,
     ...extra,
@@ -93,7 +93,7 @@ async function newUser(ctx: Awaited<ReturnType<typeof sys>>, username: string, e
 describe("users: oluşturma ve güncelleme", () => {
   it("oluşturur (hash saklanır, satırda yok), listeler, günceller; audit + definition.changed bırakır", async () => {
     const ctx = await sys();
-    const mrp = await hotelId("MRP");
+    const mrp = await hotelId("PREMIUM");
     const created = await newUser(ctx, "test.garson", { hotelIds: [mrp] });
     expect(created).toMatchObject({
       username: "test.garson",
@@ -203,8 +203,8 @@ describe("users: oluşturma ve güncelleme", () => {
 describe("users: YONETIM kapsamı", () => {
   it("R-SYS / R-ITT atamak FORBIDDEN; kapsam dışı otel FORBIDDEN; kapsamındaki rol serbest", async () => {
     const m = await mgmt();
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
     for (const code of ["R-SYS", "R-ITT"]) {
       const role = await roleByCode(code);
       await expect(
@@ -236,7 +236,7 @@ describe("users: YONETIM kapsamı", () => {
   it("yalnız kendi otellerine bağlı, SISTEM olmayan kullanıcıları görür ve yönetir", async () => {
     const s = await sys();
     const m = await mgmt();
-    const mrp = await hotelId("MRP");
+    const mrp = await hotelId("PREMIUM");
     const inside = await newUser(s, "mr.garson");
     const outside = await newUser(s, "mrp.garson", { hotelId: mrp });
     const shared = await newUser(s, "ortak.garson", { hotelIds: [mrp] });
@@ -264,8 +264,8 @@ describe("users: YONETIM kapsamı", () => {
   it("hiyerarşi: YONETIM yönetici rolü atayamaz, başka yöneticiyi yönetemez; kendi şifresini değiştirir, kendi rol/otelini değiştiremez; SISTEM etkilenmez", async () => {
     const s = await sys();
     const m = await mgmt();
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
     const otm = await roleByCode("R-OTM");
     const gar = await roleByCode("R-GAR");
 
@@ -326,13 +326,13 @@ describe("users: YONETIM kapsamı", () => {
 
   it("create: yetkisiz çağrıda bcrypt hesaplanmaz (önce yetki, sonra hash); yetkili çağrıda bir kez hesaplanır", async () => {
     const gar = await roleByCode("R-GAR");
-    const user = await makeUser({ username: "gar-denied", roleCode: "R-GAR", hotelCode: "MR" });
-    const denied = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar-denied", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const denied = await ctxFor(user, { hotelCode: "ROYAL" });
     const input = {
       username: "yeni.kisi",
       fullName: "Yeni Kişi",
       roleId: gar.id,
-      hotelId: await hotelId("MR"),
+      hotelId: await hotelId("ROYAL"),
       hotelIds: [],
       password: GOOD,
     };
@@ -344,15 +344,15 @@ describe("users: YONETIM kapsamı", () => {
   });
 
   it("R-GAR yetkisiz: list FORBIDDEN", async () => {
-    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "MR" });
-    const ctx = await ctxFor(user, { hotelCode: "MR" });
+    const user = await makeUser({ username: "gar", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(user, { hotelCode: "ROYAL" });
     await expect(users.list(ctx, Q)).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
 
 describe("users: pasife alma ve şifre belirleme oturumları kapatır", () => {
   async function openSession(userId: string, roleId: string) {
-    return createSession({ userId, hotelId: await hotelId("MR"), roleId, ip: "10.0.0.1" });
+    return createSession({ userId, hotelId: await hotelId("ROYAL"), roleId, ip: "10.0.0.1" });
   }
 
   it("setActive(false): açık oturum CIKTI/SISTEM, session.closed yayınlanır, audit; girişe izin yok; tekrar aktif edilebilir", async () => {
@@ -415,7 +415,7 @@ describe("users: pasife alma ve şifre belirleme oturumları kapatır", () => {
 describe("members", () => {
   async function setup() {
     const ctx = await sys();
-    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    const outlet = await makeOutlet("ROYAL", "Havuz Bar", "BAR");
     const user = await newUser(ctx, "uye.garson");
     return { ctx, outlet, user };
   }
@@ -467,7 +467,7 @@ describe("members", () => {
   it("YONETIM başka yöneticiyi/sistem kullanıcısını ekibe atayamaz (FORBIDDEN + YETKISIZ_DENEME); SISTEM atayabilir", async () => {
     const { ctx, outlet } = await setup();
     const m = await mgmt();
-    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
+    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "ROYAL" });
     await expect(members.assign(m, { userId: peer.id, outletId: outlet.id })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
@@ -484,7 +484,7 @@ describe("members", () => {
   it("YONETIM yöneticinin üyeliğini kaldıramaz/pasifleştiremez; üyelik değişmez", async () => {
     const { ctx, outlet } = await setup();
     const m = await mgmt();
-    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
+    const peer = await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "ROYAL" });
     const row = await members.assign(ctx, { userId: peer.id, outletId: outlet.id });
 
     await expect(members.remove(m, row.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -502,8 +502,8 @@ describe("members", () => {
   it("candidates: YONETIM için yöneticiler ve sistem kullanıcıları hariç; SISTEM için yöneticiler dahil", async () => {
     const { ctx, outlet } = await setup();
     const m = await mgmt();
-    await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "MR" });
-    await makeUser({ username: "sys-mr-aday", roleCode: "R-SYS", hotelCode: "MR" });
+    await makeUser({ username: "otm-esdeger", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    await makeUser({ username: "sys-mr-aday", roleCode: "R-SYS", hotelCode: "ROYAL" });
     const forMgmt = (await members.candidates(m, outlet.id)).map((c) => c.username);
     expect(forMgmt).toContain("uye.garson");
     expect(forMgmt).not.toContain("otm-esdeger");
@@ -519,7 +519,7 @@ describe("members", () => {
     const row = await members.assign(m, { userId: user.id, outletId: outlet.id });
     expect(row.outletId).toBe(outlet.id);
 
-    const other = await makeOutlet("MRP", "Premium Bar", "BAR");
+    const other = await makeOutlet("PREMIUM", "Premium Bar", "BAR");
     await expect(members.assign(m, { userId: user.id, outletId: other.id })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });

@@ -70,7 +70,7 @@ export const hotelUpdateSchema = z.object({
   address: optionalText(300),
   phone: optionalText(40),
   logoUrl,
-  isActive: z.boolean(),
+  isActive: z.boolean().optional(),
   emailNotifyEnabled: z.boolean().optional(),
   emailAlertEnabled: z.boolean().optional(),
   emailReportEnabled: z.boolean().optional(),
@@ -131,14 +131,11 @@ export async function update(ctx: Ctx, id: string, raw: HotelUpdateInput): Promi
       const fieldErrors: FieldErrors = { code: ["Otel kodu değiştirilemez"] };
       throw new DomainError("VALIDATION", "Otel kodu değiştirilemez", { fieldErrors });
     }
-    if (before.isSystemDefault && !input.isActive) {
-      throw new DomainError("FORBIDDEN", "Sistem oteli pasife alınamaz");
-    }
     const after = await tx.hotel.update({
       where: { id },
       data: {
         name: input.name,
-        isActive: input.isActive,
+        isActive: true,
         ...(input.address !== undefined ? { address: input.address } : {}),
         ...(input.phone !== undefined ? { phone: input.phone } : {}),
         ...(input.logoUrl !== undefined ? { logoUrl: input.logoUrl } : {}),

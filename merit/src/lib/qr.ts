@@ -41,7 +41,17 @@ export function isSignedToken(token: string): boolean {
 }
 
 export async function qrUrl(token: string): Promise<string> {
-  const base = (await getSetting("qr.baseUrl")).replace(/\/+$/, "");
+  const settingBase = await getSetting("qr.baseUrl");
+  const isDefaultLocal = !settingBase || settingBase === "http://localhost:3000";
+  const envBase = env.APP_BASE_URL;
+
+  // Veritabanı ayarı varsayılan localhost ise ancak sunucu .env dosyasında
+  // prod domain (APP_BASE_URL) girilmişse prod domain'i önceliklendir.
+  const chosen = isDefaultLocal && envBase && envBase !== "http://localhost:3000"
+    ? envBase
+    : (settingBase || envBase || "http://localhost:3000");
+
+  const base = chosen.replace(/\/+$/, "");
   return `${base}/q/${token}`;
 }
 

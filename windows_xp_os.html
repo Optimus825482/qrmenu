@@ -1,0 +1,2171 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merit International — Windows XP Cloud OS & Android Terminal</title>
+    <style>
+        /* ================= BASE & RESET ================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Tahoma', 'Segoe UI', Arial, sans-serif;
+            font-size: 11px;
+            background: #000;
+        }
+
+        /* Responsive Viewport Switcher */
+        #viewport-wrapper {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Tablet Mode */
+        #viewport-wrapper.mode-tablet {
+            width: 1024px;
+            height: 768px;
+            margin: 20px auto;
+            border: 14px solid #1e293b;
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+        }
+
+        /* Mobile Android Mode Container */
+        #viewport-wrapper.mode-mobile {
+            width: 390px;
+            height: 844px;
+            margin: 20px auto;
+            border: 14px solid #0f172a;
+            border-radius: 36px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ================= TOP CONTROLLER BAR (SWITCHER) ================= */
+        #mode-switcher-bar {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 30px;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            color: #fff;
+        }
+
+        .mode-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mode-btn:hover {
+            background: #475569;
+        }
+
+        .mode-btn.active {
+            background: #2563eb;
+            border-color: #60a5fa;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(37,99,235,0.5);
+        }
+
+        /* ================= WINDOWS XP DESKTOP THEME ================= */
+        #desktop-environment {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #295ca6 url('https://upload.wikimedia.org/wikipedia/en/2/27/Bliss_%28Windows_XP%29.png') no-repeat center center;
+            background-size: cover;
+            overflow: hidden;
+        }
+
+        /* Desktop Wallpaper Background Fallbacks / Styles */
+        #desktop-environment.bg-bliss {
+            background-image: linear-gradient(to bottom, #1f6bcf 0%, #3e88e8 40%, #7db959 55%, #468c28 100%);
+        }
+        #desktop-environment.bg-classic {
+            background: #004e98 !important;
+        }
+        #desktop-environment.bg-silver {
+            background: #708090 !important;
+        }
+        #desktop-environment.bg-royal {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #947833 100%) !important;
+        }
+
+        /* Desktop Icons Canvas */
+        #desktop-icons-area {
+            position: absolute;
+            top: 48px;
+            left: 0;
+            bottom: 34px;
+            width: 100%;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 8px;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+
+        .desktop-icon {
+            width: 82px;
+            padding: 6px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000;
+            transition: background 0.15s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(49, 106, 197, 0.4);
+            border-color: rgba(130, 180, 255, 0.6);
+        }
+
+        .desktop-icon.selected {
+            background: rgba(49, 106, 197, 0.7);
+            border-color: #316ac5;
+        }
+
+        .desktop-icon .icon-img {
+            font-size: 32px;
+            margin-bottom: 4px;
+            filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.5));
+        }
+
+        .desktop-icon .icon-label {
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        /* ================= WINDOWS XP TASKBAR ================= */
+        #xp-taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            min-height: 32px;
+            background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #245edb 92%, #1941a5 100%);
+            border-top: 1px solid #438ef5;
+            display: flex;
+            align-items: center;
+            z-index: 9999999;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.5);
+            user-select: none;
+        }
+
+        /* Start Button */
+        #xp-start-btn {
+            height: 100%;
+            background: linear-gradient(to bottom, #388e3c 0%, #4caf50 15%, #2e7d32 85%, #1b5e20 100%);
+            border: none;
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            padding: 0 16px 0 10px;
+            color: #ffffff;
+            font-style: italic;
+            font-weight: 900;
+            font-size: 13.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: inset 0 1px 1px #a5d6a7, 2px 0 5px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            transition: filter 0.15s;
+        }
+
+        #xp-start-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        #xp-start-btn:active, #xp-start-btn.active {
+            background: linear-gradient(to bottom, #1b5e20 0%, #2e7d32 100%);
+        }
+
+        /* Taskbar Running Windows Area */
+        #taskbar-windows-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0 6px;
+            overflow-x: auto;
+        }
+
+        .taskbar-item {
+            height: 24px;
+            max-width: 160px;
+            min-width: 110px;
+            background: linear-gradient(to bottom, #3c81f3 0%, #225ad7 50%, #1841a6 100%);
+            border: 1px solid #133682;
+            border-radius: 3px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 8px;
+            font-size: 11px;
+            cursor: pointer;
+            text-shadow: 1px 1px 1px #000;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .taskbar-item.active {
+            background: linear-gradient(to bottom, #1841a6 0%, #225ad7 50%, #2e6fe8 100%);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6);
+            border-color: #0b2257;
+        }
+
+        /* System Tray */
+        #xp-system-tray {
+            height: 100%;
+            background: linear-gradient(to bottom, #0e73cf 0%, #0d9cf4 15%, #0861ae 85%, #075091 100%);
+            border-left: 1px solid #1586e3;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-size: 11px;
+            box-shadow: inset 1px 0 2px rgba(0,0,0,0.2);
+        }
+
+        .tray-icon {
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* ================= WINDOWS XP START MENU ================= */
+        #xp-start-menu {
+            position: absolute;
+            bottom: 32px;
+            left: 0;
+            width: 380px;
+            height: 440px;
+            max-height: calc(100% - 32px);
+            background: #ffffff;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            box-shadow: 4px -4px 25px rgba(0,0,0,0.65);
+            display: none;
+            flex-direction: column;
+            z-index: 10000000;
+            border: 2px solid #0055ea;
+            border-bottom: none;
+            overflow: hidden;
+        }
+
+        #xp-start-menu.open {
+            display: flex;
+        }
+
+        /* Start Menu Header */
+        .start-header {
+            background: linear-gradient(to bottom, #1d57db 0%, #3e88f6 40%, #1d57db 100%);
+            padding: 10px 14px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .start-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            border: 2px solid #ffffff;
+            background: #fffdf7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .start-user-name {
+            font-size: 13px;
+            font-weight: 800;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .start-user-role {
+            font-size: 10.5px;
+            opacity: 0.85;
+        }
+
+        /* Start Menu Body */
+        .start-body {
+            flex: 1;
+            display: flex;
+            background: #ffffff;
+        }
+
+        .start-left {
+            flex: 1.2;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #ffffff;
+            overflow-y: auto;
+        }
+
+        .start-right {
+            flex: 1;
+            background: #d3e5fa;
+            border-left: 1px solid #9bbde4;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .start-item {
+            padding: 6px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #0f172a;
+            font-size: 11px;
+            transition: background 0.15s;
+        }
+
+        .start-item:hover {
+            background: #2b72e2;
+            color: #ffffff;
+        }
+
+        .start-item .s-icon {
+            font-size: 18px;
+        }
+
+        .start-footer {
+            background: linear-gradient(to bottom, #3980f4 0%, #1f5adb 100%);
+            padding: 8px 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid #5794f7;
+        }
+
+        .start-footer-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .start-footer-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* ================= WINDOWS XP DRAGGABLE WINDOWS ================= */
+        .xp-window[data-maximized="true"] {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - 32px) !important;
+            border-radius: 0 !important;
+        }
+
+        .xp-window {
+            position: absolute;
+            background: #ece9d8;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border: 3px solid #0055ea;
+            box-shadow: 2px 4px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            min-width: 420px;
+            min-height: 280px;
+        }
+
+        .xp-window.active {
+            border-color: #0055ea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 200;
+        }
+
+        .xp-title-bar {
+            height: 28px;
+            background: linear-gradient(to bottom, #0058ee 0%, #3593ff 8%, #288eff 12%, #0058ee 25%, #003dd7 85%, #0030ac 100%);
+            padding: 0 6px 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 11.5px;
+            text-shadow: 1px 1px 2px #000;
+            cursor: move;
+        }
+
+        .xp-window.inactive .xp-title-bar {
+            background: linear-gradient(to bottom, #7697d7 0%, #8ba8e5 12%, #6382c7 85%, #506cb0 100%);
+        }
+
+        .xp-title-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .xp-window-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .xp-btn-ctrl {
+            width: 21px;
+            height: 21px;
+            border: 1px solid #ffffff;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .btn-min {
+            background: linear-gradient(to bottom, #3b74e6 0%, #1546bd 100%);
+        }
+        .btn-max {
+            background: linear-gradient(to bottom, #3b74e6 0%, #1546bd 100%);
+        }
+        .btn-close {
+            background: linear-gradient(to bottom, #e05238 0%, #c1290e 100%);
+        }
+
+        /* Window Menu Bar (File, Edit, View...) */
+        .xp-menu-bar {
+            background: #ece9d8;
+            border-bottom: 1px solid #d4d0c8;
+            padding: 2px 6px;
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: #000000;
+        }
+
+        .xp-menu-btn {
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .xp-menu-btn:hover {
+            background: #316ac5;
+            color: #ffffff;
+        }
+
+        /* Window Content Body */
+        .xp-window-body {
+            flex: 1;
+            background: #ffffff;
+            padding: 14px;
+            overflow-y: auto;
+            color: #0f172a;
+            position: relative;
+        }
+
+        /* Window Status Bar */
+        .xp-status-bar {
+            height: 22px;
+            background: #ece9d8;
+            border-top: 1px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            font-size: 10.5px;
+            color: #475569;
+        }
+
+        /* ================= ANDROID MOBILE ENVIRONMENT ================= */
+        #android-environment {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            background: #f8fafc;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Android Status Bar */
+        .android-status-bar {
+            height: 28px;
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .android-notch {
+            width: 100px;
+            height: 16px;
+            background: #000;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+            margin: 0 auto;
+        }
+
+        .android-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .android-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+        }
+
+        .android-bottom-nav {
+            height: 56px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .android-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            background: none;
+            border: none;
+            font-size: 10px;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        .android-nav-btn.active {
+            color: #2563eb;
+            font-weight: 800;
+        }
+
+        .android-nav-btn span {
+            font-size: 18px;
+        }
+
+        /* ================= CONTEXT MENU & CONFIRM DIALOGS ================= */
+        #xp-context-menu {
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #979797;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            border-radius: 2px;
+            padding: 2px 0;
+            width: 180px;
+            display: none;
+            z-index: 99999;
+        }
+
+        .ctx-item {
+            padding: 5px 24px 5px 26px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #000;
+        }
+
+        .ctx-item:hover {
+            background: #2b72e2;
+            color: #ffffff;
+        }
+
+        .ctx-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 2px 0;
+        }
+
+        /* Generic Confirmation Modal (Windows XP Style) */
+        #xp-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+        }
+
+        #xp-dialog-box {
+            width: 360px;
+            background: #ece9d8;
+            border: 3px solid #0055ea;
+            border-radius: 6px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .dialog-title {
+            background: linear-gradient(to bottom, #0058ee 0%, #003dd7 100%);
+            color: #fff;
+            padding: 6px 10px;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .dialog-body {
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #ece9d8;
+        }
+
+        .dialog-icon {
+            font-size: 32px;
+        }
+
+        .dialog-message {
+            font-size: 11.5px;
+            line-height: 1.4;
+            color: #000;
+        }
+
+        .dialog-buttons {
+            padding: 10px 14px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid #d4d0c8;
+            background: #ece9d8;
+        }
+
+        .xp-button {
+            background: linear-gradient(to bottom, #ffffff 0%, #ece9d8 100%);
+            border: 1px solid #7f9db9;
+            border-radius: 3px;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .xp-button:hover {
+            border-color: #0055ea;
+            box-shadow: 0 0 3px #0055ea;
+        }
+
+        .xp-button:active {
+            background: #dcd7c5;
+        }
+
+        .xp-button.primary {
+            border: 1.5px solid #0055ea;
+        }
+
+        /* Utility Pill & Tables */
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+        .pill-gold { background: #fef3c7; color: #b45309; }
+        .pill-success { background: #dcfce7; color: #15803d; }
+        .pill-danger { background: #fee2e2; color: #b91c1c; }
+        .pill-blue { background: #dbeafe; color: #1e40af; }
+
+        .ui-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        .ui-table th {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 700;
+        }
+
+        .ui-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+        }
+
+        .ui-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Pulse Dot */
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .pulse-dot.online {
+            background: #15803d;
+            box-shadow: 0 0 0 rgba(21, 128, 61, 0.4);
+            animation: pulse-green 1.6s infinite;
+        }
+        .pulse-dot.warning {
+            background: #d97706;
+            animation: pulse-yellow 1.6s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0); }
+        }
+
+        @keyframes pulse-yellow {
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ÜST MOD SEÇİCİ KONTROL ÇUBUĞU -->
+    <div id="mode-switcher-bar">
+        <span style="font-size:14px; font-weight:800; color:#fbbf24;">👑 MERIT OS</span>
+        <span style="color:#64748b;">|</span>
+        <button class="mode-btn active" id="btn-mode-desktop" onclick="switchDeviceMode('desktop')">
+            💻 Windows XP Desktop
+        </button>
+        <button class="mode-btn" id="btn-mode-tablet" onclick="switchDeviceMode('tablet')">
+            📱 Tablet Modu (1024x768)
+        </button>
+        <button class="mode-btn" id="btn-mode-mobile" onclick="switchDeviceMode('mobile')">
+            📱 Android Mobil Terminal
+        </button>
+    </div>
+
+    <!-- ANA GÖRÜNÜM KAPLAYICI -->
+    <div id="viewport-wrapper">
+        
+        <!-- ==================== 1. WINDOWS XP MASAÜSTÜ SİSTEMİ ==================== -->
+        <div id="desktop-environment" class="bg-bliss" oncontextmenu="openContextMenu(event); return false;" onclick="handleDesktopClick(event)">
+            
+            <!-- Masaüstü Simgeleri (Çift Tıklama veya Sürükle Bırak) -->
+            <div id="desktop-icons-area" ondrop="handleIconDrop(event)" ondragover="allowDrop(event)">
+                
+                <!-- Simge 1: Master Otel Komuta -->
+                <div class="desktop-icon" id="dicon-admin" draggable="true" ondragstart="dragIcon(event, 'win-admin')" ondblclick="openWindow('win-admin')">
+                    <div class="icon-img">🏢</div>
+                    <div class="icon-label">1. Sistem Komuta</div>
+                </div>
+
+                <!-- Simge 2: Tanımlamalar Konsolu -->
+                <div class="desktop-icon" id="dicon-defs" draggable="true" ondragstart="dragIcon(event, 'win-definitions')" ondblclick="openWindow('win-definitions')">
+                    <div class="icon-img">⚙️</div>
+                    <div class="icon-label">2. Tanımlamalar</div>
+                </div>
+
+                <!-- Simge 3: Minibar Takip & Zimmet -->
+                <div class="desktop-icon" id="dicon-minibar" draggable="true" ondragstart="dragIcon(event, 'win-minibar')" ondblclick="openWindow('win-minibar')">
+                    <div class="icon-img">🧊</div>
+                    <div class="icon-label">3. Minibar Takip</div>
+                </div>
+
+                <!-- Simge 4: Canlı Radar Monitörü -->
+                <div class="desktop-icon" id="dicon-monitor" draggable="true" ondragstart="dragIcon(event, 'win-monitor')" ondblclick="openWindow('win-monitor')">
+                    <div class="icon-img">🗺️</div>
+                    <div class="icon-label">4. Radar Takip</div>
+                </div>
+
+                <!-- Simge 5: Veri Mühendisliği & DSS -->
+                <div class="desktop-icon" id="dicon-analytics" draggable="true" ondragstart="dragIcon(event, 'win-analytics')" ondblclick="openWindow('win-analytics')">
+                    <div class="icon-img">📊</div>
+                    <div class="icon-label">5. DSS Analitik</div>
+                </div>
+
+                <!-- Simge 6: Canlı Kullanıcı Takip -->
+                <div class="desktop-icon" id="dicon-usertracking" draggable="true" ondragstart="dragIcon(event, 'win-usertracking')" ondblclick="openWindow('win-usertracking')">
+                    <div class="icon-img">👥</div>
+                    <div class="icon-label">6. Kullanıcı Takip</div>
+                </div>
+
+                <!-- Simge 7: Outlet Modül & Menü Yönetimi -->
+                <div class="desktop-icon" id="dicon-outletmenu" draggable="true" ondragstart="dragIcon(event, 'win-outletmenu')" ondblclick="openWindow('win-outletmenu')">
+                    <div class="icon-img">📜</div>
+                    <div class="icon-label">7. Outlet Menü</div>
+                </div>
+
+                <!-- Simge 8: Mutfak KDS & Termal Fiş -->
+                <div class="desktop-icon" id="dicon-kds" draggable="true" ondragstart="dragIcon(event, 'win-kds')" ondblclick="openWindow('win-kds')">
+                    <div class="icon-img">🍳</div>
+                    <div class="icon-label">8. Mutfak KDS</div>
+                </div>
+
+                <!-- Simge 9: Sistem Ayarları & Mobil Yetkilendirme -->
+                <div class="desktop-icon" id="dicon-settings" draggable="true" ondragstart="dragIcon(event, 'win-settings')" ondblclick="openWindow('win-settings')">
+                    <div class="icon-img">🎛️</div>
+                    <div class="icon-label">Sistem Ayarları</div>
+                </div>
+            </div>
+
+            <!-- ==================== PENCERELER (AÇILIR KAPANIR / SÜRÜKLENİR) ==================== -->
+
+            <!-- PENCERE 1: SİSTEM YÖNETİCİSİ KOMUTA (GENEL BAKIŞ & 3 OTEL) -->
+            <div class="xp-window active" id="win-admin" style="top:50px; left:100px; width:820px; height:540px;" onclick="focusWindow('win-admin')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-admin')">
+                    <div class="xp-title-left">
+                        <span>🏢</span>
+                        <span>Merit International — Merkezi Otel &amp; Operasyon Komuta Merkezi</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-admin')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-admin')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-admin')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-menu-bar">
+                    <span class="xp-menu-btn" onclick="showConfirmDialog('Konsolide veritabanı yedeği alınıyor. Devam edilsin mi?', () => alert('✓ Veritabanı snapshot alındı.'))">Dosya</span>
+                    <span class="xp-menu-btn" onclick="alert('3 Otel ve 18 Outlet verileri eşitlendi.')">Görünüm</span>
+                    <span class="xp-menu-btn" onclick="openWindow('win-settings')">Ayarlar</span>
+                    <span class="xp-menu-btn" onclick="alert('Merit OS v1.0 - Windows XP Cloud Edition')">Yardım</span>
+                </div>
+                <div class="xp-window-body">
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h3 style="font-size:14px; font-weight:800; color:#0f172a;">3 Varsayılan Otel ve 18 Outlet Durumu</h3>
+                            <p style="font-size:11px; color:#475569;">Merit Royal, Merit Royal Diamond ve Merit Royal Premium tek merkezden yönetilmektedir.</p>
+                        </div>
+                        <button class="xp-button primary" onclick="showConfirmDialog('Yeni Tesis Ekleme Sihirbazı başlatılacak?', () => openWindow('win-definitions'))">+ Yeni Otel Ekle</button>
+                    </div>
+
+                    <!-- 3 Otel Kartı -->
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:14px;">
+                        <div style="border:2px solid #947833; border-radius:6px; padding:10px; background:#fffdf7;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong style="font-size:13px; color:#0f172a;">👑 Merit Royal Diamond</strong>
+                                <span class="pulse-dot online"></span>
+                            </div>
+                            <div style="font-size:11px; color:#475569; margin:4px 0;">273 Oda • 8 Outlet</div>
+                            <div style="background:#fff; border:1px solid #cbd5e1; border-radius:4px; padding:6px; font-size:10.5px; margin-top:6px;">
+                                Doluluk: <strong>%94.2</strong> | Aktif Sipariş: <strong>14</strong>
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <button class="xp-button" style="flex:1;" onclick="openWindow('win-definitions')">Kat &amp; Oda</button>
+                                <button class="xp-button" onclick="openWindow('win-outletmenu')">Outletler</button>
+                            </div>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; background:#f8fafc;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong style="font-size:13px; color:#0f172a;">💎 Merit Royal Hotel</strong>
+                                <span class="pulse-dot online"></span>
+                            </div>
+                            <div style="font-size:11px; color:#475569; margin:4px 0;">125 Oda • 5 Outlet</div>
+                            <div style="background:#fff; border:1px solid #cbd5e1; border-radius:4px; padding:6px; font-size:10.5px; margin-top:6px;">
+                                Doluluk: <strong>%88.6</strong> | Aktif Sipariş: <strong>6</strong>
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <button class="xp-button" style="flex:1;" onclick="openWindow('win-definitions')">Kat &amp; Oda</button>
+                                <button class="xp-button" onclick="openWindow('win-outletmenu')">Outletler</button>
+                            </div>
+                        </div>
+
+                        <div style="border:1px solid #cbd5e1; border-radius:6px; padding:10px; background:#f8fafc;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong style="font-size:13px; color:#0f172a;">🌺 Merit Royal Premium</strong>
+                                <span class="pulse-dot online"></span>
+                            </div>
+                            <div style="font-size:11px; color:#475569; margin:4px 0;">131 Oda • 5 Outlet</div>
+                            <div style="background:#fff; border:1px solid #cbd5e1; border-radius:4px; padding:6px; font-size:10.5px; margin-top:6px;">
+                                Doluluk: <strong>%91.0</strong> | Aktif Sipariş: <strong>8</strong>
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <button class="xp-button" style="flex:1;" onclick="openWindow('win-definitions')">Kat &amp; Oda</button>
+                                <button class="xp-button" onclick="openWindow('win-outletmenu')">Outletler</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hızlı İşlem Araçları -->
+                    <div style="display:flex; gap:8px;">
+                        <button class="xp-button" onclick="openWindow('win-usertracking')">👥 Canlı Nöbetçi Personeller (32 Online)</button>
+                        <button class="xp-button" onclick="openWindow('win-monitor')">🗺️ Kat Sorumlusu Radarı</button>
+                        <button class="xp-button" onclick="openWindow('win-kds')">🍳 KDS ve Fiş Yazıcıları</button>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>3 Otel Çevrimiçi • 529 Oda Senkronize</span>
+                    <span>Merit Database TCP:5432 OK</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 2: TANIMLAMALAR KONSOLU (HİYERARŞİK AKORDEON) -->
+            <div class="xp-window" id="win-definitions" style="top:70px; left:140px; width:860px; height:560px; display:none;" onclick="focusWindow('win-definitions')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-definitions')">
+                    <div class="xp-title-left">
+                        <span>⚙️</span>
+                        <span>Tanımlamalar Konsolu — Otel ➔ Kat ➔ Oda &amp; Ürün ➔ Konsept Reçeteleri</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-definitions')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-definitions')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-definitions')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-menu-bar">
+                    <span class="xp-menu-btn" onclick="showConfirmDialog('Yeni Kat veya Oda kaydı sihirbazı açılsın mı?', () => alert('Kayıt sihirbazı hazır.'))">Yeni Ekle</span>
+                    <span class="xp-menu-btn" onclick="alert('Tüm QR tokenları doğrulandı.')">QR Paketleri</span>
+                    <span class="xp-menu-btn" onclick="closeWindow('win-definitions')">Kapat</span>
+                </div>
+                <div class="xp-window-body">
+                    <!-- Hiyerarşik Akordeon Yapısı -->
+                    <div style="display:flex; gap:10px; margin-bottom:12px; background:#f1f5f9; padding:8px 12px; border-radius:6px; align-items:center;">
+                        <strong>Aktif Tesis:</strong>
+                        <select id="xp-def-hotel" style="padding:4px 8px; border:1px solid #7f9db9; font-weight:700;">
+                            <option>👑 Merit Royal Diamond (273 Oda)</option>
+                            <option>💎 Merit Royal Hotel (125 Oda)</option>
+                            <option>🌺 Merit Royal Premium (131 Oda)</option>
+                        </select>
+                        <span class="pill pill-gold">Hiyerarşik Kurulum Akışı</span>
+                    </div>
+
+                    <!-- 4 Akordeon Buton Şeridi -->
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:14px;">
+                        <button class="xp-button primary" id="xp-btn-tab-floors" onclick="switchXpDefSection('sec-floors', this)">🏢 1. Kat &amp; Oda</button>
+                        <button class="xp-button" id="xp-btn-tab-roomtypes" onclick="switchXpDefSection('sec-roomtypes', this)">🛏️ 2. Oda Tipi</button>
+                        <button class="xp-button" id="xp-btn-tab-products" onclick="switchXpDefSection('sec-products', this)">🍾 3. Ürün &amp; Konsept</button>
+                        <button class="xp-button" id="xp-btn-tab-users" onclick="switchXpDefSection('sec-users', this)">👥 4. Rol &amp; Yetki</button>
+                    </div>
+
+                    <!-- KISIM 1: KAT VE ODA TANIMLARI -->
+                    <div id="sec-floors" class="xp-def-sec">
+                        <div style="display:grid; grid-template-columns:1fr 2fr; gap:14px;">
+                            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                                <h4 style="font-size:12px; font-weight:800; margin-bottom:8px;">+ Yeni Kat / Oda Ekle</h4>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div>
+                                        <label style="font-weight:700; display:block; margin-bottom:2px;">Kat Numarası / Adı:</label>
+                                        <input type="text" id="xp-input-floor" placeholder="Örn: 4. Kat" style="width:100%; padding:4px 8px; border:1px solid #7f9db9;" />
+                                    </div>
+                                    <div>
+                                        <label style="font-weight:700; display:block; margin-bottom:2px;">Oda Numarası:</label>
+                                        <input type="text" id="xp-input-room" placeholder="Örn: 402" style="width:100%; padding:4px 8px; border:1px solid #7f9db9;" />
+                                    </div>
+                                    <div>
+                                        <label style="font-weight:700; display:block; margin-bottom:2px;">Oda Tipi Bağla:</label>
+                                        <select style="width:100%; padding:4px 8px; border:1px solid #7f9db9;">
+                                            <option>King Suite (VIP Gold Reçeteli)</option>
+                                            <option>Deluxe Marina (Standart Reçeteli)</option>
+                                            <option>Royal Penthouse (VVIP Reçeteli)</option>
+                                        </select>
+                                    </div>
+                                    <button class="xp-button primary" onclick="showConfirmDialog('Oda ve Şifreli Çift Yönlü QR üretilecek. Onaylıyor musunuz?', () => alert('✓ Oda ve QR Başarıyla Üretildi! Token: TOKEN-RD-402-A9F'))">+ Odayı Kaydet ve QR Üret</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 style="font-size:12px; font-weight:800; margin-bottom:8px;">Tanımlı Odalar ve QR Kodları</h4>
+                                <table class="ui-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Oda No</th>
+                                            <th>Kat</th>
+                                            <th>Oda Tipi</th>
+                                            <th>QR Token</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>#402</strong></td>
+                                            <td>4. Kat</td>
+                                            <td><span class="pill pill-gold">King Suite</span></td>
+                                            <td><code>TOKEN-RD-402</code></td>
+                                            <td><button class="xp-button" onclick="showConfirmDialog('#402 Nolu odayı silmek istediğinize emin misiniz?', () => alert('Oda kaydı silindi.'))">Sil</button></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#403</strong></td>
+                                            <td>4. Kat</td>
+                                            <td><span class="pill pill-blue">Deluxe Marina</span></td>
+                                            <td><code>TOKEN-RD-403</code></td>
+                                            <td><button class="xp-button" onclick="showConfirmDialog('#403 Nolu odayı silmek istediğinize emin misiniz?', () => alert('Oda kaydı silindi.'))">Sil</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KISIM 2: ODA TİPİ -->
+                    <div id="sec-roomtypes" class="xp-def-sec" style="display:none;">
+                        <h4 style="font-size:12px; font-weight:800; margin-bottom:8px;">Oda Tipi ve Minibar Standart Kapasiteleri</h4>
+                        <table class="ui-table">
+                            <thead>
+                                <tr>
+                                    <th>Oda Tipi</th>
+                                    <th>Segment</th>
+                                    <th>Standart Minibar Konsepti</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>King Suite</strong></td>
+                                    <td>VIP Gold</td>
+                                    <td>VIP King Suite Gold (Cola, Efes, Toblerone, San Pellegrino)</td>
+                                    <td><button class="xp-button" onclick="showConfirmDialog('Konsept reçetesini düzenlemek istiyor musunuz?', () => alert('Reçete düzenleme açıldı.'))">Düzenle</button></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Royal Penthouse</strong></td>
+                                    <td>VVIP Platinum</td>
+                                    <td>Penthouse Platinum (Premium Şampanya, Çerez, Soft Drinks)</td>
+                                    <td><button class="xp-button">Düzenle</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- KISIM 3: ÜRÜN VE KONSEPT (%100 FİYATSIZ İKRAM) -->
+                    <div id="sec-products" class="xp-def-sec" style="display:none;">
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:6px; margin-bottom:12px;">
+                            <strong style="color:#15803d;">🎁 %100 ÜCRETSİZ MİSAFİR İKRAM MİMARİSİ</strong>
+                            <p style="font-size:11px; color:#166534; margin-top:2px;">
+                                Minibar Takip Sisteminde <strong>kesinlikle fiyat/ücret takibi yapılmaz</strong>. Sistem sadece ana depo mevcudu, kat arabası zimmeti ve oda dolum adetlerini yönetir.
+                            </p>
+                        </div>
+                        <table class="ui-table">
+                            <thead>
+                                <tr>
+                                    <th>Stok Kodu</th>
+                                    <th>Ürün Adı</th>
+                                    <th>Depo Stoğu</th>
+                                    <th>Statü</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>MN-COLAZ-01</code></td>
+                                    <td><strong>Coca-Cola Zero 330ml</strong></td>
+                                    <td><span class="pill pill-success">1,420 Adet</span></td>
+                                    <td><span class="pill pill-gold">İkram (Fiyatsız)</span></td>
+                                    <td><button class="xp-button" onclick="showConfirmDialog('Stok sayımını güncellemek istiyor musunuz?', () => alert('Stok güncellendi.'))">Sayım</button></td>
+                                </tr>
+                                <tr>
+                                    <td><code>MN-EFESP-02</code></td>
+                                    <td><strong>Efes Pilsen 33cl</strong></td>
+                                    <td><span class="pill pill-success">980 Adet</span></td>
+                                    <td><span class="pill pill-gold">İkram (Fiyatsız)</span></td>
+                                    <td><button class="xp-button">Sayım</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- KISIM 4: ROL VE YETKİ MATRİSİ -->
+                    <div id="sec-users" class="xp-def-sec" style="display:none;">
+                        <table class="ui-table">
+                            <thead>
+                                <tr>
+                                    <th>Kullanıcı Adı</th>
+                                    <th>Görevi / Rolü</th>
+                                    <th>Yetkili Modüller</th>
+                                    <th>İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Mehmet Demir</strong></td>
+                                    <td>Servis Garsonu</td>
+                                    <td><span class="pill pill-blue">QR Sipariş</span> <span class="pill pill-gold">Beach Club + Ana Restoran</span></td>
+                                    <td><button class="xp-button" onclick="showConfirmDialog('Yetkileri değiştirmek istiyor musunuz?', () => alert('Yetki paneli açıldı.'))">Yetkiler</button></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Ayşe Kaya</strong></td>
+                                    <td>Kat Sorumlusu (HK)</td>
+                                    <td><span class="pill pill-success">Minibar Takip (4. Kat Arabası)</span></td>
+                                    <td><button class="xp-button">Yetkiler</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Hiyerarşik Tanımlama Modülü Aktif</span>
+                    <span>%100 Fiyatsız Minibar İkram Şeması</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 3: OUTLET MODÜL & ÖZEL MENÜ YÖNETİMİ -->
+            <div class="xp-window" id="win-outletmenu" style="top:90px; left:180px; width:880px; height:580px; display:none;" onclick="focusWindow('win-outletmenu')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-outletmenu')">
+                    <div class="xp-title-left">
+                        <span>📜</span>
+                        <span>Outlet Modül &amp; Menü Mimarisi (Opsiyonel Fiyat &amp; Adisyon)</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-outletmenu')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-outletmenu')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-outletmenu')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-menu-bar">
+                    <span class="xp-menu-btn" onclick="showConfirmDialog('Yeni menü kategorisi eklensin mi?', () => alert('Kategori eklendi.'))">+ Kategori Ekle</span>
+                    <span class="xp-menu-btn" onclick="showConfirmDialog('Yeni ürün kaydedilsin mi?', () => alert('Ürün kaydedildi.'))">+ Ürün Ekle</span>
+                    <span class="xp-menu-btn" onclick="alert('80mm termal adisyon test fişi gönderildi.')">Test Adisyon</span>
+                </div>
+                <div class="xp-window-body">
+                    <!-- Üst Ayar Çubuğu -->
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px 14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <strong>Yönetilen Outlet:</strong>
+                            <select id="xp-outlet-select" style="padding:4px 8px; border:1px solid #7f9db9; font-weight:700;">
+                                <option>👑 Royal Beach Club &amp; Cabana Lounge</option>
+                                <option>🍽️ Zephyros Pool &amp; Sun Lounge</option>
+                                <option>💎 Diamond Ana Restoran</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <strong>Fiyat Politikası:</strong>
+                            <select id="xp-price-policy" style="padding:4px 8px; border:1px solid #7f9db9; font-weight:700;" onchange="showConfirmDialog('Outlet fiyat görünürlük politikası değiştirilecek. Onaylıyor musunuz?', () => alert('Fiyat politikası uygulandı.'))">
+                                <option value="VISIBLE">🟢 Fiyatlar Açık ($/€/₺)</option>
+                                <option value="HIDDEN">🔴 Fiyatlar Gizli (All-Inclusive)</option>
+                                <option value="HYBRID">🟡 Hibrit (Sadece Ekstralar)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Menü Ağacı ve Ürünler -->
+                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:14px;">
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px; border-radius:6px;">
+                            <h4 style="font-size:12px; font-weight:800; margin-bottom:8px;">Kategoriler &amp; Gruplar</h4>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <div style="background:#2563eb; color:#fff; padding:6px 8px; border-radius:4px; font-weight:700; cursor:pointer;">🍸 İmza Kokteyller &amp; Spritz</div>
+                                <div style="background:#fff; border:1px solid #cbd5e1; padding:6px 8px; border-radius:4px; cursor:pointer;">🍾 Şampanyalar &amp; Prosecco</div>
+                                <div style="background:#fff; border:1px solid #cbd5e1; padding:6px 8px; border-radius:4px; cursor:pointer;">🦞 Soğuk Deniz Mahsulleri</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="font-size:12px; font-weight:800; margin-bottom:8px;">Grup Ürünleri (Görsel, Alerjen &amp; Opsiyonel Fiyat)</h4>
+                            <table class="ui-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ürün Adı</th>
+                                        <th>Alerjen</th>
+                                        <th>Opsiyonel Fiyat</th>
+                                        <th>İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Royal Passion Spritz</strong><br><small style="color:#64748b;">Çarkıfelek, Prosecco, nane</small></td>
+                                        <td><span class="pill pill-gold">Sülfit</span></td>
+                                        <td><strong style="color:#15803d;">$22.00 USD</strong></td>
+                                        <td><button class="xp-button" onclick="showConfirmDialog('Ürünü silmek istiyor musunuz?', () => alert('Ürün silindi.'))">Sil</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Moët &amp; Chandon Brut (75cl)</strong><br><small style="color:#64748b;">Fransız Şampanyası</small></td>
+                                        <td><span class="pill pill-gold">Sülfit (%12)</span></td>
+                                        <td><strong style="color:#15803d;">$180.00 USD</strong></td>
+                                        <td><button class="xp-button" onclick="showConfirmDialog('Ürünü silmek istiyor musunuz?', () => alert('Ürün silindi.'))">Sil</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Adisyon Fiyat Toplamı: AÇIK</span>
+                    <span>ESC/POS TCP:9100 Portu Bağlı</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 4: CANLI RADAR MONİTÖRÜ -->
+            <div class="xp-window" id="win-monitor" style="top:110px; left:220px; width:720px; height:480px; display:none;" onclick="focusWindow('win-monitor')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-monitor')">
+                    <div class="xp-title-left">
+                        <span>🗺️</span>
+                        <span>Canlı Animasyonlu Kat Sorumlusu Radarı</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-monitor')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-monitor')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-monitor')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>Aktif Kat: Merit Royal Diamond — 4. Kat</strong>
+                            <p style="font-size:11px; color:#475569;">Kat sorumlusu kapıdaki QR kodu okuttuğunda radar yanıp söner.</p>
+                        </div>
+                        <span class="pill pill-success"><span class="pulse-dot online"></span> Canlı Telemetri</span>
+                    </div>
+
+                    <!-- Kat Planı Radarı -->
+                    <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:10px; padding:14px; background:#fffdf7; border:2px dashed #947833; border-radius:8px;">
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; text-align:center; border-radius:6px;">
+                            <strong>Oda 401</strong><br><span class="pill pill-success" style="font-size:9px;">Tamamlandı</span>
+                        </div>
+                        <div style="background:#eff6ff; border:2px solid #2563eb; padding:10px; text-align:center; border-radius:6px; box-shadow:0 0 10px rgba(37,99,235,0.4);">
+                            <span class="pulse-dot online"></span><br>
+                            <strong>Oda 402</strong><br><span class="pill pill-gold" style="font-size:9px;">Ayşe K. İçeride</span>
+                        </div>
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; text-align:center; border-radius:6px;">
+                            <strong>Oda 403</strong><br><span class="pill pill-danger" style="font-size:9px;">Eksik Ürün</span>
+                        </div>
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; text-align:center; border-radius:6px;">
+                            <strong>Oda 404</strong><br><span class="pill pill-gold" style="font-size:9px;">DND (Uyuyor)</span>
+                        </div>
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; text-align:center; border-radius:6px;">
+                            <strong>Oda 405</strong><br><span class="pill pill-blue" style="font-size:9px;">MYBAR Talebi</span>
+                        </div>
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; text-align:center; border-radius:6px;">
+                            <strong>Oda 406</strong><br><span style="color:#94a3b8; font-size:10px;">Bekliyor</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Kat Arabası #04 Çevrimiçi</span>
+                    <span>Son Tarama: 2 dk önce</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 5: CANLI KULLANICI TAKİP SİSTEMİ -->
+            <div class="xp-window" id="win-usertracking" style="top:130px; left:260px; width:840px; height:520px; display:none;" onclick="focusWindow('win-usertracking')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-usertracking')">
+                    <div class="xp-title-left">
+                        <span>👥</span>
+                        <span>Canlı Kullanıcı Takip Sistemi — Nöbet, Mola &amp; Auto-Logout</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-usertracking')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-usertracking')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-usertracking')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <!-- İstatistikler -->
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:12px;">
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; border-radius:6px;">
+                            <span style="color:#64748b;">TOPLAM PERSONEL</span>
+                            <div style="font-size:18px; font-weight:900;">48 Kişi</div>
+                        </div>
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:8px; border-radius:6px;">
+                            <span style="color:#15803d;">AKTİF ONLINE</span>
+                            <div style="font-size:18px; font-weight:900; color:#15803d;">32 Kişi</div>
+                        </div>
+                        <div style="background:#fffbeb; border:1px solid #fde68a; padding:8px; border-radius:6px;">
+                            <span style="color:#b45309;">MOLA / IDLE</span>
+                            <div style="font-size:18px; font-weight:900; color:#b45309;">6 Kişi</div>
+                        </div>
+                        <div style="background:#fef2f2; border:1px solid #fecaca; padding:8px; border-radius:6px;">
+                            <span style="color:#b91c1c;">AUTO-LOGOUT</span>
+                            <div style="font-size:18px; font-weight:900; color:#b91c1c;">10 Kişi</div>
+                        </div>
+                    </div>
+
+                    <!-- Canlı Personel Tablosu -->
+                    <table class="ui-table">
+                        <thead>
+                            <tr>
+                                <th>Personel</th>
+                                <th>Seçili Outlet</th>
+                                <th>Cihaz</th>
+                                <th>Kalan Süre</th>
+                                <th>Durum</th>
+                                <th>Yönetim</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Mehmet Demir</strong><br><small>Servis Garsonu</small></td>
+                                <td>Royal Beach Club</td>
+                                <td>⌚ Apple Watch S9</td>
+                                <td>3 Saat 42 Dk</td>
+                                <td><span class="pill pill-success"><span class="pulse-dot online"></span> ONLINE</span></td>
+                                <td>
+                                    <button class="xp-button" onclick="showConfirmDialog('Mehmet Demir için Mola verilsin mi? Çağrılar askıya alınır.', () => alert('Mehmet Demir Molaya alındı.'))">Mola</button>
+                                    <button class="xp-button" onclick="showConfirmDialog('Personeli zorunlu logout yapmak istediğinize emin misiniz?', () => alert('Zorunlu çıkış yapıldı.'))">Çıkış</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ali Vural</strong><br><small>Kat Kuryesi</small></td>
+                                <td>Diamond IRD</td>
+                                <td>📱 iPhone 14</td>
+                                <td>7 Dk Sonra Timeout</td>
+                                <td><span class="pill pill-gold"><span class="pulse-dot warning"></span> MOLADA</span></td>
+                                <td>
+                                    <button class="xp-button primary" onclick="showConfirmDialog('Molayı bitirip Online yapılsın mı?', () => alert('Ali Vural tekrar Online oldu.'))">Online Yap</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Maksimum Vardiya: 8 Saat • Hareketsizlik Limiti: 45 Dk</span>
+                    <span>Heartbeat Daemon Aktif</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 6: DSS ANALİTİK & TÜKETİM RAPORLAMA -->
+            <div class="xp-window" id="win-analytics" style="top:150px; left:300px; width:740px; height:460px; display:none;" onclick="focusWindow('win-analytics')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-analytics')">
+                    <div class="xp-title-left">
+                        <span>📊</span>
+                        <span>Veri Mühendisliği &amp; DSS Tüketim Raporlama Konsolu</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-analytics')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-analytics')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-analytics')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px;">
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; border-radius:6px;">
+                            <strong>Aylık Tüketim:</strong>
+                            <div style="font-size:18px; font-weight:900; color:#2563eb;">14,280 Adet</div>
+                        </div>
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; border-radius:6px;">
+                            <strong>MYBAR Talepleri:</strong>
+                            <div style="font-size:18px; font-weight:900; color:#b45309;">842 İstek</div>
+                        </div>
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; border-radius:6px;">
+                            <strong>Zayiat / Kırık:</strong>
+                            <div style="font-size:18px; font-weight:900; color:#15803d;">%0.18 (Düşük)</div>
+                        </div>
+                    </div>
+                    <table class="ui-table">
+                        <thead>
+                            <tr>
+                                <th>Otel Adı</th>
+                                <th>Oda</th>
+                                <th>Aylık İkame</th>
+                                <th>Zimmet Doğruluk Oranı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Merit Royal Diamond</td>
+                                <td>273</td>
+                                <td>7,840 Adet</td>
+                                <td><span class="pill pill-success">%99.8</span></td>
+                            </tr>
+                            <tr>
+                                <td>Merit Royal Hotel</td>
+                                <td>125</td>
+                                <td>3,420 Adet</td>
+                                <td><span class="pill pill-success">%99.6</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+                        <button class="xp-button" onclick="showConfirmDialog('Excel formatında indirilsin mi?', () => alert('Rapor indirildi.'))">📥 Excel İndir</button>
+                        <button class="xp-button primary" onclick="showConfirmDialog('Yönetim sunumu PDF olarak basılsın mı?', () => alert('PDF oluşturuldu.'))">📊 PDF Bas</button>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Dönem: Ekim 2026 Kümülatif</span>
+                    <span>Otomatik Veri Mühendisliği Modeli</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 7: MUTFAK KDS & TERMAL FİŞ BASKISI -->
+            <div class="xp-window" id="win-kds" style="top:170px; left:340px; width:700px; height:480px; display:none;" onclick="focusWindow('win-kds')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-kds')">
+                    <div class="xp-title-left">
+                        <span>🍳</span>
+                        <span>Mutfak &amp; Bar KDS (Kitchen Display) &amp; Termal Ağ Yazıcısı</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-kds')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-kds')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-kds')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                        <div style="background:#fff; border:2px solid #22c55e; border-radius:6px; padding:10px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong>Masa #14</strong>
+                                <span style="color:#16a34a; font-weight:800;">03:12 Dk</span>
+                            </div>
+                            <div style="font-size:11px; color:#64748b; margin:4px 0;">Garson: Mehmet D. • Bar İstasyonu</div>
+                            <div style="font-size:12px; margin:8px 0; line-height:1.4;">
+                                1x Royal Passion Spritz (Nane Ekstra)<br>
+                                1x Moët &amp; Chandon Brut (Buz Kovası)
+                            </div>
+                            <button class="xp-button primary" style="width:100%;" onclick="showConfirmDialog('Sipariş hazırlandı olarak işaretlensin mi? Garson saatine bildirim gidecek.', () => alert('✓ Sipariş hazırlandı! Mehmet D. saatine iletildi.'))">✓ Hazır (Garsonu Çağır)</button>
+                        </div>
+                        <div style="background:#fffdf7; border:1px solid #cbd5e1; border-radius:6px; padding:10px; font-family:monospace; font-size:10.5px;">
+                            <div style="text-align:center; font-weight:700;">*** MERIT ROYAL DIAMOND ***</div>
+                            <div style="text-align:center;">ADİSYON: #AD-84021</div>
+                            <hr style="margin:4px 0;">
+                            <div>1x Royal Passion Spritz: $22.00</div>
+                            <div>1x Moët &amp; Chandon Brut: $180.00</div>
+                            <hr style="margin:4px 0;">
+                            <div style="display:flex; justify-content:space-between; font-weight:700;">
+                                <span>TOPLAM:</span>
+                                <span>$202.00 USD</span>
+                            </div>
+                            <button class="xp-button" style="width:100%; margin-top:8px;" onclick="showConfirmDialog('192.168.10.150:9100 termal yazıcıya gönderilsin mi?', () => alert('✓ 80mm Kağıda basıldı ve kesildi.'))">🖨️ ESC/POS 9100 Bas</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Termal Ağ Yazıcı Durumu: 🟢 Çevrimiçi</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 8: SİSTEM AYARLARI & MOBİL YETKİLENDİRME (KRİTİK AYARLAR) -->
+            <div class="xp-window" id="win-settings" style="top:120px; left:200px; width:700px; height:480px; display:none;" onclick="focusWindow('win-settings')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-settings')">
+                    <div class="xp-title-left">
+                        <span>🎛️</span>
+                        <span>Sistem Ayarları — Mobil Görünüm Yetkileri &amp; Masaüstü Teması</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-settings')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-settings')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-settings')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <!-- Ayar 1: Mobil Görünümde Tanımlama Ekranları Yetkisi -->
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:6px; margin-bottom:12px;">
+                        <h4 style="font-size:12px; font-weight:800; color:#1e40af; margin-bottom:4px;">📱 Mobil Görünüm Modu &amp; Yetki Sınırlandırması</h4>
+                        <p style="font-size:11px; color:#1e3a8a; margin-bottom:8px;">
+                            Mobil cihazlarda yanlışlıkla mimari değişiklik yapılmaması için tanımlama ekranları varsayılan olarak kilitlidir. Yalnızca izleme (monitoring) ve raporlama çalışır.
+                        </p>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;">
+                            <input type="checkbox" id="chk-mobile-def-permission" onchange="toggleMobileDefPermission(this.checked)" />
+                            <span>Mobil Görünümde Tanımlama / Kurulum Sekmelerini de Aktif Et</span>
+                        </label>
+                    </div>
+
+                    <!-- Ayar 2: Masaüstü Duvar Kağıdı Seçimi -->
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:6px; margin-bottom:12px;">
+                        <h4 style="font-size:12px; font-weight:800; margin-bottom:6px;">🖼️ Masaüstü Duvar Kağıdı Teması</h4>
+                        <div style="display:flex; gap:8px;">
+                            <button class="xp-button" onclick="setWallpaper('bg-bliss')">Windows XP Bliss</button>
+                            <button class="xp-button" onclick="setWallpaper('bg-classic')">Klasik Mavi</button>
+                            <button class="xp-button" onclick="setWallpaper('bg-silver')">Gümüş Metal</button>
+                            <button class="xp-button" onclick="setWallpaper('bg-royal')">Merit Royal Gold</button>
+                        </div>
+                    </div>
+
+                    <!-- Ayar 3: Oturum ve Timeout Kuralları -->
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:12px; border-radius:6px;">
+                        <h4 style="font-size:12px; font-weight:800; margin-bottom:6px;">⏱️ Vardiya &amp; Hareketsizlik Otomatik Logout Limitleri</h4>
+                        <div style="display:flex; gap:14px; font-size:11px;">
+                            <div>
+                                Maksimum Vardiya:
+                                <input type="number" value="480" style="width:60px; padding:2px 4px; border:1px solid #7f9db9;" /> Dk (8 Saat)
+                            </div>
+                            <div>
+                                Hareketsizlik Limiti:
+                                <input type="number" value="45" style="width:60px; padding:2px 4px; border:1px solid #7f9db9;" /> Dk
+                            </div>
+                            <button class="xp-button primary" onclick="showConfirmDialog('Vardiya kuralları güncellensin mi?', () => alert('✓ Ayarlar kaydedildi.'))">Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="xp-status-bar">
+                    <span>Sistem Konfigürasyonu: Aktif</span>
+                </div>
+            </div>
+
+            <!-- PENCERE 9: MİNİBAR TAKİP & ZİMMET -->
+            <div class="xp-window" id="win-minibar" style="top:80px; left:160px; width:780px; height:500px; display:none;" onclick="focusWindow('win-minibar')">
+                <div class="xp-title-bar" onmousedown="startDragWindow(event, 'win-minibar')">
+                    <div class="xp-title-left">
+                        <span>🧊</span>
+                        <span>Minibar Takip &amp; Kat Arabası Zimmet Konsolu</span>
+                    </div>
+                    <div class="xp-window-controls">
+                        <div class="xp-btn-ctrl btn-min" onclick="minimizeWindow('win-minibar')">_</div>
+                        <div class="xp-btn-ctrl btn-max" onclick="maximizeWindow('win-minibar')">□</div>
+                        <div class="xp-btn-ctrl btn-close" onclick="closeWindow('win-minibar')">✕</div>
+                    </div>
+                </div>
+                <div class="xp-window-body">
+                    <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:10px 14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <strong>Aktif Zimmet: #ZMT-2026-881 (Ayşe Kaya - 4. Kat Arabası)</strong>
+                            <p style="font-size:11px; color:#475569;">Kemal Usta (Depo Sorumlusu) tarafından teslim edildi.</p>
+                        </div>
+                        <button class="xp-button primary" onclick="showConfirmDialog('Günlük araba sayımı kapatılsın mı?', () => alert('Sayım kapatıldı.'))">✓ Sayımı Kapat</button>
+                    </div>
+                    <table class="ui-table">
+                        <thead>
+                            <tr>
+                                <th>Ürün Adı</th>
+                                <th>Zimmetli Stok</th>
+                                <th>Oda İkame Adedi</th>
+                                <th>Kalan Araba Stoğu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Coca-Cola Zero 330ml</td>
+                                <td>50 Adet</td>
+                                <td>4 Adet (#402 &amp; #403)</td>
+                                <td><strong style="color:#2563eb;">46 Adet</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Efes Pilsen 33cl</td>
+                                <td>40 Adet</td>
+                                <td>2 Adet (#402)</td>
+                                <td><strong style="color:#2563eb;">38 Adet</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="xp-status-bar">
+                    <span>%100 Fiyatsız İkram Takibi</span>
+                </div>
+            </div>
+
+            <!-- ==================== WINDOWS XP BAŞLAT MENÜSÜ ==================== -->
+            <div id="xp-start-menu" onclick="event.stopPropagation()">
+                <div class="start-header">
+                    <div class="start-avatar">👑</div>
+                    <div>
+                        <div class="start-user-name">Merit Super Admin</div>
+                        <div class="start-user-role">Merkezi Otel Komuta Yöneticisi</div>
+                    </div>
+                </div>
+                <div class="start-body">
+                    <div class="start-left">
+                        <div class="start-item" onclick="openWindow('win-admin'); toggleStartMenu();">
+                            <span class="s-icon">🏢</span>
+                            <div><strong>1. Sistem Komuta</strong><div style="font-size:9.5px; color:#64748b;">3 Otel &amp; 18 Outlet</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-definitions'); toggleStartMenu();">
+                            <span class="s-icon">⚙️</span>
+                            <div><strong>2. Tanımlamalar</strong><div style="font-size:9.5px; color:#64748b;">Kat, Oda, Ürün, Reçete</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-minibar'); toggleStartMenu();">
+                            <span class="s-icon">🧊</span>
+                            <div><strong>3. Minibar Takip</strong><div style="font-size:9.5px; color:#64748b;">Zimmet &amp; Dolum</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-monitor'); toggleStartMenu();">
+                            <span class="s-icon">🗺️</span>
+                            <div><strong>4. Canlı Radar</strong><div style="font-size:9.5px; color:#64748b;">Kat Sorumlusu Takip</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-analytics'); toggleStartMenu();">
+                            <span class="s-icon">📊</span>
+                            <div><strong>5. DSS Analitik</strong><div style="font-size:9.5px; color:#64748b;">Tüketim Raporları</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-usertracking'); toggleStartMenu();">
+                            <span class="s-icon">👥</span>
+                            <div><strong>6. Kullanıcı Takip</strong><div style="font-size:9.5px; color:#64748b;">Nöbet, Mola, Timeout</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-outletmenu'); toggleStartMenu();">
+                            <span class="s-icon">📜</span>
+                            <div><strong>7. Outlet Menü</strong><div style="font-size:9.5px; color:#64748b;">Opsiyonel Fiyat &amp; Adisyon</div></div>
+                        </div>
+                        <div class="start-item" onclick="openWindow('win-kds'); toggleStartMenu();">
+                            <span class="s-icon">🍳</span>
+                            <div><strong>8. Mutfak KDS</strong><div style="font-size:9.5px; color:#64748b;">Termal 9100 Yazıcı</div></div>
+                        </div>
+                    </div>
+                    <div class="start-right">
+                        <div class="start-item" onclick="openWindow('win-settings'); toggleStartMenu();">
+                            <span class="s-icon">🎛️</span>
+                            <span>Sistem Ayarları</span>
+                        </div>
+                        <div class="start-item" onclick="switchDeviceMode('mobile'); toggleStartMenu();">
+                            <span class="s-icon">📱</span>
+                            <span>Mobil Terminal</span>
+                        </div>
+                        <div class="start-item" onclick="alert('Merit International Ağ Durumu: 18 Termal Yazıcı Aktif'); toggleStartMenu();">
+                            <span class="s-icon">🌐</span>
+                            <span>Ağ Bağlantıları</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="start-footer">
+                    <button class="start-footer-btn" onclick="showConfirmDialog('Sistemden çıkış yapmak istediğinize emin misiniz?', () => alert('Oturum kapatıldı.'))">
+                        🔒 Oturumu Kapat
+                    </button>
+                    <button class="start-footer-btn" onclick="showConfirmDialog('Sistemi yeniden başlatmak istediğinize emin misiniz?', () => location.reload())">
+                        🔄 Yeniden Başlat
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== WINDOWS XP GÖREV ÇUBUĞU ==================== -->
+            <div id="xp-taskbar">
+                <button id="xp-start-btn" onclick="toggleStartMenu(event)">
+                    <span>🟢</span> BAŞLAT
+                </button>
+                <div id="taskbar-windows-area">
+                    <!-- Dinamik açılan pencereler buraya eklenir -->
+                </div>
+                <div id="xp-system-tray">
+                    <span class="tray-icon" title="PostgreSQL Bağlantısı">🗄️</span>
+                    <span class="tray-icon" title="Redis SSE Telemetri">⚡</span>
+                    <span class="tray-icon" title="Termal Yazıcılar">🖨️</span>
+                    <span id="xp-clock" style="font-weight:700;">14:30</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ==================== 2. ANDROID MOBİL TERMİNAL SİSTEMİ ==================== -->
+        <div id="android-environment">
+            <!-- Android Durum Çubuğu -->
+            <div class="android-status-bar">
+                <span id="android-clock">14:30</span>
+                <div class="android-notch"></div>
+                <div style="display:flex; gap:6px;">
+                    <span>📶 5G</span>
+                    <span>🔋 98%</span>
+                </div>
+            </div>
+
+            <!-- Android Başlık -->
+            <div class="android-header">
+                <div>
+                    <div style="font-size:10px; color:#cbd5e1; text-transform:uppercase;">Merit International</div>
+                    <strong style="font-size:15px;">Mobil Saha &amp; Yönetici Terminali</strong>
+                </div>
+                <span class="pill pill-gold" style="font-size:9.5px;">Android 14</span>
+            </div>
+
+            <!-- Android İçerik Alanı -->
+            <div class="android-content" id="android-content-area">
+                
+                <!-- BÖLÜM 1: CANLI MONITORING (VARSAYILAN AKTİF) -->
+                <div id="msec-monitor" class="android-screen-sec">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 style="font-size:14px; font-weight:800;">🗺️ Canlı Kat Sorumlusu Radarı</h3>
+                        <span class="pill pill-success" style="font-size:9.5px;"><span class="pulse-dot online"></span> Canlı</span>
+                    </div>
+
+                    <div style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:12px; margin-bottom:12px;">
+                        <strong>Merit Royal Diamond • 4. Kat</strong>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">Görevli: Ayşe Kaya (HK Şefi)</div>
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px;">
+                            <div style="background:#eff6ff; border:2px solid #2563eb; padding:8px; text-align:center; border-radius:6px;">
+                                <strong>#402</strong><br><span style="font-size:9.5px; color:#2563eb; font-weight:700;">İçeride</span>
+                            </div>
+                            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; text-align:center; border-radius:6px;">
+                                <strong>#403</strong><br><span style="font-size:9.5px; color:#64748b;">Bekliyor</span>
+                            </div>
+                            <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; text-align:center; border-radius:6px;">
+                                <strong>#404</strong><br><span style="font-size:9.5px; color:#b45309; font-weight:700;">DND</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:12px;">
+                        <strong>Kat Arabası #04 Canlı Stok</strong>
+                        <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-top:6px;">
+                            <span>Coca-Cola Zero:</span><strong>46 Adet</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-top:2px;">
+                            <span>Efes Pilsen:</span><strong>38 Adet</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 2: RAPORLAMA & DSS -->
+                <div id="msec-reports" class="android-screen-sec" style="display:none;">
+                    <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;">📊 Tüketim Raporları</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; border-radius:8px;">
+                            <span style="font-size:10px; color:#64748b;">GÜNLÜK İKAME</span>
+                            <div style="font-size:16px; font-weight:900; color:#2563eb;">412 Adet</div>
+                        </div>
+                        <div style="background:#fff; border:1px solid #cbd5e1; padding:10px; border-radius:8px;">
+                            <span style="font-size:10px; color:#64748b;">DND SAYISI</span>
+                            <div style="font-size:16px; font-weight:900; color:#b45309;">18 Oda</div>
+                        </div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:12px;">
+                        <strong>En Yüksek Tüketim Yapan Katlar:</strong>
+                        <div style="margin-top:6px; font-size:11.5px;">1. Diamond 4. Kat (%34)</div>
+                        <div style="margin-top:2px; font-size:11.5px;">2. Royal 2. Kat (%22)</div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 3: CANLI KULLANICI TAKİP -->
+                <div id="msec-users" class="android-screen-sec" style="display:none;">
+                    <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;">👥 Nöbetçi Personeller (32)</h3>
+                    <div style="background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>Mehmet Demir</strong>
+                            <span class="pill pill-success" style="font-size:9.5px;">ONLINE</span>
+                        </div>
+                        <div style="font-size:11px; color:#64748b;">Servis Garsonu • Beach Club</div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>Ali Vural</strong>
+                            <span class="pill pill-gold" style="font-size:9.5px;">MOLADA</span>
+                        </div>
+                        <div style="font-size:11px; color:#64748b;">Kat Kuryesi • Diamond IRD</div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 4: TANIMLAMA KISMI (VARSAYILAN KİLİTLİ / AYARLA AÇILIR) -->
+                <div id="msec-definitions" class="android-screen-sec" style="display:none;">
+                    <div id="mobile-def-locked-msg" style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:14px; text-align:center;">
+                        <span style="font-size:32px;">🔒</span>
+                        <h4 style="font-size:13px; font-weight:800; color:#b45309; margin-top:4px;">Mobil Tanımlama Modu Kilitli</h4>
+                        <p style="font-size:11px; color:#92400e; margin-top:4px;">
+                            Mobil saha cihazlarında veri güvenliğini korumak adına mimari tanımlamalar kilitlenmiştir. Bu özelliği açmak için Sistem Yöneticisi Masaüstü ekranındaki <strong>Ayarlar ➔ Mobil Görünüm Yetkileri</strong> kısmını aktif ediniz.
+                        </p>
+                    </div>
+                    <div id="mobile-def-unlocked-content" style="display:none;">
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:10px; margin-bottom:10px;">
+                            <strong style="color:#15803d;">✓ Mobil Tanımlama Yetkisi Açık</strong>
+                            <div style="font-size:11px; color:#166534;">Kat ve Oda tanımlama araçları aktiftir.</div>
+                        </div>
+                        <button class="xp-button primary" style="width:100%; padding:8px;" onclick="showConfirmDialog('Mobil cihazdan yeni kat/oda eklenecek. Onaylıyor musunuz?', () => alert('Oda eklendi.'))">+ Hızlı Oda Ekle</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Android Alt Gezinme Çubuğu -->
+            <div class="android-bottom-nav">
+                <button class="android-nav-btn active" onclick="switchAndroidTab('msec-monitor', this)">
+                    <span>🗺️</span> Radar
+                </button>
+                <button class="android-nav-btn" onclick="switchAndroidTab('msec-reports', this)">
+                    <span>📊</span> Raporlar
+                </button>
+                <button class="android-nav-btn" onclick="switchAndroidTab('msec-users', this)">
+                    <span>👥</span> Personel
+                </button>
+                <button class="android-nav-btn" onclick="switchAndroidTab('msec-definitions', this)">
+                    <span>⚙️</span> Tanımlar
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SAĞ TIK CONTEXT MENÜSÜ -->
+    <div id="xp-context-menu">
+        <div class="ctx-item" onclick="refreshDesktop()">
+            <span>🔄</span> Yenile
+        </div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item" onclick="setWallpaper('bg-bliss')">
+            <span>🖼️</span> Duvar Kağıdı: Bliss
+        </div>
+        <div class="ctx-item" onclick="setWallpaper('bg-classic')">
+            <span>🖼️</span> Duvar Kağıdı: Klasik
+        </div>
+        <div class="ctx-item" onclick="setWallpaper('bg-royal')">
+            <span>👑</span> Duvar Kağıdı: Royal Gold
+        </div>
+        <div class="ctx-divider"></div>
+        <div class="ctx-item" onclick="openWindow('win-settings')">
+            <span>🎛️</span> Özellikler / Ayarlar
+        </div>
+    </div>
+
+    <!-- WINDOWS XP ONAY DIALOGU (CONFIRM MODAL) -->
+    <div id="xp-dialog-overlay">
+        <div id="xp-dialog-box">
+            <div class="dialog-title">
+                <span id="dialog-header-title">Onay Gerekiyor — Merit OS</span>
+                <span style="cursor:pointer;" onclick="closeConfirmDialog(false)">✕</span>
+            </div>
+            <div class="dialog-body">
+                <div class="dialog-icon">⚠️</div>
+                <div class="dialog-message" id="dialog-message-text">Bu işlemi onaylamak istediğinize emin misiniz?</div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="xp-button primary" onclick="closeConfirmDialog(true)">Tamam / Evet</button>
+                <button class="xp-button" onclick="closeConfirmDialog(false)">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT MOTORU -->
+    <script>
+        // Saat Güncelleyici
+        function updateClocks() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('xp-clock').innerText = timeStr;
+            const aClock = document.getElementById('android-clock');
+            if (aClock) aClock.innerText = timeStr;
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // Cihaz Mod Değiştirici
+        function switchDeviceMode(mode) {
+            const wrapper = document.getElementById('viewport-wrapper');
+            const desktopEnv = document.getElementById('desktop-environment');
+            const androidEnv = document.getElementById('android-environment');
+            
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+
+            if (mode === 'desktop') {
+                document.getElementById('btn-mode-desktop').classList.add('active');
+                wrapper.className = '';
+                desktopEnv.style.display = 'flex';
+                androidEnv.style.display = 'none';
+            } else if (mode === 'tablet') {
+                document.getElementById('btn-mode-tablet').classList.add('active');
+                wrapper.className = 'mode-tablet';
+                desktopEnv.style.display = 'flex';
+                androidEnv.style.display = 'none';
+            } else if (mode === 'mobile') {
+                document.getElementById('btn-mode-mobile').classList.add('active');
+                wrapper.className = 'mode-mobile';
+                desktopEnv.style.display = 'none';
+                androidEnv.style.display = 'flex';
+            }
+        }
+
+        // Windows XP Pencere Yöneticisi
+        let activeZIndex = 300;
+        const openWindows = new Set(['win-admin']);
+
+        function openWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+            win.style.display = 'flex';
+            focusWindow(winId);
+            openWindows.add(winId);
+            updateTaskbar();
+        }
+
+        function closeWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+            win.style.display = 'none';
+            openWindows.delete(winId);
+            updateTaskbar();
+        }
+
+        function focusWindow(winId) {
+            document.querySelectorAll('.xp-window').forEach(w => {
+                w.classList.remove('active');
+                w.classList.add('inactive');
+            });
+            const win = document.getElementById(winId);
+            if (win) {
+                win.classList.add('active');
+                win.classList.remove('inactive');
+                activeZIndex += 2;
+                win.style.zIndex = activeZIndex;
+            }
+            updateTaskbar();
+        }
+
+        function minimizeWindow(winId) {
+            const win = document.getElementById(winId);
+            if (win) win.style.display = 'none';
+            updateTaskbar();
+        }
+
+        function maximizeWindow(winId) {
+            const win = document.getElementById(winId);
+            if (!win) return;
+            if (win.getAttribute('data-maximized') === 'true') {
+                win.style.top = win.getAttribute('data-prev-top') || '70px';
+                win.style.left = win.getAttribute('data-prev-left') || '100px';
+                win.style.width = win.getAttribute('data-prev-width') || '780px';
+                win.style.height = win.getAttribute('data-prev-height') || '500px';
+                win.removeAttribute('data-maximized');
+            } else {
+                win.setAttribute('data-prev-top', win.style.top);
+                win.setAttribute('data-prev-left', win.style.left);
+                win.setAttribute('data-prev-width', win.style.width);
+                win.setAttribute('data-prev-height', win.style.height);
+                win.style.top = '0px';
+                win.style.left = '0px';
+                win.style.width = '100%';
+                win.style.height = 'calc(100% - 30px)';
+                win.setAttribute('data-maximized', 'true');
+            }
+        }
+
+        function updateTaskbar() {
+            const area = document.getElementById('taskbar-windows-area');
+            area.innerHTML = '';
+            const windowTitles = {
+                'win-admin': '🏢 Sistem Komuta',
+                'win-definitions': '⚙️ Tanımlamalar',
+                'win-minibar': '🧊 Minibar Takip',
+                'win-monitor': '🗺️ Radar Monitör',
+                'win-analytics': '📊 DSS Analitik',
+                'win-usertracking': '👥 Kullanıcı Takip',
+                'win-outletmenu': '📜 Outlet Menü',
+                'win-kds': '🍳 Mutfak KDS',
+                'win-settings': '🎛️ Sistem Ayarları'
+            };
+
+            openWindows.forEach(winId => {
+                const win = document.getElementById(winId);
+                const isVisible = win && win.style.display !== 'none';
+                const isActive = win && win.classList.contains('active') && isVisible;
+
+                const item = document.createElement('div');
+                item.className = 'taskbar-item' + (isActive ? ' active' : '');
+                item.innerHTML = windowTitles[winId] || winId;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    if (isVisible && isActive) {
+                        minimizeWindow(winId);
+                    } else {
+                        win.style.display = 'flex';
+                        focusWindow(winId);
+                    }
+                };
+                area.appendChild(item);
+            });
+        }
+
+        // Pencere Sürükleme (Drag & Drop)
+        let isDragging = false;
+        let dragTarget = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        function startDragWindow(e, winId) {
+            focusWindow(winId);
+            dragTarget = document.getElementById(winId);
+            isDragging = true;
+            dragOffsetX = e.clientX - dragTarget.offsetLeft;
+            dragOffsetY = e.clientY - dragTarget.offsetTop;
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', stopDragWindow);
+        }
+
+        function onDragMove(e) {
+            if (!isDragging || !dragTarget) return;
+            dragTarget.style.left = Math.max(0, e.clientX - dragOffsetX) + 'px';
+            dragTarget.style.top = Math.max(0, e.clientY - dragOffsetY) + 'px';
+        }
+
+        function stopDragWindow() {
+            isDragging = false;
+            dragTarget = null;
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', stopDragWindow);
+        }
+
+        // Başlat Menüsü Aç / Kapa
+        function toggleStartMenu(e) {
+            if (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            }
+            const menu = document.getElementById('xp-start-menu');
+            const btn = document.getElementById('xp-start-btn');
+            if (!menu || !btn) return;
+
+            const isOpen = menu.classList.contains('open');
+            if (isOpen) {
+                menu.classList.remove('open');
+                btn.classList.remove('active');
+            } else {
+                document.getElementById('xp-context-menu').style.display = 'none';
+                menu.classList.add('open');
+                btn.classList.add('active');
+            }
+        }
+
+        function handleDesktopClick(e) {
+            const startMenu = document.getElementById('xp-start-menu');
+            const startBtn = document.getElementById('xp-start-btn');
+            if (startMenu && startMenu.contains(e.target)) return;
+            if (startBtn && startBtn.contains(e.target)) return;
+
+            closeAllPopups();
+        }
+
+        // Sağ Tık Context Menu
+        function openContextMenu(e) {
+            e.preventDefault();
+            const menu = document.getElementById('xp-context-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+        }
+
+        function closeAllPopups() {
+            document.getElementById('xp-context-menu').style.display = 'none';
+            const startMenu = document.getElementById('xp-start-menu');
+            if (startMenu) startMenu.classList.remove('open');
+            const startBtn = document.getElementById('xp-start-btn');
+            if (startBtn) startBtn.classList.remove('active');
+        }
+
+        function refreshDesktop() {
+            closeAllPopups();
+            alert('🔄 Masaüstü başarıyla tazelendi ve tüm telemetri önbelleği yenilendi.');
+        }
+
+        function setWallpaper(themeClass) {
+            const env = document.getElementById('desktop-environment');
+            env.className = themeClass;
+            closeAllPopups();
+        }
+
+        // Onay Dialogu (Confirm Dialog)
+        let pendingConfirmCallback = null;
+
+        function showConfirmDialog(message, callback) {
+            document.getElementById('dialog-message-text').innerText = message;
+            document.getElementById('xp-dialog-overlay').style.display = 'flex';
+            pendingConfirmCallback = callback;
+        }
+
+        function closeConfirmDialog(isConfirmed) {
+            document.getElementById('xp-dialog-overlay').style.display = 'none';
+            if (isConfirmed && pendingConfirmCallback) {
+                pendingConfirmCallback();
+            }
+            pendingConfirmCallback = null;
+        }
+
+        // Tanımlamalar Alt Bölümleri Arasında Geçiş
+        function switchXpDefSection(secId, btnElement) {
+            document.querySelectorAll('.xp-def-sec').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('#win-definitions .xp-button').forEach(b => b.classList.remove('primary'));
+            const target = document.getElementById(secId);
+            if (target) target.style.display = 'block';
+            if (btnElement) btnElement.classList.add('primary');
+        }
+
+        // Mobil Görünümde Tanımlama Yetkisini Aç / Kapat
+        function toggleMobileDefPermission(isChecked) {
+            const lockedMsg = document.getElementById('mobile-def-locked-msg');
+            const unlockedContent = document.getElementById('mobile-def-unlocked-content');
+            if (isChecked) {
+                lockedMsg.style.display = 'none';
+                unlockedContent.style.display = 'block';
+            } else {
+                lockedMsg.style.display = 'block';
+                unlockedContent.style.display = 'none';
+            }
+            showConfirmDialog(
+                isChecked 
+                    ? 'DİKKAT: Mobil görünümde mimari tanımlamalar AKTİF edildi. Mobil saha personeli kat/oda değiştirebilir.' 
+                    : 'Mobil görünümde tanımlamalar KİLİTLENDİ. Yalnızca izleme & raporlama yapılabilir.',
+                () => {}
+            );
+        }
+
+        // Android Alt Menü Sekmesi Değiştirici
+        function switchAndroidTab(secId, btnElement) {
+            document.querySelectorAll('.android-screen-sec').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.android-nav-btn').forEach(b => b.classList.remove('active'));
+            const target = document.getElementById(secId);
+            if (target) target.style.display = 'block';
+            if (btnElement) btnElement.classList.add('active');
+        }
+
+        // Masaüstü Simgesi Sürükle / Bırak (Başlat veya Masaüstü)
+        function dragIcon(e, winId) {
+            e.dataTransfer.setData('text/plain', winId);
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function handleIconDrop(e) {
+            e.preventDefault();
+            const winId = e.dataTransfer.getData('text/plain');
+            alert('✓ Kısayol Masaüstüne Yerleştirildi: ' + winId);
+        }
+
+        // İlk başlatma
+        updateTaskbar();
+    </script>
+</body>
+</html>

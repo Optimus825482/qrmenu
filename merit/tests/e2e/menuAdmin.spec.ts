@@ -9,7 +9,7 @@ test.beforeAll(() => {
   resetAndSeed();
 });
 
-const MR = { name: "Merit Royal", code: "MR" };
+const MR = { name: "Merit Royal", code: "ROYAL" };
 const PHOTO = path.resolve(__dirname, "assets/menu-photo.png");
 
 const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" });

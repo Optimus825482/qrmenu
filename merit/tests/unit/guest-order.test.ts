@@ -237,7 +237,7 @@ describe("guestOrder.get", () => {
     await testDb.outlet.update({ where: { id: s.outlet.id }, data: { orderingEnabled: false } });
     expect((await guestOrder.get(s.token, view.orderId)).orderNo).toBe(1);
 
-    const t2 = await testDb.outletTable.create({ data: { outletId: s.outlet.id, label: "M2", qrToken: "m2-token" } });
+    const t2 = await testDb.outletTable.create({ data: { outletId: s.outlet.id, areaId: s.table.areaId, label: "M2", qrToken: "m2-token" } });
     await expect(guestOrder.get(t2.qrToken as string, view.orderId)).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(guestOrder.get(s.token, "yok")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });

@@ -24,11 +24,11 @@ afterAll(async () => {
 
 describe("usersEntitledTo: üye override'ı", () => {
   it("temel kapsamdaki otelde override varsa yalnız override rolü sayılır", async () => {
-    const mr = await hotelId("MR");
-    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    const mr = await hotelId("ROYAL");
+    const outlet = await makeOutlet("ROYAL", "Havuz Bar", "BAR");
     const gar = await roleByCode("R-GAR");
     // Base role R-SGF with base hotel MR, but at the MR outlet acts as R-GAR.
-    const demoted = await makeUser({ username: "sef.dusuk", roleCode: "R-SGF", hotelCode: "MR" });
+    const demoted = await makeUser({ username: "sef.dusuk", roleCode: "R-SGF", hotelCode: "ROYAL" });
     await testDb.outletMember.create({
       data: { userId: demoted.id, outletId: outlet.id, roleId: gar.id },
     });
@@ -38,10 +38,10 @@ describe("usersEntitledTo: üye override'ı", () => {
   });
 
   it("override yükseltme: temel rol R-GAR, üyelikte R-SGF; temel rolle artık sayılmaz", async () => {
-    const mr = await hotelId("MR");
-    const outlet = await makeOutlet("MR", "Havuz Bar", "BAR");
+    const mr = await hotelId("ROYAL");
+    const outlet = await makeOutlet("ROYAL", "Havuz Bar", "BAR");
     const sgf = await roleByCode("R-SGF");
-    const promoted = await makeUser({ username: "gar.sef", roleCode: "R-GAR", hotelCode: "MR" });
+    const promoted = await makeUser({ username: "gar.sef", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await testDb.outletMember.create({
       data: { userId: promoted.id, outletId: outlet.id, roleId: sgf.id },
     });
@@ -51,21 +51,21 @@ describe("usersEntitledTo: üye override'ı", () => {
   });
 
   it("override'sız üyelik temel rolü korur; pasif üyelik veya pasif outlet override'ı devre dışı bırakır", async () => {
-    const mr = await hotelId("MR");
-    const outlet = await makeOutlet("MR", "Salon", "SALON");
+    const mr = await hotelId("ROYAL");
+    const outlet = await makeOutlet("ROYAL", "Salon", "SALON");
     const gar = await roleByCode("R-GAR");
 
-    const plain = await makeUser({ username: "sef.duz", roleCode: "R-SGF", hotelCode: "MR" });
+    const plain = await makeUser({ username: "sef.duz", roleCode: "R-SGF", hotelCode: "ROYAL" });
     await addMember(plain.id, outlet.id);
 
-    const inactiveMember = await makeUser({ username: "sef.pasif", roleCode: "R-SGF", hotelCode: "MR" });
+    const inactiveMember = await makeUser({ username: "sef.pasif", roleCode: "R-SGF", hotelCode: "ROYAL" });
     await testDb.outletMember.create({
       data: { userId: inactiveMember.id, outletId: outlet.id, roleId: gar.id, isActive: false },
     });
 
-    const closed = await makeOutlet("MR", "Kapalı", "BAR");
+    const closed = await makeOutlet("ROYAL", "Kapalı", "BAR");
     await testDb.outlet.update({ where: { id: closed.id }, data: { isActive: false } });
-    const inClosed = await makeUser({ username: "sef.kapali", roleCode: "R-SGF", hotelCode: "MR" });
+    const inClosed = await makeUser({ username: "sef.kapali", roleCode: "R-SGF", hotelCode: "ROYAL" });
     await testDb.outletMember.create({
       data: { userId: inClosed.id, outletId: closed.id, roleId: gar.id },
     });
@@ -77,21 +77,21 @@ describe("usersEntitledTo: üye override'ı", () => {
   });
 
   it("başka otelin override'ı bu oteldeki temel hakkı etkilemez", async () => {
-    const mr = await hotelId("MR");
-    const other = await makeOutlet("MRP", "Plaj Bar", "BAR");
+    const mr = await hotelId("ROYAL");
+    const other = await makeOutlet("PREMIUM", "Plaj Bar", "BAR");
     const gar = await roleByCode("R-GAR");
     const user = await makeUser({
       username: "sef.iki",
       roleCode: "R-SGF",
-      hotelCode: "MR",
-      extraHotelCodes: ["MRP"],
+      hotelCode: "ROYAL",
+      extraHotelCodes: ["PREMIUM"],
     });
     await testDb.outletMember.create({
       data: { userId: user.id, outletId: other.id, roleId: gar.id },
     });
 
     expect(await usersEntitledTo(mr, ["R-SGF"])).toEqual([user.id]);
-    expect(await usersEntitledTo(await hotelId("MRP"), ["R-SGF"])).toEqual([]);
-    expect(await usersEntitledTo(await hotelId("MRP"), ["R-GAR"])).toEqual([user.id]);
+    expect(await usersEntitledTo(await hotelId("PREMIUM"), ["R-SGF"])).toEqual([]);
+    expect(await usersEntitledTo(await hotelId("PREMIUM"), ["R-GAR"])).toEqual([user.id]);
   });
 });

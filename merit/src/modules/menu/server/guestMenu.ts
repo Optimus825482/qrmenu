@@ -9,13 +9,14 @@ export type GuestItem = {
   detail?: string;
   imageUrl: string | null;
   allergens: string[];
+  tags: string[];
   isAvailable: boolean;
   /** Only present when the outlet shows prices. */
   price?: string;
 };
 export type GuestGroup = { id: string; name: string; detail?: string; items: GuestItem[] };
-export type GuestSubcategory = { id: string; name: string; groups: GuestGroup[] };
-export type GuestCategory = { id: string; name: string; subcategories: GuestSubcategory[] };
+export type GuestSubcategory = { id: string; name: string; items: GuestItem[]; groups: GuestGroup[] };
+export type GuestCategory = { id: string; name: string; items: GuestItem[]; subcategories: GuestSubcategory[] };
 export type GuestMenu = { state: GuestState; categories: GuestCategory[] };
 
 /**
@@ -24,12 +25,12 @@ export type GuestMenu = { state: GuestState; categories: GuestCategory[] };
  * dropped, `price` only when prices are shown. Sold-out items stay, flagged. Not cached: the page is
  * dynamic and follows SSE events.
  */
-export async function getMenu(outletId: string, locale: Locale): Promise<GuestMenu> {
+export async function getMenu(outletId: string, locale: Locale, areaId?: string): Promise<GuestMenu> {
   const [state, rows] = await Promise.all([
-    guestState(outletId),
+    guestState(outletId, areaId),
     prisma.menuNode.findMany({
       where: { outletId, isActive: true },
-      include: { translations: { where: { lang: locale } } }, // "tr" is the base record: no translation rows
+      include: { translations: { where: { lang: locale, isVerified: true } } }, // Unreviewed machine drafts never reach guests.
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     }),
   ]);
@@ -49,26 +50,35 @@ export async function getMenu(outletId: string, locale: Locale): Promise<GuestMe
     const detail = t?.detail || row.detail;
     return { name: t?.name || row.name, ...(detail ? { detail } : {}) };
   };
+  const showPrice = state.pricesShown && state.design.options.showPrices;
+  const toItem = (row: Row): GuestItem => ({
+    id: row.id,
+    ...text(row),
+    imageUrl: row.imageUrl,
+    allergens: row.allergens,
+    tags: row.tags,
+    isAvailable: row.isAvailable,
+    ...(showPrice && row.price !== null ? { price: row.price.toFixed(2) } : {}),
+  });
 
   const categories: GuestCategory[] = [];
   for (const cat of of(null, "KATEGORI")) {
+    const directItems: GuestItem[] = of(cat, "OGE").map(toItem);
     const subcategories: GuestSubcategory[] = [];
     for (const sub of of(cat, "ALT_KATEGORI")) {
+      const directItems: GuestItem[] = of(sub, "OGE").map(toItem);
       const groups: GuestGroup[] = [];
       for (const group of of(sub, "GRUP")) {
-        const items: GuestItem[] = of(group, "OGE").map((row) => ({
-          id: row.id,
-          ...text(row),
-          imageUrl: row.imageUrl,
-          allergens: row.allergens,
-          isAvailable: row.isAvailable,
-          ...(state.pricesShown && row.price !== null ? { price: row.price.toFixed(2) } : {}),
-        }));
+        const items: GuestItem[] = of(group, "OGE").map(toItem);
         if (items.length > 0) groups.push({ id: group.id, ...text(group), items });
       }
-      if (groups.length > 0) subcategories.push({ id: sub.id, name: text(sub).name, groups });
+      if (directItems.length > 0 || groups.length > 0) {
+        subcategories.push({ id: sub.id, name: text(sub).name, items: directItems, groups });
+      }
     }
-    if (subcategories.length > 0) categories.push({ id: cat.id, name: text(cat).name, subcategories });
+    if (directItems.length > 0 || subcategories.length > 0) {
+      categories.push({ id: cat.id, name: text(cat).name, items: directItems, subcategories });
+    }
   }
   return { state, categories };
 }

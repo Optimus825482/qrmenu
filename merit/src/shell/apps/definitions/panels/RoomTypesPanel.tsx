@@ -71,12 +71,7 @@ export function RoomTypesPanel({ hotelId, setStatus }: Props) {
   const copy = async (values: FormValues) => {
     const result = await copyRoomTypesAction({ toHotelId: hotelId, fromHotelId: values.fromHotelId });
     if (result.ok) {
-      const { copied, skipped } = result.data;
       list.reload();
-      void alertDialog({
-        title: "Oda tipleri kopyalandı",
-        message: `${copied} oda tipi kopyalandı, ${skipped} oda tipi (aynı ad) atlandı.`,
-      });
     }
     return result;
   };
@@ -93,6 +88,7 @@ export function RoomTypesPanel({ hotelId, setStatus }: Props) {
       void alertDialog({ title: "Oda tipi silinemedi", message: result.error.message });
       return;
     }
+    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” oda tipi silindi.` });
     setSelectedId(undefined);
     list.reload();
   };
@@ -122,6 +118,10 @@ export function RoomTypesPanel({ hotelId, setStatus }: Props) {
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
         onActivate={edit}
+        rowContextActions={(row) => [
+          { label: "Düzenle", onSelect: () => edit(row) },
+          { label: "Sil", onSelect: () => void remove(row) },
+        ]}
         emptyText="Bu otelde kayıtlı oda tipi yok"
         toolbar={
           <Toolbar
@@ -149,6 +149,7 @@ export function RoomTypesPanel({ hotelId, setStatus }: Props) {
         onClose={() => setDialog(null)}
         onSubmit={submit}
         submitText="Kaydet"
+        confirmBeforeSubmit={!!editing}
       >
         <Field name="name" label="Oda tipi adı">
           <input type="text" defaultValue={editing?.name ?? ""} maxLength={80} />

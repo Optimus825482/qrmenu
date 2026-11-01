@@ -24,6 +24,12 @@ export async function createUserAction(raw: unknown): Promise<Result<users.UserR
   )(raw);
 }
 
+export async function createUserOnboardingAction(raw: unknown): Promise<Result<users.CreatedUserCredentials>> {
+  return safeAction(z.object({ data }), async (input) =>
+    users.createOnboarding(await requireUser(), input.data as users.OnboardingUserInput),
+  )(raw);
+}
+
 export async function updateUserAction(raw: unknown): Promise<Result<users.UserRow>> {
   return safeAction(z.object({ id, data }), async (input) =>
     users.update(await requireUser(), input.id, input.data as users.UpdateUserInput),
@@ -41,4 +47,12 @@ export async function setUserActiveAction(raw: unknown): Promise<Result<users.Us
   return safeAction(z.object({ id, isActive: z.boolean() }), async (input) =>
     users.setActive(await requireUser(), input.id, input.isActive),
   )(raw);
+}
+
+
+export async function deleteUserAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ id }), async (input) => {
+    await users.deleteUser(await requireUser(), input.id);
+    return null;
+  })(raw);
 }

@@ -14,11 +14,13 @@ export function CallWaiterButton({
   locale = "tr",
   options = [],
   preview = false,
+  customText,
 }: {
   token: string;
   locale?: Locale;
   options?: GuestCallOption[];
   preview?: boolean;
+  customText?: string;
 }) {
   const t = useTranslations("guest");
   const [open, setOpen] = useState(false);
@@ -84,7 +86,7 @@ export function CallWaiterButton({
         disabled={busy}
         onClick={() => setOpen(true)}
       >
-        {t("call.waiter")}
+        {customText?.trim() || t("call.waiter")}
       </button>
       <CallSheet
         open={open}

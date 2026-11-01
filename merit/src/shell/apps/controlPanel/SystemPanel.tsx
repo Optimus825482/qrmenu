@@ -13,7 +13,7 @@ import type {
   SettingSource,
   SettingsScopes,
 } from "@/modules/core/server/admin/settingsAdmin";
-import { confirm } from "../../confirm";
+import { alertDialog, confirm } from "../../confirm";
 import { useSse } from "../../useSse";
 
 const SOURCE_LABEL: Record<SettingSource, string> = {
@@ -194,6 +194,12 @@ function SettingRow({
   const canSave = dirty && next !== undefined && !(typeof next === "number" && Number.isNaN(next));
 
   const save = async (value: unknown = next) => {
+    const approved = await confirm({
+      title: "Ayarı kaydet",
+      message: `${meta.label} ayarı kaydedilsin mi?`,
+      danger: true,
+    });
+    if (!approved) return;
     setBusy(true);
     setError(null);
     try {
@@ -202,6 +208,7 @@ function SettingRow({
         // A saved secret comes back masked, so the row's identity does not change and it would
         // not remount: empty the field here or the clear text stays on screen.
         if (meta.secret) setDraft("");
+        await alertDialog({ title: "İşlem tamamlandı", message: `${meta.label} ayarı kaydedildi.` });
         onChanged(result.data, `${meta.label} kaydedildi`);
       } else {
         const message = result.error.fieldErrors?.value?.[0] ?? result.error.message;
@@ -224,7 +231,10 @@ function SettingRow({
     setError(null);
     try {
       const result = await clearSettingOverrideAction({ hotelId, key: item.key });
-      if (result.ok) onChanged(result.data, `${meta.label} otel değeri kaldırıldı`);
+      if (result.ok) {
+        await alertDialog({ title: "İşlem tamamlandı", message: `${meta.label} otel değeri kaldırıldı.` });
+        onChanged(result.data, `${meta.label} otel değeri kaldırıldı`);
+      }
       else {
         setError(result.error.message);
         onFailed(result.error.message);
