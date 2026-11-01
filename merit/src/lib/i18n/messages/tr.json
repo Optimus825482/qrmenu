@@ -6,17 +6,38 @@
       "orderingClosed": "Şu an sipariş alınmıyor, menüyü inceleyebilirsiniz",
       "soldOut": "Tükendi",
       "allergens": "Alerjenler",
-      "empty": "Menü henüz hazır değil"
+      "empty": "Menü henüz hazır değil",
+      "featured": "Öne çıkanlar",
+      "search": "Menüde ara",
+      "noResults": "Aramanızla eşleşen ürün yok",
+      "filters": "Etiketler",
+      "allergenNote": "Alerjen bilgisi AB 1169/2011 listesine göredir. Sipariş vermeden önce ekibimize danışın."
     },
     "allergen": {
       "gluten": "Gluten",
       "sut": "Süt",
       "yumurta": "Yumurta",
-      "kuruyemis": "Kuruyemiş",
-      "deniz_urunu": "Deniz ürünü",
+      "kuruyemis": "Sert kabuklu meyve",
+      "yerfistigi": "Yer fıstığı",
+      "deniz_urunu": "Kabuklu deniz ürünü",
+      "yumusakca": "Yumuşakça",
+      "balik": "Balık",
       "alkol": "Alkol",
       "soya": "Soya",
-      "susam": "Susam"
+      "susam": "Susam",
+      "kereviz": "Kereviz",
+      "hardal": "Hardal",
+      "sulfit": "Sülfit",
+      "acibakla": "Acı bakla"
+    },
+    "tag": {
+      "VEGAN": "Vegan",
+      "VEJETARYEN": "Vejetaryen",
+      "GLUTENSIZ": "Glutensiz",
+      "SEFIN_SECIMI": "Şefin seçimi",
+      "POPULER": "Popüler",
+      "YENI": "Yeni",
+      "ACILI": "Acılı"
     },
     "cart": {
       "title": "Seçimlerim",
@@ -45,7 +66,10 @@
       "waiter": "Garson çağır",
       "bill": "Hesap iste",
       "sent": "Çağrınız iletildi",
-      "tooMany": "Çok sık çağrı yaptınız, lütfen biraz bekleyin"
+      "tooMany": "Çok sık çağrı yaptınız, lütfen biraz bekleyin",
+      "title": "Size nasıl yardımcı olalım?",
+      "justCall": "Sadece çağır",
+      "close": "Kapat"
     },
     "common": {
       "back": "Geri",

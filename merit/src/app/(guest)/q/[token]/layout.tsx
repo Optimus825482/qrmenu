@@ -58,6 +58,7 @@ export default async function GuestLayout({
         token={token}
         locale={locale as Locale}
         theme={state.theme}
+        design={state.design}
         outletName={state.outletName}
         tableLabel={table.label}
         footer={
@@ -67,6 +68,7 @@ export default async function GuestLayout({
             orderingOpen={state.orderingOpen}
             pricesShown={state.pricesShown}
             currency={state.currency}
+            callOptions={state.callOptions}
           />
         }
       >

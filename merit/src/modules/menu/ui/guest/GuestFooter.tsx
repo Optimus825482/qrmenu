@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
+import type { GuestCallOption } from "../../callOptions";
 import { CallWaiterButton } from "./CallWaiterButton";
 import { SelectionsDrawer } from "./SelectionsDrawer";
 import { RECENT_ORDERS, totalQuantity, useSelectionStore } from "./selectionStore";
@@ -15,12 +16,14 @@ export function GuestFooter({
   orderingOpen,
   pricesShown,
   currency,
+  callOptions = [],
 }: {
   token: string;
   locale: Locale;
   orderingOpen: boolean;
   pricesShown: boolean;
   currency: string;
+  callOptions?: GuestCallOption[];
 }) {
   const t = useTranslations("guest");
   const store = useSelectionStore(token);
@@ -50,7 +53,7 @@ export function GuestFooter({
         </nav>
       ) : null}
       <div className="g-footer-actions">
-        <CallWaiterButton token={token} />
+        <CallWaiterButton token={token} locale={locale} options={callOptions} />
         {showSelections ? (
           <button type="button" className="g-button" onClick={() => setOpen(true)}>
             {t("cart.title")}

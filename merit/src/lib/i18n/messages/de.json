@@ -6,17 +6,38 @@
       "orderingClosed": "Bestellungen sind derzeit nicht möglich, Sie können die Karte ansehen",
       "soldOut": "Ausverkauft",
       "allergens": "Allergene",
-      "empty": "Die Speisekarte ist noch nicht fertig"
+      "empty": "Die Speisekarte ist noch nicht fertig",
+      "featured": "Empfehlungen",
+      "search": "Karte durchsuchen",
+      "noResults": "Keine Speisen passen zu Ihrer Suche",
+      "filters": "Kennzeichnungen",
+      "allergenNote": "Die Allergenangaben folgen der EU-Verordnung 1169/2011. Fragen Sie unser Team vor der Bestellung."
     },
     "allergen": {
       "gluten": "Gluten",
       "sut": "Milch",
       "yumurta": "Ei",
-      "kuruyemis": "Nüsse",
-      "deniz_urunu": "Meeresfrüchte",
+      "kuruyemis": "Schalenfrüchte",
+      "yerfistigi": "Erdnüsse",
+      "deniz_urunu": "Krebstiere",
+      "yumusakca": "Weichtiere",
+      "balik": "Fisch",
       "alkol": "Alkohol",
       "soya": "Soja",
-      "susam": "Sesam"
+      "susam": "Sesam",
+      "kereviz": "Sellerie",
+      "hardal": "Senf",
+      "sulfit": "Sulfite",
+      "acibakla": "Lupinen"
+    },
+    "tag": {
+      "VEGAN": "Vegan",
+      "VEJETARYEN": "Vegetarisch",
+      "GLUTENSIZ": "Glutenfrei",
+      "SEFIN_SECIMI": "Wahl des Küchenchefs",
+      "POPULER": "Beliebt",
+      "YENI": "Neu",
+      "ACILI": "Scharf"
     },
     "cart": {
       "title": "Meine Auswahl",
@@ -45,7 +66,10 @@
       "waiter": "Kellner rufen",
       "bill": "Rechnung anfordern",
       "sent": "Ihre Anfrage wurde gesendet",
-      "tooMany": "Zu viele Anfragen, bitte warten Sie einen Moment"
+      "tooMany": "Zu viele Anfragen, bitte warten Sie einen Moment",
+      "title": "Wie können wir helfen?",
+      "justCall": "Nur rufen",
+      "close": "Schließen"
     },
     "common": {
       "back": "Zurück",

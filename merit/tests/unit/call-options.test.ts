@@ -313,4 +313,15 @@ describe("ensureDefaultCallOptions", () => {
       expect(migrationContent).toContain(opt.label);
     }
   });
+
+  it("guest.call anahtarları 5 dilde de var", () => {
+    const langs = ["tr", "en", "de", "ru", "ar"] as const;
+    for (const lang of langs) {
+      const filePath = path.resolve(__dirname, `../../src/lib/i18n/messages/${lang}.json`);
+      const content = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      expect(content.guest?.call?.title).toBeTruthy();
+      expect(content.guest?.call?.justCall).toBeTruthy();
+      expect(content.guest?.call?.close).toBeTruthy();
+    }
+  });
 });

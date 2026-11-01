@@ -6,17 +6,38 @@
       "orderingClosed": "Ordering is closed right now, feel free to browse the menu",
       "soldOut": "Sold out",
       "allergens": "Allergens",
-      "empty": "The menu is not ready yet"
+      "empty": "The menu is not ready yet",
+      "featured": "Highlights",
+      "search": "Search the menu",
+      "noResults": "No dishes match your search",
+      "filters": "Labels",
+      "allergenNote": "Allergen information follows EU Regulation 1169/2011. Please ask our team before you order."
     },
     "allergen": {
       "gluten": "Gluten",
       "sut": "Milk",
       "yumurta": "Egg",
-      "kuruyemis": "Nuts",
-      "deniz_urunu": "Seafood",
+      "kuruyemis": "Tree nuts",
+      "yerfistigi": "Peanuts",
+      "deniz_urunu": "Crustaceans",
+      "yumusakca": "Molluscs",
+      "balik": "Fish",
       "alkol": "Alcohol",
       "soya": "Soy",
-      "susam": "Sesame"
+      "susam": "Sesame",
+      "kereviz": "Celery",
+      "hardal": "Mustard",
+      "sulfit": "Sulphites",
+      "acibakla": "Lupin"
+    },
+    "tag": {
+      "VEGAN": "Vegan",
+      "VEJETARYEN": "Vegetarian",
+      "GLUTENSIZ": "Gluten-free",
+      "SEFIN_SECIMI": "Chef's choice",
+      "POPULER": "Popular",
+      "YENI": "New",
+      "ACILI": "Spicy"
     },
     "cart": {
       "title": "My selections",
@@ -45,7 +66,10 @@
       "waiter": "Call waiter",
       "bill": "Ask for the bill",
       "sent": "Your request has been sent",
-      "tooMany": "Too many requests, please wait a moment"
+      "tooMany": "Too many requests, please wait a moment",
+      "title": "How can we help?",
+      "justCall": "Just call",
+      "close": "Close"
     },
     "common": {
       "back": "Back",
