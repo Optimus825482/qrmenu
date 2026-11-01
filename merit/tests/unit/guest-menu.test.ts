@@ -6,6 +6,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const { getMenu } = await import("@/modules/menu/server/guestMenu");
+const { guestState } = await import("@/modules/menu/server/guestState");
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
@@ -20,7 +21,7 @@ afterAll(async () => {
 
 async function outlet(priceDisplay: "SHOW" | "HIDE" | "INHERIT" = "SHOW", name = "Havuz Bar") {
   return testDb.outlet.create({
-    data: { hotelId: await hotelId("MR"), name, type: "BAR", hasMenu: true, priceDisplay },
+    data: { hotelId: await hotelId("ROYAL"), name, type: "BAR", hasMenu: true, priceDisplay },
   });
 }
 
@@ -145,5 +146,27 @@ describe("guestMenu.getMenu", () => {
     const menu = await getMenu(o.id, "tr");
     expect(items(menu)[0].imageUrl).toBe("/uploads/menu/x/y.webp");
     expect(menu.state).toMatchObject({ outletId: o.id, outletName: "Havuz Bar" });
+  });
+
+  it("guestState aktif çağrı seçeneklerini sırayla verir, pasifleri vermez", async () => {
+    const o = await outlet();
+    await testDb.outletCallOption.create({
+      data: { outletId: o.id, label: "İkinci", callType: "GARSON", sortOrder: 1, isActive: true },
+    });
+    await testDb.outletCallOption.create({
+      data: { outletId: o.id, label: "İlk", callType: "GARSON", sortOrder: 0, isActive: true },
+    });
+    await testDb.outletCallOption.create({
+      data: { outletId: o.id, label: "Pasif", callType: "GARSON", sortOrder: 2, isActive: false },
+    });
+
+    const state = await guestState(o.id);
+    expect(state.callOptions.map((c) => c.label)).toEqual(["İlk", "İkinci"]);
+  });
+
+  it("hiç seçenek yoksa boş dizi", async () => {
+    const o = await outlet();
+    const state = await guestState(o.id);
+    expect(state.callOptions).toEqual([]);
   });
 });

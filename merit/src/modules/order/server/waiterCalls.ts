@@ -7,28 +7,34 @@ import { publish } from "@/lib/realtime";
 import { DomainError, fromZod } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { notify } from "@/modules/core/server/notifications";
+import { resolveActive } from "@/modules/menu/server/callOptions";
 import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 import { onlineAt, outletAllowed } from "./approvals";
 
 /** Waiter calls: 3 per minute per table. */
 export const callLimiter = createRateLimiter({ max: 3, windowMs: 60_000 });
 
-const inputSchema = z.object({
-  token: z.string().min(1).max(64),
-  type: z.enum(["GARSON", "HESAP", "DIGER"]),
-  note: z
-    .string()
-    .transform((s) =>
-      s
-        .replace(/<[^>]*>/g, "")
-        .replace(/[\u0000-\u001f\u007f]/g, " ")
-        .trim(),
-    )
-    .pipe(z.string().max(200, "En fazla 200 karakter"))
-    .optional(),
-  ip: z.string().min(1),
-  userAgent: z.string().default(""),
-});
+const inputSchema = z
+  .object({
+    token: z.string().min(1).max(64),
+    type: z.enum(["GARSON", "HESAP", "DIGER"]).optional(),
+    optionId: z.string().min(1).max(64).optional(),
+    note: z
+      .string()
+      .transform((s) =>
+        s
+          .replace(/<[^>]*>/g, "")
+          .replace(/[\u0000-\u001f\u007f]/g, " ")
+          .trim(),
+      )
+      .pipe(z.string().max(200, "En fazla 200 karakter"))
+      .optional(),
+    ip: z.string().min(1),
+    userAgent: z.string().default(""),
+  })
+  .refine((v) => Boolean(v.type || v.optionId), {
+    message: "Çağrı tipi veya seçeneği belirtilmelidir",
+  });
 
 export type GuestCallInput = z.input<typeof inputSchema>;
 export type GuestCallView = { callId: string; type: string; status: string; tableLabel: string; createdAt: Date };
@@ -64,15 +70,27 @@ async function createFromGuest(input: GuestCallInput): Promise<GuestCallView> {
   }
 
   return prisma.$transaction(async (tx) => {
+    let callType: "GARSON" | "HESAP" | "DIGER";
+    let callNote: string | null = null;
+
+    if (data.optionId) {
+      const resolved = await resolveActive(tx, state.outletId, data.optionId);
+      callType = resolved.callType;
+      callNote = resolved.label;
+    } else {
+      callType = data.type!;
+      callNote = data.note || null;
+    }
+
     const open = await tx.waiterCall.findFirst({
-      where: { tableId: table.id, type: data.type, status: "ACIK" },
+      where: { tableId: table.id, type: callType, note: callNote, status: "ACIK" },
       orderBy: { createdAt: "asc" },
     });
     if (open) {
       return { callId: open.id, type: open.type, status: open.status, tableLabel: table.label, createdAt: open.createdAt };
     }
     const call = await tx.waiterCall.create({
-      data: { outletId: state.outletId, tableId: table.id, type: data.type, note: data.note || null },
+      data: { outletId: state.outletId, tableId: table.id, type: callType, note: callNote },
     });
 
     const assignment = await tx.tableAssignment.findFirst({
@@ -88,8 +106,8 @@ async function createFromGuest(input: GuestCallInput): Promise<GuestCallView> {
       {
         recipients: [...recipients],
         type: "call.created",
-        title: `${TYPE_TEXT[data.type]} · ${state.outletName} ${table.label}`,
-        body: call.note ?? TYPE_TEXT[data.type],
+        title: `${call.note ? `${call.note} · ` : ""}${TYPE_TEXT[callType]} · ${state.outletName} ${table.label}`,
+        body: call.note ?? TYPE_TEXT[callType],
         refType: "WaiterCall",
         refId: call.id,
       },

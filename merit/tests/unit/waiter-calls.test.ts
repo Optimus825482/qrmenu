@@ -85,6 +85,148 @@ describe("waiterCalls.createFromGuest", () => {
   it("bilinmeyen token NOT_FOUND", async () => {
     await expect(call("yok-boyle-token", "GARSON")).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
+
+  it("optionId seçeneğin tipini ve etiketini nota işler", async () => {
+    const s = await orderSetup();
+    const cashier = await staffCtx("kasa_opt", "R-KAS", s.outlet.id);
+    await openSession(cashier.user.id, s.outlet.id, "R-KAS");
+    const opt = await testDb.outletCallOption.create({
+      data: {
+        outletId: s.outlet.id,
+        label: "Peçete istiyorum",
+        callType: "GARSON",
+        sortOrder: 0,
+        isActive: true,
+      },
+    });
+
+    const view = await waiterCalls.createFromGuest({
+      token: s.token,
+      optionId: opt.id,
+      ip: "10.9.9.9",
+    });
+
+    expect(view).toMatchObject({ type: "GARSON", status: "ACIK", tableLabel: "M1" });
+    const row = await testDb.waiterCall.findUniqueOrThrow({ where: { id: view.callId } });
+    expect(row).toMatchObject({
+      outletId: s.outlet.id,
+      tableId: s.table.id,
+      type: "GARSON",
+      note: "Peçete istiyorum",
+    });
+
+    const notif = await testDb.notification.findFirst({ where: { refId: view.callId } });
+    expect(notif?.title).toContain("Peçete istiyorum");
+    expect(notif?.body).toBe("Peçete istiyorum");
+  });
+
+  it("istemcinin type'ı seçeneği ezmez", async () => {
+    const s = await orderSetup();
+    const opt = await testDb.outletCallOption.create({
+      data: {
+        outletId: s.outlet.id,
+        label: "Hesap Lütfen",
+        callType: "HESAP",
+        sortOrder: 0,
+        isActive: true,
+      },
+    });
+
+    const view = await waiterCalls.createFromGuest({
+      token: s.token,
+      type: "DIGER",
+      optionId: opt.id,
+      ip: "10.9.9.9",
+    });
+
+    expect(view.type).toBe("HESAP");
+    const row = await testDb.waiterCall.findUniqueOrThrow({ where: { id: view.callId } });
+    expect(row.type).toBe("HESAP");
+  });
+
+  it("başka outletin / pasif / olmayan optionId NOT_FOUND ve kayıt açılmaz", async () => {
+    const s = await orderSetup();
+    const other = await orderSetup({ outlet: { name: "Başka Bar" } });
+    const otherOpt = await testDb.outletCallOption.create({
+      data: {
+        outletId: other.outlet.id,
+        label: "Başka Outlet",
+        callType: "GARSON",
+        isActive: true,
+      },
+    });
+    const passiveOpt = await testDb.outletCallOption.create({
+      data: {
+        outletId: s.outlet.id,
+        label: "Pasif",
+        callType: "GARSON",
+        isActive: false,
+      },
+    });
+
+    await expect(
+      waiterCalls.createFromGuest({ token: s.token, optionId: otherOpt.id, ip: "10.9.9.9" }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    await expect(
+      waiterCalls.createFromGuest({ token: s.token, optionId: passiveOpt.id, ip: "10.9.9.9" }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    await expect(
+      waiterCalls.createFromGuest({ token: s.token, optionId: "yok-id", ip: "10.9.9.9" }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    expect(await testDb.waiterCall.count()).toBe(0);
+  });
+
+  it("farklı seçenekler yan yana açılır, aynı seçenek aynı kaydı döner", async () => {
+    const s = await orderSetup();
+    const opt1 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "Peçete", callType: "GARSON", isActive: true },
+    });
+    const opt2 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "Su", callType: "GARSON", isActive: true },
+    });
+
+    const call1 = await waiterCalls.createFromGuest({ token: s.token, optionId: opt1.id, ip: "10.9.9.9" });
+    const call2 = await waiterCalls.createFromGuest({ token: s.token, optionId: opt2.id, ip: "10.9.9.9" });
+    expect(call1.callId).not.toBe(call2.callId);
+
+    const call1Repeat = await waiterCalls.createFromGuest({ token: s.token, optionId: opt1.id, ip: "10.9.9.9" });
+    expect(call1Repeat.callId).toBe(call1.callId);
+    expect(await testDb.waiterCall.count()).toBe(2);
+  });
+
+  it("aynı tipte farklı notlu çağrı ayrı kayıttır", async () => {
+    const s = await orderSetup();
+    const call1 = await call(s.token, "GARSON", "Not 1");
+    const call2 = await call(s.token, "GARSON", "Not 2");
+    expect(call1.callId).not.toBe(call2.callId);
+    expect(await testDb.waiterCall.count()).toBe(2);
+  });
+
+  it("dakikada 3 sınırı optionId ile de geçerli", async () => {
+    const s = await orderSetup();
+    const opt1 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "1", callType: "GARSON", isActive: true },
+    });
+    const opt2 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "2", callType: "GARSON", isActive: true },
+    });
+    const opt3 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "3", callType: "GARSON", isActive: true },
+    });
+    const opt4 = await testDb.outletCallOption.create({
+      data: { outletId: s.outlet.id, label: "4", callType: "GARSON", isActive: true },
+    });
+
+    await waiterCalls.createFromGuest({ token: s.token, optionId: opt1.id, ip: "10.9.9.9" });
+    await waiterCalls.createFromGuest({ token: s.token, optionId: opt2.id, ip: "10.9.9.9" });
+    await waiterCalls.createFromGuest({ token: s.token, optionId: opt3.id, ip: "10.9.9.9" });
+    await expect(
+      waiterCalls.createFromGuest({ token: s.token, optionId: opt4.id, ip: "10.9.9.9" }),
+    ).rejects.toMatchObject({ code: "RATE_LIMITED" });
+  });
 });
 
 describe("waiterCalls.resolve / listOpen", () => {

@@ -12,7 +12,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     const body = await readJsonBody(request);
     return waiterCalls.createFromGuest({
       token,
-      type: body.type as never,
+      type: typeof body.type === "string" ? (body.type as never) : undefined,
+      optionId: typeof body.optionId === "string" ? body.optionId : undefined,
       note: typeof body.note === "string" ? body.note : undefined,
       ip: clientIp(request.headers),
       userAgent: request.headers.get("user-agent") ?? "",
