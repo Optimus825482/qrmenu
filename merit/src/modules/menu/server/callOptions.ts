@@ -9,13 +9,14 @@ import { parseInput, withAdminTx } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import {
   CALL_LANGS,
+  MAX_ACTIVE_OPTIONS,
   type CallLang,
   type CallType,
   type GuestCallOption,
 } from "../callOptions";
 import { assertOutletScope } from "./menuNodeAccess";
 
-export const MAX_ACTIVE_OPTIONS = 8;
+export { MAX_ACTIVE_OPTIONS };
 
 export type CallOptionRow = GuestCallOption & {
   sortOrder: number;
@@ -75,6 +76,16 @@ async function authorizeCallOptionOutlet(ctx: Ctx, outletId: string, action: "V"
   }
   const screen = canTem ? "QM-TEM" : "QM-MEN";
   return { outlet, screen };
+}
+
+/** Whether the caller may change the outlet's call options (QM-TEM "D", or QM-MEN "D" as the fallback). */
+export async function canWrite(ctx: Ctx, outletId: string): Promise<boolean> {
+  try {
+    await authorizeCallOptionOutlet(ctx, outletId, "D");
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function list(ctx: Ctx, outletId: string): Promise<CallOptionRow[]> {

@@ -10,7 +10,7 @@ import {
   resetReferenceData,
   resetTestData,
 } from "../helpers/fixtures";
-import { CALL_LANGS, callOptionLabel } from "@/modules/menu/callOptions";
+import { callOptionLabel } from "@/modules/menu/callOptions";
 import { DEFAULT_CALL_OPTIONS, ensureDefaultCallOptions } from "@/modules/menu/server/callOptionDefaults";
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));

@@ -7,10 +7,13 @@ import * as callOptions from "../callOptions";
 
 const id = z.string().min(1);
 
-export async function listCallOptionsAction(raw: unknown): Promise<Result<callOptions.CallOptionRow[]>> {
+export async function listCallOptionsAction(
+  raw: unknown,
+): Promise<Result<{ options: callOptions.CallOptionRow[]; canWrite: boolean }>> {
   return safeAction(z.object({ outletId: id }), async ({ outletId }) => {
     const ctx = await requireUser();
-    return await callOptions.list(ctx, outletId);
+    const options = await callOptions.list(ctx, outletId);
+    return { options, canWrite: await callOptions.canWrite(ctx, outletId) };
   })(raw);
 }
 

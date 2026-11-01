@@ -1,6 +1,9 @@
 export const CALL_LANGS = ["en", "de", "ru", "ar"] as const;
 export type CallLang = (typeof CALL_LANGS)[number];
 
+/** Most active call options one outlet may have ("Sadece çağır" is fixed and not counted). */
+export const MAX_ACTIVE_OPTIONS = 8;
+
 export type CallType = "GARSON" | "HESAP" | "DIGER";
 
 export type GuestCallOption = {

@@ -3,13 +3,17 @@
 import {
   type FormEvent,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
   useEffect,
   useId,
   useRef,
   useState,
+  type ReactElement,
 } from "react";
+import { createPortal } from "react-dom";
 import type { FieldErrors, Result } from "@/lib/result";
+import { alertDialog, confirm } from "../confirm";
 import { FieldErrorsContext } from "./formContext";
 
 /** Field values by `name`, as text (an unchecked checkbox is absent, a checked one is "on"). */
@@ -23,6 +27,8 @@ type Props = {
   onSubmit: (values: FormValues) => Promise<Result<unknown>>;
   children: ReactNode;
   submitText: string;
+  /** Require an explicit approval before saving an existing record. */
+  confirmBeforeSubmit?: boolean;
 };
 
 const FOCUSABLE =
@@ -32,17 +38,23 @@ const FIELDS =
 const UNEXPECTED = "Beklenmeyen bir hata oluştu";
 
 /**
- * Modal XP panel drawn inside the window body (not a browser dialog): it covers the window's
- * content, keeps Tab focus inside, closes on Esc and puts focus back where it was. Mounted only
- * while open, so every opening starts with empty errors and fresh field state.
+ * Modal XP panel portaled above the shell windows: it covers the owning window's title bar too,
+ * keeps Tab focus inside, closes on Esc and restores focus when closed. Mounted only while open,
+ * so every opening starts with empty errors and fresh field state.
  */
 export function FormDialog(props: Props) {
-  return props.open ? <Panel {...props} /> : null;
+  if (!props.open) return null;
+  // Looked up when the dialog opens (always after mount, in a client event): no effect or state needed.
+  const portalRoot = typeof document === "undefined" ? null : document.getElementById("xp-dialog-root");
+  const panel: ReactElement = <Panel {...props} />;
+  // Standalone previews without a shell keep rendering the dialog in place.
+  return portalRoot ? createPortal(panel, portalRoot) : panel;
 }
 
-function Panel({ title, onClose, onSubmit, children, submitText }: Props) {
+function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSubmit }: Props) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
   const busy = useRef(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -61,6 +73,32 @@ function Panel({ title, onClose, onSubmit, children, submitText }: Props) {
 
   const close = () => {
     if (!busy.current) onClose();
+  };
+
+  const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || (e.target as Element).closest("button")) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    e.preventDefault();
+    const bar = e.currentTarget;
+    bar.setPointerCapture(e.pointerId);
+    const start = { px: e.clientX, py: e.clientY, ...dragOffset.current };
+    let next = { x: start.x, y: start.y };
+    const onMove = (event: PointerEvent) => {
+      const x = start.x + event.clientX - start.px;
+      const y = start.y + event.clientY - start.py;
+      next = { x, y };
+      dialog.style.transform = `translate(${x}px, ${y}px)`;
+    };
+    const onUp = () => {
+      bar.removeEventListener("pointermove", onMove);
+      bar.removeEventListener("pointerup", onUp);
+      bar.removeEventListener("pointercancel", onUp);
+      dragOffset.current = next;
+    };
+    bar.addEventListener("pointermove", onMove);
+    bar.addEventListener("pointerup", onUp);
+    bar.addEventListener("pointercancel", onUp);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -99,8 +137,20 @@ function Panel({ title, onClose, onSubmit, children, submitText }: Props) {
       if (typeof value === "string") values[key] = value;
     }
     try {
+      if (confirmBeforeSubmit) {
+        const approved = await confirm({
+          title: "Değişikliği onayla",
+          message: `“${title}” için yaptığınız değişiklikler kaydedilsin mi?`,
+          danger: true,
+        });
+        if (!approved) return;
+      }
       const result = await onSubmit(values);
       if (result.ok) {
+        await alertDialog({
+          title: "İşlem tamamlandı",
+          message: `“${title}” işlemi başarıyla tamamlandı.`,
+        });
         busy.current = false;
         onClose();
       } else {
@@ -128,7 +178,7 @@ function Panel({ title, onClose, onSubmit, children, submitText }: Props) {
         className="xp-window xp-dialog xp-form-dialog"
         onKeyDown={onKeyDown}
       >
-        <div className="xp-titlebar">
+        <div className="xp-titlebar" onPointerDown={startDrag}>
           <span id={titleId} className="xp-titlebar-text">
             {title}
           </span>
