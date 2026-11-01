@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { safeNextPath } from "@/lib/safe-next";
 import { LoginForm } from "./LoginForm";
 
