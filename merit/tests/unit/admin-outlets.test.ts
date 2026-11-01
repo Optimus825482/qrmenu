@@ -19,7 +19,7 @@ const hotelModules = await import("@/modules/core/server/admin/hotelModules");
 const { listTargets } = await import("@/modules/core/server/targets");
 
 const Q = { page: 1, pageSize: 100 } as const;
-const OUTLET_TABLES = ["audit_logs", "outlet_tables"] as const;
+const OUTLET_TABLES = ["audit_logs", "outlet_tables", "outlet_areas"] as const;
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
@@ -34,14 +34,18 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function sys(hotelCode = "MR") {
+async function sys(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `sys-${hotelCode}`, roleCode: "R-SYS", hotelCode });
-  return ctxFor(user, { hotelCode, extraHotelCodes: ["MRP", "MRD"].filter((c) => c !== hotelCode) });
+  return ctxFor(user, { hotelCode, extraHotelCodes: ["PREMIUM", "DIAMOND"].filter((c) => c !== hotelCode) });
 }
 
-async function mgmt(hotelCode = "MR") {
+async function mgmt(hotelCode = "ROYAL") {
   const user = await makeUser({ username: `otm-${hotelCode}`, roleCode: "R-OTM", hotelCode });
   return ctxFor(user, { hotelCode });
+}
+
+async function addClosedArea(outletId: string) {
+  return testDb.outletAreaDefinition.create({ data: { outletId, type: "KAPALI" } });
 }
 
 const BAR = {
@@ -58,7 +62,7 @@ const BAR = {
 describe("outlets: CRUD", () => {
   it("fiyat gösterimi ve sipariş anahtarı değişince price.display / ordering.changed yayınlar", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const bar = await outlets.create(ctx, mr, BAR);
     publishMock.mockReset();
     await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW" });
@@ -76,7 +80,7 @@ describe("outlets: CRUD", () => {
 
   it("oluşturur, günceller, aktifliği ve sipariş anahtarını değiştirir, siler; her yazma audit + definition.changed bırakır", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
 
     const created = await outlets.create(ctx, mr, BAR);
     expect(created).toMatchObject({
@@ -130,9 +134,26 @@ describe("outlets: CRUD", () => {
     }
   });
 
+  it("outlet oluşturulunca varsayılan çağrı seçenekleri vardır", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("ROYAL");
+    const created = await outlets.create(ctx, mr, { ...BAR, name: "Çağrı Barı" });
+    const options = await testDb.outletCallOption.findMany({
+      where: { outletId: created.id },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(options).toHaveLength(4);
+    expect(options.map((o) => o.label)).toEqual([
+      "Peçete istiyorum",
+      "Sipariş vereceğim",
+      "Su istiyorum",
+      "Hesap",
+    ]);
+  });
+
   it("ikinci ODA_SERVISI outleti CONFLICT; tek başına hasOrdering VALIDATION; aynı ad CONFLICT", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     // The seed already made the hotel's room-service outlet.
     await expect(
       outlets.create(ctx, mr, { ...BAR, name: "Oda Servisi 2", type: "ODA_SERVISI" }),
@@ -161,7 +182,7 @@ describe("outlets: CRUD", () => {
       message: "Bu adda bir outlet zaten var",
     });
     // The same name is fine in another hotel.
-    await expect(outlets.create(ctx, await hotelId("MRP"), BAR)).resolves.toMatchObject({
+    await expect(outlets.create(ctx, await hotelId("PREMIUM"), BAR)).resolves.toMatchObject({
       name: BAR.name,
     });
     expect(await testDb.outlet.count({ where: { hotelId: mr, type: "ODA_SERVISI" } })).toBe(1);
@@ -169,7 +190,7 @@ describe("outlets: CRUD", () => {
 
   it("eşzamanlı iki ODA_SERVISI oluşturma: biri başarır, diğeri Türkçe CONFLICT (kısmi unique yarışı)", async () => {
     const ctx = await sys();
-    const mrp = await hotelId("MRP");
+    const mrp = await hotelId("PREMIUM");
     await testDb.outlet.deleteMany({ where: { hotelId: mrp, type: "ODA_SERVISI" } });
 
     const attempt = (name: string) => outlets.create(ctx, mrp, { ...BAR, name, type: "ODA_SERVISI" });
@@ -186,8 +207,8 @@ describe("outlets: CRUD", () => {
 
   it("outlet başka otele taşınamaz; başka otelin outleti NOT_FOUND", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
-    const mrp = await hotelId("MRP");
+    const mr = await hotelId("ROYAL");
+    const mrp = await hotelId("PREMIUM");
     const bar = await outlets.create(ctx, mr, BAR);
     await expect(
       outlets.update(ctx, mr, bar.id, { ...BAR, hotelId: mrp } as never),
@@ -199,8 +220,9 @@ describe("outlets: CRUD", () => {
 
   it("masası olan outlet silinemez (Türkçe CONFLICT, outlet ve masa durur)", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const bar = await outlets.create(ctx, mr, BAR);
+    await addClosedArea(bar.id);
     await tables.create(ctx, bar.id, { label: "M1" });
     await expect(outlets.remove(ctx, mr, bar.id)).rejects.toMatchObject({
       code: "CONFLICT",
@@ -212,13 +234,13 @@ describe("outlets: CRUD", () => {
   });
 
   it("yönetim kendi otelinin outletini yönetir; başka otelde FORBIDDEN", async () => {
-    const ctx = await mgmt("MR");
-    const bar = await outlets.create(ctx, await hotelId("MR"), BAR);
+    const ctx = await mgmt("ROYAL");
+    const bar = await outlets.create(ctx, await hotelId("ROYAL"), BAR);
     expect(bar.name).toBe(BAR.name);
-    await expect(outlets.create(ctx, await hotelId("MRP"), BAR)).rejects.toMatchObject({
+    await expect(outlets.create(ctx, await hotelId("PREMIUM"), BAR)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
-    await expect(outlets.list(ctx, await hotelId("MRP"), Q)).rejects.toMatchObject({
+    await expect(outlets.list(ctx, await hotelId("PREMIUM"), Q)).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });
@@ -227,8 +249,9 @@ describe("outlets: CRUD", () => {
 describe("tables", () => {
   it("oluşturur, günceller, siler; qrToken null; audit + definition.changed (entity table)", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     const bar = await outlets.create(ctx, mr, BAR);
+    await addClosedArea(bar.id);
     publishMock.mockReset();
 
     const t = await tables.create(ctx, bar.id, { label: "VIP 1" });
@@ -265,7 +288,8 @@ describe("tables", () => {
 
   it("bulkCreate 1..20 → M1..M20 doğal sırayla; tekrar CONFLICT ve hiçbiri eklenmez", async () => {
     const ctx = await sys();
-    const bar = await outlets.create(ctx, await hotelId("MR"), BAR);
+    const bar = await outlets.create(ctx, await hotelId("ROYAL"), BAR);
+    await addClosedArea(bar.id);
     const result = await tables.bulkCreate(ctx, bar.id, { from: 1, to: 20 });
     expect(result.created).toBe(20);
     const listed = (await tables.list(ctx, bar.id, Q)).items.map((r) => r.label);
@@ -297,8 +321,8 @@ describe("tables", () => {
 
   it("başka otelin outletinde masa işlemi yönetim için FORBIDDEN; olmayan outlet NOT_FOUND", async () => {
     const root = await sys();
-    const other = await outlets.create(root, await hotelId("MRP"), BAR);
-    const ctx = await mgmt("MR");
+    const other = await outlets.create(root, await hotelId("PREMIUM"), BAR);
+    const ctx = await mgmt("ROYAL");
     await expect(tables.list(ctx, other.id, Q)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(tables.create(ctx, other.id, { label: "X" })).rejects.toMatchObject({
       code: "FORBIDDEN",
@@ -312,8 +336,8 @@ describe("tables", () => {
 describe("hotelModules", () => {
   it("set(MR, MINIBAR, false) sonrası listTargets(kat.mr) boş; açınca geri gelir; audit, definition.changed, settings.changed", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
-    const kat = await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "MR" });
+    const mr = await hotelId("ROYAL");
+    const kat = await makeUser({ username: "kat.mr", roleCode: "R-KAT", hotelCode: "ROYAL" });
     expect(await listTargets(kat.id)).toHaveLength(1);
 
     const off = await hotelModules.set(ctx, mr, "MINIBAR", false);
@@ -347,7 +371,7 @@ describe("hotelModules", () => {
 
   it("CORE kapatılamaz; satırı olmayan modül kapalı sayılır ve set satırı oluşturur", async () => {
     const ctx = await sys();
-    const mr = await hotelId("MR");
+    const mr = await hotelId("ROYAL");
     await expect(hotelModules.set(ctx, mr, "CORE", false)).rejects.toMatchObject({
       code: "VALIDATION",
     });
@@ -367,15 +391,15 @@ describe("hotelModules", () => {
   });
 
   it("yönetim kendi otelinde modül kapatabilir; başka otelde FORBIDDEN", async () => {
-    const ctx = await mgmt("MR");
-    await expect(hotelModules.set(ctx, await hotelId("MR"), "QR_MENU", false)).resolves.toEqual({
+    const ctx = await mgmt("ROYAL");
+    await expect(hotelModules.set(ctx, await hotelId("ROYAL"), "QR_MENU", false)).resolves.toEqual({
       moduleKey: "QR_MENU",
       enabled: false,
     });
     await expect(
-      hotelModules.set(ctx, await hotelId("MRP"), "QR_MENU", false),
+      hotelModules.set(ctx, await hotelId("PREMIUM"), "QR_MENU", false),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(hotelModules.list(ctx, await hotelId("MRP"))).rejects.toMatchObject({
+    await expect(hotelModules.list(ctx, await hotelId("PREMIUM"))).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });

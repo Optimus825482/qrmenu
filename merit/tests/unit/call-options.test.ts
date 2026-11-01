@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { testDb } from "../helpers/db";
 import {
   ctxFor,
@@ -9,6 +11,7 @@ import {
   resetTestData,
 } from "../helpers/fixtures";
 import { CALL_LANGS, callOptionLabel } from "@/modules/menu/callOptions";
+import { DEFAULT_CALL_OPTIONS, ensureDefaultCallOptions } from "@/modules/menu/server/callOptionDefaults";
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 const publishMock = vi.hoisted(() => vi.fn());
@@ -251,5 +254,63 @@ describe("callOptions service", () => {
     await expect(
       callOptions.resolveActive(testDb, outlet1.id, "olmayan-id"),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("ensureDefaultCallOptions", () => {
+  it("ensureDefaultCallOptions dört seçeneği doğru sırayla ve çevirileriyle ekler", async () => {
+    const outlet = await makeOutlet();
+    await ensureDefaultCallOptions(testDb, outlet.id);
+
+    const rows = await testDb.outletCallOption.findMany({
+      where: { outletId: outlet.id },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(rows).toHaveLength(4);
+    expect(rows.map((r) => r.label)).toEqual([
+      "Peçete istiyorum",
+      "Sipariş vereceğim",
+      "Su istiyorum",
+      "Hesap",
+    ]);
+    expect(rows[0].callType).toBe("GARSON");
+    expect(rows[3].callType).toBe("HESAP");
+    expect(rows[0].translations).toMatchObject({
+      en: "Napkins, please",
+      de: "Servietten bitte",
+      ru: "Салфетки, пожалуйста",
+      ar: "مناديل من فضلك",
+    });
+  });
+
+  it("ikinci çağrı yinelemez", async () => {
+    const outlet = await makeOutlet();
+    await ensureDefaultCallOptions(testDb, outlet.id);
+    await ensureDefaultCallOptions(testDb, outlet.id);
+
+    const count = await testDb.outletCallOption.count({ where: { outletId: outlet.id } });
+    expect(count).toBe(4);
+  });
+
+  it("seçeneği olan outlete dokunmaz", async () => {
+    const ctx = await sys();
+    const outlet = await makeOutlet();
+    await callOptions.save(ctx, outlet.id, { label: "Özel Çağrı", callType: "GARSON" });
+
+    await ensureDefaultCallOptions(testDb, outlet.id);
+    const rows = await testDb.outletCallOption.findMany({ where: { outletId: outlet.id } });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].label).toBe("Özel Çağrı");
+  });
+
+  it("DEFAULT_CALL_OPTIONS migrasyon doldurmasıyla aynı etiketleri taşır", () => {
+    const migrationDir = path.resolve(__dirname, "../../prisma/migrations");
+    const migrationFiles = fs.readdirSync(migrationDir, { recursive: true })
+      .filter((f) => typeof f === "string" && f.endsWith("migration.sql"));
+    const migrationContent = migrationFiles.map((f) => fs.readFileSync(path.join(migrationDir, f as string), "utf8")).join("\n");
+
+    for (const opt of DEFAULT_CALL_OPTIONS) {
+      expect(migrationContent).toContain(opt.label);
+    }
   });
 });

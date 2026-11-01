@@ -6,6 +6,7 @@ import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 import { assertCan } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
+import { ensureDefaultCallOptions } from "@/modules/menu/server/callOptionDefaults";
 import {
   conflictFromPrisma,
   isConflictError,
@@ -24,7 +25,7 @@ const INVALID = "Girilen bilgiler geçersiz";
 const NAME_TAKEN = "Bu adda bir outlet zaten var";
 const ONE_ROOM_SERVICE = "Her otelde bir oda servisi outleti olabilir";
 const HAS_RECORDS =
-  "Outletin masa, sipariş, ekip veya menü kaydı var; silmek yerine pasife alın";
+  "Outlete bağlı masa, alan, sipariş, ekip, oturum veya menü kaydı var; silmek yerine pasife alın";
 
 export type OutletRow = {
   id: string;
@@ -37,8 +38,19 @@ export type OutletRow = {
   priceDisplay: PriceDisplay;
   kdsEnabled: boolean;
   phoneConfirmRequired: boolean;
+  autoPrintReceipt: boolean;
+  autoPrintKitchen: boolean;
   isActive: boolean;
   tableCount: number;
+  areaCount: number;
+  areas: {
+    id: string;
+    type: "ACIK" | "KAPALI";
+    name: string | null;
+    orderingEnabled: boolean | null;
+    priceDisplay: PriceDisplay | null;
+    tableCount: number;
+  }[];
 };
 
 const SELECT = {
@@ -52,15 +64,30 @@ const SELECT = {
   priceDisplay: true,
   kdsEnabled: true,
   phoneConfirmRequired: true,
+  autoPrintReceipt: true,
+  autoPrintKitchen: true,
   isActive: true,
-  _count: { select: { tables: true } },
+  areas: {
+    select: {
+      id: true,
+      type: true,
+      name: true,
+      orderingEnabled: true,
+      priceDisplay: true,
+      _count: { select: { tables: true } },
+    },
+    orderBy: [{ type: "asc" }, { createdAt: "asc" }],
+  },
+  _count: { select: { tables: true, areas: true } },
 } satisfies Prisma.OutletSelect;
 
 type OutletWithCount = Prisma.OutletGetPayload<{ select: typeof SELECT }>;
 
-const toRow = ({ _count, ...outlet }: OutletWithCount): OutletRow => ({
+const toRow = ({ _count, areas, ...outlet }: OutletWithCount): OutletRow => ({
   ...outlet,
+  areas: areas.map(({ _count: areaCount, ...area }) => ({ ...area, tableCount: areaCount.tables })),
   tableCount: _count.tables,
+  areaCount: _count.areas,
 });
 
 export const outletSchema = z
@@ -75,6 +102,8 @@ export const outletSchema = z
     priceDisplay: z.enum(PriceDisplay, "Fiyat gösterimini seçin").default("INHERIT"),
     phoneConfirmRequired: z.boolean().default(false),
     kdsEnabled: z.boolean().default(false),
+    autoPrintReceipt: z.boolean().default(true),
+    autoPrintKitchen: z.boolean().default(false),
     isActive: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
@@ -173,10 +202,13 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
           priceDisplay: input.priceDisplay,
           phoneConfirmRequired: input.phoneConfirmRequired,
           kdsEnabled: input.kdsEnabled,
+          autoPrintReceipt: input.autoPrintReceipt,
+          autoPrintKitchen: input.autoPrintKitchen,
           isActive: input.isActive ?? true,
         },
         select: SELECT,
       });
+      await ensureDefaultCallOptions(tx, created.id);
       const row = toRow(created);
       await audit(tx, {
         userId: ctx.user.id,
@@ -239,6 +271,8 @@ export async function update(
           priceDisplay: input.priceDisplay,
           phoneConfirmRequired: input.phoneConfirmRequired,
           kdsEnabled: input.kdsEnabled,
+          autoPrintReceipt: input.autoPrintReceipt,
+          autoPrintKitchen: input.autoPrintKitchen,
           ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         },
         select: SELECT,
@@ -318,6 +352,7 @@ export async function remove(ctx: Ctx, hotelId: string, id: string): Promise<voi
           _count: {
             select: {
               tables: true,
+              areas: true,
               orders: true,
               waiterCalls: true,
               members: true,

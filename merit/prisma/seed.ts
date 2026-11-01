@@ -3,10 +3,15 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import { type PrismaClient } from "@/generated/prisma/client";
 import { SCREENS } from "@/modules/core/screens";
-import { HOTEL_MODULES, HOTELS, ROOM_SERVICE_OUTLET } from "./seed/hotels";
+import { HOTEL_MODULES, HOTELS } from "./seed/hotels";
 import { MENU_THEMES } from "./seed/menuThemes";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
 import { DEFAULT_SETTINGS } from "../src/lib/settings-defs";
+import { SEED_OUTLETS } from "./seed/outlets";
+import { sampleMenuForOutlet } from "./seed/sampleMenus";
+import type { MenuNodeKind, OutletType } from "@/generated/prisma/client";
+import { suggestedUsername } from "../src/modules/core/usernames";
+import { ensureDefaultCallOptions } from "../src/modules/menu/server/callOptionDefaults";
 
 const MIN_ADMIN_PASSWORD_LENGTH = 10;
 const BCRYPT_ROUNDS = 12;
@@ -16,7 +21,7 @@ async function seedHotels(db: PrismaClient) {
     const hotel = await db.hotel.upsert({
       where: { code },
       create: { code, name, isSystemDefault: true },
-      update: { name, isSystemDefault: true },
+      update: { name, isSystemDefault: true, isActive: true },
     });
     for (const moduleKey of HOTEL_MODULES) {
       await db.hotelModule.upsert({
@@ -24,13 +29,6 @@ async function seedHotels(db: PrismaClient) {
         create: { hotelId: hotel.id, moduleKey, enabled: true },
         update: {}, // an operator may have switched the module off
       });
-    }
-    // Looked up by type, not name: an admin may have renamed it, and a hotel may have only one.
-    const roomService = await db.outlet.findFirst({
-      where: { hotelId: hotel.id, type: ROOM_SERVICE_OUTLET.type },
-    });
-    if (!roomService) {
-      await db.outlet.create({ data: { hotelId: hotel.id, ...ROOM_SERVICE_OUTLET } });
     }
   }
 }
@@ -180,12 +178,280 @@ async function seedAdmin(db: PrismaClient, password: string) {
   });
 }
 
+/** Outlet/area/table demo data: create missing rows and preserve any operator adjustments. */
+async function seedOutlets(db: PrismaClient) {
+  const hotels = await db.hotel.findMany({ where: { code: { in: ["DIAMOND", "ROYAL", "PREMIUM"] } }, select: { id: true, code: true } });
+  const hotelIds = new Map(hotels.map((hotel) => [hotel.code, hotel.id]));
+  for (const definition of SEED_OUTLETS) {
+    const hotelId = hotelIds.get(definition.hotelCode);
+    if (!hotelId) continue;
+    const existing = await db.outlet.findFirst({ where: { hotelId, name: definition.name }, select: { id: true } });
+    const outlet = existing ?? await db.outlet.create({
+      data: { hotelId, name: definition.name, type: definition.type, hasMenu: true, hasOrdering: true, orderingEnabled: true },
+      select: { id: true },
+    });
+    if (!existing) {
+      await ensureDefaultCallOptions(db, outlet.id);
+    }
+    let nextNumber = 1;
+    for (const areaDefinition of definition.areas) {
+      const area = await db.outletAreaDefinition.findFirst({
+        where: { outletId: outlet.id, type: areaDefinition.type, name: areaDefinition.name },
+        select: { id: true },
+      }) ?? await db.outletAreaDefinition.create({
+        data: { outletId: outlet.id, type: areaDefinition.type, name: areaDefinition.name, orderingEnabled: true },
+        select: { id: true },
+      });
+      for (let index = 0; index < areaDefinition.tableCount; index += 1) {
+        const number = nextNumber++;
+        const label = `${definition.name} ${number}`;
+        await db.outletTable.upsert({
+          where: { outletId_number: { outletId: outlet.id, number } },
+          create: {
+            outletId: outlet.id,
+            areaId: area.id,
+            number,
+            name: null,
+            label,
+            capacity: [2, 4, 4, 6][(number - 1) % 4],
+          },
+          update: {},
+        });
+      }
+    }
+  }
+}
+
+/** Adds realistic demo menu trees to every menu outlet; existing rows are left untouched. */
+export async function seedSampleMenus(db: PrismaClient) {
+  const outlets = await db.outlet.findMany({
+    where: { hasMenu: true, isActive: true },
+    select: { id: true, name: true, type: true },
+    orderBy: [{ hotelId: "asc" }, { name: "asc" }],
+  });
+
+  const ensureNode = async (input: {
+    outletId: string;
+    parentId: string | null;
+    kind: MenuNodeKind;
+    name: string;
+    detail?: string;
+    price?: number;
+    imageUrl?: string;
+    allergens?: string[];
+    tags?: string[];
+  }) => {
+    const existing = await db.menuNode.findFirst({
+      where: { outletId: input.outletId, parentId: input.parentId, kind: input.kind, name: input.name },
+      select: { id: true, tags: true },
+    });
+    if (existing) {
+      if ((input.tags?.length ?? 0) > 0 && existing.tags.length === 0) {
+        await db.menuNode.update({ where: { id: existing.id }, data: { tags: input.tags } });
+      }
+      return existing.id;
+    }
+    const siblings = await db.menuNode.aggregate({
+      where: { outletId: input.outletId, parentId: input.parentId },
+      _max: { sortOrder: true },
+    });
+    const created = await db.menuNode.create({
+      data: {
+        outletId: input.outletId,
+        parentId: input.parentId,
+        kind: input.kind,
+        name: input.name,
+        detail: input.detail,
+        price: input.price,
+        imageUrl: input.imageUrl,
+        allergens: input.allergens ?? [],
+        tags: input.tags ?? [],
+        sortOrder: (siblings._max.sortOrder ?? -1) + 1,
+      },
+      select: { id: true },
+    });
+    return created.id;
+  };
+
+  for (const outlet of outlets) {
+    const categories = sampleMenuForOutlet(outlet.type as OutletType, outlet.name);
+    for (const category of categories) {
+      const categoryId = await ensureNode({
+        outletId: outlet.id,
+        parentId: null,
+        kind: "KATEGORI",
+        name: category.name,
+      });
+      for (const item of category.items ?? []) {
+        await ensureNode({
+          outletId: outlet.id,
+          parentId: categoryId,
+          kind: "OGE",
+          name: item.name,
+          detail: item.detail,
+          price: item.price,
+          imageUrl: item.image,
+          allergens: item.allergens,
+          tags: item.tags,
+        });
+      }
+      for (const subcategory of category.subcategories ?? []) {
+        const subcategoryId = await ensureNode({
+          outletId: outlet.id,
+          parentId: categoryId,
+          kind: "ALT_KATEGORI",
+          name: subcategory.name,
+        });
+        for (const item of subcategory.items) {
+          await ensureNode({
+            outletId: outlet.id,
+            parentId: subcategoryId,
+            kind: "OGE",
+            name: item.name,
+            detail: item.detail,
+            price: item.price,
+            imageUrl: item.image,
+            allergens: item.allergens,
+            tags: item.tags,
+          });
+        }
+      }
+    }
+  }
+}
+
+/** Three realistic staff accounts per seeded outlet; new accounts must change the temporary password. */
+async function seedSampleStaff(db: PrismaClient) {
+  const hotels = await db.hotel.findMany({ where: { code: { in: ["DIAMOND", "ROYAL", "PREMIUM"] } }, select: { id: true, code: true } });
+  const roles = await db.role.findMany({ where: { code: { in: ["R-SGF", "R-MUS", "R-GAR"] } }, select: { id: true, code: true } });
+  const roleIds = new Map(roles.map((role) => [role.code, role.id]));
+  const passwordHash = await bcrypt.hash("123456", BCRYPT_ROUNDS);
+  const hotelsByCode = new Map(hotels.map((hotel) => [hotel.code, hotel.id]));
+  const oldLogins: Record<string, string> = { "R-SGF": "outlet.sefi", "R-MUS": "mutfak.sefi", "R-GAR": "garson" };
+  const oldHotelSuffix: Record<string, string> = { ROYAL: "mr", DIAMOND: "mrd", PREMIUM: "mrp" };
+  const people: Record<string, string[]> = {
+    "R-SGF": ["Derya Aksoy", "Hakan Demir", "Pınar Yıldız", "Murat Şahin", "Ece Yılmaz", "Burak Aydın", "Selin Kaya", "Kerem Çelik", "Zeynep Arslan", "Emre Koç", "Cansu Özkan", "Arda Güneş", "Buse Kurt", "Okan Polat", "İrem Doğan", "Selçuk Ergin", "Işıl Korkmaz", "Baran Sönmez", "Özge Kara"],
+    "R-MUS": ["Mehmet Kaya", "Ayşe Demir", "Onur Şahin", "Elif Yılmaz", "Serkan Arslan", "Sibel Aydın", "Mert Çelik", "Esra Koç", "Kaan Özkan", "Deniz Güneş", "Ceren Kurt", "Tolga Polat", "Nil Doğan", "Furkan Aksoy", "Melis Yıldız", "Cemal Keskin", "Asuman Ergin", "Kıvanç Yüce", "Gamze Çoban"],
+    "R-GAR": ["Eren Yalçın", "Aslı Kılıç", "Ahmet Erdem", "Yağmur Keskin", "Yusuf Toprak", "Ezgi Bayram", "Berk Uçar", "Seda Tunç", "Kadir Taş", "Dilan Bal", "Can Keser", "Gülce Dinç", "Fırat Söylemez", "Nisa Eren", "Arif Ünal", "Lale Şen", "Emrah Taş", "Poyraz Işık", "Gökçe Uysal"],
+  };
+
+  // Reuse the old demo accounts for the first outlet at each hotel so `*.mr` logins disappear
+  // without losing their existing passwords. Their old memberships are rebuilt below.
+  const seededOutlets: { hotelCode: string; index: number; outletId: string; hotelId: string }[] = [];
+  for (const [index, definition] of SEED_OUTLETS.entries()) {
+    const hotelId = hotelsByCode.get(definition.hotelCode);
+    if (!hotelId) continue;
+    const outlet = await db.outlet.findFirst({ where: { hotelId, name: definition.name }, select: { id: true } });
+    if (outlet) seededOutlets.push({ hotelCode: definition.hotelCode, index, outletId: outlet.id, hotelId });
+  }
+  let extraIndex = SEED_OUTLETS.length;
+  for (const hotel of hotels) {
+    const seededNames = SEED_OUTLETS.filter((definition) => definition.hotelCode === hotel.code).map((definition) => definition.name);
+    const extraOutlets = await db.outlet.findMany({
+      where: { hotelId: hotel.id, ...(seededNames.length ? { name: { notIn: seededNames } } : {}) },
+      select: { id: true },
+      orderBy: { name: "asc" },
+    });
+    for (const outlet of extraOutlets) seededOutlets.push({ hotelCode: hotel.code, index: extraIndex++, outletId: outlet.id, hotelId: hotel.id });
+  }
+  const existingSeededOutletIds = seededOutlets.map((entry) => entry.outletId);
+  const legacyUsers = await db.user.findMany({
+    where: { username: { in: Object.values(oldHotelSuffix).flatMap((suffix) => Object.values(oldLogins).map((login) => `${login}.${suffix}`)) } },
+    select: { id: true },
+  });
+  if (legacyUsers.length && existingSeededOutletIds.length) {
+    await db.outletMember.deleteMany({ where: { userId: { in: legacyUsers.map((user) => user.id) }, outletId: { in: existingSeededOutletIds } } });
+  }
+
+  const assignedLegacy = new Set<string>();
+  for (const entry of seededOutlets) {
+    if (!entry) continue;
+    const { hotelCode, index, outletId, hotelId } = entry;
+    for (const roleCode of ["R-SGF", "R-MUS", "R-GAR"] as const) {
+      const roleId = roleIds.get(roleCode);
+      const fullName = people[roleCode]?.[index];
+      if (!roleId || !fullName) continue;
+      const usernameBase = suggestedUsername(fullName);
+      let username = usernameBase;
+      let existing = await db.user.findUnique({ where: { username }, select: { id: true, fullName: true } });
+      if (existing && existing.fullName !== fullName) {
+        for (let suffix = 2; ; suffix += 1) {
+          username = `${usernameBase.slice(0, 38)}${suffix}`;
+          existing = await db.user.findUnique({ where: { username }, select: { id: true, fullName: true } });
+          if (!existing || existing.fullName === fullName) break;
+        }
+      }
+      const hotelSuffix = oldHotelSuffix[hotelCode];
+      const legacyUsername = `${oldLogins[roleCode]}.${hotelSuffix}`;
+      const legacy = assignedLegacy.has(legacyUsername)
+        ? null
+        : await db.user.findUnique({ where: { username: legacyUsername }, select: { id: true } });
+      let userId = existing?.id;
+      if (legacy && !existing) {
+        const updated = await db.user.update({
+          where: { id: legacy.id },
+          data: { username, fullName, jobTitle: roleCode === "R-SGF" ? "Outlet Şefi" : roleCode === "R-MUS" ? "Mutfak Şefi" : "Garson", roleId, hotelId },
+          select: { id: true },
+        });
+        assignedLegacy.add(legacyUsername);
+        userId = updated.id;
+      } else if (existing) {
+        await db.user.update({ where: { id: existing.id }, data: { fullName, jobTitle: roleCode === "R-SGF" ? "Outlet Şefi" : roleCode === "R-MUS" ? "Mutfak Şefi" : "Garson", roleId, hotelId } });
+      } else {
+        const created = await db.user.create({
+          data: {
+            username,
+            fullName,
+            jobTitle: roleCode === "R-SGF" ? "Outlet Şefi" : roleCode === "R-MUS" ? "Mutfak Şefi" : "Garson",
+            passwordHash,
+            mustChangePassword: true,
+            roleId,
+            hotelId,
+          },
+          select: { id: true },
+        });
+        userId = created.id;
+      }
+      if (!userId) continue;
+      await db.outletMember.upsert({
+        where: { userId_outletId: { userId, outletId } },
+        create: { userId, outletId, roleId },
+        update: { roleId, isActive: true },
+      });
+    }
+  }
+}
+
+/** Replace old technical demo identities which still exposed hotel-code suffixes. */
+async function cleanLegacyDemoNames(db: PrismaClient) {
+  const legacyNames = [
+    { from: "ayar.mr", username: "serkan.aksoy", fullName: "Serkan Aksoy", jobTitle: "F&B Müdürü" },
+    { from: "fbm.mr", username: "seda.yilmaz", fullName: "Seda Yılmaz", jobTitle: "F&B Müdürü" },
+    { from: "kat.mr", username: "aylin.kaya", fullName: "Aylin Kaya", jobTitle: "Kat Sorumlusu" },
+    { from: "mudur.mr", username: "faruk.yildiz", fullName: "Faruk Yıldız", jobTitle: "Otel Müdürü" },
+  ];
+  for (const person of legacyNames) {
+    const legacy = await db.user.findUnique({ where: { username: person.from }, select: { id: true } });
+    if (!legacy) continue;
+    const existing = await db.user.findUnique({ where: { username: person.username }, select: { id: true } });
+    if (existing) continue;
+    await db.user.update({
+      where: { id: legacy.id },
+      data: { username: person.username, fullName: person.fullName, jobTitle: person.jobTitle },
+    });
+  }
+}
+
 /** Idempotent: safe to run any number of times against the same database. */
 export async function runSeed(db: PrismaClient): Promise<void> {
   const adminPassword = requireAdminPassword(); // fail closed, before anything is written
   await seedHotels(db);
   await seedScreens(db);
   await seedRoles(db);
+  await seedOutlets(db);
+  await seedSampleMenus(db);
+  await seedSampleStaff(db);
+  await cleanLegacyDemoNames(db);
   await seedPermissions(db);
   await seedSettings(db);
   await seedMenuThemes(db);
