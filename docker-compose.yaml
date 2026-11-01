@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-merit_admin}:${POSTGRES_PASSWORD:-merit_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-merit}?schema=public
       - APP_BASE_URL=${APP_BASE_URL:-http://localhost:3000}
