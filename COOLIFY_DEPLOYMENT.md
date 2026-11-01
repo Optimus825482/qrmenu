@@ -1,94 +1,73 @@
-# 🚀 Coolify ile Merit QR Menü Kurulum Kılavuzu
+# 🚀 Coolify ile Merit QR Menü Kurulum Kılavuzu (Tek Proje / Docker Compose)
 
-Bu kılavuz, projenin **Coolify** (Self-hosted PaaS) üzerinde sıfır hata ve kesintisiz şekilde çalıştırılması için gerekli tüm adımları içerir.
-
----
-
-## 🛠️ Mimari ve Gereksinimler
-
-* **Uygulama:** Next.js (Node.js 22-alpine)
-* **Veritabanı:** PostgreSQL 15+ (Coolify içinden tek tıkla kurulabilir)
-* **ORM & Migrasyon:** Prisma (`prisma migrate deploy` konteyner açılışında otomatik uygulanır)
-* **Kalıcı Depolama (Storage):** Menü ürün fotoğrafları için kalıcı disk birimi (`/app/uploads`)
+Bu kurulumda **Coolify üzerinde tek bir proje kaynağı (Docker Compose Stack)** oluşturulur. Hem **Next.js Web Uygulaması** hem de **PostgreSQL Veritabanı** aynı stack içinde otomatik olarak ayağa kalkar, tohum veriler (oteller, beach bar, 12 masa QR'ı, menü ürünleri ve görseller) otomatik yüklenir.
 
 ---
 
-## 📋 1. Adım: Coolify'da PostgreSQL Veritabanı Açma
-
-1. Coolify panelinizde projenizin içine girin.
-2. **+ New Resource** → **Databases** → **PostgreSQL** seçin.
-3. İsim olarak `merit-db` verebilirsiniz.
-4. Oluşturulduktan sonra veritabanının **Internal Connection String (İç Bağlantı URL'si)** adresini kopyalayın.
-   * Örnek: `postgresql://postgres:sifreniz@merit-db:5432/merit`
-
----
-
-## 🌐 2. Adım: GitHub Reposunu Coolify'a Bağlama
-
-1. **+ New Resource** → **Git Repository (GitHub App veya Public/Private Repo)** seçin.
-2. `qrmenu` reposunu ve ilgili dalı (`main` veya `p5/qr-menu`) seçin.
-3. Build Pack olarak **Dockerfile** seçili olduğundan emin olun.
-4. **General** sekmesinde şu ayarları yapın:
-   * **Base Directory:** `/merit` (eğer root Dockerfile kullanacaksanız `/` bırakabilirsiniz; önerilen: `/merit`)
-   * **Dockerfile Path:** `/Dockerfile`
-   * **Ports Exposes:** `3000`
+## 🛠️ Mimari
+* **Servis 1: `app` (Next.js - Port 3000):** Web arayüzü, admin paneli, POS/Kasa, KDS mutfak ve misafir QR menüsü.
+* **Servis 2: `postgres` (PostgreSQL 16):** Uygulama veritabanı.
+* **Kalıcı Birimler (Volumes):**
+  * `postgres-data` → Veritabanının silinmesini engeller.
+  * `app-uploads` → Yüklenen yeni fotoğrafların silinmesini engeller.
+* **Örnek Görseller & Menüler:** Repo içindeki `/menu-samples` ve otel logoları doğrudan Next.js konteynerine dahildir ve ilk açılışta veritabanına otomatik bağlanır.
 
 ---
 
-## 🔑 3. Adım: Ortam Değişkenleri (Environment Variables)
+## 📋 Coolify'da Adım Adım Kurulum
 
-Coolify'daki uygulamanızın **Environment Variables** sekmesine aşağıdaki değerleri girin:
-
-| Değişken | Örnek / Açıklama |
-| :--- | :--- |
-| `DATABASE_URL` | 1. adımda kopyaladığınız Postgres bağlantı dizesi (örn: `postgresql://postgres:sifre@merit-db:5432/merit`) |
-| `APP_BASE_URL` | Sunucunuzun canlı dış adresi: `https://menu.siteniz.com` (veya IP testi için: `http://ip-adresi:3000`) |
-| `SESSION_SECRET` | 32+ karakter rastgele gizli anahtar (örn: `openssl rand -hex 32`) |
-| `QR_HMAC_SECRET` | 32+ karakter QR imzalama anahtarı (örn: `openssl rand -hex 32`) |
-| `PRINT_GATEWAY_KEY` | Termal yazıcı geçidi güvenlik anahtarı (örn: `openssl rand -hex 32`) |
-| `SEED_ADMIN_PASSWORD` | İlk kurulum admin şifresi (örn: `Merit!2026`) |
-| `UPLOADS_DIR` | `/app/uploads` |
-| `RUN_SEED` | **İlk kurulumda:** `true` (Oteller, temalar, menüler ve masaları oluşturur). Kurulum bittikten sonra `false` yapabilirsiniz. |
-| `TZ` | `Europe/Nicosia` veya `Europe/Istanbul` |
-| `NODE_ENV` | `production` |
-
-> 💡 **İpucu:** Güvenlik anahtarlarını üretmek için terminalinizde şu komutu çalıştırabilirsiniz:
-> ```bash
-> openssl rand -hex 32
-> ```
+### 1. Yeni Kaynak Ekleyin
+1. Coolify panelinizde projenize girin.
+2. **+ New Resource** → **Docker Compose** (veya **Git Repository** seçip Build Pack olarak **Docker Compose** seçin).
+3. GitHub reponuzu bağlayın:
+   * **Repository:** `https://github.com/Optimus825482/qrmenu.git`
+   * **Branch:** `main`
+   * **Compose File Path:** `docker-compose.yml` (veya doğrudan repodaki dosyayı okur)
 
 ---
 
-## 💾 4. Adım: Kalıcı Depolama (Persistent Storage / Uploads)
+### 2. Ortam Değişkenleri (Environment Variables)
 
-Kullanıcıların yüklediği menü ve ürün fotoğraflarının konteyner yeniden başlatıldığında silinmemesi için kalıcı bir birim bağlanmalıdır:
+Coolify'daki Docker Compose kaynağınızın **Environment Variables** bölümüne alan adınızı girmeniz yeterlidir:
 
-1. Coolify uygulamasında **Storages** (veya **Persistent Storage**) sekmesine gidin.
-2. **+ Add Storage** butonuna tıklayın:
-   * **Volume Name:** `merit-uploads`
-   * **Destination Path:** `/app/uploads`
-3. Kaydedin.
+```env
+APP_BASE_URL=https://menu.siteniz.com
+SEED_ADMIN_PASSWORD=Merit!2026
+RUN_SEED=true
+```
 
----
-
-## 🚀 5. Adım: Canlıya Alma (Deploy)
-
-1. Coolify'da **Deploy** butonuna basın.
-2. Konteyner ayağa kalkarken:
-   * Otomatik olarak `prisma migrate deploy` çalışır ve tablolar güncellenir.
-   * `RUN_SEED=true` olduğu için ilk örnek veriler (Merit otelleri, beach bar, masa QR'ları, temalar, kullanıcılar) yüklenir.
-   * Next.js 3000 portunda yayına başlar.
-3. Coolify otomatik SSL (Let's Encrypt HTTPS) sertifikasını bağlayacaktır.
+*(Diğer tüm ayarlar — `DATABASE_URL`, gizli anahtarlar, portlar, sağlık kontrolleri — `docker-compose.yml` içinde hazır ve otomatik yapılandırılmıştır!)*
 
 ---
 
-## 🧪 6. Adım: Kurulum Sonrası Kontrol
+### 3. Alan Adı (Domain / FQDN) Bağlama
+* Coolify'da `app` servisinin karşısına alan adınızı yazın:
+  * `https://menu.siteniz.com` (veya IP adresi ile test: `http://sunucu-ip:3000`)
+* Coolify otomatik olarak Traefik reverse proxy ve Let's Encrypt SSL sertifikasını `app` servisinin 3000 portuna yönlendirecektir.
 
-* **Sistem Sağlık Testi:**
-  `https://menu.siteniz.com/api/health` adresine gidin. `{"status":"ok", ...}` yanıtı gelmelidir.
-* **Yönetici Girişi:**
-  `https://menu.siteniz.com/giris` adresine gidin.
+---
+
+### 4. Canlıya Alma (Deploy)
+* **Deploy** butonuna tıklayın.
+* Coolify konteynerleri derleyecek ve şu sırayla başlatacaktır:
+  1. `postgres` servisi açılır ve sağlık testi (`healthy`) beklenir.
+  2. `app` servisi açılır, `docker-entrypoint.sh` devreye girer.
+  3. Veritabanı tabloları oluşturulur (`prisma migrate deploy`).
+  4. Örnek veriler ve görseller yüklenir (`prisma/seed.ts`):
+     * Merit Royal, Merit Crystal Cove, Merit Park otelleri
+     * Beach Bar ve diğer outletler
+     * Masalar ve imzalı QR kodları
+     * Menü kategorileri, içecekler, yemekler ve örnek görseller
+     * XP Tema tasarımları
+  5. Next.js 3000 portunda yayına başlar.
+
+---
+
+### 5. Giriş ve Kullanım
+* **Yönetici Girişi:** `https://menu.siteniz.com/giris`
   * **Kullanıcı adı:** `admin`
-  * **Şifre:** `SEED_ADMIN_PASSWORD` ile belirlediğiniz şifre (varsayılan: `Merit!2026`)
-* **Masa QR Kodları Kontrolü:**
-  Masaüstünde **Masa QR Kodları** penceresini açın. Masaların QR linklerinin artık `https://menu.siteniz.com/q/...` adresine yönlendiğini doğrulayın.
+  * **Şifre:** `Merit!2026` (veya `SEED_ADMIN_PASSWORD` ile belirlediğiniz şifre)
+* **Masa QR Kodları:**
+  * Yönetici arayüzünde **Masa QR Kodları** penceresini açın.
+  * Masaların QR adresleri otomatik olarak canlı adresinize (`https://menu.siteniz.com/q/...`) hazırdır.
+  * **Yazdır** veya **ZIP İndir** diyerek anında çıktı alabilirsiniz.
