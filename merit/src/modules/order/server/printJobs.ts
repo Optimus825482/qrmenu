@@ -7,7 +7,7 @@ import { DomainError } from "@/lib/result";
 import { businessDate, businessDateStart } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
-import { onlineAt } from "./approvals";
+import { onlineAt, outletAllowed } from "./approvals";
 import { formatReceiptTime, receipt, type ReceiptPayload } from "./receipt";
 
 const MAX_ATTEMPTS = 3;
@@ -71,6 +71,8 @@ async function createReceiptJob(
       tx,
     );
     const dayStart = businessDateStart(businessDate());
+    // Serialize the check + insert so concurrent approvals emit only one daily warning.
+    await tx.$queryRaw`SELECT 1 WHERE pg_advisory_xact_lock(hashtext(${'print.noPrinter:' + order.outletId}), hashtext(${dayStart.toISOString().slice(0, 10)})) IS NULL`;
     const already = await tx.notification.findFirst({
       // Notifications carry no outlet column: the outlet is encoded in refType/refId.
       where: { type: "print.noPrinter", refType: "Outlet", refId: order.outletId, createdAt: { gte: dayStart } },
@@ -159,6 +161,7 @@ async function reprint(ctx: Ctx, orderId: string): Promise<PrintJob | null> {
   if (!order || !ctx.hotelIds.includes(order.hotelId)) {
     throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
   }
+  if (!outletAllowed(ctx, order.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   await assertCan(ctx, "QS-FIS", "O", order.hotelId);
   return prisma.$transaction(async (tx) => {
     const job = await createReceiptJob(tx, order);
@@ -230,10 +233,11 @@ async function claim(hotelCode: string, limit = DEFAULT_CLAIM_LIMIT): Promise<Cl
 async function report(jobId: string, result: ReportResult): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const locked = await tx.$queryRaw<
-      { id: string; attempts: number; hotel_id: string; order_id: string | null; printer_id: string }[]
-    >`SELECT id, attempts, hotel_id, order_id, printer_id FROM print_jobs WHERE id = ${jobId} FOR UPDATE`;
+      { id: string; attempts: number; status: PrintJobStatus; hotel_id: string; order_id: string | null; printer_id: string }[]
+    >`SELECT id, attempts, status, hotel_id, order_id, printer_id FROM print_jobs WHERE id = ${jobId} FOR UPDATE`;
     if (locked.length === 0) throw new DomainError("NOT_FOUND", "Baskı işi bulunamadı");
     const job = locked[0];
+    if (job.status !== "BASILIYOR") throw new DomainError("CONFLICT", "Baskı işi artık raporlanamaz");
     if (result.ok) {
       await tx.printJob.update({
         where: { id: jobId },
@@ -322,9 +326,21 @@ async function listQueue(
   opts: { status?: PrintJobStatus; day?: string } = {},
 ): Promise<QueueJob[]> {
   await assertCan(ctx, "QS-FIS", "V", hotelId);
+  if (ctx.user.roleKind === "OUTLET" && !ctx.session.outletId) {
+    throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  }
   return prisma.printJob.findMany({
     where: {
       hotelId,
+      ...(ctx.session.outletId
+        ? {
+            OR: [
+              { order: { outletId: ctx.session.outletId } },
+              { kind: "TEST", printer: { outletId: ctx.session.outletId } },
+              { kind: "TEST", printer: { outletId: null } },
+            ],
+          }
+        : {}),
       ...(opts.status ? { status: opts.status } : {}),
       ...(opts.day
         ? { createdAt: { gte: businessDateStart(opts.day), lt: businessDateStart(nextDay(opts.day)) } }

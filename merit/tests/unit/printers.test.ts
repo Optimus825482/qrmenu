@@ -24,16 +24,17 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-type S = { s: OrderSetup; ctx: Awaited<ReturnType<typeof kasCtx>> };
+type S = { s: OrderSetup; ctx: Awaited<ReturnType<typeof adminCtx>> };
 
-/** A cashier context: R-KAS holds QS-FIS V,O,D,A (ISLET profile). */
-async function kasCtx() {
-  return (await staffCtx("kas", "R-KAS")).ctx;
+/** System context for hotel-wide printer administration. Outlet scope is tested separately. */
+async function adminCtx() {
+  const user = await makeUser({ username: "printer-admin", roleCode: "R-SYS", hotelCode: "MR" });
+  return ctxFor(user, { hotelCode: "MR" });
 }
 
 async function setup(): Promise<S> {
   const s = await orderSetup();
-  return { s, ctx: await kasCtx() };
+  return { s, ctx: await adminCtx() };
 }
 
 const CREATE = { name: "Kasa Yazıcı", ip: "192.168.1.50", paperWidth: 80 };
@@ -173,6 +174,45 @@ describe("printers.setOutletDefault", () => {
     const row = await printers.create(ctx, s.hotelId, CREATE);
     await printers.setActive(ctx, row.id, false);
     await expect(printers.setOutletDefault(ctx, s.outlet.id, row.id)).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
+  it("outlet oturumu başka outletin varsayılanını ve outlet-yazıcısını göremez/değiştiremez", async () => {
+    const { s, ctx } = await setup();
+    const other = await testDb.outlet.create({
+      data: { hotelId: s.hotelId, name: "Beach Bar", type: "BAR", hasOrdering: true },
+    });
+    const sharedPrinter = await printers.create(ctx, s.hotelId, CREATE);
+    const otherPrinter = await printers.create(ctx, s.hotelId, {
+      ...CREATE,
+      name: "Beach Yazıcı",
+      ip: "192.168.1.51",
+      outletId: other.id,
+    });
+    const ownPrinter = await printers.create(ctx, s.hotelId, {
+      ...CREATE,
+      name: "Havuz Yazıcı",
+      ip: "192.168.1.52",
+      outletId: s.outlet.id,
+    });
+    await printers.setOutletDefault(ctx, other.id, otherPrinter.id);
+
+    const scoped = (await staffCtx("kasa.havuz", "R-KAS", s.outlet.id)).ctx;
+    const rows = await printers.list(scoped, s.hotelId);
+    expect(rows.map((printer) => printer.id)).toContain(sharedPrinter.id);
+    expect(rows.map((printer) => printer.id)).toContain(ownPrinter.id);
+    expect(rows.map((printer) => printer.id)).not.toContain(otherPrinter.id);
+    await expect(printers.create(scoped, s.hotelId, CREATE)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await printers.setOutletDefault(scoped, s.outlet.id, sharedPrinter.id);
+    await printers.update(scoped, ownPrinter.id, { ...CREATE, name: "Havuz Yazıcı Güncel", outletId: s.outlet.id });
+    expect(await printers.listOrderingOutlets(scoped, s.hotelId)).toMatchObject([
+      { id: s.outlet.id, name: "Havuz Bar" },
+    ]);
+    await expect(printers.setOutletDefault(scoped, other.id, otherPrinter.id)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(printers.update(scoped, otherPrinter.id, { ...CREATE, outletId: other.id })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
   });
 });
 

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { testDb } from "../helpers/db";
-import { dropReferenceData, resetReferenceData, resetTestData } from "../helpers/fixtures";
+import { dropReferenceData, hotelId, resetReferenceData, resetTestData } from "../helpers/fixtures";
 import { type OrderSetup, openSession, orderSetup, seedOrder, staffCtx } from "../helpers/orderFixtures";
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
@@ -121,6 +121,18 @@ describe("orders.transition", () => {
     await expect(orders.transition(gar.ctx, order.id, "ONAYLANDI", {})).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThanOrEqual(1);
     expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("GONDERILDI");
+  });
+
+  it("başka otel oturumundan yapılan yetkisiz sipariş denemesini siparişin oteline yazar", async () => {
+    const s = await orderSetup();
+    const { gar } = await actors(s);
+    const order = await seedOrder(s);
+    gar.ctx.session.hotelId = await hotelId("MRP");
+    gar.ctx.hotelIds.push(s.hotelId);
+
+    await expect(orders.transition(gar.ctx, order.id, "ONAYLANDI", {})).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const audit = await testDb.auditLog.findFirstOrThrow({ where: { action: "YETKISIZ_DENEME", entityId: order.id } });
+    expect(audit.hotelId).toBe(s.hotelId);
   });
 
   it("R-GAR kendi atanmış masasında onaylar; atanmış garson bildirim alır", async () => {

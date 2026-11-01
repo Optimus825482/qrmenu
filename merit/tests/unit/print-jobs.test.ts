@@ -117,6 +117,19 @@ describe("printJobs.enqueueReceipt (orders.transition ONAYLANDI varsayılan kanc
     expect(await testDb.printJob.count()).toBe(0);
     expect(await testDb.notification.count({ where: { type: "print.noPrinter" } })).toBe(1);
   });
+
+  it("eşzamanlı onayda yazıcısız outlet için günlük tek print.noPrinter bildirimi üretir", async () => {
+    const s = await orderSetup();
+    const kas = await staffCtx("kas", "R-KAS", s.outlet.id);
+    await openSession(kas.user.id, s.outlet.id, "R-KAS");
+    const o1 = await seedOrder(s);
+    const o2 = await seedOrder(s);
+    await Promise.all([
+      orders.transition(kas.ctx, o1.id, "ONAYLANDI", {}),
+      orders.transition(kas.ctx, o2.id, "ONAYLANDI", {}),
+    ]);
+    expect(await testDb.notification.count({ where: { type: "print.noPrinter", refId: s.outlet.id } })).toBe(1);
+  });
 });
 
 describe("printJobs.enqueueTest", () => {
@@ -178,6 +191,8 @@ describe("printJobs.report", () => {
     const row = await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } });
     expect(row).toMatchObject({ status: "BASILDI" });
     expect(row.printedAt).not.toBeNull();
+    await expect(printJobs.report(job.id, { ok: false, error: "geç gelen hata" })).rejects.toMatchObject({ code: "CONFLICT" });
+    expect((await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).status).toBe("BASILDI");
     expect(publishMock).toHaveBeenCalledWith(
       expect.objectContaining({ type: "print.printed", payload: expect.objectContaining({ jobId: job.id }) }),
       expect.anything(),
@@ -224,7 +239,7 @@ describe("printJobs.report", () => {
     await openSession(kas.user.id, s.outlet.id, "R-KAS");
     const job = await makeJob(s, printer.id, { attempts: 3, status: "BASILIYOR" });
     await printJobs.report(job.id, { ok: false, error: "hata" });
-    await printJobs.report(job.id, { ok: false, error: "hata" });
+    await expect(printJobs.report(job.id, { ok: false, error: "hata" })).rejects.toMatchObject({ code: "CONFLICT" });
     expect(await testDb.notification.count({ where: { type: "print.failed" } })).toBe(1);
   });
 });
@@ -256,6 +271,16 @@ describe("printJobs.reprint", () => {
     expect(await testDb.auditLog.count({ where: { action: "PRINT_REPRINT", entityId: order.id } })).toBe(1);
     expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThanOrEqual(1);
   });
+
+  it("outlet kasası aynı oteldeki başka outlet siparişinin fişini yeniden basamaz", async () => {
+    const s = await orderSetup();
+    await makePrinter("Y1");
+    const other = await orderSetup({ outlet: { name: "Beach Bar" } });
+    const kas = await staffCtx("kas", "R-KAS", s.outlet.id);
+    const otherOrder = await seedOrder(other, { status: "ONAYLANDI", approvedAt: new Date() });
+    await expect(printJobs.reprint(kas.ctx, otherOrder.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(await testDb.printJob.count({ where: { orderId: otherOrder.id } })).toBe(0);
+  });
 });
 
 describe("printJobs.listQueue", () => {
@@ -271,6 +296,25 @@ describe("printJobs.listQueue", () => {
     const failed = await printJobs.listQueue(kas.ctx, s.hotelId, { status: "HATA" });
     expect(failed).toHaveLength(1);
     expect(failed[0].id).not.toBe(j1.id);
+  });
+
+  it("outlet kasasına yalnız kendi outletinin sipariş fişlerini listeler", async () => {
+    const s = await orderSetup();
+    const other = await orderSetup({ outlet: { name: "Beach Bar" } });
+    const printer = await makePrinter("Y1");
+    const ownPrinter = await makePrinter("Havuz", { outletId: s.outlet.id });
+    const otherPrinter = await makePrinter("Beach", { outletId: other.outlet.id });
+    const ownJob = await makeJob(s, printer.id);
+    await makeJob(other, printer.id);
+    const testJob = (printerId: string) =>
+      testDb.printJob.create({ data: { hotelId: s.hotelId, printerId, kind: "TEST", payload: { v: 1 } } });
+    const sharedTest = await testJob(printer.id);
+    const ownTest = await testJob(ownPrinter.id);
+    const otherTest = await testJob(otherPrinter.id);
+    const kas = await staffCtx("kas", "R-KAS", s.outlet.id);
+    const rows = await printJobs.listQueue(kas.ctx, s.hotelId, {});
+    expect(rows.map((row) => row.id)).toEqual(expect.arrayContaining([ownJob.id, sharedTest.id, ownTest.id]));
+    expect(rows.map((row) => row.id)).not.toContain(otherTest.id);
   });
 
   it("gün filtresi (day): dünkü iş bugünkü listede yok", async () => {

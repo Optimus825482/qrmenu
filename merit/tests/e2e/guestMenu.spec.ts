@@ -29,12 +29,14 @@ async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locat
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole("button", { name: "başlat" }).click();
   await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Yönetimi" }).click();
-  const win = page.getByRole("region", { name: `Menü Yönetimi · ${MR.name}`, exact: true });
+  const win = page.locator(`.xp-window.is-active[aria-label="Menü Yönetimi · ${MR.name}"]`);
   const hotelCard = page
-    .getByRole("region", { name: "Menü Yönetimi", exact: true })
+    .locator('.xp-window.is-active[aria-label="Menü Yönetimi"]')
     .getByRole("button", { name: new RegExp(`^${MR.name}\\s*${MR.code}$`) });
-  await expect(hotelCard.or(win)).toBeVisible();
-  if (await hotelCard.isVisible()) await hotelCard.click();
+  if (!(await win.isVisible())) {
+    await expect(hotelCard).toBeVisible();
+    await hotelCard.click();
+  }
   await expect(win).toBeVisible();
   await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
   return { page, win };

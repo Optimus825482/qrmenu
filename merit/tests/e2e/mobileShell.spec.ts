@@ -260,12 +260,20 @@ test("mobil kabuk masaüstü düzenini bozmaz: simge konumu korunur, yalnız duv
   await page.reload();
   await expect(tabs(page)).toBeVisible();
   await tab(page, "Ayarlar").click();
-  const saved2 = waitForPrefsSave();
   await page
     .getByRole("radiogroup", { name: "Duvar kağıdı" })
     .getByRole("radio", { name: "Gümüş" })
     .click();
-  expect((await saved2).ok()).toBe(true);
+  await expect
+    .poll(() =>
+      withDb(async (c) => {
+        const res = await c.query<{ wallpaper: string | null }>(
+          `SELECT prefs #>> '{shell,wallpaper}' AS wallpaper FROM users WHERE username = 'admin'`,
+        );
+        return res.rows[0]?.wallpaper ?? null;
+      }),
+    )
+    .toBe("gumus");
 
   // 3. Desktop again (fresh load, no localStorage copy): same icon position, new wallpaper.
   await page.evaluate(() => window.localStorage.clear());

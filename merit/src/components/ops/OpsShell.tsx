@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { LogoutButton } from "@/components/LogoutButton";
 import { LiveBadge } from "./LiveBadge";
 import { OutletSwitcher, type OutletTarget } from "./OutletSwitcher";
+import { NotificationBell } from "@/shell/components/NotificationBell";
 
 const waiterTabs = [
   { href: "/garson", label: "Kuyruk", path: "/garson", query: null },
@@ -27,7 +28,7 @@ export function OpsShell({ children, outletName, hotelName, fullName, targets }:
     <header className="sticky top-0 z-20 border-b border-border bg-surface/95 px-4 py-3 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
         <strong className="mr-auto text-sm">{outletName} <span className="text-muted">· {hotelName}</span></strong>
-        <span className="hidden text-xs text-muted sm:inline">{fullName}</span><LiveBadge /><OutletSwitcher targets={targets} /><LogoutButton className="rounded-lg border border-border px-2 py-1 text-xs" />
+        <span className="hidden text-xs text-muted sm:inline">{fullName}</span><NotificationBell /><LiveBadge /><OutletSwitcher targets={targets} /><LogoutButton className="rounded-lg border border-border px-2 py-1 text-xs" />
       </div>
     </header>
     <main className="mx-auto max-w-5xl p-4 pb-20">{children}</main>

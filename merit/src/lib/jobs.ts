@@ -3,11 +3,13 @@ import { env } from "@/lib/env";
 import { getSetting } from "@/lib/settings";
 import { TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
+import { escalation } from "@/modules/order/server/escalation";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
+export const ORDER_ESCALATION_QUEUE = "order.escalation";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -59,6 +61,12 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(PRINT_SWEEP_QUEUE, async () => {
       const swept = await printJobs.sweepStale(new Date());
       if (swept > 0) console.log(`[print.sweep] ${swept} baskı işi kuyruğa geri alındı`);
+    });
+    await boss.createQueue(ORDER_ESCALATION_QUEUE); // idempotent
+    await boss.schedule(ORDER_ESCALATION_QUEUE, "* * * * *", null, { tz: TZ });
+    await boss.work(ORDER_ESCALATION_QUEUE, async () => {
+      const escalated = await escalation.run(new Date());
+      if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
     });
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;

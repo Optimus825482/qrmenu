@@ -57,7 +57,7 @@ async function deny(ctx: Ctx, order: Order, to: OrderStatus): Promise<never> {
     // Outside the transaction: the denial must survive the rollback.
     await audit(prisma, {
       userId: ctx.user.id,
-      hotelId: ctx.session.hotelId,
+      hotelId: order.hotelId,
       action: "YETKISIZ_DENEME",
       entity: "Order",
       entityId: order.id,

@@ -127,8 +127,13 @@ describe("POST /api/print-queue/{id} (report)", () => {
       error: "kağıt bitti",
     });
 
+    await printJobsClaim(job.id);
     const ok = await report(job.id, { ok: true });
     expect(ok.status).toBe(204);
+    expect((await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).status).toBe("BASILDI");
+
+    const lateFailure = await report(job.id, { ok: false, error: "geç gelen hata raporu" });
+    expect(lateFailure.status).toBe(409);
     expect((await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).status).toBe("BASILDI");
 
     expect((await report("olmayan-is", { ok: true })).status).toBe(404);

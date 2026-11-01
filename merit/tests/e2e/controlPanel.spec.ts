@@ -19,8 +19,8 @@ function trackErrors(page: Page): string[] {
 
 const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" });
 const panelWindow = (page: Page) =>
-  page.getByRole("region", { name: "Denetim Masası", exact: true });
-const group = (page: Page, name: string) => page.getByRole("radiogroup", { name, exact: true });
+  page.locator('.xp-window[aria-label="Denetim Masası"].is-active');
+const group = (page: Page, name: string) => panelWindow(page).getByRole("radiogroup", { name, exact: true });
 const shell = (page: Page) => page.locator(".xp-shell");
 const cssVar = (page: Page, selector: string, name: string) =>
   page.locator(selector).evaluate((el, n) => getComputedStyle(el).getPropertyValue(n).trim(), name);
@@ -115,6 +115,7 @@ test("Marka: alt telif bandı ve filigran görünür; Denetim Masası'ndan kapan
 }) => {
   const errors = trackErrors(page);
   await openAdmin(page);
+  await openControlPanel(page);
   await expect(panelWindow(page)).toBeVisible();
   const footer = page.locator(".xp-footer-band");
   const watermark = page.locator(".xp-brand-watermark");
@@ -152,9 +153,9 @@ test("Marka: alt telif bandı ve filigran görünür; Denetim Masası'ndan kapan
   expect(Math.round(maxed!.y + maxed!.height)).toBeLessThanOrEqual(vh - 22 - 30);
   await panelWindow(page).getByRole("button", { name: "Önceki boyut" }).click();
 
+  const saved = waitForPrefsSave(page);
   await bandSwitch.uncheck();
   await markSwitch.uncheck();
-  const saved = waitForPrefsSave(page);
   await expect(footer).toHaveCount(0);
   await expect(watermark).toHaveCount(0);
   const tbOff = await box(".xp-taskbar");
@@ -190,6 +191,7 @@ test("Düz renk: renk alanına #112233 yazılınca masaüstü o renge döner, ye
 }) => {
   const errors = trackErrors(page);
   await openAdmin(page);
+  await openControlPanel(page);
   await expect(panelWindow(page)).toBeVisible();
   await expect(group(page, "Duvar kağıdı").getByRole("radio", { name: "Düz renk" })).toBeVisible();
   const hex = panelWindow(page).getByRole("textbox", { name: "Arka plan rengi" });
@@ -213,7 +215,17 @@ test("Düz renk: renk alanına #112233 yazılınca masaüstü o renge döner, ye
   await expect(desktop(page)).toHaveAttribute("data-wallpaper", "ozel");
   expect(await bg()).toBe("rgb(17, 34, 51)");
 
-  // Right-click menu offers it too; the watermark is still there on top of the flat color.
+  // This test file shares persisted user prefs across serial tests; explicitly establish the
+  // watermark state before checking that the context menu leaves the desktop decoration intact.
+  const watermarkSwitch = panelWindow(page).getByRole("switch", { name: "Duvar kağıdı filigranı" });
+  if (!(await watermarkSwitch.isChecked())) {
+    const watermarkSaved = waitForPrefsSave(page);
+    await watermarkSwitch.check();
+    expect((await watermarkSaved).ok()).toBe(true);
+  }
+  await expect(page.locator(".xp-brand-watermark")).toHaveCount(1);
+
+  // Right-click menu offers it too; the watermark stays on top of the flat color.
   // (dispatched: the Denetim Masası window covers most of the free desktop)
   await desktop(page).dispatchEvent("contextmenu", { clientX: 1200, clientY: 120, button: 2 });
   await page.getByRole("menuitem", { name: "Duvar kağıdı" }).click();

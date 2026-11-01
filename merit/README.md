@@ -1,4 +1,4 @@
-# Merit OS — P0 iskeleti ve P1 çekirdek tanımlar
+# Merit OS — P0/P1 çekirdeği ve P5 QR Menü/Sipariş
 
 Merit, otel operasyonları (kat hizmetleri, depo, oda servisi, kasa, mutfak) için tek
 bir Next.js uygulaması olarak geliştirilen platformdur. Bu depo **P0 iskeletini** içerir:
@@ -7,6 +7,8 @@ gerçek zamanlı olaylar (SSE), arka plan işleri (pg-boss), Windows XP temalı 
 kabuğu ve Komuta Merkezi, mobil kabuk ve CI. **P1 (çekirdek tanımlar ve oturum takibi)**
 bunun üzerine tanımlama pencerelerini, kurulum rehberini, online kullanıcı takibini,
 bildirim merkezini, denetim günlüğünü ve sistem ayarlarını ekler (aşağıda "P1 pencereleri").
+**P5** masa QR menüsünü, beş dilli misafir siparişini, kasa/garson onayını, KDS'yi ve
+yerel ağdaki ESC/POS yazdırma geçidini ekler.
 
 ## Gereksinimler
 
@@ -41,6 +43,7 @@ bildirim merkezini, denetim günlüğünü ve sistem ayarlarını ekler (aşağ�
    | `SEED_ADMIN_PASSWORD` | `db:seed` için | İlk `admin` kullanıcısının parolası, en az 10 karakter; varsayılanı yoktur. |
    | `TZ` | önerilir | `Europe/Nicosia` (iş saatleri ve zamanlanmış işler bu saat dilimine göre). |
    | `MERIT_DISABLE_JOBS` | hayır | `1` ise pg-boss işleri ve dinleyici başlamaz (yalnız test/CI); aşağıya bakın. |
+| `UPLOADS_DIR` | hayır | Menü görsellerinin dizini; varsayılan `<çalışma-dizini>/uploads`. |
 
 3. **Bağımlılıkları kurun ve veritabanını hazırlayın:**
 
@@ -94,6 +97,28 @@ işlemler yalnızca **SISTEM** rollerine (R-SYS) aittir:
 Yeni ekran kodları (`CR-TAN`, `CR-REH`, `CR-ONL`, `CR-DEN`, `CR-SYS`) `npm run db:seed` ile
 eklenir; mevcut bir veritabanında seed'i yeniden çalıştırmak güvenlidir (yinelenen satır
 oluşturmaz).
+
+## P5 QR Menü ve Sipariş
+
+- Misafir rotası `GET /q/{masa-qr-token}`'dır. Masa QR'ı yalnız kendi masa siparişlerini
+  görüntüleyebilir; personel için giriş gerekmez. Misafir seçimleri gönderince akış
+  `GONDERILDI → ONAYLANDI → HAZIR → SERVIS_EDILDI` olarak izlenir.
+- Kasa `/kasa`, garson `/garson`, mutfak ekranı `/kds` rotalarındadır. Fiyat gizliyse toplamlar
+  bu ekranlarda, misafir durumunda ve fişte gösterilmez; sipariş anındaki seçim saklanır.
+- Denetim Masası → Sistem'de `qr.baseUrl` dış HTTPS adresine ayarlanmalıdır; QR çıktıları bu
+  adresi taşır. `order.approvalEscalationMinutes` içindeki süre aşılırsa ilgili outletin şef
+  garsonlarına ve otelin F&B müdürlerine bildirim gönderilir.
+- Menü görselleri `UPLOADS_DIR` altında saklanır ve `/uploads/...` ile sunulur. Bu dizini kalıcı
+  bir disk/birimde tutun, web kökü ya da Git altında tutmayın.
+
+### Yazdırma geçidi
+
+Fiş kuyruğu uygulamada tutulur; termal yazıcıya erişen makinede ayrıca
+[`tools/print-gateway/README.md`](tools/print-gateway/README.md) yönergeleriyle gateway'i
+çalıştırın. Gateway `.env` dosyasındaki `GATEWAY_KEY`, uygulamanın `PRINT_GATEWAY_KEY` değeriyle
+aynı olmalıdır. Yazıcıyı Kasa → Yazıcılar'dan tanımlayın; gateway işleri çeker, üç denemeden
+sonra hatayı kasaya bildirir. cp857 için `CODEPAGE_TABLE=13` başlangıç değeridir ve test fişiyle
+sahada doğrulanmalıdır.
 
 ## Komutlar
 

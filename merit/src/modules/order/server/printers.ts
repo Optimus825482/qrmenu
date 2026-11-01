@@ -6,6 +6,7 @@ import { publish } from "@/lib/realtime";
 import { assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
+import { outletAllowed } from "./approvals";
 import {
   conflictFromPrisma,
   isConflictError,
@@ -26,6 +27,28 @@ const HAS_JOBS = "Bu yazıcının iş kayıtları var; silmek yerine pasife alı
 const NOT_FOUND = "Yazıcı bulunamadı";
 const OUTLET_NOT_OURS = "Outlet bu otelin değil";
 const PRINTER_NOT_OURS = "Yazıcı bu otelin değil";
+
+function assertPrinterOutletAllowed(ctx: Ctx, outletId: string | null): void {
+  if (outletId !== null && !outletAllowed(ctx, outletId)) {
+    throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  }
+}
+
+function assertPrinterMutationAllowed(ctx: Ctx, outletId: string | null): void {
+  if (outletId === null && ctx.session.outletId !== undefined) {
+    throw new DomainError("FORBIDDEN", "Otel geneli yazıcıya erişiminiz yok");
+  }
+  assertPrinterOutletAllowed(ctx, outletId);
+}
+
+function printerOutletScope(ctx: Ctx): Prisma.PrinterWhereInput {
+  if (ctx.session.outletId === undefined) return {};
+  return { OR: [{ outletId: null }, { outletId: ctx.session.outletId }] };
+}
+
+function orderingOutletScope(ctx: Ctx): Prisma.OutletWhereInput {
+  return ctx.session.outletId === undefined ? {} : { id: ctx.session.outletId };
+}
 
 /**
  * Gateway heartbeat: stamps `lastSeenAt` and `lastStatus` ('OK' or the error message) of the
@@ -203,7 +226,7 @@ export async function list(ctx: Ctx, hotelId: string): Promise<PrinterRow[]> {
   await assertCan(ctx, SCREEN, "V", hotelId);
   const [rows, counts] = await Promise.all([
     prisma.printer.findMany({
-      where: { hotelId },
+      where: { hotelId, ...printerOutletScope(ctx) },
       select: SELECT,
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
@@ -218,6 +241,7 @@ export async function create(ctx: Ctx, hotelId: string, raw: PrinterInput): Prom
     return await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
       const outletId = outletLink(input.outletId);
       if (outletId) await assertOutletInHotel(tx, hotelId, outletId);
+      assertPrinterMutationAllowed(ctx, outletId ?? null);
       const created = await tx.printer.create({
         data: {
           hotelId,
@@ -260,6 +284,7 @@ async function patchById(
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: found.hotelId }, async (tx) => {
     const before = await tx.printer.findFirst({ where: { id, hotelId: found.hotelId }, select: SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+    assertPrinterMutationAllowed(ctx, before.outletId);
     const data = change(before);
     if (!data) return toRow(before, (await jobCounts(tx, found.hotelId)).get(id) ?? NO_JOBS);
     const updated = await tx.printer.update({ where: { id }, data, select: SELECT });
@@ -286,8 +311,10 @@ export async function update(ctx: Ctx, id: string, raw: PrinterInput): Promise<P
     return await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: found.hotelId }, async (tx) => {
       const before = await tx.printer.findFirst({ where: { id, hotelId: found.hotelId }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+      assertPrinterMutationAllowed(ctx, before.outletId);
       const outletId = outletLink(input.outletId);
       if (outletId) await assertOutletInHotel(tx, found.hotelId, outletId);
+      if (outletId !== undefined) assertPrinterMutationAllowed(ctx, outletId);
       const updated = await tx.printer.update({
         where: { id },
         data: {
@@ -330,12 +357,14 @@ export function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<Prin
  * deactivate instead. `outlet.printerId` and `printer.outletId` clear themselves (SetNull).
  */
 export async function remove(ctx: Ctx, id: string): Promise<void> {
-  const found = await prisma.printer.findUnique({ where: { id }, select: { hotelId: true } });
+  const found = await prisma.printer.findUnique({ where: { id }, select: { hotelId: true, outletId: true } });
   if (!found) throw new DomainError("NOT_FOUND", NOT_FOUND);
+  assertPrinterMutationAllowed(ctx, found.outletId);
   try {
     await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: found.hotelId }, async (tx) => {
       const before = await tx.printer.findFirst({ where: { id, hotelId: found.hotelId }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+      assertPrinterMutationAllowed(ctx, before.outletId);
       const jobs = await tx.printJob.count({ where: { printerId: id } });
       if (jobs > 0) throw new DomainError("CONFLICT", HAS_JOBS);
       await tx.printer.delete({ where: { id } });
@@ -362,15 +391,17 @@ export async function remove(ctx: Ctx, id: string): Promise<void> {
 export async function setOutletDefault(ctx: Ctx, outletId: string, printerId: string | null): Promise<void> {
   const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hotelId: true } });
   if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+  if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: outlet.hotelId }, async (tx) => {
     if (printerId !== null) {
       const printer = await tx.printer.findFirst({
         where: { id: printerId, hotelId: outlet.hotelId, isActive: true },
-        select: { id: true },
+        select: { id: true, outletId: true },
       });
       if (!printer) {
         throw new DomainError("VALIDATION", INVALID, { fieldErrors: { printerId: [PRINTER_NOT_OURS] } });
       }
+      assertPrinterOutletAllowed(ctx, printer.outletId);
     }
     const orderingOutlet = await tx.outlet.findFirst({
       where: { id: outletId, hotelId: outlet.hotelId, hasOrdering: true },
@@ -405,7 +436,7 @@ export type OrderingOutlet = { id: string; name: string; printerId: string | nul
 export async function listOrderingOutlets(ctx: Ctx, hotelId: string): Promise<OrderingOutlet[]> {
   await assertCan(ctx, SCREEN, "V", hotelId);
   return prisma.outlet.findMany({
-    where: { hotelId, hasOrdering: true },
+    where: { hotelId, hasOrdering: true, ...orderingOutletScope(ctx) },
     orderBy: [{ name: "asc" }, { id: "asc" }],
     select: { id: true, name: true, printerId: true },
   });

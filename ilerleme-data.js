@@ -1,8 +1,8 @@
 // Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "01.11.2026 01:55",
-  headline: "P5 T1–T10 tamam (726 birim + 1 yeni yazıcı e2e; gateway T9: 16 test); sıradaki T11–T13 Garson, Kasa ve KDS ekranları (devir: docs/DEVIR.md §1a).",
+  updatedAt: "01.11.2026 05:20",
+  headline: "P5 T1–T14 tamamlandı ve doğrulandı: seri 751 birim testi, Playwright 83/83, build ve gateway başarılı. Dal main'e merge için hazır.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -99,9 +99,9 @@ window.ILERLEME = {
         { title: "Menü ağacı, çeviri, tema ve masa QR pencereleri (T3–T5)", status: "done", doneAt: "31.10 21:59" },
         { title: "Fiyat göster/gizle ve sipariş aç/kapa anahtarları (T2)", status: "done", doneAt: "31.10 20:42" },
         { title: "Misafir menü, seçimler, sipariş durumu, garson çağırma (T6–T8)", status: "done", doneAt: "31.10 23:10" },
-        { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "pending" },
+        { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "done", doneAt: "01.11 04:10" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "done", doneAt: "01.11 01:55" },
-        { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "pending" }
+        { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "done", doneAt: "01.11 04:41" }
       ]
     },
     {
@@ -163,6 +163,10 @@ window.ILERLEME = {
     { at: "31.10 22:56", text: "P5 T7 sipariş çekirdeği onaylandı (6e2440d); token hız sınırı nihai hali (23bc64f). T8 başladı." },
     { at: "31.10 23:11", text: "P5 T8 misafir seçimler/sipariş/çağrı onaylandı (accd319). Fable sınırı: T9+ devir notuyla sürdürülür." },
     { at: "01.11 00:40", text: "P5 T9 fiş kuyruğu, print-queue API ve ESC/POS print gateway onaylandı (74e7841; 710 birim + 16 gateway testi, build yeşil). guestToken global limiter düzeltmesi kapandı (720f1e5). Sıradaki T10." },
-    { at: "01.11 01:55", text: "P5 T10 Yazıcı CRUD/penceresi ve kasa yazıcı kuyruğu tamamlandı; check 726 test, build başarılı, yazıcı e2e 1/1. Sıradaki T11–T13." }
+    { at: "01.11 01:55", text: "P5 T10 Yazıcı CRUD/penceresi ve kasa yazıcı kuyruğu tamamlandı; check 726 test, build başarılı, yazıcı e2e 1/1. Sıradaki T11–T13." },
+    { at: "01.11 02:49", text: "P5 T11 personel kabuğu, garson ekranı ve masa ataması tamamlandı (b4469f4; check 733 test; garson sipariş/atama/onay e2e 1/1; build yeşil). İnceleme düzeltmeleri kapandı. Sıradaki T12 kasa ekranları." },
+    { at: "01.11 03:25", text: "P5 T12 kasa masa panosu, kuyruk, çağrılar, atama ve iptal ekranları tamamlandı (7d22158; check 737 test; e2e 1/1; build yeşil). İptal listesi Nicosia iş günü devrinde de açık işleri koruyor. Sıradaki T13 KDS." },
+    { at: "01.11 04:10", text: "P5 T13 KDS Yeni/Hazırlanıyor/Hazır ekranı tamamlandı (b88b6c2; seri 743 birim testi, KDS e2e 1/1, build yeşil). Review fixleri kapandı; sıradaki T14 eskalasyon ve kabul." },
+    { at: "01.11 05:20", text: "P5 T14 ve dal sonu incelemesi tamamlandı. Gateway geç rapor koruması, outlet yazıcı kapsamı, günlük bildirim yarış kilidi ve audit otel atfı düzeltildi. Lint/typecheck/build, seri Vitest 751, gateway 16/16 ve Playwright 83/83 geçti. Dal main'e birleştirme onayını bekliyor." }
   ]
 };

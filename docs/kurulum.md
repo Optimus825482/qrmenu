@@ -1,6 +1,6 @@
 # Merit OS — Kurulum ve dağıtım rehberi
 
-Bu belge P0 iskeletinin ve P1 çekirdek tanımlarının bulut veya şirket içi (on-prem) bir sunucuya kurulumunu anlatır.
+Bu belge P0 iskeletinin, P1 çekirdek tanımlarının ve P5 QR Menü/Sipariş bileşenlerinin bulut veya şirket içi (on-prem) bir sunucuya kurulumunu anlatır.
 Geliştirme ortamı için `merit/README.md` dosyasına bakın.
 
 ## 1. Gereksinimler
@@ -40,8 +40,13 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 | `PORT` | hayır | Dinlenecek port, varsayılan 3000. |
 | `MERIT_DISABLE_JOBS` | hayır | Üretimde **ayarlamayın**; ayarlansa bile üretimde yoksayılır. |
 | `DATABASE_URL_TEST` | hayır | Yalnız geliştirme/CI; üretimde gerekmez. |
+| `UPLOADS_DIR` | hayır | Menü görselleri için kalıcı dizin; boşsa `<uygulama>/uploads`. Uygulama kullanıcısı yazabilmelidir. |
 
 Rastgele anahtar üretmek için: `openssl rand -base64 48`.
+
+`qr.baseUrl` ortam değişkeni değildir. Migrasyon/seed sonrasında **Denetim Masası → Sistem → QR
+taban adresi** alanına misafirin erişeceği genel HTTPS adresini (örn.
+`https://menu.otel.example`) yazın; üretilmiş masa QR'ları bu değeri kullanır.
 
 ## 4. Derleme, migrasyon ve seed
 
@@ -143,6 +148,25 @@ TZ=Europe/Nicosia NODE_ENV=production pm2 start npm --name merit -- start -- -H 
 pm2 save
 ```
 
+### Print gateway (P5)
+
+Termal yazıcının erişebildiği her otelde, Merit uygulamasından ayrı bir gateway süreci çalışır:
+
+```bash
+cd /opt/merit/merit/tools/print-gateway
+npm ci
+cp .env.example .env
+# API_URL=https://merit.otel.example
+# GATEWAY_KEY=/etc/merit/merit.env içindeki PRINT_GATEWAY_KEY ile aynı değer
+# HOTEL_CODE=MR
+npm run start
+```
+
+Gateway yerel yazıcılara TCP/9100 ile erişir, fakat uygulama API'sine HTTPS üzerinden erişmelidir.
+`CODEPAGE_TABLE=13` cp857 için başlangıç değeridir; Türkçe karakterleri içeren test fişiyle
+yazıcı modelinde doğrulayın. Ayrıntılı Windows/NSSM hizmet örneği ve tüm alanlar için
+`merit/tools/print-gateway/README.md` dosyasını izleyin.
+
 ## 6. Ters vekil (nginx)
 
 Uygulama düz HTTP dinler; HTTPS vekilde sonlanır. Aşağıdaki örnekteki iki ayar
@@ -157,7 +181,8 @@ Uygulama düz HTTP dinler; HTTPS vekilde sonlanır. Aşağıdaki örnekteki iki 
   `$proxy_add_x_forwarded_for` kullanın ve `.env` içinde `TRUSTED_PROXY_HOPS` değerini vekil
   sayısına yükseltin.
 - SSE ayarları: `proxy_buffering off;` ve `proxy_read_timeout 1h;` — olay akışı
-  tamponlanmamalı ve uzun süre açık kalabilmelidir.
+  tamponlanmamalı ve uzun süre açık kalabilmelidir. Bunları genel `location /` yerine
+  ayrı konumlar kullanıyorsanız **hem** `/api/sse` **hem de** `/api/q/*/events` için uygulayın.
 
 ```nginx
 server {
