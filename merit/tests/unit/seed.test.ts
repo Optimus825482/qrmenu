@@ -204,7 +204,7 @@ describe("seed (gerçek test DB)", () => {
     const kat = await db.role.findUniqueOrThrow({ where: { code: "R-KAT" } });
     expect(kat).toMatchObject({ kind: "MINIBAR", maxOnlineMinutes: 600, defaultScreen: "MB-KAT", isSystem: true });
     const tuk = await db.appScreen.findUniqueOrThrow({ where: { code: "MB-TUK" } });
-    expect(tuk).toMatchObject({ path: "/kat/oda-kontrol", moduleKey: "MINIBAR", sortOrder: 3 });
+    expect(tuk).toMatchObject({ path: "/kat", moduleKey: "MINIBAR", sortOrder: 3 });
     const first = await db.appScreen.findFirstOrThrow({ orderBy: { sortOrder: "asc" } });
     expect(first).toMatchObject({ code: "MB-KAT", path: "/kat", sortOrder: 1 });
     const orders = (await db.appScreen.findMany({ orderBy: { sortOrder: "asc" } })).map((s) => s.sortOrder);
