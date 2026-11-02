@@ -158,7 +158,7 @@ async function create(ctx: Ctx, raw: unknown) {
       type: "order.approved",
       hotelId: outlet.hotelId,
       outletId: outlet.id,
-      payload: { orderId: created.id, orderNo: created.orderNo, tableId: table.id, tableLabel: table.label, status: created.status, assignedWaiterId: ctx.user.id, source: "GARSON" },
+      payload: { orderId: created.id, orderNo: created.orderNo, tableId: table.id, tableLabel: table.label, status: created.status, from: null, kind: "MASA", roomId: null, roomNumber: null, assignedWaiterId: ctx.user.id, byUserId: ctx.user.id, source: "GARSON" },
     }, tx);
     return created;
   });

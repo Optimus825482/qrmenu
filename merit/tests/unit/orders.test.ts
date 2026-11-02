@@ -281,3 +281,71 @@ describe("orders.get / listForOutlet / durations", () => {
     ).toEqual({});
   });
 });
+
+describe("orders.transition: radar olay yükü (G11)", () => {
+  const lastPayload = (type: string) => {
+    const call = [...publishMock.mock.calls].reverse().find(([e]) => e.type === type);
+    expect(call, type).toBeDefined();
+    return call![0].payload as Record<string, unknown>;
+  };
+
+  it("MASA onayı from, kind, tableLabel, byUserId taşır; fiyat/not anahtarı yok", async () => {
+    const s = await orderSetup();
+    const { kas } = await actors(s);
+    const order = await seedOrder(s);
+    await orders.transition(kas.ctx, order.id, "ONAYLANDI", { print: vi.fn(async () => {}) });
+    expect(lastPayload("order.approved")).toMatchObject({
+      orderId: order.id,
+      status: "ONAYLANDI",
+      from: "GONDERILDI",
+      kind: "MASA",
+      tableId: s.table.id,
+      tableLabel: "M1",
+      byUserId: kas.user.id,
+    });
+    const json = JSON.stringify(lastPayload("order.approved"));
+    for (const key of ["subtotal", "unitPrice", "price", "note"]) expect(json).not.toContain(`"${key}"`);
+  });
+
+  it("ret sebebi geriye uyum için yükte kalır (misafir akışı) ama radar normalleştirmesi onu atar", async () => {
+    const s = await orderSetup();
+    const { kas } = await actors(s);
+    const order = await seedOrder(s);
+    await orders.transition(kas.ctx, order.id, "REDDEDILDI", { reason: "Stok yok" });
+    const payload = lastPayload("order.rejected");
+    expect(payload).toMatchObject({ from: "GONDERILDI", rejectReason: "Stok yok" });
+    const { toRadarEvent } = await import("@/modules/radar/events");
+    const r = toRadarEvent({ type: "order.rejected", hotelId: s.hotelId, outletId: s.outlet.id, payload, at: "2026-11-03T10:00:00.000Z" });
+    expect(JSON.stringify(r)).not.toContain("Stok yok");
+  });
+
+  it("KDS başla: order.prep from/kind/tableLabel taşır", async () => {
+    const s = await orderSetup();
+    const { kds } = await actors(s);
+    const order = await seedOrder(s, { status: "ONAYLANDI", approvedAt: new Date() });
+    await orders.startPrep(kds.ctx, order.id);
+    expect(lastPayload("order.prep")).toMatchObject({ kind: "MASA", from: "ONAYLANDI", tableLabel: "M1", byUserId: kds.user.id });
+  });
+
+  it("oda servisi onayı roomNumber ve kind ODA_SERVISI taşır", async () => {
+    const s = await orderSetup();
+    const floor = await testDb.floor.create({ data: { hotelId: s.hotelId, name: "9. Kat", number: 9 } });
+    const room = await testDb.room.create({ data: { hotelId: s.hotelId, floorId: floor.id, number: "909" } });
+    const existing = await testDb.outlet.findFirst({ where: { hotelId: s.hotelId, type: "ODA_SERVISI" } });
+    const rsData = { isActive: true, hasMenu: true, hasOrdering: true, orderingEnabled: true };
+    const rs = existing
+      ? await testDb.outlet.update({ where: { id: existing.id }, data: rsData })
+      : await testDb.outlet.create({ data: { hotelId: s.hotelId, name: "Oda Servisi", type: "ODA_SERVISI", ...rsData } });
+    const ods = await staffCtx("ods_rd1", "R-ODS", rs.id);
+    const order = await seedOrder(s, { outletId: rs.id, kind: "ODA_SERVISI", tableId: null, roomId: room.id });
+    await orders.transition(ods.ctx, order.id, "ONAYLANDI");
+    expect(lastPayload("order.approved")).toMatchObject({
+      kind: "ODA_SERVISI",
+      roomId: room.id,
+      roomNumber: "909",
+      tableLabel: null,
+      from: "GONDERILDI",
+      byUserId: ods.user.id,
+    });
+  });
+});

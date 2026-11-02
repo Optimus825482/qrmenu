@@ -208,15 +208,33 @@ async function notifyAfter(tx: Prisma.TransactionClient, order: OrderDetail, to:
   }
 }
 
-function payload(order: Order, extra: Record<string, unknown> = {}) {
+export type OrderPayloadOptions = {
+  from?: OrderStatus | null;
+  byUserId?: string | null;
+  extra?: Record<string, unknown>;
+};
+
+/**
+ * Realtime payload of every order event. Radar (G11) fields `kind`, `from`, `tableLabel`,
+ * `roomNumber`, `byUserId` are additive; prices never travel on the wire.
+ */
+export function orderPayload(
+  order: Order & { table?: { label: string } | null; room?: { number: string } | null },
+  opts: OrderPayloadOptions = {},
+) {
   return {
     orderId: order.id,
     orderNo: order.orderNo,
     status: order.status,
+    from: opts.from ?? null,
+    kind: order.kind,
     tableId: order.tableId,
+    tableLabel: order.table?.label ?? null,
     roomId: order.roomId,
+    roomNumber: order.room?.number ?? null,
     assignedWaiterId: order.assignedWaiterId,
-    ...extra,
+    byUserId: opts.byUserId ?? null,
+    ...opts.extra,
   };
 }
 
@@ -299,7 +317,14 @@ async function transition(
         type: EVENT_OF[to] as string,
         hotelId: order.hotelId,
         outletId: order.outletId,
-        payload: payload(updated, reason ? { rejectReason: reason } : {}),
+        payload: orderPayload(
+          { ...updated, table: order.table, room: order.room },
+          {
+            from: order.status,
+            byUserId: opts.internal ? null : ctx.user.id,
+            extra: reason ? { rejectReason: reason } : {},
+          },
+        ),
       },
       tx,
     );
@@ -367,12 +392,16 @@ async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<O
 
     await printJobs.enqueueReceipt(tx, updated, { printerOptional: true });
 
+    const confirmPayload = orderPayload(
+      { ...updated, table: order.table, room: order.room },
+      { from: order.status, byUserId: ctx.user.id },
+    );
     await publish(
       {
         type: "order.confirmed",
         hotelId: order.hotelId,
         outletId: order.outletId,
-        payload: payload(updated),
+        payload: confirmPayload,
       },
       tx,
     );
@@ -382,7 +411,7 @@ async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<O
         type: "order.approved",
         hotelId: order.hotelId,
         outletId: order.outletId,
-        payload: payload(updated),
+        payload: confirmPayload,
       },
       tx,
     );
@@ -426,7 +455,15 @@ async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
       after: { status: updated.status, prepStartedAt: now },
     });
     await publish(
-      { type: "order.prep", hotelId: order.hotelId, outletId: order.outletId, payload: payload(updated) },
+      {
+        type: "order.prep",
+        hotelId: order.hotelId,
+        outletId: order.outletId,
+        payload: orderPayload(
+          { ...updated, table: order.table, room: order.room },
+          { from: order.status, byUserId: ctx.user.id },
+        ),
+      },
       tx,
     );
   });

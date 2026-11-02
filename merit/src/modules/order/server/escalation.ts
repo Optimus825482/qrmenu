@@ -45,6 +45,10 @@ async function run(now: Date): Promise<number> {
       createdAt: true,
       outlet: { select: { name: true } },
       table: { select: { label: true } },
+      room: { select: { number: true } },
+      kind: true,
+      tableId: true,
+      roomId: true,
     },
   });
 
@@ -77,7 +81,18 @@ async function run(now: Date): Promise<number> {
           type: "order.escalated",
           hotelId: order.hotelId,
           outletId: order.outletId,
-          payload: { orderId: order.id, orderNo: order.orderNo, status: WAITING },
+          payload: {
+            orderId: order.id,
+            orderNo: order.orderNo,
+            status: WAITING,
+            from: null,
+            kind: order.kind,
+            tableId: order.tableId,
+            tableLabel: order.table?.label ?? null,
+            roomId: order.roomId,
+            roomNumber: order.room?.number ?? null,
+            byUserId: null,
+          },
         },
         tx,
       );

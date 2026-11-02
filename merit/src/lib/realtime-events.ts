@@ -56,6 +56,8 @@ export const SSE_EVENT_TYPES: readonly string[] = [
   "printer.status",
   "scan.table",
   "scan.room",
+  // Radar G1: published by the minibar module, previously never reached the shell.
+  "mybar.created",
 ];
 
 /** Event types a guest (QR menu visitor) stream may carry. */
