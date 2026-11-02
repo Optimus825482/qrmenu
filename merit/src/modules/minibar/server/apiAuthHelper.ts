@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import { randomBytes } from "node:crypto";
 import { requireUser, type Ctx } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { clientIp } from "@/lib/rate-limit";
 import { type Action, assertCan } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
+import { audit } from "@/modules/core/server/audit";
 import type { UserAuditCtx } from "./minibarDefinitionsService";
 
 export type { UserAuditCtx };
@@ -137,4 +139,26 @@ export function auditCtxOf(ctx: Ctx, req: Request, hotelId?: string): UserAuditC
 export async function getAuditCtxFromRequest(req: Request): Promise<UserAuditCtx> {
   const ctx = await requireUser();
   return auditCtxOf(ctx, req);
+}
+
+/**
+ * Global catalogue (products, groups, setups) is system-wide: writes need the screen permission AND the
+ * SISTEM role. Other roles get FORBIDDEN plus a YETKISIZ_DENEME audit row.
+ */
+export async function assertCatalogWriter(ctx: Ctx, action: Action): Promise<void> {
+  await assertCan(ctx, "MB-TAN", action, ctx.session.hotelId);
+  if (ctx.user.roleKind === "SISTEM") return;
+  try {
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId: ctx.session.hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: "AppScreen",
+      entityId: "MB-TAN",
+      after: { action, reason: "global-catalogue-system-only" },
+    });
+  } catch (error) {
+    console.error("assertCatalogWriter: YETKISIZ_DENEME denetim kaydı yazılamadı", { userId: ctx.user.id, error });
+  }
+  throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
 }

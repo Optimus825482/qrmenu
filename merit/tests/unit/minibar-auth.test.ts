@@ -18,6 +18,7 @@ const dndRoute = await import("@/app/api/minibar/room/[roomId]/dnd/route");
 const stockRoute = await import("@/app/api/minibar/depo/stock/route");
 const productsRoute = await import("@/app/api/minibar/definitions/products/route");
 const setupsRoute = await import("@/app/api/minibar/definitions/setups/route");
+const roomTypeSetupsRoute = await import("@/app/api/minibar/definitions/room-type-setups/route");
 const auditRoute = await import("@/app/api/minibar/definitions/audit-logs/route");
 const consumptionRoute = await import("@/app/api/minibar/reports/consumption/route");
 const uploadRoute = await import("@/app/api/minibar/occupancy/upload/route");
@@ -190,17 +191,66 @@ describe("fiyatlar yalnız SISTEM/YONETIM'e görünür", () => {
     }
   });
 
-  it("fiyatsız rol ürün yazarken fiyat alanları yok sayılır", async () => {
+  it("global katalog yazımı yalnız SISTEM: YONETIM ve depo sorumlusu FORBIDDEN + denetim kaydı", async () => {
     const w = await minibarWorld();
+    for (const role of ["R-OTM", "R-DEP"]) {
+      const u = await staff(role, "ROYAL");
+      as(u.ctx);
+      const res = await productsRoute.POST(
+        json("definitions/products", "POST", { groupId: w.group.id, name: `Yeni-${randomUUID()}`, salePrice: 99 }),
+      );
+      expect(res.status).toBe(403);
+      expect(((await res.json()) as { code: string }).code).toBe("FORBIDDEN");
+    }
+    expect(await testDb.auditLog.count({ where: { action: "YETKISIZ_DENEME" } })).toBeGreaterThanOrEqual(2);
+
+    const sys = await staff("R-SYS", "ROYAL");
+    as(sys.ctx);
+    const ok = await productsRoute.POST(
+      json("definitions/products", "POST", { groupId: w.group.id, name: `Yeni-${randomUUID()}`, salePrice: 99 }),
+    );
+    expect(ok.status).toBe(200);
+  });
+
+  it("denetim günlüğündeki fiyatlar fiyat görmeyen role maskelenir", async () => {
+    const royal = await hotelId("ROYAL");
+    await testDb.auditLog.create({
+      data: { hotelId: royal, action: "UPDATE", entity: "Product", after: { salePrice: 12.5, purchasePrice: 7, name: "x" } },
+    });
     const dep = await staff("R-DEP", "ROYAL");
     as(dep.ctx);
-    const res = await productsRoute.POST(
-      json("definitions/products", "POST", { groupId: w.group.id, name: `Yeni-${randomUUID()}`, salePrice: 99, purchasePrice: 50 }),
+    const res = await auditRoute.GET(new Request(url("definitions/audit-logs?limit=500")));
+    if (res.status === 200) {
+      const logs = ((await res.json()) as { logs: { after: Record<string, unknown> | null }[] }).logs;
+      for (const l of logs) {
+        if (l.after && "salePrice" in l.after) expect(l.after.salePrice).toBe(0);
+        if (l.after && "purchasePrice" in l.after) expect(l.after.purchasePrice).toBe(0);
+      }
+    }
+    const sys = await staff("R-SYS", "ROYAL");
+    as(sys.ctx);
+    const full = (await (await auditRoute.GET(new Request(url("definitions/audit-logs?limit=500")))).json()) as {
+      logs: { entity: string; after: { salePrice?: number } | null }[];
+    };
+    expect(full.logs.find((l) => l.entity === "Product")?.after?.salePrice).toBe(12.5);
+  });
+});
+
+describe("oda tipi–setup ataması otel eşleşmesi", () => {
+  it("uyuşmayan hotelId NOT_FOUND; doğru otel atanır", async () => {
+    const w = await minibarWorld();
+    const diamond = await hotelId("DIAMOND");
+    const sys = await staff("R-SYS", "ROYAL", ["DIAMOND"]);
+    as(sys.ctx);
+    const extra = await testDb.setup.create({ data: { name: `S-${randomUUID().slice(0, 8)}` } });
+    const bad = await roomTypeSetupsRoute.POST(
+      json("definitions/room-type-setups", "POST", { hotelId: diamond, roomTypeId: w.roomType.id, setupId: extra.id }),
     );
-    expect(res.status).toBe(200);
-    const created = await testDb.product.findFirstOrThrow({ orderBy: { createdAt: "desc" } });
-    expect(created.salePrice).toBeNull();
-    expect(created.purchasePrice).toBeNull();
+    expect(bad.status).toBe(404);
+    const good = await roomTypeSetupsRoute.POST(
+      json("definitions/room-type-setups", "POST", { hotelId: w.hotelId, roomTypeId: w.roomType.id, setupId: extra.id }),
+    );
+    expect(good.status).toBe(200);
   });
 });
 

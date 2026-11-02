@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
-import { handle, parseQuery } from "@/modules/minibar/server/apiAuthHelper";
+import { canSeePrices, handle, maskPrices, parseQuery } from "@/modules/minibar/server/apiAuthHelper";
 import { listSystemAuditLogs } from "@/modules/minibar/server/minibarDefinitionsService";
 
 export const runtime = "nodejs";
@@ -45,6 +45,6 @@ export async function GET(req: Request) {
       includeSystemRows: isSystem && !q.hotelId,
       limit: q.limit,
     });
-    return { logs };
+    return maskPrices({ logs }, canSeePrices(ctx));
   });
 }

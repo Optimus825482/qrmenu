@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { assertCan } from "@/lib/rbac";
 import {
+  assertCatalogWriter,
   auditCtxOf,
   canSeePrices,
   handle,
@@ -40,7 +41,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "O");
     const setup = await createSetup(await parseBody(req, createSchema), auditCtxOf(ctx, req));
     return { success: true, setup };
   });
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const { id, ...data } = await parseBody(req, updateSchema);
     const setup = await updateSetup(id, data, auditCtxOf(ctx, req));
     return { success: true, setup };
@@ -57,7 +58,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Setup ID zorunludur." }, { status: 400 });
     return deleteSetup(id, auditCtxOf(ctx, req));

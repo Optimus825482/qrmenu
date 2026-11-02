@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { assertCan } from "@/lib/rbac";
 import {
+  assertCatalogWriter,
   auditCtxOf,
   canSeePrices,
   handle,
@@ -61,7 +62,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "O");
     const body = withoutPrices(await parseBody(req, createSchema), canSeePrices(ctx));
     const product = await createProduct(body, auditCtxOf(ctx, req));
     return maskPrices({ success: true, product }, canSeePrices(ctx));
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const { id, ...data } = withoutPrices(await parseBody(req, updateSchema), canSeePrices(ctx));
     const product = await updateProduct(id, data, auditCtxOf(ctx, req));
     return maskPrices({ success: true, product }, canSeePrices(ctx));
@@ -79,7 +80,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Ürün ID zorunludur." }, { status: 400 });
     return deleteProduct(id, auditCtxOf(ctx, req));

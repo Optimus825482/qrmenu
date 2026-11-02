@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { assertCan } from "@/lib/rbac";
-import { auditCtxOf, handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
+import { assertCatalogWriter, auditCtxOf, handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
 import {
   createProductGroup,
   deleteProductGroup,
@@ -32,7 +32,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "O");
     const group = await createProductGroup(await parseBody(req, createSchema), auditCtxOf(ctx, req));
     return { success: true, group };
   });
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const { id, ...data } = await parseBody(req, updateSchema);
     const group = await updateProductGroup(id, data, auditCtxOf(ctx, req));
     return { success: true, group };
@@ -49,7 +49,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Grup ID zorunludur." }, { status: 400 });
     return deleteProductGroup(id, auditCtxOf(ctx, req));

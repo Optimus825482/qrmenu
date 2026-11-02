@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { assertCan } from "@/lib/rbac";
 import {
+  assertCatalogWriter,
   auditCtxOf,
   canSeePrices,
   handle,
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "O");
     const item = await addOrUpdateSetupItem(await parseBody(req, bodySchema), auditCtxOf(ctx, req));
     return { success: true, item };
   });
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Setup öğe ID zorunludur." }, { status: 400 });
     return deleteSetupItem(id, auditCtxOf(ctx, req));
