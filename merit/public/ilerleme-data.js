@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "02.11.2026 23:12",
-  headline: "Son kontrol (02.11) düzeltmeleri main'de: lint 0 hata, tsc temiz, 913/913 birim testi, build yeşil; e2e 71/94 (menü/kasa/kabuk spec'leri yeni arayüze uyarlanıyor). P2–P7 plan dışı prototip; P8 başlamadı.",
+  updatedAt: "03.11.2026 01:08",
+  headline: "UX yenilemesi başladı (dal ux/yenileme, 15 görev); minibar tamamlama planı ve Canlı Operasyon Radarı spec'i yazılıyor.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -123,6 +123,25 @@ window.ILERLEME = {
       ]
     },
     {
+      code: "UX", title: "Arayüz / UX yenilemesi", weight: 10,
+      summary: "Belirteçler ve görünüm matrisi, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, personel kabuğu, kabuk seçimi/PWA, yetki rehberi, XP cilası",
+      tasks: [
+        { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "active" },
+        { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "pending" },
+        { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "pending" },
+        { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
+        { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
+        { title: "T7 KDS yenilemesi ve sesler", status: "pending" },
+        { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "pending" },
+        { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
+        { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "pending" },
+        { title: "T11 screenGuide, accessSummary, Erişimim", status: "pending" },
+        { title: "T12 Tur motoru ve ? yardım", status: "pending" },
+        { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "pending" },
+        { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "pending" }
+      ]
+    },
+    {
       code: "P8", title: "Kabul, eğitim ve kurulum", weight: 6,
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
@@ -133,6 +152,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 01:08", text: "UX yenileme planı yazıldı ve T1 başladı; S1–S6 kararları onaylandı; canlı operasyon radarı modülü istendi (spec yazılıyor)." },
     { at: "02.11 23:12", text: "Düzeltme dalgaları tamamlandı (7777f8d, 5ec4064, 11259de, 915b466): npm run check yeşil (913 test), build yeşil; e2e 71/94. GitHub'a push edildi." },
     { at: "02.11 22:00", text: "Fable son kontrolü: 6 inceleme + 4 düzeltme dalgası (sır varsayılanları, seed, şema drift migration'ı, minibar/rapor API yetkisi, MyBar token, Nicosia iş günü, geçici şifre, istemciye sızan admin şifresi). P2–P7 \"tamamlandı\" iddiaları geri alındı." },
     { at: "31.10 03:07", text: "Proje başladı: şartname ve mevcut tasarımların analizi." },
