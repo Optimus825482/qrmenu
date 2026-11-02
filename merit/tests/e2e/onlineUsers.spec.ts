@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
+import { answer, appWindow } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
+import { MR, newContextPage, openAdminShell } from "./menuUi";
 
 test.describe.configure({ mode: "serial" });
 
@@ -16,56 +18,36 @@ function trackErrors(page: Page): string[] {
   return errors;
 }
 
-const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" });
-
-async function openAdmin(page: Page) {
-  await login(page, "admin");
-  await expect(page).toHaveURL(/\/admin$/);
-  await expect(desktop(page)).toBeVisible();
-}
-
-const MR = { name: "Merit Royal", code: "ROYAL" };
-
-/** Başlat → Online Kullanıcılar, then the hotel card. */
-async function openOnline(page: Page, hotel: { name: string; code: string }) {
-  await page.getByRole("button", { name: "başlat" }).click();
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Online Kullanıcılar", exact: true })
-    .click();
-  await page
-    .getByRole("region", { name: "Online Kullanıcılar", exact: true })
-    .getByRole("button", { name: new RegExp(`^${hotel.name} logosu\\s+${hotel.name}$`) })
-    .click();
-  const win = page.getByRole("region", { name: `Online Kullanıcılar · ${hotel.name}`, exact: true });
-  await expect(win).toBeVisible();
-  return win;
-}
-
-test("admin listesi açıkken kat.mr 2 sn içinde görünür; zorla çıkış kat.mr oturumunu /giris yapar", async ({
+test("admin listesi açıkken kat.mr 2 sn içinde görünür; zorla çıkış kat.mr sekmesini /giris yapar ve satırı düşürür", async ({
   page,
   browser,
 }) => {
   const errors = trackErrors(page);
-  await openAdmin(page);
-  const win = await openOnline(page, MR);
+  await openAdminShell(page);
+  const win = await appWindow(page, "Online Kullanıcılar", MR.name);
+  await expect(win.getByRole("row", { name: /kat\.mr/ })).toHaveCount(0);
 
-  const katContext = await browser.newContext({
-    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
-    extraHTTPHeaders: { "x-forwarded-for": "10.42.8.8" },
-  });
+  const kat = await newContextPage(browser);
   try {
-    const kat = await katContext.newPage();
     await login(kat, "kat.mr");
     await expect(kat).toHaveURL(/\/kat$/);
-    await expect(win.getByRole("row", { name: /kat\.mr/ })).toBeVisible({ timeout: 2000 });
+    // The grid follows session.changed live: no reload on the admin side.
+    const row = win.getByRole("row", { name: /kat\.mr/ });
+    await expect(row).toBeVisible({ timeout: 2000 });
+    await expect(row).toContainText("Çevrimiçi");
 
-    await win.getByRole("row", { name: /kat\.mr/ }).click();
+    // Force logout is a dangerous action: always asked. The kat tab's SSE stream gets session.closed → /giris.
+    await row.click();
     await win.getByRole("button", { name: "Zorla çıkış" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Evet" }).click();
+    await answer(page, "Zorla çıkış", "Evet");
     await expect(kat).toHaveURL(/\/giris/, { timeout: 5000 });
+    await expect(row).toHaveCount(0, { timeout: 5000 });
+
+    // The closed session stays closed: a server-rendered /kat sends the tab back to the login page.
+    await kat.goto("/kat");
+    await expect(kat).toHaveURL(/\/giris/);
   } finally {
-    await katContext.close();
+    await kat.context().close();
   }
 
   expect(errors).toEqual([]);

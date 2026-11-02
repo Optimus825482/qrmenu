@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { startMenuItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 // One database state for the whole file (reset once): prefs saved by one test are seen by the next.
@@ -35,6 +36,15 @@ async function openAdmin(page: Page) {
   await expect(desktop(page)).toBeVisible();
 }
 
+/** The default desktop: Komuta Merkezi plus the five category folders. */
+const FOLDERS = [
+  "Outlet Operasyonları",
+  "Oda Servisi Operasyonları",
+  "Minibar Operasyonları",
+  "Sistem Yönetimi",
+  "Kullanıcı Yönetimi",
+];
+
 test("kat.mr (yönetim rolü değil) /admin → /secim", async ({ page }) => {
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
@@ -48,6 +58,7 @@ test("masaüstü: Komuta Merkezi simgesi; çift tık → pencere; sürükle; gö
   const errors = trackErrors(page);
   await openAdmin(page);
   await expect(icon(page, "Komuta Merkezi")).toBeVisible();
+  for (const folder of FOLDERS) await expect(icon(page, folder)).toBeVisible();
 
   await icon(page, "Komuta Merkezi").dblclick();
   const win = appWindow(page, "Komuta Merkezi");
@@ -90,6 +101,9 @@ test("Başlat menüsü Komuta Merkezi'ni listeler ve açar; Esc kapatır", async
   const menu = page.getByRole("menu", { name: "Başlat menüsü" });
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Komuta Merkezi" })).toBeVisible();
+  // Folders are desktop-only: the Start menu lists the apps themselves, under their category.
+  await expect(menu.getByRole("menuitem", { name: "Sistem Yönetimi", exact: true })).toHaveCount(0);
+  await expect(menu.getByRole("group", { name: "SİSTEM YÖNETİMİ" }).getByRole("menuitem", { name: "Denetim Masası" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Oturumu Kapat" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
@@ -102,9 +116,35 @@ test("Başlat menüsü Komuta Merkezi'ni listeler ve açar; Esc kapatır", async
   await expect(appWindow(page, "Komuta Merkezi")).toHaveCount(0);
 });
 
+test("masaüstü klasörü: Sistem Yönetimi çift tık → klasör penceresi → Denetim Masası açılır", async ({ page }) => {
+  const errors = trackErrors(page);
+  await openAdmin(page);
+  await icon(page, "Sistem Yönetimi").dblclick();
+  const folder = appWindow(page, "Sistem Yönetimi");
+  await expect(folder).toBeVisible();
+  await expect(folder.getByRole("heading", { name: "Sistem Yönetimi" })).toBeVisible();
+  // The folder lists the SISTEM apps the admin may open (never the folder itself).
+  for (const app of ["Tanımlamalar", "Online Kullanıcılar", "Denetim Masası", "Hakkında"]) {
+    await expect(folder.getByRole("button", { name: new RegExp(`^${app}`) })).toBeVisible();
+  }
+  await expect(folder.getByRole("button", { name: /^Sistem Yönetimi/ })).toHaveCount(0);
+
+  await folder.getByRole("button", { name: /^Denetim Masası/ }).click();
+  const settings = appWindow(page, "Denetim Masası");
+  await expect(settings).toBeVisible();
+  await settings.getByRole("button", { name: "Kapat" }).click();
+  await expect(settings).toHaveCount(0);
+  const saved = waitForPrefsSave(page);
+  await folder.getByRole("button", { name: "Kapat" }).click();
+  await expect(folder).toHaveCount(0);
+  await saved;
+  expect(errors).toEqual([]);
+});
+
 test("otel bağlamı: çok otelli kapsamda pencere önce otel kartı ister", async ({ page }) => {
   await openAdmin(page);
-  await icon(page, "Online Kullanıcılar").dblclick();
+  await page.getByRole("button", { name: "başlat" }).click();
+  await startMenuItem(page, "Online Kullanıcılar").click();
   const win = appWindow(page, "Online Kullanıcılar");
   await expect(win.getByRole("heading", { name: "Otel seçin" })).toBeVisible();
   await win.getByRole("button", { name: /Merit Royal Premium/ }).click();
@@ -141,8 +181,40 @@ test("sağ tık → Duvar kağıdı → Royal Gold; yenilemeden sonra korunur", 
   expect(errors).toEqual([]);
 });
 
-test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kaldırır", async ({ page }) => {
+test("Başlat öğesini masaüstüne sürükle → onay → kısayol oluşur ve yenilemede kalır", async ({ page }) => {
   await openAdmin(page);
+  await expect(icon(page, "Denetim Masası")).toHaveCount(0); // apps start inside their folder
+  await page.getByRole("button", { name: "başlat" }).click();
+  const item = page
+    .getByRole("menu", { name: "Başlat menüsü" })
+    .getByRole("menuitem", { name: "Denetim Masası" });
+  const box = (await desktop(page).boundingBox())!;
+  await item.dragTo(desktop(page), {
+    targetPosition: { x: box.width - 300, y: 200 },
+  });
+  const dialog = page.getByRole("dialog", { name: "Kısayol oluştur" });
+  await expect(dialog).toBeVisible();
+  const saved = waitForPrefsSave(page);
+  await dialog.getByRole("button", { name: "Evet" }).click();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
+  expect((await saved).ok()).toBe(true);
+
+  // Dropping the same item again only moves the shortcut (no question, still one icon).
+  await page.getByRole("button", { name: "başlat" }).click();
+  await item.dragTo(desktop(page), { targetPosition: { x: box.width - 300, y: 320 } });
+  await expect(dialog).toHaveCount(0);
+  await expect(icon(page, "Denetim Masası")).toHaveCount(1);
+
+  await page.reload();
+  await expect(desktop(page)).toBeVisible();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
+  await icon(page, "Denetim Masası").dblclick();
+  await expect(appWindow(page, "Denetim Masası")).toBeVisible();
+});
+
+test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kaldırır; yenilemede geri gelmez", async ({ page }) => {
+  await openAdmin(page);
+  await expect(icon(page, "Denetim Masası")).toBeVisible(); // created by the previous test
   const removeVia = async () => {
     await icon(page, "Denetim Masası").click({ button: "right" });
     await page
@@ -177,31 +249,21 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await page.keyboard.press("Enter");
   await expect(dialog).toBeHidden();
   await expect(icon(page, "Denetim Masası")).toHaveCount(0);
-  expect((await saved).ok()).toBe(true); // the next test (new browser context) relies on it
+  expect((await saved).ok()).toBe(true);
+
+  // The app is still reachable from its folder; only the shortcut went.
+  await page.reload();
+  await expect(desktop(page)).toBeVisible();
+  await expect(icon(page, "Denetim Masası")).toHaveCount(0);
+  await expect(icon(page, "Sistem Yönetimi")).toBeVisible();
 });
 
-test("Başlat öğesini masaüstüne sürükle → onay → kısayol geri gelir", async ({ page }) => {
-  await openAdmin(page);
-  await expect(icon(page, "Denetim Masası")).toHaveCount(0); // removed by the previous test
-  await page.getByRole("button", { name: "başlat" }).click();
-  const item = page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Denetim Masası" });
-  const box = (await desktop(page).boundingBox())!;
-  await item.dragTo(desktop(page), {
-    targetPosition: { x: box.width - 300, y: 200 },
-  });
-  const dialog = page.getByRole("dialog", { name: "Kısayol oluştur" });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Evet" }).click();
-  await expect(icon(page, "Denetim Masası")).toBeVisible();
-});
-
-test("mudur.mr (R-OTM): yetkisiz simgeler görünmez; /admin/hakkinda → /admin", async ({ page }) => {
+test("mudur.mr (R-OTM): yetkisiz klasör ve simgeler görünmez; /admin/hakkinda → /admin", async ({ page }) => {
   await login(page, "mudur.mr");
   await expect(page).toHaveURL(/\/admin(#.*)?$/);
   await expect(desktop(page)).toBeVisible();
   await expect(icon(page, "Komuta Merkezi")).toBeVisible();
+  await expect(icon(page, "Sistem Yönetimi")).toHaveCount(0); // CR-SYS folder
   await expect(icon(page, "Denetim Masası")).toHaveCount(0);
   await expect(icon(page, "Hakkında")).toHaveCount(0);
 

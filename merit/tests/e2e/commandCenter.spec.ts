@@ -109,6 +109,15 @@ test("Hakkında: iframe uygulaması 'F&B Command Center' sayfasını gösterir",
   expect(errors).toEqual([]);
 });
 
+/** Closes every shell window restored from the saved layout so the desktop icons are reachable. */
+async function closeRestoredWindows(page: Page): Promise<void> {
+  const closeButtons = page.locator(".xp-window").getByRole("button", { name: "Kapat" });
+  for (let i = 0; i < 10 && (await closeButtons.count()) > 0; i++) {
+    await closeButtons.first().click();
+  }
+  await expect(page.locator(".xp-window")).toHaveCount(0);
+}
+
 test("tek SSE bağlantısı: görev çubuğu ve iki Komuta Merkezi penceresi aynı EventSource'u paylaşır", async ({
   page,
 }) => {
@@ -117,6 +126,8 @@ test("tek SSE bağlantısı: görev çubuğu ve iki Komuta Merkezi penceresi ayn
     if (r.method() === "GET" && new URL(r.url()).pathname === "/api/sse") streams.push(r.url());
   });
   await openAdmin(page);
+  // The earlier tests may have left their windows in the saved layout (they would cover the icon).
+  await closeRestoredWindows(page);
   await desktop(page).getByRole("button", { name: "Komuta Merkezi", exact: true }).dblclick();
   await openFromStart(page, "Komuta Merkezi");
   const windows = page.getByRole("region", { name: "Komuta Merkezi", exact: true });

@@ -1,6 +1,7 @@
-import { randomInt } from "node:crypto";
 import type { Browser, Locator, Page } from "@playwright/test";
-import { expect, login, resetAndSeed, test } from "./fixtures";
+import { expect, resetAndSeed, test } from "./fixtures";
+import { newContextPage, openAdminShell, openMenuManager, setOrdering, setPriceDisplay, setSoldOut } from "./menuUi";
+import { openStaff } from "./opsUi";
 
 // One database state for the whole file (reset once): the live tests build on the seeded tree.
 test.describe.configure({ mode: "serial" });
@@ -8,7 +9,6 @@ test.use({ locale: "en-US" });
 
 const M1 = "/q/e2e-guest-m1";
 const M2_INACTIVE = "/q/e2e-guest-m2";
-const MR = { name: "Merit Royal", code: "ROYAL" };
 
 test.beforeAll(() => {
   resetAndSeed({ guestMenu: true });
@@ -17,28 +17,9 @@ test.beforeAll(() => {
 const card = (page: Page, name: string): Locator => page.locator("button.g-card", { hasText: name });
 
 async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locator }> {
-  // Own client IP: the login rate limiter allows 5 attempts per minute per IP.
-  const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
-  const context = await browser.newContext({
-    locale: "tr-TR",
-    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
-    extraHTTPHeaders: { "x-forwarded-for": ip },
-  });
-  const page = await context.newPage();
-  await login(page, "admin");
-  await expect(page).toHaveURL(/\/admin$/);
-  await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Yönetimi", exact: true }).click();
-  const win = page.locator(`.xp-window.is-active[aria-label="Menü Yönetimi · ${MR.name}"]`);
-  const hotelCard = page
-    .locator('.xp-window.is-active[aria-label="Menü Yönetimi"]')
-    .getByRole("button", { name: new RegExp(`^${MR.name} logosu\\s+${MR.name}$`) });
-  if (!(await win.isVisible())) {
-    await expect(hotelCard).toBeVisible();
-    await hotelCard.click();
-  }
-  await expect(win).toBeVisible();
-  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
+  const page = await newContextPage(browser);
+  await openAdminShell(page, "admin");
+  const win = await openMenuManager(page);
   return { page, win };
 }
 
@@ -91,7 +72,7 @@ test("?lang=ar sağdan sola ve Arapça; ?lang=de çerezle kalıcı", async ({ pa
   await expect(page.getByRole("tab", { name: "Drinks" })).toBeVisible();
 });
 
-test("canlı: admin Mojito'yu tükendi yapar, misafir sayfası yenilenmeden 3 sn içinde gri kart olur", async ({
+test("canlı: admin Mojito'yu tükendi yapar, misafir sayfası yenilenmeden 3 sn içinde kartı gizler ve geri getirir", async ({
   page,
   browser,
 }) => {
@@ -102,18 +83,17 @@ test("canlı: admin Mojito'yu tükendi yapar, misafir sayfası yenilenmeden 3 sn
   });
 
   const admin = await openMenuAdmin(browser);
-  await admin.win.getByRole("treeitem", { name: /Mojito/ }).click();
-  await admin.win.getByRole("switch", { name: "Tükendi" }).click();
-  await expect(admin.win.getByRole("treeitem", { name: /Mojito/ })).toContainText("tükendi");
+  await setSoldOut(admin.page, admin.win, "Mojito", true);
 
-  await expect(card(page, "Mojito")).toHaveAttribute("data-available", "false", { timeout: 3_000 });
-  await expect(card(page, "Mojito")).toContainText("Sold out");
+  // Sold-out items leave the guest list at once (SSE menu.availability); the rest stays.
+  await expect(card(page, "Mojito")).toHaveCount(0, { timeout: 3_000 });
   await expect(card(page, "Aperol Spritz")).toHaveAttribute("data-available", "true");
   expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
 
-  // Back to available: the card recovers.
-  await admin.win.getByRole("switch", { name: "Tükendi" }).click();
+  // Back to available: the card returns, still without a reload.
+  await setSoldOut(admin.page, admin.win, "Mojito", false);
   await expect(card(page, "Mojito")).toHaveAttribute("data-available", "true", { timeout: 3_000 });
+  expect(await page.evaluate(() => (window as unknown as { __noReload?: boolean }).__noReload)).toBe(true);
   await admin.page.context().close();
 });
 
@@ -123,14 +103,12 @@ test("canlı: outlet fiyat anahtarı Göster olunca fiyat 3 sn içinde görünü
   await expect(page.locator(".g-price")).toHaveCount(0);
 
   const admin = await openMenuAdmin(browser);
-  await admin.win.getByLabel("Fiyat gösterimi").selectOption({ label: "Göster" });
-  await admin.page.getByRole("button", { name: "Evet" }).click();
+  await setPriceDisplay(admin.page, admin.win, "SHOW");
 
   await expect(card(page, "Mojito").locator(".g-price")).toHaveText(/12\.00/, { timeout: 3_000 });
   await expect(card(page, "Aperol Spritz").locator(".g-price")).toHaveText(/10\.00/);
 
-  await admin.win.getByLabel("Fiyat gösterimi").selectOption({ label: "Gizle" });
-  await admin.page.getByRole("button", { name: "Evet" }).click();
+  await setPriceDisplay(admin.page, admin.win, "HIDE");
   await expect(page.locator(".g-price")).toHaveCount(0, { timeout: 3_000 });
   await admin.page.context().close();
 });
@@ -139,11 +117,16 @@ test("canlı: sipariş kapanınca şerit görünür", async ({ page, browser }) 
   await page.goto(`${M1}?lang=en`);
   await expect(page.getByText("Ordering is closed right now")).toHaveCount(0);
   const admin = await openMenuAdmin(browser);
-  await admin.win.getByRole("switch", { name: "Sipariş açık" }).click();
-  await admin.page.getByRole("button", { name: "Evet" }).click();
+  await setOrdering(admin.page, admin.win, false);
   await expect(page.getByText("Ordering is closed right now")).toBeVisible({ timeout: 3_000 });
   await card(page, "Mojito").click();
   await expect(page.getByRole("dialog", { name: "Mojito" }).getByRole("button", { name: "Add to selections" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  // The strip survives a reload (server state), and goes away again once ordering reopens.
+  await page.reload();
+  await expect(page.getByText("Ordering is closed right now")).toBeVisible();
+  await setOrdering(admin.page, admin.win, true);
+  await expect(page.getByText("Ordering is closed right now")).toHaveCount(0, { timeout: 3_000 });
   await admin.page.context().close();
 });
 
@@ -208,21 +191,13 @@ test("Peçete istiyorum çağrı notunu yazar (kasa çağrı listesinde Türkçe
   await sheet.getByRole("button", { name: "Peçete istiyorum" }).click();
   await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toBeVisible();
 
-  const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
-  const context = await browser.newContext({
-    locale: "tr-TR",
-    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
-    extraHTTPHeaders: { "x-forwarded-for": ip },
-  });
-  const cashier = await context.newPage();
-  await login(cashier, "kasa.havuz");
-  await cashier.getByRole("button", { name: /Havuz Bar/ }).click();
+  const cashier = await openStaff(browser, "kasa.havuz");
   await expect(cashier).toHaveURL(/\/kasa$/);
   await cashier.goto("/kasa?sekme=cagrilar");
   const calls = cashier.getByRole("region", { name: "Açık çağrılar" });
   await expect(calls).toContainText("M1");
   await expect(calls).toContainText("Peçete istiyorum");
-  await context.close();
+  await cashier.context().close();
 });
 
 test("çift dokunuşta tek çağrı gider", async ({ page }) => {

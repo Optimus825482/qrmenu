@@ -1,13 +1,12 @@
-import { randomInt } from "node:crypto";
 import type { Browser, Locator, Page } from "@playwright/test";
-import { expect, login, resetAndSeed, test } from "./fixtures";
+import { expect, resetAndSeed, test } from "./fixtures";
+import { newContextPage, openAdminShell, openMenuManager, setOrdering } from "./menuUi";
 
 // One database state for the whole file: the second test builds on the first one's order.
 test.describe.configure({ mode: "serial" });
 test.use({ locale: "tr-TR" });
 
 const M1 = "/q/e2e-guest-m1";
-const MR = { name: "Merit Royal", code: "ROYAL" };
 
 test.beforeAll(() => {
   resetAndSeed({ guestMenu: true });
@@ -17,26 +16,9 @@ const card = (page: Page, name: string): Locator => page.locator("button.g-card"
 const badge = (page: Page): Locator => page.getByTestId("selection-count");
 
 async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locator }> {
-  // Own client IP: the login rate limiter allows 5 attempts per minute per IP.
-  const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
-  const context = await browser.newContext({
-    locale: "tr-TR",
-    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
-    extraHTTPHeaders: { "x-forwarded-for": ip },
-  });
-  const page = await context.newPage();
-  await login(page, "admin");
-  await expect(page).toHaveURL(/\/admin$/);
-  await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Yönetimi", exact: true }).click();
-  const win = page.getByRole("region", { name: `Menü Yönetimi · ${MR.name}`, exact: true });
-  const hotelCard = page
-    .getByRole("region", { name: "Menü Yönetimi", exact: true })
-    .getByRole("button", { name: new RegExp(`^${MR.name}\\s*${MR.code}$`) });
-  await expect(hotelCard.or(win)).toBeVisible();
-  if (await hotelCard.isVisible()) await hotelCard.click();
-  await expect(win).toBeVisible();
-  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
+  const page = await newContextPage(browser);
+  await openAdminShell(page, "admin");
+  const win = await openMenuManager(page);
   return { page, win };
 }
 
@@ -105,9 +87,8 @@ test("sipariş kapanınca gönderim reddedilir, seçimler korunur, durum sayfas�
 
   // Admin switches ordering off while the guest is still filling the selections.
   const admin = await openMenuAdmin(browser);
-  await admin.win.getByRole("switch", { name: "Sipariş açık" }).click();
-  await admin.page.getByRole("button", { name: "Evet" }).click();
-  await expect(admin.win.getByRole("switch", { name: "Sipariş açık" })).not.toBeChecked();
+  await setOrdering(admin.page, admin.win, false);
+  await expect(admin.win.getByRole("switch", { name: "QR sipariş açık" })).not.toBeChecked();
 
   await drawer.getByRole("button", { name: "Seçimleri gönder" }).click();
   await expect(drawer.getByText(/şu an sipariş alınmıyor/i)).toBeVisible();

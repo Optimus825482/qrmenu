@@ -75,8 +75,16 @@ export async function appWindow(page: Page, title: string, hotelName?: string): 
   }
   await page.getByRole("button", { name: "başlat" }).click();
   await startMenuItem(page, title).click();
-  if (hotelName) await pickHotel(page, title, hotelName);
   const win = page.getByRole("region", { name: fullName, exact: true }).last();
+  if (hotelName) {
+    // Users with several hotels pick one first; a single-hotel user gets the bound window straight away.
+    const escaped = hotelName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const card = page
+      .getByRole("region", { name: title, exact: true })
+      .getByRole("button", { name: new RegExp(`^${escaped} logosu\\s+${escaped}$`) });
+    await expect(card.or(win).first()).toBeVisible();
+    if (await card.isVisible()) await card.click();
+  }
   await expect(win).toBeVisible();
   return win;
 }
