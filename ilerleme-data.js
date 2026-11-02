@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 01:30",
+  updatedAt: "03.11.2026 01:56",
   headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
   phases: [
     {
@@ -152,6 +152,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 01:48", text: "Canlı yedekten gerçek otel tanımları (3 otel, 18 kat, 558 oda, 69 ürün, 10 setup) referans seed'e eklendi ve incelemesi onaylandı (dd2995f)." },
     { at: "03.11 01:30", text: "Minibar tamamlama planı (14) ve Canlı Operasyon Radarı spec+planı (12) yazıldı. Ajan başına DB/port ile paralel uygulama başladı." },
     { at: "03.11 01:08", text: "UX yenileme planı yazıldı ve T1 başladı; S1–S6 kararları onaylandı; canlı operasyon radarı modülü istendi (spec yazılıyor)." },
     { at: "02.11 23:12", text: "Düzeltme dalgaları tamamlandı (7777f8d, 5ec4064, 11259de, 915b466): npm run check yeşil (913 test), build yeşil; e2e 71/94. GitHub'a push edildi." },
