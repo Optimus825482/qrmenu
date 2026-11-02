@@ -31,6 +31,8 @@
 
 **Durum:** `npm run check` yeşil (lint 0 hata, tsc temiz, vitest 913/913), `next build` yeşil, gateway 17/17, `prisma migrate diff` boş. Playwright 71 geçti / 8 kırık / 15 koşmadı — kırıklar menü yönetimi, kasa, kabuk masaüstü, onlineUsers, tableQr spec'lerinin yeni arayüze uyarlanmamış olmasından (bkz. defter F4 satırı).
 
+**UX yenileme (Erkan, 02.11 23:29):** spec `docs/superpowers/specs/2026-11-02-arayuz-ux-yenileme-design.md` (envanter, 3 cihaz bağlamı, yetki rehberi, 16 görev/5 dalga; §7'deki 6 soru Erkan'a). Onay sonrası `writing-plans` ile plan, sonra SDD. F6 e2e uyarlaması (menü/kasa/kabuk/online/tableQr spec'leri) 23:47'de hâlâ sürüyordu; sonucunu `git log` ile doğrula, tam e2e yeşilse push.
+
 **Sıradaki iş (sırayla):**
 1. F5: güvenlik taraması 3 bulgu — global katalog (ürün/grup/setup) yazımı yalnız SISTEM; audit-logs yanıtında `maskPrices`; room-type-setups otel eşleşmesi.
 2. F6: 6 e2e spec'ini güncel arayüze uyarlama (guestMenu, menuAdmin, qrOrder, qrOrderAcceptance, opsScreens, shell, onlineUsers, tableQr) — `tests/e2e/definitionsUi.ts` yardımcıları örnek; e2e DB `merit_e2e`/`merit_test`, sunucu `-p 3010` + `APP_BASE_URL=http://localhost:3010` + `E2E_BASE_URL`.
