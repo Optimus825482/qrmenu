@@ -1,6 +1,7 @@
 import { zipSync } from "fflate";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { assertCan } from "@/lib/rbac";
 import { generateQrToken, isSignedToken, qrUrl, renderQrPng, renderQrSvg, verifyQrToken } from "@/lib/qr";
 import { DomainError } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
@@ -27,6 +28,7 @@ export async function listRoomQr(
   if (!ctx.hotelIds.includes(hotelId)) {
     throw new DomainError("FORBIDDEN", "Bu otele erişim yetkiniz yok");
   }
+  await assertCan(ctx, "MB-KF", "V", hotelId);
 
   const where: { hotelId: string; floorId?: string } = { hotelId };
   if (floorId) where.floorId = floorId;
@@ -70,6 +72,7 @@ export async function regenerateRoomQr(ctx: Ctx, roomId: string): Promise<RoomQr
   if (!ctx.hotelIds.includes(room.hotelId)) {
     throw new DomainError("FORBIDDEN", "Bu otele erişim yetkiniz yok");
   }
+  await assertCan(ctx, "MB-KF", "D", room.hotelId);
 
   const token = generateQrToken("ROOM", room.id);
   const updated = await prisma.room.update({
@@ -113,6 +116,7 @@ export async function regenerateAllRoomQr(
   if (!ctx.hotelIds.includes(hotelId)) {
     throw new DomainError("FORBIDDEN", "Bu otele erişim yetkiniz yok");
   }
+  await assertCan(ctx, "MB-KF", "D", hotelId);
 
   const where: { hotelId: string; floorId?: string } = { hotelId };
   if (floorId) where.floorId = floorId;
@@ -158,6 +162,7 @@ export async function downloadRoomQr(
   if (!ctx.hotelIds.includes(room.hotelId)) {
     throw new DomainError("FORBIDDEN", "Bu otele erişim yetkiniz yok");
   }
+  await assertCan(ctx, "MB-KF", "V", room.hotelId);
 
   let token = room.qrToken;
   if (!token || !isSigned(token, room.id)) {
@@ -190,6 +195,7 @@ export async function downloadRoomQrZip(
   if (!ctx.hotelIds.includes(hotelId)) {
     throw new DomainError("FORBIDDEN", "Bu otele erişim yetkiniz yok");
   }
+  await assertCan(ctx, "MB-KF", "V", hotelId);
 
   const where: { hotelId: string; floorId?: string } = { hotelId };
   if (floorId) where.floorId = floorId;

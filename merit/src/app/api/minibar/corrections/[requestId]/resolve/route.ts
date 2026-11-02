@@ -1,40 +1,27 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { resolveCorrectionRequest } from "@/modules/minibar/server/minibarService";
+import { z } from "zod";
+import { assertCan } from "@/lib/rbac";
+import { DomainError } from "@/lib/result";
+import { handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
+import { correctionRequestHotel, resolveCorrectionRequest } from "@/modules/minibar/server/minibarService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  request: Request,
-  props: { params: Promise<{ requestId: string }> }
-) {
-  try {
+const bodySchema = z.object({
+  approved: z.boolean(),
+  rejectReason: z.string().max(500).optional(),
+});
+
+export async function POST(request: Request, props: { params: Promise<{ requestId: string }> }) {
+  return handle(async (ctx) => {
     const { requestId } = await props.params;
-    let approverId = "system";
-
-    try {
-      const ctx = await requireUser();
-      approverId = ctx.user.id;
-    } catch {
-      const u = await prisma.user.findFirst({ where: { isActive: true } });
-      if (u) approverId = u.id;
+    const hotelId = await correctionRequestHotel(requestId);
+    await assertCan(ctx, "MB-TAL", "A", hotelId);
+    // Past-dated corrections are decided by the system administrators / management only.
+    if (ctx.user.roleKind !== "SISTEM" && ctx.user.roleKind !== "YONETIM") {
+      throw new DomainError("FORBIDDEN", "Düzeltme taleplerini yalnızca yönetim onaylayabilir.");
     }
-
-    const body = await request.json();
-    const { approved, rejectReason } = body;
-
-    const result = await resolveCorrectionRequest({
-      requestId,
-      approverId,
-      approved: Boolean(approved),
-      rejectReason,
-    });
-
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Talep sonuçlandırılırken hata oluştu.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+    const body = await parseBody(request, bodySchema);
+    return resolveCorrectionRequest({ requestId, approverId: ctx.user.id, hotelId, ...body });
+  });
 }

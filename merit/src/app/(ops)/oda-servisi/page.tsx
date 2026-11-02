@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
+import { getSetting } from "@/lib/settings";
 import { listRoomServiceOrdersAction } from "@/modules/order/server/actions/roomServiceRecords";
 import OdaServisiClient from "./OdaServisiClient";
 
@@ -10,7 +11,7 @@ export default async function OdaServisiPage() {
   const hotelId = ctx.session.hotelId ?? ctx.hotelIds[0];
   if (!hotelId) redirect("/secim");
 
-  const [hasView, canEdit, hotel, ordersRes] = await Promise.all([
+  const [hasView, canEdit, hotel, ordersRes, slaMinutes] = await Promise.all([
     can(ctx, "RO-TAL", "V", hotelId),
     can(ctx, "RO-TAL", "D", hotelId),
     prisma.hotel.findUnique({
@@ -18,11 +19,11 @@ export default async function OdaServisiPage() {
       select: { id: true, name: true },
     }),
     listRoomServiceOrdersAction({ hotelId, limit: 100 }),
+    getSetting("rs.slaMinutes", hotelId),
   ]);
 
-  if (!hasView && ctx.user.roleKind !== "SISTEM" && ctx.user.roleKind !== "YONETIM") {
-    redirect("/secim");
-  }
+  // The permission matrix decides; no role-kind shortcut.
+  if (!hasView) redirect("/secim");
 
   const initialOrders = ordersRes.ok ? ordersRes.data.orders : [];
   const initialStats = ordersRes.ok
@@ -43,7 +44,8 @@ export default async function OdaServisiPage() {
       hotelName={hotel?.name ?? "Oda Servisi"}
       initialOrders={initialOrders}
       initialStats={initialStats}
-      canEdit={canEdit || ctx.user.roleKind === "SISTEM" || ctx.user.roleKind === "YONETIM"}
+      canEdit={canEdit}
+      slaMinutes={slaMinutes}
     />
   );
 }

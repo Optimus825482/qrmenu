@@ -1,10 +1,11 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PersistentMybarModal } from "../../components/PersistentMybarModal";
 import type { SetupInspectionItem } from "@/modules/minibar/server/minibarTypes";
+import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 
 interface RoomInspectionData {
   room: {
@@ -44,6 +45,8 @@ interface RoomInspectionData {
 export default function KatOdaKontrolPage(props: {
   params: Promise<{ roomId: string }>;
 }) {
+  // Same key for every attempt of this check: a retry replays the first result (no double deduction).
+  const checkRequestKey = useRef<string | null>(null);
   const { roomId } = use(props.params);
   const router = useRouter();
 
@@ -169,6 +172,7 @@ export default function KatOdaKontrolPage(props: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           consumedItems: [],
+          clientRequestId: (checkRequestKey.current ??= newRequestKey()),
           note: "Sarfiyat yok. Minibar kontrol edildi.",
         }),
       });
@@ -236,6 +240,7 @@ export default function KatOdaKontrolPage(props: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           consumedItems,
+          clientRequestId: (checkRequestKey.current ??= newRequestKey()),
           note: note.trim() || undefined,
         }),
       });

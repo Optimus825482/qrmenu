@@ -1,63 +1,57 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { assertCan } from "@/lib/rbac";
+import { auditCtxOf, handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
 import {
-  listProductGroups,
   createProductGroup,
-  updateProductGroup,
   deleteProductGroup,
+  listProductGroups,
+  updateProductGroup,
 } from "@/modules/minibar/server/minibarDefinitionsService";
-import { getAuditCtxFromRequest } from "@/modules/minibar/server/apiAuthHelper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const createSchema = z.object({
+  name: z.string().trim().min(1, "Ürün grubu adı zorunludur.").max(100),
+  description: z.string().max(300).optional(),
+  isActive: z.boolean().optional(),
+});
+const updateSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().max(300).nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
 export async function GET() {
-  try {
-    const groups = await listProductGroups();
-    return NextResponse.json({ groups });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün grupları alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
+    return { groups: await listProductGroups() };
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const group = await createProductGroup(body, ctx);
-    return NextResponse.json({ success: true, group });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün grubu oluşturulamadı.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    const group = await createProductGroup(await parseBody(req, createSchema), auditCtxOf(ctx, req));
+    return { success: true, group };
+  });
 }
 
 export async function PUT(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const { id, ...data } = body;
-    if (!id) return NextResponse.json({ error: "Grup ID zorunludur." }, { status: 400 });
-
-    const group = await updateProductGroup(id, data, ctx);
-    return NextResponse.json({ success: true, group });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün grubu güncellenemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const { id, ...data } = await parseBody(req, updateSchema);
+    const group = await updateProductGroup(id, data, auditCtxOf(ctx, req));
+    return { success: true, group };
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Grup ID zorunludur." }, { status: 400 });
-
-    const result = await deleteProductGroup(id, ctx);
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün grubu silinemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Grup ID zorunludur." }, { status: 400 });
+    return deleteProductGroup(id, auditCtxOf(ctx, req));
+  });
 }

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
 import { GuestFooter } from "@/modules/menu/ui/guest/GuestFooter";
@@ -89,7 +89,7 @@ export default async function GuestLayout({
     return (
       <div className="g-root" dir={rtl ? "rtl" : "ltr"} lang={locale}>
         <HtmlLangSync locale={locale as Locale} />
-        <MybarGuestScreen roomId={target.roomId} hotelId={target.hotelId} token={token} />
+        <MybarGuestScreen token={token} />
         {children /* renders nothing, but lets the page apply ?lang= */}
       </div>
     );

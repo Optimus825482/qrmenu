@@ -1,5 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import { DomainError } from "@/lib/result";
+import { getSettings } from "@/lib/settings";
+import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
+import {
+  consumedToday,
+  DND_DOUBLE_TAP_MS,
+  getBusinessDate,
+  lockRow,
+  notifyChange,
+  roomCatalogue,
+} from "./minibarCommon";
+import { nicosiaInstant } from "./dates";
+import { deductFromPool } from "./poolStock";
 import type {
   FloorSummary,
   TaskSummary,
@@ -8,277 +21,15 @@ import type {
   PriorityRoutePlan,
   PriorityTaskPlanItem,
   RoomCheckHistoryItem,
-  CorrectionRequestItem,
 } from "./minibarTypes";
 
-/**
- * Returns today's date normalized to midnight in UTC.
- */
-export function getBusinessDate(dateObj = new Date()): Date {
-  const d = new Date(dateObj);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
-
-/**
- * Ensures shared hotel consignment stock exists for testing / operational readiness.
- * If hotel has 0 HotelStock entries, initializes each product with default 120 units.
- */
-export async function ensureHotelStockSeed(hotelId: string): Promise<void> {
-  const count = await prisma.hotelStock.count({ where: { hotelId } });
-  if (count > 0) return;
-
-  const products = await prisma.product.findMany({
-    where: { isActive: true },
-    select: { id: true },
-  });
-
-  for (const p of products) {
-    await prisma.hotelStock.upsert({
-      where: {
-        hotelId_productId: { hotelId, productId: p.id },
-      },
-      update: {},
-      create: {
-        hotelId,
-        productId: p.id,
-        totalQty: 120,
-        usedQty: 0,
-        remainingQty: 120,
-        criticalLevel: 25,
-      },
-    });
-  }
-}
-
-/**
- * Seeds sample occupancy & daily tasks if none exist for today.
- */
-export async function ensureSampleOccupancySeed(hotelId: string): Promise<void> {
-  const today = getBusinessDate();
-  const existingCount = await prisma.dailyTaskItem.count({
-    where: { task: { hotelId, date: today } },
-  });
-  if (existingCount > 0) return;
-
-  const rooms = await prisma.room.findMany({
-    where: { hotelId, isActive: true },
-    include: { floor: true },
-    take: 45,
-    orderBy: [{ floor: { number: "asc" } }, { number: "asc" }],
-  });
-  if (rooms.length === 0) return;
-
-  // Create tasks: In-House, Arrival, Departure
-  const inhouseTask = await prisma.dailyTask.upsert({
-    where: {
-      hotelId_date_type: {
-        hotelId,
-        date: today,
-        type: "INHOUSE_KONTROL",
-      },
-    },
-    update: {},
-    create: {
-      hotelId,
-      date: today,
-      type: "INHOUSE_KONTROL",
-      status: "BEKLIYOR",
-    },
-  });
-
-  const arrivalTask = await prisma.dailyTask.upsert({
-    where: {
-      hotelId_date_type: {
-        hotelId,
-        date: today,
-        type: "ARRIVAL_KONTROL",
-      },
-    },
-    update: {},
-    create: {
-      hotelId,
-      date: today,
-      type: "ARRIVAL_KONTROL",
-      status: "BEKLIYOR",
-    },
-  });
-
-  const departureTask = await prisma.dailyTask.upsert({
-    where: {
-      hotelId_date_type: {
-        hotelId,
-        date: today,
-        type: "DEPARTURE_KONTROL",
-      },
-    },
-    update: {},
-    create: {
-      hotelId,
-      date: today,
-      type: "DEPARTURE_KONTROL",
-      status: "BEKLIYOR",
-    },
-  });
-
-  // Distribute rooms into realistic operational states:
-  for (let i = 0; i < rooms.length; i++) {
-    const room = rooms[i];
-    if (i < 2) {
-      // Clash room: Departure + Arrival on same day
-      await prisma.guestRecord.create({
-        data: {
-          hotelId,
-          roomId: room.id,
-          batchCode: "SAMPLE-CLASH",
-          guestCount: 2,
-          kind: "DEPARTURE",
-          arrivalDate: new Date(Date.now() - 3 * 86400000),
-          departureDate: today,
-          departureTime: "11:30",
-        },
-      });
-
-      const arrRecord = await prisma.guestRecord.create({
-        data: {
-          hotelId,
-          roomId: room.id,
-          batchCode: "SAMPLE-CLASH",
-          guestCount: 2,
-          kind: "ARRIVAL",
-          arrivalDate: today,
-          arrivalTime: "13:30",
-          departureDate: new Date(Date.now() + 4 * 86400000),
-        },
-      });
-
-      await prisma.dailyTaskItem.create({
-        data: {
-          taskId: arrivalTask.id,
-          roomId: room.id,
-          guestRecordId: arrRecord.id,
-          status: "BEKLIYOR",
-          arrivalTime: "13:30",
-          departureTime: "11:30",
-          priority: 1,
-          note: "⚠️ AYNI GÜN ÇIKIŞ VE GİRİŞ ÇAKIŞMASI!",
-        },
-      });
-    } else if (i < 10) {
-      // Arrival rooms
-      const arrTime = `${12 + (i % 5)}:00`;
-      const record = await prisma.guestRecord.create({
-        data: {
-          hotelId,
-          roomId: room.id,
-          batchCode: "SAMPLE-ARR",
-          guestCount: 2,
-          kind: "ARRIVAL",
-          arrivalDate: today,
-          arrivalTime: arrTime,
-          departureDate: new Date(Date.now() + 3 * 86400000),
-        },
-      });
-
-      await prisma.dailyTaskItem.create({
-        data: {
-          taskId: arrivalTask.id,
-          roomId: room.id,
-          guestRecordId: record.id,
-          status: "BEKLIYOR",
-          arrivalTime: arrTime,
-          priority: 2,
-        },
-      });
-    } else if (i < 30) {
-      // In-House rooms
-      const record = await prisma.guestRecord.create({
-        data: {
-          hotelId,
-          roomId: room.id,
-          batchCode: "SAMPLE-INH",
-          guestCount: 2,
-          kind: "IN_HOUSE",
-          arrivalDate: new Date(Date.now() - 2 * 86400000),
-          departureDate: new Date(Date.now() + 2 * 86400000),
-        },
-      });
-
-      const status = i === 12 ? "TAMAMLANDI" : i === 14 ? "DND_BEKLIYOR" : "BEKLIYOR";
-      await prisma.dailyTaskItem.create({
-        data: {
-          taskId: inhouseTask.id,
-          roomId: room.id,
-          guestRecordId: record.id,
-          status,
-          priority: 4,
-          dndCount: i === 14 ? 1 : 0,
-          lastDndAt: i === 14 ? new Date(Date.now() - 90 * 60000) : null,
-          checkedAt: i === 12 ? new Date() : null,
-        },
-      });
-
-      // Sample MyBar request for room 15
-      if (i === 15) {
-        const sampleProduct = await prisma.product.findFirst({ where: { isActive: true } });
-        if (sampleProduct) {
-          const req = await prisma.mybarRequest.create({
-            data: {
-              hotelId,
-              roomId: room.id,
-              businessDate: today,
-              status: "BEKLEMEDE",
-              language: "tr",
-              clientIp: "127.0.0.1",
-              idempotencyKey: `sample-mybar-${room.id}-${Date.now()}`,
-              note: "Ekstra soğuk maden suyu ve çikolata rica ediyoruz.",
-            },
-          });
-          await prisma.mybarRequestItem.create({
-            data: {
-              requestId: req.id,
-              productId: sampleProduct.id,
-              requestedQty: 3,
-            },
-          });
-        }
-      }
-    } else if (i < 36) {
-      // Departures
-      const depTime = `${10 + (i % 3)}:00`;
-      const record = await prisma.guestRecord.create({
-        data: {
-          hotelId,
-          roomId: room.id,
-          batchCode: "SAMPLE-DEP",
-          guestCount: 1,
-          kind: "DEPARTURE",
-          arrivalDate: new Date(Date.now() - 5 * 86400000),
-          departureDate: today,
-          departureTime: depTime,
-        },
-      });
-
-      await prisma.dailyTaskItem.create({
-        data: {
-          taskId: departureTask.id,
-          roomId: room.id,
-          guestRecordId: record.id,
-          status: "BEKLIYOR",
-          departureTime: depTime,
-          priority: 3,
-        },
-      });
-    }
-  }
-}
+export { getBusinessDate };
+export * from "./roomCheckService";
 
 /**
  * 1. Kat Sorumlusu Dashboard Datası
  */
 export async function getKatDashboardData(hotelId: string) {
-  await ensureHotelStockSeed(hotelId);
-  await ensureSampleOccupancySeed(hotelId);
 
   const today = getBusinessDate();
 
@@ -420,7 +171,7 @@ export async function getFloorRoomsData(floorId: string, hotelId: string) {
     select: { id: true, number: true, name: true, hotelId: true },
   });
   if (!floor) {
-    throw new Error("Kat bulunamadı.");
+    throw new DomainError("NOT_FOUND", "Kat bulunamadı.");
   }
 
   const rooms = await prisma.room.findMany({
@@ -561,12 +312,12 @@ export async function getFloorRoomsData(floorId: string, hotelId: string) {
   };
 }
 
+
 /**
  * 3. Oda Kontrol Ekranı Datası (Setup & Ürün Eksik Tamamlama)
  */
 export async function getRoomInspectionData(roomId: string, hotelId: string) {
   const today = getBusinessDate();
-  await ensureHotelStockSeed(hotelId);
 
   const room = await prisma.room.findFirst({
     where: { id: roomId, hotelId },
@@ -576,35 +327,11 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
     },
   });
   if (!room) {
-    throw new Error("Oda bulunamadı.");
+    throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
   }
 
-  let assignedSetups: { setupId: string }[] = [];
-  if (room.roomTypeId) {
-    assignedSetups = await prisma.roomTypeSetup.findMany({
-      where: {
-        hotelId,
-        roomTypeId: room.roomTypeId,
-      },
-      select: { setupId: true },
-    });
-  }
-
-  const setupIds = assignedSetups.map((s) => s.setupId);
-  const setups = await prisma.setup.findMany({
-    where: setupIds.length > 0 ? { id: { in: setupIds }, isActive: true } : { isActive: true },
-    include: {
-      items: {
-        include: {
-          product: {
-            include: {
-              group: { select: { name: true } },
-            },
-          },
-        },
-      },
-    },
-  });
+  const cat = await roomCatalogue(prisma, hotelId, room.roomTypeId);
+  const setups = cat.setups;
 
   const productIds = new Set<string>();
   setups.forEach((s) => s.items.forEach((it) => productIds.add(it.productId)));
@@ -618,6 +345,8 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
   const stockMap = new Map<string, number>();
   hotelStocks.forEach((hs) => stockMap.set(hs.productId, hs.remainingQty));
 
+  const doneToday = await consumedToday(prisma, hotelId, room.id, businessDate());
+
   const setupInspectionItems: SetupInspectionItem[] = setups.map((setup) => ({
     setupId: setup.id,
     setupName: setup.name,
@@ -630,6 +359,7 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
       targetQty: it.qty,
       hotelStockQty: stockMap.get(it.productId) ?? 0,
       addedQty: 0,
+      replenishedToday: doneToday.get(it.productId) ?? 0,
     })),
   }));
 
@@ -658,14 +388,13 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
     },
   });
 
-  let dndAllowed = true;
+  // DND re-marks are never blocked (only a 30 s double tap is); the wait is the configured
+  // recommended re-check interval, shown as guidance.
+  const { "dnd.recheckMinutes": recheckMinutes } = await getSettings(["dnd.recheckMinutes"], hotelId);
   let dndWaitMinutes = 0;
-  if (taskItem?.lastDndAt) {
+  if (taskItem?.lastDndAt && taskItem.status === "DND_BEKLIYOR") {
     const elapsedMinutes = Math.floor((Date.now() - taskItem.lastDndAt.getTime()) / 60000);
-    if (elapsedMinutes < 60) {
-      dndAllowed = false;
-      dndWaitMinutes = 60 - elapsedMinutes;
-    }
+    dndWaitMinutes = Math.max(0, recheckMinutes - elapsedMinutes);
   }
 
   return {
@@ -692,7 +421,7 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
           dndCount: taskItem.dndCount,
           lastDndAt: taskItem.lastDndAt?.toISOString() || null,
           checkedAt: taskItem.checkedAt?.toISOString() || null,
-          dndAllowed,
+          dndAllowed: true,
           dndWaitMinutes,
         }
       : null,
@@ -712,137 +441,7 @@ export async function getRoomInspectionData(roomId: string, hotelId: string) {
 }
 
 /**
- * 4. Oda Kontrolünü Tamamla & Sarfiyat / Dolum Kaydet
- */
-export async function submitRoomCheck(params: {
-  hotelId: string;
-  roomId: string;
-  userId: string;
-  consumedItems: { productId: string; qty: number; setupId?: string }[];
-  note?: string;
-}) {
-  const { hotelId, roomId, userId, consumedItems, note } = params;
-  const today = getBusinessDate();
-
-  return await prisma.$transaction(async (tx) => {
-    for (const item of consumedItems) {
-      if (item.qty <= 0) continue;
-
-      const currentStock = await tx.hotelStock.findUnique({
-        where: {
-          hotelId_productId: { hotelId, productId: item.productId },
-        },
-      });
-
-      if (!currentStock || currentStock.remainingQty < item.qty) {
-        const prod = await tx.product.findUnique({ where: { id: item.productId } });
-        throw new Error(
-          `Yetersiz otel stoğu! Ürün: "${prod?.name || item.productId}". Kalan zimmet: ${currentStock?.remainingQty || 0}, Talep edilen: ${item.qty}`
-        );
-      }
-
-      await tx.hotelStock.update({
-        where: { id: currentStock.id },
-        data: {
-          usedQty: { increment: item.qty },
-          remainingQty: { decrement: item.qty },
-        },
-      });
-
-      await tx.hotelStockMovement.create({
-        data: {
-          hotelId,
-          productId: item.productId,
-          userId,
-          type: "KULLANIM",
-          qty: item.qty,
-          note: `Oda kontrolü: Oda ${roomId}`,
-        },
-      });
-    }
-
-    const totalReplenished = consumedItems.reduce((acc, x) => acc + x.qty, 0);
-    const txType = totalReplenished > 0 ? "SETUP_KONTROL" : "SARFIYAT_YOK";
-
-    const minibarTx = await tx.minibarTransaction.create({
-      data: {
-        hotelId,
-        roomId,
-        userId,
-        type: txType,
-        note: note || (totalReplenished > 0 ? `${totalReplenished} ürün eksik tamamlandı.` : "Sarfiyat yok, minibar tam."),
-      },
-    });
-
-    if (totalReplenished > 0) {
-      for (const item of consumedItems) {
-        if (item.qty <= 0) continue;
-        await tx.minibarTransactionItem.create({
-          data: {
-            transactionId: minibarTx.id,
-            productId: item.productId,
-            setupId: item.setupId || null,
-            added: item.qty,
-            consumed: item.qty,
-          },
-        });
-      }
-    }
-
-    await tx.roomCheck.create({
-      data: {
-        roomId,
-        userId,
-        transactionId: minibarTx.id,
-        checkDate: today,
-        type: totalReplenished > 0 ? "URUN_EKLENDI" : "SARFIYAT_YOK",
-        endedAt: new Date(),
-      },
-    });
-
-    await audit(tx, {
-      userId,
-      hotelId,
-      action: "ROOM_CHECK_COMPLETE",
-      entity: "MinibarTransaction",
-      entityId: minibarTx.id,
-      after: {
-        roomId,
-        type: txType,
-        totalReplenished,
-        consumedItems,
-        note,
-      },
-    });
-
-    await tx.dailyTaskItem.updateMany({
-      where: {
-        roomId,
-        task: { hotelId, date: today },
-      },
-      data: {
-        status: "TAMAMLANDI",
-        checkedAt: new Date(),
-        note: note || undefined,
-      },
-    });
-
-    return {
-      success: true,
-      transactionId: minibarTx.id,
-      replenishedCount: totalReplenished,
-    };
-  });
-}
-
-/**
  * 4.5. MMD (Misafir Memnuniyet Durumu / Müsaade Etmedi) Kaydı
- * Seçenekler:
- * - Misafir uyuyor
- * - Misafir banyoda
- * - Misafir istemedi
- * - Misafir daha sonra gelmemizi istedi
- * - Misafir telefonda
  */
 export async function submitRoomMmd(params: {
   hotelId: string;
@@ -856,14 +455,12 @@ export async function submitRoomMmd(params: {
   const fullNote = `MMD: ${reason}${note ? ` (${note})` : ""}`;
 
   return await prisma.$transaction(async (tx) => {
+    await lockRow(tx, "rooms", roomId);
+    const room = await tx.room.findFirst({ where: { id: roomId, hotelId }, select: { id: true } });
+    if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+
     const minibarTx = await tx.minibarTransaction.create({
-      data: {
-        hotelId,
-        roomId,
-        userId,
-        type: "SARFIYAT_YOK",
-        note: fullNote,
-      },
+      data: { hotelId, roomId, userId, type: "SARFIYAT_YOK", note: fullNote },
     });
 
     await tx.roomCheck.create({
@@ -878,15 +475,8 @@ export async function submitRoomMmd(params: {
     });
 
     await tx.dailyTaskItem.updateMany({
-      where: {
-        roomId,
-        task: { hotelId, date: today },
-      },
-      data: {
-        status: "DND_BEKLIYOR",
-        lastDndAt: new Date(),
-        note: fullNote,
-      },
+      where: { roomId, task: { hotelId, date: today } },
+      data: { status: "DND_BEKLIYOR", lastDndAt: new Date(), note: fullNote },
     });
 
     await audit(tx, {
@@ -895,12 +485,9 @@ export async function submitRoomMmd(params: {
       action: "MINIBAR_ROOM_MMD",
       entity: "MinibarTransaction",
       entityId: minibarTx.id,
-      after: {
-        roomId,
-        reason,
-        note: fullNote,
-      },
+      after: { roomId, reason, note: fullNote },
     });
+    await notifyChange(tx, hotelId, "room.mmd", roomId);
 
     return {
       success: true,
@@ -911,149 +498,87 @@ export async function submitRoomMmd(params: {
 
 /**
  * 5. DND (Do Not Disturb / Rahatsız Etmeyin) Kaydı
+ *
+ * `dnd.minChecks` marks complete the room for the day; early re-marks are allowed (the
+ * `dnd.recheckMinutes` interval is guidance only) except a second tap within 30 s, which is a
+ * double tap. The room row lock serialises concurrent marks.
  */
 export async function submitRoomDnd(params: {
   hotelId: string;
   roomId: string;
   userId: string;
   note?: string;
+  now?: Date;
 }) {
   const { hotelId, roomId, userId, note } = params;
-  const today = getBusinessDate();
-  const now = new Date();
+  const now = params.now ?? new Date();
+  const today = businessDay(businessDate(now));
+  const settings = await getSettings(["dnd.minChecks", "dnd.recheckMinutes"], hotelId);
+  const minChecks = settings["dnd.minChecks"];
+  const recheck = settings["dnd.recheckMinutes"];
 
   return await prisma.$transaction(async (tx) => {
-    const existingDnd = await tx.roomDnd.findUnique({
-      where: {
-        roomId_date: { roomId, date: today },
+    await lockRow(tx, "rooms", roomId);
+    const room = await tx.room.findFirst({ where: { id: roomId, hotelId }, select: { id: true } });
+    if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+
+    const existing = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId, date: today } } });
+
+    if (existing?.status === "TAMAMLANDI") {
+      throw new DomainError("CONFLICT", "Bu oda için DND kontrolü bugün zaten tamamlandı.");
+    }
+    if (existing && now.getTime() - existing.lastAt.getTime() < DND_DOUBLE_TAP_MS) {
+      throw new DomainError("CONFLICT", "DND az önce kaydedildi (çift dokunma). Birkaç saniye sonra tekrar deneyin.");
+    }
+
+    const nextCount = (existing?.count ?? 0) + 1;
+    const completed = nextCount >= minChecks;
+    const status = completed ? "TAMAMLANDI" : "AKTIF";
+    const noteText = note || `${nextCount}. DND kontrolü`;
+
+    const dnd = existing
+      ? await tx.roomDnd.update({
+          where: { id: existing.id },
+          data: { count: nextCount, lastAt: now, status },
+        })
+      : await tx.roomDnd.create({
+          data: { hotelId, roomId, date: today, count: 1, firstAt: now, lastAt: now, status },
+        });
+
+    await tx.roomDndCheck.create({
+      data: { dndId: dnd.id, no: nextCount, userId, at: now, note: noteText },
+    });
+
+    await tx.dailyTaskItem.updateMany({
+      where: { roomId, task: { hotelId, date: today } },
+      data: {
+        dndCount: nextCount,
+        lastDndAt: now,
+        status: completed ? "TAMAMLANDI" : "DND_BEKLIYOR",
+        checkedAt: completed ? now : undefined,
+        note: completed ? `${minChecks} kez DND kontrolü tamamlandı (otomatik onaylandı)` : undefined,
       },
     });
 
-    if (existingDnd) {
-      const elapsedMinutes = Math.floor((now.getTime() - existingDnd.lastAt.getTime()) / 60000);
-      if (elapsedMinutes < 60) {
-        const waitMin = 60 - elapsedMinutes;
-        throw new Error(
-          `DND kaydı için son kontrolden itibaren en az 1 saat geçmiş olmalıdır. (Kalan bekleme süresi: ${waitMin} dakika)`
-        );
-      }
+    await audit(tx, {
+      userId,
+      hotelId,
+      action: "MINIBAR_ROOM_DND",
+      entity: "RoomDnd",
+      entityId: dnd.id,
+      before: existing ? { count: existing.count, status: existing.status } : null,
+      after: { roomId, count: nextCount, status, note: noteText },
+    });
+    await notifyChange(tx, hotelId, "room.dnd", roomId);
 
-      const nextCount = existingDnd.count + 1;
-      const isCompletedAfter3 = nextCount >= 3;
-
-      const updatedDnd = await tx.roomDnd.update({
-        where: { id: existingDnd.id },
-        data: {
-          count: nextCount,
-          lastAt: now,
-          status: isCompletedAfter3 ? "TAMAMLANDI" : "AKTIF",
-        },
-      });
-
-      await tx.roomDndCheck.create({
-        data: {
-          dndId: updatedDnd.id,
-          no: nextCount,
-          userId,
-          at: now,
-          note: note || `${nextCount}. DND kontrolü`,
-        },
-      });
-
-      await tx.dailyTaskItem.updateMany({
-        where: {
-          roomId,
-          task: { hotelId, date: today },
-        },
-        data: {
-          dndCount: nextCount,
-          lastDndAt: now,
-          status: isCompletedAfter3 ? "TAMAMLANDI" : "DND_BEKLIYOR",
-          checkedAt: isCompletedAfter3 ? now : undefined,
-          note: isCompletedAfter3 ? "3 kez DND kontrolü tamamlandı (otomatik onaylandı)" : undefined,
-        },
-      });
-
-      await audit(tx, {
-        userId,
-        hotelId,
-        action: "MINIBAR_ROOM_DND",
-        entity: "RoomDnd",
-        entityId: updatedDnd.id,
-        before: { count: existingDnd.count, status: existingDnd.status },
-        after: {
-          roomId,
-          count: nextCount,
-          status: isCompletedAfter3 ? "TAMAMLANDI" : "AKTIF",
-          note: note || `${nextCount}. DND kontrolü`,
-        },
-      });
-
-      return {
-        success: true,
-        dndCount: nextCount,
-        isCompleted: isCompletedAfter3,
-        message: isCompletedAfter3
-          ? "3. kez DND kaydedildi. Kural gereği oda gün için kontrol edildi sayıldı. ✅"
-          : `${nextCount}. DND kaydedildi. 1 saat sonra tekrar kontrol edilecektir.`,
-      };
-    } else {
-      const newDnd = await tx.roomDnd.create({
-        data: {
-          hotelId,
-          roomId,
-          date: today,
-          count: 1,
-          firstAt: now,
-          lastAt: now,
-          status: "AKTIF",
-        },
-      });
-
-      await tx.roomDndCheck.create({
-        data: {
-          dndId: newDnd.id,
-          no: 1,
-          userId,
-          at: now,
-          note: note || "1. DND kontrolü",
-        },
-      });
-
-      await tx.dailyTaskItem.updateMany({
-        where: {
-          roomId,
-          task: { hotelId, date: today },
-        },
-        data: {
-          dndCount: 1,
-          lastDndAt: now,
-          status: "DND_BEKLIYOR",
-        },
-      });
-
-      await audit(tx, {
-        userId,
-        hotelId,
-        action: "MINIBAR_ROOM_DND",
-        entity: "RoomDnd",
-        entityId: newDnd.id,
-        before: null,
-        after: {
-          roomId,
-          count: 1,
-          status: "AKTIF",
-          note: note || "1. DND kontrolü",
-        },
-      });
-
-      return {
-        success: true,
-        dndCount: 1,
-        isCompleted: false,
-        message: "1. DND kaydedildi. En az 1 saat sonra tekrar kontrol yapılmalıdır.",
-      };
-    }
+    return {
+      success: true,
+      dndCount: nextCount,
+      isCompleted: completed,
+      message: completed
+        ? `${nextCount}. kez DND kaydedildi. Kural gereği oda gün için kontrol edildi sayıldı.`
+        : `${nextCount}. DND kaydedildi. Yaklaşık ${recheck} dakika sonra tekrar kontrol edilmesi önerilir.`,
+    };
   });
 }
 
@@ -1061,8 +586,10 @@ export async function submitRoomDnd(params: {
  * 6. Akıllı Tavsiye İş Planı & Rota Optimizasyon Motoru
  */
 export async function getAdvisoryPriorityPlan(hotelId: string): Promise<PriorityRoutePlan> {
-  const today = getBusinessDate();
+  const day = businessDate();
+  const today = businessDay(day);
   const now = new Date();
+  const { "dnd.minChecks": minChecks } = await getSettings(["dnd.minChecks"], hotelId);
 
   const taskItems = await prisma.dailyTaskItem.findMany({
     where: {
@@ -1110,16 +637,14 @@ export async function getAdvisoryPriorityPlan(hotelId: string): Promise<Priority
       rank = 50;
     } else if (item.dndCount > 0) {
       urgencyType = "DND_RETRY";
-      urgencyBadge = `🚪 DND (${item.dndCount}/3)`;
-      explanation = "DND kontrol tekrarı (1 saat dolduğunda).";
+      urgencyBadge = `🚪 DND (${item.dndCount}/${minChecks})`;
+      explanation = "DND kontrol tekrarı.";
       rank = 30;
     }
 
     if (targetTime) {
-      const [h, m] = targetTime.split(":").map(Number);
-      const targetDate = new Date(today);
-      targetDate.setHours(h, m, 0, 0);
-      minutesRemaining = Math.max(0, Math.floor((targetDate.getTime() - now.getTime()) / 60000));
+      const target = nicosiaInstant(day, targetTime);
+      if (target) minutesRemaining = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 60000));
     }
 
     parsedTasks.push({
@@ -1201,36 +726,103 @@ export async function getAdvisoryPriorityPlan(hotelId: string): Promise<Priority
   };
 }
 
+/** Hotel that owns a MyBar request (used by the route to authorise against the entity's hotel). */
+export async function mybarRequestHotel(requestId: string): Promise<string> {
+  const req = await prisma.mybarRequest.findUnique({ where: { id: requestId }, select: { hotelId: true } });
+  if (!req) throw new DomainError("NOT_FOUND", "MyBar talebi bulunamadı.");
+  return req.hotelId;
+}
+
 /**
  * 7. MyBar Talebini Onayla (Confirm / Kapat)
+ *
+ * BEKLEMEDE -> TAMAMLANDI only, under a row lock; the delivered quantities leave the hotel pool
+ * (MYBAR movement, FOR UPDATE, never negative) and a MYBAR_KARSILAMA transaction records the fill.
  */
-export async function confirmMybarRequest(requestId: string, userId?: string) {
-  const req = await prisma.mybarRequest.update({
-    where: { id: requestId },
-    data: {
-      status: "TAMAMLANDI",
-      completedById: userId || null,
-      completedAt: new Date(),
-    },
-    include: {
-      room: { select: { number: true } },
-    },
-  });
+export async function confirmMybarRequest(requestId: string, userId: string, hotelId: string) {
+  return prisma.$transaction(async (tx) => {
+    await lockRow(tx, "mybar_requests", requestId);
+    const req = await tx.mybarRequest.findFirst({
+      where: { id: requestId, hotelId },
+      include: { room: { select: { id: true, number: true } }, items: true },
+    });
+    if (!req) throw new DomainError("NOT_FOUND", "MyBar talebi bulunamadı.");
+    if (req.status !== "BEKLEMEDE") {
+      throw new DomainError("CONFLICT", "Bu MyBar talebi artık beklemede değil.");
+    }
 
-  await audit(prisma, {
-    userId: userId || undefined,
-    hotelId: req.hotelId,
-    action: "MINIBAR_MYBAR_CONFIRM",
-    entity: "MybarRequest",
-    entityId: req.id,
-    before: { status: "BEKLIYOR" },
-    after: { status: "TAMAMLANDI", completedById: userId || null, roomNumber: req.room.number },
-  });
+    const lines = req.items.map((i) => ({ productId: i.productId, qty: i.requestedQty }));
+    const fill = await tx.minibarTransaction.create({
+      data: {
+        hotelId,
+        roomId: req.roomId,
+        userId,
+        type: "MYBAR_KARSILAMA",
+        note: `MyBar talebi karşılandı (#${req.id})`,
+      },
+    });
+    const products = await tx.product.findMany({
+      where: { id: { in: lines.map((l) => l.productId) } },
+      select: { id: true, purchasePrice: true, salePrice: true },
+    });
+    const priceOf = new Map(products.map((p) => [p.id, p]));
+    for (const line of lines) {
+      await tx.minibarTransactionItem.create({
+        data: {
+          transactionId: fill.id,
+          productId: line.productId,
+          added: line.qty,
+          consumed: 0,
+          purchasePrice: priceOf.get(line.productId)?.purchasePrice ?? null,
+          salePrice: priceOf.get(line.productId)?.salePrice ?? null,
+        },
+      });
+    }
+    await deductFromPool(
+      tx,
+      {
+        hotelId,
+        userId,
+        type: "MYBAR",
+        refType: "MybarRequest",
+        refId: req.id,
+        note: `MyBar: Oda ${req.room.number}`,
+      },
+      lines,
+    );
+    for (const item of req.items) {
+      await tx.mybarRequestItem.update({ where: { id: item.id }, data: { deliveredQty: item.requestedQty } });
+    }
 
-  return {
-    success: true,
-    message: `Oda ${req.room.number} için MyBar talebi onaylandı ve kapatıldı.`,
-  };
+    const completedAt = new Date();
+    await tx.mybarRequest.update({
+      where: { id: req.id },
+      data: { status: "TAMAMLANDI", completedById: userId, completedAt },
+    });
+
+    await audit(tx, {
+      userId,
+      hotelId,
+      action: "MINIBAR_MYBAR_CONFIRM",
+      entity: "MybarRequest",
+      entityId: req.id,
+      before: { status: req.status },
+      after: {
+        status: "TAMAMLANDI",
+        completedById: userId,
+        completedAt: completedAt.toISOString(),
+        roomNumber: req.room.number,
+        items: lines,
+        transactionId: fill.id,
+      },
+    });
+    await notifyChange(tx, hotelId, "mybar.confirm", req.roomId);
+
+    return {
+      success: true,
+      message: `Oda ${req.room.number} için MyBar talebi onaylandı ve kapatıldı.`,
+    };
+  });
 }
 
 /**
@@ -1242,7 +834,7 @@ export async function getMyRoomCheckHistory(params: {
   limit?: number;
 }): Promise<RoomCheckHistoryItem[]> {
   const { hotelId, userId, limit = 100 } = params;
-  const todayStr = getBusinessDate().toISOString().slice(0, 10);
+  const todayStr = businessDate();
 
   const transactions = await prisma.minibarTransaction.findMany({
     where: {
@@ -1277,7 +869,6 @@ export async function getMyRoomCheckHistory(params: {
     take: limit,
   });
 
-  // Get current hotel stock for reference
   const hotelStocks = await prisma.hotelStock.findMany({
     where: { hotelId },
     select: { productId: true, remainingQty: true },
@@ -1285,7 +876,7 @@ export async function getMyRoomCheckHistory(params: {
   const stockMap = new Map(hotelStocks.map((s) => [s.productId, s.remainingQty]));
 
   return transactions.map((tx) => {
-    const txDateStr = tx.occurredAt.toISOString().slice(0, 10);
+    const txDateStr = businessDate(tx.occurredAt);
     const isToday = txDateStr === todayStr;
 
     let typeLabel = "Sarfiyat Yok";
@@ -1348,527 +939,36 @@ export async function getMyRoomCheckHistory(params: {
   });
 }
 
-/**
- * 9. Aynı Gün İçerisinde Kaydı Sil (Ürünleri Zimmet Stoğuna İade Et)
- */
-export async function deleteRoomCheckToday(params: {
-  transactionId: string;
-  userId: string;
-  hotelId: string;
-  isManagerBypass?: boolean;
-}) {
-  const { transactionId, userId, hotelId, isManagerBypass = false } = params;
-  const todayStr = getBusinessDate().toISOString().slice(0, 10);
-
-  const tx = await prisma.minibarTransaction.findFirst({
-    where: { id: transactionId, hotelId },
-    include: {
-      items: true,
-      room: { select: { id: true, number: true } },
-    },
+/** Hotel that owns a minibar transaction (routes authorise against the entity's hotel). */
+export async function minibarTransactionHotel(transactionId: string): Promise<string> {
+  const tx = await prisma.minibarTransaction.findUnique({
+    where: { id: transactionId },
+    select: { hotelId: true },
   });
-
-  if (!tx) {
-    throw new Error("İşlem kaydı bulunamadı.");
-  }
-
-  const txDateStr = tx.occurredAt.toISOString().slice(0, 10);
-  const isToday = txDateStr === todayStr;
-
-  if (!isToday && !isManagerBypass) {
-    throw new Error(
-      "Geçmiş tarihli kayıtlar kat sorumluları tarafından doğrudan silinemez. Yalnızca Depo Sorumlusu gerekçeli talep oluşturabilir ve Sistem Yöneticisi onayı ile işlem yapılabilir."
-    );
-  }
-
-  return await prisma.$transaction(async (txPrisma) => {
-    // 1. Tüketilen / eklenen ürünleri otel zimmet stoğuna iade et
-    for (const item of tx.items) {
-      if (item.added > 0) {
-        await txPrisma.hotelStock.updateMany({
-          where: { hotelId, productId: item.productId },
-          data: {
-            remainingQty: { increment: item.added },
-            usedQty: { decrement: item.added },
-          },
-        });
-
-        await txPrisma.hotelStockMovement.create({
-          data: {
-            hotelId,
-            productId: item.productId,
-            userId,
-            type: "IADE",
-            qty: item.added,
-            note: `Oda ${tx.room.number} kontrol kaydı iptal edildi, zimmete iade.`,
-          },
-        });
-      }
-    }
-
-    // 2. İlgili roomCheck kayıtlarını sil
-    await txPrisma.roomCheck.deleteMany({
-      where: { transactionId: tx.id },
-    });
-
-    // 3. MinibarTransactionItem ve MinibarTransaction kayıtlarını sil
-    await txPrisma.minibarTransactionItem.deleteMany({
-      where: { transactionId: tx.id },
-    });
-
-    await txPrisma.minibarTransaction.delete({
-      where: { id: tx.id },
-    });
-
-    // 4. Günlük görev durumunu yeniden "BEKLIYOR" yap
-    if (isToday) {
-      await txPrisma.dailyTaskItem.updateMany({
-        where: {
-          roomId: tx.room.id,
-          task: { hotelId, date: getBusinessDate() },
-        },
-        data: {
-          status: "BEKLIYOR",
-          checkedAt: null,
-          note: null,
-        },
-      });
-    }
-
-    await audit(txPrisma, {
-      userId,
-      hotelId,
-      action: "MINIBAR_ROOM_CHECK_DELETE",
-      entity: "MinibarTransaction",
-      entityId: tx.id,
-      before: {
-        id: tx.id,
-        roomId: tx.room.id,
-        roomNumber: tx.room.number,
-        occurredAt: tx.occurredAt.toISOString(),
-        items: tx.items.map((i) => ({ productId: i.productId, added: i.added, consumed: i.consumed })),
-        note: tx.note,
-        isManagerBypass,
-      },
-      after: null,
-    });
-
-    return {
-      success: true,
-      message: `Oda ${tx.room.number} kontrol kaydı silindi ve ${tx.items.reduce(
-        (a, b) => a + b.added,
-        0
-      )} adet ürün zimmet stoğuna iade edildi.`,
-    };
-  });
+  if (!tx) throw new DomainError("NOT_FOUND", "İşlem kaydı bulunamadı.");
+  return tx.hotelId;
 }
 
-/**
- * 10. Aynı Gün İçerisinde Kaydı Güncelle (Stok Farkını Hesapla)
- */
-export async function updateRoomCheckToday(params: {
-  transactionId: string;
-  userId: string;
-  hotelId: string;
-  updatedItems: { productId: string; qty: number }[];
-  note?: string;
-  isManagerBypass?: boolean;
-}) {
-  const { transactionId, userId, hotelId, updatedItems, note, isManagerBypass = false } = params;
-  const todayStr = getBusinessDate().toISOString().slice(0, 10);
-
-  const tx = await prisma.minibarTransaction.findFirst({
-    where: { id: transactionId, hotelId },
-    include: {
-      items: true,
-      room: { select: { id: true, number: true } },
-    },
-  });
-
-  if (!tx) {
-    throw new Error("İşlem kaydı bulunamadı.");
-  }
-
-  const txDateStr = tx.occurredAt.toISOString().slice(0, 10);
-  const isToday = txDateStr === todayStr;
-
-  if (!isToday && !isManagerBypass) {
-    throw new Error(
-      "Geçmiş tarihli kayıtlar kat sorumluları tarafından doğrudan değiştirilemez. Yalnızca Depo Sorumlusu gerekçeli talep oluşturabilir ve Sistem Yöneticisi onayı ile işlem yapılabilir."
-    );
-  }
-
-  return await prisma.$transaction(async (txPrisma) => {
-    const oldItemsMap = new Map(tx.items.map((i) => [i.productId, i]));
-
-    for (const newItem of updatedItems) {
-      const oldItem = oldItemsMap.get(newItem.productId);
-      const oldQty = oldItem ? oldItem.added : 0;
-      const delta = newItem.qty - oldQty;
-
-      if (delta > 0) {
-        // Ekstra ürün eklendi: stok kontrolü ve düşüşü
-        const stock = await txPrisma.hotelStock.findUnique({
-          where: { hotelId_productId: { hotelId, productId: newItem.productId } },
-        });
-
-        if (!stock || stock.remainingQty < delta) {
-          const prod = await txPrisma.product.findUnique({ where: { id: newItem.productId } });
-          throw new Error(
-            `Yetersiz stok! "${prod?.name || newItem.productId}" için ek talep: ${delta}, Kalan: ${
-              stock?.remainingQty || 0
-            }`
-          );
-        }
-
-        await txPrisma.hotelStock.update({
-          where: { id: stock.id },
-          data: {
-            remainingQty: { decrement: delta },
-            usedQty: { increment: delta },
-          },
-        });
-
-        await txPrisma.hotelStockMovement.create({
-          data: {
-            hotelId,
-            productId: newItem.productId,
-            userId,
-            type: "KULLANIM",
-            qty: delta,
-            note: `Oda ${tx.room.number} kaydı güncellendi (ek ürün).`,
-          },
-        });
-      } else if (delta < 0) {
-        // Ürün azaltıldı: stoğa iade
-        const refundQty = Math.abs(delta);
-        await txPrisma.hotelStock.updateMany({
-          where: { hotelId, productId: newItem.productId },
-          data: {
-            remainingQty: { increment: refundQty },
-            usedQty: { decrement: refundQty },
-          },
-        });
-
-        await txPrisma.hotelStockMovement.create({
-          data: {
-            hotelId,
-            productId: newItem.productId,
-            userId,
-            type: "IADE",
-            qty: refundQty,
-            note: `Oda ${tx.room.number} kaydı güncellendi (ürün azaltıldı/iade).`,
-          },
-        });
-      }
-
-      // Kalemi güncelle veya sil
-      if (oldItem) {
-        if (newItem.qty > 0) {
-          await txPrisma.minibarTransactionItem.update({
-            where: { id: oldItem.id },
-            data: {
-              added: newItem.qty,
-              consumed: newItem.qty,
-            },
-          });
-        } else {
-          await txPrisma.minibarTransactionItem.delete({
-            where: { id: oldItem.id },
-          });
-        }
-      } else if (newItem.qty > 0) {
-        await txPrisma.minibarTransactionItem.create({
-          data: {
-            transactionId: tx.id,
-            productId: newItem.productId,
-            added: newItem.qty,
-            consumed: newItem.qty,
-          },
-        });
-      }
-    }
-
-    const totalReplenished = updatedItems.reduce((acc, x) => acc + x.qty, 0);
-    const newTxType = totalReplenished > 0 ? "SETUP_KONTROL" : "SARFIYAT_YOK";
-
-    await txPrisma.minibarTransaction.update({
-      where: { id: tx.id },
-      data: {
-        type: newTxType,
-        note: note !== undefined ? note : tx.note,
-      },
-    });
-
-    await audit(txPrisma, {
-      userId,
-      hotelId,
-      action: "MINIBAR_ROOM_CHECK_UPDATE",
-      entity: "MinibarTransaction",
-      entityId: tx.id,
-      before: {
-        id: tx.id,
-        roomId: tx.room.id,
-        roomNumber: tx.room.number,
-        type: tx.type,
-        items: tx.items.map((i) => ({ productId: i.productId, added: i.added, consumed: i.consumed })),
-        note: tx.note,
-      },
-      after: {
-        type: newTxType,
-        updatedItems,
-        note: note !== undefined ? note : tx.note,
-        isManagerBypass,
-      },
-    });
-
-    return {
-      success: true,
-      message: `Oda ${tx.room.number} oda kontrol kaydı başarıyla güncellendi.`,
-    };
-  });
-}
-
-/**
- * 11. Geçmiş Tarihli Kayıt İçin Depo Sorumlusu Düzeltme / Silme Talebi Oluşturur
- */
-export async function createPastDateCorrectionRequest(params: {
-  transactionId: string;
-  requestedById: string;
-  hotelId: string;
-  actionType: "SILME" | "DUZELTME";
-  reason: string;
-  proposedData?: Record<string, number>;
-}) {
-  const { transactionId, requestedById, hotelId, actionType, reason, proposedData } = params;
-
-  if (!reason || reason.trim().length < 5) {
-    throw new Error("Lütfen geçmiş tarihli işlem için en az 5 karakterlik açıklama/gerekçe giriniz.");
-  }
-
-  const tx = await prisma.minibarTransaction.findFirst({
-    where: { id: transactionId, hotelId },
-    include: { room: true },
-  });
-
-  if (!tx) {
-    throw new Error("Düzeltme talep edilecek işlem kaydı bulunamadı.");
-  }
-
-  // Aktif bekleyen talep var mı?
-  const pending = await prisma.minibarCorrectionRequest.findFirst({
-    where: {
-      transactionId,
-      status: "BEKLIYOR",
-    },
-  });
-
-  if (pending) {
-    throw new Error("Bu işlem için zaten onay bekleyen bir düzeltme talebi bulunmaktadır.");
-  }
-
-  const req = await prisma.minibarCorrectionRequest.create({
-    data: {
-      hotelId,
-      transactionId,
-      requestedById,
-      actionType,
-      reason: reason.trim(),
-      proposedData: proposedData ? JSON.parse(JSON.stringify(proposedData)) : undefined,
-      status: "BEKLIYOR",
-    },
-  });
-
-  await audit(prisma, {
-    userId: requestedById,
-    hotelId,
-    action: "MINIBAR_CORRECTION_REQUEST_CREATE",
-    entity: "MinibarCorrectionRequest",
-    entityId: req.id,
-    before: null,
-    after: {
-      id: req.id,
-      transactionId,
-      roomNumber: tx.room.number,
-      actionType,
-      reason: reason.trim(),
-      proposedData,
-      status: "BEKLIYOR",
-    },
-  });
-
-  return {
-    success: true,
-    requestId: req.id,
-    message: `Oda ${tx.room.number} için geçmiş tarihli ${
-      actionType === "SILME" ? "silme" : "düzeltme"
-    } talebi Sistem Yöneticisi onayına gönderildi.`,
-  };
-}
-
-/**
- * 12. Düzeltme Taleplerini Listele (Depo Sorumlusu & Sistem Yöneticisi İçin)
- */
-export async function listCorrectionRequests(params: {
-  hotelId: string;
-  status?: "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI";
-}): Promise<CorrectionRequestItem[]> {
-  const { hotelId, status } = params;
-
-  const requests = await prisma.minibarCorrectionRequest.findMany({
-    where: {
-      hotelId,
-      ...(status ? { status } : {}),
-    },
-    include: {
-      requestedBy: { select: { id: true, fullName: true } },
-      approvedBy: { select: { id: true, fullName: true } },
-      transaction: {
-        include: {
-          room: {
-            include: { floor: { select: { name: true } } },
-          },
-          items: {
-            include: { product: { select: { name: true } } },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return requests.map((r) => ({
-    id: r.id,
-    transactionId: r.transactionId,
-    roomNumber: r.transaction?.room?.number || "Bilinmiyor",
-    floorName: r.transaction?.room?.floor?.name || "-",
-    occurredAt: r.transaction?.occurredAt?.toISOString() || r.createdAt.toISOString(),
-    actionType: r.actionType,
-    reason: r.reason,
-    status: r.status,
-    requestedById: r.requestedById,
-    requestedByName: r.requestedBy.fullName,
-    approvedById: r.approvedById,
-    approvedByName: r.approvedBy?.fullName || null,
-    proposedData: r.proposedData ? (r.proposedData as Record<string, number>) : null,
-    createdAt: r.createdAt.toISOString(),
-    resolvedAt: r.resolvedAt?.toISOString() || null,
-    items: (r.transaction?.items || []).map((i) => ({
-      productName: i.product.name,
-      qty: i.added,
-    })),
-  }));
-}
-
-/**
- * 13. Düzeltme Talebini Sistem Yöneticisi Olarak Onayla veya Reddet
- */
-export async function resolveCorrectionRequest(params: {
-  requestId: string;
-  approverId: string;
-  approved: boolean;
-  rejectReason?: string;
-}) {
-  const { requestId, approverId, approved, rejectReason } = params;
-
+/** Hotel that owns a correction request. */
+export async function correctionRequestHotel(requestId: string): Promise<string> {
   const req = await prisma.minibarCorrectionRequest.findUnique({
     where: { id: requestId },
-    include: { transaction: { include: { room: true } } },
+    select: { hotelId: true },
   });
-
-  if (!req) {
-    throw new Error("Düzeltme talebi bulunamadı.");
-  }
-
-  if (req.status !== "BEKLIYOR") {
-    throw new Error(`Bu talep zaten önceden ${req.status.toLowerCase()} yapılmıştır.`);
-  }
-
-  const roomNumber = req.transaction?.room?.number || "";
-
-  if (approved) {
-    // 1. Durumu ONAYLANDI olarak işaretle
-    await prisma.minibarCorrectionRequest.update({
-      where: { id: req.id },
-      data: {
-        status: "ONAYLANDI",
-        approvedById: approverId,
-        resolvedAt: new Date(),
-      },
-    });
-
-    if (req.actionType === "SILME" && req.transactionId) {
-      await deleteRoomCheckToday({
-        transactionId: req.transactionId,
-        userId: req.requestedById,
-        hotelId: req.hotelId,
-        isManagerBypass: true,
-      });
-    } else if (req.actionType === "DUZELTME" && req.transactionId && req.proposedData) {
-      const proposedMap = req.proposedData as Record<string, number>;
-      const updatedItems = Object.entries(proposedMap).map(([productId, qty]) => ({
-        productId,
-        qty: Number(qty),
-      }));
-
-      await updateRoomCheckToday({
-        transactionId: req.transactionId,
-        userId: req.requestedById,
-        hotelId: req.hotelId,
-        updatedItems,
-        isManagerBypass: true,
-      });
-    }
-
-    await audit(prisma, {
-      userId: approverId,
-      hotelId: req.hotelId,
-      action: "MINIBAR_CORRECTION_APPROVE",
-      entity: "MinibarCorrectionRequest",
-      entityId: req.id,
-      before: { status: "BEKLIYOR" },
-      after: {
-        status: "ONAYLANDI",
-        actionType: req.actionType,
-        roomNumber,
-        resolvedAt: new Date().toISOString(),
-      },
-    });
-
-    return {
-      success: true,
-      message: `Oda ${roomNumber} için talep Sistem Yöneticisi tarafından onaylandı ve uygulandı.`,
-    };
-  } else {
-    await prisma.minibarCorrectionRequest.update({
-      where: { id: req.id },
-      data: {
-        status: "REDDEDILDI",
-        approvedById: approverId,
-        rejectReason: rejectReason || "Yönetici tarafından onaylanmadı.",
-        resolvedAt: new Date(),
-      },
-    });
-
-    await audit(prisma, {
-      userId: approverId,
-      hotelId: req.hotelId,
-      action: "MINIBAR_CORRECTION_REJECT",
-      entity: "MinibarCorrectionRequest",
-      entityId: req.id,
-      before: { status: "BEKLIYOR" },
-      after: {
-        status: "REDDEDILDI",
-        rejectReason: rejectReason || "Yönetici tarafından onaylanmadı.",
-        roomNumber,
-        resolvedAt: new Date().toISOString(),
-      },
-    });
-
-    return {
-      success: true,
-      message: `Oda ${roomNumber} için talep reddedildi.`,
-    };
-  }
+  if (!req) throw new DomainError("NOT_FOUND", "Düzeltme talebi bulunamadı.");
+  return req.hotelId;
 }
 
+/** Hotel that owns a room. */
+export async function roomHotel(roomId: string): Promise<string> {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hotelId: true } });
+  if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+  return room.hotelId;
+}
+
+/** Hotel that owns a floor. */
+export async function floorHotel(floorId: string): Promise<string> {
+  const floor = await prisma.floor.findUnique({ where: { id: floorId }, select: { hotelId: true } });
+  if (!floor) throw new DomainError("NOT_FOUND", "Kat bulunamadı.");
+  return floor.hotelId;
+}

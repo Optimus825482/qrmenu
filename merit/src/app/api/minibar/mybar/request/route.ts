@@ -1,51 +1,56 @@
 import { NextResponse } from "next/server";
-import { getMybarRoomDetails, createGuestMybarRequest } from "@/modules/minibar/server/mybarService";
+import { z } from "zod";
+import { clientIp } from "@/lib/rate-limit";
+import { DomainError, fromZod } from "@/lib/result";
+import { errorResponse } from "@/modules/minibar/server/apiAuthHelper";
+import { createGuestMybarRequest, getMybarRoomDetails } from "@/modules/minibar/server/mybarService";
+import { guestMeta } from "@/modules/menu/server/guestToken";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/*
+ * Guest endpoints (no staff session): the QR token in the request is the only credential. Hotel and
+ * room are always derived from it, never from the query string or the body.
+ */
+
+const tokenSchema = z.string().min(1).max(64);
+
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const roomId = searchParams.get("roomId");
-    const hotelId = searchParams.get("hotelId");
-
-    if (!roomId || !hotelId) {
-      return NextResponse.json({ error: "Oda ve otel parametreleri zorunludur." }, { status: 400 });
-    }
-
-    const data = await getMybarRoomDetails(roomId, hotelId);
-    return NextResponse.json(data);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "MyBar bilgisi alınamadı.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const token = tokenSchema.safeParse(new URL(request.url).searchParams.get("token"));
+    if (!token.success) throw new DomainError("VALIDATION", "QR kodu eksik.");
+    return NextResponse.json(await getMybarRoomDetails(token.data, guestMeta(request.headers)));
+  } catch (err) {
+    return errorResponse(err);
   }
 }
 
+const bodySchema = z.object({
+  token: tokenSchema,
+  idempotencyKey: z.uuid("Geçersiz istek anahtarı"),
+  language: z.string().max(8).optional(),
+  note: z.string().max(500).optional(),
+  items: z.array(z.object({ productId: z.string().min(1).max(64), qty: z.number().int() })).max(50),
+});
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { hotelId, roomId, language, note, items } = body;
-
-    if (!hotelId || !roomId || !items || !Array.isArray(items)) {
-      return NextResponse.json({ error: "Eksik parametreler." }, { status: 400 });
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      throw new DomainError("VALIDATION", "Geçersiz istek gövdesi");
     }
-
-    const forwarded = request.headers.get("x-forwarded-for");
-    const clientIp = forwarded ? forwarded.split(",")[0].trim() : "127.0.0.1";
-
+    const parsed = bodySchema.safeParse(raw);
+    if (!parsed.success) throw fromZod(parsed.error);
     const result = await createGuestMybarRequest({
-      hotelId,
-      roomId,
-      language: language || "tr",
-      note,
-      clientIp,
-      items,
+      ...parsed.data,
+      ip: clientIp(request.headers),
+      userAgent: request.headers.get("user-agent") ?? "",
     });
-
     return NextResponse.json(result);
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "Talep gönderilemedi.";
-    return NextResponse.json({ error: msg }, { status: 400 });
+  } catch (err) {
+    return errorResponse(err);
   }
 }

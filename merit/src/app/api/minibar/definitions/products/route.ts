@@ -1,69 +1,87 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { assertCan } from "@/lib/rbac";
 import {
-  listProducts,
+  auditCtxOf,
+  canSeePrices,
+  handle,
+  maskPrices,
+  parseBody,
+  parseQuery,
+} from "@/modules/minibar/server/apiAuthHelper";
+import {
   createProduct,
-  updateProduct,
   deleteProduct,
+  listProducts,
+  updateProduct,
 } from "@/modules/minibar/server/minibarDefinitionsService";
-import { getAuditCtxFromRequest } from "@/modules/minibar/server/apiAuthHelper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const groupId = searchParams.get("groupId") || undefined;
-    const search = searchParams.get("search") || undefined;
-    const isActiveParam = searchParams.get("isActive");
-    const isActive = isActiveParam !== null ? isActiveParam === "true" : undefined;
+const price = z.number().min(0).max(1_000_000).nullable().optional();
+const createSchema = z.object({
+  groupId: z.string().min(1, "Ürün grubu seçilmelidir.").max(64),
+  code: z.string().max(64).nullable().optional(),
+  name: z.string().trim().min(1, "Ürün adı zorunludur.").max(150),
+  barcode: z.string().max(64).nullable().optional(),
+  unit: z.string().max(20).optional(),
+  criticalLevel: z.number().int().min(0).max(100000).optional(),
+  purchasePrice: price,
+  salePrice: price,
+  isActive: z.boolean().optional(),
+});
+const updateSchema = createSchema.partial().extend({ id: z.string().min(1).max(64) });
+const querySchema = z.object({
+  groupId: z.string().max(64).optional(),
+  search: z.string().max(100).optional(),
+  isActive: z.enum(["true", "false"]).optional(),
+});
 
-    const products = await listProducts({ groupId, search, isActive });
-    return NextResponse.json({ products });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürünler alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+/** Prices are written by system and management roles only; for others the fields are dropped. */
+function withoutPrices<T extends { purchasePrice?: unknown; salePrice?: unknown }>(data: T, allowed: boolean): T {
+  if (allowed) return data;
+  const copy = { ...data };
+  delete copy.purchasePrice;
+  delete copy.salePrice;
+  return copy;
+}
+
+export async function GET(req: Request) {
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
+    const q = parseQuery(new URL(req.url).searchParams, querySchema);
+    const products = await listProducts({
+      groupId: q.groupId,
+      search: q.search,
+      isActive: q.isActive === undefined ? undefined : q.isActive === "true",
+    });
+    return maskPrices({ products }, canSeePrices(ctx));
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const product = await createProduct(body, ctx);
-    return NextResponse.json({ success: true, product });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün oluşturulamadı.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    const body = withoutPrices(await parseBody(req, createSchema), canSeePrices(ctx));
+    const product = await createProduct(body, auditCtxOf(ctx, req));
+    return maskPrices({ success: true, product }, canSeePrices(ctx));
+  });
 }
 
 export async function PUT(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const { id, ...data } = body;
-    if (!id) return NextResponse.json({ error: "Ürün ID zorunludur." }, { status: 400 });
-
-    const product = await updateProduct(id, data, ctx);
-    return NextResponse.json({ success: true, product });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün güncellenemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const { id, ...data } = withoutPrices(await parseBody(req, updateSchema), canSeePrices(ctx));
+    const product = await updateProduct(id, data, auditCtxOf(ctx, req));
+    return maskPrices({ success: true, product }, canSeePrices(ctx));
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Ürün ID zorunludur." }, { status: 400 });
-
-    const result = await deleteProduct(id, ctx);
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Ürün silinemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Ürün ID zorunludur." }, { status: 400 });
+    return deleteProduct(id, auditCtxOf(ctx, req));
+  });
 }

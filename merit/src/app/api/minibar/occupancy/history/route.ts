@@ -1,55 +1,29 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { handle, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
 import { checkUploadScheduleWindow } from "@/modules/minibar/server/occupancyUploadService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  try {
-    let hotelId: string | null = null;
-    try {
-      const ctx = await requireUser();
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      // Fallback
-    }
+  return handle(async (ctx) => {
+    const hotelId = await selectHotel(ctx, new URL(request.url).searchParams.get("hotelId"), "MB-DOL", "V");
 
-    const { searchParams } = new URL(request.url);
-    const paramHotelId = searchParams.get("hotelId");
-    if (paramHotelId) hotelId = paramHotelId;
+    const [history, hotels] = await Promise.all([
+      prisma.occupancyUpload.findMany({
+        where: { hotelId },
+        include: { user: { select: { fullName: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      }),
+      prisma.hotel.findMany({
+        where: { isActive: true, id: { in: ctx.hotelIds } },
+        select: { id: true, name: true, code: true },
+      }),
+    ]);
 
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel bulunamadı." }, { status: 404 });
-    }
-
-    const schedule = checkUploadScheduleWindow();
-
-    const history = await prisma.occupancyUpload.findMany({
-      where: { hotelId },
-      include: {
-        user: { select: { fullName: true, email: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    });
-
-    const hotels = await prisma.hotel.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true, code: true },
-    });
-
-    return NextResponse.json({
-      schedule,
+    return {
+      schedule: checkUploadScheduleWindow(),
       history: history.map((h) => ({
         id: h.id,
         code: h.code,
@@ -64,9 +38,6 @@ export async function GET(request: Request) {
       })),
       hotels,
       selectedHotelId: hotelId,
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Yükleme geçmişi alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    };
+  });
 }

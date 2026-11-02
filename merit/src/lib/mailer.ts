@@ -9,6 +9,11 @@ export interface MailOptions {
 
 let transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 
+/** Test hook: drop the cached transport (the env may have changed). */
+export function resetMailTransport(): void {
+  transporter = null;
+}
+
 function getTransporter(): ReturnType<typeof nodemailer.createTransport> | null {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
@@ -31,21 +36,27 @@ function getTransporter(): ReturnType<typeof nodemailer.createTransport> | null 
   return transporter;
 }
 
+/** `true` when SMTP_HOST and SMTP_USER are set. */
+export function isMailConfigured(): boolean {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER);
+}
+
 /**
- * Sends an email notification using configured SMTP settings.
- * In development or if SMTP is unconfigured, logs the email safely without throwing.
+ * Sends an email through the configured SMTP server. Returns `false` (and logs, never throws) when
+ * SMTP is not configured or the send fails; `true` only when the server accepted the message.
+ * The sender comes from SMTP_FROM (falling back to SMTP_USER).
  */
 export async function sendMail(opts: MailOptions): Promise<boolean> {
   const recipients = Array.isArray(opts.to) ? opts.to.join(", ") : opts.to;
-  const from = process.env.SMTP_FROM || '"Merit Royal F&B Command Center" <noreply@merithotels.com>';
 
   try {
     const transport = getTransporter();
     if (!transport) {
-      console.log(`[MAIL MOCK - SMTP UNCONFIGURED] To: ${recipients} | Subject: ${opts.subject}`);
-      return true;
+      console.warn(`[MAIL NOT SENT - SMTP UNCONFIGURED] To: ${recipients} | Subject: ${opts.subject}`);
+      return false;
     }
 
+    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
     await transport.sendMail({
       from,
       to: recipients,

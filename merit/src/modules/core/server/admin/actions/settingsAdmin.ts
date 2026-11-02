@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
-import { type Result, safeAction } from "@/lib/result";
+import { assertCan } from "@/lib/rbac";
+import { DomainError, type Result, safeAction } from "@/lib/result";
 import { testDeeplTranslation, testGeminiTranslation } from "@/modules/menu/server/translations";
 import * as settingsAdmin from "../settingsAdmin";
 
@@ -36,6 +37,14 @@ export async function clearSettingOverrideAction(
   )(raw);
 }
 
+/** Translation key tests spend the system's API quota: system settings (CR-SYS) "edit", system scope. */
+async function requireSystemSettings(ctx: Awaited<ReturnType<typeof requireUser>>): Promise<void> {
+  await assertCan(ctx, "CR-SYS", "D");
+  if (ctx.user.roleKind !== "SISTEM") {
+    throw new DomainError("FORBIDDEN", "Sistem geneli işlemleri yalnızca sistem yöneticisi yapabilir");
+  }
+}
+
 export async function testGeminiAction(raw: unknown): Promise<
   Result<{
     ok: true;
@@ -51,7 +60,7 @@ export async function testGeminiAction(raw: unknown): Promise<
       apiKey: z.string().optional(),
     }),
     async (input) => {
-      await requireUser();
+      await requireSystemSettings(await requireUser());
       return testGeminiTranslation(input.model, input.apiKey);
     },
   )(raw);
@@ -70,7 +79,7 @@ export async function testDeeplAction(raw: unknown): Promise<
       apiKey: z.string().optional(),
     }).optional(),
     async (input) => {
-      await requireUser();
+      await requireSystemSettings(await requireUser());
       return testDeeplTranslation(input?.apiKey);
     },
   )(raw);

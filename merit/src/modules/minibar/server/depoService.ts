@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { StockMovementType, TaskStatus } from "@/generated/prisma/client";
-import { getBusinessDate } from "./minibarService";
+import { DomainError } from "@/lib/result";
+import { getSettings } from "@/lib/settings";
+import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
+import { dayRange } from "./dates";
+import { lockStocks } from "./poolStock";
 
 export interface DepoStockItem {
   id: string;
@@ -101,6 +105,9 @@ export async function getHotelConsignmentStock(hotelId: string): Promise<DepoSto
 
 /**
  * 2. Konsinye Havuzuna Ürün Girişi / Stok Ayarlama (Depo Sorumlusu)
+ *
+ * One transaction; the HotelStock row is locked (FOR UPDATE) before the balance is read, so
+ * concurrent adjustments and room-check deductions can never push it below zero.
  */
 export async function adjustHotelConsignmentStock(params: {
   hotelId: string;
@@ -112,46 +119,44 @@ export async function adjustHotelConsignmentStock(params: {
 }): Promise<{ success: boolean; newQuantity: number; message: string }> {
   const { hotelId, productId, changeQuantity, movementType, note, userId } = params;
 
-  if (changeQuantity === 0) {
-    throw new Error("Miktar sıfır olamaz.");
+  if (!Number.isInteger(changeQuantity) || changeQuantity === 0) {
+    throw new DomainError("VALIDATION", "Miktar sıfırdan farklı bir tam sayı olmalı.");
+  }
+  if (movementType === "GIRIS" && changeQuantity < 0) {
+    throw new DomainError("VALIDATION", "Zimmet girişi pozitif olmalı.");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const stock = await tx.hotelStock.findUnique({
-      where: {
-        hotelId_productId: { hotelId, productId },
-      },
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({ where: { id: productId }, select: { id: true } });
+    if (!product) throw new DomainError("NOT_FOUND", "Ürün bulunamadı.");
+    await tx.hotelStock.upsert({
+      where: { hotelId_productId: { hotelId, productId } },
+      create: { hotelId, productId, criticalLevel: 10 },
+      update: {},
+    });
+    await lockStocks(tx, hotelId, [productId]);
+    const stock = await tx.hotelStock.findUniqueOrThrow({
+      where: { hotelId_productId: { hotelId, productId } },
     });
 
-    const prevRem = stock?.remainingQty ?? 0;
-    const prevTotal = stock?.totalQty ?? 0;
+    const prevRem = stock.remainingQty;
+    const prevTotal = stock.totalQty;
     const newRem = prevRem + changeQuantity;
 
     if (newRem < 0) {
-      throw new Error(`Yetersiz stok! Mevcut: ${prevRem}, düşülmek istenen: ${Math.abs(changeQuantity)}`);
+      throw new DomainError(
+        "STOCK_INSUFFICIENT",
+        `Yetersiz stok! Mevcut: ${prevRem}, düşülmek istenen: ${Math.abs(changeQuantity)}`,
+      );
     }
 
-    let updatedStock;
-    if (stock) {
-      updatedStock = await tx.hotelStock.update({
-        where: { id: stock.id },
-        data: {
-          totalQty: prevTotal + (changeQuantity > 0 ? changeQuantity : 0),
-          remainingQty: newRem,
-        },
-      });
-    } else {
-      updatedStock = await tx.hotelStock.create({
-        data: {
-          hotelId,
-          productId,
-          totalQty: Math.max(0, changeQuantity),
-          remainingQty: newRem,
-          usedQty: 0,
-          criticalLevel: 10,
-        },
-      });
-    }
+    const updatedStock = await tx.hotelStock.update({
+      where: { id: stock.id },
+      data: {
+        totalQty: prevTotal + (changeQuantity > 0 ? changeQuantity : 0),
+        remainingQty: newRem,
+      },
+    });
 
     await tx.hotelStockMovement.create({
       data: {
@@ -160,6 +165,8 @@ export async function adjustHotelConsignmentStock(params: {
         userId,
         type: movementType,
         qty: changeQuantity,
+        refType: "HotelStock",
+        refId: updatedStock.id,
         note: note || (changeQuantity > 0 ? "Depo sorumlusu zimmet girişi" : "Stok sayım düzeltmesi"),
       },
     });
@@ -170,7 +177,7 @@ export async function adjustHotelConsignmentStock(params: {
       action: "STOCK_ADJUSTMENT",
       entity: "HotelStock",
       entityId: updatedStock.id,
-      before: stock ? { remainingQty: prevRem, totalQty: prevTotal } : null,
+      before: { remainingQty: prevRem, totalQty: prevTotal },
       after: {
         remainingQty: updatedStock.remainingQty,
         totalQty: updatedStock.totalQty,
@@ -182,8 +189,6 @@ export async function adjustHotelConsignmentStock(params: {
 
     return { success: true, newQuantity: updatedStock.remainingQty, message: "Stok başarıyla güncellendi." };
   });
-
-  return result;
 }
 
 /**
@@ -233,16 +238,11 @@ export async function getMinibarConsumptionReport(filter: ConsumptionReportFilte
   }
 
   if (startDate || endDate) {
-    const dateFilter: Record<string, Date> = {};
-    if (startDate) {
-      dateFilter.gte = new Date(startDate);
-    }
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      dateFilter.lte = end;
-    }
-    whereClause.createdAt = dateFilter;
+    // Europe/Nicosia business days: [start of first day, start of the day after the last day).
+    const dateFilter: { gte?: Date; lt?: Date } = {};
+    if (startDate) dateFilter.gte = dayRange(startDate).gte;
+    if (endDate) dateFilter.lt = dayRange(endDate).lt;
+    whereClause.occurredAt = dateFilter;
   }
 
   const transactions = await prisma.minibarTransaction.findMany({
@@ -256,7 +256,7 @@ export async function getMinibarConsumptionReport(filter: ConsumptionReportFilte
         include: { product: true },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { occurredAt: "desc" },
   });
 
   let totalAmount = 0;
@@ -285,7 +285,7 @@ export async function getMinibarConsumptionReport(filter: ConsumptionReportFilte
       roomNumber: tx.room.number,
       floorName: tx.room.floor.name,
       staffName: tx.user?.fullName || "Personel",
-      date: tx.createdAt.toISOString(),
+      date: tx.occurredAt.toISOString(),
       totalCost: txCost,
       currency: "TL",
       items,
@@ -307,7 +307,9 @@ export async function getDailyTaskCompletionReport(
   hotelId: string,
   targetDate?: string
 ): Promise<TaskCompletionReport> {
-  const dateObj = targetDate ? new Date(targetDate) : getBusinessDate();
+  const day = targetDate ?? businessDate();
+  const dateObj = businessDay(day); // VALIDATION on a malformed date
+  const { "dnd.minChecks": minChecks } = await getSettings(["dnd.minChecks"], hotelId);
 
   const taskItems = await prisma.dailyTaskItem.findMany({
     where: {
@@ -327,12 +329,12 @@ export async function getDailyTaskCompletionReport(
 
   const totalTasks = taskItems.length;
   const completedTasks = taskItems.filter((t) => t.status === "TAMAMLANDI").length;
-  const dndClosedTasks = taskItems.filter((t) => t.dndCount >= 3).length;
+  const dndClosedTasks = taskItems.filter((t) => t.dndCount >= minChecks).length;
   const pendingTasks = taskItems.filter((t) => t.status === "BEKLIYOR").length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
   return {
-    date: dateObj.toISOString().slice(0, 10),
+    date: day,
     totalTasks,
     completedTasks,
     dndClosedTasks,

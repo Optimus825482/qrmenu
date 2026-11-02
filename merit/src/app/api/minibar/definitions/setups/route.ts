@@ -1,63 +1,65 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { assertCan } from "@/lib/rbac";
 import {
-  listSetups,
+  auditCtxOf,
+  canSeePrices,
+  handle,
+  maskPrices,
+  parseBody,
+} from "@/modules/minibar/server/apiAuthHelper";
+import {
   createSetup,
-  updateSetup,
   deleteSetup,
+  listSetups,
+  updateSetup,
 } from "@/modules/minibar/server/minibarDefinitionsService";
-import { getAuditCtxFromRequest } from "@/modules/minibar/server/apiAuthHelper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const createSchema = z.object({
+  name: z.string().trim().min(1, "Setup adı zorunludur.").max(100),
+  description: z.string().max(300).optional(),
+  isInsideCabinet: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+const updateSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().max(300).nullable().optional(),
+  isInsideCabinet: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
+
 export async function GET() {
-  try {
-    const setups = await listSetups();
-    return NextResponse.json({ setups });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup tanımları alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
+    return maskPrices({ setups: await listSetups() }, canSeePrices(ctx));
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const setup = await createSetup(body, ctx);
-    return NextResponse.json({ success: true, setup });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup oluşturulamadı.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    const setup = await createSetup(await parseBody(req, createSchema), auditCtxOf(ctx, req));
+    return { success: true, setup };
+  });
 }
 
 export async function PUT(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const { id, ...data } = body;
-    if (!id) return NextResponse.json({ error: "Setup ID zorunludur." }, { status: 400 });
-
-    const setup = await updateSetup(id, data, ctx);
-    return NextResponse.json({ success: true, setup });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup güncellenemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const { id, ...data } = await parseBody(req, updateSchema);
+    const setup = await updateSetup(id, data, auditCtxOf(ctx, req));
+    return { success: true, setup };
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Setup ID zorunludur." }, { status: 400 });
-
-    const result = await deleteSetup(id, ctx);
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup silinemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Setup ID zorunludur." }, { status: 400 });
+    return deleteSetup(id, auditCtxOf(ctx, req));
+  });
 }

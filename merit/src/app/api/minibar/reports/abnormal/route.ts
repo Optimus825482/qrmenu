@@ -1,27 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { handle, parseQuery, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
 import { getAbnormalConsumption } from "@/modules/minibar/server/abnormalConsumptionService";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const hotelId = searchParams.get("hotelId") || undefined;
-    const date = searchParams.get("date") || undefined;
-    const threshold = searchParams.get("threshold") ? Number(searchParams.get("threshold")) : undefined;
+const querySchema = z.object({
+  hotelId: z.string().max(64).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih yyyy-MM-dd olmalı").optional(),
+  threshold: z.coerce.number().int().min(1).max(1000).optional(),
+});
 
-    const report = await getAbnormalConsumption({
-      hotelId,
-      date,
-      roomThreshold: threshold,
-    });
-
-    return NextResponse.json({
-      success: true,
-      report,
-    });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Anormal tüketim raporu alınamadı.";
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
+export async function GET(req: Request) {
+  return handle(async (ctx) => {
+    const q = parseQuery(new URL(req.url).searchParams, querySchema);
+    const hotelId = await selectHotel(ctx, q.hotelId, "MB-RAP", "V");
+    const report = await getAbnormalConsumption({ hotelId, date: q.date, roomThreshold: q.threshold });
+    return { success: true, report };
+  });
 }

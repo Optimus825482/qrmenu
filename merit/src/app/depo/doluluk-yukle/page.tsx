@@ -308,7 +308,7 @@ export default function DolulukYuklePage() {
               <span>📤 Standart Doluluk Dosyası Yükle</span>
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              In-House, Departures ve Arrivals misafir bilgilerini içeren standart Excel dosyasını (.xlsx, .xls) seçiniz.
+              In-House, Departures ve Arrivals misafir bilgilerini içeren standart Excel dosyasını (.xlsx, en fazla 10 MB) seçiniz.
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export default function DolulukYuklePage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".xlsx,.xls,.xlsm"
+              accept=".xlsx"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -347,7 +347,7 @@ export default function DolulukYuklePage() {
                   <p className="text-sm font-semibold text-slate-300">
                     Excel dosyasını buraya sürükleyin veya dosya seçmek için tıklayın
                   </p>
-                  <p className="text-xs text-slate-500">Desteklenen formatlar: .xlsx, .xls, .xlsm</p>
+                  <p className="text-xs text-slate-500">Desteklenen format: .xlsx (en fazla 10 MB)</p>
                 </div>
               )}
             </div>

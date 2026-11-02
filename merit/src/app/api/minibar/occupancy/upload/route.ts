@@ -1,103 +1,47 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { processOccupancyExcel } from "@/modules/minibar/server/occupancyUploadService";
+import { DomainError } from "@/lib/result";
+import { handle, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
+import {
+  MAX_UPLOAD_BYTES,
+  processOccupancyExcel,
+} from "@/modules/minibar/server/occupancyUploadService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** Multipart overhead allowed on top of the 10 MB file limit. */
+const MAX_BODY_BYTES = MAX_UPLOAD_BYTES + 256 * 1024;
+
+/**
+ * Fails closed: no session = 401, no MB-DOL "create" permission for the target hotel = 403. The
+ * hotel is the session hotel or a selector value inside the user's scope, never an arbitrary id.
+ */
 export async function POST(request: Request) {
-  try {
-    let userId: string | null = null;
-    let hotelId: string | null = null;
-
-    const ALLOWED_ROLES = ["R-SYS", "R-DEP", "R-FBM", "R-OTM"];
-    const ALLOWED_NAMES = [
-      "Sistem Yöneticisi",
-      "Depo Sorumlusu",
-      "F&B Müdürü",
-      "F&B Yöneticisi",
-      "Otel Müdürü",
-    ];
-
-    try {
-      const ctx = await requireUser();
-      const userRole = await prisma.user.findUnique({
-        where: { id: ctx.user.id },
-        select: { role: { select: { code: true, name: true, kind: true } } },
-      });
-
-      const roleCode = userRole?.role.code || "";
-      const roleName = userRole?.role.name || "";
-      const isAllowed =
-        ALLOWED_ROLES.includes(roleCode) ||
-        ALLOWED_NAMES.some((n) => roleName.toLowerCase().includes(n.toLowerCase())) ||
-        userRole?.role.kind === "SISTEM";
-
-      if (!isAllowed) {
-        return NextResponse.json(
-          {
-            error:
-              "Oda doluluk listesi yükleme yetkisi yalnızca Depo Sorumlusu, F&B Yöneticileri ve Sistem Yöneticisine aittir.",
-          },
-          { status: 403 },
-        );
-      }
-
-      userId = ctx.user.id;
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      // Fallback: demo veya oturum açılmamış doğrudan istek
+  return handle(async (ctx) => {
+    const declared = Number(request.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
+      throw new DomainError("VALIDATION", "Dosya en fazla 10 MB olabilir.");
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-    const formHotelId = formData.get("hotelId") as string | null;
-    const forceOverride = formData.get("forceOverride") === "true";
-
-    if (formHotelId) {
-      hotelId = formHotelId;
-    }
-
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel seçilmedi veya sistemde aktif otel yok." }, { status: 400 });
-    }
-
-    if (!userId) {
-      const defaultUser = await prisma.user.findFirst({
-        where: { role: { name: { in: ["SYSTEM_ADMIN", "DEPO_SORUMLUSU", "HOTEL_ADMIN", "KAT_SORUMLUSU"] } } },
-        select: { id: true },
-      });
-      userId = defaultUser?.id || "system";
-    }
-
-    if (!file) {
-      return NextResponse.json({ error: "Lütfen bir Excel dosyası (.xlsx, .xls) seçiniz." }, { status: 400 });
-    }
-
-    const fileName = file.name || "occupancy.xlsx";
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const result = await processOccupancyExcel({
-      buffer,
-      fileName,
-      hotelId,
-      userId,
-      forceScheduleOverride: forceOverride,
+    // The target hotel travels in the multipart form, so it is authorised right after parsing and
+    // before the file is touched.
+    const formData = await request.formData().catch(() => {
+      throw new DomainError("VALIDATION", "Geçersiz form verisi.");
     });
+    const selected = formData.get("hotelId");
+    const hotelId = await selectHotel(ctx, typeof selected === "string" ? selected : null, "MB-DOL", "O");
 
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Excel dosyası işlenirken hata oluştu.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      throw new DomainError("VALIDATION", "Lütfen bir Excel dosyası (.xlsx) seçiniz.");
+    }
+    if (file.size > MAX_UPLOAD_BYTES) throw new DomainError("VALIDATION", "Dosya en fazla 10 MB olabilir.");
+
+    return processOccupancyExcel({
+      buffer: Buffer.from(await file.arrayBuffer()),
+      fileName: file.name || "occupancy.xlsx",
+      hotelId,
+      userId: ctx.user.id,
+      forceScheduleOverride: formData.get("forceOverride") === "true",
+    });
+  });
 }

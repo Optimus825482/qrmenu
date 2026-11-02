@@ -1,48 +1,19 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import { handle, parseQuery, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
 import { listCorrectionRequests } from "@/modules/minibar/server/minibarService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const querySchema = z.object({
+  hotelId: z.string().max(64).optional(),
+  status: z.enum(["BEKLIYOR", "ONAYLANDI", "REDDEDILDI"]).optional(),
+});
+
 export async function GET(request: Request) {
-  try {
-    let hotelId: string | null = null;
-
-    try {
-      const ctx = await requireUser();
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      // Dev fallback
-    }
-
-    const { searchParams } = new URL(request.url);
-    const paramHotelId = searchParams.get("hotelId");
-    if (paramHotelId) hotelId = paramHotelId;
-
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel bulunamadı." }, { status: 404 });
-    }
-
-    const statusParam = searchParams.get("status") as "BEKLIYOR" | "ONAYLANDI" | "REDDEDILDI" | null;
-
-    const list = await listCorrectionRequests({
-      hotelId,
-      status: statusParam || undefined,
-    });
-
-    return NextResponse.json(list);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Talepler alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return handle(async (ctx) => {
+    const q = parseQuery(new URL(request.url).searchParams, querySchema);
+    const hotelId = await selectHotel(ctx, q.hotelId, "MB-TAL", "V");
+    return listCorrectionRequests({ hotelId, status: q.status });
+  });
 }

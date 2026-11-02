@@ -16,6 +16,7 @@ export function PriorityRouteModal({ isOpen, onClose, hotelId }: PriorityRouteMo
 
   useEffect(() => {
     if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for the fetch started below
     setIsLoading(true);
 
     const url = hotelId

@@ -1,102 +1,44 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import type { Ctx } from "@/lib/auth";
+import { assertCan, can } from "@/lib/rbac";
+import { handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
 import {
   deleteRoomCheckToday,
+  minibarTransactionHotel,
   updateRoomCheckToday,
 } from "@/modules/minibar/server/minibarService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function DELETE(
-  request: Request,
-  props: { params: Promise<{ txId: string }> }
-) {
-  try {
-    const { txId } = await props.params;
-    let userId = "system";
-    let hotelId: string | null = null;
+const patchSchema = z.object({
+  updatedItems: z
+    .array(z.object({ productId: z.string().min(1).max(64), qty: z.number().int().min(0).max(99) }))
+    .max(200),
+  note: z.string().max(500).optional(),
+});
 
-    try {
-      const ctx = await requireUser();
-      userId = ctx.user.id;
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      const u = await prisma.user.findFirst({ where: { isActive: true } });
-      if (u) userId = u.id;
-    }
-
-    if (!hotelId) {
-      const tx = await prisma.minibarTransaction.findUnique({
-        where: { id: txId },
-        select: { hotelId: true },
-      });
-      hotelId = tx?.hotelId || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "İşlem veya otel bulunamadı." }, { status: 404 });
-    }
-
-    const result = await deleteRoomCheckToday({
-      transactionId: txId,
-      userId,
-      hotelId,
-    });
-
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Silme işlemi sırasında hata oluştu.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+/** Author or MB-TUK approver; the hotel always comes from the transaction itself. */
+async function authorise(ctx: Ctx, txId: string) {
+  const hotelId = await minibarTransactionHotel(txId);
+  await assertCan(ctx, "MB-TUK", "D", hotelId);
+  const canApprove = await can(ctx, "MB-TUK", "A", hotelId);
+  return { hotelId, canApprove };
 }
 
-export async function PATCH(
-  request: Request,
-  props: { params: Promise<{ txId: string }> }
-) {
-  try {
+export async function DELETE(_request: Request, props: { params: Promise<{ txId: string }> }) {
+  return handle(async (ctx) => {
     const { txId } = await props.params;
-    let userId = "system";
-    let hotelId: string | null = null;
+    const { hotelId, canApprove } = await authorise(ctx, txId);
+    return deleteRoomCheckToday({ transactionId: txId, userId: ctx.user.id, hotelId, canApprove });
+  });
+}
 
-    try {
-      const ctx = await requireUser();
-      userId = ctx.user.id;
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      const u = await prisma.user.findFirst({ where: { isActive: true } });
-      if (u) userId = u.id;
-    }
-
-    if (!hotelId) {
-      const tx = await prisma.minibarTransaction.findUnique({
-        where: { id: txId },
-        select: { hotelId: true },
-      });
-      hotelId = tx?.hotelId || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "İşlem veya otel bulunamadı." }, { status: 404 });
-    }
-
-    const body = await request.json();
-    const updatedItems: { productId: string; qty: number }[] = body.updatedItems || [];
-    const note: string | undefined = body.note;
-
-    const result = await updateRoomCheckToday({
-      transactionId: txId,
-      userId,
-      hotelId,
-      updatedItems,
-      note,
-    });
-
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Güncelleme sırasında hata oluştu.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+export async function PATCH(request: Request, props: { params: Promise<{ txId: string }> }) {
+  return handle(async (ctx) => {
+    const { txId } = await props.params;
+    const { hotelId, canApprove } = await authorise(ctx, txId);
+    const body = await parseBody(request, patchSchema);
+    return updateRoomCheckToday({ transactionId: txId, userId: ctx.user.id, hotelId, canApprove, ...body });
+  });
 }

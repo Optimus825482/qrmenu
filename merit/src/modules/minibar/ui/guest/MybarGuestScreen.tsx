@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { newRequestKey } from "../requestKey";
 
 interface MybarProduct {
   id: string;
   name: string;
   unit: string;
   groupName: string;
+  /** Largest quantity the hotel allows for this product. */
+  maxQty?: number;
 }
 
 interface MybarGuestScreenProps {
-  roomId: string;
-  hotelId: string;
+  /** The room QR token: the server derives hotel and room from it. */
+  token: string;
   roomNumber?: string;
   hotelName?: string;
-  token?: string;
 }
 
 type LangCode = "tr" | "en" | "de" | "ru" | "ar";
@@ -126,11 +128,12 @@ const LANG_OPTIONS: { code: LangCode; label: string; flag: string }[] = [
 ];
 
 export function MybarGuestScreen({
-  roomId,
-  hotelId,
+  token,
   roomNumber: initialRoomNumber,
   hotelName: initialHotelName,
 }: MybarGuestScreenProps) {
+  // One key per form: a retry of the same submission replays the first result instead of duplicating it.
+  const [requestKey] = useState(newRequestKey);
   const [lang, setLang] = useState<LangCode>("tr");
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
@@ -153,13 +156,14 @@ export function MybarGuestScreen({
     // Detect browser language
     const navLang = navigator.language.slice(0, 2).toLowerCase();
     if (navLang === "en" || navLang === "de" || navLang === "ru" || navLang === "ar") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- browser language is only known on the client
       setLang(navLang as LangCode);
     }
 
     async function loadData() {
       try {
         setIsLoading(true);
-        const res = await fetch(`/api/minibar/mybar/request?roomId=${roomId}&hotelId=${hotelId}`);
+        const res = await fetch(`/api/minibar/mybar/request?token=${encodeURIComponent(token)}`);
         if (res.ok) {
           const data = await res.json();
           setHotelName(data.hotel.name);
@@ -175,12 +179,13 @@ export function MybarGuestScreen({
     }
 
     loadData();
-  }, [roomId, hotelId]);
+  }, [token]);
 
   function handleQuantityChange(productId: string, delta: number) {
     const cur = selectedQuantities[productId] || 0;
     const nextVal = cur + delta;
-    if (nextVal < 0 || nextVal > 5) return; // Rule: max +5 / min 0!
+    const max = products.find((p) => p.id === productId)?.maxQty ?? 5;
+    if (nextVal < 0 || nextVal > max) return; // Rule: 0..hotel limit (default 5)
 
     setSelectedQuantities((prev) => {
       const copy = { ...prev };
@@ -213,8 +218,8 @@ export function MybarGuestScreen({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          hotelId,
-          roomId,
+          token,
+          idempotencyKey: requestKey,
           language: lang,
           note: note.trim() || undefined,
           items,

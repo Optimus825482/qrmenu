@@ -1,120 +1,61 @@
-import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 import {
-  getHotelConsignmentStock,
+  canSeePrices,
+  handle,
+  maskPrices,
+  parseBody,
+  selectHotel,
+} from "@/modules/minibar/server/apiAuthHelper";
+import {
   adjustHotelConsignmentStock,
+  getHotelConsignmentStock,
   getHotelStockMovements,
 } from "@/modules/minibar/server/depoService";
-import { StockMovementType } from "@/generated/prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  try {
-    let hotelId: string | null = null;
-    try {
-      const ctx = await requireUser();
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      // Fallback
-    }
-
-    const { searchParams } = new URL(request.url);
-    const paramHotelId = searchParams.get("hotelId");
-    if (paramHotelId) hotelId = paramHotelId;
-
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel bulunamadı." }, { status: 404 });
-    }
-
+  return handle(async (ctx) => {
+    const hotelId = await selectHotel(ctx, new URL(request.url).searchParams.get("hotelId"), "MB-ZIM", "V");
     const [stockItems, movements, hotels] = await Promise.all([
       getHotelConsignmentStock(hotelId),
       getHotelStockMovements(hotelId, 30),
       prisma.hotel.findMany({
-        where: { isActive: true },
+        where: { isActive: true, id: { in: ctx.hotelIds } },
         select: { id: true, name: true, code: true },
       }),
     ]);
-
-    return NextResponse.json({
-      stockItems,
-      movements,
-      hotels,
-      selectedHotelId: hotelId,
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Stok bilgisi alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+    return maskPrices({ stockItems, movements, hotels, selectedHotelId: hotelId }, canSeePrices(ctx));
+  });
 }
 
+const bodySchema = z.object({
+  productId: z.string().min(1).max(64),
+  changeQuantity: z.number().int().min(-100000).max(100000),
+  movementType: z.enum(["GIRIS", "DUZELTME"]).default("GIRIS"),
+  note: z.string().max(300).optional(),
+  formHotelId: z.string().max(64).optional(),
+});
+
 export async function POST(request: Request) {
-  try {
-    let userId: string | null = null;
-    let hotelId: string | null = null;
-
-    try {
-      const ctx = await requireUser();
-      userId = ctx.user.id;
-      hotelId = ctx.session.hotelId || ctx.user.hotelId || null;
-    } catch {
-      // Fallback
-    }
-
-    const body = await request.json();
-    const { productId, changeQuantity, movementType, note, formHotelId } = body;
-
-    if (formHotelId) hotelId = formHotelId;
-
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel bulunamadı." }, { status: 400 });
-    }
-
-    if (!productId || typeof changeQuantity !== "number") {
-      return NextResponse.json({ error: "Eksik parametreler (productId, changeQuantity)." }, { status: 400 });
-    }
-
-    if (!userId) {
-      const defaultUser = await prisma.user.findFirst({
-        where: { role: { name: { in: ["DEPO_SORUMLUSU", "SYSTEM_ADMIN", "KAT_SORUMLUSU"] } } },
-        select: { id: true },
-      });
-      userId = defaultUser?.id || "system";
-    }
-
-    const validMovementType: StockMovementType =
-      movementType === "DUZELTME" ? "DUZELTME" : "GIRIS";
-
-    const result = await adjustHotelConsignmentStock({
+  return handle(async (ctx) => {
+    const body = await parseBody(request, bodySchema);
+    // Entry = create (O), count correction = edit (D); the hotel selector value is authorised, not trusted.
+    const hotelId = await selectHotel(
+      ctx,
+      body.formHotelId,
+      "MB-ZIM",
+      body.movementType === "GIRIS" ? "O" : "D",
+    );
+    return adjustHotelConsignmentStock({
       hotelId,
-      productId,
-      changeQuantity,
-      movementType: validMovementType,
-      note,
-      userId,
+      productId: body.productId,
+      changeQuantity: body.changeQuantity,
+      movementType: body.movementType,
+      note: body.note,
+      userId: ctx.user.id,
     });
-
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Stok güncellenemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  });
 }

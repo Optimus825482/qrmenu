@@ -8,7 +8,8 @@ import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import {
   checkOccupancyUploadAndAlert,
-  sendDailyConsumptionAndTaskReport,
+  sendDailyConsumptionReport,
+  sendDailyTaskReport,
   runDailyTaskGeneration,
   runDndDayEndRollover,
 } from "@/modules/minibar/server/minibarJobs";
@@ -19,6 +20,7 @@ export const ORDER_ESCALATION_QUEUE = "order.escalation";
 export const MINIBAR_TASK_GEN_QUEUE = "minibar.task-gen";
 export const MINIBAR_OCCUPANCY_ALERT_QUEUE = "minibar.occupancy-alert";
 export const MINIBAR_DAILY_REPORT_QUEUE = "minibar.daily-report";
+export const MINIBAR_CONSUMPTION_REPORT_QUEUE = "minibar.consumption-report";
 export const MINIBAR_DND_ROLLOVER_QUEUE = "minibar.dnd-rollover";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
@@ -79,27 +81,39 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
     });
 
-    // 1. Gece 00:01 - Günlük görev üretimi
+    // Recurring minibar jobs. `schedule` upserts on (queue name, key), so a restart never
+    // duplicates a schedule: one stable key per queue, always Europe/Nicosia.
+    const scheduleOpts = { tz: TZ, key: "default" } as const;
+
+    // 00:01 - günlük görev üretimi (yalnız yüklenmiş doluluk verisinden)
     await boss.createQueue(MINIBAR_TASK_GEN_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_TASK_GEN_QUEUE, "1 0 * * *", null, { tz: TZ });
+    await boss.schedule(MINIBAR_TASK_GEN_QUEUE, "1 0 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_TASK_GEN_QUEUE, async () => {
       const res = await runDailyTaskGeneration(new Date());
-      console.log(`[minibar.task-gen] ${res.hotelCount} otel için günlük minibar görevleri üretildi.`);
+      console.log(
+        `[minibar.task-gen] ${res.hotelCount} otel, ${res.tasksCreated} görev, doluluk verisi olmayan otel: ${res.hotelsWithoutOccupancy}`,
+      );
     });
 
-    // 2. Sabah 09:00 - Dünün tüketim toplamları, tamamlanamayan görevler ve anormal tüketim raporu
+    // 08:00 - dünün tamamlanamayan görevleri ve anormal tüketim raporu
     await boss.createQueue(MINIBAR_DAILY_REPORT_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_DAILY_REPORT_QUEUE, "0 9 * * *", null, { tz: TZ });
+    await boss.schedule(MINIBAR_DAILY_REPORT_QUEUE, "0 8 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_DAILY_REPORT_QUEUE, async () => {
-      const res = await sendDailyConsumptionAndTaskReport(new Date());
-      if (res.sent) {
-        console.log(`[minibar.daily-report] Günlük minibar raporu (${res.reportDate}) iletildi.`);
-      }
+      const res = await sendDailyTaskReport(new Date());
+      console.log(`[minibar.daily-report] ${res.reportDate}: ${res.hotelsSent} otel raporu iletildi.`);
     });
 
-    // 3. Sabah 10:00 ve Akşam 18:00 - Günlük doluluk yüklenmediyse uyarı maili
+    // 08:05 - dünün tüketim toplamları
+    await boss.createQueue(MINIBAR_CONSUMPTION_REPORT_QUEUE); // idempotent
+    await boss.schedule(MINIBAR_CONSUMPTION_REPORT_QUEUE, "5 8 * * *", null, scheduleOpts);
+    await boss.work(MINIBAR_CONSUMPTION_REPORT_QUEUE, async () => {
+      const res = await sendDailyConsumptionReport(new Date());
+      console.log(`[minibar.consumption-report] ${res.reportDate}: ${res.hotelsSent} otel raporu iletildi.`);
+    });
+
+    // 10:00 ve 18:00 - günlük doluluk yüklenmediyse uyarı
     await boss.createQueue(MINIBAR_OCCUPANCY_ALERT_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_OCCUPANCY_ALERT_QUEUE, "0 10,18 * * *", null, { tz: TZ });
+    await boss.schedule(MINIBAR_OCCUPANCY_ALERT_QUEUE, "0 10,18 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_OCCUPANCY_ALERT_QUEUE, async () => {
       const res = await checkOccupancyUploadAndAlert(new Date());
       if (res.alertSent) {
@@ -107,9 +121,9 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       }
     });
 
-    // 4. Gece 23:59 - DND gün sonu devri
+    // 23:59 - DND gün sonu devri
     await boss.createQueue(MINIBAR_DND_ROLLOVER_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_DND_ROLLOVER_QUEUE, "59 23 * * *", null, { tz: TZ });
+    await boss.schedule(MINIBAR_DND_ROLLOVER_QUEUE, "59 23 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_DND_ROLLOVER_QUEUE, async () => {
       const res = await runDndDayEndRollover(new Date());
       console.log(`[minibar.dnd-rollover] ${res.rolloverCount} adet DND devri tamamlandı.`);

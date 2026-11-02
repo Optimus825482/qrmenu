@@ -120,6 +120,8 @@ type Props = {
   initialOrders: RoomOrderListItem[];
   initialStats: RoomServiceStats;
   canEdit: boolean;
+  /** rs.slaMinutes of the hotel (read server-side). */
+  slaMinutes: number;
 };
 
 export default function OdaServisiClient({
@@ -128,6 +130,7 @@ export default function OdaServisiClient({
   initialOrders,
   initialStats,
   canEdit,
+  slaMinutes,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -422,7 +425,7 @@ export default function OdaServisiClient({
           const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.GONDERILDI;
           const orderDate = new Date(order.createdAt);
           const elapsedMin = Math.max(0, Math.floor((now - orderDate.getTime()) / 60000));
-          const isOverdue = elapsedMin > 35 && order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL";
+          const isOverdue = elapsedMin > slaMinutes && order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL";
 
           return (
             <article
@@ -457,7 +460,7 @@ export default function OdaServisiClient({
                 {/* SLA Uyarı Çubuğu */}
                 {order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL" ? (
                   <div className="mt-2.5 flex items-center justify-between text-xs rounded-xl p-2 bg-surface-sunken border border-border/50">
-                    <span className="text-muted font-medium">SLA Hedefi (35 dk):</span>
+                    <span className="text-muted font-medium">SLA Hedefi ({slaMinutes} dk):</span>
                     <span
                       className={`font-black ${
                         isOverdue
@@ -467,7 +470,7 @@ export default function OdaServisiClient({
                             : "text-emerald-600 dark:text-emerald-400"
                       }`}
                     >
-                      {elapsedMin} / 35 dk {isOverdue ? "⚠️ GECİKTİ" : ""}
+                      {elapsedMin} / {slaMinutes} dk {isOverdue ? "⚠️ GECİKTİ" : ""}
                     </span>
                   </div>
                 ) : null}

@@ -1,6 +1,7 @@
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
+import { getSetting } from "@/lib/settings";
 import { DomainError } from "@/lib/result";
 import { businessDate, businessDateStart } from "@/lib/time";
 
@@ -46,6 +47,8 @@ export async function getCommandCenterKpis(
     }
   }
   const since = businessDateStart(businessDate());
+  const slaMinutes = new Map<string, number>();
+  for (const h of scope) slaMinutes.set(h, await getSetting("rs.slaMinutes", h));
 
   const [hotels, sessions, notificationsToday, totalRooms, occupiedRooms, activeMybarRequests, delayedRoomOrders, pendingPosOrders] = await Promise.all([
     prisma.hotel.findMany({
@@ -89,10 +92,13 @@ export async function getCommandCenterKpis(
     }),
     prisma.order.count({
       where: {
-        hotelId: { in: scope },
         kind: "ODA_SERVISI",
         status: { in: ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] },
-        createdAt: { lte: new Date(Date.now() - 35 * 60000) },
+        // Each hotel's own rs.slaMinutes threshold.
+        OR: scope.map((h) => ({
+          hotelId: h,
+          createdAt: { lte: new Date(Date.now() - (slaMinutes.get(h) ?? 30) * 60000) },
+        })),
       },
     }),
     prisma.order.count({

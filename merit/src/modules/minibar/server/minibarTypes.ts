@@ -59,6 +59,7 @@ export interface SetupInspectionItem {
     targetQty: number; // Target quantity defined in setup
     hotelStockQty: number; // Current available consignment stock in hotel pool
     addedQty: number; // Quantity replenished in this check
+    replenishedToday?: number; // already replenished in this room today (daily cap guidance)
   }[];
 }
 

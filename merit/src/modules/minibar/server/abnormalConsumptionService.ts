@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { getBusinessDate } from "./minibarService";
+import { businessDate } from "@/lib/time";
+import { addDays, dayRange } from "./dates";
 
 export interface RoomAbnormalConsumption {
   roomId: string;
@@ -44,19 +45,18 @@ export async function getAbnormalConsumption(params?: {
   date?: string;
   roomThreshold?: number;
 }): Promise<AbnormalConsumptionReport> {
-  const targetDate = params?.date || getBusinessDate().toISOString().slice(0, 10);
+  const targetDate = params?.date || businessDate();
   const roomThreshold = params?.roomThreshold || DEFAULT_ROOM_DAILY_THRESHOLD;
 
-  const startOfDay = new Date(`${targetDate}T00:00:00.000Z`);
-  const endOfDay = new Date(`${targetDate}T23:59:59.999Z`);
+  const { gte: startOfDay, lt: endOfDay } = dayRange(targetDate); // Europe/Nicosia business day
 
   // 1. Fetch transactions for the target business date
   const transactions = await prisma.minibarTransaction.findMany({
     where: {
       ...(params?.hotelId ? { hotelId: params.hotelId } : {}),
-      createdAt: {
+      occurredAt: {
         gte: startOfDay,
-        lte: endOfDay,
+        lt: endOfDay,
       },
     },
     include: {
@@ -166,12 +166,12 @@ export async function getAbnormalConsumption(params?: {
 
   // 3. Identify Product Spike Anomalies (Historical Comparison)
   // Check average consumption in the past 14 days
-  const past14DaysStart = new Date(startOfDay.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const past14DaysStart = dayRange(addDays(targetDate, -14)).gte;
   const pastTransactions = await prisma.minibarTransactionItem.findMany({
     where: {
       transaction: {
         ...(params?.hotelId ? { hotelId: params.hotelId } : {}),
-        createdAt: {
+        occurredAt: {
           gte: past14DaysStart,
           lt: startOfDay,
         },

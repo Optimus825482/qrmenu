@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { requireUser } from "@/lib/auth";
-import { safeAction } from "@/lib/result";
+import { requireUser, type Ctx } from "@/lib/auth";
+import { assertCan, can } from "@/lib/rbac";
+import { DomainError, safeAction } from "@/lib/result";
 import { prisma } from "@/lib/prisma";
 import type { OrderStatus } from "@/generated/prisma/client";
 
@@ -43,10 +44,29 @@ export type RoomServiceStats = {
   totalRevenue: number;
 };
 
+/**
+ * Hotels the list may cover: an explicit `hotelId` must be inside the user's scope and the user must
+ * hold RO-TAL "view" there; without one, every in-scope hotel where the permission applies.
+ */
+async function listableHotels(ctx: Ctx, requested?: string): Promise<string[]> {
+  if (requested) {
+    if (!ctx.hotelIds.includes(requested)) throw new DomainError("FORBIDDEN", "Bu otel için yetkiniz yok");
+    await assertCan(ctx, "RO-TAL", "V", requested);
+    return [requested];
+  }
+  const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "RO-TAL", "V", h)));
+  const hotels = ctx.hotelIds.filter((_, i) => allowed[i]);
+  if (hotels.length === 0) {
+    await assertCan(ctx, "RO-TAL", "V", ctx.session.hotelId); // audits the denied attempt
+    throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
+  }
+  return hotels;
+}
+
 export async function listRoomServiceOrdersAction(raw: unknown) {
   return safeAction(querySchema, async (input) => {
     const ctx = await requireUser();
-    const hotelIds = input.hotelId ? [input.hotelId] : ctx.hotelIds;
+    const hotelIds = await listableHotels(ctx, input.hotelId);
 
     const where: {
       kind: "ODA_SERVISI";

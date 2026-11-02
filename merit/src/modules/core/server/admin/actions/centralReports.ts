@@ -2,8 +2,12 @@
 
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/auth";
-import { safeAction } from "@/lib/result";
+import { requireUser, type Ctx } from "@/lib/auth";
+import { assertCan, can } from "@/lib/rbac";
+import { DomainError, safeAction } from "@/lib/result";
+import { getSetting } from "@/lib/settings";
+import { businessDate, businessDay } from "@/lib/time";
+import { dayRange } from "@/modules/minibar/server/dates";
 
 const filterSchema = z.object({
   hotelId: z.string().optional(),
@@ -41,6 +45,8 @@ export type MinibarReportRow = {
   inspectedRooms: number;
   consumedItems: number;
   pendingCount: number;
+  /** Always false: every figure is counted from real records, nothing is extrapolated. */
+  estimated: false;
 };
 
 export type RoomServiceReportRow = {
@@ -65,44 +71,82 @@ export type OutletReportRow = {
   callCount: number;
 };
 
+/**
+ * Hotels a report may cover: an explicit `hotelId` must be inside the user's scope AND the user
+ * must hold the report permission there; without one, every in-scope hotel the permission covers.
+ */
+async function reportHotels(ctx: Ctx, requested?: string): Promise<string[]> {
+  if (requested) {
+    if (!ctx.hotelIds.includes(requested)) {
+      throw new DomainError("FORBIDDEN", "Bu otel için yetkiniz yok");
+    }
+    await assertCan(ctx, "CR-RAP", "R", requested);
+    return [requested];
+  }
+  const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-RAP", "R", h)));
+  const hotels = ctx.hotelIds.filter((_, i) => allowed[i]);
+  if (hotels.length === 0) {
+    await assertCan(ctx, "CR-RAP", "R", ctx.session.hotelId); // audits the denied attempt
+    throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
+  }
+  return hotels;
+}
+
+function groupSet(pairs: { floorId: string; roomId: string }[]): Map<string, Set<string>> {
+  const m = new Map<string, Set<string>>();
+  for (const p of pairs) {
+    const set = m.get(p.floorId) ?? new Set<string>();
+    set.add(p.roomId);
+    m.set(p.floorId, set);
+  }
+  return m;
+}
+
 export async function getCentralReportAction(raw: unknown) {
   return safeAction(filterSchema, async (input) => {
     const ctx = await requireUser();
-    const hotelIds = input.hotelId ? [input.hotelId] : ctx.hotelIds;
+    const hotelIds = await reportHotels(ctx, input.hotelId);
 
     const fromDate = input.dateFrom ? new Date(input.dateFrom) : new Date(Date.now() - 7 * 86400000);
     const toDate = input.dateTo ? new Date(input.dateTo) : new Date();
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      throw new DomainError("VALIDATION", "Geçersiz tarih aralığı");
+    }
+    // Minibar figures are business-day based (Europe/Nicosia).
+    const fromDay = businessDate(fromDate);
+    const toDay = businessDate(toDate);
+    const txRange = { gte: dayRange(fromDay).gte, lt: dayRange(toDay).lt };
+    const dateRange = { gte: businessDay(fromDay), lte: businessDay(toDay) };
 
-    // 1. Minibar Verileri
-    const [inspectedItems, stockAgg, pendingTasks, dndCount, occupiedGuests] = await Promise.all([
-      prisma.dailyTaskItem.count({
-        where: {
-          task: { hotelId: { in: hotelIds } },
-          checkedAt: { not: null },
-        },
+    // 1. Minibar: real records only (RoomCheck, MinibarTransaction, DailyTask); nothing is estimated.
+    const [roomChecks, consumedAgg, pendingTasks, dndCount, occupiedRecords, floors] = await Promise.all([
+      prisma.roomCheck.findMany({
+        where: { checkDate: dateRange, room: { hotelId: { in: hotelIds } } },
+        select: { roomId: true, room: { select: { floorId: true } } },
       }),
-      prisma.hotelStock.aggregate({
-        where: { hotelId: { in: hotelIds } },
-        _sum: { usedQty: true },
+      prisma.minibarTransactionItem.findMany({
+        where: { consumed: { gt: 0 }, transaction: { hotelId: { in: hotelIds }, occurredAt: txRange } },
+        select: { consumed: true, transaction: { select: { room: { select: { floorId: true } } } } },
       }),
-      prisma.dailyTaskItem.count({
-        where: {
-          task: { hotelId: { in: hotelIds } },
-          status: "BEKLIYOR",
-        },
+      prisma.dailyTaskItem.findMany({
+        where: { task: { hotelId: { in: hotelIds }, date: dateRange }, status: "BEKLIYOR" },
+        select: { room: { select: { floorId: true } } },
       }),
       prisma.dailyTaskItem.count({
-        where: {
-          task: { hotelId: { in: hotelIds } },
-          status: "DND_BEKLIYOR",
-        },
+        where: { task: { hotelId: { in: hotelIds }, date: dateRange }, status: { in: ["DND_BEKLIYOR", "EKSIK"] } },
       }),
-      prisma.guestRecord.count({
+      prisma.guestRecord.findMany({
         where: {
           hotelId: { in: hotelIds },
-          arrivalDate: { lte: toDate },
-          departureDate: { gte: fromDate },
+          arrivalDate: { lte: businessDay(toDay) },
+          departureDate: { gte: businessDay(fromDay) },
         },
+        select: { roomId: true, room: { select: { floorId: true } } },
+      }),
+      prisma.floor.findMany({
+        where: { hotelId: { in: hotelIds } },
+        include: { hotel: { select: { name: true } }, rooms: { select: { id: true } } },
+        orderBy: [{ hotelId: "asc" }, { number: "asc" }],
       }),
     ]);
 
@@ -124,6 +168,9 @@ export async function getCentralReportAction(raw: unknown) {
     let rsDelivered = 0;
     let rsBreached = 0;
     let rsPhoneConfirmed = 0;
+    // SLA threshold per hotel from the rs.slaMinutes setting (no hard-coded minutes).
+    const slaByHotel = new Map<string, number>();
+    for (const h of hotelIds) slaByHotel.set(h, await getSetting("rs.slaMinutes", h));
 
     const roomServiceRows: RoomServiceReportRow[] = roomOrders.map((ro) => {
       const isDelivered = ro.status === "TESLIM_EDILDI";
@@ -133,7 +180,9 @@ export async function getCentralReportAction(raw: unknown) {
       const start = ro.createdAt.getTime();
       const end = ro.deliveredAt ? ro.deliveredAt.getTime() : Date.now();
       const durationMin = Math.max(0, Math.round((end - start) / 60000));
-      const slaBreached = ro.slaBreachedAt !== null || (durationMin > 35 && isDelivered);
+      const sla = slaByHotel.get(ro.hotelId) ?? 30;
+      const isCancelled = ro.status === "IPTAL" || ro.status === "REDDEDILDI";
+      const slaBreached = ro.slaBreachedAt !== null || (!isCancelled && durationMin > sla);
       if (slaBreached) rsBreached++;
 
       return {
@@ -224,42 +273,37 @@ export async function getCentralReportAction(raw: unknown) {
 
     const avgCallResolveSec = resolvedCount > 0 ? Math.round(totalResolveSec / resolvedCount) : 0;
 
-    // 4. Minibar Kat Bazlı Özet
-    const floors = await prisma.floor.findMany({
-      where: { hotelId: { in: hotelIds } },
-      include: {
-        hotel: { select: { name: true } },
-        rooms: { select: { id: true } },
-      },
-      orderBy: [{ hotelId: "asc" }, { number: "asc" }],
-    });
+    // 4. Minibar Kat Bazlı Özet (gerçek sayımlar)
+    const occupiedByFloor = groupSet(occupiedRecords.map((r) => ({ floorId: r.room.floorId, roomId: r.roomId })));
+    const inspectedByFloor = groupSet(roomChecks.map((c) => ({ floorId: c.room.floorId, roomId: c.roomId })));
+    const consumedByFloor = new Map<string, number>();
+    let totalConsumed = 0;
+    for (const i of consumedAgg) {
+      const f = i.transaction.room.floorId;
+      consumedByFloor.set(f, (consumedByFloor.get(f) ?? 0) + i.consumed);
+      totalConsumed += i.consumed;
+    }
+    const pendingByFloor = new Map<string, number>();
+    for (const t of pendingTasks) {
+      pendingByFloor.set(t.room.floorId, (pendingByFloor.get(t.room.floorId) ?? 0) + 1);
+    }
 
-    const totalRoomsCount = floors.reduce((sum, f) => sum + f.rooms.length, 0);
-    const avgOccRate = totalRoomsCount > 0 ? Math.min(1, occupiedGuests / totalRoomsCount) : 0.7;
-
-    const minibarRows: MinibarReportRow[] = floors.map((f) => {
-      const totalRooms = f.rooms.length;
-      const occupiedRooms = Math.round(totalRooms * avgOccRate);
-      const inspected = Math.round(occupiedRooms * 0.9);
-      const consumed = Math.round(inspected * 2);
-      const pending = Math.max(0, occupiedRooms - inspected);
-
-      return {
-        hotelName: f.hotel.name,
-        floorNumber: f.number,
-        totalRooms,
-        occupiedRooms,
-        inspectedRooms: inspected,
-        consumedItems: consumed,
-        pendingCount: pending,
-      };
-    });
+    const minibarRows: MinibarReportRow[] = floors.map((f) => ({
+      hotelName: f.hotel.name,
+      floorNumber: f.number,
+      totalRooms: f.rooms.length,
+      occupiedRooms: occupiedByFloor.get(f.id)?.size ?? 0,
+      inspectedRooms: inspectedByFloor.get(f.id)?.size ?? 0,
+      consumedItems: consumedByFloor.get(f.id) ?? 0,
+      pendingCount: pendingByFloor.get(f.id) ?? 0,
+      estimated: false,
+    }));
 
     const kpis: CentralKpisData = {
       minibar: {
-        inspectedRooms: inspectedItems,
-        totalConsumptionItems: stockAgg._sum.usedQty ?? 0,
-        pendingTasks,
+        inspectedRooms: new Set(roomChecks.map((c) => c.roomId)).size,
+        totalConsumptionItems: totalConsumed,
+        pendingTasks: pendingTasks.length,
         anomaliesCount: dndCount,
       },
       roomService: {
@@ -282,6 +326,8 @@ export async function getCentralReportAction(raw: unknown) {
       minibarRows,
       roomServiceRows,
       outletRows,
+      /** rs.slaMinutes of the first covered hotel, for the report's SLA captions. */
+      slaMinutes: slaByHotel.get(hotelIds[0]) ?? 30,
     };
   })(raw);
 }

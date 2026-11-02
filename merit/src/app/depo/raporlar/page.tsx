@@ -81,8 +81,8 @@ export default function RaporlarPage() {
   const [activeTab, setActiveTab] = useState<"CONSUMPTION" | "TASKS" | "ABNORMAL">("CONSUMPTION");
 
   // Filtreler
-  const [startDate, setStartDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState<string>(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia" }).format(new Date()));
+  const [endDate, setEndDate] = useState<string>(() => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia" }).format(new Date()));
 
   // Tüketim Raporu Verileri
   const [consumptionItems, setConsumptionItems] = useState<ConsumptionItem[]>([]);

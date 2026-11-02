@@ -1,79 +1,75 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { assertCan } from "@/lib/rbac";
+import { DomainError } from "@/lib/result";
 import {
-  listRoomTypes,
+  auditCtxOf,
+  handle,
+  parseBody,
+  selectHotel,
+} from "@/modules/minibar/server/apiAuthHelper";
+import {
   createRoomType,
-  updateRoomType,
   deleteRoomType,
+  listRoomTypes,
+  updateRoomType,
 } from "@/modules/minibar/server/minibarDefinitionsService";
-import { getAuditCtxFromRequest } from "@/modules/minibar/server/apiAuthHelper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const createSchema = z.object({
+  hotelId: z.string().min(1, "Otel ID zorunludur.").max(64),
+  name: z.string().trim().min(1, "Oda tipi adı zorunludur.").max(100),
+  cabinetCount: z.number().int().min(0).max(20).optional(),
+  isActive: z.boolean().optional(),
+});
+const updateSchema = z.object({
+  id: z.string().min(1).max(64),
+  name: z.string().trim().min(1).max(100).optional(),
+  cabinetCount: z.number().int().min(0).max(20).optional(),
+  isActive: z.boolean().optional(),
+});
+
+/** The room type decides its hotel; the caller only names the room type. */
+async function roomTypeHotel(id: string): Promise<string> {
+  const rt = await prisma.roomType.findUnique({ where: { id }, select: { hotelId: true } });
+  if (!rt) throw new DomainError("NOT_FOUND", "Oda tipi bulunamadı.");
+  return rt.hotelId;
+}
+
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    let hotelId = searchParams.get("hotelId");
-
-    if (!hotelId) {
-      const firstHotel = await prisma.hotel.findFirst({
-        where: { isActive: true },
-        select: { id: true },
-      });
-      hotelId = firstHotel?.id || null;
-    }
-
-    if (!hotelId) {
-      return NextResponse.json({ error: "Otel bulunamadı." }, { status: 404 });
-    }
-
-    const roomTypes = await listRoomTypes(hotelId);
-    return NextResponse.json({ roomTypes, selectedHotelId: hotelId });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Oda tipleri alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+  return handle(async (ctx) => {
+    const hotelId = await selectHotel(ctx, new URL(req.url).searchParams.get("hotelId"), "MB-TAN", "V");
+    return { roomTypes: await listRoomTypes(hotelId), selectedHotelId: hotelId };
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const roomType = await createRoomType(body, ctx);
-    return NextResponse.json({ success: true, roomType });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Oda tipi oluşturulamadı.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    const body = await parseBody(req, createSchema);
+    await assertCan(ctx, "MB-TAN", "O", body.hotelId); // also rejects hotels outside the user's scope
+    const roomType = await createRoomType(body, auditCtxOf(ctx, req, body.hotelId));
+    return { success: true, roomType };
+  });
 }
 
 export async function PUT(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const { id, ...data } = body;
-    if (!id) return NextResponse.json({ error: "Oda tipi ID zorunludur." }, { status: 400 });
-
-    const roomType = await updateRoomType(id, data, ctx);
-    return NextResponse.json({ success: true, roomType });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Oda tipi güncellenemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    const { id, ...data } = await parseBody(req, updateSchema);
+    const hotelId = await roomTypeHotel(id);
+    await assertCan(ctx, "MB-TAN", "D", hotelId);
+    const roomType = await updateRoomType(id, data, auditCtxOf(ctx, req, hotelId));
+    return { success: true, roomType };
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Oda tipi ID zorunludur." }, { status: 400 });
-
-    const result = await deleteRoomType(id, ctx);
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Oda tipi silinemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Oda tipi ID zorunludur." }, { status: 400 });
+    const hotelId = await roomTypeHotel(id);
+    await assertCan(ctx, "MB-TAN", "D", hotelId);
+    return deleteRoomType(id, auditCtxOf(ctx, req, hotelId));
+  });
 }

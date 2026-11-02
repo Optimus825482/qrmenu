@@ -1,51 +1,49 @@
-import { NextResponse } from "next/server";
+import { z } from "zod";
+import { assertCan } from "@/lib/rbac";
 import {
-  listSetupItems,
+  auditCtxOf,
+  canSeePrices,
+  handle,
+  maskPrices,
+  parseBody,
+} from "@/modules/minibar/server/apiAuthHelper";
+import {
   addOrUpdateSetupItem,
   deleteSetupItem,
+  listSetupItems,
 } from "@/modules/minibar/server/minibarDefinitionsService";
-import { getAuditCtxFromRequest } from "@/modules/minibar/server/apiAuthHelper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const setupId = searchParams.get("setupId");
-    if (!setupId) return NextResponse.json({ error: "Setup ID zorunludur." }, { status: 400 });
+const bodySchema = z.object({
+  setupId: z.string().min(1).max(64),
+  productId: z.string().min(1).max(64),
+  qty: z.number().int().min(1, "Setup norm miktarı 1 veya daha büyük olmalıdır.").max(999),
+});
 
-    const items = await listSetupItems(setupId);
-    return NextResponse.json({ items });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup içerikleri alınamadı.";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
+export async function GET(req: Request) {
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
+    const setupId = new URL(req.url).searchParams.get("setupId");
+    if (!setupId) return Response.json({ error: "Setup ID zorunludur." }, { status: 400 });
+    return maskPrices({ items: await listSetupItems(setupId) }, canSeePrices(ctx));
+  });
 }
 
 export async function POST(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const body = await req.json();
-    const item = await addOrUpdateSetupItem(body, ctx);
-    return NextResponse.json({ success: true, item });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup içeriği kaydedilemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "O", ctx.session.hotelId);
+    const item = await addOrUpdateSetupItem(await parseBody(req, bodySchema), auditCtxOf(ctx, req));
+    return { success: true, item };
+  });
 }
 
 export async function DELETE(req: Request) {
-  try {
-    const ctx = await getAuditCtxFromRequest(req);
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    if (!id) return NextResponse.json({ error: "Setup öğe ID zorunludur." }, { status: 400 });
-
-    const result = await deleteSetupItem(id, ctx);
-    return NextResponse.json(result);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Setup öğesi silinemedi.";
-    return NextResponse.json({ error: message }, { status: 400 });
-  }
+  return handle(async (ctx) => {
+    await assertCan(ctx, "MB-TAN", "D", ctx.session.hotelId);
+    const id = new URL(req.url).searchParams.get("id");
+    if (!id) return Response.json({ error: "Setup öğe ID zorunludur." }, { status: 400 });
+    return deleteSetupItem(id, auditCtxOf(ctx, req));
+  });
 }

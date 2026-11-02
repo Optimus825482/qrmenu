@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { PriorityRouteModal } from "./components/PriorityRouteModal";
-import { PersistentMybarModal } from "./components/PersistentMybarModal";
+import { PriorityRouteModal } from "../components/PriorityRouteModal";
+import { PersistentMybarModal } from "../components/PersistentMybarModal";
 import type { FloorSummary, TaskSummary } from "@/modules/minibar/server/minibarTypes";
 
 interface DashboardData {
@@ -35,6 +35,7 @@ export default function KatDashboardPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load (sets the loading flag first)
     loadData();
   }, []);
 

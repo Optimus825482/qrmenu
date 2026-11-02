@@ -1,25 +1,51 @@
+import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getSetting } from "@/lib/settings";
+import { createRateLimiter } from "@/lib/rate-limit";
+import { publish } from "@/lib/realtime";
+import { DomainError, fromZod } from "@/lib/result";
+import { getSetting, getSettings } from "@/lib/settings";
+import { businessDate, businessDay } from "@/lib/time";
+import { audit } from "@/modules/core/server/audit";
+import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 import { normalizeGeminiModel } from "@/modules/menu/server/translations";
-import { getBusinessDate } from "./minibarService";
+import { lockRow, roomCatalogue } from "./minibarCommon";
 
 export interface MybarProductOption {
   id: string;
   name: string;
   unit: string;
   groupName: string;
+  /** Largest quantity the guest may ask for (mybar.maxQtyPerItem; "setup" = the room's setup quantity). */
+  maxQty: number;
+}
+
+/** Guest MyBar submissions: 10 per minute per IP. */
+export const mybarCreateLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
+/** Guest MyBar page loads: 60 per minute per IP. */
+export const mybarReadLimiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+
+const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
+const FALLBACK_MAX_QTY = 5;
+
+function sanitize(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+    .trim();
 }
 
 /**
  * Translates guest note in any language (EN, RU, DE, AR, etc.) into Turkish using Gemini.
+ * The API key travels in a header, never in the URL.
  */
 export async function translateNoteToTurkish(text: string): Promise<string> {
   const trimmed = text.trim();
   if (!trimmed) return "";
 
   try {
-    const apiKey = (await getSetting("translation.geminiKey")) as string;
-    const model = (await getSetting("translation.geminiModel")) as string;
+    const apiKey = await getSetting("translation.geminiKey");
+    const model = await getSetting("translation.geminiModel");
 
     if (!apiKey) {
       return trimmed;
@@ -34,10 +60,10 @@ Return ONLY the translated Turkish sentence (no explanations, no quotation marks
 Guest note:
 "${trimmed}"`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent`;
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         generationConfig: {
@@ -65,11 +91,32 @@ Guest note:
   }
 }
 
+/** The room a QR token points at; the hotel and room never come from the request body. */
+async function resolveRoomToken(token: string, meta: GuestMeta) {
+  const target = await resolveGuestTokenLimited(token, meta, undefined, undefined, { log: false });
+  if (target.kind === "ROOM") return { roomId: target.roomId, hotelId: target.hotelId };
+  if (target.kind === "NONE" && target.reason === "RATE_LIMITED") {
+    throw new DomainError("RATE_LIMITED", "Çok fazla deneme, biraz sonra tekrar deneyin");
+  }
+  throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+}
+
+async function maxQtyFor(hotelId: string, cap: number): Promise<number> {
+  const setting = await getSetting("mybar.maxQtyPerItem", hotelId);
+  if (setting === "setup") return Math.max(1, cap);
+  return typeof setting === "number" ? setting : FALLBACK_MAX_QTY;
+}
+
 /**
- * Loads room info, products and checks if today's quota is already used.
+ * Loads room info and the products of the room's setup catalogue for a QR token, and whether
+ * today's quota is already used.
  */
-export async function getMybarRoomDetails(roomId: string, hotelId: string) {
-  const today = getBusinessDate();
+export async function getMybarRoomDetails(token: string, meta: GuestMeta) {
+  if (!mybarReadLimiter.hit(meta.ip).allowed) {
+    throw new DomainError("RATE_LIMITED", "Çok fazla istek, biraz sonra tekrar deneyin");
+  }
+  const { roomId, hotelId } = await resolveRoomToken(token, meta);
+  const today = businessDay(businessDate());
 
   const room = await prisma.room.findFirst({
     where: { id: roomId, hotelId },
@@ -78,86 +125,29 @@ export async function getMybarRoomDetails(roomId: string, hotelId: string) {
       roomType: { select: { id: true, name: true } },
     },
   });
-  if (!room) {
-    throw new Error("Oda bulunamadı.");
-  }
+  if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
 
-  // Check if request already submitted today (Rule: max 1 request per room per day!)
   const existingTodayRequest = await prisma.mybarRequest.findFirst({
-    where: {
-      hotelId,
-      roomId: room.id,
-      businessDate: today,
-    },
-    include: {
-      items: {
-        include: {
-          product: { select: { name: true } },
-        },
-      },
-    },
+    where: { hotelId, roomId: room.id, businessDate: today, status: { not: "IPTAL" } },
+    include: { items: { include: { product: { select: { name: true } } } } },
   });
 
-  // Get setups assigned to this room type
-  let assignedSetups: { setupId: string }[] = [];
-  if (room.roomTypeId) {
-    assignedSetups = await prisma.roomTypeSetup.findMany({
-      where: {
-        hotelId,
-        roomTypeId: room.roomTypeId,
-      },
-      select: { setupId: true },
-    });
-  }
-
-  const setupIds = assignedSetups.map((s) => s.setupId);
-  const setups = await prisma.setup.findMany({
-    where: setupIds.length > 0 ? { id: { in: setupIds }, isActive: true } : { isActive: true },
-    include: {
-      items: {
-        include: {
-          product: {
-            include: {
-              group: { select: { name: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  // Unique products from setups
-  const productMap = new Map<string, MybarProductOption>();
-  for (const setup of setups) {
+  const cat = await roomCatalogue(prisma, hotelId, room.roomTypeId);
+  const products: MybarProductOption[] = [];
+  const seen = new Set<string>();
+  for (const setup of cat.setups) {
     for (const it of setup.items) {
-      if (it.product && it.product.isActive) {
-        productMap.set(it.product.id, {
-          id: it.product.id,
-          name: it.product.name,
-          unit: it.product.unit || "Adet",
-          groupName: it.product.group?.name || "Minibar",
-        });
-      }
-    }
-  }
-
-  // If no setup products found, load all active products
-  if (productMap.size === 0) {
-    const allProds = await prisma.product.findMany({
-      where: { isActive: true },
-      include: { group: { select: { name: true } } },
-    });
-    for (const p of allProds) {
-      productMap.set(p.id, {
-        id: p.id,
-        name: p.name,
-        unit: p.unit || "Adet",
-        groupName: p.group?.name || "Minibar",
+      if (!it.product.isActive || seen.has(it.product.id)) continue;
+      seen.add(it.product.id);
+      products.push({
+        id: it.product.id,
+        name: it.product.name,
+        unit: it.product.unit || "Adet",
+        groupName: it.product.group?.name || "Minibar",
+        maxQty: await maxQtyFor(hotelId, cat.caps.get(it.product.id) ?? FALLBACK_MAX_QTY),
       });
     }
   }
-
-  const products = Array.from(productMap.values());
 
   return {
     hotel: {
@@ -187,69 +177,159 @@ export async function getMybarRoomDetails(roomId: string, hotelId: string) {
   };
 }
 
+const createSchema = z.object({
+  token: z.string().min(1).max(64),
+  idempotencyKey: z.uuid("Geçersiz istek anahtarı"),
+  language: z.string().max(8).default("tr"),
+  note: z.string().max(500, "En fazla 500 karakter").optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1).max(64),
+        qty: z.number().int("Adet tam sayı olmalı").min(1, "Adet en az 1").max(20, "Adet en fazla 20"),
+      }),
+    )
+    .min(1, "Lütfen en az bir ürün seçiniz.")
+    .max(50),
+  ip: z.string().min(1),
+  userAgent: z.string().default(""),
+});
+
+export type GuestMybarInput = z.input<typeof createSchema>;
+
+const isUniqueViolation = (e: unknown) => (e as { code?: string } | null)?.code === "P2002";
+
+async function replayOf(idempotencyKey: string, roomId: string) {
+  const prior = await prisma.mybarRequest.findUnique({
+    where: { idempotencyKey },
+    include: { room: { select: { number: true } } },
+  });
+  if (!prior) return null;
+  if (prior.roomId !== roomId) {
+    throw new DomainError("VALIDATION", "Geçersiz istek anahtarı", {
+      fieldErrors: { idempotencyKey: ["Geçersiz istek anahtarı"] },
+    });
+  }
+  return { success: true, requestId: prior.id, roomNumber: prior.room.number, replayed: true };
+}
+
 /**
- * Creates a MyBar request from guest phone with auto Gemini Turkish translation for notes.
+ * Creates a MyBar request from a guest phone. Hotel and room come from the QR token; items are
+ * checked against the room's setup catalogue; the daily limit is enforced under a room row lock;
+ * the client-supplied idempotency key replays the first result.
  */
-export async function createGuestMybarRequest(params: {
-  hotelId: string;
-  roomId: string;
-  language: string;
-  note?: string;
-  clientIp: string;
-  items: { productId: string; qty: number }[];
-}) {
-  const { hotelId, roomId, language, note, clientIp, items } = params;
-  const today = getBusinessDate();
-
-  // Validate rule: Max 1 request per room per day!
-  const existing = await prisma.mybarRequest.findFirst({
-    where: {
-      hotelId,
-      roomId,
-      businessDate: today,
-    },
-  });
-  if (existing) {
-    throw new Error("Bugün için odanıza ait bir MyBar talebi zaten bulunmaktadır. Günde maksimum 1 talep iletilebilir.");
+export async function createGuestMybarRequest(input: GuestMybarInput) {
+  if (!mybarCreateLimiter.hit(input.ip).allowed) {
+    throw new DomainError("RATE_LIMITED", "Çok fazla deneme, biraz sonra tekrar deneyin");
   }
+  const parsed = createSchema.safeParse(input);
+  if (!parsed.success) throw fromZod(parsed.error);
+  const data = parsed.data;
 
-  const validItems = items.filter((it) => it.qty > 0 && it.qty <= 5);
-  if (validItems.length === 0) {
-    throw new Error("Lütfen en az bir ürün seçiniz.");
+  const { roomId, hotelId } = await resolveRoomToken(data.token, { ip: data.ip, userAgent: data.userAgent });
+  const replay = await replayOf(data.idempotencyKey, roomId);
+  if (replay) return replay;
+
+  const language = (LOCALES as readonly string[]).includes(data.language) ? data.language : "tr";
+  const note = data.note ? sanitize(data.note) : "";
+  const settings = await getSettings(
+    ["mybar.dailyLimit", "mybar.quantityMode", "mybar.translateNotes"],
+    hotelId,
+  );
+  // The network call stays outside the transaction.
+  const noteTr = note && settings["mybar.translateNotes"] ? await translateNoteToTurkish(note) : note || null;
+
+  const merged = new Map<string, number>();
+  for (const it of data.items) merged.set(it.productId, (merged.get(it.productId) ?? 0) + it.qty);
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await lockRow(tx, "rooms", roomId);
+      const room = await tx.room.findFirst({
+        where: { id: roomId, hotelId },
+        select: { id: true, number: true, roomTypeId: true },
+      });
+      if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+
+      const again = await tx.mybarRequest.findUnique({
+        where: { idempotencyKey: data.idempotencyKey },
+        include: { room: { select: { number: true } } },
+      });
+      if (again) {
+        if (again.roomId !== roomId) throw new DomainError("VALIDATION", "Geçersiz istek anahtarı");
+        return { success: true, requestId: again.id, roomNumber: again.room.number, replayed: true };
+      }
+
+      const today = businessDay(businessDate());
+      if (settings["mybar.dailyLimit"]) {
+        const used = await tx.mybarRequest.count({
+          where: { roomId, businessDate: today, status: { not: "IPTAL" } },
+        });
+        if (used > 0) {
+          throw new DomainError(
+            "DAILY_LIMIT",
+            "Bugün için odanıza ait bir MyBar talebi zaten bulunmaktadır. Günde maksimum 1 talep iletilebilir.",
+          );
+        }
+      }
+
+      const cat = await roomCatalogue(tx, hotelId, room.roomTypeId);
+      const products = await tx.product.findMany({
+        where: { id: { in: [...merged.keys()] }, isActive: true },
+        select: { id: true },
+      });
+      const active = new Set(products.map((p) => p.id));
+      const lines: { productId: string; qty: number }[] = [];
+      for (const [productId, qty] of merged) {
+        const cap = cat.caps.get(productId);
+        if (cap === undefined || !active.has(productId)) {
+          throw new DomainError("VALIDATION", "Seçilen ürün bu odanın minibar listesinde yok.", {
+            fieldErrors: { items: [productId] },
+          });
+        }
+        const max = await maxQtyFor(hotelId, cap);
+        if (qty > max) {
+          throw new DomainError("VALIDATION", `Bir üründen en fazla ${max} adet istenebilir.`, {
+            fieldErrors: { items: [productId] },
+          });
+        }
+        lines.push({ productId, qty: settings["mybar.quantityMode"] === "TICK" ? 1 : qty });
+      }
+
+      const created = await tx.mybarRequest.create({
+        data: {
+          hotelId,
+          roomId,
+          businessDate: today,
+          status: "BEKLEMEDE",
+          language,
+          note: note || null,
+          noteTr,
+          clientIp: data.ip,
+          idempotencyKey: data.idempotencyKey,
+          items: { create: lines.map((l) => ({ productId: l.productId, requestedQty: l.qty })) },
+        },
+      });
+
+      await audit(tx, {
+        hotelId,
+        action: "MINIBAR_MYBAR_CREATE",
+        entity: "MybarRequest",
+        entityId: created.id,
+        after: { roomId, roomNumber: room.number, items: lines, language, ip: data.ip },
+      });
+      await publish(
+        { type: "mybar.created", hotelId, roomId, payload: { requestId: created.id, roomNumber: room.number } },
+        tx as Prisma.TransactionClient,
+      );
+
+      return { success: true, requestId: created.id, roomNumber: room.number, replayed: false };
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      const winner = await replayOf(data.idempotencyKey, roomId);
+      if (winner) return winner;
+    }
+    throw error;
   }
-
-  // Translate guest note to Turkish if provided
-  let noteTr: string | null = null;
-  if (note && note.trim()) {
-    noteTr = await translateNoteToTurkish(note.trim());
-  }
-
-  const req = await prisma.mybarRequest.create({
-    data: {
-      hotelId,
-      roomId,
-      businessDate: today,
-      status: "BEKLEMEDE",
-      language: language || "tr",
-      note: note?.trim() || null,
-      noteTr,
-      clientIp: clientIp || "127.0.0.1",
-      idempotencyKey: `mybar-guest-${roomId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      items: {
-        create: validItems.map((it) => ({
-          productId: it.productId,
-          requestedQty: it.qty,
-        })),
-      },
-    },
-    include: {
-      room: { select: { number: true } },
-    },
-  });
-
-  return {
-    success: true,
-    requestId: req.id,
-    roomNumber: req.room.number,
-  };
 }
