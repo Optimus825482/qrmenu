@@ -1,6 +1,6 @@
 import { isListening, startRealtimeListener } from "@/lib/realtime";
 import { createFilteredSseStream } from "@/lib/sse";
-import { guestEventFilter } from "@/modules/menu/guestEventFilter";
+import { guestEventFilter, sanitizeGuestEvent } from "@/modules/menu/guestEventFilter";
 import {
   globalUnknownTokenLimiter,
   guestMeta,
@@ -71,7 +71,7 @@ export async function GET(
 
   const stream = createFilteredSseStream(
     guestEventFilter({ outletId, hotelId, orderIds }),
-    { signal: request.signal },
+    { signal: request.signal, map: sanitizeGuestEvent },
   );
   return new Response(stream, {
     headers: {

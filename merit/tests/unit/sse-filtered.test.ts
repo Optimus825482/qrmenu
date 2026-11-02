@@ -12,6 +12,7 @@ const { listenerCount, publish, startRealtimeListener, stopRealtimeListener } = 
   "@/lib/realtime"
 );
 const { createFilteredSseStream } = await import("@/lib/sse");
+const { sanitizeGuestEvent } = await import("@/modules/menu/guestEventFilter");
 const { GUEST_EVENT_TYPES, SSE_EVENT_TYPES } = await import("@/lib/realtime-events");
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -82,5 +83,24 @@ describe("createFilteredSseStream", () => {
 
     await reader.cancel();
     expect(listenerCount()).toBe(base);
+  });
+
+  it("map ile misafir akışı order.approved içindeki byUserId değerini taşımaz", async () => {
+    const reader = createFilteredSseStream(
+      (e) => e.type === "order.approved" && e.outletId === "o-guest2",
+      { signal: new AbortController().signal, map: sanitizeGuestEvent },
+    ).getReader();
+    await readUntil(reader, "event: hello");
+    await publish({
+      type: "order.approved",
+      outletId: "o-guest2",
+      payload: { orderId: "o1", orderNo: 3, status: "ONAYLANDI", byUserId: "staff-secret", note: "x" },
+    });
+    const text = await readUntil(reader, "event: order.approved");
+    expect(text).toContain("event: order.approved");
+    expect(text).toContain('"orderId":"o1"');
+    expect(text).not.toContain("byUserId");
+    expect(text).not.toContain("staff-secret");
+    await reader.cancel();
   });
 });

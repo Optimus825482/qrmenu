@@ -306,7 +306,8 @@ function kindOf(p: Obj, e: MeritEvent): "MASA" | "ODA_SERVISI" {
  * Normalises one SSE event into zero or more RadarEvents. Pure and side-effect free.
  * `refresh: "ALL"` asks the store for a new snapshot; `gap` marks a connection gap.
  */
-export function toRadarEvent(e: MeritEvent): NormalizeResult {
+export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult {
+  if (!e || typeof e !== "object") return NONE;
   if (e.type === "realtime.resync") return { events: [], gap: true, refresh: "ALL" };
   if (!e.hotelId) return NONE;
   const hotelId = e.hotelId;
@@ -666,8 +667,8 @@ export function SOURCE_RANK(e: RadarEvent): 0 | 1 | 2 {
 
 /** Total order shared by the live buffer and the replay stream: (at, SOURCE_RANK, id). */
 export function compareRadarEvents(a: RadarEvent, b: RadarEvent): number {
-  const ta = Date.parse(a.at);
-  const tb = Date.parse(b.at);
+  const ta = Date.parse(a.at) || 0; // NaN -> 0 keeps the order total
+  const tb = Date.parse(b.at) || 0;
   if (ta !== tb) return ta - tb;
   const ra = SOURCE_RANK(a);
   const rb = SOURCE_RANK(b);

@@ -22,3 +22,21 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
     return true;
   };
 }
+
+/** Payload fields of an `order.*` event a guest may see; everything else (staff ids, notes ...) is dropped. */
+const GUEST_ORDER_FIELDS = [
+  "orderId", "orderNo", "status", "rejectReason", "cancelReason", "tableId", "roomId", "from", "kind",
+] as const;
+
+/**
+ * Guest delivery sanitiser: `order.*` payloads are reduced to a white list (staff `byUserId` etc. never
+ * reach the guest). Returns a copy; the shared event is untouched. Applied in the guest events route,
+ * not in the shared `publish`.
+ */
+export function sanitizeGuestEvent(e: MeritEvent): MeritEvent {
+  if (!e.type.startsWith("order.")) return e;
+  const src = (typeof e.payload === "object" && e.payload !== null ? e.payload : {}) as Record<string, unknown>;
+  const payload: Record<string, unknown> = {};
+  for (const k of GUEST_ORDER_FIELDS) if (src[k] !== undefined) payload[k] = src[k];
+  return { ...e, payload };
+}

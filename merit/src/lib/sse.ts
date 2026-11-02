@@ -5,7 +5,13 @@ export const SSE_PING_MS = 25_000;
 /** A stream is recycled after this long so the session is re-validated on reconnect. */
 export const SSE_MAX_LIFETIME_MS = 30 * 60_000;
 
-type SseOptions = { signal: AbortSignal; pingMs?: number; maxLifetimeMs?: number };
+type SseOptions = {
+  signal: AbortSignal;
+  pingMs?: number;
+  maxLifetimeMs?: number;
+  /** Per-delivery sanitiser applied to a copy of each accepted event (never mutates the shared one). */
+  map?: (e: MeritEvent) => MeritEvent;
+};
 
 /**
  * An SSE body over any event filter, independent of HTTP: a `hello` frame, every event `filter`
@@ -18,7 +24,7 @@ export function createFilteredSseStream(
   filter: (e: MeritEvent) => boolean,
   opts: SseOptions,
 ): ReadableStream<Uint8Array> {
-  const { signal, pingMs = SSE_PING_MS, maxLifetimeMs = SSE_MAX_LIFETIME_MS } = opts;
+  const { signal, pingMs = SSE_PING_MS, maxLifetimeMs = SSE_MAX_LIFETIME_MS, map } = opts;
   const encoder = new TextEncoder();
   let cleanup = () => {};
 
@@ -67,7 +73,7 @@ export function createFilteredSseStream(
           if (!EVENT_TYPE_RE.test(e.type)) return;
           const closing = e.type === "session.closed";
           // Recipient ids are routing data; the browser has no use for other users' ids.
-          const visible: MeritEvent = { ...e };
+          const visible: MeritEvent = { ...(map ? map(e) : e) };
           delete visible.userIds;
           write(`event: ${e.type}\ndata: ${JSON.stringify(visible)}\n\n`);
           if (closing) cleanup();

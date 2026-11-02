@@ -298,4 +298,21 @@ describe("sıralama (Review Focus 2)", () => {
       expect(compareRadarEvents(a, b)).toBeLessThanOrEqual(0);
     }
   });
+
+  it("geçersiz at (NaN) 0 sayılır: sıralama toplam kalır", () => {
+    const bad = status("HAZIR", "b", "not-a-date");
+    const bad2 = status("HAZIR", "c", "garbage");
+    const good = status("HAZIR", "a");
+    expect(compareRadarEvents(bad, bad)).toBe(0);
+    expect(compareRadarEvents(bad, bad2)).toBeLessThan(0);
+    expect(compareRadarEvents(bad2, bad)).toBeGreaterThan(0);
+    expect(compareRadarEvents(bad, good)).toBeLessThan(0);
+    expect(compareRadarEvents(good, bad)).toBeGreaterThan(0);
+    expect([good, bad2, bad].sort(compareRadarEvents).map((e) => e.id)).toEqual(["b", "c", "a"]);
+  });
+
+  it("toRadarEvent(null/undefined) fırlatmaz, boş sonuç döner", () => {
+    expect(toRadarEvent(null)).toEqual({ events: [] });
+    expect(toRadarEvent(undefined)).toEqual({ events: [] });
+  });
 });
