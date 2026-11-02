@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 01:08",
-  headline: "UX yenilemesi başladı (dal ux/yenileme, 15 görev); minibar tamamlama planı ve Canlı Operasyon Radarı spec'i yazılıyor.",
+  updatedAt: "03.11.2026 01:30",
+  headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -152,6 +152,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 01:30", text: "Minibar tamamlama planı (14) ve Canlı Operasyon Radarı spec+planı (12) yazıldı. Ajan başına DB/port ile paralel uygulama başladı." },
     { at: "03.11 01:08", text: "UX yenileme planı yazıldı ve T1 başladı; S1–S6 kararları onaylandı; canlı operasyon radarı modülü istendi (spec yazılıyor)." },
     { at: "02.11 23:12", text: "Düzeltme dalgaları tamamlandı (7777f8d, 5ec4064, 11259de, 915b466): npm run check yeşil (913 test), build yeşil; e2e 71/94. GitHub'a push edildi." },
     { at: "02.11 22:00", text: "Fable son kontrolü: 6 inceleme + 4 düzeltme dalgası (sır varsayılanları, seed, şema drift migration'ı, minibar/rapor API yetkisi, MyBar token, Nicosia iş günü, geçici şifre, istemciye sızan admin şifresi). P2–P7 \"tamamlandı\" iddiaları geri alındı." },
