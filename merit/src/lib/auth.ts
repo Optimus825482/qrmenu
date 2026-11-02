@@ -53,10 +53,9 @@ const SESSION_HOTEL_ONLY: RoleKind[] = ["OUTLET", "MUTFAK"];
 const TOUCH_INTERVAL_MS = 60_000;
 
 function sessionOptions(): SessionOptions {
-  // Tarayıcıların hem HTTP (Coolify sslip.io, IP adresi) hem de HTTPS üzerinde çerezi kabul etmesi için
-  // secure bayrağı sadece açıkça COOKIE_SECURE="true" tanımlandığında aktif edilir.
-  // IronSession çerez içeriğini zaten AES-256 ile şifreler, secure=false olması güvenliği zayıflatmaz.
-  const isSecure = process.env.COOKIE_SECURE === "true";
+  // Üretimde çerez secure işaretlidir. Yalnız HTTP ile erişilen test ortamları (IP, sslip.io)
+  // için COOKIE_SECURE=false verilebilir; gerçek kurulumda HTTPS kullanın.
+  const isSecure = process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false";
   return {
     password: env.SESSION_SECRET,
     cookieName: SESSION_COOKIE_NAME,

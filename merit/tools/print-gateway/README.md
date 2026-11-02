@@ -47,7 +47,7 @@ npm run typecheck      # tsc --noEmit
 | ---------------- | -------- |
 | `API_URL`        | Merit sunucusunun kök adresi (örn. `http://192.168.1.10:3000`). Sonunda `/` olmamalı. |
 | `GATEWAY_KEY`    | Taşıyıcı anahtar. Sunucu tarafındaki `PRINT_GATEWAY_KEY` ortam değişkeni ile **birebir aynı** olmalıdır; aksi halde uçlar 401 döner. |
-| `HOTEL_CODE`     | Basılacak otelin kodu (örn. `MR`). Sunucu bu otelin kuyruğunu ve yazıcılarını döner. |
+| `HOTEL_CODE`     | Basılacak otelin kodu (`ROYAL`, `DIAMOND` veya `PREMIUM`; örn. `ROYAL`). Sunucu bu otelin kuyruğunu ve yazıcılarını döner. |
 | `POLL_MS`        | Kuyruk yoklama aralığı, ms cinsinden (varsayılan `2000`). |
 | `CODEPAGE_TABLE` | `ESC t <n>` komutuyla seçilen karakter tablosu numarası. **cp857 için 13** — sahada yazıcıyla doğrulanacak; yazıcı farklı tablo numarası kullanıyorsa buradan değiştirilir. |
 

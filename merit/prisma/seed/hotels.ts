@@ -13,3 +13,6 @@ export const HOTELS: HotelDef[] = [
 
 /** Modules enabled for every seeded hotel. CORE is implicit and has no HotelModule row. */
 export const HOTEL_MODULES: ModuleKey[] = ["MINIBAR", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"];
+
+/** Hotel codes that demo data (SEED_DEMO=true) is scoped to. */
+export const DEMO_HOTEL_CODES = HOTELS.map((hotel) => hotel.code);

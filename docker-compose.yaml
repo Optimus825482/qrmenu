@@ -1,3 +1,5 @@
+# Tek compose dosyası (Coolify / VPS). Gizli değerler ortamdan gelir; varsayılan yoktur.
+# Eksik zorunlu değişken varsa `docker compose up` açık bir hata verir.
 services:
   app:
     build:
@@ -7,15 +9,21 @@ services:
     expose:
       - "3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-merit_admin}:${POSTGRES_PASSWORD:-merit_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-merit}?schema=public
-      - APP_BASE_URL=${APP_BASE_URL:-http://localhost:3000}
-      - SESSION_SECRET=${SESSION_SECRET:-6dc389f0d6df8366636837a8bcb27f56c0dd1df6eba342ee8b71d2c8e0ea4601}
-      - QR_HMAC_SECRET=${QR_HMAC_SECRET:-b125750c6f86a38e58c3c9e0591334d292561f28a3ec85998c7b2e51984e6e19}
-      - PRINT_GATEWAY_KEY=${PRINT_GATEWAY_KEY:-3997e0d995a86f6ce307e5027ef6aabfba24c84730d119dd53245228413a7555}
-      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-Merit!2026}
-      - UPLOADS_DIR=/app/uploads
-      - TZ=Europe/Nicosia
-      - RUN_SEED=${RUN_SEED:-true}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?required}:${POSTGRES_PASSWORD:?required}@postgres:5432/${POSTGRES_DB:?required}?schema=public
+      APP_BASE_URL: ${APP_BASE_URL:?required}
+      SESSION_SECRET: ${SESSION_SECRET:?required}
+      QR_HMAC_SECRET: ${QR_HMAC_SECRET:?required}
+      PRINT_GATEWAY_KEY: ${PRINT_GATEWAY_KEY:?required}
+      # Yalnız ilk admin oluşturulurken gerekir (RUN_SEED=true iken zorunlu); boş bırakılabilir.
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      UPLOADS_DIR: /app/uploads
+      TZ: Europe/Nicosia
+      # Referans veri + admin: ilk kurulumda true yapın, sonra false. Demo veri ayrı bayraktır.
+      RUN_SEED: ${RUN_SEED:-false}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      # Yalnız HTTP ile erişilen test ortamı için false; gerçek kurulumda boş bırakın.
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,13 +34,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-merit_admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-merit_secure_pass_2026}
-      - POSTGRES_DB=${POSTGRES_DB:-merit}
+      POSTGRES_USER: ${POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:?required}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-merit_admin} -d ${POSTGRES_DB:-merit}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 3s
       timeout: 5s
       retries: 10

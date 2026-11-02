@@ -29,20 +29,29 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 
 | Değişken | Zorunlu | Açıklama |
 | --- | --- | --- |
-| `DATABASE_URL` | evet | Üretim veritabanı bağlantı dizesi. |
+| `DATABASE_URL` | evet | Üretim veritabanı bağlantı dizesi (varsayılanı yok). |
 | `SESSION_SECRET` | evet | Oturum çerezini şifreleyen anahtar; en az 32 baytlık rastgele değer. |
 | `QR_HMAC_SECRET` | evet | QR imza anahtarı; en az 32 baytlık rastgele değer. |
-| `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidi anahtarı. |
-| `APP_BASE_URL` | evet | Dış adres, örn. `https://merit.otel.example` (Origin denetimleri bunu kullanır). |
-| `SEED_ADMIN_PASSWORD` | yalnız ilk seed | `admin` kullanıcısının parolası, en az 10 karakter. Seed sonrası ortamdan kaldırın. |
+| `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidi anahtarı (varsayılanı yok); geçidin `GATEWAY_KEY` değeriyle aynı olmalı. |
+| `APP_BASE_URL` | evet (üretimde) | Dış adres, örn. `https://merit.otel.example` (Origin denetimleri bunu kullanır). Üretimde varsayılanı yoktur; geliştirmede `http://localhost:3000`. |
+| `SEED_ADMIN_PASSWORD` | yalnız ilk seed | `admin` kullanıcısı **yoksa** oluşturulurken kullanılan parola, en az 10 karakter. Admin varsa seed ona dokunmaz; seed sonrası ortamdan kaldırın. |
 | `TZ` | evet (pratikte) | `Europe/Nicosia` |
 | `NODE_ENV` | evet | `production` (`npm start` bunu kendisi ayarlar; systemd örneği de açıkça verir). |
 | `PORT` | hayır | Dinlenecek port, varsayılan 3000. |
 | `MERIT_DISABLE_JOBS` | hayır | Üretimde **ayarlamayın**; ayarlansa bile üretimde yoksayılır. |
 | `DATABASE_URL_TEST` | hayır | Yalnız geliştirme/CI; üretimde gerekmez. |
 | `UPLOADS_DIR` | hayır | Menü görselleri için kalıcı dizin; boşsa `<uygulama>/uploads`. Uygulama kullanıcısı yazabilmelidir. |
+| `TRUSTED_PROXY_HOPS` | hayır | Uygulamanın önündeki güvenilir vekil sayısı (varsayılan 1); bkz. bölüm 6. |
+| `COOKIE_SECURE` | hayır | Üretimde oturum çerezi varsayılan olarak `secure`'dür. **Yalnız HTTP ile erişilen test ortamları** (IP adresi, sslip.io) için `false` verin; gerçek kurulumda ayarlamayın. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | hayır | E-posta bildirimleri; tanımsızsa e-postalar yalnız günlüğe yazılır. Port varsayılanı 587. |
+| `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çevirisi sağlayıcıları (DeepL birincil, Gemini yedek); yoksa otomatik çeviri çalışmaz. |
+| `RUN_SEED` | hayır | Yalnız Docker girişi: `true` ise açılışta `prisma/seed.ts` çalışır. Varsayılan `false`. |
+| `SEED_DEMO` | hayır | `true` ise seed ayrıca demo outlet, menü, menü tasarımı ve örnek personel yükler. Varsayılan `false`; **canlı veritabanında kullanmayın**. |
+| `LEGACY_DATABASE_URL` | hayır | Yalnız eski Flask minibar verisini taşıyan `npm run migrate:minibarlatest` betiği için kaynak veritabanı. |
+| `SKIP_ENV_VALIDATION` | hayır | Yalnız Docker derleme aşaması için (`1`); çalışma ortamında **ayarlamayın**. |
 
-Rastgele anahtar üretmek için: `openssl rand -base64 48`.
+`SESSION_SECRET`, `QR_HMAC_SECRET`, `PRINT_GATEWAY_KEY` ve `DATABASE_URL` için varsayılan değer yoktur;
+eksikse uygulama açılışta hata vererek durur. Rastgele anahtar üretmek için: `openssl rand -base64 48`.
 
 `qr.baseUrl` ortam değişkeni değildir. Migrasyon/seed sonrasında **Denetim Masası → Sistem → QR
 taban adresi** alanına misafirin erişeceği genel HTTPS adresini (örn.
@@ -55,13 +64,19 @@ cd merit
 npm ci
 npm run build                 # prisma generate && next build
 npx prisma migrate deploy     # bekleyen migrasyonları uygular (üretimde migrate dev kullanmayın)
-SEED_ADMIN_PASSWORD='<parola>' npm run db:seed   # yalnız ilk kurulumda
+SEED_ADMIN_PASSWORD='<parola>' npm run db:seed   # yalnız ilk kurulumda (admin yoksa oluşturur)
 ```
+
+Seed varsayılan olarak yalnız **referans veriyi** (oteller, roller, ekranlar, yetkiler, ayarlar,
+temalar) ve eksikse `admin`'i yazar. Demo outlet, örnek menü, menü tasarımı ve örnek personel yalnız
+`SEED_DEMO=true` ile yüklenir; örnek personelin parolası rastgele üretilir ve ilk girişte
+değiştirilmelidir (yönetici parola atar).
 
 `npm run build` sırasında arka plan işleri başlamaz, ancak `src/lib/env.ts` zorunlu
 değişkenleri modül yüklenirken doğrular: derleme (ve migrasyon/seed) komutlarının
 çalıştığı kabukta **tüm zorunlu değişkenler** (`DATABASE_URL`, `SESSION_SECRET`,
-`QR_HMAC_SECRET`, `APP_BASE_URL`, `PRINT_GATEWAY_KEY`) tanımlı olmalıdır; örneğin:
+`QR_HMAC_SECRET`, `APP_BASE_URL`, `PRINT_GATEWAY_KEY`) tanımlı olmalıdır (CI/Docker derlemesinde
+yalnız `npm run build` komutu için `SKIP_ENV_VALIDATION=1` verilebilir); örneğin:
 
 ```bash
 set -a; source /etc/merit/merit.env; set +a
@@ -74,7 +89,7 @@ süreci yeniden başlat. Seed'i ilk kurulumda ve yeni ekran kodu/rol yetkisi get
 
 ### İlk kurulum: Kurulum Rehberi
 
-Seed yalnız roller, ekran/yetki matrisi, oteller ve `admin` kullanıcısını getirir; otelin
+Seed (varsayılan, `SEED_DEMO` kapalı) yalnız roller, ekran/yetki matrisi, oteller ve `admin` kullanıcısını getirir; otelin
 kat, oda, outlet ve personel tanımları elle girilir. `admin` ile giriş yapıp
 **Başlat → Kurulum Rehberi** penceresini açın, otelinizi seçin ve adımları yukarıdan aşağıya
 izleyin. Her adımın **Aç** düğmesi Tanımlamalar penceresini doğru bölümde açar; yüzde,
@@ -104,8 +119,10 @@ npx prisma migrate deploy
 SEED_ADMIN_PASSWORD='<parola>' npm run db:seed
 ```
 
-Seed idempotenttir (var olanı yinelemez); `admin` parolasını ve elle yaptığınız tanımları
-ezmez; yalnız seed'deki üç otelin **adı** koduna göre varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
+Seed idempotenttir (var olanı yinelemez). Mevcut `admin`'in parolasına, rolüne ve aktiflik
+durumuna **dokunmaz** (admin yalnız eksikse oluşturulur); pasife alınmış oteli yeniden
+aktifleştirmez ve elle yaptığınız tanımları ezmez; yalnız seed'deki üç otelin **adı** koduna göre
+varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
 yetkisi yoktur. Rehber yüzdesi seed çalıştırıldıktan sonra anlam kazanır.
 
 ## 5. Süreç yöneticisi
@@ -158,7 +175,7 @@ npm ci
 cp .env.example .env
 # API_URL=https://merit.otel.example
 # GATEWAY_KEY=/etc/merit/merit.env içindeki PRINT_GATEWAY_KEY ile aynı değer
-# HOTEL_CODE=MR
+# HOTEL_CODE=ROYAL   (ROYAL, DIAMOND veya PREMIUM)
 npm run start
 ```
 
@@ -166,6 +183,35 @@ Gateway yerel yazıcılara TCP/9100 ile erişir, fakat uygulama API'sine HTTPS �
 `CODEPAGE_TABLE=13` cp857 için başlangıç değeridir; Türkçe karakterleri içeren test fişiyle
 yazıcı modelinde doğrulayın. Ayrıntılı Windows/NSSM hizmet örneği ve tüm alanlar için
 `merit/tools/print-gateway/README.md` dosyasını izleyin.
+
+### Docker / Coolify
+
+Depoda **tek** compose dosyası vardır: kök dizindeki `docker-compose.yaml` (Dockerfile da kökte;
+`merit/Dockerfile` aynı içeriktir). Coolify'da kaynak türü *Docker Compose*, dosya yolu
+`docker-compose.yaml`. Gizli değerlerin varsayılanı yoktur; aşağıdakiler Coolify ortam
+değişkenlerinde (veya yerel `.env`) **verilmezse** `docker compose up` hata verir:
+
+```env
+POSTGRES_USER=merit
+POSTGRES_PASSWORD=<güçlü-parola>   # URL'ye gömüldüğü için özel karakter içermesin
+POSTGRES_DB=merit
+APP_BASE_URL=https://menu.otel.example
+SESSION_SECRET=<openssl rand -base64 48>
+QR_HMAC_SECRET=<openssl rand -base64 48>
+PRINT_GATEWAY_KEY=<openssl rand -base64 32>
+```
+
+İsteğe bağlı: `RUN_SEED` (varsayılan `false`), `SEED_DEMO` (varsayılan `false`),
+`SEED_ADMIN_PASSWORD`, `COOKIE_SECURE`, `TRUSTED_PROXY_HOPS`.
+
+- **İlk kurulum:** `RUN_SEED=true` ve `SEED_ADMIN_PASSWORD` (>= 10 karakter) ile bir kez dağıtın;
+  admin oluştuktan sonra `RUN_SEED=false` yapın. Demo veri istemiyorsanız `SEED_DEMO` açmayın.
+- Giriş betiği (`docker-entrypoint.sh`) `prisma migrate deploy` çalıştırır; yalnız veritabanı
+  bağlantı hatasında en çok 30 kez yeniden dener, migrasyon hatasında **hata koduyla çıkar**
+  (konteyner ayağa kalkmaz). `RUN_SEED=true` iken seed hatası da başlatmayı durdurur.
+- Derleme aşamasında `SKIP_ENV_VALIDATION=1` yalnız `npm run build` komutuna verilir; imaja gizli
+  değer girmez.
+- Yalnız HTTP ile erişilen test ortamında (IP/sslip.io) `COOKIE_SECURE=false` verin.
 
 ## 6. Ters vekil (nginx)
 
@@ -259,7 +305,8 @@ journald'ın varsayılanı yeterlidir.
   değerleri (`change-me...`) üretimde kullanmayın. `SESSION_SECRET` değişirse açık
   oturumlar geçersiz olur.
 - **HTTPS zorunludur.** Üretimde oturum çerezi `secure` işaretlidir; düz HTTP üzerinden
-  giriş çalışmaz.
+  giriş çalışmaz. Yalnızca HTTP ile erişilen geçici test ortamları için `COOKIE_SECURE=false`
+  verilebilir; gerçek kurulumda kullanmayın.
 - `MERIT_DISABLE_JOBS=1` üretimde yoksayılır (oturum süpürücüsü her zaman çalışır).
 - `X-Forwarded-For` başlığı yalnız güvenilir vekilden gelmeli (bkz. bölüm 6); uygulama
   doğrudan internete açılmamalı.

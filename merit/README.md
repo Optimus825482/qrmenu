@@ -36,14 +36,22 @@ yerel ağdaki ESC/POS yazdırma geçidini ekler.
    | --- | --- | --- |
    | `DATABASE_URL` | evet | Geliştirme/çalışma veritabanı (`merit`). |
    | `DATABASE_URL_TEST` | testler için | Birim testlerinin kullandığı `merit_test` veritabanı. |
-   | `SESSION_SECRET` | evet | Oturum çerezi için gizli anahtar, en az 32 karakter rastgele. |
-   | `QR_HMAC_SECRET` | evet | QR kodu imzaları için gizli anahtar, en az 32 karakter rastgele. |
-   | `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidinin (ileride) kullanacağı anahtar. |
-   | `APP_BASE_URL` | evet | Uygulamanın dış adresi, örn. `http://localhost:3000` (Origin denetimleri için). |
-   | `SEED_ADMIN_PASSWORD` | `db:seed` için | İlk `admin` kullanıcısının parolası, en az 10 karakter; varsayılanı yoktur. |
+   | `SESSION_SECRET` | evet | Oturum çerezi için gizli anahtar, en az 32 karakter rastgele; varsayılanı yoktur. |
+   | `QR_HMAC_SECRET` | evet | QR kodu imzaları için gizli anahtar, en az 32 karakter rastgele; varsayılanı yoktur. |
+   | `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidi anahtarı; geçidin `GATEWAY_KEY` değeriyle aynı. Varsayılanı yoktur. |
+   | `APP_BASE_URL` | üretimde evet | Uygulamanın dış adresi (Origin denetimleri için). Geliştirmede boşsa `http://localhost:3000`; üretimde varsayılanı yoktur. |
+   | `SEED_ADMIN_PASSWORD` | `db:seed` (admin yoksa) | İlk `admin` kullanıcısının parolası, en az 10 karakter; varsayılanı yoktur. Var olan admin'e seed dokunmaz. |
    | `TZ` | önerilir | `Europe/Nicosia` (iş saatleri ve zamanlanmış işler bu saat dilimine göre). |
    | `MERIT_DISABLE_JOBS` | hayır | `1` ise pg-boss işleri ve dinleyici başlamaz (yalnız test/CI); aşağıya bakın. |
-| `UPLOADS_DIR` | hayır | Menü görsellerinin dizini; varsayılan `<çalışma-dizini>/uploads`. |
+   | `UPLOADS_DIR` | hayır | Menü görsellerinin dizini; varsayılan `<çalışma-dizini>/uploads`. |
+   | `TRUSTED_PROXY_HOPS` | hayır | Önündeki güvenilir vekil sayısı (varsayılan 1). |
+   | `COOKIE_SECURE` | hayır | Üretimde çerez varsayılan `secure`; yalnız HTTP test ortamı için `false`. |
+   | `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` | hayır | E-posta bildirimleri (yoksa yalnız günlüğe yazılır). |
+   | `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çeviri sağlayıcıları. |
+   | `RUN_SEED` | hayır | Yalnız Docker girişi; `true` ise açılışta seed çalışır (varsayılan `false`). |
+   | `SEED_DEMO` | hayır | `true` ise seed demo outlet, menü, tasarım ve örnek personel de yükler (varsayılan `false`). |
+   | `LEGACY_DATABASE_URL` | hayır | Yalnız `migrate:minibarlatest` göç betiği için eski veritabanı. |
+   | `SKIP_ENV_VALIDATION` | hayır | Yalnız Docker derlemesi (`1`); çalışma ortamında ayarlamayın. |
 
 3. **Bağımlılıkları kurun ve veritabanını hazırlayın:**
 
@@ -51,7 +59,8 @@ yerel ağdaki ESC/POS yazdırma geçidini ekler.
    npm ci
    npm run db:migrate        # geliştirme veritabanı (prisma migrate dev)
    DATABASE_URL=$DATABASE_URL_TEST npx prisma migrate deploy   # test veritabanı
-   npm run db:seed           # roller, otel/outlet verisi ve admin kullanıcısı
+   npm run db:seed           # referans veri (oteller, roller, ekranlar, yetkiler) + admin (yoksa)
+   # Demo outlet/menü/personel için: SEED_DEMO=true npm run db:seed
    ```
 
    `DATABASE_URL_TEST` değerini kabuğunuza almak için `set -a; . ./.env; set +a`
@@ -95,8 +104,9 @@ işlemler yalnızca **SISTEM** rollerine (R-SYS) aittir:
 - Yetkisiz her deneme `YETKISIZ_DENEME` olarak denetim günlüğüne yazılır.
 
 Yeni ekran kodları (`CR-TAN`, `CR-REH`, `CR-ONL`, `CR-DEN`, `CR-SYS`) `npm run db:seed` ile
-eklenir; mevcut bir veritabanında seed'i yeniden çalıştırmak güvenlidir (yinelenen satır
-oluşturmaz).
+eklenir. Seed yalnız eksik olanı oluşturur: var olan `admin`'in parolasını/rolünü/aktifliğini,
+menü düğümlerini, kullanıcı ve üyelikleri değiştirmez, pasif oteli yeniden açmaz; demo veri
+yalnız `SEED_DEMO=true` ile yüklenir.
 
 ## P5 QR Menü ve Sipariş
 

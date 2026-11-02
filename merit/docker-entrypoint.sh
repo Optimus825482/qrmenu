@@ -1,42 +1,47 @@
 #!/bin/sh
-set -e
+set -eu
 
-echo "=================================================="
-echo "🚀 Merit QR Menü & Otel Yönetim Sistemi Başlatılıyor"
-echo "=================================================="
+echo "Merit QR Menü & Otel Yönetim Sistemi başlatılıyor"
 
-# Uploads dizinini hazırla
 UPLOADS_PATH="${UPLOADS_DIR:-/app/uploads}"
 mkdir -p "$UPLOADS_PATH"
 
-# DATABASE_URL boş ise bileşenlerden otomatik oluştur
-if [ -z "$DATABASE_URL" ]; then
-  export DATABASE_URL="postgresql://${POSTGRES_USER:-merit_admin}:${POSTGRES_PASSWORD:-merit_secure_pass_2026}@${POSTGRES_HOST:-postgres}:5432/${POSTGRES_DB:-merit}?schema=public"
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "HATA: DATABASE_URL tanımlı değil." >&2
+  exit 1
 fi
 
-# Veritabanı bağlantısını bekle ve migrasyonları uygula
-if [ -n "$DATABASE_URL" ]; then
-  echo "⏳ Veritabanı bağlantısı test ediliyor..."
-  MAX_RETRIES=30
-  COUNT=0
-  until npx prisma migrate deploy || [ $COUNT -eq $MAX_RETRIES ]; do
+# Migrasyon: yalnız bağlantı hatasında yeniden dene (en fazla MAX_RETRIES); başka her hata kalıcıdır.
+MAX_RETRIES=30
+COUNT=0
+LOG="$(mktemp)"
+while :; do
+  if npx prisma migrate deploy >"$LOG" 2>&1; then
+    cat "$LOG"
+    echo "Veritabanı migrasyonları tamamlandı."
+    break
+  fi
+  cat "$LOG" >&2
+  if grep -qiE "P1001|P1002|P1017|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|Can't reach database server|Connection terminated" "$LOG"; then
     COUNT=$((COUNT + 1))
-    echo "🔄 Veritabanı henüz hazır değil ($COUNT/$MAX_RETRIES), 2 saniye bekleniyor..."
+    if [ "$COUNT" -ge "$MAX_RETRIES" ]; then
+      echo "HATA: Veritabanına $MAX_RETRIES denemede bağlanılamadı." >&2
+      exit 1
+    fi
+    echo "Veritabanı henüz hazır değil ($COUNT/$MAX_RETRIES), 2 saniye bekleniyor..."
     sleep 2
-  done
-
-  if [ $COUNT -eq $MAX_RETRIES ]; then
-    echo "⚠️ Uyarı: Veritabanına 60 saniye boyunca bağlanılamadı. Uygulama yine de başlatılıyor."
   else
-    echo "✅ Veritabanı migrasyonları başarıyla tamamlandı."
+    echo "HATA: prisma migrate deploy başarısız (bağlantı hatası değil); başlatma durduruldu." >&2
+    exit 1
   fi
+done
+rm -f "$LOG"
 
-  # RUN_SEED=true verilmişse veya varsayılan kurulumdaysa tohumlama çalıştır
-  if [ "$RUN_SEED" != "false" ]; then
-    echo "🌱 Örnek veriler ve başlangıç menüleri yükleniyor (prisma/seed.ts)..."
-    npm run db:seed || echo "⚠️ Seed işlemi tamamlanamadı veya veriler zaten mevcut."
-  fi
+# RUN_SEED=true: referans veri + (yoksa) admin. Demo veri yalnız SEED_DEMO=true ile. Başarısızlık başlatmayı durdurur.
+if [ "${RUN_SEED:-false}" = "true" ]; then
+  echo "Seed çalıştırılıyor (prisma/seed.ts, SEED_DEMO=${SEED_DEMO:-false})..."
+  npm run db:seed
 fi
 
-echo "✨ Web sunucusu başlatılıyor (port 3000)..."
+echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
 exec npm run start

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
+import { DEMO_HOTEL_CODES } from "./hotels";
 import { templatePreset, type TemplateId } from "@/modules/menu/design";
 
 const PRESETS: Record<string, { ambience: string; concept: string; template: TemplateId; theme: string }> = {
@@ -21,11 +22,11 @@ const PRESETS: Record<string, { ambience: string; concept: string; template: Tem
   "Tenis Kortları & Açık Hava Fitness": { ambience: "SPORT", concept: "CONTEMPORARY", template: "ACTIVE_HYDRATION", theme: "Deniz" },
 };
 
-/** Seed a concept-matched starting design for demo outlets, preserving any operator edits. */
+/** DEMO (SEED_DEMO=true): seed a concept-matched starting design for demo outlets, preserving any operator edits. */
 export async function seedOutletMenuDesigns(db: PrismaClient): Promise<void> {
   const themes = new Map((await db.menuTheme.findMany({ select: { id: true, name: true } })).map((theme) => [theme.name, theme.id]));
   for (const [name, preset] of Object.entries(PRESETS)) {
-    const outlets = await db.outlet.findMany({ where: { name, hasMenu: true, isActive: true }, select: { id: true, themeId: true, menuDesign: { select: { id: true } } } });
+    const outlets = await db.outlet.findMany({ where: { name, hasMenu: true, isActive: true, hotel: { code: { in: DEMO_HOTEL_CODES } } }, select: { id: true, themeId: true, menuDesign: { select: { id: true } } } });
     for (const outlet of outlets) {
       if (!outlet.menuDesign) {
         const base = templatePreset(preset.template);

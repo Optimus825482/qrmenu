@@ -1,10 +1,11 @@
+import bcrypt from "bcryptjs";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { runSeed } from "../../prisma/seed";
 import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 191;
+const EXPECTED_PERMISSION_ROWS = 199;
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -36,13 +37,14 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 17 rol, 33 ekran ve admin üretir; outlet oluşturmaz", async () => {
+  it("seed 3 otel, 17 rol, 33 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
     expect(await db.role.count()).toBe(17);
     expect(await db.appScreen.count()).toBe(33);
-    expect(await db.outlet.count()).toBe(0);
+    expect(await db.outlet.count()).toBe(3);
+    expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
     expect(await db.hotelModule.count()).toBe(12);
     expect(await db.user.count({ where: { username: "admin" } })).toBe(1);
   });
@@ -82,6 +84,16 @@ describe("seed (gerçek test DB)", () => {
       canReport: false,
     });
     expect(await permission("R-KAT", "QS-KUY")).toBeNull();
+  });
+
+  it("R-KAT: MB-TAN ve MB-DOL satırı yok, MB-ZIM yalnız V,D; R-DEP depo ekranlarını düzenler", async () => {
+    await runSeed(db);
+    expect(await permission("R-KAT", "MB-TAN")).toBeNull();
+    expect(await permission("R-KAT", "MB-DOL")).toBeNull();
+    expect(await permission("R-KAT", "MB-ZIM")).toMatchObject({ canView: true, canCreate: false, canEdit: true, canApprove: false, canReport: false });
+    for (const code of ["MB-ZIM", "MB-DOL"]) {
+      expect(await permission("R-DEP", code)).toMatchObject({ canView: true, canCreate: true, canEdit: true });
+    }
   });
 
   it("R-GAR QS-KUY için canApprove=false, R-SGF için true", async () => {
@@ -222,9 +234,100 @@ describe("seed (gerçek test DB)", () => {
     await runSeed(db);
     const hotel = await db.hotel.findFirstOrThrow({ where: { code: "ROYAL" } });
     await db.outlet.create({
-      data: { hotelId: hotel.id, name: "IRD", type: "ODA_SERVISI", hasMenu: true, hasOrdering: true },
+      data: { hotelId: hotel.id, name: "Özel Bar", type: "BAR", hasMenu: true, hasOrdering: true },
     });
     await runSeed(db);
-    expect(await db.outlet.count({ where: { type: "ODA_SERVISI", name: "IRD" } })).toBe(1);
+    expect(await db.outlet.count({ where: { type: "BAR", name: "Özel Bar" } })).toBe(1);
+  });
+  it("var olan admin'in parolası, rolü ve aktiflik durumu seed ile ezilmez", async () => {
+    await runSeed(db);
+    const admin = await db.user.findUniqueOrThrow({ where: { username: "admin" } });
+    const hash = await bcrypt.hash("baska-parola-123", 4);
+    await db.user.update({ where: { id: admin.id }, data: { passwordHash: hash, isActive: false } });
+    await runSeed(db);
+    expect(await db.user.findUniqueOrThrow({ where: { username: "admin" } })).toMatchObject({
+      id: admin.id,
+      passwordHash: hash,
+      isActive: false,
+    });
+  });
+
+  it("admin varsa SEED_ADMIN_PASSWORD gerekmez; yoksa gerekir", async () => {
+    await runSeed(db);
+    const saved = process.env.SEED_ADMIN_PASSWORD;
+    delete process.env.SEED_ADMIN_PASSWORD;
+    try {
+      await expect(runSeed(db)).resolves.toBeUndefined();
+    } finally {
+      if (saved !== undefined) process.env.SEED_ADMIN_PASSWORD = saved;
+    }
+  });
+
+  it("seed pasif yapılmış oteli yeniden aktifleştirmez", async () => {
+    await runSeed(db);
+    await db.hotel.update({ where: { code: "ROYAL" }, data: { isActive: false } });
+    await runSeed(db);
+    expect((await db.hotel.findUniqueOrThrow({ where: { code: "ROYAL" } })).isActive).toBe(false);
+  });
+
+  describe("SEED_DEMO", () => {
+    const withDemo = async (value: string | undefined, fn: () => Promise<void>) => {
+      const saved = process.env.SEED_DEMO;
+      if (value === undefined) delete process.env.SEED_DEMO;
+      else process.env.SEED_DEMO = value;
+      try {
+        await fn();
+      } finally {
+        if (saved === undefined) delete process.env.SEED_DEMO;
+        else process.env.SEED_DEMO = saved;
+      }
+    };
+
+    it("varsayılan seed demo outlet, menü ve personel üretmez", async () => {
+      await withDemo(undefined, async () => {
+        await runSeed(db);
+        expect(await db.outlet.count({ where: { type: { not: "ODA_SERVISI" } } })).toBe(0);
+        expect(await db.menuNode.count()).toBe(0);
+        expect(await db.user.count()).toBe(1);
+      });
+    });
+
+    it("SEED_DEMO=true outlet, menü ve rastgele parolalı personel üretir; ikinci çalıştırma yinelemez", async () => {
+      await withDemo("true", async () => {
+        await runSeed(db);
+        const first = { outlets: await db.outlet.count(), nodes: await db.menuNode.count(), users: await db.user.count() };
+        expect(first.outlets).toBeGreaterThan(0);
+        expect(first.nodes).toBeGreaterThan(0);
+        expect(first.users).toBeGreaterThan(1);
+        const staff = await db.user.findMany({ where: { username: { not: "admin" } } });
+        expect(staff.every((u) => u.mustChangePassword)).toBe(true);
+        expect(new Set(staff.map((u) => u.passwordHash)).size).toBe(staff.length);
+        await runSeed(db);
+        expect({ outlets: await db.outlet.count(), nodes: await db.menuNode.count(), users: await db.user.count() }).toEqual(first);
+      });
+    }, 60_000);
+
+    it("dolu menüye dokunmaz: ad, fiyat ve aktiflik korunur", async () => {
+      await withDemo("true", async () => {
+        await runSeed(db);
+        const outlet = await db.outlet.findFirstOrThrow({ where: { menuNodes: { some: {} } } });
+        const root = await db.menuNode.findFirstOrThrow({ where: { outletId: outlet.id, parentId: null } });
+        await db.menuNode.update({ where: { id: root.id }, data: { name: "Özel Kategori", isActive: false } });
+        const before = await db.menuNode.count({ where: { outletId: outlet.id } });
+        await runSeed(db);
+        expect(await db.menuNode.count({ where: { outletId: outlet.id } })).toBe(before);
+        expect(await db.menuNode.findUniqueOrThrow({ where: { id: root.id } })).toMatchObject({ name: "Özel Kategori", isActive: false });
+      });
+    }, 60_000);
+
+    it("var olan personelin rolü, oteli ve aktifliği sıfırlanmaz", async () => {
+      await withDemo("true", async () => {
+        await runSeed(db);
+        const user = await db.user.findFirstOrThrow({ where: { username: { not: "admin" } } });
+        await db.user.update({ where: { id: user.id }, data: { isActive: false } });
+        await runSeed(db);
+        expect((await db.user.findUniqueOrThrow({ where: { id: user.id } })).isActive).toBe(false);
+      });
+    }, 60_000);
   });
 });

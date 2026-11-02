@@ -96,6 +96,15 @@ export const P5_SCREEN_LIMITS = {
   },
 };
 
+/**
+ * P3 limits for the floor supervisor (R-KAT): no definitions or occupancy uploads, and on the pool screen
+ * only view + critical-level update (D). R-DEP keeps its profile rights. Migration 20261102214000 repeats
+ * the same rules for databases seeded earlier.
+ */
+export const P3_SCREEN_LIMITS: Record<string, Record<string, readonly Action[]>> = {
+  "R-KAT": { "MB-TAN": [], "MB-DOL": [], "MB-ZIM": ["V", "D"] },
+};
+
 function applyP5Limits(role: RoleDef, screen: ScreenDef, actions: readonly Action[]): readonly Action[] {
   let result = actions;
   const byRole =
@@ -106,6 +115,8 @@ function applyP5Limits(role: RoleDef, screen: ScreenDef, actions: readonly Actio
         : undefined;
   const limit = byRole?.[screen.code];
   if (limit) result = result.filter((a) => limit.includes(a));
+  const p3 = P3_SCREEN_LIMITS[role.code]?.[screen.code];
+  if (p3) result = result.filter((a) => p3.includes(a));
   const { screens, roles } = P5_SCREEN_LIMITS.approve;
   if (screens.includes(screen.code) && !roles.includes(role.code)) {
     result = result.filter((a) => a !== "A");
