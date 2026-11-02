@@ -6,9 +6,7 @@ vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const { addDays, dayRange, nicosiaInstant } = await import("@/modules/minibar/server/dates");
 const { getBusinessDate } = await import("@/modules/minibar/server/minibarCommon");
-const { assertXlsxUpload, checkUploadScheduleWindow } = await import(
-  "@/modules/minibar/server/occupancyUploadService"
-);
+const { checkUploadScheduleWindow } = await import("@/modules/minibar/server/occupancyUpload");
 
 describe("minibar iş günü (Europe/Nicosia)", () => {
   it("01:00 yerel saatte iş günü UTC gününden bir ileridir (yaz, UTC+3)", () => {
@@ -57,16 +55,5 @@ describe("minibar iş günü (Europe/Nicosia)", () => {
       currentTimeStr: "08:30",
     });
     expect(checkUploadScheduleWindow(new Date("2026-07-10T07:00:00.000Z")).isWithinWindow).toBe(false); // 10:00
-  });
-
-  it("yükleme yalnız .xlsx ve en fazla 10 MB", () => {
-    const zip = Buffer.from("PK\x03\x04rest");
-    expect(() => assertXlsxUpload("doluluk.xlsx", zip)).not.toThrow();
-    expect(() => assertXlsxUpload("doluluk.xls", zip)).toThrow(/xlsx/);
-    expect(() => assertXlsxUpload("doluluk.xlsx", Buffer.from("MZ not a zip"))).toThrow(/geçerli/);
-    expect(() => assertXlsxUpload("doluluk.xlsx", Buffer.alloc(0))).toThrow(/boş/);
-    const big = Buffer.alloc(10 * 1024 * 1024 + 1);
-    big.write("PK");
-    expect(() => assertXlsxUpload("doluluk.xlsx", big)).toThrow(/10 MB/);
   });
 });

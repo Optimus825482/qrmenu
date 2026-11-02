@@ -121,6 +121,7 @@ enum UploadStatus {
   TAMAMLANDI
   HATA
   SILINDI
+  BEKLIYOR
 }
 
 enum TaskType {
@@ -1066,6 +1067,7 @@ model OccupancyUpload {
   okRows    Int          @default(0) @map("ok_rows")
   errorRows Int          @default(0) @map("error_rows")
   errors    Json         @default("[]")
+  storedPath String?     @map("stored_path")
   userId    String       @map("user_id")
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)

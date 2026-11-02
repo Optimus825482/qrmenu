@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
-interface ScheduleInfo {
-  isWithinWindow: boolean;
-  currentTimeStr: string;
-  message: string;
-}
+type Kind = "IN_HOUSE" | "ARRIVAL" | "DEPARTURE";
 
-interface UploadHistoryItem {
+const KIND_LABEL: Record<Kind, string> = {
+  IN_HOUSE: "In House",
+  ARRIVAL: "Arrivals",
+  DEPARTURE: "Departures",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  YUKLENDI: "Yüklendi",
+  ISLENIYOR: "İşleniyor",
+  TAMAMLANDI: "Tamamlandı",
+  HATA: "Hata",
+  SILINDI: "Silindi",
+  BEKLIYOR: "Bekliyor",
+};
+
+type ScheduleInfo = { isWithinWindow: boolean; currentTimeStr: string; message: string };
+type HistoryItem = {
   id: string;
   code: string;
   fileName: string;
@@ -20,152 +32,206 @@ interface UploadHistoryItem {
   errorRows: number;
   userName: string;
   createdAt: string;
-}
-
-interface HotelItem {
-  id: string;
-  name: string;
-  code: string;
-}
-
-interface UploadResult {
-  success: boolean;
+};
+type HotelItem = { id: string; name: string; code: string };
+type RowError = { row: number; message: string };
+type Preview = {
+  format: "STANDARD" | "P4001";
+  detectedKind: Kind;
+  reportDate?: string;
+  totalRows: number;
+  okRows: number;
+  errorRows: number;
+  errors: RowError[];
+  warnings: string[];
+  unknownRooms: string[];
+  sample: {
+    row: number;
+    roomNumber: string;
+    arrivalDate: string;
+    departureDate: string;
+    arrivalTime?: string;
+    departureTime?: string;
+    guestCount: number;
+  }[];
+  hotelMatch?: { label: string; matches: boolean };
+};
+type CommitResult = {
   code: string;
   totalRows: number;
   okRows: number;
   errorRows: number;
-  tasksCreated: {
-    inhouse: number;
-    arrivals: number;
-    departures: number;
-    clashes: number;
-  };
-  errors: string[];
-  warning?: string;
+  errors: RowError[];
+  tasksGenerated: boolean;
+};
+
+async function readJson(res: Response): Promise<Record<string, unknown>> {
+  return (await res.json().catch(() => ({}))) as Record<string, unknown>;
 }
 
 export default function DolulukYuklePage() {
   const [hotels, setHotels] = useState<HotelItem[]>([]);
-  const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  const [hotelId, setHotelId] = useState("");
   const [schedule, setSchedule] = useState<ScheduleInfo | null>(null);
-  const [history, setHistory] = useState<UploadHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [kind, setKind] = useState<Kind | "">("");
+  const [preview, setPreview] = useState<Preview | null>(null);
+  const [result, setResult] = useState<CommitResult | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const loadData = useCallback(async (hotelId?: string) => {
+  const load = useCallback(async (selected?: string) => {
     try {
-      setIsLoading(true);
-      const url = hotelId
-        ? `/api/minibar/occupancy/history?hotelId=${encodeURIComponent(hotelId)}`
+      setLoading(true);
+      const url = selected
+        ? `/api/minibar/occupancy/history?hotelId=${encodeURIComponent(selected)}`
         : "/api/minibar/occupancy/history";
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Doluluk verileri alınamadı.");
-      const data = await res.json();
-      setSchedule(data.schedule);
-      setHistory(data.history || []);
-      setHotels(data.hotels || []);
-      if (!hotelId && data.selectedHotelId) {
-        setSelectedHotelId(data.selectedHotelId);
-      }
-    } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Bağlantı hatası.");
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(String(data.error ?? "Doluluk verileri alınamadı."));
+      setSchedule(data.schedule as ScheduleInfo);
+      setHistory((data.history as HistoryItem[]) ?? []);
+      setHotels((data.hotels as HotelItem[]) ?? []);
+      if (!selected && typeof data.selectedHotelId === "string") setHotelId(data.selectedHotelId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bağlantı hatası.");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      void loadData();
-    }, 0);
+    const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
-  }, [loadData]);
+  }, [load]);
 
-  const handleHotelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    setSelectedHotelId(id);
-    void loadData(id);
+  const form = (): FormData => {
+    const fd = new FormData();
+    if (file) fd.append("file", file);
+    if (hotelId) fd.append("hotelId", hotelId);
+    if (kind) fd.append("kind", kind);
+    return fd;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-      setUploadResult(null);
-      setErrorMsg(null);
-    }
+  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] ?? null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+    setMessage(null);
   };
 
-  const handleUpload = async (forceOverride = false) => {
-    if (!selectedFile) {
-      setErrorMsg("Lütfen önce bir Excel dosyası seçiniz.");
+  const runPreview = async (nextKind?: Kind | "") => {
+    if (!file) {
+      setError("Lütfen önce bir Excel dosyası (.xlsx) seçiniz.");
       return;
     }
-
+    setBusy(true);
+    setError(null);
+    setResult(null);
     try {
-      setIsUploading(true);
-      setErrorMsg(null);
-
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      if (selectedHotelId) formData.append("hotelId", selectedHotelId);
-      if (forceOverride) formData.append("forceOverride", "true");
-
-      const res = await fetch("/api/minibar/occupancy/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Yükleme başarısız oldu.");
+      const fd = form();
+      if (nextKind !== undefined) {
+        fd.delete("kind");
+        if (nextKind) fd.append("kind", nextKind);
       }
-
-      setUploadResult(data);
-      setSelectedFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      void loadData(selectedHotelId);
-    } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : "Yükleme sırasında hata oluştu.");
+      const res = await fetch("/api/minibar/occupancy/preview", { method: "POST", body: fd });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(String(data.error ?? "Önizleme başarısız oldu."));
+      setPreview(data as unknown as Preview);
+    } catch (err) {
+      setPreview(null);
+      setError(err instanceof Error ? err.message : "Önizleme sırasında hata oluştu.");
     } finally {
-      setIsUploading(false);
+      setBusy(false);
+    }
+  };
+
+  const commit = async () => {
+    if (!file || !preview) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const fd = form();
+      fd.delete("kind");
+      fd.append("kind", kind || preview.detectedKind);
+      const res = await fetch("/api/minibar/occupancy/upload", { method: "POST", body: fd });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(String(data.error ?? "Yükleme başarısız oldu."));
+      setResult(data as unknown as CommitResult);
+      setPreview(null);
+      setFile(null);
+      if (fileRef.current) fileRef.current.value = "";
+      void load(hotelId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Yükleme sırasında hata oluştu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (item: HistoryItem) => {
+    if (!window.confirm(`${item.code} yüklemesi silinsin mi? Bekleyen görev kalemleri de kaldırılır.`)) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/minibar/occupancy/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(String(data.error ?? "Yükleme silinemedi."));
+      const kept = Number(data.keptCompletedItems ?? 0);
+      setMessage(kept > 0 ? `Yükleme silindi. ${kept} tamamlanmış görev kalemi korundu.` : "Yükleme silindi.");
+      void load(hotelId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Silme sırasında hata oluştu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const regenerate = async () => {
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/minibar/tasks/regenerate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await readJson(res);
+      if (!res.ok) throw new Error(String(data.error ?? "Görevler yeniden üretilemedi."));
+      setMessage("Günlük görevler doluluk kayıtlarından yeniden üretildi.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Görevler yeniden üretilemedi.");
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
-      {/* Üst Navigasyon */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 shadow-md">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+      <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 px-4 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kat"
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
-              title="Kat Sorumlusu Dashboard"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
-            <div>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>📊 Günlük Otel Doluluk Girişi (Excel)</span>
-              </h1>
-              <p className="text-xs text-slate-400">
-                Depo Sorumlusu & Sistem Yöneticisi • Standart Saat: 09:00 - 10:00
-              </p>
-            </div>
+          <div>
+            <h1 className="text-lg font-bold text-white">Günlük Doluluk Yükleme (Excel)</h1>
+            <p className="text-xs text-slate-400">In House, Arrivals ve Departures dosyaları</p>
           </div>
-
           <div className="flex items-center gap-2 flex-wrap">
-            {hotels.length > 0 && (
+            {hotels.length > 1 && (
               <select
-                value={selectedHotelId}
-                onChange={handleHotelChange}
-                className="bg-slate-800 text-amber-400 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500"
+                data-testid="occupancy-hotel"
+                value={hotelId}
+                onChange={(e) => {
+                  setHotelId(e.target.value);
+                  setPreview(null);
+                  void load(e.target.value);
+                }}
+                className="bg-slate-800 text-amber-400 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -174,294 +240,264 @@ export default function DolulukYuklePage() {
                 ))}
               </select>
             )}
-
-            <Link
-              href="/kat/tavsiye-is-plani"
-              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
-            >
-              <span>💡 Tavsiye İş Planı</span>
+            <Link href="/kat/tavsiye-is-plani" className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-300">
+              Tavsiye İş Planı
             </Link>
-
-            <Link
-              href="/depo/stok"
-              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
-            >
-              <span>📦 Zimmet Havuzu</span>
-            </Link>
-
-            <Link
-              href="/depo/raporlar"
-              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
-            >
-              <span>📈 Raporlar</span>
-            </Link>
-
-            <Link
-              href="/depo/tanimlar"
-              className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
-            >
-              <span>⚙️ Tanımlamalar</span>
+            <Link href="/depo/stok" className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-300">
+              Zimmet Havuzu
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
-        {/* Saat Penceresi Bilgilendirme Kartı */}
+      <main className="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
         {schedule && (
           <div
-            className={`p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${
+            data-testid="occupancy-schedule"
+            className={`p-4 rounded-xl border text-sm ${
               schedule.isWithinWindow
                 ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-200"
                 : "bg-amber-950/40 border-amber-800/60 text-amber-200"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{schedule.isWithinWindow ? "🟢" : "⏰"}</span>
-              <div>
-                <p className="font-semibold text-sm">{schedule.message}</p>
-                <p className="text-xs opacity-80">
-                  Otele giriş yapacak misafirlerin odalarındaki minibar setup&apos;ları, varıştan 1 saat önce hazır edilmelidir.
-                </p>
-              </div>
-            </div>
-            <div className="text-xs font-mono px-3 py-1 rounded bg-black/40 border border-white/10 shrink-0">
-              Sistem Saati: {schedule.currentTimeStr}
-            </div>
+            {schedule.message}
           </div>
         )}
 
-        {/* Hata Mesajı */}
-        {errorMsg && (
-          <div className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-sm flex items-center gap-3">
-            <span className="text-xl">⚠️</span>
-            <div className="flex-1">{errorMsg}</div>
-            <button
-              onClick={() => setErrorMsg(null)}
-              className="text-xs text-rose-400 hover:text-rose-200 underline"
-            >
-              Kapat
-            </button>
+        {error && (
+          <div role="alert" data-testid="occupancy-error" className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-sm">
+            {error}
+          </div>
+        )}
+        {message && (
+          <div role="status" data-testid="occupancy-message" className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-200 text-sm">
+            {message}
           </div>
         )}
 
-        {/* Başarılı Yükleme Sonuç Özeti */}
-        {uploadResult && (
-          <div className="p-5 bg-slate-900 border border-emerald-500/40 rounded-2xl space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400 text-xl font-bold">✓</span>
-                <h3 className="font-bold text-white text-base">Excel Doluluk Dosyası Başarıyla İşlendi!</h3>
-              </div>
-              <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded">
-                Kod: {uploadResult.code}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700/50">
-                <span className="text-xs text-slate-400">Toplam Satır</span>
-                <p className="text-lg font-bold text-white mt-1">{uploadResult.totalRows}</p>
-              </div>
-
-              <div className="p-3 bg-red-950/40 rounded-xl border border-red-800/40">
-                <span className="text-xs text-red-300 font-semibold">1. Öncelik (Çıkış+Giriş)</span>
-                <p className="text-lg font-bold text-red-400 mt-1">
-                  {uploadResult.tasksCreated.clashes} Oda
-                </p>
-              </div>
-
-              <div className="p-3 bg-amber-950/40 rounded-xl border border-amber-800/40">
-                <span className="text-xs text-amber-300 font-semibold">2. Öncelik (Yeni Giriş)</span>
-                <p className="text-lg font-bold text-amber-400 mt-1">
-                  {uploadResult.tasksCreated.arrivals} Oda
-                </p>
-              </div>
-
-              <div className="p-3 bg-blue-950/40 rounded-xl border border-blue-800/40">
-                <span className="text-xs text-blue-300 font-semibold">3. Öncelik (In-House)</span>
-                <p className="text-lg font-bold text-blue-400 mt-1">
-                  {uploadResult.tasksCreated.inhouse} Oda
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <p className="text-xs text-slate-400">
-                Akıllı tavsiye planı otomatik oluşturuldu. Kat sorumluları öncelik sıralamasıyla yönlendirilecektir.
-              </p>
-              <Link
-                href="/kat/tavsiye-is-plani"
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition flex items-center gap-2"
-              >
-                <span>💡 Tavsiye İş Planını Görüntüle</span>
-                <span>→</span>
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Dosya Yükleme Kutusu */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
-          <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>📤 Standart Doluluk Dosyası Yükle</span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              In-House, Departures ve Arrivals misafir bilgilerini içeren standart Excel dosyasını (.xlsx, en fazla 10 MB) seçiniz.
+        {result && (
+          <div data-testid="occupancy-result" className="p-5 bg-slate-900 border border-emerald-500/40 rounded-2xl space-y-3">
+            <h3 className="font-bold text-white">Doluluk dosyası işlendi</h3>
+            <p className="text-xs font-mono text-slate-400">Kod: {result.code}</p>
+            <p className="text-sm text-slate-300">
+              {result.totalRows} satır: {result.okRows} kaydedildi, {result.errorRows} hatalı.
+              {result.tasksGenerated ? " Günlük görevler oluşturuldu." : " Görevler üç dosya da yüklenince oluşturulur."}
             </p>
+            {result.errors.length > 0 && (
+              <ul className="text-xs text-rose-300 space-y-0.5 max-h-40 overflow-y-auto">
+                {result.errors.map((e, i) => (
+                  <li key={i}>
+                    Satır {e.row}: {e.message}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+        )}
 
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-700 hover:border-amber-500/70 bg-slate-950/50 hover:bg-slate-950 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3"
-          >
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div>
+            <h2 className="text-base font-bold text-white">1. Dosyayı seçin</h2>
+            <p className="text-xs text-slate-400 mt-1">Standart veya P4001 biçiminde .xlsx dosyası (en fazla 10 MB).</p>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
             <input
-              ref={fileInputRef}
+              ref={fileRef}
+              data-testid="occupancy-file"
               type="file"
               accept=".xlsx"
-              onChange={handleFileChange}
-              className="hidden"
+              onChange={onFile}
+              className="text-xs text-slate-300"
             />
-            <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center text-slate-300">
-              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-            </div>
-
-            <div>
-              {selectedFile ? (
-                <div className="space-y-1">
-                  <p className="text-sm font-bold text-amber-400">{selectedFile.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {(selectedFile.size / 1024).toFixed(1)} KB • Değiştirmek için tıklayınız
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-slate-300">
-                    Excel dosyasını buraya sürükleyin veya dosya seçmek için tıklayın
-                  </p>
-                  <p className="text-xs text-slate-500">Desteklenen format: .xlsx (en fazla 10 MB)</p>
-                </div>
-              )}
-            </div>
+            <label className="text-xs text-slate-400 flex flex-col gap-1">
+              Dosya türü
+              <select
+                data-testid="occupancy-kind"
+                value={kind}
+                onChange={(e) => {
+                  const next = e.target.value as Kind | "";
+                  setKind(next);
+                  if (preview) void runPreview(next);
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+              >
+                <option value="">Otomatik algıla</option>
+                {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
+                  <option key={k} value={k}>
+                    {KIND_LABEL[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              data-testid="occupancy-preview"
+              onClick={() => void runPreview()}
+              disabled={!file || busy}
+              className="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold disabled:opacity-50"
+            >
+              {busy && !preview ? "İnceleniyor..." : "Önizle"}
+            </button>
           </div>
+        </section>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="text-xs text-slate-400">
-              {schedule && !schedule.isWithinWindow && (
-                <span className="text-amber-400 font-medium">
-                  ⚠️ 09:00 - 10:00 saat aralığı dışındasınız. Yönetici olarak devam edebilirsiniz.
-                </span>
-              )}
+        {preview && (
+          <section data-testid="occupancy-preview-panel" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h2 className="text-base font-bold text-white">2. Önizleme ve onay</h2>
+            <p className="text-sm text-slate-300">
+              Biçim: {preview.format === "P4001" ? "P4001" : "Standart"} - Tür: {KIND_LABEL[kind || preview.detectedKind]}
+              {preview.reportDate ? ` - Rapor tarihi: ${preview.reportDate}` : ""}
+            </p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-3 bg-slate-800/60 rounded-xl">
+                <span className="text-xs text-slate-400">Toplam satır</span>
+                <p className="text-lg font-bold text-white">{preview.totalRows}</p>
+              </div>
+              <div className="p-3 bg-emerald-950/40 rounded-xl">
+                <span className="text-xs text-emerald-300">Kaydedilecek</span>
+                <p className="text-lg font-bold text-emerald-400">{preview.okRows}</p>
+              </div>
+              <div className="p-3 bg-rose-950/40 rounded-xl">
+                <span className="text-xs text-rose-300">Hatalı</span>
+                <p className="text-lg font-bold text-rose-400">{preview.errorRows}</p>
+              </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              {selectedFile && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  disabled={isUploading}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition"
-                >
-                  İptal
-                </button>
-              )}
-
+            {preview.warnings.length > 0 && (
+              <ul data-testid="occupancy-warnings" className="text-xs text-amber-300 space-y-0.5">
+                {preview.warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            )}
+            {preview.errors.length > 0 && (
+              <ul data-testid="occupancy-errors" className="text-xs text-rose-300 space-y-0.5 max-h-48 overflow-y-auto">
+                {preview.errors.map((e, i) => (
+                  <li key={i}>
+                    Satır {e.row}: {e.message}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {preview.sample.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="text-slate-400 border-b border-slate-800">
+                      <th className="py-2 px-2">Satır</th>
+                      <th className="py-2 px-2">Oda</th>
+                      <th className="py-2 px-2">Giriş</th>
+                      <th className="py-2 px-2">Çıkış</th>
+                      <th className="py-2 px-2">Kişi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-slate-300">
+                    {preview.sample.map((s) => (
+                      <tr key={s.row} className="border-b border-slate-800/60">
+                        <td className="py-1.5 px-2">{s.row}</td>
+                        <td className="py-1.5 px-2 font-semibold text-white">{s.roomNumber}</td>
+                        <td className="py-1.5 px-2">
+                          {s.arrivalDate}
+                          {s.arrivalTime ? ` ${s.arrivalTime}` : ""}
+                        </td>
+                        <td className="py-1.5 px-2">
+                          {s.departureDate}
+                          {s.departureTime ? ` ${s.departureTime}` : ""}
+                        </td>
+                        <td className="py-1.5 px-2">{s.guestCount}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => void handleUpload(true)}
-                disabled={!selectedFile || isUploading}
-                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-xl text-xs font-bold shadow-lg shadow-amber-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                onClick={() => setPreview(null)}
+                disabled={busy}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
               >
-                {isUploading ? (
-                  <>
-                    <svg className="animate-spin w-4 h-4 text-slate-950" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                    </svg>
-                    <span>Excel İşleniyor...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🚀 Doluluk Girişini Tamamla</span>
-                  </>
-                )}
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                data-testid="occupancy-commit"
+                onClick={() => void commit()}
+                disabled={busy || preview.okRows === 0}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold disabled:opacity-50"
+              >
+                {busy ? "Yükleniyor..." : `${preview.okRows} satırı yükle`}
+              </button>
+            </div>
+          </section>
+        )}
+
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold text-white">Yükleme geçmişi</h2>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                data-testid="occupancy-regenerate"
+                onClick={() => void regenerate()}
+                disabled={busy}
+                className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+              >
+                Görevleri yeniden üret
+              </button>
+              <button type="button" onClick={() => void load(hotelId)} className="text-xs text-slate-400 hover:text-white">
+                Yenile
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Geçmiş Yüklemeler Tablosu */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>📋 Yükleme Geçmişi</span>
-            </h2>
-            <button
-              onClick={() => void loadData(selectedHotelId)}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>Yenile</span>
-            </button>
-          </div>
-
-          {isLoading ? (
-            <div className="py-12 text-center text-slate-500 text-sm">Yükleme geçmişi yükleniyor...</div>
+          {loading ? (
+            <div className="py-10 text-center text-slate-500 text-sm">Yükleme geçmişi yükleniyor...</div>
           ) : history.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-sm">
-              Henüz bu otel için bir doluluk dosyası yüklenmemiş.
-            </div>
+            <div className="py-10 text-center text-slate-500 text-sm">Henüz bu otel için bir doluluk dosyası yüklenmemiş.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+              <table data-testid="occupancy-history" className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
+                  <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
                     <th className="py-3 px-3">Tarih / Saat</th>
-                    <th className="py-3 px-3">İşlem Kodu</th>
-                    <th className="py-3 px-3">Dosya Adı</th>
+                    <th className="py-3 px-3">Kod</th>
+                    <th className="py-3 px-3">Dosya</th>
+                    <th className="py-3 px-3">Tür</th>
                     <th className="py-3 px-3">Yükleyen</th>
-                    <th className="py-3 px-3 text-center">Toplam Satır</th>
-                    <th className="py-3 px-3 text-center">Başarılı</th>
-                    <th className="py-3 px-3 text-right">Durum</th>
+                    <th className="py-3 px-3 text-center">Satır</th>
+                    <th className="py-3 px-3 text-center">Kaydedilen</th>
+                    <th className="py-3 px-3 text-center">Hatalı</th>
+                    <th className="py-3 px-3">Durum</th>
+                    <th className="py-3 px-3" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-300">
                   {history.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-800/40 transition">
+                    <tr key={item.id}>
                       <td className="py-3 px-3 font-mono text-slate-400">
-                        {new Date(item.createdAt).toLocaleString("tr-TR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
+                        {new Date(item.createdAt).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
                       </td>
-                      <td className="py-3 px-3 font-mono text-slate-300">{item.code}</td>
-                      <td className="py-3 px-3 font-medium text-white">{item.fileName}</td>
+                      <td className="py-3 px-3 font-mono">{item.code}</td>
+                      <td className="py-3 px-3 text-white">{item.fileName}</td>
+                      <td className="py-3 px-3">{KIND_LABEL[item.kind as Kind] ?? item.kind}</td>
                       <td className="py-3 px-3 text-slate-400">{item.userName}</td>
-                      <td className="py-3 px-3 text-center font-bold text-white">{item.totalRows}</td>
-                      <td className="py-3 px-3 text-center font-bold text-emerald-400">{item.okRows}</td>
+                      <td className="py-3 px-3 text-center">{item.totalRows}</td>
+                      <td className="py-3 px-3 text-center text-emerald-400">{item.okRows}</td>
+                      <td className="py-3 px-3 text-center text-rose-400">{item.errorRows}</td>
+                      <td className="py-3 px-3">{STATUS_LABEL[item.status] ?? item.status}</td>
                       <td className="py-3 px-3 text-right">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            item.status === "TAMAMLANDI"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                              : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
+                        {item.status !== "SILINDI" && (
+                          <button
+                            type="button"
+                            data-testid={`occupancy-delete-${item.code}`}
+                            onClick={() => void remove(item)}
+                            disabled={busy}
+                            className="px-2.5 py-1 border border-rose-800 text-rose-300 rounded-lg hover:bg-rose-950/40 disabled:opacity-50"
+                          >
+                            Sil
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -469,7 +505,7 @@ export default function DolulukYuklePage() {
               </table>
             </div>
           )}
-        </div>
+        </section>
       </main>
     </div>
   );
