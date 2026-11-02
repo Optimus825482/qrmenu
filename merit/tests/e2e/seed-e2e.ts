@@ -4,6 +4,7 @@ import path from "node:path";
 import { PrismaClient } from "../../src/generated/prisma/client";
 import { hashPassword } from "../../src/lib/password";
 import { runSeed } from "../../prisma/seed";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 
 // Run through tsx (see fixtures.ts): the generated Prisma client is ESM-only and cannot be loaded
@@ -15,22 +16,13 @@ const TEST_PASSWORD = "Test!2026";
 /** Tables that must survive the reset (Prisma's own bookkeeping). pg-boss lives in its own schema. */
 const KEEP_TABLES = new Set(["_prisma_migrations"]);
 
-function databaseName(url: string): string {
-  return new URL(url).pathname.replace(/^\//, "");
-}
-
 /**
- * The Playwright tests drive the dev server, which uses DATABASE_URL, so they reset and re-seed
- * the DEV database. They must never run against the unit-test database.
+ * The Playwright suite resets and re-seeds a dedicated database (E2E_DATABASE_URL, else
+ * DATABASE_URL_TEST), never the dev database. The guard (name ends _e2e/_test AND host is
+ * localhost/127.0.0.1) lives in e2eDb.ts and runs before anything is truncated.
  */
 function connectionString(): string {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set (merit/.env)");
-  const testUrl = process.env.DATABASE_URL_TEST;
-  if (url === testUrl || databaseName(url).endsWith("_test")) {
-    throw new Error("e2e must run against the dev database (DATABASE_URL), never merit_test");
-  }
-  return url;
+  return e2eDatabaseUrl();
 }
 
 /** Fixed guest QR tokens of the guest menu spec (M1 usable, M2 inactive) and a small Havuz Bar menu. */

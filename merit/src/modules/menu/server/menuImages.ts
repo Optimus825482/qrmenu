@@ -9,7 +9,6 @@ import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope, loadNodeScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
 
-const SCREEN = "QM-MEN";
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PREFIX = "/uploads/";

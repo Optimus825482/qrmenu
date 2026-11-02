@@ -10,7 +10,7 @@ import { expect, login, resetAndSeed, test } from "./fixtures";
  */
 test.describe.configure({ mode: "serial" });
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = (process.env.E2E_BASE_URL ?? "http://localhost:3000");
 const MR = { name: "Merit Royal", code: "ROYAL" };
 const GARSON = "kabul.garson";
 const GARSON_PASSWORD = "Kabul2026Pw";
@@ -54,7 +54,7 @@ const startMenuItem = (page: Page, name: string) =>
 async function pickHotel(page: Page, appName: string) {
   await page
     .getByRole("region", { name: appName, exact: true })
-    .getByRole("button", { name: new RegExp(`^${MR.name}\\s*${MR.code}$`) })
+    .getByRole("button", { name: new RegExp(`logosu\\s+${MR.name}$`) })
     .click();
 }
 
@@ -152,7 +152,7 @@ test("outlet → masalar", async () => {
   await expect(row(win, "Kabul Restoran")).toBeVisible();
 
   await node(win, "Masalar").click();
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Kabul Restoran" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Kabul Restoran" });
   await win.getByRole("button", { name: "Toplu Ekle" }).click();
   const bulk = admin.getByRole("dialog", { name: "Toplu masa ekle" });
   await bulk.getByLabel("Başlangıç numarası").fill("1");
@@ -180,7 +180,7 @@ test("kullanıcı (garson, R-GAR, MR) → ekip ataması", async () => {
   await expect(row(win, GARSON)).toContainText("Garson");
 
   await node(win, "Ekipler").click();
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Kabul Restoran" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Kabul Restoran" });
   await win.getByRole("button", { name: "Kullanıcı ekle" }).click();
   const add = admin.getByRole("dialog", { name: "Kullanıcı ekle" });
   await add.getByLabel("Kullanıcı ara").fill(GARSON);

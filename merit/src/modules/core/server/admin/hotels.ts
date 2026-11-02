@@ -131,11 +131,14 @@ export async function update(ctx: Ctx, id: string, raw: HotelUpdateInput): Promi
       const fieldErrors: FieldErrors = { code: ["Otel kodu değiştirilemez"] };
       throw new DomainError("VALIDATION", "Otel kodu değiştirilemez", { fieldErrors });
     }
+    if (before.isSystemDefault && input.isActive === false) {
+      throw new DomainError("FORBIDDEN", "Sistem oteli pasife alınamaz");
+    }
     const after = await tx.hotel.update({
       where: { id },
       data: {
         name: input.name,
-        isActive: true,
+        ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         ...(input.address !== undefined ? { address: input.address } : {}),
         ...(input.phone !== undefined ? { phone: input.phone } : {}),
         ...(input.logoUrl !== undefined ? { logoUrl: input.logoUrl } : {}),

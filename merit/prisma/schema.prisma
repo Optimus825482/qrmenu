@@ -405,6 +405,7 @@ model OutletTable {
 
   @@unique([outletId, label])
   @@unique([outletId, number])
+  @@index([areaId])
   @@map("outlet_tables")
 }
 

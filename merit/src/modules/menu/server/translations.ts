@@ -9,7 +9,6 @@ import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope, loadNodeScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
 
-const SCREEN = "QM-MEN";
 export const TRANSLATION_LANGS = ["en", "de", "ru", "ar", "fr", "el", "it"] as const;
 export type TranslationLang = (typeof TRANSLATION_LANGS)[number];
 export type TranslationProvider = "DeepL" | "Gemini";

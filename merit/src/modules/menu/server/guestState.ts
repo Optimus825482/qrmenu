@@ -23,12 +23,25 @@ export type GuestState = {
   reason?: "OUTLET_PASIF" | "OTEL_PASIF" | "MENU_KAPALI" | "SIPARIS_KAPALI";
 };
 
-const pickTheme = ({ bg, accent, soft, textOnAccent }: GuestTheme): GuestTheme => ({
-  bg,
-  accent,
-  soft,
-  textOnAccent,
-});
+/** Theme colors end up in inline CSS custom properties: only plain #rrggbb is trusted. */
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+const FALLBACK_THEME: GuestTheme = {
+  bg: "#0f0d0a",
+  accent: "#c9a24a",
+  soft: "#1d1a14",
+  textOnAccent: "#0f0d0a",
+};
+
+const pickTheme = (theme: GuestTheme): GuestTheme => {
+  const base = MENU_THEMES.find((t) => t.isDefault) ?? FALLBACK_THEME;
+  const color = (value: string, fallback: string) => (HEX_COLOR.test(value) ? value : fallback);
+  return {
+    bg: color(theme.bg, base.bg),
+    accent: color(theme.accent, base.accent),
+    soft: color(theme.soft, base.soft),
+    textOnAccent: color(theme.textOnAccent, base.textOnAccent),
+  };
+};
 
 /** Read-only, session-less state of an outlet for guest pages (menu / ordering open, prices, theme). */
 export async function guestState(outletId: string, areaId?: string): Promise<GuestState> {

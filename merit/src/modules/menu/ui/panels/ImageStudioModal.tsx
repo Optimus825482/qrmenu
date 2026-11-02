@@ -37,10 +37,12 @@ export function ImageStudioModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imgLoaded, setImgLoaded] = useState(false);
+  // Canvas çözünürlüğü: render sırasında ref okunmaz, render pipeline bu state'i günceller.
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   const [showOriginal, setShowOriginal] = useState(false);
 
   // Zoom level for canvas viewport
-  const [zoom, setZoom] = useState(1);
+  const [zoom] = useState(1);
 
   // ─── 1. Kırpma (Crop) State ───
   const [isCropping, setIsCropping] = useState(false);
@@ -274,6 +276,7 @@ export function ImageStudioModal({
     if (showOriginal && originalImgRef.current) {
       canvas.width = originalImgRef.current.naturalWidth;
       canvas.height = originalImgRef.current.naturalHeight;
+      setCanvasSize({ width: canvas.width, height: canvas.height });
       const ctx = canvas.getContext("2d");
       if (ctx) ctx.drawImage(originalImgRef.current, 0, 0);
       return;
@@ -282,6 +285,7 @@ export function ImageStudioModal({
     const isSideways = rotation === 90 || rotation === 270;
     canvas.width = isSideways ? base.height : base.width;
     canvas.height = isSideways ? base.width : base.height;
+    setCanvasSize({ width: canvas.width, height: canvas.height });
 
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return;
@@ -322,7 +326,7 @@ export function ImageStudioModal({
       let r = data[i];
       let g = data[i + 1];
       let b = data[i + 2];
-      let a = data[i + 3];
+      const a = data[i + 3];
 
       if (a === 0) continue;
 
@@ -493,7 +497,7 @@ export function ImageStudioModal({
   };
 
   // ─── Crop Box Dragging & Resizing Handlers ───
-  const handleCropMouseDown = (e: React.MouseEvent, type: any) => {
+  const handleCropMouseDown = (e: React.MouseEvent, type: NonNullable<typeof cropDrag>["type"]) => {
     e.stopPropagation();
     e.preventDefault();
     setCropDrag({
@@ -515,7 +519,7 @@ export function ImageStudioModal({
       const dy = (e.clientY - cropDrag.startY) / zoom;
       const { startBox, type } = cropDrag;
 
-      let next = { ...startBox };
+      const next = { ...startBox };
 
       if (type === "move") {
         next.x = Math.max(0, Math.min(base.width - next.width, startBox.x + dx));
@@ -1115,7 +1119,7 @@ export function ImageStudioModal({
                 />
 
                 {/* Interactive Crop Box Overlay */}
-                {isCropping && canvasRef.current && (
+                {isCropping && canvasSize && (
                   <div
                     className="xp-crop-box"
                     style={{
@@ -1145,8 +1149,8 @@ export function ImageStudioModal({
             {/* Status bar */}
             <div className="xp-studio-statusbar">
               <span>
-                {canvasRef.current
-                  ? `Çözünürlük: ${canvasRef.current.width} × ${canvasRef.current.height} px`
+                {canvasSize
+                  ? `Çözünürlük: ${canvasSize.width} × ${canvasSize.height} px`
                   : "Yükleniyor..."}
               </span>
               <span>

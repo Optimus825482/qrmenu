@@ -15,18 +15,20 @@ async function openStudio(browser: Browser): Promise<{ page: Page; win: Locator;
   const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
   const context = await browser.newContext({
     locale: "tr-TR",
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     viewport: { width: 1600, height: 1000 },
     extraHTTPHeaders: { "x-forwarded-for": ip },
   });
   const page = await context.newPage();
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
-  const windows = page.getByRole("region", { name: "Menü Tasarım Merkezi", exact: true });
+  const windows = page.getByRole("region", { name: "Menü Tasarım Stüdyosu", exact: true });
   if ((await windows.count()) === 0) {
-    await page.getByRole("region", { name: "Masaüstü" }).getByRole("button", { name: "Menü Tasarım Merkezi" }).dblclick();
+    // The icon now lives inside a category folder; the Start menu is the stable entry point.
+    await page.getByRole("button", { name: "başlat" }).click();
+    await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Tasarım Stüdyosu", exact: true }).click();
   } else if (!(await windows.first().isVisible())) {
-    await page.getByRole("toolbar", { name: "Açık pencereler" }).getByRole("button", { name: "Menü Tasarım Merkezi" }).click();
+    await page.getByRole("toolbar", { name: "Açık pencereler" }).getByRole("button", { name: "Menü Tasarım Stüdyosu" }).click();
   }
   const win = windows.first();
   await expect(win).toBeVisible();
@@ -208,7 +210,7 @@ test("kasa çağrı ekranı seçilen ifadeyi gösterir", async ({ page, browser 
   const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
   const context = await browser.newContext({
     locale: "tr-TR",
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     extraHTTPHeaders: { "x-forwarded-for": ip },
   });
   const cashier = await context.newPage();
@@ -223,9 +225,14 @@ test("kasa çağrı ekranı seçilen ifadeyi gösterir", async ({ page, browser 
 test("seçeneksiz outletde yalnız Sadece çağır, çağrı yine çalışır", async ({ page, browser }) => {
   const { page: adminPage, studio } = await openStudio(browser);
   await studio.getByRole("tab", { name: "Garson çağrısı" }).click();
+  const allRows = studio.locator(".xp-call-options-list > li");
   const activeRows = studio.locator(".xp-call-options-list > li:has(input[type='checkbox']:checked)");
   while ((await activeRows.count()) > 0) {
-    const row = activeRows.first();
+    // Pin the row identity first: `activeRows.first()` is lazy and re-resolves to the next row as
+    // soon as this one stops matching the :checked filter, so address it by its list position.
+    const idx = await allRows.evaluateAll((els) => els.findIndex((el) => el.querySelector("input[type='checkbox']:checked")));
+    if (idx < 0) break;
+    const row = allRows.nth(idx);
     await row.getByRole("checkbox").click();
     await expect(row).toHaveAttribute("data-inactive", "true");
   }

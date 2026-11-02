@@ -6,12 +6,15 @@ import { expect, test as base, type Page } from "@playwright/test";
 
 config({ path: path.resolve(__dirname, "../../.env"), quiet: true });
 
+import { e2eDatabaseUrl } from "./e2eDb";
+
 export const TEST_PASSWORD = "Test!2026";
 export const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "";
 
 /**
- * Empties every application table of the DEV database (the one the dev server uses, DATABASE_URL),
- * re-runs the seed and creates the e2e staff users. Refuses to touch the unit-test database.
+ * Empties every application table of the e2e database (E2E_DATABASE_URL, else DATABASE_URL_TEST;
+ * must be *_e2e/*_test on localhost, see e2eDb.ts), re-runs the seed and creates the e2e staff users.
+ * The app server under test must use the same database (playwright.config.ts sets it).
  * The work happens in seed-e2e.ts under tsx: the generated Prisma client is ESM-only and cannot
  * be imported by Playwright's CommonJS test loader.
  */
@@ -20,7 +23,7 @@ export function resetAndSeed(opts: { guestMenu?: boolean } = {}): void {
   execFileSync(
     process.execPath,
     [path.join(root, "node_modules/tsx/dist/cli.mjs"), path.join(__dirname, "seed-e2e.ts")],
-    { cwd: root, stdio: "inherit", env: { ...process.env, SEED_GUEST_MENU: opts.guestMenu ? "1" : "0" } },
+    { cwd: root, stdio: "inherit", env: { ...process.env, E2E_DATABASE_URL: e2eDatabaseUrl(), SEED_GUEST_MENU: opts.guestMenu ? "1" : "0" } },
   );
 }
 

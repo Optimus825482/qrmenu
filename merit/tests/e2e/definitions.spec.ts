@@ -37,7 +37,7 @@ async function openDefinitions(page: Page, hotel: { name: string; code: string }
     .click();
   const picker = page.getByRole("region", { name: "Tanımlamalar", exact: true });
   await picker
-    .getByRole("button", { name: new RegExp(`^${hotel.name}\\s*${hotel.code}$`) })
+    .getByRole("button", { name: new RegExp(`logosu\\s+${hotel.name}$`) })
     .click();
   // The newest window of that hotel (a restored or earlier one may exist already).
   const win = winFor(page, hotel.name).last();
@@ -389,7 +389,7 @@ test("Masalar: Toplu Ekle 1–5 → M1..M5; tekrar CONFLICT; masalı outlet sili
   const win = await definitionsWindow(page, MR);
 
   await node(win, "Masalar").click();
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar 2" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar 2" });
   await expect(win.getByText("Bu outletin kayıtlı masası yok")).toBeVisible();
   await win.getByRole("button", { name: "Toplu Ekle" }).click();
   const bulk = page.getByRole("dialog", { name: "Toplu masa ekle" });
@@ -461,7 +461,7 @@ test("Kullanıcılar: Yeni test.garson (R-GAR, MR) listede; zayıf şifre redded
 
   // Ekipler: add the new user to Havuz Bar.
   await node(win, "Ekipler").click();
-  await win.getByLabel("Outlet", { exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
   await expect(row(win, "garson.havuz")).toBeVisible();
   await win.getByRole("button", { name: "Kullanıcı ekle" }).click();
   const add = page.getByRole("dialog", { name: "Kullanıcı ekle" });
