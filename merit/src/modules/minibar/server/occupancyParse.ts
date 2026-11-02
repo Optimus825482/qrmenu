@@ -13,6 +13,9 @@ export type UploadKind = GuestRecordKind;
 
 /** Upload size limit (.xlsx only). */
 export const OCCUPANCY_MAX_BYTES = 10 * 1024 * 1024;
+/** Sheet size limits (a hotel has far fewer rows/columns; larger files are rejected before scanning). */
+export const OCCUPANCY_MAX_ROWS = 5000;
+export const OCCUPANCY_MAX_COLUMNS = 64;
 
 export type ParsedRow = {
   /** 1-based Excel row number. */
@@ -204,12 +207,16 @@ export async function parseWorkbook(
 
   const workbook = new ExcelJS.Workbook();
   try {
-    await workbook.xlsx.load(data as unknown as ArrayBuffer);
+    await workbook.xlsx.load(data.subarray(0, OCCUPANCY_MAX_BYTES) as unknown as ArrayBuffer);
   } catch {
     throw notXlsx();
   }
   const sheet = workbook.worksheets.find((ws) => ws.rowCount > 0) ?? workbook.worksheets[0];
   if (!sheet || sheet.rowCount === 0) throw new DomainError("VALIDATION", "Dosyada veri satırı yok");
+
+  if (sheet.rowCount > OCCUPANCY_MAX_ROWS || sheet.columnCount > OCCUPANCY_MAX_COLUMNS) {
+    throw new DomainError("VALIDATION", "Dosya beklenenden büyük");
+  }
 
   const cell = (r: number, c: number): Cell => plain(sheet.getRow(r).getCell(c).value);
   const colCount = Math.max(sheet.columnCount, 1);

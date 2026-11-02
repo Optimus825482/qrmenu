@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OCCUPANCY_MAX_BYTES, parseDateCell, parseTimeCell, parseWorkbook } from "@/modules/minibar/server/occupancyParse";
+import { OCCUPANCY_MAX_BYTES, OCCUPANCY_MAX_COLUMNS, OCCUPANCY_MAX_ROWS, parseDateCell, parseTimeCell, parseWorkbook } from "@/modules/minibar/server/occupancyParse";
 import { buildP4001Xlsx, buildStandardXlsx } from "../helpers/xlsx";
 
 const TODAY = "2026-11-03";
@@ -218,5 +218,25 @@ describe("parseWorkbook: P4001", () => {
       { row: 11, message: "Geçersiz çıkış tarihi" },
       { row: 12, message: "Giriş tarihi çıkış tarihinden önce olmalı" },
     ]);
+  });
+});
+
+describe("parseWorkbook: boyut sınırı", () => {
+  it("satır sınırını aşan sayfa reddedilir", async () => {
+    const rows = Array.from({ length: OCCUPANCY_MAX_ROWS + 1 }, (_, i) => [String(i + 1), d("2026-11-01"), d("2026-11-05"), 2]);
+    const data = await buildStandardXlsx(rows, ["Room no", "Arrival", "Departure", "Adult"]);
+    expect(await messageOf(parseWorkbook(data, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+  });
+
+  it("sütun sınırını aşan sayfa reddedilir", async () => {
+    const headers = ["Room no", "Arrival", "Departure", ...Array.from({ length: OCCUPANCY_MAX_COLUMNS }, (_, i) => `X${i}`)];
+    const data = await buildStandardXlsx([["101", d("2026-11-01"), d("2026-11-05")]], headers);
+    expect(await messageOf(parseWorkbook(data, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+  });
+
+  it("sınır içindeki sayfa kabul edilir", async () => {
+    const rows = Array.from({ length: 100 }, (_, i) => [String(i + 1), d("2026-11-01"), d("2026-11-05"), 2]);
+    const data = await buildStandardXlsx(rows, ["Room no", "Arrival", "Departure", "Adult"]);
+    expect(await messageOf(parseWorkbook(data, { today: TODAY }))).toBe("OK");
   });
 });

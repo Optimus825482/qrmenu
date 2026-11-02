@@ -97,8 +97,6 @@ const inputSchema = z
   })
   .strict();
 
-const commitSchema = inputSchema.extend({ kind: z.enum(["IN_HOUSE", "ARRIVAL", "DEPARTURE"]) });
-
 function check<T>(schema: z.ZodType<T>, value: unknown): T {
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw fromZod(parsed.error);
@@ -249,10 +247,10 @@ async function reconcileAfter(
 /** Saves the file, then writes records (upsert by room + kind + overlapping dates) in ONE transaction. */
 export async function commitOccupancy(
   ctx: Ctx,
-  input: { fileName: string; data: Buffer; kind: UploadKind; hotelId?: string },
+  input: { fileName: string; data: Buffer; kind?: UploadKind; hotelId?: string },
   now: Date = new Date(),
 ): Promise<CommitResult> {
-  const { fileName, kind, hotelId: requested } = check(commitSchema, {
+  const { fileName, kind: requestedKind, hotelId: requested } = check(inputSchema, {
     fileName: input.fileName,
     kind: input.kind,
     hotelId: input.hotelId,
@@ -262,6 +260,8 @@ export async function commitOccupancy(
   assertXlsxName(fileName);
 
   const today = businessDate(now);
+  // Without a kind the file decides (detected only after the permission check above).
+  const kind = requestedKind ?? (await parseWorkbook(input.data, { today })).detectedKind;
   const sheet = await parseWorkbook(input.data, { today, kindHint: kind });
   const code = uploadCode(now);
   const storedPath = `occupancy/${hotelId}/${code}.xlsx`;
@@ -462,6 +462,9 @@ export async function deleteUpload(
   const result = await prisma.$transaction(
     async (tx) => {
       await advisoryLock(tx, `occ:${upload.hotelId}:${day}`);
+      // Re-read under the lock: a concurrent delete may have finished while we waited.
+      const current = await tx.occupancyUpload.findUnique({ where: { id: upload.id }, select: { status: true } });
+      if (!current || current.status === "SILINDI") throw new DomainError("CONFLICT", "Yükleme zaten silinmiş");
 
       const records = await tx.guestRecord.findMany({ where: { uploadId: upload.id }, select: { id: true } });
       const recordIds = records.map((r) => r.id);
@@ -571,22 +574,28 @@ export async function getUpload(
  * Retention job: removes stored workbooks older than `occupancy.fileRetentionDays` (hotel setting,
  * default 4). Upload rows and GuestRecords stay; only the file and `storedPath` go.
  */
-export async function cleanupOldFiles(now: Date = new Date()): Promise<number> {
+export async function cleanupOldFiles(now: Date = new Date()): Promise<{ removed: number; failed: number }> {
   const candidates = await prisma.occupancyUpload.findMany({
     where: { storedPath: { not: null }, createdAt: { lt: new Date(now.getTime() - 86_400_000) } },
     select: { id: true, hotelId: true, storedPath: true, createdAt: true },
   });
   const days = new Map<string, number>();
   let removed = 0;
+  let failed = 0;
   for (const c of candidates) {
-    if (!days.has(c.hotelId)) days.set(c.hotelId, await getSetting("occupancy.fileRetentionDays", c.hotelId));
-    const keepDays = days.get(c.hotelId) as number;
-    if (c.createdAt.getTime() >= now.getTime() - keepDays * 86_400_000) continue;
-    await removeUpload(c.storedPath as string);
-    await prisma.occupancyUpload.update({ where: { id: c.id }, data: { storedPath: null } });
-    removed++;
+    try {
+      if (!days.has(c.hotelId)) days.set(c.hotelId, await getSetting("occupancy.fileRetentionDays", c.hotelId));
+      const keepDays = days.get(c.hotelId) as number;
+      if (c.createdAt.getTime() >= now.getTime() - keepDays * 86_400_000) continue;
+      await removeUpload(c.storedPath as string);
+      await prisma.occupancyUpload.update({ where: { id: c.id }, data: { storedPath: null } });
+      removed++;
+    } catch (error) {
+      failed++;
+      console.error("[occupancy] dosya temizliği başarısız", { uploadId: c.id, error });
+    }
   }
-  return removed;
+  return { removed, failed };
 }
 
 export { OCCUPANCY_MAX_BYTES };

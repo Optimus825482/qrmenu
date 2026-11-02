@@ -355,6 +355,22 @@ describe("doluluk yükleme: silme", () => {
     expect(await codeOf(svc.deleteUpload(dep.ctx, res.uploadId, NOW))).toBe("CONFLICT");
   });
 
+  it("eşzamanlı çift silme: biri OK, diğeri CONFLICT", async () => {
+    const { royal, dep } = await world();
+    const res = await svc.commitOccupancy(
+      dep.ctx,
+      { fileName: "ih.xlsx", kind: "IN_HOUSE", data: await stdFile([["101", d("2026-11-01"), d("2026-11-06"), 2, null, null]]) },
+      NOW,
+    );
+    const out = await Promise.all([
+      codeOf(svc.deleteUpload(dep.ctx, res.uploadId, NOW)),
+      codeOf(svc.deleteUpload(dep.ctx, res.uploadId, NOW)),
+    ]);
+    expect([...out].sort()).toEqual(["CONFLICT", "OK"]);
+    expect(await testDb.auditLog.count({ where: { action: "OCCUPANCY_UPLOAD_DELETE", entityId: res.uploadId } })).toBe(1);
+    expect(await testDb.guestRecord.count({ where: { hotelId: royal.hid } })).toBe(0);
+  });
+
   it("silme sonrası kalan görevler için uzlaştırma çalışır", async () => {
     const { royal, dep } = await world();
     const reconcile = vi.fn(async () => ({ created: 0, added: 0, removed: 0, updated: 0 }));
@@ -370,6 +386,22 @@ describe("doluluk yükleme: silme", () => {
 });
 
 describe("doluluk yükleme: yetki ve kapsam", () => {
+  it("kind verilmemişse de yetki parse'dan önce denetlenir (bozuk dosya + yetkisiz = FORBIDDEN)", async () => {
+    await world();
+    const kat = await staff("R-KAT", "ROYAL");
+    const garbage = Buffer.from("bu bir xlsx degil");
+    expect(await codeOf(svc.commitOccupancy(kat.ctx, { fileName: "x.xlsx", data: garbage }, NOW))).toBe("FORBIDDEN");
+    const dep = await staff("R-DEP", "ROYAL");
+    expect(await codeOf(svc.commitOccupancy(dep.ctx, { fileName: "x.xlsx", data: garbage }, NOW))).toBe("VALIDATION");
+  });
+
+  it("kind verilmemişse dosyadan algılanan tür kullanılır", async () => {
+    const { dep } = await world();
+    const data = await stdFile([["101", d("2026-11-01"), d(TODAY), 2, null, "11:00"]]);
+    const res = await svc.commitOccupancy(dep.ctx, { fileName: "dp.xlsx", data }, NOW);
+    expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: res.uploadId } })).kind).toBe("DEPARTURE");
+  });
+
   it("R-KAT ve R-HKS yükleyemez/silemez; başka otelin yüklemesi bulunamaz", async () => {
     const { diamond, dep } = await world();
     const data = await stdFile([["101", d("2026-11-01"), d("2026-11-06"), 2, null, null]]);
@@ -434,19 +466,39 @@ describe("saklama", () => {
     const oldFile = path.join(uploadsDir, oldRow.storedPath as string);
     expect(fs.existsSync(oldFile)).toBe(true);
 
-    expect(await svc.cleanupOldFiles(NOW)).toBe(1);
+    expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 1, failed: 0 });
     expect(fs.existsSync(oldFile)).toBe(false);
     expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: old.uploadId } })).storedPath).toBeNull();
     expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: recent.uploadId } })).storedPath).not.toBeNull();
     expect(await testDb.guestRecord.count({ where: { hotelId: royal.hid } })).toBe(2);
-    expect(await svc.cleanupOldFiles(NOW)).toBe(0);
+    expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 0, failed: 0 });
+  });
+
+  it("tek dosya silinemezse diğerleri temizlenir ve failed sayılır", async () => {
+    const { dep } = await world();
+    const bad = await uploadAt(dep, daysAgo(6), "bozuk.xlsx", "101");
+    const good = await uploadAt(dep, daysAgo(5), "iyi.xlsx", "102");
+    const badRow = await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: bad.uploadId } });
+    // The stored path becomes a non-empty directory: fs.rm (no recursion) fails on it.
+    const badPath = path.join(uploadsDir, badRow.storedPath as string);
+    fs.rmSync(badPath, { force: true });
+    fs.mkdirSync(badPath);
+    fs.writeFileSync(path.join(badPath, "x"), "x");
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 1, failed: 1 });
+    } finally {
+      log.mockRestore();
+    }
+    expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: good.uploadId } })).storedPath).toBeNull();
+    expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: bad.uploadId } })).storedPath).not.toBeNull();
   });
 
   it("saklama süresi ayardan gelir (10 gün iken 5 günlük kalır)", async () => {
     const { royal, dep } = await world();
     const old = await uploadAt(dep, daysAgo(5), "eski.xlsx", "101");
     await testDb.setting.create({ data: { key: "occupancy.fileRetentionDays", hotelId: royal.hid, value: 10 as never } });
-    expect(await svc.cleanupOldFiles(NOW)).toBe(0);
+    expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 0, failed: 0 });
     expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: old.uploadId } })).storedPath).not.toBeNull();
   });
 });
