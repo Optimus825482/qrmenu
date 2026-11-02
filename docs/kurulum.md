@@ -209,8 +209,11 @@ PRINT_GATEWAY_KEY=<openssl rand -base64 32>
 - Giriş betiği (`docker-entrypoint.sh`) `prisma migrate deploy` çalıştırır; yalnız veritabanı
   bağlantı hatasında en çok 30 kez yeniden dener, migrasyon hatasında **hata koduyla çıkar**
   (konteyner ayağa kalkmaz). `RUN_SEED=true` iken seed hatası da başlatmayı durdurur.
-- Derleme aşamasında `SKIP_ENV_VALIDATION=1` yalnız `npm run build` komutuna verilir; imaja gizli
-  değer girmez.
+- Derleme aşamasında `SKIP_ENV_VALIDATION=1` yalnız `prisma generate` ve `next build` komutlarına verilir;
+  imaja gizli değer girmez. Dockerfile BuildKit gerektirir (Coolify'da varsayılan) ve katman/`npm`
+  önbelleği kullanır; `package*.json` ve `prisma/schema.prisma` değişmedikçe kurulum katmanları yeniden
+  çalışmaz. Daha hızlı dağıtım için GitHub Actions'ın GHCR'a yolladığı hazır imaj kullanılabilir
+  (`COOLIFY_DEPLOYMENT.md` → Dağıtım biçimleri).
 - Yalnız HTTP ile erişilen test ortamında (IP/sslip.io) `COOKIE_SECURE=false` verin.
 
 ## 6. Ters vekil (nginx)

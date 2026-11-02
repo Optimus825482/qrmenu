@@ -9,6 +9,29 @@ Ayrıntılı genel kurulum için `docs/kurulum.md` dosyasına bakın.
 * **`postgres` (PostgreSQL 16):** uygulama veritabanı.
 * **Kalıcı birimler:** `postgres-data` (veritabanı), `app-uploads` (yüklenen görseller).
 
+## Dağıtım biçimleri ve süreler
+
+| Biçim | Nasıl | Beklenen süre |
+| --- | --- | --- |
+| **Docker Compose (sunucuda derleme)** — varsayılan | Coolify depoyu çeker ve `Dockerfile` ile derler. | İlk derleme 7-10 dk; yalnız kaynak değişince katman önbelleği sayesinde yaklaşık 3-5 dk (`npm ci` ve `prisma generate` katmanları yeniden kullanılır). `package*.json` veya `prisma/schema.prisma` değişirse ilgili katmanlar yeniden çalışır. |
+| **Docker Image (hazır imaj)** — en hızlı | GitHub Actions (`.github/workflows/docker-image.yml`) `main` push'unda imajı derleyip `ghcr.io/optimus825482/qrmenu:latest` ve `:<commit-sha>` olarak GHCR'a yollar; Coolify yalnız çeker. | Yaklaşık 1 dk (çekme + başlatma). Derleme GitHub'da yapılır. |
+
+Dockerfile iyileştirmeleri: tek `npm ci` (çalışma ortamı `node_modules` ağacı `npm prune --omit=dev` ile
+elde edilir), BuildKit önbellek bağları (`/root/.npm`, `.next/cache`), `prisma generate` yalnız şemadan ve
+bir kez, tip denetimi derlemede açık. `output: "standalone"` bilinçli olarak kullanılmaz: giriş betiği
+`prisma migrate deploy` ve isteğe bağlı `tsx prisma/seed.ts` için tam ağaç gerektirir.
+
+### Hazır imajla dağıtım (isteğe bağlı)
+1. GitHub → Packages → `qrmenu` paketini oluşturan ilk iş akışı çalıştıktan sonra paketi özel bırakın ve
+   Coolify'a bir GHCR kayıt bilgisi (kullanıcı + `read:packages` yetkili token) ekleyin; ya da paketi herkese açık yapın.
+2. Coolify'da `postgres` için ayrı bir PostgreSQL kaynağı oluşturun, uygulama için **+ New Resource →
+   Docker Image**: `ghcr.io/optimus825482/qrmenu`, etiket `latest`. Ortam değişkenlerini yukarıdaki gibi verin;
+   `DATABASE_URL`'i doğrudan tanımlayın, `UPLOADS_DIR=/app/uploads` ve `/app/uploads` için kalıcı depolama ekleyin.
+3. GitHub Actions bitince Coolify'da yeniden dağıtın (veya Coolify webhook'unu iş akışı sonuna ekleyin).
+
+Not: CI iş akışı (`ci.yml`) şu an kodla ilgisi olmayan bir runner/hesap sorunu nedeniyle başarısız
+oluyor; bu, `docker-image.yml` çalışmasını etkilemez ama GitHub Actions'ın hesapta çalışır durumda olması gerekir.
+
 ## Adım adım
 
 ### 1. Kaynağı ekleyin

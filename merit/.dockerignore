@@ -1,5 +1,6 @@
 **/node_modules
 **/.next
+**/src/generated
 **/.git
 **/.gitignore
 **/.env
@@ -9,6 +10,11 @@
 **/playwright-report
 **/coverage
 **/tests
-uploads
+**/tsconfig.tsbuildinfo
 **/*.log
 **/prisma/dev.db*
+/uploads
+*.md
+tools
+playwright.config.ts
+vitest.config.mts
