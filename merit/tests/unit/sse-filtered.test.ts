@@ -52,9 +52,9 @@ describe("olay tipleri", () => {
       expect(SSE_EVENT_TYPES).toContain(t);
     }
     expect(GUEST_EVENT_TYPES).toEqual([
-      "menu.availability", "menu.changed", "price.display", "ordering.changed", "order.approved",
-      "order.rejected", "order.prep", "order.ready", "order.served", "order.cancelled",
-      "call.resolved",
+      "menu.availability", "menu.changed", "price.display", "ordering.changed", "order.confirmed",
+      "order.approved", "order.rejected", "order.prep", "order.ready", "order.onway",
+      "order.delivered", "order.served", "order.cancelled", "call.resolved",
     ]);
     for (const t of GUEST_EVENT_TYPES) expect(SSE_EVENT_TYPES).toContain(t);
   });

@@ -322,7 +322,7 @@ describe("scopes", () => {
   it("SISTEM: sistem geneli + tüm oteller; YONETIM: yalnız yazma yetkili kendi otelleri", async () => {
     const s = await settingsAdmin.scopes(await sys());
     expect(s.system).toBe(true);
-    expect(s.hotels.map((h) => h.code).sort()).toEqual(["ROYAL", "DIAMOND", "PREMIUM"]);
+    expect(s.hotels.map((h) => h.code).sort()).toEqual(["DIAMOND", "PREMIUM", "ROYAL"]);
     const m = await settingsAdmin.scopes(await mgmt());
     expect(m.system).toBe(false);
     expect(m.hotels.map((h) => h.code)).toEqual(["ROYAL"]);

@@ -16,7 +16,7 @@ const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" })
 
 async function openApp(page: Page, title: string, hotel?: { name: string; code: string }): Promise<Locator> {
   await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: title }).click();
+  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: title, exact: true }).click();
   if (!hotel) {
     const win = page.getByRole("region", { name: title, exact: true }).first();
     await expect(win).toBeVisible();
@@ -26,7 +26,7 @@ async function openApp(page: Page, title: string, hotel?: { name: string; code: 
   // Users with several hotels pick one first; a single-hotel user gets the window straight away.
   const card = page
     .getByRole("region", { name: title, exact: true })
-    .getByRole("button", { name: new RegExp(`^${hotel.name}\\s*${hotel.code}$`) });
+    .getByRole("button", { name: new RegExp(`^${hotel.name} logosu\\s+${hotel.name}$`) });
   await expect(card.or(win)).toBeVisible();
   if (await card.isVisible()) await card.click();
   await expect(win).toBeVisible();
@@ -53,7 +53,7 @@ async function createNode(win: Locator, button: string, name: string, price?: st
 test("Menü Yönetimi: ağaç kur, tükendi, çeviri, görsel, sipariş kapat", async ({ page }) => {
   await openAdmin(page, "admin");
   const win = await openApp(page, "Menü Yönetimi", MR);
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
 
   await createNode(win, "Yeni Kategori", "İçecekler");
   await createNode(win, "Yeni Alt Kategori", "Soğuk");
@@ -128,7 +128,7 @@ test("Tema Yönetimi: yeni tema, Deniz'i Havuz Bar'a ata, varsayılan silinemez"
 test("fbm.mr: Menü Yönetimi MR için açılır, Havuz Bar menüsünü düzenler, temayı atar", async ({ page }) => {
   await openAdmin(page, "fbm.mr");
   const win = await openApp(page, "Menü Yönetimi", MR);
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
   await expect(win.getByRole("treeitem", { name: /İçecekler/ })).toBeVisible();
   await expect(win.getByRole("button", { name: "Yeni Kategori" })).toBeVisible();
 
@@ -142,7 +142,8 @@ test("fbm.mr: Menü Yönetimi MR için açılır, Havuz Bar menüsünü düzenle
 test("garson.havuz: yönetim kabuğuna giremez (menüde düzenleme yüzeyi yok)", async ({ page }) => {
   // Outlet field roles work in the ops screens: the admin shell (and its Menü Yönetimi) lands them on the outlet selection (/secim).
   await login(page, "garson.havuz");
-  await expect(page).toHaveURL(/\/secim$/);
-  await expect(page.getByText("Havuz Bar")).toBeVisible();
+  // The outlet cards are shown on the login screen itself (no admin shell).
+  await expect(page.getByRole("heading", { name: "Çalışacağınız outleti seçin" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Havuz Bar/ })).toBeVisible();
   await expect(page.getByRole("region", { name: "Masaüstü" })).toHaveCount(0);
 });

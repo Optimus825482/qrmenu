@@ -76,7 +76,7 @@ describe("menuImages", () => {
     const { ctx, cat } = await setup();
     await expect(
       images.upload(ctx, cat.id, file(Buffer.alloc(2 * 1024 * 1024 + 1))),
-    ).rejects.toMatchObject({ code: "VALIDATION", message: "Görsel 2 MB'ı aşamaz" });
+    ).rejects.toMatchObject({ code: "VALIDATION", message: expect.stringContaining("Görsel 2 MB'ı aşamaz") });
     await expect(
       images.upload(ctx, cat.id, file(Buffer.from("merhaba"), "text/plain")),
     ).rejects.toMatchObject({ code: "VALIDATION" });
@@ -85,17 +85,29 @@ describe("menuImages", () => {
     });
   });
 
-  it("ikinci yüklemede eski dosya silinir; remove görseli kaldırır", async () => {
+  it("ikinci yükleme görseli listeye ekler (ilk görsel ana kalır); remove(url) yalnız onu, remove() hepsini kaldırır", async () => {
     const { ctx, cat } = await setup();
     const first = await images.upload(ctx, cat.id, file(await png("#ff0000")));
     const second = await images.upload(ctx, cat.id, file(await png("#00ff00")));
-    expect(second.imageUrl).not.toBe(first.imageUrl);
-    expect(fs.existsSync(path.join(dir, first.imageUrl.slice(9)))).toBe(false);
-    expect(fs.existsSync(path.join(dir, second.imageUrl.slice(9)))).toBe(true);
+    expect(second.imageUrl).toBe(first.imageUrl);
+    expect(second.imageUrls).toHaveLength(2);
+    const [urlA, urlB] = second.imageUrls;
+    expect(urlA).toBe(first.imageUrl);
+    expect(fs.existsSync(path.join(dir, urlA.slice(9)))).toBe(true);
+    expect(fs.existsSync(path.join(dir, urlB.slice(9)))).toBe(true);
+
+    await images.remove(ctx, cat.id, urlA);
+    expect(fs.existsSync(path.join(dir, urlA.slice(9)))).toBe(false);
+    let node = await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } });
+    expect(node.imageUrl).toBe(urlB);
+    expect(node.imageUrls).toEqual([urlB]);
+
     await images.remove(ctx, cat.id);
-    expect(fs.existsSync(path.join(dir, second.imageUrl.slice(9)))).toBe(false);
-    expect((await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } })).imageUrl).toBeNull();
-    expect(await testDb.auditLog.count({ where: { action: "MENU_IMAGE_REMOVE" } })).toBe(1);
+    expect(fs.existsSync(path.join(dir, urlB.slice(9)))).toBe(false);
+    node = await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } });
+    expect(node.imageUrl).toBeNull();
+    expect(node.imageUrls).toEqual([]);
+    expect(await testDb.auditLog.count({ where: { action: "MENU_IMAGE_REMOVE" } })).toBe(2);
   });
 
   const listFiles = (d: string): string[] =>

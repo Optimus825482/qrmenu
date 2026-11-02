@@ -17,7 +17,7 @@ test("giriş sayfası: Merit OS başlığı, etiketli alanlar, konsolda hata yok
   page.on("pageerror", (err) => consoleErrors.push(err.message));
 
   await page.goto("/giris");
-  await expect(page.getByText("MERIT OS")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "F&B COMMAND CENTER" })).toBeVisible();
   const logo = page.getByRole("img", { name: "Merit Royal" });
   await expect(logo).toBeVisible();
   expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
@@ -25,7 +25,7 @@ test("giriş sayfası: Merit OS başlığı, etiketli alanlar, konsolda hata yok
   await expect(page.getByLabel("Kullanıcı adı")).toHaveAttribute("autocomplete", "username");
   await expect(page.getByLabel("Şifre")).toHaveAttribute("autocomplete", "current-password");
   await expect(page.getByRole("button", { name: "Giriş Yap" })).toBeVisible();
-  await expect(page).toHaveTitle("Merit OS");
+  await expect(page).toHaveTitle("F&B Command Center — Merit Royal");
 
   // Mobile first: nothing may overflow horizontally at 360 px.
   await page.setViewportSize({ width: 360, height: 740 });
@@ -65,7 +65,7 @@ test("kat.mr: ?next= göreli yola gider", async ({ page }) => {
 
 test("depo.cok (iki otel) → /secim, 2 kart, seçim → /depo/havuz", async ({ page }) => {
   await login(page, "depo.cok");
-  await expect(page).toHaveURL(/\/secim$/);
+  await expect(page.getByRole("heading", { name: "Çalışacağınız outleti seçin" })).toBeVisible();
   const cards = page.getByRole("button", { name: /Minibar/ });
   await expect(cards).toHaveCount(2);
   await expect(page.getByText("Merit Royal Premium").first()).toBeVisible();
@@ -75,7 +75,7 @@ test("depo.cok (iki otel) → /secim, 2 kart, seçim → /depo/havuz", async ({ 
 
 test("garson.havuz (iki outlet) → /secim, outlet kartları", async ({ page }) => {
   await login(page, "garson.havuz");
-  await expect(page).toHaveURL(/\/secim$/);
+  await expect(page.getByRole("heading", { name: "Çalışacağınız outleti seçin" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Beach Bar/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Havuz Bar/ })).toBeVisible();
 });

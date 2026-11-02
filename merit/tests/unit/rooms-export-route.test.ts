@@ -23,7 +23,7 @@ describe("GET /api/admin/rooms/export", () => {
     const res = await get();
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("spreadsheetml.sheet");
-    expect(res.headers.get("content-disposition")).toBe('attachment; filename="odalar-MR.xlsx"');
+    expect(res.headers.get("content-disposition")).toBe('attachment; filename="odalar-ROYAL.xlsx"');
     expect(res.headers.get("cache-control")).toBe("no-store");
     expect(Buffer.from(await res.arrayBuffer()).toString()).toBe("xlsx-bytes");
     expect(exportExcel).toHaveBeenCalledWith({ user: { id: "u1" } }, "h1");

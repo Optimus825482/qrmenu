@@ -2,11 +2,22 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Result } from "@/lib/result";
+import { answer, confirmStore } from "@/shell/confirm";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog } from "@/shell/ui/FormDialog";
 import { Toolbar } from "@/shell/ui/Toolbar";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  answer(false);
+  confirmStore.setState({ request: null });
+});
+
+/** A successful save shows an "İşlem tamamlandı" information box; the dialog closes after "Tamam". */
+async function acknowledgeSuccess() {
+  await waitFor(() => expect(confirmStore.getState().request).toMatchObject({ kind: "alert", title: "İşlem tamamlandı" }));
+  answer(true);
+}
 
 type Submit = (v: Record<string, string>) => Promise<Result<unknown>>;
 
@@ -47,6 +58,7 @@ describe("FormDialog", () => {
     fireEvent.change(screen.getByLabelText("Ad"), { target: { value: "Zemin" } });
     fireEvent.change(screen.getByLabelText("Numara"), { target: { value: "0" } });
     fireEvent.click(screen.getByRole("button", { name: "Kaydet" }));
+    await acknowledgeSuccess();
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(onSubmit).toHaveBeenCalledWith({ name: "Zemin", no: "0" });
   });
@@ -79,6 +91,7 @@ describe("FormDialog", () => {
     fireEvent.click(button);
     expect(onSubmit).toHaveBeenCalledTimes(1);
     finish({ ok: true, data: null });
+    await acknowledgeSuccess();
     await waitFor(() => expect(button.getAttribute("aria-busy")).toBeNull());
   });
 

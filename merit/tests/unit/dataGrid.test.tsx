@@ -137,8 +137,11 @@ describe("DataGrid", () => {
     expect(props.onSort).not.toHaveBeenCalled();
   });
 
-  it("sıralanabilir başlık klavyeyle erişilir: tabIndex=0, Enter/Boşluk sıralar; sıralanamaz başlık odaklanamaz", () => {
-    const props = setup({ sort: { field: "name", dir: "desc" } });
+  it("sıralanabilir başlık klavyeyle erişilir: tabIndex=0, Enter/Boşluk sıralar; sortable:false başlık odaklanamaz", () => {
+    const props = setup({
+      sort: { field: "name", dir: "desc" },
+      columns: [...COLUMNS, { key: "id", title: "Kod", sortable: false }],
+    });
     const sortable = screen.getByRole("columnheader", { name: /Ad/ });
     expect(sortable.getAttribute("tabindex")).toBe("0");
     expect(sortable.getAttribute("aria-sort")).toBe("descending");
@@ -146,10 +149,22 @@ describe("DataGrid", () => {
     expect(props.onSort).toHaveBeenLastCalledWith({ field: "name", dir: "asc" });
     fireEvent.keyDown(sortable, { key: " " });
     expect(props.onSort).toHaveBeenCalledTimes(2);
-    const plain = screen.getByRole("columnheader", { name: /Kat/ });
+    const plain = screen.getByRole("columnheader", { name: /Kod/ });
     expect(plain.getAttribute("tabindex")).toBeNull();
     fireEvent.keyDown(plain, { key: "Enter" });
     expect(props.onSort).toHaveBeenCalledTimes(2);
+  });
+
+  it("sortable verilmeyen başlık yerel sıralar: onSort çağrılmaz, satır sırası değişir", () => {
+    const props = setup();
+    const header = screen.getByRole("columnheader", { name: /Kat/ });
+    expect(header.getAttribute("tabindex")).toBe("0");
+    fireEvent.keyDown(header, { key: "Enter" }); // asc
+    fireEvent.keyDown(header, { key: "Enter" }); // desc
+    expect(props.onSort).not.toHaveBeenCalled();
+    expect(header.getAttribute("aria-sort")).toBe("descending");
+    const names = screen.getAllByRole("row").slice(1).map((r) => r.textContent ?? "");
+    expect(names[0]).toContain("Oda 201");
   });
 
   it("sayfalama: sonraki/önceki sayfa onPage çağırır", () => {

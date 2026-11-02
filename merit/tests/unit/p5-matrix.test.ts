@@ -73,7 +73,7 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     expect(themes.filter((t) => t.isDefault).map((t) => t.name)).toEqual(["Royal Gold"]);
     await db.menuTheme.update({ where: { name: "Deniz" }, data: { accent: "#000000" } });
     await runSeed(db);
-    expect(await db.menuTheme.count()).toBe(3);
+    expect(await db.menuTheme.count()).toBe(MENU_THEMES.length);
     expect((await db.menuTheme.findUniqueOrThrow({ where: { name: "Deniz" } })).accent).toBe("#000000");
   });
 

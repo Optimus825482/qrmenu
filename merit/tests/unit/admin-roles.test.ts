@@ -116,7 +116,9 @@ describe("roles: yaşam döngüsü", () => {
     });
     expect(await testDb.role.count({ where: { id: created.id } })).toBe(1);
 
-    await expect(roles.remove(ctx, (await roleByCode("R-GAR")).id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await makeUser({ username: "test.garson", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    await expect(roles.remove(ctx, (await roleByCode("R-GAR")).id)).rejects.toMatchObject({ code: "CONFLICT" });
+    await expect(roles.remove(ctx, (await roleByCode("R-SYS")).id)).rejects.toMatchObject({ code: "FORBIDDEN" });
 
     const empty = await roles.create(ctx, { code: "R-BOS", name: "Boş", kind: "OUTLET" });
     await roles.remove(ctx, empty.id);

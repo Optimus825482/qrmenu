@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import type { Page } from "@playwright/test";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.describe.configure({ mode: "serial" });
@@ -19,7 +20,7 @@ function trackErrors(page: Page): string[] {
 }
 
 async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     return await fn(client);

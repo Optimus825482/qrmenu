@@ -9,12 +9,22 @@ export default async function KdsPage() {
   if (!ctx.session.outletId || !(await can(ctx, "QS-KDS", "V", ctx.session.hotelId))) redirect("/secim");
   const outletId = ctx.session.outletId;
 
+  let loaded: { board: Awaited<ReturnType<typeof kds.board>>; canEdit: boolean; canPrint: boolean } | null = null;
+  let failure: unknown = null;
   try {
-    const board = await kds.board(ctx, outletId);
-    const canEdit = await can(ctx, "QS-KDS", "D", ctx.session.hotelId);
-    const canPrint = await can(ctx, "QS-KDS", "O", ctx.session.hotelId);
-    return <KdsClient key={outletId} outletId={outletId} board={board} canEdit={canEdit} canPrint={canPrint} />;
+    loaded = {
+      board: await kds.board(ctx, outletId),
+      canEdit: await can(ctx, "QS-KDS", "D", ctx.session.hotelId),
+      canPrint: await can(ctx, "QS-KDS", "O", ctx.session.hotelId),
+    };
   } catch (error: unknown) {
+    failure = error;
+  }
+  if (loaded) {
+    return <KdsClient key={outletId} outletId={outletId} board={loaded.board} canEdit={loaded.canEdit} canPrint={loaded.canPrint} />;
+  }
+  {
+    const error = failure;
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md rounded-2xl border border-border bg-surface p-8 shadow-sm">

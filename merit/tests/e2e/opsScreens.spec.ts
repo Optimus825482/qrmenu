@@ -17,9 +17,10 @@ async function sendOrder(page: import("@playwright/test").Page) {
 
 test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, browser }) => {
   await sendOrder(page);
-  const cashierContext = await browser.newContext({ baseURL: "http://localhost:3000", locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.21.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
+  const cashierContext = await browser.newContext({ baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"), locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.21.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
   const cashier = await cashierContext.newPage();
   await login(cashier, "kasa.havuz");
+  await cashier.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(cashier).toHaveURL(/\/kasa$/);
 
   await cashier.getByRole("button", { name: "M1 masa ataması" }).click();
@@ -53,9 +54,10 @@ test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, brow
 });
 
 test("KDS canlı mutfak akışı: yeni, hazırlanıyor, hazır ve servis", async ({ page, browser }) => {
-  const cashierContext = await browser.newContext({ baseURL: "http://localhost:3000", locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.22.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
+  const cashierContext = await browser.newContext({ baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"), locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.22.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
   const cashier = await cashierContext.newPage();
   await login(cashier, "kasa.havuz");
+  await cashier.getByRole("button", { name: /Havuz Bar/ }).click();
   await cashier.getByRole("button", { name: "M1 masa ataması" }).click();
   const assignment = cashier.getByRole("dialog", { name: "M1 · Masa ataması" });
   await assignment.getByRole("combobox", { name: "Garson" }).selectOption({ label: "Test garson.havuz" });
@@ -67,9 +69,10 @@ test("KDS canlı mutfak akışı: yeni, hazırlanıyor, hazır ve servis", async
   await cashier.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name: "Kuyruk" }).click();
   await cashier.getByRole("button", { name: "Onayla" }).click();
 
-  const kitchenContext = await browser.newContext({ baseURL: "http://localhost:3000", locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.23.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
+  const kitchenContext = await browser.newContext({ baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"), locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.23.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
   const kitchen = await kitchenContext.newPage();
   await login(kitchen, "kds.havuz");
+  await kitchen.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(kitchen).toHaveURL(/\/kds$/);
   const newColumn = kitchen.getByLabel("Yeni");
   const newCard = newColumn.getByRole("article").filter({ hasText: orderNo! });
@@ -83,10 +86,9 @@ test("KDS canlı mutfak akışı: yeni, hazırlanıyor, hazır ve servis", async
   const readyCard = readyColumn.getByRole("article").filter({ hasText: orderNo! });
   await expect(readyCard).toBeVisible();
 
-  const waiterContext = await browser.newContext({ baseURL: "http://localhost:3000", locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.24.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
+  const waiterContext = await browser.newContext({ baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"), locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": `10.24.${randomInt(1, 255)}.${randomInt(1, 255)}` } });
   const waiter = await waiterContext.newPage();
   await login(waiter, "garson.havuz");
-  await expect(waiter).toHaveURL(/\/secim$/);
   await waiter.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(waiter).toHaveURL(/\/garson$/);
   await waiter.getByRole("button", { name: "Masalarım" }).click();

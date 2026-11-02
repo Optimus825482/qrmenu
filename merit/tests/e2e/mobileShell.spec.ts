@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 import type { Page } from "@playwright/test";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 // One database state for the whole file (reset once).
@@ -27,7 +28,7 @@ const tab = (page: Page, name: string) => tabs(page).getByRole("tab", { name });
 const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" });
 
 async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     return await fn(client);

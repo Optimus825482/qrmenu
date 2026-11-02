@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { getSetting } from "@/lib/settings";
@@ -182,7 +182,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
         include: VIEW_INCLUDE,
       });
 
-      let finalStatus: string = created.status;
+      let finalStatus: OrderStatus = created.status;
       if (state.confirmRequired) {
         await tx.order.update({
           where: { id: created.id },
@@ -211,7 +211,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
 
       const orderForRecipients = {
         ...created,
-        status: finalStatus as any,
+        status: finalStatus,
       };
 
       await notify(
@@ -243,7 +243,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
       );
 
       return toGuestOrderView(
-        { ...created, status: finalStatus as any },
+        { ...created, status: finalStatus },
         {
           kind: "ODA_SERVISI",
           roomNumber: target.room.number,

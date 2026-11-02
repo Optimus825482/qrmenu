@@ -319,6 +319,16 @@ describe("tables", () => {
     expect(bulkAudit).toHaveLength(2);
   });
 
+  it("bulkCreate useAreaLabel: etiket '<outlet> <no>' olur, ön ek yok sayılır (Tanımlamalar penceresi)", async () => {
+    const ctx = await sys();
+    const bar = await outlets.create(ctx, await hotelId("ROYAL"), BAR);
+    await addClosedArea(bar.id);
+    const result = await tables.bulkCreate(ctx, bar.id, { prefix: "", from: 1, to: 3, useAreaLabel: true });
+    expect(result.created).toBe(3);
+    const listed = (await tables.list(ctx, bar.id, Q)).items.map((r) => r.label);
+    expect(listed).toEqual(["Havuz Bar 2 1", "Havuz Bar 2 2", "Havuz Bar 2 3"]);
+  });
+
   it("başka otelin outletinde masa işlemi yönetim için FORBIDDEN; olmayan outlet NOT_FOUND", async () => {
     const root = await sys();
     const other = await outlets.create(root, await hotelId("PREMIUM"), BAR);

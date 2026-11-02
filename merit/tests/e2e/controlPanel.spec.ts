@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { acknowledge, answer } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 // One database state for the whole file (reset once): prefs saved by one test are seen by the next.
@@ -124,13 +125,13 @@ test("Marka: alt telif bandı ve filigran görünür; Denetim Masası'ndan kapan
 
   // Defaults: both on.
   await expect(footer).toHaveText(
-    "MERIT ROYAL F&B OPERATION COMMAND CENTER © 2026 · CODE BY ERKAN ERDEM",
+    "MERIT ROYAL · F&B COMMAND CENTER © 2026 · CODE BY ERKAN ERDEM",
   );
   await expect(watermark).toHaveCount(1);
   await expect(watermark).toHaveAttribute("aria-hidden", "true");
   expect(await watermark.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
   await expect(watermark).toContainText("MERIT ROYAL");
-  await expect(watermark).toContainText("F&B OPERATION COMMAND CENTER");
+  await expect(watermark).toContainText("F&B COMMAND CENTER");
   await expect(watermark).not.toContainText("ERKAN");
   await expect(watermark).not.toContainText("©");
   await expect(bandSwitch).toBeChecked();
@@ -249,13 +250,13 @@ test("mobil Ayarlar: Marka anahtarları var, alt telif bandı mobilde çizilmez"
   await expect(page.locator(".xp-footer-band")).toHaveCount(0);
 });
 
-test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ request, page }) => {
+test("GET /manifest.webmanifest 200, name F&B Command Center; /sw.js sunulur", async ({ request, page }) => {
   const res = await request.get("/manifest.webmanifest");
   expect(res.status()).toBe(200);
   const manifest = await res.json();
   expect(manifest).toMatchObject({
-    name: "Merit OS",
-    short_name: "Merit OS",
+    name: "F&B Command Center",
+    short_name: "F&B Center",
     start_url: "/admin",
     display: "standalone",
   });
@@ -263,9 +264,9 @@ test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ re
   const sources = (manifest.icons as { src: string }[]).map((icon) => icon.src);
   expect(sources).toEqual(
     expect.arrayContaining([
-      "/icons/merit.svg",
-      "/icons/legacy/icon-192.png",
-      "/icons/legacy/icon-512.png",
+      "/icons/merit.svg?v=4",
+      "/icons/merit-192.png?v=4",
+      "/icons/merit-512.png?v=4",
     ]),
   );
   for (const icon of manifest.icons as { src: string }[]) {
@@ -279,7 +280,7 @@ test("GET /manifest.webmanifest 200, name Merit OS; /sw.js sunulur", async ({ re
   await page.goto("/giris");
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
     "href",
-    /icons\/legacy\/apple-touch-icon-180\.png/,
+    /icons\/merit-192\.png/,
   );
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
     "href",
@@ -382,7 +383,7 @@ test("Sistem: admin DND kontrol sayısını sistem geneli ve otel için değişt
   await openAdmin(page);
   if (!(await panelWindow(page).isVisible())) await openControlPanel(page);
   const win = panelWindow(page);
-  await win.getByRole("tab", { name: "Sistem" }).click();
+  await win.getByRole("tab", { name: "Minibar ve Kat" }).click();
   const scope = win.getByLabel("Kapsam");
   await expect(scope).toHaveValue("");
 
@@ -391,6 +392,8 @@ test("Sistem: admin DND kontrol sayısını sistem geneli ve otel için değişt
   await expect(row.getByText("sistem", { exact: true })).toBeVisible();
   await row.getByLabel("DND asgari kontrol sayısı").fill("4");
   await row.getByRole("button", { name: "Kaydet" }).click();
+  await answer(page, "Ayarı kaydet", "Evet");
+  await acknowledge(page);
   await expect(win.getByRole("status")).toContainText("DND asgari kontrol sayısı kaydedildi");
   await expect(row.getByText("sistem", { exact: true })).toBeVisible();
 
@@ -400,12 +403,14 @@ test("Sistem: admin DND kontrol sayısını sistem geneli ve otel için değişt
   await expect(row.getByText("sistem", { exact: true })).toBeVisible();
   await row.getByLabel("DND asgari kontrol sayısı").fill("3");
   await row.getByRole("button", { name: "Kaydet" }).click();
+  await answer(page, "Ayarı kaydet", "Evet");
+  await acknowledge(page);
   await expect(row.getByText("otel", { exact: true })).toBeVisible();
 
   await page.reload();
   const again = panelWindow(page);
   await expect(again).toBeVisible();
-  await again.getByRole("tab", { name: "Sistem" }).click();
+  await again.getByRole("tab", { name: "Minibar ve Kat" }).click();
   await again.getByLabel("Kapsam").selectOption({ label: "Otel: Merit Royal" });
   const reloaded = again.getByRole("group", { name: "DND asgari kontrol sayısı" });
   await expect(reloaded.getByLabel("DND asgari kontrol sayısı")).toHaveValue("3");
@@ -413,13 +418,15 @@ test("Sistem: admin DND kontrol sayısını sistem geneli ve otel için değişt
 
   // Removing the hotel value falls back to the system value 4.
   await reloaded.getByRole("button", { name: "Otel değerini kaldır" }).click();
-  await page.getByRole("dialog", { name: "Otel değerini kaldır" }).getByRole("button", { name: "Evet" }).click();
+  await answer(page, "Otel değerini kaldır", "Evet");
+  await acknowledge(page);
   await expect(reloaded.getByLabel("DND asgari kontrol sayısı")).toHaveValue("4");
   await expect(reloaded.getByText("sistem", { exact: true })).toBeVisible();
 
   // Invalid value comes back as a field error and nothing is saved.
   await reloaded.getByLabel("DND asgari kontrol sayısı").fill("99");
   await reloaded.getByRole("button", { name: "Kaydet" }).click();
+  await answer(page, "Ayarı kaydet", "Evet");
   await expect(reloaded.getByRole("alert")).toBeVisible();
   expect(errors.filter((e) => !/status of 4\d\d/.test(e))).toEqual([]);
 });
@@ -431,16 +438,18 @@ test("Sistem: otel yöneticisi (ayar.mr) 'Sistem geneli' görmez, kendi otelini 
   await expect(page).toHaveURL(/\/admin$/);
   await openControlPanel(page);
   const win = panelWindow(page);
-  await win.getByRole("tab", { name: "Sistem" }).click();
+  await win.getByRole("tab", { name: "Minibar ve Kat" }).click();
   const scope = win.getByLabel("Kapsam");
   await expect(scope.getByRole("option", { name: "Sistem geneli" })).toHaveCount(0);
   await expect(scope.getByRole("option")).toHaveCount(1);
   const row = win.getByRole("group", { name: "DND asgari kontrol sayısı" });
   await row.getByLabel("DND asgari kontrol sayısı").fill("5");
   await row.getByRole("button", { name: "Kaydet" }).click();
+  await answer(page, "Ayarı kaydet", "Evet");
+  await acknowledge(page);
   await expect(row.getByText("otel", { exact: true })).toBeVisible();
   await page.reload();
-  await panelWindow(page).getByRole("tab", { name: "Sistem" }).click();
+  await panelWindow(page).getByRole("tab", { name: "Minibar ve Kat" }).click();
   await expect(
     panelWindow(page).getByRole("group", { name: "DND asgari kontrol sayısı" }).getByLabel("DND asgari kontrol sayısı"),
   ).toHaveValue("5");

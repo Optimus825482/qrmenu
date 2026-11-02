@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import type { Page } from "@playwright/test";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.describe.configure({ mode: "serial" });
@@ -36,7 +37,7 @@ async function openFromStart(page: Page, name: string) {
 
 /** Emits an event on the merit_events channel straight from the database (what publish() does). */
 async function pgNotify(event: Record<string, unknown>): Promise<void> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     await client.query("SELECT pg_notify('merit_events', $1)", [JSON.stringify(event)]);
@@ -46,7 +47,7 @@ async function pgNotify(event: Record<string, unknown>): Promise<void> {
 }
 
 async function adminId(): Promise<string> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     const res = await client.query<{ id: string }>("SELECT id FROM users WHERE username = 'admin'");
@@ -84,7 +85,7 @@ test("Komuta Merkezi: 3 Otel KPI'sı; olay akışı pg_notify ile canlı güncel
   expect(errors).toEqual([]);
 });
 
-test("Hakkında: iframe uygulaması 'Merit OS' sayfasını gösterir", async ({ page }) => {
+test("Hakkında: iframe uygulaması 'F&B Command Center' sayfasını gösterir", async ({ page }) => {
   const errors = trackErrors(page);
   await openAdmin(page);
   await openFromStart(page, "Hakkında");
@@ -96,7 +97,7 @@ test("Hakkında: iframe uygulaması 'Merit OS' sayfasını gösterir", async ({ 
   await expect(iframe).toHaveAttribute("sandbox", "allow-same-origin allow-scripts allow-forms");
 
   const frame = page.frameLocator('iframe[title="Hakkında"]');
-  await expect(frame.getByRole("heading", { name: "Merit OS" })).toBeVisible();
+  await expect(frame.getByRole("heading", { name: "F&B Command Center" })).toBeVisible();
   await expect(frame.getByText("Bu pencere iframe uygulama sözleşmesinin örneğidir.")).toBeVisible();
   await expect(frame.getByText("0.1.0", { exact: true })).toBeVisible();
 

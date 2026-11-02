@@ -20,6 +20,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
   const [minibarRows, setMinibarRows] = useState<MinibarReportRow[]>([]);
   const [roomServiceRows, setRoomServiceRows] = useState<RoomServiceReportRow[]>([]);
   const [outletRows, setOutletRows] = useState<OutletReportRow[]>([]);
+  const [slaMinutes, setSlaMinutes] = useState(30);
 
   const loadReport = useCallback(async () => {
     setLoading(true);
@@ -51,6 +52,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
         setMinibarRows(res.data.minibarRows);
         setRoomServiceRows(res.data.roomServiceRows);
         setOutletRows(res.data.outletRows);
+        setSlaMinutes(res.data.slaMinutes);
         setStatus?.(`Merkezi rapor güncellendi (${new Date().toLocaleTimeString("tr-TR")})`);
       } else {
         setError(res.error?.message ?? "Rapor verileri alınamadı");
@@ -254,7 +256,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
                   <p className="text-lg font-black text-emerald-700">{kpis?.roomService.deliveredOrders ?? 0}</p>
                 </div>
                 <div className="p-2.5 rounded bg-[#f0fdfa] border border-[#99f6e4]">
-                  <p className="text-[11px] text-muted">SLA Başarı Oranı (&lt;35 dk)</p>
+                  <p className="text-[11px] text-muted">SLA Başarı Oranı (&lt;{slaMinutes} dk)</p>
                   <p className="text-lg font-black text-teal-700">%{kpis?.roomService.slaSuccessRate ?? 100}</p>
                 </div>
                 <div className="p-2.5 rounded bg-[#fefce8] border border-[#fef08a]">
@@ -342,7 +344,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
                   <th className="p-2 font-bold">Durum</th>
                   <th className="p-2 font-bold">Ürünler</th>
                   <th className="p-2 font-bold">Süre</th>
-                  <th className="p-2 font-bold text-center">SLA (&lt;35dk)</th>
+                  <th className="p-2 font-bold text-center">SLA (&lt;{slaMinutes} dk)</th>
                   <th className="p-2 font-bold text-center">Telefon Teyidi</th>
                 </tr>
               </thead>

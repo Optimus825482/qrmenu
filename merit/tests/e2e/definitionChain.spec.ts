@@ -1,5 +1,7 @@
 import { Client } from "pg";
-import type { BrowserContext, Locator, Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { answer, appWindow, node, pickHotel, row, saveEdit, saveNew, startMenuItem, userWizard } from "./definitionsUi";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 /**
@@ -13,7 +15,10 @@ test.describe.configure({ mode: "serial" });
 const BASE_URL = (process.env.E2E_BASE_URL ?? "http://localhost:3000");
 const MR = { name: "Merit Royal", code: "ROYAL" };
 const GARSON = "kabul.garson";
+/** The waiter's own password, set at the forced first-login change. */
 const GARSON_PASSWORD = "Kabul2026Pw";
+/** Temporary password the onboarding wizard shows (read from the dialog, never assumed). */
+let garsonTemporaryPassword = "";
 
 let adminContext: BrowserContext;
 let garsonContext: BrowserContext;
@@ -46,24 +51,11 @@ test.afterAll(async () => {
   await garsonContext?.close();
 });
 
-const node = (win: Locator, name: string) => win.getByRole("treeitem", { name, exact: true });
-const row = (win: Locator, text: string) => win.getByRole("row").filter({ hasText: text });
-const startMenuItem = (page: Page, name: string) =>
-  page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name, exact: true });
+const definitions = (page: Page) => appWindow(page, "Tanımlamalar", MR.name);
 
-async function pickHotel(page: Page, appName: string) {
-  await page
-    .getByRole("region", { name: appName, exact: true })
-    .getByRole("button", { name: new RegExp(`logosu\\s+${MR.name}$`) })
-    .click();
-}
-
-const definitions = (page: Page) =>
-  page.getByRole("region", { name: `Tanımlamalar · ${MR.name}`, exact: true }).first();
-
-/** Runs a query against the dev database the app uses (the same one resetAndSeed filled). */
+/** Runs a query against the e2e database the app under test uses (the one resetAndSeed filled). */
 async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     return await fn(client);
@@ -99,12 +91,12 @@ test("admin girer ve Tanımlamalar penceresini Merit Royal için açar", async (
   await expect(admin).toHaveURL(/\/admin$/);
   await admin.getByRole("button", { name: "başlat" }).click();
   await startMenuItem(admin, "Tanımlamalar").click();
-  await pickHotel(admin, "Tanımlamalar");
-  await expect(definitions(admin)).toBeVisible();
+  await pickHotel(admin, "Tanımlamalar", MR.name);
+  await expect(admin.getByRole("region", { name: `Tanımlamalar · ${MR.name}`, exact: true }).first()).toBeVisible();
 });
 
 test("oda tipi → kat → toplu oda zinciri", async () => {
-  const win = definitions(admin);
+  const win = await definitions(admin);
 
   // The rooms need a floor and a type; the type comes first, as the guide orders it.
   await node(win, "Oda Tipleri").click();
@@ -112,7 +104,7 @@ test("oda tipi → kat → toplu oda zinciri", async () => {
   const type = admin.getByRole("dialog", { name: "Yeni oda tipi" });
   await type.getByLabel("Oda tipi adı").fill("Kabul Suit");
   await type.getByLabel("Kabin sayısı").fill("2");
-  await type.getByRole("button", { name: "Kaydet" }).click();
+  await saveNew(admin, type);
   await expect(row(win, "Kabul Suit")).toBeVisible();
 
   await node(win, "Katlar").click();
@@ -120,7 +112,7 @@ test("oda tipi → kat → toplu oda zinciri", async () => {
   const floor = admin.getByRole("dialog", { name: "Yeni kat" });
   await floor.getByLabel("Kat numarası").fill("7");
   await floor.getByLabel("Kat adı").fill("Kabul Katı");
-  await floor.getByRole("button", { name: "Kaydet" }).click();
+  await saveNew(admin, floor);
   await expect(row(win, "Kabul Katı")).toBeVisible();
 
   await node(win, "Odalar").click();
@@ -131,15 +123,12 @@ test("oda tipi → kat → toplu oda zinciri", async () => {
   await bulk.getByLabel("Başlangıç numarası").fill("701");
   await bulk.getByLabel("Bitiş numarası").fill("703");
   await expect(bulk.getByRole("status", { name: "Önizleme" })).toContainText("701, 702, 703");
-  await bulk.getByRole("button", { name: "Ekle" }).click();
-  const added = admin.getByRole("alertdialog", { name: "Odalar eklendi" });
-  await expect(added).toContainText("3 oda eklendi.");
-  await added.getByRole("button", { name: "Tamam" }).click();
+  await saveNew(admin, bulk, "Ekle");
   for (const number of ["701", "702", "703"]) await expect(row(win, number)).toBeVisible();
 });
 
-test("outlet → masalar", async () => {
-  const win = definitions(admin);
+test("outlet → alan → masalar", async () => {
+  const win = await definitions(admin);
 
   await node(win, "Outletler").click();
   await win.getByRole("button", { name: "Yeni kayıt" }).click();
@@ -147,50 +136,58 @@ test("outlet → masalar", async () => {
   await outlet.getByLabel("Outlet adı").fill("Kabul Restoran");
   await outlet.getByLabel("Tür").selectOption({ label: "Salon" });
   await outlet.getByLabel("Menü", { exact: true }).check();
-  await outlet.getByLabel("Sipariş alır").check();
-  await outlet.getByRole("button", { name: "Kaydet" }).click();
+  await outlet.getByLabel("Sipariş modülü (garson / kasa)").check();
+  await saveNew(admin, outlet);
   await expect(row(win, "Kabul Restoran")).toBeVisible();
 
-  await node(win, "Masalar").click();
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Kabul Restoran" });
+  // Tables belong to an area of the outlet: add one to the selected outlet first.
+  await row(win, "Kabul Restoran").click();
+  await win.getByRole("button", { name: "Alan Ekle" }).click();
+  await saveNew(admin, admin.getByRole("dialog", { name: "Outlet alanı ekle" }), "Ekle");
+
+  // The outlet is a tree node; its tables are listed under it ("<outlet> <sıra no>").
+  await node(win, "Kabul Restoran").click();
   await win.getByRole("button", { name: "Toplu Ekle" }).click();
   const bulk = admin.getByRole("dialog", { name: "Toplu masa ekle" });
   await bulk.getByLabel("Başlangıç numarası").fill("1");
   await bulk.getByLabel("Bitiş numarası").fill("3");
-  await bulk.getByRole("button", { name: "Ekle" }).click();
-  const added = admin.getByRole("alertdialog", { name: "Masalar eklendi" });
-  await expect(added).toContainText("3 masa eklendi.");
-  await added.getByRole("button", { name: "Tamam" }).click();
-  for (const label of ["M1", "M2", "M3"]) await expect(row(win, label)).toBeVisible();
+  await saveNew(admin, bulk, "Ekle");
+  for (const label of ["Kabul Restoran 1", "Kabul Restoran 2", "Kabul Restoran 3"]) {
+    await expect(row(win, label)).toBeVisible();
+  }
 });
 
 test("kullanıcı (garson, R-GAR, MR) → ekip ataması", async () => {
-  const win = definitions(admin);
+  const users = await appWindow(admin, "Kullanıcı Yönetimi");
 
-  await node(win, "Kullanıcılar").click();
-  await win.getByRole("button", { name: "Yeni kayıt" }).click();
-  const user = admin.getByRole("dialog", { name: "Yeni kullanıcı" });
-  await user.getByLabel("Kullanıcı adı").fill(GARSON);
-  await user.getByLabel("Ad soyad").fill("Kabul Garson");
-  await user.getByLabel("Rol", { exact: true }).selectOption({ label: "Garson" });
-  await expect(user.getByLabel("Ana otel")).toHaveValue(/.+/); // the window's hotel is preselected
-  await user.getByLabel("Şifre", { exact: true }).fill(GARSON_PASSWORD);
-  await user.getByRole("button", { name: "Kaydet" }).click();
-  await expect(row(win, GARSON)).toBeVisible();
-  await expect(row(win, GARSON)).toContainText("Garson");
+  await users.getByRole("button", { name: "Yeni kayıt" }).click();
+  const wizard = userWizard(admin);
+  await wizard.getByLabel("Ad soyad").fill("Kabul Garson");
+  await wizard.getByLabel("Görev (F&B)").selectOption({ label: "Garson" });
+  await wizard.getByLabel("Rol ve yetkiler").selectOption({ label: "Garson" });
+  await wizard.getByLabel("E-posta adresi").fill("kabul.garson@example.com");
+  await wizard.getByLabel("Sisteme giriş kullanıcı adı").fill(GARSON);
+  await wizard.getByRole("button", { name: "İleri" }).click();
+  await wizard.getByLabel("Ana otel").selectOption({ label: MR.name });
+  await wizard.getByRole("button", { name: "Kullanıcıyı kaydet" }).click();
+  garsonTemporaryPassword = await wizard.getByLabel("Geçici şifre").inputValue();
+  expect(garsonTemporaryPassword).not.toBe("");
+  await wizard.getByRole("button", { name: "Tamam" }).click();
+  await expect(row(users, GARSON)).toBeVisible();
+  await expect(row(users, GARSON)).toContainText("Garson");
 
-  await node(win, "Ekipler").click();
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Kabul Restoran" });
-  await win.getByRole("button", { name: "Kullanıcı ekle" }).click();
-  const add = admin.getByRole("dialog", { name: "Kullanıcı ekle" });
-  await add.getByLabel("Kullanıcı ara").fill(GARSON);
-  await add.getByRole("option", { name: new RegExp(GARSON.replace(".", "\\.")) }).click();
-  await add.getByRole("button", { name: "Ekle" }).click();
-  await expect(row(win, GARSON)).toBeVisible();
+  const teams = await appWindow(admin, "Ekip Yönetimi", MR.name);
+  await node(teams, "Kabul Restoran").click();
+  await teams.getByRole("button", { name: "Hızlı kullanıcı ekle" }).click();
+  const add = admin.getByRole("dialog", { name: "Hızlı kullanıcı ekle" });
+  await add.getByLabel("Görev seçin").selectOption({ label: "Garson" });
+  await add.getByRole("button", { name: new RegExp(GARSON.replace(".", "\\.")) }).click();
+  await add.locator("footer").getByRole("button", { name: "Kapat" }).click();
+  await expect(row(teams, GARSON)).toBeVisible();
 });
 
 test("rol: R-GAR'dan kopyalanan R-TST; garson bu role geçer", async () => {
-  const win = definitions(admin);
+  const win = await appWindow(admin, "Kullanıcı Yönetimi");
 
   await node(win, "Roller").click();
   await win.getByRole("button", { name: "Yeni kayıt" }).click();
@@ -199,9 +196,9 @@ test("rol: R-GAR'dan kopyalanan R-TST; garson bu role geçer", async () => {
   await role.getByLabel("Ad", { exact: true }).fill("Kabul Rolü");
   await role.getByLabel("Tür").selectOption("OUTLET");
   // A copy carries rights, not the landing screen: without one the waiter would land on "/".
-  await role.getByLabel("Açılış ekranı").selectOption({ label: "QS-KUY — Sipariş Onay Kuyruğu" });
+  await role.getByLabel("Açılış ekranı").selectOption({ label: "Outlet Garson Ekranı" });
   await role.getByLabel("Yetkileri kopyala").selectOption({ label: "R-GAR — Garson" });
-  await role.getByRole("button", { name: "Kaydet" }).click();
+  await saveNew(admin, role);
   await expect(row(win, "R-TST")).toBeVisible();
 
   // The copy carries the waiter's rights over.
@@ -212,24 +209,34 @@ test("rol: R-GAR'dan kopyalanan R-TST; garson bu role geçer", async () => {
   await win.getByRole("button", { name: "Seçili kaydı düzenle" }).click();
   const edit = admin.getByRole("dialog", { name: "Kullanıcıyı düzenle" });
   await edit.getByLabel("Rol", { exact: true }).selectOption({ label: "Kabul Rolü" });
-  await edit.getByRole("button", { name: "Kaydet" }).click();
-  await expect(edit).toHaveCount(0);
+  await saveEdit(admin, edit);
   await expect(row(win, GARSON)).toContainText("Kabul Rolü");
 });
 
 test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, açılınca görünür", async () => {
-  const win = definitions(admin);
+  const win = await appWindow(admin, "Kullanıcı Yönetimi");
 
-  // The waiter works in a second browser the whole time.
-  await login(garson, GARSON, GARSON_PASSWORD);
+  // The waiter works in a second browser the whole time. First login: temporary password -> own
+  // password, then the outlet card is picked.
+  await garson.goto("/giris");
+  await garson.getByLabel("Kullanıcı adı").fill(GARSON);
+  await garson.getByLabel("Şifre").fill(garsonTemporaryPassword);
+  await garson.getByRole("button", { name: "Giriş Yap" }).click();
+  await expect(garson).toHaveURL(/\/sifre-degistir$/);
+  await garson.getByLabel("Yeni şifre", { exact: true }).fill(GARSON_PASSWORD);
+  await garson.getByLabel("Yeni şifre tekrar").fill(GARSON_PASSWORD);
+  await garson.getByRole("button", { name: "Şifremi kaydet ve devam et" }).click();
+  await expect(garson).toHaveURL(/\/secim$/);
+  await garson.getByRole("button", { name: /Kabul Restoran/ }).click();
   await expect(garson).toHaveURL(/\/garson$/); // the role's landing screen (QS-KUY)
   expect(await canView("R-TST", "QS-KUY")).toBe(true);
 
   await node(win, "Yetki Matrisi").click();
   await win.getByLabel("Rol", { exact: true }).selectOption({ label: "R-TST — Kabul Rolü" });
-  const cell = win.getByRole("checkbox", { name: "QS-KUY Görüntüle" });
+  const cell = win.getByRole("checkbox", { name: "Outlet Garson Ekranı · Görüntüle" });
   await expect(cell).toBeChecked();
   await cell.click();
+  await answer(admin, "Ekran yetkisini güncelle", "Evet");
   await expect(cell).not.toBeChecked();
 
   await garson.reload();
@@ -237,6 +244,7 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
   await expect.poll(() => canView("R-TST", "QS-KUY")).toBe(false);
 
   await cell.click();
+  await answer(admin, "Ekran yetkisini güncelle", "Evet");
   await expect(cell).toBeChecked();
   await garson.reload();
   await expect.poll(() => canView("R-TST", "QS-KUY")).toBe(true);
@@ -245,7 +253,7 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
 test("Kurulum Rehberi: Merit Royal %100", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
   await startMenuItem(admin, "Kurulum Rehberi").click();
-  await pickHotel(admin, "Kurulum Rehberi");
+  await pickHotel(admin, "Kurulum Rehberi", MR.name);
   const guide = admin.getByRole("region", { name: `Kurulum Rehberi · ${MR.name}`, exact: true });
   await expect(guide).toBeVisible();
   await expect(guide.getByTestId("guide-percent")).toHaveText("%100");
@@ -258,7 +266,7 @@ test("Kurulum Rehberi: Merit Royal %100", async () => {
 test("Online Kullanıcılar: garson listede; zorla çıkış → garsonun sonraki gezinmesi /giris", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
   await startMenuItem(admin, "Online Kullanıcılar").click();
-  await pickHotel(admin, "Online Kullanıcılar");
+  await pickHotel(admin, "Online Kullanıcılar", MR.name);
   const online = admin.getByRole("region", { name: `Online Kullanıcılar · ${MR.name}`, exact: true });
   await expect(online).toBeVisible();
 

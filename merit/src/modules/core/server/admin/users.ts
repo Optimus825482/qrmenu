@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { z } from "zod";
 import type { Prisma, RoleKind } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
@@ -403,8 +404,21 @@ async function nextUsername(tx: Prisma.TransactionClient, fullName: string): Pro
   throw new DomainError("CONFLICT", "Otomatik kullanıcı adı oluşturulamadı");
 }
 
+const TEMP_UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const TEMP_LOWER = "abcdefghijkmnpqrstuvwxyz";
+const TEMP_DIGITS = "23456789";
+
+/** Random one-time password (14 chars, upper + lower + digits, no look-alike characters) from crypto. */
 function temporaryPassword(): string {
-  return "123456";
+  const pick = (set: string) => set[randomInt(set.length)];
+  const all = TEMP_UPPER + TEMP_LOWER + TEMP_DIGITS;
+  const chars = [pick(TEMP_UPPER), pick(TEMP_LOWER), pick(TEMP_DIGITS)];
+  while (chars.length < 14) chars.push(pick(all));
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+  return chars.join("");
 }
 
 type NewUserInput = {
@@ -463,7 +477,8 @@ async function createRecord(
           action: "USER_CREATE",
           entity: "User",
           entityId: row.id,
-          after: row,
+          // The temporary password itself is never audited, only that one was issued.
+          after: mustChangePassword ? { ...row, tempPasswordIssued: true } : row,
         });
         await publishUser(tx, row.id, hotels, "create");
         return row;

@@ -21,24 +21,24 @@ async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locat
   const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
   const context = await browser.newContext({
     locale: "tr-TR",
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     extraHTTPHeaders: { "x-forwarded-for": ip },
   });
   const page = await context.newPage();
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Yönetimi" }).click();
+  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Yönetimi", exact: true }).click();
   const win = page.locator(`.xp-window.is-active[aria-label="Menü Yönetimi · ${MR.name}"]`);
   const hotelCard = page
     .locator('.xp-window.is-active[aria-label="Menü Yönetimi"]')
-    .getByRole("button", { name: new RegExp(`^${MR.name}\\s*${MR.code}$`) });
+    .getByRole("button", { name: new RegExp(`^${MR.name} logosu\\s+${MR.name}$`) });
   if (!(await win.isVisible())) {
     await expect(hotelCard).toBeVisible();
     await hotelCard.click();
   }
   await expect(win).toBeVisible();
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
   return { page, win };
 }
 
@@ -76,11 +76,17 @@ test("?lang=ar sağdan sola ve Arapça; ?lang=de çerezle kalıcı", async ({ pa
   await page.goto(M1);
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
   await page.reload();
-  await expect(page.getByRole("link", { name: "DE", exact: true })).toHaveAttribute("aria-current", "true");
+  // The language picker is a button (current language) that opens a menu of all languages.
+  const picker = page.getByRole("button", { name: /Sprachauswahl: Deutsch/ });
+  await expect(picker).toContainText("DE");
+  await picker.click();
+  await expect(page.getByRole("menuitem", { name: /Deutsch/ })).toHaveAttribute("aria-current", "true");
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("tab", { name: "İçecekler" })).toBeVisible(); // no German translation: Turkish base
 
-  // The switch links work too.
-  await page.getByRole("link", { name: "EN", exact: true }).click();
+  // The menu entries switch the language too.
+  await picker.click();
+  await page.getByRole("menuitem", { name: /English/ }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("tab", { name: "Drinks" })).toBeVisible();
 });
@@ -205,11 +211,12 @@ test("Peçete istiyorum çağrı notunu yazar (kasa çağrı listesinde Türkçe
   const ip = `10.${randomInt(1, 255)}.${randomInt(1, 255)}.${randomInt(1, 255)}`;
   const context = await browser.newContext({
     locale: "tr-TR",
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     extraHTTPHeaders: { "x-forwarded-for": ip },
   });
   const cashier = await context.newPage();
   await login(cashier, "kasa.havuz");
+  await cashier.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(cashier).toHaveURL(/\/kasa$/);
   await cashier.goto("/kasa?sekme=cagrilar");
   const calls = cashier.getByRole("region", { name: "Açık çağrılar" });

@@ -525,3 +525,32 @@ describe("members", () => {
     });
   });
 });
+
+describe("createOnboarding geçici şifre", () => {
+  it("rastgele ≥12 karakter (harf+rakam), mustChangePassword, audit'te açık metin yok", async () => {
+    const ctx = await sys();
+    const role = await roleByCode("R-GAR");
+    const input = {
+      fullName: "Rastgele Sifre",
+      jobTitle: "Garson",
+      email: "rastgele@example.com",
+      roleId: role.id,
+      hotelId: await hotelId("ROYAL"),
+    };
+    const a = await users.createOnboarding(ctx, { ...input, username: "rastgele.bir" });
+    const b = await users.createOnboarding(ctx, { ...input, username: "rastgele.iki" });
+    for (const { temporaryPassword: pw } of [a, b]) {
+      expect(pw.length).toBeGreaterThanOrEqual(12);
+      expect(pw).toMatch(/[A-Z]/);
+      expect(pw).toMatch(/[a-z]/);
+      expect(pw).toMatch(/\d/);
+      expect(pw).not.toBe("123456");
+    }
+    expect(a.temporaryPassword).not.toBe(b.temporaryPassword);
+    const stored = await testDb.user.findUniqueOrThrow({ where: { id: a.user.id } });
+    expect(stored.mustChangePassword).toBe(true);
+    const logs = JSON.stringify(await testDb.auditLog.findMany({ where: { entityId: a.user.id } }));
+    expect(logs).not.toContain(a.temporaryPassword);
+    expect(logs).toContain("tempPasswordIssued");
+  });
+});

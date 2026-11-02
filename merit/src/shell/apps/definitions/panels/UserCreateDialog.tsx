@@ -122,7 +122,7 @@ export function UserCreateDialog({
             <p><strong>{credentials.user.fullName}</strong> için hesap oluşturuldu.</p>
             <Field name="username" label="Sisteme giriş kullanıcı adı"><input readOnly value={credentials.user.username} /></Field>
             <Field name="temporaryPassword" label="Geçici şifre"><input readOnly value={credentials.temporaryPassword} /></Field>
-            <p className="xp-defs-note">Geçici şifre: <strong>123456</strong>. Bu bilgileri şimdi personele iletin; ilk girişte yeni bir şifre belirlemesi zorunludur.</p>
+            <p className="xp-defs-note">Bu şifre yalnızca şimdi gösterilir ve tekrar görüntülenemez. Bilgileri şimdi personele iletin; ilk girişte yeni bir şifre belirlemesi zorunludur.</p>
             {error ? <p role="alert" className="xp-form-banner">{error}</p> : null}
             <div className="xp-dialog-actions">
               <button type="button" className="xp-button" onClick={() => void copyCredentials()}>{copied ? "Kopyalandı" : "Bilgileri kopyala"}</button>

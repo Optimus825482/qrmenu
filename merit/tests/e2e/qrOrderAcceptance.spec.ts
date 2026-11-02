@@ -3,13 +3,14 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { Client } from "pg";
 import type { Page } from "@playwright/test";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.describe.configure({ mode: "serial" });
 test.use({ locale: "tr-TR" });
 
 async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
   try {
     return await fn(client);
@@ -64,12 +65,13 @@ test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay e
   const hiddenStatusUrl = await sendOrder(page);
 
   const cashierContext = await browser.newContext({
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     locale: "tr-TR",
     extraHTTPHeaders: { "x-forwarded-for": "10.31.1.1" },
   });
   const cashier = await cashierContext.newPage();
   await login(cashier, "kasa.havuz");
+  await cashier.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(cashier).toHaveURL(/\/kasa$/);
   await cashier.getByRole("button", { name: "M1 masa ataması" }).click();
   const assignment = cashier.getByRole("dialog", { name: "M1 · Masa ataması" });
@@ -78,12 +80,13 @@ test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay e
   await approve(cashier);
 
   const kitchenContext = await browser.newContext({
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     locale: "tr-TR",
     extraHTTPHeaders: { "x-forwarded-for": "10.31.1.2" },
   });
   const kitchen = await kitchenContext.newPage();
   await login(kitchen, "kds.havuz");
+  await kitchen.getByRole("button", { name: /Havuz Bar/ }).click();
   const newCard = kitchen.getByLabel("Yeni").getByRole("article").first();
   await expect(newCard).toBeVisible();
   await expect(newCard).not.toContainText("€");
@@ -93,7 +96,7 @@ test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay e
   await prepCard.getByRole("button", { name: "Hazır" }).click();
 
   const waiterContext = await browser.newContext({
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     locale: "tr-TR",
     extraHTTPHeaders: { "x-forwarded-for": "10.31.1.3" },
   });
@@ -167,9 +170,10 @@ test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay e
   );
   expect(escalationOutput.toString()).toContain("1");
 
-  const chiefContext = await browser.newContext({ baseURL: "http://localhost:3000", locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": "10.31.1.4" } });
+  const chiefContext = await browser.newContext({ baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"), locale: "tr-TR", extraHTTPHeaders: { "x-forwarded-for": "10.31.1.4" } });
   const chief = await chiefContext.newPage();
   await login(chief, "sef.havuz");
+  await chief.getByRole("button", { name: /Havuz Bar/ }).click();
   await expect(chief).toHaveURL(/\/garson$/);
   await expect(chief.getByTestId("bell-badge")).toBeVisible();
   await chief.getByRole("button", { name: /^Bildirimler/ }).click();

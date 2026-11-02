@@ -17,7 +17,7 @@ async function openTableQr(page: Page): Promise<Locator> {
   const win = page.getByRole("region", { name: "Masa QR Kodları · Merit Royal", exact: true });
   const card = page
     .getByRole("region", { name: "Masa QR Kodları", exact: true })
-    .getByRole("button", { name: /^Merit Royal\s*MR$/ });
+    .getByRole("button", { name: /^Merit Royal logosu\s+Merit Royal$/ });
   await expect(card.or(win)).toBeVisible();
   if (await card.isVisible()) await card.click();
   await expect(win).toBeVisible();
@@ -29,7 +29,7 @@ test("Masa QR: Havuz Bar M1..M5 toplu üretilir, rozetler imzalı olur, ZIP 5 SV
   await expect(page).toHaveURL(/\/admin$/);
   await expect(desktop(page)).toBeVisible();
   const win = await openTableQr(page);
-  await win.getByRole("combobox", { name: "Outlet", exact: true }).selectOption({ label: "Havuz Bar" });
+  await win.getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
 
   for (const label of ["M1", "M2", "M3", "M4", "M5"]) {
     await expect(win.getByTestId(`tq-badge-${label}`)).toHaveText("QR yok");

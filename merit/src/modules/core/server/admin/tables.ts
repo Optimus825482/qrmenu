@@ -389,7 +389,11 @@ export async function bulkCreate(ctx: Ctx, outletId: string, raw: BulkInput): Pr
       const area = resolveArea(outlet, input.areaId);
       const firstNumber = input.useAreaLabel ? input.from : await nextTableNumber(tx, outletId);
       const numbers = requestedLabels.map((_, index) => firstNumber + index);
-      const labels = numbers.map((number) => tableLabel(outlet.name, number, null));
+      // useAreaLabel: "<outlet> <n>" labels keyed by the requested numbers; otherwise the given prefix is honored
+      // ("M1..M20") and the numeric order key continues the outlet's own sequence.
+      const labels = input.useAreaLabel
+        ? numbers.map((number) => tableLabel(outlet.name, number, null))
+        : requestedLabels;
       attemptedLabels = labels;
       const conflicts = await existingLabels(tx, outletId, labels);
       if (conflicts.length > 0) throw bulkConflict(conflicts);

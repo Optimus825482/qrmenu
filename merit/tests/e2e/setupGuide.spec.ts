@@ -35,7 +35,7 @@ async function openGuide(page: Page, hotel: { name: string; code: string }): Pro
     .click();
   await page
     .getByRole("region", { name: "Kurulum Rehberi", exact: true })
-    .getByRole("button", { name: new RegExp(`^${hotel.name}\\s*${hotel.code}$`) })
+    .getByRole("button", { name: new RegExp(`^${hotel.name} logosu\\s+${hotel.name}$`) })
     .click();
   const win = page.getByRole("region", { name: `Kurulum Rehberi · ${hotel.name}`, exact: true });
   await expect(win).toBeVisible();
@@ -55,10 +55,10 @@ test("Kurulum Rehberi: ilerleme ve adımlar görünür; Katlar adımında Aç �
   await expect(steps).toHaveCount(10);
   await expect(steps.first()).toContainText("Otel bilgileri");
   await expect(steps.first().getByRole("img", { name: "Tamamlandı" })).toBeVisible();
-  // Product setup arrives with P2: optional and not openable yet.
+  // Product / minibar setup is optional ("Zorunlu değil") and opens the Minibar definitions app.
   const product = steps.filter({ hasText: "Ürün ve minibar setup" });
   await expect(product).toContainText("Zorunlu değil");
-  await expect(product.getByRole("button", { name: "Aç" })).toBeDisabled();
+  await expect(product.getByRole("button", { name: "Aç" })).toBeEnabled();
 
   await steps.filter({ hasText: "Katlar" }).getByRole("button", { name: "Aç" }).click();
 
@@ -85,8 +85,8 @@ test("Komuta Merkezi: otel başına Kurulum % kartı", async ({ page }) => {
 
   const card = win.getByRole("list", { name: "Kurulum durumu" });
   await expect(card.getByRole("listitem")).toHaveCount(3);
-  await expect(card.getByTestId("setup-MR")).toContainText(MR.name);
-  await expect(card.getByTestId("setup-MR")).toContainText(/%\d+/);
+  await expect(card.getByTestId("setup-ROYAL")).toContainText(MR.name);
+  await expect(card.getByTestId("setup-ROYAL")).toContainText(/%\d+/);
   await expect(card.getByRole("progressbar", { name: `${MR.name} kurulum ilerlemesi` })).toBeVisible();
 
   expect(errors).toEqual([]);

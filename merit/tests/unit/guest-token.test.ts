@@ -51,7 +51,7 @@ describe("resolveGuestToken", () => {
     expect(logs).toHaveLength(1);
     expect(logs[0]).toMatchObject({ tableId: table.id, kind: "MISAFIR", ok: true, ip: meta.ip, userAgent: "vitest" });
     expect(publishMock).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "scan.table", outletId: outlet.id, payload: { tableId: table.id } }),
+      expect.objectContaining({ type: "scan.table", outletId: outlet.id, payload: { tableId: table.id, tableLabel: "M1" } }),
     );
   });
 

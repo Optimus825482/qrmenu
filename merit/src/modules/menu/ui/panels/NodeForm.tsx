@@ -47,13 +47,15 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // React clears currentTarget once the handler yields (the confirmation awaits).
+    const formElement = e.currentTarget;
     const approved = await confirm({
       title: "Menü kaydını güncelle",
       message: `“${node.name}” kaydındaki değişiklikler kaydedilsin mi?`,
       danger: true,
     });
     if (!approved) return;
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formElement);
     const data: Record<string, unknown> = {
       name: String(form.get("name") ?? ""),
       detail: String(form.get("detail") ?? ""),

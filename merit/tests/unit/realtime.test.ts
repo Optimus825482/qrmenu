@@ -106,15 +106,22 @@ describe("publish / subscribe (gerçek Postgres)", () => {
   });
 
   it("dinleyici başlar ve başlatma tekrar çağrılınca aynı bağlantıyı kullanır", async () => {
+    // Other test files (running in parallel workers) may hold their own LISTEN connection on this
+    // database, so idempotency is asserted as "starting again adds no connection".
+    const count = async () => {
+      const { rows } = await pgQuery(
+        "select count(*)::int as n from pg_stat_activity " +
+          "where query = 'LISTEN merit_events' and datname = current_database()",
+      );
+      return rows[0].n as number;
+    };
     expect(isListening()).toBe(true);
+    const before = await count();
+    expect(before).toBeGreaterThanOrEqual(1);
+    await startRealtimeListener();
     await startRealtimeListener();
     expect(isListening()).toBe(true);
-    const { rows } = await pgQuery(
-      // Scoped to this database: a dev server listening on the dev database must not count.
-      "select count(*)::int as n from pg_stat_activity " +
-        "where query = 'LISTEN merit_events' and datname = current_database()",
-    );
-    expect(rows[0].n).toBe(1);
+    expect(await count()).toBe(before);
   });
 
   it("publish → abone 500 ms içinde olayı alır; unsubscribe sonrası sayaç 0", async () => {

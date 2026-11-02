@@ -36,7 +36,7 @@ describe("ShellPrefs görünüm alanları", () => {
 
   it("geçersiz theme → parse null; sunucu eylemi VALIDATION", async () => {
     expect(parseShellPrefs({ ...legacy, theme: "neon" })).toBeNull();
-    expect(parseShellPrefs({ ...legacy, fontScale: "XXL" })).toBeNull();
+    expect(parseShellPrefs({ ...legacy, fontScale: "XXXXL" })).toBeNull();
     expect(parseShellPrefs({ ...legacy, fontFamily: "comic" })).toBeNull();
     const save = safeAction(shellPrefsSchema, async () => null);
     const result = await save({ ...legacy, theme: "neon" });
@@ -60,7 +60,7 @@ describe("windowStore görünüm eylemleri", () => {
 
   it("geçersiz değerler yok sayılır", () => {
     const store = createWindowStore();
-    store.getState().setFontScale("XXL" as never);
+    store.getState().setFontScale("XXXXL" as never);
     store.getState().setFontFamily("comic" as never);
     store.getState().setTheme("neon" as never);
     expect(store.getState().snapshot()).toMatchObject({

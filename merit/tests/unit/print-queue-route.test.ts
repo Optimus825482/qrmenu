@@ -57,11 +57,11 @@ async function setupPrinter() {
 
 describe("GET /api/print-queue (claim)", () => {
   it("anahtarsız 401", async () => {
-    expect((await get("hotel=MR", null)).status).toBe(401);
+    expect((await get("hotel=ROYAL", null)).status).toBe(401);
   });
 
   it("yanlış anahtar 401", async () => {
-    expect((await get("hotel=MR", "yanlis-anahtar")).status).toBe(401);
+    expect((await get("hotel=ROYAL", "yanlis-anahtar")).status).toBe(401);
   });
 
   it("doğru anahtar + bilinmeyen otel 404", async () => {
@@ -82,7 +82,7 @@ describe("GET /api/print-queue (claim)", () => {
         payload: { v: 1, orderNo: order.orderNo, pricesShown: false, footer: [] },
       },
     });
-    const res = await get("hotel=MR&limit=10", KEY);
+    const res = await get("hotel=ROYAL&limit=10", KEY);
     expect(res.status).toBe(200);
     const body = (await res.json()) as { jobs: { id: string; kind: string; printer: { ip: string; port: number } }[] };
     expect(body.jobs).toHaveLength(1);
@@ -101,9 +101,9 @@ describe("GET /api/print-queue (claim)", () => {
     await testDb.printJob.create({
       data: { hotelId: s.hotelId, printerId: printer.id, kind: "TEST", payload: { v: 1 } },
     });
-    const zero = await get("hotel=MR&limit=0", KEY);
+    const zero = await get("hotel=ROYAL&limit=0", KEY);
     expect((await zero.json() as { jobs: unknown[] }).jobs).toHaveLength(1); // clamp -> 1 job available
-    const big = await get("hotel=MR&limit=9999", KEY);
+    const big = await get("hotel=ROYAL&limit=9999", KEY);
     expect((big.status)).toBe(200);
   });
 });

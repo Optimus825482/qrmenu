@@ -66,11 +66,16 @@ describe("tableAssignments", () => {
     });
   });
 
-  it("myTables yalnız oturum garsonunun aktif masalarını döndürür", async () => {
+  it("myTables oturumun outletindeki tüm aktif masaları döndürür (garson ekranı atamadan bağımsız)", async () => {
     const { s, cashier, waiter, waiter2 } = await setup();
     const second = await testDb.outletTable.create({ data: { outletId: s.outlet.id, areaId: s.table.areaId, label: "M2" } });
     await tableAssignments.assign(cashier.ctx, { tableId: s.table.id, userId: waiter.user.id });
     await tableAssignments.assign(cashier.ctx, { tableId: second.id, userId: waiter2.user.id });
+    await expect(tableAssignments.myTables(waiter.ctx)).resolves.toEqual([
+      expect.objectContaining({ tableId: s.table.id, label: "M1" }),
+      expect.objectContaining({ tableId: second.id, label: "M2" }),
+    ]);
+    await testDb.outletTable.update({ where: { id: second.id }, data: { isActive: false } });
     await expect(tableAssignments.myTables(waiter.ctx)).resolves.toEqual([
       expect.objectContaining({ tableId: s.table.id, label: "M1" }),
     ]);

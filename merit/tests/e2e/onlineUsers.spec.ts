@@ -35,7 +35,7 @@ async function openOnline(page: Page, hotel: { name: string; code: string }) {
     .click();
   await page
     .getByRole("region", { name: "Online Kullanıcılar", exact: true })
-    .getByRole("button", { name: new RegExp(`^${hotel.name}\\s*${hotel.code}$`) })
+    .getByRole("button", { name: new RegExp(`^${hotel.name} logosu\\s+${hotel.name}$`) })
     .click();
   const win = page.getByRole("region", { name: `Online Kullanıcılar · ${hotel.name}`, exact: true });
   await expect(win).toBeVisible();
@@ -51,7 +51,7 @@ test("admin listesi açıkken kat.mr 2 sn içinde görünür; zorla çıkış ka
   const win = await openOnline(page, MR);
 
   const katContext = await browser.newContext({
-    baseURL: "http://localhost:3000",
+    baseURL: (process.env.E2E_BASE_URL ?? "http://localhost:3000"),
     extraHTTPHeaders: { "x-forwarded-for": "10.42.8.8" },
   });
   try {

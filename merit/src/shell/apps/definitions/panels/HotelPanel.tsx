@@ -88,6 +88,8 @@ function HotelForm({
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (busy.current) return;
+    // React clears currentTarget once the handler yields (the confirmation below awaits).
+    const formElement = e.currentTarget;
     const approved = await confirm({
       title: "Otel bilgilerini güncelle",
       message: `“${hotel.name}” otelindeki değişiklikler kaydedilsin mi?`,
@@ -99,7 +101,7 @@ function HotelForm({
     setMessage(null);
     setFieldErrors({});
     onEdit();
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formElement);
     const text = (name: string) => String(form.get(name) ?? "");
     try {
       const result = await updateHotelAction({
