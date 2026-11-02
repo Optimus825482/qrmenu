@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "02.11.2026 09:30",
-  headline: "P2–P7 Tüm Eksik Modüller Tamamlandı: Oda QR Motoru, Oda Servisi Operasyon & SLA Portalı (/oda-servisi), Merkezi Raporlama (CR-RAP), Canlı Komuta Radarı ve Arka Plan Zamanlanmış İşleri Devrede.",
+  updatedAt: "02.11.2026 22:00",
+  headline: "Son kontrol (02.11): P0/P1/P5 ve Menü Tasarım Merkezi tamam; P2–P7 için eklenen kod plan dışı bir prototiptir (güvenlik/veri düzeltmeleri yapıldı, plan görevleri açık); P8 başlamadı. Ayrıntı: docs/kabul/.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -65,30 +65,30 @@ window.ILERLEME = {
       code: "P2", title: "Minibar tanımları ve veri göçü", weight: 10,
       summary: "Ürün grubu/ürün/setup/atama, oda QR üretimi, zimmet havuzu, canlı veritabanından tam göç",
       tasks: [
-        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri (fiyatsız All-Inclusive)", status: "done", doneAt: "02.11 06:40" },
-        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "done", doneAt: "02.11 09:15" },
-        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye (araba transfersiz doğrudan havuz)", status: "done", doneAt: "02.11 07:10" },
-        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "done", doneAt: "02.11 09:18" }
+        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri (fiyatsız All-Inclusive)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye (araba transfersiz doğrudan havuz)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
       ]
     },
     {
       code: "P3", title: "Minibar operasyonu", weight: 16,
       summary: "Kat sorumlusu ve depo ekranları, oda kontrolü, DND, doluluk Excel, günlük görevler",
       tasks: [
-        { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "done", doneAt: "02.11 05:30" },
-        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "done", doneAt: "02.11 05:40" },
-        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "done", doneAt: "02.11 06:00" },
-        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "done", doneAt: "02.11 06:30" },
-        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "done", doneAt: "02.11 08:45" }
+        { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
       ]
     },
     {
       code: "P4", title: "MyBar ve bildirimler", weight: 8,
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
-        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "02.11 05:40" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "02.11 07:30" },
-        { title: "Web Push kanalı", status: "done", doneAt: "02.11 08:00" }
+        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Web Push kanalı", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
       ]
     },
     {
@@ -109,17 +109,17 @@ window.ILERLEME = {
       code: "P6", title: "Oda servisi", weight: 6,
       summary: "Oda servisi menüsü, misafir akışı, mutfak ekranı, telefon teyidi, SLA",
       tasks: [
-        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "done", doneAt: "02.11 03:30" },
-        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "done", doneAt: "02.11 09:20" }
+        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
       ]
     },
     {
       code: "P7", title: "Raporlar, e-posta ve izleme", weight: 8,
       summary: "Rapor merkezi (Excel/PDF), SMTP ve zamanlanmış e-postalar, canlı radar",
       tasks: [
-        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "done", doneAt: "02.11 08:40" },
-        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "done", doneAt: "02.11 08:45" },
-        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "done", doneAt: "02.11 09:22" }
+        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
       ]
     },
     {
@@ -133,6 +133,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "02.11 22:00", text: "Fable son kontrolü: 6 inceleme + 4 düzeltme dalgası (sır varsayılanları, seed, şema drift migration'ı, minibar/rapor API yetkisi, MyBar token, Nicosia iş günü, geçici şifre, istemciye sızan admin şifresi). P2–P7 \"tamamlandı\" iddiaları geri alındı." },
     { at: "31.10 03:07", text: "Proje başladı: şartname ve mevcut tasarımların analizi." },
     { at: "31.10 04:30", text: "Spec ve P0 planı onaylandı; uygulama başladı." },
     { at: "31.10 08:04", text: "P0'ın 14 görevi tamamlandı; final dal incelemesi başladı." },
