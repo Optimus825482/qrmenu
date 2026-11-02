@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 02:36",
+  updatedAt: "03.11.2026 02:55",
   headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
   phases: [
     {
@@ -128,7 +128,7 @@ window.ILERLEME = {
       tasks: [
         { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "active" },
         { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:20", note: "7244d05 — inceleme sürüyor" },
-        { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "pending" },
+        { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "active", note: "T3 uygulandı (0d0cc5f): notify/snackbar, tepsi balonu, 29 başarı modalı kaldırıldı; T4 sürüyor" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
         { title: "T7 KDS yenilemesi ve sesler", status: "pending" },
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 02:55", text: "UX T3 snackbar/tek onay uygulandı (0d0cc5f, 50 dosya); minibar T6/T9 ve radar T1 kapandı; 02:45 ağ kesintisi sonrası 5 ajan sürdürüldü." },
     { at: "03.11 02:36", text: "Minibar T9 doluluk Excel uygulandı (45680ab); T1 temel (migration, SCREEN_LIMITS, olaylar) başladı." },
     { at: "03.11 02:33", text: "Minibar T6 oda QR (fd68ecc) ve Radar T1 olay birliği (8b99c64) uygulandı; incelemeler ve Radar T2 (SLA taraması) başladı." },
     { at: "03.11 02:22", text: "UX T2 (rol bazlı iniş /baslat, katalog, yetkisiz ekran sayfası) uygulandı (7244d05); T11 Erişimim başladı." },
