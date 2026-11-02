@@ -63,14 +63,14 @@ test("kat.mr: ?next= göreli yola gider", async ({ page }) => {
   await expect(page).toHaveURL(/\/kat\/kontrol$/);
 });
 
-test("depo.cok (iki otel) → /secim, 2 kart, seçim → /depo/havuz", async ({ page }) => {
+test("depo.cok (iki otel) → /secim, 2 kart, seçim → /depo/stok", async ({ page }) => {
   await login(page, "depo.cok");
   await expect(page.getByRole("heading", { name: "Çalışacağınız outleti seçin" })).toBeVisible();
   const cards = page.getByRole("button", { name: /Minibar/ });
   await expect(cards).toHaveCount(2);
   await expect(page.getByText("Merit Royal Premium").first()).toBeVisible();
   await cards.first().click();
-  await expect(page).toHaveURL(/\/depo\/havuz$/);
+  await expect(page).toHaveURL(/\/depo\/stok$/);
 });
 
 test("garson.havuz (iki outlet) → /secim, outlet kartları", async ({ page }) => {

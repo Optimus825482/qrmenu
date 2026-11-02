@@ -14,7 +14,16 @@ interface DashboardData {
   activeMybarCount: number;
 }
 
-export default function KatDashboardPage() {
+export type KatLinks = { occupancy: boolean; definitions: boolean; stock: boolean; reports: boolean };
+export type KatFilter = "mybar" | "dnd" | null;
+
+const FILTER_LABEL: Record<Exclude<KatFilter, null>, string> = {
+  mybar: "MyBar talebi olan katlar",
+  dnd: "DND kaydı olan katlar",
+};
+
+/** Floor-supervisor home. Links to other screens render only when the user may view them. */
+export default function KatDashboard({ links, filter }: { links: KatLinks; filter: KatFilter }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
@@ -38,6 +47,10 @@ export default function KatDashboardPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load (sets the loading flag first)
     loadData();
   }, []);
+
+  const floors = (data?.floors ?? []).filter((floor) =>
+    filter === "mybar" ? floor.mybarCount > 0 : filter === "dnd" ? floor.dndCount > 0 : true,
+  );
 
   const formattedDate = new Intl.DateTimeFormat("tr-TR", {
     day: "numeric",
@@ -110,41 +123,49 @@ export default function KatDashboardPage() {
               <span>İşlemlerim</span>
             </Link>
 
-            <Link
-              href="/depo/doluluk-yukle"
-              className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 active:scale-95 text-amber-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-              title="Günlük Excel Doluluk Yükleme"
-            >
-              <span>📊</span>
-              <span>Doluluk Girişi</span>
-            </Link>
+            {links.occupancy && (
+              <Link
+                href="/depo/doluluk-yukle"
+                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 active:scale-95 text-amber-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
+                title="Günlük Excel Doluluk Yükleme"
+              >
+                <span>📊</span>
+                <span>Doluluk Girişi</span>
+              </Link>
+            )}
 
-            <Link
-              href="/depo/stok"
-              className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 text-emerald-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-              title="Depo Sorumlusu Konsinye Havuz Stoğu"
-            >
-              <span>📦</span>
-              <span>Stok Havuzu</span>
-            </Link>
+            {links.stock && (
+              <Link
+                href="/depo/stok"
+                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 text-emerald-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
+                title="Depo Sorumlusu Konsinye Havuz Stoğu"
+              >
+                <span>📦</span>
+                <span>Stok Havuzu</span>
+              </Link>
+            )}
 
-            <Link
-              href="/depo/raporlar"
-              className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 active:scale-95 text-blue-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-              title="Minibar Tüketim & Görev Raporları"
-            >
-              <span>📈</span>
-              <span>Raporlar</span>
-            </Link>
+            {links.reports && (
+              <Link
+                href="/depo/raporlar"
+                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 active:scale-95 text-blue-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
+                title="Minibar Tüketim & Görev Raporları"
+              >
+                <span>📈</span>
+                <span>Raporlar</span>
+              </Link>
+            )}
 
-            <Link
-              href="/depo/tanimlar"
-              className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 active:scale-95 text-purple-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-              title="Ürün, Grup, Setup, Oda Tipi Tanımları ve Silinemez Audit Logları"
-            >
-              <span>⚙️</span>
-              <span>Tanımlamalar</span>
-            </Link>
+            {links.definitions && (
+              <Link
+                href="/depo/tanimlar"
+                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 active:scale-95 text-purple-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
+                title="Ürün, Grup, Setup, Oda Tipi Tanımları ve Silinemez Audit Logları"
+              >
+                <span>⚙️</span>
+                <span>Tanımlamalar</span>
+              </Link>
+            )}
 
             <Link
               href="/kat/qr"
@@ -309,14 +330,27 @@ export default function KatDashboardPage() {
             </span>
           </div>
 
+          {filter && (
+            <p className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800">
+              <span>Süzgeç: {FILTER_LABEL[filter]}</span>
+              <Link href="/kat" className="underline">
+                Tüm katları göster
+              </Link>
+            </p>
+          )}
+
           {isLoading ? (
             <div className="py-16 text-center text-slate-400">
               <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
               <p className="font-semibold text-sm">Katlar yükleniyor...</p>
             </div>
+          ) : floors.length === 0 && filter ? (
+            <p className="py-10 text-center text-sm font-semibold text-slate-500">
+              Bu süzgece uyan kat yok.
+            </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {data?.floors.map((floor) => {
+              {floors.map((floor) => {
                 const rate = floor.occupancyRate;
                 const circleColor =
                   rate >= 80 ? "text-rose-500" : rate >= 50 ? "text-amber-500" : "text-emerald-500";

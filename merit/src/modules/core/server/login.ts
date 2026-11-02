@@ -113,11 +113,9 @@ async function startSession(
     roleCode: role.code,
   });
 
-  if (target.kind === "ADMIN") return "/admin";
-  const screen = role.defaultScreen
-    ? await prisma.appScreen.findUnique({ where: { code: role.defaultScreen } })
-    : null;
-  return screen?.path ?? "/";
+  // The desktop opens directly; every other target lands through /baslat, which resolves the
+  // role's default screen (or the first visible one) with the permissions of that moment.
+  return target.kind === "ADMIN" ? "/admin" : "/baslat";
 }
 
 /**

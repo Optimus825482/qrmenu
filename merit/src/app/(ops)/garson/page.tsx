@@ -8,19 +8,22 @@ import { tableAssignments } from "@/modules/order/server/tableAssignments";
 import { prisma } from "@/lib/prisma";
 import { waiterCalls } from "@/modules/order/server/waiterCalls";
 import GarsonClient from "./GarsonClient";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export const metadata: Metadata = { title: "Garson · Merit", manifest: "/api/manifest/garson" };
 
 export default async function GarsonPage() {
   const ctx = await requireUser();
-  if (!ctx.session.outletId || !(await can(ctx, "QS-KUY", "V", ctx.session.hotelId))) redirect("/secim");
+  if (!(await can(ctx, "QS-KUY", "V", ctx.session.hotelId))) denyScreen("QS-KUY");
+  if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
   const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } });
   const canCreateOrder = Boolean(outlet?.hasOrdering) && await can(ctx, "QS-KUY", "O", ctx.session.hotelId);
   const [queue, tables, calls, openOrders] = await Promise.all([
     approvals.visibleQueue(ctx, outletId),
     tableAssignments.myTables(ctx),
-    waiterCalls.listOpen(ctx, outletId),
+    // Barmen and butlers have no QM-CAG module: the page must still open for them.
+    can(ctx, "QM-CAG", "V", ctx.session.hotelId).then((allowed) => (allowed ? waiterCalls.listOpen(ctx, outletId) : [])),
     orders.listForOutlet(ctx, outletId, { statuses: ["ONAYLANDI", "HAZIR"] }),
   ]);
   const cards = queue.map((order) => ({ ...order, canApprove: false }));

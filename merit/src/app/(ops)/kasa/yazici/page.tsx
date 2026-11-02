@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { currentUser, permits } from "@/app/(admin)/admin/guard";
 import { YaziciKuyrugu } from "./YaziciKuyrugu";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function KasaYaziciPage() {
   const ctx = await currentUser();
   if (!ctx) redirect("/giris?next=%2Fkasa%2Fyazici");
-  if (!(await permits(ctx, "QS-FIS", "V"))) redirect("/secim");
+  if (!(await permits(ctx, "QS-FIS", "V"))) denyScreen("QS-FIS");
   const [canTestPrint, canReprint] = await Promise.all([
     permits(ctx, "QS-FIS", "D"),
     permits(ctx, "QS-FIS", "O"),

@@ -142,6 +142,18 @@ async function resetAndSeed(): Promise<void> {
         canEdit: true,
       },
     });
+
+    // One user per role (`rol.<kod>`, e.g. rol.r-dep) for the landing spec. Outlet and kitchen roles
+    // belong to Havuz Bar, the room service role to the hotel's room service outlet.
+    const roomService = await db.outlet.findFirstOrThrow({ where: { hotelId: mr, type: "ODA_SERVISI" } });
+    for (const roleDef of await db.role.findMany({ orderBy: { code: "asc" } })) {
+      const roleUser = await makeUser(`rol.${roleDef.code.toLowerCase()}`, roleDef.code, "ROYAL");
+      if (roleDef.kind === "OUTLET" || roleDef.kind === "MUTFAK") {
+        await db.outletMember.create({
+          data: { userId: roleUser.id, outletId: roleDef.code === "R-ODS" ? roomService.id : pool },
+        });
+      }
+    }
   } finally {
     await db.$disconnect();
   }

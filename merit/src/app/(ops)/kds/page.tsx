@@ -3,10 +3,12 @@ import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { kds } from "@/modules/order/server/kds";
 import KdsClient from "./KdsClient";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export default async function KdsPage() {
   const ctx = await requireUser();
-  if (!ctx.session.outletId || !(await can(ctx, "QS-KDS", "V", ctx.session.hotelId))) redirect("/secim");
+  if (!(await can(ctx, "QS-KDS", "V", ctx.session.hotelId))) denyScreen("QS-KDS");
+  if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
 
   let loaded: { board: Awaited<ReturnType<typeof kds.board>>; canEdit: boolean; canPrint: boolean } | null = null;

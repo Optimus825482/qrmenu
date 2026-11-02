@@ -249,7 +249,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     const res = await performLogin(creds("kat1"), deps);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
-    expect(res.data.next).toBe("/kat");
+    expect(res.data.next).toBe("/baslat");
     expect(res.data.targets).toHaveLength(1);
 
     const session = await testDb.userSession.findFirstOrThrow({ where: { userId: user.id } });
@@ -559,7 +559,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(pickDeps.setCookie).toHaveBeenCalledWith(
       expect.objectContaining({ userId: user.id, sessionId: session.id, roleCode: "R-GAR" }),
     );
-    if (pick.ok) expect(pick.data.next).toBe("/garson");
+    if (pick.ok) expect(pick.data.next).toBe("/baslat");
   });
 
   it("geçersiz hedef indeksi reddedilir ve oturum açılmaz", async () => {
@@ -592,7 +592,7 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data.targets.map((t) => t.hotelName)).toEqual(["Merit Royal"]);
-    expect(res.data.next).toBe("/depo/havuz");
+    expect(res.data.next).toBe("/baslat");
     const session = await testDb.userSession.findFirstOrThrow({ where: { userId: user.id } });
     expect(session.hotelId).toBe(await hotelId("ROYAL"));
   });

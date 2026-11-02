@@ -26,7 +26,7 @@ export const ROLES: RoleDef[] = [
   { code: "R-GAR", name: "Garson", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KUY" },
   { code: "R-BAR", name: "Barmen", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KUY" },
   { code: "R-BUT", name: "Butler (VIP)", kind: "OUTLET", profile: "SAHA", modules: ["QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KUY" },
-  { code: "R-OUT", name: "Outlet Görevlisi", kind: "OUTLET", profile: "SAHA", modules: ["QR_MENU"], defaultScreen: "QM-MIS" },
+  { code: "R-OUT", name: "Outlet Görevlisi", kind: "OUTLET", profile: "SAHA", modules: ["QR_MENU"], defaultScreen: "QM-CAG" },
   { code: "R-ODS", name: "Oda Servisi Görevlisi", kind: "OUTLET", profile: "SAHA", modules: ["ROOM_SERVICE"], defaultScreen: "RO-TAL" },
   { code: "R-KAS", name: "Kasa", kind: "OUTLET", profile: "ISLET", modules: ["QR_ORDER", "QR_MENU"], defaultScreen: "QS-KAS" },
   { code: "R-MUS", name: "Mutfak Şefi", kind: "MUTFAK", profile: "ISLET", modules: ["QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KDS" },

@@ -5,6 +5,7 @@ import { can } from "@/lib/rbac";
 import { getSetting } from "@/lib/settings";
 import { listRoomServiceOrdersAction } from "@/modules/order/server/actions/roomServiceRecords";
 import OdaServisiClient from "./OdaServisiClient";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export default async function OdaServisiPage() {
   const ctx = await requireUser();
@@ -23,7 +24,7 @@ export default async function OdaServisiPage() {
   ]);
 
   // The permission matrix decides; no role-kind shortcut.
-  if (!hasView) redirect("/secim");
+  if (!hasView) denyScreen("RO-TAL");
 
   const initialOrders = ordersRes.ok ? ordersRes.data.orders : [];
   const initialStats = ordersRes.ok

@@ -347,7 +347,7 @@ describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
       roleId: user.roleId,
     });
     await cookieFor({ userId: user.id, sessionId: session.id, roleCode: "R-KAT" });
-    expect(await selectTargetAction(0)).toMatchObject({ ok: true, data: { next: "/kat" } });
+    expect(await selectTargetAction(0)).toMatchObject({ ok: true, data: { next: "/baslat" } });
     expect(await testDb.userSession.count()).toBe(2);
   });
 
@@ -369,7 +369,7 @@ describe("bekleyen hedef-seçim çerezi (/secim) erişim vermez", () => {
     const user = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
     await cookieFor({ userId: user.id, pendingTargets: true });
     const res = await selectTargetAction(0);
-    expect(res).toMatchObject({ ok: true, data: { next: "/kat" } });
+    expect(res).toMatchObject({ ok: true, data: { next: "/baslat" } });
 
     const row = await testDb.userSession.findFirstOrThrow({ where: { userId: user.id } });
     const ctx = await requireUser(); // the new cookie now grants access

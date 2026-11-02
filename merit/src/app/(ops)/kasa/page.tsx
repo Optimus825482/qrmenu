@@ -6,10 +6,12 @@ import { approvals } from "@/modules/order/server/approvals";
 import { cashier } from "@/modules/order/server/cashier";
 import { waiterCalls } from "@/modules/order/server/waiterCalls";
 import KasaClient from "./KasaClient";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export default async function CashierPage() {
   const ctx = await requireUser();
-  if (!ctx.session.outletId || !(await can(ctx, "QS-KAS", "V", ctx.session.hotelId))) redirect("/secim");
+  if (!(await can(ctx, "QS-KAS", "V", ctx.session.hotelId))) denyScreen("QS-KAS");
+  if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
   const [board, queue, calls, canEdit, members, outlet] = await Promise.all([
     cashier.tableBoard(ctx, outletId),

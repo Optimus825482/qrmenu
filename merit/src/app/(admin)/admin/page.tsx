@@ -7,6 +7,7 @@ import { getSetting } from "@/lib/settings";
 import { loadShellPrefs } from "@/shell/prefsAction";
 import { currentUser, permits } from "./guard";
 import { ShellClient } from "./ShellClient";
+import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 /** The admin desktop is for system and management roles only. */
 const SHELL_ROLE_KINDS = new Set(["SISTEM", "YONETIM"]);
@@ -15,7 +16,7 @@ export default async function AdminPage() {
   const ctx = await currentUser();
   if (!ctx) redirect("/giris?next=%2Fadmin");
   // The desktop opens on Komuta Merkezi: without it the user has no business here (audited).
-  if (!(await permits(ctx, "CR-KOM", "V"))) redirect("/secim");
+  if (!(await permits(ctx, "CR-KOM", "V"))) denyScreen("CR-KOM");
   if (!SHELL_ROLE_KINDS.has(ctx.user.roleKind)) redirect("/secim");
 
   const [hotels, prefs, confirmSimpleActions, mobileDefinitions] = await Promise.all([

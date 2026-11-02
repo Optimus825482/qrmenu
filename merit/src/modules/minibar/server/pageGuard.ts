@@ -6,7 +6,8 @@ import { DomainError } from "@/lib/result";
 
 /**
  * Server-side guard of a staff page: no valid session -> /giris (back to the page afterwards),
- * session without the "view" permission on the screen for the session hotel -> /secim.
+ * session without the "view" permission on the screen for the session hotel -> /yetkisiz (the
+ * "Bu ekran sana atanmadı" page).
  * Used by one layout per route segment, so it runs whenever the segment is entered.
  */
 export async function requireScreen(screen: string): Promise<void> {
@@ -20,5 +21,10 @@ export async function requireScreen(screen: string): Promise<void> {
     }
     throw error;
   }
-  if (!(await can(ctx, screen, "V", ctx.session.hotelId))) redirect("/secim");
+  if (!(await can(ctx, screen, "V", ctx.session.hotelId))) denyScreen(screen);
+}
+
+/** Sends a signed-in user who may not view `code` to the explanation page (never into a loop). */
+export function denyScreen(code: string): never {
+  redirect(`/yetkisiz?ekran=${encodeURIComponent(code)}`);
 }
