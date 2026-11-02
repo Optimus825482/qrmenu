@@ -6,10 +6,20 @@ import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
+import {
+  checkOccupancyUploadAndAlert,
+  sendDailyConsumptionAndTaskReport,
+  runDailyTaskGeneration,
+  runDndDayEndRollover,
+} from "@/modules/minibar/server/minibarJobs";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
+export const MINIBAR_TASK_GEN_QUEUE = "minibar.task-gen";
+export const MINIBAR_OCCUPANCY_ALERT_QUEUE = "minibar.occupancy-alert";
+export const MINIBAR_DAILY_REPORT_QUEUE = "minibar.daily-report";
+export const MINIBAR_DND_ROLLOVER_QUEUE = "minibar.dnd-rollover";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -67,6 +77,42 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(ORDER_ESCALATION_QUEUE, async () => {
       const escalated = await escalation.run(new Date());
       if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
+    });
+
+    // 1. Gece 00:01 - Günlük görev üretimi
+    await boss.createQueue(MINIBAR_TASK_GEN_QUEUE); // idempotent
+    await boss.schedule(MINIBAR_TASK_GEN_QUEUE, "1 0 * * *", null, { tz: TZ });
+    await boss.work(MINIBAR_TASK_GEN_QUEUE, async () => {
+      const res = await runDailyTaskGeneration(new Date());
+      console.log(`[minibar.task-gen] ${res.hotelCount} otel için günlük minibar görevleri üretildi.`);
+    });
+
+    // 2. Sabah 09:00 - Dünün tüketim toplamları, tamamlanamayan görevler ve anormal tüketim raporu
+    await boss.createQueue(MINIBAR_DAILY_REPORT_QUEUE); // idempotent
+    await boss.schedule(MINIBAR_DAILY_REPORT_QUEUE, "0 9 * * *", null, { tz: TZ });
+    await boss.work(MINIBAR_DAILY_REPORT_QUEUE, async () => {
+      const res = await sendDailyConsumptionAndTaskReport(new Date());
+      if (res.sent) {
+        console.log(`[minibar.daily-report] Günlük minibar raporu (${res.reportDate}) iletildi.`);
+      }
+    });
+
+    // 3. Sabah 10:00 ve Akşam 18:00 - Günlük doluluk yüklenmediyse uyarı maili
+    await boss.createQueue(MINIBAR_OCCUPANCY_ALERT_QUEUE); // idempotent
+    await boss.schedule(MINIBAR_OCCUPANCY_ALERT_QUEUE, "0 10,18 * * *", null, { tz: TZ });
+    await boss.work(MINIBAR_OCCUPANCY_ALERT_QUEUE, async () => {
+      const res = await checkOccupancyUploadAndAlert(new Date());
+      if (res.alertSent) {
+        console.log(`[minibar.occupancy-alert] Eksik doluluk uyarısı gönderildi: ${res.missingHotels.join(", ")}`);
+      }
+    });
+
+    // 4. Gece 23:59 - DND gün sonu devri
+    await boss.createQueue(MINIBAR_DND_ROLLOVER_QUEUE); // idempotent
+    await boss.schedule(MINIBAR_DND_ROLLOVER_QUEUE, "59 23 * * *", null, { tz: TZ });
+    await boss.work(MINIBAR_DND_ROLLOVER_QUEUE, async () => {
+      const res = await runDndDayEndRollover(new Date());
+      console.log(`[minibar.dnd-rollover] ${res.rolloverCount} adet DND devri tamamlandı.`);
     });
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;

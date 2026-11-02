@@ -87,7 +87,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
     >
       <header className="mb-appbar">
         <div>
-          <p className="mb-appbar-title">Merit OS</p>
+          <p className="mb-appbar-title">F&amp;B Command Center</p>
           <p className="mb-appbar-sub">{currentLabel}</p>
         </div>
         <span className="mb-sse" data-status={status} role="status">

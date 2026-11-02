@@ -36,6 +36,13 @@ const COLUMNS: Column<RoomRow>[] = [
   },
   { key: "capacity", title: "Kapasite", width: 80, sortable: true },
   {
+    key: "extension",
+    title: "Dahili",
+    width: 70,
+    sortable: true,
+    render: (row) => row.extension ?? "",
+  },
+  {
     key: "isActive",
     title: "Durum",
     width: 70,
@@ -140,6 +147,7 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
       // Text that is not a number goes through as text so the server names the field.
       capacity: capacityText ? (numberOrUndefined(capacityText) ?? capacityText) : null,
       guestMessage: values.guestMessage ?? "",
+      extension: values.extension ?? "",
       isActive: values.isActive === "on",
     };
     const result =
@@ -298,6 +306,9 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
         </Field>
         <Field name="capacity" label="Kapasite">
           <input type="text" inputMode="numeric" defaultValue={editing?.capacity ?? ""} />
+        </Field>
+        <Field name="extension" label="Dahili no">
+          <input type="text" defaultValue={editing?.extension ?? ""} maxLength={20} />
         </Field>
         <Field name="guestMessage" label="Misafir mesajı">
           <textarea rows={3} maxLength={500} defaultValue={editing?.guestMessage ?? ""} />

@@ -34,7 +34,10 @@ export default async function AboutPage({
       <div className="xp-about">
         <XpIcon name="bilgi" size={48} />
         <div>
-          <h1>Merit OS</h1>
+          <h1>F&amp;B Command Center</h1>
+          <p style={{ margin: "2px 0 8px 0", color: "#64748b", fontSize: "11px", fontWeight: "600" }}>
+            Merit Royal Hotels &amp; Resorts
+          </p>
           <dl>
             <dt>Sürüm</dt>
             <dd>{pkg.version}</dd>

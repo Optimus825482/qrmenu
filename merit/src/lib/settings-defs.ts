@@ -28,12 +28,17 @@ export const SETTING_SCHEMAS = {
   "order.approvalEscalationMinutes": minutes,
   "order.callAlertSeconds": z.number().int().min(1).max(3600),
   "rs.slaMinutes": minutes,
+  "rs.maxOpenPerRoom": z.number().int().min(1).max(10),
   "email.notifyEnabled": flag,
   "email.alertEnabled": flag,
   "email.reportEnabled": flag,
   "email.systemEnabled": flag,
   "occupancy.fileRetentionDays": z.number().int().min(1).max(365),
   "qr.baseUrl": z.url(),
+  "translation.deeplKey": z.string().default(""),
+  "translation.geminiKey": z.string().default(""),
+  "translation.provider": z.enum(["AUTO", "DEEPL", "GEMINI"]),
+  "translation.geminiModel": z.enum(["gemini-3.8-flash", "gemini-flash-latest", "gemini-flash-lite-latest"]),
 } as const;
 
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
@@ -62,12 +67,17 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "order.approvalEscalationMinutes": 2,
   "order.callAlertSeconds": 60,
   "rs.slaMinutes": 30,
+  "rs.maxOpenPerRoom": 3,
   "email.notifyEnabled": false,
   "email.alertEnabled": false,
   "email.reportEnabled": false,
   "email.systemEnabled": false,
   "occupancy.fileRetentionDays": 4,
   "qr.baseUrl": "http://localhost:3000",
+  "translation.deeplKey": "",
+  "translation.geminiKey": "",
+  "translation.provider": "AUTO",
+  "translation.geminiModel": "gemini-3.8-flash",
 };
 
 export function isSettingKey(key: string): key is SettingKey {
@@ -85,6 +95,7 @@ export const SETTING_GROUPS = [
   "Kabuk",
   "E-posta",
   "QR",
+  "Çeviri",
 ] as const;
 export type SettingGroup = (typeof SETTING_GROUPS)[number];
 
@@ -105,6 +116,8 @@ export type SettingMeta = {
   secret?: boolean;
   /** Only the system scope may hold it (a hotel row is refused). */
   systemOnly?: boolean;
+  placeholder?: string;
+  helpLink?: { url: string; label: string };
 };
 
 export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
@@ -264,6 +277,13 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     type: "number",
     unit: "dk",
   },
+  "rs.maxOpenPerRoom": {
+    label: "Oda başına açık sipariş sınırı",
+    description: "Bir odanın aynı anda sahip olabileceği açık oda servisi siparişi sayısı.",
+    group: "Oda Servisi",
+    type: "number",
+    unit: "adet",
+  },
   "email.notifyEnabled": {
     label: "Bildirim e-postaları",
     description: "Bildirim e-postaları gönderilsin mi.",
@@ -293,5 +313,55 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     description: "QR kodlarına yazılan genel adres (örn. https://menu.ornek.com).",
     group: "QR",
     type: "text",
+  },
+  "translation.deeplKey": {
+    label: "DeepL API anahtarı",
+    description: "Menülerin otomatik çevirisi için DeepL API anahtarı (:fx ile biten ücretsiz anahtar desteklenir).",
+    group: "Çeviri",
+    type: "text",
+    secret: true,
+    systemOnly: true,
+    placeholder: "Örn: 12345678-abcd-...:fx",
+    helpLink: {
+      url: "https://www.deepl.com/pro-api",
+      label: "Ücretsiz DeepL API Anahtarı Al (500.000 karakter/ay)",
+    },
+  },
+  "translation.geminiKey": {
+    label: "Google AI Studio API anahtarı",
+    description: "DeepL olmadığında veya hata verdiğinde devreye girecek Google Gemini API anahtarı.",
+    group: "Çeviri",
+    type: "text",
+    secret: true,
+    systemOnly: true,
+    placeholder: "Örn: AIzaSy...",
+    helpLink: {
+      url: "https://aistudio.google.com/apikey",
+      label: "Ücretsiz Google AI Studio API Anahtarı Al",
+    },
+  },
+  "translation.provider": {
+    label: "Tercih edilen çeviri servisi",
+    description: "Otomatik modda DeepL birincil, Gemini yedektir. Doğrudan tek servis de seçilebilir.",
+    group: "Çeviri",
+    type: "enum",
+    options: [
+      { value: "AUTO", label: "Otomatik (DeepL + Gemini Yedek)" },
+      { value: "DEEPL", label: "Yalnızca DeepL" },
+      { value: "GEMINI", label: "Yalnızca Google Gemini" },
+    ],
+    systemOnly: true,
+  },
+  "translation.geminiModel": {
+    label: "Gemini yapay zeka modeli",
+    description: "Çeviri için kullanılacak Gemini modeli. Flash modelleri çok hızlıdır ve ücretsiz kotası cömerttir.",
+    group: "Çeviri",
+    type: "enum",
+    options: [
+      { value: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Önerilen — En Güncel ve Kararlı)" },
+      { value: "gemini-flash-latest", label: "Gemini Flash Latest (Dinamik En Son Sürüm)" },
+      { value: "gemini-flash-lite-latest", label: "Gemini Flash-Lite Latest (Ultra Hızlı / Hafif)" },
+    ],
+    systemOnly: true,
   },
 };

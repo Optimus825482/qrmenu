@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Result } from "@/lib/result";
 import { MAX_QUANTITY, NOTE_MAX } from "./ItemSheet";
 import { priceFormatter } from "./priceFormat";
 import { useSelectionStore } from "./selectionStore";
+import { useModalFocusTrap } from "./useModalFocusTrap";
 
 function subscribeOnline(callback: () => void): () => void {
   window.addEventListener("online", callback);
@@ -54,15 +55,14 @@ export function SelectionsDrawer({
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useModalFocusTrap({
+    active: true,
+    onClose,
+    initialFocusRef: closeRef,
+    containerRef: drawerRef,
+  });
 
   const format = priceFormatter(locale, currency);
   const total = items.reduce((sum, i) => sum + (i.unitPrice ? Number(i.unitPrice) * i.qty : 0), 0);
@@ -106,6 +106,7 @@ export function SelectionsDrawer({
   return (
     <div className="g-sheet-backdrop" onClick={onClose}>
       <div
+        ref={drawerRef}
         className="g-sheet g-selections"
         role="dialog"
         aria-modal="true"

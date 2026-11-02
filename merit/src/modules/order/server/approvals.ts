@@ -1,11 +1,12 @@
-import type { Order, Prisma } from "@/generated/prisma/client";
+import type { Order, OrderKind, Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
-export type ApprovalSubject = Pick<Order, "hotelId" | "outletId" | "assignedWaiterId"> & Partial<Pick<Order, "tableId">>;
+export type ApprovalSubject = Pick<Order, "hotelId" | "outletId" | "assignedWaiterId"> &
+  Partial<Pick<Order, "tableId" | "kind">>;
 
 const ACTIVE_SESSION = ["ONLINE", "UYARI"] as const;
 
@@ -33,6 +34,17 @@ export async function onlineAt(tx: Prisma.TransactionClient, outletId: string, r
  * hotel's F&B managers (R-FBM). Unique ids.
  */
 async function recipientsFor(tx: Prisma.TransactionClient, order: ApprovalSubject): Promise<string[]> {
+  if (order.kind === "ODA_SERVISI") {
+    const out = new Set<string>();
+    for (const id of await onlineAt(tx, order.outletId, ["R-ODS", "R-BUT", "R-MUS"])) {
+      out.add(id);
+    }
+    for (const id of await usersEntitledTo(order.hotelId, ["R-FBM"], tx)) {
+      out.add(id);
+    }
+    return [...out];
+  }
+
   const out = new Set<string>(await onlineAt(tx, order.outletId, ["R-KAS"]));
   if (order.assignedWaiterId) out.add(order.assignedWaiterId);
   else for (const id of await onlineAt(tx, order.outletId, ["R-GAR"])) out.add(id);

@@ -10,6 +10,9 @@ export const DEFAULT_CALL_OPTIONS = [
       de: "Servietten bitte",
       ru: "Салфетки, пожалуйста",
       ar: "مناديل من فضلك",
+      fr: "Des serviettes, s'il vous plaît",
+      el: "Χαρτοπετσέτες, παρακαλώ",
+      it: "Tovaglioli, per favore",
     },
   },
   {
@@ -21,6 +24,9 @@ export const DEFAULT_CALL_OPTIONS = [
       de: "Ich möchte bestellen",
       ru: "Я хочу сделать заказ",
       ar: "أرغب في الطلب",
+      fr: "Je voudrais commander",
+      el: "Θα ήθελα να παραγγείλω",
+      it: "Vorrei ordinare",
     },
   },
   {
@@ -32,6 +38,9 @@ export const DEFAULT_CALL_OPTIONS = [
       de: "Wasser, bitte",
       ru: "Воды, пожалуйста",
       ar: "ماء من فضلك",
+      fr: "De l'eau, s'il vous plaît",
+      el: "Νερό, παρακαλώ",
+      it: "Acqua, per favore",
     },
   },
   {
@@ -43,6 +52,9 @@ export const DEFAULT_CALL_OPTIONS = [
       de: "Die Rechnung, bitte",
       ru: "Счёт, пожалуйста",
       ar: "الحساب من فضلك",
+      fr: "L'addition, s'il vous plaît",
+      el: "Το λογαριασμό, παρακαλώ",
+      it: "Il conto, per favore",
     },
   },
 ] as const;

@@ -11,7 +11,14 @@
       "search": "Search the menu",
       "noResults": "No dishes match your search",
       "filters": "Labels",
-      "allergenNote": "Allergen information follows EU Regulation 1169/2011. Please ask our team before you order."
+      "allergenNote": "Allergen information follows EU Regulation 1169/2011. Please ask our team before you order.",
+      "clearSearch": "Clear search",
+      "clear": "Clear",
+      "itemsFound": "{count} items found",
+      "subcategories": "Subcategories",
+      "all": "All",
+      "backToTop": "Back to top",
+      "photoCount": "{count} photos"
     },
     "allergen": {
       "gluten": "Gluten",
@@ -76,7 +83,14 @@
       "retry": "Please try again",
       "offline": "No connection, reconnecting",
       "close": "Close",
-      "language": "Language"
+      "language": "Language",
+      "gallery": "Image gallery",
+      "prevPhoto": "Previous photo",
+      "nextPhoto": "Next photo",
+      "photoIndex": "Photo {index}",
+      "selectPhoto": "Select photo {index}",
+      "languages": "Languages",
+      "selectLanguage": "Language: {name}"
     },
     "room": {
       "placeholder": "The room page is coming in the next stage"

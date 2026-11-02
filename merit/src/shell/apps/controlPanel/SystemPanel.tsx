@@ -6,6 +6,8 @@ import {
   listSettingsAction,
   setSettingAction,
   settingsScopesAction,
+  testDeeplAction,
+  testGeminiAction,
 } from "@/modules/core/server/admin/actions/settingsAdmin";
 import type {
   SettingGroupRow,
@@ -13,6 +15,7 @@ import type {
   SettingSource,
   SettingsScopes,
 } from "@/modules/core/server/admin/settingsAdmin";
+import type { SettingGroup } from "@/lib/settings-defs";
 import { alertDialog, confirm } from "../../confirm";
 import { useSse } from "../../useSse";
 
@@ -49,7 +52,17 @@ function valueOf(item: SettingItem, draft: string): unknown {
 }
 
 /** Denetim Masası → Sistem: settings of the system or of one hotel, grouped, edited field by field. */
-export function SystemPanel({ setStatus }: { setStatus(text: string): void }) {
+export function SystemPanel({
+  setStatus,
+  filterGroups,
+  title,
+  description,
+}: {
+  setStatus(text: string): void;
+  filterGroups?: SettingGroup[];
+  title?: string;
+  description?: string;
+}) {
   const [scopes, setScopes] = useState<SettingsScopes | null>(null);
   const [scope, setScope] = useState<string | null>(null); // SYSTEM_SCOPE or a hotel id
   const [groups, setGroups] = useState<SettingGroupRow[]>([]);
@@ -114,31 +127,44 @@ export function SystemPanel({ setStatus }: { setStatus(text: string): void }) {
   const scopeName =
     hotelId === null ? "Sistem geneli" : (scopes.hotels.find((h) => h.id === hotelId)?.name ?? "");
 
+  const panelTitle = title ?? "Sistem";
+  const panelDesc =
+    description ??
+    "Sistem geneli değerler tüm otellere uygulanır; bir otel kendi değerini tanımlarsa o otelde onu kullanır.";
+
+  const visibleGroups = filterGroups
+    ? groups.filter((g) => filterGroups.includes(g.group))
+    : groups;
+
+  const showScopeSelector =
+    scopes &&
+    scopes.hotels.length > 0 &&
+    visibleGroups.some((g) => g.items.some((i) => !i.meta.systemOnly));
+
   return (
     <>
-      <h2 className="xp-cp-title">Sistem</h2>
-      <p className="xp-cp-note">
-        Sistem geneli değerler tüm otellere uygulanır; bir otel kendi değerini tanımlarsa o
-        otelde onu kullanır.
-      </p>
-      <div className="xp-cp-color">
-        <label htmlFor={`${id}-scope`}>Kapsam</label>
-        <select
-          id={`${id}-scope`}
-          value={scope ?? ""}
-          onChange={(e) => {
-            setScope(e.target.value);
-            setNotice(null);
-          }}
-        >
-          {scopes.system ? <option value={SYSTEM_SCOPE}>Sistem geneli</option> : null}
-          {scopes.hotels.map((h) => (
-            <option key={h.id} value={h.id}>
-              Otel: {h.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <h2 className="xp-cp-title">{panelTitle}</h2>
+      <p className="xp-cp-note">{panelDesc}</p>
+      {showScopeSelector ? (
+        <div className="xp-cp-color">
+          <label htmlFor={`${id}-scope`}>Kapsam</label>
+          <select
+            id={`${id}-scope`}
+            value={scope ?? ""}
+            onChange={(e) => {
+              setScope(e.target.value);
+              setNotice(null);
+            }}
+          >
+            {scopes.system ? <option value={SYSTEM_SCOPE}>Sistem geneli</option> : null}
+            {scopes.hotels.map((h) => (
+              <option key={h.id} value={h.id}>
+                Otel: {h.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
       {notice ? (
         <p role={notice.kind === "error" ? "alert" : "status"} className="xp-defs-note">
           {notice.text}
@@ -149,7 +175,7 @@ export function SystemPanel({ setStatus }: { setStatus(text: string): void }) {
           {loadError}
         </p>
       ) : null}
-      {groups.map((g) => (
+      {visibleGroups.map((g) => (
         <section key={g.group} className="xp-cp-section" aria-label={g.group}>
           <h3 className="xp-cp-heading">{g.group}</h3>
           {g.items.map((item) => (
@@ -187,6 +213,8 @@ function SettingRow({
   const initial = draftOf(item);
   const [draft, setDraft] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const next = valueOf(item, draft);
@@ -258,7 +286,7 @@ function SettingRow({
     );
   } else if (meta.type === "enum") {
     control = (
-      <select id={id} value={draft} disabled={busy} onChange={(e) => setDraft(e.target.value)}>
+      <select id={id} className="xp-system-select" value={draft} disabled={busy} onChange={(e) => setDraft(e.target.value)}>
         {meta.options?.map((o) => (
           <option key={String(o.value)} value={String(o.value)}>
             {o.label}
@@ -271,6 +299,7 @@ function SettingRow({
       <input
         id={id}
         type="number"
+        className="xp-system-input xp-system-input-sm"
         step={meta.step ?? 1}
         value={draft}
         disabled={busy}
@@ -278,22 +307,27 @@ function SettingRow({
       />
     );
   } else {
+    const placeholder =
+      meta.secret && item.source !== "default"
+        ? "•••••••• (Kayıtlı — değiştirmek için yeni anahtarı yazın)"
+        : meta.placeholder || (meta.secret ? "API anahtarını buraya yapıştırın…" : undefined);
     control = (
       <input
         id={id}
         type={meta.secret ? "password" : "text"}
         autoComplete={meta.secret ? "new-password" : "off"}
-        placeholder={meta.secret && item.source !== "default" ? "Kayıtlı (değiştirmek için yazın)" : undefined}
+        placeholder={placeholder}
         value={draft}
         disabled={busy}
+        className="xp-system-input"
         onChange={(e) => setDraft(e.target.value)}
       />
     );
   }
 
   return (
-    <div role="group" aria-label={meta.label} className="xp-cp-choices" style={{ marginBottom: 6 }}>
-      <label htmlFor={id} style={{ minWidth: 200 }} title={meta.description}>
+    <div role="group" aria-label={meta.label} className="xp-cp-choices" style={{ marginBottom: 10, alignItems: "center" }}>
+      <label htmlFor={id} style={{ minWidth: 200, fontWeight: 600 }} title={meta.description}>
         {meta.label}
       </label>
       {control}
@@ -304,6 +338,138 @@ function SettingRow({
       <button type="button" className="xp-button" disabled={busy || !canSave} onClick={() => void save()}>
         Kaydet
       </button>
+      {item.key === "translation.geminiModel" ? (
+        <button
+          type="button"
+          className="xp-button"
+          disabled={busy || testing}
+          title="Seçili Gemini modeli ile Google AI Studio bağlantısını ve örnek çeviriyi test eder"
+          style={{
+            fontWeight: 700,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            color: "#0055ea",
+          }}
+          onClick={async () => {
+            setTesting(true);
+            setTestResult(null);
+            try {
+              const res = await testGeminiAction({ model: draft });
+              if (res.ok) {
+                setTestResult({ ok: true, text: res.data.message });
+                await alertDialog({
+                  title: "Gemini Bağlantı Testi Başarılı",
+                  message: `${res.data.message}\n\n• Model: ${res.data.model}\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
+                });
+              } else {
+                const message = res.error.message || "Gemini bağlantı testi başarısız oldu.";
+                setTestResult({ ok: false, text: message });
+                await alertDialog({
+                  title: "Gemini Bağlantı Testi Başarısız",
+                  message,
+                });
+              }
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : String(err);
+              setTestResult({ ok: false, text: message });
+              await alertDialog({ title: "Bağlantı Hatası", message });
+            } finally {
+              setTesting(false);
+            }
+          }}
+        >
+          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+        </button>
+      ) : null}
+      {item.key === "translation.geminiKey" ? (
+        <button
+          type="button"
+          className="xp-button"
+          disabled={busy || testing}
+          title="Google AI Studio API anahtarını test eder"
+          style={{
+            fontWeight: 700,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            color: "#0055ea",
+          }}
+          onClick={async () => {
+            setTesting(true);
+            setTestResult(null);
+            try {
+              const res = await testGeminiAction({ apiKey: draft.trim() || undefined });
+              if (res.ok) {
+                setTestResult({ ok: true, text: res.data.message });
+                await alertDialog({
+                  title: "Gemini Anahtar Testi Başarılı",
+                  message: `${res.data.message}\n\n• Model: ${res.data.model}\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
+                });
+              } else {
+                const message = res.error.message || "Gemini bağlantı testi başarısız oldu.";
+                setTestResult({ ok: false, text: message });
+                await alertDialog({
+                  title: "Gemini Bağlantı Testi Başarısız",
+                  message,
+                });
+              }
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : String(err);
+              setTestResult({ ok: false, text: message });
+              await alertDialog({ title: "Bağlantı Hatası", message });
+            } finally {
+              setTesting(false);
+            }
+          }}
+        >
+          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+        </button>
+      ) : null}
+      {item.key === "translation.deeplKey" ? (
+        <button
+          type="button"
+          className="xp-button"
+          disabled={busy || testing}
+          title="DeepL API anahtarını ve bağlantısını test eder"
+          style={{
+            fontWeight: 700,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            color: "#0055ea",
+          }}
+          onClick={async () => {
+            setTesting(true);
+            setTestResult(null);
+            try {
+              const res = await testDeeplAction({ apiKey: draft.trim() || undefined });
+              if (res.ok) {
+                setTestResult({ ok: true, text: res.data.message });
+                await alertDialog({
+                  title: "DeepL Bağlantı Testi Başarılı",
+                  message: `${res.data.message}\n\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
+                });
+              } else {
+                const message = res.error.message || "DeepL bağlantı testi başarısız oldu.";
+                setTestResult({ ok: false, text: message });
+                await alertDialog({
+                  title: "DeepL Bağlantı Testi Başarısız",
+                  message,
+                });
+              }
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : String(err);
+              setTestResult({ ok: false, text: message });
+              await alertDialog({ title: "Bağlantı Hatası", message });
+            } finally {
+              setTesting(false);
+            }
+          }}
+        >
+          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+        </button>
+      ) : null}
       {meta.secret && item.source !== "default" ? (
         <button type="button" className="xp-button" disabled={busy} onClick={() => void save("")}>
           Değeri temizle
@@ -314,9 +480,52 @@ function SettingRow({
           Otel değerini kaldır
         </button>
       ) : null}
-      <span className="xp-cp-note" style={{ flexBasis: "100%" }}>
-        {meta.description}
-      </span>
+      <div className="xp-cp-note" style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 2 }}>
+        <span>{meta.description}</span>
+        {meta.helpLink ? (
+          <a
+            href={meta.helpLink.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="xp-system-help-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              color: "#0055ea",
+              fontWeight: 700,
+              textDecoration: "underline",
+              fontSize: "11px",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              background: "rgba(0, 85, 234, 0.08)",
+            }}
+          >
+            🔑 {meta.helpLink.label} ↗
+          </a>
+        ) : null}
+      </div>
+      {testResult ? (
+        <div
+          role="status"
+          style={{
+            flexBasis: "100%",
+            marginTop: 4,
+            padding: "4px 8px",
+            borderRadius: 3,
+            fontSize: 12,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            backgroundColor: testResult.ok ? "#ecfdf5" : "#fef2f2",
+            border: `1px solid ${testResult.ok ? "#a7f3d0" : "#fecaca"}`,
+            color: testResult.ok ? "#065f46" : "#991b1b",
+          }}
+        >
+          <span>{testResult.ok ? "✅" : "⚠️"}</span>
+          <span>{testResult.text}</span>
+        </div>
+      ) : null}
       {error ? (
         <span role="alert" className="xp-defs-error" style={{ flexBasis: "100%" }}>
           {error}

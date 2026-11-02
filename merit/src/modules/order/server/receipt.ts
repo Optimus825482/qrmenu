@@ -19,6 +19,7 @@ export type ReceiptPayload = {
   header: { hotel: string; outlet: string };
   orderNo: number;
   table: string;
+  extension?: string;
   at: string;
   waiter?: string;
   items: ReceiptItem[];
@@ -39,6 +40,7 @@ export function formatReceiptTime(d: Date): string {
 const RECEIPT_INCLUDE = {
   items: { orderBy: { createdAt: "asc" } },
   table: { select: { label: true } },
+  room: { select: { number: true, extension: true } },
   outlet: { select: { name: true } },
   hotel: { select: { name: true } },
   assignedWaiter: { select: { fullName: true } },
@@ -59,7 +61,12 @@ async function build(tx: Prisma.TransactionClient, orderId: string): Promise<Rec
       ? { unitPrice: money(item.unitPrice), total: money(item.unitPrice.mul(item.qty)) }
       : {}),
   }));
-  const waiter = order.assignedWaiter?.fullName ?? order.approvedBy?.fullName ?? undefined;
+  const isRoom = order.kind === "ODA_SERVISI";
+  const table = isRoom ? `Oda ${order.room?.number ?? "-"}` : (order.table?.label ?? "-");
+  const extension = isRoom ? (order.room?.extension ?? undefined) : undefined;
+  const waiter = isRoom
+    ? (order.approvedBy?.fullName ?? order.assignedWaiter?.fullName ?? undefined)
+    : (order.assignedWaiter?.fullName ?? order.approvedBy?.fullName ?? undefined);
   const subtotal =
     order.subtotal ??
     order.items.reduce(
@@ -70,7 +77,8 @@ async function build(tx: Prisma.TransactionClient, orderId: string): Promise<Rec
     v: 1,
     header: { hotel: order.hotel.name, outlet: order.outlet.name },
     orderNo: order.orderNo,
-    table: order.table?.label ?? "-",
+    table,
+    ...(extension ? { extension } : {}),
     at: formatReceiptTime(order.approvedAt ?? new Date()),
     ...(waiter ? { waiter } : {}),
     items,

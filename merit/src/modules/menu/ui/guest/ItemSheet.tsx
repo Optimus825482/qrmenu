@@ -1,9 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { AllergenKey } from "../../allergens";
 import type { GuestItem } from "../../server/guestMenu";
+import { useModalFocusTrap } from "./useModalFocusTrap";
 
 export const ALLERGEN_ICON: Record<AllergenKey, string> = {
   gluten: "🌾",
@@ -62,21 +63,44 @@ export function ItemSheet({
   const t = useTranslations("guest");
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState("");
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (diff > 40) {
+      setActiveImageIdx((prev) => (prev < images.length - 1 ? prev + 1 : 0));
+    } else if (diff < -40) {
+      setActiveImageIdx((prev) => (prev > 0 ? prev - 1 : images.length - 1));
+    }
+    touchStartX.current = null;
+  };
+
+  const images: string[] = [];
+  if (item.imageUrl) images.push(item.imageUrl);
+  for (const url of item.imageUrls ?? []) {
+    if (!images.includes(url)) images.push(url);
+  }
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useModalFocusTrap({
+    active: true,
+    onClose,
+    initialFocusRef: closeRef,
+    containerRef: sheetRef,
+  });
 
   const soldOut = !item.isAvailable;
   return (
     <div className="g-sheet-backdrop" onClick={onClose}>
       <div
+        ref={sheetRef}
         className="g-sheet"
         role="dialog"
         aria-modal="true"
@@ -86,9 +110,74 @@ export function ItemSheet({
         <button ref={closeRef} type="button" className="g-sheet-close" onClick={onClose} aria-label={t("common.close")}>
           <span aria-hidden="true">×</span>
         </button>
-        {item.imageUrl ? (
+        {images.length > 1 ? (
+          <>
+            <div
+              className="g-sheet-gallery"
+              role="region"
+              aria-label={t("common.gallery")}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="g-sheet-image"
+                src={images[activeImageIdx]}
+                alt={`${item.name} (${activeImageIdx + 1}/${images.length})`}
+              />
+              <button
+                type="button"
+                className="g-gallery-nav g-gallery-prev"
+                onClick={() => setActiveImageIdx((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                aria-label={t("common.prevPhoto")}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                className="g-gallery-nav g-gallery-next"
+                onClick={() => setActiveImageIdx((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                aria-label={t("common.nextPhoto")}
+              >
+                ›
+              </button>
+              <div className="g-gallery-dots">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`g-gallery-dot ${i === activeImageIdx ? "is-active" : ""}`}
+                    onClick={() => setActiveImageIdx(i)}
+                    aria-label={t("common.photoIndex", { index: i + 1 })}
+                  />
+                ))}
+              </div>
+              <span className="g-gallery-counter">
+                {activeImageIdx + 1} / {images.length}
+              </span>
+            </div>
+
+            {/* Thumbnail mini strip */}
+            <div className="g-gallery-strip" role="tablist" aria-label={t("common.gallery")}>
+              {images.map((url, i) => (
+                <button
+                  key={url}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === activeImageIdx}
+                  className={`g-gallery-thumb ${i === activeImageIdx ? "is-active" : ""}`}
+                  onClick={() => setActiveImageIdx(i)}
+                  aria-label={t("common.selectPhoto", { index: i + 1 })}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" />
+                </button>
+              ))}
+            </div>
+          </>
+        ) : images.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="g-sheet-image" src={item.imageUrl} alt={item.name} />
+          <img className="g-sheet-image" src={images[0]} alt={item.name} />
         ) : (
           <div className="g-sheet-image g-placeholder" aria-hidden="true" />
         )}

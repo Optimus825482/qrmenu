@@ -31,6 +31,7 @@ export const DEFINITION_NODES: readonly NodeDef[] = [
   { id: "oda-tipleri", label: "Oda Tipleri", level: 2 },
   { id: "odalar", label: "Odalar", level: 2 },
   { id: "outletler", label: "Outletler", level: 1 },
+  { id: "minibar-tanimlar", label: "Minibar & Setup Tanımları", level: 1 },
 ];
 
 const DEFAULT_PANEL = "otel";
@@ -134,6 +135,14 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
     body = <TablesPanel hotelId={hotelId} outletId={node.outletId} setStatus={setStatus} />;
   } else if (node.id === "outletler") {
     body = <OutletsPanel hotelId={hotelId} setStatus={setStatus} />;
+  } else if (node.id === "minibar-tanimlar") {
+    body = (
+      <iframe
+        src="/depo/tanimlar"
+        title="Minibar Tanımları"
+        className="w-full h-full border-0 rounded-lg min-h-[500px]"
+      />
+    );
   } else {
     body = <HotelPanel hotelId={hotelId} setStatus={setStatus} />;
   }

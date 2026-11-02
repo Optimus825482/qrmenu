@@ -11,7 +11,14 @@
       "search": "Menüde ara",
       "noResults": "Aramanızla eşleşen ürün yok",
       "filters": "Etiketler",
-      "allergenNote": "Alerjen bilgisi AB 1169/2011 listesine göredir. Sipariş vermeden önce ekibimize danışın."
+      "allergenNote": "Alerjen bilgisi AB 1169/2011 listesine göredir. Sipariş vermeden önce ekibimize danışın.",
+      "clearSearch": "Aramayı temizle",
+      "clear": "Temizle",
+      "itemsFound": "{count} ürün bulundu",
+      "subcategories": "Alt kategoriler",
+      "all": "Tümü",
+      "backToTop": "Menü Başına Dön",
+      "photoCount": "{count} fotoğraf"
     },
     "allergen": {
       "gluten": "Gluten",
@@ -76,7 +83,14 @@
       "retry": "Tekrar deneyin",
       "offline": "Bağlantı yok, yeniden bağlanılıyor",
       "close": "Kapat",
-      "language": "Dil"
+      "language": "Dil",
+      "gallery": "Görsel galerisi",
+      "prevPhoto": "Önceki fotoğraf",
+      "nextPhoto": "Sonraki fotoğraf",
+      "photoIndex": "{index}. fotoğraf",
+      "selectPhoto": "{index}. fotoğrafı seç",
+      "languages": "Diller",
+      "selectLanguage": "Dil seçimi: {name}"
     },
     "room": {
       "placeholder": "Oda sayfası bir sonraki aşamada"

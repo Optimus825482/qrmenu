@@ -11,7 +11,14 @@
       "search": "Karte durchsuchen",
       "noResults": "Keine Speisen passen zu Ihrer Suche",
       "filters": "Kennzeichnungen",
-      "allergenNote": "Die Allergenangaben folgen der EU-Verordnung 1169/2011. Fragen Sie unser Team vor der Bestellung."
+      "allergenNote": "Die Allergenangaben folgen der EU-Verordnung 1169/2011. Fragen Sie unser Team vor der Bestellung.",
+      "clearSearch": "Suche löschen",
+      "clear": "Löschen",
+      "itemsFound": "{count} Artikel gefunden",
+      "subcategories": "Unterkategorien",
+      "all": "Alle",
+      "backToTop": "Nach oben",
+      "photoCount": "{count} Fotos"
     },
     "allergen": {
       "gluten": "Gluten",
@@ -76,7 +83,14 @@
       "retry": "Bitte erneut versuchen",
       "offline": "Keine Verbindung, Verbindung wird wiederhergestellt",
       "close": "Schließen",
-      "language": "Sprache"
+      "language": "Sprache",
+      "gallery": "Bildergalerie",
+      "prevPhoto": "Vorheriges Foto",
+      "nextPhoto": "Nächstes Foto",
+      "photoIndex": "Foto {index}",
+      "selectPhoto": "Foto {index} auswählen",
+      "languages": "Sprachen",
+      "selectLanguage": "Sprachauswahl: {name}"
     },
     "room": {
       "placeholder": "Die Zimmerseite folgt in der nächsten Stufe"

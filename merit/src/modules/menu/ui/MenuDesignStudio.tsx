@@ -656,42 +656,47 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
               <button type="button" className="xp-button" aria-label="Yakınlaştır" disabled={zoom >= 1.15} onClick={() => setZoomLock(Math.min(1.15, Math.round((zoom + 0.05) * 100) / 100))}>+</button>
             </div>
           </div>
-          <div className="xp-design-canvas" ref={canvasRef} data-locked={zoomLock !== null || undefined}>
-            <div className="xp-design-stage" style={{ width: DEVICE_BOX[device].w * zoom, height: DEVICE_BOX[device].h * zoom }}>
-              <div className="xp-design-stage-scale" style={{ width: DEVICE_BOX[device].w, height: DEVICE_BOX[device].h, transform: `scale(${zoom})` }}>
-                <StudioDevice device={device}>
-              <DesignPreviewFrame>
-                <NextIntlClientProvider locale={previewLocale} messages={PREVIEW_MESSAGES[previewLocale]}>
-                  <GuestFrame
-                    token="onizleme"
-                    locale={previewLocale}
-                    onLocaleChange={setPreviewLocale}
-                    preview
-                    theme={selectedTheme}
-                    design={design}
-                    outletName={outlet?.name ?? "Menü"}
-                    tableLabel="Masa 12"
-                    footer={
-                      <div className="g-footer-actions">
-                        <CallWaiterButton
-                          token="onizleme"
-                          locale={previewLocale}
-                          options={callOptions}
-                          preview
-                          customText={design.options.callWaiterText}
-                        />
-                      </div>
-                    }
-                  >
-                    <MenuView menu={preview.menu} locale={previewLocale} />
-                  </GuestFrame>
-                </NextIntlClientProvider>
-              </DesignPreviewFrame>
-                </StudioDevice>
+          <div className="xp-design-canvas-body">
+            <div className="xp-design-canvas" ref={canvasRef} data-locked={zoomLock !== null || undefined}>
+              <div className="xp-design-stage" style={{ width: DEVICE_BOX[device].w * zoom, height: DEVICE_BOX[device].h * zoom }}>
+                <div className="xp-design-stage-scale" style={{ width: DEVICE_BOX[device].w, height: DEVICE_BOX[device].h, transform: `scale(${zoom})` }}>
+                  <StudioDevice device={device}>
+                <DesignPreviewFrame>
+                  <NextIntlClientProvider locale={previewLocale} messages={PREVIEW_MESSAGES[previewLocale]}>
+                    <GuestFrame
+                      token="onizleme"
+                      locale={previewLocale}
+                      onLocaleChange={setPreviewLocale}
+                      preview
+                      device={device}
+                      theme={selectedTheme}
+                      design={design}
+                      outletName={outlet?.name ?? "Menü"}
+                      tableLabel="Masa 12"
+                      footer={
+                        <div className="g-footer-actions">
+                          <CallWaiterButton
+                            token="onizleme"
+                            locale={previewLocale}
+                            options={callOptions}
+                            preview
+                            customText={design.options.callWaiterText}
+                          />
+                        </div>
+                      }
+                    >
+                      <MenuView menu={preview.menu} locale={previewLocale} />
+                    </GuestFrame>
+                  </NextIntlClientProvider>
+                </DesignPreviewFrame>
+                  </StudioDevice>
+                </div>
               </div>
             </div>
+            <aside className="xp-design-canvas-aside">
+              <QualityPanel findings={findings} />
+            </aside>
           </div>
-          <QualityPanel findings={findings} />
         </div>
       </div>
       {notice ? <p className={notice.startsWith("Tasarım kaydedildi") ? "xp-design-success" : "xp-design-error"} role={notice.startsWith("Tasarım kaydedildi") ? "status" : "alert"}>{notice}</p> : null}

@@ -37,6 +37,7 @@ export type RoomRow = {
   number: string;
   capacity: number | null;
   guestMessage: string | null;
+  extension: string | null;
   /** The QR token itself never leaves the server: lists and audit rows only know whether one exists. */
   hasQr: boolean;
   isActive: boolean;
@@ -50,6 +51,7 @@ const SELECT = {
   number: true,
   capacity: true,
   guestMessage: true,
+  extension: true,
   qrToken: true,
   isActive: true,
   floor: { select: { number: true, name: true } },
@@ -69,6 +71,7 @@ const toRow = (room: RoomWithRelations): RoomRow => ({
   number: room.number,
   capacity: room.capacity,
   guestMessage: room.guestMessage,
+  extension: room.extension,
   hasQr: room.qrToken !== null,
   isActive: room.isActive,
 });
@@ -94,6 +97,13 @@ export const roomSchema = z.object({
     .nullish()
     .transform((value) => value ?? null),
   guestMessage: optionalText(500, "Misafir mesajı en fazla 500 karakter olabilir"),
+  extension: z
+    .string()
+    .trim()
+    .max(20, "Dahili no en fazla 20 karakter olabilir")
+    .regex(/^[0-9A-Za-z\-\/ ]*$/, "Dahili no yalnız harf, rakam, tire ve eğik çizgi içerebilir")
+    .nullish()
+    .transform((value) => value || null),
   isActive: z.boolean().optional(),
 });
 export type RoomInput = z.input<typeof roomSchema>;
@@ -231,6 +241,7 @@ export async function create(ctx: Ctx, hotelId: string, raw: RoomInput): Promise
           number: input.number,
           capacity: input.capacity,
           guestMessage: input.guestMessage,
+          extension: input.extension,
           isActive: input.isActive ?? true,
         },
         select: SELECT,
@@ -273,6 +284,7 @@ export async function update(
           number: input.number,
           capacity: input.capacity,
           guestMessage: input.guestMessage,
+          extension: input.extension,
           ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         },
         select: SELECT,

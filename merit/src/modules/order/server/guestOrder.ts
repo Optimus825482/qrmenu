@@ -12,6 +12,7 @@ import {
 } from "@/modules/menu/server/guestToken";
 import { approvals } from "./approvals";
 import { orderNo } from "./orderNo";
+import { validateCartItems } from "./cart";
 
 /** Guest orders: 10 per minute per IP. */
 export const orderLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
@@ -66,19 +67,23 @@ export type GuestOrderView = {
   currency: string;
   pricesShown: boolean;
   rejectReason?: string;
-  tableLabel: string;
+  tableLabel?: string;
+  kind: "MASA" | "ODA_SERVISI";
+  roomNumber?: string;
+  roomService?: { slaMinutes: number; confirmRequired: boolean };
 };
 
 const VIEW_INCLUDE = {
   items: { orderBy: { createdAt: "asc" } },
   table: { select: { label: true } },
+  room: { select: { number: true } },
 } as const satisfies Prisma.OrderInclude;
 
 type ViewOrder = Prisma.OrderGetPayload<{ include: typeof VIEW_INCLUDE }>;
 
 const money = (d: Prisma.Decimal) => d.toDecimalPlaces(2).toFixed(2);
 
-function toView(order: ViewOrder): GuestOrderView {
+export function toGuestOrderView(order: ViewOrder, extra: Partial<GuestOrderView> = {}): GuestOrderView {
   return {
     orderId: order.id,
     orderNo: order.orderNo,
@@ -96,7 +101,10 @@ function toView(order: ViewOrder): GuestOrderView {
     currency: order.currency,
     pricesShown: order.pricesShown,
     ...(order.rejectReason ? { rejectReason: order.rejectReason } : {}),
-    tableLabel: order.table?.label ?? "",
+    tableLabel: order.table?.label ?? undefined,
+    kind: (order.kind as "MASA" | "ODA_SERVISI") ?? "MASA",
+    roomNumber: order.room?.number ?? undefined,
+    ...extra,
   };
 }
 
@@ -136,45 +144,20 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
     where: { idempotencyKey: data.idempotencyKey },
     include: VIEW_INCLUDE,
   });
-  if (replay) {
+    if (replay) {
     if (replay.tableId !== target.table.id) {
       throw new DomainError("VALIDATION", "Geçersiz istek anahtarı", {
         fieldErrors: { idempotencyKey: ["Geçersiz istek anahtarı"] },
       });
     }
-    return toView(replay);
+    return toGuestOrderView(replay);
   }
   const { state, table } = target;
   if (!state.orderingOpen) throw new DomainError("CONFLICT", "Şu an sipariş alınmıyor");
 
   try {
     return await prisma.$transaction(async (tx) => {
-      const ids = [...new Set(data.items.map((i) => i.menuNodeId))];
-      const rows = await tx.$queryRaw<NodeRow[]>`
-        SELECT id, name, price, kind::text AS kind, is_active, is_available, outlet_id
-        FROM menu_nodes WHERE id IN (${Prisma.join(ids)}) FOR SHARE`;
-      const byId = new Map(rows.map((r) => [r.id, r]));
-
-      const bad: string[] = [];
-      for (const item of data.items) {
-        const row = byId.get(item.menuNodeId);
-        const foreign = !row || row.outlet_id !== state.outletId;
-        if (!foreign && row.is_active && row.is_available && row.kind === "OGE") continue;
-        const name = foreign ? UNKNOWN_ITEM : row.name;
-        if (!bad.includes(name)) bad.push(name);
-      }
-      if (bad.length > 0) {
-        throw new DomainError("VALIDATION", "Bazı öğeler şu an sipariş edilemiyor", {
-          fieldErrors: { items: bad },
-        });
-      }
-
-      const lines = data.items.map((item) => {
-        const row = byId.get(item.menuNodeId) as NodeRow;
-        const unitPrice =
-          state.pricesShown && row.price != null ? new Prisma.Decimal(String(row.price)).toDecimalPlaces(2) : null;
-        return { item, row, unitPrice };
-      });
+      const lines = await validateCartItems(tx, state.outletId, data.items, state.pricesShown);
       const subtotal = state.pricesShown
         ? lines.reduce(
             (sum, l) => (l.unitPrice ? sum.plus(l.unitPrice.mul(l.item.qty)) : sum),
@@ -248,7 +231,7 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
         },
         tx,
       );
-      return toView(order);
+      return toGuestOrderView(order);
     });
   } catch (error) {
     // Two requests with one idempotency key raced: the loser returns the winner's order.
@@ -257,7 +240,7 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
         where: { idempotencyKey: data.idempotencyKey },
         include: VIEW_INCLUDE,
       });
-      if (winner && winner.tableId === table.id) return toView(winner);
+      if (winner && winner.tableId === table.id) return toGuestOrderView(winner);
     }
     throw error;
   }
@@ -271,7 +254,7 @@ async function get(token: string, orderId: string, meta: GuestMeta = { ip: "unkn
     include: VIEW_INCLUDE,
   });
   if (!order) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
-  return toView(order);
+  return toGuestOrderView(order);
 }
 
 export const guestOrder = { create, get };

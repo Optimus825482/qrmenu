@@ -1,0 +1,51 @@
+{
+  "id": "/?source=pwa",
+  "name": "QR Menu Master",
+  "short_name": "QR Menu",
+  "description": "Temassız, hızlı ve interaktif dijital QR menü ve sipariş platformu.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "categories": ["food", "productivity"],
+  "dir": "ltr",
+  "lang": "tr-TR",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Menüyü Gör",
+      "short_name": "Menü",
+      "description": "Günün lezzetlerine ve menüye göz atın",
+      "url": "/menu?source=pwa_shortcut",
+      "icons": [{ "src": "/icons/shortcut-menu.png", "sizes": "96x96" }]
+    }
+  ]
+}

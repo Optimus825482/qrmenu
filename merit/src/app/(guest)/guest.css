@@ -8,7 +8,14 @@
   --m-text: #f5f1e8;
   --m-muted: color-mix(in srgb, var(--m-text) 62%, transparent);
   --m-line: color-mix(in srgb, var(--m-text) 14%, transparent);
+  width: 100%;
+  max-width: 100vw;
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
   background: var(--m-bg);
   color: var(--m-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif;
@@ -20,56 +27,550 @@
 .g-design-hero { margin: 0 0 1rem; padding: 1rem 1.15rem; border-radius: 1rem; background: var(--m-soft); color: var(--m-accent); }
 .g-design-hero > span { display: block; font-size: .72rem; opacity: .72; }
 .g-design-hero h2 { margin: .2rem 0 0; font-family: Georgia, serif; font-size: 1.35rem; }
-.g-frame[data-template="coastal"] .g-header, .g-frame[data-template="tropic"] .g-header { border-bottom-color: #57a8a1; }
-.g-frame[data-template="cabana"] .g-header { border-bottom-color: var(--m-accent); }
-.g-frame[data-template="spa"] .g-design-hero { border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent); border-radius: 1.25rem; background: color-mix(in srgb, var(--m-soft) 70%, transparent); }
-.g-frame[data-template="hamam"] .g-design-hero { border-block: 1px solid color-mix(in srgb, var(--m-accent) 45%, transparent); border-radius: 0; background: transparent; }
-.g-frame[data-template="garden"] .g-card { border-radius: 1.2rem; box-shadow: 0 5px 18px color-mix(in srgb, var(--m-accent) 9%, transparent); }
-.g-frame[data-template="active"] .g-card { border-radius: .8rem; border-inline-start: 3px solid var(--m-accent); }
-.g-frame[data-template="atrium"] .g-design-hero { border-radius: 1.5rem 1.5rem .5rem .5rem; background: linear-gradient(135deg, var(--m-soft), color-mix(in srgb, var(--m-accent) 16%, var(--m-bg))); }
-.g-frame[data-template="noir"] .g-card, .g-frame[data-template="velvet"] .g-card { border-radius: .35rem; }
-.g-frame[data-template="editorial"] .g-card, .g-frame[data-template="chef"] .g-card { border-radius: .25rem; box-shadow: none; }
-.g-frame[data-template="atelier"] .g-card, .g-frame[data-template="patisserie"] .g-card { border-radius: 1rem; }
-.g-frame[data-template="midnight"] .g-design-hero { border-radius: 1.25rem; background: linear-gradient(135deg, color-mix(in srgb, var(--m-bg) 80%, #000), var(--m-soft)); border: 1px solid color-mix(in srgb, var(--m-accent) 25%, transparent); box-shadow: 0 8px 32px color-mix(in srgb, var(--m-accent) 15%, transparent); }
-.g-frame[data-template="midnight"] .g-card { border-radius: .85rem; border: 1px solid color-mix(in srgb, var(--m-accent) 18%, transparent); backdrop-filter: blur(8px); background: color-mix(in srgb, var(--m-soft) 85%, transparent); }
-.g-frame[data-template="crystal"] .g-design-hero { border-radius: 0; background: transparent; border-block: 2px solid color-mix(in srgb, var(--m-accent) 50%, transparent); text-align: center; }
-.g-frame[data-template="crystal"] .g-card { border-radius: 6px; border: 1px solid color-mix(in srgb, var(--m-accent) 35%, transparent); box-shadow: 0 4px 16px color-mix(in srgb, var(--m-accent) 12%, transparent); }
-.g-frame[data-template="cabana"] .g-design-hero { border-radius: 1.5rem; background: linear-gradient(140deg, color-mix(in srgb, var(--m-accent) 18%, var(--m-soft)), var(--m-soft)); border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent); }
-.g-frame[data-template="cabana"] .g-card { border-radius: 1.25rem; border: 1px solid var(--m-line); box-shadow: 0 6px 20px color-mix(in srgb, var(--m-accent) 8%, transparent); }
-.g-frame[data-template="botanical"] .g-design-hero { border-radius: 1.25rem; background: linear-gradient(135deg, color-mix(in srgb, #2d5a3f 20%, var(--m-soft)), var(--m-soft)); border: 1px solid color-mix(in srgb, var(--m-accent) 25%, transparent); }
-.g-frame[data-template="botanical"] .g-card { border-radius: 1.1rem; border-inline-start: 4px solid var(--m-accent); box-shadow: 0 4px 14px color-mix(in srgb, var(--m-accent) 10%, transparent); }
-.g-frame[data-template="zen"] .g-design-hero { border-radius: 0; background: transparent; border-bottom: 1px solid var(--m-line); text-align: start; }
-.g-frame[data-template="zen"] .g-card { border-radius: 0; background: transparent; border-width: 0 0 1px; box-shadow: none; }
-.g-frame[data-template="artisan"] .g-design-hero { border-radius: .5rem; border: 1px solid color-mix(in srgb, var(--m-accent) 40%, transparent); background: color-mix(in srgb, var(--m-soft) 90%, black); }
-.g-frame[data-template="artisan"] .g-card { border-radius: .5rem; border: 1px solid color-mix(in srgb, var(--m-accent) 22%, transparent); }
-.g-frame[data-template="mykonos"] .g-design-hero { border-radius: 1.5rem; border: 1px solid color-mix(in srgb, var(--m-accent) 35%, transparent); background: linear-gradient(135deg, color-mix(in srgb, #0284c7 15%, var(--m-soft)), var(--m-soft)); }
-.g-frame[data-template="mykonos"] .g-card { border-radius: 1.2rem; box-shadow: 0 6px 20px color-mix(in srgb, var(--m-accent) 12%, transparent); }
-.g-frame[data-template="aegean"] .g-card { border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
-.g-frame[data-template="lagoon"] .g-design-hero { border-radius: 1.4rem; background: linear-gradient(135deg, color-mix(in srgb, #0891b2 18%, var(--m-soft)), var(--m-soft)); }
-.g-frame[data-template="riviera"] .g-card { border-radius: 1.1rem; border: 1px solid color-mix(in srgb, var(--m-accent) 25%, transparent); box-shadow: 0 4px 16px color-mix(in srgb, var(--m-accent) 10%, transparent); }
-.g-frame[data-template="prestige"] .g-design-hero { border-radius: 1rem; border: 1px solid color-mix(in srgb, var(--m-accent) 45%, transparent); box-shadow: 0 8px 30px color-mix(in srgb, var(--m-accent) 14%, transparent); }
-.g-frame[data-template="prestige"] .g-card { border-radius: .9rem; border: 1px solid color-mix(in srgb, var(--m-accent) 20%, transparent); }
-.g-frame[data-template="cellar"] .g-design-hero { border-radius: .6rem; border: 1px solid color-mix(in srgb, var(--m-accent) 35%, transparent); background: color-mix(in srgb, var(--m-soft) 85%, #2a080c); }
-.g-frame[data-template="cellar"] .g-card { border-radius: .5rem; border: 1px solid color-mix(in srgb, var(--m-accent) 20%, transparent); }
-.g-frame[data-template="degustation"] .g-design-hero { border-radius: 0; border-block: 1px solid color-mix(in srgb, var(--m-accent) 40%, transparent); background: transparent; text-align: center; }
-.g-frame[data-template="vienna"] .g-card { border-radius: .3rem; border: 1px solid color-mix(in srgb, var(--m-accent) 25%, transparent); }
-.g-frame[data-template="roastery"] .g-card { border-radius: .7rem; border-inline-start: 3px solid var(--m-accent); }
-.g-frame[data-template="holistic"] .g-design-hero { border-radius: 1.5rem; border: 1px solid color-mix(in srgb, var(--m-accent) 28%, transparent); }
-.g-frame[data-template="sanctuary"] .g-card { border-radius: 0; border-width: 0 0 1px; box-shadow: none; }
-.g-frame[data-template="orchard"] .g-card { border-radius: .85rem; }
-.g-frame[data-template="pergola"] .g-card { border-radius: 1rem; border: 1px solid color-mix(in srgb, var(--m-accent) 20%, transparent); }
-.g-frame[data-template="clubhouse"] .g-card { border-radius: .6rem; border-inline-start: 4px solid var(--m-accent); }
-.g-frame[data-template="vitality"] .g-card { border-radius: 1rem; }
-.g-frame[data-template="goldenhour"] .g-design-hero { border-radius: 1.4rem; background: linear-gradient(135deg, color-mix(in srgb, #f97316 22%, var(--m-soft)), var(--m-soft)); border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent); }
-.g-frame[data-template="starlight"] .g-design-hero { border-radius: 1rem; background: linear-gradient(135deg, #090e1a, var(--m-soft)); border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent); }
-.g-frame[data-template="electric"] .g-design-hero { border-radius: 1.25rem; background: linear-gradient(135deg, #180924, var(--m-soft)); border: 1px solid color-mix(in srgb, #d946ef 40%, transparent); box-shadow: 0 0 24px color-mix(in srgb, #d946ef 20%, transparent); }
-.g-frame[data-template="electric"] .g-card { border-radius: .8rem; border: 1px solid color-mix(in srgb, #d946ef 25%, transparent); }
-.g-frame[data-template="jazz"] .g-design-hero { border-radius: .3rem; border: 1px solid color-mix(in srgb, var(--m-accent) 45%, transparent); text-align: center; }
-.g-frame[data-template="pulse"] .g-card { border-radius: .75rem; border: 1px solid color-mix(in srgb, #06b6d4 30%, transparent); box-shadow: 0 0 16px color-mix(in srgb, #06b6d4 15%, transparent); }
-.g-frame[data-template="gazebo"] .g-card { border-radius: 1.2rem; border: 1px solid color-mix(in srgb, var(--m-accent) 28%, transparent); }
-.g-frame[data-template="moet"] .g-design-hero { border-radius: 0; border-block: 2px solid var(--m-accent); text-align: center; }
-.g-frame[data-template="courtyard"] .g-card { border-radius: .65rem; border: 1px solid color-mix(in srgb, var(--m-accent) 20%, transparent); }
-.g-frame[data-template="orangerie"] .g-design-hero { border-radius: 1.35rem; border: 1px solid color-mix(in srgb, var(--m-accent) 30%, transparent); background: linear-gradient(135deg, color-mix(in srgb, #1e3a2f 18%, var(--m-soft)), var(--m-soft)); }
+
+/* ==========================================================================
+   ÖZGÜN VE DETAYLI MOBİL QR MENÜ ŞABLON MİMARİSİ (7 FARKLI TASARIM ARKETİPİ)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   ARKETİP 1: MİCHELİN & GOURMET EDİTORİAL
+   Şablonlar: editorial, chef, degustation, cellar, zen, aegean
+   Konsept: Rafine Fransız/Nordik tadım menüsü, dikişsiz keten masa örtüsü estetiği,
+            noktalı lider çizgiler, italik serif başlıklar ve minimalist tipografi.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="editorial"],
+.g-frame[data-template="chef"],
+.g-frame[data-template="degustation"],
+.g-frame[data-template="cellar"],
+.g-frame[data-template="zen"],
+.g-frame[data-template="aegean"] {
+  --g-editorial-serif: "Playfair Display", Didot, Georgia, "Times New Roman", serif;
+}
+
+.g-frame[data-template="editorial"] .g-design-hero,
+.g-frame[data-template="chef"] .g-design-hero,
+.g-frame[data-template="degustation"] .g-design-hero,
+.g-frame[data-template="cellar"] .g-design-hero,
+.g-frame[data-template="zen"] .g-design-hero,
+.g-frame[data-template="aegean"] .g-design-hero {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--m-line);
+  border-radius: 0;
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+.g-frame[data-template="editorial"] .g-design-hero::before,
+.g-frame[data-template="chef"] .g-design-hero::before,
+.g-frame[data-template="degustation"] .g-design-hero::before {
+  content: "— ◆ —";
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  color: var(--m-accent);
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+.g-frame[data-template="editorial"] .g-design-hero h2,
+.g-frame[data-template="chef"] .g-design-hero h2,
+.g-frame[data-template="degustation"] .g-design-hero h2 {
+  font-family: var(--g-editorial-serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Kategori sekmeleri: Şişkin butonlar yerine rafine alt çizgi sekmesi */
+.g-frame[data-template="editorial"] .g-tabs button,
+.g-frame[data-template="chef"] .g-tabs button,
+.g-frame[data-template="degustation"] .g-tabs button,
+.g-frame[data-template="cellar"] .g-tabs button,
+.g-frame[data-template="zen"] .g-tabs button,
+.g-frame[data-template="aegean"] .g-tabs button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-family: var(--g-editorial-serif);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--m-muted);
+  box-shadow: none;
+}
+.g-frame[data-template="editorial"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="chef"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="degustation"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="cellar"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="zen"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="aegean"] .g-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--m-accent);
+  color: var(--m-accent);
+  background: transparent;
+  font-weight: 700;
+}
+
+/* Menü kartları: Çerçevesiz, dikişsiz satır & noktalı lider çizgi */
+.g-frame[data-template="editorial"] .g-card,
+.g-frame[data-template="chef"] .g-card,
+.g-frame[data-template="degustation"] .g-card,
+.g-frame[data-template="cellar"] .g-card,
+.g-frame[data-template="zen"] .g-card,
+.g-frame[data-template="aegean"] .g-card {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--m-line) 85%, transparent);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px 4px;
+  transition: background-color 0.15s ease;
+}
+.g-frame[data-template="editorial"] .g-card:hover,
+.g-frame[data-template="chef"] .g-card:hover {
+  background: color-mix(in srgb, var(--m-soft) 40%, transparent);
+}
+.g-frame[data-template="editorial"] .g-name,
+.g-frame[data-template="chef"] .g-name,
+.g-frame[data-template="degustation"] .g-name,
+.g-frame[data-template="cellar"] .g-name {
+  font-family: var(--g-editorial-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.g-frame[data-template="editorial"] .g-detail,
+.g-frame[data-template="chef"] .g-detail,
+.g-frame[data-template="degustation"] .g-detail {
+  font-style: italic;
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+.g-frame[data-template="editorial"] .g-price,
+.g-frame[data-template="chef"] .g-price,
+.g-frame[data-template="degustation"] .g-price {
+  font-family: var(--g-editorial-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--m-ink);
+  letter-spacing: 0.02em;
+}
+.g-frame[data-template="editorial"] .g-thumb,
+.g-frame[data-template="chef"] .g-thumb {
+  border-radius: 4px;
+  border: 1px solid var(--m-line);
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 2: COASTAL & RİVİERA BEŞ YILDIZ SAHİL KULÜBÜ
+   Şablonlar: coastal, mykonos, tropic, cabana, goldenhour, riviera, lagoon, pool
+   Konsept: Güneşten ağarmış kum tonları, buzlu cam (frosted glass) kartlar,
+            organik yuvarlatılmış taş kıvrımları, ferah ada atmosferi.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="coastal"] .g-design-hero,
+.g-frame[data-template="mykonos"] .g-design-hero,
+.g-frame[data-template="tropic"] .g-design-hero,
+.g-frame[data-template="cabana"] .g-design-hero,
+.g-frame[data-template="goldenhour"] .g-design-hero,
+.g-frame[data-template="riviera"] .g-design-hero,
+.g-frame[data-template="lagoon"] .g-design-hero,
+.g-frame[data-template="pool"] .g-design-hero {
+  border-radius: 28px 10px 28px 10px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--m-accent) 16%, var(--m-soft)), var(--m-soft));
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+}
+
+.g-frame[data-template="coastal"] .g-tabs button,
+.g-frame[data-template="mykonos"] .g-tabs button,
+.g-frame[data-template="tropic"] .g-tabs button,
+.g-frame[data-template="cabana"] .g-tabs button,
+.g-frame[data-template="goldenhour"] .g-tabs button,
+.g-frame[data-template="riviera"] .g-tabs button {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-bg) 85%, white);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+.g-frame[data-template="coastal"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="mykonos"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="tropic"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="cabana"] .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--m-accent) 35%, transparent);
+}
+
+.g-frame[data-template="coastal"] .g-card,
+.g-frame[data-template="mykonos"] .g-card,
+.g-frame[data-template="tropic"] .g-card,
+.g-frame[data-template="cabana"] .g-card,
+.g-frame[data-template="goldenhour"] .g-card,
+.g-frame[data-template="riviera"] .g-card {
+  background: color-mix(in srgb, var(--m-bg) 75%, white);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 20px;
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--m-accent) 8%, transparent);
+}
+.g-frame[data-template="coastal"] .g-thumb,
+.g-frame[data-template="mykonos"] .g-thumb,
+.g-frame[data-template="tropic"] .g-thumb,
+.g-frame[data-template="cabana"] .g-thumb {
+  border-radius: 16px;
+}
+.g-frame[data-template="coastal"] .g-price,
+.g-frame[data-template="mykonos"] .g-price {
+  background: color-mix(in srgb, var(--m-soft) 85%, var(--m-bg));
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 3: URBAN CRAFT BİSTRO & ROASTERY
+   Şablonlar: artisan, roastery, active, clubhouse, vitality, pergola
+   Konsept: 3. nesil kahve kavurucuları, craft smash burger & taproom,
+            endüstriyel neo-brütalizm, kalın konturlar, monospaced teknik etiketler.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="artisan"] .g-design-hero,
+.g-frame[data-template="roastery"] .g-design-hero,
+.g-frame[data-template="active"] .g-design-hero,
+.g-frame[data-template="clubhouse"] .g-design-hero,
+.g-frame[data-template="vitality"] .g-design-hero {
+  border-radius: 6px;
+  border: 2px solid var(--m-line);
+  box-shadow: 3px 3px 0px var(--m-line);
+  background: var(--m-soft);
+}
+.g-frame[data-template="artisan"] .g-design-hero h2,
+.g-frame[data-template="roastery"] .g-design-hero h2,
+.g-frame[data-template="active"] .g-design-hero h2 {
+  font-family: "Segoe UI", Inter, system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.g-frame[data-template="artisan"] .g-tabs button,
+.g-frame[data-template="roastery"] .g-tabs button,
+.g-frame[data-template="active"] .g-tabs button,
+.g-frame[data-template="clubhouse"] .g-tabs button {
+  border-radius: 6px;
+  border: 2px solid var(--m-line);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  background: var(--m-bg);
+}
+.g-frame[data-template="artisan"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="roastery"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="active"] .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-text);
+  box-shadow: 2px 2px 0px var(--m-text);
+}
+
+.g-frame[data-template="artisan"] .g-card,
+.g-frame[data-template="roastery"] .g-card,
+.g-frame[data-template="active"] .g-card,
+.g-frame[data-template="clubhouse"] .g-card,
+.g-frame[data-template="vitality"] .g-card,
+.g-frame[data-template="pergola"] .g-card {
+  border: 2px solid var(--m-line);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0px var(--m-line);
+  background: var(--m-soft);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.g-frame[data-template="artisan"] .g-card:hover,
+.g-frame[data-template="roastery"] .g-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--m-line);
+}
+.g-frame[data-template="artisan"] .g-name,
+.g-frame[data-template="roastery"] .g-name,
+.g-frame[data-template="active"] .g-name {
+  font-family: Inter, system-ui, sans-serif;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+.g-frame[data-template="artisan"] .g-price,
+.g-frame[data-template="roastery"] .g-price,
+.g-frame[data-template="active"] .g-price {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "SF Mono", "Courier New", monospace;
+  font-weight: 800;
+  font-size: 0.88rem;
+  letter-spacing: -0.02em;
+}
+.g-frame[data-template="artisan"] .g-thumb,
+.g-frame[data-template="roastery"] .g-thumb {
+  border-radius: 4px;
+  border: 1.5px solid var(--m-line);
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 4: NOİR SPEAKEASY & NEON VIP LOUNGE
+   Şablonlar: noir, midnight, velvet, electric, pulse, jazz, starlight
+   Konsept: Düşük ışıklı kokteyl speakeasy, obsidyen koyu cam kartlar,
+            parlayan neon amber/cyan konturlar, gece kulübü VIP enerjisi.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="noir"] .g-design-hero,
+.g-frame[data-template="midnight"] .g-design-hero,
+.g-frame[data-template="velvet"] .g-design-hero,
+.g-frame[data-template="electric"] .g-design-hero,
+.g-frame[data-template="pulse"] .g-design-hero,
+.g-frame[data-template="jazz"] .g-design-hero,
+.g-frame[data-template="starlight"] .g-design-hero {
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(22, 28, 44, 0.95), rgba(12, 16, 26, 0.98));
+  border: 1px solid color-mix(in srgb, var(--m-accent) 40%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--m-accent) 22%, transparent);
+}
+
+.g-frame[data-template="noir"] .g-tabs button,
+.g-frame[data-template="midnight"] .g-tabs button,
+.g-frame[data-template="velvet"] .g-tabs button,
+.g-frame[data-template="electric"] .g-tabs button,
+.g-frame[data-template="pulse"] .g-tabs button {
+  border-radius: 999px;
+  background: rgba(16, 22, 36, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, rgba(255, 255, 255, 0.1));
+  color: #e2e8f0;
+}
+.g-frame[data-template="noir"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="midnight"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="electric"] .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--m-accent) 60%, transparent);
+}
+
+.g-frame[data-template="noir"] .g-card,
+.g-frame[data-template="midnight"] .g-card,
+.g-frame[data-template="velvet"] .g-card,
+.g-frame[data-template="electric"] .g-card,
+.g-frame[data-template="pulse"] .g-card,
+.g-frame[data-template="starlight"] .g-card {
+  background: rgba(18, 24, 40, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.g-frame[data-template="noir"] .g-card:hover,
+.g-frame[data-template="midnight"] .g-card:hover {
+  border-color: var(--m-accent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--m-accent) 30%, transparent);
+}
+.g-frame[data-template="noir"] .g-price,
+.g-frame[data-template="midnight"] .g-price,
+.g-frame[data-template="electric"] .g-price,
+.g-frame[data-template="pulse"] .g-price {
+  color: var(--m-accent);
+  font-family: "SF Mono", monospace;
+  font-weight: 750;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--m-accent) 55%, transparent);
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 5: ZEN & SPA SANCTUARY
+   Şablonlar: spa, hamam, holistic, sanctuary
+   Konsept: Wabi-sabi dinginliği, doğal taş ve bambu çizgisi,
+            geniş negatif alan ("Ma") ve huzurlu spa menüsü deneyimi.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="spa"] .g-design-hero,
+.g-frame[data-template="hamam"] .g-design-hero,
+.g-frame[data-template="holistic"] .g-design-hero,
+.g-frame[data-template="sanctuary"] .g-design-hero {
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--m-line);
+  padding: 1.5rem 0.5rem;
+}
+
+.g-frame[data-template="spa"] .g-tabs button,
+.g-frame[data-template="hamam"] .g-tabs button,
+.g-frame[data-template="holistic"] .g-tabs button,
+.g-frame[data-template="sanctuary"] .g-tabs button {
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: var(--m-muted);
+}
+.g-frame[data-template="spa"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="hamam"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="holistic"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="sanctuary"] .g-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--m-accent);
+  color: var(--m-accent);
+  background: transparent;
+  font-weight: 700;
+}
+
+.g-frame[data-template="spa"] .g-card,
+.g-frame[data-template="hamam"] .g-card,
+.g-frame[data-template="holistic"] .g-card,
+.g-frame[data-template="sanctuary"] .g-card {
+  border: none;
+  border-inline-start: 3px solid var(--m-accent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--m-soft) 40%, transparent);
+  box-shadow: none;
+  padding: 12px 14px;
+}
+.g-frame[data-template="spa"] .g-name,
+.g-frame[data-template="sanctuary"] .g-name {
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 6: PARİSİAN PÂTİSSERİE & VİENNESE GRAND CAFÉ
+   Şablonlar: patisserie, vienna, atelier, orangerie, botanical, courtyard, orchard, garden
+   Konsept: Belle Époque, Viyana kahvehanesi mirası, pastel çift-kontur zarafet,
+            dairesel madalyon pasta vitrinleri.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="patisserie"] .g-design-hero,
+.g-frame[data-template="vienna"] .g-design-hero,
+.g-frame[data-template="atelier"] .g-design-hero,
+.g-frame[data-template="orangerie"] .g-design-hero,
+.g-frame[data-template="botanical"] .g-design-hero,
+.g-frame[data-template="garden"] .g-design-hero {
+  border-radius: 16px;
+  border: 1px solid var(--m-line);
+  outline: 1px solid color-mix(in srgb, var(--m-accent) 40%, transparent);
+  outline-offset: -5px;
+  background: color-mix(in srgb, var(--m-bg) 95%, #fff);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.g-frame[data-template="patisserie"] .g-tabs button,
+.g-frame[data-template="vienna"] .g-tabs button,
+.g-frame[data-template="atelier"] .g-tabs button,
+.g-frame[data-template="orangerie"] .g-tabs button {
+  border-radius: 12px;
+  border: 1px solid var(--m-line);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.92rem;
+  background: color-mix(in srgb, var(--m-soft) 40%, #fff);
+}
+.g-frame[data-template="patisserie"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="vienna"] .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+  border-radius: 12px;
+}
+
+.g-frame[data-template="patisserie"] .g-card,
+.g-frame[data-template="vienna"] .g-card,
+.g-frame[data-template="atelier"] .g-card,
+.g-frame[data-template="orangerie"] .g-card,
+.g-frame[data-template="botanical"] .g-card,
+.g-frame[data-template="garden"] .g-card {
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+  background: color-mix(in srgb, var(--m-soft) 60%, white);
+}
+.g-frame[data-template="patisserie"] .g-thumb,
+.g-frame[data-template="vienna"] .g-thumb {
+  border-radius: 50%;
+  aspect-ratio: 1;
+  border: 2px solid color-mix(in srgb, var(--m-accent) 30%, var(--m-line));
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 7: ROYAL PALACE & GRANDE HERİTAGE
+   Şablonlar: royal, grande, prestige, crystal, moet, gazebo, aqua, atrium
+   Konsept: Beş yıldızlı saray zarafeti, altın yaldız çift çerçeve kontur,
+            Regal simetri ve klasik imparatorluk tipografisi.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="royal"] .g-design-hero,
+.g-frame[data-template="grande"] .g-design-hero,
+.g-frame[data-template="prestige"] .g-design-hero,
+.g-frame[data-template="crystal"] .g-design-hero,
+.g-frame[data-template="moet"] .g-design-hero {
+  border-block: 2px solid var(--m-accent);
+  background: transparent;
+  border-radius: 0;
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+.g-frame[data-template="royal"] .g-design-hero h2,
+.g-frame[data-template="grande"] .g-design-hero h2,
+.g-frame[data-template="crystal"] .g-design-hero h2 {
+  font-family: Georgia, "Iowan Old Style", serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 1.25rem;
+}
+
+.g-frame[data-template="royal"] .g-tabs button,
+.g-frame[data-template="grande"] .g-tabs button,
+.g-frame[data-template="prestige"] .g-tabs button,
+.g-frame[data-template="crystal"] .g-tabs button,
+.g-frame[data-template="moet"] .g-tabs button {
+  border: 1px solid color-mix(in srgb, var(--m-accent) 60%, transparent);
+  border-radius: 4px;
+  font-family: Georgia, serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.g-frame[data-template="royal"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="grande"] .g-tabs button[aria-selected="true"],
+.g-frame[data-template="crystal"] .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--m-accent) 30%, transparent);
+}
+
+.g-frame[data-template="royal"] .g-card,
+.g-frame[data-template="grande"] .g-card,
+.g-frame[data-template="prestige"] .g-card,
+.g-frame[data-template="crystal"] .g-card,
+.g-frame[data-template="moet"] .g-card,
+.g-frame[data-template="gazebo"] .g-card,
+.g-frame[data-template="aqua"] .g-card,
+.g-frame[data-template="atrium"] .g-card {
+  border: 1px solid var(--m-accent);
+  box-shadow: inset 0 0 0 2px var(--m-bg), inset 0 0 0 3px color-mix(in srgb, var(--m-accent) 40%, transparent);
+  border-radius: 8px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--m-soft) 80%, var(--m-bg));
+}
+.g-frame[data-template="royal"] .g-name,
+.g-frame[data-template="grande"] .g-name,
+.g-frame[data-template="crystal"] .g-name {
+  font-family: Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 .g-root *,
 .g-root *::before,
 .g-root *::after {
@@ -92,6 +593,29 @@
   color: inherit;
 }
 
+.g-root {
+  --g-safe-top: env(safe-area-inset-top, 0px);
+  --g-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+.g-root[data-preview="true"][data-device="iphone-promax"] {
+  --g-safe-top: 54px;
+  --g-safe-bottom: 24px;
+}
+.g-root[data-preview="true"][data-device="iphone-x"] {
+  --g-safe-top: 44px;
+  --g-safe-bottom: 24px;
+}
+.g-root[data-preview="true"][data-device="iphone-8"],
+.g-root[data-preview="true"][data-device="note-8"],
+.g-root[data-preview="true"][data-device="ipad"] {
+  --g-safe-top: 0px;
+  --g-safe-bottom: 0px;
+}
+.g-root[data-preview="true"]:not([data-device]) {
+  --g-safe-top: 54px;
+  --g-safe-bottom: 24px;
+}
+
 .g-header {
   position: sticky;
   top: 0;
@@ -100,12 +624,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 14px;
+  padding-top: calc(10px + var(--g-safe-top));
+  padding-bottom: 10px;
+  padding-left: calc(14px + env(safe-area-inset-left, 0px));
+  padding-right: calc(14px + env(safe-area-inset-right, 0px));
   background: var(--m-bg);
   border-bottom: 1px solid var(--m-line);
-}
-.g-root[data-preview="true"] .g-header {
-  margin-top: 18px;
 }
 .g-header-left {
   flex: none;
@@ -115,6 +639,9 @@
 }
 .g-header-right {
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   min-width: 58px;
 }
 .g-title {
@@ -249,8 +776,11 @@
 .g-footer {
   position: sticky;
   bottom: 0;
-  z-index: 20;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  z-index: 28;
+  padding-top: 10px;
+  padding-bottom: calc(12px + var(--g-safe-bottom));
+  padding-left: calc(16px + env(safe-area-inset-left, 0px));
+  padding-right: calc(16px + env(safe-area-inset-right, 0px));
   background: var(--m-bg);
   border-top: 1px solid var(--m-line);
 }
@@ -276,27 +806,40 @@
 }
 
 .g-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  overflow-x: auto;
-  padding: 12px 16px;
-  scrollbar-width: none;
+  padding: 10px calc(16px + env(safe-area-inset-right, 0px)) 10px calc(16px + env(safe-area-inset-left, 0px));
   position: sticky;
-  top: 55px;
-  z-index: 9;
+  top: calc(52px + var(--g-safe-top));
+  z-index: 25;
   background: var(--m-bg);
 }
 .g-tabs::-webkit-scrollbar {
   display: none;
 }
 .g-tabs button {
-  flex: none;
-  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 44px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: 1px solid var(--m-line);
   background: transparent;
   cursor: pointer;
-  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.g-tabs button:last-child:nth-child(odd) {
+  grid-column: span 2;
 }
 .g-tabs button[aria-selected="true"] {
   background: var(--m-accent);
@@ -304,9 +847,35 @@
   color: var(--m-text-on-accent);
   font-weight: 650;
 }
+.g-tabs button:active {
+  transform: scale(0.98);
+}
+.g-tab-label {
+  flex: 1;
+}
+.g-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-text) 10%, transparent);
+  color: var(--m-ink);
+  font-size: 0.72rem;
+  font-weight: 750;
+  margin-left: 6px;
+  transition: all 0.15s ease;
+}
+.g-tabs button[aria-selected="true"] .g-tab-count {
+  background: color-mix(in srgb, var(--m-text-on-accent) 25%, transparent);
+  color: var(--m-text-on-accent);
+}
 
 .g-sub {
-  padding: 8px 16px 0;
+  scroll-margin-top: calc(140px + var(--g-safe-top, 0px));
+  padding: 8px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
 }
 .g-sub > h2 {
   font-size: 1.25rem;
@@ -324,11 +893,12 @@
 .g-cards {
   display: grid;
   gap: 10px;
+  width: 100%;
 }
 .g-card {
   width: 100%;
   display: grid;
-  grid-template-columns: 72px 1fr auto;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   padding: 10px;
@@ -337,6 +907,8 @@
   border: 1px solid var(--m-line);
   border-radius: 14px;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .g-card[data-available="false"] {
   opacity: 0.55;
@@ -345,9 +917,11 @@
 .g-thumb {
   width: 72px;
   height: 72px;
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   object-fit: cover;
   display: block;
+  background-color: var(--m-soft);
 }
 .g-placeholder {
   background: linear-gradient(135deg, var(--m-line), transparent);
@@ -432,6 +1006,7 @@
   max-width: 560px;
   max-height: 90dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--m-bg);
   color: var(--m-text);
   border-radius: 20px 20px 0 0;
@@ -451,6 +1026,7 @@
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .g-sheet-image {
   width: 100%;
@@ -459,8 +1035,139 @@
   display: block;
   border-radius: 20px 20px 0 0;
 }
+.g-sheet-gallery {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  background: #000;
+}
+.g-sheet-gallery .g-sheet-image {
+  border-radius: 0;
+  height: 100%;
+}
+.g-gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 50%;
+  border: 0;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  z-index: 2;
+  transition: background 0.15s ease;
+}
+.g-gallery-nav:hover,
+.g-gallery-nav:focus-visible {
+  background: rgb(0 0 0 / 0.8);
+}
+.g-gallery-prev {
+  left: 8px;
+}
+.g-gallery-next {
+  right: 8px;
+}
+.g-gallery-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgb(0 0 0 / 0.45);
+  z-index: 2;
+}
+.g-gallery-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: rgb(255 255 255 / 0.5);
+  cursor: pointer;
+}
+.g-gallery-dot.is-active {
+  background: #fff;
+  transform: scale(1.2);
+}
+.g-gallery-counter {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  background: rgb(0 0 0 / 0.6);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  z-index: 2;
+}
+.g-gallery-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
+}
+.g-gallery-thumb {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  background: var(--m-soft);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.g-gallery-thumb.is-active {
+  opacity: 1;
+  border-color: var(--m-accent, #0055ea);
+  transform: scale(1.05);
+}
+.g-gallery-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.g-thumb-wrap {
+  position: relative;
+  display: inline-block;
+  align-self: flex-start;
+}
+.g-thumb-count {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
 .g-sheet-body {
-  padding: 16px;
+  padding: 16px calc(16px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -501,6 +1208,7 @@
   background: var(--m-soft);
   font-size: 1.3rem;
   cursor: pointer;
+  touch-action: manipulation;
 }
 .g-qty button:disabled {
   opacity: 0.4;
@@ -525,6 +1233,7 @@
   border: 1px solid var(--m-line);
   background: var(--m-soft);
   color: var(--m-text);
+  font-size: 16px;
 }
 
 .g-unavailable {
@@ -703,6 +1412,7 @@
   border: 1px solid var(--m-line);
   background: var(--m-bg);
   color: var(--m-text);
+  font-size: 16px;
 }
 .g-link {
   border: 0;
@@ -772,35 +1482,200 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 0 16px 8px;
+  padding: 0 calc(16px + env(safe-area-inset-right, 0px)) 8px calc(16px + env(safe-area-inset-left, 0px));
   position: sticky;
-  top: 108px;
-  z-index: 8;
-  background: color-mix(in srgb, var(--m-bg) 92%, transparent);
+  top: calc(104px + var(--g-safe-top));
+  z-index: 24;
+  background: color-mix(in srgb, var(--m-bg) 95%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.g-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+.g-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 13px;
+  pointer-events: none;
+  opacity: 0.5;
 }
 .g-search {
   width: 100%;
   min-height: 44px;
-  padding: 8px 12px;
+  padding: 8px 36px 8px 34px;
   border: 1px solid var(--m-line);
   border-radius: 12px;
   background: var(--m-soft);
   color: var(--m-text);
+  font-size: 15px;
+  transition: all 0.15s ease;
 }
-.g-filters {
+.g-search:focus {
+  border-color: var(--m-accent);
+  outline: none;
+  background: var(--m-bg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 20%, transparent);
+}
+.g-search-clear {
+  position: absolute;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--m-text) 12%, transparent);
+  color: var(--m-ink);
+  font-size: 15px;
+  cursor: pointer;
+  line-height: 1;
+}
+[dir="rtl"] .g-search-icon {
+  left: auto;
+  right: 12px;
+}
+[dir="rtl"] .g-search {
+  padding: 8px 34px 8px 36px;
+}
+[dir="rtl"] .g-search-clear {
+  right: auto;
+  left: 8px;
+}
+[dir="rtl"] .g-tab-count {
+  margin-left: 0;
+  margin-right: 6px;
+}
+[dir="rtl"] .g-thumb-count {
+  right: auto;
+  left: 4px;
+}
+[dir="rtl"] .g-gallery-prev {
+  left: auto;
+  right: 8px;
+}
+[dir="rtl"] .g-gallery-next {
+  right: auto;
+  left: 8px;
+}
+[dir="rtl"] .g-gallery-counter {
+  right: auto;
+  left: 12px;
+}
+
+.g-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--m-accent) 12%, var(--m-soft));
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, transparent);
+  font-size: 0.8rem;
+  color: var(--m-text);
+  font-weight: 600;
+}
+.g-filter-clear-all {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--m-accent);
+  font-weight: 750;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.g-filter-clear-all:hover {
+  text-decoration: underline;
+}
+
+.g-sub-nav {
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  padding: 4px 0 2px;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.g-sub-nav::-webkit-scrollbar {
+  display: none;
+}
+.g-sub-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-soft) 85%, var(--m-bg));
+  border: 1px solid var(--m-line);
+  color: var(--m-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.g-sub-chip:hover,
+.g-sub-chip:active {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+}
+
+.g-back-top-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 8px;
+}
+.g-back-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--m-soft);
+  color: var(--m-accent);
+  border: 1px solid color-mix(in srgb, var(--m-accent) 30%, var(--m-line));
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+.g-back-top:hover {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+}
+.g-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-block: 2px;
 }
 .g-filters button {
-  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 36px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid var(--m-line);
   background: transparent;
+  font-size: 0.82rem;
+  font-weight: 500;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
 }
 .g-filters button[aria-pressed="true"] {
   background: var(--m-accent);
@@ -824,38 +1699,57 @@
   text-transform: uppercase;
 }
 .g-featured {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.g-featured li {
+  list-style: none;
+}
+.g-featured li:last-child:nth-child(odd) {
+  grid-column: span 2;
 }
 .g-featured-card {
   display: flex;
-  width: 148px;
-  flex: none;
+  width: 100%;
+  height: 100%;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   padding: 0;
   border: 1px solid var(--m-line);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--m-soft);
   text-align: start;
   cursor: pointer;
   overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.g-featured-card:active {
+  transform: scale(0.98);
 }
 .g-featured-card img {
   width: 100%;
-  height: 88px;
+  height: 110px;
   object-fit: cover;
+  border-radius: 15px 15px 0 0;
+}
+.g-featured li:last-child:nth-child(odd) .g-featured-card img {
+  height: 140px;
 }
 .g-featured-card span {
-  padding: 0 10px 10px;
-  font-size: 0.85rem;
-  font-weight: 650;
+  padding: 0 12px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--m-text);
+  line-height: 1.35;
 }
 .g-legal {
-  margin: 18px 16px 0;
+  margin: 18px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
   color: var(--m-muted);
   font-size: 0.75rem;
 }
@@ -871,7 +1765,7 @@
   display: none;
 }
 .g-frame[data-images="off"] .g-card {
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 .g-frame[data-allergens="off"] .g-allergens,
 .g-frame[data-allergens="off"] .g-sheet-body section {
@@ -909,38 +1803,6 @@
 }
 .g-frame[data-card="photo"] .g-card-side {
   align-items: flex-start;
-}
-.g-frame[data-template="royal"] .g-design-hero,
-.g-frame[data-template="grande"] .g-design-hero,
-.g-frame[data-template="editorial"] .g-design-hero,
-.g-frame[data-template="noir"] .g-design-hero {
-  text-align: center;
-  background: transparent;
-  border-bottom: 1px solid var(--m-line);
-  border-radius: 0;
-}
-.g-frame[data-template="royal"] .g-sub > h2,
-.g-frame[data-template="grande"] .g-sub > h2,
-.g-frame[data-template="editorial"] .g-sub > h2,
-.g-frame[data-template="chef"] .g-name,
-.g-frame[data-template="noir"] .g-design-hero h2 {
-  font-family: Georgia, "Iowan Old Style", Palatino, "Times New Roman", serif;
-}
-.g-frame[data-template="editorial"] .g-card,
-.g-frame[data-template="chef"] .g-card {
-  background: transparent;
-  border-width: 0 0 1px;
-  border-radius: 0;
-  box-shadow: none;
-}
-.g-frame[data-template="coastal"] .g-card,
-.g-frame[data-template="tropic"] .g-card,
-.g-frame[data-template="atelier"] .g-card {
-  border-radius: 18px;
-}
-.g-frame[data-template="noir"] .g-card,
-.g-frame[data-template="velvet"] .g-card {
-  border-radius: 4px;
 }
 
 /* Design-center presentation controls. Keep the guest surface readable at every density. */
@@ -995,8 +1857,20 @@
 
 .g-tabs button,
 .g-filters button,
-.g-sheet-close { min-width: 44px; min-height: 44px; }
-.g-lang a { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.g-sheet-close { min-width: 48px; min-height: 48px; }
+.g-lang a { min-width: 48px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; }
+
+@media (pointer: coarse) {
+  .g-tabs button,
+  .g-filters button,
+  .g-sheet-close,
+  .g-lang a,
+  .g-button {
+    min-width: 48px;
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .g-root *, .g-root *::before, .g-root *::after { scroll-behavior: auto !important; }
@@ -1009,5 +1883,21 @@
   .g-menu {
     width: min(100%, 760px);
     margin-inline: auto;
+  }
+}
+
+@media all and (display-mode: standalone) {
+  .g-root {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .g-note input,
+  .g-note textarea,
+  .g-search {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .g-header {
+    padding-top: calc(8px + var(--g-safe-top));
   }
 }

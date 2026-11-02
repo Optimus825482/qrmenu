@@ -15,7 +15,15 @@ import {
 } from "../server/actions/callOptions";
 import type { CallOptionRow } from "../server/callOptions";
 
-const LANG_LABEL: Record<CallLang, string> = { en: "İngilizce", de: "Almanca", ru: "Rusça", ar: "Arapça" };
+const LANG_LABEL: Record<CallLang, string> = {
+  en: "İngilizce",
+  de: "Almanca",
+  ru: "Rusça",
+  ar: "Arapça",
+  fr: "Fransızca",
+  el: "Yunanca",
+  it: "İtalyanca",
+};
 const TYPE_LABEL = { GARSON: "Garson", HESAP: "Hesap", DIGER: "Diğer" } as const;
 
 type Dialog = { mode: "new" } | { mode: "edit"; row: CallOptionRow } | null;

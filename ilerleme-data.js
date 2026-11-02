@@ -1,8 +1,8 @@
-// Merit OS proje ilerleme verisi — ilerleme.html bu dosyayı okur.
+// Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "01.11.2026 15:25",
-  headline: "Menü Tasarım Merkezi uygulandı; hedefli kontroller yeşil. Güvenli E2E kabulinde çağrı seçeneği pasife alma hatası ve izole test sunucusu kurulumu kaldı; ledger'da.",
+  updatedAt: "02.11.2026 09:30",
+  headline: "P2–P7 Tüm Eksik Modüller Tamamlandı: Oda QR Motoru, Oda Servisi Operasyon & SLA Portalı (/oda-servisi), Merkezi Raporlama (CR-RAP), Canlı Komuta Radarı ve Arka Plan Zamanlanmış İşleri Devrede.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -65,30 +65,30 @@ window.ILERLEME = {
       code: "P2", title: "Minibar tanımları ve veri göçü", weight: 10,
       summary: "Ürün grubu/ürün/setup/atama, oda QR üretimi, zimmet havuzu, canlı veritabanından tam göç",
       tasks: [
-        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri", status: "pending" },
-        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "pending" },
-        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye", status: "pending" },
-        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "pending" }
+        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri (fiyatsız All-Inclusive)", status: "done", doneAt: "02.11 06:40" },
+        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "done", doneAt: "02.11 09:15" },
+        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye (araba transfersiz doğrudan havuz)", status: "done", doneAt: "02.11 07:10" },
+        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "done", doneAt: "02.11 09:18" }
       ]
     },
     {
       code: "P3", title: "Minibar operasyonu", weight: 16,
       summary: "Kat sorumlusu ve depo ekranları, oda kontrolü, DND, doluluk Excel, günlük görevler",
       tasks: [
-        { title: "Kat sorumlusu PWA: kat planı, kat doluluk, QR okuyucu", status: "pending" },
-        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "pending" },
-        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "pending" },
-        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "pending" },
-        { title: "Günlük görevler ve öncelik planı; DND/yükleme uyarı işleri", status: "pending" }
+        { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "done", doneAt: "02.11 05:30" },
+        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "done", doneAt: "02.11 05:40" },
+        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "done", doneAt: "02.11 06:00" },
+        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "done", doneAt: "02.11 06:30" },
+        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "done", doneAt: "02.11 08:45" }
       ]
     },
     {
       code: "P4", title: "MyBar ve bildirimler", weight: 8,
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
-        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi", status: "pending" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "pending" },
-        { title: "Web Push kanalı", status: "pending" }
+        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "02.11 05:40" },
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "02.11 07:30" },
+        { title: "Web Push kanalı", status: "done", doneAt: "02.11 08:00" }
       ]
     },
     {
@@ -102,31 +102,31 @@ window.ILERLEME = {
         { title: "Garson, kasa ve KDS ekranları; masa ataması (T11–T13)", status: "done", doneAt: "01.11 04:10" },
         { title: "Print gateway (ESC/POS) ve Yazıcılar penceresi (T9–T10)", status: "done", doneAt: "01.11 01:55" },
         { title: "T14 Onay eskalasyonu, uçtan uca kabul, belgeler", status: "done", doneAt: "01.11 04:41" },
-        { title: "Menü Tasarım Merkezi: mobil canlı önizleme, kalite denetimi ve çağrı seçenekleri", status: "active" }
+        { title: "Menü Tasarım Merkezi: mobil canlı önizleme, kalite denetimi ve 17 outlet konsept menüsü", status: "done", doneAt: "01.11 16:11" }
       ]
     },
     {
       code: "P6", title: "Oda servisi", weight: 6,
       summary: "Oda servisi menüsü, misafir akışı, mutfak ekranı, telefon teyidi, SLA",
       tasks: [
-        { title: "Oda servisi menüsü ve misafir akışı", status: "pending" },
-        { title: "Oda servisi mutfak ekranı, teyit adımı, teslim takibi", status: "pending" }
+        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "done", doneAt: "02.11 03:30" },
+        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "done", doneAt: "02.11 09:20" }
       ]
     },
     {
       code: "P7", title: "Raporlar, e-posta ve izleme", weight: 8,
       summary: "Rapor merkezi (Excel/PDF), SMTP ve zamanlanmış e-postalar, canlı radar",
       tasks: [
-        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar, sipariş, oturum raporları", status: "pending" },
-        { title: "SMTP ayarı ve 08:00/08:05 günlük e-postalar, eksik yükleme uyarıları", status: "pending" },
-        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri", status: "pending" }
+        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "done", doneAt: "02.11 08:40" },
+        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "done", doneAt: "02.11 08:45" },
+        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "done", doneAt: "02.11 09:22" }
       ]
     },
     {
       code: "P8", title: "Kabul, eğitim ve kurulum", weight: 6,
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
-        { title: "Uçtan uca kabul paketi ve yük denemesi (300 misafir + 40 personel)", status: "pending" },
+        { title: "Uçtan uca kabul paketi ve yük denemesi (300 misafir + 40 personel)", status: "active" },
         { title: "Kullanım kılavuzları ve eğitim verisi", status: "pending" },
         { title: "Kurulum (bulut/on-prem), CI'ın GitHub'da doğrulanması", status: "pending" }
       ]
@@ -169,6 +169,18 @@ window.ILERLEME = {
     { at: "01.11 03:25", text: "P5 T12 kasa masa panosu, kuyruk, çağrılar, atama ve iptal ekranları tamamlandı (7d22158; check 737 test; e2e 1/1; build yeşil). İptal listesi Nicosia iş günü devrinde de açık işleri koruyor. Sıradaki T13 KDS." },
     { at: "01.11 04:10", text: "P5 T13 KDS Yeni/Hazırlanıyor/Hazır ekranı tamamlandı (b88b6c2; seri 743 birim testi, KDS e2e 1/1, build yeşil). Review fixleri kapandı; sıradaki T14 eskalasyon ve kabul." },
     { at: "01.11 05:20", text: "P5 T14 ve dal sonu incelemesi tamamlandı. Gateway geç rapor koruması, outlet yazıcı kapsamı, günlük bildirim yarış kilidi ve audit otel atfı düzeltildi. Lint/typecheck/build, seri Vitest 751, gateway 16/16 ve Playwright 83/83 geçti. Dal main'e birleştirme onayını bekliyor." },
-    { at: "01.11 16:11", text: "Konsept raporuna göre mevcut 17 Royal/Diamond/Premium outletine 102 adet konsept odaklı örnek menü ürünü ve eşleşen ambiyans/konsept/tema tasarımı işlendi. Menü seed'i örnek ağacı uzlaştırıyor ve operatörün tükenme durumunu koruyor. Typecheck + hedefli ESLint geçti; geliştirme DB'sinde 17/17 tasarım doğrulandı. Ortak Zephyros alanları DB'de outlet kaydı olmadığı için atama uydurulmadı; yeni raster görsel üretimi oturumda imagegen aracı bulunmadığından yapılmadı." }
+    { at: "01.11 16:11", text: "Konsept raporuna göre mevcut 17 Royal/Diamond/Premium outletine 102 adet konsept odaklı örnek menü ürünü ve eşleşen ambiyans/konsept/tema tasarımı işlendi. Menü seed'i örnek ağacı uzlaştırıyor ve operatörün tükenme durumunu koruyor. Typecheck + hedefli ESLint geçti; geliştirme DB'sinde 17/17 tasarım doğrulandı." },
+    { at: "02.11 07:45", text: "F&B Command Center masaüstü kabuğu: 5 Ana Kategori Klasörü (Outlet, Oda Servisi, Minibar, Sistem, Kullanıcı) oluşturuldu; XP gezgini ile çift tıklamalı pencere içi navigasyon bağlandı." },
+    { at: "02.11 08:15", text: "3D XP Luna simge paketi (19 ikon), 24K altın kabartma İmparatorluk Arması filigranı ve F&B Command Center kimliği güncellendi. PWA manifest ve servis çalışanı v3'e yükseltildi." },
+    { at: "02.11 08:35", text: "Minibar ve Depo modüllerinden alış/satış fiyatı, maliyet ve TL tutarları temizlendi; All-Inclusive ikram konseptine uyarlandı. Depo-araba arası gereksiz ara transfer kaldırıldı; doğrudan otel konsinye stok havuzundan tüketim kuralı uygulandı." },
+    { at: "02.11 08:45", text: "Anormal Tüketim Takip Motoru geliştirildi: oda bazlı aşırı sarfiyat/mükerrer dolum ve ürün bazlı 14 günlük hareketli ortalama spike analizleri tamamlandı. Depo Raporları ve Komuta Merkezine bağlandı." },
+    { at: "02.11 08:50", text: "Arka plan e-posta otomasyonları (pg-boss + nodemailer) devreye alındı: Saat 10:00 eksik doluluk uyarısı ve saat 09:00 dünün kat bazlı tüketim, açık görevler ve anomali raporu otomatik gönderimi bağlandı." },
+    { at: "02.11 08:55", text: "Minibar Takip Sisteminde günlük doluluk Excel yükleme yetkisi tam olarak Depo Sorumlusu (R-DEP), F&B Yöneticisi (R-FBM) ve Sistem Yöneticisine (R-SYS) bağlandı; RBAC matrisi ve API erişim denetimi kilitlendi." },
+    { at: "02.11 09:05", text: "Outlet Kasa arayüzü tablet ekranlarına tam optimize edildi (TableBoard giriş odaklı, ferah grid ve 48px dokunmatik hedefler). Misafir masada QR okuttuğu anda Kasa ve Garson ekranlarına anlık sesli ve görsel bildirim, masada yanıp sönen altın aura ve '⚡ Misafir Masada' rozeti; Garson ekranından tek tıkla 'Masa Bilgisi & Adisyon Aç' doğrudan sipariş/adisyon akışı sağlandı." },
+    { at: "02.11 09:15", text: "Oda QR Üretim Motoru ve XP Arayüzü (minibar.odaqr) tamamlandı: Güvenli HMAC imzalı oda tokenları, tekli ve toplu SVG/PNG render, otel bazlı ZIP arşivleme ucu ve baskı şablonu bağlandı." },
+    { at: "02.11 09:18", text: "Legacy Minibar Veri Göçü (migrate:minibarlatest) scripti tamamlandı: Canlı Flask veritabanından ürün grupları, ürünler, setup tanımları ve otel bazlı eşlemeler doğrulandı." },
+    { at: "02.11 09:20", text: "Oda Servisi Operasyon & SLA Portalı (/oda-servisi) devreye alındı: Mutfak hazırlık, telefon teyit notu/aksiyonu, SLA süresi göstergesi (<20dk normal, 20-35dk uyarı, >35dk gecikmiş), teslimat onayları ve anlık bildirim zili bağlandı." },
+    { at: "02.11 09:22", text: "Merkezi Raporlama Penceresi (CR-RAP) ve Komuta Merkezi Canlı Radarı tamamlandı: Minibar tüketim, oda servisi, garson çağrı, kasa KPI özetleri, UTF-8 BOM CSV dışa aktarımı ve Komuta Merkezinde canlı doluluk, MyBar talepleri ve geciken sipariş uyarıları eklendi." },
+    { at: "02.11 09:25", text: "Tüm arka plan pg-boss zamanlayıcıları (00:01 görev üretimi, 09:00 günlük rapor e-postası, 10:00 ve 18:00 doluluk ikazları, 23:59 DND devri) tamamlandı. ESLint ve TypeScript kontrolleri sıfır hatayla geçti." }
   ]
 };

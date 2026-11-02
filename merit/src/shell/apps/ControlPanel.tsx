@@ -8,18 +8,29 @@ import { AppearancePanel } from "./controlPanel/AppearancePanel";
 import { InstallPanel } from "./controlPanel/InstallPanel";
 import { SystemPanel } from "./controlPanel/SystemPanel";
 
-type Category = "gorunum" | "uygulama" | "sistem";
+type Category =
+  | "gorunum"
+  | "ceviri"
+  | "oturum"
+  | "minibar"
+  | "servis"
+  | "sistem"
+  | "uygulama";
 
-const CATEGORIES: { id: Category; label: string; icon: string }[] = [
+const CATEGORIES: { id: Category; label: string; icon: string; system?: boolean }[] = [
   { id: "gorunum", label: "Görünüm", icon: "pencere" },
+  { id: "ceviri", label: "Çeviri", icon: "tema", system: true },
+  { id: "oturum", label: "Oturum ve Güvenlik", icon: "kullanicilar", system: true },
+  { id: "minibar", label: "Minibar ve Kat", icon: "otel", system: true },
+  { id: "servis", label: "Oda Servisi ve Sipariş", icon: "menu", system: true },
+  { id: "sistem", label: "QR Menü ve Sistem", icon: "qr", system: true },
   { id: "uygulama", label: "Uygulama", icon: "komuta" },
-  { id: "sistem", label: "Sistem", icon: "ayarlar" },
 ];
 
 /** Denetim Masası (core.ayarlar): categories on the left, the chosen panel on the right. */
 export function ControlPanel({ setStatus }: AppProps) {
   const [current, setCurrent] = useState<Category>("gorunum");
-  // "Sistem" needs edit permission on CR-SYS (system scope or at least one hotel).
+  // System tabs need edit permission on CR-SYS (system scope or at least one hotel).
   const [canSystem, setCanSystem] = useState(false);
   useEffect(() => {
     let live = true;
@@ -32,7 +43,7 @@ export function ControlPanel({ setStatus }: AppProps) {
       live = false;
     };
   }, []);
-  const categories = CATEGORIES.filter((c) => c.id !== "sistem" || canSystem);
+  const categories = CATEGORIES.filter((c) => !c.system || canSystem);
   const id = useId();
   const tabId = (c: Category) => `${id}-tab-${c}`;
   const panelId = `${id}-panel`;
@@ -89,8 +100,41 @@ export function ControlPanel({ setStatus }: AppProps) {
       >
         {current === "gorunum" ? (
           <AppearancePanel />
+        ) : current === "ceviri" ? (
+          <SystemPanel
+            setStatus={setStatus}
+            filterGroups={["Çeviri"]}
+            title="Çeviri Ayarları"
+            description="Otomatik çok dilli menü çevirisi için DeepL ve Google AI Studio API anahtarlarını yapılandırın."
+          />
+        ) : current === "oturum" ? (
+          <SystemPanel
+            setStatus={setStatus}
+            filterGroups={["Oturum", "Kabuk"]}
+            title="Oturum ve Güvenlik Ayarları"
+            description="Personel oturum süreleri, hareketsizlik limitleri ve onaylama tercihlerini yönetin."
+          />
+        ) : current === "minibar" ? (
+          <SystemPanel
+            setStatus={setStatus}
+            filterGroups={["MyBar", "DND"]}
+            title="Minibar ve Kat Hizmetleri"
+            description="MyBar günlük giriş sınırları, tüketim miktar modları ve Rahatsız Etmeyin (DND) kontrol kuralları."
+          />
+        ) : current === "servis" ? (
+          <SystemPanel
+            setStatus={setStatus}
+            filterGroups={["Sipariş", "Oda Servisi", "Fiyat", "Stok"]}
+            title="Oda Servisi ve Sipariş Ayarları"
+            description="Sipariş onay süreleri, garson çağrı uyarıları, oda servisi SLA ve fiyat gösterim tercihleri."
+          />
         ) : current === "sistem" ? (
-          <SystemPanel setStatus={setStatus} />
+          <SystemPanel
+            setStatus={setStatus}
+            filterGroups={["QR", "E-posta"]}
+            title="QR Menü ve Sistem Ayarları"
+            description="Masa ve alan QR kodlarının taban web adresi ile otomatik e-posta bildirim ayarları."
+          />
         ) : (
           <InstallPanel setStatus={setStatus} />
         )}

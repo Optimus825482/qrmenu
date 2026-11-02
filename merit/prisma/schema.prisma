@@ -129,6 +129,17 @@ enum TaskType {
   DEPARTURE_KONTROL
 }
 
+enum CorrectionRequestStatus {
+  BEKLIYOR
+  ONAYLANDI
+  REDDEDILDI
+}
+
+enum CorrectionActionType {
+  SILME
+  DUZELTME
+}
+
 enum TaskStatus {
   BEKLIYOR
   DEVAM
@@ -247,6 +258,7 @@ model Hotel {
   uploadTasks         UploadTask[]
   dailyTasks          DailyTask[]
   stockRequests       StockRequest[]
+  minibarCorrectionRequests MinibarCorrectionRequest[]
   orders              Order[]
   orderCounters       OrderCounter[]
   printers            Printer[]
@@ -312,6 +324,7 @@ model Room {
   qrToken       String?   @unique @map("qr_token")
   qrGeneratedAt DateTime? @map("qr_generated_at") @db.Timestamptz(3)
   guestMessage  String?   @map("guest_message") @db.VarChar(500)
+  extension     String?   @db.VarChar(20)
   isActive      Boolean   @default(true) @map("is_active")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -459,8 +472,11 @@ model User {
   ordersPhoneConfirmed Order[]              @relation("OrderPhoneConfirmedBy")
   ordersAssigned       Order[]              @relation("OrderAssignedWaiter")
   ordersServed         Order[]              @relation("OrderServedBy")
+  ordersDelivered      Order[]              @relation("OrderDeliveredBy")
   orderEvents          OrderEvent[]
   waiterCallsResolved  WaiterCall[]
+  correctionRequestsMade MinibarCorrectionRequest[] @relation("MinibarCorrectionRequester")
+  correctionRequestsApproved MinibarCorrectionRequest[] @relation("MinibarCorrectionApprover")
 
   @@map("users")
 }
@@ -852,10 +868,12 @@ model MinibarTransaction {
   occurredAt DateTime      @default(now()) @map("occurred_at") @db.Timestamptz(3)
   createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  hotel Hotel                    @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  room  Room                     @relation(fields: [roomId], references: [id], onDelete: Restrict)
-  user  User                     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  items MinibarTransactionItem[]
+  hotel              Hotel                     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room               Room                      @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user               User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items              MinibarTransactionItem[]
+  roomChecks         RoomCheck[]
+  correctionRequests MinibarCorrectionRequest[]
 
   @@index([roomId, occurredAt])
   @@index([hotelId, occurredAt])
@@ -883,19 +901,44 @@ model MinibarTransactionItem {
   @@map("minibar_transaction_items")
 }
 
-model RoomCheck {
-  id        String        @id @default(cuid())
-  roomId    String        @map("room_id")
-  userId    String        @map("user_id")
-  checkDate DateTime      @map("check_date") @db.Date
-  startedAt DateTime      @default(now()) @map("started_at") @db.Timestamptz(3)
-  endedAt   DateTime?     @map("ended_at") @db.Timestamptz(3)
-  type      RoomCheckType
-  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+model MinibarCorrectionRequest {
+  id            String                  @id @default(cuid())
+  hotelId       String                  @map("hotel_id")
+  transactionId String?                 @map("transaction_id")
+  requestedById String                  @map("requested_by_id")
+  approvedById  String?                 @map("approved_by_id")
+  actionType    CorrectionActionType    @map("action_type")
+  reason        String
+  status        CorrectionRequestStatus @default(BEKLIYOR)
+  proposedData  Json?                   @map("proposed_data")
+  rejectReason  String?                 @map("reject_reason")
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  resolvedAt    DateTime?               @map("resolved_at") @db.Timestamptz(3)
 
-  room Room @relation(fields: [roomId], references: [id], onDelete: Restrict)
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  hotel       Hotel               @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  transaction MinibarTransaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  requestedBy User                @relation("MinibarCorrectionRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  approvedBy  User?               @relation("MinibarCorrectionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([hotelId, status])
+  @@map("minibar_correction_requests")
+}
+
+model RoomCheck {
+  id            String        @id @default(cuid())
+  roomId        String        @map("room_id")
+  userId        String        @map("user_id")
+  transactionId String?       @map("transaction_id")
+  checkDate     DateTime      @map("check_date") @db.Date
+  startedAt     DateTime      @default(now()) @map("started_at") @db.Timestamptz(3)
+  endedAt       DateTime?     @map("ended_at") @db.Timestamptz(3)
+  type          RoomCheckType
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  room        Room                @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transaction MinibarTransaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
 
   @@index([roomId, checkDate])
   @@index([userId, checkDate])
@@ -1196,6 +1239,7 @@ model MenuNode {
   name        String
   detail      String?
   imageUrl    String?      @map("image_url")
+  imageUrls   String[]     @default([]) @map("image_urls")
   price       Decimal?     @db.Decimal(10, 2)
   currency    String       @default("EUR")
   allergens   String[]     @default([])
@@ -1289,6 +1333,11 @@ model Order {
   servedAt           DateTime?   @map("served_at") @db.Timestamptz(3)
   assignedWaiterId   String?     @map("assigned_waiter_id")
   servedById         String?     @map("served_by_id")
+  onWayAt            DateTime?   @map("on_way_at") @db.Timestamptz(3)
+  deliveredAt        DateTime?   @map("delivered_at") @db.Timestamptz(3)
+  deliveredById      String?     @map("delivered_by_id")
+  slaWarnedAt        DateTime?   @map("sla_warned_at") @db.Timestamptz(3)
+  slaBreachedAt      DateTime?   @map("sla_breached_at") @db.Timestamptz(3)
   prepStartedAt      DateTime?   @map("prep_started_at") @db.Timestamptz(3)
   rejectedAt         DateTime?   @map("rejected_at") @db.Timestamptz(3)
   escalatedAt        DateTime?   @map("escalated_at") @db.Timestamptz(3)
@@ -1306,12 +1355,14 @@ model Order {
   phoneConfirmedBy User?        @relation("OrderPhoneConfirmedBy", fields: [phoneConfirmedById], references: [id], onDelete: SetNull)
   assignedWaiter   User?        @relation("OrderAssignedWaiter", fields: [assignedWaiterId], references: [id], onDelete: SetNull)
   servedBy         User?        @relation("OrderServedBy", fields: [servedById], references: [id], onDelete: SetNull)
+  deliveredBy      User?        @relation("OrderDeliveredBy", fields: [deliveredById], references: [id], onDelete: SetNull)
   items            OrderItem[]
   events           OrderEvent[]
   printJobs        PrintJob[]
 
   @@unique([hotelId, businessDate, orderNo])
   @@index([outletId, status, createdAt])
+  @@index([roomId, status])
   @@map("orders")
 }
 

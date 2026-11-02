@@ -15,8 +15,16 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
     }
     throw error;
   }
-  if (!ctx.session.outletId) redirect("/secim");
-  const outlet = await prisma.outlet.findUnique({ where: { id: ctx.session.outletId }, include: { hotel: { select: { name: true } } } });
+  let outletId = ctx.session.outletId;
+  if (!outletId && ctx.session.hotelId) {
+    const rsOutlet = await prisma.outlet.findFirst({
+      where: { hotelId: ctx.session.hotelId, type: "ODA_SERVISI" },
+      select: { id: true },
+    });
+    if (rsOutlet) outletId = rsOutlet.id;
+  }
+  if (!outletId) redirect("/secim");
+  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, include: { hotel: { select: { name: true } } } });
   if (!outlet) redirect("/secim");
   const targets = (await listTargets(ctx.user.id)).map((target, index) => ({ target, index })).filter(({ target }) => target.kind === "OUTLET").map(({ target, index }) => ({ index, label: target.label }));
   return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets}>{children}</OpsShell>;

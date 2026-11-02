@@ -24,7 +24,7 @@ export function FooterBand() {
 
   return (
     <footer ref={ref} className="xp-footer-band">
-      MERIT ROYAL F&amp;B OPERATION COMMAND CENTER © 2026 · CODE BY ERKAN ERDEM
+      MERIT ROYAL · F&amp;B COMMAND CENTER © 2026 · CODE BY ERKAN ERDEM
     </footer>
   );
 }

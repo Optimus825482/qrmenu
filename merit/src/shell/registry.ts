@@ -4,12 +4,14 @@ import type { ModuleKey } from "@/generated/prisma/enums";
 /** Start-menu group of an app (spec §5.1). */
 export type AppCategory =
   | "GENEL"
+  | "OUTLET"
+  | "ROOM_SERVICE"
   | "MINIBAR"
+  | "SISTEM"
+  | "KULLANICI"
   | "QR_MENU"
   | "QR_ORDER"
-  | "ROOM_SERVICE"
-  | "RAPOR"
-  | "SISTEM";
+  | "RAPOR";
 
 /**
  * What the shell passes to an app component (spec §5.2). `setDirty(true)` marks unsaved work: the

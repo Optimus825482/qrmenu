@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { useHydrated } from "@/components/useHydrated";
 import { safeNextPath } from "@/lib/safe-next";
 import { loginAction, selectTargetAction } from "@/modules/core/server/loginAction";
@@ -20,11 +20,57 @@ const REMEMBERED_USERNAME_KEY = "merit.rememberedUsername";
 const inputClass =
   "min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-base text-text placeholder:text-muted/60 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({
+  next,
+  devAdminPassword,
+}: {
+  next?: string;
+  devAdminPassword?: string;
+}) {
   const router = useRouter();
   const hydrated = useHydrated();
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  const devAccounts = [
+    {
+      key: "admin",
+      title: "Admin",
+      subtitle: "Sistem Yöneticisi",
+      username: "admin",
+      password: devAdminPassword || "Merit!2026",
+      icon: "👑",
+      border: "border-blue-500/30 hover:border-blue-500 bg-blue-50/50 dark:bg-blue-950/20",
+    },
+    {
+      key: "garson",
+      title: "Garson",
+      subtitle: "Eren Yalçın",
+      username: "eren.yalcin",
+      password: "123456",
+      icon: "🍽️",
+      border: "border-emerald-500/30 hover:border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20",
+    },
+    {
+      key: "sef_garson",
+      title: "Şef Garson",
+      subtitle: "Derya Aksoy",
+      username: "derya.aksoy",
+      password: "123456",
+      icon: "👔",
+      border: "border-amber-500/30 hover:border-amber-500 bg-amber-50/50 dark:bg-amber-950/20",
+    },
+    {
+      key: "mutfak_sefi",
+      title: "Mutfak Şefi",
+      subtitle: "Mehmet Kaya",
+      username: "mehmet.kaya",
+      password: "123456",
+      icon: "👨‍🍳",
+      border: "border-rose-500/30 hover:border-rose-500 bg-rose-50/50 dark:bg-rose-950/20",
+    },
+  ] as const;
 
   useEffect(() => {
     let rememberedUsername: string | null = null;
@@ -43,6 +89,9 @@ export function LoginForm({ next }: { next?: string }) {
 
   const [state, submit, pending] = useActionState(
     async (previous: FormState, formData: FormData): Promise<FormState> => {
+      if (formData.get("action") === "reset") {
+        return INITIAL;
+      }
       const targetIndex = formData.get("targetIndex");
       if (targetIndex !== null) {
         const result = await selectTargetAction(Number(targetIndex));
@@ -59,11 +108,14 @@ export function LoginForm({ next }: { next?: string }) {
         return { status: "done", username: previous.username };
       }
       const username = String(formData.get("username") ?? "");
+      const password = String(formData.get("password") ?? "");
+      const isDevQuick = formData.get("devQuick") === "1";
       setUsername(username);
+      setPassword(password);
       const remember = formData.get("rememberMe") === "on";
       const result = await loginAction({
         username,
-        password: String(formData.get("password") ?? ""),
+        password,
       });
       if (!result.ok) return { status: "error", username, message: result.error.message };
 
@@ -77,6 +129,14 @@ export function LoginForm({ next }: { next?: string }) {
       // After credential verification, show the available workspace options in this login form.
       const goToPicker = result.data.next === "/secim";
       if (goToPicker && result.data.targets.length > 0) {
+        // If developer quick login and has single target, automatically enter
+        if (isDevQuick && result.data.targets.length === 1) {
+          const targetRes = await selectTargetAction(0);
+          if (targetRes.ok) {
+            router.replace(targetRes.data.next);
+            return { status: "done", username };
+          }
+        }
         return { status: "choosing", username, targets: result.data.targets };
       }
       const to = result.data.next === "/sifre-degistir"
@@ -102,8 +162,8 @@ export function LoginForm({ next }: { next?: string }) {
           className="mx-auto mb-2 w-auto"
           style={{ maxHeight: 48 }}
         />
-        <h1 className="text-2xl font-bold tracking-[0.2em] text-brand">MERIT OS</h1>
-        <p className="mt-1 text-sm text-muted">Personel girişi</p>
+        <h1 className="text-xl font-bold tracking-[0.18em] text-brand uppercase">F&amp;B COMMAND CENTER</h1>
+        <p className="mt-1 text-xs tracking-wider text-muted font-medium">MERIT ROYAL HOTELS &amp; RESORTS</p>
       </header>
 
       {state.status === "error" && (
@@ -134,6 +194,20 @@ export function LoginForm({ next }: { next?: string }) {
               <span aria-hidden="true">›</span>
             </button>
           ))}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              const fd = new FormData();
+              fd.set("action", "reset");
+              startTransition(() => {
+                submit(fd);
+              });
+            }}
+            className="mt-1 text-center text-xs text-muted hover:text-brand underline"
+          >
+            ← Farklı kullanıcı ile giriş yap
+          </button>
         </section>
       ) : null}
 
@@ -167,6 +241,8 @@ export function LoginForm({ next }: { next?: string }) {
           type="password"
           autoComplete="current-password"
           required
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
           className={inputClass}
         />
       </div>
@@ -200,6 +276,53 @@ export function LoginForm({ next }: { next?: string }) {
       >
         Giriş Yap
       </button>
+
+      <div className="relative my-1 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border/80" />
+        </div>
+        <span className="relative bg-surface px-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
+          Geliştirici Hızlı Giriş
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2" role="group" aria-label="Geliştirici Rol Girişleri">
+        {devAccounts.map((account) => (
+          <button
+            key={account.key}
+            type="button"
+            disabled={busy}
+            title={`${account.title} (${account.username}) olarak hızlı giriş yap`}
+            onClick={() => {
+              setUsername(account.username);
+              setPassword(account.password);
+              const fd = new FormData();
+              fd.set("username", account.username);
+              fd.set("password", account.password);
+              fd.set("devQuick", "1");
+              if (rememberMe) fd.set("rememberMe", "on");
+              startTransition(() => {
+                submit(fd);
+              });
+            }}
+            className={`group relative flex flex-col items-start rounded-xl border p-2.5 text-left transition-all hover:scale-[1.02] hover:shadow-sm active:scale-[0.98] disabled:opacity-50 ${account.border}`}
+          >
+            <div className="flex w-full items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm font-bold text-text">
+                <span className="text-base" role="img" aria-hidden="true">{account.icon}</span>
+                <span>{account.title}</span>
+              </span>
+              <span className="text-xs text-muted group-hover:text-brand font-bold">›</span>
+            </div>
+            <span className="mt-0.5 text-xs text-muted truncate w-full">{account.subtitle}</span>
+            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted font-mono">
+              <span className="truncate">{account.username}</span>
+              <span>•</span>
+              <span className="tracking-tighter">••••••</span>
+            </div>
+          </button>
+        ))}
+      </div>
       </> : null}
     </form>
   );

@@ -7,6 +7,7 @@ import {
   resolveGuestTokenLimited,
   unknownTokenLimiter,
 } from "@/modules/menu/server/guestToken";
+import { roomServiceState } from "@/modules/order/server/roomService/roomState";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -41,7 +42,24 @@ export async function GET(
       return new Response("Service Unavailable", { status: 503, headers: { ...NO_STORE, "Retry-After": "5" } });
     }
   }
-  if (target.kind !== "TABLE") return new Response("Not found", { status: 404, headers: NO_STORE });
+  if (target.kind !== "TABLE" && target.kind !== "ROOM") {
+    return new Response("Not found", { status: 404, headers: NO_STORE });
+  }
+
+  let outletId: string;
+  let hotelId: string;
+
+  if (target.kind === "TABLE") {
+    outletId = target.state.outletId;
+    hotelId = target.state.hotelId;
+  } else {
+    const rsState = await roomServiceState(target.roomId);
+    if (!rsState.rsOutletId) {
+      return new Response("Not found", { status: 404, headers: NO_STORE });
+    }
+    outletId = rsState.rsOutletId;
+    hotelId = rsState.hotelId;
+  }
 
   const orderIds = (new URL(request.url).searchParams.get("orders") ?? "")
     .split(",")
@@ -52,7 +70,7 @@ export async function GET(
   if (!isListening()) await startRealtimeListener();
 
   const stream = createFilteredSseStream(
-    guestEventFilter({ outletId: target.state.outletId, hotelId: target.state.hotelId, orderIds }),
+    guestEventFilter({ outletId, hotelId, orderIds }),
     { signal: request.signal },
   );
   return new Response(stream, {

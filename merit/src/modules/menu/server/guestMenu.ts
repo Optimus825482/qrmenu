@@ -8,6 +8,7 @@ export type GuestItem = {
   name: string;
   detail?: string;
   imageUrl: string | null;
+  imageUrls?: string[];
   allergens: string[];
   tags: string[];
   isAvailable: boolean;
@@ -51,15 +52,23 @@ export async function getMenu(outletId: string, locale: Locale, areaId?: string)
     return { name: t?.name || row.name, ...(detail ? { detail } : {}) };
   };
   const showPrice = state.pricesShown && state.design.options.showPrices;
-  const toItem = (row: Row): GuestItem => ({
-    id: row.id,
-    ...text(row),
-    imageUrl: row.imageUrl,
-    allergens: row.allergens,
-    tags: row.tags,
-    isAvailable: row.isAvailable,
-    ...(showPrice && row.price !== null ? { price: row.price.toFixed(2) } : {}),
-  });
+  const toItem = (row: Row): GuestItem => {
+    const urls: string[] = [];
+    if (row.imageUrl) urls.push(row.imageUrl);
+    for (const u of row.imageUrls ?? []) {
+      if (!urls.includes(u)) urls.push(u);
+    }
+    return {
+      id: row.id,
+      ...text(row),
+      imageUrl: urls[0] ?? row.imageUrl,
+      imageUrls: urls,
+      allergens: row.allergens,
+      tags: row.tags,
+      isAvailable: row.isAvailable,
+      ...(showPrice && row.price !== null ? { price: row.price.toFixed(2) } : {}),
+    };
+  };
 
   const categories: GuestCategory[] = [];
   for (const cat of of(null, "KATEGORI")) {

@@ -1,12 +1,93 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3a81f3"/>
-      <stop offset="0.55" stop-color="#0058e6"/>
-      <stop offset="1" stop-color="#0040c0"/>
+    <!-- Background Royal Shield Gradient -->
+    <linearGradient id="shieldBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1b3d"/>
+      <stop offset="45%" stop-color="#06102b"/>
+      <stop offset="100%" stop-color="#020716"/>
     </linearGradient>
+
+    <!-- 24K Luxury Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff0c2"/>
+      <stop offset="25%" stop-color="#eac775"/>
+      <stop offset="60%" stop-color="#c99e3a"/>
+      <stop offset="85%" stop-color="#9d741c"/>
+      <stop offset="100%" stop-color="#d4af37"/>
+    </linearGradient>
+
+    <!-- Secondary Soft Gold Gradient -->
+    <linearGradient id="goldSoft" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#aa7c11"/>
+      <stop offset="50%" stop-color="#dfbc6c"/>
+      <stop offset="100%" stop-color="#faeec8"/>
+    </linearGradient>
+
+    <!-- Subtle Outer Border Gold -->
+    <linearGradient id="borderGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e6c875" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#805912" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Radial Glow for Core -->
+    <radialGradient id="royalGlow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#1e3a70" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="goldDrop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <path d="M120 384V128h62l74 118 74-118h62v256h-60V230l-76 116-76-116v154z" fill="#ffffff"/>
-  <rect x="120" y="408" width="272" height="14" rx="7" fill="#c9a24a"/>
+
+  <!-- Outer Rounded Shield Card -->
+  <rect width="512" height="512" rx="108" fill="url(#shieldBg)"/>
+  <rect x="6" y="6" width="500" height="500" rx="102" fill="url(#royalGlow)"/>
+  <rect x="12" y="12" width="488" height="488" rx="96" fill="none" stroke="url(#borderGold)" stroke-width="3" stroke-opacity="0.75"/>
+  <rect x="22" y="22" width="468" height="468" rx="86" fill="none" stroke="url(#borderGold)" stroke-width="1" stroke-opacity="0.3"/>
+
+  <g filter="url(#goldDrop)">
+    <!-- 5-Point Royal Imperial Crown -->
+    <!-- Crown Base Band -->
+    <path d="M176 138 Q256 148 336 138 L344 148 Q256 158 168 148 Z" fill="url(#goldGrad)"/>
+    <!-- Jewels on Band -->
+    <circle cx="216" cy="148" r="3.5" fill="#ffffff" opacity="0.9"/>
+    <circle cx="256" cy="150" r="4.5" fill="#e74c3c"/>
+    <circle cx="296" cy="148" r="3.5" fill="#ffffff" opacity="0.9"/>
+    <!-- Crown Peaks & Orbs -->
+    <path d="M176 138 L160 88 L196 112 L228 72 L256 104 L284 72 L316 112 L352 88 L336 138 Z" fill="url(#goldGrad)"/>
+    <!-- Crown Pearl Finials -->
+    <circle cx="160" cy="85" r="7" fill="url(#goldSoft)"/>
+    <circle cx="228" cy="69" r="8.5" fill="url(#goldSoft)"/>
+    <circle cx="256" cy="101" r="5.5" fill="url(#goldSoft)"/>
+    <circle cx="284" cy="69" r="8.5" fill="url(#goldSoft)"/>
+    <circle cx="352" cy="85" r="7" fill="url(#goldSoft)"/>
+    <!-- Crown Inset Fleur-de-lis / Cross Accent on center peak -->
+    <path d="M256 46 L260 56 L270 60 L260 64 L256 74 L252 64 L242 60 L252 56 Z" fill="url(#goldGrad)"/>
+
+    <!-- Central Majestic Serif Monogram 'M' -->
+    <path d="M142 368 L142 196 L188 196 L256 308 L324 196 L370 196 L370 368 L328 368 L328 252 L274 340 L238 340 L184 252 L184 368 Z" fill="url(#goldGrad)"/>
+    <!-- Serifs & Ornamental Base Cuts on M -->
+    <rect x="130" y="364" width="28" height="6" rx="2" fill="url(#goldGrad)"/>
+    <rect x="354" y="364" width="28" height="6" rx="2" fill="url(#goldGrad)"/>
+    <rect x="130" y="194" width="28" height="6" rx="2" fill="url(#goldGrad)"/>
+    <rect x="354" y="194" width="28" height="6" rx="2" fill="url(#goldGrad)"/>
+
+    <!-- Classical Laurel Wreath Flanking Base -->
+    <!-- Left Wreath Leaf Cluster -->
+    <path d="M122 330 C108 300 114 260 126 230 C122 245 120 262 126 278 C116 268 108 248 112 232 C104 252 104 278 116 298 C104 290 98 274 100 258 C96 278 100 304 118 322 C108 316 102 304 102 292 C102 312 112 334 130 348 Z" fill="url(#goldSoft)" opacity="0.85"/>
+    <path d="M130 350 C140 375 162 396 195 408 C175 398 160 384 150 366 C165 382 186 395 210 402 C190 392 176 376 168 358 Z" fill="url(#goldSoft)" opacity="0.85"/>
+    <!-- Right Wreath Leaf Cluster -->
+    <path d="M390 330 C404 300 398 260 386 230 C390 245 392 262 386 278 C396 268 404 248 400 232 C408 252 408 278 396 298 C408 290 414 274 412 258 C416 278 412 304 394 322 C404 316 410 304 410 292 C410 312 400 334 382 348 Z" fill="url(#goldSoft)" opacity="0.85"/>
+    <path d="M382 350 C372 375 350 396 317 408 C337 398 352 384 362 366 C347 382 326 395 302 402 C322 392 336 376 344 358 Z" fill="url(#goldSoft)" opacity="0.85"/>
+
+    <!-- Bottom Center Luxury Star & Ribbon Tie -->
+    <polygon points="256,386 262,400 277,401 266,410 270,424 256,415 242,424 246,410 235,401 250,400" fill="url(#goldGrad)"/>
+
+    <!-- Refined Typography: MERIT ROYAL -->
+    <text x="256" y="456" text-anchor="middle" font-family="'Cinzel', 'Georgia', 'Times New Roman', serif" font-size="28" font-weight="700" letter-spacing="9" fill="url(#goldGrad)">MERIT ROYAL</text>
+    <!-- Subtitle: LUXURY HOTELS & RESORTS -->
+    <text x="256" y="478" text-anchor="middle" font-family="'Cinzel', 'Georgia', 'Times New Roman', serif" font-size="12" font-weight="500" letter-spacing="5" fill="#eac775" opacity="0.9">OPERATIONS COMMAND</text>
+  </g>
 </svg>

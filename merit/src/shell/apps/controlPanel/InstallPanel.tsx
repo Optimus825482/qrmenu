@@ -8,7 +8,7 @@ const VERSION = process.env.MERIT_VERSION ?? "—";
 const BUILD_DATE = process.env.MERIT_BUILD_DATE ?? "—";
 
 const OUTCOME_TEXT: Record<InstallOutcome, string> = {
-  accepted: "Merit OS yükleniyor; kurulunca kendi penceresinde açılır.",
+  accepted: "F&B Command Center yükleniyor; kurulunca kendi penceresinde açılır.",
   dismissed: "Yükleme iptal edildi.",
   unavailable: "Yükleme şu anda kullanılamıyor.",
 };
@@ -26,7 +26,7 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
   };
 
   let note: string;
-  if (installed) note = "Merit OS bu cihazda uygulama olarak kurulu.";
+  if (installed) note = "F&B Command Center bu cihazda uygulama olarak kurulu.";
   else if (canInstall) note = "Tarayıcınız yüklemeyi onaylamanızı isteyecek.";
   else if (isIos) note = "iPhone / iPad: Safari'de Paylaş düğmesine, ardından \"Ana Ekrana Ekle\"ye dokunun.";
   else
@@ -37,7 +37,7 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
     <>
       <h2 className="xp-cp-title">Uygulama</h2>
       <p className="xp-cp-note">
-        Merit OS&apos;u masaüstüne veya ana ekrana ekler; tarayıcı çubukları olmadan kendi
+        F&amp;B Command Center&apos;ı masaüstüne veya ana ekrana ekler; tarayıcı çubukları olmadan kendi
         penceresinde açılır.
       </p>
       <section className="xp-cp-section" aria-labelledby={`${id}-install`}>

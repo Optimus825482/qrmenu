@@ -59,6 +59,7 @@ async function createReceiptJob(
   tx: Prisma.TransactionClient,
   order: Pick<Order, "id" | "hotelId" | "outletId">,
   force = false,
+  printerOptional = false,
 ): Promise<PrintJob | null> {
   if (!force) {
     const outlet = await tx.outlet.findUniqueOrThrow({ where: { id: order.outletId }, select: { autoPrintReceipt: true } });
@@ -66,6 +67,7 @@ async function createReceiptJob(
   }
   const printer = await printerFor(tx, order);
   if (!printer) {
+    if (printerOptional) return null;
     await publish(
       {
         type: "print.failed",
@@ -152,9 +154,13 @@ async function createKitchenJob(
   return job;
 }
 
-/** Approval-hook shape (`orders.transition`); a no-printer outlet answers with print.failed. */
-async function enqueueReceipt(tx: Prisma.TransactionClient, order: Order): Promise<void> {
-  await createReceiptJob(tx, order);
+/** Approval-hook shape (`orders.transition`); a no-printer outlet answers with print.failed unless printerOptional. */
+async function enqueueReceipt(
+  tx: Prisma.TransactionClient,
+  order: Order,
+  opts?: { printerOptional?: boolean },
+): Promise<void> {
+  await createReceiptJob(tx, order, false, opts?.printerOptional ?? false);
 }
 
 async function enqueueKitchen(tx: Prisma.TransactionClient, order: Order): Promise<void> {

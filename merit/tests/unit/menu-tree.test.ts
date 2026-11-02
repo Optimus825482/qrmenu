@@ -291,7 +291,7 @@ describe("çeviriler", () => {
     await translations.set(ctx, item.id, "ar", { name: "موهيتو", detail: "منعش" });
     const find = async () =>
       (await tree.list(ctx, o.id))[0].children[0].children[0].children[0].translations;
-    expect(await find()).toEqual([{ lang: "ar", name: "موهيتو", detail: "منعش" }]);
+    expect(await find()).toEqual([{ lang: "ar", name: "موهيتو", detail: "منعش", isVerified: true }]);
     await translations.set(ctx, item.id, "ar", { name: "موهيتو 2" });
     expect((await find())[0].name).toBe("موهيتو 2");
     await expect(translations.set(ctx, item.id, "tr", { name: "x" })).rejects.toMatchObject({

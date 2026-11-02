@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { type Result, safeAction } from "@/lib/result";
+import { testDeeplTranslation, testGeminiTranslation } from "@/modules/menu/server/translations";
 import * as settingsAdmin from "../settingsAdmin";
 
 const hotelId = z.string().min(1).nullable();
@@ -32,5 +33,45 @@ export async function clearSettingOverrideAction(
 ): Promise<Result<settingsAdmin.SettingItem>> {
   return safeAction(z.object({ hotelId: z.string().min(1), key }), async (input) =>
     settingsAdmin.clearHotelOverride(await requireUser(), input.hotelId, input.key),
+  )(raw);
+}
+
+export async function testGeminiAction(raw: unknown): Promise<
+  Result<{
+    ok: true;
+    model: string;
+    latencyMs: number;
+    sample: { source: string; translated: string };
+    message: string;
+  }>
+> {
+  return safeAction(
+    z.object({
+      model: z.string().optional(),
+      apiKey: z.string().optional(),
+    }),
+    async (input) => {
+      await requireUser();
+      return testGeminiTranslation(input.model, input.apiKey);
+    },
+  )(raw);
+}
+
+export async function testDeeplAction(raw: unknown): Promise<
+  Result<{
+    ok: true;
+    latencyMs: number;
+    sample: { source: string; translated: string };
+    message: string;
+  }>
+> {
+  return safeAction(
+    z.object({
+      apiKey: z.string().optional(),
+    }).optional(),
+    async (input) => {
+      await requireUser();
+      return testDeeplTranslation(input?.apiKey);
+    },
   )(raw);
 }

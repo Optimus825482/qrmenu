@@ -97,4 +97,12 @@ describe("renderReceipt", () => {
     expect(totalLine).toBeDefined();
     expect(totalLine).toContain("EUR");
   });
+
+  it("extension doluysa 'Dahili: {extension}' satırı yazar, boşsa yazmaz", () => {
+    const withExt = renderReceipt({ ...payloadWithoutPrices, extension: "4101" }, 48);
+    expect(withExt).toContain("Dahili: 4101");
+
+    const withoutExt = renderReceipt(payloadWithoutPrices, 48);
+    expect(withoutExt.some((line) => line.includes("Dahili:"))).toBe(false);
+  });
 });

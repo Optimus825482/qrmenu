@@ -31,6 +31,11 @@ type OpenCall = {
   overdue: boolean;
 };
 type Waiter = { id: string; fullName: string };
+type ActiveScan = {
+  tableId: string;
+  tableLabel: string;
+  timestamp: number;
+};
 type Props = {
   outletId: string;
   outletName?: string;
@@ -183,6 +188,17 @@ export default function KasaClient({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [rejectModal, setRejectModal] = useState<{ id: string; orderNo: number; tableLabel: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [activeScans, setActiveScans] = useState<ActiveScan[]>([]);
+
+  // Taranan masaları 90 saniye sonra otomatik temizle
+  useEffect(() => {
+    if (activeScans.length === 0) return;
+    const interval = setInterval(() => {
+      const cutoff = Date.now() - 90_000;
+      setActiveScans((prev) => prev.filter((s) => s.timestamp > cutoff));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeScans.length]);
 
   // Canlı Kiosk Saati
   useEffect(() => {
@@ -241,7 +257,20 @@ export default function KasaClient({
 
   useSse((event) => {
     if (event.outletId === outletId) {
-      if (soundEnabled && (event.type === "order.created" || event.type === "call.created")) {
+      if (event.type === "scan.table") {
+        const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
+        if (payload?.tableId) {
+          if (soundEnabled) playKioskChime();
+          const tableLabel =
+            payload.tableLabel ??
+            board.tables.find((t) => t.id === payload.tableId)?.label ??
+            "Masa";
+          setActiveScans((prev) => [
+            { tableId: payload.tableId!, tableLabel, timestamp: Date.now() },
+            ...prev.filter((s) => s.tableId !== payload.tableId),
+          ]);
+        }
+      } else if (soundEnabled && (event.type === "order.created" || event.type === "call.created")) {
         playKioskChime();
       }
       void refresh();
@@ -469,6 +498,7 @@ export default function KasaClient({
           tables={board.tables}
           areas={board.areas}
           calls={calls}
+          scannedTableIds={activeScans.map((s) => s.tableId)}
           onSelect={setSelected}
         />
       ) : null}
@@ -699,6 +729,51 @@ export default function KasaClient({
             </div>
           </div>
         </div>
+      ) : null}
+
+      {/* Canlı Masa QR Okutma Bildirimleri (Kiosk Floating Alert) */}
+      {activeScans.length > 0 ? (
+        <aside
+          aria-label="Canlı masa bildirimleri"
+          className="fixed bottom-20 right-4 z-40 flex flex-col gap-2 max-w-sm w-[calc(100vw-2rem)] sm:w-80 pointer-events-auto"
+        >
+          {activeScans.slice(0, 3).map((scan) => (
+            <div
+              key={scan.tableId}
+              className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-400 text-slate-950 font-bold shadow-2xl border-2 border-amber-300 ring-2 ring-amber-500/50 animate-bounce"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-2xl select-none">📱</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-black truncate">{scan.tableLabel}</p>
+                  <p className="text-[11px] font-semibold text-slate-900 truncate">
+                    Misafir masada QR menüyü okuttu!
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const found = board.tables.find((t) => t.id === scan.tableId);
+                    if (found) setSelected(found);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-950 text-white hover:bg-slate-800 text-xs font-black transition active:scale-95 shadow-sm"
+                >
+                  Masaya Git
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveScans((prev) => prev.filter((s) => s.tableId !== scan.tableId))}
+                  className="h-7 w-7 rounded-full bg-amber-500/80 hover:bg-amber-600 text-slate-950 flex items-center justify-center text-xs font-bold"
+                  aria-label="Bildirimi kapat"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </aside>
       ) : null}
 
       {/* Garson Atama Diyalogları */}

@@ -1,0 +1,238 @@
+/**
+ * Responsive PWA & Mobile CSS Architecture Boilerplate
+ * Implements Google web.dev Responsive Design & PWA standards:
+ * - Fluid typography (clamp) & reading line lengths (ch)
+ * - CSS Logical properties (inline/block) & i18n
+ * - CSS Container Queries (@container) for modular components
+ * - Touch ergonomics (@media pointer: coarse) with 48px hit areas
+ * - Safe area insets for notches & gestures
+ * - Dark mode design tokens & accent-color
+ * - Scroll-snap mobile carousel transitioning to desktop grid
+ * - Reduced motion & focus-visible accessibility
+ * - PWA display-mode standalone overrides
+ */
+
+/* 1. Design Tokens & Color Schemes */
+:root {
+  color-scheme: light dark;
+
+  /* Theme Palette (Light) */
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-contrast: #ffffff;
+  --accent: #f59e0b;
+
+  /* Safe Area Insets */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+
+  /* Radius & Shadows */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #0b0f19;
+    --bg-surface: #1e293b;
+    --bg-elevated: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
+    --primary-contrast: #ffffff;
+  }
+}
+
+/* 2. Global Resets & Safe Area Shell */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  padding-inline-start: var(--sal);
+  padding-inline-end: var(--sar);
+  padding-block-start: var(--sat);
+  padding-block-end: var(--sab);
+  min-block-size: 100vh;
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Fluid Responsive Typography */
+h1 {
+  font-size: clamp(1.85rem, 1.25rem + 2.5vw, 3.25rem);
+  line-height: 1.15;
+  font-weight: 800;
+  margin-block-end: 0.5em;
+}
+
+h2 {
+  font-size: clamp(1.35rem, 1.05rem + 1.25vw, 2.25rem);
+  line-height: 1.25;
+  font-weight: 700;
+  margin-block-end: 0.4em;
+}
+
+h3 {
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.6rem);
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+p, .prose {
+  font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.1rem);
+  line-height: 1.65;
+  max-inline-size: 68ch; /* Optimal line length */
+  margin-block-end: 1rem;
+}
+
+/* 4. Responsive Images & Media */
+img, video, canvas, svg {
+  max-inline-size: 100%;
+  block-size: auto;
+  vertical-align: middle;
+}
+
+.aspect-media {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background-color: var(--border-color);
+}
+
+/* 5. Macro Layout: Dynamic Grid */
+.container {
+  inline-size: min(100% - 2rem, 76rem);
+  margin-inline: auto;
+  padding-block: 1.5rem;
+}
+
+.macro-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 52rem) {
+  .macro-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(18rem, 1fr);
+  }
+}
+
+/* 6. Micro Layout: Container Queries */
+.card-wrapper {
+  container-type: inline-size;
+}
+
+.adaptive-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@container (min-width: 26rem) {
+  .adaptive-card {
+    grid-template-columns: 6.5rem 1fr auto;
+    align-items: center;
+  }
+}
+
+/* 7. Mobile UI Pattern: Horizontal Scroll-Snap Carousel */
+.scroll-snap-strip {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: inline mandatory;
+  -webkit-overflow-scrolling: touch;
+  gap: 1rem;
+  padding-block: 0.5rem;
+  padding-inline: 1rem;
+  margin-inline: -1rem;
+}
+
+.scroll-snap-strip > * {
+  flex: 0 0 min(82vw, 18rem);
+  scroll-snap-align: start;
+}
+
+@media (min-width: 48rem) {
+  .scroll-snap-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    overflow-x: visible;
+    padding-inline: 0;
+    margin-inline: 0;
+  }
+}
+
+/* 8. Touch & Pointer Ergonomics */
+@media (pointer: coarse) {
+  button, .btn, .nav-item, input, select {
+    min-inline-size: 48px;
+    min-block-size: 48px;
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover, .adaptive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+
+/* 9. Accessibility, Focus Ring & Low Motion */
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 10. Standalone PWA Mode Adjustments */
+@media (display-mode: standalone) {
+  body {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .browser-only-notice {
+    display: none !important;
+  }
+}

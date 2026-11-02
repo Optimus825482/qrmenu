@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../";
 
 /* Theme tokens of the modern staff/guest UI. The XP shell brings its own theme later. */
 :root {

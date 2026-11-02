@@ -12,6 +12,15 @@ export type CommandCenterKpis = {
   /** Notifications created since 00:00 Nicosia time today, for users/hotels in scope. */
   notificationsToday: number;
   openSessionsByHotel: { hotelId: string; code: string; name: string; online: number }[];
+  /** Canlı Komuta Radarı Verileri */
+  radar: {
+    totalRooms: number;
+    occupiedRooms: number;
+    occupancyPercent: number;
+    activeMybarRequests: number;
+    delayedRoomOrders: number;
+    pendingPosOrders: number;
+  };
 };
 
 /**
@@ -38,7 +47,7 @@ export async function getCommandCenterKpis(
   }
   const since = businessDateStart(businessDate());
 
-  const [hotels, sessions, notificationsToday] = await Promise.all([
+  const [hotels, sessions, notificationsToday, totalRooms, occupiedRooms, activeMybarRequests, delayedRoomOrders, pendingPosOrders] = await Promise.all([
     prisma.hotel.findMany({
       where: { id: { in: scope }, isActive: true },
       select: { id: true, code: true, name: true },
@@ -64,20 +73,59 @@ export async function getCommandCenterKpis(
         ],
       },
     }),
+    prisma.room.count({ where: { hotelId: { in: scope }, isActive: true } }),
+    prisma.guestRecord.count({
+      where: {
+        hotelId: { in: scope },
+        arrivalDate: { lte: since },
+        departureDate: { gte: since },
+      },
+    }),
+    prisma.mybarRequest.count({
+      where: {
+        hotelId: { in: scope },
+        status: "BEKLEMEDE",
+      },
+    }),
+    prisma.order.count({
+      where: {
+        hotelId: { in: scope },
+        kind: "ODA_SERVISI",
+        status: { in: ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] },
+        createdAt: { lte: new Date(Date.now() - 35 * 60000) },
+      },
+    }),
+    prisma.order.count({
+      where: {
+        hotelId: { in: scope },
+        kind: "MASA",
+        status: "GONDERILDI",
+      },
+    }),
   ]);
 
   const usersByHotel = new Map<string, number>();
   for (const s of sessions) usersByHotel.set(s.hotelId, (usersByHotel.get(s.hotelId) ?? 0) + 1);
 
+  const occupancyPercent = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
   return {
     hotels: hotels.length,
-    onlineUsers: new Set(sessions.map((s) => s.userId)).size,
+    onlineUsers: new Set(sessions.map((s: { userId: string }) => s.userId)).size,
     notificationsToday,
-    openSessionsByHotel: hotels.map((h) => ({
+    openSessionsByHotel: hotels.map((h: { id: string; code: string; name: string }) => ({
       hotelId: h.id,
       code: h.code,
       name: h.name,
       online: usersByHotel.get(h.id) ?? 0,
     })),
+    radar: {
+      totalRooms,
+      occupiedRooms,
+      occupancyPercent,
+      activeMybarRequests,
+      delayedRoomOrders,
+      pendingPosOrders,
+    },
   };
 }

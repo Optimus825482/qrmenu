@@ -1,23 +1,68 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
 import { GuestFooter } from "@/modules/menu/ui/guest/GuestFooter";
 import { GuestFrame, HtmlLangSync } from "@/modules/menu/ui/guest/GuestFrame";
-import RoomPlaceholder from "@/modules/menu/ui/guest/RoomPlaceholder";
+import { MybarGuestScreen } from "@/modules/minibar/ui/guest/MybarGuestScreen";
 import "../../guest.css";
 import { getGuestTarget } from "./guestTarget";
 import Unavailable from "./unavailable";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Menü",
-  robots: { index: false, follow: false },
-  // The URL carries the table token: do not leak it through the Referer header.
-  referrer: "no-referrer",
-};
+export async function generateViewport({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Viewport> {
+  const { token } = await params;
+  const target = await getGuestTarget(token);
+  const themeColor = target.kind === "TABLE" ? target.state.theme.bg : "#0f0d0a";
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    themeColor,
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}): Promise<Metadata> {
+  const { token } = await params;
+  const target = await getGuestTarget(token);
+  const title =
+    target.kind === "TABLE"
+      ? `${target.state.outletName} · Menü`
+      : "Menü";
+  const appTitle =
+    target.kind === "TABLE"
+      ? `${target.state.outletName} Menü`
+      : "Merit Menü";
+
+  return {
+    title,
+    robots: { index: false, follow: false },
+    referrer: "no-referrer",
+    manifest: `/api/manifest/guest/${encodeURIComponent(token)}`,
+    appleWebApp: {
+      capable: true,
+      title: appTitle,
+      statusBarStyle: "black-translucent",
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+    },
+  };
+}
 
 export default async function GuestLayout({
   children,
@@ -41,11 +86,10 @@ export default async function GuestLayout({
   }
 
   if (target.kind === "ROOM") {
-    const t = await getTranslations("guest");
     return (
       <div className="g-root" dir={rtl ? "rtl" : "ltr"} lang={locale}>
         <HtmlLangSync locale={locale as Locale} />
-        <RoomPlaceholder message={t("room.placeholder")} />
+        <MybarGuestScreen roomId={target.roomId} hotelId={target.hotelId} token={token} />
         {children /* renders nothing, but lets the page apply ?lang= */}
       </div>
     );

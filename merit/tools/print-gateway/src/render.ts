@@ -16,6 +16,7 @@ export type ReceiptPayload = {
   header: { hotel: string; outlet: string };
   orderNo: number;
   table: string;
+  extension?: string;
   /** 'HH:mm dd.MM.yyyy' biçiminde (Nicosia saat dilimi), sunucuda oluşturulur. */
   at: string;
   waiter?: string;
@@ -63,6 +64,9 @@ export function renderReceipt(payload: ReceiptPayload, width: PaperWidth): strin
 
   lines.push(center(`${payload.header.hotel} · ${payload.header.outlet}`, width));
   lines.push(truncate(`#${payload.orderNo}  ${payload.table}  ${payload.at}`, width));
+  if (payload.extension) {
+    lines.push(truncate(`Dahili: ${payload.extension}`, width));
+  }
   if (payload.waiter) {
     lines.push(truncate(`Garson: ${payload.waiter}`, width));
   }

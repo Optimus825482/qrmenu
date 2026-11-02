@@ -9,23 +9,20 @@ import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { approvals, onlineAt, outletAllowed } from "./approvals";
 import { printJobs } from "./printJobs";
+import { isAllowed } from "./transitions";
 
 /** Overrides the default receipt enqueuer inside the approval transaction (tests, future kinds). */
 export type PrintEnqueuer = (tx: Prisma.TransactionClient, order: Order) => Promise<void>;
-
-/** Table order state machine (Global Constraints). Anything else is CONFLICT. */
-const TRANSITIONS: Partial<Record<OrderStatus, readonly OrderStatus[]>> = {
-  GONDERILDI: ["ONAYLANDI", "REDDEDILDI"],
-  ONAYLANDI: ["HAZIR", "IPTAL"],
-  HAZIR: ["SERVIS_EDILDI", "IPTAL"],
-};
 
 const EVENT_OF: Partial<Record<OrderStatus, string>> = {
   ONAYLANDI: "order.approved",
   REDDEDILDI: "order.rejected",
   HAZIR: "order.ready",
   SERVIS_EDILDI: "order.served",
+  YOLDA: "order.onway",
+  TESLIM_EDILDI: "order.delivered",
   IPTAL: "order.cancelled",
+  TEYIT_BEKLIYOR: "order.confirmed",
 };
 
 const REASON_MIN = 3;
@@ -35,6 +32,7 @@ const ALREADY = "Sipariş zaten işlendi";
 const INCLUDE = {
   items: { orderBy: { createdAt: "asc" } },
   table: { select: { label: true } },
+  room: { select: { number: true, extension: true } },
   outlet: { select: { name: true } },
 } as const satisfies Prisma.OrderInclude;
 
@@ -90,6 +88,54 @@ async function authorize(ctx: Ctx, order: Order, to: OrderStatus): Promise<void>
   forbidOutlet(ctx, order);
 }
 
+async function authorizeRoomTransition(
+  ctx: Ctx,
+  order: OrderDetail,
+  from: OrderStatus,
+  to: OrderStatus,
+  internal?: boolean,
+): Promise<void> {
+  if (internal) {
+    if (from === "GONDERILDI" && to === "TEYIT_BEKLIYOR") return;
+    throw new DomainError("CONFLICT", ALREADY);
+  }
+  switch (to) {
+    case "ONAYLANDI": {
+      const outlet = await prisma.outlet.findUnique({
+        where: { id: order.outletId },
+        select: { phoneConfirmRequired: true },
+      });
+      if (outlet?.phoneConfirmRequired) {
+        throw new DomainError("CONFLICT", "Bu outlette telefon teyidi zorunlu");
+      }
+      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      break;
+    }
+    case "HAZIR":
+      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      break;
+    case "YOLDA":
+    case "TESLIM_EDILDI":
+      await assertCan(ctx, "RO-TES", "D", order.hotelId);
+      break;
+    case "IPTAL": {
+      const isPreApproval = from === "GONDERILDI" || from === "TEYIT_BEKLIYOR";
+      if (isPreApproval) {
+        await assertCan(ctx, "RO-TEL", "D", order.hotelId);
+      } else {
+        const hasTesA = await can(ctx, "RO-TES", "A", order.hotelId);
+        if (!hasTesA) {
+          await deny(ctx, order, to);
+        }
+      }
+      break;
+    }
+    default:
+      throw new DomainError("CONFLICT", ALREADY);
+  }
+  forbidOutlet(ctx, order);
+}
+
 function stamps(to: OrderStatus, ctx: Ctx, now: Date, reason?: string): Prisma.OrderUncheckedUpdateInput {
   switch (to) {
     case "ONAYLANDI":
@@ -98,6 +144,10 @@ function stamps(to: OrderStatus, ctx: Ctx, now: Date, reason?: string): Prisma.O
       return { rejectedAt: now, rejectReason: reason };
     case "HAZIR":
       return { readyAt: now };
+    case "YOLDA":
+      return { onWayAt: now };
+    case "TESLIM_EDILDI":
+      return { deliveredAt: now, deliveredById: ctx.user.id };
     case "SERVIS_EDILDI":
       return { servedAt: now, servedById: ctx.user.id };
     case "IPTAL":
@@ -107,35 +157,54 @@ function stamps(to: OrderStatus, ctx: Ctx, now: Date, reason?: string): Prisma.O
   }
 }
 
-const place = (order: OrderDetail) => `${order.outlet.name}${order.table ? ` ${order.table.label}` : ""}`;
+const place = (order: OrderDetail) =>
+  `${order.outlet.name}${order.table ? ` ${order.table.label}` : ""}${order.room ? ` Oda ${order.room.number}` : ""}`;
 
 async function notifyAfter(tx: Prisma.TransactionClient, order: OrderDetail, to: OrderStatus): Promise<void> {
   const ref = { refType: "Order", refId: order.id } as const;
-  if (to === "ONAYLANDI" && order.assignedWaiterId) {
-    await notify(
-      {
-        recipients: [order.assignedWaiterId],
-        type: "order.approved",
-        title: `Sipariş onaylandı · ${place(order)}`,
-        body: `#${order.orderNo}`,
-        ...ref,
-      },
-      tx,
-    );
-  } else if (to === "HAZIR") {
-    const recipients = order.assignedWaiterId
-      ? [order.assignedWaiterId]
-      : await onlineAt(tx, order.outletId, ["R-GAR"]);
-    await notify(
-      {
-        recipients,
-        type: "order.ready",
-        title: `Sipariş hazır · ${place(order)}`,
-        body: `#${order.orderNo}`,
-        ...ref,
-      },
-      tx,
-    );
+  if (order.kind === "MASA") {
+    if (to === "ONAYLANDI" && order.assignedWaiterId) {
+      await notify(
+        {
+          recipients: [order.assignedWaiterId],
+          type: "order.approved",
+          title: `Sipariş onaylandı · ${place(order)}`,
+          body: `#${order.orderNo}`,
+          ...ref,
+        },
+        tx,
+      );
+    } else if (to === "HAZIR") {
+      const recipients = order.assignedWaiterId
+        ? [order.assignedWaiterId]
+        : await onlineAt(tx, order.outletId, ["R-GAR"]);
+      await notify(
+        {
+          recipients,
+          type: "order.ready",
+          title: `Sipariş hazır · ${place(order)}`,
+          body: `#${order.orderNo}`,
+          ...ref,
+        },
+        tx,
+      );
+    }
+  } else if (order.kind === "ODA_SERVISI") {
+    if (to === "HAZIR") {
+      const recipients = await onlineAt(tx, order.outletId, ["R-ODS", "R-BUT"]);
+      if (recipients.length > 0) {
+        await notify(
+          {
+            recipients,
+            type: "order.ready",
+            title: `Oda servisi hazır · Oda ${order.room?.number ?? ""}`,
+            body: `#${order.orderNo}`,
+            ...ref,
+          },
+          tx,
+        );
+      }
+    }
   }
 }
 
@@ -145,12 +214,13 @@ function payload(order: Order, extra: Record<string, unknown> = {}) {
     orderNo: order.orderNo,
     status: order.status,
     tableId: order.tableId,
+    roomId: order.roomId,
     assignedWaiterId: order.assignedWaiterId,
     ...extra,
   };
 }
 
-export type TransitionOptions = { reason?: string; print?: PrintEnqueuer };
+export type TransitionOptions = { reason?: string; print?: PrintEnqueuer; internal?: boolean };
 
 /**
  * Moves an order along the state machine under a row lock: a second concurrent attempt finds the
@@ -175,13 +245,19 @@ async function transition(
 
   return prisma.$transaction(async (tx) => {
     const order = await lockedOrder(tx, ctx, orderId);
-    if (order.kind !== "MASA" || !TRANSITIONS[order.status]?.includes(to)) {
+    if (!isAllowed(order.kind, order.status, to)) {
       throw new DomainError("CONFLICT", ALREADY);
     }
     if (to === "HAZIR" && !order.prepStartedAt) {
       throw new DomainError("CONFLICT", "Sipariş hazırlanmaya başlanmadan hazır yapılamaz");
     }
-    await authorize(ctx, order, to);
+    if (order.kind === "MASA") {
+      await authorize(ctx, order, to);
+    } else if (order.kind === "ODA_SERVISI") {
+      await authorizeRoomTransition(ctx, order, order.status, to, opts.internal);
+    } else {
+      throw new DomainError("CONFLICT", ALREADY);
+    }
 
     const now = new Date();
     const updated = await tx.order.update({
@@ -189,10 +265,17 @@ async function transition(
       data: { status: to, ...stamps(to, ctx, now, reason) },
     });
     await tx.orderEvent.create({
-      data: { orderId: order.id, userId: ctx.user.id, from: order.status, to, note: reason ?? null, at: now },
+      data: {
+        orderId: order.id,
+        userId: opts.internal ? null : ctx.user.id,
+        from: order.status,
+        to,
+        note: reason ?? (opts.internal && to === "TEYIT_BEKLIYOR" ? "TEYIT_GEREKLI" : null),
+        at: now,
+      },
     });
     await audit(tx, {
-      userId: ctx.user.id,
+      userId: opts.internal ? undefined : ctx.user.id,
       hotelId: order.hotelId,
       action: `ORDER_${to}`,
       entity: "Order",
@@ -204,9 +287,11 @@ async function transition(
       // Default hook enqueues the ESC/POS receipt (no printer → print.failed + cashier notice);
       // an explicit opts.print (tests, future order kinds) keeps overriding it.
       if (opts.print) await opts.print(tx, updated);
-      else {
+      else if (order.kind === "MASA") {
         await printJobs.enqueueReceipt(tx, updated);
         await printJobs.enqueueKitchen(tx, updated);
+      } else if (order.kind === "ODA_SERVISI") {
+        await printJobs.enqueueReceipt(tx, updated, { printerOptional: true });
       }
     }
     await publish(
@@ -223,11 +308,100 @@ async function transition(
   });
 }
 
+/**
+ * Confirms a phone order for room service: GONDERILDI | TEYIT_BEKLIYOR -> ONAYLANDI.
+ * Sets phoneConfirmedAt/ById and approvedAt/ById, creates OrderEvent, audits and publishes.
+ */
+async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<Order> {
+  return prisma.$transaction(async (tx) => {
+    const order = await lockedOrder(tx, ctx, orderId);
+    if (order.kind !== "ODA_SERVISI" || !(order.status === "GONDERILDI" || order.status === "TEYIT_BEKLIYOR")) {
+      throw new DomainError("CONFLICT", ALREADY);
+    }
+    await assertCan(ctx, "RO-TEL", "D", order.hotelId);
+    forbidOutlet(ctx, order);
+
+    const now = new Date();
+    const updated = await tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: "ONAYLANDI",
+        phoneConfirmedAt: now,
+        phoneConfirmedById: ctx.user.id,
+        approvedAt: now,
+        approvedById: ctx.user.id,
+      },
+    });
+
+    const noteText = "TELEFON_TEYIDI" + (note?.trim() ? `: ${note.trim()}` : "");
+    await tx.orderEvent.create({
+      data: {
+        orderId: order.id,
+        userId: ctx.user.id,
+        from: order.status,
+        to: "ONAYLANDI",
+        note: noteText,
+        at: now,
+      },
+    });
+
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "ROOM_ORDER_PHONE_CONFIRMED",
+      entity: "Order",
+      entityId: order.id,
+      before: { status: order.status },
+      after: { status: "ONAYLANDI", note: note?.trim() || null },
+    });
+
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "ORDER_ONAYLANDI",
+      entity: "Order",
+      entityId: order.id,
+      before: { status: order.status },
+      after: { status: "ONAYLANDI" },
+    });
+
+    await printJobs.enqueueReceipt(tx, updated, { printerOptional: true });
+
+    await publish(
+      {
+        type: "order.confirmed",
+        hotelId: order.hotelId,
+        outletId: order.outletId,
+        payload: payload(updated),
+      },
+      tx,
+    );
+
+    await publish(
+      {
+        type: "order.approved",
+        hotelId: order.hotelId,
+        outletId: order.outletId,
+        payload: payload(updated),
+      },
+      tx,
+    );
+
+    return updated;
+  });
+}
+
 /** KDS "başla": marks an approved order as being prepared. Anything else is a no-op. */
 async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const order = await lockedOrder(tx, ctx, orderId);
-    await assertCan(ctx, "QS-KDS", "D", order.hotelId);
+    if (order.kind === "MASA") {
+      await assertCan(ctx, "QS-KDS", "D", order.hotelId);
+    } else if (order.kind === "ODA_SERVISI") {
+      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+    } else {
+      throw new DomainError("CONFLICT", ALREADY);
+    }
     forbidOutlet(ctx, order);
     if (order.status !== "ONAYLANDI" || order.prepStartedAt) return;
     const now = new Date();
@@ -313,4 +487,4 @@ function durations(
   return out;
 }
 
-export const orders = { transition, startPrep, get, listForOutlet, durations };
+export const orders = { transition, confirmPhone, startPrep, get, listForOutlet, durations };

@@ -6,11 +6,13 @@ import { publish } from "@/lib/realtime";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { removeUpload } from "@/lib/uploads";
-import { parseInput, withAdminTx } from "@/modules/core/server/admin/crud";
+import { parseInput } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import { ALLERGENS } from "../allergens";
 import { ITEM_TAG_IDS } from "../design";
-import { assertOutletScope, loadNodeScope, outletHotel } from "./menuNodeAccess";
+import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
+import { assertMenuAccess } from "./menuAccess";
+import { autoTranslateMenuNode } from "./translations";
 
 const SCREEN = "QM-MEN";
 
@@ -30,6 +32,7 @@ export type MenuTreeNode = {
   sortOrder: number;
   hasImage: boolean;
   imageUrl: string | null;
+  imageUrls: string[];
   translations: { lang: string; name: string; detail?: string; isVerified: boolean }[];
   children: MenuTreeNode[];
 };
@@ -103,7 +106,7 @@ function assertPlacement(kind: MenuNodeKind, parent: { kind: MenuNodeKind } | nu
   // layer valid so existing menus remain editable and continue to render.
   if (
     kind === "OGE" &&
-    (parent?.kind === "KATEGORI" || parent?.kind === "ALT_KATEGORI" || parent?.kind === "GRUP")
+    (parent?.kind === "ALT_KATEGORI" || parent?.kind === "GRUP")
   ) return;
   const required = PARENT_KIND[kind];
   if (required === null) {
@@ -139,6 +142,12 @@ async function emitChanged(
 type NodeRow = Prisma.MenuNodeGetPayload<{ include: { translations: true } }>;
 
 function toNode(row: NodeRow): MenuTreeNode {
+  const urls: string[] = [];
+  if (row.imageUrl) urls.push(row.imageUrl);
+  for (const u of row.imageUrls ?? []) {
+    if (!urls.includes(u)) urls.push(u);
+  }
+
   return {
     id: row.id,
     outletId: row.outletId,
@@ -153,8 +162,9 @@ function toNode(row: NodeRow): MenuTreeNode {
     isAvailable: row.isAvailable,
     isActive: row.isActive,
     sortOrder: row.sortOrder,
-    hasImage: row.imageUrl !== null,
-    imageUrl: row.imageUrl,
+    hasImage: urls.length > 0,
+    imageUrl: urls[0] ?? row.imageUrl,
+    imageUrls: urls,
     translations: row.translations
       .map((t) => ({ lang: t.lang, name: t.name, isVerified: t.isVerified, ...(t.detail ? { detail: t.detail } : {}) }))
       .sort((a, b) => a.lang.localeCompare(b.lang)),
@@ -163,10 +173,11 @@ function toNode(row: NodeRow): MenuTreeNode {
 }
 
 export async function list(ctx: Ctx, outletId: string): Promise<MenuTreeNode[]> {
-  const hotelId = await outletHotel(outletId);
-  const menuAccess = await can(ctx, SCREEN, "V", hotelId);
-  const cashierAccess = ctx.session.outletId === outletId && (await can(ctx, "QS-KAS", "V", hotelId));
-  if (!menuAccess && !cashierAccess) await assertCan(ctx, SCREEN, "V", hotelId);
+  const outlet = await outletScope(outletId);
+  const cashierAccess = ctx.session.outletId === outletId && (await can(ctx, "QS-KAS", "V", outlet.hotelId));
+  if (!cashierAccess) {
+    await assertMenuAccess(ctx, outlet, "V");
+  }
   assertOutletScope(ctx, outletId);
   const rows = await prisma.menuNode.findMany({
     where: { outletId },
@@ -185,9 +196,10 @@ export async function list(ctx: Ctx, outletId: string): Promise<MenuTreeNode[]> 
 
 export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInput): Promise<MenuTreeNode> {
   const input = parseInput(createSchema, raw);
-  const hotelId = await outletHotel(outletId);
-  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
-    assertOutletScope(ctx, outletId);
+  const outlet = await outletScope(outletId);
+  await assertMenuAccess(ctx, outlet, "D");
+  assertOutletScope(ctx, outletId);
+  return prisma.$transaction(async (tx) => {
     const parent = input.parentId
       ? await tx.menuNode.findFirst({
           where: { id: input.parentId, outletId },
@@ -222,13 +234,14 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
     });
     await audit(tx, {
       userId: ctx.user.id,
-      hotelId,
+      hotelId: outlet.hotelId,
       action: "MENU_NODE_CREATE",
       entity: "MenuNode",
       entityId: row.id,
       after: { outletId, parentId: row.parentId, kind: row.kind, name: row.name },
     });
-    await emitChanged(tx, hotelId, outletId, row.id, "create");
+    await emitChanged(tx, outlet.hotelId, outletId, row.id, "create");
+    void autoTranslateMenuNode(row.id, row.name, row.detail, outlet.hotelId, outletId);
     return toNode(row);
   });
 }
@@ -236,8 +249,9 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
 export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput): Promise<MenuTreeNode> {
   const input = parseInput(updateSchema, raw);
   const scope = await loadNodeScope(nodeId);
-  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: scope.hotelId }, async (tx) => {
-    assertOutletScope(ctx, scope.outletId);
+  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
+  assertOutletScope(ctx, scope.outletId);
+  return prisma.$transaction(async (tx) => {
     const before = await tx.menuNode.findUnique({ where: { id: nodeId } });
     if (!before) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
     if (input.price !== undefined && input.price !== null && before.kind !== "OGE") {
@@ -272,6 +286,9 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
       after: snap(row),
     });
     await emitChanged(tx, scope.hotelId, scope.outletId, nodeId, "update");
+    if (input.name !== undefined || input.detail !== undefined) {
+      void autoTranslateMenuNode(nodeId, row.name, row.detail, scope.hotelId, scope.outletId);
+    }
     return toNode(row);
   });
 }
@@ -279,8 +296,9 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
 export async function move(ctx: Ctx, nodeId: string, raw: MenuNodeMoveInput): Promise<void> {
   const input = parseInput(moveSchema, raw);
   const scope = await loadNodeScope(nodeId);
-  await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: scope.hotelId }, async (tx) => {
-    assertOutletScope(ctx, scope.outletId);
+  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
+  assertOutletScope(ctx, scope.outletId);
+  await prisma.$transaction(async (tx) => {
     // Row lock first: parentId must not change under us (a concurrent move of the same node).
     await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
     const node = await tx.menuNode.findUnique({
@@ -344,7 +362,8 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
     (ownOutlet &&
       ((await can(ctx, "QS-KUY", "D", scope.hotelId)) ||
         (await can(ctx, "QS-KAS", "D", scope.hotelId)) ||
-        (await can(ctx, "QS-KDS", "D", scope.hotelId))));
+        (await can(ctx, "QS-KDS", "D", scope.hotelId)) ||
+        (scope.outletType === "ODA_SERVISI" && (await can(ctx, "RO-TAL", "D", scope.hotelId)))));
   if (!allowed) await assertCan(ctx, SCREEN, "D", scope.hotelId);
   assertOutletScope(ctx, scope.outletId);
   await prisma.$transaction(async (tx) => {
@@ -375,12 +394,11 @@ export async function setAvailable(ctx: Ctx, nodeId: string, available: boolean)
 
 export async function remove(ctx: Ctx, nodeId: string): Promise<{ deactivated?: true }> {
   const scope = await loadNodeScope(nodeId);
+  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
+  assertOutletScope(ctx, scope.outletId);
   let imageToRemove: string | null = null;
-  const result = await withAdminTx(
-    ctx,
-    { screen: SCREEN, action: "D", hotelId: scope.hotelId },
+  const result = await prisma.$transaction(
     async (tx): Promise<{ deactivated?: true }> => {
-      assertOutletScope(ctx, scope.outletId);
       const node = await tx.menuNode.findUnique({
         where: { id: nodeId },
         select: { name: true, imageUrl: true, isActive: true },

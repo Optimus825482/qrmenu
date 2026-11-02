@@ -44,13 +44,18 @@ export async function guestState(outletId: string, areaId?: string): Promise<Gue
       })
     : null;
   const modules = await prisma.hotelModule.findMany({
-    where: { hotelId: outlet.hotelId, moduleKey: { in: ["QR_MENU", "QR_ORDER"] } },
+    where: { hotelId: outlet.hotelId, moduleKey: { in: ["QR_MENU", "QR_ORDER", "ROOM_SERVICE"] } },
     select: { moduleKey: true, enabled: true },
   });
   const on = (key: string) => modules.some((m) => m.moduleKey === key && m.enabled);
 
-  const menuOpen = outlet.isActive && outlet.hotel.isActive && outlet.hasMenu && on("QR_MENU");
-  const orderingOpen = menuOpen && outlet.hasOrdering && (area?.orderingEnabled ?? outlet.orderingEnabled) && on("QR_ORDER");
+  const isRoomService = outlet.type === "ODA_SERVISI";
+  const menuOpen = isRoomService
+    ? outlet.isActive && outlet.hotel.isActive && outlet.hasMenu && on("ROOM_SERVICE")
+    : outlet.isActive && outlet.hotel.isActive && outlet.hasMenu && on("QR_MENU");
+  const orderingOpen = isRoomService
+    ? menuOpen && outlet.hasOrdering && (area?.orderingEnabled ?? outlet.orderingEnabled)
+    : menuOpen && outlet.hasOrdering && (area?.orderingEnabled ?? outlet.orderingEnabled) && on("QR_ORDER");
 
   let reason: GuestState["reason"];
   if (!outlet.isActive) reason = "OUTLET_PASIF";

@@ -11,7 +11,14 @@
       "search": "Rechercher dans le menu",
       "noResults": "Aucun plat ne correspond à votre recherche",
       "filters": "Mentions",
-      "allergenNote": "Les allergènes suivent le règlement européen 1169/2011. Demandez à notre équipe avant de commander."
+      "allergenNote": "Les allergènes suivent le règlement européen 1169/2011. Demandez à notre équipe avant de commander.",
+      "clearSearch": "Effacer la recherche",
+      "clear": "Effacer",
+      "itemsFound": "{count} articles trouvés",
+      "subcategories": "Sous-catégories",
+      "all": "Tous",
+      "backToTop": "Haut de page",
+      "photoCount": "{count} photos"
     },
     "allergen": {
       "gluten": "Gluten",
@@ -67,7 +74,14 @@
       "retry": "Veuillez réessayer",
       "offline": "Connexion indisponible, reconnexion en cours",
       "close": "Fermer",
-      "language": "Langue"
+      "language": "Langue",
+      "gallery": "Galerie photos",
+      "prevPhoto": "Photo précédente",
+      "nextPhoto": "Photo suivante",
+      "photoIndex": "Photo {index}",
+      "selectPhoto": "Sélectionner la photo {index}",
+      "languages": "Langues",
+      "selectLanguage": "Langue : {name}"
     },
     "room": {
       "placeholder": "La page de la chambre sera disponible lors d’une prochaine étape"

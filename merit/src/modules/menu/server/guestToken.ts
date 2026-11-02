@@ -83,7 +83,7 @@ async function resolve(
           type: "scan.table",
           hotelId: state.hotelId,
           outletId: state.outletId,
-          payload: { tableId: table.id },
+          payload: { tableId: table.id, tableLabel: table.label },
         });
       } catch (error) {
         console.error("[guest token] scan.table", error);

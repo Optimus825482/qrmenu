@@ -247,7 +247,7 @@ export function Window({ id, hotels, userName }: Props) {
         onSelect: () =>
           void alertDialog({
             title: `Hakkında — ${app.title}`,
-            message: `${app.title}\nMerit OS uygulaması (${app.id})`,
+            message: `${app.title}\nF&B Command Center uygulaması (${app.id})`,
           }),
       },
     ],

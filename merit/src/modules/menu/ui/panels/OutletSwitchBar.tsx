@@ -79,9 +79,22 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
       ) : (
         <span className="xp-badge">sipariş modülü pasif</span>
       )}
-      <label className="xp-module-switch">
-        Fiyat gösterimi
+      <label className="xp-module-switch" style={{ gap: 6, fontWeight: 600 }}>
+        <span>Fiyat gösterimi:</span>
         <select
+          className="xp-system-select"
+          style={{
+            height: 26,
+            padding: "2px 8px",
+            border: "1px solid #7f9db9",
+            borderRadius: 3,
+            backgroundColor: "#ffffff",
+            color: "#111827",
+            fontWeight: 500,
+            fontSize: 12,
+            cursor: "pointer",
+            boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.12)",
+          }}
           value={outlet.priceDisplay}
           disabled={!canSwitch || busy}
           onChange={(e) => void setPrice(e.target.value as keyof typeof PRICE_LABELS)}

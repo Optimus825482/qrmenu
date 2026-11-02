@@ -28,8 +28,12 @@ const RELOAD_MS = 300;
 
 type Creating = { kind: MenuNodeKind; parent: MenuTreeNode | null } | null;
 
+export type MenuManagerProps = AppProps & {
+  lockOutletType?: "ODA_SERVISI";
+};
+
 /** Menü Yönetimi (QM-MEN): outlet menu tree on the left, node form on the right. */
-export function MenuManager({ hotelId, setStatus, setDirty, openApp }: AppProps) {
+export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lockOutletType }: MenuManagerProps) {
   const [context, setContext] = useState<MenuContext | null>(null);
   const [outletId, setOutletId] = useState<string | undefined>();
   const [tree, setTree] = useState<MenuTreeNode[]>([]);
@@ -45,11 +49,17 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp }: AppProps)
       return;
     }
     setError(null);
-    setContext(result.data);
+    const outlets = lockOutletType
+      ? result.data.outlets.filter((o) => o.type === lockOutletType)
+      : result.data.outlets;
+    setContext({
+      ...result.data,
+      outlets,
+    });
     setOutletId((current) =>
-      current && result.data.outlets.some((o) => o.id === current) ? current : result.data.outlets[0]?.id,
+      current && outlets.some((o) => o.id === current) ? current : outlets[0]?.id,
     );
-  }, [hotelId]);
+  }, [hotelId, lockOutletType]);
 
   const loadTree = useCallback(async () => {
     if (!outletId) {
@@ -183,29 +193,105 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp }: AppProps)
 
   return (
     <div className="xp-mm">
-      <div className="xp-mm-top">
-        <span className="xp-mm-hotel"><strong>Otel:</strong> {context?.hotelName ?? "Yükleniyor…"}</span>
-        {context?.fixedOutlet ? (
-          <strong>{outlet?.name}</strong>
+      <div className="xp-mm-top" style={{ alignItems: "center", gap: 10 }}>
+        <button
+          type="button"
+          className="xp-button"
+          onClick={() => {
+            if (typeof close === "function") close();
+            else if (typeof window !== "undefined" && window.history.length > 1) window.history.back();
+          }}
+          title="Geri dön / Pencereyi kapat"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontWeight: 700,
+            padding: "2px 10px",
+            height: 26,
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>←</span>
+          <span>Geri</span>
+        </button>
+
+        <div style={{ width: 1, height: 18, backgroundColor: "#b2b2b2", margin: "0 2px" }} />
+
+        {context?.fixedOutlet || lockOutletType ? (
+          <span style={{ fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: "#475569" }}>Outlet:</span>
+            <strong
+              style={{
+                color: "var(--xp-title-text, #0055ea)",
+                backgroundColor: "#ffffff",
+                padding: "2px 8px",
+                border: "1px solid #7f9db9",
+                borderRadius: 3,
+                fontSize: 12,
+              }}
+            >
+              {outlet?.name}
+            </strong>
+          </span>
         ) : (
-          <label className="xp-module-switch">
-            Outlet
-            <select value={outletId ?? ""} onChange={(e) => {
-                setOutletId(e.target.value);
-                setSelectedId(undefined);
-              }}>
-              {context?.outlets.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+            <span style={{ color: "#334155" }}>Outlet:</span>
+            <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+              <select
+                className="xp-system-select"
+                value={outletId ?? ""}
+                style={{
+                  height: 26,
+                  minWidth: 180,
+                  padding: "2px 26px 2px 8px",
+                  border: "1px solid #7f9db9",
+                  borderRadius: 3,
+                  backgroundColor: "#ffffff",
+                  color: "#0f172a",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  boxShadow: "inset 1px 1px 2px rgba(0,0,0,0.12)",
+                }}
+                onChange={(e) => {
+                  setOutletId(e.target.value);
+                  setSelectedId(undefined);
+                }}
+              >
+                {context?.outlets.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+              <span
+                style={{
+                  position: "absolute",
+                  right: 8,
+                  pointerEvents: "none",
+                  fontSize: 10,
+                  color: "#475569",
+                  fontWeight: 800,
+                  userSelect: "none",
+                }}
+              >
+                ▼
+              </span>
+            </div>
           </label>
         )}
         {outlet && context ? (
           <OutletSwitchBar outlet={outlet} canSwitch={context.canSwitch} onChanged={reload} />
         ) : null}
-        <button type="button" className="xp-button" disabled={!outletId} onClick={() => openApp("menu.tema", { hotelId, outletId })}>
+        <button
+          type="button"
+          className="xp-button"
+          disabled={!outletId}
+          style={{ height: 26, marginLeft: "auto" }}
+          onClick={() => openApp("menu.tema", { hotelId, outletId })}
+        >
           Menü Tasarımı
         </button>
       </div>

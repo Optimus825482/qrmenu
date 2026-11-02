@@ -27,12 +27,14 @@ import { APP_DRAG_TYPE } from "./StartMenu";
 
 const CATEGORY_LABEL: Record<AppDefinition["category"], string> = {
   GENEL: "Genel",
-  MINIBAR: "Minibar Takip",
-  QR_MENU: "QR Menü",
-  QR_ORDER: "QR Sipariş",
-  ROOM_SERVICE: "QR Oda Servisi",
+  OUTLET: "Outlet Operasyonları",
+  ROOM_SERVICE: "Oda Servisi Operasyonları",
+  MINIBAR: "Minibar Operasyonları",
+  SISTEM: "Sistem Yönetimi",
+  KULLANICI: "Kullanıcı Yönetimi",
+  QR_MENU: "QR Menü Operasyonları",
+  QR_ORDER: "QR Sipariş Operasyonları",
   RAPOR: "Raporlar",
-  SISTEM: "Sistem",
 };
 
 /** Pointer travel (px) before a press on an icon becomes a drag. */
@@ -263,7 +265,7 @@ function DesktopIcon({ icon, app, selected, onSelect, onOpen, onMenu }: IconProp
         onMenu(e);
       }}
     >
-      <XpIcon name={app.icon} />
+      <XpIcon name={app.icon} size={40} />
       <span className="xp-desktop-icon-label">{app.title}</span>
     </button>
   );

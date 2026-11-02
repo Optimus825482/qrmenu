@@ -411,4 +411,30 @@ describe("rooms: exportExcel", () => {
     await workbook.xlsx.load((await rooms.exportExcel(ctx, mr)) as unknown as ArrayBuffer);
     expect(workbook.worksheets[0].getRow(2).getCell(1).value).toBe("'=1+1");
   });
+
+  it("extension: '4101' kaydolur ve audit before/after içinde görünür; '<b>' VALIDATION; boş string -> null", async () => {
+    const ctx = await sys();
+    const { hotelId: mr, floor } = await setup(ctx);
+
+    const created = await rooms.create(ctx, mr, { floorId: floor.id, number: "101", extension: "4101" });
+    expect(created.extension).toBe("4101");
+
+    const auditRow = await testDb.auditLog.findFirst({
+      where: { entityId: created.id, action: "ROOM_CREATE" },
+    });
+    const after = auditRow?.after as Record<string, unknown> | null;
+    expect(after?.extension).toBe("4101");
+
+    // '<b>' VALIDATION (invalid characters)
+    await expect(
+      rooms.create(ctx, mr, { floorId: floor.id, number: "102", extension: "<b>" }),
+    ).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { extension: expect.any(Array) },
+    });
+
+    // boş string -> null
+    const blank = await rooms.create(ctx, mr, { floorId: floor.id, number: "103", extension: "   " });
+    expect(blank.extension).toBeNull();
+  });
 });

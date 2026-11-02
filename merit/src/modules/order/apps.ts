@@ -1,4 +1,5 @@
 import { registerApp } from "@/shell/registry";
+import { registerRoomServiceApps } from "./roomServiceApps";
 
 /**
  * Registrations of the QR order module's apps (QR_ORDER category). Idempotent: registerApp
@@ -18,4 +19,6 @@ export function registerOrderApps(): void {
     component: () => import("./ui/PrintersWindow").then((m) => ({ default: m.PrintersWindow })),
     mobile: "none",
   });
+
+  registerRoomServiceApps();
 }

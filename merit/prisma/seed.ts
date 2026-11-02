@@ -194,7 +194,15 @@ async function seedOutlets(db: PrismaClient) {
     if (!hotelId) continue;
     const existing = await db.outlet.findFirst({ where: { hotelId, name: definition.name }, select: { id: true } });
     const outlet = existing ?? await db.outlet.create({
-      data: { hotelId, name: definition.name, type: definition.type, hasMenu: true, hasOrdering: true, orderingEnabled: true },
+      data: {
+        hotelId,
+        name: definition.name,
+        type: definition.type,
+        hasMenu: true,
+        hasOrdering: true,
+        orderingEnabled: true,
+        kdsEnabled: true,
+      },
       select: { id: true },
     });
     if (!existing) {
@@ -399,7 +407,7 @@ async function seedSampleStaff(db: PrismaClient) {
             fullName,
             jobTitle: roleCode === "R-SGF" ? "Outlet Şefi" : roleCode === "R-MUS" ? "Mutfak Şefi" : "Garson",
             passwordHash,
-            mustChangePassword: true,
+            mustChangePassword: false,
             roleId,
             hotelId,
           },

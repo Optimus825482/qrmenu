@@ -11,7 +11,14 @@
       "search": "Cerca nel menu",
       "noResults": "Nessun piatto corrisponde alla ricerca",
       "filters": "Etichette",
-      "allergenNote": "Gli allergeni seguono il regolamento UE 1169/2011. Chiedi al nostro team prima di ordinare."
+      "allergenNote": "Gli allergeni seguono il regolamento UE 1169/2011. Chiedi al nostro team prima di ordinare.",
+      "clearSearch": "Cancella ricerca",
+      "clear": "Cancella",
+      "itemsFound": "{count} articoli trovati",
+      "subcategories": "Sottocategorie",
+      "all": "Tutti",
+      "backToTop": "Torna su",
+      "photoCount": "{count} foto"
     },
     "allergen": {
       "gluten": "Glutine",
@@ -67,7 +74,14 @@
       "retry": "Riprova",
       "offline": "Connessione assente, riconnessione in corso",
       "close": "Chiudi",
-      "language": "Lingua"
+      "language": "Lingua",
+      "gallery": "Galleria immagini",
+      "prevPhoto": "Foto precedente",
+      "nextPhoto": "Foto successiva",
+      "photoIndex": "Foto {index}",
+      "selectPhoto": "Seleziona foto {index}",
+      "languages": "Lingue",
+      "selectLanguage": "Selezione lingua: {name}"
     },
     "room": {
       "placeholder": "La pagina della camera sarà disponibile in una fase successiva"

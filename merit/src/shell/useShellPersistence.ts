@@ -84,11 +84,25 @@ export function useShellPersistence({
 
     const local = readLocal(userId);
     const { serverPrefs: fromServer, appIds: visible } = initial.current;
+    const primaryDesktopApps = [
+      "core.komuta",
+      "folder.outlet",
+      "folder.room-service",
+      "folder.minibar",
+      "folder.sistem",
+      "folder.kullanici",
+    ];
+    const defaultIcons = primaryDesktopApps
+      .filter((appId) => visible.includes(appId))
+      .map((appId, idx) => ({
+        appId,
+        ...gridPosition(idx, effectiveViewport({ ...store, footerBand: DEFAULT_APPEARANCE.footerBand })),
+      }));
     const fallback: ShellPrefs = {
       ...DEFAULT_APPEARANCE,
-      icons: visible.map((appId, i) => ({ appId, ...gridPosition(i, effectiveViewport({ ...store, footerBand: DEFAULT_APPEARANCE.footerBand })) })),
+      icons: defaultIcons,
       windows: [],
-      shortcutVersion: 2,
+      shortcutVersion: 5,
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
     store.restore(chosen);
@@ -109,6 +123,19 @@ export function useShellPersistence({
         store.addIcon("menu.tema", pos.x, pos.y);
       }
       store.setShortcutVersion(2);
+      migratedShortcuts = true;
+    }
+    // Primary Master Desktop Categories layout: Outlet, Oda Servisi, Minibar, Sistem, Kullanıcı + Komuta Merkezi
+    if ((chosen.shortcutVersion ?? 0) < 5) {
+      // Keep only Komuta Merkezi and the 5 Master Category Folders on the clean desktop
+      const newIcons = primaryDesktopApps
+        .filter((appId) => visible.includes(appId))
+        .map((appId, idx) => ({
+          appId,
+          ...gridPosition(idx, effectiveViewport(store)),
+        }));
+      store.setIcons(newIcons);
+      store.setShortcutVersion(5);
       migratedShortcuts = true;
     }
 

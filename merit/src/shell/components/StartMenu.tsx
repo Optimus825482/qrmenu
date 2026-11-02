@@ -8,13 +8,15 @@ import { usePwaInstall } from "../usePwaInstall";
 
 /** Start-menu groups in display order (spec §5.1). */
 const CATEGORIES: { key: AppCategory; label: string }[] = [
+  { key: "OUTLET", label: "OUTLET OPERASYONLARI" },
+  { key: "ROOM_SERVICE", label: "ODA SERVİSİ OPERASYONLARI" },
+  { key: "MINIBAR", label: "MİNİBAR OPERASYONLARI" },
+  { key: "SISTEM", label: "SİSTEM YÖNETİMİ" },
+  { key: "KULLANICI", label: "KULLANICI YÖNETİMİ" },
   { key: "GENEL", label: "GENEL" },
-  { key: "MINIBAR", label: "MİNİBAR TAKİP" },
   { key: "QR_MENU", label: "QR MENÜ" },
   { key: "QR_ORDER", label: "QR SİPARİŞ" },
-  { key: "ROOM_SERVICE", label: "QR ODA SERVİSİ" },
   { key: "RAPOR", label: "RAPORLAR" },
-  { key: "SISTEM", label: "SİSTEM" },
 ];
 
 /** App opened by the right column's "Denetim Masası" entry. */
@@ -88,7 +90,7 @@ function StartPanel({ apps, userName, onOpenApp, onClose, startButtonRef }: Omit
 
   const groups = CATEGORIES.map((c) => ({
     ...c,
-    apps: apps.filter((a) => a.category === c.key),
+    apps: apps.filter((a) => a.category === c.key && !a.id.startsWith("folder.")),
   })).filter((g) => g.apps.length > 0);
   const settings = apps.find((a) => a.id === SETTINGS_APP_ID);
   const { canInstall, promptInstall } = usePwaInstall();

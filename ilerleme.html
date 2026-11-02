@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Merit OS — İlerleme</title>
+<title>F&amp;B Command Center — İlerleme</title>
 <meta name="color-scheme" content="light dark">
 <style>
   :root {
@@ -75,7 +75,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Merit OS — Proje İlerlemesi <small>Merit Royal · Diamond · Premium</small></h1>
+    <h1>F&amp;B Command Center — Proje İlerlemesi <small>Merit Royal Hotels &amp; Resorts</small></h1>
     <div class="toolbar">
       <span class="countdown" id="countdown"></span>
       <button type="button" id="refresh">Yenile</button>
@@ -142,7 +142,7 @@
   document.getElementById('statPhases').textContent = data.phases.filter(function (p) { return phasePct(p) === 100; }).length + ' / ' + data.phases.length;
   document.getElementById('updated').textContent = data.updatedAt || '—';
   document.getElementById('headline').textContent = data.headline || '';
-  document.title = 'Merit OS — İlerleme %' + pct;
+  document.title = 'F&B Command Center — İlerleme %' + pct;
 
   var host = document.getElementById('phases');
   data.phases.forEach(function (p) {

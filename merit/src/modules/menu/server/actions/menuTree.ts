@@ -53,8 +53,12 @@ export async function setTranslationAction(
   )(raw);
 }
 
-export async function autoTranslateMenuNodeAction(raw: unknown): Promise<Result<{ languages: string[] }>> {
-  return safeAction(z.object({ nodeId: id }), async (i) => translations.autoGenerate(await requireUser(), i.nodeId))(raw);
+export async function autoTranslateMenuNodeAction(
+  raw: unknown,
+): Promise<Result<{ languages: string[]; provider?: string }>> {
+  return safeAction(z.object({ nodeId: id }), async (i) => translations.autoGenerate(await requireUser(), i.nodeId))(
+    raw,
+  );
 }
 
 export async function verifyTranslationAction(raw: unknown): Promise<Result<null>> {
@@ -71,24 +75,74 @@ export async function removeTranslationAction(raw: unknown): Promise<Result<null
   })(raw);
 }
 
-export async function uploadMenuImageAction(formData: FormData): Promise<Result<{ imageUrl: string }>> {
+export async function uploadMenuImagesAction(
+  formData: FormData,
+): Promise<Result<{ imageUrl: string | null; imageUrls: string[] }>> {
   return safeAction(
-    z.object({ nodeId: id, file: z.instanceof(File, { message: "Görsel seçin" }) }),
+    z.object({
+      nodeId: id,
+      files: z.array(z.instanceof(File, { message: "Görsel seçin" })).min(1, "En az bir görsel seçin"),
+    }),
+    async (i) => {
+      const uploadFiles: images.UploadFile[] = [];
+      for (const file of i.files) {
+        if (file.size === 0) continue;
+        uploadFiles.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          bytes: Buffer.from(await file.arrayBuffer()),
+        });
+      }
+      if (uploadFiles.length === 0) throw new DomainError("VALIDATION", "Görsel seçin");
+      return images.uploadMultiple(await requireUser(), i.nodeId, uploadFiles);
+    },
+  )({
+    nodeId: formData.get("nodeId"),
+    files: formData.getAll("files").length > 0 ? formData.getAll("files") : [formData.get("file")].filter(Boolean),
+  });
+}
+
+export async function uploadMenuImageAction(formData: FormData): Promise<Result<{ imageUrl: string }>> {
+  const result = await uploadMenuImagesAction(formData);
+  if (!result.ok) return result;
+  return { ok: true, data: { imageUrl: result.data.imageUrl ?? "" } };
+}
+
+export async function removeMenuImageAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ nodeId: id, imageUrl: z.string().optional() }), async (i) => {
+    await images.remove(await requireUser(), i.nodeId, i.imageUrl);
+    return null;
+  })(raw);
+}
+
+export async function setPrimaryMenuImageAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ nodeId: id, imageUrl: z.string().min(1) }), async (i) => {
+    await images.setPrimary(await requireUser(), i.nodeId, i.imageUrl);
+    return null;
+  })(raw);
+}
+
+export async function replaceMenuImageAction(formData: FormData): Promise<Result<{ imageUrl: string }>> {
+  return safeAction(
+    z.object({
+      nodeId: id,
+      oldImageUrl: z.string().min(1),
+      file: z.instanceof(File, { message: "Görsel seçin" }),
+    }),
     async (i) => {
       if (i.file.size === 0) throw new DomainError("VALIDATION", "Görsel seçin");
-      return images.upload(await requireUser(), i.nodeId, {
+      const res = await images.replace(await requireUser(), i.nodeId, i.oldImageUrl, {
         name: i.file.name,
         type: i.file.type,
         size: i.file.size,
         bytes: Buffer.from(await i.file.arrayBuffer()),
       });
+      return { imageUrl: res.imageUrl };
     },
-  )({ nodeId: formData.get("nodeId"), file: formData.get("file") });
-}
-
-export async function removeMenuImageAction(raw: unknown): Promise<Result<null>> {
-  return safeAction(z.object({ nodeId: id }), async (i) => {
-    await images.remove(await requireUser(), i.nodeId);
-    return null;
-  })(raw);
+  )({
+    nodeId: formData.get("nodeId"),
+    oldImageUrl: formData.get("oldImageUrl"),
+    file: formData.get("file"),
+  });
 }

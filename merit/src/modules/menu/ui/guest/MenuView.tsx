@@ -12,6 +12,17 @@ import { useSelectionStore } from "./selectionStore";
 
 const FEATURED_TAGS = new Set<ItemTagId>(["SEFIN_SECIMI", "POPULER"]);
 
+function categoryItemCount(category: GuestCategory): number {
+  let count = category.items.length;
+  for (const sub of category.subcategories) {
+    count += sub.items.length;
+    for (const group of sub.groups) {
+      count += group.items.length;
+    }
+  }
+  return count;
+}
+
 function findItem(categories: GuestCategory[], id: string): GuestItem | undefined {
   for (const category of categories) {
     const direct = category.items.find((item) => item.id === id);
@@ -33,6 +44,7 @@ function ItemCards({
   onOpen,
   format,
   soldOutLabel,
+  photoCountLabel,
   showPrice,
   photoIds,
 }: {
@@ -40,6 +52,7 @@ function ItemCards({
   onOpen(id: string): void;
   format(price: string): string;
   soldOutLabel: string;
+  photoCountLabel: (count: number) => string;
   showPrice: boolean;
   /** Curated-photo mode: only these dishes show a photo (large); null shows photos as usual. */
   photoIds: Set<string> | null;
@@ -56,8 +69,23 @@ function ItemCards({
             onClick={() => onOpen(item.id)}
           >
             {photoIds && !photoIds.has(item.id) ? null : item.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="g-thumb" src={item.imageUrl} alt="" loading="lazy" />
+              <span className="g-thumb-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="g-thumb"
+                  src={item.imageUrl}
+                  alt={item.name}
+                  loading="lazy"
+                  decoding="async"
+                  width={144}
+                  height={144}
+                />
+                {item.imageUrls && item.imageUrls.length > 1 ? (
+                  <span className="g-thumb-count" aria-label={photoCountLabel(item.imageUrls.length)}>
+                    📸 {item.imageUrls.length}
+                  </span>
+                ) : null}
+              </span>
             ) : (
               <span className="g-thumb g-placeholder" aria-hidden="true" />
             )}
@@ -107,13 +135,13 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
   const store = useSelectionStore(token ?? "studio-onizleme");
   const addSelection = store((s) => s.add);
 
-  const needle = query.trim().toLocaleLowerCase("tr");
+  const needle = query.trim().toLocaleLowerCase(locale);
   const visible = useMemo(() => {
     const matches = (item: GuestItem) => {
       if (!item.isAvailable) return false;
       if (tagFilters.length > 0 && !item.tags.some((tag) => tagFilters.includes(tag as ItemTagId))) return false;
       if (!needle) return true;
-      return `${item.name} ${item.detail ?? ""}`.toLocaleLowerCase("tr").includes(needle);
+      return `${item.name} ${item.detail ?? ""}`.toLocaleLowerCase(locale).includes(needle);
     };
     return categories
       .map((category) => ({
@@ -130,7 +158,7 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
           .filter((sub) => sub.items.length > 0 || sub.groups.length > 0),
       }))
       .filter((category) => category.items.length > 0 || category.subcategories.length > 0);
-  }, [categories, needle, tagFilters]);
+  }, [categories, needle, tagFilters, locale]);
 
   const activeId = visible.some((category) => category.id === picked) ? picked : (visible[0]?.id ?? null);
   const active = visible.find((category) => category.id === activeId);
@@ -151,13 +179,49 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
   const heroPhoto = options.hero === "PHOTO" && options.heroImageUrl !== "" ? options.heroImageUrl : null;
   const showTools = options.showSearch || options.showFilters;
 
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (visible.length === 0) return;
+    const currentIndex = visible.findIndex((cat) => cat.id === activeId);
+    let nextIndex = currentIndex;
+
+    if (e.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % visible.length;
+    } else if (e.key === "ArrowLeft") {
+      nextIndex = (currentIndex - 1 + visible.length) % visible.length;
+    } else if (e.key === "ArrowDown") {
+      nextIndex = currentIndex + 2 < visible.length ? currentIndex + 2 : currentIndex;
+    } else if (e.key === "ArrowUp") {
+      nextIndex = currentIndex - 2 >= 0 ? currentIndex - 2 : currentIndex;
+    } else if (e.key === "Home") {
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      nextIndex = visible.length - 1;
+    } else {
+      return;
+    }
+
+    e.preventDefault();
+    const nextCategory = visible[nextIndex];
+    if (nextCategory) {
+      setPicked(nextCategory.id);
+      const tabEl = document.getElementById(`g-tab-${nextCategory.id}`);
+      tabEl?.focus();
+    }
+  };
+
   const blocks: Record<string, ReactNode> = {
     hero:
       options.hero === "NONE" ? null : (
         <section className="g-design-hero" key="hero" data-photo={heroPhoto ? "true" : undefined}>
           {heroPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="g-hero-img" src={heroPhoto} alt="" loading="eager" />
+            <img
+              className="g-hero-img"
+              src={heroPhoto}
+              alt={`${state.outletName} · ${state.hotelName}`}
+              loading="eager"
+              fetchPriority="high"
+            />
           ) : null}
           <span>{state.hotelName}</span>
           <h2>{state.outletName}</h2>
@@ -168,7 +232,12 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
         ) : (
-          <div className="g-tabs" role="tablist" aria-label={t("menu.title")}>
+          <div
+            className="g-tabs"
+            role="tablist"
+            aria-label={t("menu.title")}
+            onKeyDown={handleTabKeyDown}
+          >
             {visible.map((category) => (
               <button
                 key={category.id}
@@ -176,10 +245,14 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
                 role="tab"
                 id={`g-tab-${category.id}`}
                 aria-selected={category.id === activeId}
+                tabIndex={category.id === activeId ? 0 : -1}
                 aria-controls="g-panel"
                 onClick={() => setPicked(category.id)}
               >
-                {category.name}
+                <span className="g-tab-label">{category.name}</span>
+                <span className="g-tab-count" aria-label={t("menu.itemsFound", { count: categoryItemCount(category) })}>
+                  {categoryItemCount(category)}
+                </span>
               </button>
             ))}
           </div>
@@ -187,14 +260,28 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
         {showTools ? (
         <div className="g-tools">
           {options.showSearch ? (
-            <input
-              className="g-search"
-              type="search"
-              value={query}
-              placeholder={t("menu.search")}
-              aria-label={t("menu.search")}
-              onChange={(event) => setQuery(event.target.value)}
-            />
+            <div className="g-search-wrap">
+              <span className="g-search-icon" aria-hidden="true">🔍</span>
+              <input
+                className="g-search"
+                type="search"
+                value={query}
+                placeholder={t("menu.search")}
+                aria-label={t("menu.search")}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              {query ? (
+                <button
+                  type="button"
+                  className="g-search-clear"
+                  onClick={() => setQuery("")}
+                  aria-label={t("menu.clearSearch")}
+                  title={t("menu.clear")}
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
           ) : null}
           {options.showFilters && ITEM_TAG_IDS.some((tag) => presentTags.has(tag)) ? (
             <div className="g-filters" role="group" aria-label={t("menu.filters")}>
@@ -210,6 +297,54 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
                   }
                 >
                   {t(`tag.${tag}`)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {needle || tagFilters.length > 0 ? (
+            <div className="g-filter-banner" role="status">
+              <span>
+                {needle ? `"${needle}" ` : ""}
+                {tagFilters.length > 0 ? `[${tagFilters.map((tag) => t(`tag.${tag}`)).join(", ")}] ` : ""}
+                • {t("menu.itemsFound", { count: visible.reduce((acc, cat) => acc + categoryItemCount(cat), 0) })}
+              </span>
+              <button
+                type="button"
+                className="g-filter-clear-all"
+                onClick={() => {
+                  setQuery("");
+                  setTagFilters([]);
+                }}
+              >
+                {t("menu.clear")} ×
+              </button>
+            </div>
+          ) : null}
+          {active && active.subcategories.length > 1 ? (
+            <div className="g-sub-nav" role="navigation" aria-label={t("menu.subcategories")}>
+              {directItems.length > 0 ? (
+                <button
+                  type="button"
+                  className="g-sub-chip"
+                  onClick={() => {
+                    const el = document.getElementById("g-direct-items");
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  {t("menu.all")} ({directItems.length})
+                </button>
+              ) : null}
+              {active.subcategories.map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  className="g-sub-chip"
+                  onClick={() => {
+                    const el = document.getElementById(`g-sub-${sub.id}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  {sub.name} ({sub.items.length + sub.groups.reduce((a, g) => a + g.items.length, 0)})
                 </button>
               ))}
             </div>
@@ -240,25 +375,63 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
           </section>
         ) : null}
         {directItems.length > 0 ? (
-          <section className="g-sub">
-            <ItemCards items={directItems} onOpen={setOpenId} format={format} soldOutLabel={t("menu.soldOut")} showPrice={showPrice} photoIds={photoIds} />
+          <section id="g-direct-items" className="g-sub">
+            <ItemCards
+              items={directItems}
+              onOpen={setOpenId}
+              format={format}
+              soldOutLabel={t("menu.soldOut")}
+              photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+              showPrice={showPrice}
+              photoIds={photoIds}
+            />
           </section>
         ) : null}
         {active?.subcategories.map((sub) => (
-          <section key={sub.id} className="g-sub">
+          <section key={sub.id} id={`g-sub-${sub.id}`} className="g-sub">
             <h2>{sub.name}</h2>
             {sub.items.length > 0 ? (
-              <ItemCards items={sub.items} onOpen={setOpenId} format={format} soldOutLabel={t("menu.soldOut")} showPrice={showPrice} photoIds={photoIds} />
+              <ItemCards
+                items={sub.items}
+                onOpen={setOpenId}
+                format={format}
+                soldOutLabel={t("menu.soldOut")}
+                photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+                showPrice={showPrice}
+                photoIds={photoIds}
+              />
             ) : null}
             {sub.groups.map((group) => (
               <div key={group.id} className="g-group">
                 <h3>{group.name}</h3>
                 {group.detail ? <p className="g-detail">{group.detail}</p> : null}
-                <ItemCards items={group.items} onOpen={setOpenId} format={format} soldOutLabel={t("menu.soldOut")} showPrice={showPrice} photoIds={photoIds} />
+                <ItemCards
+                  items={group.items}
+                  onOpen={setOpenId}
+                  format={format}
+                  soldOutLabel={t("menu.soldOut")}
+                  photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+                  showPrice={showPrice}
+                  photoIds={photoIds}
+                />
               </div>
             ))}
           </section>
         ))}
+        {active && (directItems.length > 4 || active.subcategories.length > 1) ? (
+          <div className="g-back-top-wrap">
+            <button
+              type="button"
+              className="g-back-top"
+              onClick={() => {
+                const tabsEl = document.querySelector(".g-tabs");
+                tabsEl?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              ↑ {t("menu.backToTop")}
+            </button>
+          </div>
+        ) : null}
         <p className="g-legal">{t("menu.allergenNote")}</p>
       </div>
     ),

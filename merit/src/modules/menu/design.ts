@@ -117,47 +117,47 @@ const options = (partial: Partial<DesignOptions> = {}): DesignOptions => ({
 
 export const DESIGN_TEMPLATES = [
   // 1. RESORT (Otel & Resort)
-  { id: "ROYAL", name: "Royal Signature", ambience: "RESORT", concept: "LUXURY", style: "royal", options: options() },
-  { id: "GRANDE", name: "Grande Palace", ambience: "RESORT", concept: "CLASSIC", style: "grande", options: options({ cardStyle: "LIST", showImages: false, uppercaseCategories: true, typography: "CLASSIC" }) },
-  { id: "ARTISAN_GRILL", name: "Artisan Smoke & Grill", ambience: "RESORT", concept: "RUSTIC", style: "artisan", options: options({ cardStyle: "CARD", typography: "CLASSIC" }) },
+  { id: "ROYAL", name: "Royal Signature", ambience: "RESORT", concept: "LUXURY", style: "royal", options: options({ cardStyle: "LIST", typography: "CLASSIC", uppercaseCategories: true, density: "AIRY" }) },
+  { id: "GRANDE", name: "Grande Palace", ambience: "RESORT", concept: "CLASSIC", style: "grande", options: options({ cardStyle: "LIST", showImages: false, uppercaseCategories: true, typography: "CLASSIC", density: "AIRY" }) },
+  { id: "ARTISAN_GRILL", name: "Artisan Smoke & Grill", ambience: "RESORT", concept: "RUSTIC", style: "artisan", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT", uppercaseCategories: true }) },
   { id: "RESORT_PRESTIGE", name: "Resort Prestige Gallery", ambience: "RESORT", concept: "LUXURY", style: "prestige", options: options({ cardStyle: "PHOTO", typography: "MODERN", density: "BALANCED" }) },
 
   // 2. BEACH (Sahil & Beach Club)
-  { id: "COASTAL", name: "Coastal Breeze", ambience: "BEACH", concept: "MEDITERRANEAN", style: "coastal", options: options({ cardStyle: "CARD", typography: "COASTAL" }) },
-  { id: "TROPIC", name: "Tropic Escape", ambience: "BEACH", concept: "NATURAL", style: "tropic", options: options({ cardStyle: "CARD", typography: "COASTAL" }) },
+  { id: "COASTAL", name: "Coastal Breeze", ambience: "BEACH", concept: "MEDITERRANEAN", style: "coastal", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "BALANCED" }) },
+  { id: "TROPIC", name: "Tropic Escape", ambience: "BEACH", concept: "NATURAL", style: "tropic", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "BALANCED" }) },
   { id: "MYKONOS_CLUB", name: "Mykonos Sun & Beats", ambience: "BEACH", concept: "BOHEMIAN", style: "mykonos", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "COMPACT" }) },
-  { id: "AEGEAN_BREEZE", name: "Aegean Minimalist List", ambience: "BEACH", concept: "MEDITERRANEAN", style: "aegean", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+  { id: "AEGEAN_BREEZE", name: "Aegean Minimalist List", ambience: "BEACH", concept: "MEDITERRANEAN", style: "aegean", options: options({ cardStyle: "LIST", typography: "EDITORIAL", density: "AIRY", showImages: false }) },
 
   // 3. POOL (Havuz)
   { id: "POOL_CLUB", name: "Pool Club", ambience: "POOL", concept: "CONTEMPORARY", style: "pool", options: options({ cardStyle: "PHOTO", typography: "MODERN", density: "COMPACT" }) },
-  { id: "AQUA_GOLD", name: "Aqua & Gold", ambience: "POOL", concept: "LUXURY", style: "aqua", options: options({ cardStyle: "CARD", typography: "MODERN" }) },
+  { id: "AQUA_GOLD", name: "Aqua & Gold", ambience: "POOL", concept: "LUXURY", style: "aqua", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "AIRY", uppercaseCategories: true }) },
   { id: "LAGOON_DECK", name: "Lagoon Deck Bar", ambience: "POOL", concept: "CONTEMPORARY", style: "lagoon", options: options({ cardStyle: "LIST", typography: "HUMANIST", density: "BALANCED" }) },
   { id: "CABANA_POOL", name: "Poolside Riviera", ambience: "POOL", concept: "MEDITERRANEAN", style: "riviera", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "AIRY" }) },
 
   // 4. LOUNGE (Lounge & Bar)
-  { id: "NOIR_LOUNGE", name: "Noir Lounge", ambience: "LOUNGE", concept: "CLASSIC", style: "noir", options: options({ cardStyle: "LIST", uppercaseCategories: true, typography: "EDITORIAL" }) },
-  { id: "VELVET", name: "Velvet Room", ambience: "LOUNGE", concept: "LUXURY", style: "velvet", options: options({ cardStyle: "CARD", typography: "CLASSIC" }) },
-  { id: "ATRIUM_SOCIAL", name: "Atrium Social", ambience: "LOUNGE", concept: "CONTEMPORARY", style: "atrium", options: options({ cardStyle: "CARD", typography: "MODERN" }) },
+  { id: "NOIR_LOUNGE", name: "Noir Lounge", ambience: "LOUNGE", concept: "CLASSIC", style: "noir", options: options({ cardStyle: "LIST", uppercaseCategories: true, typography: "EDITORIAL", density: "COMPACT" }) },
+  { id: "VELVET", name: "Velvet Room", ambience: "LOUNGE", concept: "LUXURY", style: "velvet", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "COMPACT" }) },
+  { id: "ATRIUM_SOCIAL", name: "Atrium Social", ambience: "LOUNGE", concept: "CONTEMPORARY", style: "atrium", options: options({ cardStyle: "CARD", typography: "MODERN", density: "BALANCED" }) },
   { id: "CRYSTAL_BAR", name: "Crystal Champagne Bar", ambience: "LOUNGE", concept: "ART_DECO", style: "crystal", options: options({ cardStyle: "CARD", uppercaseCategories: true, typography: "EDITORIAL", density: "AIRY" }) },
 
   // 5. GOURMET (Fine Dining)
   { id: "GOURMET", name: "Gourmet Editorial", ambience: "GOURMET", concept: "LUXURY", style: "editorial", options: options({ cardStyle: "LIST", showImages: false, uppercaseCategories: true, typography: "EDITORIAL", density: "AIRY" }) },
-  { id: "CHEF_TABLE", name: "Chef's Table", ambience: "GOURMET", concept: "CONTEMPORARY", style: "chef", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
-  { id: "ZEN_ASIAN", name: "Zen Minimalist Lounge", ambience: "GOURMET", concept: "MINIMALIST", style: "zen", options: options({ cardStyle: "LIST", typography: "MODERN", density: "AIRY" }) },
+  { id: "CHEF_TABLE", name: "Chef's Table", ambience: "GOURMET", concept: "CONTEMPORARY", style: "chef", options: options({ cardStyle: "LIST", typography: "EDITORIAL", density: "AIRY" }) },
+  { id: "ZEN_ASIAN", name: "Zen Minimalist Lounge", ambience: "GOURMET", concept: "MINIMALIST", style: "zen", options: options({ cardStyle: "LIST", typography: "SERENITY", density: "AIRY", uppercaseCategories: true }) },
   { id: "SOMMELIER_CELLAR", name: "Sommelier Grand Cru", ambience: "GOURMET", concept: "CLASSIC", style: "cellar", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "BALANCED" }) },
   { id: "MICHELIN_ATELIER", name: "Michelin Degustation", ambience: "GOURMET", concept: "LUXURY", style: "degustation", options: options({ cardStyle: "PHOTO", typography: "EDITORIAL", density: "AIRY" }) },
 
   // 6. CAFE (Kafe & Patisserie)
   { id: "CAFE_ATELIER", name: "Café Atelier", ambience: "CAFE", concept: "NATURAL", style: "atelier", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
-  { id: "PATISSERIE", name: "Pâtisserie Moderne", ambience: "CAFE", concept: "CLASSIC", style: "patisserie", options: options({ cardStyle: "PHOTO", typography: "HUMANIST" }) },
-  { id: "VIENNA_HERITAGE", name: "Vienna Grand Café", ambience: "CAFE", concept: "CLASSIC", style: "vienna", options: options({ cardStyle: "LIST", typography: "CLASSIC", uppercaseCategories: true }) },
-  { id: "ROASTERY_SPECIAL", name: "Artisan Roastery", ambience: "CAFE", concept: "CONTEMPORARY", style: "roastery", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT" }) },
+  { id: "PATISSERIE", name: "Pâtisserie Moderne", ambience: "CAFE", concept: "CLASSIC", style: "patisserie", options: options({ cardStyle: "PHOTO", typography: "HUMANIST", density: "AIRY" }) },
+  { id: "VIENNA_HERITAGE", name: "Vienna Grand Café", ambience: "CAFE", concept: "CLASSIC", style: "vienna", options: options({ cardStyle: "LIST", typography: "CLASSIC", uppercaseCategories: true, density: "AIRY" }) },
+  { id: "ROASTERY_SPECIAL", name: "Artisan Roastery", ambience: "CAFE", concept: "CONTEMPORARY", style: "roastery", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT", uppercaseCategories: true }) },
 
   // 7. SPA (Spa & Wellness)
   { id: "SPA_RITUAL", name: "Diamond Wellness Ritual", ambience: "SPA", concept: "NATURAL", style: "spa", options: options({ cardStyle: "CARD", typography: "HUMANIST", density: "AIRY", showPrices: false }) },
   { id: "HAMAM_HERITAGE", name: "Hamam Heritage", ambience: "SPA", concept: "CLASSIC", style: "hamam", options: options({ cardStyle: "LIST", typography: "CLASSIC", density: "AIRY", showPrices: false }) },
   { id: "THERMAL_HOLISTIC", name: "Holistic Thermal Spa", ambience: "SPA", concept: "NATURAL", style: "holistic", options: options({ cardStyle: "PHOTO", typography: "SERENITY", density: "AIRY", showPrices: false }) },
-  { id: "ZEN_SANCTUARY", name: "Zen Sanctuary Ritual", ambience: "SPA", concept: "MINIMALIST", style: "sanctuary", options: options({ cardStyle: "CARD", typography: "MODERN", density: "AIRY", showPrices: false }) },
+  { id: "ZEN_SANCTUARY", name: "Zen Sanctuary Ritual", ambience: "SPA", concept: "MINIMALIST", style: "sanctuary", options: options({ cardStyle: "CARD", typography: "SERENITY", density: "AIRY", showPrices: false }) },
 
   // 8. GARDEN (Aile & Bahçe)
   { id: "FAMILY_GARDEN", name: "Meritta Family Garden", ambience: "GARDEN", concept: "NATURAL", style: "garden", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
@@ -165,7 +165,7 @@ export const DESIGN_TEMPLATES = [
   { id: "PICNIC_GOURMET", name: "Garden Pergola & Grill", ambience: "GARDEN", concept: "RUSTIC", style: "pergola", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "BALANCED" }) },
 
   // 9. SPORT (Spor & Aktivite)
-  { id: "ACTIVE_HYDRATION", name: "Active Hydration", ambience: "SPORT", concept: "CONTEMPORARY", style: "active", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT" }) },
+  { id: "ACTIVE_HYDRATION", name: "Active Hydration", ambience: "SPORT", concept: "CONTEMPORARY", style: "active", options: options({ cardStyle: "CARD", typography: "MODERN", density: "COMPACT", uppercaseCategories: true }) },
   { id: "COURT_CLUB", name: "Tennis & Court Clubhouse", ambience: "SPORT", concept: "CONTEMPORARY", style: "clubhouse", options: options({ cardStyle: "LIST", typography: "MODERN", density: "BALANCED" }) },
   { id: "POWER_SMOOTHIE", name: "Power Vitality Bar", ambience: "SPORT", concept: "NATURAL", style: "vitality", options: options({ cardStyle: "PHOTO", typography: "HUMANIST", density: "BALANCED" }) },
 

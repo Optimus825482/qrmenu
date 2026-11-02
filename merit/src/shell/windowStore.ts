@@ -124,6 +124,7 @@ type ShellActions = {
   addIcon(appId: string, x: number, y: number): void;
   moveIcon(appId: string, x: number, y: number): void;
   removeIcon(appId: string): void;
+  setIcons(icons: IconPos[]): void;
   arrangeIcons(): void;
   snapshot(): ShellPrefs;
   restore(p: ShellPrefs): void;
@@ -516,6 +517,10 @@ export function createWindowStore() {
 
       removeIcon(appId) {
         set({ icons: get().icons.filter((i) => i.appId !== appId) });
+      },
+
+      setIcons(icons) {
+        set({ icons });
       },
 
       arrangeIcons() {

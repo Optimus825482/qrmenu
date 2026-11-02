@@ -53,7 +53,7 @@ export function LanguageSwitch({
         className="g-lang-btn"
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label={`Dil seçimi: ${current.nativeName}`}
+        aria-label={t("selectLanguage", { name: current.nativeName })}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="g-lang-flag">
@@ -76,7 +76,7 @@ export function LanguageSwitch({
       </button>
 
       {open ? (
-        <div className="g-lang-menu" role="menu" aria-label="Diller">
+        <div className="g-lang-menu" role="menu" aria-label={t("languages")}>
           {LOCALES.map((code) => {
             const meta = LOCALE_META[code];
             const isSelected = code === locale;

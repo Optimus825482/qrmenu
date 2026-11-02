@@ -31,12 +31,13 @@ export default function CashierMenu({
 }) {
   const [nodes, setNodes] = useState<MenuTreeNode[]>([]);
   const [priceDisplay, setPriceDisplay] = useState(initialPriceDisplay);
+  const [prevInitial, setPrevInitial] = useState(initialPriceDisplay);
+  if (prevInitial !== initialPriceDisplay) {
+    setPrevInitial(initialPriceDisplay);
+    setPriceDisplay(initialPriceDisplay);
+  }
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setPriceDisplay(initialPriceDisplay);
-  }, [initialPriceDisplay]);
 
   const load = useCallback(async () => {
     const result = await listMenuTreeAction({ outletId });

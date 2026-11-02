@@ -7,6 +7,7 @@ import type { OutletDesign } from "../../design";
 import { DESIGN_TEMPLATES } from "../../design";
 import { readableText } from "../../contrast";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { PwaInstallButton } from "@/shell/components/PwaInstallButton";
 
 /** Sets <html lang dir> for the guest's language (the root layout is shared with the staff app). */
 export function HtmlLangSync({ locale }: { locale: Locale }) {
@@ -32,6 +33,7 @@ export function GuestFrame({
   outletName,
   tableLabel,
   preview = false,
+  device,
   onLocaleChange,
   children,
   footer,
@@ -44,6 +46,7 @@ export function GuestFrame({
   tableLabel: string;
   /** Studio preview: the language links would navigate the iframe away from the live menu. */
   preview?: boolean;
+  device?: string;
   onLocaleChange?: (locale: Locale) => void;
   children: ReactNode;
   /** Bottom bar slot: the selections button arrives with the ordering flow. */
@@ -72,6 +75,7 @@ export function GuestFrame({
       data-density={design.options.density.toLowerCase()}
       data-hero={design.options.hero.toLowerCase()}
       data-preview={preview ? "true" : undefined}
+      data-device={device}
       data-curated={design.options.curatedPhotos ? "on" : "off"}
       dir={isRtl(locale) ? "rtl" : "ltr"}
       lang={locale}
@@ -87,7 +91,9 @@ export function GuestFrame({
           <span aria-hidden="true"> · </span>
           <span>{tableLabel}</span>
         </h1>
-        <div className="g-header-right" />
+        <div className="g-header-right">
+          {!preview ? <PwaInstallButton /> : null}
+        </div>
       </header>
       <div className="g-body">{children}</div>
       {footer ? <footer className="g-footer">{footer}</footer> : null}
