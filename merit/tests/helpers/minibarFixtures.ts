@@ -92,3 +92,10 @@ export async function staff(
 export async function stockOf(hid: string, productId: string) {
   return testDb.hotelStock.findUniqueOrThrow({ where: { hotelId_productId: { hotelId: hid, productId } } });
 }
+
+/** Kat sorumlusu (R-KAT) of `hotelCode`. */
+export const makeKat = (hotelCode = "ROYAL") => staff("R-KAT", hotelCode);
+
+/** Depo sorumlusu (R-DEP) of `hotelCode`, optionally also bound to other hotels. */
+export const makeDepo = (hotelCode = "ROYAL", extraHotelCodes: string[] = []) =>
+  staff("R-DEP", hotelCode, extraHotelCodes);
