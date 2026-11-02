@@ -18,3 +18,4 @@
 tools
 playwright.config.ts
 vitest.config.mts
+.next-*

@@ -6,6 +6,8 @@ import pkg from "./package.json";
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // Paralel ajan derlemeleri çakışmasın: NEXT_DIST_DIR=.next-<ad> npx next build / next start
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Shown in Hakkında and Denetim Masası → Uygulama (inlined into client bundles too).
   env: { MERIT_BUILD_DATE: new Date().toISOString().slice(0, 10), MERIT_VERSION: pkg.version },
   // Clickjacking protection: pages may only be framed by Merit itself (the shell's iframe apps).
