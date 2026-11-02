@@ -37,3 +37,22 @@ export function screenForPath(pathname: string): ScreenDef | undefined {
   }
   return best;
 }
+
+/**
+ * The screen a page actually checks on entry, when it differs from the catalogue screen that
+ * lists the route (single source of truth for the guard of every route under `src/app`):
+ * `/kat` is guarded by MB-KAT (MB-TUK, MB-PERS and MB-DND are filters inside it), `/admin` by
+ * CR-KOM (every desktop window opens inside it) and the room-service sub-pages redirect into
+ * `/oda-servisi` (RO-TAL). Routes not listed are guarded by their own catalogue screen.
+ */
+const ROUTE_GUARDS: Readonly<Record<string, string>> = {
+  "/kat": "MB-KAT",
+  "/admin": "CR-KOM",
+  "/oda-servisi/teyit": "RO-TAL",
+  "/oda-servisi/teslim": "RO-TAL",
+};
+
+/** Code of the screen whose "view" permission the page behind `screen`'s route requires. */
+export function guardScreenOf(screen: { code: string; path: string }): string {
+  return ROUTE_GUARDS[routeOf(screen)] ?? screen.code;
+}

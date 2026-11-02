@@ -3,8 +3,10 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/rbac";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { SCREENS } from "../../screens";
+import { audit } from "../audit";
 import { usersEntitledTo } from "../entitlements";
 import { notify } from "../notifications";
 
@@ -31,6 +33,11 @@ export async function reportAccessAction(
     const screen = SCREENS.find((s) => s.code === code);
     if (!screen) throw new DomainError("NOT_FOUND", "Ekran bulunamadı");
 
+    // Only a screen the caller really cannot open can be reported.
+    if (await can(ctx, screen.code, "V", ctx.session.hotelId)) {
+      throw new DomainError("VALIDATION", "Bu ekranı zaten görüntüleyebilirsiniz");
+    }
+
     const refId = `${ctx.user.id}:${screen.code}:${dayKey(new Date())}`;
     return prisma.$transaction(async (tx) => {
       // Serialises double taps of the same report.
@@ -53,6 +60,14 @@ export async function reportAccessAction(
         },
         tx,
       );
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId: ctx.session.hotelId,
+        action: "YETKI_TALEP",
+        entity: "AppScreen",
+        entityId: screen.code,
+        after: { screen: screen.code },
+      });
       return { notified, already: false };
     });
   })(screenCode);

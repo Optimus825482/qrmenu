@@ -31,7 +31,10 @@ afterAll(async () => {
 });
 
 async function ctxOf(roleCode: string) {
-  const user = await makeUser({ username: `l-${roleCode}`, roleCode, hotelCode: "ROYAL" });
+  const username = `l-${roleCode}`;
+  const user =
+    (await testDb.user.findUnique({ where: { username } })) ??
+    (await makeUser({ username, roleCode, hotelCode: "ROYAL" }));
   return ctxFor(user, { hotelCode: "ROYAL" });
 }
 
@@ -87,6 +90,45 @@ describe("resolveLanding (gerçek test DB)", () => {
     expect((await resolveLanding(ctx)).path).toBe("/admin");
     const pos = await resolveLanding(ctx, { shell: "pos" });
     expect(pos.path.startsWith("/kasa") || pos.path.startsWith("/kds")).toBe(true);
+  });
+});
+
+describe("rota koruyucu ekran", () => {
+  /** Role R-HKS reduced to exactly `codes` (view only, hotel-wide). */
+  async function onlyScreens(codes: string[]) {
+    const role = await testDb.role.findUniqueOrThrow({ where: { code: "R-HKS" } });
+    await testDb.roleScreenPermission.deleteMany({ where: { roleId: role.id } });
+    for (const code of codes) {
+      const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code } });
+      await testDb.roleScreenPermission.create({ data: { roleId: role.id, screenId: screen.id, canView: true } });
+    }
+  }
+
+  it("MB-PERS var, MB-KAT yok: /kat'a inmez (sayfa MB-KAT ister), sıradaki uygun ekrana düşer", async () => {
+    await onlyScreens(["MB-PERS", "MB-RAP"]);
+    const landing = await resolveLanding(await ctxOf("R-HKS"));
+    expect(landing.path).toBe("/depo/raporlar");
+    expect(landing.screenCode).toBe("MB-RAP");
+  });
+
+  it("yalnız MB-PERS: koruyucu ekran yok, /secim", async () => {
+    await onlyScreens(["MB-PERS"]);
+    expect(await resolveLanding(await ctxOf("R-HKS"))).toEqual({ screenCode: "", path: "/secim", fallback: true });
+  });
+
+  it("MB-PERS + MB-KAT: /kat'a iner; CR-RAP var CR-KOM yok: /admin'e inmez", async () => {
+    await onlyScreens(["MB-PERS", "MB-KAT"]);
+    expect((await resolveLanding(await ctxOf("R-HKS"))).path).toBe("/kat");
+    await onlyScreens(["CR-RAP"]);
+    expect((await resolveLanding(await ctxOf("R-HKS"))).path).toBe("/secim");
+  });
+
+  it("guardScreenOf: her iniş adayının koruyucusu katalogda vardır", async () => {
+    const { guardScreenOf } = await import("@/modules/core/screenPaths");
+    const codes = new Set(SCREENS.map((s) => s.code));
+    for (const s of SCREENS) expect(codes.has(guardScreenOf(s)), s.code).toBe(true);
+    expect(guardScreenOf(SCREENS.find((s) => s.code === "MB-TUK")!)).toBe("MB-KAT");
+    expect(guardScreenOf(SCREENS.find((s) => s.code === "CR-DEN")!)).toBe("CR-KOM");
   });
 });
 

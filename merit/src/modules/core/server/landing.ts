@@ -1,7 +1,7 @@
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { visibleScreens } from "@/lib/rbac";
-import { routeOf } from "../screenPaths";
+import { guardScreenOf, routeOf } from "../screenPaths";
 import { SCREENS, type ScreenDef } from "../screens";
 
 export type Landing = { screenCode: string; path: string; fallback: boolean };
@@ -28,7 +28,7 @@ function landingPath(screen: ScreenDef): string {
 
 /**
  * Where a signed-in user starts: the role's default screen when they may view it, else the first
- * visible catalogue screen (landing-excluded ones skipped), else the target picker. With
+ * visible catalogue screen whose route guard also passes (landing-excluded ones skipped), else the target picker. With
  * `opts.shell` a default whose natural shell differs falls to the first visible screen of that
  * shell (the default stays when the shell has none).
  */
@@ -40,9 +40,21 @@ export async function resolveLanding(
     visibleScreens(ctx),
     prisma.role.findUnique({ where: { id: ctx.user.roleId }, select: { defaultScreen: true } }),
   ]);
+  return pickLanding(visible, role?.defaultScreen, opts);
+}
+
+/** Pure part of resolveLanding: `visible` are the viewable screen codes, `defaultScreen` the role's default. */
+export function pickLanding(
+  visible: readonly string[],
+  defaultScreen: string | null | undefined,
+  opts?: { shell?: LandingShell },
+): Landing {
   const allowed = new Set(visible);
-  const candidates = SCREENS.filter((s) => allowed.has(s.code) && !LANDING_EXCLUDED.includes(s.code));
-  const preferred = candidates.find((s) => s.code === role?.defaultScreen);
+  // A screen is only a candidate when the page behind its route (its guard screen) is viewable too.
+  const candidates = SCREENS.filter(
+    (s) => allowed.has(s.code) && allowed.has(guardScreenOf(s)) && !LANDING_EXCLUDED.includes(s.code),
+  );
+  const preferred = candidates.find((s) => s.code === defaultScreen);
   let chosen = preferred ?? candidates[0];
   if (opts?.shell && chosen && shellOf(chosen) !== opts.shell) {
     chosen = candidates.find((s) => shellOf(s) === opts.shell) ?? chosen;
