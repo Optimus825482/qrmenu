@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { runSeed } from "../../prisma/seed";
+import { loadLegacyDefinitions } from "../../prisma/seed/legacyDefinitions";
 import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
@@ -24,16 +25,23 @@ async function counts() {
     access: await db.roleModuleAccess.count(),
     settings: await db.setting.count(),
     users: await db.user.count(),
+    floors: await db.floor.count(),
+    rooms: await db.room.count(),
+    roomTypes: await db.roomType.count(),
+    products: await db.product.count(),
+    setups: await db.setup.count(),
+    setupItems: await db.setupItem.count(),
+    roomTypeSetups: await db.roomTypeSetup.count(),
   };
 }
 
 describe("seed (gerçek test DB)", () => {
   beforeEach(async () => {
-    await truncate("hotels", "roles", "app_screens", "settings", "users");
+    await truncate("hotels", "roles", "app_screens", "settings", "users", "product_groups", "setups");
   });
 
   afterAll(async () => {
-    await truncate("hotels", "roles", "app_screens", "settings", "users");
+    await truncate("hotels", "roles", "app_screens", "settings", "users", "product_groups", "setups");
     await db.$disconnect();
   });
 
@@ -47,6 +55,45 @@ describe("seed (gerçek test DB)", () => {
     expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
     expect(await db.hotelModule.count()).toBe(12);
     expect(await db.user.count({ where: { username: "admin" } })).toBe(1);
+  });
+
+  it("seed eski sistemin otel/kat/oda tipi/oda/ürün/setup tanımlarını referans veri olarak yükler (QR token yok)", async () => {
+    await runSeed(db);
+    const data = loadLegacyDefinitions();
+    for (const h of data.hotels) {
+      const hotel = await db.hotel.findUniqueOrThrow({ where: { code: h.code } });
+      expect(await db.floor.count({ where: { hotelId: hotel.id } })).toBe(h.floors.length);
+      expect(await db.roomType.count({ where: { hotelId: hotel.id } })).toBe(h.roomTypes.length);
+      expect(await db.room.count({ where: { hotelId: hotel.id } })).toBe(h.rooms.length);
+      expect(await db.roomTypeSetup.count({ where: { hotelId: hotel.id } })).toBe(h.roomTypeSetups.length);
+      expect(hotel.logoUrl).toBe(h.logoUrl);
+    }
+    expect(await db.room.count({ where: { qrToken: { not: null } } })).toBe(0);
+    expect(await db.productGroup.count()).toBeGreaterThanOrEqual(data.productGroups.length);
+    expect(await db.product.count()).toBeGreaterThanOrEqual(data.products.length);
+    expect(await db.setup.count()).toBeGreaterThanOrEqual(data.setups.length);
+    expect(await db.outlet.count({ where: { type: { not: "ODA_SERVISI" } } })).toBe(0);
+  });
+
+  it("referans tanımları ikinci seed'de düzenlenmiş kayıtları ezmez ve pasifleştirmez", async () => {
+    await runSeed(db);
+    const sample = loadLegacyDefinitions().hotels[0];
+    const hotel = await db.hotel.findUniqueOrThrow({ where: { code: sample.code } });
+    const room = sample.rooms[0];
+    await db.room.update({
+      where: { hotelId_number: { hotelId: hotel.id, number: room.number } },
+      data: { guestMessage: "Elle düzenlendi", isActive: false, qrToken: "elle-token" },
+    });
+    await db.hotel.update({ where: { id: hotel.id }, data: { logoUrl: "/brand/ozel.png" } });
+    await runSeed(db);
+    const after = await db.room.findUniqueOrThrow({
+      where: { hotelId_number: { hotelId: hotel.id, number: room.number } },
+    });
+    expect(after.guestMessage).toBe("Elle düzenlendi");
+    expect(after.isActive).toBe(false);
+    expect(after.qrToken).toBe("elle-token");
+    expect((await db.hotel.findUniqueOrThrow({ where: { id: hotel.id } })).logoUrl).toBe("/brand/ozel.png");
+    expect(await db.room.count({ where: { hotelId: hotel.id } })).toBe(sample.rooms.length);
   });
 
   it("seed ikinci kez çalışınca kayıt sayıları değişmez", async () => {

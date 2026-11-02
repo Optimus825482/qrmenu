@@ -1,0 +1,6142 @@
+{
+  "source": "canlı yedek 02.11.2026",
+  "extractedAt": "2026-11-02",
+  "hotels": [
+    {
+      "code": "DIAMOND",
+      "name": "Merit Royal Diamond",
+      "isActive": true,
+      "logoUrl": "/brand/hotels/diamond.png",
+      "floors": [
+        {
+          "number": 0,
+          "name": "ASMA KAT",
+          "isActive": true
+        },
+        {
+          "number": 1,
+          "name": "1. KAT",
+          "isActive": true
+        },
+        {
+          "number": 2,
+          "name": "2. KAT",
+          "isActive": true
+        },
+        {
+          "number": 3,
+          "name": "3. KAT",
+          "isActive": true
+        },
+        {
+          "number": 4,
+          "name": "4. KAT",
+          "isActive": true
+        },
+        {
+          "number": 5,
+          "name": "5. KAT",
+          "isActive": true
+        },
+        {
+          "number": 6,
+          "name": "Mevkon",
+          "isActive": true
+        }
+      ],
+      "roomTypes": [
+        {
+          "name": "JUNIOR SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "KING SUITE",
+          "cabinetCount": 2,
+          "isActive": true
+        },
+        {
+          "name": "QUEEN SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "STANDARD",
+          "cabinetCount": 1,
+          "isActive": true
+        }
+      ],
+      "rooms": [
+        {
+          "number": "1101",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1102",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1103",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1104",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1105",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1106",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1107",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1108",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1109",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1110",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1111",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1112",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1113",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1114",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1115",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1116",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1117",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1118",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1119",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1120",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1121",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1122",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1123",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1124",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1126",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1128",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1129",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1130",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1131",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1132",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1133",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1134",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1135",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1136",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1137",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1138",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1139",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1140",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1141",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1142",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1143",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1145",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1146",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1147",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1148",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1149",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1150",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1151",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1152",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1153",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1154",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1156",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1158",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1159",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1160",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1161",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1162",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1164",
+          "floorNumber": 0,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1166",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1168",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1170",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1172",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1174",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1176",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1178",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1180",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1182",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1184",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1201",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1202",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1203",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1204",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1205",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1206",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1207",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1208",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1209",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1210",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1211",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1212",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1213",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1214",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1215",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1216",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1217",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1218",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1219",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1220",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1221",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1222",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1223",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1224",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1226",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1228",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1229",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1230",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1231",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1233",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1235",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1236",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1237",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1238",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1239",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1240",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1241",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1242",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1243",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1245",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1246",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1247",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1248",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1249",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1250",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1251",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1252",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1253",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1254",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1256",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1258",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1259",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1260",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1261",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1262",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1301",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1302",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1303",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1304",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1305",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1306",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1307",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1308",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1309",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1310",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1311",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1312",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1313",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1314",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1315",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1316",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1317",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1318",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1319",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1320",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1321",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1322",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1323",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1324",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1326",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1328",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1329",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1330",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1331",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1333",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1335",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1336",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1337",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1338",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1339",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1340",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1341",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1342",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1343",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1345",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1346",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1347",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1348",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1349",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1350",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1351",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1352",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1353",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1354",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1355",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1356",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1357",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1358",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1359",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1360",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1361",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1362",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1401",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1402",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1403",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1404",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1405",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1406",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1407",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1408",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1409",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1410",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1411",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1412",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1413",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1414",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1415",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1416",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1417",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1418",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1419",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1420",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1421",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1422",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1423",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1424",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1426",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1428",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1429",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1430",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1431",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1433",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1435",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1436",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1437",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1438",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1439",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1440",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1441",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1442",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1443",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1445",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1446",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1447",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1448",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1449",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1450",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1451",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1452",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1453",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1454",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1455",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1456",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1457",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1458",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1459",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1460",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1461",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1462",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1501",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1502",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1503",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1504",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1505",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1506",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1507",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1508",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1509",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1510",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1511",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1512",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1513",
+          "floorNumber": 5,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1514",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1516",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1517",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1518",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1519",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1520",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1521",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1522",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1523",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1524",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1525",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1526",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1527",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1528",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1529",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1530",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1531",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1532",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1533",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1534",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1536",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1537",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1538",
+          "floorNumber": 5,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1601",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1602",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1603",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1604",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1605",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1606",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1607",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1608",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1609",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1610",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1611",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1612",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1613",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1614",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1615",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1616",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1617",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1618",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1619",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1620",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1621",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1622",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1623",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1624",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1625",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1626",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1627",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1628",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1629",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "1630",
+          "floorNumber": 6,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        }
+      ],
+      "roomTypeSetups": [
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "JUNIOR- SICAK SETUP"
+        },
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING - SICAK SETUP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING SETUP DOLAP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "MAXİ BAR"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN - SICAK SETUP"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN SETUP DOLAP"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART - SICAK SETUP"
+        }
+      ]
+    },
+    {
+      "code": "PREMIUM",
+      "name": "Merit Royal Premium",
+      "isActive": true,
+      "logoUrl": "/brand/hotels/premium.png",
+      "floors": [
+        {
+          "number": 0,
+          "name": "ZEMİN KAT",
+          "isActive": true
+        },
+        {
+          "number": 1,
+          "name": "1. KAT",
+          "isActive": true
+        },
+        {
+          "number": 2,
+          "name": "2. KAT",
+          "isActive": true
+        },
+        {
+          "number": 3,
+          "name": "3. KAT",
+          "isActive": true
+        },
+        {
+          "number": 4,
+          "name": "4. KAT",
+          "isActive": true
+        },
+        {
+          "number": 5,
+          "name": "5. KAT",
+          "isActive": true
+        }
+      ],
+      "roomTypes": [
+        {
+          "name": "JUNIOR SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "KING SUITE",
+          "cabinetCount": 2,
+          "isActive": true
+        },
+        {
+          "name": "QUEEN SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "STANDARD",
+          "cabinetCount": 1,
+          "isActive": true
+        }
+      ],
+      "rooms": [
+        {
+          "number": "151",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "152",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "153",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "154",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "155",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "156",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "157",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "158",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "159",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "160",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "161",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "162",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "163",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "164",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "165",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "166",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "167",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "168",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "169",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "170",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "171",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "172",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "173",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "174",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "175",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "176",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "177",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "178",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "179",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "180",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "181",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "182",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "183",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "184",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "185",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "186",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "187",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "189",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "190",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "191",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "192",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "193",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "194",
+          "floorNumber": 0,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "251",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "252",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "253",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "254",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "255",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "256",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "257",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "258",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "259",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "260",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "261",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "262",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "263",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "264",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "265",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "266",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "267",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "268",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "269",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "270",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "271",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "272",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "273",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "274",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "275",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "276",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "277",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "278",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "279",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "280",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "281",
+          "floorNumber": 2,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "351",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "352",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "353",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "354",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "355",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "356",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "357",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "358",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "359",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "360",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "361",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "362",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "363",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "365",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "367",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "369",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "370",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "371",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "372",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "373",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "374",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "375",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "376",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "377",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "378",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "379",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "380",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "381",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "457",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "458",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "459",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "460",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "461",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "462",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "463",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "465",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "467",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "469",
+          "floorNumber": 4,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "470",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "471",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "472",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "473",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "474",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "475",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "557",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "558",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "559",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "560",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "561",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "562",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "570",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "571",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "572",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "573",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "574",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "575",
+          "floorNumber": 5,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        }
+      ],
+      "roomTypeSetups": [
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "ATIŞTIRMALIK ÜRÜNLER"
+        },
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "JUNIOR- SICAK SETUP"
+        },
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "ATIŞTIRMALIK ÜRÜNLER"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING - SICAK SETUP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING SETUP DOLAP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "MAXİ BAR"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "ATIŞTIRMALIK ÜRÜNLER"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN - SICAK SETUP"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN SETUP DOLAP"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "ATIŞTIRMALIK ÜRÜNLER"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART - SICAK SETUP"
+        }
+      ]
+    },
+    {
+      "code": "ROYAL",
+      "name": "Merit Royal Hotel",
+      "isActive": true,
+      "logoUrl": "/brand/hotels/royal.png",
+      "floors": [
+        {
+          "number": 1,
+          "name": "1. KAT",
+          "isActive": true
+        },
+        {
+          "number": 2,
+          "name": "2. KAT",
+          "isActive": true
+        },
+        {
+          "number": 3,
+          "name": "3. KAT",
+          "isActive": true
+        },
+        {
+          "number": 4,
+          "name": "4. KAT",
+          "isActive": true
+        },
+        {
+          "number": 5,
+          "name": "5. KAT",
+          "isActive": true
+        }
+      ],
+      "roomTypes": [
+        {
+          "name": "JUNIOR SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "KING SUITE",
+          "cabinetCount": 2,
+          "isActive": true
+        },
+        {
+          "name": "QUEEN SUITE",
+          "cabinetCount": 1,
+          "isActive": true
+        },
+        {
+          "name": "STANDARD",
+          "cabinetCount": 1,
+          "isActive": true
+        }
+      ],
+      "rooms": [
+        {
+          "number": "102",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "103",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "104",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "105",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "106",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "107",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "108",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "109",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "110",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "113",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "114",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "117",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "119",
+          "floorNumber": 1,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "120",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "121",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "122",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "123",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "124",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "125",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "126",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "127",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "128",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "129",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "130",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "131",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "132",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "133",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "134",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "135",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "136",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "137",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "138",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "139",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "140",
+          "floorNumber": 1,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "141",
+          "floorNumber": 1,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "142",
+          "floorNumber": 1,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "201",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "202",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "203",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "204",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "205",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "206",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "207",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "208",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "209",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "210",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "211",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "212",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "213",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "214",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "215",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "216",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "217",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "218",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "219",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "220",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "221",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "222",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "223",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "224",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "225",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "226",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "227",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "228",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "229",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "230",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "231",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "232",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "233",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "234",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "235",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "236",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "237",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "238",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "239",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "240",
+          "floorNumber": 2,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "241",
+          "floorNumber": 2,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "242",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "243",
+          "floorNumber": 2,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "302",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "303",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "305",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "309",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "313",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "314",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "317",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "319",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "320",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "321",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "323",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "326",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "327",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "329",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "330",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "331",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "333",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "336",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "338",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "339",
+          "floorNumber": 3,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "340",
+          "floorNumber": 3,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "341",
+          "floorNumber": 3,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "342",
+          "floorNumber": 3,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "402",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "403",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "409",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "419",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "420",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "421",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "423",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "426",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "427",
+          "floorNumber": 4,
+          "roomType": "STANDARD",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "430",
+          "floorNumber": 4,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "433",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "436",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "437",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "439",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "441",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "442",
+          "floorNumber": 4,
+          "roomType": "QUEEN SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "501",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "502",
+          "floorNumber": 5,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "503",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "504",
+          "floorNumber": 5,
+          "roomType": "JUNIOR SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "505",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "506",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        },
+        {
+          "number": "507",
+          "floorNumber": 5,
+          "roomType": "KING SUITE",
+          "capacity": null,
+          "guestMessage": null,
+          "isActive": true
+        }
+      ],
+      "roomTypeSetups": [
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "JUNIOR- SICAK SETUP"
+        },
+        {
+          "roomType": "JUNIOR SUITE",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING - SICAK SETUP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "KING SETUP DOLAP"
+        },
+        {
+          "roomType": "KING SUITE",
+          "setup": "MAXİ BAR"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN - SICAK SETUP"
+        },
+        {
+          "roomType": "QUEEN SUITE",
+          "setup": "QUEEN SETUP DOLAP"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART"
+        },
+        {
+          "roomType": "STANDARD",
+          "setup": "STANDART - SICAK SETUP"
+        }
+      ]
+    }
+  ],
+  "productGroups": [
+    {
+      "name": "ALKOLLU İÇECEKLER",
+      "description": "ZCD",
+      "isActive": false
+    },
+    {
+      "name": "Alkollü İçecekler",
+      "description": null,
+      "isActive": true
+    },
+    {
+      "name": "Alkolsüz İçecekler",
+      "description": null,
+      "isActive": true
+    },
+    {
+      "name": "Atıştırmalık Ürünler",
+      "description": null,
+      "isActive": true
+    },
+    {
+      "name": "Maxi Bar Ürünleri",
+      "description": null,
+      "isActive": true
+    },
+    {
+      "name": "Sıcak İçecek",
+      "description": null,
+      "isActive": true
+    },
+    {
+      "name": "Sıcak İçecekler",
+      "description": null,
+      "isActive": false
+    }
+  ],
+  "products": [
+    {
+      "group": "Alkollü İçecekler",
+      "name": "Bira Efes Şişe 33 Cl",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "30.00",
+      "salePrice": "39.00",
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Ice Tea Limon 200 ml.",
+      "unit": "Kutu",
+      "criticalLevel": 10,
+      "purchasePrice": "12.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Ice Tea Şeftali (Lipton) 330 ML",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "26.45",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "17.50",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Mr Brown Black  Ice Coffee",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "45.45",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Mr Brown Vanilla Ice Coffee 240 ml.",
+      "unit": "Kutu",
+      "criticalLevel": 10,
+      "purchasePrice": "18.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Pepsi Kutu 250 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "9.55",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Pepsi Max 250 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "7.95",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Redbull 250 ml.",
+      "unit": "Kutu",
+      "criticalLevel": 10,
+      "purchasePrice": "25.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Seven Up Kutu 250 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "9.55",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Sırma Soda 200 ml.",
+      "unit": "Şişe",
+      "criticalLevel": 10,
+      "purchasePrice": "5.00",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Soda Şişe Sade 200 Ml (Beypazarı)",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "8.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Su Cam Logolu (Sırma) 750 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "36.50",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Alkolsüz İçecekler",
+      "name": "Yedigün Kutu 250 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "9.55",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Antep Fıstığı Çerez Cam Kavanoz 80 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "45.00",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Benimo",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Browni Çikolata 50 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "15.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Çerez Fıstık Tuzlu",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "20.00",
+      "salePrice": "26.00",
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Çerez Kesesi - Boş",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.50",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Eti Browni Intense 45 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "25.71",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Eti Brownie",
+      "unit": "Adet",
+      "criticalLevel": 100,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Eti Cin",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Eti Puf",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Haribo",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Meyveli Jelibon",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Top Kek",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Tuzlu Fıstık Kraft 60 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "25.00",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Ülker Çikolatalı Gofret",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Ülker Çizi",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Ülker Çokonat 33 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "19.04",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Zuber Antep Fıstıklı",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Zuber Çilek Kakao",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Zuber Elma-Tarçın",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Atıştırmalık Ürünler",
+      "name": "Zuber Hindistan Cevizli",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": null,
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Brusc. Cheese",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "28.56",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Brusc. Tomato",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "28.56",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Cips Pringels 40 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "68.90",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Crax Peynirli 50 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "12.75",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Çikolata Snickers 50 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.61",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Jp Chenet Ice Edition 20 Cl",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "99.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Kahve Mehmet Efendi",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "22.82",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Kahve Segafredo Kapsül",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "21.86",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Maison Chardonnay 187 ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "52.08",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Maison Merlot 187 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "52.08",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Mateus Rose Original 25 Cl",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "50.25",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Nesfit Kakaolu 23.5 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.33",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Nesfit Karamelli 23.5 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.33",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Nesfit Kırmızı Meyveli 23.5 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.33",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Nesfit Muzlu ve Çikolatalı 23.5 G",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.33",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Pellegrino 250 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "83.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Perrier 330 Ml",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "102.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Sakız  Çilek Aromalı 27 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.89",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Sakız Yeşil Nane Aromalı Sakız 27 G",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "34.89",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Maxi Bar Ürünleri",
+      "name": "Twix Double Chocolate Bar 50 Gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "31.46",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Bitki Çayları 2 gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Coffee Mate Stick 5 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.50",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Çay Poşet Earl Grey Sade",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "10.00",
+      "salePrice": "13.00",
+      "isActive": false
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Çay Poşet English Breakfast Tea",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "6.00",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Çay Poşet Ihlamur",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Çay Poşet Papatya",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Çay Poşet Yeşil Çay",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "2.50",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Early Grey Tea",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "3.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "English Breakfast Tea",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "3.00",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Kahve Kreması Nescafe Stick",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "3.07",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Kahve Nescafe Stick Gold",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "7.06",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Nescafe Stick 5 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "4.50",
+      "salePrice": null,
+      "isActive": false
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Stick Esmer Şeker 2 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "0.35",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Stick Sakarin 1 gr",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "0.50",
+      "salePrice": null,
+      "isActive": true
+    },
+    {
+      "group": "Sıcak İçecek",
+      "name": "Stick Şeker 2 gr.",
+      "unit": "Adet",
+      "criticalLevel": 10,
+      "purchasePrice": "0.30",
+      "salePrice": null,
+      "isActive": true
+    }
+  ],
+  "setups": [
+    {
+      "name": "ATIŞTIRMALIK ÜRÜNLER",
+      "description": "ATIŞTIRMALIK ÜRÜNLER",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Benimo",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Browni Çikolata 50 gr.",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Fıstık Tuzlu",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Eti Browni Intense 45 Gr",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Eti Cin",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Eti Puf",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Haribo",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Top Kek",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çikolatalı Gofret",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çizi",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çokonat 33 Gr",
+          "qty": 1
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Crax Peynirli 50 Gr",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "name": "DENEME",
+      "description": "DE",
+      "isInsideCabinet": true,
+      "isActive": false,
+      "items": []
+    },
+    {
+      "name": "JUNIOR- SICAK SETUP",
+      "description": "JUNIOR- SICAK SETUP",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Su Cam Logolu (Sırma) 750 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Fıstık Tuzlu",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Kesesi - Boş",
+          "qty": 1
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Kahve Segafredo Kapsül",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Bitki Çayları 2 gr",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Coffee Mate Stick 5 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Early Grey Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "English Breakfast Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Kahve Kreması Nescafe Stick",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Nescafe Stick 5 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Esmer Şeker 2 gr.",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Sakarin 1 gr",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Şeker 2 gr.",
+          "qty": 4
+        }
+      ]
+    },
+    {
+      "name": "KING - SICAK SETUP",
+      "description": "KING - SICAK SETUP",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Su Cam Logolu (Sırma) 750 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Antep Fıstığı Çerez Cam Kavanoz 80 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Fıstık Tuzlu",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Kahve Segafredo Kapsül",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Bitki Çayları 2 gr",
+          "qty": 8
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Early Grey Tea",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "English Breakfast Tea",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Kahve Kreması Nescafe Stick",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Nescafe Stick 5 gr.",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Esmer Şeker 2 gr.",
+          "qty": 8
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Sakarin 1 gr",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Şeker 2 gr.",
+          "qty": 8
+        }
+      ]
+    },
+    {
+      "name": "KING SETUP DOLAP",
+      "description": "KING SETUP DOLAP",
+      "isInsideCabinet": true,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkollü İçecekler",
+          "product": "Bira Efes Şişe 33 Cl",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Limon 200 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Şeftali (Lipton) 330 ML",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Black  Ice Coffee",
+          "qty": 1
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Vanilla Ice Coffee 240 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Max 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Redbull 250 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Seven Up Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Soda Şişe Sade 200 Ml (Beypazarı)",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Yedigün Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Browni Çikolata 50 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çokonat 33 Gr",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "name": "MAXİ BAR",
+      "description": "MAXİ BAR",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Sırma Soda 200 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Brusc. Cheese",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Brusc. Tomato",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Cips Pringels 40 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Crax Peynirli 50 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Çikolata Snickers 50 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Jp Chenet Ice Edition 20 Cl",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Maison Chardonnay 187 ml",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Maison Merlot 187 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Mateus Rose Original 25 Cl",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Nesfit Kakaolu 23.5 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Nesfit Karamelli 23.5 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Nesfit Kırmızı Meyveli 23.5 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Nesfit Muzlu ve Çikolatalı 23.5 G",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Pellegrino 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Perrier 330 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Sakız  Çilek Aromalı 27 Gr",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Sakız Yeşil Nane Aromalı Sakız 27 G",
+          "qty": 2
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Twix Double Chocolate Bar 50 Gr",
+          "qty": 2
+        }
+      ]
+    },
+    {
+      "name": "QUEEN - SICAK SETUP",
+      "description": "QUEEN - SICAK SETUP",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Su Cam Logolu (Sırma) 750 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Fıstık Tuzlu",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Kesesi - Boş",
+          "qty": 1
+        },
+        {
+          "group": "Maxi Bar Ürünleri",
+          "product": "Kahve Segafredo Kapsül",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Early Grey Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "English Breakfast Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Kahve Kreması Nescafe Stick",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Nescafe Stick 5 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Esmer Şeker 2 gr.",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Sakarin 1 gr",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Şeker 2 gr.",
+          "qty": 4
+        }
+      ]
+    },
+    {
+      "name": "QUEEN SETUP DOLAP",
+      "description": "QUEEN SETUP DOLAP",
+      "isInsideCabinet": true,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkollü İçecekler",
+          "product": "Bira Efes Şişe 33 Cl",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Limon 200 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Şeftali (Lipton) 330 ML",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+          "qty": 8
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Black  Ice Coffee",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Vanilla Ice Coffee 240 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Max 250 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Redbull 250 ml.",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Seven Up Kutu 250 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Soda Şişe Sade 200 Ml (Beypazarı)",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Yedigün Kutu 250 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Browni Çikolata 50 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çokonat 33 Gr",
+          "qty": 2
+        }
+      ]
+    },
+    {
+      "name": "STANDART",
+      "description": "STANDART",
+      "isInsideCabinet": true,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkollü İçecekler",
+          "product": "Bira Efes Şişe 33 Cl",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Limon 200 ml.",
+          "qty": 1
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Ice Tea Şeftali (Lipton) 330 ML",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Küçük Su Cam Logolu (Sırma) 330 Ml",
+          "qty": 4
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Black  Ice Coffee",
+          "qty": 1
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Mr Brown Vanilla Ice Coffee 240 ml.",
+          "qty": 1
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Pepsi Max 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Redbull 250 ml.",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Seven Up Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Soda Şişe Sade 200 Ml (Beypazarı)",
+          "qty": 2
+        },
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Yedigün Kutu 250 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Browni Çikolata 50 gr.",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Ülker Çokonat 33 Gr",
+          "qty": 1
+        }
+      ]
+    },
+    {
+      "name": "STANDART - SICAK SETUP",
+      "description": "STANDART- SICAK SETUP",
+      "isInsideCabinet": false,
+      "isActive": true,
+      "items": [
+        {
+          "group": "Alkolsüz İçecekler",
+          "product": "Su Cam Logolu (Sırma) 750 Ml",
+          "qty": 2
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Fıstık Tuzlu",
+          "qty": 1
+        },
+        {
+          "group": "Atıştırmalık Ürünler",
+          "product": "Çerez Kesesi - Boş",
+          "qty": 1
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Bitki Çayları 2 gr",
+          "qty": 4
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Coffee Mate Stick 5 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Early Grey Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "English Breakfast Tea",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Kahve Kreması Nescafe Stick",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Nescafe Stick 5 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Esmer Şeker 2 gr.",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Sakarin 1 gr",
+          "qty": 2
+        },
+        {
+          "group": "Sıcak İçecek",
+          "product": "Stick Şeker 2 gr.",
+          "qty": 4
+        }
+      ]
+    }
+  ]
+}

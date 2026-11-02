@@ -110,7 +110,7 @@ describe("getSetting", () => {
 
   it("seed'li sistem satırları varsayılanlarla aynıdır", async () => {
     const { runSeed } = await import("../../prisma/seed");
-    await runSeed(testDb);
+    await runSeed(testDb, { legacyDefinitions: false });
     const rows = await testDb.setting.findMany({ where: { hotelId: null } });
     expect(Object.fromEntries(rows.map((r) => [r.key, r.value]))).toEqual(DEFAULT_SETTINGS);
   });

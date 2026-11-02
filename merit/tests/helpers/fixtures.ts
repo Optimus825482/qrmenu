@@ -6,7 +6,8 @@ import { testDb, truncate } from "./db";
 /** Empties and re-seeds the reference data (hotels, roles, screens, settings). Call once per file. */
 export async function resetReferenceData(): Promise<void> {
   await truncate("hotels", "roles", "app_screens", "settings", "users");
-  await runSeed(testDb);
+  // Tests build their own floors/rooms/products; the real-hotel definitions are covered by seed.test.ts.
+  await runSeed(testDb, { legacyDefinitions: false });
 }
 
 /** Removes everything a test creates (users and what hangs off them, extra outlets) and reactivates hotels. */

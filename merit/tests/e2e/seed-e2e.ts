@@ -65,7 +65,7 @@ async function resetAndSeed(): Promise<void> {
     await db.$executeRawUnsafe(
       `TRUNCATE TABLE ${tables.map((t) => `"${t}"`).join(", ")} RESTART IDENTITY CASCADE`,
     );
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
 
     const passwordHash = await hashPassword(TEST_PASSWORD);
     const hotel = async (code: string) => (await db.hotel.findUniqueOrThrow({ where: { code } })).id;

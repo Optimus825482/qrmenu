@@ -27,7 +27,7 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
   });
 
   it("R-GAR: QM-MEN yalnız V; QS-FIS/QS-KAS/QS-IPT/QS-RAP/QM-RAP satırı yok; QS-KUY D=true A=false", async () => {
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     expect(await permission("R-GAR", "QM-MEN")).toMatchObject({
       canView: true, canCreate: false, canEdit: false, canApprove: false, canReport: false,
     });
@@ -40,7 +40,7 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
   });
 
   it("mutfak rolleri kasa/fiş/menü ekranlarını görmez; QS-KUY yalnız V; R-KDS QS-KDS D=true", async () => {
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     for (const role of ["R-MUS", "R-MUP", "R-KDS"]) {
       for (const screen of ["QS-KAS", "QS-FIS", "QS-IPT", "QM-MEN", "QM-TEM", "QM-RAP"]) {
         expect(await permission(role, screen)).toBeNull();
@@ -53,7 +53,7 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
   });
 
   it("onay (A) QS-KUY ve QS-IPT'de yalnız R-SYS, R-OTM, R-FBM, R-SGF, R-KAS'ta kalır", async () => {
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     expect(await permission("R-SGF", "QS-KUY")).toMatchObject({ canApprove: true });
     expect(await permission("R-SGF", "QM-MEN")).toMatchObject({ canEdit: true });
     expect(await permission("R-KAS", "QS-IPT")).toMatchObject({ canApprove: true });
@@ -67,18 +67,18 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
   });
 
   it("menü temaları adına göre oluşturulur; tekrar seed çoğaltmaz ve düzenlenmiş temayı ezmez", async () => {
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     const themes = await db.menuTheme.findMany();
     expect(themes.map((t) => t.name).sort()).toEqual(MENU_THEMES.map((t) => t.name).sort());
     expect(themes.filter((t) => t.isDefault).map((t) => t.name)).toEqual(["Royal Gold"]);
     await db.menuTheme.update({ where: { name: "Deniz" }, data: { accent: "#000000" } });
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     expect(await db.menuTheme.count()).toBe(MENU_THEMES.length);
     expect((await db.menuTheme.findUniqueOrThrow({ where: { name: "Deniz" } })).accent).toBe("#000000");
   });
 
   it("migration 0005 matris SQL'i eski (profil tabanlı) matrisi yeni seed matrisine çevirir", async () => {
-    await runSeed(db);
+    await runSeed(db, { legacyDefinitions: false });
     type Row = { role: { code: string }; screen: { code: string }; canView: boolean; canCreate: boolean; canEdit: boolean; canApprove: boolean; canReport: boolean };
     const where = { hotelId: null, screen: { code: { startsWith: "Q" } } };
     const toMap = (rows: Row[]) =>

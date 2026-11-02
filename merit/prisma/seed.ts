@@ -12,6 +12,7 @@ import { SEED_OUTLETS } from "./seed/outlets";
 import { sampleMenuForOutlet, type SampleMenuItem } from "./seed/sampleMenus";
 import { seedOutletMenuDesigns } from "./seed/menuDesigns";
 import { seedMinibarDemo } from "./seed/minibarDemo";
+import { seedLegacyDefinitions } from "./seed/legacyDefinitions";
 import type { MenuNodeKind, OutletType } from "@/generated/prisma/client";
 import { suggestedUsername } from "../src/modules/core/usernames";
 import { ensureDefaultCallOptions } from "../src/modules/menu/server/callOptionDefaults";
@@ -395,10 +396,17 @@ function demoRequested(): boolean {
 
 /**
  * Idempotent: safe to run any number of times. Reference data (hotels, roles, screens, permissions,
- * settings, themes) is created/refreshed; the admin is created only when missing. Demo data (outlets,
- * sample menus and designs, sample staff) is written only with SEED_DEMO=true.
+ * settings, themes) is created/refreshed; the admin is created only when missing. The real hotel definitions
+ * from the legacy backup (floors, room types, rooms, product groups, products, setups) are created when
+ * missing and never overwritten. Demo data (outlets, sample menus and designs, sample staff) is written
+ * only with SEED_DEMO=true.
  */
-export async function runSeed(db: PrismaClient): Promise<void> {
+export interface RunSeedOptions {
+  /** Load the real hotel definitions from the legacy backup (default true). Test helpers turn it off. */
+  legacyDefinitions?: boolean;
+}
+
+export async function runSeed(db: PrismaClient, options: RunSeedOptions = {}): Promise<void> {
   // Fail closed, before anything is written: a first-time admin needs a strong password.
   if (!(await db.user.findUnique({ where: { username: "admin" }, select: { id: true } }))) requireAdminPassword();
   await seedHotels(db);
@@ -409,6 +417,7 @@ export async function runSeed(db: PrismaClient): Promise<void> {
   await seedPermissions(db);
   await seedSettings(db);
   await seedAdmin(db);
+  if (options.legacyDefinitions !== false) await seedLegacyDefinitions(db); // real hotels: floors, room types, rooms, products, setups (create-if-missing only)
   if (demoRequested()) {
     await seedOutlets(db);
     await seedSampleMenus(db);

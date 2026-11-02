@@ -72,6 +72,22 @@ temalar) ve eksikse `admin`'i yazar. Demo outlet, örnek menü, menü tasarımı
 `SEED_DEMO=true` ile yüklenir; örnek personelin parolası rastgele üretilir ve ilk girişte
 değiştirilmelidir (yönetici parola atar).
 
+Referans seed ayrıca **eski canlı minibar sisteminin gerçek otel tanımlarını** yükler
+(`merit/prisma/seed/data/legacy-definitions.json`, kaynak: canlı yedek 02.11.2026): otel logoları,
+katlar, oda tipleri, odalar (QR token olmadan), ürün grupları, ürünler, setuplar, setup içerikleri ve
+oda tipi-setup atamaları. Yükleme yalnız **eksik kayıtları** oluşturur; var olan kaydı değiştirmez,
+pasifleştirmez, QR token'a dokunmaz, ODA_SERVISI/menü verisi üretmez; her seed çalıştırması güvenlidir.
+Özet sayılar `legacy-definitions.README.md` dosyasındadır. Veriyi yeniden çıkarmak için (yalnız
+geliştirici makinesi, eski veritabanının yerel restore'u gerekir; bağlantı bilgisi dosyalara yazılmaz):
+
+```bash
+cd merit
+LEGACY_DATABASE_URL='postgresql://kullanici:sifre@localhost:5432/minibar' npx tsx scripts/extract-legacy-definitions.ts
+```
+
+Bu komut JSON'u, README özetini ve `public/brand/hotels/<kod>.png` logolarını yeniden yazar. Geçmiş
+işlemler ve kullanıcılar bu adımın kapsamı dışındadır (`scripts/migrate-minibar-data.ts`).
+
 `npm run build` sırasında arka plan işleri başlamaz, ancak `src/lib/env.ts` zorunlu
 değişkenleri modül yüklenirken doğrular: derleme (ve migrasyon/seed) komutlarının
 çalıştığı kabukta **tüm zorunlu değişkenler** (`DATABASE_URL`, `SESSION_SECRET`,
@@ -89,8 +105,8 @@ süreci yeniden başlat. Seed'i ilk kurulumda ve yeni ekran kodu/rol yetkisi get
 
 ### İlk kurulum: Kurulum Rehberi
 
-Seed (varsayılan, `SEED_DEMO` kapalı) yalnız roller, ekran/yetki matrisi, oteller ve `admin` kullanıcısını getirir; otelin
-kat, oda, outlet ve personel tanımları elle girilir. `admin` ile giriş yapıp
+Seed (varsayılan, `SEED_DEMO` kapalı) roller, ekran/yetki matrisi, oteller, `admin` kullanıcısı ve eski sistemden alınan
+kat/oda/ürün/setup tanımlarını getirir; outlet ve personel tanımları elle girilir. `admin` ile giriş yapıp
 **Başlat → Kurulum Rehberi** penceresini açın, otelinizi seçin ve adımları yukarıdan aşağıya
 izleyin. Her adımın **Aç** düğmesi Tanımlamalar penceresini doğru bölümde açar; yüzde,
 zorunlu adımlar bitince %100 olur (aynı yüzde Komuta Merkezi'ndeki Kurulum kartında görünür):
