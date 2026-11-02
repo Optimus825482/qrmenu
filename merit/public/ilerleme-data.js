@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "02.11.2026 22:00",
-  headline: "Son kontrol (02.11): P0/P1/P5 ve Menü Tasarım Merkezi tamam; P2–P7 için eklenen kod plan dışı bir prototiptir (güvenlik/veri düzeltmeleri yapıldı, plan görevleri açık); P8 başlamadı. Ayrıntı: docs/kabul/.",
+  updatedAt: "02.11.2026 23:12",
+  headline: "Son kontrol (02.11) düzeltmeleri main'de: lint 0 hata, tsc temiz, 913/913 birim testi, build yeşil; e2e 71/94 (menü/kasa/kabuk spec'leri yeni arayüze uyarlanıyor). P2–P7 plan dışı prototip; P8 başlamadı.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -133,6 +133,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "02.11 23:12", text: "Düzeltme dalgaları tamamlandı (7777f8d, 5ec4064, 11259de, 915b466): npm run check yeşil (913 test), build yeşil; e2e 71/94. GitHub'a push edildi." },
     { at: "02.11 22:00", text: "Fable son kontrolü: 6 inceleme + 4 düzeltme dalgası (sır varsayılanları, seed, şema drift migration'ı, minibar/rapor API yetkisi, MyBar token, Nicosia iş günü, geçici şifre, istemciye sızan admin şifresi). P2–P7 \"tamamlandı\" iddiaları geri alındı." },
     { at: "31.10 03:07", text: "Proje başladı: şartname ve mevcut tasarımların analizi." },
     { at: "31.10 04:30", text: "Spec ve P0 planı onaylandı; uygulama başladı." },
