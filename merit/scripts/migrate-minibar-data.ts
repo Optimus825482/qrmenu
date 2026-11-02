@@ -1,11 +1,14 @@
 import pg from "pg";
 import { prisma } from "../src/lib/prisma";
 
-const LEGACY_URL = "postgresql://postgres:518518Erkan@localhost:5432/minibar";
+const LEGACY_URL = process.env.LEGACY_DATABASE_URL;
+if (!LEGACY_URL) {
+  throw new Error("LEGACY_DATABASE_URL ortam değişkeni gerekli (ör. postgresql://kullanici:sifre@localhost:5432/minibar)");
+}
 
 async function main() {
   console.log("🚀 Minibar veri aktarımı başlatılıyor...");
-  console.log(`Kaynak: ${LEGACY_URL}`);
+  console.log(`Kaynak: ${LEGACY_URL.replace(/:\/\/([^:]+):[^@]+@/, "://$1:***@")}`);
 
   const legacyClient = new pg.Client({ connectionString: LEGACY_URL });
   await legacyClient.connect();
