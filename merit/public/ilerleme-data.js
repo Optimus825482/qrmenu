@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 02:03",
+  updatedAt: "03.11.2026 02:22",
   headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
   phases: [
     {
@@ -127,7 +127,7 @@ window.ILERLEME = {
       summary: "Belirteçler ve görünüm matrisi, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, personel kabuğu, kabuk seçimi/PWA, yetki rehberi, XP cilası",
       tasks: [
         { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "active" },
-        { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "pending" },
+        { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:20", note: "7244d05 — inceleme sürüyor" },
         { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "pending" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
@@ -135,7 +135,7 @@ window.ILERLEME = {
         { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "pending" },
         { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
         { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "pending" },
-        { title: "T11 screenGuide, accessSummary, Erişimim", status: "pending" },
+        { title: "T11 screenGuide, accessSummary, Erişimim", status: "active" },
         { title: "T12 Tur motoru ve ? yardım", status: "pending" },
         { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "pending" },
         { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "pending" }
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 02:22", text: "UX T2 (rol bazlı iniş /baslat, katalog, yetkisiz ekran sayfası) uygulandı (7244d05); T11 Erişimim başladı." },
     { at: "03.11 02:03", text: "Minibar T7 incelemesi onaylandı; Canlı Radar T1 (olay birliği) başladı." },
     { at: "03.11 02:00", text: "Minibar T7 (stok görünümleri, ek talep yaşam döngüsü) uygulandı (c6f7f5d); inceleme ve T6 (oda QR) başladı." },
     { at: "03.11 01:48", text: "Canlı yedekten gerçek otel tanımları (3 otel, 18 kat, 558 oda, 69 ürün, 10 setup) referans seed'e eklendi ve incelemesi onaylandı (dd2995f)." },
