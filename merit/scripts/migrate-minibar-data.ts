@@ -1,10 +1,14 @@
 import pg from "pg";
 import { prisma } from "../src/lib/prisma";
 
-const LEGACY_URL = process.env.LEGACY_DATABASE_URL;
-if (!LEGACY_URL) {
-  throw new Error("LEGACY_DATABASE_URL ortam değişkeni gerekli (ör. postgresql://kullanici:sifre@localhost:5432/minibar)");
+function requireLegacyUrl(): string {
+  const url = process.env.LEGACY_DATABASE_URL;
+  if (!url) {
+    throw new Error("LEGACY_DATABASE_URL ortam değişkeni gerekli (ör. postgresql://kullanici:sifre@localhost:5432/minibar)");
+  }
+  return url;
 }
+const LEGACY_URL: string = requireLegacyUrl();
 
 async function main() {
   console.log("🚀 Minibar veri aktarımı başlatılıyor...");
