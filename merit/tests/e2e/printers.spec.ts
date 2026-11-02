@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import type { Browser, Locator, Page } from "@playwright/test";
-import { saveNew } from "./definitionsUi";
+import { acknowledge, saveNew } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.use({ locale: "tr-TR" });
@@ -41,7 +41,7 @@ test("yazıcı CRUD ve test fişi kasa kuyruğuna düşer", async ({ browser }) 
   await expect(win.getByRole("gridcell", { name: "Kasa Yazıcı", exact: true })).toBeVisible();
   await expect(win.getByText("görülmedi")).toBeVisible();
   await win.getByRole("button", { name: "Seçili yazıcıya test fişi gönder" }).click();
-  await expect(admin.getByRole("alertdialog")).toContainText("test fişi kuyruğa alındı");
+  await acknowledge(admin, /test fişi kuyruğa alındı/);
   await admin.close();
 
   const cashierContext = await browser.newContext({

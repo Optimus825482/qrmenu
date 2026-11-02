@@ -12,7 +12,8 @@ import {
   listRoomsAction,
   updateRoomAction,
 } from "@/modules/core/server/admin/actions/rooms";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -88,7 +89,7 @@ async function downloadRooms(hotelId: string): Promise<void> {
   } catch {
     // network failure: the generic message stands
   }
-  void alertDialog({ title: "Excel'e aktarılamadı", message });
+  notify.error(message, { title: "Excel'e aktarılamadı" });
 }
 
 /** Odalar: rooms of the window's hotel, filtered by floor and room type, with bulk add and Excel export. */
@@ -165,15 +166,15 @@ export function RoomsPanel({ hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Odayı sil",
       message: `"${row.number}" numaralı oda silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteRoomAction({ hotelId, id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Oda silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Oda silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.number}” numaralı oda silindi.` });
+    notify.success(`“${row.number}” numaralı oda silindi.`);
     setSelectedId(undefined);
     list.reload();
   };

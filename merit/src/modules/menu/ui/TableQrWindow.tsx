@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
 import type { AppProps } from "@/shell/registry";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { useSse } from "@/shell/useSse";
 import { listOutletAreasAction } from "@/modules/core/server/admin/actions/outletAreas";
 import type { OutletAreaRow } from "@/modules/core/server/admin/outletAreas";
@@ -100,15 +101,15 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
   const regenerateOne = async (row: TableQrRow) => {
     const yes = await confirm({
       title: "QR kodunu yenile",
-      message: `"${row.label}" masasının QR kodu yenilensin mi? Eski basılı kod çalışmayı bırakır.`,
-      danger: true,
+      message: `"${row.label}" masasının QR kodu yenilensin mi? Eski QR kodu geçersiz olur.`,
+      danger: true, confirmLabel: "QR'ı yenile",
     });
     if (!yes) return;
     setBusy(true);
     const result = await regenerateTableQrAction({ tableId: row.id });
     setBusy(false);
-    if (!result.ok) void alertDialog({ title: "Yenilenemedi", message: result.error.message });
-    else await alertDialog({ title: "İşlem tamamlandı", message: `“${row.label}” masasının QR kodu yenilendi.` });
+    if (!result.ok) notify.error(result.error.message, { title: "Yenilenemedi" });
+    else notify.success(`“${row.label}” masasının QR kodu yenilendi.`);
     await loadRows();
   };
 
@@ -119,20 +120,20 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
     const yes = await confirm({
       title: "Toplu QR üret/yenile",
       message: areaTitle
-        ? `"${areaTitle}" alanındaki masaların QR kodları ${onlyUnsigned ? "üretilsin" : "yenilensin"} mi? Eski basılı kodlar çalışmayı bırakır.`
+        ? `"${areaTitle}" alanındaki masaların QR kodları ${onlyUnsigned ? "üretilsin" : "yenilensin"} mi? Eski QR kodları geçersiz olur.`
         : onlyUnsigned
-          ? "İmzasız ya da QR kodu olmayan masaların kodları üretilsin mi? Bu masaların eski basılı kodları çalışmayı bırakır."
-          : "Outletin tüm masalarının QR kodları yenilensin mi? Tüm eski basılı kodlar çalışmayı bırakır.",
-      danger: true,
+          ? "İmzasız ya da QR kodu olmayan masaların kodları üretilsin mi? Bu masaların eski QR kodları geçersiz olur."
+          : "Outletin tüm masalarının QR kodları yenilensin mi? Tüm eski QR kodları geçersiz olur.",
+      danger: true, confirmLabel: "Üret",
     });
     if (!yes) return;
     setBusy(true);
     const result = await regenerateAllTableQrAction({ outletId, onlyUnsigned, areaId });
     setBusy(false);
-    if (!result.ok) void alertDialog({ title: "Üretilemedi", message: result.error.message });
+    if (!result.ok) notify.error(result.error.message, { title: "Üretilemedi" });
     else {
       setStatus(`${result.data.count} masanın QR kodu üretildi`);
-      await alertDialog({ title: "İşlem tamamlandı", message: `${result.data.count} masanın QR kodu güncellendi.` });
+      notify.success(`${result.data.count} masanın QR kodu güncellendi.`);
     }
     await loadRows();
   };

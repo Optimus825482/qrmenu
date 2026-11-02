@@ -2,12 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { WelcomeOpener } from "@/components/guide/WelcomeOpener";
 import { registerCoreApps } from "@/modules/core/apps";
 import { registerMenuApps } from "@/modules/menu/apps";
 import { registerOrderApps } from "@/modules/order/apps";
 import { registerMinibarApps } from "@/modules/minibar/apps";
 import { fontVariables } from "@/shell/appearance";
-import { alertDialog } from "@/shell/confirm";
+import { notify, setNotifySurface } from "@/shell/notify";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
 import { Desktop } from "@/shell/components/Desktop";
 import { FooterBand } from "@/shell/components/FooterBand";
@@ -15,6 +16,7 @@ import { MobileShell } from "@/shell/components/MobileShell";
 import type { HotelInfo } from "@/shell/components/HotelPicker";
 import { StartMenu } from "@/shell/components/StartMenu";
 import { Taskbar } from "@/shell/components/Taskbar";
+import { TrayBalloonHost } from "@/shell/components/TrayBalloon";
 import { Window } from "@/shell/components/Window";
 import { getApps } from "@/shell/registry";
 import type { ShellPrefs } from "@/shell/types";
@@ -37,6 +39,10 @@ export type ShellClientProps = {
   confirmSimpleActions: boolean;
   /** Setting shell.mobileDefinitions: default of the mobile "Tanımlamaları mobilde aç" switch. */
   mobileDefinitions: boolean;
+  /** The access summary is unacknowledged (first login / changed permissions): open "Erişimim" at once. */
+  welcomeNeeded?: boolean;
+  /** The session hotel, the context of that window. */
+  welcomeHotelId?: string;
 };
 
 /**
@@ -50,6 +56,8 @@ export function ShellClient({
   prefs,
   confirmSimpleActions,
   mobileDefinitions,
+  welcomeNeeded = false,
+  welcomeHotelId = "",
 }: ShellClientProps) {
   // Desktop and Start menu show the union over the user's hotels; windows bound to a hotel are
   // limited per hotel by the store (screensByHotel).
@@ -83,6 +91,10 @@ export function ShellClient({
   useEffect(() => () => clearTimeout(refreshTimer.current), []);
 
   const mode = useShellMode();
+  // Feedback surface follows the shell: tray balloon on the XP desktop, snackbar on the Android shell.
+  useEffect(() => {
+    setNotifySurface(mode === "mobile" ? "snackbar" : "xp");
+  }, [mode]);
   const ready = useWindowStore((s) => s.ready);
   const order = useWindowStore((s) => s.order);
   const theme = useWindowStore((s) => s.theme);
@@ -95,10 +107,7 @@ export function ShellClient({
   const openApp = useCallback((appId: string) => {
     const store = windowStore.getState();
     if (store.open(appId) === null && store.order.length >= MAX_WINDOWS) {
-      void alertDialog({
-        title: "Pencere sınırı",
-        message: `En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`,
-      });
+      notify.error(`En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`, { title: "Pencere sınırı" });
     }
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
@@ -139,7 +148,9 @@ export function ShellClient({
             startButtonRef={startButtonRef}
           />
           {footerBand ? <FooterBand /> : null}
+          <WelcomeOpener needed={welcomeNeeded} hotelId={welcomeHotelId} />
           <ConfirmDialog />
+          <TrayBalloonHost />
         </>
       ) : null}
     </div>

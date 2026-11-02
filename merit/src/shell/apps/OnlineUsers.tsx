@@ -204,7 +204,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
     const yes = await confirm({
       title: "Zorla çıkış",
       message: `${selected.user.fullName} oturumdan çıkarılsın mı?`,
-      danger: true,
+      danger: true, confirmLabel: "Çıkış yaptır",
     });
     if (!yes) return;
     setBusy(true);
@@ -223,7 +223,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
     const yes = await confirm({
       title: "Boştaki oturumlar",
       message: "Hareketsizlik süresi dolan açık oturumlar kapatılacak. Devam edilsin mi?",
-      danger: true,
+      danger: true, confirmLabel: "Oturumları kapat",
     });
     if (!yes) return;
     setBusy(true);

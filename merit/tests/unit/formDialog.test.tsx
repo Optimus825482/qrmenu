@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Result } from "@/lib/result";
 import { answer, confirmStore } from "@/shell/confirm";
+import { notify, notifyStore } from "@/shell/notify";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog } from "@/shell/ui/FormDialog";
 import { Toolbar } from "@/shell/ui/Toolbar";
@@ -13,10 +14,10 @@ afterEach(() => {
   confirmStore.setState({ request: null });
 });
 
-/** A successful save shows an "İşlem tamamlandı" information box; the dialog closes after "Tamam". */
+/** A successful save shows no modal: a non-blocking success notice (notify) is queued instead. */
 async function acknowledgeSuccess() {
-  await waitFor(() => expect(confirmStore.getState().request).toMatchObject({ kind: "alert", title: "İşlem tamamlandı" }));
-  answer(true);
+  await waitFor(() => expect(notifyStore.getState().toasts[0]).toMatchObject({ kind: "success" }));
+  expect(confirmStore.getState().request).toBeNull();
 }
 
 type Submit = (v: Record<string, string>) => Promise<Result<unknown>>;

@@ -102,7 +102,7 @@ test("Varsayılana dön: onaydan sonra M / Tahoma / Luna / Bliss", async ({ page
   await panelWindow(page).getByRole("button", { name: "Varsayılana dön" }).click();
   const dialog = page.getByRole("dialog", { name: "Varsayılana dön" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Evet" }).click();
+  await dialog.locator('[data-confirm="ok"]').click();
   const saved = waitForPrefsSave(page);
   await expect(shell(page)).toHaveAttribute("data-theme", "luna");
   expect(await cssVar(page, ".xp-shell", "--xp-font-size")).toBe("12px");

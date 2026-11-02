@@ -4,7 +4,8 @@ import { type FormEvent, useEffect, useRef, useState } from "react";
 import type { FieldErrors } from "@/lib/result";
 import { listHotelsAction, updateHotelAction } from "@/modules/core/server/admin/actions/hotels";
 import type { HotelRow } from "@/modules/core/server/admin/hotels";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { Field } from "@/shell/ui/Field";
 import { FieldErrorsContext } from "@/shell/ui/formContext";
 import { useLiveList } from "@/shell/ui/useLiveList";
@@ -93,7 +94,7 @@ function HotelForm({
     const approved = await confirm({
       title: "Otel bilgilerini güncelle",
       message: `“${hotel.name}” otelindeki değişiklikler kaydedilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     busy.current = true;
@@ -111,7 +112,7 @@ function HotelForm({
         },
       });
       if (result.ok) {
-        await alertDialog({ title: "İşlem tamamlandı", message: `“${hotel.name}” otel bilgileri güncellendi.` });
+        notify.success(`“${hotel.name}” otel bilgileri güncellendi.`);
         onSaved();
       } else {
         setMessage(result.error.message);

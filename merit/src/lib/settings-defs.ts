@@ -52,7 +52,7 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "session.idleMinutes": 45,
   "session.singleDevice": true,
   "session.singleTargetAuto": true,
-  "shell.confirmSimpleActions": true,
+  "shell.confirmSimpleActions": false,
   "shell.mobileDefinitions": false,
   "mybar.dailyLimit": true,
   "mybar.quantityMode": "QTY",
@@ -163,7 +163,7 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
   },
   "shell.confirmSimpleActions": {
     label: "Basit işlemlerde onay sor",
-    description: "Oluşturma ve düzenleme gibi basit işlemlerde de onay penceresi gösterilir.",
+    description: "Kapalıyken basit işlemler sorulmadan yapılır ve sonuç kısa bir bildirimle gösterilir; silme gibi geri alınamaz işlemler her zaman sorulur.",
     group: "Kabuk",
     type: "boolean",
   },

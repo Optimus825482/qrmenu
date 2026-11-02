@@ -2,7 +2,8 @@
 
 import { type FormEvent, useState } from "react";
 import type { FieldErrors } from "@/lib/result";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { FieldErrorsContext } from "@/shell/ui/formContext";
 import { Field } from "@/shell/ui/Field";
 import { ALLERGENS } from "../../allergens";
@@ -52,7 +53,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
     const approved = await confirm({
       title: "Menü kaydını güncelle",
       message: `“${node.name}” kaydındaki değişiklikler kaydedilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const form = new FormData(formElement);
@@ -76,7 +77,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
       setMessage(translations.ok
         ? { ok: true, text: `Bilgiler kaydedildi; ${translations.data.languages.length} dilde otomatik çeviri oluşturuldu. Çevirileri yayından önce gözden geçirin.` }
         : { ok: false, text: `Bilgiler kaydedildi ancak çeviriler oluşturulamadı: ${translations.error.message}` });
-      if (translations.ok) await alertDialog({ title: "Kayıt ve çeviriler tamamlandı", message: `“${node.name}” bilgileri kaydedildi. ${translations.data.languages.length} dil için DeepL çevirisi oluşturuldu ve yanıtların eksiksiz olduğu doğrulandı. Menü terimlerini kullanmadan önce kontrol edin.` });
+      if (translations.ok) notify.success(`“${node.name}” bilgileri kaydedildi. ${translations.data.languages.length} dil için DeepL çevirisi oluşturuldu ve yanıtların eksiksiz olduğu doğrulandı. Menü terimlerini kullanmadan önce kontrol edin.`);
       onChanged();
     } else {
       setMessage({ ok: false, text: result.error.message });
@@ -88,7 +89,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
     const approved = await confirm({
       title: "Menü durumunu güncelle",
       message: `“${node.name}” için tükenme durumu değiştirilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const result = await setMenuAvailabilityAction({ nodeId: node.id, available: !soldOut });
@@ -96,7 +97,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
       setMessage({ ok: false, text: result.error.message });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü durumu güncellendi.` });
+    notify.success(`“${node.name}” menü durumu güncellendi.`);
     onChanged();
   };
 

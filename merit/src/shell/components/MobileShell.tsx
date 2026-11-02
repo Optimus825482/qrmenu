@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
+import { SnackbarHost } from "@/components/ui/Snackbar";
 import { fontVariables } from "../appearance";
 import { useMobileDefs } from "../useMobileDefs";
 import { useSse, type SseStatus } from "../useSse";
@@ -157,6 +158,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
           })}
         </div>
       </nav>
+      <SnackbarHost bottomOffset="72px" />
     </div>
   );
 }

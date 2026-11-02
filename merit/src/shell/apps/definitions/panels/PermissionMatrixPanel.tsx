@@ -8,7 +8,8 @@ import {
 import { roleOptionsAction, updateRoleAction } from "@/modules/core/server/admin/actions/roles";
 import type { Flags, PermissionMatrix, ScreenCell } from "@/modules/core/server/admin/permissions";
 import type { RoleOptions } from "@/modules/core/server/admin/roles";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 
 type Props = { hotelId: string; setStatus(text: string): void };
 const ACTIONS = ["V", "O", "D", "A", "R"] as const;
@@ -171,14 +172,14 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
           : item),
       } : current);
       setError("");
-      await alertDialog({ title: "Kaydedildi", message: `${role.name} rolünün açılış ekranı güncellendi.` });
+      notify.success(`${role.name} rolünün açılış ekranı güncellendi.`);
     } finally {
       setSavingScreen(false);
     }
   };
 
   const togglePermission = async (cell: ScreenCell, action: (typeof ACTIONS)[number], value: boolean) => {
-    const yes = await confirm({ title: "Ekran yetkisini güncelle", message: `${cell.name} için “${ACTION_TITLES[action]}” yetkisi ${value ? "açılsın" : "kapatılsın"} mı?`, danger: !value });
+    const yes = await confirm({ title: "Ekran yetkisini güncelle", message: `${cell.name} için “${ACTION_TITLES[action]}” yetkisi ${value ? "açılsın" : "kapatılsın"} mı?`, danger: true, confirmLabel: "Onayla" });
     if (!yes) return;
     const flags: Flags = { V: cell.V, O: cell.O, D: cell.D, A: cell.A, R: cell.R, [action]: value };
     setBusy(true);

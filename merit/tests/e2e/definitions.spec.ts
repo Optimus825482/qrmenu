@@ -400,6 +400,9 @@ test("Masalar (outlet düğümü): Toplu Ekle 1–5 → 5 masa; tekrar CONFLICT;
   await saveNew(page, one);
   await expect(row(win, "VIP 1")).toBeVisible();
   await deleteSelected(page, win, "Masayı sil");
+  // Single confirmation, no success modal: only a non-blocking "silindi" notice remains.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "silindi" }).first()).toBeVisible();
   await expect(row(win, "VIP 1")).toHaveCount(0);
 
   // The outlet with tables cannot be deleted.

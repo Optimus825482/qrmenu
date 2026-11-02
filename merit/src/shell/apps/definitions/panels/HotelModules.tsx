@@ -6,7 +6,8 @@ import {
   setHotelModuleAction,
 } from "@/modules/core/server/admin/actions/hotelModules";
 import type { HotelModuleState } from "@/modules/core/server/admin/hotelModules";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { useSse } from "@/shell/useSse";
 import { MODULE_LABELS } from "./values";
 
@@ -52,7 +53,7 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
       message: enabled
         ? `${label} modülü bu otelde açılsın mı?`
         : `${label} bu otelde kapatılsın mı? Modülü kullanan personel ve ekranlar erişimini kaybeder.`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!yes) return;
     setBusy(item.moduleKey);
@@ -62,9 +63,9 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
         setModules((current) =>
           current.map((m) => (m.moduleKey === item.moduleKey ? result.data : m)),
         );
-        await alertDialog({ title: "İşlem tamamlandı", message: `“${label}” modülü güncellendi.` });
+        notify.success(`“${label}” modülü güncellendi.`);
       } else {
-        void alertDialog({ title: "Modül değiştirilemedi", message: result.error.message });
+        notify.error(result.error.message, { title: "Modül değiştirilemedi" });
       }
     } finally {
       setBusy(null);

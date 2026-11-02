@@ -11,7 +11,8 @@ import {
 import { createOutletAreaAction } from "@/modules/core/server/admin/actions/outletAreas";
 import { OutletAreaPanel } from "./OutletAreaPanel";
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -124,15 +125,15 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Outleti sil",
       message: `"${row.name}" outleti silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteOutletAction({ hotelId, id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Outlet silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Outlet silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” outleti silindi.` });
+    notify.success(`“${row.name}” outleti silindi.`);
     setSelectedId(undefined);
     list.reload();
   };

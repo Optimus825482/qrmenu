@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import {
   removeMenuImageAction,
   setPrimaryMenuImageAction,
@@ -56,6 +57,9 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
 
         // Prompt user: ask if they want to open the image editing studio
         const openStudio = await confirm({
+          danger: true,
+          confirmLabel: "Stüdyoyu aç",
+          cancelLabel: "Şimdi değil",
           title: "Yükleme Tamamlandı",
           message: `“${node.name}” görseli otomatik optimize edilerek kaydedildi.\n\nGörsel İşleme Stüdyosu açılsın mı? (Kırpma, arka plan kaldırma, renk sıcaklığı, parlaklık vb.)`,
         });
@@ -84,7 +88,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
       message: isPrimary && images.length > 1
         ? `Bu görsel ana kapak görselidir. Silinsin mi? (Bir sonraki görsel otomatik kapak yapılacaktır.)`
         : `Seçili görsel silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Kaldır",
     });
     if (!approved) return;
 
@@ -108,7 +112,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
     const approved = await confirm({
       title: "Tüm Görselleri Kaldır",
       message: `“${node.name}” öğesine ait tüm görseller silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Kaldır",
     });
     if (!approved) return;
 
@@ -119,10 +123,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
       if (!result.ok) {
         setError(result.error.message);
       } else {
-        await alertDialog({
-          title: "İşlem Tamamlandı",
-          message: `“${node.name}” öğesinin tüm görselleri silindi.`,
-        });
+        notify.success(`“${node.name}” öğesinin tüm görselleri silindi.`);
         onChanged();
       }
     } catch {

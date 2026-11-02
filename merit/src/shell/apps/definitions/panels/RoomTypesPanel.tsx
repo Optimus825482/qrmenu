@@ -9,7 +9,8 @@ import {
   listRoomTypesAction,
   updateRoomTypeAction,
 } from "@/modules/core/server/admin/actions/roomTypes";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { useWindowStore } from "@/shell/windowStore";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
@@ -80,15 +81,15 @@ export function RoomTypesPanel({ hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Oda tipini sil",
       message: `"${row.name}" oda tipi silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteRoomTypeAction({ hotelId, id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Oda tipi silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Oda tipi silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” oda tipi silindi.` });
+    notify.success(`“${row.name}” oda tipi silindi.`);
     setSelectedId(undefined);
     list.reload();
   };

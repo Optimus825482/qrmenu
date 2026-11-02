@@ -101,7 +101,7 @@ export function Window({ id, hotels, userName }: Props) {
       const yes = await confirm({
         title: "Kaydedilmemiş değişiklikler",
         message: `"${current.title}" penceresinde kaydedilmemiş değişiklikler var. Yine de kapatılsın mı?`,
-        danger: true,
+        danger: true, confirmLabel: "Yine de kapat",
       });
       if (!yes) return;
     }

@@ -14,7 +14,8 @@ import { userOptionsAction } from "@/modules/core/server/admin/actions/users";
 import type { MemberCandidate, MemberRow } from "@/modules/core/server/admin/members";
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
 import type { UserOptions } from "@/modules/core/server/admin/users";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { Toolbar } from "@/shell/ui/Toolbar";
@@ -116,7 +117,7 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
     const result = await assignMemberAction({ userId: candidate.id, outletId });
     setAddingUserId(null);
     if (!result.ok) {
-      void alertDialog({ title: "Ekip üyesi eklenemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Ekip üyesi eklenemedi" });
       return;
     }
     setCandidates((current) => current.filter((user) => user.id !== candidate.id));
@@ -129,15 +130,15 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
     const yes = await confirm({
       title: "Ekipten çıkar",
       message: `"${row.username}" outletin ekibinden çıkarılsın mı?`,
-      danger: true,
+      danger: true, confirmLabel: "Çıkar",
     });
     if (!yes) return;
     const result = await removeMemberAction({ id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Üye çıkarılamadı", message: result.error.message });
+      notify.error(result.error.message, { title: "Üye çıkarılamadı" });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” ekipten çıkarıldı.` });
+    notify.success(`“${row.username}” ekipten çıkarıldı.`);
     setSelectedId(undefined);
     list.reload();
   };
@@ -146,15 +147,15 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
     const approved = await confirm({
       title: "Üye durumunu güncelle",
       message: `“${row.username}” için üyelik durumu ${row.isActive ? "pasife alınsın" : "aktifleştirilsin"} mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const result = await setMemberActiveAction({ id: row.id, isActive: !row.isActive });
     if (!result.ok) {
-      void alertDialog({ title: "Durum değiştirilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Durum değiştirilemedi" });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” üyelik durumu güncellendi.` });
+    notify.success(`“${row.username}” üyelik durumu güncellendi.`);
     list.reload();
   };
 

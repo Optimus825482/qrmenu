@@ -128,7 +128,7 @@ export function CallOptionsPanel({
     const yes = await confirm({
       title: "Seçeneği sil",
       message: `“${row.label}” çağrı seçeneği silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (yes) await persist(await removeCallOptionAction({ id: row.id }));
   }

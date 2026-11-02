@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MenuNodeKind } from "@/generated/prisma/client";
 import type { MeritEvent } from "@/lib/realtime-events";
 import type { AppProps } from "@/shell/registry";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
 import { useSse } from "@/shell/useSse";
@@ -122,9 +123,9 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
       setSelectedId(result.data.id);
       const translated = await autoTranslateMenuNodeAction({ nodeId: result.data.id });
       if (!translated.ok) {
-        void alertDialog({ title: "Kayıt yapıldı; çeviri oluşturulamadı", message: translated.error.message });
+        notify.info(`Kayıt yapıldı; çeviri oluşturulamadı: ${translated.error.message}`);
       } else {
-        void alertDialog({ title: "Kayıt ve çeviriler tamamlandı", message: `${translated.data.languages.length} dil için DeepL çevirisi oluşturuldu. Menü terimlerini kullanmadan önce gözden geçirin.` });
+        notify.success(`${translated.data.languages.length} dil için DeepL çevirisi oluşturuldu. Menü terimlerini kullanmadan önce gözden geçirin.`);
       }
       await loadTree();
     }
@@ -137,15 +138,15 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
     const approved = await confirm({
       title: "Menü sırasını güncelle",
       message: `“${node.name}” menü kaydının sırası değiştirilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const result = await moveMenuNodeAction({
       nodeId: node.id,
       data: { newParentId: node.parentId, index },
     });
-    if (!result.ok) void alertDialog({ title: "Taşınamadı", message: result.error.message });
-    else await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü sırası güncellendi.` });
+    if (!result.ok) notify.error(result.error.message, { title: "Taşınamadı" });
+    else notify.success(`“${node.name}” menü sırası güncellendi.`);
     await loadTree();
   };
 
@@ -153,15 +154,15 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
     const yes = await confirm({
       title: `${KIND_LABEL[node.kind]} sil`,
       message: `"${node.name}" silinsin mi? Altındaki kayıtlar da silinir; siparişte kullanılmışsa pasife alınır.`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteMenuNodeAction({ nodeId: node.id });
     if (!result.ok) {
-      void alertDialog({ title: "Silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${node.name}” silindi.` });
+    notify.success(`“${node.name}” silindi.`);
     setSelectedId(undefined);
     await loadTree();
   };
@@ -170,12 +171,12 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
     const approved = await confirm({
       title: "Menü durumunu güncelle",
       message: `“${node.name}” ${node.isAvailable ? "pasife alınsın" : "yeniden aktifleştirilsin"} mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const result = await setMenuAvailabilityAction({ nodeId: node.id, available: !node.isAvailable });
-    if (!result.ok) void alertDialog({ title: "Değiştirilemedi", message: result.error.message });
-    else await alertDialog({ title: "İşlem tamamlandı", message: `“${node.name}” menü durumu güncellendi.` });
+    if (!result.ok) notify.error(result.error.message, { title: "Değiştirilemedi" });
+    else notify.success(`“${node.name}” menü durumu güncellendi.`);
     await loadTree();
   };
 

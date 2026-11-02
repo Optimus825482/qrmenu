@@ -4,8 +4,9 @@ import { acknowledge, answer, appWindow } from "./definitionsUi";
 import { expect, login } from "./fixtures";
 
 /**
- * Shared selectors of the Menü Yönetimi window (QM-MEN). Every write goes through a "danger"
- * confirm box (Evet) and ends with an "İşlem tamamlandı" message box (Tamam); the FormDialog of a
+ * Shared selectors of the Menü Yönetimi window (QM-MEN). Every write goes through one "danger"
+ * confirm box (confirm button, `answer(..., "Evet")`) and ends with a non-blocking success notice
+ * (`acknowledge`, role "status"); the FormDialog of a
  * new record is portaled above the shell, so it is looked up on the page, not inside the window.
  */
 

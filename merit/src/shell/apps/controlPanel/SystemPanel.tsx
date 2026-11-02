@@ -16,7 +16,8 @@ import type {
   SettingsScopes,
 } from "@/modules/core/server/admin/settingsAdmin";
 import type { SettingGroup } from "@/lib/settings-defs";
-import { alertDialog, confirm } from "../../confirm";
+import { confirm } from "../../confirm";
+import { notify } from "../../notify";
 import { useSse } from "../../useSse";
 
 const SOURCE_LABEL: Record<SettingSource, string> = {
@@ -225,7 +226,7 @@ function SettingRow({
     const approved = await confirm({
       title: "Ayarı kaydet",
       message: `${meta.label} ayarı kaydedilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     setBusy(true);
@@ -236,7 +237,7 @@ function SettingRow({
         // A saved secret comes back masked, so the row's identity does not change and it would
         // not remount: empty the field here or the clear text stays on screen.
         if (meta.secret) setDraft("");
-        await alertDialog({ title: "İşlem tamamlandı", message: `${meta.label} ayarı kaydedildi.` });
+        notify.success(`${meta.label} ayarı kaydedildi.`);
         onChanged(result.data, `${meta.label} kaydedildi`);
       } else {
         const message = result.error.fieldErrors?.value?.[0] ?? result.error.message;
@@ -252,7 +253,7 @@ function SettingRow({
     const yes = await confirm({
       title: "Otel değerini kaldır",
       message: `${meta.label} için bu otele özel değer kaldırılsın mı? Sistem geneli (ya da varsayılan) değer uygulanır.`,
-      danger: true,
+      danger: true, confirmLabel: "Kaldır",
     });
     if (!yes || hotelId === null) return;
     setBusy(true);
@@ -260,7 +261,7 @@ function SettingRow({
     try {
       const result = await clearSettingOverrideAction({ hotelId, key: item.key });
       if (result.ok) {
-        await alertDialog({ title: "İşlem tamamlandı", message: `${meta.label} otel değeri kaldırıldı.` });
+        notify.success(`${meta.label} otel değeri kaldırıldı.`);
         onChanged(result.data, `${meta.label} otel değeri kaldırıldı`);
       }
       else {
@@ -358,22 +359,16 @@ function SettingRow({
               const res = await testGeminiAction({ model: draft });
               if (res.ok) {
                 setTestResult({ ok: true, text: res.data.message });
-                await alertDialog({
-                  title: "Gemini Bağlantı Testi Başarılı",
-                  message: `${res.data.message}\n\n• Model: ${res.data.model}\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
-                });
+                notify.success(`${res.data.message}`);
               } else {
                 const message = res.error.message || "Gemini bağlantı testi başarısız oldu.";
                 setTestResult({ ok: false, text: message });
-                await alertDialog({
-                  title: "Gemini Bağlantı Testi Başarısız",
-                  message,
-                });
+                notify.error(message, { title: "Gemini Bağlantı Testi Başarısız" });
               }
             } catch (err: unknown) {
               const message = err instanceof Error ? err.message : String(err);
               setTestResult({ ok: false, text: message });
-              await alertDialog({ title: "Bağlantı Hatası", message });
+              notify.error(message, { title: "Bağlantı Hatası" });
             } finally {
               setTesting(false);
             }
@@ -402,22 +397,16 @@ function SettingRow({
               const res = await testGeminiAction({ apiKey: draft.trim() || undefined });
               if (res.ok) {
                 setTestResult({ ok: true, text: res.data.message });
-                await alertDialog({
-                  title: "Gemini Anahtar Testi Başarılı",
-                  message: `${res.data.message}\n\n• Model: ${res.data.model}\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
-                });
+                notify.success(`${res.data.message}`);
               } else {
                 const message = res.error.message || "Gemini bağlantı testi başarısız oldu.";
                 setTestResult({ ok: false, text: message });
-                await alertDialog({
-                  title: "Gemini Bağlantı Testi Başarısız",
-                  message,
-                });
+                notify.error(message, { title: "Gemini Bağlantı Testi Başarısız" });
               }
             } catch (err: unknown) {
               const message = err instanceof Error ? err.message : String(err);
               setTestResult({ ok: false, text: message });
-              await alertDialog({ title: "Bağlantı Hatası", message });
+              notify.error(message, { title: "Bağlantı Hatası" });
             } finally {
               setTesting(false);
             }
@@ -446,22 +435,16 @@ function SettingRow({
               const res = await testDeeplAction({ apiKey: draft.trim() || undefined });
               if (res.ok) {
                 setTestResult({ ok: true, text: res.data.message });
-                await alertDialog({
-                  title: "DeepL Bağlantı Testi Başarılı",
-                  message: `${res.data.message}\n\n• Yanıt Süresi: ${res.data.latencyMs} ms\n• Örnek Çeviri: ${res.data.sample.source} → ${res.data.sample.translated}`,
-                });
+                notify.success(`${res.data.message}`);
               } else {
                 const message = res.error.message || "DeepL bağlantı testi başarısız oldu.";
                 setTestResult({ ok: false, text: message });
-                await alertDialog({
-                  title: "DeepL Bağlantı Testi Başarısız",
-                  message,
-                });
+                notify.error(message, { title: "DeepL Bağlantı Testi Başarısız" });
               }
             } catch (err: unknown) {
               const message = err instanceof Error ? err.message : String(err);
               setTestResult({ ok: false, text: message });
-              await alertDialog({ title: "Bağlantı Hatası", message });
+              notify.error(message, { title: "Bağlantı Hatası" });
             } finally {
               setTesting(false);
             }

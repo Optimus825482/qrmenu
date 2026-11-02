@@ -13,7 +13,8 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import type { FieldErrors, Result } from "@/lib/result";
-import { alertDialog, confirm } from "../confirm";
+import { confirm } from "../confirm";
+import { notify } from "../notify";
 import { FieldErrorsContext } from "./formContext";
 
 /** Field values by `name`, as text (an unchecked checkbox is absent, a checked one is "on"). */
@@ -29,6 +30,8 @@ type Props = {
   submitText: string;
   /** Require an explicit approval before saving an existing record. */
   confirmBeforeSubmit?: boolean;
+  /** Snackbar/balloon text after a successful save; default "“title” kaydedildi.". */
+  successMessage?: string;
 };
 
 const FOCUSABLE =
@@ -51,7 +54,7 @@ export function FormDialog(props: Props) {
   return portalRoot ? createPortal(panel, portalRoot) : panel;
 }
 
-function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSubmit }: Props) {
+function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSubmit, successMessage }: Props) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -141,16 +144,13 @@ function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSu
         const approved = await confirm({
           title: "Değişikliği onayla",
           message: `“${title}” için yaptığınız değişiklikler kaydedilsin mi?`,
-          danger: true,
+          danger: true, confirmLabel: "Onayla",
         });
         if (!approved) return;
       }
       const result = await onSubmit(values);
       if (result.ok) {
-        await alertDialog({
-          title: "İşlem tamamlandı",
-          message: `“${title}” işlemi başarıyla tamamlandı.`,
-        });
+        notify.success(successMessage ?? `“${title}” kaydedildi.`);
         busy.current = false;
         onClose();
       } else {

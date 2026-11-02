@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { AppProps } from "@/shell/registry";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -156,24 +157,24 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
     const approved = await confirm({
       title: "Varsayılan temayı değiştir",
       message: `“${row.name}” varsayılan tema yapılsın mı?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const result = await setDefaultThemeAction({ id: row.id });
-    if (!result.ok) void alertDialog({ title: "Varsayılan yapılamadı", message: result.error.message });
-    else await alertDialog({ title: "İşlem tamamlandı", message: `“${row.name}” varsayılan tema yapıldı.` });
+    if (!result.ok) notify.error(result.error.message, { title: "Varsayılan yapılamadı" });
+    else notify.success(`“${row.name}” varsayılan tema yapıldı.`);
     await load();
   };
 
   const remove = async (row: ThemeRow) => {
-    const yes = await confirm({ title: "Temayı sil", message: `"${row.name}" teması silinsin mi?`, danger: true });
+    const yes = await confirm({ title: "Temayı sil", message: `"${row.name}" teması silinsin mi?`, danger: true, confirmLabel: "Sil" });
     if (!yes) return;
     const result = await deleteThemeAction({ id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Tema silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Tema silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” teması silindi.` });
+    notify.success(`“${row.name}” teması silindi.`);
     setSelectedId(undefined);
     await load();
   };
@@ -195,7 +196,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
     const result = await assignThemeAction({ outletId, themeId: themeId || null });
     if (!result.ok) {
       clearTimeout(timer);
-      void alertDialog({ title: "Tema atanamadı", message: result.error.message });
+      notify.error(result.error.message, { title: "Tema atanamadı" });
       await load();
     }
   };

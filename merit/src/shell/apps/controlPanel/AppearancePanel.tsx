@@ -10,7 +10,8 @@ export function AppearancePanel() {
     const yes = await confirm({
       title: "Varsayılana dön",
       message: "Yazı boyutu, yazı tipi, duvar kağıdı, tema ve marka ayarları varsayılan değerlerine dönsün mü?",
-      danger: false,
+      danger: true,
+      confirmLabel: "Varsayılana dön",
     });
     if (yes) windowStore.getState().resetAppearance();
   };

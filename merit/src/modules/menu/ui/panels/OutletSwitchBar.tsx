@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import type { MenuOutletInfo } from "../../server/menuContext";
 import {
   setOutletOrderingEnabledAction,
@@ -26,17 +27,17 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
       message: enabled
         ? `"${outlet.name}" için masa siparişi açılsın mı?`
         : `"${outlet.name}" için masa siparişi kapatılsın mı? Misafirler menüyü görmeye devam eder.`,
-      danger: true,
+      danger: true, confirmLabel: enabled ? "Aç" : "Kapat",
     });
     if (!yes) return;
     setBusy(true);
     const result = await setOutletOrderingEnabledAction({ id: outlet.id, enabled });
     setBusy(false);
     if (!result.ok) {
-      void alertDialog({ title: "Sipariş durumu değiştirilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Sipariş durumu değiştirilemedi" });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” sipariş durumu güncellendi.` });
+    notify.success(`“${outlet.name}” sipariş durumu güncellendi.`);
     onChanged();
   };
 
@@ -44,17 +45,17 @@ export function OutletSwitchBar({ outlet, canSwitch, onChanged }: Props) {
     const yes = await confirm({
       title: "Fiyat gösterimi",
       message: `"${outlet.name}" için fiyat gösterimi "${PRICE_LABELS[value]}" olarak değiştirilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!yes) return;
     setBusy(true);
     const result = await setOutletPriceDisplayAction({ id: outlet.id, value });
     setBusy(false);
     if (!result.ok) {
-      void alertDialog({ title: "Fiyat gösterimi değiştirilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Fiyat gösterimi değiştirilemedi" });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” fiyat gösterimi güncellendi.` });
+    notify.success(`“${outlet.name}” fiyat gösterimi güncellendi.`);
     onChanged();
   };
 

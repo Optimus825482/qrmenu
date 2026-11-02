@@ -9,7 +9,8 @@ import {
   updateRoleAction,
 } from "@/modules/core/server/admin/actions/roles";
 import type { RoleOptions, RoleRow } from "@/modules/core/server/admin/roles";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -112,15 +113,15 @@ export function RolesPanel({ hotelId: _hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Rolü sil",
       message: `“${row.code} — ${row.name}” rolü silinsin mi? Kullanımda olan roller silinemez.`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteRoleAction({ id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Rol silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Rol silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.code} — ${row.name}” rolü silindi.` });
+    notify.success(`“${row.code} — ${row.name}” rolü silindi.`);
     setSelectedId(undefined);
     list.reload();
   };

@@ -38,9 +38,9 @@ async function openStudio(browser: Browser): Promise<{ page: Page; win: Locator;
   return { page, win, studio };
 }
 
-/** Confirms the "İşlem tamamlandı" notice a successful FormDialog shows. */
+/** Waits for the non-blocking success notice a successful FormDialog shows (tray balloon). */
 async function acknowledge(page: Page) {
-  await page.getByRole("alertdialog").getByRole("button", { name: "Tamam" }).click();
+  await expect(page.getByRole("status").and(page.locator(".xp-balloon, .ui-snackbar")).first()).toBeVisible();
 }
 
 async function addOption(page: Page, studio: Locator, label: string) {

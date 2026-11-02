@@ -8,7 +8,8 @@ import {
   listFloorsAction,
   updateFloorAction,
 } from "@/modules/core/server/admin/actions/floors";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -68,15 +69,15 @@ export function FloorsPanel({ hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Katı sil",
       message: `"${row.name}" katı silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteFloorAction({ hotelId, id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Kat silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Kat silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” katı silindi.` });
+    notify.success(`“${row.name}” katı silindi.`);
     setSelectedId(undefined);
     list.reload();
   };

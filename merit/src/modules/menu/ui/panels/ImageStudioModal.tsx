@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { alertDialog } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { replaceMenuImageAction, uploadMenuImagesAction } from "../../server/actions/menuTree";
 
 type Props = {
@@ -599,10 +599,7 @@ export function ImageStudioModal({
       if (!result.ok) {
         setError(result.error.message);
       } else {
-        await alertDialog({
-          title: "Görsel Güncellendi",
-          message: `“${nodeName}” görseli stüdyo düzenlemeleriyle kaydedildi.`,
-        });
+        notify.success(`“${nodeName}” görseli stüdyo düzenlemeleriyle kaydedildi.`);
         onSaved(result.data.imageUrl);
         onClose();
       }
@@ -629,10 +626,7 @@ export function ImageStudioModal({
       if (!result.ok) {
         setError(result.error.message);
       } else {
-        await alertDialog({
-          title: "Yeni Görsel Eklendi",
-          message: `Düzenlenen görsel “${nodeName}” galerisine eklendi.`,
-        });
+        notify.success(`Düzenlenen görsel “${nodeName}” galerisine eklendi.`);
         onSaved(result.data.imageUrl ?? initialImageUrl);
         onClose();
       }

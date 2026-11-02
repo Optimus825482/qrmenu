@@ -189,14 +189,14 @@ test("Başlat öğesini masaüstüne sürükle → onay → kısayol oluşur ve 
     .getByRole("menu", { name: "Başlat menüsü" })
     .getByRole("menuitem", { name: "Denetim Masası" });
   const box = (await desktop(page).boundingBox())!;
+  const saved = waitForPrefsSave(page);
   await item.dragTo(desktop(page), {
     targetPosition: { x: box.width - 300, y: 200 },
   });
+  // shell.confirmSimpleActions is off by default: creating a shortcut is not asked.
   const dialog = page.getByRole("dialog", { name: "Kısayol oluştur" });
-  await expect(dialog).toBeVisible();
-  const saved = waitForPrefsSave(page);
-  await dialog.getByRole("button", { name: "Evet" }).click();
   await expect(icon(page, "Denetim Masası")).toBeVisible();
+  await expect(dialog).toHaveCount(0);
   expect((await saved).ok()).toBe(true);
 
   // Dropping the same item again only moves the shortcut (no question, still one icon).
@@ -230,14 +230,14 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await expect(dialog).toBeHidden();
   await expect(icon(page, "Denetim Masası")).toBeVisible();
 
-  // Enter on the title-bar × means "close" (= Hayır), not Evet; Tab skips the ×.
+  // Delete question: focus starts on the safe button (Vazgeç); Enter there cancels; Tab skips the ×.
   await removeVia();
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Evet" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Vazgeç" })).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(dialog.getByRole("button", { name: "Hayır" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Kaldır" })).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(dialog.getByRole("button", { name: "Evet" })).toBeFocused();
+  await expect(dialog.getByRole("button", { name: "Vazgeç" })).toBeFocused();
   await dialog.getByRole("button", { name: "Kapat" }).focus();
   await page.keyboard.press("Enter");
   await expect(dialog).toBeHidden();
@@ -245,11 +245,15 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
 
   await removeVia();
   await expect(dialog).toBeVisible();
-  const saved = waitForPrefsSave(page);
-  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter"); // on Vazgeç: the shortcut stays
+  await expect(dialog).toBeHidden();
+  await expect(icon(page, "Denetim Masası")).toBeVisible();
+  await removeVia();
+  const saved2 = waitForPrefsSave(page);
+  await dialog.getByRole("button", { name: "Kaldır" }).click();
   await expect(dialog).toBeHidden();
   await expect(icon(page, "Denetim Masası")).toHaveCount(0);
-  expect((await saved).ok()).toBe(true);
+  expect((await saved2).ok()).toBe(true);
 
   // The app is still reachable from its folder; only the shortcut went.
   await page.reload();

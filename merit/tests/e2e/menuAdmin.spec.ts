@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { Locator, Page } from "@playwright/test";
-import { acknowledge, answer, appWindow, deleteSelected, saveNew } from "./definitionsUi";
+import { acknowledge, answer, appWindow, dismissError, deleteSelected, saveNew } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 import { createNode, openAdminShell, openMenuManager, setOrdering, setSoldOut, treeItem } from "./menuUi";
 
@@ -125,12 +125,12 @@ test("Menü Tasarım Stüdyosu: yeni tema, Deniz'i Havuz Bar'a ata, varsayılan 
   await answer(page, "Temayı sil", "Evet");
   const refused = page.getByRole("alertdialog", { name: "Tema silinemedi" });
   await expect(refused).toContainText("Varsayılan tema silinemez");
-  await acknowledge(page, "Tema silinemedi");
+  await dismissError(page, "Tema silinemedi");
   await themeRow(again, "Deniz").click();
   await again.getByRole("button", { name: "Seçili kaydı sil" }).click();
   await answer(page, "Temayı sil", "Evet");
   await expect(refused).toContainText(/tarafından kullanılıyor/);
-  await acknowledge(page, "Tema silinemedi");
+  await dismissError(page, "Tema silinemedi");
   await expect(themeRow(again, "Deniz")).toBeVisible();
 
   // The unused "Test Teması" theme goes away for good.

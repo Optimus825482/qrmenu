@@ -5,8 +5,8 @@ import { answer, useConfirmRequest } from "../confirm";
 import { XpIcon } from "../icons";
 
 /**
- * XP message box for confirm() / alertDialog(). Modal: Enter = Evet when focus is on Evet or on
- * the dialog itself; on Hayır or the title-bar × it means that control (= Hayır). Esc = Hayır.
+ * XP message box for confirm() / alertDialog(). Modal: Enter = the focused button (on the dialog
+ * itself: the default answer, which is cancel for danger questions); title-bar × = cancel. Esc = Hayır.
  * Tab cycles through the action buttons only.
  */
 export function ConfirmDialog() {
@@ -20,13 +20,24 @@ export function ConfirmDialog() {
       message={request.message}
       danger={request.danger ?? false}
       alert={request.kind === "alert"}
+      confirmLabel={request.confirmLabel ?? "Evet"}
+      cancelLabel={request.cancelLabel ?? "Hayır"}
+      focusCancel={request.autoFocusTarget === "cancel"}
     />
   );
 }
 
-type BoxProps = { title: string; message: string; danger: boolean; alert: boolean };
+type BoxProps = {
+  title: string;
+  message: string;
+  danger: boolean;
+  alert: boolean;
+  confirmLabel: string;
+  cancelLabel: string;
+  focusCancel: boolean;
+};
 
-function MessageBox({ title, message, danger, alert }: BoxProps) {
+function MessageBox({ title, message, danger, alert, confirmLabel, cancelLabel, focusCancel }: BoxProps) {
   const titleId = useId();
   const messageId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -36,7 +47,7 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    yesRef.current?.focus();
+    (focusCancel ? noRef.current : yesRef.current)?.focus();
 
     // Window-level (capture) so the keys work wherever focus is and never reach the shell below.
     const onKeyDown = (e: KeyboardEvent) => {
@@ -50,7 +61,8 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
         e.preventDefault();
         e.stopPropagation();
         const focused = document.activeElement;
-        if (focused === yesRef.current || focused === dialog) answer(true);
+        if (focused === yesRef.current) answer(true);
+        else if (focused === dialog) answer(!focusCancel);
         else if (focused === noRef.current || focused === closeRef.current) answer(false);
         // focus elsewhere (cannot normally happen, see onFocusIn): no answer
       } else if (e.key === "Tab") {
@@ -66,7 +78,9 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
     };
     // Focus that escapes (a click on the backdrop) is pulled back in.
     const onFocusIn = (e: FocusEvent) => {
-      if (!dialogRef.current?.contains(e.target as Node)) yesRef.current?.focus();
+      if (!dialogRef.current?.contains(e.target as Node)) {
+        (focusCancel ? noRef.current : yesRef.current)?.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("focusin", onFocusIn);
@@ -108,12 +122,24 @@ function MessageBox({ title, message, danger, alert }: BoxProps) {
           <p id={messageId}>{message}</p>
         </div>
         <div className="xp-dialog-actions">
-          <button ref={yesRef} type="button" className="xp-button" onClick={() => answer(true)}>
-            {alert ? "Tamam" : "Evet"}
+          <button
+            ref={yesRef}
+            type="button"
+            className="xp-button"
+            data-confirm="ok"
+            onClick={() => answer(true)}
+          >
+            {alert ? "Tamam" : confirmLabel}
           </button>
           {alert ? null : (
-            <button ref={noRef} type="button" className="xp-button" onClick={() => answer(false)}>
-              Hayır
+            <button
+              ref={noRef}
+              type="button"
+              className="xp-button"
+              data-confirm="cancel"
+              onClick={() => answer(false)}
+            >
+              {cancelLabel}
             </button>
           )}
         </div>

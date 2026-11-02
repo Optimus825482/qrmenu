@@ -14,7 +14,8 @@ import {
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
 import type { OutletAreaRow } from "@/modules/core/server/admin/outletAreas";
 import type { TableRow } from "@/modules/core/server/admin/tables";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -182,15 +183,15 @@ export function TablesPanel({ hotelId, setStatus, outletId: fixedOutletId }: Pro
     const yes = await confirm({
       title: "Masayı sil",
       message: `"${row.label}" masası silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteTableAction({ outletId, id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Masa silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Masa silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.label}” masası silindi.` });
+    notify.success(`“${row.label}” masası silindi.`);
     setSelectedId(undefined);
     setSelectedRows([]);
     list.reload();
@@ -205,7 +206,7 @@ export function TablesPanel({ hotelId, setStatus, outletId: fixedOutletId }: Pro
     const approved = await confirm({
       title: "Seçili masaları sil",
       message: `${selectedRows.length} masa silinsin mi? Bu işlem geri alınamaz.`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!approved) return;
 
@@ -222,12 +223,11 @@ export function TablesPanel({ hotelId, setStatus, outletId: fixedOutletId }: Pro
     setSelectedId(remaining[0]?.id);
     list.reload();
     if (failed.length === 0) {
-      await alertDialog({ title: "Kayıtlar silindi", message: `${removed.size} masa silindi.` });
+      notify.success(`${removed.size} masa silindi.`);
       return;
     }
-    await alertDialog({
+    notify.error(failed.map(({ row, message }) => `${row.label}: ${message}`).join("\n"), {
       title: `${removed.size} masa silindi, ${failed.length} silinemedi`,
-      message: failed.map(({ row, message }) => `${row.label}: ${message}`).join("\n"),
     });
   };
 

@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { TZ } from "@/lib/time";
 import type { AppProps } from "@/shell/registry";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { useSse } from "@/shell/useSse";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
@@ -116,25 +117,25 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
   const sendTest = async (row: PrinterRow) => {
     const result = await enqueueTestPrintAction({ printerId: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Test fişi gönderilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Test fişi gönderilemedi" });
       return;
     }
-    void alertDialog({ title: "Test fişi", message: `"${row.name}" için test fişi kuyruğa alındı` });
+    notify.success(`"${row.name}" için test fişi kuyruğa alındı`);
   };
 
   const remove = async (row: PrinterRow) => {
     const yes = await confirm({
       title: "Yazıcıyı sil",
       message: `"${row.name}" yazıcısı silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deletePrinterAction({ id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Yazıcı silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Yazıcı silinemedi" });
       return;
     }
-    await alertDialog({ title: "Kayıt silindi", message: `“${row.name}” yazıcısı silindi.` });
+    notify.success(`“${row.name}” yazıcısı silindi.`);
     setSelectedId(undefined);
     list.reload();
     void loadOutlets();
@@ -145,7 +146,7 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
     const approved = await confirm({
       title: "Varsayılan yazıcıyı güncelle",
       message: `“${outlet.name}” outletinin varsayılan yazıcısı ${selectedPrinter ? `“${selectedPrinter.name}” yapılsın` : "kaldırılsın"} mı?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) {
       void loadOutlets();
@@ -153,9 +154,9 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
     }
     const result = await setOutletDefaultPrinterAction({ outletId: outlet.id, printerId });
     if (!result.ok) {
-      void alertDialog({ title: "Varsayılan yazıcı kaydedilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Varsayılan yazıcı kaydedilemedi" });
     } else {
-      await alertDialog({ title: "İşlem tamamlandı", message: `“${outlet.name}” outletinin varsayılan yazıcısı güncellendi.` });
+      notify.success(`“${outlet.name}” outletinin varsayılan yazıcısı güncellendi.`);
     }
     // The server state is the truth (also restores the shown value after a failure).
     void loadOutlets();

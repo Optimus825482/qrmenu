@@ -10,7 +10,8 @@ import {
   userOptionsAction,
 } from "@/modules/core/server/admin/actions/users";
 import type { UserOptions, UserRow } from "@/modules/core/server/admin/users";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
@@ -120,15 +121,15 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
       message: row.isActive
         ? `“${row.username}” pasife alınsın mı? Açık oturumları hemen kapatılır ve giriş yapamaz.`
         : `“${row.username}” yeniden aktifleştirilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: row.isActive ? "Pasife al" : "Aktifleştir",
     });
     if (!yes) return;
     const result = await setUserActiveAction({ id: row.id, isActive: !row.isActive });
     if (!result.ok) {
-      void alertDialog({ title: "Durum değiştirilemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Durum değiştirilemedi" });
       return;
     }
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” kullanıcı durumu güncellendi.` });
+    notify.success(`“${row.username}” kullanıcı durumu güncellendi.`);
     list.reload();
   };
 
@@ -136,16 +137,16 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
     const yes = await confirm({
       title: "Kullanıcıyı sistemden sil",
       message: `“${row.fullName}” (${row.username}) hesabı sistemden kaldırılsın mı? Hesaba giriş kapatılır ve kullanıcı listeden çıkarılır; geçmiş işlem kayıtları korunur.`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!yes) return;
     const result = await deleteUserAction({ id: row.id });
     if (!result.ok) {
-      void alertDialog({ title: "Kullanıcı silinemedi", message: result.error.message });
+      notify.error(result.error.message, { title: "Kullanıcı silinemedi" });
       return;
     }
     setSelectedId(undefined);
-    await alertDialog({ title: "İşlem tamamlandı", message: `“${row.username}” sistemden kaldırıldı. Geçmiş kayıtları korundu.` });
+    notify.success(`“${row.username}” sistemden kaldırıldı. Geçmiş kayıtları korundu.`);
     list.reload();
   };
 

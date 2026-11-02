@@ -274,7 +274,7 @@ test("Online Kullanıcılar: garson listede; zorla çıkış → garsonun sonrak
   await expect(waiter).toBeVisible();
   await waiter.click();
   await online.getByRole("button", { name: "Zorla çıkış" }).click();
-  await admin.getByRole("dialog").getByRole("button", { name: "Evet" }).click();
+  await admin.getByRole("dialog").locator('[data-confirm="ok"]').click();
 
   // The garson's next navigation bounces to the login page (/kat only needs a valid session).
   await expect

@@ -4,9 +4,10 @@ import { expect } from "./fixtures";
 /**
  * Shared selectors of the Tanımlamalar / Kullanıcı / Ekip windows.
  *
- * Every successful save in a FormDialog ends with an "İşlem tamamlandı" message box that must be
- * acknowledged (the dialog closes after "Tamam"); editing an existing record first asks
- * "Değişikliği onayla"; deleting asks first and ends with "Kayıt silindi".
+ * A successful save or delete shows no modal any more: the FormDialog closes and a non-blocking
+ * tray balloon (snackbar on mobile) reports the result (`acknowledge`). Editing an existing record
+ * still asks one confirmation ("Değişikliği onayla"); deleting asks once ("Sil" / "Vazgeç").
+ * Failures stay a message box (`dismissError`).
  */
 
 export const node = (win: Locator, name: string) => win.getByRole("treeitem", { name, exact: true });
@@ -14,19 +15,32 @@ export const row = (win: Locator, text: string) => win.getByRole("row").filter({
 export const startMenuItem = (page: Page, name: string) =>
   page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name, exact: true });
 
-/** Clicks "Tamam" of an information box (default: the one every FormDialog save ends with). */
-export async function acknowledge(page: Page, title = "İşlem tamamlandı"): Promise<void> {
+/**
+ * Waits for the non-blocking success notice (tray balloon / snackbar, role "status", optionally
+ * containing `text`) and checks that no modal dialog is left open. A legacy dialog-title argument
+ * ("Islem tamamlandi", "Kayit silindi") is ignored: those titles no longer exist.
+ */
+export async function acknowledge(page: Page, text?: string | RegExp): Promise<void> {
+  const legacy = typeof text === "string" && /^(İşlem tamamlandı|Kayıt silindi)$/.test(text);
+  const notice = page.getByRole("status").and(page.locator(".xp-balloon, .ui-snackbar"));
+  const shown = text && !legacy ? notice.filter({ hasText: text }) : notice;
+  await expect(shown.first()).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+}
+
+/** Clicks "Tamam" of an error message box (failures still block, by design). */
+export async function dismissError(page: Page, title: string): Promise<void> {
   const box = page.getByRole("alertdialog", { name: title, exact: true });
   await expect(box).toBeVisible();
   await box.getByRole("button", { name: "Tamam" }).click();
   await expect(box).toHaveCount(0);
 }
 
-/** Answers a Evet / Hayır question box. */
+/** Answers the single confirmation box: "Evet" = confirm button, "Hayır" = cancel (labels vary: Sil / Vazgeç ...). */
 export async function answer(page: Page, title: string, choice: "Evet" | "Hayır"): Promise<void> {
   const box = page.getByRole("dialog", { name: title, exact: true });
   await expect(box).toBeVisible();
-  await box.getByRole("button", { name: choice, exact: true }).click();
+  await box.locator(`[data-confirm="${choice === "Evet" ? "ok" : "cancel"}"]`).click();
   await expect(box).toHaveCount(0);
 }
 
@@ -45,11 +59,11 @@ export async function saveEdit(page: Page, dialog: Locator): Promise<void> {
   await expect(dialog).toHaveCount(0);
 }
 
-/** Deletes the selected record through the toolbar: confirm, then the "Kayıt silindi" message. */
+/** Deletes the selected record through the toolbar: one confirmation, then the "... silindi" notice. */
 export async function deleteSelected(page: Page, win: Locator, askTitle: string): Promise<void> {
   await win.getByRole("button", { name: "Seçili kaydı sil" }).click();
   await answer(page, askTitle, "Evet");
-  await acknowledge(page, "Kayıt silindi");
+  await acknowledge(page, /silindi|kaldırıldı/);
 }
 
 /** The hotel card of `hotelName` inside the picker region of a window that has no hotel yet. */

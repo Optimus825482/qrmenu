@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { alertDialog, confirm } from "@/shell/confirm";
+import { confirm } from "@/shell/confirm";
+import { notify } from "@/shell/notify";
 import { removeTranslationAction, setTranslationAction, verifyTranslationAction } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 
@@ -28,7 +29,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
     const approved = await confirm({
       title: "Çeviriyi kaydet",
       message: `${current.label} dili için “${node.name}” çevirisi kaydedilsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Onayla",
     });
     if (!approved) return;
     const values = new FormData(form);
@@ -38,7 +39,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
       data: { name: String(values.get("name") ?? ""), detail: String(values.get("detail") ?? "") },
     });
     if (result.ok) {
-      await alertDialog({ title: "İşlem tamamlandı", message: `${current.label} çevirisi güncellendi.` });
+      notify.success(`${current.label} çevirisi güncellendi.`);
       setMessage({ ok: true, text: `${current.label} çevirisi kaydedildi` });
       onChanged();
     } else {
@@ -50,12 +51,12 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
     const approved = await confirm({
       title: "Çeviriyi sil",
       message: `${current.label} dilindeki “${node.name}” çevirisi silinsin mi?`,
-      danger: true,
+      danger: true, confirmLabel: "Sil",
     });
     if (!approved) return;
     const result = await removeTranslationAction({ nodeId: node.id, lang });
     if (result.ok) {
-      await alertDialog({ title: "İşlem tamamlandı", message: `${current.label} çevirisi silindi.` });
+      notify.success(`${current.label} çevirisi silindi.`);
     }
     setMessage(
       result.ok
@@ -66,7 +67,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
   };
 
   const verify = async () => {
-    const approved = await confirm({ title: "Çeviriyi onayla", message: `${current.label} çevirisini kontrol ettiniz mi? Onaylanan çeviri misafir menüsünde gösterilir.` });
+    const approved = await confirm({ title: "Çeviriyi onayla", message: `${current.label} çevirisini kontrol ettiniz mi? Onaylanan çeviri misafir menüsünde gösterilir.`, danger: true, confirmLabel: "Onayla" });
     if (!approved) return;
     const result = await verifyTranslationAction({ nodeId: node.id, lang });
     setMessage(result.ok ? { ok: true, text: `${current.label} çevirisi onaylandı ve misafir menüsünde gösterilecek.` } : { ok: false, text: result.error.message });

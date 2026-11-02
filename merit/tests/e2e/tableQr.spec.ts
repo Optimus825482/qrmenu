@@ -58,8 +58,8 @@ test("Masa QR: Havuz Bar M1..M5 toplu üretilir, rozetler imzalı olur, ZIP 5 SV
   // Single regenerate asks first (danger confirm) and keeps the badge signed.
   await win.getByRole("button", { name: "M1 QR yenile" }).click();
   const ask = page.getByRole("dialog", { name: "QR kodunu yenile" });
-  await expect(ask).toContainText(/Eski basılı kod çalışmayı bırakır/);
-  await ask.getByRole("button", { name: "Evet" }).click();
+  await expect(ask).toContainText(/Eski QR kodu geçersiz olur/);
+  await ask.locator('[data-confirm="ok"]').click();
   await acknowledge(page);
   await expect(badge(win, "M1")).toHaveText("imzalı");
 });
@@ -74,8 +74,7 @@ test("Masa QR: imzalar sunucuda kalır (yeni sayfa), 'Yalnız imzasızları' ile
   await expect(win.getByRole("checkbox", { name: "Yalnız imzasızları" })).toBeChecked();
   await win.getByRole("button", { name: "Toplu üret/yenile" }).click();
   await answer(page, "Toplu QR üret/yenile", "Evet");
-  await expect(page.getByRole("alertdialog", { name: "İşlem tamamlandı" })).toContainText("0 masanın QR kodu güncellendi");
-  await acknowledge(page);
+  await acknowledge(page, "0 masanın QR kodu güncellendi");
   // Hayır leaves everything as it was.
   await win.getByRole("button", { name: "M2 QR yenile" }).click();
   await answer(page, "QR kodunu yenile", "Hayır");

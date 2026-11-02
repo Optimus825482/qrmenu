@@ -7,9 +7,22 @@ import { createStore } from "zustand/vanilla";
  * without asking; dangerous ones (delete, approve, force logout) always ask.
  */
 
-export type ConfirmOptions = { title: string; message: string; danger?: boolean };
+export type ConfirmOptions = {
+  title: string;
+  message: string;
+  danger?: boolean;
+  /** Action verb of the confirm button ("Sil", "Onayla"); default "Evet". */
+  confirmLabel?: string;
+  /** Default "Hayır", or "Vazgeç" for danger questions. */
+  cancelLabel?: string;
+};
 
-type Request = ConfirmOptions & { kind: "confirm" | "alert"; resolve(answer: boolean): void };
+type Request = ConfirmOptions & {
+  kind: "confirm" | "alert";
+  /** Which button gets the initial focus: the safe one (cancel) for danger questions. */
+  autoFocusTarget: "ok" | "cancel";
+  resolve(answer: boolean): void;
+};
 
 type ConfirmState = {
   request: Request | null;
@@ -19,7 +32,7 @@ type ConfirmState = {
 
 export const confirmStore = createStore<ConfirmState>()(() => ({
   request: null,
-  confirmSimpleActions: true,
+  confirmSimpleActions: false,
 }));
 
 function ask(request: Omit<Request, "resolve">): Promise<boolean> {
@@ -33,7 +46,14 @@ function ask(request: Omit<Request, "resolve">): Promise<boolean> {
 export function confirm(opts: ConfirmOptions): Promise<boolean> {
   const danger = opts.danger ?? false;
   if (!danger && !confirmStore.getState().confirmSimpleActions) return Promise.resolve(true);
-  return ask({ ...opts, danger, kind: "confirm" });
+  return ask({
+    ...opts,
+    danger,
+    kind: "confirm",
+    confirmLabel: opts.confirmLabel ?? "Evet",
+    cancelLabel: opts.cancelLabel ?? (danger ? "Vazgeç" : "Hayır"),
+    autoFocusTarget: danger ? "cancel" : "ok",
+  });
 }
 
 /** Removing a desktop shortcut is a delete: always asked, whatever the setting says. */
@@ -42,12 +62,13 @@ export function confirmRemoveShortcut(appTitle: string): Promise<boolean> {
     title: "Kısayolu kaldır",
     message: `"${appTitle}" kısayolu masaüstünden kaldırılsın mı? Uygulama Başlat menüsünde kalır.`,
     danger: true,
+    confirmLabel: "Kaldır",
   });
 }
 
 /** Information box with a single "Tamam" button (Özellikler, Hakkında). */
 export function alertDialog(opts: { title: string; message: string }): Promise<boolean> {
-  return ask({ ...opts, danger: false, kind: "alert" });
+  return ask({ ...opts, danger: false, kind: "alert", autoFocusTarget: "ok" });
 }
 
 /** Answers the open question and clears it. */
