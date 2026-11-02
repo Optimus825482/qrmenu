@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 02:55",
+  updatedAt: "03.11.2026 02:59",
   headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
   phases: [
     {
@@ -127,7 +127,7 @@ window.ILERLEME = {
       summary: "Belirteçler ve görünüm matrisi, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, personel kabuğu, kabuk seçimi/PWA, yetki rehberi, XP cilası",
       tasks: [
         { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "active" },
-        { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:20", note: "7244d05 — inceleme sürüyor" },
+        { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:58", note: "7244d05 + ded9ca7 (inceleme onaylı)" },
         { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "active", note: "T3 uygulandı (0d0cc5f): notify/snackbar, tepsi balonu, 29 başarı modalı kaldırıldı; T4 sürüyor" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
