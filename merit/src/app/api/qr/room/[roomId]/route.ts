@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { DomainError } from "@/lib/result";
-import { downloadRoomQr } from "@/modules/minibar/server/roomQr";
+import { renderRoomQrFile } from "@/modules/minibar/server/roomQr";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(
       throw new DomainError("VALIDATION", "Biçim svg veya png olmalıdır");
     }
     const { roomId } = await params;
-    const file = await downloadRoomQr(ctx, roomId, format);
+    const file = await renderRoomQrFile(ctx, roomId, format);
     return new Response(new Uint8Array(file.body), {
       headers: {
         "Content-Type": file.contentType,

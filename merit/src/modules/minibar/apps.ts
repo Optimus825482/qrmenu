@@ -94,7 +94,7 @@ export function registerMinibarApps(): void {
     title: "Oda QR Kodları & Baskı",
     icon: "qr",
     moduleKey: "MINIBAR",
-    screenCode: "MB-KF",
+    screenCode: "MB-TAN",
     category: "MINIBAR",
     needsHotel: true,
     window: { w: 980, h: 620, minW: 720, minH: 450 },

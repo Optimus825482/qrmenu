@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { DomainError } from "@/lib/result";
-import { downloadRoomQrZip } from "@/modules/minibar/server/roomQr";
+import { roomQrZip } from "@/modules/minibar/server/roomQr";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export async function GET(
     const ctx = await requireUser();
     const { hotelId } = await params;
     const floorId = new URL(request.url).searchParams.get("floorId") ?? undefined;
-    const file = await downloadRoomQrZip(ctx, hotelId, floorId);
+    const file = await roomQrZip(ctx, hotelId, { floorId });
     return new Response(new Uint8Array(file.body), {
       headers: {
         "Content-Type": "application/zip",
