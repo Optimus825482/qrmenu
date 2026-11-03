@@ -2799,7 +2799,7 @@
   top: 50%;
   right: -11px;
   color: var(--xp-accent, #2869c7);
-  content: "92";
+  content: "\2192";
   transform: translateY(-50%);
 }
 
