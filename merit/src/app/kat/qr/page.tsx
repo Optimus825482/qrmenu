@@ -1,107 +1,97 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons/Icon";
 
-interface RoomOption {
-  id: string;
-  number: string;
-  floorName: string;
-}
+type Resolved = { roomId: string; floorId: string; number: string };
 
 export default function KatQrScannerPage() {
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
   const [hasCamera, setHasCamera] = useState(true);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [manualRoomNumber, setManualRoomNumber] = useState("");
-  const [rooms, setRooms] = useState<RoomOption[]>([]);
+  const [manualCode, setManualCode] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [roomError, setRoomError] = useState<string | null>(null);
   const manualRef = useRef<HTMLInputElement | null>(null);
-  const [isScanning, setIsScanning] = useState(true);
+  const busy = useRef(false);
 
-  // Fetch rooms for quick fallback search
-  useEffect(() => {
-    fetch("/api/minibar/dashboard")
-      .then((res) => res.json())
-      .then(async (dash) => {
-        if (dash.floors && dash.floors.length > 0) {
-          const allRooms: RoomOption[] = [];
-          for (const f of dash.floors) {
-            const fRes = await fetch(`/api/minibar/floor/${f.id}`);
-            if (fRes.ok) {
-              const fData = await fRes.json();
-              for (const r of fData.rooms || []) {
-                allRooms.push({
-                  id: r.id,
-                  number: r.number,
-                  floorName: f.name,
-                });
-              }
-            }
-          }
-          setRooms(allRooms);
-        }
-      })
-      .catch((err) => console.error("Rooms fetch error:", err));
-  }, []);
-
-  // Request camera access
-  useEffect(() => {
-    let stream: MediaStream | null = null;
-
-    async function startCamera() {
+  /** One resolve call for both the camera and the typed code; success opens the room check. */
+  const resolve = useCallback(
+    async (text: string): Promise<boolean> => {
+      if (busy.current) return false;
+      busy.current = true;
+      setIsSearching(true);
+      setRoomError(null);
       try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          setHasCamera(false);
-          setCameraError("Kamera bu cihazda veya tarayıcıda desteklenmiyor.");
-          return;
-        }
-
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
+        const res = await fetch("/api/minibar/qr/resolve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
         });
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        const json = (await res.json()) as Resolved & { error?: string };
+        if (!res.ok) {
+          setRoomError(json.error ?? "QR kod çözümlenemedi.");
+          return false;
         }
+        router.push(`/kat/oda-kontrol/${json.roomId}`);
+        return true;
+      } catch {
+        setRoomError("Bağlantı hatası. Tekrar deneyin.");
+        return false;
+      } finally {
+        busy.current = false;
+        setIsSearching(false);
+      }
+    },
+    [router],
+  );
+
+  // Camera: html5-qrcode (works in Safari/Firefox too), loaded on the client only.
+  useEffect(() => {
+    let stop: (() => Promise<void>) | null = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        if (cancelled) return;
+        const scanner = new Html5Qrcode("qr-reader");
+        stop = async () => {
+          try {
+            if (scanner.isScanning) await scanner.stop();
+            scanner.clear();
+          } catch {
+            /* already stopped */
+          }
+        };
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (text) => {
+            void resolve(text);
+          },
+          () => {},
+        );
+        if (cancelled) await stop();
       } catch (err: unknown) {
-        console.warn("Camera access denied or unavailable:", err);
+        if (cancelled) return;
         setHasCamera(false);
-        const msg = err instanceof Error ? err.message : "Kamera açılamadı";
-        setCameraError(msg);
+        setCameraError(err instanceof Error ? err.message : "Kamera açılamadı");
       }
-    }
-
-    startCamera();
-
+    })();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      cancelled = true;
+      void stop?.();
     };
-  }, []);
+  }, [resolve]);
 
-  function handleManualSubmit(e: React.FormEvent) {
+  async function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const query = manualRoomNumber.trim().toLowerCase();
-    if (!query) return;
-
-    setRoomError(null);
-    setIsSearching(true);
-    const matched = rooms.find((r) => r.number.toLowerCase() === query);
-
-    if (matched) {
-      router.push(`/kat/oda-kontrol/${matched.id}`);
-    } else {
-      setRoomError(`Oda bulunamadı: ${manualRoomNumber.trim()}. Numarayı kontrol edin.`);
-      setIsSearching(false);
-      manualRef.current?.focus();
-    }
+    const code = manualCode.trim();
+    if (!code) return;
+    const ok = await resolve(code);
+    if (!ok) manualRef.current?.focus();
   }
 
   return (
@@ -141,13 +131,7 @@ export default function KatQrScannerPage() {
         <div className="relative w-full aspect-square max-w-xs sm:max-w-sm rounded-3xl overflow-hidden bg-slate-800 border-4 border-indigo-500/80 shadow-2xl flex items-center justify-center">
           {hasCamera ? (
             <>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover"
-              />
+              <div id="qr-reader" data-testid="qr-reader" className="w-full h-full" />
               {/* Reticle / Scanner Target Box */}
               <div className="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-center justify-center">
                 <div className="w-full h-0.5 bg-rose-500 shadow-md shadow-rose-500"></div>
@@ -171,7 +155,7 @@ export default function KatQrScannerPage() {
       <div className="max-w-md mx-auto w-full bg-slate-800/90 rounded-3xl p-5 border border-slate-700 shadow-xl space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Manuel Oda Girişi (Serbest Seçim)
+            Elle Kod Girişi
           </span>
           <span className="text-[10px] font-bold text-indigo-400 bg-indigo-950 px-2 py-0.5 rounded">
             Yetkili Modu
@@ -182,42 +166,22 @@ export default function KatQrScannerPage() {
           <input
             ref={manualRef}
             type="text"
-            aria-label="Oda numarası"
+            aria-label="QR kodu"
             aria-invalid={roomError ? true : undefined}
-            value={manualRoomNumber}
-            onChange={(e) => { setManualRoomNumber(e.target.value); setRoomError(null); }}
-            placeholder="Oda no (Örn: 304)..."
+            value={manualCode}
+            onChange={(e) => { setManualCode(e.target.value); setRoomError(null); }}
+            placeholder="QR kodu veya bağlantısı..."
             className="flex-1 px-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-600 text-white font-bold placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           />
           <button
             type="submit"
-            disabled={isSearching || !manualRoomNumber.trim()}
+            disabled={isSearching || !manualCode.trim()}
             className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 disabled:opacity-40 text-white font-black text-sm shadow-lg shadow-indigo-600/30 transition-all touch-manipulation cursor-pointer"
           >
             {isSearching ? "Aranıyor..." : "Aç"}
           </button>
         </form>
         {roomError ? <p role="alert" className="text-sm font-semibold text-rose-300">{roomError}</p> : null}
-
-        {rooms.length > 0 && (
-          <div className="pt-2">
-            <span className="text-[10px] text-slate-400 block mb-1.5 font-bold">
-              Hızlı Seçim (Son Odalar):
-            </span>
-            <div className="flex flex-wrap gap-1.5">
-              {rooms.slice(0, 6).map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => router.push(`/kat/oda-kontrol/${r.id}`)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-90 text-xs font-bold text-slate-200 transition-all touch-manipulation cursor-pointer"
-                >
-                  Oda {r.number}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </main>
   );

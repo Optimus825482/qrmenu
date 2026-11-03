@@ -1,6 +1,6 @@
+import { DomainError } from "@/lib/result";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { publish } from "@/lib/realtime";
 import { businessDate, businessDay } from "@/lib/time";
 
 export type Db = Prisma.TransactionClient | typeof prisma;
@@ -58,7 +58,16 @@ export async function lockRow(tx: Prisma.TransactionClient, table: "rooms" | "mi
   await tx.$queryRawUnsafe(`SELECT id FROM ${table} WHERE id = $1 FOR UPDATE`, id);
 }
 
-export async function notifyChange(tx: Prisma.TransactionClient, hotelId: string, kind: string, roomId?: string) {
-  await publish({ type: "minibar.changed", hotelId, ...(roomId ? { roomId } : {}), payload: { kind } }, tx);
+/** Hotel that owns a room. */
+export async function roomHotel(roomId: string): Promise<string> {
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hotelId: true } });
+  if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
+  return room.hotelId;
 }
 
+/** Hotel that owns a floor. */
+export async function floorHotel(floorId: string): Promise<string> {
+  const floor = await prisma.floor.findUnique({ where: { id: floorId }, select: { hotelId: true } });
+  if (!floor) throw new DomainError("NOT_FOUND", "Kat bulunamadı.");
+  return floor.hotelId;
+}

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { handle, parseQuery, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
-import { listCorrectionRequests } from "@/modules/minibar/server/minibarService";
+import { listCorrectionRequests } from "@/modules/minibar/server/roomCheckService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

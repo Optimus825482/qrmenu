@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { assertCan } from "@/lib/rbac";
 import { handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
-import { confirmMybarRequest, mybarRequestHotel } from "@/modules/minibar/server/minibarService";
+import { confirmMybarRequest, mybarRequestHotel } from "@/modules/minibar/server/mybarService";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

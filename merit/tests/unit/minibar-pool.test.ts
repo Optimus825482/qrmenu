@@ -8,7 +8,7 @@ import { makeDepo, makeKat, minibarWorld, resetMinibarData, staff, stockOf } fro
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
-const svc = await import("@/modules/minibar/server/minibarService");
+const svc = await import("@/modules/minibar/server/floorPlan");
 const pool = await import("@/modules/minibar/server/pool");
 const { publish } = await import("@/lib/realtime");
 
@@ -108,7 +108,7 @@ describe("minibar havuz düşümü", () => {
     const w = await minibarWorld({ stock: 0 });
     const kat = await staff("R-KAT");
     await testDb.hotelStock.deleteMany({ where: { hotelId: w.hotelId } });
-    await svc.getKatDashboardData(w.hotelId);
+    await svc.katPlan(kat.ctx);
     await rc.getRoomCheckView(kat.ctx, w.room.id);
     expect(await testDb.hotelStock.count({ where: { hotelId: w.hotelId } })).toBe(0);
     expect(await testDb.dailyTaskItem.count()).toBe(0);

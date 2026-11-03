@@ -9,7 +9,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const mybar = await import("@/modules/minibar/server/mybarService");
-const svc = await import("@/modules/minibar/server/minibarService");
+const svc = await import("@/modules/minibar/server/mybarService");
 const { rateLimitDelay, unknownTokenLimiter, globalUnknownTokenLimiter } = await import(
   "@/modules/menu/server/guestToken"
 );

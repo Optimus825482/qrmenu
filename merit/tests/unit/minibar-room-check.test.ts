@@ -18,7 +18,6 @@ const { publish } = await import("@/lib/realtime");
 const rc = await import("@/modules/minibar/server/roomCheckService");
 const checklistSvc = await import("@/modules/minibar/server/roomChecklist");
 const dnd = await import("@/modules/minibar/server/dnd");
-const minibarService = await import("@/modules/minibar/server/minibarService");
 const roomRoute = await import("@/app/api/minibar/room/[roomId]/route");
 const checkRoute = await import("@/app/api/minibar/room/[roomId]/check/route");
 const noUseRoute = await import("@/app/api/minibar/room/[roomId]/no-consumption/route");
@@ -648,8 +647,9 @@ describe("rotalar ve MMD kaldırıldı", () => {
 
   it("MMD uç noktası ve servisi yok", async () => {
     expect(existsSync(path.join(process.cwd(), "src/app/api/minibar/room/[roomId]/mmd/route.ts"))).toBe(false);
-    expect((minibarService as Record<string, unknown>).submitRoomMmd).toBeUndefined();
-    expect((minibarService as Record<string, unknown>).getMyRoomCheckHistory).toBeUndefined();
+    expect((rc as Record<string, unknown>).submitRoomMmd).toBeUndefined();
+    expect(existsSync(path.join(process.cwd(), "src/modules/minibar/server/minibarService.ts"))).toBe(false);
+    expect((rc as Record<string, unknown>).getMyRoomCheckHistory).toBeUndefined();
   });
 
   it("check / no-consumption / my-checks rotaları servise bağlı (yeni ve eski gövde)", async () => {

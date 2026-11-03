@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useCallback, useEffect, useState } from "react";
+import { useMinibarLive } from "@/modules/minibar/ui/useMinibarLive";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PersistentMybarModal } from "../../components/PersistentMybarModal";
@@ -61,6 +62,11 @@ export default function KatDolulukDetayPage(props: {
     const t = setTimeout(() => void loadData(false), 0);
     return () => clearTimeout(t);
   }, [loadData]);
+
+  useMinibarLive(
+    ["task.updated", "roomcheck.done", "dnd.marked", "dnd.completed", "dnd.missed", "occupancy.uploaded", "mybar.created"],
+    () => void loadData(false),
+  );
 
   if (isLoading) {
     return (

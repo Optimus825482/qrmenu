@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMinibarLive } from "@/modules/minibar/ui/useMinibarLive";
 import Link from "next/link";
 import { PriorityRouteModal } from "../components/PriorityRouteModal";
 import { PersistentMybarModal } from "../components/PersistentMybarModal";
@@ -29,9 +30,9 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
   const [isLoading, setIsLoading] = useState(true);
   const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
 
-  async function loadData() {
+  async function loadData(silent = false) {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       const res = await fetch("/api/minibar/dashboard");
       if (res.ok) {
         const json = await res.json();
@@ -48,6 +49,11 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load (sets the loading flag first)
     loadData();
   }, []);
+
+  useMinibarLive(
+    ["task.updated", "task.generated", "roomcheck.done", "dnd.marked", "dnd.completed", "dnd.missed", "occupancy.uploaded", "stock.changed", "stock.critical", "mybar.created"],
+    () => void loadData(true),
+  );
 
   const floors = (data?.floors ?? []).filter((floor) =>
     filter === "mybar" ? floor.mybarCount > 0 : filter === "dnd" ? floor.dndCount > 0 : true,
@@ -190,7 +196,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
 
             <button
               type="button"
-              onClick={loadData}
+              onClick={() => void loadData()}
               className="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 flex items-center justify-center transition-colors touch-manipulation cursor-pointer"
               aria-label="Yenile"
             >

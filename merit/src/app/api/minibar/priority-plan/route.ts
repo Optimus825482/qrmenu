@@ -1,5 +1,5 @@
 import { handle, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
-import { getAdvisoryPriorityPlan } from "@/modules/minibar/server/minibarService";
+import { getAdvisoryPriorityPlan } from "@/modules/minibar/server/floorPlan";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

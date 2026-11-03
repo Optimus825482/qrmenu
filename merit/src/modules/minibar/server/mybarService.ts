@@ -10,6 +10,7 @@ import { audit } from "@/modules/core/server/audit";
 import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 import { normalizeGeminiModel } from "@/modules/menu/server/translations";
 import { lockRow, roomCatalogue } from "./minibarCommon";
+import { takeManyFromPool } from "./pool";
 
 export interface MybarProductOption {
   id: string;
@@ -332,4 +333,102 @@ export async function createGuestMybarRequest(input: GuestMybarInput) {
     }
     throw error;
   }
+}
+
+/** Hotel that owns a MyBar request (used by the route to authorise against the entity's hotel). */
+export async function mybarRequestHotel(requestId: string): Promise<string> {
+  const req = await prisma.mybarRequest.findUnique({ where: { id: requestId }, select: { hotelId: true } });
+  if (!req) throw new DomainError("NOT_FOUND", "MyBar talebi bulunamadı.");
+  return req.hotelId;
+}
+
+/**
+ * 7. MyBar Talebini Onayla (Confirm / Kapat)
+ *
+ * BEKLEMEDE -> TAMAMLANDI only, under a row lock; the delivered quantities leave the hotel pool
+ * (MYBAR movement, FOR UPDATE, never negative) and a MYBAR_KARSILAMA transaction records the fill.
+ */
+export async function confirmMybarRequest(requestId: string, userId: string, hotelId: string) {
+  return prisma.$transaction(async (tx) => {
+    await lockRow(tx, "mybar_requests", requestId);
+    const req = await tx.mybarRequest.findFirst({
+      where: { id: requestId, hotelId },
+      include: { room: { select: { id: true, number: true } }, items: true },
+    });
+    if (!req) throw new DomainError("NOT_FOUND", "MyBar talebi bulunamadı.");
+    if (req.status !== "BEKLEMEDE") {
+      throw new DomainError("CONFLICT", "Bu MyBar talebi artık beklemede değil.");
+    }
+
+    const lines = req.items.map((i) => ({ productId: i.productId, qty: i.requestedQty }));
+    const fill = await tx.minibarTransaction.create({
+      data: {
+        hotelId,
+        roomId: req.roomId,
+        userId,
+        type: "MYBAR_KARSILAMA",
+        note: `MyBar talebi karşılandı (#${req.id})`,
+      },
+    });
+    const products = await tx.product.findMany({
+      where: { id: { in: lines.map((l) => l.productId) } },
+      select: { id: true, purchasePrice: true, salePrice: true },
+    });
+    const priceOf = new Map(products.map((p) => [p.id, p]));
+    for (const line of lines) {
+      await tx.minibarTransactionItem.create({
+        data: {
+          transactionId: fill.id,
+          productId: line.productId,
+          added: line.qty,
+          consumed: 0,
+          purchasePrice: priceOf.get(line.productId)?.purchasePrice ?? null,
+          salePrice: priceOf.get(line.productId)?.salePrice ?? null,
+        },
+      });
+    }
+    await takeManyFromPool(
+      tx,
+      {
+        hotelId,
+        userId,
+        type: "MYBAR",
+        refType: "MybarRequest",
+        refId: req.id,
+        note: `MyBar: Oda ${req.room.number}`,
+      },
+      lines,
+    );
+    for (const item of req.items) {
+      await tx.mybarRequestItem.update({ where: { id: item.id }, data: { deliveredQty: item.requestedQty } });
+    }
+
+    const completedAt = new Date();
+    await tx.mybarRequest.update({
+      where: { id: req.id },
+      data: { status: "TAMAMLANDI", completedById: userId, completedAt },
+    });
+
+    await audit(tx, {
+      userId,
+      hotelId,
+      action: "MINIBAR_MYBAR_CONFIRM",
+      entity: "MybarRequest",
+      entityId: req.id,
+      before: { status: req.status },
+      after: {
+        status: "TAMAMLANDI",
+        completedById: userId,
+        completedAt: completedAt.toISOString(),
+        roomNumber: req.room.number,
+        items: lines,
+        transactionId: fill.id,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Oda ${req.room.number} için MyBar talebi onaylandı ve kapatıldı.`,
+    };
+  });
 }

@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { PersistentMybarModal } from "../../components/PersistentMybarModal";
 import type { SetupInspectionItem } from "@/modules/minibar/server/minibarTypes";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
-import { Icon, type IconName } from "@/components/icons/Icon";
+import { useMinibarLive } from "@/modules/minibar/ui/useMinibarLive";
+import { Icon } from "@/components/icons/Icon";
 
 interface RoomInspectionData {
   room: {
@@ -58,7 +59,6 @@ export default function KatOdaKontrolPage(props: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDndModalOpen, setIsDndModalOpen] = useState(false);
   const [dndNote, setDndNote] = useState("");
-  const [isMmdModalOpen, setIsMmdModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Ürüne tıklayınca açılan Minibar Dolum Dialog Modalı
@@ -68,14 +68,6 @@ export default function KatOdaKontrolPage(props: {
     setupName: string;
   } | null>(null);
   const [modalReplenishQty, setModalReplenishQty] = useState(0);
-
-  const MMD_REASONS: { label: string; icon: IconName }[] = [
-    { label: "Misafir uyuyor", icon: "moon" },
-    { label: "Misafir banyoda", icon: "droplet" },
-    { label: "Misafir istemedi", icon: "hand" },
-    { label: "Misafir daha sonra gelmemizi istedi", icon: "clock" },
-    { label: "Misafir telefonda", icon: "call" },
-  ];
 
   function showToast(text: string, type: "success" | "error") {
     setToastMessage({ text, type });
@@ -106,10 +98,25 @@ export default function KatOdaKontrolPage(props: {
     }
   }, [roomId]);
 
+  const refreshView = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/minibar/room/${roomId}`);
+      if (res.ok) setData(await res.json());
+    } catch (err) {
+      console.error("Room refresh error:", err);
+    }
+  }, [roomId]);
+
   useEffect(() => {
     const t = setTimeout(() => void loadData(false), 0);
     return () => clearTimeout(t);
   }, [loadData]);
+
+  // Pool, badge and DND status change under the screen; the typed quantities (replenishedMap) are kept.
+  useMinibarLive(
+    ["roomcheck.done", "dnd.marked", "dnd.completed", "stock.changed", "task.updated", "mybar.created"],
+    () => void refreshView(),
+  );
 
   function handleQuantityChange(productId: string, delta: number, maxAllowed: number, stockQty: number) {
     const current = replenishedMap[productId] || 0;
@@ -168,14 +175,10 @@ export default function KatOdaKontrolPage(props: {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`/api/minibar/room/${data.room.id}/check`, {
+      const res = await fetch(`/api/minibar/room/${data.room.id}/no-consumption`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          consumedItems: [],
-          clientRequestId: (checkRequestKey.current ??= newRequestKey()),
-          note: "Sarfiyat yok. Minibar kontrol edildi.",
-        }),
+        body: JSON.stringify({ clientRequestId: (checkRequestKey.current ??= newRequestKey()) }),
       });
 
       const resJson = await res.json();
@@ -195,37 +198,13 @@ export default function KatOdaKontrolPage(props: {
     }
   }
 
-  async function handleMmdSubmit(reason: string) {
-    if (!data) return;
-    setIsSubmitting(true);
-
-    try {
-      const res = await fetch(`/api/minibar/room/${data.room.id}/mmd`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason }),
-      });
-
-      const resJson = await res.json();
-      if (!res.ok) {
-        throw new Error(resJson.error || "MMD kaydedilemedi.");
-      }
-
-      setIsMmdModalOpen(false);
-      showToast(resJson.message || "MMD durumu kaydedildi.", "success");
-      setTimeout(() => {
-        router.push(`/kat/doluluk/${data.room.floorId}`);
-      }, 1200);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "MMD hatası";
-      showToast(msg, "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   async function handleCompleteCheck() {
     if (!data) return;
+    if (Object.values(replenishedMap).every((q) => !q)) {
+      // Empty selection: "Sarfiyat Yok" (T5 no-consumption endpoint).
+      await handleSarfiyatYok();
+      return;
+    }
     setIsSubmitting(true);
 
     const consumedItems: { productId: string; qty: number }[] = [];
@@ -393,16 +372,6 @@ export default function KatOdaKontrolPage(props: {
             >
               <Icon name="door" size={20} />
               <span>DND</span>
-            </button>
-
-            {/* SARI Renk MMD Butonu (Sarfiyat Yok'un SOL yanında!) */}
-            <button
-              type="button"
-              onClick={() => setIsMmdModalOpen(true)}
-              className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-amber-950 font-black text-xs sm:text-sm shadow-md shadow-amber-500/25 border-2 border-amber-500 flex items-center gap-1.5 touch-manipulation cursor-pointer"
-            >
-              <Icon name="hand" size={20} />
-              <span>MMD</span>
             </button>
 
             {/* Sarfiyat Yok Butonu */}
@@ -779,57 +748,6 @@ export default function KatOdaKontrolPage(props: {
                 {isSubmitting ? "Kaydediliyor..." : "DND Kaydet"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* SARI MMD (Misafir Müsaade Etmedi) Seçenekler Modalı */}
-      {isMmdModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border-4 border-amber-400 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <span className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 font-black text-xl flex items-center justify-center shadow-md shadow-amber-400/30">
-                  MMD
-                </span>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900">
-                    Oda {data.room.number} • MMD Nedeni
-                  </h3>
-                  <p className="text-xs font-semibold text-slate-500">
-                    Misafir müsaade etmedi durumunu seçiniz:
-                  </p>
-                </div>
-              </div>
-              <button aria-label="Kapat"
-                type="button"
-                onClick={() => setIsMmdModalOpen(false)}
-                className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold hover:bg-slate-200"
-              >
-                <Icon name="close" size={20} />
-              </button>
-            </div>
-
-            {/* 5 Specific User Defined Reasons */}
-            <div className="space-y-2.5 pt-1">
-              {MMD_REASONS.map((reason) => (
-                <button
-                  key={reason.label}
-                  type="button"
-                  onClick={() => handleMmdSubmit(reason.label)}
-                  disabled={isSubmitting}
-                  className="w-full p-4 rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-98 text-amber-950 font-bold text-base flex items-center gap-3.5 border-2 border-amber-200 hover:border-amber-400 transition-all shadow-sm touch-manipulation cursor-pointer text-left"
-                >
-                  <Icon name={reason.icon} size={24} />
-                  <span className="flex-1">{reason.label}</span>
-                  <span className="text-amber-500 font-black">→</span>
-                </button>
-              ))}
-            </div>
-
-            <p className="text-xs text-slate-400 text-center pt-2">
-              Seçim yapıldığında oda daha sonra tekrar kontrol edilmek üzere kaydedilir.
-            </p>
           </div>
         </div>
       )}
