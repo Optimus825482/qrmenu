@@ -12,7 +12,7 @@ export function sanitizeNote(raw: string): string {
     .replace(/\r\n?/g, "\n")
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     // Yön değiştirme (bidi), sıfır genişlikli ve C1/DEL karakterleri personel ekranını yanıltmasın.
-    .replace(/[\u007F-\u009F​-‏‪-‮⁦-⁩﻿]/g, "")
+    .replace(/[\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
