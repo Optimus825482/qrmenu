@@ -115,6 +115,7 @@ export function Window({ id, hotels, userName }: Props) {
       close: () => windowStore.getState().close(id),
       setStatus: (text: string) => setStatusText(text),
       setDirty: (value: boolean) => setDirty(value),
+      setTitle: (title: string) => windowStore.getState().setTitle(id, title),
       openApp: (appId: string, opts?: { hotelId?: string; panel?: string; outletId?: string }) => {
         const store = windowStore.getState();
         const opened = store.open(appId, { hotelId: opts?.hotelId, initialPanel: opts?.panel, initialOutletId: opts?.outletId });

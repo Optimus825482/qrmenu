@@ -105,6 +105,19 @@ export function registerCoreApps(): void {
     mobile: "readonly",
   });
   registerApp({
+    id: "core.radar",
+    title: "Canlı Radar",
+    icon: "radar",
+    moduleKey: "CORE",
+    screenCode: "CR-RAD",
+    category: "GENEL",
+    needsHotel: false,
+    window: { w: 1280, h: 760, minW: 1024, minH: 640 },
+    kind: "component",
+    component: () => import("@/modules/radar/ui/RadarWindow").then((m) => ({ default: m.RadarWindow })),
+    mobile: "none",
+  });
+  registerApp({
     id: "core.tanimlar",
     title: "Tanımlamalar",
     icon: "otel",

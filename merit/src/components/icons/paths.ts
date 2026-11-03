@@ -142,6 +142,11 @@ export const ICON_PATHS = {
   "allergen-hardal": ["M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z", "M12 15v.01"],
   "allergen-sulfit": [circle(9, 13, 3), circle(15, 13, 3), circle(12, 19, 3), "M12 3v5", "M12 8c2 0 4-1 5-3"],
   "allergen-acibakla": [circle(12, 6.5, 2.5), circle(12, 17.5, 2.5), circle(6.5, 12, 2.5), circle(17.5, 12, 2.5), circle(12, 12, 1)],
+  // Canlı Radar (Lucide kaynaklı, ISC lisansı: https://lucide.dev)
+  radar: ["M19.07 4.93A10 10 0 0 0 6.99 3.34", "M4 6h.01", "M2.29 9.62A10 10 0 1 0 21.31 8.35", "M16.24 7.76A6 6 0 1 0 8.23 16.67", "M12 18h.01", "M17.99 11.66A6 6 0 0 1 15.77 16.67", circle(12, 12, 2), "m13.41 10.59 5.66-5.66"],
+  play: ["M6 3l14 9-14 9V3z"],
+  pause: ["M6 4h4v16H6z", "M14 4h4v16h-4z"],
+  rewind: ["M11 19 2 12l9-7v14z", "M22 19l-9-7 9-7v14z"],
 } as const satisfies Record<string, readonly string[]>;
 
 export type IconName = keyof typeof ICON_PATHS;

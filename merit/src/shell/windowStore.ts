@@ -107,6 +107,7 @@ type ShellActions = {
   setBounds(id: string, x: number, y: number, w: number, h: number): void;
   setHotel(id: string, hotelId: string): void;
   clearHotel(id: string): void;
+  setTitle(id: string, title: string): void;
   setWallpaper(wallpaper: Wallpaper): void;
   /** `#rrggbb` color of the "Düz renk" wallpaper; anything else is ignored. */
   setWallpaperColor(hex: string): void;
@@ -435,6 +436,10 @@ export function createWindowStore() {
           if (!app || !appVisibleInHotel(get(), app, hotelId)) return w;
           return { ...w, hotelId, title: titleFor(app, hotelId) };
         });
+      },
+
+      setTitle(id, title) {
+        update(id, (w) => (w.title === title ? w : { ...w, title }));
       },
 
       clearHotel(id) {

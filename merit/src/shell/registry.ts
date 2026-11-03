@@ -31,6 +31,8 @@ export type AppProps = {
   close(): void;
   setStatus(text: string): void;
   setDirty(dirty: boolean): void;
+  /** Replaces the window title (the app knows a better one than "<app> · <hotel>", e.g. the radar scope). */
+  setTitle?(title: string): void;
   /**
    * Opens another app in a new window (`panel` = the app's `initialPanel`, e.g. a Tanımlamalar tree
    * node). Does nothing for an app the user may not open; at the window limit it says so.

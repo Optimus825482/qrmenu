@@ -74,6 +74,32 @@ const GLYPHS: Record<string, ReactNode> = {
     </>
   ),
 
+  // CANLI RADAR: Canlı Radar (koyu ekran, süpürme kolu ve işaretler)
+  radar: (
+    <>
+      <defs>
+        <linearGradient id="rd-frame" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#2c3e50" />
+          <stop offset="100%" stopColor="#0d1318" />
+        </linearGradient>
+        <linearGradient id="rd-sweep" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#2ecc71" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#2ecc71" stopOpacity="0.55" />
+        </linearGradient>
+      </defs>
+      <circle cx="24" cy="24" r="20" fill="url(#rd-frame)" />
+      <circle cx="24" cy="24" r="19" fill="none" stroke="#4a6572" strokeWidth="0.8" />
+      <circle cx="24" cy="24" r="13" fill="none" stroke="#2ecc71" strokeWidth="0.8" opacity="0.55" />
+      <circle cx="24" cy="24" r="7" fill="none" stroke="#2ecc71" strokeWidth="0.8" opacity="0.55" />
+      <path d="M24 24 L24 5 A19 19 0 0 1 40.5 14.5 Z" fill="url(#rd-sweep)" />
+      <path d="M24 24 L24 5" stroke="#2ecc71" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="33" cy="17" r="2.2" fill="#f39c12" />
+      <circle cx="15" cy="30" r="2" fill="#ff4757" />
+      <circle cx="28" cy="33" r="1.6" fill="#00f2fe" />
+      <circle cx="24" cy="24" r="1.6" fill="#2ecc71" />
+    </>
+  ),
+
   // 2. KLASÖR: Luxury Windows XP / Executive 3D Amber Folder
   klasor: (
     <>
