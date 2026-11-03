@@ -14,6 +14,7 @@ import { useSse } from "@/shell/useSse";
 import { Icon } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
 import { Button } from "@/components/ui/Button";
+import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Segmented } from "@/components/ui/Segmented";
 
 type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note: string | null; pricesShown: boolean; canApprove: boolean; table: { label: string } | null; items: { id: string; nameSnapshot: string; qty: number; unitPrice: { toString(): string } | null }[] };
@@ -162,6 +163,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     {notice && !composerTable ? <p role="status" className="rounded-lg border border-success bg-[var(--success-bg)] p-3 text-sm text-text">{notice}</p> : null}
     {tab === "queue" ? (
       <div className="grid gap-3">
+        <RoutineCard />
         {queue.length === 0 ? <p className="text-muted">Bekleyen sipariş yok.</p> : queue.map((order) => (
           <article key={order.id} className="rounded-xl border border-border bg-surface p-4">
             <div className="flex items-baseline justify-between">

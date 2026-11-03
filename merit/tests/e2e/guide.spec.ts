@@ -1,6 +1,11 @@
+import { randomUUID } from "node:crypto";
+import type { Page } from "@playwright/test";
 import { Client } from "pg";
 import { e2eDatabaseUrl } from "./e2eDb";
+import { appWindow, node, row } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
+import { newContextPage, openAdminShell } from "./menuUi";
+import { approveOrder, openStaff, railLink, sendGuestOrder } from "./opsUi";
 
 // Erişimim (P-UX-10): the specs share one database state and run in order.
 test.describe.configure({ mode: "serial" });
@@ -134,4 +139,149 @@ test("yönetici XP masaüstünde Erişimim penceresini görür, Anladım ile kap
   await page.reload();
   await expect(page.locator(".xp-shell")).toBeVisible();
   await expect(page.getByTestId("access-window")).toHaveCount(0);
+});
+
+// Günlük rutin kartları (P-UX-12) ve "Kullanıcıya göster" önizlemesi (P-UX-13).
+test.describe("rutin kartları ve Kullanıcıya göster", () => {
+  let room101Token = "";
+  let suProductId = "";
+
+  test.beforeAll(async () => {
+    process.env.SEED_MINIBAR = "1";
+    try {
+      resetAndSeed({ guestMenu: true });
+    } finally {
+      delete process.env.SEED_MINIBAR;
+    }
+    await withDb(async (c) => {
+      room101Token = (
+        await c.query<{ qr_token: string }>(
+          `SELECT r.qr_token FROM rooms r JOIN hotels h ON h.id = r.hotel_id WHERE h.code = 'ROYAL' AND r.number = '101' LIMIT 1`,
+        )
+      ).rows[0].qr_token;
+      suProductId = (await c.query<{ id: string }>(`SELECT id FROM products WHERE name = 'Su' LIMIT 1`)).rows[0].id;
+    });
+  });
+
+  const item = (page: Page, id: string) => page.locator(`[data-testid="routine-item"][data-item="${id}"]`);
+  const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Nicosia" }).format(new Date());
+
+  test("kat.mr Bugün: rutin kartı; MyBar talebi gelince madde işaretsiz, Gördüm sonrası kendiliğinden işaretlenir; elle işaret prefs'e yazılır", async ({ browser }) => {
+    const page = await newContextPage(browser);
+    await login(page, "kat.mr");
+    await expect(page).toHaveURL(/\/kat$/);
+    await page.goto("/kat/tavsiye-is-plani");
+    const card = page.getByTestId("routine-card").first();
+    await expect(card).toBeVisible();
+    await expect(card).toContainText("Kat sorumlusunun günü");
+    await expect(item(page, "mybar-yok")).toHaveAttribute("data-done", "true");
+    await expect(item(page, "mybar-yok")).toContainText("otomatik");
+
+    const guest = await page.request.post("/api/minibar/mybar/request", {
+      data: {
+        token: room101Token,
+        idempotencyKey: randomUUID(),
+        language: "tr",
+        note: "Lütfen hızlıca su gönderin",
+        items: [{ productId: suProductId, qty: 1 }],
+      },
+    });
+    expect(guest.status(), await guest.text()).toBe(200);
+    // Live (SSE), no reload: the pending request unticks the automatic item.
+    await expect(item(page, "mybar-yok")).toHaveAttribute("data-done", "false", { timeout: 10_000 });
+    const alertDialog = page.getByRole("alertdialog");
+    await expect(alertDialog).toBeVisible({ timeout: 5_000 });
+    await alertDialog.getByRole("button", { name: /Gördüm/ }).click();
+    await expect(alertDialog).toHaveCount(0);
+    await expect(item(page, "mybar-yok")).toHaveAttribute("data-done", "true", { timeout: 10_000 });
+
+    // Manual item: optimistic tick, stored under prefs.guide.checklist[<today>].
+    const manual = item(page, "gorevleri-ac");
+    await expect(manual).toHaveAttribute("data-done", "false");
+    await manual.getByRole("checkbox").click();
+    await expect(manual).toHaveAttribute("data-done", "true");
+    await expect
+      .poll(async () =>
+        withDb(async (c) => {
+          const res = await c.query<{ ticks: string[] | null }>(
+            `SELECT prefs->'guide'->'checklist'->$2 AS ticks FROM users WHERE username = $1`,
+            ["kat.mr", today()],
+          );
+          return res.rows[0]?.ticks ?? [];
+        }),
+      )
+      .toContain("gorevleri-ac");
+    await page.reload();
+    await expect(item(page, "gorevleri-ac")).toHaveAttribute("data-done", "true");
+    await page.context().close();
+  });
+
+  test("depo.mr /depo: rutin kartı yalnız yetkili ekranlara bağlanır", async ({ browser }) => {
+    const page = await newContextPage(browser);
+    await login(page, "depo.mr");
+    await expect(page).not.toHaveURL(/\/giris/);
+    await page.goto("/depo");
+    const card = page.getByTestId("routine-card");
+    await expect(card).toContainText("Depo sorumlusunun günü");
+    await expect(item(page, "doluluk-yuklendi")).toHaveAttribute("data-done", "false");
+    const hrefs = await card.locator("a").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) expect(href.startsWith("/")).toBe(true);
+    await page.context().close();
+  });
+
+  test("kasa.havuz: son kuyruk siparişi onaylanınca 'Onay kuyruğu boş' işaretlenir", async ({ browser }) => {
+    const guest = await newContextPage(browser);
+    const order = await sendGuestOrder(guest);
+    const cashier = await openStaff(browser, "kasa.havuz");
+    await expect(cashier).toHaveURL(/\/kasa$/);
+    await expect(item(cashier, "kuyruk-bos")).toHaveAttribute("data-done", "false");
+    await approveOrder(cashier, order.orderNo);
+    await railLink(cashier, "Masalar").click();
+    await expect(item(cashier, "kuyruk-bos")).toHaveAttribute("data-done", "true", { timeout: 10_000 });
+    await guest.context().close();
+    await cashier.context().close();
+  });
+
+  test("admin: Kullanıcıya göster kat.mr'ın Erişimim sayfasıyla aynı ekranları gösterir; oturum çerezi değişmez; rol sekmesi", async ({ browser }) => {
+    const kat = await newContextPage(browser);
+    await login(kat, "kat.mr");
+    await expect(kat).toHaveURL(/\/kat$/);
+    await kat.goto("/erisimim");
+    await expect(kat.getByTestId("access-screen").first()).toBeVisible();
+    const own = await kat.getByTestId("access-screen").allInnerTexts();
+    expect(own.length).toBeGreaterThan(0);
+    await kat.context().close();
+
+    const admin = await newContextPage(browser);
+    await openAdminShell(admin);
+    const cookieKey = async () => (await admin.context().cookies()).map((c) => `${c.name}=${c.value}`).sort().join(";");
+    const before = await cookieKey();
+    const users = await appWindow(admin, "Kullanıcı Yönetimi");
+    await users.getByRole("searchbox").fill("kat.mr");
+    await row(users, "kat.mr").click();
+    await users.getByRole("button", { name: "Kullanıcıya göster" }).click();
+    const dialog = admin.getByTestId("access-preview-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText("Bu bir önizlemedir; oturum açılmaz.");
+    await expect(dialog.getByTestId("access-screen").first()).toBeVisible();
+    expect(await dialog.getByTestId("access-screen").allInnerTexts()).toEqual(own);
+    await expect(dialog.getByTestId("access-preview-landing-screen")).toContainText("/kat");
+    await dialog.getByRole("button", { name: "Kapat" }).last().click();
+    await expect(dialog).toHaveCount(0);
+    expect(await cookieKey()).toBe(before);
+    const audits = await withDb((c) => c.query(`SELECT 1 FROM audit_logs WHERE action = 'YETKI_ONIZLEME' AND entity = 'User'`));
+    expect(audits.rowCount).toBeGreaterThanOrEqual(1);
+
+    // "Bu rol ne görür?" tab of the permission matrix: same summary, no person.
+    await node(users, "Yetki Matrisi").click();
+    await users.getByRole("tab", { name: "Bu rol ne görür?" }).click();
+    const panel = users.getByTestId("role-preview");
+    await users.getByLabel("Rol", { exact: true }).selectOption({ label: "R-KAT — Kat Sorumlusu" });
+    await panel.getByLabel("Otel").selectOption({ label: "Merit Royal" });
+    await expect(panel.getByTestId("access-greeting")).toContainText("Kat Sorumlusu");
+    await expect(panel.locator('[data-code="MB-ZIM"]')).toBeVisible();
+    await expect(panel.locator('[data-code="MB-DOL"]')).toHaveCount(0);
+    await admin.context().close();
+  });
 });

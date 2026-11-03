@@ -15,6 +15,7 @@ import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { Field } from "@/shell/ui/Field";
 import { FormDialog, type FormValues } from "@/shell/ui/FormDialog";
+import { AccessPreviewDialog } from "../../AccessPreviewDialog";
 import { Toolbar } from "@/shell/ui/Toolbar";
 import { useLiveList } from "@/shell/ui/useLiveList";
 import { UserForm, userInputFromValues } from "./UserForm";
@@ -74,6 +75,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
   const [options, setOptions] = useState<UserOptions | null>(null);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [previewRow, setPreviewRow] = useState<UserRow | null>(null);
   const selected = list.rows.find((r) => r.id === selectedId);
 
   useEffect(() => {
@@ -177,6 +179,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
         onActivate={edit}
         rowContextActions={(row) => [
           { label: "Düzenle", onSelect: () => edit(row) },
+          { label: "Kullanıcıya göster", onSelect: () => setPreviewRow(row) },
           { label: "Şifre belirle", onSelect: () => openPasswordDialog(row) },
           {
             label: "Sil",
@@ -220,6 +223,14 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
                 {(options?.jobTitles ?? []).map((title) => <option key={title} value={title}>{title}</option>)}
               </select>
             </label>
+            <button
+              type="button"
+              className="xp-button"
+              disabled={!selected}
+              onClick={() => selected && setPreviewRow(selected)}
+            >
+              Kullanıcıya göster
+            </button>
             {selected && selected.isActive && (selected.roleKind === "SISTEM" || selected.username.toLocaleLowerCase("tr-TR") === "admin") ? null : (
               <button
                 type="button"
@@ -233,6 +244,13 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
           </Toolbar>
         }
       />
+      {previewRow ? (
+        <AccessPreviewDialog
+          user={previewRow}
+          hotelId={hotelId ?? previewRow.hotelId ?? previewRow.hotelIds[0] ?? ""}
+          onClose={() => setPreviewRow(null)}
+        />
+      ) : null}
       <UserCreateDialog
         open={dialog?.mode === "new"}
         options={options}

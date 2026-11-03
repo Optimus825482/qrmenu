@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
+import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Icon } from "@/components/icons/Icon";
 
 interface PriorityPlanEntry {
@@ -85,6 +86,7 @@ export default function KatTavsiyeIsPlaniPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6 space-y-3">
+        <RoutineCard />
         {loading ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
             Akıllı iş planı hesaplanıyor...

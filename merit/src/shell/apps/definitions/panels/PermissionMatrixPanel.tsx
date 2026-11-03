@@ -6,6 +6,9 @@ import {
   setPermissionScreenAction,
 } from "@/modules/core/server/admin/actions/permissions";
 import { roleOptionsAction, updateRoleAction } from "@/modules/core/server/admin/actions/roles";
+import { userOptionsAction } from "@/modules/core/server/admin/actions/users";
+import { previewRoleAccessAction, type AccessPreview } from "@/modules/core/server/actions/accessPreview";
+import { AccessPreviewView } from "../../AccessPreviewDialog";
 import type { Flags, PermissionMatrix, ScreenCell } from "@/modules/core/server/admin/permissions";
 import type { RoleOptions } from "@/modules/core/server/admin/roles";
 import { confirm } from "@/shell/confirm";
@@ -76,7 +79,7 @@ function screensForRole(options: RoleOptions | null, roleCode?: string) {
 }
 
 /** Rolün açılış ekranını seçer; QR operasyon ekranlarında akış ve ekran izinlerini de gösterir. */
-export function PermissionMatrixPanel({ setStatus }: Props) {
+export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
   const [options, setOptions] = useState<RoleOptions | null>(null);
   const [roleId, setRoleId] = useState("");
   const [screenCode, setScreenCode] = useState("");
@@ -84,6 +87,11 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
   const [error, setError] = useState("");
   const [savingScreen, setSavingScreen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<"ayar" | "onizleme">("ayar");
+  const [hotels, setHotels] = useState<{ id: string; name: string }[]>([]);
+  const [previewHotel, setPreviewHotel] = useState(hotelId);
+  const [preview, setPreview] = useState<AccessPreview | null>(null);
+  const [previewError, setPreviewError] = useState("");
   const role = options?.roles.find((item) => item.id === roleId);
   const currentFlow = screenCode in FLOWS ? FLOWS[screenCode as keyof typeof FLOWS] : null;
   const flow = currentFlow ?? FLOW_FALLBACK;
@@ -127,12 +135,36 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
   }, [roleId]);
 
   useEffect(() => {
+    if (tab !== "onizleme") return;
+    let live = true;
+    void userOptionsAction().then((result) => {
+      if (!live || !result.ok) return;
+      setHotels(result.data.hotels);
+      setPreviewHotel((current) => current || result.data.hotels[0]?.id || "");
+    });
+    return () => { live = false; };
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== "onizleme" || !roleId || !previewHotel) return;
+    let live = true;
+    void previewRoleAccessAction({ roleId, hotelId: previewHotel }).then((result) => {
+      if (!live) return;
+      if (result.ok) setPreview(result.data);
+      else setPreviewError(result.error.message);
+    });
+    return () => { live = false; };
+  }, [tab, roleId, previewHotel]);
+
+  useEffect(() => {
     setStatus(role ? `${role.name} · açılış ekranı` : "Rol ve açılış ekranı seçin");
   }, [role, setStatus]);
 
   const chooseRole = (id: string) => {
     const next = options?.roles.find((item) => item.id === id);
     setRoleId(id);
+    setPreview(null);
+    setPreviewError("");
     const screenOptions = screensForRole(options, next?.code);
     const nextScreen = screenOptions.some((screen) => screen.code === next?.defaultScreen)
       ? next?.defaultScreen ?? ""
@@ -199,14 +231,41 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
     }
   };
 
+  const roleSelect = (
+    <label>Rol
+      <select aria-label="Rol" value={roleId} onChange={(event) => chooseRole(event.target.value)}>
+        {(options?.roles ?? []).map((item) => <option key={item.id} value={item.id}>{item.code} — {item.name}</option>)}
+      </select>
+    </label>
+  );
+
   return (
     <div className="xp-matrix xp-role-screen">
+      <div role="tablist" aria-label="Rol görünümü" className="xp-defs-filters">
+        <button type="button" role="tab" aria-selected={tab === "ayar"} className="xp-button" onClick={() => setTab("ayar")}>
+          Açılış ve yetkiler
+        </button>
+        <button type="button" role="tab" aria-selected={tab === "onizleme"} className="xp-button" onClick={() => setTab("onizleme")}>
+          Bu rol ne görür?
+        </button>
+      </div>
+      {tab === "onizleme" ? (
+        <section role="tabpanel" aria-label="Bu rol ne görür?" data-testid="role-preview">
+          <div className="xp-defs-filters">
+            {roleSelect}
+            <label>Otel
+              <select aria-label="Otel" value={previewHotel} onChange={(event) => { setPreview(null); setPreviewError(""); setPreviewHotel(event.target.value); }}>
+                {hotels.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+          </div>
+          {previewError ? <p role="alert" className="xp-defs-error">{previewError}</p> : null}
+          {preview ? <AccessPreviewView preview={preview} /> : previewError ? null : <p className="xp-defs-note">Yükleniyor...</p>}
+        </section>
+      ) : (
+    <>
       <div className="xp-defs-filters xp-role-screen-selectors">
-        <label>Rol
-          <select aria-label="Rol" value={roleId} onChange={(event) => chooseRole(event.target.value)}>
-            {(options?.roles ?? []).map((item) => <option key={item.id} value={item.id}>{item.code} — {item.name}</option>)}
-          </select>
-        </label>
+        {roleSelect}
         <label>Açılış ekranı
           <select aria-label="Açılış ekranı" value={screenCode} onChange={(event) => setScreenCode(event.target.value)}>
             <option value="">Seçilmedi</option>
@@ -260,6 +319,8 @@ export function PermissionMatrixPanel({ setStatus }: Props) {
       ) : screenCode ? (
         <p className="xp-defs-note">Seçilen ekran için açılış hedefi kaydedilir. QR sipariş ekranlarında iş akışı ve ekran yetkileri ayrıca gösterilir.</p>
       ) : null}
+    </>
+      )}
     </div>
   );
 }

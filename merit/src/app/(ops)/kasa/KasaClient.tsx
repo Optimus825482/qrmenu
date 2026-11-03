@@ -20,6 +20,7 @@ import { Icon, type IconName } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
 import AssignDialog from "./AssignDialog";
 import CashierMenu from "./CashierMenu";
+import { RoutineCard } from "@/components/guide/RoutineCard";
 import TableBoard, { type BoardTable } from "./TableBoard";
 import TablePanel, { type PanelCall } from "./TablePanel";
 
@@ -282,6 +283,8 @@ export default function KasaClient({
       </div>
 
       {tab !== "menu" ? <Kpis value={board.kpis} /> : null}
+
+      {tab === "tables" ? <RoutineCard /> : null}
 
       {activeScans.length > 0 ? (
         <aside aria-label="Canlı masa bildirimleri" className="grid gap-2">
