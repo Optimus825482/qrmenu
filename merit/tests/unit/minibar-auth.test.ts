@@ -18,6 +18,8 @@ const dndRoute = await import("@/app/api/minibar/room/[roomId]/dnd/route");
 const stockRoute = await import("@/app/api/minibar/depo/stock/route");
 const productsRoute = await import("@/app/api/minibar/definitions/products/route");
 const setupsRoute = await import("@/app/api/minibar/definitions/setups/route");
+const setupItemsRoute = await import("@/app/api/minibar/definitions/setup-items/route");
+const groupsRoute = await import("@/app/api/minibar/definitions/product-groups/route");
 const roomTypeSetupsRoute = await import("@/app/api/minibar/definitions/room-type-setups/route");
 const auditRoute = await import("@/app/api/minibar/definitions/audit-logs/route");
 const consumptionRoute = await import("@/app/api/minibar/reports/consumption/route");
@@ -87,12 +89,13 @@ describe("otel kapsamı: kendi otelinin dışına erişilemez", () => {
     const kat = await staff("R-KAT", "ROYAL");
     as(kat.ctx);
 
-    expect((await roomRoute.GET(new Request(url("room/x")), params({ roomId: theirs.room.id }))).status).toBe(403);
+    // room services hide other hotels' rooms entirely (NOT_FOUND, no existence leak)
+    expect((await roomRoute.GET(new Request(url("room/x")), params({ roomId: theirs.room.id }))).status).toBe(404);
     const check = await checkRoute.POST(
       json("room/x/check", "POST", { consumedItems: [{ productId: theirs.cola.id, qty: 1 }] }),
       params({ roomId: theirs.room.id }),
     );
-    expect(check.status).toBe(403);
+    expect(check.status).toBe(404);
     expect((await dndRoute.POST(json("d", "POST", {}), params({ roomId: theirs.room.id }))).status).toBe(403);
     expect((await dashboard.GET(new Request(url(`dashboard?hotelId=${theirs.hotelId}`)))).status).toBe(403);
     expect((await stockRoute.GET(new Request(url(`depo/stock?hotelId=${theirs.hotelId}`)))).status).toBe(403);
@@ -114,7 +117,7 @@ describe("otel kapsamı: kendi otelinin dışına erişilemez", () => {
     const intruder = await staff("R-DEP", "ROYAL");
     as(intruder.ctx);
     const del = await myCheckRoute.DELETE(new Request(url("my-checks/t"), { method: "DELETE" }), params({ txId: tx.id }));
-    expect(del.status).toBe(403);
+    expect(del.status).toBe(404);
     expect(await testDb.minibarTransaction.count({ where: { id: tx.id } })).toBe(1);
   });
 
@@ -177,8 +180,18 @@ describe("fiyatlar yalnız SISTEM/YONETIM'e görünür", () => {
     // Havuz fiyat taşımaz: fiyat görmeyen role alan 0/null gelir ya da hiç gelmez.
     expect([0, null, undefined]).toContain(depStock.stockItems.find((s) => s.productId === w.cola.id)?.price);
 
-    const setups = (await (await setupsRoute.GET()).json()) as { setups: { items: { salePrice: number }[] }[] };
-    expect(setups.setups.flatMap((s) => s.items).every((i) => i.salePrice === 0)).toBe(true);
+    const setups = (await (await setupsRoute.GET()).json()) as { setups: { items: { id: string; salePrice: number | null }[] }[] };
+    const setupItems = setups.setups.flatMap((s) => s.items);
+    expect(setupItems.length).toBeGreaterThan(0);
+    expect(setupItems.every((i) => i.salePrice === null)).toBe(true);
+    const oneSetup = w.setup.id;
+    const itemsBody = (await (await setupItemsRoute.GET(new Request(url(`definitions/setup-items?setupId=${oneSetup}`)))).json()) as {
+      items: { salePrice: number | null }[];
+    };
+    expect(itemsBody.items.length).toBeGreaterThan(0);
+    expect(itemsBody.items.every((i) => i.salePrice === null)).toBe(true);
+    const groupsBody = JSON.stringify(await (await groupsRoute.GET()).json());
+    expect(groupsBody).not.toMatch(/[Pp]rice/);
 
     for (const role of ["R-OTM", "R-SYS"]) {
       const boss = await staff(role, "ROYAL");

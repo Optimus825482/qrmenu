@@ -9,6 +9,9 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const publishMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/realtime", () => ({ publish: publishMock }));
 
+const requireUser = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth", () => ({ requireUser }));
+const groupsRoute = await import("@/app/api/minibar/definitions/product-groups/route");
 const groups = await import("@/modules/minibar/server/productGroups");
 const products = await import("@/modules/minibar/server/products");
 const setups = await import("@/modules/minibar/server/setups");
@@ -118,6 +121,60 @@ describe("ürün grupları", () => {
     expect((await groups.list(dep, LIST)).total).toBe(1);
     await expectDomainError(groups.create(dep, { name: "Yetkisiz" }), "FORBIDDEN");
     expect(await testDb.productGroup.count()).toBe(1);
+  });
+});
+
+describe("PUT product-groups birleştirme", () => {
+  it("yalnız description gönderilince ad korunur", async () => {
+    const ctx = await sys();
+    const g = await newGroup(ctx, "Birlesik");
+    requireUser.mockResolvedValue(ctx);
+    const res = await groupsRoute.PUT(
+      new Request("http://localhost/api/minibar/definitions/product-groups", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: g.id, description: "Yeni açıklama" }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(await testDb.productGroup.findUniqueOrThrow({ where: { id: g.id } })).toMatchObject({
+      name: "Birlesik",
+      description: "Yeni açıklama",
+    });
+  });
+});
+
+describe("setup - ürün pasifleştirme yarışı", () => {
+  it("aktif setup'taki ürün pasife alınamaz; pasif ürün setup'a eklenemez", async () => {
+    const ctx = await sys();
+    const g = await newGroup(ctx);
+    const p = await newProduct(ctx, g.id, "Su");
+    const s = await setups.create(ctx, { name: "S1" });
+    await setups.addItem(ctx, s.id, { productId: p.id, qty: 1 });
+    await expectDomainError(products.setActive(ctx, p.id, false), "CONFLICT", /S1 setup içinde kullanılıyor/);
+    const q = await newProduct(ctx, g.id, "Soda");
+    await products.setActive(ctx, q.id, false);
+    await expectDomainError(setups.addItem(ctx, s.id, { productId: q.id, qty: 1 }), "VALIDATION");
+  });
+
+  it("eşzamanlı ekleme + pasife alma: tam biri CONFLICT/VALIDATION alır, durum tutarlı kalır", async () => {
+    const ctx = await sys();
+    const g = await newGroup(ctx);
+    for (let round = 0; round < 5; round++) {
+      const p = await newProduct(ctx, g.id, `Yaris${round}`);
+      const s = await setups.create(ctx, { name: `YS${round}` });
+      const results = await Promise.allSettled([
+        setups.addItem(ctx, s.id, { productId: p.id, qty: 1 }),
+        products.setActive(ctx, p.id, false),
+      ]);
+      const rejected = results.filter((r) => r.status === "rejected");
+      expect(rejected.length).toBe(1);
+      const code = ((rejected[0] as PromiseRejectedResult).reason as DomainError).code;
+      expect(["CONFLICT", "VALIDATION"]).toContain(code);
+      const inSetup = await testDb.setupItem.count({ where: { setupId: s.id, productId: p.id } });
+      const active = (await testDb.product.findUniqueOrThrow({ where: { id: p.id } })).isActive;
+      expect(inSetup === 1 && !active).toBe(false);
+    }
   });
 });
 

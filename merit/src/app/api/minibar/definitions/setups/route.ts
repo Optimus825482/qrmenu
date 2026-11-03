@@ -20,7 +20,7 @@ function legacyShape(s: SetupDetail) {
     ...s,
     roomTypeAssignmentCount: s.assignedRoomTypeCount,
     totalNormItems: s.items.reduce((sum, i) => sum + i.qty, 0),
-    items: s.items.map((i) => ({ ...i, salePrice: i.salePrice === null ? 0 : Number(i.salePrice) })),
+    items: s.items.map((i) => ({ ...i, salePrice: i.salePrice === null ? null : Number(i.salePrice) })),
   };
 }
 

@@ -295,6 +295,7 @@ export async function update(ctx: Ctx, id: string, raw: ProductUpdateInput): Pro
   const input = parseInput(productUpdateSchema, raw);
   try {
     return await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+      if (input.isActive === false) await tx.$queryRaw`SELECT id FROM products WHERE id = ${id} FOR UPDATE`;
       const before = await tx.product.findUnique({ where: { id }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
       if (input.groupId !== undefined && input.groupId !== before.groupId) await assertActiveGroup(tx, input.groupId);
@@ -334,6 +335,8 @@ export async function update(ctx: Ctx, id: string, raw: ProductUpdateInput): Pro
 
 export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<ProductRow> {
   return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    // Serialises against setups.addItem (FOR SHARE on the product row).
+    await tx.$queryRaw`SELECT id FROM products WHERE id = ${id} FOR UPDATE`;
     const before = await tx.product.findUnique({ where: { id }, select: SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
     if (!isActive && before.isActive) await assertNotInActiveSetup(tx, id);

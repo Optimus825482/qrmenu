@@ -11,7 +11,7 @@ const updateSchema = z.object({ id: z.string().min(1).max(64), qty: z.number() }
 /** Item shape the definitions window reads (numeric price). */
 const legacyShape = <T extends { salePrice: string | null }>(i: T) => ({
   ...i,
-  salePrice: i.salePrice === null ? 0 : Number(i.salePrice),
+  salePrice: i.salePrice === null ? null : Number(i.salePrice),
 });
 
 export async function GET(req: Request) {

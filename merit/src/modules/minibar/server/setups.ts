@@ -294,6 +294,8 @@ export async function addItem(ctx: Ctx, setupId: string, raw: SetupItemInput): P
       await lockSetup(tx, setupId);
       const setup = await tx.setup.findUnique({ where: { id: setupId }, select: { name: true } });
       if (!setup) throw new DomainError("NOT_FOUND", NOT_FOUND);
+      // Share-lock the product row so a concurrent deactivation (FOR UPDATE) cannot slip past the check.
+      await tx.$queryRaw`SELECT id FROM products WHERE id = ${input.productId} FOR SHARE`;
       const product = await tx.product.findUnique({ where: { id: input.productId }, select: { isActive: true } });
       if (!product?.isActive) {
         throw new DomainError("VALIDATION", "Ürün seçin", { fieldErrors: { productId: ["Ürün seçin"] } });
