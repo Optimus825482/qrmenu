@@ -7,6 +7,8 @@ import { LiveBadge } from "./LiveBadge";
 import { OutletSwitcher, type OutletTarget } from "./OutletSwitcher";
 import { NotificationBell } from "@/shell/components/NotificationBell";
 import { PwaInstallButton } from "@/shell/components/PwaInstallButton";
+import { PosShell } from "@/components/pos/PosShell";
+import type { PosShellData } from "@/app/(ops)/posShellData";
 
 const waiterTabs = [
   { href: "/garson", label: "Kuyruk", path: "/garson", query: null },
@@ -27,10 +29,17 @@ const roomServiceTabs = [
   { href: "/oda-servisi?sekme=gecmis", label: "Geçmiş", path: "/oda-servisi", query: "gecmis" },
 ];
 
-export function OpsShell({ children, outletName, hotelName, fullName, targets }: { children: React.ReactNode; outletName: string; hotelName: string; fullName: string; targets: OutletTarget[] }) {
+export function OpsShell({ children, outletName, hotelName, fullName, targets, outletId, pos }: { children: React.ReactNode; outletName: string; hotelName: string; fullName: string; targets: OutletTarget[]; outletId?: string; pos?: PosShellData }) {
   const path = usePathname();
   const search = useSearchParams();
   const isKiosk = path.startsWith("/kasa");
+  // Kasa ve KDS dokunmatik POS kabuğunu kullanır; garson / oda servisi eski sekmeli kabukta kalır (UX T8).
+  if (isKiosk && pos?.kasa) {
+    return <PosShell context="kasa" outletName={outletName} hotelName={hotelName} fullName={fullName} rail={pos.kasa.rail} printer={pos.kasa.printer} outletId={outletId} targets={targets}>{children}</PosShell>;
+  }
+  if (path.startsWith("/kds") && pos?.kds) {
+    return <PosShell context="kds" outletName={outletName} hotelName={hotelName} fullName={fullName} rail={pos.kds.rail} printer={null} outletId={outletId} targets={targets}>{children}</PosShell>;
+  }
   const isRoomService = path.startsWith("/oda-servisi");
   const tabs = isKiosk ? cashierTabs : isRoomService ? roomServiceTabs : path.startsWith("/kds") ? [] : waiterTabs;
   const containerClass = isKiosk || isRoomService ? "mx-auto w-full max-w-[1700px] px-3 sm:px-6" : "mx-auto max-w-5xl px-4";

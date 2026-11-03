@@ -1,0 +1,319 @@
+/* POS kabuğu (kasa, KDS): yatayda solda 72 px ray + altta durum şeridi; dikeyde ray alta iner. */
+.pos-shell {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rail main"
+    "strip strip";
+  height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  touch-action: manipulation;
+}
+
+.pos-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tap-gap);
+  width: 72px;
+  padding: 8px 4px;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.pos-main {
+  grid-area: main;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.pos-strip {
+  grid-area: strip;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 14px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.pos-rail-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 64px;
+  padding: 4px 2px;
+  border-radius: var(--radius-m);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.pos-rail-item[aria-current="page"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.pos-rail-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+  background: var(--danger);
+  color: var(--on-accent);
+}
+
+.pos-strip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  font: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+button.pos-strip-item,
+a.pos-strip-item {
+  cursor: pointer;
+}
+
+.pos-strip-item[data-state="bad"] {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.pos-strip-item[data-state="warn"] {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+/* Dikey tutuş: ray alta yatay çubuk olur. */
+@media (max-aspect-ratio: 1/1) {
+  .pos-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "main"
+      "rail"
+      "strip";
+  }
+
+  .pos-rail {
+    flex-direction: row;
+    width: auto;
+    padding: 4px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .pos-rail-item {
+    flex: 1 1 0;
+    min-width: 64px;
+  }
+}
+
+/* Tam ekran kapısı: engelleyici katman değil, haritanın üstünde büyük bir bant. */
+.pos-gate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+/* Masa kartları: ton = renk + kenar biçimi + metin (statusTone.ts). */
+.pos-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+  min-height: 104px;
+  padding: 8px 10px;
+  text-align: left;
+  border-radius: var(--radius-m);
+  border-color: var(--tone-fg, var(--border));
+  border-style: solid;
+  border-width: 2px;
+  background: var(--tone-bg, var(--surface));
+  color: var(--text);
+}
+
+.pos-tile.tone-thick {
+  border-width: 4px;
+}
+
+.pos-tile.tone-double {
+  border-width: 6px;
+  border-style: double;
+}
+
+.pos-tile.tone-dashed {
+  border-width: 3px;
+  border-style: dashed;
+}
+
+.pos-tile[aria-pressed="true"] {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pos-tile.call-overdue {
+  box-shadow: inset 0 0 0 4px var(--danger);
+}
+
+.pos-tile-label {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pos-tile-tone {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tone-fg, var(--muted));
+}
+
+.pos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 24px;
+  background: var(--surface);
+  border: 2px solid currentColor;
+}
+
+.pos-unassigned {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px dashed var(--muted);
+  border-radius: var(--radius-s);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Masa haritası + yan panel yerleşimi. */
+.pos-split {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pos-split-board {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.pos-panel {
+  flex: 0 0 38%;
+  max-width: 38%;
+  position: sticky;
+  top: 0;
+  max-height: calc(100dvh - 44px - 24px);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+}
+
+@media (max-aspect-ratio: 1/1) {
+  /* Panelin yapışma sınırı bölüm olsun (harita ve başlıklar dahil): panel ana alanın dibine oturur. */
+  .pos-split {
+    display: contents;
+  }
+
+  /* Alttan sayfa: ana alanın altına yapışır (ray ve durum şeridi görünür kalır), harita üstte kaydırılır. */
+  .pos-panel {
+    position: sticky;
+    top: auto;
+    bottom: 0;
+    z-index: 30;
+    flex: none;
+    max-width: none;
+    height: 60dvh;
+    max-height: 60dvh;
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
+    box-shadow: 0 -4px 16px rgb(15 23 42 / 0.18);
+  }
+}
+
+/* Okunur boş durum / yardımcılar. */
+.pos-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--tap-action);
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.pos-btn[data-primary] {
+  min-height: var(--tap-primary);
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.pos-btn[data-danger] {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.pos-btn:disabled {
+  opacity: 0.6;
+}
+
+.pos-strip-select {
+  min-height: 44px;
+  max-width: 200px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  font-size: 14px;
+}
+
+.pos-btn[aria-pressed="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}

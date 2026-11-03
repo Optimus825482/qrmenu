@@ -98,20 +98,20 @@ export default function CashierMenu({
       </header>
 
       {/* Menü Fiyat Durumu & Canlı Değiştirme Kartı */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-surface p-4 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-l)] border border-border bg-surface p-4">
         <div>
           <div className="flex items-center gap-2">
             <span
-              className={`inline-block h-2.5 w-2.5 rounded-full ${
-                priceDisplay === "SHOW" ? "bg-emerald-500 ring-2 ring-emerald-200" : "bg-rose-500 ring-2 ring-rose-200"
+              className={`inline-block h-3 w-3 rounded-full ${
+                priceDisplay === "SHOW" ? "bg-success" : "bg-danger"
               }`}
             />
             <h3 className="font-semibold text-base">QR Menü Fiyat Gösterimi</h3>
           </div>
-          <p className="text-xs text-muted mt-0.5">
+          <p className="text-sm text-muted mt-0.5">
             {priceDisplay === "SHOW"
-              ? "🟢 Fiyatlar şu anda misafir QR menüsünde açık ve görünür durumdadır."
-              : "🔴 Fiyatlar şu anda misafir QR menüsünde gizlidir (fiyatsız katalog modu)."}
+              ? "Fiyatlar şu anda misafir QR menüsünde açık ve görünür durumdadır."
+              : "Fiyatlar şu anda misafir QR menüsünde gizlidir (fiyatsız katalog modu)."}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -119,12 +119,8 @@ export default function CashierMenu({
             type="button"
             disabled={!canEdit || pending}
             onClick={() => togglePrice("SHOW")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-              priceDisplay === "SHOW"
-                ? "bg-emerald-600 text-white shadow-sm"
-                : "border border-border bg-background text-muted hover:text-foreground"
-            } disabled:opacity-50`}
-            title={canEdit ? "Fiyatları misafir menüsünde aç" : "Kasa düzenleme yetkisi gereklidir"}
+            className="pos-btn"
+            aria-pressed={priceDisplay === "SHOW"}
           >
             Fiyatları Göster
           </button>
@@ -132,19 +128,15 @@ export default function CashierMenu({
             type="button"
             disabled={!canEdit || pending}
             onClick={() => togglePrice("HIDE")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-              priceDisplay === "HIDE"
-                ? "bg-rose-600 text-white shadow-sm"
-                : "border border-border bg-background text-muted hover:text-foreground"
-            } disabled:opacity-50`}
-            title={canEdit ? "Fiyatları misafir menüsünde gizle" : "Kasa düzenleme yetkisi gereklidir"}
+            className="pos-btn"
+            aria-pressed={priceDisplay === "HIDE"}
           >
             Fiyatları Gizle
           </button>
         </div>
       </div>
 
-      {error ? <p role="alert" className="text-sm text-red-700">{error}</p> : null}
+      {error ? <p role="alert" className="text-sm font-semibold text-danger">{error}</p> : null}
       {items.length === 0 ? <p className="text-muted">Bu outlet için menü öğesi tanımlanmamış.</p> : null}
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {items.map(({ node, path }) => (

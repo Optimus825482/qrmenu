@@ -1,23 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { approveOrderAction, rejectOrderAction } from "@/modules/order/actions/orders";
+import { approveOrderAction, rejectOrderAction, listQueueAction } from "@/modules/order/actions/orders";
 import { tableBoardAction } from "@/modules/order/actions/cashier";
-import { listQueueAction } from "@/modules/order/actions/orders";
 import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/calls";
+import { assignTableAction, unassignTableAction } from "@/modules/order/actions/assignments";
+import { reprintAction } from "@/modules/order/actions/printJobs";
+import { tablePanelOrdersAction, type PanelOrder } from "@/modules/order/server/actions/pos";
 import { setOutletPriceDisplayAction } from "@/modules/menu/server/actions/outletSwitches";
 import type { TableBoard as TableBoardData } from "@/modules/order/server/cashier";
+import { StaffOrderComposer } from "@/modules/order/ui/StaffOrderComposer";
 import { useSse } from "@/shell/useSse";
+import { notify } from "@/shell/notify";
 import { askReason } from "@/components/ui/reason";
 import { ORDER_REJECT_REASONS, REASON_MIN_LENGTH } from "@/modules/order/ui/reasons";
+import { playCue } from "@/components/pos/soundGate";
+import { Icon, type IconName } from "@/components/icons/Icon";
+import { formatPrice } from "@/lib/formatPrice";
 import AssignDialog from "./AssignDialog";
 import CashierMenu from "./CashierMenu";
 import TableBoard, { type BoardTable } from "./TableBoard";
-import { Icon, type IconName } from "@/components/icons/Icon";
-import { formatPrice } from "@/lib/formatPrice";
-import { usePulseOnIncrease } from "@/components/ui/usePulseOnIncrease";
+import TablePanel, { type PanelCall } from "./TablePanel";
 
 type QueueOrder = {
   id: string;
@@ -36,11 +40,7 @@ type OpenCall = {
   overdue: boolean;
 };
 type Waiter = { id: string; fullName: string };
-type ActiveScan = {
-  tableId: string;
-  tableLabel: string;
-  timestamp: number;
-};
+type ActiveScan = { tableId: string; tableLabel: string; timestamp: number };
 type Props = {
   outletId: string;
   outletName?: string;
@@ -53,6 +53,11 @@ type Props = {
   canEdit: boolean;
   /** Otelin `price.currency` ayarı (sunucudan). */
   currency: string;
+  /** Oturumdaki kullanıcı: "Yeni adisyon" yalnız kendi masasına açılabilir (staffOrders kuralı). */
+  meId?: string;
+  capabilities?: { approve: boolean; reprint: boolean; createOrder: boolean };
+  /** Çözülmüş fiyat gösterimi (outlet ayarı + otel varsayılanı). */
+  pricesShown?: boolean;
 };
 
 const LIVE_EVENTS = [
@@ -74,88 +79,38 @@ const LIVE_EVENTS = [
   "price.display",
 ] as const;
 
-function playKioskChime() {
-  try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(880, now);
-    osc.frequency.setValueAtTime(1320, now + 0.1);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    osc.start(now);
-    osc.stop(now + 0.4);
-  } catch {
-    // ses izin verilmemişse sessiz geç
-  }
+const PORTRAIT = "(max-aspect-ratio: 1/1)";
+const subscribePortrait = (cb: () => void) => {
+  const mq = window.matchMedia(PORTRAIT);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const usePortrait = (): boolean =>
+  useSyncExternalStore(subscribePortrait, () => window.matchMedia(PORTRAIT).matches, () => false);
+
+function Kpi({ icon, label, value, tone }: { icon: IconName; label: string; value: string | number; tone?: "warn" | "danger" | "success" }) {
+  const color = tone ? `var(--${tone})` : "var(--text)";
+  return (
+    <div className="flex items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-3" style={{ minHeight: 44, color }}>
+      <Icon name={icon} size={20} />
+      <div className="min-w-0">
+        <p className="truncate text-sm text-muted">{label}</p>
+        <p className="truncate text-base font-extrabold">{value}</p>
+      </div>
+    </div>
+  );
 }
 
 function Kpis({ value }: { value: TableBoardData["kpis"] }) {
   return (
-    <section aria-label="Kasa göstergeleri" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+    <section aria-label="Kasa göstergeleri" className="grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
       <Kpi icon="receipt" label="Bugünkü sipariş" value={value.todayOrders} />
-      <Kpi
-        icon="hourglass"
-        label="Bekleyen sipariş"
-        value={value.pending}
-        highlight={value.pending > 0 ? "amber" : undefined}
-      />
-      <Kpi
-        icon="zap"
-        label="Onay ortalaması"
-        value={value.avgApprovalSec === undefined ? "—" : `${value.avgApprovalSec} sn`}
-      />
-      <Kpi
-        icon="flame"
-        label="Hazırlık ortalaması"
-        value={value.avgPrepSec === undefined ? "—" : `${Math.round(value.avgPrepSec / 60)} dk`}
-      />
-      <Kpi
-        icon="bell"
-        label="Açık çağrı"
-        value={value.openCalls}
-        highlight={value.openCalls > 0 ? "rose" : undefined}
-      />
-      <Kpi
-        icon="printer"
-        label="Yazıcı"
-        value={value.printerOnline === null ? "—" : value.printerOnline ? "Çevrimiçi" : "Çevrimdışı"}
-        highlight={value.printerOnline === true ? "emerald" : value.printerOnline === false ? "rose" : undefined}
-      />
+      <Kpi icon="hourglass" label="Bekleyen sipariş" value={value.pending} tone={value.pending > 0 ? "warn" : undefined} />
+      <Kpi icon="zap" label="Onay ortalaması" value={value.avgApprovalSec === undefined ? "—" : `${value.avgApprovalSec} sn`} />
+      <Kpi icon="flame" label="Hazırlık ortalaması" value={value.avgPrepSec === undefined ? "—" : `${Math.round(value.avgPrepSec / 60)} dk`} />
+      <Kpi icon="bell" label="Açık çağrı" value={value.openCalls} tone={value.openCalls > 0 ? "danger" : undefined} />
+      <Kpi icon="printer" label="Yazıcı" value={value.printerOnline === null ? "—" : value.printerOnline ? "Çevrimiçi" : "Çevrimdışı"} tone={value.printerOnline === true ? "success" : value.printerOnline === false ? "danger" : undefined} />
     </section>
-  );
-}
-
-function Kpi({
-  icon,
-  label,
-  value,
-  highlight,
-}: {
-  icon: IconName;
-  label: string;
-  value: string | number;
-  highlight?: "amber" | "rose" | "emerald";
-}) {
-  let badgeStyle = "bg-surface border-border text-text";
-  if (highlight === "amber") badgeStyle = "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-100";
-  if (highlight === "rose") badgeStyle = "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-100";
-  if (highlight === "emerald") badgeStyle = "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-100";
-
-  return (
-    <div className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-2xs ${badgeStyle}`}>
-      <Icon name={icon} size={24} />
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-medium text-muted truncate">{label}</p>
-        <p className="text-base sm:text-lg font-black tracking-tight truncate">{value}</p>
-      </div>
-    </div>
   );
 }
 
@@ -170,27 +125,28 @@ export default function KasaClient({
   waiters,
   canEdit,
   currency,
+  meId,
+  capabilities = { approve: true, reprint: true, createOrder: false },
+  pricesShown = false,
 }: Props) {
   const router = useRouter();
   const params = useSearchParams();
+  const portrait = usePortrait();
   const [board, setBoard] = useState(initialBoard);
   const [queue, setQueue] = useState(initialQueue);
   const [calls, setCalls] = useState(initialCalls);
-  const queueBadgeRef = usePulseOnIncrease<HTMLSpanElement>(queue.length);
-  const callsBadgeRef = usePulseOnIncrease<HTMLSpanElement>(calls.length);
   const [priceDisplay, setPriceDisplay] = useState<"INHERIT" | "SHOW" | "HIDE">(initialPriceDisplay);
-  const [selected, setSelected] = useState<BoardTable | undefined>();
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [panelOrders, setPanelOrders] = useState<PanelOrder[]>([]);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [composer, setComposer] = useState<{ tableId: string; label: string } | null>(null);
   const [bulk, setBulk] = useState(false);
-  const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
-
-  // Kiosk UI durumları
-  const [clock, setClock] = useState("");
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeScans, setActiveScans] = useState<ActiveScan[]>([]);
 
-  // Taranan masaları 90 saniye sonra otomatik temizle
+  const selected: BoardTable | undefined = board.tables.find((t) => t.id === selectedId);
+
+  // Taranan masaları 90 saniye sonra otomatik temizle.
   useEffect(() => {
     if (activeScans.length === 0) return;
     const interval = setInterval(() => {
@@ -200,44 +156,43 @@ export default function KasaClient({
     return () => clearInterval(interval);
   }, [activeScans.length]);
 
-  // Canlı Kiosk Saati
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setClock(now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Art arda gelen yüklemelerde yalnız en yenisinin yanıtı uygulanır (geç gelen eski yanıt listeyi geri almasın).
+  const panelSeq = useRef(0);
+  const loadPanel = useCallback(
+    async (tableId: string) => {
+      const seq = ++panelSeq.current;
+      const result = await tablePanelOrdersAction(outletId, tableId);
+      if (seq !== panelSeq.current) return;
+      if (result.ok) setPanelOrders(result.data);
+      else notify.error(result.error.message);
+      setPanelLoading(false);
+    },
+    [outletId],
+  );
 
-  // Tam ekran takibi
-  useEffect(() => {
-    const checkFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", checkFs);
-    return () => document.removeEventListener("fullscreenchange", checkFs);
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      void document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      void document.exitFullscreen().catch(() => {});
-    }
+  const selectTable = (table: BoardTable) => {
+    if (table.id === selectedId) return;
+    setSelectedId(table.id);
+    setPanelOrders([]);
+    setPanelLoading(true);
+    void loadPanel(table.id);
+  };
+  const closePanel = () => {
+    setSelectedId(undefined);
+    setPanelOrders([]);
   };
 
-  const togglePriceDisplay = async (nextValue: "SHOW" | "HIDE") => {
+  const togglePriceDisplay = (nextValue: "SHOW" | "HIDE") => {
     if (!canEdit || pending) return;
     startTransition(async () => {
       const prev = priceDisplay;
       setPriceDisplay(nextValue);
       const result = await setOutletPriceDisplayAction({ id: outletId, value: nextValue });
       if (!result.ok) {
-        setError(result.error.message);
+        notify.error(result.error.message);
         setPriceDisplay(prev);
         return;
       }
-      setError("");
       router.refresh();
     });
   };
@@ -249,338 +204,199 @@ export default function KasaClient({
       listOpenCallsAction(outletId),
     ]);
     if (nextBoard.ok) setBoard(nextBoard.data);
-    else setError(nextBoard.error.message);
+    else notify.error(nextBoard.error.message);
     if (nextQueue.ok) setQueue(nextQueue.data as QueueOrder[]);
     if (nextCalls.ok) setCalls(nextCalls.data);
+    if (selectedId) await loadPanel(selectedId);
     router.refresh();
-  }, [outletId, router]);
+  }, [outletId, router, selectedId, loadPanel]);
 
   useSse((event) => {
-    if (event.outletId === outletId) {
-      if (event.type === "scan.table") {
-        const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
-        if (payload?.tableId) {
-          if (soundEnabled) playKioskChime();
-          const tableLabel =
-            payload.tableLabel ??
-            board.tables.find((t) => t.id === payload.tableId)?.label ??
-            "Masa";
-          setActiveScans((prev) => [
-            { tableId: payload.tableId!, tableLabel, timestamp: Date.now() },
-            ...prev.filter((s) => s.tableId !== payload.tableId),
-          ]);
-        }
-      } else if (soundEnabled && (event.type === "order.created" || event.type === "call.created")) {
-        playKioskChime();
+    if (event.outletId !== outletId) return;
+    if (event.type === "scan.table") {
+      const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
+      if (payload?.tableId) {
+        playCue("call");
+        const tableLabel = payload.tableLabel ?? board.tables.find((t) => t.id === payload.tableId)?.label ?? "Masa";
+        setActiveScans((prev) => [{ tableId: payload.tableId!, tableLabel, timestamp: Date.now() }, ...prev.filter((s) => s.tableId !== payload.tableId)]);
       }
-      void refresh();
     }
+    void refresh();
   }, LIVE_EVENTS);
 
-  const tab =
-    params.get("sekme") === "kuyruk"
-      ? "queue"
-      : params.get("sekme") === "cagrilar"
-        ? "calls"
-        : params.get("sekme") === "menu"
-          ? "menu"
-          : "tables";
+  const sekme = params.get("sekme");
+  const tab = sekme === "kuyruk" ? "queue" : sekme === "cagrilar" ? "calls" : sekme === "menu" ? "menu" : "tables";
 
-  const act = (work: () => Promise<{ ok: boolean; error?: { message: string } }>) =>
+  const act = (work: () => Promise<{ ok: boolean; error?: { message: string } }>, success?: string) =>
     startTransition(async () => {
       const result = await work();
       if (!result.ok) {
-        setError(result.error?.message ?? "İşlem tamamlanamadı");
+        notify.error(result.error?.message ?? "İşlem tamamlanamadı");
         return;
       }
-      setError("");
+      if (success) notify.success(success);
       await refresh();
     });
 
-  const rejectOrder = (order: { id: string; orderNo: number; table?: { label: string } | null }) =>
+  const rejectOrder = (order: { id: string; orderNo: number; tableLabel?: string }) =>
     void askReason({
-      title: `Sipariş #${order.orderNo} (${order.table?.label ?? "Masa"}) reddedilecek`,
+      title: `Sipariş #${order.orderNo} (${order.tableLabel ?? "Masa"}) reddedilecek`,
       message: "Bir ret sebebi seçin veya yazın.",
       reasons: ORDER_REJECT_REASONS,
       minLength: REASON_MIN_LENGTH,
       confirmLabel: "Reddet",
       danger: true,
     }).then((reason) => {
-      if (reason) act(() => rejectOrderAction(order.id, reason));
+      if (reason) act(() => rejectOrderAction(order.id, reason), `#${order.orderNo} reddedildi`);
     });
 
+  const panelCalls: PanelCall[] = selected
+    ? calls.filter((c) => c.tableLabel === selected.label).map((c) => ({ id: c.id, type: c.type, note: c.note, ageSec: c.ageSec }))
+    : [];
+
   return (
-    <section className="merit-kiosk space-y-4">
-      {/* Dokunmatik Kiosk Üst Kontrol Barı */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3.5 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <h1 className="text-lg sm:text-xl font-black tracking-tight text-text flex items-center gap-2">
-              <span>{outletName ?? "Outlet Kasa"}</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" title="Canlı POS bağlantısı" />
-            </h1>
-            <p className="text-xs text-muted flex items-center gap-2">
-              <span>Dokunmatik Kasa &amp; Masa Terminali</span>
-              {clock ? (
-                <>
-                  <span>&bull;</span>
-                  <span className="font-mono font-bold text-text">{clock}</span>
-                </>
-              ) : null}
-            </p>
-          </div>
-        </div>
-
-        {/* Kiosk Hızlı Aksiyon Düğmeleri */}
+    <section className="merit-kiosk space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-extrabold">
+          {outletName ?? "Outlet"} <span className="text-muted">· Dokunmatik Kasa</span>
+        </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {/* Menü Fiyat Gösterimi Toggle'ı */}
           {hasMenu ? (
-            <div className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-sunken px-2.5 py-1 text-xs">
-              <span className="text-muted font-medium hidden sm:inline">Fiyatlar:</span>
-              <button
-                type="button"
-                disabled={!canEdit || pending}
-                onClick={() => togglePriceDisplay(priceDisplay === "SHOW" ? "HIDE" : "SHOW")}
-                className={`min-h-8 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all active:scale-95 ${
-                  priceDisplay === "SHOW"
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-rose-600 text-white shadow-xs"
-                } disabled:opacity-50`}
-                title={canEdit ? "Fiyat gösterimini değiştirmek için dokunun" : "Yetki gereklidir"}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                {priceDisplay === "SHOW" ? "Açık" : "Kapalı"}
-              </button>
-            </div>
-          ) : null}
-
-          {/* Ses Aç / Kapat */}
-          <button
-            type="button"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`min-h-9 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95 flex items-center gap-1 ${
-              soundEnabled
-                ? "bg-surface-sunken border-border text-text"
-                : "bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/40"
-            }`}
-            title="Sipariş ve çağrılarda sesli uyarı"
-          >
-            <Icon name={soundEnabled ? "bell" : "bell-off"} size={20} />
-            <span>{soundEnabled ? "Ses Açık" : "Sessiz"}</span>
-          </button>
-
-          {/* Tam Ekran Kiosk Modu */}
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="min-h-9 px-3 py-1 rounded-xl text-xs font-bold border border-border bg-surface-sunken hover:bg-border text-text transition-all active:scale-95"
-            title="Kiosk Tam Ekran"
-          >
-            <Icon name={isFullscreen ? "fullscreen-exit" : "fullscreen"} size={20} /> {isFullscreen ? "Normal" : "Tam Ekran"}
-          </button>
-
-          {/* Toplu Garson Atama (Masalar sekmesinde) */}
-          {tab === "tables" ? (
             <button
               type="button"
-              disabled={!canEdit}
-              onClick={() => setBulk(true)}
-              className="min-h-9 rounded-xl border border-border bg-surface-sunken hover:bg-border px-3 py-1 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+              className="pos-btn"
+              disabled={!canEdit || pending}
+              aria-pressed={priceDisplay === "SHOW"}
+              onClick={() => togglePriceDisplay(priceDisplay === "SHOW" ? "HIDE" : "SHOW")}
             >
-              <Icon name="users" size={20} /> Toplu Atama
+              Fiyatlar: {priceDisplay === "SHOW" ? "Açık" : "Kapalı"}
+            </button>
+          ) : null}
+          {tab === "tables" ? (
+            <button type="button" className="pos-btn" disabled={!canEdit} onClick={() => setBulk(true)}>
+              <Icon name="users" size={20} />
+              Toplu atama
             </button>
           ) : null}
         </div>
       </div>
 
-      {/* Dokunmatik Kiosk Ana Navigasyon Sekmeleri */}
-      <nav className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar" aria-label="Kasa ekranı sekmeleri">
-        <button
-          type="button"
-          aria-current={tab === "tables" ? "page" : undefined}
-          onClick={() => router.push("/kasa")}
-          className={`min-h-[50px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "tables"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="utensils" size={20} /> Masalar</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-extrabold">
-            {board.tables.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          aria-current={tab === "queue" ? "page" : undefined}
-          onClick={() => router.push("/kasa?sekme=kuyruk")}
-          className={`min-h-[50px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "queue"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="clipboard" size={20} /> Adisyon Kuyruğu</span>
-          {queue.length > 0 ? (
-            <span ref={queueBadgeRef} className="rounded-full bg-rose-600 text-white px-2 py-0.5 text-xs font-black">
-              {queue.length}
-            </span>
-          ) : (
-            <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-muted">0</span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          aria-current={tab === "calls" ? "page" : undefined}
-          onClick={() => router.push("/kasa?sekme=cagrilar")}
-          className={`min-h-[50px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "calls"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="bell" size={20} /> Garson Çağrıları</span>
-          {calls.length > 0 ? (
-            <span ref={callsBadgeRef} className="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">
-              {calls.length}
-            </span>
-          ) : (
-            <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-muted">0</span>
-          )}
-        </button>
-
-        {hasMenu ? (
-          <button
-            type="button"
-            aria-current={tab === "menu" ? "page" : undefined}
-            onClick={() => router.push("/kasa?sekme=menu")}
-            className={`min-h-[50px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-              tab === "menu"
-                ? "bg-accent text-white shadow-sm"
-                : "bg-surface border border-border text-text hover:bg-surface-sunken"
-            }`}
-          >
-            <span><Icon name="list" size={20} /> Outlet Menüsü</span>
-          </button>
-        ) : null}
-
-        {/* Yazıcı ve İptal Kısayol Sekmeleri */}
-        <Link
-          href="/kasa/yazici"
-          className="min-h-[50px] shrink-0 px-3.5 py-2 rounded-2xl text-xs font-semibold bg-surface border border-border text-muted hover:text-text hover:bg-surface-sunken flex items-center gap-1.5 transition active:scale-95 ml-auto"
-        >
-          <span><Icon name="printer" size={20} /> Yazıcı</span>
-        </Link>
-        <Link
-          href="/kasa/iptal"
-          className="min-h-[50px] shrink-0 px-3.5 py-2 rounded-2xl text-xs font-semibold bg-surface border border-border text-muted hover:text-text hover:bg-surface-sunken flex items-center gap-1.5 transition active:scale-95"
-        >
-          <span><Icon name="close" size={20} /> İptal / İade</span>
-        </Link>
-      </nav>
-
-      {/* KPI Kartları (Menu sekmesinde değilken) */}
       {tab !== "menu" ? <Kpis value={board.kpis} /> : null}
 
-      {/* Hata Uyarısı */}
-      {error ? (
-        <div role="alert" className="flex items-center justify-between rounded-xl bg-rose-500/10 border border-rose-500/30 p-3 text-sm text-rose-700 dark:text-rose-300 font-semibold">
-          <span>{error}</span>
-          <button type="button" onClick={() => setError("")} className="text-xs underline">Kapat</button>
+      {activeScans.length > 0 ? (
+        <aside aria-label="Canlı masa bildirimleri" className="grid gap-2">
+          {activeScans.slice(0, 3).map((scan) => (
+            <div key={scan.tableId} className="flex items-center justify-between gap-2 rounded-[var(--radius-l)] border-[3px] border-dashed bg-surface p-3 shadow-lg" style={{ borderColor: "var(--accent)" }}>
+              <div className="flex min-w-0 items-center gap-2">
+                <Icon name="phone" size={24} />
+                <div className="min-w-0">
+                  <p className="truncate text-base font-extrabold">{scan.tableLabel}</p>
+                  <p className="truncate text-sm">Misafir masada QR menüyü okuttu</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button type="button" className="pos-btn" onClick={() => { const found = board.tables.find((t) => t.id === scan.tableId); if (found) selectTable(found); }}>
+                  Masaya git
+                </button>
+                <button type="button" className="pos-btn" aria-label="Bildirimi kapat" onClick={() => setActiveScans((prev) => prev.filter((s) => s.tableId !== scan.tableId))}>
+                  <Icon name="close" size={20} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </aside>
+      ) : null}
+
+
+      {tab === "tables" ? (
+        <div className="pos-split">
+          <div className="pos-split-board">
+            <TableBoard
+              tables={board.tables}
+              areas={board.areas}
+              calls={calls}
+              scannedTableIds={activeScans.map((s) => s.tableId)}
+              selectedId={selectedId}
+              currency={currency}
+              onSelect={selectTable}
+            />
+          </div>
+          {selected ? (
+            <TablePanel
+              key={selected.id}
+              table={selected}
+              orders={panelOrders}
+              calls={panelCalls}
+              waiters={waiters}
+              capabilities={{
+                approve: capabilities.approve,
+                assign: canEdit,
+                reprint: capabilities.reprint,
+                createOrder: capabilities.createOrder && Boolean(meId) && selected.waiter?.id === meId,
+              }}
+              currency={currency}
+              pricesShown={pricesShown}
+              layout={portrait ? "sheet" : "side"}
+              loading={panelLoading}
+              busy={pending}
+              onClose={closePanel}
+              onApprove={(order) => act(() => approveOrderAction(order.id), `#${order.orderNo} onaylandı`)}
+              onReject={(order) => rejectOrder({ id: order.id, orderNo: order.orderNo, tableLabel: selected.label })}
+              onReprint={(order) => act(() => reprintAction({ orderId: order.id }), `#${order.orderNo} fişi yazdırma kuyruğuna gönderildi`)}
+              onResolveCall={(call) => act(() => resolveCallAction(call.id, "YANITLANDI"))}
+              onAssign={(userId) => act(() => (userId ? assignTableAction(selected.id, userId) : unassignTableAction(selected.id)), userId ? "Garson atandı" : "Atama kaldırıldı")}
+              onCreateOrder={() => setComposer({ tableId: selected.id, label: selected.label })}
+            />
+          ) : null}
         </div>
       ) : null}
 
-      {/* 1. SEKMELER: MASALAR (Masa Panosu) */}
-      {tab === "tables" ? (
-        <TableBoard
-          tables={board.tables}
-          areas={board.areas}
-          calls={calls}
-          scannedTableIds={activeScans.map((s) => s.tableId)}
-          currency={currency}
-          onSelect={setSelected}
-        />
-      ) : null}
-
-      {/* 2. SEKMELER: ADİSYON KUYRUĞU (Gelen Siparişler - Dokunmatik Onay) */}
       {tab === "queue" ? (
         <section aria-label="Onay kuyruğu" className="space-y-3">
           {queue.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center text-muted">
-              <Icon name="check" size={32} className="block mb-2" />
+            <div className="rounded-[var(--radius-l)] border border-dashed border-border bg-surface p-12 text-center text-muted">
+              <Icon name="check" size={32} className="mb-2 block" />
               <p className="text-base font-semibold">Bekleyen onaylanacak sipariş yok.</p>
-              <p className="text-xs mt-1">Misafirlerden QR menü üzerinden yeni sipariş geldiğinde anında burada listelenir.</p>
+              <p className="mt-1 text-sm">Misafirlerden QR menü üzerinden yeni sipariş geldiğinde anında burada listelenir.</p>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
               {queue.map((order) => {
-                const totalAmount = order.items.reduce(
-                  (sum, it) => sum + (Number(it.unitPrice ?? 0) * it.qty),
-                  0,
-                );
+                const totalAmount = order.items.reduce((sum, it) => sum + Number(it.unitPrice ?? 0) * it.qty, 0);
                 return (
-                  <article
-                    key={order.id}
-                    className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-4 shadow-sm hover:border-accent transition"
-                  >
+                  <article key={order.id} className="flex flex-col justify-between rounded-[var(--radius-l)] border-4 bg-surface p-4" style={{ borderColor: "var(--warn)" }}>
                     <div>
-                      <div className="flex items-start justify-between gap-3 border-b border-border/50 pb-2.5">
+                      <div className="flex items-start justify-between gap-3 border-b border-border pb-2">
                         <div>
-                          <h2 className="text-lg font-black text-text">
-                            #{order.orderNo} &bull; {order.table?.label ?? "Masa Bilgisi Yok"}
-                          </h2>
-                          <p className="text-xs text-muted mt-0.5">
-                            {new Date(order.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                          </p>
+                          <h2 className="text-lg font-extrabold">#{order.orderNo} &bull; {order.table?.label ?? "Masa bilgisi yok"}</h2>
+                          <p className="text-sm text-muted">{new Date(order.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</p>
                         </div>
                         {totalAmount > 0 ? (
                           <div className="text-right">
-                            <span className="text-xs text-muted block">Tutar</span>
-                            <span className="text-base font-black text-sky-700 dark:text-sky-300 font-mono">
-                              {formatPrice(totalAmount, currency)}
-                            </span>
+                            <span className="block text-sm text-muted">Tutar</span>
+                            <span className="text-base font-extrabold">{formatPrice(totalAmount, currency)}</span>
                           </div>
                         ) : null}
                       </div>
-
-                      {/* Ürün Listesi */}
-                      <ul className="mt-3 space-y-1.5 text-sm">
+                      <ul className="mt-3 space-y-1 text-base">
                         {order.items.map((item) => (
-                          <li key={item.id} className="flex items-center justify-between gap-2 py-1 border-b border-border/30 last:border-0">
-                            <span className="font-semibold text-text">{item.nameSnapshot}</span>
-                            <span className="rounded-md bg-surface-sunken px-2 py-0.5 text-xs font-black text-accent">
-                              × {item.qty}
-                            </span>
+                          <li key={item.id} className="flex items-center justify-between gap-2 border-b border-border py-1 last:border-0">
+                            <span className="font-semibold">{item.nameSnapshot}</span>
+                            <span className="font-extrabold">× {item.qty}</span>
                           </li>
                         ))}
                       </ul>
-
-                      {/* Varsa Sipariş Notu */}
                       {order.note ? (
-                        <div className="mt-3 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-900 dark:text-amber-200">
+                        <p className="mt-3 rounded-[var(--radius-m)] p-2 text-sm" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}>
                           <strong>Not:</strong> {order.note}
-                        </div>
+                        </p>
                       ) : null}
                     </div>
-
-                    {/* Dokunmatik Büyük Onay / Ret Butonları */}
-                    <div className="mt-4 pt-3 border-t border-border/50 flex gap-2.5">
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => act(() => approveOrderAction(order.id))}
-                        className="flex-1 min-h-[52px] rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black text-sm sm:text-base shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        <Icon name="check" size={20} /> Onayla &amp; Yazdır
+                    <div className="mt-4 flex gap-3 border-t border-border pt-3">
+                      <button type="button" className="pos-btn flex-1" data-primary disabled={pending} onClick={() => act(() => approveOrderAction(order.id), `#${order.orderNo} onaylandı`)}>
+                        <Icon name="check" size={24} /> Onayla &amp; Yazdır
                       </button>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => rejectOrder(order)}
-                        className="min-h-[52px] px-4 rounded-xl border border-rose-300/80 bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-98 text-sm font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-                      >
+                      <button type="button" className="pos-btn" data-danger disabled={pending} onClick={() => rejectOrder({ id: order.id, orderNo: order.orderNo, tableLabel: order.table?.label })}>
                         <Icon name="close" size={20} /> Reddet
                       </button>
                     </div>
@@ -592,57 +408,31 @@ export default function KasaClient({
         </section>
       ) : null}
 
-      {/* 3. SEKMELER: GARSON ÇAĞRILARI */}
       {tab === "calls" ? (
         <section aria-label="Açık çağrılar" className="space-y-3">
           {calls.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center text-muted">
-              <Icon name="bell" size={32} className="block mb-2" />
+            <div className="rounded-[var(--radius-l)] border border-dashed border-border bg-surface p-12 text-center text-muted">
+              <Icon name="bell" size={32} className="mb-2 block" />
               <p className="text-base font-semibold">Şu anda açık garson çağrısı yok.</p>
-              <p className="text-xs mt-1">Misafirler masadan &quot;Garson Çağır&quot; butonuyla çağrı başlattığında burada görünür.</p>
+              <p className="mt-1 text-sm">Misafirler masadan &quot;Garson Çağır&quot; düğmesiyle çağrı başlattığında burada görünür.</p>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
               {calls.map((call) => (
-                <article
-                  key={call.id}
-                  className={`flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition ${
-                    call.ageSec > 60
-                      ? "border-rose-500 bg-rose-500/10 ring-2 ring-rose-500/20"
-                      : "border-border bg-surface hover:border-accent"
-                  }`}
-                >
+                <article key={call.id} className="flex flex-col justify-between rounded-[var(--radius-l)] border-4 p-4" style={{ borderColor: call.ageSec >= 60 ? "var(--danger)" : "var(--warn)", background: call.ageSec >= 60 ? "var(--danger-bg)" : "var(--surface)" }}>
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <strong className="text-lg font-black text-text">{call.tableLabel}</strong>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                          call.ageSec > 60
-                            ? "bg-rose-600 text-white"
-                            : "bg-amber-500 text-white"
-                        }`}
-                      >
-                        {call.ageSec} sn önce
-                      </span>
+                      <strong className="text-lg font-extrabold">{call.tableLabel}</strong>
+                      <span className="text-sm font-bold">{call.ageSec} sn önce</span>
                     </div>
-                    <p className="mt-2 text-sm font-semibold text-text">
+                    <p className="mt-2 text-base font-semibold">
                       <Icon name="bell" size={20} /> {call.type}
                     </p>
-                    {call.note ? (
-                      <p className="mt-1 text-xs text-muted bg-surface-sunken p-2 rounded-lg">
-                        Not: {call.note}
-                      </p>
-                    ) : null}
+                    {call.note ? <p className="mt-1 rounded-[var(--radius-m)] bg-bg p-2 text-sm text-muted">Not: {call.note}</p> : null}
                   </div>
-
-                  <div className="mt-4 pt-3 border-t border-border/50">
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => act(() => resolveCallAction(call.id, "YANITLANDI"))}
-                      className="w-full min-h-[48px] rounded-xl bg-accent hover:bg-accent/90 active:scale-98 text-white font-bold text-sm shadow-xs transition flex items-center justify-center gap-1.5"
-                    >
-                      <Icon name="check" size={20} /> Yanıtlandı Olarak Kapat
+                  <div className="mt-4 border-t border-border pt-3">
+                    <button type="button" className="pos-btn w-full" data-primary disabled={pending} onClick={() => act(() => resolveCallAction(call.id, "YANITLANDI"))}>
+                      <Icon name="check" size={24} /> Yanıtlandı olarak kapat
                     </button>
                   </div>
                 </article>
@@ -652,84 +442,23 @@ export default function KasaClient({
         </section>
       ) : null}
 
-      {/* 4. SEKMELER: OUTLET MENÜSÜ & FİYAT KONTROLÜ */}
-      {tab === "menu" ? (
-        <CashierMenu
+      {tab === "menu" ? <CashierMenu outletId={outletId} canEdit={canEdit} priceDisplay={priceDisplay} onPriceDisplayChange={setPriceDisplay} /> : null}
+
+      {composer ? (
+        <StaffOrderComposer
           outletId={outletId}
-          canEdit={canEdit}
-          priceDisplay={priceDisplay}
-          onPriceDisplayChange={setPriceDisplay}
+          table={composer}
+          onDone={(orderNo) => {
+            setComposer(null);
+            if (orderNo !== null) {
+              notify.success(`#${orderNo} numaralı adisyon oluşturuldu`);
+              void refresh();
+            }
+          }}
         />
       ) : null}
 
-      {/* Canlı Masa QR Okutma Bildirimleri (Kiosk Floating Alert) */}
-      {activeScans.length > 0 ? (
-        <aside
-          aria-label="Canlı masa bildirimleri"
-          className="fixed bottom-20 right-4 z-40 flex flex-col gap-2 max-w-sm w-[calc(100vw-2rem)] sm:w-80 pointer-events-auto"
-        >
-          {activeScans.slice(0, 3).map((scan) => (
-            <div
-              key={scan.tableId}
-              className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-400 text-slate-950 font-bold shadow-2xl border-2 border-amber-300 ring-2 ring-amber-500/50"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Icon name="phone" size={24} />
-                <div className="min-w-0">
-                  <p className="text-sm font-black truncate">{scan.tableLabel}</p>
-                  <p className="text-[11px] font-semibold text-slate-900 truncate">
-                    Misafir masada QR menüyü okuttu!
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const found = board.tables.find((t) => t.id === scan.tableId);
-                    if (found) setSelected(found);
-                  }}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-950 text-white hover:bg-slate-800 text-xs font-black transition active:scale-95 shadow-sm"
-                >
-                  Masaya Git
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveScans((prev) => prev.filter((s) => s.tableId !== scan.tableId))}
-                  className="h-7 w-7 rounded-full bg-amber-500/80 hover:bg-amber-600 text-slate-950 flex items-center justify-center text-xs font-bold"
-                  aria-label="Bildirimi kapat"
-                >
-                  <Icon name="close" size={20} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </aside>
-      ) : null}
-
-      {/* Garson Atama Diyalogları */}
-      {selected ? (
-        <AssignDialog
-          table={selected}
-          tables={board.tables}
-          waiters={waiters}
-          outletId={outletId}
-          canEdit={canEdit}
-          onClose={() => setSelected(undefined)}
-          onDone={refresh}
-        />
-      ) : null}
-      {bulk ? (
-        <AssignDialog
-          bulk
-          tables={board.tables}
-          waiters={waiters}
-          outletId={outletId}
-          canEdit={canEdit}
-          onClose={() => setBulk(false)}
-          onDone={refresh}
-        />
-      ) : null}
+      {bulk ? <AssignDialog tables={board.tables} waiters={waiters} outletId={outletId} canEdit={canEdit} onClose={() => setBulk(false)} onDone={refresh} /> : null}
     </section>
   );
 }

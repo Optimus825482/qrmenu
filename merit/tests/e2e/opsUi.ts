@@ -36,19 +36,27 @@ export async function sendGuestOrder(
 export const tableTile = (cashier: Page, label: string): Locator =>
   cashier.getByRole("button", { name: `${label} masa detayları` });
 
-/** Assigns `waiter` to table `label` through the tile's dialog. */
+/** A link of the POS rail (Masalar, Kuyruk, Çağrılar, Menü, Yazıcı, İptal). */
+export const railLink = (cashier: Page, name: string | RegExp): Locator =>
+  cashier.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name });
+
+/** The side panel (landscape) or bottom sheet (portrait) of table `label`. */
+export const tablePanel = (cashier: Page, label: string): Locator =>
+  cashier.getByRole("complementary", { name: label, exact: true }).or(cashier.getByRole("dialog", { name: label, exact: true }));
+
+/** Assigns `waiter` to table `label` through the table's side panel. */
 export async function assignWaiter(cashier: Page, label: string, waiter: string): Promise<void> {
-  await cashier.getByRole("button", { name: "Masalar" }).click();
+  await railLink(cashier, "Masalar").click();
   await tableTile(cashier, label).click();
-  const dialog = cashier.getByRole("dialog", { name: `${label} · Masa ataması` });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("combobox", { name: "Garson" }).selectOption({ label: waiter });
-  await dialog.getByRole("button", { name: "Ata", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+  const panel = tablePanel(cashier, label);
+  await expect(panel).toBeVisible();
+  await panel.getByRole("button", { name: "Değiştir" }).click();
+  await panel.getByRole("combobox", { name: "Garson" }).selectOption({ label: waiter });
+  await panel.getByRole("button", { name: "Ata", exact: true }).click();
   await expect(tableTile(cashier, label)).toContainText(waiter);
 }
 
-/** The card of order `orderNo` in the cashier's Adisyon Kuyruğu tab. */
+/** The card of order `orderNo` in the cashier's Kuyruk tab. */
 export function queueCard(cashier: Page, orderNo: number): Locator {
   return cashier
     .getByRole("region", { name: "Onay kuyruğu" })
@@ -58,7 +66,7 @@ export function queueCard(cashier: Page, orderNo: number): Locator {
 
 /** Approves order `orderNo` from the cashier's queue tab. */
 export async function approveOrder(cashier: Page, orderNo: number): Promise<void> {
-  await cashier.getByRole("button", { name: "Adisyon Kuyruğu" }).click();
+  await railLink(cashier, /^Kuyruk/).click();
   const card = queueCard(cashier, orderNo);
   await expect(card).toBeVisible();
   await card.getByRole("button", { name: /Onayla/ }).click();

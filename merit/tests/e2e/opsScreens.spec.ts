@@ -7,8 +7,10 @@ import {
   pendingKpi,
   prepareOrder,
   queueCard,
+  railLink,
   sendGuestOrder,
   serveOrder,
+  tablePanel,
   tableTile,
 } from "./opsUi";
 
@@ -23,31 +25,32 @@ test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, brow
   const cashier = await openStaff(browser, "kasa.havuz");
   await expect(cashier).toHaveURL(/\/kasa$/);
 
-  // The board already carries the open order (GONDERILDI = "Onay Bekliyor") and the KPI counts it.
-  await expect(tableTile(cashier, "M1")).toContainText(`#${first.orderNo}`);
-  await expect(tableTile(cashier, "M1")).toContainText("Onay Bekliyor");
+  // The board already carries the open order (GONDERILDI = "Onay bekliyor · 1"), its panel lists #N, and the KPI counts it.
+  await expect(tableTile(cashier, "M1")).toContainText("Onay bekliyor · 1");
+  await tableTile(cashier, "M1").click();
+  await expect(tablePanel(cashier, "M1").getByRole("article", { name: `Sipariş #${first.orderNo}` })).toBeVisible();
   await expect(pendingKpi(cashier)).toHaveText("1");
 
   // Assignment through the tile dialog; it is server state: still there after a reload.
   await assignWaiter(cashier, "M1", WAITER);
   await cashier.reload();
   await expect(tableTile(cashier, "M1")).toContainText(WAITER);
-  await expect(tableTile(cashier, "M2")).toContainText("Garson atanmamış");
+  await expect(tableTile(cashier, "M2")).toContainText("Atanmadı");
 
   // A guest call reaches the tile live (SSE), with its type badge.
   const call = await page.request.post(`/api/q/${M1_TOKEN}/call`, { data: { type: "GARSON" } });
   expect(call.ok()).toBeTruthy();
   await expect(tableTile(cashier, "M1")).toContainText("GARSON", { timeout: 3_000 });
-  await expect(cashier.getByRole("button", { name: "Garson Çağrıları" })).toContainText("1");
+  await expect(railLink(cashier, /^Çağrılar/)).toContainText("1");
 
   // Approve from the queue tab: the pending KPI drops to 0 and the tile moves on to "Hazırlanıyor".
   await approveOrder(cashier, first.orderNo);
   await expect(pendingKpi(cashier)).toHaveText("0");
-  await cashier.getByRole("button", { name: "Masalar" }).click();
+  await railLink(cashier, "Masalar").click();
   await expect(tableTile(cashier, "M1")).toContainText("Hazırlanıyor");
 
   // Second order: approve, then cancel it from İptal / İade with a reason (single reason dialog).
-  await cashier.getByRole("button", { name: "Adisyon Kuyruğu" }).click();
+  await railLink(cashier, /^Kuyruk/).click();
   const second = await sendGuestOrder(page);
   await expect(queueCard(cashier, second.orderNo)).toBeVisible({ timeout: 3_000 }); // live, no reload
   await approveOrder(cashier, second.orderNo);

@@ -43,7 +43,6 @@ test("kasa /kasa/iptal: tek sebep diyaloğu ile iptal", async ({ page, browser }
   cashier.on("dialog", (d) => {
     throw new Error(`Beklenmeyen tarayıcı diyaloğu (${d.type()})`);
   });
-  await cashier.getByRole("button", { name: "Adisyon Kuyruğu" }).click();
   await approveOrder(cashier, order.orderNo);
   await cashier.getByRole("navigation", { name: "Personel bölümleri" }).getByRole("link", { name: "İptal" }).click();
   await expect(cashier).toHaveURL(/\/kasa\/iptal$/);

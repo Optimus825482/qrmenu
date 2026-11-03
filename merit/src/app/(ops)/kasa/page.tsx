@@ -6,7 +6,7 @@ import { approvals } from "@/modules/order/server/approvals";
 import { cashier } from "@/modules/order/server/cashier";
 import { waiterCalls } from "@/modules/order/server/waiterCalls";
 import KasaClient from "./KasaClient";
-import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
+import { resolveCurrency, resolvePriceDisplay } from "@/modules/menu/server/priceDisplay";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export default async function CashierPage() {
@@ -14,7 +14,7 @@ export default async function CashierPage() {
   if (!(await can(ctx, "QS-KAS", "V", ctx.session.hotelId))) denyScreen("QS-KAS");
   if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
-  const [board, queue, calls, canEdit, members, outlet, currency] = await Promise.all([
+  const [board, queue, calls, canEdit, members, outlet, currency, canApprove, canReprint, canOrder] = await Promise.all([
     cashier.tableBoard(ctx, outletId),
     approvals.visibleQueue(ctx, outletId),
     waiterCalls.listOpen(ctx, outletId),
@@ -26,10 +26,14 @@ export default async function CashierPage() {
     }),
     prisma.outlet.findUnique({
       where: { id: outletId },
-      select: { hasMenu: true, priceDisplay: true, name: true },
+      select: { hasMenu: true, hasOrdering: true, priceDisplay: true, name: true },
     }),
     resolveCurrency(ctx.session.hotelId),
+    can(ctx, "QS-KUY", "A", ctx.session.hotelId).then(async (all) => all || can(ctx, "QS-KUY", "D", ctx.session.hotelId)),
+    can(ctx, "QS-FIS", "O", ctx.session.hotelId),
+    can(ctx, "QS-KUY", "O", ctx.session.hotelId),
   ]);
+  const priceDisplay = await resolvePriceDisplay({ hotelId: ctx.session.hotelId, priceDisplay: outlet?.priceDisplay ?? "INHERIT" });
   return (
     <KasaClient
       outletId={outletId}
@@ -42,6 +46,9 @@ export default async function CashierPage() {
       waiters={members.map(({ user }) => user)}
       canEdit={canEdit}
       currency={currency}
+      meId={ctx.user.id}
+      pricesShown={priceDisplay === "SHOW"}
+      capabilities={{ approve: canApprove, reprint: canReprint, createOrder: outlet?.hasOrdering === true && canOrder }}
     />
   );
 }

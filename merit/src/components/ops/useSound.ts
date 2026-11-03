@@ -1,28 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
+import { playCue, soundStore, unlockAudio, type SoundName } from "@/components/pos/soundGate";
 
-/** Browser audio requires a gesture; arm once and use a small oscillator fallback when no asset exists. */
-export function useSound(name: "new-order" | "ready" | "call") {
-  const enabled = useRef(false);
+/**
+ * İmza korunur: `useSound(name)` çalma işlevi döner. Ses `soundGate` üzerindedir; ilk kullanıcı
+ * hareketi kapıyı açar (POS'ta ayrıca "Tam ekranı başlat" düğmesi açar).
+ */
+export function useSound(name: SoundName) {
   useEffect(() => {
-    const arm = () => { enabled.current = true; };
+    const arm = () => {
+      if (soundStore.getState().state === "locked") void unlockAudio();
+    };
     window.addEventListener("pointerdown", arm, { once: true });
     window.addEventListener("keydown", arm, { once: true });
-    return () => { window.removeEventListener("pointerdown", arm); window.removeEventListener("keydown", arm); };
+    return () => {
+      window.removeEventListener("pointerdown", arm);
+      window.removeEventListener("keydown", arm);
+    };
   }, []);
-  return useCallback(() => {
-    if (!enabled.current) return;
-    const audio = new Audio(`/sounds/${name}.mp3`);
-    audio.play().catch(() => {
-      const context = new AudioContext();
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.frequency.value = name === "call" ? 880 : name === "ready" ? 660 : 520;
-      gain.gain.setValueAtTime(0.08, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.18);
-      oscillator.connect(gain).connect(context.destination);
-      oscillator.start(); oscillator.stop(context.currentTime + 0.18);
-    });
-  }, [name]);
+  return useCallback(() => playCue(name), [name]);
 }

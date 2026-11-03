@@ -54,16 +54,16 @@ export default function IptalClient({ outletId, initial, canCancel, canPrint }: 
         <h1 className="text-xl font-semibold">Sipariş iptali</h1>
         <p className="text-sm text-muted">Onaylanmış veya hazır siparişler iptal edilebilir. Servis edilen siparişler yalnız görüntülenir.</p>
       </div>
-      {error ? <p role="status" className="text-sm text-red-700">{error}</p> : null}
+      {error ? <p role="status" className="text-sm font-semibold text-danger">{error}</p> : null}
       <div className="grid gap-3">
         {orders.length === 0 ? <p className="text-muted">İptal edilebilir son sipariş yok.</p> : orders.map((order) => (
-          <article key={order.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4">
+          <article key={order.id} className="flex flex-wrap items-center gap-3 rounded-[var(--radius-l)] border border-border bg-surface p-4">
             <div className="mr-auto">
               <h2 className="font-semibold">#{order.orderNo} · {order.table?.label ?? "Masa yok"}</h2>
               <p className="text-sm text-muted">{STATUS_TEXT[order.status] ?? order.status}</p>
             </div>
-            {canPrint ? <button type="button" disabled={pending} onClick={() => print(order)} className="min-h-[var(--tap-std,48px)] rounded border px-3 py-2 text-sm disabled:opacity-50">Adisyon yazdır</button> : null}
-            {order.status === "SERVIS_EDILDI" ? <span className="text-sm text-muted">Düzeltme v1&apos;de yok</span> : <button type="button" disabled={!canCancel} onClick={() => void askCancel(order)} className="min-h-[var(--tap-std,48px)] rounded border border-red-300 px-3 py-2 text-sm text-red-700 disabled:opacity-50">İptal et</button>}
+            {canPrint ? <button type="button" disabled={pending} onClick={() => print(order)} className="pos-btn">Adisyon yazdır</button> : null}
+            {order.status === "SERVIS_EDILDI" ? <span className="text-sm text-muted">Düzeltme v1&apos;de yok</span> : <button type="button" disabled={!canCancel} onClick={() => void askCancel(order)} className="pos-btn" data-danger>İptal et</button>}
           </article>
         ))}
       </div>

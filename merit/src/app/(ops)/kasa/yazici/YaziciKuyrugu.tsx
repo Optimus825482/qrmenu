@@ -8,6 +8,7 @@ import { enqueueTestPrintAction, listTodayQueueAction, reprintAction } from "@/m
 import { listPrintersAction } from "@/modules/order/actions/printers";
 import type { QueueJob } from "@/modules/order/server/printJobs";
 import type { PrinterRow } from "@/modules/order/server/printers";
+import { TONES, type StatusTone } from "@/components/ui/statusTone";
 
 // Queue movements and heartbeat flips redraw the page; `realtime.resync` covers dropped events.
 const LIVE_EVENTS = [
@@ -27,37 +28,31 @@ const jobTable = (job: QueueJob): string => job.order?.table?.label ?? "-";
 const canReprintJob = (job: QueueJob): boolean =>
   job.kind === "FIS" && job.orderId !== null && (job.status === "BASILDI" || job.status === "HATA");
 
-const BADGE_TONES: Record<QueueJob["status"], string> = {
-  KUYRUKTA: "bg-slate-100 text-slate-700 border-slate-300",
-  BASILIYOR: "bg-amber-100 text-amber-700 border-amber-300",
-  BASILDI: "bg-emerald-100 text-emerald-700 border-emerald-300",
-  HATA: "bg-red-100 text-red-700 border-red-300",
+const BADGE_TONES: Record<QueueJob["status"], StatusTone> = {
+  KUYRUKTA: "neutral",
+  BASILIYOR: "pending",
+  BASILDI: "ready",
+  HATA: "call",
 };
 
 function StatusBadge({ status }: { status: QueueJob["status"] }) {
+  const t = TONES[BADGE_TONES[status]];
   return (
-    <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-semibold ${BADGE_TONES[status]}`}>
+    <span className="inline-block rounded-full px-2 text-sm font-semibold" style={{ color: t.fg, background: t.bg, border: `2px ${t.border === "dashed" ? "dashed" : t.border === "double" ? "double" : "solid"} ${t.fg}` }}>
       {status}
     </span>
   );
 }
 
 function PrinterChip({ printer }: { printer: PrinterRow }) {
+  const state = printer.online ? "ok" : printer.lastSeenAt !== null ? "bad" : "unseen";
   return (
-    <span className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm">
+    <span className="inline-flex items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-3 py-2 text-sm">
       <span className="font-medium">{printer.name}</span>
-      {printer.online ? (
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-          çevrimiçi
-        </span>
-      ) : printer.lastSeenAt !== null ? (
-        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-          {printer.lastStatus ?? "HATA"}
-        </span>
-      ) : (
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">görülmedi</span>
-      )}
-      <span className="text-xs text-slate-500">
+      <span className="rounded-full px-2 text-sm font-semibold" style={state === "ok" ? { color: "var(--success)", background: "var(--success-bg)" } : state === "bad" ? { color: "var(--danger)", background: "var(--danger-bg)" } : { color: "var(--muted)", background: "var(--muted-bg)" }}>
+        {state === "ok" ? "çevrimiçi" : state === "bad" ? (printer.lastStatus ?? "HATA") : "görülmedi"}
+      </span>
+      <span className="text-sm text-muted">
         kuyruk {printer.queued} · hata {printer.failed}
       </span>
     </span>
@@ -138,15 +133,15 @@ export function YaziciKuyrugu({
     <>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold">Fiş Yazıcı Kuyruğu</h1>
-          <p className="text-sm text-slate-500">Bugünün işleri</p>
+          <h1 className="text-xl font-extrabold">Fiş Yazıcı Kuyruğu</h1>
+          <p className="text-sm text-muted">Bugünün işleri</p>
         </div>
         {canTestPrint ? <div className="flex items-center gap-2">
           <select
             aria-label="Yazıcı"
             value={testPrinterId}
             onChange={(event) => setTestPrinterId(event.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
+            className="rounded-[var(--radius-m)] border border-border bg-surface px-3 text-base" style={{ minHeight: "var(--tap-action)" }}
           >
             {testPrinters.length === 0 ? <option value="">Yazıcı yok</option> : null}
             {testPrinters.map((printer) => (
@@ -159,7 +154,7 @@ export function YaziciKuyrugu({
             type="button"
             onClick={() => void sendTest()}
             disabled={!testPrinterId}
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="pos-btn" data-primary
           >
             Test fişi
           </button>
@@ -167,28 +162,28 @@ export function YaziciKuyrugu({
       </header>
 
       {error ? (
-        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-[var(--radius-m)] border px-3 py-2 text-sm" style={{ color: "var(--danger)", background: "var(--danger-bg)", borderColor: "var(--danger)" }}>
           {error}
         </p>
       ) : null}
       {notice ? (
-        <p role="status" className={notice.tone === "ok" ? "text-sm text-emerald-700" : "text-sm text-red-700"}>
+        <p role="status" className="text-sm font-semibold" style={{ color: notice.tone === "ok" ? "var(--success)" : "var(--danger)" }}>
           {notice.text}
         </p>
       ) : null}
 
       <section aria-label="Yazıcı durumu" className="flex flex-wrap gap-2">
         {printers.length === 0 ? (
-          <p className="text-sm text-slate-500">Bu otelde kayıtlı yazıcı yok.</p>
+          <p className="text-sm text-muted">Bu otelde kayıtlı yazıcı yok.</p>
         ) : (
           printers.map((printer) => <PrinterChip key={printer.id} printer={printer} />)
         )}
       </section>
 
-      <section className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <section role="region" aria-label="Yazıcı işleri" tabIndex={0} className="overflow-x-auto rounded-[var(--radius-l)] border border-border bg-surface">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-border text-left text-sm text-muted">
               <th scope="col" className="px-3 py-2">
                 Saat
               </th>
@@ -215,7 +210,7 @@ export function YaziciKuyrugu({
           </thead>
           <tbody>
             {jobs.map((job) => (
-              <tr key={job.id} className="border-b border-slate-100 last:border-0">
+              <tr key={job.id} className="border-b border-border last:border-0">
                 <td className="whitespace-nowrap px-3 py-2">{formatInTimeZone(job.createdAt, TZ, "HH:mm")}</td>
                 <td className="px-3 py-2 font-medium">{jobLabel(job)}</td>
                 <td className="px-3 py-2">{jobTable(job)}</td>
@@ -224,7 +219,7 @@ export function YaziciKuyrugu({
                   <StatusBadge status={job.status} />
                 </td>
                 <td className="px-3 py-2">{job.attempts}</td>
-                <td className="max-w-64 truncate px-3 py-2" title={job.error ?? undefined}>
+                <td className="max-w-64 truncate px-3 py-2">
                   {job.error ?? ""}
                 </td>
                 {canReprint ? <td className="px-3 py-2 text-right">
@@ -232,7 +227,7 @@ export function YaziciKuyrugu({
                     <button
                       type="button"
                       onClick={() => void reprint(job)}
-                      className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold hover:bg-slate-50"
+                      className="pos-btn"
                     >
                       Yeniden bas
                     </button>
@@ -242,7 +237,7 @@ export function YaziciKuyrugu({
             ))}
             {jobs.length === 0 ? (
               <tr>
-                <td colSpan={canReprint ? 8 : 7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={canReprint ? 8 : 7} className="px-3 py-6 text-center text-muted">
                   Bugün basılacak iş yok.
                 </td>
               </tr>

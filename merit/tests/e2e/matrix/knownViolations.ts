@@ -12,10 +12,6 @@ export const KNOWN_TOUCH_VIOLATIONS: Record<string, string> = {
   "depo-stok": "T8",
   garson: "T8",
   "garson-cagrilar": "T8",
-  kasa: "T6",
-  "kasa-yazici": "T6",
-  "kasa-iptal": "T6",
-  kds: "T7",
   "oda-servisi": "T8",
   "admin@desktop-1366x768": "T14",
   "admin@tablet-1280x800": "T14",
@@ -28,8 +24,6 @@ export const KNOWN_AXE_VIOLATIONS: Record<string, string> = {
   kat: "T9",
   "kat-oda-kontrol": "T9",
   "depo-stok": "T8",
-  kasa: "T6",
-  "kasa-yazici@phone-390x844": "T6",
   "oda-servisi": "T8",
 };
 

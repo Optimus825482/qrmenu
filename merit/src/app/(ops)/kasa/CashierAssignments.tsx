@@ -25,5 +25,5 @@ export default function CashierAssignments({ tables, waiters, canEdit }: { table
       setError("");
       router.refresh();
     })}>Ata {table.label}</button>
-  </article>)}{error && <p role="alert" className="text-sm text-red-700">{error}</p>}</div>;
+  </article>)}{error && <p role="alert" className="text-sm text-danger">{error}</p>}</div>;
 }
