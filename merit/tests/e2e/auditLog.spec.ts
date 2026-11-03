@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { findStartItem } from "./definitionsUi";
 import { Client } from "pg";
 import type { Page } from "@playwright/test";
 import { e2eDatabaseUrl } from "./e2eDb";
@@ -71,10 +72,7 @@ test("Denetim Günlüğü SETTING_UPDATE satırında before/after; zil rozeti 1,
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "başlat" }).click();
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Denetim Günlüğü", exact: true })
-    .click();
+  await (await findStartItem(page, "Denetim Günlüğü")).click();
   const win = page.getByRole("region", { name: "Denetim Günlüğü", exact: true });
   await expect(win).toBeVisible();
   await win.getByRole("textbox", { name: "İşlem" }).fill("SETTING_UPDATE");

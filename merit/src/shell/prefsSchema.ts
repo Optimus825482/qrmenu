@@ -38,6 +38,8 @@ const winState = z.object({
 });
 
 export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object({
+  recentApps: z.array(id).max(6).default([]),
+  xpDensity: z.enum(["comfortable", "compact"]).default("comfortable"),
   wallpaper: z.enum(WALLPAPERS),
   wallpaperColor: z.string().regex(HEX_COLOR).default(DEFAULT_APPEARANCE.wallpaperColor),
   fontScale: z.enum(FONT_SCALES).default(DEFAULT_APPEARANCE.fontScale),

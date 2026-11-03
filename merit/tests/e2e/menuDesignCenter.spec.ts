@@ -1,4 +1,5 @@
 import { randomInt } from "node:crypto";
+import { findStartItem } from "./definitionsUi";
 import type { Browser, Locator, Page } from "@playwright/test";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
@@ -22,13 +23,13 @@ async function openStudio(browser: Browser): Promise<{ page: Page; win: Locator;
   const page = await context.newPage();
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
-  const windows = page.getByRole("region", { name: "Menü Tasarım Stüdyosu", exact: true });
+  const windows = page.getByRole("region", { name: "Menü Tasarım Merkezi", exact: true });
   if ((await windows.count()) === 0) {
     // The icon now lives inside a category folder; the Start menu is the stable entry point.
     await page.getByRole("button", { name: "başlat" }).click();
-    await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Menü Tasarım Stüdyosu", exact: true }).click();
+    await (await findStartItem(page, "Menü Tasarım Merkezi")).click();
   } else if (!(await windows.first().isVisible())) {
-    await page.getByRole("toolbar", { name: "Açık pencereler" }).getByRole("button", { name: "Menü Tasarım Stüdyosu" }).click();
+    await page.getByRole("toolbar", { name: "Açık pencereler" }).getByRole("button", { name: "Menü Tasarım Merkezi" }).click();
   }
   const win = windows.first();
   await expect(win).toBeVisible();

@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import type { Browser, Locator, Page } from "@playwright/test";
-import { acknowledge, saveNew } from "./definitionsUi";
+import { acknowledge, saveNew, findStartItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.use({ locale: "tr-TR" });
@@ -20,7 +20,7 @@ async function openPrinters(browser: Browser): Promise<{ page: Page; win: Locato
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Yazıcılar" }).click();
+  await (await findStartItem(page, "Yazıcılar")).click();
   const win = page.getByRole("region", { name: `Yazıcılar · ${MR.name}`, exact: true });
   const hotelCard = page
     .getByRole("region", { name: "Yazıcılar", exact: true })

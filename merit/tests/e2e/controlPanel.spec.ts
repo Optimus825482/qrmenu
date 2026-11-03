@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { acknowledge, answer } from "./definitionsUi";
+import { acknowledge, answer, findStartItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 // One database state for the whole file (reset once): prefs saved by one test are seen by the next.
@@ -40,10 +40,7 @@ async function openAdmin(page: Page) {
 
 async function openControlPanel(page: Page) {
   await page.getByRole("button", { name: "başlat" }).click();
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Denetim Masası" })
-    .click();
+  await (await findStartItem(page, "Denetim Masası")).click();
   await expect(panelWindow(page)).toBeVisible();
 }
 

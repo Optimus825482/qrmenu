@@ -78,6 +78,8 @@ export type IconPos = { appId: string; x: number; y: number };
 
 /** What is persisted per user in `User.prefs.shell` (and cached in localStorage). */
 export type ShellPrefs = Appearance & {
+  recentApps?: string[];
+  xpDensity?: "comfortable" | "compact";
   icons: IconPos[];
   windows: WinState[];
   shortcutVersion?: number;

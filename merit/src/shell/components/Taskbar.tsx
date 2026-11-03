@@ -7,6 +7,8 @@ import { useSse, type SseStatus } from "../useSse";
 import { selectActiveId, useWindowStore, windowStore } from "../windowStore";
 import { NotificationBell } from "./NotificationBell";
 import { TrayStatusText } from "./TrayBalloon";
+import { DbTray, PrinterTray } from "./TrayStatus";
+import type { PrinterState } from "@/components/pos/usePrinterStatus";
 
 const clockFormat = new Intl.DateTimeFormat("tr-TR", {
   hour: "2-digit",
@@ -43,9 +45,11 @@ type Props = {
   startOpen: boolean;
   onToggleStart(): void;
   startButtonRef: RefObject<HTMLButtonElement | null>;
+  /** Last known state of the session hotel's default receipt printer. */
+  printerInitial?: PrinterState;
 };
 
-export function Taskbar({ startOpen, onToggleStart, startButtonRef }: Props) {
+export function Taskbar({ startOpen, onToggleStart, startButtonRef, printerInitial = "unknown" }: Props) {
   const order = useWindowStore((s) => s.order);
   const windows = useWindowStore((s) => s.windows);
   const activeId = useWindowStore(selectActiveId);
@@ -93,6 +97,8 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef }: Props) {
       </div>
       <div className="xp-tray">
         <TrayStatusText />
+        <PrinterTray initial={printerInitial} />
+        <DbTray />
         <NotificationBell />
         <span
           className="xp-sse-dot"

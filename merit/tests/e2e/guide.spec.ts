@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { Client } from "pg";
 import { e2eDatabaseUrl } from "./e2eDb";
-import { node, row, startMenuItem } from "./definitionsUi";
+import { node, row, findStartItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 import { newContextPage, openAdminShell } from "./menuUi";
 import { approveOrder, openStaff, railLink, sendGuestOrder } from "./opsUi";
@@ -66,7 +66,7 @@ async function openUsersWindow(page: Page) {
   const window = page.getByRole("region", { name: title, exact: true });
   if (!(await window.isVisible())) {
     await page.getByRole("button", { name: "başlat", exact: true }).press("Enter");
-    await startMenuItem(page, title).press("Enter");
+    await (await findStartItem(page, title)).press("Enter");
   }
   await expect(window).toBeVisible();
   return window;

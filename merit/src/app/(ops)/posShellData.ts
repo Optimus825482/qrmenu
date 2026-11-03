@@ -2,14 +2,13 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import type { PosRailItem } from "@/components/pos/PosRail";
+import { printerStateFromPing } from "@/components/pos/printerState";
 import type { PrinterState } from "@/components/pos/usePrinterStatus";
 
 export type PosShellData = {
   kasa: { rail: PosRailItem[]; printer: { initial: PrinterState; href: string } | null } | null;
   kds: { rail: PosRailItem[] } | null;
 };
-
-const PRINTER_ONLINE_AFTER_MS = 90_000;
 
 /**
  * POS kabuğunun sunucu verisi: yetkisiz ray öğeleri burada süzülür (istemciye hiç gitmez),
@@ -41,10 +40,7 @@ export async function loadPosShellData(
       select: { lastSeenAt: true, lastStatus: true },
       orderBy: [{ outletId: "asc" }, { createdAt: "asc" }, { id: "asc" }],
     });
-    let initial: PrinterState = "unknown";
-    if (printer?.lastSeenAt) {
-      initial = printer.lastStatus === "OK" && Date.now() - printer.lastSeenAt.getTime() <= PRINTER_ONLINE_AFTER_MS ? "ok" : "error";
-    }
+    const initial = printerStateFromPing(printer);
     kasa = { rail, printer: fis || kas ? { initial, href: fis ? "/kasa/yazici" : "/kasa" } : null };
   }
   return {

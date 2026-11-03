@@ -4,9 +4,11 @@ import type { AppProps } from "@/shell/registry";
 import { getApps } from "@/shell/registry";
 import { useWindowStore } from "@/shell/windowStore";
 import { XpIcon } from "@/shell/icons";
+import { APP_FOLDERS } from "@/shell/appFolders";
+import { SCREEN_GUIDES } from "@/modules/core/screenGuide";
 
 interface CategoryFolderAppProps extends AppProps {
-  categoryKey: "OUTLET" | "ROOM_SERVICE" | "MINIBAR" | "SISTEM" | "KULLANICI";
+  categoryKey: string;
   categoryTitle: string;
   categorySubtitle: string;
 }
@@ -19,11 +21,12 @@ export function CategoryFolderWindow({
 }: CategoryFolderAppProps) {
   const allowedIds = useWindowStore((s) => s.appIds);
   const allApps = getApps();
+  const folder = APP_FOLDERS.find(({ id }) => id === categoryKey);
   // Filter apps belonging to this category, EXCLUDING the folder itself (id starting with "folder.")
   // and checking allowed permissions for the active user
   const folderApps = allApps.filter(
     (a) =>
-      a.category === categoryKey &&
+      folder?.categories.includes(a.category) &&
       !a.id.startsWith("folder.") &&
       (!allowedIds || allowedIds.includes(a.id)),
   );
@@ -68,10 +71,10 @@ export function CategoryFolderWindow({
                 <XpIcon name={app.icon} size={38} />
               </div>
               <span className="font-semibold text-xs text-gray-800 group-hover:text-blue-900 leading-tight max-w-[130px] line-clamp-2 drop-shadow-sm">
-                {app.title}
+                {app.launchLabel ?? app.title}
               </span>
               <span className="text-[10px] text-gray-400 mt-1 opacity-70 group-hover:opacity-100 font-medium">
-                Açmak için tıklayın
+                {SCREEN_GUIDES[app.screenCode]?.purpose}
               </span>
             </button>
           ))}
@@ -92,7 +95,7 @@ export function OutletFolderWindow(props: AppProps) {
   return (
     <CategoryFolderWindow
       {...props}
-      categoryKey="OUTLET"
+      categoryKey="outlet"
       categoryTitle="Outlet Operasyonları"
       categorySubtitle="Outlet, Masa Tanımları, QR Menü Yönetimi ve Tasarım Stüdyosu"
     />
@@ -103,7 +106,7 @@ export function RoomServiceFolderWindow(props: AppProps) {
   return (
     <CategoryFolderWindow
       {...props}
-      categoryKey="ROOM_SERVICE"
+      categoryKey="room-service"
       categoryTitle="Oda Servisi Operasyonları"
       categorySubtitle="Oda Servisi Menüsü, Tasarım Stüdyosu, Sipariş Kayıtları ve SLA Raporları"
     />
@@ -114,7 +117,7 @@ export function MinibarFolderWindow(props: AppProps) {
   return (
     <CategoryFolderWindow
       {...props}
-      categoryKey="MINIBAR"
+      categoryKey="minibar"
       categoryTitle="Minibar Operasyonları"
       categorySubtitle="Kat Planı, Setup/Ürün Tanımları, Konsinye Stok ve Tüketim Raporları"
     />
@@ -125,7 +128,7 @@ export function SistemFolderWindow(props: AppProps) {
   return (
     <CategoryFolderWindow
       {...props}
-      categoryKey="SISTEM"
+      categoryKey="sistem"
       categoryTitle="Sistem Yönetimi"
       categorySubtitle="Otel Tanımlamaları, Denetim Masası, Sistem Ayarları ve Audit Log"
     />
@@ -136,7 +139,7 @@ export function KullaniciFolderWindow(props: AppProps) {
   return (
     <CategoryFolderWindow
       {...props}
-      categoryKey="KULLANICI"
+      categoryKey="kullanici"
       categoryTitle="Kullanıcı Yönetimi"
       categorySubtitle="Personel Hesapları, Rol Tanımları, Yetki Matrisi ve Ekip Yönetimi"
     />

@@ -53,6 +53,32 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
     return () => clearTimeout(t);
   }, [loadData]);
 
+  /** Report rows as a semicolon CSV (Excel opens it as is); quotes are doubled, formulas are neutralised. */
+  const exportCsv = () => {
+    const cell = (value: string | number | null): string => {
+      const text = value === null ? "" : String(value);
+      const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+      return `"${safe.replace(/"/g, '""')}"`;
+    };
+    const header = ["Sipariş No", "Otel", "Oda", "Durum", "Tutar", "Para birimi", "Oluşturma", "Teslim", "SLA aşımı"];
+    const lines = orders.map((o) =>
+      [o.orderNo, o.hotelName, o.roomNumber, o.status, o.subtotal, o.currency, o.createdAt, o.deliveredAt, o.slaBreachedAt]
+        .map(cell)
+        .join(";"),
+    );
+    const csv = [header.map(cell).join(";"), ...lines].join("\r\n");
+    const blob = new Blob(["﻿", csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `oda-servisi-sla-${dateRange}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setStatus(`${orders.length} satır indirildi`);
+  };
+
   // Calculate SLA compliance (orders with slaBreachedAt vs total delivered)
   const deliveredCount = stats?.delivered ?? 0;
   const breachedCount = orders.filter((o) => o.slaBreachedAt !== null).length;
@@ -103,9 +129,20 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
           <button
             type="button"
             onClick={() => void loadData()}
+            data-xp-command="refresh"
             className="border border-[#7f9db9] px-3 py-1 rounded bg-white hover:bg-gray-50 font-bold"
           >
             Yenile
+          </button>
+          <button
+            type="button"
+            data-guide="sla-indir"
+            data-xp-command="export"
+            disabled={loading || orders.length === 0}
+            onClick={exportCsv}
+            className="border border-[#7f9db9] px-3 py-1 rounded bg-white hover:bg-gray-50 font-bold disabled:opacity-50"
+          >
+            CSV indir
           </button>
         </div>
       </div>

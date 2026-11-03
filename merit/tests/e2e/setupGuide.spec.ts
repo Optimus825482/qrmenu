@@ -1,4 +1,5 @@
 import type { Locator, Page } from "@playwright/test";
+import { findStartItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 test.describe.configure({ mode: "serial" });
@@ -29,10 +30,7 @@ const MR = { name: "Merit Royal", code: "ROYAL" };
 /** Başlat → Kurulum Rehberi, then the hotel card (admin has three hotels: a picker shows). */
 async function openGuide(page: Page, hotel: { name: string; code: string }): Promise<Locator> {
   await page.getByRole("button", { name: "başlat" }).click();
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "Kurulum Rehberi", exact: true })
-    .click();
+  await (await findStartItem(page, "Kurulum Rehberi")).click();
   await page
     .getByRole("region", { name: "Kurulum Rehberi", exact: true })
     .getByRole("button", { name: new RegExp(`^${hotel.name} logosu\\s+${hotel.name}$`) })

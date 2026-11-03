@@ -153,6 +153,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
         <button
           type="button"
           onClick={exportCsv}
+          data-xp-command="export"
           data-guide="rapor-indir"
           className="xp-button text-xs px-3 py-1 font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-400 flex items-center gap-1"
         >

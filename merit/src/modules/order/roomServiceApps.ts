@@ -1,5 +1,5 @@
 import type { AppProps } from "@/shell/registry";
-import { registerApp } from "@/shell/registry";
+import { registerCatalogApp } from "@/shell/registry";
 
 /**
  * Registers room service apps (ROOM_SERVICE category).
@@ -7,9 +7,10 @@ import { registerApp } from "@/shell/registry";
  */
 export function registerRoomServiceApps(): void {
   // 1. Oda Servisi Menü Yönetimi
-  registerApp({
+  registerCatalogApp({
     id: "rs.menu",
     title: "Oda Servisi Menü Yönetimi",
+    launchLabel: "Oda Servisi Menü Yönetimi",
     icon: "menu",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
@@ -25,9 +26,10 @@ export function registerRoomServiceApps(): void {
   });
 
   // 2. Oda Servisi Menü Tasarım Stüdyosu
-  registerApp({
+  registerCatalogApp({
     id: "rs.tema",
     title: "Oda Servisi Menü Tasarım Stüdyosu",
+    launchLabel: "Oda Servisi Menü Tasarım Stüdyosu",
     icon: "tema",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
@@ -40,9 +42,10 @@ export function registerRoomServiceApps(): void {
   });
 
   // 3. Oda Servisi Kayıtları (Siparişler)
-  registerApp({
+  registerCatalogApp({
     id: "rs.kayitlar",
     title: "Oda Servisi Kayıtları",
+    launchLabel: "Oda Servisi Kayıtları",
     icon: "pencere",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
@@ -56,9 +59,10 @@ export function registerRoomServiceApps(): void {
   });
 
   // 4. Oda Servisi Raporları
-  registerApp({
+  registerCatalogApp({
     id: "rs.rapor",
     title: "Oda Servisi Raporları",
+    launchLabel: "Oda Servisi Raporları",
     icon: "denetim",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-SLA",

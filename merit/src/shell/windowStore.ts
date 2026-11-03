@@ -72,6 +72,8 @@ type ShellState = {
   footerHeight: number;
   brandWatermark: boolean;
   shortcutVersion: number;
+  recentApps: string[];
+  xpDensity: NonNullable<ShellPrefs["xpDensity"]>;
   icons: IconPos[];
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
@@ -120,6 +122,7 @@ type ShellActions = {
   setFooterHeight(px: number): void;
   setBrandWatermark(on: boolean): void;
   setShortcutVersion(version: number): void;
+  setXpDensity(density: ShellState["xpDensity"]): void;
   /** Wallpaper, font, theme and brand switches back to DEFAULT_APPEARANCE ("Varsayılana dön"). */
   resetAppearance(): void;
   addIcon(appId: string, x: number, y: number): void;
@@ -175,6 +178,18 @@ export function clampWindowPosition(
 
 function maximizedRect(vp: ShellState["viewport"]): Rect {
   return { x: 0, y: 0, w: vp.w, h: deskHeight(vp) };
+}
+
+export function fitToViewport(rect: Rect, viewport: { w: number; h: number; taskbarH: number }): { rect: Rect; maximized: boolean } {
+  const width = Math.max(0, viewport.w);
+  const height = Math.max(0, viewport.h - viewport.taskbarH);
+  if (rect.w > width || rect.h > height) {
+    return { rect: { x: 0, y: 0, w: width, h: height }, maximized: true };
+  }
+  return {
+    rect: { ...rect, x: clamp(rect.x, 0, width - rect.w), y: clamp(rect.y, 0, height - rect.h) },
+    maximized: false,
+  };
 }
 
 /** Grid slot of the i-th icon, column by column (XP's auto-arrange). */
@@ -261,7 +276,8 @@ export function createWindowStore() {
 
     const titleFor = (app: AppDefinition, hotelId?: string): string => {
       const hotel = hotelId ? get().hotels.find((h) => h.id === hotelId) : undefined;
-      return hotel ? `${app.title} · ${hotel.name}` : app.title;
+      const title = app.launchLabel ?? app.title;
+      return hotel ? `${title} · ${hotel.name}` : title;
     };
 
     /** Renumbers z before the counter would leave its band (long sessions, many focus clicks). */
@@ -298,6 +314,8 @@ export function createWindowStore() {
       ...DEFAULT_APPEARANCE,
       footerHeight: FOOTER_HEIGHT,
       shortcutVersion: 0,
+      recentApps: [],
+      xpDensity: "comfortable",
       icons: [],
       hotels: [],
       appIds: null,
@@ -324,15 +342,27 @@ export function createWindowStore() {
 
       open(appId, opts = {}) {
         const app = allowed(appId, opts.hotelId);
-        if (!app || get().order.length >= MAX_WINDOWS) return null;
+        if (!app) return null;
+        const recentApps = [appId, ...get().recentApps.filter((recent) => recent !== appId)].slice(0, 6);
+        if (app.external) {
+          if (typeof window === "undefined") return null;
+          const href = new URL(app.external.href, window.location.origin);
+          if (href.origin !== window.location.origin) return null;
+          href.searchParams.set("mod", "personel");
+          window.open(`${href.pathname}${href.search}${href.hash}`, "_blank", "noopener");
+          set({ recentApps });
+          return null;
+        }
+        if (get().order.length >= MAX_WINDOWS) return null;
         compactZ();
         const { order, cascade, seq, nextZ } = get();
         const vp = effectiveViewport(get());
-        const w = Math.min(app.window.w, Math.max(minSize(app).w, vp.w));
-        const h = Math.min(app.window.h, Math.max(minSize(app).h, deskHeight(vp)));
+        const { w, h } = app.window;
         let step = order.length === 0 ? 0 : cascade + 1;
         const at = (k: number) => CASCADE_ORIGIN + k * CASCADE_STEP;
         if (at(step) + w > vp.w || at(step) + h > deskHeight(vp)) step = 0;
+        const requested = { x: at(step), y: at(step), w, h };
+        const { rect, maximized } = fitToViewport(requested, { ...vp, taskbarH: TASKBAR_H });
         const hotelId = resolveHotel(app, opts.hotelId);
         const id = `w${seq}`;
         const win: WinState = {
@@ -342,11 +372,10 @@ export function createWindowStore() {
           ...(opts.initialPanel !== undefined ? { initialPanel: opts.initialPanel } : {}),
           ...(opts.initialOutletId !== undefined ? { initialOutletId: opts.initialOutletId } : {}),
           title: titleFor(app, hotelId),
-          ...clampWindowPosition(at(step), at(step), w, h, vp),
-          w,
-          h,
+          ...rect,
           minimized: false,
-          maximized: false,
+          maximized,
+          ...(maximized ? { prev: rect } : {}),
           z: nextZ,
         };
         set({
@@ -355,6 +384,7 @@ export function createWindowStore() {
           nextZ: nextZ + 1,
           seq: seq + 1,
           cascade: step,
+          recentApps,
         });
         return id;
       },
@@ -504,6 +534,10 @@ export function createWindowStore() {
         if (Number.isInteger(version) && version >= 0) set({ shortcutVersion: version });
       },
 
+      setXpDensity(xpDensity) {
+        set({ xpDensity });
+      },
+
       resetAppearance() {
         get().setFooterBand(DEFAULT_APPEARANCE.footerBand);
         set({ ...DEFAULT_APPEARANCE });
@@ -545,6 +579,8 @@ export function createWindowStore() {
           footerBand,
           brandWatermark,
           shortcutVersion,
+          recentApps,
+          xpDensity,
           icons,
           order,
           windows,
@@ -558,6 +594,8 @@ export function createWindowStore() {
           footerBand,
           brandWatermark,
           shortcutVersion,
+          recentApps,
+          xpDensity,
           icons: icons.map((i) => ({ ...i })),
           // Opening sub-view/outlet are one-off requests and are not saved in window preferences.
           windows: order.map((id) => {
@@ -578,7 +616,7 @@ export function createWindowStore() {
         for (const saved of p.windows) {
           if (order.length >= MAX_WINDOWS) break;
           const app = allowed(saved.appId);
-          if (!app || windows[saved.id]) continue;
+          if (!app || app.external || windows[saved.id]) continue;
           const hotelId = resolveHotel(app, saved.hotelId);
           const min = minSize(app);
           const w = Math.max(min.w, saved.w);
@@ -622,6 +660,8 @@ export function createWindowStore() {
           footerBand,
           brandWatermark: bool(p.brandWatermark, DEFAULT_APPEARANCE.brandWatermark),
           shortcutVersion: Number.isInteger(p.shortcutVersion) ? p.shortcutVersion : 0,
+          recentApps: [...new Set(p.recentApps ?? [])].slice(0, 6),
+          xpDensity: p.xpDensity ?? "comfortable",
           seq: Math.max(get().seq, maxSeq + 1),
           cascade: 0,
           ready: true,

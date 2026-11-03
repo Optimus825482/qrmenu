@@ -269,7 +269,7 @@ function DesktopIcon({ icon, app, selected, onSelect, onOpen, onMenu }: IconProp
       }}
     >
       <XpIcon name={app.icon} size={40} />
-      <span className="xp-desktop-icon-label">{app.title}</span>
+      <span className="xp-desktop-icon-label">{app.launchLabel ?? app.title}</span>
     </button>
   );
 }

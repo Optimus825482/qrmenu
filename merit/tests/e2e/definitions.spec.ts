@@ -9,7 +9,7 @@ import {
   row,
   saveEdit,
   saveNew,
-  startMenuItem,
+  findStartItem,
   userWizard,
 } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
@@ -524,7 +524,7 @@ test("canlı yenileme: başka pencerede eklenen kat açık listede görünür", 
 
   // A second Tanımlamalar window of the same hotel (the restored one stays open).
   await page.getByRole("button", { name: "başlat" }).click();
-  await page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name: "Tanımlamalar", exact: true }).click();
+  await (await findStartItem(page, "Tanımlamalar")).click();
   await page
     .getByRole("region", { name: "Tanımlamalar", exact: true })
     .getByRole("button", { name: new RegExp(`^${MR.name} logosu\\s+${MR.name}$`) })
@@ -546,7 +546,7 @@ test("mudur.mr (yönetim): Tanımlamalar görünür, tek oteli olduğundan seçi
   await login(page, "mudur.mr");
   await expect(page).toHaveURL(/\/admin$/);
   await page.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(page, "Tanımlamalar").click();
+  await (await findStartItem(page, "Tanımlamalar")).click();
   const win = page.getByRole("region", { name: `Tanımlamalar · ${MR.name}`, exact: true }).last();
   await expect(win).toBeVisible();
   await node(win, "Katlar").click();

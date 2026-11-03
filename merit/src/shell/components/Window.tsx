@@ -18,6 +18,7 @@ import {
 import { appFrameUrl } from "../appearance";
 import { alertDialog, confirm } from "../confirm";
 import { XpIcon } from "../icons";
+import { useWindowCommands } from "../keyboard";
 import { getApp, type AppDefinition, type AppProps } from "../registry";
 import {
   clampWindowPosition,
@@ -63,6 +64,8 @@ function isSameOriginPath(url: string | undefined): url is string {
 }
 
 const MENU_NAMES: MenuName[] = ["Dosya", "Görünüm", "Yardım"];
+/** Underlined letter of each menu-bar entry: F10 (or a lone Alt), then this key opens it. */
+const MENU_MNEMONIC: Record<MenuName, string> = { Dosya: "d", Görünüm: "g", Yardım: "y" };
 
 type MenuName = "Dosya" | "Görünüm" | "Yardım";
 
@@ -84,6 +87,9 @@ export function Window({ id, hotels, userName }: Props) {
   const [reloadKey, setReloadKey] = useState(0);
   const [menu, setMenu] = useState<{ name: MenuName; x: number; y: number } | null>(null);
   const [dirty, setDirty] = useState(false);
+  /** Which `data-xp-command` buttons the app offers, read when a menu opens (File menu enabling). */
+  const [offered, setOffered] = useState<string[]>([]);
+  const density = useWindowStore((s) => s.xpDensity);
 
   const actions = windowStore.getState();
   // A string selector keeps the snapshot stable between renders (no new array each time).
@@ -132,6 +138,50 @@ export function Window({ id, hotels, userName }: Props) {
       },
     }),
     [id],
+  );
+
+  /** The app's own toolbar button for a command (New, Edit, Delete, Refresh, Export), if enabled. */
+  const commandButton = (name: string): HTMLButtonElement | null =>
+    ref.current?.querySelector<HTMLButtonElement>(`[data-xp-command="${name}"]:not(:disabled)`) ?? null;
+
+  useWindowCommands(
+    {
+      save: () => {
+        const dialogForm = document.querySelector<HTMLFormElement>("#xp-dialog-root [role=dialog] form");
+        if (dialogForm) {
+          dialogForm.requestSubmit();
+          return true;
+        }
+        const button = commandButton("save");
+        if (!button) return false;
+        button.click();
+        return true;
+      },
+      remove: () => {
+        const button = commandButton("remove");
+        button?.click();
+        return Boolean(button);
+      },
+      rename: () => {
+        const button = commandButton("rename");
+        button?.click();
+        return Boolean(button);
+      },
+      find: () => {
+        const input = ref.current?.querySelector<HTMLInputElement>("input[type=search], input[data-xp-command=find]");
+        if (!input) return false;
+        input.focus();
+        input.select();
+        return true;
+      },
+      refresh: () => {
+        const button = commandButton("refresh");
+        if (button) button.click();
+        else setReloadKey((k) => k + 1);
+        return true;
+      },
+    },
+    active && !!win && !win.minimized,
   );
 
   if (!win || !app) return null;
@@ -257,8 +307,30 @@ export function Window({ id, hotels, userName }: Props) {
   };
 
   const menus: Record<MenuName, MenuItem[]> = {
-    Dosya: [{ label: "Kapat", onSelect: () => void requestClose() }],
-    Görünüm: [{ label: "Yenile", onSelect: () => setReloadKey((k) => k + 1) }],
+    Dosya: [
+      { label: "Yeni…", mnemonic: "y", disabled: !offered.includes("new"), onSelect: () => commandButton("new")?.click() },
+      { label: "Dışa aktar", mnemonic: "d", disabled: !offered.includes("export"), onSelect: () => commandButton("export")?.click() },
+      { kind: "separator" },
+      { label: "Kapat", mnemonic: "k", onSelect: () => void requestClose() },
+    ],
+    Görünüm: [
+      {
+        label: "Yenile (F5)",
+        mnemonic: "y",
+        onSelect: () => {
+          const button = commandButton("refresh");
+          if (button) button.click();
+          else setReloadKey((k) => k + 1);
+        },
+      },
+      {
+        label: "Yoğunluk",
+        submenu: [
+          { label: "Rahat", mnemonic: "r", checked: density === "comfortable", onSelect: () => actions.setXpDensity("comfortable") },
+          { label: "Sıkı", mnemonic: "s", checked: density === "compact", onSelect: () => actions.setXpDensity("compact") },
+        ],
+      },
+    ],
     Yardım: [
       ...(guideScreen
         ? [
@@ -272,7 +344,8 @@ export function Window({ id, hotels, userName }: Props) {
         onSelect: () =>
           void alertDialog({
             title: `Hakkında — ${app.title}`,
-            message: `${app.title}\nF&B Command Center uygulaması (${app.id})`,
+            message: `${app.title}
+F&B Command Center uygulaması (${app.id})`,
           }),
       },
     ],
@@ -285,7 +358,41 @@ export function Window({ id, hotels, userName }: Props) {
     }
     const r = button.getBoundingClientRect();
     menuAnchor.current = button;
+    setOffered(
+      [...(ref.current?.querySelectorAll<HTMLElement>("[data-xp-command]:not(:disabled)") ?? [])].map(
+        (el) => el.dataset.xpCommand ?? "",
+      ),
+    );
     setMenu({ name, x: r.left, y: r.bottom });
+  };
+
+  /** Menu bar keys: ← → move, ↓ or Enter opens, the underlined letter opens its menu directly. */
+  const onMenubarKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const items = [...e.currentTarget.querySelectorAll<HTMLButtonElement>(".xp-menubar-item")];
+    const index = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (index < 0 || e.ctrlKey || e.metaKey) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      items[(index + (e.key === "ArrowRight" ? 1 : -1) + items.length) % items.length]?.focus();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      openMenu(MENU_NAMES[index], items[index]);
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      (ref.current ?? document.body).focus();
+      return;
+    }
+    const byLetter = MENU_NAMES.findIndex((name) => MENU_MNEMONIC[name] === e.key.toLocaleLowerCase("tr-TR"));
+    if (byLetter >= 0) {
+      e.preventDefault();
+      items[byLetter]?.focus();
+      setMenu(null);
+      openMenu(MENU_NAMES[byLetter], items[byLetter]);
+    }
   };
 
   let body: ReactNode;
@@ -304,7 +411,7 @@ export function Window({ id, hotels, userName }: Props) {
       <iframe
         key={reloadKey}
         src={appFrameUrl(app.url, { fontFamily, theme })}
-        title={app.title}
+        title={app.launchLabel ?? app.title}
         sandbox="allow-same-origin allow-scripts allow-forms"
         className="xp-iframe"
       />
@@ -322,6 +429,9 @@ export function Window({ id, hotels, userName }: Props) {
   return (
     <section
       ref={ref}
+      id={`xp-window-${id}`}
+      data-has-guide={guideScreen ? "" : undefined}
+      tabIndex={-1}
       aria-label={win.title}
       className={className}
       hidden={win.minimized}
@@ -367,7 +477,7 @@ export function Window({ id, hotels, userName }: Props) {
           ×
         </button>
       </div>
-      <div className="xp-menubar" role="menubar" aria-label={`${app.title} menüsü`}>
+      <div className="xp-menubar" role="menubar" aria-label={`${app.title} menüsü`} onKeyDown={onMenubarKeyDown}>
         {MENU_NAMES.map((name) => (
           <button
             key={name}
@@ -378,7 +488,8 @@ export function Window({ id, hotels, userName }: Props) {
             className="xp-menubar-item"
             onClick={(e) => openMenu(name, e.currentTarget)}
           >
-            {name}
+            <u>{name[0]}</u>
+            {name.slice(1)}
           </button>
         ))}
       </div>

@@ -1282,6 +1282,31 @@
   background: var(--xp-sse-connecting);
 }
 
+.xp-tray-icon {
+  display: grid;
+  place-items: center;
+  width: calc(28px * var(--xp-ui-scale));
+  height: max(var(--tap-xp), calc(22px * var(--xp-ui-scale)));
+  padding: 0;
+  border: 0;
+  border-bottom: 3px solid var(--xp-sse-closed);
+  background: transparent;
+  color: inherit;
+}
+
+.xp-tray-icon[data-state="ok"] {
+  border-bottom-color: var(--xp-sse-open);
+}
+
+.xp-tray-icon[data-state="error"],
+.xp-tray-icon[data-state="down"] {
+  border-bottom-color: var(--xp-close-2);
+}
+
+.xp-tray-icon[data-state="unknown"] {
+  border-bottom-color: var(--xp-sse-connecting);
+}
+
 .xp-bell {
   position: relative;
   display: flex;
@@ -1293,7 +1318,7 @@
   display: grid;
   place-items: center;
   width: calc(28px * var(--xp-ui-scale));
-  height: calc(22px * var(--xp-ui-scale));
+  height: max(var(--tap-xp), calc(22px * var(--xp-ui-scale)));
   padding: 0;
   border: 0;
   background: transparent;
@@ -2033,7 +2058,17 @@
   min-width: max-content;
 }
 
+.xp-shell {
+  --xp-row: 24px;
+}
+
+.xp-shell[data-xp-density="compact"] {
+  --xp-row: 22px;
+}
+
 .xp-grid-row > .xp-grid-cell {
+  min-height: var(--xp-row);
+  box-sizing: border-box;
   overflow: hidden;
   padding: 2px 6px;
   white-space: nowrap;

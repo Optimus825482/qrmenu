@@ -7,6 +7,7 @@ export type MenuItem =
   | {
       kind?: "item";
       label: string;
+      mnemonic?: string;
       onSelect?: () => void;
       submenu?: MenuItem[];
       /** Radio item (role=menuitemradio) when defined. */
@@ -112,10 +113,13 @@ function MenuList({ x, y, flipRight, items, label, onDone, onBack, root = false 
     if (current === -1 && !["Escape", "ArrowDown", "ArrowUp"].includes(e.key)) return;
     switch (e.key) {
       case "ArrowDown":
-      case "ArrowUp": {
+      case "ArrowUp":
+      case "Home":
+      case "End": {
         e.preventDefault();
         const step = e.key === "ArrowDown" ? 1 : -1;
-        all[(current + step + all.length) % all.length]?.focus();
+        const next = e.key === "Home" ? 0 : e.key === "End" ? all.length - 1 : (current + step + all.length) % all.length;
+        all[next]?.focus();
         break;
       }
       case "ArrowRight": {
@@ -138,6 +142,13 @@ function MenuList({ x, y, flipRight, items, label, onDone, onBack, root = false 
         e.preventDefault();
         onDone();
         break;
+      default: {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const match = all.find((button) => button.dataset.mnemonic === e.key.toLocaleLowerCase("tr-TR"));
+        if (!match) return;
+        e.preventDefault();
+        match.click();
+      }
     }
   };
 
@@ -168,6 +179,7 @@ function MenuList({ x, y, flipRight, items, label, onDone, onBack, root = false 
               aria-expanded={hasSub ? expanded : undefined}
               aria-disabled={item.disabled || undefined}
               data-index={index}
+              data-mnemonic={item.mnemonic}
               tabIndex={-1}
               className="xp-menu-item"
               onPointerEnter={(e) => {
@@ -187,7 +199,9 @@ function MenuList({ x, y, flipRight, items, label, onDone, onBack, root = false 
               <span className="xp-menu-check" aria-hidden="true">
                 {item.checked ? "●" : ""}
               </span>
-              {item.label}
+              {item.mnemonic && item.label[0]?.toLocaleLowerCase("tr-TR") === item.mnemonic
+                ? <span><u>{item.label[0]}</u>{item.label.slice(1)}</span>
+                : item.label}
               {hasSub ? (
                 <span className="xp-menu-arrow" aria-hidden="true">
                   ▸

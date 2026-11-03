@@ -1,6 +1,6 @@
 import { Client } from "pg";
 import type { BrowserContext, Page } from "@playwright/test";
-import { answer, appWindow, node, pickHotel, row, saveEdit, saveNew, startMenuItem, userWizard } from "./definitionsUi";
+import { answer, appWindow, node, pickHotel, row, saveEdit, saveNew, findStartItem, userWizard } from "./definitionsUi";
 import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
@@ -90,7 +90,7 @@ test("admin girer ve Tanımlamalar penceresini Merit Royal için açar", async (
   await login(admin, "admin");
   await expect(admin).toHaveURL(/\/admin$/);
   await admin.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(admin, "Tanımlamalar").click();
+  await (await findStartItem(admin, "Tanımlamalar")).click();
   await pickHotel(admin, "Tanımlamalar", MR.name);
   await expect(admin.getByRole("region", { name: `Tanımlamalar · ${MR.name}`, exact: true }).first()).toBeVisible();
 });
@@ -255,7 +255,7 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
 
 test("Kurulum Rehberi: Merit Royal %90 (9/10 zorunlu adım; ürün ve minibar setup bekliyor)", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(admin, "Kurulum Rehberi").click();
+  await (await findStartItem(admin, "Kurulum Rehberi")).click();
   await pickHotel(admin, "Kurulum Rehberi", MR.name);
   const guide = admin.getByRole("region", { name: `Kurulum Rehberi · ${MR.name}`, exact: true });
   await expect(guide).toBeVisible();
@@ -270,7 +270,7 @@ test("Kurulum Rehberi: Merit Royal %90 (9/10 zorunlu adım; ürün ve minibar se
 
 test("Online Kullanıcılar: garson listede; zorla çıkış → garsonun sonraki gezinmesi /giris", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(admin, "Online Kullanıcılar").click();
+  await (await findStartItem(admin, "Online Kullanıcılar")).click();
   await pickHotel(admin, "Online Kullanıcılar", MR.name);
   const online = admin.getByRole("region", { name: `Online Kullanıcılar · ${MR.name}`, exact: true });
   await expect(online).toBeVisible();
@@ -295,7 +295,7 @@ test("Online Kullanıcılar: garson listede; zorla çıkış → garsonun sonrak
 
 test("Denetim Günlüğü: zincirin satırları", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(admin, "Denetim Günlüğü").click();
+  await (await findStartItem(admin, "Denetim Günlüğü")).click();
   const log = admin.getByRole("region", { name: "Denetim Günlüğü", exact: true });
   await expect(log).toBeVisible();
 

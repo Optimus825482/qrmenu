@@ -16,6 +16,19 @@ export const startMenuItem = (page: Page, name: string) =>
   page.getByRole("menu", { name: "Başlat menüsü" }).getByRole("menuitem", { name, exact: true });
 
 /**
+ * The Start-menu entry of `name`: opens the menu when it is closed, types the name into the search
+ * box (the left column otherwise lists only recent and pinned apps) and returns the result item.
+ */
+export async function findStartItem(page: Page, name: string): Promise<Locator> {
+  const search = page.getByRole("searchbox", { name: "Uygulama ara" });
+  if (!(await search.isVisible())) await page.getByRole("button", { name: "başlat" }).click();
+  await search.fill(name);
+  const item = startMenuItem(page, name);
+  await expect(item).toBeVisible();
+  return item;
+}
+
+/**
  * Waits for the non-blocking success notice (tray balloon / snackbar, role "status", optionally
  * containing `text`) and checks that no modal dialog is left open. A legacy dialog-title argument
  * ("Islem tamamlandi", "Kayit silindi") is ignored: those titles no longer exist.
@@ -87,8 +100,7 @@ export async function appWindow(page: Page, title: string, hotelName?: string): 
     await existing.first().dispatchEvent("pointerdown");
     return existing.first();
   }
-  await page.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(page, title).click();
+  await (await findStartItem(page, title)).click();
   const win = page.getByRole("region", { name: fullName, exact: true }).last();
   if (hotelName) {
     // Users with several hotels pick one first; a single-hotel user gets the bound window straight away.

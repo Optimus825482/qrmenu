@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import type { Locator, Page } from "@playwright/test";
-import { startMenuItem } from "./definitionsUi";
+import { findStartItem } from "./definitionsUi";
 import { expect } from "./fixtures";
 
 /** Shared flows of the Canlı Radar window specs. */
@@ -16,7 +16,7 @@ export async function openRadar(page: Page): Promise<Locator> {
   const existing = page.getByRole("region", { name: /^Canlı Radar/ });
   if ((await existing.count()) === 0) {
     await page.getByRole("button", { name: "başlat" }).click();
-    await startMenuItem(page, "Canlı Radar").click();
+    await (await findStartItem(page, "Canlı Radar")).click();
   }
   const win = page.getByRole("region", { name: /^Canlı Radar · / }).first();
   await expect(win).toBeVisible();

@@ -1,11 +1,11 @@
-import { registerApp } from "@/shell/registry";
+import { registerCatalogApp } from "@/shell/registry";
 
 /**
- * Registrations of the QR menu module's apps (QR_MENU category). Idempotent: registerApp overwrites
+ * Registrations of the QR menu module's apps (QR_MENU category). Idempotent: registerCatalogApp overwrites
  * by id. Called next to registerCoreApps() by the shell client.
  */
 export function registerMenuApps(): void {
-  registerApp({
+  registerCatalogApp({
     id: "menu.yonetim",
     title: "Menü Yönetimi",
     icon: "menu",
@@ -18,7 +18,7 @@ export function registerMenuApps(): void {
     component: () => import("./ui/MenuManager").then((m) => ({ default: m.MenuManager })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "menu.tema",
     title: "Menü Tasarım Stüdyosu",
     icon: "tema",
@@ -31,9 +31,10 @@ export function registerMenuApps(): void {
     component: () => import("./ui/ThemeManager").then((m) => ({ default: m.ThemeManager })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "menu.masaqr",
     title: "Masa QR Kodları",
+    launchLabel: "Masa QR Kodları",
     icon: "qr",
     moduleKey: "QR_MENU",
     screenCode: "QM-MEN",

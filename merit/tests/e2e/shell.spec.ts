@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { startMenuItem } from "./definitionsUi";
+import { findStartItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 
 // One database state for the whole file (reset once): prefs saved by one test are seen by the next.
@@ -102,10 +102,18 @@ test("Başlat menüsü Komuta Merkezi'ni listeler ve açar; Esc kapatır", async
   const menu = page.getByRole("menu", { name: "Başlat menüsü" });
   await expect(menu).toBeVisible();
   await expect(menu.getByRole("menuitem", { name: "Komuta Merkezi" })).toBeVisible();
-  // Folders are desktop-only: the Start menu lists the apps themselves, under their category.
+  // Folders are desktop-only: the Start menu lists the apps themselves; the folders are under "Tüm Programlar".
   await expect(menu.getByRole("menuitem", { name: "Sistem Yönetimi", exact: true })).toHaveCount(0);
-  await expect(menu.getByRole("group", { name: "SİSTEM YÖNETİMİ" }).getByRole("menuitem", { name: "Denetim Masası" })).toBeVisible();
+  await expect(page.getByRole("menu", { name: "Sistem kısayolları" }).getByRole("menuitem", { name: "Denetim Masası" })).toBeVisible();
+  await menu.getByRole("menuitem", { name: /Tüm Programlar/ }).click();
+  await page.getByRole("menu", { name: "Tüm Programlar", exact: true }).getByRole("menuitem", { name: /Sistem/ }).click();
+  await expect(page.getByRole("menu", { name: "Sistem", exact: true }).getByRole("menuitem", { name: "Denetim Günlüğü" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Oturumu Kapat" })).toBeVisible();
+  // Esc closes one level at a time: folder list, "Tüm Programlar", then the menu itself.
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu", { name: "Sistem", exact: true })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu", { name: "Tüm Programlar", exact: true })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
 
@@ -145,7 +153,7 @@ test("masaüstü klasörü: Sistem Yönetimi çift tık → klasör penceresi �
 test("otel bağlamı: çok otelli kapsamda pencere önce otel kartı ister", async ({ page }) => {
   await openAdmin(page);
   await page.getByRole("button", { name: "başlat" }).click();
-  await startMenuItem(page, "Online Kullanıcılar").click();
+  await (await findStartItem(page, "Online Kullanıcılar")).click();
   const win = appWindow(page, "Online Kullanıcılar");
   await expect(win.getByRole("heading", { name: "Otel seçin" })).toBeVisible();
   await win.getByRole("button", { name: /Merit Royal Premium/ }).click();

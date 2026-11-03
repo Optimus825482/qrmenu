@@ -1,11 +1,11 @@
-import { registerApp } from "@/shell/registry";
+import { registerCatalogApp } from "@/shell/registry";
 
 /**
  * Registrations of the Minibar tracking module's apps (MINIBAR category).
  * Makes all Minibar screens accessible directly on the Merit OS System Administrator desktop & Start Menu.
  */
 export function registerMinibarApps(): void {
-  registerApp({
+  registerCatalogApp({
     id: "minibar.kat",
     title: "Minibar Operasyon & Kat Planı",
     icon: "minibar",
@@ -14,26 +14,27 @@ export function registerMinibarApps(): void {
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1280, h: 800, minW: 800, minH: 550 },
-    kind: "iframe",
-    url: "/kat",
+    kind: "component",
+    external: { href: "/kat" },
     mobile: "full",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.rota",
     title: "Akıllı Tavsiye İş Planı",
+    launchLabel: "Akıllı Tavsiye İş Planı",
     icon: "komuta",
     moduleKey: "MINIBAR",
     screenCode: "MB-KAT",
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1100, h: 720, minW: 760, minH: 500 },
-    kind: "iframe",
-    url: "/kat/tavsiye-is-plani",
+    kind: "component",
+    external: { href: "/kat/tavsiye-is-plani" },
     mobile: "full",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.doluluk",
     title: "Günlük Doluluk Girişi (Excel)",
     icon: "pencere",
@@ -42,12 +43,12 @@ export function registerMinibarApps(): void {
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1100, h: 750, minW: 760, minH: 500 },
-    kind: "iframe",
-    url: "/depo/doluluk-yukle",
+    kind: "component",
+    external: { href: "/depo/doluluk-yukle" },
     mobile: "readonly",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.stok",
     title: "Konsinye Stok & Zimmet Havuzu",
     icon: "otel",
@@ -56,12 +57,12 @@ export function registerMinibarApps(): void {
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1150, h: 750, minW: 760, minH: 500 },
-    kind: "iframe",
-    url: "/depo/stok",
+    kind: "component",
+    external: { href: "/depo/stok" },
     mobile: "full",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.rapor",
     title: "Minibar Tüketim & Görev Raporları",
     icon: "denetim",
@@ -70,12 +71,12 @@ export function registerMinibarApps(): void {
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1200, h: 800, minW: 800, minH: 520 },
-    kind: "iframe",
-    url: "/depo/raporlar",
+    kind: "component",
+    external: { href: "/depo/raporlar" },
     mobile: "readonly",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.tanim",
     title: "Minibar Tanımları & Audit Log",
     icon: "ayarlar",
@@ -84,14 +85,15 @@ export function registerMinibarApps(): void {
     category: "MINIBAR",
     needsHotel: false,
     window: { w: 1300, h: 850, minW: 850, minH: 550 },
-    kind: "iframe",
-    url: "/depo/tanimlar",
+    kind: "component",
+    external: { href: "/depo/tanimlar" },
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "minibar.odaqr",
     title: "Oda QR Kodları & Baskı",
+    launchLabel: "Oda QR Kodları & Baskı",
     icon: "qr",
     moduleKey: "MINIBAR",
     screenCode: "MB-TAN",

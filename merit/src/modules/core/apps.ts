@@ -1,14 +1,15 @@
-import { registerApp } from "@/shell/registry";
+import { registerCatalogApp } from "@/shell/registry";
 
 /**
  * Registrations of the core (CORE module) apps — the single source of the shell's built-in apps.
- * Idempotent: registerApp overwrites by id. Other modules add their own `apps.ts` the same way.
+ * Idempotent: registerCatalogApp overwrites by id. Other modules add their own `apps.ts` the same way.
  */
 export function registerCoreApps(): void {
   // 5 Ana Masaüstü Operasyon Klasörü (Folder Apps)
-  registerApp({
+  registerCatalogApp({
     id: "folder.outlet",
     title: "Outlet Operasyonları",
+    launchLabel: "Outlet Operasyonları",
     icon: "klasor",
     moduleKey: "CORE",
     screenCode: "CR-TAN",
@@ -23,9 +24,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "folder.room-service",
     title: "Oda Servisi Operasyonları",
+    launchLabel: "Oda Servisi Operasyonları",
     icon: "servis",
     moduleKey: "CORE",
     screenCode: "RO-TAL",
@@ -40,9 +42,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "folder.minibar",
     title: "Minibar Operasyonları",
+    launchLabel: "Minibar Operasyonları",
     icon: "minibar",
     moduleKey: "CORE",
     screenCode: "MB-KAT",
@@ -57,9 +60,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "folder.sistem",
     title: "Sistem Yönetimi",
+    launchLabel: "Sistem Yönetimi",
     icon: "ayarlar",
     moduleKey: "CORE",
     screenCode: "CR-SYS",
@@ -74,9 +78,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "folder.kullanici",
     title: "Kullanıcı Yönetimi",
+    launchLabel: "Kullanıcı Yönetimi",
     icon: "kullanicilar",
     moduleKey: "CORE",
     screenCode: "CR-KUL",
@@ -91,7 +96,7 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
 
-  registerApp({
+  registerCatalogApp({
     id: "core.komuta",
     title: "Komuta Merkezi",
     icon: "komuta",
@@ -104,7 +109,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/CommandCenter").then((m) => ({ default: m.CommandCenter })),
     mobile: "readonly",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.radar",
     title: "Canlı Radar",
     icon: "radar",
@@ -117,7 +122,7 @@ export function registerCoreApps(): void {
     component: () => import("@/modules/radar/ui/RadarWindow").then((m) => ({ default: m.RadarWindow })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.tanimlar",
     title: "Tanımlamalar",
     icon: "otel",
@@ -131,9 +136,10 @@ export function registerCoreApps(): void {
       import("@/shell/apps/definitions/Definitions").then((m) => ({ default: m.Definitions })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.ekipler",
     title: "Ekip Yönetimi",
+    launchLabel: "Ekip Yönetimi",
     icon: "ekipler",
     moduleKey: "CORE",
     screenCode: "CR-KUL",
@@ -144,7 +150,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/TeamManagement").then((m) => ({ default: m.TeamManagement })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.kullanici",
     title: "Kullanıcı Yönetimi",
     icon: "kullanicilar",
@@ -157,7 +163,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/UserManagement").then((m) => ({ default: m.UserManagement })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.rehber",
     title: "Kurulum Rehberi",
     icon: "soru",
@@ -170,7 +176,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/SetupGuide").then((m) => ({ default: m.SetupGuide })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.online",
     title: "Online Kullanıcılar",
     icon: "online",
@@ -183,7 +189,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/OnlineUsers").then((m) => ({ default: m.OnlineUsers })),
     mobile: "readonly",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.denetim",
     title: "Denetim Günlüğü",
     icon: "denetim",
@@ -196,7 +202,7 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/AuditLog").then((m) => ({ default: m.AuditLog })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.rapor",
     title: "Merkezi Raporlama & KPI",
     icon: "rapor",
@@ -212,9 +218,10 @@ export function registerCoreApps(): void {
       })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.outlet-tanim",
     title: "Outlet & Masa Tanımları",
+    launchLabel: "Outlet & Masa Tanımları",
     icon: "otel",
     moduleKey: "CORE",
     screenCode: "CR-TAN",
@@ -228,9 +235,10 @@ export function registerCoreApps(): void {
       })),
     mobile: "none",
   });
-  registerApp({
+  registerCatalogApp({
     id: "core.ayarlar",
     title: "Denetim Masası",
+    launchLabel: "Denetim Masası",
     icon: "ayarlar",
     moduleKey: "CORE",
     screenCode: "CR-SYS",
@@ -242,9 +250,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
   // "Erişimim": what the signed-in role may do. Bound to CR-KOM (everyone on the desktop has it).
-  registerApp({
+  registerCatalogApp({
     id: "core.erisimim",
     title: "Erişimim",
+    launchLabel: "Erişimim",
     icon: "bilgi",
     moduleKey: "CORE",
     screenCode: "CR-KOM",
@@ -256,9 +265,10 @@ export function registerCoreApps(): void {
     mobile: "none",
   });
   // The iframe app contract: the window hosts a same-origin page (src/app/(admin)/admin/hakkinda).
-  registerApp({
+  registerCatalogApp({
     id: "core.hakkinda",
     title: "Hakkında",
+    launchLabel: "Hakkında",
     icon: "bilgi",
     moduleKey: "CORE",
     screenCode: "CR-SYS",

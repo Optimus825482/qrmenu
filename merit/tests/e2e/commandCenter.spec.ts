@@ -1,4 +1,5 @@
 import { Client } from "pg";
+import { findStartItem } from "./definitionsUi";
 import type { Page } from "@playwright/test";
 import { e2eDatabaseUrl } from "./e2eDb";
 import { expect, login, resetAndSeed, test } from "./fixtures";
@@ -29,10 +30,7 @@ async function openAdmin(page: Page) {
 
 async function openFromStart(page: Page, name: string) {
   await page.getByRole("button", { name: "başlat" }).click();
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name, exact: true })
-    .click();
+  await (await findStartItem(page, name)).click();
 }
 
 /** Emits an event on the merit_events channel straight from the database (what publish() does). */

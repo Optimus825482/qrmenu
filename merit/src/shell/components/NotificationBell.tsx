@@ -59,6 +59,7 @@ export function NotificationBell() {
         type="button"
         className="xp-bell-button"
         aria-label={label}
+        title={label}
         aria-expanded={open}
         aria-controls="xp-bell-panel"
         onClick={() => setOpen((value) => !value)}

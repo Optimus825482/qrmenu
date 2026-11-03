@@ -12,7 +12,7 @@ test.beforeAll(() => {
 });
 
 const PHOTO = path.resolve(__dirname, "assets/menu-photo.png");
-const STUDIO = "Menü Tasarım Stüdyosu";
+const STUDIO = "Menü Tasarım Merkezi";
 
 /** A theme row of the studio grid (its accessible name starts with the theme name, then the swatches). */
 /**
@@ -92,7 +92,7 @@ test("Menü Yönetimi: ağaç kur, tükendi, çeviri, görsel, sıra, sipariş k
   await expect(again.getByRole("switch", { name: "QR sipariş açık" })).not.toBeChecked();
 });
 
-test("Menü Tasarım Stüdyosu: yeni tema, Deniz'i Havuz Bar'a ata, varsayılan ve kullanılan tema silinemez", async ({ page }) => {
+test("Menü Tasarım Merkezi: yeni tema, Deniz'i Havuz Bar'a ata, varsayılan ve kullanılan tema silinemez", async ({ page }) => {
   await openAdminShell(page, "admin");
   const win = await openStudioThemes(page);
 

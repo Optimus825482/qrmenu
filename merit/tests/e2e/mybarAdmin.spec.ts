@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { findStartItem } from "./definitionsUi";
 import { readFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
@@ -39,10 +40,7 @@ async function openDepotMybar(page: Page): Promise<void> {
 
 async function openFromStart(page: Page): Promise<void> {
   await page.getByRole("button", { name: "başlat" }).press("Enter");
-  await page
-    .getByRole("menu", { name: "Başlat menüsü" })
-    .getByRole("menuitem", { name: "MyBar Talepleri", exact: true })
-    .click();
+  await (await findStartItem(page, "MyBar Talepleri")).click();
   await expect(win(page)).toBeVisible();
   // The window asks for a hotel first (needsHotel).
   const royal = win(page).getByRole("button").filter({ hasText: /^Merit Royal$/ });

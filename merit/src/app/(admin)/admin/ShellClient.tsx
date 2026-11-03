@@ -19,7 +19,10 @@ import { StartMenu } from "@/shell/components/StartMenu";
 import { Taskbar } from "@/shell/components/Taskbar";
 import { TrayBalloonHost } from "@/shell/components/TrayBalloon";
 import { Window } from "@/shell/components/Window";
-import { getApps } from "@/shell/registry";
+import { useShellShortcuts } from "@/shell/keyboard";
+import { getApp, getApps } from "@/shell/registry";
+import type { PrinterState } from "@/components/pos/usePrinterStatus";
+import { requestGuide } from "@/components/guide/guideEvents";
 import type { ShellPrefs } from "@/shell/types";
 import { useShellMode } from "@/shell/useShellMode";
 import { useSse } from "@/shell/useSse";
@@ -45,6 +48,8 @@ export type ShellClientProps = {
   welcomeNeeded?: boolean;
   /** The session hotel, the context of that window. */
   welcomeHotelId?: string;
+  /** Last ping state of the session hotel's default printer (tray). */
+  printerInitial?: PrinterState;
 };
 
 /**
@@ -60,6 +65,7 @@ export function ShellClient({
   mobileDefinitions,
   welcomeNeeded = false,
   welcomeHotelId = "",
+  printerInitial = "unknown",
 }: ShellClientProps) {
   // Desktop and Start menu show the union over the user's hotels; windows bound to a hotel are
   // limited per hotel by the store (screensByHotel).
@@ -68,6 +74,7 @@ export function ShellClient({
     return getApps().filter((a) => visible.has(a.screenCode));
   }, [screensByHotel]);
   const appIds = useMemo(() => apps.map((a) => a.id), [apps]);
+  useShellShortcuts();
   useShellPersistence({
     userId: user.id,
     hotels,
@@ -104,15 +111,23 @@ export function ShellClient({
   const fontFamily = useWindowStore((s) => s.fontFamily);
   const footerBand = useWindowStore((s) => s.footerBand);
   const wallpaperColor = useWindowStore((s) => s.wallpaperColor);
+  const xpDensity = useWindowStore((s) => s.xpDensity);
   const [startOpen, setStartOpen] = useState(false);
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const openApp = useCallback((appId: string) => {
     const store = windowStore.getState();
-    if (store.open(appId) === null && store.order.length >= MAX_WINDOWS) {
+    const opened = store.open(appId);
+    if (opened) requestAnimationFrame(() => document.getElementById(`xp-window-${opened}`)?.focus());
+    if (opened === null && !getApp(appId)?.external && store.order.length >= MAX_WINDOWS) {
       notify.error(`En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`, { title: "Pencere sınırı" });
     }
   }, []);
   const closeStart = useCallback(() => setStartOpen(false), []);
+  const openHelp = () => {
+    const scope = document.querySelector(".xp-window.is-active[data-has-guide]");
+    if (scope) requestGuide("help", scope);
+    else openApp("core.rehber");
+  };
 
   // Same persistence for both shells (appearance, layout). Both share the tab's one SSE connection
   // (sseStore), which survives a switch between them.
@@ -125,6 +140,7 @@ export function ShellClient({
       className="xp-shell"
       data-theme={theme}
       data-footer={footerBand ? "on" : "off"}
+      data-xp-density={xpDensity}
       style={fontVariables(fontScale, fontFamily, wallpaperColor)}
     >
       {ready ? (
@@ -140,12 +156,14 @@ export function ShellClient({
             startOpen={startOpen}
             onToggleStart={() => setStartOpen((o) => !o)}
             startButtonRef={startButtonRef}
+            printerInitial={printerInitial}
           />
           <StartMenu
             open={startOpen}
             apps={apps}
             userName={user.fullName}
             onOpenApp={openApp}
+            onHelp={openHelp}
             onClose={closeStart}
             startButtonRef={startButtonRef}
           />

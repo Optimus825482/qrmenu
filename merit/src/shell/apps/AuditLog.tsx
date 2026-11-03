@@ -287,7 +287,7 @@ export function AuditLog({ setStatus }: AppProps) {
               />
             </label>
             {canExport ? (
-              <button type="button" className="xp-button" disabled={busy} onClick={() => void exportCsv()}>
+              <button type="button" className="xp-button" data-xp-command="export" disabled={busy} onClick={() => void exportCsv()}>
                 CSV&apos;ye aktar
               </button>
             ) : null}
