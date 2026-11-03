@@ -1,6 +1,6 @@
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { DomainError } from "@/lib/result";
 import { publishRadar } from "@/modules/radar/publish";
@@ -83,6 +83,8 @@ export async function resolveRoomByQr(
   });
   if (!room || !room.isActive) return fail(null, "NOT_FOUND", "Geçersiz veya tanınmayan QR kod");
   if (!ctx.hotelIds.includes(room.hotelId)) return fail(room.id, "FORBIDDEN", "Bu oda size ait otelde değil");
+  // Oda başka bir otelde olabilir: MB-KF yetkisi odanın oteli üzerinden de doğrulanır.
+  if (!(await can(ctx, SCREEN, "V", room.hotelId))) return fail(room.id, "FORBIDDEN", "Bu oda size ait otelde değil");
 
   await log(room.id, true);
   try {
