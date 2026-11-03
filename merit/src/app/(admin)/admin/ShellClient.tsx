@@ -7,6 +7,7 @@ import { registerCoreApps } from "@/modules/core/apps";
 import { registerMenuApps } from "@/modules/menu/apps";
 import { registerOrderApps } from "@/modules/order/apps";
 import { registerMinibarApps } from "@/modules/minibar/apps";
+import { registerMybarApps } from "@/modules/mybar/apps";
 import { fontVariables } from "@/shell/appearance";
 import { notify, setNotifySurface } from "@/shell/notify";
 import { ConfirmDialog } from "@/shell/components/ConfirmDialog";
@@ -29,6 +30,7 @@ registerCoreApps();
 registerMenuApps();
 registerOrderApps();
 registerMinibarApps();
+registerMybarApps();
 
 export type ShellClientProps = {
   user: { id: string; fullName: string; roleId: string };

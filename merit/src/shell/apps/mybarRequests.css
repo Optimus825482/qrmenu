@@ -1,0 +1,131 @@
+.xp-mybar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--xp-body);
+}
+
+.xp-mybar-kpis {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  border-bottom: 1px solid var(--xp-body-edge);
+}
+
+.xp-mybar-kpi {
+  padding: 4px 8px;
+  border: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-mybar-kpi dt {
+  margin: 0;
+  color: var(--xp-muted);
+}
+
+.xp-mybar-kpi dd {
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-mybar-filters {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px;
+  border-bottom: 1px solid var(--xp-body-edge);
+}
+
+.xp-mybar-filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.xp-mybar-filters input[type="date"] {
+  max-width: 140px;
+}
+
+.xp-mybar-split {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.xp-mybar-split > .xp-grid {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+}
+
+.xp-mybar-detail {
+  flex: none;
+  width: 300px;
+  overflow: auto;
+  padding: 8px;
+  border-left: 1px solid var(--xp-body-edge);
+  background: var(--xp-body-light);
+}
+
+.xp-mybar-detail h3 {
+  margin: 0 0 6px;
+  font-size: inherit;
+}
+
+.xp-mybar-detail dl {
+  margin: 0 0 8px;
+}
+
+.xp-mybar-detail dt {
+  color: var(--xp-muted);
+}
+
+.xp-mybar-detail dd {
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+
+.xp-mybar-detail table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.xp-mybar-detail th,
+.xp-mybar-detail td {
+  padding: 2px 4px;
+  border: 1px solid var(--xp-body-edge);
+  text-align: left;
+}
+
+.xp-mybar-badge {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid currentcolor;
+  font-weight: bold;
+}
+
+.xp-mybar-badge[data-status="BEKLEMEDE"] {
+  color: #8a4b00;
+}
+
+.xp-mybar-badge[data-status="TAMAMLANDI"] {
+  color: #1b6b1b;
+}
+
+.xp-mybar-badge[data-status="IPTAL"] {
+  color: #9a1c1c;
+}
+
+.xp-mybar-unseen {
+  font-weight: bold;
+}

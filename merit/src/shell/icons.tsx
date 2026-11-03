@@ -257,6 +257,38 @@ const GLYPHS: Record<string, ReactNode> = {
     </>
   ),
 
+  // MYBAR TALEPLERİ: Gümüş servis tepsisinde kokteyl kadehi ve talep zili
+  mybar: (
+    <>
+      <defs>
+        <linearGradient id="mbr-tray" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#e2e8f0" />
+          <stop offset="100%" stopColor="#64748b" />
+        </linearGradient>
+        <linearGradient id="mbr-glass" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.95" />
+          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+        </linearGradient>
+        <linearGradient id="mbr-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </linearGradient>
+      </defs>
+      {/* Silver tray */}
+      <ellipse cx="24" cy="38" rx="19" ry="5" fill="url(#mbr-tray)" stroke="#475569" strokeWidth="1" />
+      {/* Cocktail glass */}
+      <path d="M12 8 H36 L24 24 Z" fill="url(#mbr-glass)" stroke="#0369a1" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M15 11 H33 L24 22 Z" fill="#0ea5e9" opacity="0.55" />
+      <line x1="24" y1="24" x2="24" y2="35" stroke="#0369a1" strokeWidth="1.6" strokeLinecap="round" />
+      <ellipse cx="24" cy="35.5" rx="6" ry="1.6" fill="#0369a1" opacity="0.85" />
+      {/* Garnish */}
+      <circle cx="31" cy="8" r="3" fill="#84cc16" stroke="#3f6212" strokeWidth="0.8" />
+      {/* Request bell */}
+      <path d="M36 14 a5 5 0 0 1 10 0 v4 l1.5 2 h-13 l1.5 -2 z" fill="url(#mbr-gold)" stroke="#92400e" strokeWidth="0.8" />
+      <circle cx="41" cy="22" r="1.3" fill="#92400e" />
+    </>
+  ),
+
   // 5. AYARLAR & SİSTEM: Precision-Cut 3D Gear & Executive System Console
   ayarlar: (
     <>
