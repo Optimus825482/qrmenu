@@ -8,3 +8,4 @@ Task 1: fix round 1 DONE (3e1be71; sanitizeGuestEvent + sse.ts map seçeneği; 5
 Task 7: dispatched (rd7, DB'siz saf istemci). 
 Task 7: implementer DONE (df77d46; 27 test; scrub <150 ms/10k; radar/state.ts T7'de oluşturuldu → T5 bunu temel alır; prep bayrağı sapma yoklamasıyla). Review (Sonnet) dispatched.
 Task 7: review NEEDS FIXES — Important: presence.tick status/idle sıfırlıyor (lastSeen-only olmalı); print/mail sayaçları 2 sn örtüşmede çift sayılıyor. Minörler: resync in-flight; false drift (queue); mybar.closed requestId; tablo açık-durum whitelist; trim yalnız flush'ta; perf best-of-3; test boşlukları. Fix round 1 dispatched (rd7f).
+Task 2: implementer DONE (23df08f; radar-publish-order 13, radar-jobs 1; G20 devir: minibarJobs sendHotelMailOnce failed → publishMailFailed). İNCELENMEDİ → sonraki ajan Sonnet inceleme.
