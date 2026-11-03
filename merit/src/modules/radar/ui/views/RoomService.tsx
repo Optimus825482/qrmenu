@@ -65,6 +65,7 @@ function RsCard({
       className="rd-card rd-rs-card"
       data-tone={sla.tone}
       data-order-id={order.orderId}
+      data-anchor={`order:${order.orderId}`}
       aria-pressed={selected}
       onClick={onSelect}
     >

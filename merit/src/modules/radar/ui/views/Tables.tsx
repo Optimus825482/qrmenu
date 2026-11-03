@@ -27,6 +27,7 @@ function Card({ table, now, selected, onSelect }: { table: TableCard; now: numbe
       className="rd-card"
       data-tone={m.tone}
       data-table-id={table.tableId}
+      data-anchor={`table:${table.tableId}`}
       aria-pressed={selected}
       onClick={onSelect}
     >
@@ -122,7 +123,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
 
   return (
     <div>
-      <div className="rd-select-row">
+      <div className="rd-select-row" data-anchor={`queue:${outlet.outletId}:kds`}>
         <label htmlFor="rd-outlet">Outlet</label>
         <select
           id="rd-outlet"

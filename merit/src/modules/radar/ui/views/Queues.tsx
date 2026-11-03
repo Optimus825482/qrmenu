@@ -51,6 +51,7 @@ function OutletRow({
       ref={ref}
       className="rd-queue-row"
       data-outlet-id={outlet.outletId}
+      data-anchor={`outlet:${outlet.outletId}`}
       tabIndex={0}
       onClick={() => onSelect(outlet.outletId)}
       onKeyDown={(e) => {
@@ -69,20 +70,33 @@ function OutletRow({
         ) : null}
       </th>
       <td>
-        <span className="rd-badge" data-tone={kasaTone} data-testid={`queue-kasa-${outlet.outletId}`}>
+        <span className="rd-badge" data-tone={kasaTone} data-testid={`queue-kasa-${outlet.outletId}`} data-anchor={`queue:${outlet.outletId}:kasa`}>
           {q.kasa.count} bekleyen
         </span>
         {q.kasa.count > 0 ? <span className="rd-muted rd-small"> · en eski {ageText(q.kasa.oldest, now)}</span> : null}
       </td>
       <td>
         <div className="rd-queue-chips">
-          <span className="rd-badge" data-tone={q.kds.YENI.count > 0 ? "warn" : "muted"} data-testid={`queue-kds-yeni-${outlet.outletId}`}>
+          <span
+            className="rd-badge"
+            data-tone={q.kds.YENI.count > 0 ? "warn" : "muted"}
+            data-testid={`queue-kds-yeni-${outlet.outletId}`}
+            data-anchor={`queue:${outlet.outletId}:YENI`}
+          >
             Yeni {q.kds.YENI.count}
           </span>
-          <span className="rd-badge" data-tone={q.kds.HAZIRLANIYOR.count > 0 ? "info" : "muted"}>
+          <span
+            className="rd-badge"
+            data-tone={q.kds.HAZIRLANIYOR.count > 0 ? "info" : "muted"}
+            data-anchor={`queue:${outlet.outletId}:HAZIRLANIYOR`}
+          >
             Hazırlanıyor {q.kds.HAZIRLANIYOR.count}
           </span>
-          <span className="rd-badge" data-tone={q.kds.HAZIR.count > 0 ? "success" : "muted"}>
+          <span
+            className="rd-badge"
+            data-tone={q.kds.HAZIR.count > 0 ? "success" : "muted"}
+            data-anchor={`queue:${outlet.outletId}:HAZIR`}
+          >
             Hazır {q.kds.HAZIR.count}
           </span>
         </div>
@@ -91,7 +105,7 @@ function OutletRow({
         ) : null}
       </td>
       <td>
-        <div className="rd-queue-chips" data-tone={printTone}>
+        <div className="rd-queue-chips" data-tone={printTone} data-anchor={`queue:${outlet.outletId}:print`}>
           <span>Kuyrukta {q.print.KUYRUKTA}</span>
           <span>· Basılıyor {q.print.BASILIYOR}</span>
           <span className="rd-badge" data-tone={q.print.HATA > 0 ? "danger" : "muted"}>

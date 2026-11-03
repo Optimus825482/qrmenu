@@ -17,19 +17,23 @@ type SimArgs = {
   hotel: string;
   rate: number;
   duration: number;
+  /** Animated scene load: order lifecycles, calls, room checks and MyBar requests (drives the motion layer). */
+  scene: boolean;
 };
 
 function parseArgs(argv: string[]): SimArgs {
   let hotel = "ROYAL";
   let rate = 2;
   let duration = 30;
+  let scene = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--hotel" && argv[i + 1]) hotel = argv[++i];
     else if (a === "--rate" && argv[i + 1]) rate = Math.max(0.2, Math.min(20, Number(argv[++i]) || 2));
     else if (a === "--duration" && argv[i + 1]) duration = Math.max(1, Math.min(3600, Number(argv[++i]) || 30));
+    else if (a === "--scene") scene = true;
   }
-  return { hotel, rate, duration };
+  return { hotel, rate, duration, scene };
 }
 
 async function main() {
@@ -67,7 +71,84 @@ async function main() {
 
   console.log(`[radar-sim] ${hotel.name} (${hotel.code}) — ${args.rate} olay/sn, ${args.duration} sn`);
 
+  // Scene mode: every tick advances one table's order through its lifecycle, and now and then opens or closes a
+  // call, checks a room or raises a MyBar request. Identifiers only; no free text, as in the real events.
+  const LIFECYCLE = [
+    ["order.created", "GONDERILDI"],
+    ["order.approved", "ONAYLANDI"],
+    ["order.prep", "ONAYLANDI"],
+    ["order.ready", "HAZIR"],
+    ["order.served", "SERVIS_EDILDI"],
+  ] as const;
+  const orders = new Map<string, { orderId: string; orderNo: number; step: number }>();
+  const calls = new Map<string, string>();
+  let orderNo = 9000;
+  const MINIBAR_ROLES = ["SISTEM", "YONETIM", "MINIBAR"] as const;
+  const sceneTick = async (n: number) => {
+    const t = tables[n % tables.length];
+    if (t) {
+      let o = orders.get(t.id);
+      if (!o) {
+        o = { orderId: `sim-${t.id}-${n}`, orderNo: ++orderNo, step: 0 };
+        orders.set(t.id, o);
+      }
+      const [type, status] = LIFECYCLE[o.step]!;
+      await publish({
+        type,
+        hotelId: hotel.id,
+        outletId: t.outletId,
+        payload: { orderId: o.orderId, orderNo: o.orderNo, status, tableId: t.id, kind: "MASA" },
+      });
+      o.step++;
+      if (o.step >= LIFECYCLE.length) orders.delete(t.id);
+      const open = calls.get(t.id);
+      if (open) {
+        await publish({
+          type: "call.resolved",
+          hotelId: hotel.id,
+          outletId: t.outletId,
+          payload: { callId: open, tableId: t.id },
+        });
+        calls.delete(t.id);
+      } else if (n % 4 === 0) {
+        const callId = `sim-call-${t.id}-${n}`;
+        calls.set(t.id, callId);
+        await publish({
+          type: "call.created",
+          hotelId: hotel.id,
+          outletId: t.outletId,
+          payload: { callId, tableId: t.id, type: "GARSON" },
+        });
+      }
+    }
+    const r = rooms[n % Math.max(1, rooms.length)];
+    if (r && n % 3 === 0) {
+      await publish({
+        type: "roomcheck.done",
+        hotelId: hotel.id,
+        roomId: r.id,
+        roleKinds: [...MINIBAR_ROLES],
+        payload: { roomId: r.id, roomNumber: r.number, floorId: r.floorId, checkType: "SARFIYAT_YOK", addedQty: 0 },
+      });
+    }
+    if (r && n % 9 === 0) {
+      await publish({
+        type: "mybar.created",
+        hotelId: hotel.id,
+        roomId: r.id,
+        roleKinds: [...MINIBAR_ROLES],
+        payload: { requestId: `sim-mybar-${n}`, roomId: r.id, roomNumber: r.number },
+      });
+    }
+  };
+
   while (Date.now() < stopAt) {
+    if (args.scene) {
+      await sceneTick(seq);
+      seq++;
+      await new Promise((r) => setTimeout(r, intervalMs));
+      continue;
+    }
     const pick = seq % 3;
     if (pick === 0 && tables.length > 0) {
       const t = tables[seq % tables.length]!;

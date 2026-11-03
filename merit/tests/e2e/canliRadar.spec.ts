@@ -45,7 +45,7 @@ for (const viewport of RADAR_VIEWPORTS) {
     await expect(win).toHaveAccessibleName(`Canlı Radar · ${MR_NAME}`);
     await expect(radarTab(win, "Kat")).toHaveAttribute("aria-selected", "true");
     await expect(win.getByRole("grid", { name: "Kat ve oda ızgarası" }).or(win.getByText("Bu otelde oda tanımlı değil."))).toBeVisible();
-    await expect(win.getByText("Doluluk yüklenmedi")).toBeVisible();
+    await expect(win.getByText("Doluluk yüklenmedi", { exact: true })).toBeVisible();
     await expectNoHorizontalScroll(page);
     await expectRadarAxeClean(page, "radar-pencere");
 
@@ -75,7 +75,8 @@ test("Masa kartı sipariş ve onay akışını 2 sn içinde gösterir", async ({
   await tableCard(win, "M1").click();
   const panel = win.getByRole("region", { name: "Masa M1 ayrıntısı" });
   await expect(panel).toContainText(`Sipariş ${order.orderNo}`);
-  await expect(panel.getByRole("button")).toHaveCount(1); // only "Kapat"
+  // Only "Kapat" and the link into the app: nothing in the panel changes an order.
+  await expect(panel.getByRole("button")).toHaveText(["Kapat", "Uygulamada aç"]);
 
   const cashier = await openStaff(browser, "kasa.havuz");
   await approveOrder(cashier, order.orderNo);

@@ -159,7 +159,7 @@ export function Timeline({
               onClick={() => onScrub((cursorMs ?? nowMs) - 10_000)}
             >
               <Icon name="arrow-left" size={14} />
-              <span>-10 sn</span>
+              <span>10 saniye geri</span>
             </button>
             <button
               type="button"
@@ -172,7 +172,7 @@ export function Timeline({
                 else onScrub(next);
               }}
             >
-              <span>+10 sn</span>
+              <span>10 saniye ileri</span>
               <Icon name="arrow-right" size={14} />
             </button>
             <button

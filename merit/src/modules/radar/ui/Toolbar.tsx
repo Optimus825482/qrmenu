@@ -46,6 +46,8 @@ export type ToolbarProps = {
   connection: ConnectionState;
   /** Extra mode text of the connection area ("Geçmiş 14:12:30"). */
   modeText?: string;
+  /** The "Animasyon" switch of the scene layer; `reduced` locks it off (system reduced-motion setting). */
+  motion?: { on: boolean; reduced: boolean; onToggle(): void };
 };
 
 export function Toolbar(p: ToolbarProps) {
@@ -103,6 +105,25 @@ export function Toolbar(p: ToolbarProps) {
           </button>
         ))}
       </div>
+      {p.motion ? (
+        <button
+          type="button"
+          className="rd-chip"
+          aria-pressed={p.motion.on}
+          disabled={p.motion.reduced}
+          title={
+            p.motion.reduced
+              ? "Sistem hareketi azalt ayarı açık: animasyon kapalı"
+              : p.motion.on
+                ? "Animasyon: Açık"
+                : "Animasyon: Kapalı"
+          }
+          onClick={p.motion.onToggle}
+        >
+          <Icon name="sparkles" size={14} />
+          Animasyon
+        </button>
+      ) : null}
       <span className="rd-conn" data-state={p.connection} role="status">
         <Icon name={p.connection === "offline" ? "wifi-off" : "wifi"} size={14} />
         {p.modeText ?? CONNECTION_TEXT[p.connection]}

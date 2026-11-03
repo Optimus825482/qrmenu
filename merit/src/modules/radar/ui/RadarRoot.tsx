@@ -11,6 +11,8 @@ import type { RadarAlert, RadarEvent, RadarLayer, WallView } from "../types";
 import { AlertStrip } from "./AlertStrip";
 import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
+import { MotionLayer } from "./motion/MotionLayer";
+import { useMotionPreference } from "./motion/useMotionPreference";
 import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
@@ -101,6 +103,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const soundGateRef = useRef(createSoundGate({ minGapMs: 30_000, enabled: Boolean(initial.soundOnEscalation) }));
 
   const { store, state } = useRadar(hotelId);
+  const motionPref = useMotionPreference();
   const sse = useStore(sseClient().store, (s) => s.status);
   const now = useNow(1000);
   const all = hotelId === "ALL";
@@ -298,6 +301,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     [scoped, state.buffer, active],
   );
   const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
+  // The animated scene follows the live stream and the day replay (at the replay speed); a scrubbed past is still.
+  const motionSpeed = state.mode === "replay" && state.replay ? state.replay.speed : 1;
+  const motionOn = motionPref.on && !all && state.mode !== "scrub";
 
   const currentHotel = useMemo(
     () => initial.hotels.find((h) => h.id === hotelId) ?? initial.hotels[0],
@@ -521,6 +527,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           ref={rootRef}
           className={`rd-root${wall && cursorHidden ? " rd-cursor-hidden" : ""}`}
           data-radar-density={wall ? "wall" : "xp"}
+          // Focusable by script and click so Esc / End still reach the shortcuts after a focused button went away.
+          tabIndex={-1}
           onKeyDown={onKeyDown}
         >
           {wall ? (
@@ -549,6 +557,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             view={view}
             onView={setChoice}
             connection={connection}
+            motion={{ on: motionPref.on, reduced: motionPref.reduced, onToggle: motionPref.toggle }}
             modeText={
               state.mode === "replay" && state.replay
                 ? `Tekrar ${clock(state.replay.virtualMs)}`
@@ -637,6 +646,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             }
             onClose={() => setReplayDialog(false)}
           />
+          <MotionLayer rootRef={rootRef} state={snap} events={visibleEvents} speed={motionSpeed} enabled={motionOn} />
           {help ? (
             <div className="rd-help" role="dialog" aria-label="Klavye kısayolları">
               <div className="rd-row">

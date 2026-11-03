@@ -58,6 +58,7 @@ function Cell({
       data-tone={m.tone}
       data-edge={m.edge}
       data-room-id={room.roomId}
+      data-anchor={`room:${room.roomId}`}
       aria-label={m.ariaLabel}
       aria-selected={selected}
       tabIndex={focusable ? 0 : -1}
@@ -231,7 +232,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
                 const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
                 const name = view.people[s.userId] ?? "Kat sorumlusu";
                 return (
-                  <li key={s.userId}>
+                  <li key={s.userId} data-anchor={`staff:${s.userId}`}>
                     <div className="rd-row">
                       <span>{name}</span>
                       <span>
@@ -258,7 +259,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
               {near.map((s) => {
                 const crit = s.remaining <= s.critical;
                 return (
-                  <li key={s.productId} className="rd-row">
+                  <li key={s.productId} className="rd-row" data-anchor={`stock:${s.productId}`}>
                     <span>{s.name}</span>
                     <span className="rd-badge" data-tone={crit ? "danger" : "warn"}>
                       <Icon name={crit ? "error" : "warning"} size={12} />

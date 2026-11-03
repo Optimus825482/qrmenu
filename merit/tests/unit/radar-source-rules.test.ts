@@ -14,6 +14,11 @@ function walk(path: string): string[] {
 
 const files = ROOTS.flatMap(walk).filter((f) => /\.(tsx?|css)$/.test(f));
 
+/** The one module-level exception of the "no continuous motion" rule: the animated scene layer (Task 13). */
+const MOTION_DIR = "src/modules/radar/ui/motion/";
+const inMotion = (f: string) => f.split("\\").join("/").startsWith(MOTION_DIR);
+const MOTION_ONLY = new Set(["animation", "@keyframes", "infinite"]);
+
 const RULES: [string, RegExp][] = [
   ["raw hex colour", /#[0-9a-fA-F]{3,8}\b(?![\w-])/],
   ["rgb()/rgba()/hsl()", /\b(?:rgba?|hsla?)\(/],
@@ -35,7 +40,8 @@ describe("radar UI source rules", () => {
 
   for (const [name, re] of RULES) {
     it(`has no ${name}`, () => {
-      const hits = files.flatMap((f) =>
+      const scanned = MOTION_ONLY.has(name) ? files.filter((f) => !inMotion(f)) : files;
+      const hits = scanned.flatMap((f) =>
         readFileSync(f, "utf8")
           .split(/\r?\n/)
           .map((line, i) => ({ f, i: i + 1, line }))
@@ -45,4 +51,35 @@ describe("radar UI source rules", () => {
       expect(hits).toEqual([]);
     });
   }
+
+  it("keeps the motion exception inside ui/motion/** and motion.css", () => {
+    const motion = files.filter(inMotion);
+    expect(motion.some((f) => f.endsWith("motion.css"))).toBe(true);
+    expect(motion.some((f) => f.endsWith("MotionLayer.tsx"))).toBe(true);
+    // Everything outside the folder still has no animation at all.
+    const leaks = files
+      .filter((f) => !inMotion(f))
+      .filter((f) => /\banimation\b|@keyframes|\binfinite\b/.test(readFileSync(f, "utf8")));
+    expect(leaks).toEqual([]);
+  });
+
+  it("motion.css animates transform and opacity only, with a single continuous ring", () => {
+    const css = readFileSync(join(MOTION_DIR, "motion.css"), "utf8");
+    const blocks = [...css.matchAll(/@keyframes\s+[\w-]+\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)];
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const b of blocks) {
+      const props = [...b[1].matchAll(/([\w-]+)\s*:/g)].map((m) => m[1]);
+      expect(props.length).toBeGreaterThan(0);
+      for (const p of props) expect(["transform", "opacity"]).toContain(p);
+    }
+    // Layout-triggering properties never appear in any transition / will-change.
+    for (const m of css.matchAll(/(?:transition(?:-property)?|will-change)\s*:\s*([^;]+);/g)) {
+      expect(m[1].split(",").every((v) => /^\s*(transform|opacity)\b/.test(v))).toBe(true);
+    }
+    // `infinite` is used exactly once: the ring of an open call.
+    expect(css.match(/\binfinite\b/g)?.length).toBe(1);
+    expect(/\.rd-m-ring[^{]*\{[^}]*infinite/.test(css)).toBe(true);
+    // Reduced motion hides the whole layer.
+    expect(css).toMatch(/prefers-reduced-motion:\s*reduce/);
+  });
 });

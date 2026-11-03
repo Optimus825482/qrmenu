@@ -466,7 +466,7 @@ Kontrast: metin ≥ 4.5:1, kenar/ikon ≥ 3:1 (WCAG 1.4.3 / 1.4.11). Katmanlar o
 |---|---|
 | Nabız | Durum değişiminde tek 600 ms'lik halka (`outline` + opaklık sönümü); aynı varlıkta 2 sn'de en fazla bir |
 | "Akış" | Kuyruk sayaçları 200 ms sayı geçişi; olay şeridi satırı 150 ms kayarak girer; kartlar ızgarada yer değiştirmez |
-| Sürekli hareket | **Yasak** (ping/bounce/döngülü pulse, dönen ikon, kayan yazı). Saniye sayaçları yalnız metin günceller |
+| Sürekli hareket | **Yasak** (ping/bounce/döngülü pulse, dönen ikon, kayan yazı). Saniye sayaçları yalnız metin günceller. **Tek istisna:** §5.8 animasyon katmanı (`ui/motion/**` + `motion.css`); orada da sürekli olan yalnız açık çağrı halkasıdır |
 | `prefers-reduced-motion` | Nabız ve geçişler 0 ms; durum değişimi yalnız renk/metinle |
 | Fırtına / hızlı tekrar | Bir boşaltmada >20 olay veya tekrar ≥10× → nabız yok |
 | Ses | Yalnız `radar.soundOnEscalation=true` ve ses kilidi açıksa; Kritik uyarı ilk oluştuğunda; `public/sounds/error.mp3` (UX §2.3); 30 sn'de en fazla 1 |
@@ -500,6 +500,38 @@ Kontrast: metin ≥ 4.5:1, kenar/ikon ≥ 3:1 (WCAG 1.4.3 / 1.4.11). Katmanlar o
 ### 5.7 Açıklama (lejant)
 
 Görünüm → "Açıklama göster": görünüm başına glif/renk/metin tablosu. İlk 3 açılışta varsayılan açık, sonra `User.prefs.radar.legend`. Duvar modunda alt köşede küçük kalıcı lejant.
+
+### 5.8 Animasyonlu gösterim (T13; "simülatif" = animasyonlu sahne)
+
+Erkan'ın "simülatif" ile kastettiği, operasyonun hareketli gösterimidir: siparişin masadan mutfağa, hazırdan masaya akışı, personelin ve oda kontrollerinin kat planında ilerleyişi, çağrıların halkası. Bu, radarın üstüne **isteğe bağlı, varsayılan açık** bir katmandır (`MotionLayer`); veri kaynağı yine mağaza olaylarıdır, bu yüzden canlı akışta, Gün tekrarında ve `scripts/radar-sim.ts --scene` yükünde aynı şekilde çalışır. Hücreler ve şeritler aynı bilgiyi metin olarak taşır; katman süstür (`aria-hidden`).
+
+**Eşleme (olay → hareket):**
+
+| Olay | Hareket (`kind`) | Çapa (`data-anchor`) | Süre |
+|---|---|---|---|
+| `order.status` → ONAYLANDI + hazırlanıyor | `order.flow` nokta, eğri yol | `table:<id>` → `queue:<outlet>:HAZIRLANIYOR` | 1800 ms |
+| `order.status` → ONAYLANDI (onay) | `order.flow` | `table:<id>` → `queue:<outlet>:YENI` | 1800 ms |
+| `order.status` → GONDERILDI / TEYIT_BEKLIYOR | `order.flow` | `table:<id>` → `queue:<outlet>:kasa` | 1800 ms |
+| `order.status` → HAZIR | `order.ready` tepsi | `queue:<outlet>:HAZIR` → `table:<id>` | 1500 ms |
+| `order.status` → SERVIS_EDILDI / TESLIM_EDILDI | `order.served` onay halkası | `table:<id>` | 600 ms |
+| `call.opened` | `call.ring` halka | `table:<id>` | çağrı kapanana kadar, 1,2 sn periyot |
+| `room.checked` | `room.check` süpürme + `staff.move` | `room:<id>`; `staff:<kullanıcı>` → `room:<id>` | 900 / 1200 ms |
+| `dnd.marked` | `dnd.mark` süpürme + `staff.move` | `room:<id>`; `staff:<kullanıcı>` → `room:<id>` | 900 / 1200 ms |
+| `mybar.opened` | `mybar.request` rozet uçuşu | `room:<id>` → `staff:<kat sorumlusu>` | 1400 ms |
+| `presence` (yer değişti) | `staff.move` | `outlet:<önceki>` → `outlet:<yeni>` | 1200 ms |
+| `print.job` (KUYRUKTA/BASILIYOR) | `print.job` çizgi | `queue:<outlet>:HAZIRLANIYOR` → `queue:<outlet>:print` | 500 ms |
+| `stock.level` (kritik ve altı) | `stock.critical` titreşim | `stock:<ürün>` | 400 ms |
+
+Oda servisi siparişleri aynı türleri yerinde (`order:<id>` kartı) gösterir. Çapa görünümde çizilmiyorsa o uç atlanır: iki uç da yoksa hareket yoktur, tek uç varsa hareket orada yerinde oynar. Masa görünümünde mutfak aşamalarının hepsi outlet seçici satırındaki tek `queue:<outlet>:kds` çapasına düşer.
+
+**Sınırlar ve bütçe:**
+- Aynı anda en çok **120** sprite; aynı tür ve çapadaki olaylar tek sprite + `+N` rozetine birleşir, 120'ye sığmayan gruplar köşedeki toplam `+N` rozetine gider. Tek bir boşaltmada 400'den fazla olay (sarma/yeniden yükleme) hareket üretmez.
+- Yalnız `transform` ve `opacity` hareket eder; düzen okuması yalnız olay anında yapılır (çapa dikdörtgenleri), animasyon sırasında değil. Tek `requestAnimationFrame` döngüsü yalnız ekranda sprite varken ve sekme görünürken çalışır; Sekme gizliyken gelen olaylar hareket üretmez.
+- Sürekli olan tek hareket açık çağrının halkasıdır (`motion.css`, tek `infinite`); çağrı kapanınca öğe DOM'dan kalkar. Kaynak kuralları testi bu istisnayı `ui/motion/**` ile sınırlar ve `motion.css` içinde yalnız `transform`/`opacity` keyframes kabul eder.
+- Gün tekrarı hız çarpanı (1x/10x/60x) süreleri böler; 60x'te yalnız "ışıltı" türleri kalır (`order.ready`, `call.ring`, `stock.critical`, en az 300 ms).
+- Hedef: 1920×1080 duvar ekranında 60 fps; `radar-motion-perf.test.ts` 120 sprite × 1000 adımı ≤ 50 ms ölçer, e2e 10 sn kare süresi ortalamasını ≤ 20 ms doğrular.
+
+**Anahtar:** Araç çubuğunda `Animasyon` düğmesi (`aria-pressed`); tercih `localStorage` `merit.u.radar.motion` (`1`/`0`), duvar ekranında `?motion=0|1` sorgusu bu tercihi o sayfa için geçersiz kılar. `prefers-reduced-motion: reduce` her zaman kazanır: katman kapalı, düğme kilitli; kapalıyken DOM'a hiç motion düğümü basılmaz. Geçmişe sarma (scrub) sırasında ve "Tüm kompleks" görünümünde katman yoktur. Hiçbir sprite fiyat, misafir adı veya not taşımaz (yalnız kimlik, tür, ton, süre).
 
 ---
 

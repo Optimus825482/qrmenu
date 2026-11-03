@@ -21,6 +21,10 @@
   position: relative;
 }
 
+.rd-root:focus {
+  outline: none;
+}
+
 .rd-root[data-radar-density="wall"] {
   --rd-font: 16px;
   --rd-small: 14px;

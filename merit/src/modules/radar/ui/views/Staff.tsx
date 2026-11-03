@@ -59,7 +59,7 @@ function SessionRow({
     session.lastPlace ?? (session.outletId ? outletNames.get(session.outletId) : undefined) ?? "—";
 
   return (
-    <tr ref={ref} data-session-id={session.sessionId}>
+    <tr ref={ref} data-session-id={session.sessionId} data-anchor={`staff:${session.userId}`}>
       <td>{displayName}</td>
       <td>{session.roleCode}</td>
       <td>{place}</td>
@@ -149,7 +149,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
               {outlets.map((o) => {
                 const count = sessions.filter((s) => s.outletId === o.outletId).length;
                 return (
-                  <li key={o.outletId} className="rd-row">
+                  <li key={o.outletId} className="rd-row" data-anchor={`outlet:${o.outletId}`}>
                     <span>{o.name}</span>
                     <span className="rd-badge" data-tone={count > 0 ? "info" : "muted"}>
                       {count} personel
@@ -169,7 +169,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                 const rawName = view.people[sup.userId] ?? sup.name;
                 const shown = nameStyle === "short" ? shortName(rawName) : rawName;
                 return (
-                  <li key={sup.userId} className="rd-row">
+                  <li key={sup.userId} className="rd-row" data-anchor={`staff:${sup.userId}`}>
                     <span>{shown}</span>
                     <span className="rd-muted rd-small">
                       {sup.done}/{sup.total} görev
