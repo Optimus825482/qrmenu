@@ -1,88 +1,74 @@
 import { z } from "zod";
-import { assertCan } from "@/lib/rbac";
-import {
-  assertCatalogWriter,
-  auditCtxOf,
-  canSeePrices,
-  handle,
-  maskPrices,
-  parseBody,
-  parseQuery,
-} from "@/modules/minibar/server/apiAuthHelper";
-import {
-  createProduct,
-  deleteProduct,
-  listProducts,
-  updateProduct,
-} from "@/modules/minibar/server/minibarDefinitionsService";
+import { canSeePrices, handle, maskPrices, parseBody, parseQuery } from "@/modules/minibar/server/apiAuthHelper";
+import { create, listAll, type ProductRow, remove, setActive, update } from "@/modules/minibar/server/products";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const price = z.number().min(0).max(1_000_000).nullable().optional();
-const createSchema = z.object({
-  groupId: z.string().min(1, "Ürün grubu seçilmelidir.").max(64),
-  code: z.string().max(64).nullable().optional(),
-  name: z.string().trim().min(1, "Ürün adı zorunludur.").max(150),
-  barcode: z.string().max(64).nullable().optional(),
-  unit: z.string().max(20).optional(),
-  criticalLevel: z.number().int().min(0).max(100000).optional(),
-  purchasePrice: price,
-  salePrice: price,
+const fieldsSchema = z.object({
+  groupId: z.string().max(64).optional(),
+  code: z.string().nullable().optional(),
+  name: z.string().optional(),
+  barcode: z.string().nullable().optional(),
+  unit: z.string().optional(),
+  criticalLevel: z.number().optional(),
+  purchasePrice: z.number().nullable().optional(),
+  salePrice: z.number().nullable().optional(),
   isActive: z.boolean().optional(),
 });
-const updateSchema = createSchema.partial().extend({ id: z.string().min(1).max(64) });
+const createSchema = fieldsSchema.extend({ groupId: z.string().max(64), name: z.string() });
+const updateSchema = fieldsSchema.extend({ id: z.string().min(1).max(64) });
 const querySchema = z.object({
   groupId: z.string().max(64).optional(),
   search: z.string().max(100).optional(),
   isActive: z.enum(["true", "false"]).optional(),
 });
 
-/** Prices are written by system and management roles only; for others the fields are dropped. */
-function withoutPrices<T extends { purchasePrice?: unknown; salePrice?: unknown }>(data: T, allowed: boolean): T {
-  if (allowed) return data;
-  const copy = { ...data };
-  delete copy.purchasePrice;
-  delete copy.salePrice;
-  return copy;
+/** Row shape the definitions window reads: numeric prices and `setupItemCount`; the typed fields stay. */
+function legacyShape(p: ProductRow) {
+  return {
+    ...p,
+    purchasePrice: p.purchasePrice === null ? null : Number(p.purchasePrice),
+    salePrice: p.salePrice === null ? null : Number(p.salePrice),
+    setupItemCount: p.setupCount,
+  };
 }
 
 export async function GET(req: Request) {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
     const q = parseQuery(new URL(req.url).searchParams, querySchema);
-    const products = await listProducts({
+    const products = await listAll(ctx, {
       groupId: q.groupId,
-      search: q.search,
-      isActive: q.isActive === undefined ? undefined : q.isActive === "true",
+      q: q.search || undefined,
+      active: q.isActive === undefined ? undefined : q.isActive === "true",
     });
-    return maskPrices({ products }, canSeePrices(ctx));
+    return maskPrices({ products: products.map(legacyShape) }, canSeePrices(ctx));
   });
 }
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "O");
-    const body = withoutPrices(await parseBody(req, createSchema), canSeePrices(ctx));
-    const product = await createProduct(body, auditCtxOf(ctx, req));
-    return maskPrices({ success: true, product }, canSeePrices(ctx));
+    const product = await create(ctx, await parseBody(req, createSchema));
+    return maskPrices({ success: true, product: legacyShape(product) }, canSeePrices(ctx));
   });
 }
 
+/** `{ id, isActive }` alone toggles activity; any other field edits the product (omitted fields stay). */
 export async function PUT(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "D");
-    const { id, ...data } = withoutPrices(await parseBody(req, updateSchema), canSeePrices(ctx));
-    const product = await updateProduct(id, data, auditCtxOf(ctx, req));
-    return maskPrices({ success: true, product }, canSeePrices(ctx));
+    const { id, ...data } = await parseBody(req, updateSchema);
+    const { isActive, ...others } = data;
+    const onlyActive = isActive !== undefined && Object.values(others).every((v) => v === undefined);
+    const product = onlyActive ? await setActive(ctx, id, isActive) : await update(ctx, id, data);
+    return maskPrices({ success: true, product: legacyShape(product) }, canSeePrices(ctx));
   });
 }
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Ürün ID zorunludur." }, { status: 400 });
-    return deleteProduct(id, auditCtxOf(ctx, req));
+    await remove(ctx, id);
+    return { success: true, message: "Ürün silindi." };
   });
 }

@@ -21,7 +21,16 @@ const rooms = await import("@/modules/core/server/admin/rooms");
 const outlets = await import("@/modules/core/server/admin/outlets");
 const tables = await import("@/modules/core/server/admin/tables");
 
-const GUIDE_TABLES = ["audit_logs", "outlet_tables", "rooms", "floors", "room_types"] as const;
+const GUIDE_TABLES = [
+  "audit_logs",
+  "outlet_tables",
+  "rooms",
+  "floors",
+  "room_types",
+  "products",
+  "product_groups",
+  "setups",
+] as const;
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
@@ -59,6 +68,19 @@ const stepOf = (status: Awaited<ReturnType<typeof setupGuide.status>>, key: stri
   return step;
 };
 
+/** An active product, an active setup holding it, assigned to `roomTypeId` of the hotel. */
+async function addMinibarCatalog(hid: string, roomTypeId: string, opts: { assign?: boolean; empty?: boolean } = {}) {
+  const group = await testDb.productGroup.create({ data: { name: "Icecekler" } });
+  const product = await testDb.product.create({ data: { groupId: group.id, name: "Kola" } });
+  const setup = await testDb.setup.create({
+    data: { name: "MINI", ...(opts.empty ? {} : { items: { create: [{ productId: product.id, qty: 2 }] } }) },
+  });
+  if (opts.assign !== false) {
+    await testDb.roomTypeSetup.create({ data: { hotelId: hid, roomTypeId, setupId: setup.id } });
+  }
+  return { product, setup };
+}
+
 const BAR = {
   name: "Havuz Bar",
   type: "BAR",
@@ -67,7 +89,7 @@ const BAR = {
 } as const;
 
 describe("setupGuide.status", () => {
-  it("yeni otelde yalnız otel-bilgi tamamdır (%11); adımlar sıralı, oda servisi outleti sayılmaz", async () => {
+  it("yeni otelde yalnız otel-bilgi tamamdır (%10); adımlar sıralı, oda servisi outleti sayılmaz", async () => {
     const ctx = await sys();
     const mr = await hotelId("ROYAL");
 
@@ -86,14 +108,40 @@ describe("setupGuide.status", () => {
       "urun-setup",
     ]);
     expect(status.steps.filter((s) => s.done).map((s) => s.key)).toEqual(["otel-bilgi"]);
-    expect(status.percent).toBe(11);
+    expect(status.percent).toBe(10);
     // Every hotel is seeded with a room-service outlet: it is not a setup outlet.
     expect(stepOf(status, "outletler")).toMatchObject({ done: false, count: 0, required: true });
-    expect(stepOf(status, "urun-setup")).toMatchObject({ done: false, required: false });
-    expect(status.steps.filter((s) => s.required)).toHaveLength(9);
+    expect(stepOf(status, "urun-setup")).toMatchObject({ done: false, count: 0, required: true });
+    expect(status.steps.filter((s) => s.required)).toHaveLength(10);
     expect(stepOf(status, "katlar").openApp).toEqual({ appId: "core.tanimlar", panel: "katlar" });
     expect(stepOf(status, "oda-tipi-atama").openApp).toEqual({ appId: "core.tanimlar", panel: "odalar" });
     expect(stepOf(status, "otel-bilgi")).toMatchObject({ count: 1 });
+  });
+
+  it("urun-setup: ürün, kalemli setup ve oda tipi ataması birlikte gerekir; MINIBAR kapalıysa zorunlu değil", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("ROYAL");
+    const type = await roomTypes.create(ctx, mr, { name: "Deluxe", cabinetCount: 2 });
+
+    expect(stepOf(await setupGuide.status(ctx, mr), "urun-setup")).toMatchObject({ done: false, count: 0, required: true });
+
+    // content-less setup assigned directly in the database does not count
+    await addMinibarCatalog(mr, type.id, { empty: true });
+    expect(stepOf(await setupGuide.status(ctx, mr), "urun-setup")).toMatchObject({ done: false, count: 1 });
+    await testDb.roomTypeSetup.deleteMany({});
+    await testDb.setup.deleteMany({});
+    await testDb.product.deleteMany({});
+    await testDb.productGroup.deleteMany({});
+
+    // product and filled setup without an assignment
+    const { setup } = await addMinibarCatalog(mr, type.id, { assign: false });
+    expect(stepOf(await setupGuide.status(ctx, mr), "urun-setup")).toMatchObject({ done: false, count: 0 });
+
+    await testDb.roomTypeSetup.create({ data: { hotelId: mr, roomTypeId: type.id, setupId: setup.id } });
+    expect(stepOf(await setupGuide.status(ctx, mr), "urun-setup")).toMatchObject({ done: true, count: 1, required: true });
+
+    await setModule("ROYAL", "MINIBAR", false);
+    expect(stepOf(await setupGuide.status(ctx, mr), "urun-setup")).toMatchObject({ required: false });
   });
 
   it("otel adresi girilince otel-bilgi sayısı artar", async () => {
@@ -120,13 +168,13 @@ describe("setupGuide.status", () => {
       "oda-tipi-atama",
     ]);
     expect(stepOf(typed, "odalar").count).toBe(1);
-    expect(typed.percent).toBe(56); // 5 / 9
+    expect(typed.percent).toBe(50); // 5 / 10
 
     await rooms.create(ctx, mr, { floorId: floor.id, number: "102" });
     const untyped = await setupGuide.status(ctx, mr);
     expect(stepOf(untyped, "odalar")).toMatchObject({ done: true, count: 2 });
     expect(stepOf(untyped, "oda-tipi-atama")).toMatchObject({ done: false, count: 1 });
-    expect(untyped.percent).toBe(44); // 4 / 9
+    expect(untyped.percent).toBe(40); // 4 / 10
   });
 
   it("pasif kat ve pasif oda sayılmaz; başka otelin kayıtları karışmaz", async () => {
@@ -232,9 +280,9 @@ describe("setupGuide.status", () => {
     for (const key of ["outletler", "masalar", "ekipler"]) {
       expect(stepOf(status, key).required).toBe(false);
     }
-    // otel-bilgi, katlar, oda-tipleri, odalar, oda-tipi-atama, kullanicilar (kat sorumlusu).
-    expect(status.steps.filter((s) => s.required)).toHaveLength(6);
-    expect(status.percent).toBe(17); // 1 / 6
+    // otel-bilgi, katlar, oda-tipleri, odalar, oda-tipi-atama, kullanicilar (kat sorumlusu), urun-setup.
+    expect(status.steps.filter((s) => s.required)).toHaveLength(7);
+    expect(status.percent).toBe(14); // 1 / 7
 
     await setModule("ROYAL", "QR_MENU", true);
     const menuOn = await setupGuide.status(ctx, mr);
@@ -254,6 +302,7 @@ describe("setupGuide.status", () => {
     const waiter = await makeUser({ username: "gar-all", roleCode: "R-GAR", hotelCode: "ROYAL" });
     await makeUser({ username: "kat-all", roleCode: "R-KAT", hotelCode: "ROYAL" });
     await addMember(waiter.id, bar.id);
+    await addMinibarCatalog(mr, type.id);
 
     const status = await setupGuide.status(ctx, mr);
     expect(status.percent).toBe(100);
@@ -277,7 +326,7 @@ describe("setupGuide.status", () => {
     const mrp = await hotelId("PREMIUM");
     const manager = await mgmt("ROYAL");
 
-    await expect(setupGuide.status(manager, mr)).resolves.toMatchObject({ percent: 11 });
+    await expect(setupGuide.status(manager, mr)).resolves.toMatchObject({ percent: 10 });
     await expect(setupGuide.status(manager, mrp)).rejects.toMatchObject({ code: "FORBIDDEN" });
 
     const floor = await makeUser({ username: "kat-yetkisiz", roleCode: "R-KAT", hotelCode: "ROYAL" });
@@ -297,8 +346,8 @@ describe("setupGuide.summary", () => {
     const rows = await setupGuide.summary(ctx);
 
     expect(rows.map((r) => r.code)).toEqual(["ROYAL", "DIAMOND", "PREMIUM"]); // Royal, Royal Diamond, Royal Premium
-    expect(rows.find((r) => r.code === "ROYAL")).toMatchObject({ hotelId: mr, name: "Merit Royal", percent: 33 }); // 3 / 9
-    expect(rows.find((r) => r.code === "PREMIUM")?.percent).toBe(11);
+    expect(rows.find((r) => r.code === "ROYAL")).toMatchObject({ hotelId: mr, name: "Merit Royal", percent: 30 }); // 3 / 10
+    expect(rows.find((r) => r.code === "PREMIUM")?.percent).toBe(10);
   });
 
   it("pasif oteli ve yetkisiz otelleri dışarıda bırakır; hiç yetki yoksa reddeder", async () => {

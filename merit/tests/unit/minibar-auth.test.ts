@@ -168,8 +168,8 @@ describe("fiyatlar yalnız SISTEM/YONETIM'e görünür", () => {
       products: { id: string; salePrice: number | null; purchasePrice: number | null }[];
     };
     const mine = depProducts.products.find((p) => p.id === w.cola.id)!;
-    expect(mine.salePrice).toBe(0);
-    expect(mine.purchasePrice).toBe(0);
+    expect(mine.salePrice).toBeNull();
+    expect(mine.purchasePrice).toBeNull();
 
     const depStock = (await (await stockRoute.GET(new Request(url("depo/stock")))).json()) as {
       stockItems: { productId: string; price: number }[];
@@ -242,7 +242,9 @@ describe("oda tipi–setup ataması otel eşleşmesi", () => {
     const diamond = await hotelId("DIAMOND");
     const sys = await staff("R-SYS", "ROYAL", ["DIAMOND"]);
     as(sys.ctx);
-    const extra = await testDb.setup.create({ data: { name: `S-${randomUUID().slice(0, 8)}` } });
+    const extra = await testDb.setup.create({
+      data: { name: `S-${randomUUID().slice(0, 8)}`, items: { create: [{ productId: w.cola.id, qty: 1 }] } },
+    });
     const bad = await roomTypeSetupsRoute.POST(
       json("definitions/room-type-setups", "POST", { hotelId: diamond, roomTypeId: w.roomType.id, setupId: extra.id }),
     );

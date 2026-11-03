@@ -1,13 +1,6 @@
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
-import { DomainError } from "@/lib/result";
-import { auditCtxOf, handle, parseBody, parseQuery, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
-import {
-  assignRoomTypeSetup,
-  listRoomTypeSetups,
-  removeRoomTypeSetup,
-} from "@/modules/minibar/server/minibarDefinitionsService";
+import { handle, parseBody, parseQuery, selectHotel } from "@/modules/minibar/server/apiAuthHelper";
+import { assignOne, listAssignments, set, unassignOne } from "@/modules/minibar/server/roomTypeSetups";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,36 +10,38 @@ const keySchema = z.object({
   roomTypeId: z.string().min(1).max(64),
   setupId: z.string().min(1).max(64),
 });
-
-/** The room type decides its hotel; a mismatching body hotelId is treated as not found. */
-async function resolveHotel(roomTypeId: string, claimedHotelId: string): Promise<string> {
-  const rt = await prisma.roomType.findUnique({ where: { id: roomTypeId }, select: { hotelId: true } });
-  if (!rt || rt.hotelId !== claimedHotelId) throw new DomainError("NOT_FOUND", "Oda tipi bulunamadı.");
-  return rt.hotelId;
-}
+const listSchema = keySchema.omit({ setupId: true }).extend({ setupIds: z.array(z.string().max(64)).max(200) });
 
 export async function GET(req: Request) {
   return handle(async (ctx) => {
     const hotelId = await selectHotel(ctx, new URL(req.url).searchParams.get("hotelId"), "MB-TAN", "V");
-    return { assignments: await listRoomTypeSetups(hotelId), selectedHotelId: hotelId };
+    return { assignments: await listAssignments(ctx, hotelId), selectedHotelId: hotelId };
   });
 }
 
+/** Adds one setup to the room type (current list plus the setup). */
 export async function POST(req: Request) {
   return handle(async (ctx) => {
     const body = await parseBody(req, keySchema);
-    const hotelId = await resolveHotel(body.roomTypeId, body.hotelId);
-    await assertCan(ctx, "MB-TAN", "O", hotelId);
-    const assignment = await assignRoomTypeSetup({ ...body, hotelId }, auditCtxOf(ctx, req, hotelId));
-    return { success: true, assignment };
+    await assignOne(ctx, body.hotelId, body.roomTypeId, body.setupId);
+    return { success: true };
   });
 }
 
+/** Replaces the room type's whole setup list; an empty list removes every assignment. */
+export async function PUT(req: Request) {
+  return handle(async (ctx) => {
+    const body = await parseBody(req, listSchema);
+    await set(ctx, body.hotelId, body.roomTypeId, body.setupIds);
+    return { success: true };
+  });
+}
+
+/** Removes one setup from the room type (current list minus the setup). */
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
     const key = parseQuery(new URL(req.url).searchParams, keySchema);
-    const hotelId = await resolveHotel(key.roomTypeId, key.hotelId);
-    await assertCan(ctx, "MB-TAN", "D", hotelId);
-    return removeRoomTypeSetup({ ...key, hotelId }, auditCtxOf(ctx, req, hotelId));
+    await unassignOne(ctx, key.hotelId, key.roomTypeId, key.setupId);
+    return { success: true, message: "Setup ataması kaldırıldı." };
   });
 }

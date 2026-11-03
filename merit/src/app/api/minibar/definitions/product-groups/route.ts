@@ -1,57 +1,48 @@
 import { z } from "zod";
-import { assertCan } from "@/lib/rbac";
-import { assertCatalogWriter, auditCtxOf, handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
-import {
-  createProductGroup,
-  deleteProductGroup,
-  listProductGroups,
-  updateProductGroup,
-} from "@/modules/minibar/server/minibarDefinitionsService";
+import { canSeePrices, handle, maskPrices, parseBody } from "@/modules/minibar/server/apiAuthHelper";
+import { create, listAll, remove, setActive, update } from "@/modules/minibar/server/productGroups";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const createSchema = z.object({
-  name: z.string().trim().min(1, "Ürün grubu adı zorunludur.").max(100),
-  description: z.string().max(300).optional(),
+const fieldsSchema = z.object({
+  name: z.string().max(200).optional(),
+  description: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
 });
-const updateSchema = z.object({
-  id: z.string().min(1).max(64),
-  name: z.string().trim().min(1).max(100).optional(),
-  description: z.string().max(300).nullable().optional(),
-  isActive: z.boolean().optional(),
-});
+const createSchema = fieldsSchema.extend({ name: z.string().max(200) });
+const updateSchema = fieldsSchema.extend({ id: z.string().min(1).max(64) });
 
 export async function GET() {
   return handle(async (ctx) => {
-    await assertCan(ctx, "MB-TAN", "V", ctx.session.hotelId);
-    return { groups: await listProductGroups() };
+    return maskPrices({ groups: await listAll(ctx) }, canSeePrices(ctx));
   });
 }
 
 export async function POST(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "O");
-    const group = await createProductGroup(await parseBody(req, createSchema), auditCtxOf(ctx, req));
+    const group = await create(ctx, await parseBody(req, createSchema));
     return { success: true, group };
   });
 }
 
+/** `{ id, isActive }` alone toggles activity; any other field edits the group (name required). */
 export async function PUT(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "D");
     const { id, ...data } = await parseBody(req, updateSchema);
-    const group = await updateProductGroup(id, data, auditCtxOf(ctx, req));
+    const group =
+      data.isActive !== undefined && data.name === undefined && data.description === undefined
+        ? await setActive(ctx, id, data.isActive)
+        : await update(ctx, id, { name: data.name ?? "", description: data.description, isActive: data.isActive });
     return { success: true, group };
   });
 }
 
 export async function DELETE(req: Request) {
   return handle(async (ctx) => {
-    await assertCatalogWriter(ctx, "D");
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return Response.json({ error: "Grup ID zorunludur." }, { status: 400 });
-    return deleteProductGroup(id, auditCtxOf(ctx, req));
+    await remove(ctx, id);
+    return { success: true, message: "Ürün grubu silindi." };
   });
 }

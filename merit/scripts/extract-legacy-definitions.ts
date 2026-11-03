@@ -29,6 +29,25 @@ const clean = (v: unknown): string => String(v ?? "").trim();
 const orNull = (v: unknown): string | null => clean(v) || null;
 const money = (v: unknown): string | null => (v === null || v === undefined ? null : Number(v).toFixed(2));
 
+/** Image types a legacy logo may carry, by data-URI media type (the stored file keeps its real type). */
+const LOGO_EXTENSIONS: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+};
+
+/** Decodes a base64 logo (with or without a data-URI prefix); the extension follows the source type. */
+function parseLogo(value: string): { ext: string; bytes: Buffer } | null {
+  if (!value) return null;
+  const match = /^data:([a-z0-9.+/-]+);base64,/i.exec(value);
+  const ext = match ? (LOGO_EXTENSIONS[match[1].toLowerCase()] ?? "png") : "png";
+  const bytes = Buffer.from(match ? value.slice(match[0].length) : value, "base64");
+  return bytes.length > 0 ? { ext, bytes } : null;
+}
+
 async function main() {
   const url = process.env.LEGACY_DATABASE_URL;
   if (!url) throw new Error("LEGACY_DATABASE_URL ortam değişkeni gerekli.");
@@ -83,10 +102,11 @@ async function main() {
       .map((h) => {
         const code = codeByLegacyId.get(h.id)!;
         let logoUrl: string | null = null;
-        const raw = clean(h.logo).replace(/^data:image\/[a-z+]+;base64,/i, "");
-        if (raw) {
-          writeFileSync(path.join(LOGO_DIR, `${code.toLowerCase()}.png`), Buffer.from(raw, "base64"));
-          logoUrl = `/brand/hotels/${code.toLowerCase()}.png`;
+        const logo = parseLogo(clean(h.logo));
+        if (logo) {
+          const file = `${code.toLowerCase()}.${logo.ext}`;
+          writeFileSync(path.join(LOGO_DIR, file), logo.bytes);
+          logoUrl = `/brand/hotels/${file}`;
         }
         const floors = floorRows
           .filter((f) => codeByLegacyId.get(f.otel_id) === code)
@@ -177,7 +197,8 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
+main().catch((error: unknown) => {
+  // Only the message: a driver error object can carry the connection string.
+  console.error(error instanceof Error ? error.message : "Bilinmeyen hata");
   process.exit(1);
 });

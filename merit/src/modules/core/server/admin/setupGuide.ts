@@ -66,19 +66,35 @@ async function compute(hotelId: string): Promise<SetupStatus> {
     OR: [{ hotelId }, { userHotels: { some: { hotelId } } }],
   });
 
-  const [modules, floors, roomTypes, rooms, typedRooms, outlets, tables, members, floorStaff, waiters] =
-    await Promise.all([
-      prisma.hotelModule.findMany({ where: { hotelId, enabled: true }, select: { moduleKey: true } }),
-      prisma.floor.count({ where: { hotelId, isActive: true } }),
-      prisma.roomType.count({ where: { hotelId, isActive: true } }),
-      prisma.room.count({ where: { hotelId, isActive: true } }),
-      prisma.room.count({ where: { hotelId, isActive: true, roomTypeId: { not: null } } }),
-      prisma.outlet.count({ where: { hotelId, isActive: true, type: { not: "ODA_SERVISI" } } }),
-      prisma.outletTable.count({ where: { isActive: true, outlet: orderOutlets } }),
-      prisma.outletMember.count({ where: { isActive: true, outlet: orderOutlets, user: { isActive: true } } }),
-      prisma.user.count({ where: staffOf(FLOOR_ROLE) }),
-      prisma.user.count({ where: staffOf(WAITER_ROLE) }),
-    ]);
+  const [
+    modules,
+    floors,
+    roomTypes,
+    rooms,
+    typedRooms,
+    outlets,
+    tables,
+    members,
+    floorStaff,
+    waiters,
+    activeProducts,
+    filledSetups,
+    setupAssignments,
+  ] = await Promise.all([
+    prisma.hotelModule.findMany({ where: { hotelId, enabled: true }, select: { moduleKey: true } }),
+    prisma.floor.count({ where: { hotelId, isActive: true } }),
+    prisma.roomType.count({ where: { hotelId, isActive: true } }),
+    prisma.room.count({ where: { hotelId, isActive: true } }),
+    prisma.room.count({ where: { hotelId, isActive: true, roomTypeId: { not: null } } }),
+    prisma.outlet.count({ where: { hotelId, isActive: true, type: { not: "ODA_SERVISI" } } }),
+    prisma.outletTable.count({ where: { isActive: true, outlet: orderOutlets } }),
+    prisma.outletMember.count({ where: { isActive: true, outlet: orderOutlets, user: { isActive: true } } }),
+    prisma.user.count({ where: staffOf(FLOOR_ROLE) }),
+    prisma.user.count({ where: staffOf(WAITER_ROLE) }),
+    prisma.product.count({ where: { isActive: true } }),
+    prisma.setup.count({ where: { isActive: true, items: { some: {} } } }),
+    prisma.roomTypeSetup.count({ where: { hotelId } }),
+  ]);
 
   const enabled = new Set(modules.map((m) => m.moduleKey));
   const qrMenu = enabled.has("QR_MENU");
@@ -148,13 +164,13 @@ async function compute(hotelId: string): Promise<SetupStatus> {
       required: qrOrder,
       openApp: { appId: "core.ekipler" },
     },
-    // Added with the product module (P2); not a registered app yet, so the guide cannot open it.
     {
       key: "urun-setup",
       title: "Ürün ve minibar setup",
-      done: false,
-      count: 0,
-      required: false,
+      // An active product, an active setup with content, and at least one room type it is assigned to.
+      done: activeProducts >= 1 && filledSetups >= 1 && setupAssignments >= 1,
+      count: setupAssignments,
+      required: minibar,
       openApp: { appId: "minibar.tanim", panel: "urun-setup" },
     },
   ];

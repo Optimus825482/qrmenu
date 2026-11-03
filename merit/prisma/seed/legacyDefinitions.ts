@@ -43,7 +43,8 @@ export interface LegacyDefinitions {
 }
 
 export function loadLegacyDefinitions(): LegacyDefinitions {
-  const file = path.join(process.cwd(), "prisma", "seed", "data", "legacy-definitions.json");
+  // Relative to this file, so the seed works from any working directory.
+  const file = path.join(__dirname, "data", "legacy-definitions.json");
   return JSON.parse(readFileSync(file, "utf8")) as LegacyDefinitions;
 }
 
@@ -53,9 +54,14 @@ export function loadLegacyDefinitions(): LegacyDefinitions {
  *
  * Idempotent and non-destructive: rows are created only when their natural key is missing
  * (hotel+floor number, hotel+room type name, hotel+room number, group name, group+product name, setup
- * name, setup+product, hotel+room type+setup). Existing rows are never updated or deactivated, QR
- * tokens are never written, and Hotel.logoUrl is only filled while it is empty. Hotels that are not
- * present yet are skipped (seedHotels runs first).
+ * name). Existing rows are never updated or deactivated, QR tokens are never written, and
+ * Hotel.logoUrl is only filled while it is empty. Hotels that are not present yet are skipped
+ * (seedHotels runs first).
+ *
+ * Setup items and room-type setup assignments are what an administrator edits afterwards, so a re-run
+ * must not bring back rows that were deleted on purpose: setup items are added only to setups this run
+ * CREATES, and assignments only for setups this run creates or for a hotel whose room types this run
+ * creates (a hotel that had none yet).
  */
 export async function seedLegacyDefinitions(
   db: PrismaClient,
@@ -90,6 +96,8 @@ export async function seedLegacyDefinitions(
   const products = await db.product.findMany({ select: { id: true, groupId: true, name: true } });
   const productId = new Map(products.map((p) => [`${p.groupId}|${p.name}`, p.id]));
 
+  const existingSetupNames = new Set((await db.setup.findMany({ select: { name: true } })).map((s) => s.name));
+  const createdSetups = new Set(data.setups.map((s) => s.name).filter((name) => !existingSetupNames.has(name)));
   await db.setup.createMany({
     data: data.setups.map((s) => ({
       name: s.name,
@@ -104,6 +112,7 @@ export async function seedLegacyDefinitions(
 
   const setupItems = data.setups.flatMap((s) =>
     s.items.flatMap((item) => {
+      if (!createdSetups.has(s.name)) return [];
       const sid = setupId.get(s.name);
       const gid = groupId.get(item.group);
       const pid = gid ? productId.get(`${gid}|${item.product}`) : undefined;
@@ -117,6 +126,7 @@ export async function seedLegacyDefinitions(
     const hotel = await db.hotel.findUnique({ where: { code: h.code }, select: { id: true, logoUrl: true } });
     if (!hotel) continue;
 
+    const hadRoomTypes = (await db.roomType.count({ where: { hotelId: hotel.id } })) > 0;
     await db.floor.createMany({
       data: h.floors.map((f) => ({ hotelId: hotel.id, number: f.number, name: f.name, isActive: f.isActive })),
       skipDuplicates: true,
@@ -158,7 +168,9 @@ export async function seedLegacyDefinitions(
       data: h.roomTypeSetups.flatMap((a) => {
         const tid = typeId.get(a.roomType);
         const sid = setupId.get(a.setup);
-        return tid && sid ? [{ hotelId: hotel.id, roomTypeId: tid, setupId: sid }] : [];
+        if (!tid || !sid) return [];
+        if (hadRoomTypes && !createdSetups.has(a.setup)) return [];
+        return [{ hotelId: hotel.id, roomTypeId: tid, setupId: sid }];
       }),
       skipDuplicates: true,
     });
