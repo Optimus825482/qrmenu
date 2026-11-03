@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 16:45",
-  headline: "Minibar P2/P3 ve Canlı Operasyon Radarı (T1–T12: anlık görüntü, 30 dk geri sarma, NDJSON gün tekrarı, /radar duvar ekranı, Komuta Merkezi bağlantısı ve yük kanıtları) tamamlandı. P4 MyBar veri temeli (T1) ve talep yaşam döngüsü servisi (T5) tamamlandı. Sıradaki: UX T9–T15.",
+  updatedAt: "03.11.2026 17:18",
+  headline: "Minibar P2/P3, Canlı Operasyon Radarı (T1–T12), P4 MyBar sunucu temeli (T1+T5) ve UX T9 (Kat sorumlusu akışları: SSE MyBar bildirimleri, tek dokunuş +N ikame ve Geri al, QR/fener, kat/depo ekranları) tamamlandı. Fable'a devir: sıradaki UX T10 ve T12–T15.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -133,8 +133,8 @@ window.ILERLEME = {
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "done", doneAt: "03.11 10:55", note: "c441101 + 1927871 (inceleme onaylı): tam ekran/wake-lock/ses kapısı, 44 px durum şeridi, masa haritası ve yan panel" },
         { title: "T7 KDS yenilemesi ve sesler", status: "done", doneAt: "03.11 12:10", note: "41ad912 (inceleme onaylı): üç sütun, 64 px bump, Hazır geri alma (6 sn), ses ipuçları" },
         { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "done", doneAt: "03.11 14:00", note: "4d82da4 (inceleme onaylı): tek alt gezinme/ray, gezinme modeli, profil menüsü, oturum şeridi, /depo panosu" },
-        { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
-        { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "pending" },
+        { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "done", doneAt: "03.11 17:18", note: "useMybarStream (setInterval=0, SSE), PersistentMybarModal (1/N sayacı, ses/titreşim), oda kontrolü (+1..+4 tek dokunuş ikame + 6 sn Geri al), /kat/qr (kamera reddedilince oda no/QR girişi + fener), /kat/** cırcır sıfırlama" },
+        { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "active", note: "Fable devrinde ilk sıradaki UX görevi" },
         { title: "T11 screenGuide, accessSummary, Erişimim", status: "done", doneAt: "03.11 05:55", note: "b5f8022 (inceleme onaylı); rehber metinleri docs/kabul/ux-rehber-metinleri.md onayınızı bekliyor" },
         { title: "T12 Tur motoru ve ? yardım", status: "pending" },
         { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "pending" },
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 17:18", text: "UX T9 (Kat sorumlusu akışları: useMybarStream SSE kancası, PersistentMybarModal 1/N sayacı ve ses/titreşim, oda kontrolünde +1..+4 tek dokunuş ikame + 6 sn Geri al snackbar, /kat/qr kamera reddi + oda numarası çözümü + fener, çıplak kat/depo sayfalarının belirteçlerle yenilenmesi, depo/page.tsx depoDashboard okuması, src/app/kat/** küçük yazı ve ham palet cırcırlarının 0'a indirilmesi) tamamlandı ve doğrulandı (mybar-stream + uxRatchet + uxSourceRules 11/11 yeşil, tsc/eslint 0 hata). DEVIR.md ve ilerleme.html Fable devri için güncellendi; sıradaki: UX T10, T12–T15." },
     { at: "03.11 16:45", text: "Radar T12 (Komuta Merkezi 'Canlı Radar\\'ı aç' düğmesi, radar-sim.ts sahte olay üreticisi, radar-load.test.ts 5/5 yük/sınır kanıtları, canliRadarScope.spec.ts kapsam e2e'si, P7/P8 plan ve DEVIR güncellemeleri) tamamlandı. Canlı Operasyon Radarı modülünün tamamı (T1–T12) kapatıldı. Sıradaki: UX T9–T15." },
     { at: "03.11 16:35", text: "Radar T11 (/radar duvar ekranı rotası, tam ekran ve wakeLock, görünüm dönüş denetleyicisi, kritik uyarıda 60 sn duraklama ve ses kapısı) tamamlandı ve doğrulandı (radar-wall 6/6 + radar-source-rules 11/11 yeşil, tsc/eslint temiz). Sıradaki: Radar T12." },
     { at: "03.11 16:29", text: "Radar T10 (zaman şeridi, 30 dk geri sarma, NDJSON akış istemcisi ve 1x/10x/60x gün tekrarı oynatıcısı) tamamlandı ve doğrulandı (38/38 radar birim testi yeşil, tsc/eslint temiz). Sıradaki: Radar T11 (/radar duvar ekranı) ve T12." },

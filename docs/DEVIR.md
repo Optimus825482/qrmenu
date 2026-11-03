@@ -17,6 +17,7 @@
 | P4 MyBar + bildirimler | **Kısmi prototip**: misafir isteği 02.11'de QR tokena bağlandı; yaşam döngüsü (Gördüm/karşılama/iptal), depo penceresi, Web Push YOK | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
 | P6 QR Oda Servisi | **Kısmi**: sipariş çekirdeği/durum makinesi/`/oda-servisi` plana uygun ve testli; misafir oda servisi UI, SLA tarama/eskalasyon işi YOK | `docs/superpowers/plans/2026-10-31-p6-oda-servisi.md` |
 | P7 Rapor / e-posta / izleme | **Kısmi prototip**: CR-RAP penceresi (CSV), e-posta işleri 02.11'de otel kapsamlı+EmailLog yapıldı; Excel/PDF motoru, SMTP ayar/mühür, radar KPI kalan 3 metriği YOK | `docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md` |
+| UX Arayüz Yenilemesi | **Kısmi (T1–T9 ve T11 tamamlandı; T10, T12–T15 kaldı)**: belirteçler/matris, iniş/yetkisiz, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, StaffShell, Erişimim ve Kat sorumlusu akışları (`/kat/**`, `useMybarStream`, `+N` tek dokunuş + Geri al, QR/fener) tamamlandı. | `docs/superpowers/plans/2026-11-03-ux-yenileme.md` (+ `.superpowers/sdd/2026-11-03-ux-yenileme/progress.md`) |
 | RADAR Canlı Operasyon Radarı | **Tamamlandı (T1–T12)** (`ux/yenileme` dalında; tüm modüllerin salt-okunur canlı izlemesi, `/radar` duvar ekranı, 30 dk geri sarma ve NDJSON gün tekrarı, `CR-RAD`, `OperationEvent`) | `docs/superpowers/plans/2026-11-03-canli-radar.md` (+ `.superpowers/sdd/2026-11-03-canli-radar/progress.md`) |
 | P8 Kabul / eğitim / kurulum | Başlamadı (Docker/Coolify kurulumu var; kabul paketi, yük testi, kılavuzlar yok) | `docs/superpowers/plans/2026-10-31-p8-kabul.md` |
 
@@ -24,24 +25,41 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (3 Kasım 2026, 15:35 — Antigravity'ye devir; dal `ux/yenileme`, HEAD `c201ba3` + commit'siz radar T8 düzeltmesi)
+## 1a. Kalınan yer (3 Kasım 2026, 17:18 — Antigravity'den Fable'a devir; dal `ux/yenileme`)
 
-**Kim ne yaptı:** Fable (sabah–14:15) minibar planını bitirdi, dalga doğrulamasını yeşil kapattı (`wave-verification-report.md`). Codex (14:50–15:30) minibar kapanış düzeltmeleri (`e34a0ee`, `1dd4bc7`), radar T6 düzeltme turu (`c29df98`), P4 MyBar veri temeli (`c201ba3`) ve **commit'siz** radar T8 düzeltme turu yaptı; kullanıcı talimatıyla Codex **hiç test/build koşmadı** (statik inceleme yalnız). Codex'in kendi kapanış doğrulaması (`closure-verification-report.md`) yarıda durduruldu, geçerli iddia taşımaz. Şimdi **Antigravity** devam ediyor; Fable sınırı sıfırlanınca (haftalık Pzt 12:00; 5 saatlik 15:50) doğrular.
+**Kim ne yaptı:** Fable (sabah–14:15) minibar planını bitirdi, dalga doğrulamasını yeşil kapattı (`wave-verification-report.md`). Codex (14:50–15:30) minibar kapanış düzeltmeleri (`e34a0ee`, `1dd4bc7`), radar T6 düzeltme turu (`c29df98`), P4 MyBar veri temeli (`c201ba3`) ve commit'siz radar T8 düzeltme turu yaptı. Ardından **Antigravity (15:35–17:18)** devreye girerek Codex'in işlerini doğruladı, Radar T6 stok bazlama hatasını düzeltti (`e8fcb0d`), **P4 T5** (`d2757e9`), **Canlı Operasyon Radarı'nın kalan tüm görevlerini (T3 `86ee6de`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12 `5ea6fd6`)** ve **UX T9 (Kat sorumlusu akışları + kat/depo sayfaları)** görevini tamamlayıp birim testleri, `tsc --noEmit` ve `eslint` ile doğruladı. Kullanım sınırına yaklaşıldığı için iş **Fable'a** devrediliyor.
 
-**Sıralama (Erkan, 03.11 12:06):** minibar (kapalı) → radar → UX. Codex, radar T3'ün ön koşulu olduğu için P4'ün sunucu temelini (T1, sonra T5 MyBar yaşam döngüsü) öne çekti; P4'ün UI/push kısmı UX sonrasına kalır.
+**Sıralama (Erkan, 03.11 12:06):** minibar (kapalı) → radar (kapalı) → UX (T10, T12–T15 kaldı) → P4 kalan (T2–T4, T6–T10) → P6 → P7 → P8.
 
-### Antigravity yürütme durumu (03.11 16:45 güncellemesi)
+### Antigravity oturumunda tamamlananlar (03.11 15:35–17:18)
 1. **Tamamlandı (`50e5ffa`):** Codex'in commit'siz radar T8 düzeltmesi doğrulandı (`tsc --noEmit`, `eslint src/modules/radar`, `vitest run radar-` 215/215 yeşil) ve commit edildi.
 2. **Tamamlandı (`e8fcb0d`):** Codex'in test edilmemiş `c29df98` (Radar T6) ve `c201ba3` (P4 T1) commit'leri doğrulandı (`prisma migrate deploy` + 68/68 P4 T1 testi yeşil), Radar T6'daki alt-pencere stok seviyesi bazlama hatası düzeltildi (`post_upper` CTE + 32/32 replay testi yeşil) ve `next build` doğrulandı.
 3. **Tamamlandı:** Radar T6 ve T8 yeniden inceleme raporları (`SPEC: PASS`, `QUALITY: APPROVED`) ve SDD defteri kapatıldı.
-4. **Tamamlandı (`d2757e9` + Radar T3–T12):** **P4 T5** (`acknowledge/complete/cancel`, `list/kpis/get/listUnseen/listForRoom`, `mybar.*` olayları — 11/11 birim testi yeşil) ve ardından **Canlı Operasyon Radarı'nın tamamı (T3 `86ee6de`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12)** tamamlandı ve kapatıldı.
-5. **Sırada (UX kalanı):** T9 (çıplak kat/depo sayfaları: `/kat/qr`, `/kat/gorevler`, `/kat/dnd`, `/kat/oda-kontrol`, `/depo/gorevler`, `/depo/doluluk-yukle`; `data-mutates`; depo sayıları `depoDashboard`'dan), T10, T12, T13, T14–T15; sonra P4 UI/push, P6, P7, P8.
-6. Her görev kapanışında: defter satırı → `ilerleme-data.js` (`node --check`, `merit/public/` kopyası) → `docs: ilerleme — …` commit; DEVIR §1a'yı bırakırken güncelle.
+4. **Tamamlandı (`d2757e9` + Radar T3–T12):** **P4 T5** (`acknowledge/complete/cancel`, `list/kpis/get/listUnseen/listForRoom`, `mybar.*` olayları — 11/11 birim testi yeşil) ve ardından **Canlı Operasyon Radarı'nın tamamı (T3 `86ee6de`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12 `5ea6fd6`)** tamamlandı ve kapatıldı.
+5. **Tamamlandı (UX T9):**
+   - `useMybarStream.ts` (`setInterval=0`, tek başlangıç sorgusu + SSE `mybar.created/seen/acknowledged/completed/cancelled/realtime.resync`) ve `PersistentMybarModal.tsx` (`role="alertdialog"`, `1/N` sayacı, `playCue("call")` + `navigator.vibrate`, 56 px `"Gördüm"` düğmesi, arka plan sekme görünürlük uyarısı).
+   - `/kat/oda-kontrol/[roomId]/page.tsx`: her ürün satırında 48×48 px, 8 px aralıklı ayrı `+1 · +2 · +3 · +4` düğmeleri, tek dokunuşta `POST /api/minibar/room/[roomId]/check` + `"Bugün eklenen: N"` + 6 sn `"Geri al"` snackbar (`DELETE /api/minibar/my-checks/[txId]`); havuz/setup sınır nedenleri; alt yapışkan `"Sarfiyat Yok / DND İşaretle / Kaydet"` çubuğu.
+   - `/kat/qr/page.tsx`: kamera izni reddedildiğinde açık uyarı + `"Oda numarası yaz veya QR kodu gir"` alanı (`roomScan.ts` oda numarasını da çözümler) + fener (`torch`) düğmesi.
+   - `/kat/(home)/KatDashboard.tsx` (üst tekrarlı hızlı çubuk kaldırıldı), `/kat/gorevler`, `/kat/dnd`, `/depo/gorevler`, `/depo/doluluk-yukle` tasarım belirteçleriyle yenilendi; `/depo/page.tsx` sayılarını `depoDashboard(ctx)` üzerinden okuyor; mutasyon düğmelerine `data-mutates` eklendi.
+   - `tests/unit/uxRatchet.json` içinde `src/app/kat/**` ve `doluluk-yukle`/`stok` sıfırlandı (`uxRatchet.test.ts` 2/2 yeşil); `tests/e2e/matrix/knownViolations.ts` içinden `kat` ve `kat-oda-kontrol` çıkarıldı; `mybar-stream.test.ts` (3/3) ve `uxSourceRules.test.ts` (6/6) yeşil, `tsc --noEmit` ve `eslint` 0 hata. `tests/e2e/katFlows.spec.ts` hazırlandı.
+
+### Fable için sıradaki adımlar (öncelik sırasıyla)
+1. **Canlı e2e doğrulaması (tek süreçte):** Antigravity oturumunda yazılan `tests/e2e/canliRadarScope.spec.ts`, `tests/e2e/canliRadar.spec.ts` (5. test dahil) ve `tests/e2e/katFlows.spec.ts` ile `tests/e2e/matrix/` (`kat` ve `kat-oda-kontrol` ihlalsiz) testlerini çalıştırıp doğrula.
+2. **UX Kalan Görevler (`docs/superpowers/plans/2026-11-03-ux-yenileme.md`):**
+   - **UX T10:** Kabuk seçimi (`resolveShell`, `deviceRecord`), çift PWA manifesti (`/personel.webmanifest`, `/pos.webmanifest`), `DeviceSetupPrompt` ve kiosk/kurulum rehberi.
+   - **UX T12:** Tur motoru (`CoachMarks`, `HelpSheet`, `useScreenTour`), `settingSentences`, `data-guide` öznitelikleri, `F1` / `?` yardım menüsü.
+   - **UX T13:** Günlük kontrol listeleri (`routines`, `RoutineCard`) ve yönetici önizlemesi (`accessPreview`, `AccessPreviewDialog` — "Kullanıcıya göster").
+   - **UX T14–T15:** XP masaüstü cilası (`depo/raporlar` ve `depo/tanimlar` ham palet/küçük yazı cırcırlarının sıfırlanması, `admin@*` dokunma ihlallerinin temizlenmesi), `final-gates.test.ts`, tüm `knownViolations.ts` ve `uxRatchet.json` tablolarının `{}` yapılması ve belgeler.
+3. **UX Sonrası Fazlar:**
+   - **P4 MyBar kalan görevler** (`docs/superpowers/plans/2026-10-31-p4-mybar.md`: T2–T4 misafir `/q/[token]` çok dilli akışı ve Gemini çeviri, T6–T10 personel/depo MyBar pencereleri ve Web Push).
+   - **P6 Oda Servisi** (`docs/superpowers/plans/2026-10-31-p6-oda-servisi.md`).
+   - **P7 Rapor / E-posta / İzleme** (`docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md` — T10/T11 artık yalnız kalan 3 metrik ve Komuta Merkezi KPI çiplerini kapsar).
+   - **P8 Kabul / Yük / Kurulum** (`docs/superpowers/plans/2026-10-31-p8-kabul.md`).
 
 ### Durum özeti
-- **Minibar (14/14 kapalı, doğrulama yeşil):** T1 `6042bab`; T2 `5402b6a`+`cb397bf`+`a66895a`; T3 `83e3b50`; T4 `4444d08`+`4385096`; T5 `c64a6e3`; T6 `fd68ecc`; T7 `c6f7f5d`; T8 `7e3e7a8`+`1fff117`; T9 `45680ab`+`734783c`; T10 `be4a7ab`+`9a03ab9`+`499fa64`; T11 `dff58ad`; T12 `bad0b42`; T13 `8b25eb1`+`c1525ac`; T14 `8db0269`+`924e3c4`; kapanış `e34a0ee`, `1dd4bc7`; doğrulama düzeltmeleri `7fbfaf0`, `9d6d8b6`. Backlog: defterde (rapor sözleşmesi legacy karşılaştırması P7/kabul; gerçek göç, şifre sıfırlama, SMTP, dağıtım yapılmadı).
-- **Radar (12/12 kapalı, tamamlandı):** T1 `8b99c64`+`3e1be71`, T2 `23df08f`, T3 `86ee6de`, T4 `0552fe5`, T5 `f6fbfee`, T6 `0971845`+`c29df98`+`e8fcb0d`, T7 `df77d46`+`63282d3`, T8 `382d6ae`+`50e5ffa`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12 (Komuta Merkezi bağlantısı, `radar-sim.ts`, `radar-load.test.ts`, `canliRadarScope.spec.ts`, P7/P8 plan düzeltmeleri).
-- **UX:** kapalı T1–T8, T11; e2e `1014aaa`, matrix `b6dfccd`; sıradaki T9, T10, T12–T15. Onay bekleyen metinler `docs/kabul/ux-rehber-metinleri.md`.
+- **Minibar (14/14 kapalı, doğrulama yeşil):** T1 `6042bab`; T2 `5402b6a`+`cb397bf`+`a66895a`; T3 `83e3b50`; T4 `4444d08`+`4385096`; T5 `c64a6e3`; T6 `fd68ecc`; T7 `c6f7f5d`; T8 `7e3e7a8`+`1fff117`; T9 `45680ab`+`734783c`; T10 `be4a7ab`+`9a03ab9`+`499fa64`; T11 `dff58ad`; T12 `bad0b42`; T13 `8b25eb1`+`c1525ac`; T14 `8db0269`+`924e3c4`; kapanış `e34a0ee`, `1dd4bc7`; doğrulama düzeltmeleri `7fbfaf0`, `9d6d8b6`.
+- **Radar (12/12 kapalı, tamamlandı):** T1 `8b99c64`+`3e1be71`, T2 `23df08f`, T3 `86ee6de`, T4 `0552fe5`, T5 `f6fbfee`, T6 `0971845`+`c29df98`+`e8fcb0d`, T7 `df77d46`+`63282d3`, T8 `382d6ae`+`50e5ffa`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12 `5ea6fd6`.
+- **UX (10/15 kapalı):** kapalı T1–T9, T11; sıradaki **T10, T12, T13, T14, T15**. Onay bekleyen metinler `docs/kabul/ux-rehber-metinleri.md`.
 - **P4 MyBar:** kapalı T1 `c201ba3` (migration `20261103121000_p4_mybar`, 68/68 test yeşil) ve T5 `d2757e9` (MyBar yaşam döngüsü servisi + action'lar, 11/11 test yeşil); T2–T4, T6–T10 UX sonrasında.
 
 ### Kararlar (bu dalga)
