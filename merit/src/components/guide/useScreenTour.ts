@@ -5,6 +5,7 @@ import { markGuideSeenAction } from "@/modules/core/server/guideActions";
 import { guideFor, SCREEN_GUIDES } from "@/modules/core/screenGuide";
 import type { CoachStep } from "./CoachMarks";
 import { patchSeen, useGuideClientState } from "./guideClient";
+import { notify } from "@/shell/notify";
 import { readSeenLocal, resolveSteps, shouldAutoStart, writeSeenLocal } from "./tourModel";
 
 export type ScreenTourOptions = {
@@ -12,6 +13,8 @@ export type ScreenTourOptions = {
   getRoot?: () => ParentNode | null;
   /** Start by itself on the first visit (default true). */
   autoStart?: boolean;
+  /** Hotel of the XP window (its permissions may differ from the session's). */
+  hotelId?: string;
 };
 
 export type ScreenTour = {
@@ -43,7 +46,7 @@ function storage(): Storage | null {
  * finishing or closing records the version as seen, so it does not come back by itself.
  */
 export function useScreenTour(code: string | undefined, options: ScreenTourOptions = {}): ScreenTour {
-  const state = useGuideClientState();
+  const { state, retry } = useGuideClientState(options.hotelId);
   const [steps, setSteps] = useState<CoachStep[]>([]);
   const [active, setActive] = useState(false);
   const optionsRef = useRef(options);
@@ -74,11 +77,12 @@ export function useScreenTour(code: string | undefined, options: ScreenTourOptio
   const pendingStart = useRef(false);
 
   const start = useCallback((): boolean => {
-    if (running) return false;
-    // The guide data is still loading (a very early request): start as soon as it arrives.
-    if (!guide || !actions) {
-      pendingStart.current = Boolean(code);
-      return Boolean(code);
+    if (running || !guide) return false;
+    // Wait for an early request, or retry a failed load after an explicit replay.
+    if (state == null) {
+      pendingStart.current = true;
+      if (state === null) retry();
+      return true;
     }
     const found = collect();
     if (found.length === 0) return false;
@@ -87,14 +91,16 @@ export function useScreenTour(code: string | undefined, options: ScreenTourOptio
     setSteps(found);
     setActive(true);
     return true;
-  }, [collect, guide, actions, code]);
+  }, [collect, guide, retry, state]);
 
   useEffect(() => {
-    if (pendingStart.current && guide && actions) {
+    if (!pendingStart.current || state === undefined) return;
+    const timer = window.setTimeout(() => {
       pendingStart.current = false;
-      start();
-    }
-  }, [guide, actions, start]);
+      if (state === null || !start()) notify.info("Bu ekranın turu şimdi başlatılamadı.");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [state, start]);
 
   const finish = useCallback(
     (reason: "done" | "skip") => {

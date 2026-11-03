@@ -20,6 +20,8 @@ export type ScreenGuide = {
   steps: GuideStep[];
   mistakes: string[];
   settings?: SettingKey[];
+  /** Mistake tips that describe an action: shown only to users who hold all listed actions (text -> actions). */
+  mistakeRequires?: Record<string, Action[]>;
 };
 
 export type RoutineAuto =
@@ -64,6 +66,7 @@ type Extra = {
   actions?: Partial<Record<Action, string>>;
   settings?: SettingKey[];
   requires?: Record<string, Action[]>;
+  mistakeRequires?: Record<string, Action[]>;
 };
 
 function guide(
@@ -88,6 +91,7 @@ function guide(
     })),
     mistakes,
     ...(extra.settings ? { settings: extra.settings } : {}),
+    ...(extra.mistakeRequires ? { mistakeRequires: extra.mistakeRequires } : {}),
   };
 }
 
@@ -167,6 +171,7 @@ const LIST: ScreenGuide[] = [
       },
       settings: ["stock.defaultCriticalLevel"],
       requires: { "havuz-giris": ["O"] },
+      mistakeRequires: { "Havuz yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.": ["O"] },
     },
   ),
   guide(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loadGuideClientAction, type GuideClientState } from "@/modules/core/server/helpActions";
 import { useGuide } from "./GuideProvider";
 
@@ -9,20 +9,30 @@ import { useGuide } from "./GuideProvider";
  * loaded once per page load and shared by every tour/help host on it. A state whose welcome summary
  * is still unacknowledged is re-read by the next host (the XP desktop acknowledges without a reload).
  */
-let cache: Promise<GuideClientState | null> | null = null;
+const caches = new Map<string, Promise<GuideClientState | null>>();
+const keyOf = (hotelId?: string) => hotelId ?? "";
 
-function fetchState(): Promise<GuideClientState | null> {
-  return loadGuideClientAction()
+function fetchState(hotelId?: string): Promise<GuideClientState | null> {
+  return loadGuideClientAction(hotelId)
     .then((result) => (result.ok ? result.data : null))
     .catch(() => null);
 }
 
-export function loadGuideClient(): Promise<GuideClientState | null> {
-  if (!cache) cache = fetchState();
-  return cache.then((state) => {
-    if (state && !state.welcomeOk) {
-      cache = fetchState();
-      return cache;
+/** `hotelId`: the hotel an XP window works in (permissions differ per hotel); omitted = the session's. */
+export function loadGuideClient(hotelId?: string): Promise<GuideClientState | null> {
+  const key = keyOf(hotelId);
+  let cached = caches.get(key);
+  if (!cached) {
+    cached = fetchState(hotelId);
+    caches.set(key, cached);
+  }
+  return cached.then((state) => {
+    if (!state || !state.welcomeOk) {
+      const current = caches.get(key);
+      if (current && current !== cached) return current;
+      const fresh = fetchState(hotelId);
+      caches.set(key, fresh);
+      return fresh;
     }
     return state;
   });
@@ -30,25 +40,35 @@ export function loadGuideClient(): Promise<GuideClientState | null> {
 
 /** Remembers a finished tour in the shared state (the server write happens separately). */
 export function patchSeen(code: string, version: number): void {
-  cache = (cache ?? Promise.resolve(null)).then((state) =>
-    state ? { ...state, seen: { ...state.seen, [code]: Math.max(state.seen[code] ?? 0, version) } } : state,
-  );
+  for (const [key, cached] of caches) {
+    caches.set(
+      key,
+      cached.then((state) =>
+        state ? { ...state, seen: { ...state.seen, [code]: Math.max(state.seen[code] ?? 0, version) } } : state,
+      ),
+    );
+  }
 }
 
-/** `null` while loading, or when the user is not signed in. */
-export function useGuideClientState(): GuideClientState | null {
+/** `undefined` while loading, `null` when the request fails. */
+export function useGuideClientState(hotelId?: string) {
   const provided = useGuide();
-  const hasProvider = Object.keys(provided.actionsByScreen).length > 0;
-  const [state, setState] = useState<GuideClientState | null>(null);
+  const hasProvider = hotelId === undefined && Object.keys(provided.actionsByScreen).length > 0;
+  const [state, setState] = useState<GuideClientState | null>();
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setState(undefined);
+    setAttempt((current) => current + 1);
+  }, []);
   useEffect(() => {
     if (hasProvider) return;
     let alive = true;
-    void loadGuideClient().then((value) => {
+    void loadGuideClient(hotelId).then((value) => {
       if (alive) setState(value);
     });
     return () => {
       alive = false;
     };
-  }, [hasProvider]);
-  return hasProvider ? provided : state;
+  }, [hasProvider, hotelId, attempt]);
+  return { state: hasProvider ? provided : state, retry };
 }

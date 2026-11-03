@@ -10,6 +10,14 @@ export function eligibleSteps(guide: ScreenGuide, actions: readonly Action[]): G
   return guide.steps.filter((step) => !step.requires || step.requires.every((a) => actions.includes(a)));
 }
 
+/** Mistake tips the user may be told: those that describe an action need that action. */
+export function eligibleMistakes(guide: ScreenGuide, actions: readonly Action[]): string[] {
+  return guide.mistakes.filter((text) => {
+    const needs = guide.mistakeRequires?.[text];
+    return !needs || needs.every((a) => actions.includes(a));
+  });
+}
+
 /**
  * Permitted steps whose target exists on the screen right now. A step without a target is skipped;
  * with none left the tour does not open (and nothing is recorded as seen).

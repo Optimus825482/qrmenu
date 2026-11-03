@@ -15,20 +15,22 @@ export type GuideClientState = {
 };
 
 /** Own data only (`requireUser`): any signed-in user may read their own guide state and help. */
-export async function loadGuideClientAction(): Promise<Result<GuideClientState>> {
-  return safeAction(z.object({}), async () => {
+const hotelArg = z.object({ hotelId: z.string().min(1).max(64).optional() });
+
+export async function loadGuideClientAction(hotelId?: string): Promise<Result<GuideClientState>> {
+  return safeAction(hotelArg, async (input) => {
     const ctx = await requireUser();
-    const { summary, prefs, welcomeOk } = await loadGuideState(ctx);
+    const { summary, prefs, welcomeOk } = await loadGuideState(ctx, input.hotelId);
     const actionsByScreen = Object.fromEntries(
       summary.modules.flatMap((m) => m.screens.map((s) => [s.code, s.actions] as const)),
     );
     return { actionsByScreen, seen: prefs.seen, welcomeOk };
-  })({});
+  })({ hotelId });
 }
 
-export async function loadHelpAction(code: string): Promise<Result<HelpContent | null>> {
-  return safeAction(z.string().min(1).max(20), async (value) => {
+export async function loadHelpAction(code: string, hotelId?: string): Promise<Result<HelpContent | null>> {
+  return safeAction(z.object({ code: z.string().min(1).max(20), hotelId: hotelArg.shape.hotelId }), async (input) => {
     const ctx = await requireUser();
-    return helpFor(ctx, value);
-  })(code);
+    return helpFor(ctx, input.code, input.hotelId);
+  })({ code, hotelId });
 }

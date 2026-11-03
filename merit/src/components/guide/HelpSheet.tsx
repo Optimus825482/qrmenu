@@ -9,6 +9,8 @@ import "./guide.css";
 
 export type HelpSheetProps = {
   code: string;
+  /** Hotel of the XP window (its permissions and settings); the session's when omitted. */
+  hotelId?: string;
   open: boolean;
   onClose(): void;
   /** "Turu tekrar oynat": the host closes the sheet and starts the tour. */
@@ -29,7 +31,7 @@ export function HelpSheet(props: HelpSheetProps) {
   return <HelpSheetBody {...props} />;
 }
 
-function HelpSheetBody({ code, onClose, onReplay, variant = "bottom" }: HelpSheetProps) {
+function HelpSheetBody({ code, hotelId, onClose, onReplay, variant = "bottom" }: HelpSheetProps) {
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const boxRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -39,7 +41,7 @@ function HelpSheetBody({ code, onClose, onReplay, variant = "bottom" }: HelpShee
 
   useEffect(() => {
     let alive = true;
-    void loadHelpAction(code)
+    void loadHelpAction(code, hotelId)
       .then((result) => {
         if (alive) setLoad(result.ok ? { status: "ready", content: result.data } : { status: "error" });
       })
@@ -49,7 +51,7 @@ function HelpSheetBody({ code, onClose, onReplay, variant = "bottom" }: HelpShee
     return () => {
       alive = false;
     };
-  }, [code]);
+  }, [code, hotelId]);
 
   // Print only the sheet: the stylesheet hides everything else while this class is set.
   useEffect(() => {

@@ -20,6 +20,8 @@ export type ScreenGuideHostProps = {
   scopeRef?: RefObject<HTMLElement | null>;
   /** Start the tour by itself on the first visit (an XP window passes whether it is the active one). */
   autoStart?: boolean;
+  /** Hotel of the XP window; guide data and help are computed for it. */
+  hotelId?: string;
   /** F1 anywhere on the page opens the help (page-level hosts only; XP windows handle F1 themselves). */
   f1?: boolean;
 };
@@ -28,7 +30,7 @@ export type ScreenGuideHostProps = {
  * Tour and help of the current screen: mounts the coach marks overlay and the help sheet, and listens
  * for `merit:guide` requests ("?" buttons, Yardım menus, F1).
  */
-export function ScreenGuideHost({ code: fixedCode, density, scopeRef, autoStart = true, f1 = false }: ScreenGuideHostProps) {
+export function ScreenGuideHost({ code: fixedCode, ...props }: ScreenGuideHostProps) {
   const pathname = usePathname();
   const search = useSearchParams();
   const searchText = search.toString();
@@ -36,19 +38,26 @@ export function ScreenGuideHost({ code: fixedCode, density, scopeRef, autoStart 
     () => fixedCode ?? screenCodeForLocation(pathname, searchText),
     [fixedCode, pathname, searchText],
   );
-  const tour = useScreenTour(code, { getRoot: () => scopeRef?.current ?? null, autoStart });
+  return <ScreenGuide key={JSON.stringify([code, props.hotelId])} {...props} code={code} />;
+}
+
+function ScreenGuide({ code, density, scopeRef, autoStart = true, hotelId, f1 = false }: ScreenGuideHostProps) {
+  const tour = useScreenTour(code, { getRoot: () => scopeRef?.current ?? null, autoStart, hotelId });
   const [helpOpen, setHelpOpen] = useState(false);
   const startRef = useRef(tour.start);
+  const replayTimer = useRef<number | undefined>(undefined);
   useEffect(() => {
     startRef.current = tour.start;
   });
 
   const replay = useCallback(() => {
     setHelpOpen(false);
-    window.setTimeout(() => {
+    window.clearTimeout(replayTimer.current);
+    replayTimer.current = window.setTimeout(() => {
       if (!startRef.current()) notify.info("Bu ekranda gösterilecek adım yok.");
     }, 0);
   }, []);
+  useEffect(() => () => window.clearTimeout(replayTimer.current), []);
 
   useEffect(() => {
     const target: EventTarget = scopeRef?.current ?? window;
@@ -79,6 +88,7 @@ export function ScreenGuideHost({ code: fixedCode, density, scopeRef, autoStart 
       {code ? (
         <HelpSheet
           code={code}
+          hotelId={hotelId}
           open={helpOpen}
           onClose={() => setHelpOpen(false)}
           onReplay={replay}

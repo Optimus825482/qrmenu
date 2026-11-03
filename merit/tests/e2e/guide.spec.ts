@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { Client } from "pg";
 import { e2eDatabaseUrl } from "./e2eDb";
-import { appWindow, node, row } from "./definitionsUi";
+import { node, row, startMenuItem } from "./definitionsUi";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 import { newContextPage, openAdminShell } from "./menuUi";
 import { approveOrder, openStaff, railLink, sendGuestOrder } from "./opsUi";
@@ -61,6 +61,17 @@ async function cardCodes(page: import("@playwright/test").Page): Promise<string[
   return codes.sort();
 }
 
+async function openUsersWindow(page: Page) {
+  const title = "Kullanıcı Yönetimi";
+  const window = page.getByRole("region", { name: title, exact: true });
+  if (!(await window.isVisible())) {
+    await page.getByRole("button", { name: "başlat", exact: true }).press("Enter");
+    await startMenuItem(page, title).press("Enter");
+  }
+  await expect(window).toBeVisible();
+  return window;
+}
+
 test("kat.mr ilk girişte zorunlu Erişimim; Anladım /kat'a götürür; ikinci girişte özet çıkmaz", async ({ page, context }) => {
   await forgetWelcome("kat.mr");
   await login(page, "kat.mr");
@@ -71,7 +82,8 @@ test("kat.mr ilk girişte zorunlu Erişimim; Anladım /kat'a götürür; ikinci 
   // Single screen, single button: no navigation, no profile menu, no links to leave through.
   await expect(page.getByRole("navigation")).toHaveCount(0);
   await expect(page.getByRole("link")).toHaveCount(0);
-  await expect(page.getByRole("button")).toHaveCount(1);
+  await expect(page.getByRole("main").getByRole("button")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /Profil menüsü/ })).toHaveCount(0);
   await expect(page.getByText(/göremediğin/i)).toHaveCount(0);
 
   // Only owned screens: the card count equals the viewable screens and nothing else is listed.
@@ -184,9 +196,8 @@ test.describe("rutin kartları ve Kullanıcıya göster", () => {
 
     const guest = await page.request.post(`/api/q/${room101Token}/mybar`, {
       data: {
-        token: room101Token,
         idempotencyKey: randomUUID(),
-        language: "tr",
+        locale: "tr",
         note: "Lütfen hızlıca su gönderin",
         items: [{ productId: suProductId, qty: 1 }],
       },
@@ -262,7 +273,7 @@ test.describe("rutin kartları ve Kullanıcıya göster", () => {
     await openAdminShell(admin);
     const cookieKey = async () => (await admin.context().cookies()).map((c) => `${c.name}=${c.value}`).sort().join(";");
     const before = await cookieKey();
-    const users = await appWindow(admin, "Kullanıcı Yönetimi");
+    const users = await openUsersWindow(admin);
     await users.getByRole("searchbox").fill("kat.mr");
     await row(users, "kat.mr").click();
     await users.getByRole("button", { name: "Kullanıcıya göster" }).click();
@@ -312,6 +323,16 @@ test.describe("ekran turu ve yardım", () => {
     );
   }
 
+  async function seenTourVersion(username: string, screen: string): Promise<number> {
+    return withDb(async (c) => {
+      const result = await c.query<{ version: number | null }>(
+        `SELECT (prefs->'guide'->'seen'->>$2)::int AS version FROM users WHERE username = $1`,
+        [username, screen],
+      );
+      return result.rows[0]?.version ?? 0;
+    });
+  }
+
   const tour = (page: Page) => page.getByRole("dialog", { name: "Ekran turu" });
   const help = (page: Page) => page.getByTestId("help-sheet");
 
@@ -351,11 +372,11 @@ test.describe("ekran turu ve yardım", () => {
     await expect(tour(page).locator(".guide-tour-count")).toHaveText(/^2\/\d/);
     await page.keyboard.press("Escape");
     await expect(tour(page)).toHaveCount(0);
+    await expect.poll(() => seenTourVersion("kat.mr", "MB-KAT")).toBeGreaterThan(0);
 
     await page.reload();
     await expect(page.locator("#icerik")).toBeVisible();
-    await page.waitForTimeout(3_000);
-    await expect(tour(page)).toHaveCount(0);
+    await expect(tour(page)).not.toBeVisible({ timeout: 3_000 });
     await page.context().close();
   });
 
@@ -383,8 +404,7 @@ test.describe("ekran turu ve yardım", () => {
     const page = await newContextPage(browser);
     await login(page, "kat2.mr");
     await expect(page).toHaveURL(/\/erisimim\?hos-geldin=1$/);
-    await page.waitForTimeout(2_500);
-    await expect(tour(page)).toHaveCount(0);
+    await expect(tour(page)).not.toBeVisible({ timeout: 2_500 });
     await page.getByRole("button", { name: "Anladım" }).click();
     await expect(page).toHaveURL(/\/kat$/);
     await expect(tour(page)).toBeVisible({ timeout: 10_000 });
@@ -462,6 +482,7 @@ test.describe("ekran turu ve yardım", () => {
     await expect(help(kat).getByTestId("help-abilities")).toContainText("Ürünün kritik seviyesini güncellersin.");
     await expect(help(kat)).not.toContainText("Havuza yeni giriş yaparsın.");
     await expect(help(kat)).not.toContainText("Yeni kayıt açabilirsin");
+    await expect(help(kat)).not.toContainText("önce Ek Talep ile stok iste");
     await kat.context().close();
 
     const depo = await newContextPage(browser);
@@ -471,6 +492,7 @@ test.describe("ekran turu ve yardım", () => {
     await depo.getByRole("button", { name: /Profil menüsü/ }).click();
     await depo.getByRole("menuitem", { name: "Yardım" }).click();
     await expect(help(depo).getByTestId("help-abilities")).toContainText("Havuza yeni giriş yaparsın.");
+    await expect(help(depo)).toContainText("önce Ek Talep ile stok iste");
     await depo.context().close();
 
     // Setting values show as sentences and follow the current value.
@@ -504,7 +526,12 @@ test.describe("ekran turu ve yardım", () => {
     await forgetTour("admin", "CR-KUL");
     const page = await newContextPage(browser);
     await openAdminShell(page);
-    const users = await appWindow(page, "Kullanıcı Yönetimi");
+    const users = await openUsersWindow(page);
+    // First visit to the window: the tour starts by itself; close it before driving the window.
+    await expect(tour(page)).toBeVisible({ timeout: 10_000 });
+    await expect(tour(page).getByRole("button", { name: "İleri" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(tour(page)).toHaveCount(0);
     await users.getByRole("searchbox").focus();
     await page.evaluate(() => {
       (window as unknown as { __f1: boolean }).__f1 = false;
@@ -530,10 +557,10 @@ test.describe("ekran turu ve yardım", () => {
     await expect(tour(page)).toHaveCount(0);
 
     // Closing recorded the tour as seen: it does not start by itself again.
+    await expect.poll(() => seenTourVersion("admin", "CR-KUL")).toBeGreaterThan(0);
     await page.reload();
-    await expect(page.getByRole("region", { name: "Masaüstü" })).toBeVisible();
-    await page.waitForTimeout(2_000);
-    await expect(tour(page)).toHaveCount(0);
+    await openUsersWindow(page);
+    await expect(tour(page)).not.toBeVisible({ timeout: 2_000 });
     await page.context().close();
   });
 });

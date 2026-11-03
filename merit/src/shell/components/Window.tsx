@@ -384,7 +384,7 @@ export function Window({ id, hotels, userName }: Props) {
       </div>
       <div className="xp-window-body">{body}</div>
       {guideScreen && app.kind === "component" && !(app.needsHotel && !win.hotelId) ? (
-        <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />
+        <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} hotelId={win.hotelId} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />
       ) : null}
       <div className="xp-statusbar">
         Otel: {hotel?.name ?? "—"} · Kullanıcı: {userName} · {status}

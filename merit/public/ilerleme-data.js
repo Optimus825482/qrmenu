@@ -2,7 +2,7 @@
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
   updatedAt: "03.11.2026 20:10",
-  headline: "Minibar ve radar planları kapalı. UX T12 doğrulaması sürüyor, T14–T15 kaldı. P4 MyBar yönetim ekranı ve Web Push doğrulandı, T10 kabulü açık. P6, P7 ve P8 boşluk analizleri hazır.",
+  headline: "Minibar ve radar planları kapalı. UX T12 düzeltmeleri doğrulandı, T14–T15 açık. P4 MyBar yönetim ekranı ve Web Push doğrulandı, T10 kabulü açık. P6, P7 ve P8 boşluk analizleri hazır.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -136,7 +136,7 @@ window.ILERLEME = {
         { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "done", doneAt: "03.11 17:18", note: "useMybarStream (setInterval=0, SSE), PersistentMybarModal (1/N sayacı, ses/titreşim), oda kontrolü (+1..+4 tek dokunuş ikame + 6 sn Geri al), /kat/qr (kamera reddedilince oda no/QR girişi + fener), /kat/** cırcır sıfırlama" },
         { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "done", doneAt: "03.11 18:05", note: "c8d6db1 (inceleme onaylı): kabuk kararı, cihaz kaydı, üç manifest, tablet kiosk kurulumu" },
         { title: "T11 screenGuide, accessSummary, Erişimim", status: "done", doneAt: "03.11 05:55", note: "b5f8022 (inceleme onaylı); rehber metinleri docs/kabul/ux-rehber-metinleri.md onayınızı bekliyor" },
-        { title: "T12 Tur motoru ve ? yardım", status: "active" },
+        { title: "T12 Tur motoru ve ? yardım", status: "done", doneAt: "03.11 20:10", note: "Düzeltme turu: 24/24 birim, 16 Chromium senaryosu ayrı koşularda geçti, üretim derlemesi yeşil." },
         { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "done", doneAt: "03.11 18:06", note: "cb17f17 + 50c4542 (inceleme onaylı): rutin kartları, erişim önizleme penceresi, Bu rol ne görür" },
         { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "pending" }
       ]
@@ -165,6 +165,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 20:10", text: "UX T12 rehber düzeltmeleri hedefli birim ve Chromium koşularında doğrulandı. Sonraki UX adımı T14 XP cilası." },
     { at: "03.11 20:10", text: "P4 T8 otel kapsamı, depo erişimi, dışa aktarma yetkisi, sayfalama ve iptal diyaloğu düzeltmeleri hedefli testlerde doğrulandı. Tam check göç testi hatası sonrası durduruldu; P4 T10 açık." },
     { at: "03.11 19:55", text: "Erkan genel MyBar Web Push metnini seçti. Cihaz bildiriminden oda, ürün ve not ayrıntıları çıkarıldı, uygulama içi ayrıntılar korundu. Push dağıtım testleri 14/14 geçti. P6, P7 ve P8 boşluk analizleri hazır." },
     { at: "03.11 17:18", text: "UX T9 (Kat sorumlusu akışları: useMybarStream SSE kancası, PersistentMybarModal 1/N sayacı ve ses/titreşim, oda kontrolünde +1..+4 tek dokunuş ikame + 6 sn Geri al snackbar, /kat/qr kamera reddi + oda numarası çözümü + fener, çıplak kat/depo sayfalarının belirteçlerle yenilenmesi, depo/page.tsx depoDashboard okuması, src/app/kat/** küçük yazı ve ham palet cırcırlarının 0'a indirilmesi) tamamlandı ve doğrulandı (mybar-stream + uxRatchet + uxSourceRules 11/11 yeşil, tsc/eslint 0 hata). DEVIR.md ve ilerleme.html Fable devri için güncellendi; sıradaki: UX T10, T12–T15." },

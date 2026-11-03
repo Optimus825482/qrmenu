@@ -3,6 +3,8 @@ import { actionsByScreen } from "@/lib/rbac";
 import { getSettings } from "@/lib/settings";
 import type { SettingKey } from "@/lib/settings-defs";
 import { settingSentence } from "@/components/guide/settingSentences";
+import { eligibleMistakes } from "@/components/guide/tourModel";
+import { guideHotelId } from "./guideState";
 import { GENERIC_ACTION_TEXT, guideFor } from "../screenGuide";
 import { SCREENS } from "../screens";
 
@@ -23,10 +25,10 @@ export type HelpContent = {
  * Help sheet content for one screen, for the signed-in user: nothing is described that the user
  * cannot do (no `V` -> null) and setting sentences reflect the values in force NOW for the hotel.
  */
-export async function helpFor(ctx: Ctx, code: string): Promise<HelpContent | null> {
+export async function helpFor(ctx: Ctx, code: string, windowHotelId?: string): Promise<HelpContent | null> {
   const screen = SCREENS.find((s) => s.code === code);
   if (!screen) return null;
-  const hotelId = ctx.session.hotelId;
+  const hotelId = guideHotelId(ctx, windowHotelId);
   const actions = (await actionsByScreen(ctx.user.roleId, hotelId)).get(code);
   if (!actions) return null;
 
@@ -47,7 +49,7 @@ export async function helpFor(ctx: Ctx, code: string): Promise<HelpContent | nul
     steps: guide.steps
       .filter((s) => !s.requires || s.requires.every((a) => actions.includes(a)))
       .map((s) => ({ title: s.title, body: s.body })),
-    mistakes: guide.mistakes,
+    mistakes: eligibleMistakes(guide, actions),
     settings,
   };
 }

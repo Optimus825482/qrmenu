@@ -9,8 +9,8 @@
 .guide-tour-spot {
   position: fixed;
   border-radius: var(--radius-m, 10px);
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  outline: 2px solid var(--accent-app, #1c4fd8);
+  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--text) 50%, transparent);
+  outline: 2px solid var(--accent-app);
   outline-offset: 2px;
   pointer-events: none;
 }
@@ -24,11 +24,11 @@
   border-radius: var(--radius-m, 10px);
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text) 30%, transparent);
 }
 
 .guide-tour-count {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--muted);
 }
@@ -73,9 +73,9 @@
 }
 
 .guide-btn[data-primary] {
-  background: var(--accent-app, #1c4fd8);
-  border-color: var(--accent-app, #1c4fd8);
-  color: #fff;
+  background: var(--accent-app);
+  border-color: var(--accent-app);
+  color: var(--on-accent);
 }
 
 .guide-btn:disabled {
@@ -85,7 +85,7 @@
 
 .guide-btn:focus-visible,
 .guide-help-close:focus-visible {
-  outline: 3px solid var(--accent-app, #1c4fd8);
+  outline: 3px solid var(--accent-app);
   outline-offset: 2px;
 }
 
@@ -103,7 +103,7 @@
   inset: 0;
   z-index: 100015;
   display: flex;
-  background: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--text) 50%, transparent);
 }
 
 .guide-help-backdrop[data-variant="side"] {
@@ -122,7 +122,7 @@
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text) 30%, transparent);
 }
 
 .guide-help[data-variant="side"] {
