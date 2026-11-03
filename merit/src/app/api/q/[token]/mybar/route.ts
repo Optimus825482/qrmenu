@@ -11,14 +11,34 @@ export const runtime = "nodejs";
 const MAX_BODY_BYTES = 16 * 1024;
 
 /** Guest MyBar submission. The room QR token is the only credential; hotel and room never come from the body. */
+/** Gövdeyi en çok `max` bayt okur; aşılırsa okuyucuyu iptal edip `null` döner. */
+async function readBodyCapped(request: Request, max: number): Promise<string | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return "";
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > max) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 export async function POST(request: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const declared = Number(request.headers.get("content-length") ?? "0");
   const tooLarge = () =>
     NextResponse.json(fail("VALIDATION", "İstek çok büyük"), { status: 413, headers: { "Cache-Control": "no-store" } });
   if (declared > MAX_BODY_BYTES) return tooLarge();
-  const text = await request.text();
-  if (Buffer.byteLength(text) > MAX_BODY_BYTES) return tooLarge();
+  // Gövde akış olarak okunur; sınır aşılır aşılmaz okuma iptal edilir (Content-Length güvenilmez).
+  const text = await readBodyCapped(request, MAX_BODY_BYTES);
+  if (text === null) return tooLarge();
 
   return guestResult(async () => {
     let body: unknown;
