@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 16:17",
-  headline: "Minibar P2/P3 tamamlandı ve doğrulandı. P4 MyBar veri temeli (T1) ve talep yaşam döngüsü servisi (T5) tamamlandı; Canlı Radar T1–T9 (T3 minibar/MyBar yayın boşlukları ve T9 Kuyruklar/Oda Servisi/Personel/şeritler dahil) kapandı. Sıradaki: Radar T10–T12 ve UX T9–T15.",
+  updatedAt: "03.11.2026 16:29",
+  headline: "Minibar P2/P3 tamamlandı ve doğrulandı. P4 MyBar veri temeli (T1) ve talep yaşam döngüsü servisi (T5) tamamlandı; Canlı Radar T1–T10 (T9 görünümler/şeritler ve T10 zaman şeridi/30 dk geri sarma/gün tekrarı oynatıcısı dahil) kapandı. Sıradaki: Radar T11 (/radar duvar ekranı), T12 ve UX T9–T15.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -150,7 +150,7 @@ window.ILERLEME = {
         { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "done", doneAt: "03.11 15:40", note: "0971845 + c29df98 + e8fcb0d (DST penceresi, geçmiş süzgeçleri, idle sayfalama, üst sınır sonrası stok yeniden bazlama; 32/32 replay testi ve yeniden inceleme APPROVED)" },
         { title: "T7 İstemci deposu ve indirgeyiciler", status: "done", doneAt: "03.11 03:21", note: "df77d46 + 63282d3" },
         { title: "T8–T9 XP penceresi ve altı görünüm", status: "done", doneAt: "03.11 16:15", note: "T8 (382d6ae + 50e5ffa) ve T9 (Kuyruklar, Oda Servisi, Personel, uyarı/olay şeridi, lejant, klavye 1–6/Alt+1..5, ayrıntı balonu; 45/45 birim testi yeşil) tamamlandı" },
-        { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "active", note: "T10 zaman şeridi + gün tekrarı oynatıcı, T11 /radar duvar ekranı ve T12 bütünleştirme sırada" }
+        { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "active", note: "T10 (zaman şeridi, 30 dk geri sarma, 1x/10x/60x gün tekrarı oynatıcısı) tamamlandı; T11 /radar duvar ekranı ve T12 bütünleştirme sırada" }
       ]
     },
     {
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 16:29", text: "Radar T10 (zaman şeridi, 30 dk geri sarma, NDJSON akış istemcisi ve 1x/10x/60x gün tekrarı oynatıcısı) tamamlandı ve doğrulandı (38/38 radar birim testi yeşil, tsc/eslint temiz). Sıradaki: Radar T11 (/radar duvar ekranı) ve T12." },
     { at: "03.11 16:15", text: "Radar T9 (Kuyruklar, Oda Servisi, Personel görünümleri, uyarı/olay şeritleri, lejant, klavye kısayolları ve ayrıntı balonu) tamamlandı ve doğrulandı (45/45 birim testi yeşil, tsc/eslint temiz). Sıradaki: Radar T10 (zaman şeridi ve gün tekrarı oynatıcısı), T11 (/radar duvar ekranı), T12." },
     { at: "03.11 16:02", text: "Antigravity devamı: Radar T8 düzeltme turu (50e5ffa) ve T6 stok yeniden bazlama düzeltmesi (e8fcb0d) doğrulandı ve kapatıldı (215/215 radar birim testi, next build yeşil). P4 T5 MyBar talep yaşam döngüsü servisi (d2757e9, 11/11 test) ve Radar T3 minibar/MyBar yayın boşlukları (radar-publish-minibar + 9 test paketi 175/175 yeşil, canliRadar e2e 5. test açıldı) tamamlandı. Sıradaki: Radar T9–T12 ve UX T9–T15." },
     { at: "03.11 15:35", text: "Codex devamı (test koşmadan, statik incelemeyle): minibar kapanış düzeltmeleri e34a0ee ve 1dd4bc7, radar T6 düzeltme turu c29df98, P4 MyBar veri temeli c201ba3 (migration, olaylar, ayarlar), radar T8 düzeltme turu commit'siz. Codex sınırı doldu; Antigravity devam ediyor. DEVIR §1a Antigravity için ilk altı adımla yeniden yazıldı; Fable sıfırlanınca test/doğrulama." },
