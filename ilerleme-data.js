@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 05:56",
+  updatedAt: "03.11.2026 06:35",
   headline: "Paralel 2. tur: minibar T2/T3/T4, radar T4, UX T5 uygulanıyor; UX T1 ve radar T2 incelemesi onaylandı.",
   phases: [
     {
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 06:35", text: "Minibar T1 ve T3 (pool.ts) incelemeleri onaylandı; T12 göç iskeleti uygulandı (bad0b42). Çalışan: minibar T2/T4, radar T4, UX T5." },
     { at: "03.11 05:55", text: "UX T1 ve radar T2 incelemeleri onaylandı; minibar T2–T4, radar T4 ve UX T5 paralel başladı; dev DB migration'ları uygulandı." },
     { at: "03.11 04:25", text: "UX T1 belirteçler/görünüm matrisi (198/198) ve T4/T11 uygulandı; minibar T1 ve radar T2/T7 bitti. Tüm ajanlar kapandı; inceleme ve bütünleştirme sonraki oturumda." },
     { at: "03.11 03:20", text: "Minibar T1 temel (6042bab) ve radar T7 istemci deposu (df77d46) uygulandı; UX T2 kapandı. Fable sınırı — devir notu güncellendi." },
