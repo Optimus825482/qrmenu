@@ -1,7 +1,7 @@
 import { PgBoss } from "pg-boss";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/settings";
-import { TZ } from "@/lib/time";
+import { businessDate, TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
 import { rsSlaSweep } from "@/modules/order/server/roomService/sla";
@@ -15,8 +15,8 @@ import {
   sendDailyConsumptionReport,
   sendDailyTaskReport,
   runDailyTaskGeneration,
-  runDndDayEndRollover,
 } from "@/modules/minibar/server/minibarJobs";
+import { closeDndDay } from "@/modules/minibar/server/dnd";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
@@ -155,8 +155,9 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.createQueue(MINIBAR_DND_ROLLOVER_QUEUE); // idempotent
     await boss.schedule(MINIBAR_DND_ROLLOVER_QUEUE, "59 23 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_DND_ROLLOVER_QUEUE, async () => {
-      const res = await runDndDayEndRollover(new Date());
-      console.log(`[minibar.dnd-rollover] ${res.rolloverCount} adet DND devri tamamlandı.`);
+      const now = new Date();
+      const closed = await closeDndDay(businessDate(now), now);
+      console.log(`[minibar.dnd-rollover] ${closed} adet DND kaydı gün sonunda kapatıldı.`);
     });
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;

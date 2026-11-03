@@ -11,7 +11,7 @@ import {
   roomCatalogue,
 } from "./minibarCommon";
 import { nicosiaInstant } from "./dates";
-import { DEFAULT_ARRIVAL_TIME, DEFAULT_DEPARTURE_TIME, DND_MIN_GAP_SECONDS } from "../constants";
+import { DEFAULT_ARRIVAL_TIME, DEFAULT_DEPARTURE_TIME } from "../constants";
 import { takeManyFromPool } from "./pool";
 import type {
   FloorSummary,
@@ -492,92 +492,6 @@ export async function submitRoomMmd(params: {
     return {
       success: true,
       message: `MMD kaydedildi: ${reason}. Oda daha sonra tekrar kontrol listesinde yer alacaktır.`,
-    };
-  });
-}
-
-/**
- * 5. DND (Do Not Disturb / Rahatsız Etmeyin) Kaydı
- *
- * `dnd.minChecks` marks complete the room for the day; early re-marks are allowed (the
- * `dnd.recheckMinutes` interval is guidance only) except a second tap within 30 s, which is a
- * double tap. The room row lock serialises concurrent marks.
- */
-export async function submitRoomDnd(params: {
-  hotelId: string;
-  roomId: string;
-  userId: string;
-  note?: string;
-  now?: Date;
-}) {
-  const { hotelId, roomId, userId, note } = params;
-  const now = params.now ?? new Date();
-  const today = businessDay(businessDate(now));
-  const settings = await getSettings(["dnd.minChecks", "dnd.recheckMinutes"], hotelId);
-  const minChecks = settings["dnd.minChecks"];
-  const recheck = settings["dnd.recheckMinutes"];
-
-  return await prisma.$transaction(async (tx) => {
-    await lockRow(tx, "rooms", roomId);
-    const room = await tx.room.findFirst({ where: { id: roomId, hotelId }, select: { id: true } });
-    if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı.");
-
-    const existing = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId, date: today } } });
-
-    if (existing?.status === "TAMAMLANDI") {
-      throw new DomainError("CONFLICT", "Bu oda için DND kontrolü bugün zaten tamamlandı.");
-    }
-    if (existing && now.getTime() - existing.lastAt.getTime() < DND_MIN_GAP_SECONDS * 1000) {
-      throw new DomainError("CONFLICT", "DND az önce kaydedildi (çift dokunma). Birkaç saniye sonra tekrar deneyin.");
-    }
-
-    const nextCount = (existing?.count ?? 0) + 1;
-    const completed = nextCount >= minChecks;
-    const status = completed ? "TAMAMLANDI" : "AKTIF";
-    const noteText = note || `${nextCount}. DND kontrolü`;
-
-    const dnd = existing
-      ? await tx.roomDnd.update({
-          where: { id: existing.id },
-          data: { count: nextCount, lastAt: now, status },
-        })
-      : await tx.roomDnd.create({
-          data: { hotelId, roomId, date: today, count: 1, firstAt: now, lastAt: now, status },
-        });
-
-    await tx.roomDndCheck.create({
-      data: { dndId: dnd.id, no: nextCount, userId, at: now, note: noteText },
-    });
-
-    await tx.dailyTaskItem.updateMany({
-      where: { roomId, task: { hotelId, date: today } },
-      data: {
-        dndCount: nextCount,
-        lastDndAt: now,
-        status: completed ? "TAMAMLANDI" : "DND_BEKLIYOR",
-        checkedAt: completed ? now : undefined,
-        note: completed ? `${minChecks} kez DND kontrolü tamamlandı (otomatik onaylandı)` : undefined,
-      },
-    });
-
-    await audit(tx, {
-      userId,
-      hotelId,
-      action: "MINIBAR_ROOM_DND",
-      entity: "RoomDnd",
-      entityId: dnd.id,
-      before: existing ? { count: existing.count, status: existing.status } : null,
-      after: { roomId, count: nextCount, status, note: noteText },
-    });
-    await notifyChange(tx, hotelId, "room.dnd", roomId);
-
-    return {
-      success: true,
-      dndCount: nextCount,
-      isCompleted: completed,
-      message: completed
-        ? `${nextCount}. kez DND kaydedildi. Kural gereği oda gün için kontrol edildi sayıldı.`
-        : `${nextCount}. DND kaydedildi. Yaklaşık ${recheck} dakika sonra tekrar kontrol edilmesi önerilir.`,
     };
   });
 }

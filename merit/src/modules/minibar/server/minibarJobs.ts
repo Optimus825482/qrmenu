@@ -443,37 +443,3 @@ export async function runDailyTaskGeneration(now = new Date()): Promise<{
 
   return { hotelCount: hotels.length, tasksCreated, hotelsWithoutOccupancy };
 }
-
-/**
- * 23:59 - DND gün sonu devri: bugünün tamamlanmamış DND odaları kapatılır. Kayıtlar EKSIK
- * (tamamlanmadı) durumuna alınır; böylece ertesi gün yeniden başlar ve raporlarda eksik görünür.
- */
-export async function runDndDayEndRollover(now = new Date()): Promise<{ rolloverCount: number }> {
-  const today = businessDay(businessDate(now));
-
-  return prisma.$transaction(async (tx) => {
-    const items = await tx.dailyTaskItem.findMany({
-      where: { status: "DND_BEKLIYOR", task: { date: today } },
-      select: { id: true },
-    });
-    if (items.length > 0) {
-      await tx.dailyTaskItem.updateMany({
-        where: { id: { in: items.map((i) => i.id) } },
-        data: { status: "EKSIK" },
-      });
-      await tx.taskStatusLog.createMany({
-        data: items.map((i) => ({
-          taskItemId: i.id,
-          from: "DND_BEKLIYOR" as const,
-          to: "EKSIK" as const,
-          note: "DND gün sonu devri: kontrol tamamlanamadı",
-        })),
-      });
-    }
-    await tx.roomDnd.updateMany({
-      where: { date: today, status: "AKTIF" },
-      data: { status: "EKSIK" },
-    });
-    return { rolloverCount: items.length };
-  });
-}

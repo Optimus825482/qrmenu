@@ -6,7 +6,6 @@ import { audit } from "@/modules/core/server/audit";
 import {
   assertWithinCatalogue,
   consumedToday,
-  getBusinessDate,
   lockRow,
   normalizeItems,
   notifyChange,
@@ -14,6 +13,8 @@ import {
 } from "./minibarCommon";
 import type { CorrectionRequestItem } from "./minibarTypes";
 import { restoreStock, takeManyFromPool } from "./pool";
+import { autoCompleteDnd } from "./dnd";
+import { completeOpenItemsForRoom, reopenIfUncovered } from "./tasks";
 
 /**
  * 4. Oda Kontrolünü Tamamla & Sarfiyat / Dolum Kaydet
@@ -140,10 +141,9 @@ export async function submitRoomCheck(params: {
       },
     });
 
-    await tx.dailyTaskItem.updateMany({
-      where: { roomId, task: { hotelId, date: today } },
-      data: { status: "TAMAMLANDI", checkedAt: new Date(), note: note || undefined },
-    });
+    const reason = totalReplenished > 0 ? "IKAME" : "SARFIYAT_YOK";
+    await autoCompleteDnd(tx, { hotelId, roomId, day, userId, reason });
+    await completeOpenItemsForRoom(tx, { hotelId, roomId, day, userId, reason });
 
     await notifyChange(tx, hotelId, "room.check", roomId);
 
@@ -227,10 +227,7 @@ export async function deleteRoomCheckTx(
   await tx.minibarTransaction.delete({ where: { id: row.id } });
 
   if (isToday) {
-    await tx.dailyTaskItem.updateMany({
-      where: { roomId: row.room.id, task: { hotelId, date: getBusinessDate() } },
-      data: { status: "BEKLIYOR", checkedAt: null, note: null },
-    });
+    await reopenIfUncovered(tx, { hotelId, roomId: row.room.id, day: businessDate(), userId });
   }
 
   await audit(tx, {
