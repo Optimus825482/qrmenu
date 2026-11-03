@@ -51,7 +51,7 @@ export default async function DepoGorevlerPage() {
           <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{summary.waiting}</p>
         </div>
         <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4">
-          <p className="text-xs uppercase tracking-wider text-accent">DND</p>
+          <p className="text-xs uppercase tracking-wider text-text">DND</p>
           <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{summary.dnd}</p>
         </div>
       </section>

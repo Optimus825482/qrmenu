@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons/Icon";
-import { RoutineCard } from "@/components/guide/RoutineCard";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
-import { getRoutines } from "@/modules/core/server/routines";
 import { depoDashboard } from "@/modules/minibar/server/depoDashboard";
 
 export const dynamic = "force-dynamic";
@@ -50,8 +48,6 @@ export default async function DepoHomePage() {
     openDnd = dndCount;
   }
 
-  const routines = await getRoutines(ctx);
-
   const cards = [
     {
       href: "/depo/stok",
@@ -63,7 +59,7 @@ export default async function DepoHomePage() {
           : criticalCount > 0
             ? `${criticalCount} kritik stok`
             : null,
-      tone: "border-accent/40 bg-accent/10 text-accent",
+      tone: "border-accent/40 bg-accent/10 text-text",
     },
     {
       href: "/depo/gorevler",
@@ -77,7 +73,7 @@ export default async function DepoHomePage() {
       title: "Doluluk Excel Yükleme",
       subtitle: "Günlük Konaklama (In-House), Giriş (Arrival) ve Çıkış (Departure) listeleri",
       badge: pano ? `${pano.doneCount}/3 yüklendi` : null,
-      tone: "border-accent/40 bg-accent/10 text-accent",
+      tone: "border-accent/40 bg-accent/10 text-text",
     },
     {
       href: "/depo/raporlar",
@@ -126,8 +122,6 @@ export default async function DepoHomePage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
-        {routines.length > 0 ? <RoutineCard routines={routines} /> : null}
-
         {pano ? (
           <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-2xl border border-border bg-surface p-4">
@@ -143,7 +137,7 @@ export default async function DepoHomePage() {
               <p className="mt-1 text-2xl font-bold text-danger tabular-nums">{pano.criticalCount}</p>
             </div>
             <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4">
-              <p className="text-xs uppercase tracking-wider text-accent">Aktif DND</p>
+              <p className="text-xs uppercase tracking-wider text-text">Aktif DND</p>
               <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{pano.openDnd}</p>
             </div>
           </section>
