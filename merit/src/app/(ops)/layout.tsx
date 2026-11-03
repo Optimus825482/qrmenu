@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { OpsShell } from "@/components/ops/OpsShell";
+import { loadStaffShellProps } from "@/components/staff/loadShellProps";
 import { listTargets } from "@/modules/core/server/targets";
 import { loadPosShellData } from "./posShellData";
 
@@ -30,5 +31,7 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
   if (!outlet) redirect("/secim");
   const targets = (await listTargets(ctx.user.id)).map((target, index) => ({ target, index })).filter(({ target }) => target.kind === "OUTLET").map(({ target, index }) => ({ index, label: target.label }));
   const pos = await loadPosShellData(ctx, outlet);
-  return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos}><ConfirmHost variant="sheet" />{children}</OpsShell>;
+  const path = (await headers()).get("x-merit-current-path") ?? "/garson";
+  const staff = await loadStaffShellProps(ctx, path, { outletId: outlet.id });
+  return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos} staff={staff}><ConfirmHost variant="sheet" />{children}</OpsShell>;
 }

@@ -9,10 +9,6 @@ import { projectName } from "./viewports";
  */
 export const KNOWN_TOUCH_VIOLATIONS: Record<string, string> = {
   "kat-oda-kontrol": "T9",
-  "depo-stok": "T8",
-  garson: "T8",
-  "garson-cagrilar": "T8",
-  "oda-servisi": "T8",
   "admin@desktop-1366x768": "T14",
   "admin@tablet-1280x800": "T14",
   "admin@tablet-1024x768": "T14",
@@ -23,8 +19,6 @@ export const KNOWN_TOUCH_VIOLATIONS: Record<string, string> = {
 export const KNOWN_AXE_VIOLATIONS: Record<string, string> = {
   kat: "T9",
   "kat-oda-kontrol": "T9",
-  "depo-stok": "T8",
-  "oda-servisi": "T8",
 };
 
 /** Route/project pairs that scroll horizontally today: "<route key>@<project>". */

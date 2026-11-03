@@ -13,6 +13,8 @@ import { ORDER_REJECT_REASONS, REASON_MIN_LENGTH } from "@/modules/order/ui/reas
 import { useSse } from "@/shell/useSse";
 import { Icon } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
+import { Button } from "@/components/ui/Button";
+import { Segmented } from "@/components/ui/Segmented";
 
 type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note: string | null; pricesShown: boolean; canApprove: boolean; table: { label: string } | null; items: { id: string; nameSnapshot: string; qty: number; unitPrice: { toString(): string } | null }[] };
 type OpenOrder = { id: string; orderNo: number; tableId: string | null; status: string };
@@ -99,11 +101,28 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
   const act = (fn: () => Promise<{ ok: boolean }>) => startTransition(async () => { const result = await fn(); if (result.ok) await refresh(); });
   const openComposer = (table: { tableId: string; label: string }) => { setNotice(""); setComposerTable(table); };
   const tab = params.get("sekme") === "masalar" ? "tables" : "queue";
+  const wantsNew = params.get("yeni") === "1";
   return <section className="space-y-4">
-    <div className="flex gap-2">
-      <button className={`min-h-[48px] touch-manipulation px-4 py-2 text-sm font-medium ${tab === "queue" ? "rounded-lg bg-accent text-white" : "rounded-lg border"}`} onClick={() => router.push("/garson")}>Kuyruk</button>
-      <button className={`min-h-[48px] touch-manipulation px-4 py-2 text-sm font-medium ${tab === "tables" ? "rounded-lg bg-accent text-white" : "rounded-lg border"}`} onClick={() => router.push("/garson?sekme=masalar")}>Outlet Masaları</button>
-    </div>
+    <Segmented
+      label="Garson bölümleri"
+      value={tab}
+      onChange={(next) => router.push(next === "tables" ? "/garson?sekme=masalar" : "/garson")}
+      options={[
+        { value: "queue", label: "Kuyruk", badge: queue.length },
+        { value: "tables", label: "Masalarım" },
+      ]}
+    />
+
+    {/* FAB "Yeni adisyon": hangi masa için? (tek masa varsa doğrudan açılır) */}
+    {wantsNew && !composerTable && canCreateOrder ? (
+      <div role="region" aria-label="Yeni adisyon" className="space-y-2 rounded-2xl border border-border bg-surface p-4">
+        <h2 className="font-semibold">Yeni adisyon için masa seç</h2>
+        {myTables.length === 0 ? <p className="text-muted">Bu outlet için aktif masa yok.</p> : (
+          <ul className="flex flex-wrap gap-2">{myTables.map((table) => <li key={table.tableId}><Button variant="primary" onClick={() => { router.replace("/garson?sekme=masalar"); openComposer(table); }}>{table.label}</Button></li>)}</ul>
+        )}
+        <Button onClick={() => router.replace("/garson?sekme=masalar")}>Vazgeç</Button>
+      </div>
+    ) : null}
 
     {/* Misafir QR Okuma Anlık Bildirimleri (Garson Üst Bildirim Kartı) */}
     {scanAlerts.length > 0 ? (
@@ -112,95 +131,100 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
           <aside
             key={alert.tableId}
             aria-label="Misafir QR bildirimi"
-            className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold shadow-lg border-2 border-amber-300 ring-2 ring-amber-500/40"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-accent bg-[var(--info-bg)] p-3.5 text-text"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex min-w-0 items-center gap-2.5">
               <Icon name="phone" size={24} />
               <div className="min-w-0">
-                <p className="text-sm font-black truncate">{alert.tableLabel}</p>
-                <p className="text-xs font-semibold text-slate-900 truncate">
-                  Misafir masada QR menüyü okuttu!
-                </p>
+                <p className="truncate text-base font-bold">{alert.tableLabel}</p>
+                <p className="truncate text-sm text-muted">Misafir masada QR menüyü okuttu</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="primary"
                 onClick={() => {
                   openComposer({ tableId: alert.tableId, label: alert.tableLabel });
                   setScanAlerts((prev) => prev.filter((s) => s.tableId !== alert.tableId));
                 }}
-                className="inline-flex min-h-[44px] items-center justify-center px-4 py-2 rounded-xl bg-slate-950 text-white hover:bg-slate-800 text-xs font-black shadow-sm transition active:scale-95 touch-manipulation"
               >
-                Masa Bilgisi &amp; Adisyon Aç
-              </button>
-              <button
-                type="button"
-                onClick={() => setScanAlerts((prev) => prev.filter((s) => s.tableId !== alert.tableId))}
-                className="h-8 w-8 rounded-full bg-amber-600/50 hover:bg-amber-600 text-slate-950 flex items-center justify-center text-xs font-bold"
-                aria-label="Bildirimi kapat"
-              >
+                Masa bilgisi ve adisyon aç
+              </Button>
+              <Button aria-label="Bildirimi kapat" onClick={() => setScanAlerts((prev) => prev.filter((s) => s.tableId !== alert.tableId))}>
                 <Icon name="close" size={20} />
-              </button>
+              </Button>
             </div>
           </aside>
         ))}
       </div>
     ) : null}
 
-    {notice && !composerTable ? <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p> : null}
-    {tab === "queue" ? <div className="grid gap-3">{queue.length === 0 ? <p className="text-muted">Bekleyen sipariş yok.</p> : queue.map((order) => <article key={order.id} className="rounded-xl border border-border bg-surface p-4 shadow-sm"><div className="flex items-baseline justify-between"><h2 className="font-semibold">#{order.orderNo} · {order.table?.label ?? "Masa yok"}</h2><span className="text-xs text-muted">{Math.max(0, Math.floor((now - new Date(order.createdAt).getTime()) / 60000))} dk</span></div><ul className="mt-2 text-sm">{order.items.map((item) => <li key={item.id}>{item.nameSnapshot} × {item.qty}{order.pricesShown && item.unitPrice ? ` · ${formatPrice(String(item.unitPrice), currency)}` : ""}</li>)}</ul>{order.note && <p className="mt-2 text-sm text-muted">Not: {order.note}</p>}<div className="mt-3 flex gap-2"><button disabled={!order.canApprove || pending} onClick={() => act(() => approveOrderAction(order.id))} className="inline-flex min-h-[48px] items-center justify-center touch-manipulation rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40">Onayla</button><button disabled={pending} onClick={() => { void askReason({ title: `Sipariş #${order.orderNo} reddedilecek`, reasons: ORDER_REJECT_REASONS, minLength: REASON_MIN_LENGTH, confirmLabel: "Reddet", danger: true }).then((reason) => { if (reason) act(async () => { const result = await rejectOrderAction(order.id, reason); if (result.ok) notify.success(`Sipariş #${order.orderNo} reddedildi`); else notify.error(result.error.message); return result; }); }); }} className="inline-flex min-h-[48px] items-center justify-center touch-manipulation rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700">Reddet</button></div></article>)}</div> : <div className="grid gap-3">{myTables.length === 0 ? <p className="text-muted">Bu outlet için aktif masa yok.</p> : myTables.map((table) => {
-      const isScanned = scanAlerts.some((a) => a.tableId === table.tableId);
-      return (
-        <article
-          key={table.tableId}
-          className={`rounded-2xl border p-4 shadow-sm transition ${
-            isScanned
-              ? "border-amber-400 ring-2 ring-amber-400/60 bg-amber-500/10"
-              : "border-border bg-surface"
-          }`}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="font-black text-base">{table.label}</h2>
-              {isScanned ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-xs">
-                  <Icon name="zap" size={20} /> Misafir Masada
-                </span>
-              ) : null}
+    {notice && !composerTable ? <p role="status" className="rounded-lg border border-success bg-[var(--success-bg)] p-3 text-sm text-text">{notice}</p> : null}
+    {tab === "queue" ? (
+      <div className="grid gap-3">
+        {queue.length === 0 ? <p className="text-muted">Bekleyen sipariş yok.</p> : queue.map((order) => (
+          <article key={order.id} className="rounded-xl border border-border bg-surface p-4">
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-semibold">#{order.orderNo} · {order.table?.label ?? "Masa yok"}</h2>
+              <span className="text-sm text-muted">{Math.max(0, Math.floor((now - new Date(order.createdAt).getTime()) / 60000))} dk</span>
             </div>
-            {canCreateOrder ? (
-              <button
-                disabled={pending}
-                className={`inline-flex min-h-[48px] items-center justify-center touch-manipulation rounded-xl px-4 py-2 text-sm font-black shadow-xs active:scale-95 transition disabled:opacity-50 ${
-                  isScanned
-                    ? "bg-amber-500 text-slate-950 hover:bg-amber-400"
-                    : "bg-accent text-white"
-                }`}
-                onClick={() => openComposer(table)}
-              >
-                {isScanned ? "Adisyon Aç" : "Yeni adisyon"}
-              </button>
-            ) : null}
-          </div>
-          {openOrders.filter((order) => order.tableId === table.tableId).map((order) => (
-            <div key={order.id} className="mt-2 flex items-center justify-between rounded-lg bg-bg p-2 text-sm">
-              <span>#{order.orderNo} · {statusText(order.status)}</span>
-              {order.status === "HAZIR" && (
-                <button
-                  disabled={pending}
-                  className="inline-flex min-h-[48px] items-center justify-center touch-manipulation rounded-lg bg-accent px-3 py-1 text-white"
-                  onClick={() => act(() => markServedAction(order.id))}
-                >
-                  Servis edildi
-                </button>
-              )}
+            <ul className="mt-2 text-sm">
+              {order.items.map((item) => <li key={item.id}>{item.nameSnapshot} × {item.qty}{order.pricesShown && item.unitPrice ? ` · ${formatPrice(String(item.unitPrice), currency)}` : ""}</li>)}
+            </ul>
+            {order.note && <p className="mt-2 text-sm text-muted">Not: {order.note}</p>}
+            <div className="mt-3 flex gap-2">
+              <Button mutates variant="primary" disabled={!order.canApprove || pending} onClick={() => act(() => approveOrderAction(order.id))}>Onayla</Button>
+              <Button mutates variant="danger" disabled={pending} onClick={() => { void askReason({ title: `Sipariş #${order.orderNo} reddedilecek`, reasons: ORDER_REJECT_REASONS, minLength: REASON_MIN_LENGTH, confirmLabel: "Reddet", danger: true }).then((reason) => { if (reason) act(async () => { const result = await rejectOrderAction(order.id, reason); if (result.ok) notify.success(`Sipariş #${order.orderNo} reddedildi`); else notify.error(result.error.message); return result; }); }); }}>Reddet</Button>
             </div>
-          ))}
+          </article>
+        ))}
+      </div>
+    ) : (
+      <div className="grid gap-3">
+        {myTables.length === 0 ? <p className="text-muted">Bu outlet için aktif masa yok.</p> : myTables.map((table) => {
+          const isScanned = scanAlerts.some((a) => a.tableId === table.tableId);
+          return (
+            <article
+              key={table.tableId}
+              className={`rounded-2xl p-4 ${isScanned ? "border-2 border-dashed border-accent bg-[var(--info-bg)]" : "border border-border bg-surface"}`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold">{table.label}</h2>
+                  {isScanned ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-accent px-2 py-0.5 text-[13px] font-bold text-accent">
+                      <Icon name="zap" size={16} /> Misafir masada
+                    </span>
+                  ) : null}
+                </div>
+                {canCreateOrder ? (
+                  <Button variant="primary" disabled={pending} onClick={() => openComposer(table)}>
+                    {isScanned ? "Adisyon aç" : "Yeni adisyon"}
+                  </Button>
+                ) : null}
+              </div>
+              {openOrders.filter((order) => order.tableId === table.tableId).map((order) => (
+                <div key={order.id} className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg p-2 text-sm">
+                  <span>#{order.orderNo} · {statusText(order.status)}</span>
+                  {order.status === "HAZIR" && (
+                    <Button mutates variant="primary" disabled={pending} onClick={() => act(() => markServedAction(order.id))}>Servis edildi</Button>
+                  )}
+                </div>
+              ))}
+            </article>
+          );
+        })}
+      </div>
+    )}
+    <section aria-label="Açık çağrılar" className="space-y-2">
+      <h2 className="font-semibold">Çağrılar</h2>
+      {calls.map((item) => (
+        <article key={item.id} className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${item.overdue ? "border-danger text-danger" : "border-border"}`}>
+          <span>{item.tableLabel} · {item.type}{item.note ? ` · ${item.note}` : ""}</span>
+          <Button mutates disabled={pending} onClick={() => act(() => resolveCallAction(item.id, "YANITLANDI"))}>Yanıtla</Button>
         </article>
-      );
-    })}</div>}
-    <section aria-label="Açık çağrılar" className="space-y-2"><h2 className="font-semibold">Çağrılar</h2>{calls.map((item) => <article key={item.id} className={`flex items-center justify-between rounded-lg border p-3 ${item.overdue ? "border-red-500 text-red-800" : "border-border"}`}><span>{item.tableLabel} · {item.type}{item.note ? ` · ${item.note}` : ""}</span><button disabled={pending} className="inline-flex min-h-[48px] items-center justify-center touch-manipulation rounded-lg border px-3 py-2 text-sm" onClick={() => act(() => resolveCallAction(item.id, "YANITLANDI"))}>Yanıtla</button></article>)}</section>
+      ))}
+    </section>
     {composerTable ? <StaffOrderComposer outletId={outletId} table={composerTable} onDone={(orderNo) => { setComposerTable(null); if (orderNo !== null) { setNotice(`#${orderNo} numaralı adisyon oluşturuldu.`); void refresh(); } }} /> : null}
   </section>;
 }

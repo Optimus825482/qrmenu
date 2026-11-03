@@ -92,9 +92,9 @@ export async function prepareOrder(kitchen: Page, orderNo: number): Promise<Loca
   return card("Hazır");
 }
 
-/** Marks order `orderNo` served from the waiter's Outlet Masaları tab. */
+/** Marks order `orderNo` served from the waiter's Masalarım tab. */
 export async function serveOrder(waiter: Page, orderNo: number): Promise<void> {
-  await waiter.getByRole("button", { name: "Outlet Masaları" }).click();
+  await waiter.getByRole("tab", { name: "Masalarım" }).click();
   const line = waiter.getByText(new RegExp(`^#${orderNo} ·`));
   await expect(line).toContainText("HAZIR");
   await line.locator("..").getByRole("button", { name: "Servis edildi" }).click();

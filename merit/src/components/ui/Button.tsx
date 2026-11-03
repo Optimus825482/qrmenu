@@ -7,6 +7,8 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
   /** Visible explanation of why the action is unavailable; keeps the button focusable (aria-disabled). */
   disabledReason?: string;
+  /** The action writes data: the staff shell disables it (aria-disabled) while the device is offline. */
+  mutates?: boolean;
 };
 
 const VARIANT: Record<ButtonVariant, string> = {
@@ -16,7 +18,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   ghost: "border-transparent bg-transparent text-text",
 };
 
-export function Button({ variant = "secondary", icon, disabledReason, className, children, onClick, type, style, ...rest }: ButtonProps) {
+export function Button({ variant = "secondary", icon, disabledReason, mutates, className, children, onClick, type, style, ...rest }: ButtonProps) {
   const reasonId = useId();
   const blocked = Boolean(disabledReason);
   const primary = variant === "primary";
@@ -32,6 +34,7 @@ export function Button({ variant = "secondary", icon, disabledReason, className,
       {...rest}
       type={type ?? "button"}
       data-primary={primary ? "" : undefined}
+      data-mutates={mutates ? "" : undefined}
       aria-disabled={blocked ? "true" : undefined}
       aria-describedby={blocked ? reasonId : rest["aria-describedby"]}
       onClick={handleClick}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   approveRoomOrderAction,
   confirmRoomPhoneAction,
@@ -35,7 +35,7 @@ const STATUS_CONFIG: Record<
 > = {
   TEYIT_BEKLIYOR: {
     label: "Telefon Teyidi Bekliyor",
-    badge: "bg-amber-500 text-slate-950",
+    badge: "bg-[var(--warn-bg)] text-warn border border-warn",
     border: "border-amber-400 ring-2 ring-amber-400/40",
     bg: "bg-amber-500/10",
     icon: "call",
@@ -63,9 +63,9 @@ const STATUS_CONFIG: Record<
   },
   YOLDA: {
     label: "Yolda / Serviste",
-    badge: "bg-indigo-600 text-white",
-    border: "border-indigo-500",
-    bg: "bg-indigo-500/10",
+    badge: "bg-info text-white",
+    border: "border-info",
+    bg: "bg-[var(--info-bg)]",
     icon: "walk",
   },
   TESLIM_EDILDI: {
@@ -133,7 +133,6 @@ export default function OdaServisiClient({
   canEdit,
   slaMinutes,
 }: Props) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("sekme") || "talepler";
 
@@ -258,11 +257,11 @@ export default function OdaServisiClient({
         <div>
           <h1 className="text-xl font-black tracking-tight text-text flex items-center gap-2">
             <span><Icon name="concierge" size={20} /> Oda Servisi Operasyon Paneli</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">
+            <span className="text-[13px] px-2 py-0.5 rounded-full border border-accent bg-surface text-accent font-bold">
               {hotelName}
             </span>
           </h1>
-          <p className="text-xs text-muted mt-0.5">
+          <p className="text-[13px] text-muted mt-0.5">
             Canlı oda siparişleri, mutfak hazırlık, telefon teyidi ve SLA takibi
           </p>
         </div>
@@ -274,14 +273,14 @@ export default function OdaServisiClient({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Oda no veya sipariş ara..."
-            className="w-full h-10 rounded-xl border border-border bg-surface-sunken px-3 pl-8 text-xs font-medium placeholder:text-muted focus:border-accent focus:outline-none"
+            className="w-full h-11 rounded-xl border border-border bg-surface-sunken px-3 pl-8 text-[13px] font-medium placeholder:text-muted focus:border-accent focus:outline-none"
           />
-          <Icon name="search" size={16} className="absolute left-2.5 top-2.5 text-muted pointer-events-none" />
+          <Icon name="search" size={16} className="absolute left-2.5 top-3.5 text-muted pointer-events-none" />
           {search ? (
             <button aria-label="Kapat"
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-2.5 h-5 w-5 rounded-full bg-border text-xs flex items-center justify-center text-muted hover:text-text"
+              className="absolute right-2.5 top-2.5 h-5 w-5 rounded-full bg-border text-[13px] flex items-center justify-center text-muted hover:text-text"
             >
               <Icon name="close" size={20} />
             </button>
@@ -294,7 +293,7 @@ export default function OdaServisiClient({
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
           <Icon name="clipboard" size={24} />
           <div>
-            <p className="text-[11px] font-medium text-muted">Toplam Sipariş</p>
+            <p className="text-[13px] font-medium text-muted">Toplam Sipariş</p>
             <p className="text-lg font-black text-text">{stats.total}</p>
           </div>
         </div>
@@ -308,7 +307,7 @@ export default function OdaServisiClient({
         >
           <Icon name="call" size={24} />
           <div>
-            <p className="text-[11px] font-medium text-muted">Teyit Bekleyen</p>
+            <p className="text-[13px] font-medium text-muted">Teyit Bekleyen</p>
             <p className="text-lg font-black">{stats.pending}</p>
           </div>
         </div>
@@ -316,7 +315,7 @@ export default function OdaServisiClient({
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
           <Icon name="flame" size={24} />
           <div>
-            <p className="text-[11px] font-medium text-muted">Mutfakta / Hazırlık</p>
+            <p className="text-[13px] font-medium text-muted">Mutfakta / Hazırlık</p>
             <p className="text-lg font-black text-text">{stats.approved}</p>
           </div>
         </div>
@@ -324,7 +323,7 @@ export default function OdaServisiClient({
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
           <Icon name="walk" size={24} />
           <div>
-            <p className="text-[11px] font-medium text-muted">Yolda / Serviste</p>
+            <p className="text-[13px] font-medium text-muted">Yolda / Serviste</p>
             <p className="text-lg font-black text-text">{stats.onWay}</p>
           </div>
         </div>
@@ -332,72 +331,13 @@ export default function OdaServisiClient({
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
           <Icon name="check" size={24} />
           <div>
-            <p className="text-[11px] font-medium text-muted">Teslim Edildi</p>
+            <p className="text-[13px] font-medium text-muted">Teslim Edildi</p>
             <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
               {stats.delivered}
             </p>
           </div>
         </div>
       </div>
-
-      {/* Dokunmatik Tablet Navigasyon Sekmeleri */}
-      <nav className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <button
-          type="button"
-          onClick={() => router.push("/oda-servisi")}
-          className={`min-h-[48px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "talepler"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="concierge" size={20} /> Açık Talepler</span>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-black">
-            {orders.filter((o) => o.status !== "TESLIM_EDILDI" && o.status !== "IPTAL" && o.status !== "REDDEDILDI").length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => router.push("/oda-servisi?sekme=teyit")}
-          className={`min-h-[48px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "teyit"
-              ? "bg-amber-600 text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="call" size={20} /> Telefon Teyidi</span>
-          {stats.pending > 0 ? (
-            <span className="rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-xs font-black">
-              {stats.pending}
-            </span>
-          ) : null}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => router.push("/oda-servisi?sekme=teslim")}
-          className={`min-h-[48px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "teslim"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="clock" size={20} /> Teslimat &amp; SLA</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => router.push("/oda-servisi?sekme=gecmis")}
-          className={`min-h-[48px] shrink-0 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 ${
-            tab === "gecmis"
-              ? "bg-accent text-white shadow-sm"
-              : "bg-surface border border-border text-text hover:bg-surface-sunken"
-          }`}
-        >
-          <span><Icon name="list" size={20} /> Sipariş Geçmişi</span>
-        </button>
-      </nav>
 
       {/* Hata Uyarısı */}
       {error ? (
@@ -406,7 +346,7 @@ export default function OdaServisiClient({
           className="flex items-center justify-between rounded-xl bg-rose-500/10 border border-rose-500/30 p-3 text-sm text-rose-700 dark:text-rose-300 font-semibold"
         >
           <span>{error}</span>
-          <button type="button" onClick={() => setError("")} className="text-xs underline">
+          <button type="button" onClick={() => setError("")} className="min-h-11 min-w-11 px-2 text-[13px] underline">
             Kapat
           </button>
         </div>
@@ -418,7 +358,7 @@ export default function OdaServisiClient({
           <div className="col-span-full py-16 text-center text-muted border border-dashed border-border rounded-2xl bg-surface">
             <Icon name="concierge" size={32} className="block mb-2" />
             <p className="text-base font-semibold">Bu görünümde bekleyen sipariş bulunmuyor.</p>
-            <p className="text-xs mt-1">Misafirlerden yeni oda servisi talebi geldiğinde anında burada listelenir.</p>
+            <p className="text-[13px] mt-1">Misafirlerden yeni oda servisi talebi geldiğinde anında burada listelenir.</p>
           </div>
         ) : null}
 
@@ -441,17 +381,17 @@ export default function OdaServisiClient({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl font-black text-text">Oda #{order.roomNumber}</span>
-                      <span className="text-xs font-mono font-bold text-muted">
+                      <span className="text-[13px] font-mono font-bold text-muted">
                         #{order.orderNo}
                       </span>
                     </div>
-                    <p className="text-[11px] text-muted mt-0.5">
+                    <p className="text-[13px] text-muted mt-0.5">
                       {orderDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} &bull; {elapsedMin} dk önce
                     </p>
                   </div>
 
                   <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black tracking-wide ${cfg.badge}`}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[13px] font-black tracking-wide ${cfg.badge}`}
                   >
                     <Icon name={cfg.icon} size={20} />
                     <span>{cfg.label}</span>
@@ -460,7 +400,7 @@ export default function OdaServisiClient({
 
                 {/* SLA Uyarı Çubuğu */}
                 {order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL" ? (
-                  <div className="mt-2.5 flex items-center justify-between text-xs rounded-xl p-2 bg-surface-sunken border border-border/50">
+                  <div className="mt-2.5 flex items-center justify-between text-[13px] rounded-xl p-2 bg-surface-sunken border border-border/50">
                     <span className="text-muted font-medium">SLA Hedefi ({slaMinutes} dk):</span>
                     <span
                       className={`font-black ${
@@ -478,7 +418,7 @@ export default function OdaServisiClient({
 
                 {/* Ürün Özeti */}
                 <div className="mt-3">
-                  <p className="text-xs font-bold text-muted mb-1">Seçilen Ürünler ({order.itemCount} adet):</p>
+                  <p className="text-[13px] font-bold text-muted mb-1">Seçilen Ürünler ({order.itemCount} adet):</p>
                   <p className="text-sm font-semibold text-text leading-snug">
                     {order.itemsSummary}
                   </p>
@@ -486,14 +426,14 @@ export default function OdaServisiClient({
 
                 {/* Varsa Misafir Notu */}
                 {order.note ? (
-                  <div className="mt-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-xs text-amber-900 dark:text-amber-200">
+                  <div className="mt-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[13px] text-amber-900 dark:text-amber-200">
                     <strong>Misafir Notu:</strong> {order.note}
                   </div>
                 ) : null}
 
                 {/* Telefon Teyidi Bilgisi */}
                 {order.phoneConfirmedAt ? (
-                  <p className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                  <p className="mt-2 text-[13px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                     <span><Icon name="check" size={20} /> Telefon teyidi alındı:</span>
                     <span>
                       {new Date(order.phoneConfirmedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
@@ -513,7 +453,7 @@ export default function OdaServisiClient({
                       setConfirmModal(order);
                       setConfirmNote("");
                     }}
-                    className="flex-1 min-h-[48px] rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-warn text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="call" size={20} /> Telefonla Teyit Et
                   </button>
@@ -524,8 +464,9 @@ export default function OdaServisiClient({
                   <button
                     type="button"
                     disabled={pending}
+                    data-mutates
                     onClick={() => act(() => approveRoomOrderAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="flame" size={20} /> Mutfakta Hazırla
                   </button>
@@ -536,8 +477,9 @@ export default function OdaServisiClient({
                   <button
                     type="button"
                     disabled={pending}
+                    data-mutates
                     onClick={() => act(() => markRoomReadyAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="utensils" size={20} /> Hazırlandı (Servise Ver)
                   </button>
@@ -548,8 +490,9 @@ export default function OdaServisiClient({
                   <button
                     type="button"
                     disabled={pending}
+                    data-mutates
                     onClick={() => act(() => markRoomOnWayAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-info text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="walk" size={20} /> Odaya Çıkar (Yolda)
                   </button>
@@ -560,8 +503,9 @@ export default function OdaServisiClient({
                   <button
                     type="button"
                     disabled={pending}
+                    data-mutates
                     onClick={() => act(() => markRoomDeliveredAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="check" size={20} /> Odaya Teslim Edildi
                   </button>
@@ -576,7 +520,7 @@ export default function OdaServisiClient({
                       setCancelModal(order);
                       setCancelReason("");
                     }}
-                    className="min-h-[48px] px-3.5 rounded-xl border border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 text-xs font-bold transition active:scale-95"
+                    className="min-h-[48px] px-3.5 rounded-xl border border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 text-[13px] font-bold transition active:scale-95"
                   >
                     İptal / Ret
                   </button>
@@ -594,7 +538,7 @@ export default function OdaServisiClient({
             <h2 className="text-lg font-black text-text">
               <Icon name="call" size={20} /> Oda #{confirmModal.roomNumber} Telefon Teyidi
             </h2>
-            <p className="text-xs text-muted mt-1">
+            <p className="text-[13px] text-muted mt-1">
               Sipariş #{confirmModal.orderNo} için misafir arandı ve teyit alındı. İsteğe bağlı not ekleyebilirsiniz:
             </p>
 
@@ -603,22 +547,23 @@ export default function OdaServisiClient({
               onChange={(e) => setConfirmNote(e.target.value)}
               placeholder="Örn: Misafir buz ve ekstra bardak rica etti..."
               rows={3}
-              className="w-full mt-3 rounded-xl border border-border bg-surface-sunken p-3 text-xs focus:border-accent focus:outline-none"
+              className="w-full mt-3 rounded-xl border border-border bg-surface-sunken p-3 text-[13px] focus:border-accent focus:outline-none"
             />
 
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
                 onClick={() => setConfirmModal(null)}
-                className="flex-1 min-h-[44px] rounded-xl border border-border text-xs font-bold"
+                className="flex-1 min-h-[44px] rounded-xl border border-border text-[13px] font-bold"
               >
                 Vazgeç
               </button>
               <button
                 type="button"
                 disabled={pending}
+                data-mutates
                 onClick={handlePhoneConfirm}
-                className="flex-1 min-h-[44px] rounded-xl bg-amber-500 text-slate-950 font-black text-xs hover:bg-amber-400"
+                className="flex-1 min-h-[44px] rounded-xl bg-warn text-white font-black text-sm"
               >
                 Teyidi Kaydet &amp; Onayla
               </button>
@@ -634,7 +579,7 @@ export default function OdaServisiClient({
             <h2 className="text-lg font-black text-rose-700 dark:text-rose-400">
               <Icon name="close" size={20} /> Siparişi İptal Et / Reddet
             </h2>
-            <p className="text-xs text-muted mt-1">
+            <p className="text-[13px] text-muted mt-1">
               Oda #{cancelModal.roomNumber} - Sipariş #{cancelModal.orderNo} iptal edilecek. Lütfen gerekçe belirtin:
             </p>
 
@@ -643,22 +588,23 @@ export default function OdaServisiClient({
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               placeholder="Örn: Misafir iptal etti / Mutfakta stok kalmadı"
-              className="w-full mt-3 h-10 rounded-xl border border-border bg-surface-sunken px-3 text-xs focus:border-accent focus:outline-none"
+              className="w-full mt-3 h-10 rounded-xl border border-border bg-surface-sunken px-3 text-[13px] focus:border-accent focus:outline-none"
             />
 
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
                 onClick={() => setCancelModal(null)}
-                className="flex-1 min-h-[44px] rounded-xl border border-border text-xs font-bold"
+                className="flex-1 min-h-[44px] rounded-xl border border-border text-[13px] font-bold"
               >
                 Vazgeç
               </button>
               <button
                 type="button"
                 disabled={pending || cancelReason.trim().length < 3}
+                data-mutates
                 onClick={handleCancel}
-                className="flex-1 min-h-[44px] rounded-xl bg-rose-600 text-white font-black text-xs hover:bg-rose-500 disabled:opacity-50"
+                className="flex-1 min-h-[44px] rounded-xl bg-rose-600 text-white font-black text-[13px] hover:bg-rose-500 disabled:opacity-50"
               >
                 İptali Kesinleştir
               </button>

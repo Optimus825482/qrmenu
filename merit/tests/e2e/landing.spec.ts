@@ -54,7 +54,7 @@ for (const [code, expected] of Object.entries(LANDINGS)) {
 test("kat.mr: ana ekranda Doluluk Girişi ve Tanımlamalar yok; yetkisiz ekran açıklanır ve bildirim günde bir kez gider", async ({ page }) => {
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
-  await expect(page.getByRole("link", { name: /İşlemlerim/ })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /İşlemlerim/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Doluluk Girişi/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: /Tanımlamalar/ })).toHaveCount(0);
 
