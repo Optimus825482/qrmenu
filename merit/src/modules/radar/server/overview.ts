@@ -63,10 +63,14 @@ async function build(ctx: Ctx, now: Date): Promise<RadarOverview> {
 }
 
 /** Overview of every hotel the caller holds `CR-RAD V` on (never throws for a partial scope). */
-export async function radarOverview(ctx: Ctx): Promise<RadarOverview> {
+export async function radarOverview(ctx: Ctx, hotelId = "ALL"): Promise<RadarOverview> {
+  if (hotelId !== "ALL") {
+    await assertRadarScope(ctx, hotelId, "V");
+    ctx = { ...ctx, hotelIds: [hotelId] };
+  }
   // Fails fast for a role without the radar anywhere (the session hotel decides the audit row).
   const watchable = await Promise.all(ctx.hotelIds.map((id) => can(ctx, "CR-RAD", "V", id)));
   if (!watchable.some(Boolean)) await assertRadarScope(ctx, ctx.session.hotelId, "V");
-  const key = `overview:${ctx.user.roleId}:${[...ctx.hotelIds].sort().join(",")}`;
+  const key = `overview:${hotelId}:${ctx.user.roleId}:${[...ctx.hotelIds].sort().join(",")}`;
   return singleFlight(key, FLIGHT_TTL_MS, () => build(ctx, new Date()));
 }

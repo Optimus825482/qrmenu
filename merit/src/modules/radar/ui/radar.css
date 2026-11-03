@@ -200,13 +200,13 @@
   flex: none;
 }
 
-.rd-banner[data-tone="danger"] {
+.rd-root .rd-banner[data-tone="danger"] {
   color: var(--danger);
   background: var(--danger-bg);
   border-bottom-style: dashed;
 }
 
-.rd-banner[data-tone="warn"] {
+.rd-root .rd-banner[data-tone="warn"] {
   color: var(--warn);
   background: var(--warn-bg);
 }
@@ -250,37 +250,37 @@
 }
 
 /* Tonlar */
-[data-tone="muted"] {
+.rd-root [data-tone="muted"] {
   --tone-fg: var(--muted);
   --tone-bg: var(--muted-bg);
   --tone-line: var(--muted);
 }
 
-[data-tone="accent"] {
+.rd-root [data-tone="accent"] {
   --tone-fg: var(--accent);
   --tone-bg: var(--surface);
   --tone-line: var(--accent);
 }
 
-[data-tone="warn"] {
+.rd-root [data-tone="warn"] {
   --tone-fg: var(--warn);
   --tone-bg: var(--warn-bg);
   --tone-line: var(--warn);
 }
 
-[data-tone="info"] {
+.rd-root [data-tone="info"] {
   --tone-fg: var(--info);
   --tone-bg: var(--info-bg);
   --tone-line: var(--info);
 }
 
-[data-tone="success"] {
+.rd-root [data-tone="success"] {
   --tone-fg: var(--success);
   --tone-bg: var(--success-bg);
   --tone-line: var(--success);
 }
 
-[data-tone="danger"] {
+.rd-root [data-tone="danger"] {
   --tone-fg: var(--danger);
   --tone-bg: var(--danger-bg);
   --tone-line: var(--danger);
@@ -361,11 +361,11 @@ button.rd-counter {
   cursor: pointer;
 }
 
-.rd-counter[data-tone="warn"] {
+.rd-root .rd-counter[data-tone="warn"] {
   border-width: 3px;
 }
 
-.rd-counter[data-tone="danger"] {
+.rd-root .rd-counter[data-tone="danger"] {
   border-width: 2px;
 }
 
@@ -583,21 +583,21 @@ button.rd-counter {
   cursor: pointer;
 }
 
-.rd-card[data-tone="warn"] {
+.rd-root .rd-card[data-tone="warn"] {
   border-width: 3px;
 }
 
-.rd-card[data-tone="accent"] {
+.rd-root .rd-card[data-tone="accent"] {
   border-style: dashed;
   border-width: 2px;
 }
 
-.rd-card[data-tone="success"] {
+.rd-root .rd-card[data-tone="success"] {
   border-style: double;
   border-width: 4px;
 }
 
-.rd-card[data-tone="danger"] {
+.rd-root .rd-card[data-tone="danger"] {
   border-width: 3px;
 }
 

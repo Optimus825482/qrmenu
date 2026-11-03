@@ -5,7 +5,6 @@ import { useStore } from "zustand";
 import { sseClient } from "@/shell/sseStore";
 import { pulseOnce } from "@/components/ui/pulseOnce";
 import { radarOverviewAction, radarSnapshotAction } from "../server/actions/radar";
-import type { RadarOverview } from "../types";
 import { createRadarStore, type RadarStore, type RadarStoreDeps, type RadarStoreState } from "./radarStore";
 
 function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
@@ -15,8 +14,8 @@ function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
       if (!r.ok) throw new Error(r.error.message);
       return r.data;
     },
-    async fetchOverview() {
-      const r = await radarOverviewAction();
+    async fetchOverview(hotelId) {
+      const r = await radarOverviewAction({ hotelId });
       if (!r.ok) throw new Error(r.error.message);
       return r.data;
     },
@@ -93,47 +92,3 @@ export function useNow(ms = 1000): number {
   return now;
 }
 
-/**
- * Counters of the overview cards. For "ALL" they come from the store (kept fresh by SSE); for one hotel they
- * are fetched while the overview is on screen and refreshed every `refreshMs`.
- */
-export function useOverview(
-  hotelId: string,
-  stored: RadarOverview | null,
-  active: boolean,
-  refreshMs = 15_000,
-): { overview: RadarOverview | null; error: string | null; retry(): void } {
-  const [local, setLocal] = useState<RadarOverview | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
-  const single = hotelId !== "ALL";
-
-  useEffect(() => {
-    if (!single || !active) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const load = async () => {
-      try {
-        const r = await radarOverviewAction();
-        if (cancelled) return;
-        if (r.ok) {
-          setLocal(r.data);
-          setError(null);
-        } else setError(r.error.message);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Genel bakış yüklenemedi.");
-      }
-      if (!cancelled) timer = setTimeout(() => void load(), refreshMs);
-    };
-    void load();
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [single, active, hotelId, refreshMs, tick]);
-
-  const source = single ? local : stored;
-  const overview =
-    source && single ? { ...source, hotels: source.hotels.filter((h) => h.hotelId === hotelId) } : source;
-  return { overview, error, retry: () => setTick((n) => n + 1) };
-}

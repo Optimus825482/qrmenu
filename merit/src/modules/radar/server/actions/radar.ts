@@ -16,8 +16,8 @@ export async function radarSnapshotAction(raw: unknown): Promise<Result<RadarSna
 }
 
 /** Server Action for the overview cards of every hotel the caller may watch. */
-export async function radarOverviewAction(): Promise<Result<RadarOverview>> {
-  return safeAction(z.undefined(), async () => radarOverview(await requireUser()))(undefined);
+export async function radarOverviewAction(raw: unknown = { hotelId: "ALL" }): Promise<Result<RadarOverview>> {
+  return safeAction(snapshotInput, async ({ hotelId }) => radarOverview(await requireUser(), hotelId))(raw);
 }
 
 /** Server Action: the hotels the caller may watch (id, code, name); the window starts from this. */

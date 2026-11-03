@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useStore } from "zustand";
 import { Icon } from "@/components/icons/Icon";
 import { DensityRoot } from "@/components/ui/Density";
@@ -10,7 +10,7 @@ import { LAYER_LABELS, metricLayer } from "../labels";
 import type { RadarLayer, WallView } from "../types";
 import { MenuBar, type MenuDef } from "./MenuBar";
 import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, type ConnectionState, type ViewKey } from "./Toolbar";
-import { RadarStoreContext, useNow, useOverview, useRadar } from "./useRadar";
+import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
 import { Overview } from "./views/Overview";
 import { Tables } from "./views/Tables";
@@ -68,6 +68,7 @@ const SHORTCUTS: [string, string][] = [
 
 export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const wall = mode === "wall";
+  const idPrefix = useId();
   const [hotelId, setHotelId] = useState<string>(initial.hotelId);
   const [choice, setChoice] = useState<ViewKey | null>(null);
   const [off, setOff] = useState<ReadonlySet<RadarLayer>>(new Set());
@@ -80,13 +81,17 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const sse = useStore(sseClient().store, (s) => s.status);
   const now = useNow(1000);
   const all = hotelId === "ALL";
-  const snap = state.view;
+  // A scope switch renders before the effect restarts the store; hide the old scope immediately.
+  const scoped = state.hotelId === hotelId;
+  const snap = scoped ? state.view : null;
+  const overview = scoped ? state.overview : null;
+  const overviewError = scoped ? state.overviewError : null;
 
   // Layers in scope: from the snapshot of one hotel, or from the counters that came with the overview.
   const scope = useMemo<RadarLayer[]>(() => {
     if (all) {
       const found = new Set<RadarLayer>();
-      for (const h of state.overview?.hotels ?? []) for (const m of h.metrics) found.add(metricLayer(m.screenCode));
+      for (const h of overview?.hotels ?? []) for (const m of h.metrics) found.add(metricLayer(m.screenCode));
       return LAYER_ORDER.filter((l) => found.has(l));
     }
     if (!snap) return [];
@@ -99,7 +104,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         (layer === "ODA_SERVISI" && l.roomService) ||
         (layer === "PERSONEL" && l.staff),
     );
-  }, [all, snap, state.overview]);
+  }, [all, snap, overview]);
   const active = useMemo(() => new Set(scope.filter((l) => !off.has(l))), [scope, off]);
 
   const views = useMemo<ViewKey[]>(() => {
@@ -110,8 +115,6 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   }, [all, snap, active]);
   const fallback: ViewKey = all ? "genel" : snap?.layers.minibar ? "kat" : snap?.layers.order ? "masa" : "genel";
   const view: ViewKey = choice && views.includes(choice) ? choice : views.includes(fallback) ? fallback : "genel";
-
-  const { overview, error: overviewError, retry } = useOverview(hotelId, state.overview, view === "genel");
 
   const connection: ConnectionState =
     state.connection === "offline" || sse === "closed"
@@ -125,21 +128,21 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     chrome?.setTitle?.(`Canlı Radar · ${hotelName}`);
   }, [chrome, hotelName]);
 
-  const lastEvent = state.lastEventAt ? Date.parse(state.lastEventAt) : undefined;
+  const lastEvent = scoped && state.lastEventAt ? Date.parse(state.lastEventAt) : undefined;
   const minutes = snap?.config.liveBufferMinutes ?? 30;
   useEffect(() => {
     chrome?.setStatus?.(
-      `Son olay ${lastEvent ? clock(lastEvent) : "yok"} · Arabellek ${minutes} dk / ${state.buffer.length} olay`,
+      `Otel: ${hotelName} · Son olay ${lastEvent ? clock(lastEvent) : "yok"} · Arabellek ${minutes} dk / ${state.buffer.length} olay`,
     );
-  }, [chrome, lastEvent, minutes, state.buffer.length]);
+  }, [chrome, hotelName, lastEvent, minutes, state.buffer.length]);
 
   useEffect(() => {
     if (help) helpClose.current?.focus();
   }, [help]);
 
-  const loaded = all ? state.overview !== null : snap !== null;
-  const failed = !loaded && state.connection === "offline";
-  const skeleton = useDelayed(!loaded && !failed, SKELETON_DELAY_MS);
+  const loaded = all ? overview !== null : snap !== null;
+  const failed = scoped && !loaded && state.connection === "offline";
+  const skeleton = useDelayed((!loaded || (view === "genel" && !overview && !overviewError)) && !failed, SKELETON_DELAY_MS);
 
   const pickHotel = (id: string, next: ViewKey | null) => {
     setHotelId(id);
@@ -239,8 +242,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         <Overview
           overview={overview}
           layers={active}
-          views={views}
-          onOpenHotel={(id) => pickHotel(id, "kat")}
+          views={all ? undefined : views}
+          onOpenHotel={(id) => pickHotel(id, null)}
           onOpenView={(id, v) => (id === hotelId ? setChoice(v) : pickHotel(id, v))}
         />
       );
@@ -248,13 +251,13 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       body = (
         <div className="rd-center" role="alert">
           <EmptyState title="Genel bakış yüklenemedi" hint={overviewError} />
-          <button type="button" className="rd-chip" onClick={retry}>
+          <button type="button" className="rd-chip" onClick={() => void store.getState().refresh()}>
             Tekrar dene
           </button>
         </div>
       );
     } else {
-      body = null;
+      body = skeleton ? <div className="rd-center" aria-busy="true">Genel bakış yükleniyor</div> : null;
     }
   } else if (view === "kat" && snap) {
     body = <Floor view={snap} now={now} onOpenApp={openApp} />;
@@ -273,6 +276,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         >
           {wall ? null : <MenuBar menus={menus} />}
           <Toolbar
+            idPrefix={idPrefix}
             hotels={initial.hotels}
             hotelId={hotelId}
             onHotel={(id) => pickHotel(id, null)}
@@ -297,10 +301,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             </div>
           ) : null}
           <div
-            id="rd-view"
+            id={`${idPrefix}-view`}
             className="rd-main"
             role="tabpanel"
-            aria-labelledby={`rd-tab-${view}`}
+            aria-labelledby={`${idPrefix}-tab-${view}`}
             tabIndex={0}
           >
             {body}

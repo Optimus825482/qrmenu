@@ -96,7 +96,7 @@ export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: O
           layer,
           metrics: hotel.metrics.filter((m) => metricLayer(m.screenCode) === layer),
         })).filter((g) => g.metrics.length > 0 && (!layers || layers.has(g.layer)));
-        const canOpenHotel = hasView("kat") || hasView("masa");
+        const canOpenHotel = byLayer.some(({ layer }) => hasView(LAYER_VIEW[layer]));
         return (
           <article key={hotel.hotelId} className="rd-hotel-card" aria-label={`${hotel.code} ${hotel.name}`}>
             <div className="rd-hotel-head">

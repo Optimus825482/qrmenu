@@ -25,6 +25,7 @@ export const CONNECTION_TEXT: Record<ConnectionState, string> = {
 };
 
 export type ToolbarProps = {
+  idPrefix: string;
   hotels: { id: string; code: string; name: string }[];
   hotelId: string;
   onHotel(id: string): void;
@@ -85,9 +86,9 @@ export function Toolbar(p: ToolbarProps) {
             type="button"
             role="tab"
             className="rd-tab"
-            id={`rd-tab-${v}`}
+            id={`${p.idPrefix}-tab-${v}`}
             aria-selected={p.view === v}
-            aria-controls="rd-view"
+            aria-controls={`${p.idPrefix}-view`}
             title={`${i + 1}`}
             onClick={() => p.onView(v)}
           >

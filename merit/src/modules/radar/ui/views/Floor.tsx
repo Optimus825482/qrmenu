@@ -198,7 +198,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
 
   const selectedRoom = selected ? flat.find((x) => x.room.roomId === selected) : undefined;
   const near = minibar.stock.filter((s) => s.remaining <= s.critical * 1.2).sort((a, b) => a.remaining - b.remaining);
-  const missingAll = minibar.uploads.length > 0 && minibar.uploads.every((u) => u.status === "EKSIK");
+  const missingAll = minibar.uploads.length === 0 || minibar.uploads.every((u) => u.status === "EKSIK");
 
   return (
     <div className="rd-floor">
@@ -212,7 +212,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
                 <div role="rowheader" className="rd-floor-name">
                   {f.name}
                 </div>
-                <div className="rd-floor-cells">
+                <div className="rd-floor-cells" role="presentation">
                   {f.rooms.map((r) => (
                     <Cell
                       key={r.roomId}

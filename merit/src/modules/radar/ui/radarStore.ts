@@ -20,8 +20,8 @@ export type RadarStoreDeps = {
   reducedMotion(): boolean;
   hidden(): boolean;
   onDrift?(path: string): void;
-  /** "Tüm kompleks" (hotelId "ALL") counters. */
-  fetchOverview?(): Promise<RadarOverview>;
+  /** Counters scoped to the selected hotel, or every permitted hotel for "ALL". */
+  fetchOverview?(hotelId: string): Promise<RadarOverview>;
   /** Alerts derived on every tick; default: the snapshot's own system alerts. */
   deriveAlerts?(state: RadarState, nowMs: number): RadarAlert[];
   /** `radar.liveBufferMinutes` (default 30). */
@@ -47,6 +47,7 @@ export type RadarStoreState = {
   pending: number;
   seq: number;
   overview: RadarOverview | null;
+  overviewError: string | null;
   start(hotelId: string): void;
   stop(): void;
   refresh(): Promise<void>;
@@ -141,6 +142,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
   const seen = new Set<string>();
   const lastPulseAt = new Map<string, number>();
   let generation = 0;
+  let overviewRequest = 0;
   let unsubscribe: (() => void) | undefined;
   let inflight: Promise<void> | undefined;
   let flushCancel: (() => void) | undefined;
@@ -321,17 +323,34 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       if (!flushCancel) flushCancel = deps.schedule(flush, 1000 / FLUSH_PER_SEC);
     };
 
+    const loadOverview = async () => {
+      const hotelId = get().hotelId;
+      if (!hotelId || !deps.fetchOverview) return;
+      const gen = generation;
+      const request = ++overviewRequest;
+      try {
+        const result = await deps.fetchOverview(hotelId);
+        if (gen !== generation || request !== overviewRequest) return;
+        // Defense in depth: one-hotel stores never adopt cards for another hotel.
+        const overview = hotelId === "ALL" ? result : {
+          ...result,
+          hotels: result.hotels.filter((h) => h.hotelId === hotelId),
+        };
+        set({ overview, overviewError: null, ...(hotelId === "ALL" ? { connection: "live" as const } : {}) });
+      } catch (error) {
+        if (gen !== generation || request !== overviewRequest) return;
+        set({
+          overviewError: error instanceof Error ? error.message : "Genel bakış yüklenemedi.",
+          ...(hotelId === "ALL" ? { connection: "offline" as const } : {}),
+        });
+      }
+    };
+
     const refreshOverview = () => {
       if (overviewCancel || !deps.fetchOverview) return;
       overviewCancel = deps.schedule(() => {
         overviewCancel = undefined;
-        const gen = generation;
-        void deps.fetchOverview!().then(
-          (overview) => {
-            if (gen === generation) set({ overview });
-          },
-          () => undefined,
-        );
+        void loadOverview();
       }, DEBOUNCE_MS);
     };
 
@@ -414,6 +433,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       pending: 0,
       seq: 0,
       overview: null,
+      overviewError: null,
 
       start(hotelId) {
         stop();
@@ -439,6 +459,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
           pending: 0,
           seq: 0,
           overview: null,
+          overviewError: null,
         });
         unsubscribe = deps.subscribe((e) => get().ingest(e), RADAR_EVENT_TYPES);
         void get().refresh();
@@ -453,28 +474,20 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       refresh() {
         const { hotelId } = get();
         if (!hotelId) return Promise.resolve();
-        if (hotelId === "ALL") {
-          if (!deps.fetchOverview) return Promise.resolve();
-          const gen = generation;
-          return deps.fetchOverview().then(
-            (overview) => {
-              if (gen === generation) set({ overview, connection: "live" });
+        if (hotelId === "ALL") return loadOverview();
+        if (inflight) return inflight;
+        const gen = generation;
+        const p: Promise<void> = Promise.all([
+          loadOverview(),
+          deps.fetchSnapshot(hotelId).then(
+            (snap) => {
+              if (gen === generation) adopt(snap);
             },
             () => {
               if (gen === generation) set({ connection: "offline" });
             },
-          );
-        }
-        if (inflight) return inflight;
-        const gen = generation;
-        const p: Promise<void> = deps.fetchSnapshot(hotelId).then(
-          (snap) => {
-            if (gen === generation) adopt(snap);
-          },
-          () => {
-            if (gen === generation) set({ connection: "offline" });
-          },
-        );
+          ),
+        ]).then(() => undefined);
         inflight = p;
         void p.finally(() => {
           if (inflight === p) inflight = undefined;
@@ -527,7 +540,10 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
           queue.push(re);
           added = true;
         }
-        if (added) scheduleFlush();
+        if (added) {
+          scheduleFlush();
+          refreshOverview();
+        }
       },
     };
   });
