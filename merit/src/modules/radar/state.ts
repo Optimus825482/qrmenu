@@ -1,7 +1,7 @@
 // Client-safe reducer state of the live radar: the snapshot shape plus the few derived/side fields
 // the pure reducers need (print jobs by id, people names, refresh requests).
 import type { PrintJobStatus } from "@/generated/prisma/client";
-import type { RadarSnapshot } from "./types";
+import type { RadarConfig, RadarSnapshot } from "./types";
 
 type Layers = RadarSnapshot["layers"];
 type SnapOutlet = NonNullable<Layers["order"]>["outlets"][number];
@@ -26,6 +26,7 @@ export type RadarState = {
   businessDate: string;
   layers: RadarStateLayers;
   sparkline: RadarSnapshot["sparkline"];
+  config: RadarConfig;
   /**
  * Open print jobs by id (set semantics, status from snapshot-era and later events). Events older than
  * `generatedAt` only record their claim here; the snapshot counts already include them.
@@ -42,20 +43,25 @@ export type RadarState = {
 };
 
 export function initialState(s: RadarSnapshot): RadarState {
-  const people: Record<string, string> = {};
+  const people: Record<string, string> = { ...(s.people ?? {}) };
   for (const x of s.layers.staff?.sessions ?? []) people[x.userId] = x.name;
   for (const x of s.layers.minibar?.supervisors ?? []) people[x.userId] = x.name;
   for (const o of s.layers.order?.outlets ?? [])
     for (const a of o.areas)
       for (const t of a.tables) if (t.waiterId && t.waiterName) people[t.waiterId] = t.waiterName;
+  // Open print jobs by id: replayed overlap events then stay idempotent.
+  const jobs: Record<string, PrintJobRef> = {};
+  for (const o of s.layers.order?.outlets ?? [])
+    for (const j of o.queues.jobs ?? []) jobs[j.jobId] = { status: j.status, outletId: o.outletId };
   return {
     generatedAt: s.generatedAt,
     hotelId: s.hotelId,
     businessDate: s.businessDate,
     layers: s.layers,
     sparkline: s.sparkline,
-    jobs: {},
-    mailFailed: 0,
+    config: s.config,
+    jobs,
+    mailFailed: s.layers.system.mailFailed ?? 0,
     mailIds: {},
     people,
     needsRefresh: new Set(),
@@ -69,6 +75,8 @@ export function toSnapshot(s: RadarState): RadarSnapshot {
     businessDate: s.businessDate,
     layers: s.layers,
     sparkline: s.sparkline,
+    config: s.config,
+    people: s.people,
   };
 }
 

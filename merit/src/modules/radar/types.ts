@@ -114,8 +114,51 @@ export type RadarAlert = {
   count: number;
 };
 
-/** Placeholder until the P7 metric set lands (overview hotels carry it as-is). */
-export type RadarMetric = { key: string; label: string; value: number | null; unit?: string };
+export type RadarMetricKey =
+  | "mybarPending"
+  | "mybarStale"
+  | "dndActive"
+  | "tasksOpen"
+  | "uploadsMissing"
+  | "stockCritical"
+  | "stockRequestsOpen"
+  | "ordersAwaiting"
+  | "ordersStale"
+  | "ordersInProgress"
+  | "callsOpen"
+  | "callsOverdue"
+  | "printFailed"
+  | "printersOffline"
+  | "rsOpen"
+  | "rsOverSla"
+  | "onlineStaff"
+  | "mailFailed"
+  | "consumptionToday"
+  | "taskCompletionPct";
+
+/** One radar counter of the overview cards (P7 T10 shape). */
+export type RadarMetric = {
+  key: RadarMetricKey;
+  label: string;
+  value: number;
+  severity: "ok" | "warn" | "crit";
+  unit?: string;
+  screenCode: string;
+};
+
+/** Effective `radar.*` and related settings of one hotel; the client derives alerts and timing from it. */
+export type RadarConfig = {
+  liveBufferMinutes: number;
+  idleMinutes: number;
+  mybarStaleMinutes: number;
+  callAlertSeconds: number;
+  approvalEscalationMinutes: number;
+  slaMinutes: number;
+  wallRotateSeconds: number;
+  wallViews: WallView[];
+  soundOnEscalation: boolean;
+  replayRetentionDays: number;
+};
 
 export type RadarSparkline = { bucketStart: string; counts: Partial<Record<RadarLayer, number>> }[];
 
@@ -137,6 +180,8 @@ export type RadarSnapshot = {
           checkedToday: { type: RoomCheckType; at: string; userId: string } | null;
           dnd: { count: number; minChecks: number; status: DndStatus; lastAt: string } | null;
           mybar: { requestId: string; since: string; seen: boolean } | null;
+          /** Last room QR scan within 15 minutes. */
+          scannedAt?: string;
         }[];
       }[];
       supervisors: {
@@ -165,7 +210,15 @@ export type RadarSnapshot = {
             label: string;
             waiterId?: string;
             waiterName?: string;
-            orders: { orderId: string; orderNo: number; status: OrderStatus; since: string }[];
+            orders: {
+              orderId: string;
+              orderNo: number;
+              status: OrderStatus;
+              since: string;
+              /** KDS "start preparing" (status stays ONAYLANDI). */
+              prep?: boolean;
+              escalated?: boolean;
+            }[];
             call: { callId: string; type: CallType; since: string } | null;
             scannedAt?: string;
           }[];
@@ -174,6 +227,8 @@ export type RadarSnapshot = {
           kasa: { count: number; oldest?: string };
           kds: Record<"YENI" | "HAZIRLANIYOR" | "HAZIR", { count: number; oldest?: string }>;
           print: Record<"KUYRUKTA" | "BASILIYOR" | "HATA", number>;
+          /** Today's unfinished print jobs by id; `print` counts derive from them. */
+          jobs: { jobId: string; status: "KUYRUKTA" | "BASILIYOR" | "HATA" }[];
         };
         printers: { printerId: string; name: string; state: "HAZIR" | "SESSIZ" | "HATA"; lastSeenAt?: string }[];
       }[];
@@ -203,8 +258,11 @@ export type RadarSnapshot = {
         lastPlace?: string;
       }[];
     };
-    system: { alerts: RadarAlert[] };
+    system: { alerts: RadarAlert[]; mailFailed: number };
   };
+  /** userId -> full name; only for the visible scope (SISTEM / YONETIM sessions). */
+  people?: Record<string, string>;
+  config: RadarConfig;
   sparkline: RadarSparkline;
 };
 
@@ -220,4 +278,3 @@ export type RadarOverview = {
   }[];
 };
 
-// RadarState (the reducer state) is defined with the client store in Task 7.
