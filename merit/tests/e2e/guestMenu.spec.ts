@@ -42,6 +42,21 @@ test("M1 tokenı: outlet adı, masa etiketi ve menü (en)", async ({ page }) => 
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
+test("alerjen listesi: her alerjende SVG ikon (aria-hidden) ve dilin metin etiketi; title= yok", async ({ page }) => {
+  await page.goto(M1);
+  await card(page, "Mojito").click();
+  const sheet = page.getByRole("dialog", { name: "Mojito" });
+  const items = sheet.locator(".g-allergen-list li");
+  await expect(items).toHaveCount(2);
+  for (const [i, label] of ["Alcohol", "Sulphites"].entries()) {
+    const li = items.nth(i);
+    await expect(li.locator("svg[aria-hidden='true']")).toHaveCount(1);
+    await expect(li).toContainText(label);
+    await expect(li).not.toHaveAttribute("title", /.+/);
+  }
+  await page.keyboard.press("Escape");
+});
+
 test("?lang=ar sağdan sola ve Arapça; ?lang=de çerezle kalıcı", async ({ page }) => {
   await page.goto(`${M1}?lang=ar`);
   await expect(page).toHaveURL(new RegExp(`${M1}$`)); // the lang route sent us back without the query

@@ -40,11 +40,12 @@ async function seedGuestMenu(db: PrismaClient, outletId: string): Promise<void> 
     parentId?: string;
     price?: number;
     sortOrder?: number;
+    allergens?: string[];
   }) => db.menuNode.create({ data: { outletId, ...data } });
   const cat = await node({ kind: "KATEGORI", name: "İçecekler" });
   const sub = await node({ kind: "ALT_KATEGORI", name: "Soğuk", parentId: cat.id });
   const group = await node({ kind: "GRUP", name: "Kokteyller", parentId: sub.id });
-  const mojito = await node({ kind: "OGE", name: "Mojito", parentId: group.id, price: 12, sortOrder: 0 });
+  const mojito = await node({ kind: "OGE", name: "Mojito", parentId: group.id, price: 12, sortOrder: 0, allergens: ["alkol", "sulfit"] });
   await node({ kind: "OGE", name: "Aperol Spritz", parentId: group.id, price: 10, sortOrder: 1 });
   await db.menuNodeTranslation.createMany({
     data: [

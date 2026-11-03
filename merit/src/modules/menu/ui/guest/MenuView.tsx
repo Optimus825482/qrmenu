@@ -9,6 +9,7 @@ import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { categoryItems, curatedPhotoIds } from "./menuPresentation";
 import { priceFormatter } from "./priceFormat";
 import { useSelectionStore } from "./selectionStore";
+import { Icon } from "@/components/icons/Icon";
 
 const FEATURED_TAGS = new Set<ItemTagId>(["SEFIN_SECIMI", "POPULER"]);
 
@@ -82,7 +83,7 @@ function ItemCards({
                 />
                 {item.imageUrls && item.imageUrls.length > 1 ? (
                   <span className="g-thumb-count" aria-label={photoCountLabel(item.imageUrls.length)}>
-                    📸 {item.imageUrls.length}
+                    <Icon name="camera" size={16} /> {item.imageUrls.length}
                   </span>
                 ) : null}
               </span>
@@ -261,7 +262,7 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
         <div className="g-tools">
           {options.showSearch ? (
             <div className="g-search-wrap">
-              <span className="g-search-icon" aria-hidden="true">🔍</span>
+              <Icon name="search" size={20} className="g-search-icon" />
               <input
                 className="g-search"
                 type="search"

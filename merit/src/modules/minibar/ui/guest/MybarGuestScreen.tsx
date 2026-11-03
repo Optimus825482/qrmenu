@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { newRequestKey } from "../requestKey";
+import { Icon } from "@/components/icons/Icon";
 
 interface MybarProduct {
   id: string;
@@ -119,12 +120,12 @@ const I18N = {
   },
 };
 
-const LANG_OPTIONS: { code: LangCode; label: string; flag: string }[] = [
-  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "de", label: "Deutsch", flag: "🇩🇪" },
-  { code: "ru", label: "Русский", flag: "🇷🇺" },
-  { code: "ar", label: "العربية", flag: "🇸🇦" },
+const LANG_OPTIONS: { code: LangCode; label: string }[] = [
+  { code: "tr", label: "Türkçe" },
+  { code: "en", label: "English" },
+  { code: "de", label: "Deutsch" },
+  { code: "ru", label: "Русский" },
+  { code: "ar", label: "العربية" },
 ];
 
 export function MybarGuestScreen({
@@ -276,9 +277,8 @@ export function MybarGuestScreen({
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
               className="px-3.5 py-1.5 rounded-full bg-white/95 border-2 border-amber-500 shadow-lg text-xs font-black text-slate-900 flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
             >
-              <span>{LANG_OPTIONS.find((l) => l.code === lang)?.flag}</span>
               <span className="uppercase">{lang}</span>
-              <span className="text-[10px] text-amber-600">▼</span>
+              <Icon name="chevron-down" size={16} className="text-amber-600" />
             </button>
 
             {isLangMenuOpen && (
@@ -295,7 +295,7 @@ export function MybarGuestScreen({
                       lang === item.code ? "bg-amber-100/70 text-amber-900 font-black" : "text-slate-800"
                     }`}
                   >
-                    <span>{item.flag}</span>
+                    <span className="uppercase text-[10px] font-black w-5">{item.code}</span>
                     <span>{item.label}</span>
                   </button>
                 ))}
@@ -308,7 +308,7 @@ export function MybarGuestScreen({
         <div className="bg-gradient-to-b from-slate-900 via-[#0a2351] to-[#1e3a8a] text-white p-6 sm:p-8 text-center border-b-4 border-amber-400 relative">
           {/* Room Badge */}
           <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black text-xs sm:text-sm shadow-lg mb-3 tracking-wide">
-            <span>🛎️</span>
+            <Icon name="concierge" size={20} />
             <span>
               {t.room} {roomNumber}
             </span>
@@ -328,7 +328,7 @@ export function MybarGuestScreen({
           {isSuccess ? (
             <div className="py-10 text-center space-y-4 animate-in fade-in">
               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner">
-                ✓
+                <Icon name="check" size={16} />
               </div>
               <h2 className="text-2xl font-black text-slate-900">{t.successTitle}</h2>
               <p className="text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
@@ -338,7 +338,7 @@ export function MybarGuestScreen({
           ) : alreadyRequested ? (
             <div className="py-8 text-center space-y-4">
               <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto">
-                🕒
+                <Icon name="clock" size={16} />
               </div>
               <h2 className="text-xl font-black text-slate-900">{t.alreadyTitle}</h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
@@ -484,7 +484,7 @@ export function MybarGuestScreen({
                   <span>{t.submitting}</span>
                 ) : (
                   <>
-                    <span>🛎️</span>
+                    <Icon name="concierge" size={20} />
                     <span>{t.submitBtn}</span>
                   </>
                 )}

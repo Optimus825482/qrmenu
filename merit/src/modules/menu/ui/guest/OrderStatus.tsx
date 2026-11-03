@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/i18n/locales";
 import type { GuestOrderView } from "@/modules/order/server/guestOrder";
 import { priceFormatter } from "./priceFormat";
 import { useGuestEvents } from "./useGuestEvents";
+import { Icon } from "@/components/icons/Icon";
 
 const STEPS = ["GONDERILDI", "ONAYLANDI", "HAZIR", "SERVIS_EDILDI"] as const;
 type Step = (typeof STEPS)[number];
@@ -55,7 +56,7 @@ export function OrderStatus({ token, locale, order }: { token: string; locale: L
               aria-current={index === current ? "step" : undefined}
             >
               <span className="g-step-dot" aria-hidden="true">
-                {index <= current ? "✓" : index + 1}
+                {index <= current ? <Icon name="check" size={16} /> : index + 1}
               </span>
               <span>{t(`order.status.${step}`)}</span>
             </li>

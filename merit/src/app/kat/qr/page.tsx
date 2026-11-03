@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/components/icons/Icon";
 
 interface RoomOption {
   id: string;
@@ -149,12 +150,12 @@ export default function KatQrScannerPage() {
               />
               {/* Reticle / Scanner Target Box */}
               <div className="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-center justify-center">
-                <div className="w-full h-0.5 bg-rose-500 shadow-md shadow-rose-500 animate-pulse"></div>
+                <div className="w-full h-0.5 bg-rose-500 shadow-md shadow-rose-500"></div>
               </div>
             </>
           ) : (
             <div className="p-6 text-center text-slate-400 space-y-2">
-              <span className="text-4xl block mb-2">📷</span>
+              <Icon name="camera" size={32} className="block mb-2" />
               <p className="font-bold text-sm text-white">Kamera Kullanılamıyor</p>
               <p className="text-xs">{cameraError || "Lütfen oda numarasını manuel giriniz."}</p>
             </div>

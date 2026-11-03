@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { notify } from "@/shell/notify";
 import { replaceMenuImageAction, uploadMenuImagesAction } from "../../server/actions/menuTree";
+import { Icon } from "@/components/icons/Icon";
 
 type Props = {
   isOpen: boolean;
@@ -644,7 +645,7 @@ export function ImageStudioModal({
       <div className="xp-studio-window" onClick={(e) => e.stopPropagation()}>
         {/* Title Bar */}
         <div className="xp-studio-titlebar">
-          <span>🖼️ Profesyonel Görsel Stüdyosu — {nodeName}</span>
+          <span><Icon name="image" size={16} /> Profesyonel Görsel Stüdyosu — {nodeName}</span>
           <button
             type="button"
             className="xp-studio-titlebar-btn"
@@ -667,7 +668,7 @@ export function ImageStudioModal({
                 className={`xp-studio-tab-btn ${activeTab === "crop" ? "is-active" : ""}`}
                 onClick={() => { setActiveTab("crop"); setBgTool("none"); }}
               >
-                ✂️ Kırp & Çevir
+                <Icon name="scissors" size={16} /> Kırp & Çevir
               </button>
               <button
                 type="button"
@@ -676,7 +677,7 @@ export function ImageStudioModal({
                 className={`xp-studio-tab-btn ${activeTab === "bg" ? "is-active" : ""}`}
                 onClick={() => { setActiveTab("bg"); setIsCropping(false); }}
               >
-                🪄 Arka Plan
+                <Icon name="wand" size={16} /> Arka Plan
               </button>
               <button
                 type="button"
@@ -685,7 +686,7 @@ export function ImageStudioModal({
                 className={`xp-studio-tab-btn ${activeTab === "adjust" ? "is-active" : ""}`}
                 onClick={() => { setActiveTab("adjust"); setBgTool("none"); setIsCropping(false); }}
               >
-                🎨 Işık & Sıcaklık
+                <Icon name="palette" size={16} /> Işık & Sıcaklık
               </button>
               <button
                 type="button"
@@ -694,7 +695,7 @@ export function ImageStudioModal({
                 className={`xp-studio-tab-btn ${activeTab === "presets" ? "is-active" : ""}`}
                 onClick={() => { setActiveTab("presets"); setBgTool("none"); setIsCropping(false); }}
               >
-                ✨ Gurme Filtre
+                <Icon name="sparkles" size={16} /> Gurme Filtre
               </button>
             </div>
 
@@ -730,7 +731,7 @@ export function ImageStudioModal({
                         style={{ flex: 1 }}
                         onClick={applyCrop}
                       >
-                        ✓ Kırpmayı Onayla
+                        <Icon name="check" size={16} /> Kırpmayı Onayla
                       </button>
                       <button
                         type="button"
@@ -747,7 +748,7 @@ export function ImageStudioModal({
                       style={{ width: "100%", fontWeight: 700 }}
                       onClick={() => handleSetAspect(cropAspect)}
                     >
-                      ✂️ Kırpma Çerçevesini Aç
+                      <Icon name="scissors" size={16} /> Kırpma Çerçevesini Aç
                     </button>
                   )}
 
@@ -814,7 +815,7 @@ export function ImageStudioModal({
                       style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                       onClick={() => setBgTool(bgTool === "eyedropper" ? "none" : "eyedropper")}
                     >
-                      🔍 Damlalık: Görseldeki Renge Tıkla ve Sil
+                      <Icon name="search" size={16} /> Damlalık: Görseldeki Renge Tıkla ve Sil
                     </button>
                     {eyedropperColor && (
                       <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
@@ -850,14 +851,14 @@ export function ImageStudioModal({
                       className={`xp-studio-tool-btn ${bgTool === "eraser" ? "is-active" : ""}`}
                       onClick={() => setBgTool(bgTool === "eraser" ? "none" : "eraser")}
                     >
-                      🧹 Silgi Fırçası (Arka Plan Sil)
+                      <Icon name="eraser" size={16} /> Silgi Fırçası (Arka Plan Sil)
                     </button>
                     <button
                       type="button"
                       className={`xp-studio-tool-btn ${bgTool === "restore" ? "is-active" : ""}`}
                       onClick={() => setBgTool(bgTool === "restore" ? "none" : "restore")}
                     >
-                      🖌️ Geri Getir Fırçası
+                      <Icon name="brush" size={16} /> Geri Getir Fırçası
                     </button>
                   </div>
 
@@ -1013,35 +1014,35 @@ export function ImageStudioModal({
                       className="xp-button"
                       onClick={() => applyPreset("gourmet")}
                     >
-                      🍽️ Gurme Canlı (İştah Açıcı Renkler)
+                      <Icon name="utensils" size={16} /> Gurme Canlı (İştah Açıcı Renkler)
                     </button>
                     <button
                       type="button"
                       className="xp-button"
                       onClick={() => applyPreset("warm")}
                     >
-                      🍲 Sıcak Restoran (Sıcak samimi ışık)
+                      <Icon name="utensils" size={16} /> Sıcak Restoran (Sıcak samimi ışık)
                     </button>
                     <button
                       type="button"
                       className="xp-button"
                       onClick={() => applyPreset("crisp")}
                     >
-                      ⚡ Net & Çıtır (Detaylı doku & kontrast)
+                      <Icon name="zap" size={16} /> Net & Çıtır (Detaylı doku & kontrast)
                     </button>
                     <button
                       type="button"
                       className="xp-button"
                       onClick={() => applyPreset("fineDining")}
                     >
-                      🍷 Lüks Fine-Dining (Zengin derin tonlar)
+                      <Icon name="wine" size={16} /> Lüks Fine-Dining (Zengin derin tonlar)
                     </button>
                     <button
                       type="button"
                       className="xp-button"
                       onClick={() => applyPreset("bw")}
                     >
-                      📷 Artisan Siyah & Beyaz
+                      <Icon name="camera" size={16} /> Artisan Siyah & Beyaz
                     </button>
                   </div>
                 </div>
@@ -1056,11 +1057,11 @@ export function ImageStudioModal({
                 <span style={{ fontWeight: 600 }}>Önizleme Tuvali</span>
                 <span style={{ fontSize: 10, color: "#555" }}>
                   {bgTool === "eyedropper"
-                    ? "👉 Silmek istediğiniz arka plan rengine tıklayın"
+                    ? "Silmek istediğiniz arka plan rengine tıklayın"
                     : bgTool === "eraser"
-                    ? "🖌️ Silmek için fırçayla sürükleyin"
+                    ? "Silmek için fırçayla sürükleyin"
                     : bgTool === "restore"
-                    ? "🖌️ Geri boyamak için sürükleyin"
+                    ? "Geri boyamak için sürükleyin"
                     : ""}
                 </span>
               </div>
@@ -1078,7 +1079,7 @@ export function ImageStudioModal({
                   onTouchEnd={() => setShowOriginal(false)}
                   title="Basılı tutarak orijinal halini görün"
                 >
-                  👁️ Orijinali Gör
+                  <Icon name="eye" size={16} /> Orijinali Gör
                 </button>
 
                 <button
@@ -1189,7 +1190,7 @@ export function ImageStudioModal({
             onClick={() => void handleSaveReplace()}
             title="Mevcut fotoğrafı düzenlenmiş haliyle günceller"
           >
-            {busy ? "İşleniyor..." : "✓ Mevcut Görseli Güncelle"}
+            {busy ? "İşleniyor..." : "Mevcut Görseli Güncelle"}
           </button>
         </div>
       </div>

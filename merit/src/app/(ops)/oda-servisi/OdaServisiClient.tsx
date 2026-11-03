@@ -16,6 +16,7 @@ import {
   type RoomServiceStats,
 } from "@/modules/order/server/actions/roomServiceRecords";
 import { useSse } from "@/shell/useSse";
+import { Icon, type IconName } from "@/components/icons/Icon";
 
 const LIVE_EVENTS = [
   "order.created",
@@ -30,63 +31,63 @@ const LIVE_EVENTS = [
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; badge: string; border: string; bg: string; icon: string }
+  { label: string; badge: string; border: string; bg: string; icon: IconName }
 > = {
   TEYIT_BEKLIYOR: {
     label: "Telefon Teyidi Bekliyor",
-    badge: "bg-amber-500 text-slate-950 animate-pulse",
+    badge: "bg-amber-500 text-slate-950",
     border: "border-amber-400 ring-2 ring-amber-400/40",
     bg: "bg-amber-500/10",
-    icon: "📞",
+    icon: "call",
   },
   GONDERILDI: {
     label: "Yeni Talep",
-    badge: "bg-amber-600 text-white animate-pulse",
+    badge: "bg-amber-600 text-white",
     border: "border-amber-500",
     bg: "bg-amber-500/10",
-    icon: "🔔",
+    icon: "bell",
   },
   ONAYLANDI: {
     label: "Mutfakta / Hazırlanıyor",
     badge: "bg-sky-600 text-white",
     border: "border-sky-500",
     bg: "bg-sky-500/10",
-    icon: "🍳",
+    icon: "flame",
   },
   HAZIR: {
     label: "Hazır / Servis Bekliyor",
-    badge: "bg-emerald-600 text-white animate-bounce",
+    badge: "bg-emerald-600 text-white",
     border: "border-emerald-500",
     bg: "bg-emerald-500/10",
-    icon: "🍽️",
+    icon: "utensils",
   },
   YOLDA: {
     label: "Yolda / Serviste",
     badge: "bg-indigo-600 text-white",
     border: "border-indigo-500",
     bg: "bg-indigo-500/10",
-    icon: "🚶",
+    icon: "walk",
   },
   TESLIM_EDILDI: {
     label: "Teslim Edildi",
     badge: "bg-emerald-700 text-white",
     border: "border-emerald-600/40",
     bg: "bg-surface",
-    icon: "✓",
+    icon: "check",
   },
   IPTAL: {
     label: "İptal Edildi",
     badge: "bg-rose-700 text-white",
     border: "border-rose-400/40",
     bg: "bg-rose-500/5",
-    icon: "✕",
+    icon: "close",
   },
   REDDEDILDI: {
     label: "Reddedildi",
     badge: "bg-rose-800 text-white",
     border: "border-rose-400/40",
     bg: "bg-rose-500/5",
-    icon: "✕",
+    icon: "close",
   },
 };
 
@@ -256,7 +257,7 @@ export default function OdaServisiClient({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div>
           <h1 className="text-xl font-black tracking-tight text-text flex items-center gap-2">
-            <span>🛎️ Oda Servisi Operasyon Paneli</span>
+            <span><Icon name="concierge" size={20} /> Oda Servisi Operasyon Paneli</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent font-bold">
               {hotelName}
             </span>
@@ -275,14 +276,14 @@ export default function OdaServisiClient({
             placeholder="Oda no veya sipariş ara..."
             className="w-full h-10 rounded-xl border border-border bg-surface-sunken px-3 pl-8 text-xs font-medium placeholder:text-muted focus:border-accent focus:outline-none"
           />
-          <span className="absolute left-2.5 top-2.5 text-xs text-muted pointer-events-none">🔍</span>
+          <Icon name="search" size={16} className="absolute left-2.5 top-2.5 text-muted pointer-events-none" />
           {search ? (
-            <button
+            <button aria-label="Kapat"
               type="button"
               onClick={() => setSearch("")}
               className="absolute right-2.5 top-2.5 h-5 w-5 rounded-full bg-border text-xs flex items-center justify-center text-muted hover:text-text"
             >
-              ✕
+              <Icon name="close" size={20} />
             </button>
           ) : null}
         </div>
@@ -291,7 +292,7 @@ export default function OdaServisiClient({
       {/* KPI Kartları */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-5">
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <span className="text-2xl select-none">📋</span>
+          <Icon name="clipboard" size={24} />
           <div>
             <p className="text-[11px] font-medium text-muted">Toplam Sipariş</p>
             <p className="text-lg font-black text-text">{stats.total}</p>
@@ -305,7 +306,7 @@ export default function OdaServisiClient({
               : "border-border bg-surface text-text"
           }`}
         >
-          <span className="text-2xl select-none">📞</span>
+          <Icon name="call" size={24} />
           <div>
             <p className="text-[11px] font-medium text-muted">Teyit Bekleyen</p>
             <p className="text-lg font-black">{stats.pending}</p>
@@ -313,7 +314,7 @@ export default function OdaServisiClient({
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <span className="text-2xl select-none">🍳</span>
+          <Icon name="flame" size={24} />
           <div>
             <p className="text-[11px] font-medium text-muted">Mutfakta / Hazırlık</p>
             <p className="text-lg font-black text-text">{stats.approved}</p>
@@ -321,7 +322,7 @@ export default function OdaServisiClient({
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <span className="text-2xl select-none">🚶</span>
+          <Icon name="walk" size={24} />
           <div>
             <p className="text-[11px] font-medium text-muted">Yolda / Serviste</p>
             <p className="text-lg font-black text-text">{stats.onWay}</p>
@@ -329,7 +330,7 @@ export default function OdaServisiClient({
         </div>
 
         <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <span className="text-2xl select-none">✓</span>
+          <Icon name="check" size={24} />
           <div>
             <p className="text-[11px] font-medium text-muted">Teslim Edildi</p>
             <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
@@ -350,7 +351,7 @@ export default function OdaServisiClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>🛎️ Açık Talepler</span>
+          <span><Icon name="concierge" size={20} /> Açık Talepler</span>
           <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-black">
             {orders.filter((o) => o.status !== "TESLIM_EDILDI" && o.status !== "IPTAL" && o.status !== "REDDEDILDI").length}
           </span>
@@ -365,9 +366,9 @@ export default function OdaServisiClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>📞 Telefon Teyidi</span>
+          <span><Icon name="call" size={20} /> Telefon Teyidi</span>
           {stats.pending > 0 ? (
-            <span className="rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-xs font-black animate-pulse">
+            <span className="rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-xs font-black">
               {stats.pending}
             </span>
           ) : null}
@@ -382,7 +383,7 @@ export default function OdaServisiClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>⏱️ Teslimat &amp; SLA</span>
+          <span><Icon name="clock" size={20} /> Teslimat &amp; SLA</span>
         </button>
 
         <button
@@ -394,7 +395,7 @@ export default function OdaServisiClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>📜 Sipariş Geçmişi</span>
+          <span><Icon name="list" size={20} /> Sipariş Geçmişi</span>
         </button>
       </nav>
 
@@ -415,7 +416,7 @@ export default function OdaServisiClient({
       <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {filteredOrders.length === 0 ? (
           <div className="col-span-full py-16 text-center text-muted border border-dashed border-border rounded-2xl bg-surface">
-            <span className="text-3xl block mb-2">🛎️</span>
+            <Icon name="concierge" size={32} className="block mb-2" />
             <p className="text-base font-semibold">Bu görünümde bekleyen sipariş bulunmuyor.</p>
             <p className="text-xs mt-1">Misafirlerden yeni oda servisi talebi geldiğinde anında burada listelenir.</p>
           </div>
@@ -431,7 +432,7 @@ export default function OdaServisiClient({
             <article
               key={order.id}
               className={`flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all bg-surface ${cfg.border} ${
-                isOverdue ? "ring-2 ring-rose-500 animate-pulse bg-rose-500/5" : ""
+                isOverdue ? "ring-2 ring-rose-500 bg-rose-500/5" : ""
               }`}
             >
               <div>
@@ -452,7 +453,7 @@ export default function OdaServisiClient({
                   <span
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-black tracking-wide ${cfg.badge}`}
                   >
-                    <span>{cfg.icon}</span>
+                    <Icon name={cfg.icon} size={20} />
                     <span>{cfg.label}</span>
                   </span>
                 </div>
@@ -464,13 +465,13 @@ export default function OdaServisiClient({
                     <span
                       className={`font-black ${
                         isOverdue
-                          ? "text-rose-600 dark:text-rose-400 animate-pulse"
+                          ? "text-rose-600 dark:text-rose-400"
                           : elapsedMin > 20
                             ? "text-amber-600 dark:text-amber-400"
                             : "text-emerald-600 dark:text-emerald-400"
                       }`}
                     >
-                      {elapsedMin} / {slaMinutes} dk {isOverdue ? "⚠️ GECİKTİ" : ""}
+                      {elapsedMin} / {slaMinutes} dk {isOverdue ? "GECİKTİ" : ""}
                     </span>
                   </div>
                 ) : null}
@@ -493,7 +494,7 @@ export default function OdaServisiClient({
                 {/* Telefon Teyidi Bilgisi */}
                 {order.phoneConfirmedAt ? (
                   <p className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
-                    <span>✓ Telefon teyidi alındı:</span>
+                    <span><Icon name="check" size={20} /> Telefon teyidi alındı:</span>
                     <span>
                       {new Date(order.phoneConfirmedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                     </span>
@@ -514,7 +515,7 @@ export default function OdaServisiClient({
                     }}
                     className="flex-1 min-h-[48px] rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <span>📞</span> Telefonla Teyit Et
+                    <Icon name="call" size={20} /> Telefonla Teyit Et
                   </button>
                 ) : null}
 
@@ -526,7 +527,7 @@ export default function OdaServisiClient({
                     onClick={() => act(() => approveRoomOrderAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <span>🍳</span> Mutfakta Hazırla
+                    <Icon name="flame" size={20} /> Mutfakta Hazırla
                   </button>
                 ) : null}
 
@@ -538,7 +539,7 @@ export default function OdaServisiClient({
                     onClick={() => act(() => markRoomReadyAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <span>🍽️</span> Hazırlandı (Servise Ver)
+                    <Icon name="utensils" size={20} /> Hazırlandı (Servise Ver)
                   </button>
                 ) : null}
 
@@ -550,7 +551,7 @@ export default function OdaServisiClient({
                     onClick={() => act(() => markRoomOnWayAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <span>🚶</span> Odaya Çıkar (Yolda)
+                    <Icon name="walk" size={20} /> Odaya Çıkar (Yolda)
                   </button>
                 ) : null}
 
@@ -562,7 +563,7 @@ export default function OdaServisiClient({
                     onClick={() => act(() => markRoomDeliveredAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    <span>✓</span> Odaya Teslim Edildi
+                    <Icon name="check" size={20} /> Odaya Teslim Edildi
                   </button>
                 ) : null}
 
@@ -591,7 +592,7 @@ export default function OdaServisiClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
             <h2 className="text-lg font-black text-text">
-              📞 Oda #{confirmModal.roomNumber} Telefon Teyidi
+              <Icon name="call" size={20} /> Oda #{confirmModal.roomNumber} Telefon Teyidi
             </h2>
             <p className="text-xs text-muted mt-1">
               Sipariş #{confirmModal.orderNo} için misafir arandı ve teyit alındı. İsteğe bağlı not ekleyebilirsiniz:
@@ -631,7 +632,7 @@ export default function OdaServisiClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
             <h2 className="text-lg font-black text-rose-700 dark:text-rose-400">
-              ❌ Siparişi İptal Et / Reddet
+              <Icon name="close" size={20} /> Siparişi İptal Et / Reddet
             </h2>
             <p className="text-xs text-muted mt-1">
               Oda #{cancelModal.roomNumber} - Sipariş #{cancelModal.orderNo} iptal edilecek. Lütfen gerekçe belirtin:

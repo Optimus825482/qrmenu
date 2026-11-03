@@ -12,6 +12,7 @@ import { menuContextAction } from "../server/actions/menuAdmin";
 import { listTableQrAction, regenerateAllTableQrAction, regenerateTableQrAction } from "../server/actions/tableQr";
 import type { MenuContext } from "../server/menuContext";
 import type { TableQrRow } from "../server/tableQr";
+import { Icon } from "@/components/icons/Icon";
 
 const LIVE_EVENTS = ["definition.changed", "assignment.changed", "realtime.resync"];
 const RELOAD_MS = 300;
@@ -209,7 +210,7 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
 
         {/* Seçili Outlet Masa Sayısı & Durum Çipi */}
         <div className="xp-tq-stats-chip" title="Aktif masa sayısı ve imzalı QR durumu">
-          <span>🪑 <strong>{rows.length}</strong> masa</span>
+          <span><Icon name="table" size={16} /> <strong>{rows.length}</strong> masa</span>
           {areas.length > 0 ? <span>&bull; {areas.length} alan</span> : null}
           <span>&bull;</span>
           <span style={{ color: signedCount === rows.length && rows.length > 0 ? "#15803d" : "#b45309" }}>
@@ -246,7 +247,7 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
               style={{ fontWeight: "bold", color: "#1e3a8a" }}
               title="Önizle ve Stand / Kart Formatında Yazdır"
             >
-              🖨️ Yazdır
+              <Icon name="printer" size={16} /> Yazdır
             </a>
           </>
         ) : null}

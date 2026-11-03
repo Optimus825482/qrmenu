@@ -119,7 +119,7 @@ export function PersistentMybarModal({ hotelId, onRefresh }: MybarModalProps) {
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border-4 border-amber-400 overflow-hidden transform scale-100 transition-all">
         {/* Amber Header Band */}
         <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 p-6 text-white text-center">
-          <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center shadow-inner animate-bounce">
+          <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center shadow-inner">
             <svg
               className="w-9 h-9 text-white"
               fill="none"

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PersistentMybarModal } from "../../components/PersistentMybarModal";
 import type { SetupInspectionItem } from "@/modules/minibar/server/minibarTypes";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
+import { Icon, type IconName } from "@/components/icons/Icon";
 
 interface RoomInspectionData {
   room: {
@@ -68,12 +69,12 @@ export default function KatOdaKontrolPage(props: {
   } | null>(null);
   const [modalReplenishQty, setModalReplenishQty] = useState(0);
 
-  const MMD_REASONS = [
-    { label: "Misafir uyuyor", icon: "😴" },
-    { label: "Misafir banyoda", icon: "🚿" },
-    { label: "Misafir istemedi", icon: "✋" },
-    { label: "Misafir daha sonra gelmemizi istedi", icon: "⏰" },
-    { label: "Misafir telefonda", icon: "📞" },
+  const MMD_REASONS: { label: string; icon: IconName }[] = [
+    { label: "Misafir uyuyor", icon: "moon" },
+    { label: "Misafir banyoda", icon: "droplet" },
+    { label: "Misafir istemedi", icon: "hand" },
+    { label: "Misafir daha sonra gelmemizi istedi", icon: "clock" },
+    { label: "Misafir telefonda", icon: "call" },
   ];
 
   function showToast(text: string, type: "success" | "error") {
@@ -182,7 +183,7 @@ export default function KatOdaKontrolPage(props: {
         throw new Error(resJson.error || "İşlem kaydedilemedi.");
       }
 
-      showToast("Sarfiyat yok olarak kaydedildi! ✓", "success");
+      showToast("Sarfiyat yok olarak kaydedildi!", "success");
       setTimeout(() => {
         router.push(`/kat/doluluk/${data.room.floorId}`);
       }, 1000);
@@ -250,7 +251,7 @@ export default function KatOdaKontrolPage(props: {
         throw new Error(resJson.error || "Kontrol kaydedilemedi.");
       }
 
-      showToast("Oda kontrolü ve sarfiyat başarıyla kaydedildi! ✅", "success");
+      showToast("Oda kontrolü ve sarfiyat başarıyla kaydedildi!", "success");
       setTimeout(() => {
         router.push(`/kat/doluluk/${data.room.floorId}`);
       }, 1200);
@@ -329,7 +330,7 @@ export default function KatOdaKontrolPage(props: {
             toastMessage.type === "success" ? "bg-emerald-600" : "bg-rose-600"
           }`}
         >
-          <span>{toastMessage.type === "success" ? "✓" : "⚠️"}</span>
+          <span>{toastMessage.type === "success" ? <Icon name="check" size={20} /> : <Icon name="warning" size={20} />}</span>
           <span>{toastMessage.text}</span>
         </div>
       )}
@@ -363,7 +364,7 @@ export default function KatOdaKontrolPage(props: {
               className="h-12 px-3 sm:px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm flex items-center gap-1.5 active:scale-95 transition-all touch-manipulation cursor-pointer"
               title="Oda Kontrol İşlemlerim"
             >
-              <span>📋</span>
+              <Icon name="clipboard" size={20} />
               <span className="hidden md:inline">İşlemlerim</span>
             </Link>
 
@@ -390,7 +391,7 @@ export default function KatOdaKontrolPage(props: {
               onClick={() => setIsDndModalOpen(true)}
               className="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-orange-600/20 flex items-center gap-1.5 touch-manipulation cursor-pointer"
             >
-              <span>🚪</span>
+              <Icon name="door" size={20} />
               <span>DND</span>
             </button>
 
@@ -400,7 +401,7 @@ export default function KatOdaKontrolPage(props: {
               onClick={() => setIsMmdModalOpen(true)}
               className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-amber-950 font-black text-xs sm:text-sm shadow-md shadow-amber-500/25 border-2 border-amber-500 flex items-center gap-1.5 touch-manipulation cursor-pointer"
             >
-              <span>✋</span>
+              <Icon name="hand" size={20} />
               <span>MMD</span>
             </button>
 
@@ -411,7 +412,7 @@ export default function KatOdaKontrolPage(props: {
               disabled={isSubmitting}
               className="px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-slate-700 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md flex items-center gap-1.5 touch-manipulation cursor-pointer"
             >
-              <span>✓</span>
+              <Icon name="check" size={20} />
               <span>Sarfiyat Yok</span>
             </button>
 
@@ -453,10 +454,10 @@ export default function KatOdaKontrolPage(props: {
                 <span className="text-sm font-bold text-slate-500">Durum:</span>
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">
                   {data.guestStatus.kind === "ARRIVAL"
-                    ? `✈️ Giriş (${data.guestStatus.arrivalTime || "14:00"})`
+                    ? `Giriş (${data.guestStatus.arrivalTime || "14:00"})`
                     : data.guestStatus.kind === "DEPARTURE"
-                    ? `🚶 Çıkış (${data.guestStatus.departureTime || "12:00"})`
-                    : "🏠 In-House"}
+                    ? `Çıkış (${data.guestStatus.departureTime || "12:00"})`
+                    : "In-House"}
                 </span>
                 {data.taskItem?.dndCount ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800">
@@ -486,7 +487,7 @@ export default function KatOdaKontrolPage(props: {
           <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-400 rounded-3xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🛎️</span>
+                <Icon name="concierge" size={24} />
                 <h3 className="text-base sm:text-lg font-black text-amber-950">
                   Bu Oda İçin Misafir MyBar Talebi Var!
                 </h3>
@@ -538,7 +539,7 @@ export default function KatOdaKontrolPage(props: {
                 <div className="bg-slate-900 text-white px-5 sm:px-6 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-sm">
-                      📦
+                      <Icon name="box" size={20} />
                     </div>
                     <div>
                       <h3 className="text-base sm:text-lg font-black tracking-tight">
@@ -555,7 +556,7 @@ export default function KatOdaKontrolPage(props: {
                     onClick={() => handleQuickFillAllSetup(setup)}
                     className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs shadow-md transition-all touch-manipulation cursor-pointer"
                   >
-                    ⚡ Hepsini Doldur
+                    <Icon name="zap" size={20} /> Hepsini Doldur
                   </button>
                 </div>
 
@@ -621,7 +622,7 @@ export default function KatOdaKontrolPage(props: {
                               onClick={() => handleOpenItemDialog(item, setup.setupName)}
                               className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/25 flex items-center gap-1.5 cursor-pointer touch-manipulation"
                             >
-                              <span>✓</span>
+                              <Icon name="check" size={20} />
                               <span>+{currentReplenished} Eklendi (Sarfiyat)</span>
                             </button>
                           ) : (
@@ -728,7 +729,7 @@ export default function KatOdaKontrolPage(props: {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/75 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 text-orange-600">
-              <span className="text-3xl">🚪</span>
+              <Icon name="door" size={32} />
               <div>
                 <h3 className="text-xl font-black text-slate-900">
                   DND (Rahatsız Etmeyin)
@@ -748,7 +749,7 @@ export default function KatOdaKontrolPage(props: {
               </p>
               {data.taskItem && data.taskItem.dndWaitMinutes > 0 && (
                 <p className="text-rose-600 font-bold">
-                  ⚠️ Son DND kontrolünden sonra henüz 1 saat dolmadı. Bekleme süresi: {data.taskItem.dndWaitMinutes} dk.
+                  <Icon name="warning" size={20} /> Son DND kontrolünden sonra henüz 1 saat dolmadı. Bekleme süresi: {data.taskItem.dndWaitMinutes} dk.
                 </p>
               )}
             </div>
@@ -800,12 +801,12 @@ export default function KatOdaKontrolPage(props: {
                   </p>
                 </div>
               </div>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setIsMmdModalOpen(false)}
                 className="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold hover:bg-slate-200"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -819,7 +820,7 @@ export default function KatOdaKontrolPage(props: {
                   disabled={isSubmitting}
                   className="w-full p-4 rounded-2xl bg-amber-50 hover:bg-amber-100 active:scale-98 text-amber-950 font-bold text-base flex items-center gap-3.5 border-2 border-amber-200 hover:border-amber-400 transition-all shadow-sm touch-manipulation cursor-pointer text-left"
                 >
-                  <span className="text-2xl">{reason.icon}</span>
+                  <Icon name={reason.icon} size={24} />
                   <span className="flex-1">{reason.label}</span>
                   <span className="text-amber-500 font-black">→</span>
                 </button>
@@ -847,12 +848,12 @@ export default function KatOdaKontrolPage(props: {
                   {activeItemModal.item.productName}
                 </h3>
               </div>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setActiveItemModal(null)}
                 className="w-10 h-10 rounded-xl hover:bg-slate-100 text-slate-400 font-black text-lg flex items-center justify-center cursor-pointer"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -945,7 +946,7 @@ export default function KatOdaKontrolPage(props: {
             {/* Kullanıcının tam mantığına göre Dinamik Rehber Kartı */}
             <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 font-medium space-y-1">
               <p className="font-bold flex items-center gap-1.5">
-                <span>💡</span>
+                <Icon name="lightbulb" size={20} />
                 <span>Nasıl İşlenecek?</span>
               </p>
               <p>
@@ -976,7 +977,7 @@ export default function KatOdaKontrolPage(props: {
                 onClick={handleConfirmItemReplenish}
                 className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>✓</span>
+                <Icon name="check" size={20} />
                 <span>Dolumu Onayla ({modalReplenishQty} Adet)</span>
               </button>
             </div>

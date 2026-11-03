@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { PersistentMybarModal } from "../components/PersistentMybarModal";
 import type { RoomCheckHistoryItem } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 export default function KatIslemlerimPage() {
   const [history, setHistory] = useState<RoomCheckHistoryItem[]>([]);
@@ -82,7 +83,7 @@ export default function KatIslemlerimPage() {
       if (!res.ok) {
         throw new Error(json.error || "Silme işlemi başarısız.");
       }
-      showToast(json.message || "Kayıt başarıyla silindi ve stok iade edildi! ✅", "success");
+      showToast(json.message || "Kayıt başarıyla silindi ve stok iade edildi!", "success");
       setDeleteTarget(null);
       await loadHistory();
     } catch (err: unknown) {
@@ -128,7 +129,7 @@ export default function KatIslemlerimPage() {
         throw new Error(json.error || "Güncelleme başarısız.");
       }
 
-      showToast(json.message || "Kayıt başarıyla güncellendi! ✅", "success");
+      showToast(json.message || "Kayıt başarıyla güncellendi!", "success");
       setEditTarget(null);
       await loadHistory();
     } catch (err: unknown) {
@@ -177,7 +178,7 @@ export default function KatIslemlerimPage() {
         throw new Error(json.error || "Düzeltme talebi gönderilemedi.");
       }
 
-      showToast(json.message || "Düzeltme talebi Sistem Yöneticisi onayına iletildi! 📋", "success");
+      showToast(json.message || "Düzeltme talebi Sistem Yöneticisi onayına iletildi!", "success");
       setCorrectionTarget(null);
       await loadHistory();
     } catch (err: unknown) {
@@ -199,7 +200,7 @@ export default function KatIslemlerimPage() {
             toastMessage.type === "success" ? "bg-emerald-600" : "bg-rose-600"
           }`}
         >
-          <span>{toastMessage.type === "success" ? "✓" : "⚠️"}</span>
+          <span>{toastMessage.type === "success" ? <Icon name="check" size={20} /> : <Icon name="warning" size={20} />}</span>
           <span>{toastMessage.text}</span>
         </div>
       )}
@@ -218,7 +219,7 @@ export default function KatIslemlerimPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  📋 Oda Kontrol İşlemlerim
+                  <Icon name="clipboard" size={20} /> Oda Kontrol İşlemlerim
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
                   {history.length} Kayıt
@@ -239,14 +240,14 @@ export default function KatIslemlerimPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 pl-9 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50"
             />
-            <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            <Icon name="search" size={16} className="absolute left-3 top-2.5 text-slate-400" />
             {searchQuery && (
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-sm"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             )}
           </div>
@@ -267,11 +268,11 @@ export default function KatIslemlerimPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500">Bugünkü Kontroller</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             </div>
             <div className="text-2xl sm:text-3xl font-black text-emerald-700 mt-2">{todayCount}</div>
             <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md inline-block mt-2">
-              ✓ Düzenlenebilir / Silinebilir
+              <Icon name="check" size={20} /> Düzenlenebilir / Silinebilir
             </span>
           </button>
 
@@ -286,7 +287,7 @@ export default function KatIslemlerimPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500">Geçmiş Tarihli</span>
-              <span className="text-sm">🔒</span>
+              <Icon name="lock" size={20} />
             </div>
             <div className="text-2xl sm:text-3xl font-black text-slate-700 mt-2">{pastCount}</div>
             <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md inline-block mt-2">
@@ -305,7 +306,7 @@ export default function KatIslemlerimPage() {
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500">Toplam Sarfiyat Adedi</span>
-              <span className="text-sm">📦</span>
+              <Icon name="box" size={20} />
             </div>
             <div className="text-2xl sm:text-3xl font-black text-indigo-700 mt-2">{totalReplenishedCount}</div>
             <span className="text-[11px] font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-md inline-block mt-2">
@@ -325,7 +326,7 @@ export default function KatIslemlerimPage() {
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            🟢 Bugün ({todayCount})
+            <Icon name="circle" size={20} /> Bugün ({todayCount})
           </button>
           <button
             type="button"
@@ -336,7 +337,7 @@ export default function KatIslemlerimPage() {
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            🔒 Geçmiş Kayıtlar ({pastCount})
+            <Icon name="lock" size={20} /> Geçmiş Kayıtlar ({pastCount})
           </button>
           <button
             type="button"
@@ -359,7 +360,7 @@ export default function KatIslemlerimPage() {
           </div>
         ) : filteredList.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
-            <span className="text-4xl block mb-2">📭</span>
+            <Icon name="inbox" size={32} className="block mb-2" />
             <h3 className="text-base font-bold text-slate-800">Kayıt Bulunamadı</h3>
             <p className="text-xs text-slate-500 mt-1">
               {filterTab === "TODAY"
@@ -415,7 +416,7 @@ export default function KatIslemlerimPage() {
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 font-bold mt-1 flex items-center gap-2">
-                          <span>🕒 {item.isToday ? `Bugün ${formattedTime}` : `${formattedFullDate} ${formattedTime}`}</span>
+                          <span><Icon name="clock" size={20} /> {item.isToday ? `Bugün ${formattedTime}` : `${formattedFullDate} ${formattedTime}`}</span>
                           {item.totalItemsCount > 0 && (
                             <>
                               <span>•</span>
@@ -437,7 +438,7 @@ export default function KatIslemlerimPage() {
                         </span>
                       ) : (
                         <span className="px-3 py-1.5 rounded-xl bg-slate-200 text-slate-700 font-extrabold text-xs flex items-center gap-1.5">
-                          <span>🔒</span>
+                          <Icon name="lock" size={20} />
                           Tarih Geçmiş (Kilitli)
                         </span>
                       )}
@@ -467,14 +468,14 @@ export default function KatIslemlerimPage() {
 
                     {item.note && (
                       <p className="text-xs text-slate-600 bg-slate-100/70 p-2.5 rounded-xl font-medium border border-slate-200/80">
-                        💬 <span className="font-semibold text-slate-700">Not:</span> {item.note}
+                        <Icon name="message" size={20} /> <span className="font-semibold text-slate-700">Not:</span> {item.note}
                       </p>
                     )}
 
                     {/* Pending Correction Alert if any */}
                     {item.pendingCorrection && (
                       <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center gap-3">
-                        <span className="text-xl">⏳</span>
+                        <Icon name="hourglass" size={24} />
                         <div>
                           <div className="text-xs font-black text-amber-900">
                             Sistem Yöneticisi Onayı Bekliyor (
@@ -499,7 +500,7 @@ export default function KatIslemlerimPage() {
                           onClick={() => handleOpenEdit(item)}
                           className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                         >
-                          <span>✏️</span>
+                          <Icon name="edit" size={20} />
                           <span>Değiştir / Düzenle</span>
                         </button>
                         <button
@@ -507,7 +508,7 @@ export default function KatIslemlerimPage() {
                           onClick={() => setDeleteTarget(item)}
                           className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                         >
-                          <span>🗑️</span>
+                          <Icon name="trash" size={20} />
                           <span>Kaydı Sil</span>
                         </button>
                       </div>
@@ -515,7 +516,7 @@ export default function KatIslemlerimPage() {
                       /* GEÇMİŞ TARİH: Kat sorumlusu değiştiremez / silemez; ancak Depo Sorumlusu gerekçe girerek talep oluşturabilir */
                       <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <p className="text-xs text-slate-500 font-semibold italic flex items-center gap-1.5">
-                          <span>ℹ️</span>
+                          <Icon name="info" size={20} />
                           Geçmiş tarihli kayıtlar kilitlidir. Kat sorumlusu silemez veya değiştiremez.
                         </p>
                         {!item.pendingCorrection && (
@@ -525,7 +526,7 @@ export default function KatIslemlerimPage() {
                             className="px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                             title="Depo Sorumlusu gerekçeli talep oluşturur, Sistem Yöneticisi onaylar"
                           >
-                            <span>📝</span>
+                            <Icon name="edit" size={20} />
                             <span>Depo Düzeltme Talebi Oluştur</span>
                           </button>
                         )}
@@ -544,7 +545,7 @@ export default function KatIslemlerimPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
           <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-black">
-              🗑️
+              <Icon name="trash" size={20} />
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-900">Oda Kontrol Kaydını Sil</h3>
@@ -587,7 +588,7 @@ export default function KatIslemlerimPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl font-black">
-                  ✏️
+                  <Icon name="edit" size={20} />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-slate-900">
@@ -598,12 +599,12 @@ export default function KatIslemlerimPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setEditTarget(null)}
                 className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 font-black text-lg"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -697,7 +698,7 @@ export default function KatIslemlerimPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-black">
-                  📝
+                  <Icon name="edit" size={20} />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-slate-900">
@@ -708,12 +709,12 @@ export default function KatIslemlerimPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setCorrectionTarget(null)}
                 className="w-9 h-9 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 font-black text-lg"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -730,7 +731,7 @@ export default function KatIslemlerimPage() {
                       : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  🗑️ Kaydı Tamamen İptal Et (Sil)
+                  <Icon name="trash" size={20} /> Kaydı Tamamen İptal Et (Sil)
                 </button>
                 <button
                   type="button"
@@ -741,7 +742,7 @@ export default function KatIslemlerimPage() {
                       : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
                   }`}
                 >
-                  ✏️ Ürün Adetlerini Düzelt
+                  <Icon name="edit" size={20} /> Ürün Adetlerini Düzelt
                 </button>
               </div>
             </div>

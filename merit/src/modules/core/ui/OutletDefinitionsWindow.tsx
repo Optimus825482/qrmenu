@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { AppProps } from "@/shell/registry";
 import { OutletsPanel } from "@/shell/apps/definitions/panels/OutletsPanel";
 import { TablesPanel } from "@/shell/apps/definitions/panels/TablesPanel";
+import { Icon } from "@/components/icons/Icon";
 
 export function OutletDefinitionsWindow({ hotelId, setStatus }: AppProps) {
   const [tab, setTab] = useState<"outlets" | "tables">("outlets");
@@ -21,7 +22,7 @@ export function OutletDefinitionsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-transparent text-gray-700 hover:bg-white/50"
           }`}
         >
-          🏨 Outlet Tanımları & Alanlar
+          <Icon name="building" size={16} /> Outlet Tanımları & Alanlar
         </button>
         <button
           type="button"
@@ -32,7 +33,7 @@ export function OutletDefinitionsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-transparent text-gray-700 hover:bg-white/50"
           }`}
         >
-          🪑 Masa Tanımları & Alan Bağlantıları
+          <Icon name="table" size={16} /> Masa Tanımları & Alan Bağlantıları
         </button>
       </div>
 

@@ -55,4 +55,51 @@ describe("UX kaynak kuralları", () => {
     }
     expect(hits).toEqual([]);
   });
+
+  describe("P-UX-3: emoji, sürekli animasyon, sabit para birimi", () => {
+    function walkAll(dir: string, out: string[] = []): string[] {
+      for (const name of readdirSync(dir)) {
+        if (name === "generated") continue;
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) walkAll(p, out);
+        else if (/\.(ts|tsx|css|json)$/.test(name)) out.push(p);
+      }
+      return out;
+    }
+    const all = walkAll(SRC).map((p) => ({ p, text: readFileSync(p, "utf8") }));
+
+    it("src içinde emoji/dingbat 0 (oklar, ×, ·, •, geometrik şekiller serbest)", () => {
+      const re = /[\u{1F000}-\u{1FAFF}\u{2300}-\u{23FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/u;
+      const hits: string[] = [];
+      for (const f of all) {
+        f.text.split("\n").forEach((line, i) => {
+          if (re.test(line)) hits.push(`${f.p}:${i + 1}`);
+        });
+      }
+      expect(hits).toEqual([]);
+    });
+
+    it("sürekli animasyon yok: animate-(bounce|ping|pulse) ve animation:...infinite (spin hariç) 0", () => {
+      const hits: string[] = [];
+      for (const f of all) {
+        f.text.split("\n").forEach((line, i) => {
+          if (/animate-(bounce|ping|pulse)\b/.test(line)) hits.push(`${f.p}:${i + 1}`);
+          const m = /animation(?:-[a-z]+)?:[^;]*infinite/.exec(line);
+          if (m && !/\bspin\b/.test(m[0])) hits.push(`${f.p}:${i + 1}`);
+        });
+      }
+      expect(hits).toEqual([]);
+    });
+
+    it(".tsx içinde sabit para birimi simgesi (₺, €) 0 — formatPrice kullanılır", () => {
+      const hits: string[] = [];
+      for (const f of all) {
+        if (!f.p.endsWith(".tsx")) continue;
+        f.text.split("\n").forEach((line, i) => {
+          if (/[₺€]/.test(line)) hits.push(`${f.p}:${i + 1}`);
+        });
+      }
+      expect(hits).toEqual([]);
+    });
+  });
 });

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 interface RoomQrModalProps {
   room: RoomCardData | null;
@@ -138,7 +139,7 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
         <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 flex items-center justify-center font-black text-xl">
-              📷
+              <Icon name="camera" size={20} />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
@@ -153,12 +154,12 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
             </div>
           </div>
 
-          <button
+          <button aria-label="Kapat"
             type="button"
             onClick={onClose}
             className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 font-black text-lg transition-colors cursor-pointer"
           >
-            ✕
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -177,12 +178,12 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
 
                 {/* Laser Scanning Reticle */}
                 <div className="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-rose-500 via-rose-400 to-rose-500 shadow-lg shadow-rose-500/80 animate-pulse" />
+                  <div className="w-full h-1 bg-gradient-to-r from-rose-500 via-rose-400 to-rose-500 shadow-lg shadow-rose-500/80" />
                 </div>
 
                 {verifySuccess && (
                   <div className="absolute inset-0 bg-emerald-600/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 animate-in zoom-in-95">
-                    <span className="text-5xl block mb-2">✅</span>
+                    <Icon name="check-circle" size={32} className="block mb-2" />
                     <strong className="text-lg font-black">QR Kod Doğrulandı!</strong>
                     <span className="text-xs text-emerald-100 font-semibold mt-1">
                       Oda {room.number} minibar kontrolüne giriliyor...
@@ -192,7 +193,7 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
               </>
             ) : (
               <div className="p-6 text-center text-slate-400 space-y-2">
-                <span className="text-4xl block mb-2">📷</span>
+                <Icon name="camera" size={32} className="block mb-2" />
                 <p className="font-bold text-sm text-white">Kamera Açılamadı</p>
                 <p className="text-xs">{cameraError || "Lütfen manuel giriş butonunu kullanınız."}</p>
               </div>
@@ -201,7 +202,7 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
 
           {verifyError && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-bold text-center animate-in shake">
-              ⚠️ {verifyError}
+              <Icon name="warning" size={20} /> {verifyError}
             </div>
           )}
 
@@ -241,7 +242,7 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
               onClick={handleManualBypass}
               className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
             >
-              <span>⚡</span>
+              <Icon name="zap" size={20} />
               <span>Oda {room.number} Kontrolünü Doğrudan Başlat</span>
             </button>
           </div>

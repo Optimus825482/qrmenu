@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/locales";
 import { FlagIcon } from "./FlagIcon";
+import { Icon } from "@/components/icons/Icon";
 
 /** Menü sol üst köşesinde yer alan bayraklı dil seçici */
 export function LanguageSwitch({
@@ -96,7 +97,7 @@ export function LanguageSwitch({
                   </span>
                   <span className="g-lang-item-name">{meta.nativeName}</span>
                   <span className="g-lang-item-code">{meta.label}</span>
-                  {isSelected ? <span className="g-lang-item-check">✓</span> : null}
+                  {isSelected ? <Icon name="check" size={20} className="g-lang-item-check" /> : null}
                 </button>
               );
             }
@@ -116,7 +117,7 @@ export function LanguageSwitch({
                 </span>
                 <span className="g-lang-item-name">{meta.nativeName}</span>
                 <span className="g-lang-item-code">{meta.label}</span>
-                {isSelected ? <span className="g-lang-item-check">✓</span> : null}
+                {isSelected ? <Icon name="check" size={20} className="g-lang-item-check" /> : null}
               </a>
             );
           })}

@@ -9,6 +9,7 @@ import {
   type RoomServiceReportRow,
   type OutletReportRow,
 } from "@/modules/core/server/admin/actions/centralReports";
+import { Icon } from "@/components/icons/Icon";
 
 export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
   const [tab, setTab] = useState<"kpi" | "minibar" | "oda-servisi" | "outlet">("kpi");
@@ -145,7 +146,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
             disabled={loading}
             className="xp-button text-xs px-2.5 py-1 font-bold"
           >
-            {loading ? "Yenileniyor..." : "🔄 Yenile"}
+            {loading ? "Yenileniyor..." : "Yenile"}
           </button>
         </div>
 
@@ -154,7 +155,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
           onClick={exportCsv}
           className="xp-button text-xs px-3 py-1 font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-400 flex items-center gap-1"
         >
-          <span>📥</span> Excel&apos;e Aktar (.CSV)
+          <Icon name="download" size={16} /> Excel&apos;e Aktar (.CSV)
         </button>
       </div>
 
@@ -169,7 +170,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-[#e5e5d8] border-[#b0b0a0] text-muted hover:bg-[#eaeae0]"
           }`}
         >
-          📊 Genel KPI Özeti
+          <Icon name="chart" size={16} /> Genel KPI Özeti
         </button>
 
         <button
@@ -181,7 +182,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-[#e5e5d8] border-[#b0b0a0] text-muted hover:bg-[#eaeae0]"
           }`}
         >
-          🍾 Minibar &amp; İkram
+          <Icon name="minibar" size={16} /> Minibar &amp; İkram
         </button>
 
         <button
@@ -193,7 +194,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-[#e5e5d8] border-[#b0b0a0] text-muted hover:bg-[#eaeae0]"
           }`}
         >
-          🛎️ Oda Servisi SLA
+          <Icon name="concierge" size={16} /> Oda Servisi SLA
         </button>
 
         <button
@@ -205,7 +206,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
               : "bg-[#e5e5d8] border-[#b0b0a0] text-muted hover:bg-[#eaeae0]"
           }`}
         >
-          🍽️ Outlet POS &amp; Garson
+          <Icon name="utensils" size={16} /> Outlet POS &amp; Garson
         </button>
       </div>
 
@@ -222,7 +223,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
           <div className="space-y-4">
             {/* Minibar KPI Blok */}
             <fieldset className="border border-[#7f9db9] rounded p-3 bg-[#fdfdfd]">
-              <legend className="font-bold text-[#0c3276] px-1">🍾 Minibar &amp; All-Inclusive İkram KPI&apos;ları</legend>
+              <legend className="font-bold text-[#0c3276] px-1"><Icon name="minibar" size={16} /> Minibar &amp; All-Inclusive İkram KPI&apos;ları</legend>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
                 <div className="p-2.5 rounded bg-[#f0f4f9] border border-[#d0dbe9]">
                   <p className="text-[11px] text-muted">Kontrol Edilen Oda</p>
@@ -245,7 +246,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
 
             {/* Oda Servisi KPI Blok */}
             <fieldset className="border border-[#7f9db9] rounded p-3 bg-[#fdfdfd]">
-              <legend className="font-bold text-[#831843] px-1">🛎️ QR Oda Servisi &amp; SLA Performansı</legend>
+              <legend className="font-bold text-[#831843] px-1"><Icon name="concierge" size={16} /> QR Oda Servisi &amp; SLA Performansı</legend>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
                 <div className="p-2.5 rounded bg-[#fdf2f8] border border-[#fbcfe8]">
                   <p className="text-[11px] text-muted">Toplam Oda Siparişi</p>
@@ -268,7 +269,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
 
             {/* Outlet KPI Blok */}
             <fieldset className="border border-[#7f9db9] rounded p-3 bg-[#fdfdfd]">
-              <legend className="font-bold text-[#1e3a8a] px-1">🍽️ Outlet POS &amp; Garson Çağrı KPI&apos;ları</legend>
+              <legend className="font-bold text-[#1e3a8a] px-1"><Icon name="utensils" size={16} /> Outlet POS &amp; Garson Çağrı KPI&apos;ları</legend>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
                 <div className="p-2.5 rounded bg-[#f0f4f9] border border-[#d0dbe9]">
                   <p className="text-[11px] text-muted">Toplam Outlet Siparişi</p>

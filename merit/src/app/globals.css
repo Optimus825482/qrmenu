@@ -119,3 +119,30 @@ body {
   height: 100%;
   object-fit: contain;
 }
+
+/* Olay anında tek nabız (600 ms): yeni sipariş/çağrı geldiğinde `pulseOnce()` ekler, animationend'de kaldırır.
+   Sürekli (sonsuz döngülü) animasyon yasaktır; kalıcı durum renk + kenar + metinle gösterilir. */
+@keyframes pulse-once {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 6px color-mix(in srgb, currentColor 0%, transparent);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.pulse-once {
+  animation: pulse-once 600ms ease-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-once {
+    animation: none;
+  }
+}

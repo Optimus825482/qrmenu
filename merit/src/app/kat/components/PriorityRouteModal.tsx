@@ -215,7 +215,7 @@ export function PriorityRouteModal({ isOpen, onClose, hotelId }: PriorityRouteMo
                               <span
                                 className={`px-2 py-0.5 rounded-md text-xs font-black ${
                                   isClash
-                                    ? "bg-rose-600 text-white animate-pulse"
+                                    ? "bg-rose-600 text-white"
                                     : isArrival
                                     ? "bg-emerald-600 text-white"
                                     : "bg-slate-200 text-slate-800"

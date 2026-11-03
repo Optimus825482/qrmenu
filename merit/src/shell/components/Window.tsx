@@ -31,6 +31,7 @@ import {
 } from "../windowStore";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { HotelPicker, type HotelInfo } from "./HotelPicker";
+import { Icon } from "@/components/icons/Icon";
 
 const lazyApps = new Map<string, LazyExoticComponent<ComponentType<AppProps>>>();
 
@@ -329,7 +330,7 @@ export function Window({ id, hotels, userName }: Props) {
             aria-label={win.maximized ? "Önceki boyut" : "Ekranı kapla"}
             onClick={() => actions.toggleMaximize(id)}
           >
-            {win.maximized ? "❐" : "□"}
+            {win.maximized ? <Icon name="restore" size={12} /> : "□"}
           </button>
         ) : null}
         <button

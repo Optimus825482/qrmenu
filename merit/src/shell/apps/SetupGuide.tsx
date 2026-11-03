@@ -6,6 +6,7 @@ import { setupGuideStatusAction } from "@/modules/core/server/admin/actions/setu
 import type { SetupStatus } from "@/modules/core/server/admin/setupGuide";
 import { getApp, type AppProps } from "../registry";
 import { useSse } from "../useSse";
+import { Icon } from "@/components/icons/Icon";
 
 const RELOAD_DEBOUNCE_MS = 500;
 const LOAD_FAILED = "Kurulum durumu alınamadı";
@@ -92,7 +93,7 @@ export function SetupGuide({ hotelId, openApp, setStatus }: AppProps) {
                     role="img"
                     aria-label={step.done ? "Tamamlandı" : "Eksik"}
                   >
-                    {step.done ? "✓" : "○"}
+                    {step.done ? <Icon name="check" size={16} /> : "○"}
                   </span>
                   <span className="xp-guide-title">{step.title}</span>
                   {step.required ? null : <span className="xp-badge">Zorunlu değil</span>}

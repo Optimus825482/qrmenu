@@ -6,6 +6,7 @@ import { approvals } from "@/modules/order/server/approvals";
 import { cashier } from "@/modules/order/server/cashier";
 import { waiterCalls } from "@/modules/order/server/waiterCalls";
 import KasaClient from "./KasaClient";
+import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 export default async function CashierPage() {
@@ -13,7 +14,7 @@ export default async function CashierPage() {
   if (!(await can(ctx, "QS-KAS", "V", ctx.session.hotelId))) denyScreen("QS-KAS");
   if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
-  const [board, queue, calls, canEdit, members, outlet] = await Promise.all([
+  const [board, queue, calls, canEdit, members, outlet, currency] = await Promise.all([
     cashier.tableBoard(ctx, outletId),
     approvals.visibleQueue(ctx, outletId),
     waiterCalls.listOpen(ctx, outletId),
@@ -27,6 +28,7 @@ export default async function CashierPage() {
       where: { id: outletId },
       select: { hasMenu: true, priceDisplay: true, name: true },
     }),
+    resolveCurrency(ctx.session.hotelId),
   ]);
   return (
     <KasaClient
@@ -39,6 +41,7 @@ export default async function CashierPage() {
       calls={calls}
       waiters={members.map(({ user }) => user)}
       canEdit={canEdit}
+      currency={currency}
     />
   );
 }

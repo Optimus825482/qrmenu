@@ -4,25 +4,14 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import type { AllergenKey } from "../../allergens";
 import type { GuestItem } from "../../server/guestMenu";
+import { Icon, isIconName, type IconName } from "@/components/icons/Icon";
 import { useModalFocusTrap } from "./useModalFocusTrap";
 
-export const ALLERGEN_ICON: Record<AllergenKey, string> = {
-  gluten: "🌾",
-  sut: "🥛",
-  yumurta: "🥚",
-  kuruyemis: "🌰",
-  yerfistigi: "🥜",
-  deniz_urunu: "🦐",
-  yumusakca: "🐚",
-  balik: "🐟",
-  alkol: "🍷",
-  soya: "🫘",
-  susam: "🌱",
-  kereviz: "🥬",
-  hardal: "🟡",
-  sulfit: "🍇",
-  acibakla: "🌸",
-};
+/** Her alerjen anahtarının SVG ikonu (`allergen-<anahtar>`); metin etiketi her zaman yanında gösterilir. */
+export function allergenIconName(key: string): IconName {
+  const name = `allergen-${key}`;
+  return isIconName(name) ? name : "info";
+}
 
 export const MAX_QUANTITY = 20;
 export const NOTE_MAX = 500;
@@ -34,7 +23,7 @@ export function AllergenIcons({ allergens }: { allergens: readonly string[] }) {
     <ul className="g-allergens">
       {allergens.map((key) => (
         <li key={key} title={t(key)} aria-label={t(key)}>
-          <span aria-hidden="true">{ALLERGEN_ICON[key as AllergenKey] ?? "•"}</span>
+          <Icon name={allergenIconName(key)} size={20} />
         </li>
       ))}
     </ul>
@@ -192,7 +181,7 @@ export function ItemSheet({
               <ul className="g-allergen-list">
                 {item.allergens.map((key) => (
                   <li key={key}>
-                    <span aria-hidden="true">{ALLERGEN_ICON[key as AllergenKey] ?? "•"}</span>{" "}
+                    <Icon name={allergenIconName(key)} size={20} />{" "}
                     {t(`allergen.${key as AllergenKey}`)}
                   </li>
                 ))}

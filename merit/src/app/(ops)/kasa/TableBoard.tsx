@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { TableBoard as TableBoardData } from "@/modules/order/server/cashier";
+import { Icon } from "@/components/icons/Icon";
+import { formatPrice } from "@/lib/formatPrice";
 
 export type BoardTable = TableBoardData["tables"][number];
 
@@ -17,9 +19,11 @@ type Props = {
   calls: { tableLabel: string; ageSec: number; type?: string; note?: string | null }[];
   scannedTableIds?: string[];
   onSelect: (table: BoardTable) => void;
+  /** Otelin `price.currency` ayarı. */
+  currency: string;
 };
 
-export default function TableBoard({ tables, areas = [], calls, scannedTableIds = [], onSelect }: Props) {
+export default function TableBoard({ tables, areas = [], calls, scannedTableIds = [], onSelect, currency }: Props) {
   const [selectedAreaId, setSelectedAreaId] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "OCCUPIED" | "EMPTY" | "CALLS" | "SCANNED">("ALL");
   const [search, setSearch] = useState<string>("");
@@ -158,7 +162,7 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                   : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30"
               }`}
             >
-              <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
               Çağrı Var ({counts.withCalls})
             </button>
             {counts.scanned > 0 ? (
@@ -168,10 +172,10 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                 className={`min-h-9 px-3 py-1 rounded-lg text-xs font-bold transition active:scale-95 flex items-center gap-1.5 ${
                   statusFilter === "SCANNED"
                     ? "bg-amber-500 text-slate-950 shadow-xs"
-                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 animate-pulse"
+                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40"
                 }`}
               >
-                <span>⚡</span>
+                <Icon name="zap" size={20} />
                 Misafir Masada ({counts.scanned})
               </button>
             ) : null}
@@ -198,14 +202,14 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
               placeholder="Masa no ara..."
               className="w-full h-9 rounded-lg border border-border bg-surface-sunken px-3 pl-8 text-xs font-medium placeholder:text-muted focus:border-accent focus:outline-none"
             />
-            <span className="absolute left-2.5 top-2.5 text-xs text-muted pointer-events-none">🔍</span>
+            <Icon name="search" size={16} className="absolute left-2.5 top-2.5 text-muted pointer-events-none" />
             {search ? (
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setSearch("")}
                 className="absolute right-2 top-2 h-5 w-5 rounded-full bg-border text-xs flex items-center justify-center text-muted hover:text-text"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             ) : null}
           </div>
@@ -233,10 +237,10 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
           let cardBg = "bg-surface hover:bg-surface-sunken/60";
 
           if (isOverdue) {
-            cardBorder = "border-rose-500 ring-2 ring-rose-500/30 animate-pulse";
+            cardBorder = "border-rose-500 ring-2 ring-rose-500/30";
             cardBg = "bg-rose-50/80 dark:bg-rose-950/20";
           } else if (isScanned) {
-            cardBorder = "border-amber-400 ring-4 ring-amber-400/60 shadow-lg shadow-amber-500/25 animate-pulse";
+            cardBorder = "border-amber-400 ring-4 ring-amber-400/60 shadow-lg shadow-amber-500/25";
             cardBg = "bg-amber-100/80 dark:bg-amber-950/40";
           } else if (hasCall) {
             cardBorder = "border-amber-500 ring-2 ring-amber-500/30";
@@ -276,10 +280,10 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                   {/* Çağrı / QR Tarama Rozeti */}
                   {isScanned ? (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black tracking-wide bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md animate-bounce"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-black tracking-wide bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-md"
                       title="Misafir masada QR menüyü okuttu"
                     >
-                      ⚡ QR OKUNDU
+                      <Icon name="zap" size={20} /> QR OKUNDU
                     </span>
                   ) : hasCall ? (
                     <span
@@ -290,7 +294,7 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                       }`}
                       title={tableCall?.note ? `Not: ${tableCall.note}` : undefined}
                     >
-                      🔔 {tableCall?.type || (table.openCalls > 1 ? `${table.openCalls}` : "Çağrı")}
+                      <Icon name="bell" size={20} /> {tableCall?.type || (table.openCalls > 1 ? `${table.openCalls}` : "Çağrı")}
                     </span>
                   ) : hasOrders ? (
                     <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-800 dark:text-sky-200 text-[10px] font-bold">
@@ -303,7 +307,7 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
 
                 {/* Garson Bilgisi */}
                 <div className="mt-2 text-xs flex items-center gap-1.5 text-muted">
-                  <span className="text-xs">👤</span>
+                  <Icon name="user" size={16} />
                   <span className="truncate font-medium">
                     {table.waiter?.fullName ?? "Garson atanmamış"}
                   </span>
@@ -313,7 +317,6 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                 {isScanned ? (
                   <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-extrabold text-amber-700 dark:text-amber-300">
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                     </span>
                     <span>Misafir masada (QR menüde)</span>
@@ -328,7 +331,7 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                     {totalAmount > 0 ? (
                       <div className="text-xs font-black text-text flex items-center justify-between">
                         <span>Toplam:</span>
-                        <span className="text-sky-700 dark:text-sky-300 font-mono">₺{totalAmount.toFixed(2)}</span>
+                        <span className="text-sky-700 dark:text-sky-300 font-mono">{formatPrice(totalAmount, currency)}</span>
                       </div>
                     ) : null}
                     <div className="flex flex-wrap gap-1">
@@ -355,7 +358,7 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
                   </div>
                 ) : (
                   <div className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
-                    <span>✓</span> Hazır / Boş
+                    <Icon name="check" size={20} /> Hazır / Boş
                   </div>
                 )}
               </div>

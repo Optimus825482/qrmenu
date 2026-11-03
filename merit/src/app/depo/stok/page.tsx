@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { Icon } from "@/components/icons/Icon";
 
 interface DepoStockItem {
   id: string;
@@ -150,7 +151,7 @@ export default function DepoStokPage() {
             </Link>
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>📦 Kat Sorumlusu Ortak Konsinye Stok Havuzu</span>
+                <span><Icon name="box" size={20} /> Kat Sorumlusu Ortak Konsinye Stok Havuzu</span>
               </h1>
               <p className="text-xs text-slate-400">
                 Depo Sorumlusu Zimmet Takibi • Otel Bazlı Ortak Havuz
@@ -177,21 +178,21 @@ export default function DepoStokPage() {
               href="/depo/doluluk-yukle"
               className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📊 Doluluk Girişi
+              <Icon name="chart" size={20} /> Doluluk Girişi
             </Link>
 
             <Link
               href="/depo/raporlar"
               className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📈 Raporlar
+              <Icon name="trending" size={20} /> Raporlar
             </Link>
 
             <Link
               href="/depo/tanimlar"
               className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition"
             >
-              ⚙️ Tanımlamalar & Audit
+              <Icon name="settings" size={20} /> Tanımlamalar & Audit
             </Link>
           </div>
         </div>
@@ -201,7 +202,7 @@ export default function DepoStokPage() {
         {/* Bilgilendirme Kartı */}
         <div className="p-4 bg-emerald-950/30 border border-emerald-800/40 rounded-xl flex items-center justify-between gap-3 text-emerald-200 text-xs">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">ℹ️</span>
+            <Icon name="info" size={24} />
             <div>
               <span className="font-bold">Otel Bazlı Ortak Zimmet Kuralı:</span> Bu ekrandan otele tanımlanan zimmet stoğu (örneğin 100 Kola), o oteldeki tüm kat görevlilerinin ortak havuzudur. Kat görevlisi minibar dolumu yaptıkça havuzdan otomatik düşer.
             </div>
@@ -225,7 +226,7 @@ export default function DepoStokPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              📦 Mevcut Stok Havuzu ({filteredItems.length})
+              <Icon name="box" size={20} /> Mevcut Stok Havuzu ({filteredItems.length})
             </button>
             <button
               onClick={() => setActiveTab("MOVEMENTS")}
@@ -235,7 +236,7 @@ export default function DepoStokPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              📜 Hareket Geçmişi ({movements.length})
+              <Icon name="list" size={20} /> Hareket Geçmişi ({movements.length})
             </button>
           </div>
 
@@ -310,7 +311,7 @@ export default function DepoStokPage() {
                                 onClick={() => openAdjustModal(item, "DUZELTME")}
                                 className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
                               >
-                                ⚙️ Düzenle
+                                <Icon name="settings" size={20} /> Düzenle
                               </button>
                             </div>
                           </td>
@@ -392,13 +393,13 @@ export default function DepoStokPage() {
           <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <span>{movementType === "GIRIS" ? "➕ Zimmet Stoğu Ekle" : "⚙️ Stok Düzeltme / Sayım Farkı"}</span>
+                <span>{movementType === "GIRIS" ? "Zimmet Stoğu Ekle" : "Stok Düzeltme / Sayım Farkı"}</span>
               </h3>
-              <button
+              <button aria-label="Kapat"
                 onClick={() => setIsAdjustModalOpen(false)}
                 className="text-slate-400 hover:text-white text-lg p-1"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 

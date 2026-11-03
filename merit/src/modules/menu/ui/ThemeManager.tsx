@@ -20,6 +20,7 @@ import {
 } from "../server/actions/themes";
 import type { AssignTarget, ThemeRow } from "../server/themes";
 import { MenuDesignStudio } from "./MenuDesignStudio";
+import { Icon } from "@/components/icons/Icon";
 
 type Dialog = { mode: "new" } | { mode: "edit"; row: ThemeRow } | null;
 type Colors = Pick<ThemeRow, "bg" | "accent" | "soft" | "textOnAccent">;
@@ -285,7 +286,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                             }}
                             title={`“${selected?.name}” temasını önizlenen ${studio.activeOutletName || "outlete"} ata`}
                           >
-                            ✓ Önizlenen Outlete Ata
+                            <Icon name="check" size={16} /> Önizlenen Outlete Ata
                           </button>
                         </>
                       ) : null}
@@ -297,7 +298,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
               <div className="xp-themes-assign">
                 <div className="xp-themes-assign-header">
                   <div className="xp-themes-assign-title">
-                    <span className="xp-theme-section-icon">🎨</span>
+                    <Icon name="palette" size={20} className="xp-theme-section-icon" />
                     <strong>OUTLET TEMA ATAMALARI</strong>
                     <span className="xp-badge-count">{filteredOutlets.length} outlet</span>
                   </div>
@@ -348,10 +349,10 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                             onClick={() => studio.selectOutlet(o.id)}
                             title="Önizlemek için tıklayın"
                           >
-                            <span className="xp-theme-outlet-icon">🏪</span>
+                            <Icon name="store" size={20} className="xp-theme-outlet-icon" />
                             <span className="xp-theme-outlet-name">{o.name}</span>
                             {isPreviewing ? (
-                              <span className="xp-theme-active-tag">📱 Önizleniyor</span>
+                              <span className="xp-theme-active-tag"><Icon name="phone" size={16} /> Önizleniyor</span>
                             ) : null}
                           </div>
                           <div className="xp-theme-outlet-actions">
@@ -391,7 +392,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                 )}
                 {saved ? (
                   <div role="status" className="xp-theme-toast">
-                    <span className="xp-theme-toast-check">✓</span>
+                    <Icon name="check" size={20} className="xp-theme-toast-check" />
                     <span>{saved}</span>
                   </div>
                 ) : null}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { confirm } from "@/shell/confirm";
+import { Icon } from "@/components/icons/Icon";
 
 interface ProductGroupItem {
   id: string;
@@ -636,10 +637,10 @@ export default function MinibarTanimlarPage() {
             </Link>
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>⚙️ Minibar & Sistem Tanımlamaları</span>
+                <span><Icon name="settings" size={20} /> Minibar & Sistem Tanımlamaları</span>
               </h1>
               <p className="text-xs text-slate-400">
-                Ürün Grupları • Ürünler • Oda Tipleri • Setuplar • 🛡️ Silinemez Denetim Kaydı
+                Ürün Grupları • Ürünler • Oda Tipleri • Setuplar • <Icon name="shield" size={20} /> Silinemez Denetim Kaydı
               </p>
             </div>
           </div>
@@ -667,21 +668,21 @@ export default function MinibarTanimlarPage() {
               href="/depo/stok"
               className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📦 Stok Havuzu
+              <Icon name="box" size={20} /> Stok Havuzu
             </Link>
 
             <Link
               href="/kat/tavsiye-is-plani"
               className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
             >
-              💡 Tavsiye Planı
+              <Icon name="lightbulb" size={20} /> Tavsiye Planı
             </Link>
 
             <Link
               href="/depo/raporlar"
               className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📈 Raporlar
+              <Icon name="trending" size={20} /> Raporlar
             </Link>
           </div>
         </div>
@@ -691,18 +692,18 @@ export default function MinibarTanimlarPage() {
         {/* Bildirim Mesajları */}
         {errorMsg && (
           <div className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-xs flex items-center justify-between">
-            <span>⚠️ {errorMsg}</span>
-            <button onClick={() => setErrorMsg(null)} className="text-rose-400 hover:text-white ml-2">
-              ✕
+            <span><Icon name="warning" size={20} /> {errorMsg}</span>
+            <button aria-label="Kapat" onClick={() => setErrorMsg(null)} className="text-rose-400 hover:text-white ml-2">
+              <Icon name="close" size={20} />
             </button>
           </div>
         )}
 
         {successMsg && (
           <div role="status" className="p-4 bg-emerald-950/60 border border-emerald-800 rounded-xl text-emerald-200 text-xs flex items-center justify-between">
-            <span>✓ {successMsg}</span>
-            <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-white ml-2">
-              ✕
+            <span><Icon name="check" size={20} /> {successMsg}</span>
+            <button aria-label="Kapat" onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-white ml-2">
+              <Icon name="close" size={20} />
             </button>
           </div>
         )}
@@ -717,7 +718,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
             }`}
           >
-            <span>🍾</span>
+            <Icon name="minibar" size={20} />
             <span>Ürünler ({products.length})</span>
           </button>
 
@@ -729,7 +730,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
             }`}
           >
-            <span>🏷️</span>
+            <Icon name="tag" size={20} />
             <span>Ürün Grupları ({groups.length})</span>
           </button>
 
@@ -741,7 +742,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
             }`}
           >
-            <span>📦</span>
+            <Icon name="box" size={20} />
             <span>Setup Konseptleri ({setups.length})</span>
           </button>
 
@@ -753,7 +754,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
             }`}
           >
-            <span>🛏️</span>
+            <Icon name="bed" size={20} />
             <span>Oda Tipleri ({roomTypes.length})</span>
           </button>
 
@@ -765,7 +766,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
             }`}
           >
-            <span>🔗</span>
+            <Icon name="link" size={20} />
             <span>Oda Tipi Setup Atamaları ({assignments.length})</span>
           </button>
 
@@ -777,7 +778,7 @@ export default function MinibarTanimlarPage() {
                 : "bg-slate-900 text-purple-300 hover:text-white border border-purple-900/50"
             }`}
           >
-            <span>🛡️</span>
+            <Icon name="shield" size={20} />
             <span>Silinemez Audit Logları</span>
           </button>
         </div>
@@ -828,7 +829,7 @@ export default function MinibarTanimlarPage() {
                 }}
                 className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
               >
-                <span>➕</span>
+                <Icon name="plus" size={20} />
                 <span>Yeni Ürün Tanımla</span>
               </button>
             </div>
@@ -937,7 +938,7 @@ export default function MinibarTanimlarPage() {
                 }}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
-                <span>➕</span>
+                <Icon name="plus" size={20} />
                 <span>Yeni Ürün Grubu</span>
               </button>
             </div>
@@ -1021,7 +1022,7 @@ export default function MinibarTanimlarPage() {
                 }}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
-                <span>➕</span>
+                <Icon name="plus" size={20} />
                 <span>Yeni Setup Konsepti</span>
               </button>
             </div>
@@ -1068,7 +1069,7 @@ export default function MinibarTanimlarPage() {
                       }}
                       className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
                     >
-                      <span>📋</span>
+                      <Icon name="clipboard" size={20} />
                       <span>İçerik Normu Düzenle</span>
                     </button>
 
@@ -1086,7 +1087,7 @@ export default function MinibarTanimlarPage() {
                       className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition"
                       title="Setup Düzenle"
                     >
-                      ⚙️
+                      <Icon name="settings" size={20} />
                     </button>
 
                     <button
@@ -1094,7 +1095,7 @@ export default function MinibarTanimlarPage() {
                       className="p-2 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl transition"
                       title="Setup Sil"
                     >
-                      🗑️
+                      <Icon name="trash" size={20} />
                     </button>
                   </div>
                 </div>
@@ -1123,7 +1124,7 @@ export default function MinibarTanimlarPage() {
                 }}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
-                <span>➕</span>
+                <Icon name="plus" size={20} />
                 <span>Yeni Oda Tipi Tanımla</span>
               </button>
             </div>
@@ -1228,7 +1229,7 @@ export default function MinibarTanimlarPage() {
                 }}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
-                <span>➕</span>
+                <Icon name="plus" size={20} />
                 <span>Oda Tipine Setup Ata</span>
               </button>
             </div>
@@ -1288,7 +1289,7 @@ export default function MinibarTanimlarPage() {
           <div className="space-y-4">
             <div className="p-4 bg-purple-950/40 border border-purple-800/60 rounded-2xl flex items-center justify-between gap-3 text-purple-200 text-xs">
               <div className="flex items-center gap-2.5">
-                <span className="text-xl">🛡️</span>
+                <Icon name="shield" size={24} />
                 <div>
                   <span className="font-bold">Silinemez Tarih-Saat Damgalı Denetim Kaydı (Immutable Audit Trail):</span> Sistemdeki tüm Ekleme, Güncelleme, Silme ve Atama işlemleri bu alana mühürlenir. Silinen veya güncellenen kayıtların eski içerikleri (`before`) ve yeni içerikleri (`after`) kalıcı olarak saklanır.
                 </div>
@@ -1361,7 +1362,7 @@ export default function MinibarTanimlarPage() {
                                 }}
                                 className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-semibold transition"
                               >
-                                🔍 Snapshot Gör
+                                <Icon name="search" size={20} /> Snapshot Gör
                               </button>
                             </td>
                           </tr>
@@ -1649,7 +1650,7 @@ export default function MinibarTanimlarPage() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <span>📋 {activeSetupForItems.name}</span>
+                  <span><Icon name="clipboard" size={20} /> {activeSetupForItems.name}</span>
                   <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
                     Setup İçerik Normu
                   </span>
@@ -1658,8 +1659,8 @@ export default function MinibarTanimlarPage() {
                   Kat görevlilerinin odada eksik tamamlaması gereken hedef minibar norm sayıları
                 </p>
               </div>
-              <button onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
-                ✕
+              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -1728,7 +1729,7 @@ export default function MinibarTanimlarPage() {
                           className="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg text-xs"
                           title="Çıkar"
                         >
-                          ✕ Kaldır
+                          <Icon name="close" size={20} /> Kaldır
                         </button>
                       </div>
                     </div>
@@ -1894,7 +1895,7 @@ export default function MinibarTanimlarPage() {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="font-bold text-base text-white flex items-center gap-2">
-                  <span>🛡️ Denetim Kaydı Snapshot</span>
+                  <span><Icon name="shield" size={20} /> Denetim Kaydı Snapshot</span>
                   <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">
                     {activeAuditLog.action} • {activeAuditLog.entity}
                   </span>
@@ -1905,8 +1906,8 @@ export default function MinibarTanimlarPage() {
                   {activeAuditLog.ip || "Yerel"}
                 </p>
               </div>
-              <button onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
-                ✕
+              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
+                <Icon name="close" size={20} />
               </button>
             </div>
 
@@ -1914,7 +1915,7 @@ export default function MinibarTanimlarPage() {
               {/* BEFORE */}
               <div>
                 <div className="flex items-center justify-between bg-rose-950/40 border border-rose-900/60 px-3 py-1.5 rounded-t-xl text-rose-300 font-bold">
-                  <span>◀️ ÖNCEKİ DEĞER (BEFORE / SİLİNEN KAYIT)</span>
+                  <span><Icon name="arrow-left" size={20} /> ÖNCEKİ DEĞER (BEFORE / SİLİNEN KAYIT)</span>
                   <span>{activeAuditLog.before ? "Mevcut" : "Yok (Yeni Kayıt)"}</span>
                 </div>
                 <pre className="p-3 bg-black/60 border border-t-0 border-slate-800 rounded-b-xl text-rose-200 overflow-x-auto text-[11px] max-h-48">
@@ -1927,7 +1928,7 @@ export default function MinibarTanimlarPage() {
               {/* AFTER */}
               <div>
                 <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-900/60 px-3 py-1.5 rounded-t-xl text-emerald-300 font-bold">
-                  <span>▶️ SONRAKİ DEĞER (AFTER / GÜNCEL KAYIT)</span>
+                  <span><Icon name="arrow-right" size={20} /> SONRAKİ DEĞER (AFTER / GÜNCEL KAYIT)</span>
                   <span>{activeAuditLog.after ? "Mevcut" : "Yok (Silinmiş Kayıt)"}</span>
                 </div>
                 <pre className="p-3 bg-black/60 border border-t-0 border-slate-800 rounded-b-xl text-emerald-200 overflow-x-auto text-[11px] max-h-48">

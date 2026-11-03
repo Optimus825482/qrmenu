@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { Icon } from "@/components/icons/Icon";
 
 interface HotelItem {
   id: string;
@@ -216,7 +217,7 @@ export default function RaporlarPage() {
             </Link>
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>📊 Detaylı Minibar & Operasyon Raporları</span>
+                <span><Icon name="chart" size={20} /> Detaylı Minibar & Operasyon Raporları</span>
               </h1>
               <p className="text-xs text-slate-400">
                 Tüketim Analitiği • Görev Tamamlanma & DND İstatistikleri
@@ -253,21 +254,21 @@ export default function RaporlarPage() {
               href="/depo/doluluk-yukle"
               className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📊 Doluluk Girişi
+              <Icon name="chart" size={20} /> Doluluk Girişi
             </Link>
 
             <Link
               href="/depo/stok"
               className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📦 Stok Havuzu
+              <Icon name="box" size={20} /> Stok Havuzu
             </Link>
 
             <Link
               href="/depo/tanimlar"
               className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition"
             >
-              ⚙️ Tanımlamalar & Audit
+              <Icon name="settings" size={20} /> Tanımlamalar & Audit
             </Link>
           </div>
         </div>
@@ -305,7 +306,7 @@ export default function RaporlarPage() {
                   : "text-slate-400 hover:text-red-400"
               }`}
             >
-              🚨 Anormal Tüketim Raporu
+              <Icon name="warning" size={20} /> Anormal Tüketim Raporu
             </button>
           </div>
 
@@ -611,7 +612,7 @@ export default function RaporlarPage() {
             <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
               <div className="px-5 py-3.5 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
                 <h3 className="font-bold text-sm text-red-400 flex items-center gap-2">
-                  <span>🚨</span> Oda Bazlı Anormal Tüketim Detayları
+                  <Icon name="warning" size={20} /> Oda Bazlı Anormal Tüketim Detayları
                 </h3>
                 <span className="text-xs text-slate-400">
                   Eşik: Günde 6+ adet veya mükerrer dolum
@@ -622,7 +623,7 @@ export default function RaporlarPage() {
                 <div className="py-12 text-center text-slate-500 text-sm">Anormal tüketim verileri taranıyor...</div>
               ) : !abnormalReport || abnormalReport.roomAnomalies.length === 0 ? (
                 <div className="py-12 text-center text-emerald-400 text-sm font-semibold">
-                  ✓ Seçilen tarihte anormal tüketim tespit edilen oda bulunmamaktadır.
+                  <Icon name="check" size={20} /> Seçilen tarihte anormal tüketim tespit edilen oda bulunmamaktadır.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -679,7 +680,7 @@ export default function RaporlarPage() {
               <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
                 <div className="px-5 py-3.5 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
                   <h3 className="font-bold text-sm text-amber-400 flex items-center gap-2">
-                    <span>📈</span> Ürün Bazlı Olağandışı Tüketim Artışı (Spike)
+                    <Icon name="trending" size={20} /> Ürün Bazlı Olağandışı Tüketim Artışı (Spike)
                   </h3>
                   <span className="text-xs text-slate-400">14 Günlük Hareketli Ortalamaya Göre</span>
                 </div>

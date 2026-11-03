@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { QualityFinding, QualityLevel } from "../quality";
+import { Icon } from "@/components/icons/Icon";
 
 const ORDER: Record<QualityLevel, number> = { block: 0, warn: 1, info: 2 };
 const LABEL: Record<QualityLevel, string> = { block: "ENGEL", warn: "UYARI", info: "BİLGİ" };
@@ -26,7 +27,7 @@ export function QualityPanel({ findings, id }: { findings: QualityFinding[]; id?
         aria-label="Kalite kontrol panelini aç"
       >
         <span className="xp-design-quality-badge-icon">
-          {blockCount > 0 ? "⛔" : warnCount > 0 ? "⚠️" : "✓"}
+          {blockCount > 0 ? <Icon name="ban" size={16} /> : warnCount > 0 ? <Icon name="warning" size={20} /> : <Icon name="check" size={20} />}
         </span>
         <span className="xp-design-quality-badge-text">
           Kalite ({sorted.length})
@@ -61,7 +62,7 @@ export function QualityPanel({ findings, id }: { findings: QualityFinding[]; id?
 
       {sorted.length === 0 ? (
         <div className="xp-design-quality-ok" role="status">
-          <span className="xp-design-quality-ok-icon">✓</span>
+          <Icon name="check" size={20} className="xp-design-quality-ok-icon" />
           <div>
             <strong>Sorun bulunmadı</strong>
             <p>Tasarım ve menü ayarları kurallara uygun.</p>

@@ -8,6 +8,7 @@ import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
 import { useSetupSummary } from "../useSetupSummary";
 import { useSse } from "../useSse";
 import type { AppProps } from "../registry";
+import { Icon } from "@/components/icons/Icon";
 
 const FEED_LIMIT = 50;
 
@@ -72,7 +73,6 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
       <fieldset className="xp-group my-2 p-2.5 bg-[#fcfdff] border-[#7f9db9] rounded shadow-xs">
         <legend className="font-bold text-[#0c3276] px-1 flex items-center gap-1.5">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
           <span>Canlı Komuta Radarı</span>
@@ -80,7 +80,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
           <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
             <div className="flex items-center justify-between text-muted text-[11px]">
-              <span>🏨 Canlı Doluluk</span>
+              <span><Icon name="building" size={16} /> Canlı Doluluk</span>
               <span className="font-bold text-[#1e3a8a]">%{kpis?.radar?.occupancyPercent ?? 0}</span>
             </div>
             <p className="text-base font-black text-[#0c3276] mt-1">
@@ -91,12 +91,12 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           <div
             className={`p-2 rounded border flex flex-col justify-between ${
               (kpis?.radar?.activeMybarRequests ?? 0) > 0
-                ? "bg-[#fffbeb] border-amber-400 text-amber-900 animate-pulse"
+                ? "bg-[#fffbeb] border-amber-400 text-amber-900"
                 : "bg-white border-[#b8cfe5] text-text"
             }`}
           >
             <div className="flex items-center justify-between text-[11px]">
-              <span>📱 MyBar Talepleri</span>
+              <span><Icon name="phone" size={16} /> MyBar Talepleri</span>
               {(kpis?.radar?.activeMybarRequests ?? 0) > 0 ? (
                 <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
                   YENİ
@@ -111,12 +111,12 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           <div
             className={`p-2 rounded border flex flex-col justify-between ${
               (kpis?.radar?.delayedRoomOrders ?? 0) > 0
-                ? "bg-[#fef2f2] border-rose-400 text-rose-900 animate-pulse"
+                ? "bg-[#fef2f2] border-rose-400 text-rose-900"
                 : "bg-white border-[#b8cfe5] text-text"
             }`}
           >
             <div className="flex items-center justify-between text-[11px]">
-              <span>⏱️ Geciken Sipariş (SLA)</span>
+              <span><Icon name="clock" size={16} /> Geciken Sipariş (SLA)</span>
               {(kpis?.radar?.delayedRoomOrders ?? 0) > 0 ? (
                 <span className="px-1.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black">
                   &gt;35 dk
@@ -130,7 +130,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
 
           <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
             <div className="flex items-center justify-between text-muted text-[11px]">
-              <span>🍽️ Açık Kasa Kuyruğu</span>
+              <span><Icon name="utensils" size={16} /> Açık Kasa Kuyruğu</span>
               <span className="font-bold text-[#1e3a8a]">{kpis?.radar?.pendingPosOrders ?? 0} adisyon</span>
             </div>
             <p className="text-base font-black text-[#0c3276] mt-1">
@@ -142,81 +142,81 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
       {/* Operasyonlar Hızlı Erişim ve Lansman Paneli */}
       <div className="flex flex-col gap-2 my-2.5">
         <div className="flex flex-wrap gap-1.5 items-center bg-[#f0f4f9] p-2 rounded border border-[#b8cfe5]">
-          <span className="font-bold text-[11px] text-[#1e3a8a] mr-1">🏪 OUTLET:</span>
+          <span className="font-bold text-[11px] text-[#1e3a8a] mr-1"><Icon name="store" size={16} /> OUTLET:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.outlet-tanim")}>
-            🏨 Outlet & Masa Tanımları
+            <Icon name="building" size={16} /> Outlet & Masa Tanımları
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.yonetim")}>
-            📋 Menü Yönetimi
+            <Icon name="clipboard" size={16} /> Menü Yönetimi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.tema")}>
-            🎨 Menü Tasarım Stüdyosu
+            <Icon name="palette" size={16} /> Menü Tasarım Stüdyosu
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.masaqr")}>
-            📱 Masa QR Kodları
+            <Icon name="phone" size={16} /> Masa QR Kodları
           </button>
         </div>
 
         <div className="flex flex-wrap gap-1.5 items-center bg-[#fdf2f8] p-2 rounded border border-[#fbcfe8]">
-          <span className="font-bold text-[11px] text-[#831843] mr-1">🛎️ ODA SERVİSİ:</span>
+          <span className="font-bold text-[11px] text-[#831843] mr-1"><Icon name="concierge" size={16} /> ODA SERVİSİ:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.menu")}>
-            🛎️ Oda Servisi Menü Yönetimi
+            <Icon name="concierge" size={16} /> Oda Servisi Menü Yönetimi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.tema")}>
-            🎨 Menü Tasarım Stüdyosu
+            <Icon name="palette" size={16} /> Menü Tasarım Stüdyosu
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.kayitlar")}>
-            📑 Oda Servisi Kayıtları
+            <Icon name="clipboard" size={16} /> Oda Servisi Kayıtları
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.rapor")}>
-            📈 SLA & Operasyon Raporları
+            <Icon name="trending" size={16} /> SLA & Operasyon Raporları
           </button>
         </div>
 
         <div className="flex flex-wrap gap-1.5 items-center bg-[#f0fdf4] p-2 rounded border border-[#bbf7d0]">
-          <span className="font-bold text-[11px] text-[#14532d] mr-1">🍾 MİNİBAR:</span>
+          <span className="font-bold text-[11px] text-[#14532d] mr-1"><Icon name="minibar" size={16} /> MİNİBAR:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.kat")}>
-            🍾 Minibar Kat Operasyon
+            <Icon name="minibar" size={16} /> Minibar Kat Operasyon
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.tanim")}>
-            ⚙️ Minibar & Setup Tanımları
+            <Icon name="settings" size={16} /> Minibar & Setup Tanımları
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.stok")}>
-            📦 Konsinye Stok Havuzu
+            <Icon name="box" size={16} /> Konsinye Stok Havuzu
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.doluluk")}>
-            📊 Excel Doluluk Girişi
+            <Icon name="chart" size={16} /> Excel Doluluk Girişi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.rapor")}>
-            📈 Tüketim & Görev Raporları
+            <Icon name="trending" size={16} /> Tüketim & Görev Raporları
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100" onClick={() => openApp?.("minibar.odaqr")}>
-            📱 Oda QR Kodları &amp; Baskı
+            <Icon name="phone" size={16} /> Oda QR Kodları &amp; Baskı
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-red-700 bg-red-50/80 hover:bg-red-100" onClick={() => openApp?.("minibar.rapor")}>
-            🚨 Anormal Tüketim Takibi
+            <Icon name="warning" size={16} /> Anormal Tüketim Takibi
           </button>
         </div>
 
         <div className="flex flex-wrap gap-1.5 items-center bg-[#fafafa] p-2 rounded border border-[#d4d4d8]">
-          <span className="font-bold text-[11px] text-[#27272a] mr-1">⚙️ SİSTEM & KULLANICI:</span>
+          <span className="font-bold text-[11px] text-[#27272a] mr-1"><Icon name="settings" size={16} /> SİSTEM & KULLANICI:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.tanimlar")}>
-            🏢 Otel & Genel Tanımlamalar
+            <Icon name="building" size={16} /> Otel & Genel Tanımlamalar
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.kullanici")}>
-            👥 Kullanıcı & Rol Yönetimi
+            <Icon name="users" size={16} /> Kullanıcı & Rol Yönetimi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.ekipler")}>
-            🤝 Ekip Yönetimi
+            <Icon name="users" size={16} /> Ekip Yönetimi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-blue-800 bg-blue-50/80 hover:bg-blue-100" onClick={() => openApp?.("core.rapor")}>
-            📊 Merkezi Raporlama &amp; KPI
+            <Icon name="chart" size={16} /> Merkezi Raporlama &amp; KPI
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.ayarlar")}>
-            🖥️ Denetim Masası
+            <Icon name="monitor" size={16} /> Denetim Masası
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.denetim")}>
-            📜 Denetim Günlüğü (Audit Log)
+            <Icon name="list" size={16} /> Denetim Günlüğü (Audit Log)
           </button>
         </div>
       </div>

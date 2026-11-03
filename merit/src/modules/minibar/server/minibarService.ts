@@ -237,7 +237,7 @@ export async function getFloorRoomsData(floorId: string, hotelId: string) {
 
     if (hasArrival && hasDeparture) {
       status = "clash";
-      statusLabel = "⚠️ Çakışma (Çıkış + Giriş)";
+      statusLabel = "Çakışma (Çıkış + Giriş)";
       const arr = roomGuestRecords.find((g) => g.kind === "ARRIVAL");
       const dep = roomGuestRecords.find((g) => g.kind === "DEPARTURE");
       arrivalTime = arr?.arrivalTime || taskItem?.arrivalTime || DEFAULT_ARRIVAL_TIME;
@@ -619,25 +619,25 @@ export async function getAdvisoryPriorityPlan(hotelId: string): Promise<Priority
 
     if (isClash) {
       urgencyType = "CLASH";
-      urgencyBadge = "⚠️ Çakışma (Kritik)";
+      urgencyBadge = "Çakışma (Kritik)";
       targetTime = item.arrivalTime;
       explanation = `Bugün çıkış (${item.departureTime}) ve giriş (${item.arrivalTime}) var! Girişten 1 saat önce hazır olmalı.`;
       rank = 10;
     } else if (item.arrivalTime) {
       urgencyType = "ARRIVAL";
-      urgencyBadge = "✈️ Giriş";
+      urgencyBadge = "Giriş";
       targetTime = item.arrivalTime;
       explanation = `Misafir gelişi: ${item.arrivalTime}. Varıştan 1 saat önce hazır olmalı.`;
       rank = 20;
     } else if (item.departureTime) {
       urgencyType = "DEPARTURE";
-      urgencyBadge = "🚶 Çıkış";
+      urgencyBadge = "Çıkış";
       targetTime = item.departureTime;
       explanation = `Misafir çıkışı: ${item.departureTime}. Setup tamamlama.`;
       rank = 50;
     } else if (item.dndCount > 0) {
       urgencyType = "DND_RETRY";
-      urgencyBadge = `🚪 DND (${item.dndCount}/${minChecks})`;
+      urgencyBadge = `DND (${item.dndCount}/${minChecks})`;
       explanation = "DND kontrol tekrarı.";
       rank = 30;
     }
@@ -704,12 +704,12 @@ export async function getAdvisoryPriorityPlan(hotelId: string): Promise<Priority
   const clashCount = parsedTasks.filter((t) => t.urgencyType === "CLASH").length;
   const criticalCount = parsedTasks.filter((t) => t.urgencyType === "CLASH" || t.urgencyType === "ARRIVAL").length;
 
-  let briefing = `📋 Bugün bekleyen ${parsedTasks.length} görev var.`;
+  let briefing = `Bugün bekleyen ${parsedTasks.length} görev var.`;
   if (clashCount > 0) {
-    briefing += ` ⚠️ ${clashCount} odada kritik Departure-Arrival çakışması tespit edildi!`;
+    briefing += ` ${clashCount} odada kritik Departure-Arrival çakışması tespit edildi!`;
   }
   if (recommendedStartFloor) {
-    briefing += ` 🚀 Önerilen başlangıç: ${recommendedStartFloor.floorName} (Oda ${recommendedStartFloor.firstRoomNumber}).`;
+    briefing += ` Önerilen başlangıç: ${recommendedStartFloor.floorName} (Oda ${recommendedStartFloor.firstRoomNumber}).`;
   }
 
   return {

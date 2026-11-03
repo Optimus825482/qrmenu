@@ -7,6 +7,7 @@ import {
   type RoomOrderListItem,
   type RoomServiceStats,
 } from "../server/actions/roomServiceRecords";
+import { formatPrice } from "@/lib/formatPrice";
 
 export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
   const [stats, setStats] = useState<RoomServiceStats | null>(null);
@@ -144,7 +145,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
           <span className="text-2xl font-bold text-purple-700 mt-1 block">
             {loading
               ? "..."
-              : `${(stats?.totalRevenue ?? 0).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} €`}
+              : formatPrice(stats?.totalRevenue ?? 0, orders[0]?.currency ?? "EUR")}
           </span>
           <span className="text-gray-500 text-[10px]">Faturalandırılan oda servisi</span>
         </div>
@@ -229,7 +230,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
                   <span className="font-bold text-gray-800">Oda {o.roomNumber}</span>
                   <span className="text-gray-500 truncate max-w-[150px]">{o.itemsSummary}</span>
                   <span className="font-mono font-bold text-blue-700">
-                    {o.subtotal.toFixed(2)} {o.currency}
+                    {formatPrice(o.subtotal, o.currency)}
                   </span>
                 </div>
               ))

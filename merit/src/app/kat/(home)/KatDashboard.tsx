@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PriorityRouteModal } from "../components/PriorityRouteModal";
 import { PersistentMybarModal } from "../components/PersistentMybarModal";
 import type { FloorSummary, TaskSummary } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 interface DashboardData {
   hotel: { id: string; name: string; code: string };
@@ -111,7 +112,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
               href="/kat/tavsiye-is-plani"
               className="flex-1 sm:flex-none px-4 sm:px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all flex items-center justify-center gap-2 touch-manipulation cursor-pointer"
             >
-              <span>💡</span>
+              <Icon name="lightbulb" size={20} />
               <span>Tavsiye İş Planı</span>
             </Link>
 
@@ -119,7 +120,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
               href="/kat/islemlerim"
               className="flex-1 sm:flex-none px-4 sm:px-5 py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-95 text-slate-800 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 touch-manipulation cursor-pointer"
             >
-              <span>📋</span>
+              <Icon name="clipboard" size={20} />
               <span>İşlemlerim</span>
             </Link>
 
@@ -129,7 +130,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                 className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 active:scale-95 text-amber-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                 title="Günlük Excel Doluluk Yükleme"
               >
-                <span>📊</span>
+                <Icon name="chart" size={20} />
                 <span>Doluluk Girişi</span>
               </Link>
             )}
@@ -140,7 +141,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                 className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 text-emerald-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                 title="Depo Sorumlusu Konsinye Havuz Stoğu"
               >
-                <span>📦</span>
+                <Icon name="box" size={20} />
                 <span>Stok Havuzu</span>
               </Link>
             )}
@@ -151,7 +152,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                 className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 active:scale-95 text-blue-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                 title="Minibar Tüketim & Görev Raporları"
               >
-                <span>📈</span>
+                <Icon name="trending" size={20} />
                 <span>Raporlar</span>
               </Link>
             )}
@@ -162,7 +163,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                 className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 active:scale-95 text-purple-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
                 title="Ürün, Grup, Setup, Oda Tipi Tanımları ve Silinemez Audit Logları"
               >
-                <span>⚙️</span>
+                <Icon name="settings" size={20} />
                 <span>Tanımlamalar</span>
               </Link>
             )}
@@ -238,7 +239,7 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                 <p className="text-indigo-200 text-xs">
                   {data?.taskSummary?.clashCount ? (
                     <span className="text-amber-300 font-bold">
-                      ⚠️ {data.taskSummary.clashCount} kritik Departure-Arrival çakışması mevcut!
+                      <Icon name="warning" size={20} /> {data.taskSummary.clashCount} kritik Departure-Arrival çakışması mevcut!
                     </span>
                   ) : (
                     "Oda kontrolleri ve zimmet takibi"
@@ -363,8 +364,8 @@ export default function KatDashboard({ links, filter }: { links: KatLinks; filte
                   >
                     {/* MyBar Badge Indicator */}
                     {floor.mybarCount > 0 && (
-                      <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black uppercase shadow-md animate-bounce">
-                        <span>🛎️ MyBar ({floor.mybarCount})</span>
+                      <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black uppercase shadow-md">
+                        <span><Icon name="concierge" size={20} /> MyBar ({floor.mybarCount})</span>
                       </div>
                     )}
 

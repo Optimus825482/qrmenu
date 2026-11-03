@@ -10,6 +10,7 @@ import {
 } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 import { ImageStudioModal } from "./ImageStudioModal";
+import { Icon } from "@/components/icons/Icon";
 
 type Props = { node: MenuTreeNode; canEdit: boolean; onChanged(): void };
 
@@ -185,7 +186,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
                     className="xp-mm-thumb-img"
                     loading="lazy"
                   />
-                  {isPrimary ? <span className="xp-mm-primary-tag">★ Kapak</span> : null}
+                  {isPrimary ? <span className="xp-mm-primary-tag"><Icon name="star" size={16} /> Kapak</span> : null}
                 </div>
                 {canEdit ? (
                   <div className="xp-mm-thumb-actions" style={{ flexDirection: "column", gap: 2 }}>
@@ -197,7 +198,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
                       onClick={() => openStudioFor(url)}
                       title="Kırpma, Arka Plan Kaldırma, Renk Sıcaklığı ve Gurme Filtreleri Stüdyosu"
                     >
-                      🎨 Stüdyo & Kırp
+                      <Icon name="palette" size={16} /> Stüdyo & Kırp
                     </button>
 
                     <div style={{ display: "flex", gap: 2, width: "100%" }}>
@@ -250,7 +251,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
             disabled={busy}
             onClick={() => input.current?.click()}
           >
-            {busy ? "Yükleniyor..." : "📁 Görsel(ler) Seç / Yükle..."}
+            {busy ? "Yükleniyor..." : "Görsel(ler) Seç / Yükle..."}
           </button>
 
           {images.length > 0 ? (

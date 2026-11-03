@@ -22,6 +22,7 @@ import {
   updatePrinterAction,
 } from "../actions/printers";
 import type { OrderingOutlet, PrinterRow } from "../server/printers";
+import { Icon } from "@/components/icons/Icon";
 
 // Live state of the grid: heartbeat flips and job queue movements.
 const LIVE_EVENTS = ["printer.status", "print.queued", "print.printed", "print.failed"] as const;
@@ -92,7 +93,7 @@ export function PrintersWindow({ hotelId, setStatus }: AppProps) {
     { key: "status", title: "Durum", width: 180, render: (row) => <StatusCell row={row} /> },
     { key: "queued", title: "Kuyruk", width: 70 },
     { key: "failed", title: "Hata", width: 70 },
-    { key: "isActive", title: "Aktif", width: 60, render: (row) => (row.isActive ? "✓" : "—") },
+    { key: "isActive", title: "Aktif", width: 60, render: (row) => (row.isActive ? <Icon name="check" size={16} /> : "—") },
   ];
 
   const submit = async (values: FormValues) => {

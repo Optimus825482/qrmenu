@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { confirm } from "@/shell/confirm";
 import type { CorrectionRequestItem } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 export default function DuzeltmeOnayPage() {
   const [requests, setRequests] = useState<CorrectionRequestItem[]>([]);
@@ -59,7 +60,7 @@ export default function DuzeltmeOnayPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Onaylama başarısız.");
-      showToast(json.message || "Talep onaylandı ve değişiklik uygulandı! ✅", "success");
+      showToast(json.message || "Talep onaylandı ve değişiklik uygulandı!", "success");
       await loadRequests();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Onaylama hatası";
@@ -103,7 +104,7 @@ export default function DuzeltmeOnayPage() {
             toastMessage.type === "success" ? "bg-emerald-600" : "bg-rose-600"
           }`}
         >
-          <span>{toastMessage.type === "success" ? "✓" : "⚠️"}</span>
+          <span>{toastMessage.type === "success" ? <Icon name="check" size={20} /> : <Icon name="warning" size={20} />}</span>
           <span>{toastMessage.text}</span>
         </div>
       )}
@@ -120,7 +121,7 @@ export default function DuzeltmeOnayPage() {
             </Link>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                🛡️ Sistem Yöneticisi Düzeltme Onayları
+                <Icon name="shield" size={20} /> Sistem Yöneticisi Düzeltme Onayları
               </h1>
               <p className="text-xs text-slate-500 font-semibold">
                 Depo Sorumlusu tarafından iletilen geçmiş tarihli oda kontrolü düzeltme/silme talepleri.
@@ -132,7 +133,7 @@ export default function DuzeltmeOnayPage() {
             href="/kat/islemlerim"
             className="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs hover:bg-slate-900"
           >
-            📋 İşlemlerim
+            <Icon name="clipboard" size={20} /> İşlemlerim
           </Link>
         </div>
       </header>
@@ -155,7 +156,7 @@ export default function DuzeltmeOnayPage() {
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
               }`}
             >
-              {st === "BEKLIYOR" ? "⏳ Onay Bekleyenler" : st === "ONAYLANDI" ? "✓ Onaylananlar" : "✗ Reddedilenler"}
+              {st === "BEKLIYOR" ? "Onay Bekleyenler" : st === "ONAYLANDI" ? "Onaylananlar" : "Reddedilenler"}
             </button>
           ))}
         </div>
@@ -168,7 +169,7 @@ export default function DuzeltmeOnayPage() {
           </div>
         ) : requests.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
-            <span className="text-4xl block mb-2">🎉</span>
+            <Icon name="check-circle" size={32} className="block mb-2" />
             <h3 className="text-base font-bold text-slate-800">Bekleyen Talep Yok</h3>
             <p className="text-xs text-slate-500 mt-1">Seçilen duruma uygun onay talebi bulunmuyor.</p>
           </div>
@@ -280,7 +281,7 @@ export default function DuzeltmeOnayPage() {
                         disabled={isSubmitting}
                         className="px-4 py-2.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-800 font-bold text-xs sm:text-sm active:scale-95 cursor-pointer"
                       >
-                        ✗ Reddet
+                        <Icon name="close" size={20} /> Reddet
                       </button>
                       <button
                         type="button"
@@ -288,7 +289,7 @@ export default function DuzeltmeOnayPage() {
                         disabled={isSubmitting}
                         className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-emerald-600/25 cursor-pointer"
                       >
-                        ✓ Talebi Onayla & Uygula
+                        <Icon name="check" size={20} /> Talebi Onayla & Uygula
                       </button>
                     </div>
                   )}

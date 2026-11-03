@@ -19,6 +19,7 @@ import type { SettingGroup } from "@/lib/settings-defs";
 import { confirm } from "../../confirm";
 import { notify } from "../../notify";
 import { useSse } from "../../useSse";
+import { Icon } from "@/components/icons/Icon";
 
 const SOURCE_LABEL: Record<SettingSource, string> = {
   default: "varsayılan",
@@ -374,7 +375,7 @@ function SettingRow({
             }
           }}
         >
-          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+          {testing ? "Test ediliyor..." : "Test Et"}
         </button>
       ) : null}
       {item.key === "translation.geminiKey" ? (
@@ -412,7 +413,7 @@ function SettingRow({
             }
           }}
         >
-          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+          {testing ? "Test ediliyor..." : "Test Et"}
         </button>
       ) : null}
       {item.key === "translation.deeplKey" ? (
@@ -450,7 +451,7 @@ function SettingRow({
             }
           }}
         >
-          {testing ? "⏳ Test ediliyor..." : "⚡ Test Et"}
+          {testing ? "Test ediliyor..." : "Test Et"}
         </button>
       ) : null}
       {meta.secret && item.source !== "default" ? (
@@ -484,7 +485,7 @@ function SettingRow({
               background: "rgba(0, 85, 234, 0.08)",
             }}
           >
-            🔑 {meta.helpLink.label} ↗
+            <Icon name="key" size={16} /> {meta.helpLink.label} ↗
           </a>
         ) : null}
       </div>
@@ -505,7 +506,7 @@ function SettingRow({
             color: testResult.ok ? "#065f46" : "#991b1b",
           }}
         >
-          <span>{testResult.ok ? "✅" : "⚠️"}</span>
+          <span>{testResult.ok ? <Icon name="check-circle" size={16} /> : <Icon name="warning" size={20} />}</span>
           <span>{testResult.text}</span>
         </div>
       ) : null}

@@ -37,7 +37,7 @@ test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, brow
   // A guest call reaches the tile live (SSE), with its type badge.
   const call = await page.request.post(`/api/q/${M1_TOKEN}/call`, { data: { type: "GARSON" } });
   expect(call.ok()).toBeTruthy();
-  await expect(tableTile(cashier, "M1")).toContainText("🔔", { timeout: 3_000 });
+  await expect(tableTile(cashier, "M1")).toContainText("GARSON", { timeout: 3_000 });
   await expect(cashier.getByRole("button", { name: "Garson Çağrıları" })).toContainText("1");
 
   // Approve from the queue tab: the pending KPI drops to 0 and the tile moves on to "Hazırlanıyor".

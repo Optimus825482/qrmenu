@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RoomQrModal } from "../components/RoomQrModal";
 import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 interface TaskPlanItem {
   taskId: string;
@@ -115,7 +116,7 @@ export default function TavsiyeIsPlaniPage() {
             </Link>
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>💡 Akıllı Tavsiye İş Planı & Rota</span>
+                <span><Icon name="lightbulb" size={20} /> Akıllı Tavsiye İş Planı & Rota</span>
               </h1>
               <p className="text-xs text-slate-400">
                 Kat & Mesafe Optimize • Kat sorumlusunun uymak zorunda olmadığı tavsiye planı
@@ -137,7 +138,7 @@ export default function TavsiyeIsPlaniPage() {
               href="/kat/islemlerim"
               className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
             >
-              📋 İşlemlerim
+              <Icon name="clipboard" size={20} /> İşlemlerim
             </Link>
           </div>
         </div>
@@ -164,7 +165,7 @@ export default function TavsiyeIsPlaniPage() {
 
               {plan.recommendedStartFloor && (
                 <div className="px-4 py-2 bg-amber-500/20 border border-amber-500/40 rounded-xl flex items-center gap-3 shrink-0">
-                  <span className="text-2xl">🚀</span>
+                  <Icon name="rocket" size={24} />
                   <div>
                     <span className="text-[10px] uppercase font-bold text-amber-300 block">Önerilen Başlangıç</span>
                     <span className="text-sm font-bold text-white">
@@ -202,7 +203,7 @@ export default function TavsiyeIsPlaniPage() {
             {plan.floorSequence && plan.floorSequence.length > 0 && (
               <div className="pt-3 border-t border-slate-800">
                 <p className="text-xs text-slate-400 mb-2 font-medium">
-                  🎯 Kat Geçiş Sırası Tavsiyesi (Asansör ve Yürüme Mesafesi Minimize Edildi):
+                  <Icon name="target" size={20} /> Kat Geçiş Sırası Tavsiyesi (Asansör ve Yürüme Mesafesi Minimize Edildi):
                 </p>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   {plan.floorSequence.map((f, idx) => (
@@ -246,7 +247,7 @@ export default function TavsiyeIsPlaniPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>📋 Sıralı Tavsiye Oda Listesi</span>
+              <span><Icon name="clipboard" size={20} /> Sıralı Tavsiye Oda Listesi</span>
               {filteredTasks && (
                 <span className="text-xs font-normal text-slate-400">
                   ({filteredTasks.length} oda gösteriliyor)
@@ -308,7 +309,7 @@ export default function TavsiyeIsPlaniPage() {
 
                       <div className="text-xs text-slate-400 space-y-1">
                         <p className="flex items-center gap-1.5 font-medium text-slate-300">
-                          <span>🏢 {t.floorName}</span>
+                          <span><Icon name="building" size={20} /> {t.floorName}</span>
                           {t.targetTime && <span>• Saat: {t.targetTime}</span>}
                         </p>
                         <p className="text-slate-400 leading-relaxed text-[11px]">{t.explanation}</p>

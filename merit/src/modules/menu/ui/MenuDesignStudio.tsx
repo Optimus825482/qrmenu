@@ -42,6 +42,7 @@ import { previewMenu } from "./previewMenu";
 import { CallWaiterButton } from "./guest/CallWaiterButton";
 import { GuestFrame } from "./guest/GuestFrame";
 import { MenuView } from "./guest/MenuView";
+import { Icon } from "@/components/icons/Icon";
 
 export interface StudioContext {
   activeOutletId: string;
@@ -464,7 +465,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                     >
                       <div className="xp-design-template-art-wrap">
                         <span className={`xp-design-template-art is-${template.style}`}><i /><i /><i /></span>
-                        {isSelected ? <span className="xp-design-selected-pill">✓ SEÇİLİ</span> : null}
+                        {isSelected ? <span className="xp-design-selected-pill"><Icon name="check" size={16} /> SEÇİLİ</span> : null}
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                         <strong>{template.name}</strong>

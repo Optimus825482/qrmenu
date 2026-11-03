@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PersistentMybarModal } from "../../components/PersistentMybarModal";
 import { RoomQrModal } from "../../components/RoomQrModal";
 import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import { Icon } from "@/components/icons/Icon";
 
 interface FloorDetailData {
   floor: { id: string; number: number; name: string; hotelId: string };
@@ -148,7 +149,7 @@ export default function KatDolulukDetayPage(props: {
               href="/kat/tavsiye-is-plani"
               className="px-3.5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-900 font-bold text-sm shadow-sm active:scale-95 transition-all flex items-center gap-1.5 touch-manipulation cursor-pointer"
             >
-              <span>💡</span>
+              <Icon name="lightbulb" size={20} />
               <span className="hidden sm:inline">Tavsiye Planı</span>
             </Link>
 
@@ -156,7 +157,7 @@ export default function KatDolulukDetayPage(props: {
               href="/kat/islemlerim"
               className="px-4 py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-sm shadow-sm active:scale-95 transition-all flex items-center gap-1.5 touch-manipulation cursor-pointer"
             >
-              <span>📋</span>
+              <Icon name="clipboard" size={20} />
               <span className="hidden sm:inline">İşlemlerim</span>
             </Link>
 
@@ -405,9 +406,9 @@ export default function KatDolulukDetayPage(props: {
                       e.stopPropagation();
                       setSelectedMybarRoom(room);
                     }}
-                    className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/40 hover:brightness-110 active:scale-95 transition-all text-[11px] font-black animate-bounce cursor-pointer"
+                    className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/40 hover:brightness-110 active:scale-95 transition-all text-[11px] font-black cursor-pointer"
                   >
-                    <span>🛎️</span>
+                    <Icon name="concierge" size={20} />
                     <span>MyBar</span>
                   </button>
                 )}
@@ -433,7 +434,7 @@ export default function KatDolulukDetayPage(props: {
 
                 {isDnd && (
                   <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-orange-500 text-white flex items-center gap-1 text-[11px] font-black shadow-md">
-                    <span>🚪</span>
+                    <Icon name="door" size={20} />
                     <span>{room.dndCount}/3</span>
                   </div>
                 )}
@@ -451,26 +452,26 @@ export default function KatDolulukDetayPage(props: {
                 {/* Bottom Status Badge */}
                 <div className="mt-3 text-center space-y-1">
                   {isClash && (
-                    <div className="px-2 py-1 rounded-xl bg-rose-600 text-white text-[11px] font-black tracking-wide shadow-sm animate-pulse">
-                      ⚠️ ÇAKIŞMA! Çıkış & Giriş
+                    <div className="px-2 py-1 rounded-xl bg-rose-600 text-white text-[11px] font-black tracking-wide shadow-sm">
+                      <Icon name="warning" size={20} /> ÇAKIŞMA! Çıkış & Giriş
                     </div>
                   )}
 
                   {isArrival && (
                     <div className="px-2 py-1 rounded-xl bg-emerald-100 text-emerald-800 text-[11px] font-black tracking-wide border border-emerald-300">
-                      ✈️ Giriş {room.arrivalTime ? `(${room.arrivalTime})` : ""}
+                      <Icon name="plane" size={20} /> Giriş {room.arrivalTime ? `(${room.arrivalTime})` : ""}
                     </div>
                   )}
 
                   {isDeparture && (
                     <div className="px-2 py-1 rounded-xl bg-purple-100 text-purple-800 text-[11px] font-black tracking-wide border border-purple-300">
-                      🚶 Çıkış {room.departureTime ? `(${room.departureTime})` : ""}
+                      <Icon name="walk" size={20} /> Çıkış {room.departureTime ? `(${room.departureTime})` : ""}
                     </div>
                   )}
 
                   {isInHouse && (
                     <div className="px-2 py-1 rounded-xl bg-amber-100 text-amber-900 text-[11px] font-black tracking-wide border border-amber-300">
-                      🏠 In-House
+                      <Icon name="home" size={20} /> In-House
                     </div>
                   )}
 
@@ -483,7 +484,7 @@ export default function KatDolulukDetayPage(props: {
                   {/* Inspection status caption */}
                   <div className="text-[10px] font-bold text-slate-400">
                     {isCompleted
-                      ? "Kontrol Edildi ✓"
+                      ? "Kontrol Edildi"
                       : isDnd
                       ? "DND Bekliyor"
                       : "Kontrol Bekliyor"}
@@ -501,17 +502,17 @@ export default function KatDolulukDetayPage(props: {
           <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🛎️</span>
+                <Icon name="concierge" size={24} />
                 <h3 className="text-xl font-black text-slate-900">
                   Oda {selectedMybarRoom.number} MyBar Talebi
                 </h3>
               </div>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setSelectedMybarRoom(null)}
                 className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold"
               >
-                ✕
+                <Icon name="close" size={20} />
               </button>
             </div>
 

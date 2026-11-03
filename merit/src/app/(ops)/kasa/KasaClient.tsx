@@ -15,6 +15,9 @@ import { ORDER_REJECT_REASONS, REASON_MIN_LENGTH } from "@/modules/order/ui/reas
 import AssignDialog from "./AssignDialog";
 import CashierMenu from "./CashierMenu";
 import TableBoard, { type BoardTable } from "./TableBoard";
+import { Icon, type IconName } from "@/components/icons/Icon";
+import { formatPrice } from "@/lib/formatPrice";
+import { usePulseOnIncrease } from "@/components/ui/usePulseOnIncrease";
 
 type QueueOrder = {
   id: string;
@@ -48,6 +51,8 @@ type Props = {
   calls: OpenCall[];
   waiters: Waiter[];
   canEdit: boolean;
+  /** Otelin `price.currency` ayarı (sunucudan). */
+  currency: string;
 };
 
 const LIVE_EVENTS = [
@@ -94,31 +99,31 @@ function playKioskChime() {
 function Kpis({ value }: { value: TableBoardData["kpis"] }) {
   return (
     <section aria-label="Kasa göstergeleri" className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
-      <Kpi icon="🧾" label="Bugünkü sipariş" value={value.todayOrders} />
+      <Kpi icon="receipt" label="Bugünkü sipariş" value={value.todayOrders} />
       <Kpi
-        icon="⏳"
+        icon="hourglass"
         label="Bekleyen sipariş"
         value={value.pending}
         highlight={value.pending > 0 ? "amber" : undefined}
       />
       <Kpi
-        icon="⚡"
+        icon="zap"
         label="Onay ortalaması"
         value={value.avgApprovalSec === undefined ? "—" : `${value.avgApprovalSec} sn`}
       />
       <Kpi
-        icon="🍳"
+        icon="flame"
         label="Hazırlık ortalaması"
         value={value.avgPrepSec === undefined ? "—" : `${Math.round(value.avgPrepSec / 60)} dk`}
       />
       <Kpi
-        icon="🔔"
+        icon="bell"
         label="Açık çağrı"
         value={value.openCalls}
         highlight={value.openCalls > 0 ? "rose" : undefined}
       />
       <Kpi
-        icon="🖨️"
+        icon="printer"
         label="Yazıcı"
         value={value.printerOnline === null ? "—" : value.printerOnline ? "Çevrimiçi" : "Çevrimdışı"}
         highlight={value.printerOnline === true ? "emerald" : value.printerOnline === false ? "rose" : undefined}
@@ -133,19 +138,19 @@ function Kpi({
   value,
   highlight,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   value: string | number;
   highlight?: "amber" | "rose" | "emerald";
 }) {
   let badgeStyle = "bg-surface border-border text-text";
   if (highlight === "amber") badgeStyle = "bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-100";
-  if (highlight === "rose") badgeStyle = "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-100 animate-pulse";
+  if (highlight === "rose") badgeStyle = "bg-rose-500/10 border-rose-500/30 text-rose-900 dark:text-rose-100";
   if (highlight === "emerald") badgeStyle = "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-100";
 
   return (
     <div className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-2xs ${badgeStyle}`}>
-      <span className="text-xl sm:text-2xl select-none">{icon}</span>
+      <Icon name={icon} size={24} />
       <div className="flex-1 min-w-0">
         <p className="text-[11px] font-medium text-muted truncate">{label}</p>
         <p className="text-base sm:text-lg font-black tracking-tight truncate">{value}</p>
@@ -164,12 +169,15 @@ export default function KasaClient({
   calls: initialCalls,
   waiters,
   canEdit,
+  currency,
 }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [board, setBoard] = useState(initialBoard);
   const [queue, setQueue] = useState(initialQueue);
   const [calls, setCalls] = useState(initialCalls);
+  const queueBadgeRef = usePulseOnIncrease<HTMLSpanElement>(queue.length);
+  const callsBadgeRef = usePulseOnIncrease<HTMLSpanElement>(calls.length);
   const [priceDisplay, setPriceDisplay] = useState<"INHERIT" | "SHOW" | "HIDE">(initialPriceDisplay);
   const [selected, setSelected] = useState<BoardTable | undefined>();
   const [bulk, setBulk] = useState(false);
@@ -309,7 +317,7 @@ export default function KasaClient({
           <div className="flex flex-col">
             <h1 className="text-lg sm:text-xl font-black tracking-tight text-text flex items-center gap-2">
               <span>{outletName ?? "Outlet Kasa"}</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Canlı POS bağlantısı" />
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" title="Canlı POS bağlantısı" />
             </h1>
             <p className="text-xs text-muted flex items-center gap-2">
               <span>Dokunmatik Kasa &amp; Masa Terminali</span>
@@ -357,7 +365,8 @@ export default function KasaClient({
             }`}
             title="Sipariş ve çağrılarda sesli uyarı"
           >
-            <span>{soundEnabled ? "🔔 Ses Açık" : "🔕 Sessiz"}</span>
+            <Icon name={soundEnabled ? "bell" : "bell-off"} size={20} />
+            <span>{soundEnabled ? "Ses Açık" : "Sessiz"}</span>
           </button>
 
           {/* Tam Ekran Kiosk Modu */}
@@ -367,7 +376,7 @@ export default function KasaClient({
             className="min-h-9 px-3 py-1 rounded-xl text-xs font-bold border border-border bg-surface-sunken hover:bg-border text-text transition-all active:scale-95"
             title="Kiosk Tam Ekran"
           >
-            {isFullscreen ? "⤓ Normal" : "⛶ Tam Ekran"}
+            <Icon name={isFullscreen ? "fullscreen-exit" : "fullscreen"} size={20} /> {isFullscreen ? "Normal" : "Tam Ekran"}
           </button>
 
           {/* Toplu Garson Atama (Masalar sekmesinde) */}
@@ -378,7 +387,7 @@ export default function KasaClient({
               onClick={() => setBulk(true)}
               className="min-h-9 rounded-xl border border-border bg-surface-sunken hover:bg-border px-3 py-1 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
             >
-              👥 Toplu Atama
+              <Icon name="users" size={20} /> Toplu Atama
             </button>
           ) : null}
         </div>
@@ -396,7 +405,7 @@ export default function KasaClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>🍽️ Masalar</span>
+          <span><Icon name="utensils" size={20} /> Masalar</span>
           <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-extrabold">
             {board.tables.length}
           </span>
@@ -412,9 +421,9 @@ export default function KasaClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>📋 Adisyon Kuyruğu</span>
+          <span><Icon name="clipboard" size={20} /> Adisyon Kuyruğu</span>
           {queue.length > 0 ? (
-            <span className="rounded-full bg-rose-600 text-white px-2 py-0.5 text-xs font-black animate-pulse">
+            <span ref={queueBadgeRef} className="rounded-full bg-rose-600 text-white px-2 py-0.5 text-xs font-black">
               {queue.length}
             </span>
           ) : (
@@ -432,9 +441,9 @@ export default function KasaClient({
               : "bg-surface border border-border text-text hover:bg-surface-sunken"
           }`}
         >
-          <span>🔔 Garson Çağrıları</span>
+          <span><Icon name="bell" size={20} /> Garson Çağrıları</span>
           {calls.length > 0 ? (
-            <span className="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black animate-pulse">
+            <span ref={callsBadgeRef} className="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">
               {calls.length}
             </span>
           ) : (
@@ -453,7 +462,7 @@ export default function KasaClient({
                 : "bg-surface border border-border text-text hover:bg-surface-sunken"
             }`}
           >
-            <span>📜 Outlet Menüsü</span>
+            <span><Icon name="list" size={20} /> Outlet Menüsü</span>
           </button>
         ) : null}
 
@@ -462,13 +471,13 @@ export default function KasaClient({
           href="/kasa/yazici"
           className="min-h-[50px] shrink-0 px-3.5 py-2 rounded-2xl text-xs font-semibold bg-surface border border-border text-muted hover:text-text hover:bg-surface-sunken flex items-center gap-1.5 transition active:scale-95 ml-auto"
         >
-          <span>🖨️ Yazıcı</span>
+          <span><Icon name="printer" size={20} /> Yazıcı</span>
         </Link>
         <Link
           href="/kasa/iptal"
           className="min-h-[50px] shrink-0 px-3.5 py-2 rounded-2xl text-xs font-semibold bg-surface border border-border text-muted hover:text-text hover:bg-surface-sunken flex items-center gap-1.5 transition active:scale-95"
         >
-          <span>❌ İptal / İade</span>
+          <span><Icon name="close" size={20} /> İptal / İade</span>
         </Link>
       </nav>
 
@@ -490,6 +499,7 @@ export default function KasaClient({
           areas={board.areas}
           calls={calls}
           scannedTableIds={activeScans.map((s) => s.tableId)}
+          currency={currency}
           onSelect={setSelected}
         />
       ) : null}
@@ -499,7 +509,7 @@ export default function KasaClient({
         <section aria-label="Onay kuyruğu" className="space-y-3">
           {queue.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center text-muted">
-              <span className="text-3xl block mb-2">✓</span>
+              <Icon name="check" size={32} className="block mb-2" />
               <p className="text-base font-semibold">Bekleyen onaylanacak sipariş yok.</p>
               <p className="text-xs mt-1">Misafirlerden QR menü üzerinden yeni sipariş geldiğinde anında burada listelenir.</p>
             </div>
@@ -529,7 +539,7 @@ export default function KasaClient({
                           <div className="text-right">
                             <span className="text-xs text-muted block">Tutar</span>
                             <span className="text-base font-black text-sky-700 dark:text-sky-300 font-mono">
-                              ₺{totalAmount.toFixed(2)}
+                              {formatPrice(totalAmount, currency)}
                             </span>
                           </div>
                         ) : null}
@@ -563,7 +573,7 @@ export default function KasaClient({
                         onClick={() => act(() => approveOrderAction(order.id))}
                         className="flex-1 min-h-[52px] rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white font-black text-sm sm:text-base shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
                       >
-                        <span>✓</span> Onayla &amp; Yazdır
+                        <Icon name="check" size={20} /> Onayla &amp; Yazdır
                       </button>
                       <button
                         type="button"
@@ -571,7 +581,7 @@ export default function KasaClient({
                         onClick={() => rejectOrder(order)}
                         className="min-h-[52px] px-4 rounded-xl border border-rose-300/80 bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-98 text-sm font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                       >
-                        <span>✕</span> Reddet
+                        <Icon name="close" size={20} /> Reddet
                       </button>
                     </div>
                   </article>
@@ -587,7 +597,7 @@ export default function KasaClient({
         <section aria-label="Açık çağrılar" className="space-y-3">
           {calls.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center text-muted">
-              <span className="text-3xl block mb-2">🔔</span>
+              <Icon name="bell" size={32} className="block mb-2" />
               <p className="text-base font-semibold">Şu anda açık garson çağrısı yok.</p>
               <p className="text-xs mt-1">Misafirler masadan &quot;Garson Çağır&quot; butonuyla çağrı başlattığında burada görünür.</p>
             </div>
@@ -608,7 +618,7 @@ export default function KasaClient({
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                           call.ageSec > 60
-                            ? "bg-rose-600 text-white animate-pulse"
+                            ? "bg-rose-600 text-white"
                             : "bg-amber-500 text-white"
                         }`}
                       >
@@ -616,7 +626,7 @@ export default function KasaClient({
                       </span>
                     </div>
                     <p className="mt-2 text-sm font-semibold text-text">
-                      🔔 {call.type}
+                      <Icon name="bell" size={20} /> {call.type}
                     </p>
                     {call.note ? (
                       <p className="mt-1 text-xs text-muted bg-surface-sunken p-2 rounded-lg">
@@ -632,7 +642,7 @@ export default function KasaClient({
                       onClick={() => act(() => resolveCallAction(call.id, "YANITLANDI"))}
                       className="w-full min-h-[48px] rounded-xl bg-accent hover:bg-accent/90 active:scale-98 text-white font-bold text-sm shadow-xs transition flex items-center justify-center gap-1.5"
                     >
-                      <span>✓</span> Yanıtlandı Olarak Kapat
+                      <Icon name="check" size={20} /> Yanıtlandı Olarak Kapat
                     </button>
                   </div>
                 </article>
@@ -661,10 +671,10 @@ export default function KasaClient({
           {activeScans.slice(0, 3).map((scan) => (
             <div
               key={scan.tableId}
-              className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-400 text-slate-950 font-bold shadow-2xl border-2 border-amber-300 ring-2 ring-amber-500/50 animate-bounce"
+              className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-400 text-slate-950 font-bold shadow-2xl border-2 border-amber-300 ring-2 ring-amber-500/50"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-2xl select-none">📱</span>
+                <Icon name="phone" size={24} />
                 <div className="min-w-0">
                   <p className="text-sm font-black truncate">{scan.tableLabel}</p>
                   <p className="text-[11px] font-semibold text-slate-900 truncate">
@@ -689,7 +699,7 @@ export default function KasaClient({
                   className="h-7 w-7 rounded-full bg-amber-500/80 hover:bg-amber-600 text-slate-950 flex items-center justify-center text-xs font-bold"
                   aria-label="Bildirimi kapat"
                 >
-                  ✕
+                  <Icon name="close" size={20} />
                 </button>
               </div>
             </div>

@@ -7,6 +7,8 @@ import {
   type RoomOrderListItem,
   type RoomServiceStats,
 } from "../server/actions/roomServiceRecords";
+import { Icon } from "@/components/icons/Icon";
+import { formatPrice } from "@/lib/formatPrice";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   TEYIT_BEKLIYOR: { label: "Telefon Teyidi Bekliyor", color: "#b45309", bg: "#fef3c7" },
@@ -101,7 +103,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               Teslim: {stats.delivered}
             </span>
             <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold">
-              Ciro: {stats.totalRevenue.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} €
+              Ciro: {formatPrice(stats.totalRevenue, orders[0]?.currency ?? "EUR")}
             </span>
           </div>
         )}
@@ -176,7 +178,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
                         {o.itemsSummary}
                       </td>
                       <td className="p-1.5 font-mono font-semibold text-right border-r border-[#f0f0f0]">
-                        {o.subtotal.toFixed(2)} {o.currency}
+                        {formatPrice(o.subtotal, o.currency)}
                       </td>
                       <td className="p-1.5 text-gray-500 border-r border-[#f0f0f0]">
                         {new Date(o.createdAt).toLocaleTimeString("tr-TR", {
@@ -200,12 +202,12 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               <span className="font-bold text-sm text-gray-800">
                 Sipariş Detayı #{selectedOrder.orderNo}
               </span>
-              <button
+              <button aria-label="Kapat"
                 type="button"
                 onClick={() => setSelectedOrder(null)}
                 className="text-gray-400 hover:text-gray-700 font-bold"
               >
-                ✕
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -259,7 +261,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             <div className="mt-auto p-2 bg-blue-50 border border-blue-200 rounded flex justify-between items-center">
               <span className="font-bold text-blue-900">Toplam Tutar:</span>
               <span className="font-mono font-bold text-base text-blue-900">
-                {selectedOrder.subtotal.toFixed(2)} {selectedOrder.currency}
+                {formatPrice(selectedOrder.subtotal, selectedOrder.currency)}
               </span>
             </div>
           </div>
