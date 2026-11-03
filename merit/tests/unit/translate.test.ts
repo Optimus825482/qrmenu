@@ -9,7 +9,7 @@ const { gtxProvider } = await import("@/modules/mybar/server/translate/gtx");
 const { getTranslationProvider, setTranslationProviderForTests } = await import(
   "@/modules/mybar/server/translate"
 );
-const { translateNoteForStaff, localizeTexts, warmTranslations } = await import(
+const { translateNoteForStaff, localizeTexts, warmTranslations, resetTranslationMemoryForTests, WARM_BATCH_MAX } = await import(
   "@/modules/mybar/server/translateService"
 );
 type Provider = import("@/modules/mybar/server/translate/provider").TranslationProvider;
@@ -27,6 +27,7 @@ beforeAll(async () => {
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 beforeEach(async () => {
+  resetTranslationMemoryForTests();
   await testDb.textTranslation.deleteMany();
   await testDb.setting.deleteMany({ where: { key: "mybar.translateNotes" } });
 });
@@ -150,5 +151,108 @@ describe("localizeTexts / warmTranslations", () => {
     setTranslationProviderForTests(fake({ Su: { text: "Wasser", sourceLang: "tr", translated: true } }).provider);
     expect(await warmTranslations(["Su"], "de")).toBe(1);
     expect(await testDb.textTranslation.count()).toBe(2);
+  });
+});
+
+describe("hardening", () => {
+  const ac = () => new AbortController().signal;
+
+  it("gtx throws on a non-ok response", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })));
+    await expect(gtxProvider.translate("x", { to: "tr", signal: ac() })).rejects.toThrow("503");
+  });
+
+  it("selects the provider from TRANSLATE_PROVIDER", async () => {
+    const prev = process.env.TRANSLATE_PROVIDER;
+    try {
+      process.env.TRANSLATE_PROVIDER = "gtx";
+      vi.resetModules();
+      const mod = await import("@/modules/mybar/server/translate");
+      expect(mod.getTranslationProvider().name).toBe("gtx");
+      process.env.TRANSLATE_PROVIDER = "none";
+      vi.resetModules();
+      const mod2 = await import("@/modules/mybar/server/translate");
+      expect(mod2.getTranslationProvider().name).toBe("none");
+    } finally {
+      if (prev === undefined) delete process.env.TRANSLATE_PROVIDER;
+      else process.env.TRANSLATE_PROVIDER = prev;
+      vi.resetModules();
+    }
+  });
+
+  it("never logs note text, even on failure", async () => {
+    const warnSpy = vi.mocked(console.warn);
+    warnSpy.mockClear();
+    setTranslationProviderForTests({
+      name: "fake",
+      translate: async () => {
+        throw new Error("secret-note-content");
+      },
+    });
+    await translateNoteForStaff(hid, "secret-note-content");
+    expect(warnSpy).toHaveBeenCalled();
+    expect(JSON.stringify(warnSpy.mock.calls)).not.toContain("secret-note-content");
+  });
+
+  it("times out under fake timers", async () => {
+    setTranslationProviderForTests({ name: "fake", translate: () => new Promise(() => {}) });
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      let result: unknown;
+      void translateNoteForStaff(hid, "hello").then((r) => (result = r));
+      for (let i = 0; i < 100 && result === undefined; i += 1) {
+        await vi.advanceTimersByTimeAsync(100);
+        await new Promise((r) => setImmediate(r));
+      }
+      expect(result).toEqual({ noteTr: null, srcLang: null });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("strips HTML/control chars and rejects notes over 500 characters before the provider", async () => {
+    const { provider, translate } = fake({ hello: { text: "merhaba", sourceLang: "en", translated: true } });
+    setTranslationProviderForTests(provider);
+    expect((await translateNoteForStaff(hid, "<b>hel\u0007lo</b>")).noteTr).toBe("merhaba");
+    expect(translate).toHaveBeenCalledWith("hello", expect.anything());
+    translate.mockClear();
+    expect(await translateNoteForStaff(hid, "a".repeat(501))).toEqual({ noteTr: null, srcLang: null });
+    expect(translate).not.toHaveBeenCalled();
+  });
+
+  it("caps warm batches and skips in-flight keys", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    const translate = vi.fn(async (t: string) => {
+      await gate;
+      return { text: `${t}-x`, sourceLang: "tr", translated: true };
+    });
+    setTranslationProviderForTests({ name: "fake", translate });
+    const texts = Array.from({ length: WARM_BATCH_MAX + 10 }, (_, i) => `urun${i}`);
+    const first = warmTranslations(texts, "en");
+    const second = warmTranslations(texts, "en"); // all first-batch keys in flight
+    release();
+    expect(await first).toBe(WARM_BATCH_MAX);
+    await second;
+    expect(translate.mock.calls.length).toBeLessThanOrEqual(WARM_BATCH_MAX + 10);
+    expect(new Set(translate.mock.calls.map((c) => c[0])).size).toBe(translate.mock.calls.length);
+  });
+
+  it("negative-caches unchanged texts and reports cache-write errors separately", async () => {
+    const { provider, translate } = fake({});
+    setTranslationProviderForTests(provider);
+    expect(await warmTranslations(["Coca-Cola"], "en")).toBe(0);
+    await localizeTexts(["Coca-Cola"], "en");
+    await warmTranslations(["Coca-Cola"], "en");
+    expect(translate).toHaveBeenCalledTimes(1);
+
+    const ok = fake({ Su: { text: "Water", sourceLang: "tr", translated: true } });
+    setTranslationProviderForTests(ok.provider);
+    const warnSpy = vi.mocked(console.warn);
+    warnSpy.mockClear();
+    const up = vi.spyOn(testDb.textTranslation, "upsert").mockRejectedValueOnce(new Error("db down"));
+    expect(await warmTranslations(["Su"], "en")).toBe(0);
+    up.mockRestore();
+    expect(String(warnSpy.mock.calls[0][0])).toContain("önbellek yazımı");
   });
 });
