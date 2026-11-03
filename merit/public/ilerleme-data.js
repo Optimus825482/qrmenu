@@ -109,8 +109,8 @@ window.ILERLEME = {
       code: "P6", title: "Oda servisi", weight: 6,
       summary: "Oda servisi menüsü, misafir akışı, mutfak ekranı, telefon teyidi, SLA",
       tasks: [
-        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
+        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "active", note: "T3R oda SSE kapsamı ve hız sınırı doğrulandı. T4a sekiz dilde hazır. Misafir menüsü ve durum rotası açık." },
+        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "active", note: "T2R oda siparişi Hazırlandı geçişi doğrulandı. Personel panosu ve SLA işleri açık." }
       ]
     },
     {
@@ -165,6 +165,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },
     { at: "03.11 20:10", text: "UX T12 rehber düzeltmeleri hedefli birim ve Chromium koşularında doğrulandı. Sonraki UX adımı T14 XP cilası." },
     { at: "03.11 20:10", text: "P4 T8 otel kapsamı, depo erişimi, dışa aktarma yetkisi, sayfalama ve iptal diyaloğu düzeltmeleri hedefli testlerde doğrulandı. Tam check göç testi hatası sonrası durduruldu; P4 T10 açık." },
     { at: "03.11 19:55", text: "Erkan genel MyBar Web Push metnini seçti. Cihaz bildiriminden oda, ürün ve not ayrıntıları çıkarıldı, uygulama içi ayrıntılar korundu. Push dağıtım testleri 14/14 geçti. P6, P7 ve P8 boşluk analizleri hazır." },

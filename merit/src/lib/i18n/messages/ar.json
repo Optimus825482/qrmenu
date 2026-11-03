@@ -58,6 +58,9 @@
     },
     "order": {
       "status": {
+        "TEYIT_BEKLIYOR": "بانتظار التأكيد",
+        "YOLDA": "في الطريق",
+        "TESLIM_EDILDI": "تم التسليم",
         "GONDERILDI": "تم الإرسال",
         "ONAYLANDI": "تم التأكيد",
         "HAZIR": "جاهز",
@@ -93,7 +96,34 @@
       "selectLanguage": "اختيار اللغة: {name}"
     },
     "room": {
-      "placeholder": "صفحة الغرفة ستتوفر في المرحلة القادمة"
+      "card": {
+        "roomService": "خدمة الغرف",
+        "roomServiceHint": "تصفّح القائمة واطلب التوصيل إلى غرفتك"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "قائمة خدمة الغرف"
+      },
+      "selections": {
+        "submit": "إرسال الاختيارات"
+      },
+      "limit": "لقد بلغت الحد الأقصى لطلبات خدمة الغرف.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "بانتظار التأكيد",
+          "ONAYLANDI": "قيد التحضير",
+          "HAZIR": "جاهز",
+          "YOLDA": "في الطريق",
+          "TESLIM_EDILDI": "تم التسليم",
+          "IPTAL": "تم الإلغاء"
+        },
+        "confirmHint": "سنتصل بهاتف غرفتك لتأكيد طلبك.",
+        "eta": "الوقت المقدّر: {min} دقيقة",
+        "cancel": "إلغاء الطلب",
+        "cancelConfirm": "هل تريد إلغاء طلبك؟",
+        "cancelled": "تم إلغاء طلبك."
+      }
     },
     "unavailable": {
       "title": "هذه القائمة غير متاحة حاليًا",

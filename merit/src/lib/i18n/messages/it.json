@@ -49,6 +49,9 @@
     },
     "order": {
       "status": {
+        "TEYIT_BEKLIYOR": "In attesa di conferma",
+        "YOLDA": "In arrivo",
+        "TESLIM_EDILDI": "Consegnato",
         "GONDERILDI": "Inviato",
         "ONAYLANDI": "Confermato",
         "HAZIR": "Pronto",
@@ -84,7 +87,34 @@
       "selectLanguage": "Selezione lingua: {name}"
     },
     "room": {
-      "placeholder": "La pagina della camera sarà disponibile in una fase successiva"
+      "card": {
+        "roomService": "Servizio in camera",
+        "roomServiceHint": "Consulta il menù e ordina in camera"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "Menù del servizio in camera"
+      },
+      "selections": {
+        "submit": "Invia selezioni"
+      },
+      "limit": "Hai raggiunto il limite di ordini per il servizio in camera.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "In attesa di conferma",
+          "ONAYLANDI": "In preparazione",
+          "HAZIR": "Pronto",
+          "YOLDA": "In arrivo",
+          "TESLIM_EDILDI": "Consegnato",
+          "IPTAL": "Annullato"
+        },
+        "confirmHint": "Ti chiameremo al telefono della camera per confermare il tuo ordine.",
+        "eta": "Tempo stimato: {min} min",
+        "cancel": "Annulla ordine",
+        "cancelConfirm": "Vuoi annullare il tuo ordine?",
+        "cancelled": "Il tuo ordine è stato annullato."
+      }
     },
     "unavailable": {
       "title": "Questo menu non è disponibile al momento",

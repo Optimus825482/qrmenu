@@ -58,6 +58,9 @@
     },
     "order": {
       "status": {
+        "TEYIT_BEKLIYOR": "Awaiting confirmation",
+        "YOLDA": "On the way",
+        "TESLIM_EDILDI": "Delivered",
         "GONDERILDI": "Sent",
         "ONAYLANDI": "Confirmed",
         "HAZIR": "Ready",
@@ -93,7 +96,34 @@
       "selectLanguage": "Language: {name}"
     },
     "room": {
-      "placeholder": "The room page is coming in the next stage"
+      "card": {
+        "roomService": "Room Service",
+        "roomServiceHint": "Browse the menu and order delivery to your room"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "Room Service Menu"
+      },
+      "selections": {
+        "submit": "Send selections"
+      },
+      "limit": "You’ve reached the room service order limit.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "Awaiting confirmation",
+          "ONAYLANDI": "Being prepared",
+          "HAZIR": "Ready",
+          "YOLDA": "On the way",
+          "TESLIM_EDILDI": "Delivered",
+          "IPTAL": "Cancelled"
+        },
+        "confirmHint": "We’ll call your room phone to confirm your order.",
+        "eta": "Estimated time: {min} min",
+        "cancel": "Cancel order",
+        "cancelConfirm": "Would you like to cancel your order?",
+        "cancelled": "Your order has been cancelled."
+      }
     },
     "unavailable": {
       "title": "This menu is not available right now",

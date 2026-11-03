@@ -58,6 +58,9 @@
     },
     "order": {
       "status": {
+        "TEYIT_BEKLIYOR": "Bestätigung ausstehend",
+        "YOLDA": "Unterwegs",
+        "TESLIM_EDILDI": "Geliefert",
         "GONDERILDI": "Gesendet",
         "ONAYLANDI": "Bestätigt",
         "HAZIR": "Fertig",
@@ -93,7 +96,34 @@
       "selectLanguage": "Sprachauswahl: {name}"
     },
     "room": {
-      "placeholder": "Die Zimmerseite folgt in der nächsten Stufe"
+      "card": {
+        "roomService": "Zimmerservice",
+        "roomServiceHint": "Sehen Sie sich die Speisekarte an und bestellen Sie auf Ihr Zimmer"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "Zimmerservice-Speisekarte"
+      },
+      "selections": {
+        "submit": "Auswahl senden"
+      },
+      "limit": "Sie haben das Bestelllimit für den Zimmerservice erreicht.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "Bestätigung ausstehend",
+          "ONAYLANDI": "Wird zubereitet",
+          "HAZIR": "Fertig",
+          "YOLDA": "Unterwegs",
+          "TESLIM_EDILDI": "Geliefert",
+          "IPTAL": "Storniert"
+        },
+        "confirmHint": "Wir rufen Sie auf Ihrem Zimmertelefon an, um Ihre Bestellung zu bestätigen.",
+        "eta": "Voraussichtliche Wartezeit: {min} Min.",
+        "cancel": "Bestellung stornieren",
+        "cancelConfirm": "Möchten Sie Ihre Bestellung stornieren?",
+        "cancelled": "Ihre Bestellung wurde storniert."
+      }
     },
     "unavailable": {
       "title": "Diese Speisekarte ist derzeit nicht verfügbar",

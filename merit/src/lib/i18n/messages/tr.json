@@ -58,6 +58,9 @@
     },
     "order": {
       "status": {
+        "TEYIT_BEKLIYOR": "Teyit bekleniyor",
+        "YOLDA": "Yolda",
+        "TESLIM_EDILDI": "Teslim edildi",
         "GONDERILDI": "Gönderildi",
         "ONAYLANDI": "Onaylandı",
         "HAZIR": "Hazır",
@@ -93,7 +96,34 @@
       "selectLanguage": "Dil seçimi: {name}"
     },
     "room": {
-      "placeholder": "Oda sayfası bir sonraki aşamada"
+      "card": {
+        "roomService": "Oda Servisi",
+        "roomServiceHint": "Menüye göz atın ve odanıza sipariş verin"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "Oda Servisi Menüsü"
+      },
+      "selections": {
+        "submit": "Seçimleri gönder"
+      },
+      "limit": "Oda servisi için sipariş sınırına ulaştınız.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "Teyit bekleniyor",
+          "ONAYLANDI": "Hazırlanıyor",
+          "HAZIR": "Hazır",
+          "YOLDA": "Yolda",
+          "TESLIM_EDILDI": "Teslim edildi",
+          "IPTAL": "İptal edildi"
+        },
+        "confirmHint": "Siparişinizi teyit etmek için odanızdaki telefonu arayacağız.",
+        "eta": "Tahmini süre: {min} dk",
+        "cancel": "Vazgeç",
+        "cancelConfirm": "Siparişinizden vazgeçmek istiyor musunuz?",
+        "cancelled": "Siparişiniz iptal edildi."
+      }
     },
     "unavailable": {
       "title": "Bu menü şu an kullanılamıyor",

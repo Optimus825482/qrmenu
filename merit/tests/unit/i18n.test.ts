@@ -34,6 +34,25 @@ describe("mesaj dosyaları", () => {
       "guest.cart.submit",
       "guest.order.status.GONDERILDI",
       "guest.order.status.SERVIS_EDILDI",
+      "guest.order.status.TEYIT_BEKLIYOR",
+      "guest.order.status.YOLDA",
+      "guest.order.status.TESLIM_EDILDI",
+      "guest.room.card.roomService",
+      "guest.room.card.roomServiceHint",
+      "guest.rs.menu.title",
+      "guest.rs.selections.submit",
+      "guest.rs.limit",
+      "guest.rs.order.status.TEYIT_BEKLIYOR",
+      "guest.rs.order.status.ONAYLANDI",
+      "guest.rs.order.status.HAZIR",
+      "guest.rs.order.status.YOLDA",
+      "guest.rs.order.status.TESLIM_EDILDI",
+      "guest.rs.order.status.IPTAL",
+      "guest.rs.order.confirmHint",
+      "guest.rs.order.eta",
+      "guest.rs.order.cancel",
+      "guest.rs.order.cancelConfirm",
+      "guest.rs.order.cancelled",
       "guest.allergen.deniz_urunu",
       "guest.unavailable.title",
       "guest.unavailable.BILINMEYEN",
@@ -44,6 +63,17 @@ describe("mesaj dosyaları", () => {
     }
     for (const [locale, entries] of sets) {
       for (const [k, v] of entries) expect(v.trim(), `${locale}:${k}`).not.toBe("");
+    }
+  });
+
+  it("kullanılmayan oda yer tutucusu yok", () => {
+    expect(base).not.toContain("guest.room.placeholder");
+  });
+
+  it("oda servisi süre tahmini dakika parametresini kullanır", () => {
+    for (const [locale, entries] of sets) {
+      const eta = entries.find(([key]) => key === "guest.rs.order.eta")?.[1] ?? "";
+      expect(eta, locale).toContain("{min}");
     }
   });
 
