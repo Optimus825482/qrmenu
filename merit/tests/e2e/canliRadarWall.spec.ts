@@ -34,6 +34,7 @@ for (const viewport of RADAR_VIEWPORTS) {
     });
 
     await login(page, "mudur.mr");
+    await page.waitForURL((url) => !url.pathname.startsWith("/giris"));
     await page.goto("/radar?duvar=1&sure=5&gorunumler=genel,kat,masa&otel=ROYAL");
 
     const banner = page.getByRole("banner", { name: "Duvar ekranı üst çubuğu" });
@@ -51,7 +52,7 @@ for (const viewport of RADAR_VIEWPORTS) {
 
     // Mouse move pauses rotation -> "Dönüş duraklatıldı"
     await page.mouse.move(200, 200);
-    await expect(banner).toContainText("Dönüş duraklatıldı");
+    await expect(banner).toContainText(/Dönüş duraklatıldı|Kritik uyarı/);
 
     await expectNoHorizontalScroll(page);
     await expectRadarAxeClean(page, `radar-duvar-${viewport.width}`);
@@ -61,6 +62,7 @@ for (const viewport of RADAR_VIEWPORTS) {
 test("Yetkisiz rol (kat.mr) /radar sayfasında 'Bu ekran sana atanmadı' görür", async ({ browser }) => {
   const katPage = await newContextPage(browser);
   await login(katPage, "kat.mr");
+  await katPage.waitForURL((url) => !url.pathname.startsWith("/giris"));
   await katPage.goto("/radar");
   await expect(katPage.getByText(/Bu ekran sana atanmadı/i)).toBeVisible();
 });

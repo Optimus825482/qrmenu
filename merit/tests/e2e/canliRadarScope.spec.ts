@@ -94,6 +94,7 @@ test("mudur.mr kapsamı: araç çubuğunda yalnız ROYAL; PREMIUM replay 403 + Y
 test("kat.mr: /radar 'Bu ekran sana atanmadı' ve replay 403", async ({ browser }) => {
   const katPage = await newContextPage(browser);
   await login(katPage, "kat.mr");
+  await katPage.waitForURL((url) => !url.pathname.startsWith("/giris"));
   await katPage.goto("/radar");
   await expect(katPage.getByText(/Bu ekran sana atanmadı/i)).toBeVisible();
 

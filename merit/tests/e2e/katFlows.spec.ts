@@ -84,6 +84,7 @@ test("2. misafir MyBar talebi gönderdiğinde kat sorumlusunda 1 s içinde Persi
 }) => {
   const katPage = await newContextPage(browser);
   await login(katPage, "kat.mr");
+  await expect(katPage).toHaveURL(/kat$|erisimim/);
   if (/erisimim/.test(katPage.url())) {
     await katPage.getByRole("button", { name: "Anladım" }).click();
   }
@@ -125,6 +126,7 @@ test("3. /kat/qr kamera izni reddedildiğinde oda numarası yazma kutusu görün
   });
 
   await login(page, "kat.mr");
+  await expect(page).toHaveURL(/kat$|erisimim/);
   if (/erisimim/.test(page.url())) {
     await page.getByRole("button", { name: "Anladım" }).click();
   }
@@ -133,7 +135,7 @@ test("3. /kat/qr kamera izni reddedildiğinde oda numarası yazma kutusu görün
   const input = page.getByLabel("QR kodu");
   await expect(input).toBeVisible();
   await input.fill("101");
-  await page.getByRole("button", { name: "Aç" }).click();
+  await page.getByRole("button", { name: "Aç", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/kat/oda-kontrol/${seedIds.room101Id}$`));
 
   await page.context().close();
