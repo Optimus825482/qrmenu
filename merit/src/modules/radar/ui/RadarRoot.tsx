@@ -11,8 +11,11 @@ import type { RadarAlert, RadarEvent, RadarLayer, WallView } from "../types";
 import { AlertStrip } from "./AlertStrip";
 import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
+import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
+import { Timeline } from "./Timeline";
 import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, type ConnectionState, type ViewKey } from "./Toolbar";
+import type { PlaybackSpeed } from "./playback";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
 import { Overview } from "./views/Overview";
@@ -23,7 +26,7 @@ import { Tables } from "./views/Tables";
 import "./radar.css";
 
 export type RadarInitial = {
-  hotels: { id: string; code: string; name: string }[];
+  hotels: { id: string; code: string; name: string; canReplay?: boolean }[];
   hotelId: string | "ALL";
   views?: WallView[];
   rotateSeconds?: number;
@@ -67,6 +70,9 @@ function useDelayed(on: boolean, ms: number): boolean {
 const SHORTCUTS: [string, string][] = [
   ["1…6", "Genel Bakış · Kat · Masa · Kuyruklar · Oda Servisi · Personel"],
   ["Alt + 1…5", "Katmanı aç veya kapat"],
+  ["Sol / Sağ ok", "10 saniye geri veya ileri sar (Shift ile 1 dk)"],
+  ["End", "Canlıya dön / tekrarda sona atla"],
+  ["Space · + / -", "Tekrarda oynat/duraklat ve hız değiştir"],
   ["F5", "Anlık görüntüyü yenile"],
   ["F1", "Bu yardımı aç veya kapat"],
   ["Ok tuşları · Enter · Esc", "Kat ızgarasında gezin, ayrıntı aç, kapat"],
@@ -80,6 +86,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const [off, setOff] = useState<ReadonlySet<RadarLayer>>(new Set());
   const [outletId, setOutletId] = useState<string | undefined>(initial.outletId);
   const [help, setHelp] = useState(false);
+  const [replayDialog, setReplayDialog] = useState(false);
   const [legendOpen, setLegendOpen] = useState<boolean>(() => consumeInitialLegendOpen());
   const rootRef = useRef<HTMLDivElement | null>(null);
   const helpClose = useRef<HTMLButtonElement | null>(null);
@@ -215,6 +222,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   );
   const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
 
+  const currentHotel = useMemo(
+    () => initial.hotels.find((h) => h.id === hotelId) ?? initial.hotels[0],
+    [initial.hotels, hotelId],
+  );
+  const canReplay = currentHotel?.canReplay !== false;
+
   const menus: MenuDef[] = [
     {
       label: "Dosya",
@@ -246,22 +259,87 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       ],
     },
     {
+      label: "Oynat",
+      items: [
+        {
+          kind: "action" as const,
+          label: "Canlıya dön",
+          shortcut: "End",
+          onSelect: () => store.getState().goLive(),
+        },
+        ...(canReplay && !all
+          ? [
+              {
+                kind: "action" as const,
+                label: "Gün tekrarı…",
+                onSelect: () => setReplayDialog(true),
+              },
+            ]
+          : []),
+      ],
+    },
+    {
       label: "Yardım",
       items: [{ kind: "action", label: "Klavye kısayolları", shortcut: "F1", onSelect: () => setHelp(true) }],
     },
   ];
 
+  const cycleSpeed = (dir: 1 | -1) => {
+    const s = store.getState();
+    if (s.mode !== "replay" || !s.replay) return;
+    const order: PlaybackSpeed[] = [1, 10, 60];
+    const idx = order.indexOf(s.replay.speed);
+    const next = order[Math.max(0, Math.min(order.length - 1, idx + dir))];
+    s.replaySetSpeed(next);
+  };
+
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (target.closest("select, input, textarea")) return;
+    const s = store.getState();
     if (e.key === "F5") {
       e.preventDefault();
-      void store.getState().refresh();
+      void s.refresh();
     } else if (e.key === "F1") {
       e.preventDefault();
       setHelp((h) => !h);
-    } else if (e.key === "Escape" && help) {
-      setHelp(false);
+    } else if (e.key === "Escape") {
+      if (help) {
+        e.preventDefault();
+        setHelp(false);
+      } else if (replayDialog) {
+        e.preventDefault();
+        setReplayDialog(false);
+      } else if (s.mode === "replay") {
+        e.preventDefault();
+        s.exitReplay();
+      }
+    } else if (e.key === "End") {
+      if (!all) {
+        e.preventDefault();
+        if (s.mode === "replay") s.replayJumpToEnd();
+        else s.goLive();
+      }
+    } else if (e.key === " " && s.mode === "replay") {
+      e.preventDefault();
+      s.replayToggle();
+    } else if ((e.key === "+" || e.key === "=") && s.mode === "replay") {
+      e.preventDefault();
+      cycleSpeed(1);
+    } else if (e.key === "-" && s.mode === "replay") {
+      e.preventDefault();
+      cycleSpeed(-1);
+    } else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !all && !target.closest("[role='grid']")) {
+      e.preventDefault();
+      const step = (e.shiftKey ? 60_000 : 10_000) * (e.key === "ArrowLeft" ? -1 : 1);
+      if (s.mode === "replay" && s.replay) {
+        s.replaySeek(s.replay.virtualMs + step);
+      } else {
+        const cur = s.cursor ?? now;
+        const next = cur + step;
+        if (next >= now) s.goLive();
+        else s.scrubTo(next);
+      }
     } else if (e.altKey && !e.ctrlKey && !e.metaKey && /^[1-5]$/.test(e.key)) {
       const layer = scope[Number(e.key) - 1];
       if (layer) {
@@ -369,9 +447,38 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             view={view}
             onView={setChoice}
             connection={connection}
-            modeText={CONNECTION_TEXT[connection]}
+            modeText={
+              state.mode === "replay" && state.replay
+                ? `Tekrar ${clock(state.replay.virtualMs)}`
+                : state.mode === "scrub" && state.cursor
+                  ? `Geçmiş ${clock(state.cursor)}`
+                  : CONNECTION_TEXT[connection]
+            }
           />
-          {loaded && connection === "offline" ? (
+          {!all && state.mode === "scrub" && state.cursor ? (
+            <div className="rd-banner" data-tone="warn" role="status">
+              <Icon name="rewind" size={14} />
+              <span>
+                Geçmiş görünüm · {clock(state.cursor)}
+                {state.pending > 0 ? ` · +${state.pending} yeni olay` : ""}
+              </span>
+              <button type="button" className="rd-chip" onClick={() => store.getState().goLive()}>
+                Canlıya dön (End)
+              </button>
+            </div>
+          ) : null}
+          {!all && state.mode === "replay" && state.replay ? (
+            <div className="rd-banner" data-tone="info" role="status">
+              <Icon name="play" size={14} />
+              <span>
+                Tekrar · {state.replay.day} · {clock(state.replay.virtualMs)} · {state.replay.speed}×
+              </span>
+              <button type="button" className="rd-chip" onClick={() => store.getState().exitReplay()}>
+                Canlıya dön (Esc)
+              </button>
+            </div>
+          ) : null}
+          {loaded && connection === "offline" && state.mode !== "replay" ? (
             <div className="rd-banner" data-tone="danger" role="status">
               <Icon name="wifi-off" size={14} />
               <span>
@@ -398,6 +505,33 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               <Ticker events={visibleEvents} state={snap} mode="window" nameStyle="full" onSelect={focusEvent} />
             ) : null}
           </div>
+          {!all && loaded ? (
+            <Timeline
+              mode={state.mode}
+              nowMs={now}
+              liveBufferMinutes={minutes}
+              cursorMs={state.cursor}
+              buffer={visibleEvents}
+              gaps={state.gaps}
+              replay={state.replay}
+              onScrub={(ms) => store.getState().scrubTo(ms)}
+              onGoLive={() => store.getState().goLive()}
+              onReplayToggle={() => store.getState().replayToggle()}
+              onReplaySpeed={(s) => store.getState().replaySetSpeed(s)}
+              onReplayJumpToEnd={() => store.getState().replayJumpToEnd()}
+              onExitReplay={() => store.getState().exitReplay()}
+            />
+          ) : null}
+          <ReplayPlayer
+            open={replayDialog}
+            nowMs={now}
+            retentionDays={snap?.config.replayRetentionDays ?? 90}
+            hotelId={hotelId}
+            onStart={({ hotelId: hid, day, from, to, speed }) =>
+              store.getState().enterReplay({ hotelId: hid, day, from, to, speed })
+            }
+            onClose={() => setReplayDialog(false)}
+          />
           {help ? (
             <div className="rd-help" role="dialog" aria-label="Klavye kısayolları">
               <div className="rd-row">

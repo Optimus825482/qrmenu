@@ -31,12 +31,18 @@ export async function assertRadarScope(ctx: Ctx, hotelId: string, action: "V" | 
 }
 
 /** Hotels the caller holds `CR-RAD V` on (cheap: no counters; the window learns its scope from this). */
-export async function radarHotels(ctx: Ctx): Promise<{ id: string; code: string; name: string }[]> {
+export async function radarHotels(ctx: Ctx): Promise<{ id: string; code: string; name: string; canReplay: boolean }[]> {
   const hotels = await prisma.hotel.findMany({
     where: { id: { in: ctx.hotelIds }, isActive: true },
     select: { id: true, code: true, name: true },
     orderBy: [{ code: "asc" }],
   });
-  const allowed = await Promise.all(hotels.map(async (h) => ((await can(ctx, "CR-RAD", "V", h.id)) ? h : null)));
-  return allowed.filter((h): h is (typeof hotels)[number] => h !== null);
+  const allowed = await Promise.all(
+    hotels.map(async (h) => {
+      if (!(await can(ctx, "CR-RAD", "V", h.id))) return null;
+      const canReplay = await can(ctx, "CR-RAD", "R", h.id);
+      return { ...h, canReplay };
+    }),
+  );
+  return allowed.filter((h): h is NonNullable<(typeof allowed)[number]> => h !== null);
 }

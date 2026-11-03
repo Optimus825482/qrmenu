@@ -159,3 +159,51 @@ test("Kuyruklar, Personel, lejant ve klavye kısayolları canlı çalışır", a
   await expectRadarAxeClean(page, "radar-kuyruk-personel");
 });
 
+test("Zaman şeridinde 10 sn geri sarma ve Gün tekrarı oynatıcısı (60x / Sona atla) çalışır", async ({ page, browser }) => {
+  await page.setViewportSize(RADAR_VIEWPORTS[0]);
+  await openDesktop(page, "admin");
+  const win = await openRadar(page);
+  await radarToolbar(win).getByRole("combobox", { name: "Otel" }).selectOption({ label: MR_NAME });
+  await radarTab(win, "Masa").click();
+  await win.getByRole("combobox", { name: "Outlet" }).selectOption({ label: "Havuz Bar" });
+
+  // Create a new order on M1, wait 2 seconds, approve it -> M1 has a new order
+  const guest = await newContextPage(browser);
+  const order = await sendGuestOrder(guest);
+  await expect(tableCard(win, "M1")).toContainText("Onay bekliyor", { timeout: 2_000 });
+  await page.waitForTimeout(2_000);
+
+  const cashier = await openStaff(browser, "kasa.havuz");
+  await approveOrder(cashier, order.orderNo);
+  await expect(tableCard(win, "M1")).toContainText("Hazırlanıyor", { timeout: 2_000 });
+
+  // Scrub back 10 seconds -> banner shows "Geçmiş görünüm"
+  await win.getByRole("button", { name: "10 saniye geri" }).click();
+  await expect(win.getByText(/Geçmiş görünüm/)).toBeVisible();
+
+  // While in scrub mode, a new event arrives -> "+1 yeni olay"
+  const order2 = await sendGuestOrder(guest);
+  await expect(win.getByText(/\+[1-9]\d* yeni olay/)).toBeVisible({ timeout: 2_000 });
+  void order2;
+
+  // Press End -> return to live
+  await win.locator(".rd-root").press("End");
+  await expect(win.getByText(/Geçmiş görünüm/)).toHaveCount(0);
+
+  // Open Oynat -> Gün tekrarı…
+  await win.getByRole("menuitem", { name: "Oynat" }).click();
+  await win.getByRole("menuitem", { name: "Gün tekrarı…" }).click();
+  const dialog = win.getByRole("dialog", { name: "Gün tekrarı" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Tekrarı başlat" }).click();
+
+  await expect(win.getByText(/Tekrar ·/)).toBeVisible({ timeout: 5_000 });
+  await win.getByRole("button", { name: "Sona atla" }).click();
+  await expect(tableCard(win, "M1")).toContainText("Onay bekliyor");
+
+  // Esc -> exit replay and return to live
+  await win.locator(".rd-root").press("Escape");
+  await expect(win.getByText(/Tekrar ·/)).toHaveCount(0);
+});
+
+

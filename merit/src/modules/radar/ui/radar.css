@@ -934,3 +934,108 @@ button.rd-alert-chip {
   gap: 8px;
   min-width: 0;
 }
+
+/* Zaman şeridi ve gün tekrarı iletişim kutusu */
+.rd-timeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--app-line);
+  background: var(--surface);
+  flex: none;
+}
+
+.rd-timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.rd-timeline-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--app-bg);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.rd-timeline-hist {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-app-soft);
+  pointer-events: none;
+}
+
+.rd-timeline-mark {
+  position: absolute;
+  transform: translateX(-50%);
+  color: var(--text);
+  line-height: 0;
+  pointer-events: none;
+}
+
+.rd-timeline-gap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed var(--warn);
+  border-right: 1px dashed var(--warn);
+  background: var(--warn-bg);
+  color: var(--warn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rd-timeline-gap-label {
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rd-timeline-head {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent-app);
+  pointer-events: none;
+}
+
+.rd-timeline-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-size: var(--rd-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.rd-replay-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.rd-field {
+  display: grid;
+  gap: 2px;
+  font-size: var(--rd-small);
+}
+
+.rd-error-text {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--rd-small);
+  font-weight: 700;
+}

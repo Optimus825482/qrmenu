@@ -2,9 +2,12 @@ import { createStore, type StoreApi } from "zustand/vanilla";
 import type { MeritEvent } from "@/lib/realtime-events";
 import { BUFFER_MAX_EVENTS, FLUSH_PER_SEC, PULSE_MS, STORM_THRESHOLD } from "../constants";
 import { RADAR_EVENT_TYPES, compareRadarEvents, toRadarEvent } from "../events";
+import type { ReplayLine } from "../server/replay/stream";
 import { comparableState, firstDiffPath, initialState, type RadarState } from "../state";
 import type { RadarAlert, RadarEvent, RadarOverview, RadarSnapshot } from "../types";
+import { createPlayback, type PlaybackController, type PlaybackSpeed } from "./playback";
 import { reduce } from "./reducers";
+import { loadReplay, type LoadReplayParams } from "./replayClient";
 
 /**
  * Client store of the live radar (no React). Events are normalised, queued and reduced in one
@@ -26,9 +29,25 @@ export type RadarStoreDeps = {
   deriveAlerts?(state: RadarState, nowMs: number): RadarAlert[];
   /** `radar.liveBufferMinutes` (default 30). */
   bufferMinutes?(): number;
+  /** Optional custom replay loader (defaults to `loadReplay`). */
+  loadReplay?(params: LoadReplayParams): AsyncIterable<ReplayLine>;
 };
 
 export type RadarMode = "live" | "scrub" | "replay";
+
+export type ReplayState = {
+  day: string;
+  from: string;
+  to: string;
+  startMs: number;
+  endMs: number;
+  virtualMs: number;
+  speed: PlaybackSpeed;
+  playing: boolean;
+  atEnd: boolean;
+  totalEvents: number;
+  error?: string;
+};
 
 export type RadarStoreState = {
   mode: RadarMode;
@@ -48,11 +67,18 @@ export type RadarStoreState = {
   seq: number;
   overview: RadarOverview | null;
   overviewError: string | null;
+  replay: ReplayState | null;
   start(hotelId: string): void;
   stop(): void;
   refresh(): Promise<void>;
   scrubTo(ms: number): void;
   goLive(): void;
+  enterReplay(params: { hotelId: string; day: string; from?: string; to?: string; speed?: PlaybackSpeed }): Promise<void>;
+  exitReplay(): void;
+  replaySeek(ms: number): void;
+  replaySetSpeed(speed: PlaybackSpeed): void;
+  replayToggle(): void;
+  replayJumpToEnd(): void;
   tick(): void;
   ingest(e: MeritEvent): void;
   /** Reduces the queue now (the UI calls it when the tab becomes visible). */
@@ -152,6 +178,11 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
   let driftCancel: (() => void) | undefined;
   let deferred = false;
   let rolloverSeen: string | undefined;
+  let playback: PlaybackController | undefined;
+  let replayEvents: RadarEvent[] = [];
+  let replayCps = new Map<number, RadarState>();
+  let replayTickCancel: (() => void) | undefined;
+  let replayLastRealMs = 0;
 
   const store = createStore<RadarStoreState>()((set, get) => {
     const bufferMs = () => (deps.bufferMinutes?.() ?? 30) * MIN;
@@ -356,12 +387,12 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
 
     const drift = () => {
       driftCancel = deps.schedule(drift, DRIFT_MS);
-      const { hotelId, live } = get();
-      if (!hotelId || hotelId === "ALL" || !live) return;
+      const { hotelId, live, mode } = get();
+      if (!hotelId || hotelId === "ALL" || !live || mode === "replay") return;
       const gen = generation;
       void deps.fetchSnapshot(hotelId).then(
         (snap) => {
-          if (gen !== generation) return;
+          if (gen !== generation || get().mode === "replay") return;
           get().flush(); // compare against live + flushed queue
           if (queue.length > 0) return; // hidden tab: queue not applied yet, try next round
           const cur = get().live;
@@ -378,12 +409,77 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       );
     };
 
+    const rebuildReplayAt = (time: number): RadarState | null => {
+      if (replayCps.size === 0) return null;
+      let key = -Infinity;
+      for (const k of replayCps.keys()) if (k <= time && k > key) key = k;
+      if (key === -Infinity) key = Math.min(...replayCps.keys());
+      let cur = replayCps.get(key)!;
+      for (let i = lowerBound(replayEvents, key); i < replayEvents.length && t(replayEvents[i]) <= time; i++) {
+        cur = reduce(cur, replayEvents[i]);
+      }
+      return cur;
+    };
+
+    const stepReplay = () => {
+      replayTickCancel = undefined;
+      const s = get();
+      if (s.mode !== "replay" || !playback || !s.replay || !s.view) return;
+      const nowMs = deps.now();
+      const dt = Math.max(0, nowMs - replayLastRealMs);
+      replayLastRealMs = nowMs;
+
+      if (playback.playing()) {
+        const crossed = playback.advance(dt);
+        let view = s.view;
+        for (const e of crossed) view = reduce(view, e);
+        const vMs = playback.virtualMs();
+        let pulses = expire(s.pulses, nowMs);
+        // Spec 3.6 / 5.4: no pulse at speed >= 10x or > STORM_THRESHOLD
+        if (playback.speed() < 10 && !deps.reducedMotion() && crossed.length > 0 && crossed.length <= STORM_THRESHOLD) {
+          for (const e of crossed) {
+            const key = pulseKey(e);
+            if (!key) continue;
+            const prev = lastPulseAt.get(key);
+            if (prev !== undefined && nowMs - prev < PULSE_GAP_MS) continue;
+            lastPulseAt.set(key, nowMs);
+            if (pulses === s.pulses) pulses = new Map(pulses);
+            pulses.set(key, nowMs + PULSE_MS);
+          }
+        }
+        const visibleReplayBuf = replayEvents.slice(0, lowerBound(replayEvents, vMs + 1));
+        set({
+          view,
+          cursor: vMs,
+          buffer: visibleReplayBuf,
+          pulses,
+          alerts: (deps.deriveAlerts ?? defaultAlerts)(view, vMs),
+          lastEventAt: visibleReplayBuf[visibleReplayBuf.length - 1]?.at,
+          seq: s.seq + 1,
+          replay: {
+            ...s.replay,
+            virtualMs: vMs,
+            playing: playback.playing(),
+            atEnd: playback.atEnd(),
+          },
+        });
+      }
+
+      if (get().mode === "replay" && playback?.playing()) {
+        replayTickCancel = deps.schedule(stepReplay, 1000 / FLUSH_PER_SEC);
+      }
+    };
+
     const tick = () => {
       const s = get();
       const nowMs = deps.now();
       const pulses = expire(s.pulses, nowMs);
       const patch: Partial<RadarStoreState> = {};
       if (pulses !== s.pulses) patch.pulses = pulses;
+      if (s.mode === "replay") {
+        if (Object.keys(patch).length > 0) set(patch);
+        return;
+      }
       if (trimNow()) {
         patch.buffer = buf.slice();
         patch.checkpoints = new Map(cps);
@@ -410,9 +506,12 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       generation++;
       unsubscribe?.();
       unsubscribe = undefined;
-      for (const c of [flushCancel, refreshCancel, overviewCancel, tickCancel, driftCancel]) c?.();
-      flushCancel = refreshCancel = overviewCancel = tickCancel = driftCancel = undefined;
+      for (const c of [flushCancel, refreshCancel, overviewCancel, tickCancel, driftCancel, replayTickCancel]) c?.();
+      flushCancel = refreshCancel = overviewCancel = tickCancel = driftCancel = replayTickCancel = undefined;
       inflight = undefined;
+      playback = undefined;
+      replayEvents = [];
+      replayCps.clear();
       queue = [];
       deferred = false;
     };
@@ -434,6 +533,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       seq: 0,
       overview: null,
       overviewError: null,
+      replay: null,
 
       start(hotelId) {
         stop();
@@ -460,6 +560,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
           seq: 0,
           overview: null,
           overviewError: null,
+          replay: null,
         });
         unsubscribe = deps.subscribe((e) => get().ingest(e), RADAR_EVENT_TYPES);
         void get().refresh();
@@ -497,6 +598,10 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
 
       scrubTo(time) {
         const s = get();
+        if (s.mode === "replay") {
+          get().replaySeek(time);
+          return;
+        }
         if (!s.live) return;
         const view = scrubState(time);
         if (!view) return;
@@ -505,7 +610,185 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
 
       goLive() {
         const s = get();
+        if (s.mode === "replay") {
+          get().exitReplay();
+          return;
+        }
         set({ mode: "live", cursor: null, view: s.live, pending: 0 });
+      },
+
+      async enterReplay({ hotelId, day, from = "00:00", to = "24:00", speed = 1 }) {
+        const gen = ++generation;
+        for (const c of [flushCancel, refreshCancel, replayTickCancel]) c?.();
+        flushCancel = refreshCancel = replayTickCancel = undefined;
+        queue = [];
+
+        const loader = deps.loadReplay ?? ((p: LoadReplayParams) => loadReplay(p));
+        let snap: RadarSnapshot | null = null;
+        let snapAtMs = 0;
+        const evs: RadarEvent[] = [];
+
+        for await (const line of loader({ hotelId, day, from, to })) {
+          if (gen !== generation) return;
+          if (line.kind === "snapshot") {
+            snap = line.state;
+            snapAtMs = Date.parse(line.at) || Date.parse(line.state.generatedAt) || deps.now();
+          } else if (line.kind === "event") {
+            evs.push(line.e);
+          }
+        }
+        if (gen !== generation || !snap) return;
+
+        evs.sort(compareRadarEvents);
+        replayEvents = evs;
+        replayCps = new Map();
+
+        const init = initialState(snap);
+        replayCps.set(snapAtMs, init);
+        // 5-virtual-minute checkpoints for fast backward seeking in replay
+        const CP_STEP = 5 * MIN;
+        let nextCp = Math.floor(snapAtMs / CP_STEP) * CP_STEP + CP_STEP;
+        let cur = init;
+        for (const e of evs) {
+          const et = t(e);
+          while (nextCp <= et) {
+            replayCps.set(nextCp, cur);
+            nextCp += CP_STEP;
+          }
+          cur = reduce(cur, e);
+        }
+
+        const [fh, fm] = from.split(":").map(Number);
+        const [th, tm] = to.split(":").map(Number);
+        const spanMs = Math.max(MIN, ((th * 60 + (tm || 0)) - (fh * 60 + (fm || 0))) * MIN);
+        const lastEvMs = evs.length > 0 ? t(evs[evs.length - 1]) : snapAtMs;
+        const endMs = Math.max(snapAtMs + 1000, lastEvMs, Math.min(snapAtMs + spanMs, deps.now()));
+
+        playback = createPlayback(evs, { startMs: snapAtMs, endMs, speed });
+        replayLastRealMs = deps.now();
+
+        set({
+          mode: "replay",
+          hotelId,
+          base: snap,
+          view: init,
+          cursor: snapAtMs,
+          buffer: [],
+          checkpoints: new Map(replayCps),
+          pulses: new Map(),
+          gaps: [],
+          alerts: (deps.deriveAlerts ?? defaultAlerts)(init, snapAtMs),
+          pending: 0,
+          seq: get().seq + 1,
+          replay: {
+            day,
+            from,
+            to,
+            startMs: snapAtMs,
+            endMs,
+            virtualMs: snapAtMs,
+            speed,
+            playing: playback.playing(),
+            atEnd: playback.atEnd(),
+            totalEvents: evs.length,
+          },
+        });
+
+        if (playback.playing()) {
+          replayTickCancel = deps.schedule(stepReplay, 1000 / FLUSH_PER_SEC);
+        }
+      },
+
+      exitReplay() {
+        const { hotelId } = get();
+        replayTickCancel?.();
+        replayTickCancel = undefined;
+        playback = undefined;
+        replayEvents = [];
+        replayCps.clear();
+        if (hotelId) {
+          get().start(hotelId);
+        } else {
+          set({ mode: "live", replay: null, cursor: null });
+        }
+      },
+
+      replaySeek(ms) {
+        const s = get();
+        if (s.mode !== "replay" || !playback || !s.replay) return;
+        playback.seek(ms);
+        const vMs = playback.virtualMs();
+        const view = rebuildReplayAt(vMs) ?? s.view;
+        const visibleReplayBuf = replayEvents.slice(0, lowerBound(replayEvents, vMs + 1));
+        set({
+          view,
+          cursor: vMs,
+          buffer: visibleReplayBuf,
+          pulses: new Map(),
+          alerts: view ? (deps.deriveAlerts ?? defaultAlerts)(view, vMs) : s.alerts,
+          lastEventAt: visibleReplayBuf[visibleReplayBuf.length - 1]?.at,
+          seq: s.seq + 1,
+          replay: {
+            ...s.replay,
+            virtualMs: vMs,
+            playing: playback.playing(),
+            atEnd: playback.atEnd(),
+          },
+        });
+      },
+
+      replaySetSpeed(speed) {
+        const s = get();
+        if (s.mode !== "replay" || !playback || !s.replay) return;
+        playback.setSpeed(speed);
+        set({
+          replay: {
+            ...s.replay,
+            speed: playback.speed(),
+          },
+        });
+      },
+
+      replayToggle() {
+        const s = get();
+        if (s.mode !== "replay" || !playback || !s.replay) return;
+        playback.toggle();
+        replayLastRealMs = deps.now();
+        set({
+          replay: {
+            ...s.replay,
+            playing: playback.playing(),
+            atEnd: playback.atEnd(),
+          },
+        });
+        if (playback.playing() && !replayTickCancel) {
+          replayTickCancel = deps.schedule(stepReplay, 1000 / FLUSH_PER_SEC);
+        }
+      },
+
+      replayJumpToEnd() {
+        const s = get();
+        if (s.mode !== "replay" || !playback || !s.replay || !s.view) return;
+        replayTickCancel?.();
+        replayTickCancel = undefined;
+        const endMs = s.replay.endMs;
+        const view = rebuildReplayAt(endMs) ?? s.view;
+        playback.seek(endMs);
+        set({
+          view,
+          cursor: endMs,
+          buffer: replayEvents.slice(),
+          pulses: new Map(),
+          alerts: (deps.deriveAlerts ?? defaultAlerts)(view, endMs),
+          lastEventAt: replayEvents[replayEvents.length - 1]?.at,
+          seq: s.seq + 1,
+          replay: {
+            ...s.replay,
+            virtualMs: endMs,
+            playing: false,
+            atEnd: true,
+          },
+        });
       },
 
       tick,
@@ -518,6 +801,7 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
 
       ingest(e) {
         const s = get();
+        if (s.mode === "replay") return;
         const hotelId = s.hotelId;
         if (!hotelId) return;
         const r = toRadarEvent(e);

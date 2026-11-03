@@ -20,7 +20,9 @@ export async function radarOverviewAction(raw: unknown = { hotelId: "ALL" }): Pr
   return safeAction(snapshotInput, async ({ hotelId }) => radarOverview(await requireUser(), hotelId))(raw);
 }
 
-/** Server Action: the hotels the caller may watch (id, code, name); the window starts from this. */
-export async function radarHotelsAction(): Promise<Result<{ id: string; code: string; name: string }[]>> {
+/** Server Action: the hotels the caller may watch (id, code, name, canReplay); the window starts from this. */
+export async function radarHotelsAction(): Promise<
+  Result<{ id: string; code: string; name: string; canReplay?: boolean }[]>
+> {
   return safeAction(z.undefined(), async () => radarHotels(await requireUser()))(undefined);
 }
