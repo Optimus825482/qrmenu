@@ -670,6 +670,7 @@ model Notification {
   refType   String?   @map("ref_type")
   refId     String?   @map("ref_id")
   isRead    Boolean   @default(false) @map("is_read")
+  pushedAt  DateTime? @map("pushed_at") @db.Timestamptz(3)
   readAt    DateTime? @map("read_at") @db.Timestamptz(3)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -685,6 +686,7 @@ model Notification {
 model PushSubscription {
   id         String   @id @default(cuid())
   userId     String   @map("user_id")
+  failCount  Int      @default(0) @map("fail_count")
   endpoint   String   @unique
   p256dh     String
   auth       String
@@ -695,6 +697,7 @@ model PushSubscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("push_subscriptions")
 }
 
@@ -869,6 +872,7 @@ model MinibarTransaction {
   roomId          String        @map("room_id")
   userId          String        @map("user_id")
   type            MinibarTxType
+  mybarRequestId  String?       @map("mybar_request_id")
   legacyType      String?       @map("legacy_type")
   note            String?
   clientRequestId String?       @unique @map("client_request_id")
@@ -880,11 +884,13 @@ model MinibarTransaction {
   user               User                       @relation(fields: [userId], references: [id], onDelete: Restrict)
   items              MinibarTransactionItem[]
   roomChecks         RoomCheck[]
+  mybarRequest       MybarRequest?              @relation(fields: [mybarRequestId], references: [id], onDelete: SetNull)
   correctionRequests MinibarCorrectionRequest[]
 
   @@index([roomId, occurredAt])
   @@index([hotelId, occurredAt])
   @@index([userId, occurredAt])
+  @@index([mybarRequestId])
   @@map("minibar_transactions")
 }
 
@@ -1006,6 +1012,7 @@ model MybarRequest {
   language          String
   note              String?
   noteTr            String?     @map("note_tr")
+  noteSrcLang       String?     @map("note_src_lang") @db.VarChar(8)
   seenById          String?     @map("seen_by_id")
   seenAt            DateTime?   @map("seen_at") @db.Timestamptz(3)
   completedById     String?     @map("completed_by_id")
@@ -1026,8 +1033,10 @@ model MybarRequest {
   completedBy User?              @relation("MybarCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
   cancelledBy User?              @relation("MybarCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
   items       MybarRequestItem[]
+  transactions MinibarTransaction[]
 
   @@index([hotelId, status])
+  @@index([hotelId, businessDate])
   @@index([roomId, businessDate])
   @@map("mybar_requests")
 }
@@ -1044,6 +1053,7 @@ model MybarRequestItem {
   request MybarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
 
+  @@unique([requestId, productId])
   @@map("mybar_request_items")
 }
 
@@ -1562,4 +1572,17 @@ model OperationEvent {
 
   @@index([hotelId, at])
   @@map("operation_events")
+}
+
+model TextTranslation {
+  id         String   @id @default(cuid())
+  sourceHash String   @map("source_hash") @db.VarChar(64)
+  sourceText String   @map("source_text") @db.VarChar(600)
+  targetLang String   @map("target_lang") @db.VarChar(8)
+  translated String   @db.VarChar(1200)
+  provider   String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([sourceHash, targetLang])
+  @@map("text_translations")
 }

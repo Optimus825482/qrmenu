@@ -27,6 +27,7 @@ export const SETTING_SCHEMAS = {
   "session.singleTargetAuto": flag,
   "shell.confirmSimpleActions": flag,
   "shell.mobileDefinitions": flag,
+  "guest.ipRateMultiplier": z.number().int().min(1).max(20),
   "mybar.dailyLimit": flag,
   "mybar.quantityMode": z.enum(["QTY", "TICK"]),
   "mybar.maxQtyPerItem": z.union([z.literal("setup"), z.number().int().min(1).max(20)]),
@@ -74,6 +75,7 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "session.singleTargetAuto": true,
   "shell.confirmSimpleActions": false,
   "shell.mobileDefinitions": false,
+  "guest.ipRateMultiplier": 1,
   "mybar.dailyLimit": true,
   "mybar.quantityMode": "QTY",
   "mybar.maxQtyPerItem": "setup",
@@ -115,6 +117,7 @@ export function isSettingKey(key: string): key is SettingKey {
 export const SETTING_GROUPS = [
   "Oturum",
   "MyBar",
+  "Misafir",
   "DND",
   "Stok",
   "Fiyat",
@@ -150,6 +153,14 @@ export type SettingMeta = {
 };
 
 export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
+  "guest.ipRateMultiplier": {
+    label: "Misafir IP hız sınırı çarpanı",
+    description: "Ortak otel Wi-Fi IP adresleri için misafir hız sınırlarını çarpar.",
+    group: "Misafir",
+    type: "number",
+    step: 1,
+    systemOnly: true,
+  },
   "session.maxOnlineMinutes": {
     label: "En uzun çevrimiçi süre",
     description: "Bir oturumun açık kalabileceği en uzun süre; dolunca oturum kapanır.",
