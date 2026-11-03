@@ -6,36 +6,7 @@ import { IdMap } from "../idmap";
 import { decodeLogo, toPng } from "../logos";
 import { clean, fold, hotelCodeFor, orNull, parsePrice, toBool, truncate } from "../mapping";
 import type { StepContext } from "../types";
-
-type Row = Record<string, unknown>;
-
-const num = (v: unknown): number | null => {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-};
-const idOf = (v: unknown): string => String(v);
-
-function* chunked<T>(items: T[], size: number): Generator<T[]> {
-  for (let i = 0; i < items.length; i += size) yield items.slice(i, i + size);
-}
-
-async function readAll(
-  ctx: StepContext,
-  table: string,
-  spec: { cols: { name: string; required?: boolean }[]; key: string[] },
-): Promise<Row[]> {
-  const out: Row[] = [];
-  if (!(await ctx.legacy.tableExists(table))) {
-    ctx.report.warn("TABLO_YOK", `Legacy tabloda ${table} yok, boş varsayıldı`, table);
-    return out;
-  }
-  for await (const rows of ctx.legacy.rows<Row>(table, spec)) out.push(...rows);
-  return out;
-}
-
-const req = (name: string) => ({ name, required: true });
-const opt = (name: string) => ({ name });
+import { chunked, idOf, num, opt, readAll, req, type Row } from "./shared";
 
 interface Shared {
   /** legacy hotel id -> target hotel id */

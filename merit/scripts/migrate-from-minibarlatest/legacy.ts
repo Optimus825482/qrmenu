@@ -1,4 +1,28 @@
 import pg from "pg";
+import { fromZonedTime } from "date-fns-tz";
+
+const NICOSIA = "Europe/Nicosia";
+
+/**
+ * Type parsers of the legacy session. The Flask application stores naive `timestamp` values as Nicosia wall-clock
+ * time, so they are converted to the real instant here (node-pg would otherwise read them in the process time zone).
+ * `date` columns stay plain 'yyyy-MM-dd' strings (node-pg would build a local-midnight Date).
+ */
+export const legacyTypes = {
+  getTypeParser(oid: number, format?: "text" | "binary") {
+    if (oid === 1114 && format !== "binary") {
+      return (text: string): Date | null => {
+        const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d+))?$/.exec(text);
+        if (!m) return null;
+        const ms = (m[3] ?? "").padEnd(3, "0").slice(0, 3);
+        const d = fromZonedTime(`${m[1]}T${m[2]}.${ms}`, NICOSIA);
+        return Number.isNaN(d.getTime()) ? null : d;
+      };
+    }
+    if (oid === 1082 && format !== "binary") return (text: string): string => text;
+    return pg.types.getTypeParser(oid, format as "text");
+  },
+};
 
 export class MissingColumnError extends Error {
   constructor(table: string, column: string) {
@@ -50,7 +74,7 @@ export class LegacyReader {
   private async conn(): Promise<pg.Client> {
     if (this.client) return this.client;
     this.connecting ??= (async () => {
-      const c = new pg.Client({ connectionString: this.url });
+      const c = new pg.Client({ connectionString: this.url, types: legacyTypes });
       await c.connect();
       await c.query("SET default_transaction_read_only = on");
       this.client = c;

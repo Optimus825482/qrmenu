@@ -1,12 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { PrismaClient } from "../../src/generated/prisma/client";
-import { pgAdapter } from "../../src/lib/pgAdapter";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { ConfigError, parseConfig, STEP_NAMES, type MigrationConfig, type StepName } from "./config";
 import { IdMap } from "./idmap";
 import { LegacyReader } from "./legacy";
 import { Report, redact } from "./report";
 import { runDefinitions } from "./steps/definitions";
+import { runHistory } from "./steps/history";
+import { runUsers } from "./steps/users";
 import type { StepContext, StepFn, TxClient } from "./types";
 
 export type { StepContext, StepFn } from "./types";
@@ -22,6 +24,8 @@ export class DryRunRollback extends Error {
 /** Steps implemented so far; the remaining ones are added by the later migration tasks. */
 const STEPS: Partial<Record<StepName, StepFn>> = {
   definitions: runDefinitions,
+  users: runUsers,
+  history: runHistory,
 };
 
 export interface MainHooks {
@@ -54,7 +58,11 @@ export async function main(argv: string[], env: Record<string, string | undefine
     return error instanceof ConfigError ? 2 : 1;
   }
 
-  const prisma = new PrismaClient({ adapter: pgAdapter(cfg.targetUrl) });
+  const prisma = new PrismaClient({
+    // Same session time zone as src/lib/pgAdapter (UTC); the migration runs one statement at a time, so a small pool
+    // keeps a shared database server from running out of connections.
+    adapter: new PrismaPg({ connectionString: cfg.targetUrl, options: "-c TimeZone=UTC", max: 3 }),
+  });
   const legacy = new LegacyReader(cfg.legacyUrl, cfg.legacySchema, {
     batch: cfg.batch,
     onWarn: (code, message, example) => report.warn(code, message, example),

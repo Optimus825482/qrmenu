@@ -17,7 +17,7 @@ const env = { LEGACY_DATABASE_URL: URL, DATABASE_URL: URL };
 const quiet = { log: () => undefined };
 
 const run = (...extra: string[]) =>
-  main(["--legacy-schema", "legacy_fx", "--report", reportPath, "--logo-dir", logoDir, ...extra], env, quiet);
+  main(["--legacy-schema", "legacy_fx", "--report", reportPath, "--logo-dir", logoDir, "--only", "definitions", ...extra], env, quiet);
 
 const report = () => fs.readFileSync(reportPath, "utf8");
 /** [legacy, created, existing, dropped, failed, fark] of a report table row. */
