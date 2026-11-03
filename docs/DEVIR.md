@@ -23,23 +23,16 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (2 Kasım 2026, 23:12 — Fable son kontrolü)
+## 1a. Kalınan yer (3 Kasım 2026, 03:20 — Fable sınırı; çalışma dalı `ux/yenileme`)
 
-**Son kontrol sonuçları:** `docs/kabul/2026-11-02-dogrulama-raporu.md` (doğrulama koşusu) ve `docs/kabul/2026-11-02-tutarlilik-denetimi.md` (iddia/kod karşılaştırması, ertelenmiş maddeler, §15 kabul ölçütleri). Defter: `.superpowers/sdd/2026-11-02-son-kontrol/progress.md` (kopya: `docs/superpowers/plans/2026-11-02-son-kontrol-ledger.md`).
+**Dal durumu:** tüm yeni iş `ux/yenileme` dalında (main'den ayrıldı, main'e birleştirme/push Erkan onayı ile). Paralel ajan kuralları: `.superpowers/sdd/PARALEL-KURALLAR.md` (ajan başına DB `merit_test_<ad>`/`merit_<ad>_e2e`, port, `NEXT_DIST_DIR`). Defterler ve kopyaları: `docs/superpowers/plans/2026-11-03-{ux-yenileme,minibar-tamamlama,canli-radar}-ledger.md`, `2026-11-02-son-kontrol-ledger.md`.
 
-**Düzeltme dalgaları (`main`):** `7777f8d` şema drift migration'ı + e2e DB koruması; `5ec4064` sır varsayılanları kaldırıldı, tek `docker-compose.yaml` (`${VAR:?}`), entrypoint migration hatasında durur, seed yalnız eksik referans verisi (otel başına 1 ODA_SERVISI outleti dahil), demo veri `SEED_DEMO=true`, `RUN_SEED` varsayılan kapalı, çerez `secure`, R-KAT yetki sınırı migration'ı; `11259de` 27 minibar API ucu kimlik+yetki+otel kapsamı, MyBar misafir isteği QR tokena bağlı, Nicosia iş günü, DND 2/120, kilitli havuz düşümü, sahte veri üretimi kaldırıldı, rapor IDOR'ları ve uydurma satırlar kaldırıldı, e-posta otel kapsamı + EmailLog; `915b466` eski birim/e2e testleri güncellendi, toplu masa etiketi öneki geri, geçici şifre rastgele, istemciye sızan admin şifresi ve dev hızlı giriş kaldırıldı, HotelPanel/NodeForm kaydet kilitlenmesi düzeltildi.
-
-**Durum:** `npm run check` yeşil (lint 0 hata, tsc temiz, vitest 913/913), `next build` yeşil, gateway 17/17, `prisma migrate diff` boş. Playwright TAM paket 96/96 yeşil (F6 `afd9dda`; ayrıca /kat sayfalarına SSE aboneliği eklendi — zorla çıkış artık anında ulaşır).
-
-**UX yenileme (Erkan, 02.11 23:29):** spec `docs/superpowers/specs/2026-11-02-arayuz-ux-yenileme-design.md` (envanter, 3 cihaz bağlamı, yetki rehberi, 16 görev/5 dalga; §7'deki 6 soru Erkan'a). Onay sonrası `writing-plans` ile plan, sonra SDD. F6 e2e uyarlaması (menü/kasa/kabuk/online/tableQr spec'leri) 23:47'de hâlâ sürüyordu; sonucunu `git log` ile doğrula, tam e2e yeşilse push.
-
-**Sıradaki iş (sırayla):**
-1. F5: güvenlik taraması 3 bulgu — global katalog (ürün/grup/setup) yazımı yalnız SISTEM; audit-logs yanıtında `maskPrices`; room-type-setups otel eşleşmesi.
-2. F6: 6 e2e spec'ini güncel arayüze uyarlama (guestMenu, menuAdmin, qrOrder, qrOrderAcceptance, opsScreens, shell, onlineUsers, tableQr) — `tests/e2e/definitionsUi.ts` yardımcıları örnek; e2e DB `merit_e2e`/`merit_test`, sunucu `-p 3010` + `APP_BASE_URL=http://localhost:3010` + `E2E_BASE_URL`.
-3. Coolify yeniden dağıtım: zorunlu değişkenler `POSTGRES_USER/PASSWORD/DB`, `APP_BASE_URL`, `SESSION_SECRET`, `QR_HMAC_SECRET`, `PRINT_GATEWAY_KEY`, `SEED_ADMIN_PASSWORD` (ilk kurulum), `TRUSTED_PROXY_HOPS=1`; `RUN_SEED`/`SEED_DEMO` yalnız bilinçli olarak `true`. Gateway `.env`: `HOTEL_CODE=ROYAL|DIAMOND|PREMIUM`.
-4. P2–P7 açık plan görevleri (tutarlılık denetimindeki kapsam tablolarına göre) ve P8.
-
-**Sonraki ajana talimat:** Önce `docs/kabul/` raporlarını ve bu bölümü oku; §3 süreci (uygulayıcı → inceleme → düzeltme) atlanmaz; test DB paylaşımlı → tek vitest; e2e yalnız `_e2e`/`_test` DB'de; 3000/3001 portlarına dokunma; `main`'e birleştirme ve push yalnız Erkan onayıyla.
+**Tamamlanan ve incelenen (commit'li):** seed'e gerçek otel tanımları (`dd2995f`); UX T2 (`7244d05`+`ded9ca7`), UX T3 (`0d0cc5f`, inceleme: T11 commit'i WelcomeOpener bağımlılığını kapatmalı); minibar T6 (`fd68ecc`), T7 (`c6f7f5d`), T9 (`45680ab`+`734783c`); radar T1 (`8b99c64`+`3e1be71`).
+**Uygulandı, inceleme bekliyor:** minibar T1 (`6042bab`) → Sonnet inceleme (review-package `734783c..6042bab` benzeri: `git show 6042bab`).
+**Ajanlarda sürüyordu (03:18):** UX T1 (belirteçler/matris), UX T4 (tarayıcı diyalogları), UX T11 (Erişimim — `src/components/guide/**` dahil commit etmeli), radar T2 (SLA/yayın boşlukları), radar T7 fix round. Bunların commit'lerini `git log` ile doğrula; commit yoksa çalışma ağacındaki dosyalarını (`git status`) incele; yarımsa aynı brief ile taze ajan.
+**Sıradaki görevler:** UX T5 (emoji→ikon; UX ajanları bitince), UX T6–T10, T12–T15; minibar T2–T5, T8, T10–T14 (T1 indi → T2/T3/T4 şimdi paralel olabilir); radar T3 (minibar T3–T5 sonrası), T4 (migration CR-RAD; şema serbest), T5, T6, T8–T12.
+**Bilinen e2e drift (dalga-1 bütünleştirme görevi):** `definitions.spec` kullanıcı sayfalama (rol.* seed kullanıcıları); `shell`/`commandCenter`/`guide` spec'leri `/admin` → `/yetkisiz` (T2 guard); matrix axe/touch `depo-stok`; `merit` dev DB'de 3 migration bekliyor (`migrate deploy`).
+**Kararlar:** UX S1–S6 ve radar 4 soru varsayılanları bağlayıcı; `roomcheck.done` SSE_EVENT_TYPES dışında (radar açıkça abone); yönetici silmelerini seed geri getirmez (minibar T2).
 
 ## 2. Çalışma ortamı
 

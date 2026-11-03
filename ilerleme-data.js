@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 02:59",
-  headline: "Paralel uygulama: UX T1–T3, minibar T7/T9, canlı yedekten gerçek otel tanımları; radar ve minibar planları hazır.",
+  updatedAt: "03.11.2026 03:20",
+  headline: "Dal ux/yenileme: UX T2–T3, minibar T1/T6/T7/T9, radar T1/T7 uygulandı; UX T1/T4/T11, radar T2 sürüyor. Devir: docs/DEVIR.md §1a.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 03:20", text: "Minibar T1 temel (6042bab) ve radar T7 istemci deposu (df77d46) uygulandı; UX T2 kapandı. Fable sınırı — devir notu güncellendi." },
     { at: "03.11 02:55", text: "UX T3 snackbar/tek onay uygulandı (0d0cc5f, 50 dosya); minibar T6/T9 ve radar T1 kapandı; 02:45 ağ kesintisi sonrası 5 ajan sürdürüldü." },
     { at: "03.11 02:36", text: "Minibar T9 doluluk Excel uygulandı (45680ab); T1 temel (migration, SCREEN_LIMITS, olaylar) başladı." },
     { at: "03.11 02:33", text: "Minibar T6 oda QR (fd68ecc) ve Radar T1 olay birliği (8b99c64) uygulandı; incelemeler ve Radar T2 (SLA taraması) başladı." },

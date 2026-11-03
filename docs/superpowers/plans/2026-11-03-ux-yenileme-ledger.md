@@ -1,0 +1,11 @@
+# UX yenileme defteri — dal ux/yenileme (main 7f56db7), 03.11 01:06
+Ruling: S1–S6 spec varsayılanları bağlayıcı. Test DB tek uygulayıcı. Her görev: Sonnet uygulayıcı → Sonnet inceleme → Haiku yeniden inceleme; dalga sonu Opus.
+Task 1: dispatched (Sonnet).
+Ruling (Erkan 01:21: daha fazla paralellik): ajan başına DB (merit_test_<ad>/merit_e2e_<ad>), port, NEXT_DIST_DIR (2f6c0e6); kurallar .superpowers/sdd/PARALEL-KURALLAR.md. Dosya kümeleri ayrık görevler paralel; roles.ts/realtime-events.ts gibi ortak dosyalara dokunan görevler (minibar T1, radar RD-1, UX T5 emoji) sırayla.
+Task 2: dispatched (ux2, 3012). Task 3: dispatched (ux3, 3013). Seed-legacy: GO (merit_test_seed).
+Task 2: implementer DONE_WITH_CONCERNS (7244d05; landing 19/19, login 11/11; seed.test MB-TUK yolu → kontrolör düzeltir; routes.ts depo-stok → UX T1'e). Review (Sonnet) dispatched. Task 11 dispatched (ux11, 3031).
+Task 2: review NEEDS FIXES — Important: landing.ts rota koruyucu ekranını (MB-KAT, CR-KOM) kontrol etmiyor → özel matriste /yetkisiz döngüsü. Fix round 1 (Sonnet, ux2 DB) dispatched: guard-ekran haritası + can(guard) + test; reportAccess audit satırı; yalnız görüntülenemeyen ekran kabul.
+Task 4: dispatched (ux4, 3014) — T3 notify API inmemişse satır içi durum + devir.
+Task 3: implementer DONE (0d0cc5f, 50 dosya; e2e 285/317: kalanlar başkalarının drift'i: definitions users sayfalama (rol.* kullanıcıları), shell/commandCenter/guide /admin→/yetkisiz (T2), matrix axe/touch depo-stok (T1)). Review (Sonnet) dispatched. Dalga-1 bütünleştirme görevi: T1/T2f/T4/T11 inince e2e drift + tam suite.
+Task 3: review NEEDS FIXES — Important: 0d0cc5f ShellClient.tsx, T11'in henüz commit'lenmemiş src/components/guide/WelcomeOpener'ını import ediyor (ağaçta var, commit'te yok) → T11 commit'i kapatır (ruling); minörler (MenuManager çeviri hatası notify.error; SystemPanel test sonucu ayrıntısı; successMessage çağıranı; toast Escape/stopPropagation; boş live region; mobil ConfirmDialog mount) → dalga-1 bütünleştirme görevi.
+Task 2: fix round 1 DONE (ded9ca7; guardScreenOf + pickLanding guard; YETKI_TALEP audit; landing 19/19). Ruling: dar düzeltme, dalga sonu Opus kapsar. Task 2 CLOSED. (schema.test 7 kırık = mb1 yarım migration.)
