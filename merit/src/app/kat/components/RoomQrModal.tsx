@@ -1,249 +1,108 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import { useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 
 interface RoomQrModalProps {
-  room: RoomCardData | null;
+  roomNumber: string;
+  floorName: string;
+  roomTypeName: string;
+  qrToken: string;
   onClose: () => void;
 }
 
-export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
-  const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+export function RoomQrModal({
+  roomNumber,
+  floorName,
+  roomTypeName,
+  qrToken,
+  onClose,
+}: RoomQrModalProps) {
+  const [origin] = useState(() => (typeof window !== "undefined" ? window.location.origin : ""));
+  const [copied, setCopied] = useState(false);
 
-  const [hasCamera, setHasCamera] = useState(true);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verifySuccess, setVerifySuccess] = useState(false);
-  const [verifyError, setVerifyError] = useState<string | null>(null);
-  const [manualCode, setManualCode] = useState("");
+  const guestUrl = origin ? `${origin}/q/${qrToken}` : `/q/${qrToken}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=10&data=${encodeURIComponent(
+    guestUrl,
+  )}`;
 
-  // Start Camera Stream
-  useEffect(() => {
-    if (!room) return;
-
-    let stream: MediaStream | null = null;
-    let isMounted = true;
-
-    async function startCamera() {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          if (isMounted) {
-            setHasCamera(false);
-            setCameraError("Kamera bu cihazda veya tarayıcıda desteklenmiyor.");
-          }
-          return;
-        }
-
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-        });
-
-        if (videoRef.current && isMounted) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err: unknown) {
-        console.warn("Kamera erişimi açılamadı:", err);
-        if (isMounted) {
-          setHasCamera(false);
-          const msg = err instanceof Error ? err.message : "Kamera açılamadı";
-          setCameraError(msg);
-        }
-      }
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(guestUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Kopyalanamadı.
     }
+  };
 
-    void startCamera();
-
-    return () => {
-      isMounted = false;
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [room]);
-
-  const handleCodeDetected = useCallback(
-    (code: string) => {
-      if (!room || isVerifying || verifySuccess) return;
-      setIsVerifying(true);
-      setVerifyError(null);
-
-      const trimmed = code.trim();
-      const isRoomMatch =
-        trimmed === room.number ||
-        trimmed.endsWith(`/${room.number}`) ||
-        trimmed.includes(`room=${room.number}`) ||
-        trimmed.includes(room.id);
-
-      if (isRoomMatch || trimmed.length > 5) {
-        setVerifySuccess(true);
-        setTimeout(() => {
-          router.push(`/kat/oda-kontrol/${room.id}`);
-        }, 700);
-      } else {
-        setVerifyError(`Okutulan QR kod Oda ${room.number} ile eşleşmedi!`);
-        setIsVerifying(false);
-      }
-    },
-    [room, isVerifying, verifySuccess, router]
-  );
-
-  // BarcodeDetector interval if available
-  useEffect(() => {
-    if (!room || !hasCamera) return;
-
-    let timer: ReturnType<typeof setInterval> | undefined;
-
-    if (typeof window !== "undefined" && "BarcodeDetector" in window) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const detector = new (window as any).BarcodeDetector({ formats: ["qr_code"] });
-
-        timer = setInterval(async () => {
-          if (videoRef.current && videoRef.current.readyState === 4 && !isVerifying) {
-            try {
-              const barcodes = await detector.detect(videoRef.current);
-              if (barcodes && barcodes.length > 0) {
-                const rawVal = barcodes[0].rawValue;
-                handleCodeDetected(rawVal);
-              }
-            } catch {
-              // ignore frame read errors
-            }
-          }
-        }, 500);
-      } catch {
-        // detector initialization fallback
-      }
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [room, hasCamera, isVerifying, handleCodeDetected]);
-
-  function handleManualBypass() {
-    if (!room) return;
-    router.push(`/kat/oda-kontrol/${room.id}`);
-  }
-
-  if (!room) return null;
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in select-none">
-      <div className="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl border border-slate-200 flex flex-col">
-        {/* Header */}
-        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-400/30 flex items-center justify-center font-black text-xl">
-              <Icon name="camera" size={20} />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
-                <span>Oda {room.number}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-600 text-white font-bold">
-                  QR Doğrulama
-                </span>
-              </h2>
-              <p className="text-xs text-slate-400 font-semibold">
-                Minibar dolumu için dolap üzerindeki QR kodu okutun
-              </p>
-            </div>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="room-qr-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/85 backdrop-blur-sm p-4"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-border bg-surface text-text shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+              Oda QR Kod
+            </span>
+            <h2 id="room-qr-modal-title" className="text-lg font-bold text-text">
+              Oda {roomNumber} ({floorName})
+            </h2>
+            <p className="text-xs text-muted">{roomTypeName}</p>
           </div>
-
-          <button aria-label="Kapat"
+          <button
             type="button"
             onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 font-black text-lg transition-colors cursor-pointer"
+            style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
+            className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-bg px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface"
           >
-            <Icon name="close" size={20} />
+            <Icon name="close" size={16} />
+            Kapat
           </button>
         </div>
 
-        {/* Camera / QR Viewport */}
-        <div className="p-6 space-y-4">
-          <div className="relative w-full aspect-square max-w-xs mx-auto rounded-3xl overflow-hidden bg-slate-950 border-4 border-indigo-500/80 shadow-inner flex items-center justify-center">
-            {hasCamera ? (
-              <>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  className="w-full h-full object-cover"
-                />
-
-                {/* Laser Scanning Reticle */}
-                <div className="absolute inset-8 border-2 border-dashed border-white/70 rounded-2xl pointer-events-none flex items-center justify-center">
-                  <div className="w-full h-1 bg-gradient-to-r from-rose-500 via-rose-400 to-rose-500 shadow-lg shadow-rose-500/80" />
-                </div>
-
-                {verifySuccess && (
-                  <div className="absolute inset-0 bg-emerald-600/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 animate-in zoom-in-95">
-                    <Icon name="check-circle" size={32} className="block mb-2" />
-                    <strong className="text-lg font-black">QR Kod Doğrulandı!</strong>
-                    <span className="text-xs text-emerald-100 font-semibold mt-1">
-                      Oda {room.number} minibar kontrolüne giriliyor...
-                    </span>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="p-6 text-center text-slate-400 space-y-2">
-                <Icon name="camera" size={32} className="block mb-2" />
-                <p className="font-bold text-sm text-white">Kamera Açılamadı</p>
-                <p className="text-xs">{cameraError || "Lütfen manuel giriş butonunu kullanınız."}</p>
-              </div>
-            )}
+        <div className="p-6 flex flex-col items-center space-y-4">
+          <div className="rounded-2xl bg-white p-4 shadow-inner">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrImageUrl}
+              alt={`Oda ${roomNumber} QR Kod`}
+              className="h-56 w-56 object-contain"
+            />
           </div>
 
-          {verifyError && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-bold text-center animate-in shake">
-              <Icon name="warning" size={20} /> {verifyError}
-            </div>
-          )}
+          <div className="w-full rounded-xl border border-border bg-bg p-3 text-center">
+            <p className="text-xs uppercase tracking-wider text-muted">QR Token / Kod</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-accent">{qrToken}</p>
+            <p className="mt-1 truncate text-xs text-muted">{guestUrl}</p>
+          </div>
 
-          <p className="text-xs text-slate-500 font-semibold text-center">
-            QR okutulduğunda kat sorumlusunun odaya varış zamanı otomatik kayıt altına alınır.
-          </p>
-
-          {/* Yetkili / Manuel Bypass Section */}
-          <div className="pt-2 border-t border-slate-100 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-500">Kamera olmadan giriş:</span>
-              <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
-                Yetkili Girişi
-              </span>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder={`Oda no (${room.number}) teyit edin...`}
-                value={manualCode}
-                onChange={(e) => setManualCode(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <button
-                type="button"
-                disabled={manualCode.trim().length === 0}
-                onClick={handleManualBypass}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-95 disabled:opacity-40 text-white font-bold text-xs cursor-pointer shadow-sm"
-              >
-                Teyit Et
-              </button>
-            </div>
-
+          <div className="grid w-full grid-cols-2 gap-2 pt-1">
             <button
               type="button"
-              onClick={handleManualBypass}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 active:scale-95 text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer transition-all"
+              onClick={() => void handleCopy()}
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-4 py-2.5 text-xs font-semibold text-text hover:bg-surface"
             >
-              <Icon name="zap" size={20} />
-              <span>Oda {room.number} Kontrolünü Doğrudan Başlat</span>
+              <Icon name="link" size={16} />
+              {copied ? "Bağlantı Kopyalandı" : "Bağlantıyı Kopyala"}
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-white hover:opacity-95"
+            >
+              <Icon name="printer" size={16} />
+              QR Etiket Yazdır
             </button>
           </div>
         </div>

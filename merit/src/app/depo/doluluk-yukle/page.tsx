@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { confirm } from "@/shell/confirm";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { confirm } from "@/shell/confirm";
 
 type Kind = "IN_HOUSE" | "ARRIVAL" | "DEPARTURE";
 
@@ -176,7 +176,15 @@ export default function DolulukYuklePage() {
   };
 
   const remove = async (item: HistoryItem) => {
-    if (!(await confirm({ title: `${item.code} yüklemesi silinsin mi?`, message: "Bekleyen görev kalemleri de kaldırılır.", danger: true, confirmLabel: "Sil" }))) return;
+    if (
+      !(await confirm({
+        title: `${item.code} yüklemesi silinsin mi?`,
+        message: "Bekleyen görev kalemleri de kaldırılır.",
+        danger: true,
+        confirmLabel: "Sil",
+      }))
+    )
+      return;
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -215,12 +223,12 @@ export default function DolulukYuklePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <header className="sticky top-0 z-40 bg-slate-900/90 border-b border-slate-800 px-4 py-3">
+    <div className="min-h-screen bg-bg text-text font-sans">
+      <header className="sticky top-0 z-40 bg-bg/95 border-b border-border px-4 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-lg font-bold text-white">Günlük Doluluk Yükleme (Excel)</h1>
-            <p className="text-xs text-slate-400">In House, Arrivals ve Departures dosyaları</p>
+            <h1 className="text-lg font-bold text-text">Günlük Doluluk Yükleme (Excel)</h1>
+            <p className="text-xs text-muted">In House, Arrivals ve Departures dosyaları</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {hotels.length > 1 && (
@@ -232,7 +240,8 @@ export default function DolulukYuklePage() {
                   setPreview(null);
                   void load(e.target.value);
                 }}
-                className="bg-slate-800 text-amber-400 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold"
+                style={{ minHeight: "var(--tap-action)" }}
+                className="bg-surface text-accent border border-border rounded-xl px-3 py-1.5 text-xs font-semibold"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -241,10 +250,18 @@ export default function DolulukYuklePage() {
                 ))}
               </select>
             )}
-            <Link href="/kat/tavsiye-is-plani" className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-300">
+            <Link
+              href="/kat/tavsiye-is-plani"
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
+            >
               Tavsiye İş Planı
             </Link>
-            <Link href="/depo/stok" className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-300">
+            <Link
+              href="/depo/stok"
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
+            >
               Zimmet Havuzu
             </Link>
           </div>
@@ -257,8 +274,8 @@ export default function DolulukYuklePage() {
             data-testid="occupancy-schedule"
             className={`p-4 rounded-xl border text-sm ${
               schedule.isWithinWindow
-                ? "bg-emerald-950/40 border-emerald-800/60 text-emerald-200"
-                : "bg-amber-950/40 border-amber-800/60 text-amber-200"
+                ? "bg-ok/15 border-ok/40 text-ok"
+                : "bg-warn/15 border-warn/40 text-warn"
             }`}
           >
             {schedule.message}
@@ -266,26 +283,39 @@ export default function DolulukYuklePage() {
         )}
 
         {error && (
-          <div role="alert" data-testid="occupancy-error" className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-sm">
+          <div
+            role="alert"
+            data-testid="occupancy-error"
+            className="p-4 bg-danger/15 border border-danger/40 rounded-xl text-danger text-sm"
+          >
             {error}
           </div>
         )}
         {message && (
-          <div role="status" data-testid="occupancy-message" className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-emerald-200 text-sm">
+          <div
+            role="status"
+            data-testid="occupancy-message"
+            className="p-4 bg-ok/15 border border-ok/40 rounded-xl text-ok text-sm"
+          >
             {message}
           </div>
         )}
 
         {result && (
-          <div data-testid="occupancy-result" className="p-5 bg-slate-900 border border-emerald-500/40 rounded-2xl space-y-3">
-            <h3 className="font-bold text-white">Doluluk dosyası işlendi</h3>
-            <p className="text-xs font-mono text-slate-400">Kod: {result.code}</p>
-            <p className="text-sm text-slate-300">
+          <div
+            data-testid="occupancy-result"
+            className="p-5 bg-surface border border-ok/40 rounded-2xl space-y-3"
+          >
+            <h3 className="font-bold text-text">Doluluk dosyası işlendi</h3>
+            <p className="text-xs font-mono text-muted">Kod: {result.code}</p>
+            <p className="text-sm text-text">
               {result.totalRows} satır: {result.okRows} kaydedildi, {result.errorRows} hatalı.
-              {result.tasksGenerated ? " Günlük görevler oluşturuldu." : " Görevler üç dosya da yüklenince oluşturulur."}
+              {result.tasksGenerated
+                ? " Günlük görevler oluşturuldu."
+                : " Görevler üç dosya da yüklenince oluşturulur."}
             </p>
             {result.errors.length > 0 && (
-              <ul className="text-xs text-rose-300 space-y-0.5 max-h-40 overflow-y-auto">
+              <ul className="text-xs text-danger space-y-0.5 max-h-40 overflow-y-auto">
                 {result.errors.map((e, i) => (
                   <li key={i}>
                     Satır {e.row}: {e.message}
@@ -296,10 +326,12 @@ export default function DolulukYuklePage() {
           </div>
         )}
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <section className="bg-surface border border-border rounded-2xl p-6 space-y-4">
           <div>
-            <h2 className="text-base font-bold text-white">1. Dosyayı seçin</h2>
-            <p className="text-xs text-slate-400 mt-1">Standart veya P4001 biçiminde .xlsx dosyası (en fazla 10 MB).</p>
+            <h2 className="text-base font-bold text-text">1. Dosyayı seçin</h2>
+            <p className="text-xs text-muted mt-1">
+              Standart veya P4001 biçiminde .xlsx dosyası (en fazla 10 MB).
+            </p>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <input
@@ -308,9 +340,9 @@ export default function DolulukYuklePage() {
               type="file"
               accept=".xlsx"
               onChange={onFile}
-              className="text-xs text-slate-300"
+              className="text-xs text-text"
             />
-            <label className="text-xs text-slate-400 flex flex-col gap-1">
+            <label className="text-xs text-muted flex flex-col gap-1">
               Dosya türü
               <select
                 data-testid="occupancy-kind"
@@ -320,7 +352,8 @@ export default function DolulukYuklePage() {
                   setKind(next);
                   if (preview) void runPreview(next);
                 }}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200"
+                style={{ minHeight: "var(--tap-action)" }}
+                className="bg-bg border border-border rounded-xl px-3 py-1.5 text-xs text-text"
               >
                 <option value="">Otomatik algıla</option>
                 {(Object.keys(KIND_LABEL) as Kind[]).map((k) => (
@@ -335,7 +368,8 @@ export default function DolulukYuklePage() {
               data-testid="occupancy-preview"
               onClick={() => void runPreview()}
               disabled={!file || busy}
-              className="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold disabled:opacity-50"
+              style={{ minHeight: "var(--tap-action)" }}
+              className="px-5 py-2 bg-bg border border-border hover:bg-surface text-text rounded-xl text-xs font-bold disabled:opacity-50"
             >
               {busy && !preview ? "İnceleniyor..." : "Önizle"}
             </button>
@@ -343,35 +377,39 @@ export default function DolulukYuklePage() {
         </section>
 
         {preview && (
-          <section data-testid="occupancy-preview-panel" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-            <h2 className="text-base font-bold text-white">2. Önizleme ve onay</h2>
-            <p className="text-sm text-slate-300">
-              Biçim: {preview.format === "P4001" ? "P4001" : "Standart"} - Tür: {KIND_LABEL[kind || preview.detectedKind]}
+          <section
+            data-testid="occupancy-preview-panel"
+            className="bg-surface border border-border rounded-2xl p-6 space-y-4"
+          >
+            <h2 className="text-base font-bold text-text">2. Önizleme ve onay</h2>
+            <p className="text-sm text-text">
+              Biçim: {preview.format === "P4001" ? "P4001" : "Standart"} - Tür:{" "}
+              {KIND_LABEL[kind || preview.detectedKind]}
               {preview.reportDate ? ` - Rapor tarihi: ${preview.reportDate}` : ""}
             </p>
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="p-3 bg-slate-800/60 rounded-xl">
-                <span className="text-xs text-slate-400">Toplam satır</span>
-                <p className="text-lg font-bold text-white">{preview.totalRows}</p>
+              <div className="p-3 bg-bg border border-border rounded-xl">
+                <span className="text-xs text-muted">Toplam satır</span>
+                <p className="text-lg font-bold text-text">{preview.totalRows}</p>
               </div>
-              <div className="p-3 bg-emerald-950/40 rounded-xl">
-                <span className="text-xs text-emerald-300">Kaydedilecek</span>
-                <p className="text-lg font-bold text-emerald-400">{preview.okRows}</p>
+              <div className="p-3 bg-ok/15 border border-ok/30 rounded-xl">
+                <span className="text-xs text-ok">Kaydedilecek</span>
+                <p className="text-lg font-bold text-ok">{preview.okRows}</p>
               </div>
-              <div className="p-3 bg-rose-950/40 rounded-xl">
-                <span className="text-xs text-rose-300">Hatalı</span>
-                <p className="text-lg font-bold text-rose-400">{preview.errorRows}</p>
+              <div className="p-3 bg-danger/15 border border-danger/30 rounded-xl">
+                <span className="text-xs text-danger">Hatalı</span>
+                <p className="text-lg font-bold text-danger">{preview.errorRows}</p>
               </div>
             </div>
             {preview.warnings.length > 0 && (
-              <ul data-testid="occupancy-warnings" className="text-xs text-amber-300 space-y-0.5">
+              <ul data-testid="occupancy-warnings" className="text-xs text-warn space-y-0.5">
                 {preview.warnings.map((w, i) => (
                   <li key={i}>{w}</li>
                 ))}
               </ul>
             )}
             {preview.errors.length > 0 && (
-              <ul data-testid="occupancy-errors" className="text-xs text-rose-300 space-y-0.5 max-h-48 overflow-y-auto">
+              <ul data-testid="occupancy-errors" className="text-xs text-danger space-y-0.5 max-h-48 overflow-y-auto">
                 {preview.errors.map((e, i) => (
                   <li key={i}>
                     Satır {e.row}: {e.message}
@@ -383,7 +421,7 @@ export default function DolulukYuklePage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="text-slate-400 border-b border-slate-800">
+                    <tr className="text-muted border-b border-border">
                       <th className="py-2 px-2">Satır</th>
                       <th className="py-2 px-2">Oda</th>
                       <th className="py-2 px-2">Giriş</th>
@@ -391,11 +429,11 @@ export default function DolulukYuklePage() {
                       <th className="py-2 px-2">Kişi</th>
                     </tr>
                   </thead>
-                  <tbody className="text-slate-300">
+                  <tbody className="text-text">
                     {preview.sample.map((s) => (
-                      <tr key={s.row} className="border-b border-slate-800/60">
+                      <tr key={s.row} className="border-b border-border/60">
                         <td className="py-1.5 px-2">{s.row}</td>
-                        <td className="py-1.5 px-2 font-semibold text-white">{s.roomNumber}</td>
+                        <td className="py-1.5 px-2 font-semibold text-text">{s.roomNumber}</td>
                         <td className="py-1.5 px-2">
                           {s.arrivalDate}
                           {s.arrivalTime ? ` ${s.arrivalTime}` : ""}
@@ -416,16 +454,20 @@ export default function DolulukYuklePage() {
                 type="button"
                 onClick={() => setPreview(null)}
                 disabled={busy}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                style={{ minHeight: "var(--tap-action)" }}
+                className="px-4 py-2 bg-bg border border-border hover:bg-surface text-text rounded-xl text-xs font-semibold"
               >
                 Vazgeç
               </button>
               <button
                 type="button"
+                data-primary=""
+                data-mutates=""
                 data-testid="occupancy-commit"
                 onClick={() => void commit()}
                 disabled={busy || preview.okRows === 0}
-                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold disabled:opacity-50"
+                style={{ minHeight: "var(--tap-primary)" }}
+                className="px-6 py-2.5 bg-accent hover:opacity-95 text-white rounded-xl text-xs font-bold disabled:opacity-50"
               >
                 {busy ? "Yükleniyor..." : `${preview.okRows} satırı yükle`}
               </button>
@@ -433,34 +475,43 @@ export default function DolulukYuklePage() {
           </section>
         )}
 
-        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <section className="bg-surface border border-border rounded-2xl p-6 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-bold text-white">Yükleme geçmişi</h2>
+            <h2 className="text-base font-bold text-text">Yükleme geçmişi</h2>
             <div className="flex items-center gap-3">
               <button
                 type="button"
+                data-mutates=""
                 data-testid="occupancy-regenerate"
                 onClick={() => void regenerate()}
                 disabled={busy}
-                className="px-3 py-1.5 border border-slate-700 rounded-lg text-xs text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                style={{ minHeight: "var(--tap-action)" }}
+                className="px-3 py-1.5 border border-border bg-bg rounded-xl text-xs font-semibold text-text hover:bg-surface disabled:opacity-50"
               >
                 Görevleri yeniden üret
               </button>
-              <button type="button" onClick={() => void load(hotelId)} className="text-xs text-slate-400 hover:text-white">
+              <button
+                type="button"
+                onClick={() => void load(hotelId)}
+                style={{ minHeight: "var(--tap-action)" }}
+                className="px-3 py-1.5 text-xs font-semibold text-muted hover:text-text"
+              >
                 Yenile
               </button>
             </div>
           </div>
 
           {loading ? (
-            <div className="py-10 text-center text-slate-500 text-sm">Yükleme geçmişi yükleniyor...</div>
+            <div className="py-10 text-center text-muted text-sm">Yükleme geçmişi yükleniyor...</div>
           ) : history.length === 0 ? (
-            <div className="py-10 text-center text-slate-500 text-sm">Henüz bu otel için bir doluluk dosyası yüklenmemiş.</div>
+            <div className="py-10 text-center text-muted text-sm">
+              Henüz bu otel için bir doluluk dosyası yüklenmemiş.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table data-testid="occupancy-history" className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 uppercase tracking-wider">
+                  <tr className="border-b border-border text-muted uppercase tracking-wider">
                     <th className="py-3 px-3">Tarih / Saat</th>
                     <th className="py-3 px-3">Kod</th>
                     <th className="py-3 px-3">Dosya</th>
@@ -473,28 +524,33 @@ export default function DolulukYuklePage() {
                     <th className="py-3 px-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-border/60 text-text">
                   {history.map((item) => (
                     <tr key={item.id}>
-                      <td className="py-3 px-3 font-mono text-slate-400">
-                        {new Date(item.createdAt).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                      <td className="py-3 px-3 font-mono text-muted">
+                        {new Date(item.createdAt).toLocaleString("tr-TR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
                       </td>
                       <td className="py-3 px-3 font-mono">{item.code}</td>
-                      <td className="py-3 px-3 text-white">{item.fileName}</td>
+                      <td className="py-3 px-3 text-text">{item.fileName}</td>
                       <td className="py-3 px-3">{KIND_LABEL[item.kind as Kind] ?? item.kind}</td>
-                      <td className="py-3 px-3 text-slate-400">{item.userName}</td>
+                      <td className="py-3 px-3 text-muted">{item.userName}</td>
                       <td className="py-3 px-3 text-center">{item.totalRows}</td>
-                      <td className="py-3 px-3 text-center text-emerald-400">{item.okRows}</td>
-                      <td className="py-3 px-3 text-center text-rose-400">{item.errorRows}</td>
+                      <td className="py-3 px-3 text-center text-ok">{item.okRows}</td>
+                      <td className="py-3 px-3 text-center text-danger">{item.errorRows}</td>
                       <td className="py-3 px-3">{STATUS_LABEL[item.status] ?? item.status}</td>
                       <td className="py-3 px-3 text-right">
                         {item.status !== "SILINDI" && (
                           <button
                             type="button"
+                            data-mutates=""
                             data-testid={`occupancy-delete-${item.code}`}
                             onClick={() => void remove(item)}
                             disabled={busy}
-                            className="px-2.5 py-1 border border-rose-800 text-rose-300 rounded-lg hover:bg-rose-950/40 disabled:opacity-50"
+                            style={{ minHeight: "var(--tap-action)" }}
+                            className="px-3 py-1.5 border border-danger/40 text-danger rounded-xl hover:bg-danger/15 disabled:opacity-50"
                           >
                             Sil
                           </button>

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { StaffShell } from "@/components/staff/StaffShell";
 import { loadStaffShellProps, requireStaffLayout } from "@/components/staff/loadShellProps";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
+import { SnackbarHost } from "@/components/ui/Snackbar";
 import { SessionWatch } from "./SessionWatch";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
       <>
         <SessionWatch />
         <ConfirmHost variant="sheet" />
+        <SnackbarHost />
         {children}
       </>
     );

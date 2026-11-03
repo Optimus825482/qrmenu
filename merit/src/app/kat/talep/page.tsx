@@ -150,7 +150,7 @@ export default function KatTalepPage() {
             Not{" "}
             <input value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} data-testid="talep-not" />
           </label>{" "}
-          <button type="button" data-testid="talep-gonder" disabled={busy} onClick={() => void send()}>
+          <button type="button" data-mutates="" data-testid="talep-gonder" disabled={busy} onClick={() => void send()}>
             Talebi Gönder
           </button>
         </p>
@@ -172,7 +172,7 @@ export default function KatTalepPage() {
               ))}
             </ul>
             {r.status === "BEKLEMEDE" && (
-              <button type="button" data-testid={`talep-iptal-${r.code}`} onClick={() => void cancel(r.id)}>
+              <button type="button" data-mutates="" data-testid={`talep-iptal-${r.code}`} onClick={() => void cancel(r.id)}>
                 İptal et
               </button>
             )}

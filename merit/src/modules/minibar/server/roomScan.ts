@@ -77,10 +77,16 @@ export async function resolveRoomByQr(
     throw e;
   }
 
-  const room = await prisma.room.findUnique({
+  let room = await prisma.room.findUnique({
     where: { qrToken: token },
     select: { id: true, hotelId: true, floorId: true, number: true, isActive: true },
   });
+  if (!room) {
+    room = await prisma.room.findFirst({
+      where: { hotelId: ctx.session.hotelId, number: token, isActive: true },
+      select: { id: true, hotelId: true, floorId: true, number: true, isActive: true },
+    });
+  }
   if (!room || !room.isActive) return fail(null, "NOT_FOUND", "Geçersiz veya tanınmayan QR kod");
   if (!ctx.hotelIds.includes(room.hotelId)) return fail(room.id, "FORBIDDEN", "Bu oda size ait otelde değil");
   // Oda başka bir otelde olabilir: MB-KF yetkisi odanın oteli üzerinden de doğrulanır.

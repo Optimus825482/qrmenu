@@ -1,27 +1,10 @@
 {
   "smallText": {
     "src/app/depo/raporlar/page.tsx": 9,
-    "src/app/depo/tanimlar/page.tsx": 14,
-    "src/app/kat/(home)/KatDashboard.tsx": 5,
-    "src/app/kat/doluluk/[floorId]/page.tsx": 8,
-    "src/app/kat/islemlerim/page.tsx": 5,
-    "src/app/kat/oda-kontrol/[roomId]/page.tsx": 6,
-    "src/app/kat/qr/page.tsx": 1,
-    "src/app/kat/tavsiye-is-plani/page.tsx": 5
+    "src/app/depo/tanimlar/page.tsx": 14
   },
   "rawPalette": {
-    "src/app/depo/doluluk-yukle/page.tsx": 51,
     "src/app/depo/raporlar/page.tsx": 115,
-    "src/app/depo/tanimlar/page.tsx": 262,
-    "src/app/kat/(home)/KatDashboard.tsx": 60,
-    "src/app/kat/components/PersistentMybarModal.tsx": 4,
-    "src/app/kat/components/PriorityRouteModal.tsx": 41,
-    "src/app/kat/components/RoomQrModal.tsx": 27,
-    "src/app/kat/doluluk/[floorId]/page.tsx": 89,
-    "src/app/kat/duzeltme-onay/page.tsx": 45,
-    "src/app/kat/islemlerim/page.tsx": 144,
-    "src/app/kat/oda-kontrol/[roomId]/page.tsx": 109,
-    "src/app/kat/qr/page.tsx": 18,
-    "src/app/kat/tavsiye-is-plani/page.tsx": 43
+    "src/app/depo/tanimlar/page.tsx": 262
   }
 }

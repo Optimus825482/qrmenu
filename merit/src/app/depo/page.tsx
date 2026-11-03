@@ -1,123 +1,175 @@
 import Link from "next/link";
-import type { Metadata } from "next";
-import { Icon, type IconName } from "@/components/icons/Icon";
+import { redirect } from "next/navigation";
+import { Icon } from "@/components/icons/Icon";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { can } from "@/lib/rbac";
-import { businessDate, TZ } from "@/lib/time";
-import { dayRange } from "@/modules/minibar/server/dates";
-import { denyScreen } from "@/modules/minibar/server/pageGuard";
-import { listPoolAll } from "@/modules/minibar/server/pool";
+import { DomainError } from "@/lib/result";
+import { depoDashboard } from "@/modules/minibar/server/depoDashboard";
 
-export const metadata: Metadata = { title: "Depo panosu · Merit" };
 export const dynamic = "force-dynamic";
 
-type Card = { id: string; href: string; icon: IconName; title: string; value: string; note: string; tone: "ok" | "warn" | "danger" | "neutral" };
-
-const TONE: Record<Card["tone"], string> = {
-  ok: "border-success text-success",
-  warn: "border-warn text-warn",
-  danger: "border-danger text-danger",
-  neutral: "border-border text-muted",
-};
-
-/** Depo panosu: yalnız yetkili kartlar çizilir; her kart ilgili ekrana gider. */
 export default async function DepoHomePage() {
-  const ctx = await requireUser();
+  let ctx;
+  try {
+    ctx = await requireUser();
+  } catch (error) {
+    if (error instanceof DomainError && error.code === "UNAUTHORIZED") {
+      redirect("/giris?next=/depo");
+    }
+    throw error;
+  }
+
   const hotelId = ctx.session.hotelId;
-  const [zim, tal, dol, rap] = await Promise.all([
-    can(ctx, "MB-ZIM", "V", hotelId),
-    can(ctx, "MB-TAL", "V", hotelId),
-    can(ctx, "MB-DOL", "V", hotelId),
-    can(ctx, "MB-RAP", "V", hotelId),
-  ]);
-  if (!zim && !rap) denyScreen("MB-ZIM");
+  if (!hotelId) redirect("/secim");
 
-  const cards: Card[] = [];
-
-  if (zim) {
-    const rows = await listPoolAll(ctx, hotelId, { includeEmpty: true });
-    const critical = rows.filter((row) => row.status === "STOKOUT" || row.status === "KRITIK").length;
-    cards.push({
-      id: "stock",
-      href: "/depo/stok",
-      icon: "box",
-      title: "Kritik stok",
-      value: String(critical),
-      note: critical > 0 ? "ürün kritik seviyede ya da tükendi" : "Havuzda kritik ürün yok",
-      tone: critical > 0 ? "danger" : "ok",
-    });
+  let pano: Awaited<ReturnType<typeof depoDashboard>> | null = null;
+  try {
+    pano = await depoDashboard(ctx);
+  } catch (error) {
+    if (!(error instanceof DomainError && error.code === "FORBIDDEN")) throw error;
   }
 
-  if (tal) {
-    const [corrections, requests] = await Promise.all([
-      prisma.minibarCorrectionRequest.count({ where: { hotelId, status: "BEKLIYOR" } }),
+  let hotelName = pano?.hotelName ?? "Otel";
+  let pendingRequests = pano?.pendingRequests ?? 0;
+  let pendingCorrections = pano?.pendingCorrections ?? 0;
+  const criticalCount = pano?.criticalCount ?? 0;
+  let openDnd = pano?.openDnd ?? 0;
+
+  if (!pano) {
+    const [hotel, reqCount, corrCount, dndCount] = await Promise.all([
+      prisma.hotel.findUnique({ where: { id: hotelId }, select: { name: true } }),
       prisma.stockRequest.count({ where: { hotelId, status: "BEKLEMEDE" } }),
+      prisma.minibarCorrectionRequest.count({ where: { hotelId, status: "BEKLIYOR" } }),
+      prisma.roomDnd.count({ where: { hotelId, status: "AKTIF" } }),
     ]);
-    const pending = corrections + requests;
-    cards.push({
-      id: "requests",
-      href: "/kat/duzeltme-onay",
-      icon: "inbox",
-      title: "Bekleyen talepler",
-      value: String(pending),
-      note: pending > 0 ? `${corrections} düzeltme · ${requests} ek talep` : "Bekleyen talep yok",
-      tone: pending > 0 ? "warn" : "ok",
-    });
+    hotelName = hotel?.name ?? "Otel";
+    pendingRequests = reqCount;
+    pendingCorrections = corrCount;
+    openDnd = dndCount;
   }
 
-  if (dol) {
-    const range = dayRange(businessDate());
-    const latest = await prisma.occupancyUpload.findFirst({
-      where: { hotelId, createdAt: { gte: range.gte, lt: range.lt }, status: { notIn: ["SILINDI"] } },
-      orderBy: { createdAt: "desc" },
-      select: { status: true, okRows: true, errorRows: true, createdAt: true },
-    });
-    const time = latest?.createdAt.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
-    const failed = latest?.status === "HATA";
-    cards.push({
-      id: "occupancy",
+  const cards = [
+    {
+      href: "/depo/stok",
+      title: "Minibar Stok & Talepler",
+      subtitle: "Otel havuz stoğu, fatura alış ve zayi girişleri, bekleyen kat talepleri",
+      badge:
+        pendingRequests > 0
+          ? `${pendingRequests} bekleyen talep`
+          : criticalCount > 0
+            ? `${criticalCount} kritik stok`
+            : null,
+      tone: "border-accent/40 bg-accent/10 text-accent",
+    },
+    {
+      href: "/depo/gorevler",
+      title: "Günlük Görevler",
+      subtitle: "Günlük kontrol kalemlerinin durumu ve tamamlanma oranları",
+      badge: pano?.tasks ? `${pano.tasks.completed}/${pano.tasks.total} tamamlandı` : null,
+      tone: "border-ok/40 bg-ok/10 text-ok",
+    },
+    {
       href: "/depo/doluluk-yukle",
-      icon: "trending",
-      title: "Doluluk yükleme",
-      value: latest ? (failed ? "Hatalı" : "Yüklendi") : "Bekliyor",
-      note: latest ? `${time} · ${latest.okRows} satır${latest.errorRows > 0 ? ` · ${latest.errorRows} hatalı` : ""}` : "Bugünün doluluk dosyası henüz yüklenmedi",
-      tone: failed ? "danger" : latest ? "ok" : "warn",
-    });
-  }
-
-  if (rap) {
-    cards.push({
-      id: "reports",
+      title: "Doluluk Excel Yükleme",
+      subtitle: "Günlük Konaklama (In-House), Giriş (Arrival) ve Çıkış (Departure) listeleri",
+      badge: pano ? `${pano.doneCount}/3 yüklendi` : null,
+      tone: "border-accent/40 bg-accent/10 text-accent",
+    },
+    {
       href: "/depo/raporlar",
-      icon: "chart",
-      title: "Raporlar",
-      value: "Aç",
-      note: "Minibar tüketim ve stok raporları",
-      tone: "neutral",
-    });
-  }
+      title: "Minibar Raporları",
+      subtitle: "Tüketim maliyet/satış analizi, görev tamamlanma ve olağandışı işlem denetimi",
+      badge: openDnd > 0 ? `${openDnd} aktif DND` : null,
+      tone: "border-warn/40 bg-warn/10 text-warn",
+    },
+    {
+      href: "/depo/tanimlar",
+      title: "Minibar Tanımları",
+      subtitle: "Ürün grupları, ürünler, setup şablonları, oda tipleri ve denetim kayıtları",
+      badge: null,
+      tone: "border-border bg-surface text-text",
+    },
+    {
+      href: "/kat/duzeltme-onay",
+      title: "Geçmiş Kayıt Düzeltme Onayları",
+      subtitle: "Geçmiş tarihli oda kontrol kayıtları için gönderilen düzeltme/silme talepleri",
+      badge: pendingCorrections > 0 ? `${pendingCorrections} onay bekliyor` : null,
+      tone: "border-danger/40 bg-danger/10 text-danger",
+    },
+  ];
 
   return (
-    <section className="space-y-4">
-      <h1 className="text-xl font-bold text-text">Depo panosu</h1>
-      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {cards.map((card) => (
-          <li key={card.id}>
+    <div className="min-h-screen bg-bg text-text">
+      <header className="border-b border-border bg-bg/95 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+              Merit Royal · Depo & Minibar Yönetimi
+            </span>
+            <h1 className="text-xl font-bold text-text">{hotelName} — Depo Yönetim Paneli</h1>
+          </div>
+          <div className="flex items-center gap-2">
             <Link
-              href={card.href}
-              className={`flex min-h-[96px] items-center gap-4 rounded-xl border-2 bg-surface p-4 ${TONE[card.tone]}`}
+              href="/kat"
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
             >
-              <Icon name={card.icon} size={32} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-semibold text-text">{card.title}</span>
-                <span className="block text-sm text-muted">{card.note}</span>
-              </span>
-              <span className="text-2xl font-bold">{card.value}</span>
+              <Icon name="floor" size={16} />
+              Kat Sorumlusu Ekranı
             </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-6 py-8 space-y-6">
+        {pano ? (
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <p className="text-xs uppercase tracking-wider text-muted">Doluluk Yükleme</p>
+              <p className="mt-1 text-2xl font-bold text-text tabular-nums">{pano.doneCount}/3</p>
+            </div>
+            <div className="rounded-2xl border border-warn/30 bg-warn/10 p-4">
+              <p className="text-xs uppercase tracking-wider text-warn">Bekleyen Talep</p>
+              <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{pano.pendingRequests}</p>
+            </div>
+            <div className="rounded-2xl border border-danger/30 bg-danger/10 p-4">
+              <p className="text-xs uppercase tracking-wider text-danger">Kritik Stok</p>
+              <p className="mt-1 text-2xl font-bold text-danger tabular-nums">{pano.criticalCount}</p>
+            </div>
+            <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4">
+              <p className="text-xs uppercase tracking-wider text-accent">Aktif DND</p>
+              <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{pano.openDnd}</p>
+            </div>
+          </section>
+        ) : null}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {cards.map((card) => (
+            <Link
+              key={card.href}
+              href={card.href}
+              className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-accent"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-base font-bold text-text group-hover:text-accent transition">
+                    {card.title}
+                  </h2>
+                  {card.badge ? (
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${card.tone}`}>
+                      {card.badge}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-xs text-muted">{card.subtitle}</p>
+              </div>
+              <div className="mt-4 flex items-center justify-end text-xs font-semibold text-accent">
+                Ekranı Aç →
+              </div>
+            </Link>
+          ))}
+        </div>
+      </main>
+    </div>
   );
 }

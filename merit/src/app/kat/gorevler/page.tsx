@@ -1,80 +1,105 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Icon } from "@/components/icons/Icon";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { businessDate } from "@/lib/time";
+import { listTaskItems, taskSummary } from "@/modules/minibar/server/tasks";
 
-type Item = {
-  itemId: string;
-  taskType: string;
-  roomId: string;
-  roomNumber: string;
-  floorName: string;
-  status: string;
-  arrivalTime: string | null;
-  departureTime: string | null;
-  dndCount: number;
-  priority: number;
-};
-type Summary = { total: number; completed: number; waiting: number; dnd: number; incomplete: number; ratePct: number };
+export const dynamic = "force-dynamic";
 
-const STATUS_LABEL: Record<string, string> = {
-  BEKLIYOR: "Bekliyor",
-  DEVAM: "Devam ediyor",
-  DND_BEKLIYOR: "DND bekliyor",
-  TAMAMLANDI: "Tamamlandı",
-  DND: "DND",
-  EKSIK: "Eksik",
-};
-const TYPE_LABEL: Record<string, string> = {
-  INHOUSE_KONTROL: "In House",
-  ARRIVAL_KONTROL: "Arrival",
-  DEPARTURE_KONTROL: "Departure",
-};
-
-/** Bare functional task list (UX T9 restyles). */
-export default function GorevlerPage() {
-  const [items, setItems] = useState<Item[] | null>(null);
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/minibar/tasks");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Görevler alınamadı.");
-      setItems(data.items);
-      setSummary(data.summary);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Görevler alınamadı.");
-    }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, [load]);
+export default async function KatGorevlerPage() {
+  const ctx = await requireUser();
+  const day = businessDate();
+  const [summary, items] = await Promise.all([
+    taskSummary(prisma, ctx.session.hotelId, day),
+    listTaskItems(ctx),
+  ]);
 
   return (
-    <main data-testid="gorevler-page">
-      <h1>Görevler</h1>
-      <Link href="/kat">Geri</Link>
-      {error && <p data-testid="gorevler-error">{error}</p>}
-      {summary && (
-        <p data-testid="gorevler-summary">
-          Toplam {summary.total}, tamamlanan {summary.completed}, bekleyen {summary.waiting}, DND {summary.dnd} (%{summary.ratePct})
-        </p>
+    <div className="mx-auto max-w-4xl px-4 py-6 space-y-5 text-text">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+            Günlük Görevler · {day}
+          </span>
+          <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>
+        </div>
+        <Link
+          href="/kat"
+          style={{ minHeight: "var(--tap-action)" }}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
+        >
+          <Icon name="arrow-left" size={16} />
+          Kat Planına Dön
+        </Link>
+      </div>
+
+      <section
+        data-testid="kat-gorevler-summary"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
+        <div className="rounded-2xl border border-border bg-surface p-3.5">
+          <p className="text-xs uppercase tracking-wider text-muted">Toplam</p>
+          <p className="mt-1 text-2xl font-bold text-text tabular-nums">{summary.total}</p>
+        </div>
+        <div className="rounded-2xl border border-ok/30 bg-ok/10 p-3.5">
+          <p className="text-xs uppercase tracking-wider text-ok">Tamamlanan</p>
+          <p className="mt-1 text-2xl font-bold text-ok tabular-nums">{summary.completed}</p>
+        </div>
+        <div className="rounded-2xl border border-warn/30 bg-warn/10 p-3.5">
+          <p className="text-xs uppercase tracking-wider text-warn">Bekleyen</p>
+          <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{summary.waiting}</p>
+        </div>
+        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-3.5">
+          <p className="text-xs uppercase tracking-wider text-accent">DND</p>
+          <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{summary.dnd}</p>
+        </div>
+      </section>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+          Bugün için oluşturulmuş görev kalemi bulunmuyor.
+        </div>
+      ) : (
+        <ul className="space-y-2.5">
+          {items.map((i) => {
+            const tone =
+              i.status === "TAMAMLANDI"
+                ? "border-ok/40 bg-ok/10 text-ok"
+                : i.status === "DND_BEKLIYOR"
+                  ? "border-warn/40 bg-warn/10 text-warn"
+                  : "border-accent/40 bg-accent/10 text-accent";
+            return (
+              <li
+                key={i.itemId}
+                data-testid="kat-gorevler-item"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold text-text tabular-nums">
+                    Oda {i.roomNumber}
+                  </span>
+                  <span className="rounded-lg border border-border bg-bg px-2.5 py-0.5 text-xs font-medium text-muted">
+                    {i.taskType}
+                  </span>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone}`}>
+                    {i.status}
+                  </span>
+                </div>
+
+                <Link
+                  href={`/kat/oda-kontrol/${i.roomId}`}
+                  style={{ minHeight: "var(--tap-action)" }}
+                  className="inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-bold text-white hover:opacity-95"
+                >
+                  Kontrol Et
+                  <Icon name="arrow-right" size={14} />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       )}
-      {items && items.length === 0 && <p data-testid="gorevler-empty">Bugün için görev yok.</p>}
-      <ul data-testid="gorevler-list">
-        {items?.map((it) => (
-          <li key={it.itemId} data-testid="gorevler-item" data-status={it.status}>
-            <Link href={`/kat/oda-kontrol/${it.roomId}`}>Oda {it.roomNumber}</Link> — {it.floorName} — {TYPE_LABEL[it.taskType] ?? it.taskType} — {STATUS_LABEL[it.status] ?? it.status}
-            {it.arrivalTime ? ` — Varış ${it.arrivalTime}` : ""}
-            {it.departureTime ? ` — Çıkış ${it.departureTime}` : ""}
-          </li>
-        ))}
-      </ul>
-    </main>
+    </div>
   );
 }

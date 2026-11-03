@@ -1,471 +1,312 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useMinibarLive } from "@/modules/minibar/ui/useMinibarLive";
 import Link from "next/link";
-import { PriorityRouteModal } from "../components/PriorityRouteModal";
-import { PersistentMybarModal } from "../components/PersistentMybarModal";
-import type { FloorSummary, TaskSummary } from "@/modules/minibar/server/minibarTypes";
+import { useCallback, useEffect, useState } from "react";
+import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
+import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
+import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
 
-interface DashboardData {
-  hotel: { id: string; name: string; code: string };
+export type KatFilter = "mybar" | "dnd" | null;
+
+export interface KatDashboardLinks {
+  occupancy?: boolean;
+  definitions?: boolean;
+  stock?: boolean;
+  reports?: boolean;
+}
+
+interface DashboardState {
+  hotel: { id: string; name: string; code: string } | null;
   today: string;
-  taskSummary: TaskSummary;
+  taskSummary: {
+    total: number;
+    completed: number;
+    pending: number;
+    dnd: number;
+    completionRate: number;
+    clashCount: number;
+  };
+  criticalStockCount: number;
   floors: FloorSummary[];
   activeMybarCount: number;
 }
 
-export type KatLinks = { occupancy: boolean; definitions: boolean; stock: boolean; reports: boolean };
-export type KatFilter = "mybar" | "dnd" | null;
+interface HotelOption {
+  id: string;
+  name: string;
+  code: string;
+}
 
-const FILTER_LABEL: Record<Exclude<KatFilter, null>, string> = {
-  mybar: "MyBar talebi olan katlar",
-  dnd: "DND kaydı olan katlar",
-};
+export function KatDashboard({
+  hotels = [],
+  initialHotelId = "",
+  canSwitchHotel = false,
+  filter = null,
+}: {
+  hotels?: HotelOption[];
+  initialHotelId?: string;
+  canSwitchHotel?: boolean;
+  filter?: KatFilter;
+  links?: KatDashboardLinks;
+}) {
+  void filter;
+  const [selectedHotelId, setSelectedHotelId] = useState(initialHotelId);
+  const [data, setData] = useState<DashboardState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showPriorityModal, setShowPriorityModal] = useState(false);
 
-/** Floor-supervisor home. Links to other screens render only when the user may view them. */
-export default function KatDashboard({ links, filter }: { links: KatLinks; filter: KatFilter }) {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRouteModalOpen, setIsRouteModalOpen] = useState(false);
-
-  async function loadData(silent = false) {
+  const fetchDashboard = useCallback(async (hotelId: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      if (!silent) setIsLoading(true);
-      const res = await fetch("/api/minibar/dashboard");
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
+      const url = hotelId
+        ? `/api/minibar/dashboard?hotelId=${encodeURIComponent(hotelId)}`
+        : "/api/minibar/dashboard";
+      const res = await fetch(url);
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? "Kat paneli verisi alınamadı.");
       }
-    } catch (err) {
-      console.error("Dashboard error:", err);
+      const json = (await res.json()) as DashboardState;
+      setData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load (sets the loading flag first)
-    loadData();
   }, []);
 
-  useMinibarLive(
-    ["task.updated", "task.generated", "roomcheck.done", "dnd.marked", "dnd.completed", "dnd.missed", "occupancy.uploaded", "stock.changed", "stock.critical", "mybar.created"],
-    () => void loadData(true),
-  );
-
-  const floors = (data?.floors ?? []).filter((floor) =>
-    filter === "mybar" ? floor.mybarCount > 0 : filter === "dnd" ? floor.dndCount > 0 : true,
-  );
-
-  const formattedDate = new Intl.DateTimeFormat("tr-TR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    weekday: "long",
-  }).format(new Date());
+  useEffect(() => {
+    const t = setTimeout(() => void fetchDashboard(selectedHotelId), 0);
+    return () => clearTimeout(t);
+  }, [selectedHotelId, fetchDashboard]);
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900 pb-12 select-none">
-      {/* Persistent MyBar Alert Modal */}
-      <PersistentMybarModal hotelId={data?.hotel?.id} onRefresh={loadData} />
+    <div className="min-h-screen bg-bg text-text">
+      <PersistentMybarModal hotelId={selectedHotelId} />
+      {showPriorityModal && (
+        <PriorityRouteModal
+          hotelId={selectedHotelId}
+          onClose={() => setShowPriorityModal(false)}
+        />
+      )}
 
-      {/* Autonomous Route Modal */}
-      <PriorityRouteModal
-        isOpen={isRouteModalOpen}
-        onClose={() => setIsRouteModalOpen(false)}
-        hotelId={data?.hotel?.id}
-      />
-
-      {/* Tablet-First Top Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-              <svg
-                className="w-7 h-7"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-                  {data?.hotel?.name || "Merit Royal"}
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-700">
-                  Kat Sorumlusu
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
-                {formattedDate}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Action Touch Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <Link
-              href="/kat/tavsiye-is-plani"
-              className="flex-1 sm:flex-none px-4 sm:px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-95 text-white font-bold text-sm shadow-lg shadow-purple-600/25 transition-all flex items-center justify-center gap-2 touch-manipulation cursor-pointer"
+      <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+        {canSwitchHotel && hotels.length > 1 ? (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3.5">
+            <label htmlFor="kat-hotel-select" className="text-xs font-semibold text-muted">
+              Aktif Otel
+            </label>
+            <select
+              id="kat-hotel-select"
+              value={selectedHotelId}
+              onChange={(e) => setSelectedHotelId(e.target.value)}
+              style={{ minHeight: "var(--tap-action)" }}
+              className="rounded-xl border border-border bg-bg px-3 py-2 text-xs font-medium text-text focus:border-accent focus:outline-none"
             >
-              <Icon name="lightbulb" size={20} />
-              <span>Tavsiye İş Planı</span>
-            </Link>
+              {hotels.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.name} ({h.code})
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
-            <Link
-              href="/kat/islemlerim"
-              className="flex-1 sm:flex-none px-4 sm:px-5 py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-95 text-slate-800 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2 touch-manipulation cursor-pointer"
+        {loading && !data ? (
+          <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+            Kat planı ve günlük görevler yükleniyor...
+          </div>
+        ) : error ? (
+          <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-6 text-sm text-danger">
+            {error}
+          </div>
+        ) : data ? (
+          <>
+            <section
+              aria-label="Günün özeti"
+              className="rounded-2xl border border-border bg-surface p-5 space-y-4"
             >
-              <Icon name="clipboard" size={20} />
-              <span>İşlemlerim</span>
-            </Link>
-
-            {links.occupancy && (
-              <Link
-                href="/depo/doluluk-yukle"
-                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 active:scale-95 text-amber-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-                title="Günlük Excel Doluluk Yükleme"
-              >
-                <Icon name="chart" size={20} />
-                <span>Doluluk Girişi</span>
-              </Link>
-            )}
-
-            {links.stock && (
-              <Link
-                href="/depo/stok"
-                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 text-emerald-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-                title="Depo Sorumlusu Konsinye Havuz Stoğu"
-              >
-                <Icon name="box" size={20} />
-                <span>Stok Havuzu</span>
-              </Link>
-            )}
-
-            {links.reports && (
-              <Link
-                href="/depo/raporlar"
-                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 active:scale-95 text-blue-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-                title="Minibar Tüketim & Görev Raporları"
-              >
-                <Icon name="trending" size={20} />
-                <span>Raporlar</span>
-              </Link>
-            )}
-
-            {links.definitions && (
-              <Link
-                href="/depo/tanimlar"
-                className="flex-1 sm:flex-none px-3.5 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 active:scale-95 text-purple-900 font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-1.5 touch-manipulation cursor-pointer"
-                title="Ürün, Grup, Setup, Oda Tipi Tanımları ve Silinemez Audit Logları"
-              >
-                <Icon name="settings" size={20} />
-                <span>Tanımlamalar</span>
-              </Link>
-            )}
-
-            <Link
-              href="/kat/qr"
-              className="flex-1 sm:flex-none px-4 sm:px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 transition-all flex items-center justify-center gap-2 touch-manipulation cursor-pointer"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                />
-              </svg>
-              <span>Hızlı QR</span>
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => void loadData()}
-              className="w-12 h-12 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 flex items-center justify-center transition-colors touch-manipulation cursor-pointer"
-              aria-label="Yenile"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 space-y-6">
-        {/* Günlük Görevler Tablet Summary Bar */}
-        <section className="bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl shadow-indigo-950/20 border border-indigo-800/50">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/30 flex items-center justify-center text-indigo-300">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight">
-                  Günlük Minibar Kontrol Görevleri
-                </h2>
-                <p className="text-indigo-200 text-xs">
-                  {data?.taskSummary?.clashCount ? (
-                    <span className="text-amber-300 font-bold">
-                      <Icon name="warning" size={20} /> {data.taskSummary.clashCount} kritik Departure-Arrival çakışması mevcut!
-                    </span>
-                  ) : (
-                    "Oda kontrolleri ve zimmet takibi"
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Progress Percentage Badge */}
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="text-xs text-indigo-300 font-semibold">İlerleme:</span>
-              <span className="text-xl sm:text-2xl font-black text-emerald-400">
-                %{data?.taskSummary?.completionRate ?? 0}
-              </span>
-            </div>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="w-full bg-indigo-950/80 rounded-full h-3 mb-6 overflow-hidden p-0.5 border border-indigo-700/50">
-            <div
-              className="bg-gradient-to-r from-emerald-500 to-green-400 h-full rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${data?.taskSummary?.completionRate ?? 0}%` }}
-            />
-          </div>
-
-          {/* 4 Big Touch KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 text-center border border-white/10 active:scale-98 transition-transform">
-              <div className="text-3xl sm:text-4xl font-black text-white">
-                {data?.taskSummary?.total ?? 0}
-              </div>
-              <div className="text-xs sm:text-sm font-bold text-indigo-200 mt-1 uppercase tracking-wider">
-                Toplam Görev
-              </div>
-            </div>
-
-            <div className="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-4 text-center border border-emerald-400/30 active:scale-98 transition-transform">
-              <div className="text-3xl sm:text-4xl font-black text-emerald-400">
-                {data?.taskSummary?.completed ?? 0}
-              </div>
-              <div className="text-xs sm:text-sm font-bold text-emerald-200 mt-1 uppercase tracking-wider">
-                Tamamlanan
-              </div>
-            </div>
-
-            <div className="bg-amber-500/20 backdrop-blur-md rounded-2xl p-4 text-center border border-amber-400/30 active:scale-98 transition-transform">
-              <div className="text-3xl sm:text-4xl font-black text-amber-400">
-                {data?.taskSummary?.pending ?? 0}
-              </div>
-              <div className="text-xs sm:text-sm font-bold text-amber-200 mt-1 uppercase tracking-wider">
-                Bekleyen
-              </div>
-            </div>
-
-            <div className="bg-orange-500/20 backdrop-blur-md rounded-2xl p-4 text-center border border-orange-400/30 active:scale-98 transition-transform">
-              <div className="text-3xl sm:text-4xl font-black text-orange-400">
-                {data?.taskSummary?.dnd ?? 0}
-              </div>
-              <div className="text-xs sm:text-sm font-bold text-orange-200 mt-1 uppercase tracking-wider">
-                DND
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Kat Bazlı Doluluk - Tablet Uyumlu Büyük Kartlar */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <svg
-                className="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.5"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Kat Bazlı Doluluk
-              </h2>
-            </div>
-            <span className="text-xs sm:text-sm font-bold text-slate-500">
-              Oda detayları için kata dokunun
-            </span>
-          </div>
-
-          {filter && (
-            <p className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800">
-              <span>Süzgeç: {FILTER_LABEL[filter]}</span>
-              <Link href="/kat" className="underline">
-                Tüm katları göster
-              </Link>
-            </p>
-          )}
-
-          {isLoading ? (
-            <div className="py-16 text-center text-slate-400">
-              <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="font-semibold text-sm">Katlar yükleniyor...</p>
-            </div>
-          ) : floors.length === 0 && filter ? (
-            <p className="py-10 text-center text-sm font-semibold text-slate-500">
-              Bu süzgece uyan kat yok.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-              {floors.map((floor) => {
-                const rate = floor.occupancyRate;
-                const circleColor =
-                  rate >= 80 ? "text-rose-500" : rate >= 50 ? "text-amber-500" : "text-emerald-500";
-
-                return (
-                  <Link
-                    key={floor.id}
-                    href={`/kat/doluluk/${floor.id}`}
-                    className="group relative bg-white rounded-3xl p-4 sm:p-5 border-2 border-slate-200 hover:border-indigo-500 hover:shadow-xl active:scale-95 transition-all flex flex-col justify-between touch-manipulation cursor-pointer"
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+                    Günün Özeti · {data.today}
+                  </span>
+                  <h2 className="text-base font-bold text-text mt-0.5">
+                    Günlük Minibar Kontrol Görevleri
+                  </h2>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPriorityModal(true)}
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
                   >
-                    {/* MyBar Badge Indicator */}
-                    {floor.mybarCount > 0 && (
-                      <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black uppercase shadow-md">
-                        <span><Icon name="concierge" size={20} /> MyBar ({floor.mybarCount})</span>
-                      </div>
-                    )}
-
-                    {/* Floor Title */}
-                    <div className="text-center mt-1 mb-2">
-                      <span className="text-base sm:text-lg font-black text-slate-900 group-hover:text-indigo-600 transition-colors">
-                        {floor.name}
+                    <Icon name="zap" size={16} />
+                    Tavsiye İş Planı
+                    {data.taskSummary.clashCount > 0 ? (
+                      <span className="rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
+                        {data.taskSummary.clashCount}
                       </span>
-                    </div>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void fetchDashboard(selectedHotelId)}
+                    style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text hover:bg-surface"
+                  >
+                    <Icon name="refresh" size={16} />
+                    Yenile
+                  </button>
+                </div>
+              </div>
 
-                    {/* Donut Progress Gauge */}
-                    <div className="flex items-center justify-center my-2">
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24">
-                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                          <path
-                            className="text-slate-100"
-                            stroke="currentColor"
-                            strokeWidth="3.5"
-                            fill="none"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                          <path
-                            className={circleColor}
-                            stroke="currentColor"
-                            strokeWidth="3.5"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeDasharray={`${rate}, 100`}
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                          <span className={`text-base sm:text-lg font-black ${circleColor}`}>
-                            %{rate}
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase -mt-0.5">
-                            Doluluk
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                <div className="rounded-xl border border-border bg-bg p-3.5">
+                  <p className="text-xs uppercase tracking-wider text-muted">Toplam Görev</p>
+                  <p className="mt-1 text-2xl font-bold text-text tabular-nums">{data.taskSummary.total}</p>
+                </div>
+                <div className="rounded-xl border border-ok/30 bg-ok/10 p-3.5">
+                  <p className="text-xs uppercase tracking-wider text-ok">Tamamlanan</p>
+                  <p className="mt-1 text-2xl font-bold text-ok tabular-nums">{data.taskSummary.completed}</p>
+                </div>
+                <div className="rounded-xl border border-warn/30 bg-warn/10 p-3.5">
+                  <p className="text-xs uppercase tracking-wider text-warn">Bekleyen</p>
+                  <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{data.taskSummary.pending}</p>
+                </div>
+                <div className="rounded-xl border border-accent/30 bg-accent/10 p-3.5">
+                  <p className="text-xs uppercase tracking-wider text-accent">DND Bekleyen</p>
+                  <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{data.taskSummary.dnd}</p>
+                </div>
+                <div className="rounded-xl border border-danger/30 bg-danger/10 p-3.5 col-span-2 sm:col-span-1">
+                  <p className="text-xs uppercase tracking-wider text-danger">Kritik Çakışma</p>
+                  <p className="mt-1 text-2xl font-bold text-danger tabular-nums">{data.taskSummary.clashCount}</p>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between text-xs text-muted mb-1.5">
+                  <span>Tamamlanma Oranı</span>
+                  <span className="font-bold text-text tabular-nums">%{data.taskSummary.completionRate}</span>
+                </div>
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-bg border border-border">
+                  <div
+                    className="h-full rounded-full bg-ok transition-all duration-300"
+                    style={{ width: `${Math.min(100, data.taskSummary.completionRate)}%` }}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {data.criticalStockCount > 0 ? (
+              <div className="flex items-center justify-between rounded-2xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-text">
+                <div className="flex items-center gap-2.5">
+                  <Icon name="warning" size={20} className="text-warn" />
+                  <span>
+                    Otel havuz stoğunda <strong>{data.criticalStockCount} ürün</strong> kritik seviyenin altında!
+                  </span>
+                </div>
+                <Link
+                  href="/kat/stok?tab=critical"
+                  style={{ minHeight: "var(--tap-action)" }}
+                  className="inline-flex items-center gap-1 rounded-xl bg-warn px-3 py-2 text-xs font-bold text-bg hover:opacity-95"
+                >
+                  Kritik Stokları Gör
+                  <Icon name="arrow-right" size={16} />
+                </Link>
+              </div>
+            ) : null}
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-text">Kat Planı ve Oda Doluluk Durumu</h2>
+                <span className="text-xs text-muted">{data.floors.length} Kat</span>
+              </div>
+
+              {data.floors.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+                  Bu otel için tanımlı kat bulunamadı.
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {data.floors.map((floor) => {
+                    const occupancyRate =
+                      floor.totalRooms > 0
+                        ? Math.round((floor.occupiedRooms / floor.totalRooms) * 100)
+                        : 0;
+                    return (
+                      <Link
+                        key={floor.id}
+                        href={`/kat/doluluk/${floor.id}`}
+                        className="group relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-accent/60"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="text-xs font-semibold uppercase tracking-widest text-muted">
+                                Kat #{floor.number}
+                              </span>
+                              <h3 className="text-lg font-bold text-text group-hover:text-accent transition">
+                                {floor.name}
+                              </h3>
+                            </div>
+                            <span className="rounded-full bg-bg border border-border px-2.5 py-1 text-xs font-semibold text-text tabular-nums">
+                              {floor.occupiedRooms}/{floor.totalRooms} Dolu (%{occupancyRate})
+                            </span>
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                            <div className="rounded-xl bg-bg border border-border p-2">
+                              <p className="text-xs text-muted">Giriş</p>
+                              <p className="text-sm font-bold text-accent tabular-nums">{floor.arrivalCount}</p>
+                            </div>
+                            <div className="rounded-xl bg-bg border border-border p-2">
+                              <p className="text-xs text-muted">Çıkış</p>
+                              <p className="text-sm font-bold text-warn tabular-nums">{floor.departureCount}</p>
+                            </div>
+                            <div className="rounded-xl bg-bg border border-border p-2">
+                              <p className="text-xs text-muted">Kontrol</p>
+                              <p className="text-sm font-bold text-ok tabular-nums">{floor.checkedCount}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            {floor.dndCount > 0 ? (
+                              <span className="rounded-md bg-warn/15 px-2 py-0.5 font-semibold text-warn">
+                                {floor.dndCount} DND
+                              </span>
+                            ) : null}
+                            {floor.mybarCount > 0 ? (
+                              <span className="rounded-md bg-danger/20 px-2 py-0.5 font-bold text-danger">
+                                {floor.mybarCount} MyBar Talebi
+                              </span>
+                            ) : null}
+                            {floor.dndCount === 0 && floor.mybarCount === 0 ? (
+                              <span className="text-muted">Bekleyen uyarı yok</span>
+                            ) : null}
+                          </div>
+                          <span className="inline-flex items-center gap-1 font-semibold text-accent group-hover:translate-x-0.5 transition">
+                            Odaları Aç
+                            <Icon name="arrow-right" size={14} />
                           </span>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Occupancy numbers */}
-                    <div className="text-center space-y-1 mt-1">
-                      <div className="text-xl sm:text-2xl font-black text-slate-900">
-                        {floor.occupiedRooms}{" "}
-                        <span className="text-xs font-semibold text-slate-400">
-                          / {floor.totalRooms} Oda
-                        </span>
-                      </div>
-
-                      {/* Small Status Pills */}
-                      <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-slate-100">
-                        {floor.arrivalCount > 0 && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-800">
-                            +{floor.arrivalCount} Giriş
-                          </span>
-                        )}
-                        {floor.departureCount > 0 && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-800">
-                            -{floor.departureCount} Çıkış
-                          </span>
-                        )}
-                        {floor.dndCount > 0 && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-orange-100 text-orange-800">
-                            {floor.dndCount} DND
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Hover indicator */}
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg
-                        className="w-4 h-4 text-indigo-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2.5"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </>
+        ) : null}
+      </main>
+    </div>
   );
 }
+
+export default KatDashboard;

@@ -1,220 +1,153 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { Icon } from "@/components/icons/Icon";
+import { playCue } from "@/components/pos/soundGate";
+import { useMybarStream } from "./useMybarStream";
 
-interface MybarModalProps {
-  hotelId?: string;
-  onRefresh?: () => void;
-}
-
-interface ActiveMybarItem {
-  id: string;
-  roomNumber: string;
-  floorName: string;
-  requestedAt: string;
-  note: string | null;
-  items: { productName: string; qty: number }[];
-}
-
-export function PersistentMybarModal({ hotelId, onRefresh }: MybarModalProps) {
-  const [activeRequests, setActiveRequests] = useState<ActiveMybarItem[]>([]);
-  const [currentRequest, setCurrentRequest] = useState<ActiveMybarItem | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Poll for active MyBar requests every 15 seconds
-  useEffect(() => {
-    let isMounted = true;
-
-    async function checkMybar() {
-      try {
-        const url = hotelId
-          ? `/api/minibar/dashboard?hotelId=${hotelId}`
-          : "/api/minibar/dashboard";
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const data = await res.json();
-
-        // If there are active mybar requests, fetch details
-        if (data.activeMybarCount > 0) {
-          // Check floors for mybar details
-          for (const f of data.floors || []) {
-            if (f.mybarCount > 0) {
-              const floorRes = await fetch(`/api/minibar/floor/${f.id}`);
-              if (floorRes.ok) {
-                const floorData = await floorRes.json();
-                const mybarRooms = (floorData.rooms || []).filter(
-                  (r: { hasMybarRequest: boolean }) => r.hasMybarRequest
-                );
-                if (mybarRooms.length > 0 && isMounted) {
-                  const items: ActiveMybarItem[] = mybarRooms.map(
-                    (r: {
-                      mybarDetails?: {
-                        id: string;
-                        requestedAt: string;
-                        notes?: string | null;
-                        items: { productName: string; qty: number }[];
-                      };
-                      number: string;
-                      floorName: string;
-                    }) => ({
-                      id: r.mybarDetails?.id || "",
-                      roomNumber: r.number,
-                      floorName: r.floorName,
-                      requestedAt: r.mybarDetails?.requestedAt || "",
-                      note: r.mybarDetails?.notes || null,
-                      items: r.mybarDetails?.items || [],
-                    })
-                  );
-                  setActiveRequests(items);
-                  if (items.length > 0) setCurrentRequest(items[0]);
-                  return;
-                }
-              }
-            }
-          }
-        } else if (isMounted) {
-          setActiveRequests([]);
-          setCurrentRequest(null);
-        }
-      } catch (err) {
-        console.error("MyBar check error:", err);
-      }
-    }
-
-    checkMybar();
-    const interval = setInterval(checkMybar, 15000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [hotelId]);
-
-  async function handleConfirm() {
-    if (!currentRequest) return;
-    setIsSubmitting(true);
+function triggerAlertFeedback() {
+  playCue("call");
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
     try {
-      const res = await fetch("/api/minibar/mybar/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: currentRequest.id }),
-      });
-      if (res.ok) {
-        // Remove from list
-        const remaining = activeRequests.filter((r) => r.id !== currentRequest.id);
-        setActiveRequests(remaining);
-        setCurrentRequest(remaining.length > 0 ? remaining[0] : null);
-        if (onRefresh) onRefresh();
-      }
-    } catch (err) {
-      console.error("Confirm error:", err);
-    } finally {
-      setIsSubmitting(false);
+      navigator.vibrate([200, 100, 200]);
+    } catch {
+      // Titreşim desteklenmiyorsa sessizce geç.
     }
   }
+}
 
-  if (!currentRequest) return null;
+export function PersistentMybarModal({ hotelId }: { hotelId?: string } = {}) {
+  const { pending, ack } = useMybarStream({ hotelId });
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const alertedIdsRef = useRef<Set<string>>(new Set());
+  const deferredAlertRef = useRef(false);
+
+  const current = pending[0];
+
+  useEffect(() => {
+    if (!current) return;
+    if (alertedIdsRef.current.has(current.id)) return;
+    if (typeof document !== "undefined" && document.hidden) {
+      deferredAlertRef.current = true;
+      return;
+    }
+    alertedIdsRef.current.add(current.id);
+    triggerAlertFeedback();
+  }, [current]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onVisibility = () => {
+      if (!document.hidden && deferredAlertRef.current && current) {
+        deferredAlertRef.current = false;
+        alertedIdsRef.current.add(current.id);
+        triggerAlertFeedback();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [current]);
+
+  if (!current) return null;
+
+  const handleConfirm = async () => {
+    setConfirming(true);
+    setError(null);
+    try {
+      await ack(current.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Onaylanamadı.");
+    } finally {
+      setConfirming(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border-4 border-amber-400 overflow-hidden transform scale-100 transition-all">
-        {/* Amber Header Band */}
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-500 p-6 text-white text-center">
-          <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center shadow-inner">
-            <svg
-              className="w-9 h-9 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="mybar-alert-title"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-bg/85 backdrop-blur-sm p-4"
+    >
+      <div className="w-full max-w-md rounded-2xl border-2 border-danger bg-surface text-text shadow-2xl overflow-hidden">
+        <div className="bg-danger px-5 py-4 text-white">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+              <Icon name="bell" size={16} />
+              Misafir MyBar Talebi
+            </span>
+            <span
+              data-testid="mybar-counter"
+              className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold tabular-nums"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+              1/{pending.length}
+            </span>
           </div>
-          <span className="inline-block px-3 py-1 bg-white/30 rounded-full text-xs font-black tracking-wider uppercase mb-2">
-            Yeni Misafir Talebi
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-            MYBAR TALEBİ ALINDI!
+          <h2 id="mybar-alert-title" className="mt-1 text-2xl font-bold">
+            Oda {current.roomNumber}
           </h2>
-          <p className="text-amber-100 text-sm mt-1">
-            {currentRequest.floorName} • Oda {currentRequest.roomNumber}
+          <p className="text-xs text-white/90">
+            {current.floorName ? `${current.floorName} · ` : ""}
+            Talep saati: {new Date(current.requestedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 space-y-4">
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">
-                Talep Edilen Ürünler
-              </span>
-              <span className="text-xs font-bold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-md">
-                Oda {currentRequest.roomNumber}
-              </span>
+        <div className="p-5 space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+              Talep Edilen Ürünler
+            </p>
+            <div className="divide-y divide-border rounded-xl border border-border bg-bg">
+              {current.items.map((it, idx) => (
+                <div key={idx} className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                  <span className="font-medium text-text">{it.productName}</span>
+                  <span className="rounded-lg bg-danger/15 px-2.5 py-0.5 font-bold text-danger tabular-nums">
+                    {it.qty} Adet
+                  </span>
+                </div>
+              ))}
             </div>
-
-            {currentRequest.items.length > 0 ? (
-              <ul className="divide-y divide-amber-200/70">
-                {currentRequest.items.map((it, idx) => (
-                  <li
-                    key={idx}
-                    className="py-2.5 flex items-center justify-between text-slate-800 font-bold"
-                  >
-                    <span>{it.productName}</span>
-                    <span className="inline-flex items-center justify-center min-w-8 h-8 px-2.5 bg-amber-500 text-white font-black rounded-lg shadow-sm">
-                      +{it.qty}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-600 font-medium">Standart dolum talebi.</p>
-            )}
-
-            {currentRequest.note && (
-              <div className="mt-3 pt-3 border-t border-amber-200/80 text-xs text-amber-900">
-                <span className="font-bold">Misafir Notu:</span> {currentRequest.note}
-              </div>
-            )}
           </div>
 
-          <p className="text-xs text-slate-500 text-center leading-relaxed">
-            Bu bildirim ekrandan yalnızca <strong>&quot;Onayla / Confirm&quot;</strong> butonuna
-            basıldığında kalkar ve misafire anında &quot;Talebiniz ulaşmıştır&quot; iletilir.
-          </p>
+          {current.notes ? (
+            <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs text-text">
+              <span className="font-semibold">Misafir Notu: </span>
+              {current.notes}
+            </div>
+          ) : null}
 
-          {/* Big Touch Action Button */}
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-            className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 active:scale-98 text-white font-black text-lg tracking-wide shadow-xl shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 touch-manipulation cursor-pointer"
-          >
-            {isSubmitting ? (
-              <span>Onaylanıyor...</span>
-            ) : (
-              <>
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span>TALEBİ GÖRDÜM & ONAYLA (CONFIRM)</span>
-              </>
-            )}
-          </button>
+          {error ? (
+            <div role="alert" className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-xs text-danger">
+              {error}
+            </div>
+          ) : null}
+
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              data-primary=""
+              data-mutates=""
+              onClick={handleConfirm}
+              disabled={confirming}
+              style={{ minHeight: "var(--tap-primary)" }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-3.5 text-sm font-bold text-white transition hover:opacity-95 disabled:opacity-50"
+            >
+              <Icon name="check" size={20} />
+              {confirming ? "Onaylanıyor..." : "Gördüm — Onayla ve Talebi Kapat"}
+            </button>
+            {current.roomId ? (
+              <Link
+                href={`/kat/oda-kontrol/${current.roomId}`}
+                style={{ minHeight: "var(--tap-action)" }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg px-4 py-2.5 text-center text-xs font-semibold text-text hover:bg-surface"
+              >
+                <Icon name="door" size={16} />
+                Oda Kontrol Ekranına Git
+              </Link>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

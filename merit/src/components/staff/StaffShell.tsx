@@ -6,6 +6,7 @@ import { useMemo, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { DensityRoot } from "@/components/ui/Density";
+import { SnackbarHost } from "@/components/ui/Snackbar";
 import { screenForPath } from "@/modules/core/screenPaths";
 import { InstallPrompt } from "./InstallPrompt";
 import { isNavActive, type NavModel } from "./navModel";
@@ -123,6 +124,7 @@ export function StaffShell({
             {nav.fab.label}
           </Link>
         ) : null}
+        <SnackbarHost bottomOffset={layout === "bottom" ? "76px" : "24px"} />
       </div>
     </DensityRoot>
   );

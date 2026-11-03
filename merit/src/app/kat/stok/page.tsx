@@ -122,7 +122,7 @@ export default function KatStokPage() {
                       style={{ width: 70 }}
                     />
                     {drafts[r.productId] !== undefined && (
-                      <button type="button" data-testid={`kritik-kaydet-${r.productId}`} onClick={() => void saveLevel(r.productId)}>
+                      <button type="button" data-mutates="" data-testid={`kritik-kaydet-${r.productId}`} onClick={() => void saveLevel(r.productId)}>
                         Kaydet
                       </button>
                     )}

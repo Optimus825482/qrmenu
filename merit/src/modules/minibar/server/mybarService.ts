@@ -406,6 +406,7 @@ export async function confirmMybarRequest(requestId: string, userId: string, hot
     }
 
     const completedAt = new Date();
+    const waitSec = Math.max(0, Math.floor((completedAt.getTime() - req.createdAt.getTime()) / 1000));
     await tx.mybarRequest.update({
       where: { id: req.id },
       data: { status: "TAMAMLANDI", completedById: userId, completedAt },
@@ -427,6 +428,19 @@ export async function confirmMybarRequest(requestId: string, userId: string, hot
         transactionId: fill.id,
       },
     });
+    await publishRadar(
+      "mybar.completed",
+      { hotelId, roomId: req.roomId },
+      {
+        requestId: req.id,
+        roomId: req.roomId,
+        roomNumber: req.room.number,
+        closedWithMissing: false,
+        waitSec,
+        byUserId: userId,
+      },
+      tx as Prisma.TransactionClient,
+    );
 
     return {
       success: true,

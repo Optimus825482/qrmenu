@@ -1,114 +1,97 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useMinibarLive } from "@/modules/minibar/ui/useMinibarLive";
+import { Icon } from "@/components/icons/Icon";
+import { requireUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { businessDate } from "@/lib/time";
+import { listTaskItems, taskSummary } from "@/modules/minibar/server/tasks";
 
-type Item = {
-  itemId: string;
-  taskType: string;
-  roomId: string;
-  roomNumber: string;
-  floorName: string;
-  status: string;
-  arrivalTime: string | null;
-  departureTime: string | null;
-  dndCount: number;
-  checkedAt: string | null;
-};
-type Summary = {
-  total: number;
-  completed: number;
-  waiting: number;
-  dnd: number;
-  incomplete: number;
-  ratePct: number;
-  byType: Record<string, { total: number; completed: number; ratePct: number }>;
-};
+export const dynamic = "force-dynamic";
 
-const TYPE_LABEL: Record<string, string> = {
-  INHOUSE_KONTROL: "In House",
-  ARRIVAL_KONTROL: "Arrival",
-  DEPARTURE_KONTROL: "Departure",
-};
-const STATUS_LABEL: Record<string, string> = {
-  BEKLIYOR: "Bekliyor",
-  DEVAM: "Devam ediyor",
-  TAMAMLANDI: "Tamamlandı",
-  DND_BEKLIYOR: "DND bekliyor",
-  EKSIK: "Eksik",
-};
-const FILTERS = [
-  ["ALL", "Tümü"],
-  ["BEKLEYEN", "Bekleyen"],
-  ["DND", "DND"],
-  ["TAMAMLANDI", "Tamamlanan"],
-] as const;
-
-/** Bare read-only task tracking for the depot (UX restyles). The floor supervisors do the work in /kat/gorevler. */
-export default function DepoGorevlerPage() {
-  const [items, setItems] = useState<Item[] | null>(null);
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [filter, setFilter] = useState<(typeof FILTERS)[number][0]>("ALL");
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/minibar/tasks?filter=${filter}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Görevler alınamadı.");
-      setItems(data.items);
-      setSummary(data.summary);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Görevler alınamadı.");
-    }
-  }, [filter]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
-    return () => clearTimeout(timer);
-  }, [load]);
-  useMinibarLive(["task.updated", "task.generated", "dnd.marked", "dnd.completed", "dnd.missed", "occupancy.uploaded"], () => void load());
+export default async function DepoGorevlerPage() {
+  const ctx = await requireUser();
+  const day = businessDate();
+  const [summary, items] = await Promise.all([
+    taskSummary(prisma, ctx.session.hotelId, day),
+    listTaskItems(ctx),
+  ]);
 
   return (
-    <main data-testid="depo-gorevler-page">
-      <h1>Görev izleme</h1>
-      <Link href="/depo" className="inline-flex min-h-11 min-w-11 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium text-text">Geri</Link>
-      {error && <p data-testid="depo-gorevler-error">{error}</p>}
-      {summary && (
-        <section data-testid="depo-gorevler-summary">
-          <p>
-            Toplam {summary.total}, tamamlanan {summary.completed}, bekleyen {summary.waiting}, DND {summary.dnd}, eksik{" "}
-            {summary.incomplete} (%{summary.ratePct})
-          </p>
-          <ul>
-            {Object.entries(summary.byType).map(([type, t]) => (
-              <li key={type} data-testid="depo-gorevler-type" data-type={type}>
-                {TYPE_LABEL[type] ?? type}: {t.completed}/{t.total} (%{t.ratePct})
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      <div role="group" aria-label="Süzgeç">
-        {FILTERS.map(([value, label]) => (
-          <button key={value} type="button" className="min-h-11 min-w-11 rounded-lg border border-border px-3 text-sm aria-pressed:bg-accent aria-pressed:text-white" aria-pressed={filter === value} onClick={() => setFilter(value)}>
-            {label}
-          </button>
-        ))}
+    <div className="mx-auto max-w-5xl px-6 py-8 space-y-6 text-text">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+            Depo & Operasyon · {day}
+          </span>
+          <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>
+        </div>
+        <Link
+          href="/depo"
+          style={{ minHeight: "var(--tap-action)" }}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
+        >
+          <Icon name="arrow-left" size={16} />
+          Depo Panosuna Dön
+        </Link>
       </div>
-      {items && items.length === 0 && <p data-testid="depo-gorevler-empty">Bugün için görev yok.</p>}
-      <ul data-testid="depo-gorevler-list">
-        {items?.map((it) => (
-          <li key={it.itemId} data-testid="depo-gorevler-item" data-status={it.status}>
-            Oda {it.roomNumber} — {it.floorName} — {TYPE_LABEL[it.taskType] ?? it.taskType} — {STATUS_LABEL[it.status] ?? it.status}
-            {it.dndCount > 0 ? ` — DND ${it.dndCount}` : ""}
-            {it.arrivalTime ? ` — Varış ${it.arrivalTime}` : ""}
-            {it.departureTime ? ` — Çıkış ${it.departureTime}` : ""}
-          </li>
-        ))}
-      </ul>
-    </main>
+
+      <section
+        data-testid="depo-gorevler-summary"
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+      >
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <p className="text-xs uppercase tracking-wider text-muted">Toplam</p>
+          <p className="mt-1 text-2xl font-bold text-text tabular-nums">{summary.total}</p>
+        </div>
+        <div className="rounded-2xl border border-ok/30 bg-ok/10 p-4">
+          <p className="text-xs uppercase tracking-wider text-ok">Tamamlanan</p>
+          <p className="mt-1 text-2xl font-bold text-ok tabular-nums">{summary.completed}</p>
+        </div>
+        <div className="rounded-2xl border border-warn/30 bg-warn/10 p-4">
+          <p className="text-xs uppercase tracking-wider text-warn">Bekleyen</p>
+          <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{summary.waiting}</p>
+        </div>
+        <div className="rounded-2xl border border-accent/30 bg-accent/10 p-4">
+          <p className="text-xs uppercase tracking-wider text-accent">DND</p>
+          <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{summary.dnd}</p>
+        </div>
+      </section>
+
+      {items.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+          Bugün için oluşturulmuş görev kalemi bulunmuyor.
+        </div>
+      ) : (
+        <ul className="space-y-2.5">
+          {items.map((i) => {
+            const tone =
+              i.status === "TAMAMLANDI"
+                ? "border-ok/40 bg-ok/10 text-ok"
+                : i.status === "DND_BEKLIYOR"
+                  ? "border-warn/40 bg-warn/10 text-warn"
+                  : "border-accent/40 bg-accent/10 text-accent";
+            return (
+              <li
+                key={i.itemId}
+                data-testid="depo-gorevler-item"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold text-text tabular-nums">
+                    Oda {i.roomNumber}
+                  </span>
+                  <span className="rounded-lg border border-border bg-bg px-2.5 py-0.5 text-xs font-medium text-muted">
+                    {i.taskType}
+                  </span>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone}`}>
+                    {i.status}
+                  </span>
+                </div>
+                <span className="text-xs text-muted">{i.floorName}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
