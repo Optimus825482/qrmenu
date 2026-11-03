@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 06:55",
-  headline: "Paralel 2. tur: minibar T2/T3/T4, radar T4, UX T5 uygulanıyor; UX T1 ve radar T2 incelemesi onaylandı.",
+  updatedAt: "03.11.2026 14:51",
+  headline: "Minibar kapanış düzeltmeleri incelendi: göç doğrulaması ve DND/görev uzlaştırması düzeltildi; tam doğrulama sürüyor. Sırada radar, ardından UX.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -65,21 +65,21 @@ window.ILERLEME = {
       code: "P2", title: "Minibar tanımları ve veri göçü", weight: 10,
       summary: "Ürün grubu/ürün/setup/atama, oda QR üretimi, zimmet havuzu, canlı veritabanından tam göç",
       tasks: [
-        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri (fiyatsız All-Inclusive)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye (araba transfersiz doğrudan havuz)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
+        { title: "Ürün grubu, ürün, setup ve otel bazlı oda tipi–setup atama pencereleri (fiyatsız All-Inclusive)", status: "active", note: "14 görevlik minibar tamamlama planı uygulandı ve incelendi. Katalog/havuz/QR servisleri hazır; son check/build/e2e bekleniyor. UI cilası UX planında." },
+        { title: "Oda QR üretimi (HMAC token), SVG/PNG/ZIP indirme, yazdırma şablonu", status: "active", note: "QR indirme token yenilemez; üretim, toplu modlar, baskı ve yetki testleri incelendi. Son dalga doğrulaması bekleniyor." },
+        { title: "Otel zimmet havuzu: giriş, iade, düzeltme, kritik seviye (araba transfersiz doğrudan havuz)", status: "active", note: "Tek sahipli havuz, işaretli hareket ve kritik stok çekirdeği incelendi. Son dalga doğrulaması bekleniyor." },
+        { title: "Göç scripti: minibar_legacy → yeni şema (tanımlar + işlem geçmişi), doğrulama raporu", status: "active", note: "Tanımlar, işlem geçmişi, doluluk/görev/DND/günlük göçü uygulandı. Kapanış e34a0ee: eşlenmiş hedef doğrulaması; 171/171 göç testi ve bağımsız inceleme geçti. Gerçek aktarım yapılmadı." }
       ]
     },
     {
       code: "P3", title: "Minibar operasyonu", weight: 16,
       summary: "Kat sorumlusu ve depo ekranları, oda kontrolü, DND, doluluk Excel, günlük görevler",
       tasks: [
-        { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "active", note: "03.11 12:05: kat planı/doluluk servisleri, html5-qrcode okuyucu, QR çözümleme ve canlı yenileme tamamlandı ve incelendi (be4a7ab + 9a03ab9 + 499fa64); ekran yeniden tasarımı UX T9." },
-        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "03.11 10:55: oda kontrolü servisi (kapasiteli +N ikame, Sarfiyat Yok, idempotent istek, sil/güncelle, MMD kaldırıldı) tamamlandı ve incelendi (c64a6e3). 07:10: DND ve görev kalemi çekirdeği (tasks.ts/dnd.ts: ayarlı eşik, 30 sn çift dokunma, 120 dk hatırlatma, gün sonu EKSIK) tamamlandı ve incelendi (4444d08, 4385096). Oda kontrolü servisi (+N ikame, Sarfiyat Yok, sil/güncelle) uygulanıyor; /kat sayfaları UX planında." },
-        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "03.11 13:40: günlük görev uzlaştırma ve öncelik planı tamamlandı ve incelendi (7e3e7a8 + 1fff117); altı pg-boss kuyruğu, depo panosu, birebir rapor sözleşmesi ve uçtan uca kabul tamamlandı ve incelendi (dff58ad). Minibar planının 14 görevi bitti; tek ajanla tam doğrulama sürüyor. Göç (T12–T14) tamamlandı: canlı yedekle kuru koşu temiz." }
+        { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "active", note: "Kat planı ve QR okuyucu servisleri incelendi; ekran tasarımı UX T9 kapsamında. Minibar son doğrulaması sürüyor." },
+        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "Kapanış 1dd4bc7: gecikmiş 23:59 işi yeni günü kapatmaz; geç doluluk görevleri mevcut kontrol/DND sonucunu devralır. 96/96 hedefli test ve bütünleşik inceleme geçti." },
+        { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "active", note: "Stok ve ek talep yaşam döngüsü/havuz işlemleri uygulandı ve incelendi; son dalga doğrulaması bekleniyor. UI cilası UX planında." },
+        { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "active", note: "Doluluk Excel, yükleme görevleri ve depo servisleri incelendi. Görünüm matrisindeki bilinen dokunma hedefleri UX kapsamında; son doğrulama sürüyor." },
+        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "Altı pg-boss kuyruğu, görev uzlaştırma ve rapor veri sözleşmesi incelendi. Bağımsız legacy rapor karşılaştırması P7/kabul kapsamındadır; tam check/build/e2e sürüyor." }
       ]
     },
     {
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 14:51", text: "Codex devamı: dört minibar kapanış bulgusu e34a0ee ve 1dd4bc7 ile düzeltildi. Göç 171/171, operasyon 96/96 hedefli test geçti; bağımsız göç yeniden incelemesi ve bütünleşik minibar incelemesi onayladı. İzole DB/3061 üzerinde tam doğrulama başladı; radar henüz açılmadı." },
     { at: "03.11 06:55", text: "UX T5 (emoji→ikon) uygulandı (72c35cf); minibar T2 katalog onaylandı; UX T6 POS kabuğu ve dalga-1 e2e bütünleştirme başladı." },
     { at: "03.11 06:45", text: "Radar T4 (CR-RAD, OperationEvent, ayarlar) uygulandı (0552fe5); T5 anlık görüntü başladı; minibar T13 göç başladı." },
     { at: "03.11 06:35", text: "Minibar T1 ve T3 (pool.ts) incelemeleri onaylandı; T12 göç iskeleti uygulandı (bad0b42). Çalışan: minibar T2/T4, radar T4, UX T5." },

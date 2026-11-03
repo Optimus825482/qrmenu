@@ -12,8 +12,8 @@
 | P0 İskelet | Bitti, `main`'de | `docs/superpowers/plans/2026-10-31-p0-iskelet.md` (+ `-ledger.md`) |
 | P1 Çekirdek tanımlar | **Tamamlandı ve `main`'e birleştirildi** (12 görev + Opus dal incelemesi + 2 düzeltme turu) | `docs/superpowers/plans/2026-10-31-p1-cekirdek.md` (+ `-ledger.md`) |
 | P5 QR Menü/Sipariş | **Tamamlandı, `main`'de** (T1–T14 + menü tasarım merkezi; son kontrol 02.11 ile güvenlik düzeltmeleri) | `docs/superpowers/plans/2026-10-31-p5-qr-menu.md` (+ `-ledger.md`), `2026-11-01-menu-tasarim-merkezi.md` |
-| P2 Minibar tanımları + veri göçü | **Plan dışı prototip var** (`b52da3b`); 02.11 son kontrolde yetki/kapsam/havuz kilidi/iş günü düzeltildi; plan görevlerinin ~0/14'ü tam, ~8 kısmi; göç scripti yalnız tanımlar | `docs/superpowers/plans/2026-10-31-p2-minibar-tanimlar.md`; durum: `docs/kabul/2026-11-02-tutarlilik-denetimi.md` |
-| P3 Minibar operasyonu | **Plan dışı prototip var**; DND 2/120, Nicosia iş günü, kilitli havuz, sahte veri kaldırma 02.11'de düzeltildi; stok talepleri, QR okuyucu, görev motoru, Excel kuralları eksik | `docs/superpowers/plans/2026-10-31-p3-minibar-operasyon.md` |
+| P2 Minibar tanımları + veri göçü | **14 görevlik tamamlama planında uygulandı ve incelendi; kapanış doğrulaması sürüyor**. Göç e34a0ee ile eşlenmiş hedeflere sınırlandı (171/171 test); gerçek aktarım yapılmadı. UI cilası UX planında. | `docs/superpowers/plans/2026-11-03-minibar-tamamlama.md` |
+| P3 Minibar operasyonu | **Çekirdek uygulandı ve incelendi; kapanış doğrulaması sürüyor**. 1dd4bc7: geciken gün sonu yeni günü kapatmaz, geç görevler mevcut kontrol/DND durumunu devralır (96/96 hedefli test). UI cilası UX planında. | `docs/superpowers/plans/2026-11-03-minibar-tamamlama.md` |
 | P4 MyBar + bildirimler | **Kısmi prototip**: misafir isteği 02.11'de QR tokena bağlandı; yaşam döngüsü (Gördüm/karşılama/iptal), depo penceresi, Web Push YOK | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
 | P6 QR Oda Servisi | **Kısmi**: sipariş çekirdeği/durum makinesi/`/oda-servisi` plana uygun ve testli; misafir oda servisi UI, SLA tarama/eskalasyon işi YOK | `docs/superpowers/plans/2026-10-31-p6-oda-servisi.md` |
 | P7 Rapor / e-posta / izleme | **Kısmi prototip**: CR-RAP penceresi (CSV), e-posta işleri 02.11'de otel kapsamlı+EmailLog yapıldı; Excel/PDF motoru, SMTP ayar/mühür, radar ısı haritası YOK | `docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md` |
@@ -50,6 +50,14 @@ Kapalı: T1–T8, T11 (T7 `41ad912` karar: oda servisi geri alma RO-TAL D; T8 `4
 
 ### Kararlar (bu dalga)
 DND `dnd.minChecks`/`dnd.recheckMinutes`, 30 sn çift dokunma, gün sonu EKSIK idempotent; `roomcheck.done` SSE_EVENT_TYPES dışında; seed yönetici silmelerini geri getirmez; göçte bcrypt korunur (scrypt/diğer `SIFRE_SIFIRLANMALI`), e-posta küçük harf+tekil, otel tahmini yok, DND birleştirme count=max; POS durum şeridi 44 px, tam ekran kapısı banner; KDS oda servisi geri alma RO-TAL D; StaffBell; "Şifre değiştir" bilgi sayfası.
+
+## 1b. Codex devamı (3 Kasım 2026, 14:51)
+
+- Kullanıcı mevcut devri gerekli becerilerle multiparalel subagent-driven sürdürmeyi istedi. Mevcut `ux/yenileme` dalı kullanılıyor; main/birleştirme/push yapılmadı. Sıra minibar → radar → UX korunuyor.
+- Kapanışta iki göç ve iki operasyon bulgusu giderildi: `e34a0ee` (göç 171/171), `1dd4bc7` (operasyon 96/96, son metin koşusu 33/33). Göç yeniden incelemesi SPEC/QUALITY PASS; bütünleşik minibar incelemesi SPEC/QUALITY APPROVED.
+- Yeni tam doğrulama ajanı `closure_verification`: birim DB `merit_test_cdxv`, e2e DB `merit_cdxv_e2e`, port 3061, `.next-cdxv`. Her iki DB 30 migration ile hazır; check/build/schema diff/chromium sonuçları henüz bekleniyor. Rapor `.superpowers/sdd/2026-11-03-minibar-tamamlama/closure-verification-report.md`.
+- Eski harici `ver` baseline: 1781 birim, 153 chromium geçti; 6 görünüm matrisi 273 geçti/15 başarısız. Üç UI dosyasında (KDS axe, kat/dnd ve depo/gorevler dokunma hedefi) küçük düzeltmeler yapıp 3050 üzerinde hedefli tekrar koşuyor; bu dosyalara dokunulmadı. Önceki dalgaların 3012/3013/3014/3015/3019/3031/3040 test sunucuları proje yolu+PID+port doğrulanıp kapatıldı; kullanıcı 3000/3001 ve çalışan 3050 korundu.
+- Legacy rapor sözleşmesinin bağımsız canlı sistem karşılaştırması P7/kabulde; gerçek göç, şifre sıfırlama, SMTP ve dağıtım yapılmadı.
 
 ## 2. Çalışma ortamı
 
