@@ -16,13 +16,20 @@ type LevelRow = { id: string; product_id: string; at: Date; remaining: bigint | 
 function levelSql(q: ReplaySourceArgs, range: TimeRange, take: number | undefined): Prisma.Sql {
   const lower = range.gt ? Prisma.sql`x.at > ${range.gt}` : Prisma.sql`x.at >= ${range.gte!}`;
   return Prisma.sql`
+    WITH post_upper AS (
+      SELECT product_id, COALESCE(SUM(qty), 0) AS post_qty
+      FROM hotel_stock_movements
+      WHERE hotel_id = ${q.hotelId} AND created_at > ${range.lte}
+      GROUP BY product_id
+    )
     SELECT x.id, x.product_id, x.at, x.remaining, x.critical FROM (
       SELECT m.id, m.product_id, m.created_at AS at, hs.critical_level AS critical,
-        hs.remaining_qty - COALESCE(SUM(m.qty) OVER (
+        (hs.remaining_qty - COALESCE(pu.post_qty, 0)) - COALESCE(SUM(m.qty) OVER (
           PARTITION BY m.product_id ORDER BY m.created_at DESC, m.id DESC
           ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS remaining
       FROM hotel_stock_movements m
       JOIN hotel_stocks hs ON hs.hotel_id = m.hotel_id AND hs.product_id = m.product_id
+      LEFT JOIN post_upper pu ON pu.product_id = m.product_id
       WHERE m.hotel_id = ${q.hotelId} AND m.created_at <= ${range.lte}
     ) x
     WHERE ${lower} AND x.at <= ${range.lte}

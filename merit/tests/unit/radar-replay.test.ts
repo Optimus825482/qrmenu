@@ -641,6 +641,11 @@ describe("snapshot + events = later snapshot", () => {
     const foldedRest = { ...comparableState(folded), staff: undefined };
     const endRest = { ...comparableState(initialState(end)), staff: undefined };
     expect(foldedRest).toEqual(endRest);
+
+    // Sub-window before 16:00 movement (+20): historical stock must rebase against movements after `to`.
+    const subLines = await direct(w.sys, { ...WHOLE_DAY(), from: "11:00", to: "15:00" });
+    const subStock = eventsOf(subLines).filter((x) => x.type === "stock.level" && x.productId === day.productId);
+    expect(subStock.map((x) => (x as Extract<RadarEvent, { type: "stock.level" }>).remaining)).toEqual([63, 60]);
   });
 });
 
