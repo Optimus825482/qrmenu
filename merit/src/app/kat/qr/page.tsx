@@ -16,11 +16,18 @@ export default function KatQrScannerPage() {
   const [roomError, setRoomError] = useState<string | null>(null);
   const manualRef = useRef<HTMLInputElement | null>(null);
   const busy = useRef(false);
+  /** Başarılı çözümlemeden sonra kamera aynı kodu tekrar bildirir; sonrakiler yok sayılır. */
+  const done = useRef(false);
+  const stopScanner = useRef<(() => Promise<void>) | null>(null);
+  const lastText = useRef<{ text: string; at: number } | null>(null);
 
   /** One resolve call for both the camera and the typed code; success opens the room check. */
   const resolve = useCallback(
     async (text: string): Promise<boolean> => {
-      if (busy.current) return false;
+      if (busy.current || done.current) return false;
+      const nowMs = Date.now();
+      if (lastText.current && lastText.current.text === text && nowMs - lastText.current.at < 3000) return false;
+      lastText.current = { text, at: nowMs };
       busy.current = true;
       setIsSearching(true);
       setRoomError(null);
@@ -35,6 +42,8 @@ export default function KatQrScannerPage() {
           setRoomError(json.error ?? "QR kod çözümlenemedi.");
           return false;
         }
+        done.current = true;
+        await stopScanner.current?.();
         router.push(`/kat/oda-kontrol/${json.roomId}`);
         return true;
       } catch {
@@ -65,6 +74,7 @@ export default function KatQrScannerPage() {
             /* already stopped */
           }
         };
+        stopScanner.current = stop;
         await scanner.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 220, height: 220 } },
