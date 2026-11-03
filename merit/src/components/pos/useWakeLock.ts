@@ -24,17 +24,21 @@ export function useWakeLock(active: boolean): { supported: boolean; held: boolea
     let sentinel: Sentinel | undefined;
     let cancelled = false;
     const acquire = async () => {
+      if (sentinel) return; // zaten tutuluyor; ikinci sentinel alınmaz
       try {
         const api = (navigator as unknown as { wakeLock: WakeLockApi }).wakeLock;
         const next = await api.request("screen");
-        if (cancelled) {
+        if (cancelled || sentinel) {
           void next.release().catch(() => undefined);
           return;
         }
         sentinel = next;
         setHeld(true);
         next.addEventListener("release", () => {
-          if (sentinel === next) setHeld(false);
+          if (sentinel === next) {
+            sentinel = undefined;
+            setHeld(false);
+          }
         });
       } catch {
         setHeld(false);
