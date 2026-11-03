@@ -104,7 +104,7 @@ const ENTITY_TABLE: Record<string, string> = {
   minibarTx: "minibar_transactions",
   roomCheck: "room_checks",
   hotelStock: "hotel_stocks",
-  hotelStockMovement: "hotel_stock_movements",
+  stockMovement: "hotel_stock_movements",
   occupancyUpload: "occupancy_uploads",
   guestRecord: "guest_records",
   uploadTask: "upload_tasks",
@@ -122,7 +122,7 @@ async function checkCounts(ctx: StepContext, ran: string[]): Promise<ValidationR
   const bad: string[] = [];
   // Rows the id map knows but the target no longer has (the counters cannot see these).
   for (const [entity, table] of Object.entries(ENTITY_TABLE)) {
-    const src = ENTITY_SOURCES[entity] ?? { step: entity === "hotelStockMovement" ? "history" : "definitions" };
+    const src = ENTITY_SOURCES[entity] ?? { step: entity === "stockMovement" ? "history" : "definitions" };
     if (!ran.includes(src.step) || ((src as { logs?: boolean }).logs && ctx.cfg.skipLogs)) continue;
     const lost = await ctx.tx((db) =>
       db.$queryRawUnsafe<{ n: bigint }[]>(
@@ -312,30 +312,33 @@ async function checkMybar(ctx: StepContext): Promise<ValidationResult> {
 
 async function checkTxTypes(ctx: StepContext): Promise<ValidationResult> {
   if (!(await ctx.legacy.tableExists("minibar_islemleri"))) return pass("ISLEM_TIP_SAYILARI", "İşlem tipi sayıları (legacy tablo yok)");
-  const legacy = await ctx.legacy.query<{ tip: unknown; n: string }>(
-    `SELECT "islem_tipi" AS tip, count(*) AS n FROM "${ctx.cfg.legacySchema}"."minibar_islemleri" GROUP BY "islem_tipi"`,
-  );
+  const legacy = await legacyRows(ctx, "minibar_islemleri", ["id", "islem_tipi"]);
+  const txOf = await mapped(ctx, "minibarTx");
   const want = new Map<string, number>();
-  for (const l of legacy) want.set(fold(clean(l.tip)), (want.get(fold(clean(l.tip))) ?? 0) + Number(l.n));
-  const grouped = await ctx.tx((db) => db.minibarTransaction.groupBy({ by: ["type", "legacyType"], _count: { _all: true } }));
+  const seen = new Set<string>();
+  for (const l of legacy) {
+    const targetId = txOf.get(idOf(l.id));
+    if (!targetId || seen.has(targetId)) continue;
+    seen.add(targetId);
+    const tip = fold(clean(l.islem_tipi));
+    want.set(tip, (want.get(tip) ?? 0) + 1);
+  }
   const got = new Map<string, number>();
-  for (const g of grouped) {
-    const tip =
-      g.type === "SETUP_KONTROL" ? "setup_kontrol" : g.type === "SARFIYAT_YOK" ? "sarfiyat_yok" : g.type === "MYBAR_KARSILAMA" ? "ekstra_ekleme" : fold(g.legacyType ?? "");
-    got.set(tip, (got.get(tip) ?? 0) + g._count._all);
+  for (const part of chunked([...new Set(txOf.values())], 5000)) {
+    const grouped = await ctx.tx((db) => db.minibarTransaction.groupBy({
+      by: ["type", "legacyType"], where: { id: { in: part } }, _count: { _all: true },
+    }));
+    for (const g of grouped) {
+      const tip =
+        g.type === "SETUP_KONTROL" ? "setup_kontrol" : g.type === "SARFIYAT_YOK" ? "sarfiyat_yok" : g.type === "MYBAR_KARSILAMA" ? "ekstra_ekleme" : fold(g.legacyType ?? "");
+      got.set(tip, (got.get(tip) ?? 0) + g._count._all);
+    }
   }
   const bad: string[] = [];
-  let missing = 0;
   for (const tip of new Set([...want.keys(), ...got.keys()])) {
     const w = want.get(tip) ?? 0;
     const g = got.get(tip) ?? 0;
-    if (g > w) bad.push(`${tip || "(boş)"}: legacy ${w}, hedef ${g}`);
-    missing += Math.max(0, w - g);
-  }
-  // Counters exist only in the run that migrated (a standalone validation has none): then the missing rows must be the dropped ones.
-  const counter = ctx.report.counts().minibarTx;
-  if (counter && bad.length === 0 && missing !== counter.dropped) {
-    bad.push(`tip başına eksik toplam ${missing}, taşınmadı olarak raporlanan ${counter.dropped}`);
+    if (g !== w) bad.push(`${tip || "(boş)"}: legacy ${w}, hedef ${g}`);
   }
   return outcome("ISLEM_TIP_SAYILARI", "İşlem tipi sayıları legacy ile uyumlu (fark yalnız taşınmayanlar)", bad, "FAIL");
 }

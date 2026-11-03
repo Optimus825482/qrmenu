@@ -199,6 +199,40 @@ describe("göç doğrulaması ve uçtan uca kabul", () => {
       expect(results.filter((r) => r.level === "FAIL")).toEqual([]);
     });
 
+    it("eşlenmiş HotelStockMovement silinirse yalnız history doğrulaması SAYI_FARKI FAIL verir", async () => {
+      const mapping = await testDb.legacyIdMap.findFirstOrThrow({ where: { entity: "stockMovement" } });
+      await testDb.hotelStockMovement.delete({ where: { id: mapping.newId } });
+      const results = await validate(["history"]);
+      expect(level(results, "SAYI_FARKI")).toBe("FAIL");
+      expect(results.find((r) => r.code === "SAYI_FARKI")?.detail?.join()).toContain("stockMovement");
+    });
+
+    it("yerel işlem ve aynı hedefe çoklu eşleme sonrası aynı dump tekrarı geçer", async () => {
+      const mapping = await testDb.legacyIdMap.findFirstOrThrow({ where: { entity: "minibarTx" } });
+      const tx = await testDb.minibarTransaction.findUniqueOrThrow({ where: { id: mapping.newId } });
+      await testDb.minibarTransaction.create({ data: {
+        hotelId: tx.hotelId, roomId: tx.roomId, userId: tx.userId, type: "SARFIYAT_YOK",
+      } });
+      await testDb.legacyIdMap.createMany({ data: Array.from({ length: 5001 }, (_, i) => ({
+        entity: "minibarTx", legacyId: `alias-${i}`, newId: tx.id,
+      })) });
+      expect(level(await validate(["history"]), "ISLEM_TIP_SAYILARI")).toBe("PASS");
+      expect(await run()).toBe(0);
+      expect(report()).toMatch(/GEÇTİ — ISLEM_TIP_SAYILARI/);
+    });
+
+    it("eşlenmiş işlemin tipi bozulursa ISLEM_TIP_SAYILARI FAIL verir", async () => {
+      const tx = await testDb.minibarTransaction.findFirstOrThrow({ where: { type: "SARFIYAT_YOK" } });
+      await testDb.minibarTransaction.update({ where: { id: tx.id }, data: { type: "SETUP_KONTROL" } });
+      expect(level(await validate(["history"]), "ISLEM_TIP_SAYILARI")).toBe("FAIL");
+    });
+
+    it("eşlenmiş işlem silinirse ISLEM_TIP_SAYILARI FAIL verir", async () => {
+      const tx = await testDb.minibarTransaction.findFirstOrThrow({ where: { type: "SARFIYAT_YOK" } });
+      await testDb.minibarTransaction.delete({ where: { id: tx.id } });
+      expect(level(await validate(["history"]), "ISLEM_TIP_SAYILARI")).toBe("FAIL");
+    });
+
     it("HotelStock.remaining değişirse HAVUZ_FARKI FAIL", async () => {
       const pool = await testDb.hotelStock.findFirstOrThrow({ where: { hotel: { code: "DIAMOND" }, remainingQty: 60 } });
       await testDb.hotelStock.update({ where: { id: pool.id }, data: { remainingQty: 59, totalQty: pool.usedQty + 59 } });
