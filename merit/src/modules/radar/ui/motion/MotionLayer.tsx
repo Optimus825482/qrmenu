@@ -7,6 +7,8 @@ import {
   FRAME_STRIDE,
   MAX_SPRITES,
   coalesce,
+  hiddenAfterPrune,
+  liveItems,
   deriveMotion,
   openCallIds,
   prepare,
@@ -160,10 +162,11 @@ export function MotionLayer({ rootRef, state, events, speed, enabled }: MotionLa
     if (!active) return;
     return clock.subscribe((now) => {
       apply(now);
-      const live = listRef.current.filter((p) => p.ev.kind === "call.ring" || p.ev.at + p.ev.durationMs > now);
+      const live = liveItems(listRef.current, now);
       if (live.length !== listRef.current.length) {
         listRef.current = live;
         setList(live);
+        setHidden((h) => hiddenAfterPrune(live, h));
       }
     });
   }, [active, clock, apply]);

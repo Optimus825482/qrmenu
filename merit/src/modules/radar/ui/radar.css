@@ -21,7 +21,7 @@
   position: relative;
 }
 
-.rd-root:focus {
+.rd-root:focus-visible {
   outline: none;
 }
 

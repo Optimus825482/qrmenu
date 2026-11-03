@@ -235,7 +235,18 @@ export function ringsFor(s: RadarState, now: number): MotionEvent[] {
   return out;
 }
 
-const groupKey = (m: MotionEvent) => `${m.kind}|${m.from}|${m.to ?? ""}`;
+// A call ring belongs to its call: two open calls on one table keep two rings.
+const groupKey = (m: MotionEvent) => (m.kind === "call.ring" ? m.id : `${m.kind}|${m.from}|${m.to ?? ""}`);
+
+/** Items still running at `now` (rings stay until their call closes). */
+export function liveItems<T extends { ev: MotionEvent }>(items: readonly T[], now: number): T[] {
+  return items.filter((p) => p.ev.kind === "call.ring" || p.ev.at + p.ev.durationMs > now);
+}
+
+/** The global `+N` count of dropped motions only makes sense while something is on screen. */
+export function hiddenAfterPrune(live: readonly unknown[], hidden: number): number {
+  return live.length === 0 ? 0 : hidden;
+}
 
 /**
  * Merges same-kind, same-anchor items into one with a `more` count, drops repeated ids and keeps at most `max`

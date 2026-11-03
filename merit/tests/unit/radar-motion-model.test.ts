@@ -7,6 +7,8 @@ import {
   RING_FOREVER_MS,
   coalesce,
   deriveMotion,
+  hiddenAfterPrune,
+  liveItems,
   openCallIds,
   prune,
   ringsFor,
@@ -280,5 +282,22 @@ describe("coalesce / prune", () => {
     const rings = ringsFor(state, 50);
     expect(rings).toHaveLength(1);
     expect(rings[0]).toMatchObject({ kind: "call.ring", from: "table:t2", at: 50 });
+  });
+
+  it("iki açık çağrı iki ayrı halka olarak kalır; biri kapanınca yalnız o gider", () => {
+    const mk = (id: string) =>
+      item({ id: `ring:${id}`, kind: "call.ring", from: "table:t1", to: undefined, durationMs: RING_FOREVER_MS, tone: "danger" });
+    const { items } = coalesce([mk("c1"), mk("c2")]);
+    expect(items).toHaveLength(2);
+    expect(prune(items, 10, new Set(["c2"])).map((m) => m.id)).toEqual(["ring:c2"]);
+  });
+
+  it("+N rozeti sprite'lar bitince temizlenir", () => {
+    const list = Array.from({ length: 300 }, (_, i) => ({ ev: item({ id: `h${i}`, at: 0, durationMs: 500, from: `table:y${i}` }) }));
+    const { items, hidden } = coalesce(list.map((p) => p.ev));
+    expect(hidden).toBe(180);
+    const running = items.map((ev) => ({ ev }));
+    expect(hiddenAfterPrune(liveItems(running, 100), hidden)).toBe(180);
+    expect(hiddenAfterPrune(liveItems(running, 600), hidden)).toBe(0);
   });
 });
