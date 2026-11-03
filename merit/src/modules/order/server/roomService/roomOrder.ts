@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
+import { createRateLimiter, scaledMax } from "@/lib/rate-limit";
 import { getSetting } from "@/lib/settings";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
@@ -13,12 +14,14 @@ import {
 } from "@/modules/menu/server/guestToken";
 import { approvals } from "../approvals";
 import { orderNo } from "../orderNo";
-import { orderLimiter, toGuestOrderView, type GuestOrderView } from "../guestOrder";
+import { toGuestOrderView, type GuestOrderView } from "../guestOrder";
 import { validateCartItems } from "../cart";
 import { CLOSED_STATUSES } from "../transitions";
 import { roomServiceState } from "./roomState";
 
 const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
+const roomOrderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
+const roomCancelLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
 
 function sanitize(text: string): string {
   return text
@@ -81,7 +84,7 @@ async function resolveRoom(token: string, meta: GuestMeta) {
 const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
 
 async function create(input: RoomOrderInput): Promise<GuestOrderView> {
-  if (!orderLimiter.hit(input.ip).allowed) {
+  if (!(await roomOrderLimiter.hit(input.ip)).allowed) {
     throw new DomainError("RATE_LIMITED", "Çok fazla sipariş denemesi, biraz sonra tekrar deneyin");
   }
 
@@ -115,6 +118,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
   if (!state.orderingOpen || !state.rsOutletId) {
     throw new DomainError("CONFLICT", "Şu an oda servisi siparişi alınmıyor");
   }
+  const maxOpen = await getSetting("rs.maxOpenPerRoom", state.hotelId);
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -128,12 +132,6 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
           status: { notIn: [...CLOSED_STATUSES] },
         },
       });
-
-      let maxOpen = 3;
-      try {
-        const settingVal = await getSetting("rs.maxOpenPerRoom", state.hotelId);
-        if (typeof settingVal === "number") maxOpen = settingVal;
-      } catch {}
 
       if (openCount >= maxOpen) {
         throw new DomainError("CONFLICT", `Odanız için en fazla ${maxOpen} açık sipariş olabilir`);
@@ -296,7 +294,7 @@ async function guestCancel(
   orderId: string,
   meta: GuestMeta = { ip: "unknown", userAgent: "" },
 ): Promise<{ ok: true }> {
-  if (!orderLimiter.hit(meta.ip).allowed) {
+  if (!roomCancelLimiter.hit(meta.ip).allowed) {
     throw new DomainError("RATE_LIMITED", "Çok fazla deneme, biraz sonra tekrar deneyin");
   }
   const target = await resolveRoom(token, meta);

@@ -392,11 +392,16 @@ describe("roomOrder.create & get & guestCancel", () => {
     });
   });
 
-  it("11. sipariş/dk aynı IP RATE_LIMITED", async () => {
+  it.each([
+    { multiplier: 1, allowed: 10 },
+    { multiplier: 3, allowed: 30 },
+  ])("IP çarpanı $multiplier iken dakikada $allowed sipariş kabul edilir", async ({ multiplier, allowed }) => {
     const s = await setupRsEnv();
-    const ip = "10.99.88.77";
+    const ip = `10.99.88.${multiplier}`;
+    await testDb.setting.deleteMany({ where: { key: "guest.ipRateMultiplier", hotelId: null } });
+    await testDb.setting.create({ data: { key: "guest.ipRateMultiplier", value: multiplier } });
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < allowed; i++) {
       const res = await roomOrder.create({
         token: s.roomToken,
         idempotencyKey: randomUUID(),
@@ -423,6 +428,56 @@ describe("roomOrder.create & get & guestCancel", () => {
     ).rejects.toMatchObject({
       code: "RATE_LIMITED",
     });
+  });
+
+  it("guestCancel IP çarpanından ve sipariş oluşturma sayacından bağımsızdır", async () => {
+    const s = await setupRsEnv();
+    const ip = "10.99.88.91";
+    const meta = { ip, userAgent: "vitest" };
+    await testDb.setting.deleteMany({ where: { key: "guest.ipRateMultiplier", hotelId: null } });
+    await testDb.setting.create({ data: { key: "guest.ipRateMultiplier", value: 3 } });
+    const input = {
+      token: s.roomToken,
+      idempotencyKey: randomUUID(),
+      items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
+      ...meta,
+    };
+    const order = await roomOrder.create(input);
+    for (let i = 0; i < 9; i++) await roomOrder.create(input);
+
+    await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).resolves.toEqual({ ok: true });
+    for (let i = 0; i < 9; i++) {
+      await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).rejects.toMatchObject({
+        code: "CONFLICT",
+      });
+    }
+    await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).rejects.toMatchObject({
+      code: "RATE_LIMITED",
+    });
+  });
+
+  it("açık sipariş sınırı okunamazsa sipariş oluşturulmaz", async () => {
+    const s = await setupRsEnv();
+    const failure = new Error("setting read failed");
+    const findMany = testDb.setting.findMany.bind(testDb.setting);
+    const read = vi.spyOn(testDb.setting, "findMany").mockImplementation((args) => {
+      const key = args?.where?.key;
+      if (typeof key === "object" && Array.isArray(key.in) && key.in.includes("rs.maxOpenPerRoom")) {
+        throw failure;
+      }
+      return findMany(args);
+    });
+    try {
+      await expect(roomOrder.create({
+        token: s.roomToken,
+        idempotencyKey: randomUUID(),
+        items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
+        ip: "10.99.88.92",
+      })).rejects.toBe(failure);
+      expect(await testDb.order.count({ where: { roomId: s.room.id } })).toBe(0);
+    } finally {
+      read.mockRestore();
+    }
   });
 
   it("guestCancel: TEYIT_BEKLIYOR'da ok (order.cancelled olayı), ONAYLANDI'da CONFLICT, başka odanın siparişi NOT_FOUND", async () => {
@@ -535,6 +590,7 @@ describe("events filter for room service", () => {
     const filter = guestEventFilter({
       outletId: "rs_outlet_1",
       hotelId: "mr_1",
+      roomId: "room_1",
       orderIds: ["order_mine_1"],
     });
 
@@ -543,7 +599,7 @@ describe("events filter for room service", () => {
       type: "order.onway",
       outletId: "rs_outlet_1",
       hotelId: "mr_1",
-      payload: { orderId: "order_mine_1" },
+      payload: { orderId: "order_mine_1", roomId: "room_1" },
       at: new Date().toISOString(),
     };
     expect(filter(myOnway)).toBe(true);
@@ -553,7 +609,7 @@ describe("events filter for room service", () => {
       type: "order.approved",
       outletId: "rs_outlet_1",
       hotelId: "mr_1",
-      payload: { orderId: "order_other_2" },
+      payload: { orderId: "order_other_2", roomId: "room_2" },
       at: new Date().toISOString(),
     };
     expect(filter(otherApproved)).toBe(false);

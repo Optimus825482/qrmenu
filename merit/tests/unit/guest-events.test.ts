@@ -26,6 +26,27 @@ describe("guestEventFilter", () => {
     expect(filter(ev({ type: "scan.table", outletId: "o1" }))).toBe(false);
   });
 
+  it("oda akışındaki sipariş olayı oda, outlet, otel ve istenen sipariş kimliğine uymalıdır", () => {
+    const scope = { outletId: "o1", hotelId: "h1", roomId: "r1", orderIds: ["ord1", "ord2"] };
+    const roomFilter = guestEventFilter(scope);
+    const onway = ev({
+      type: "order.onway", outletId: "o1", hotelId: "h1",
+      payload: { orderId: "ord1", roomId: "r1" },
+    });
+
+    expect(roomFilter(onway)).toBe(true);
+    expect(roomFilter({ ...onway, roomId: "r1", payload: { orderId: "ord1" } })).toBe(true);
+    expect(roomFilter({ ...onway, payload: { orderId: "ord2", roomId: "r2" } })).toBe(false);
+    expect(roomFilter({ ...onway, payload: { orderId: "ord1" } })).toBe(false);
+    expect(roomFilter({ ...onway, roomId: "r2" })).toBe(false);
+    expect(roomFilter({ ...onway, payload: { orderId: "ord3", roomId: "r1" } })).toBe(false);
+    expect(roomFilter({ ...onway, outletId: "o2" })).toBe(false);
+    expect(roomFilter({ ...onway, hotelId: "h2" })).toBe(false);
+    expect(roomFilter({ ...onway, outletId: undefined })).toBe(false);
+    expect(roomFilter({ ...onway, hotelId: undefined })).toBe(false);
+    expect(guestEventFilter({ ...scope, outletId: undefined })(onway)).toBe(false);
+  });
+
   it("order.* yalnız verilen orderIds için", () => {
     expect(filter(ev({ type: "order.approved", outletId: "o1", payload: { orderId: "ord1" } }))).toBe(true);
     expect(filter(ev({ type: "order.approved", outletId: "o1", payload: { orderId: "ord2" } }))).toBe(false);

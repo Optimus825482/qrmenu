@@ -124,6 +124,17 @@ describe("roomServiceState", () => {
     expect(state.reason).toBe("MENU_KAPALI");
   });
 
+  it("SLA ayarı okunamazsa hata çağırana iletilir", async () => {
+    const { room } = await setupRoomAndOutlet();
+    const failure = new Error("setting read failed");
+    const read = vi.spyOn(testDb.setting, "findMany").mockRejectedValueOnce(failure);
+    try {
+      await expect(roomServiceState(room.id)).rejects.toBe(failure);
+    } finally {
+      read.mockRestore();
+    }
+  });
+
   it("confirmRequired ve slaMinutes (otel ayarı 20 -> 20) doğru yüklenir", async () => {
     const { room } = await setupRoomAndOutlet({ phoneConfirmRequired: true, slaMinutes: 20 });
     const state = await roomServiceState(room.id);

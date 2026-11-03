@@ -40,11 +40,7 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
   if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
 
   const hotel = room.hotel;
-  let slaMinutes = 30;
-  try {
-    const rawSla = await getSetting("rs.slaMinutes", hotel.id);
-    if (typeof rawSla === "number") slaMinutes = rawSla;
-  } catch {}
+  const slaMinutes = await getSetting("rs.slaMinutes", hotel.id);
 
   // 1. Room is inactive
   if (!room.isActive) {

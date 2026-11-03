@@ -5,7 +5,7 @@ export type GuestStreamScope = {
   outletId?: string;
   hotelId: string;
   orderIds: readonly string[];
-  /** Room of a room QR: its own `mybar.*` events (and no other room's) reach the stream. */
+  /** Room of a room QR: its own `mybar.*` and requested `order.*` events reach the stream. */
   roomId?: string;
 };
 
@@ -13,7 +13,7 @@ export type GuestStreamScope = {
  * Which realtime events a guest stream may carry: guest types only; the outlet's own events (or, when
  * an event names no outlet, its hotel's; an event with no hotel is system-wide, e.g. `price.display`
  * from the system setting, and reaches every outlet); `order.*` only for the guest's own orders;
- * `mybar.*` only for the guest's own room.
+ * room orders also require the matching hotel, outlet and room; `mybar.*` only for the guest's own room.
  */
 export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => boolean {
   return (e) => {
@@ -27,7 +27,15 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
       return false;
     }
     if (e.type.startsWith("order.")) {
-      const orderId = (e.payload as { orderId?: unknown } | undefined)?.orderId;
+      const payload = e.payload as { orderId?: unknown; roomId?: unknown } | undefined;
+      if (
+        scope.roomId !== undefined &&
+        (scope.outletId === undefined || e.outletId !== scope.outletId ||
+          e.hotelId !== scope.hotelId || (e.roomId ?? payload?.roomId) !== scope.roomId)
+      ) {
+        return false;
+      }
+      const orderId = payload?.orderId;
       return typeof orderId === "string" && scope.orderIds.includes(orderId);
     }
     return true;
