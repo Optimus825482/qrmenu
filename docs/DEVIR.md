@@ -23,41 +23,31 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (3 Kasım 2026, 14:15 — Fable 5 saatlik sınır; çalışma dalı `ux/yenileme`, HEAD `4d82da4`)
+## 1a. Kalınan yer (3 Kasım 2026, 15:35 — Antigravity'ye devir; dal `ux/yenileme`, HEAD `c201ba3` + commit'siz radar T8 düzeltmesi)
 
-**Sıralama kararı (Erkan, 03.11 12:06):** önce **minibar** (bitti — doğrulama sürüyor), sonra **radar**, sonra **UX**'in kalanı. Parçalı çalışma istenmiyor: bir alan kapanmadan diğerine yeni görev açılmaz.
+**Kim ne yaptı:** Fable (sabah–14:15) minibar planını bitirdi, dalga doğrulamasını yeşil kapattı (`wave-verification-report.md`). Codex (14:50–15:30) minibar kapanış düzeltmeleri (`e34a0ee`, `1dd4bc7`), radar T6 düzeltme turu (`c29df98`), P4 MyBar veri temeli (`c201ba3`) ve **commit'siz** radar T8 düzeltme turu yaptı; kullanıcı talimatıyla Codex **hiç test/build koşmadı** (statik inceleme yalnız). Codex'in kendi kapanış doğrulaması (`closure-verification-report.md`) yarıda durduruldu, geçerli iddia taşımaz. Şimdi **Antigravity** devam ediyor; Fable sınırı sıfırlanınca (haftalık Pzt 12:00; 5 saatlik 15:50) doğrular.
 
-### Sonraki ajan için çalışma düzeni (adım adım)
-1. `git log --oneline -15` ve `git status --short` ile durumu doğrula; ajan raporlarına değil commit'lere güven. Çalışma ağacındaki yabancı değişiklikleri (`merit/tsconfig.json` → `git checkout -- merit/tsconfig.json`; `scripts/migrate-from-minibarlatest/*` → doğrulama ajanının yarım düzeltmesi, aşağıya bak) sınıflandır.
-2. Döngü (her görev için): `task-N-brief.md` oku → Sonnet uygulayıcı (TDD, tek commit, LF, `Co-Authored-By`) → inceleme (riskli backend Sonnet, diğerleri Haiku) → önemli bulgular için düzeltme turu (aynı ajan) → Haiku yeniden inceleme → defter satırı (`.superpowers/sdd/<plan>/progress.md`) → `ilerleme-data.js` satırı + `node --check` + `merit/public/` kopyası → commit `docs: ilerleme — …`.
-3. Paralellik: `.superpowers/sdd/PARALEL-KURALLAR.md`. Postgres 100 bağlantı sınırı: ajan başına **tek vitest süreci**, tam `npm run check`/tam e2e yalnız **dalga sonunda tek ajanla**. Token: kontrolör turları kısa, incelemelerde Haiku, belge commit'leri kilometre taşında.
-4. Dalga sonu: Opus dal incelemesi → düzeltme → tam doğrulama → DEVIR §1 tablosu + ilerleme → Erkan onayı ile `main`'e birleştirme/push → Coolify.
+**Sıralama (Erkan, 03.11 12:06):** minibar (kapalı) → radar → UX. Codex, radar T3'ün ön koşulu olduğu için P4'ün sunucu temelini (T1, sonra T5 MyBar yaşam döngüsü) öne çekti; P4'ün UI/push kısmı UX sonrasına kalır.
 
-### Şu an çalışan ajan (14:15)
-**Dalga doğrulama ajanı `ver`** (Sonnet; DB `merit_test_ver`/`merit_ver_e2e`, port 3050, `.next-ver`): tam `npm run check` → `next build` → `prisma migrate diff` → tam chromium e2e → 6 görünüm matrisi → ratchet. Küçük gerilemeleri ayrı `fix(...)` commit'leriyle düzeltir; raporu `.superpowers/sdd/2026-11-03-minibar-tamamlama/wave-verification-report.md`. 14:12'de çalışma ağacında `scripts/migrate-from-minibarlatest/{legacy.ts,steps/definitions.ts}` düzenlemesi vardı (muhtemelen `migrate-tasks`/`migrate-validate` 4 kırmızı için). **Devralırsan:** rapor yoksa düzenlemeyi `git diff` ile incele; mantıklıysa `migrate-*` testlerini tek süreçte koşup commit'le, değilse `git checkout --` ile at; sonra doğrulama adımlarını kendin tamamla.
+### Antigravity için ilk 6 adım (sırayla)
+1. `git status --short` → `merit/src/modules/radar/**` içindeki 9 dosyalık commit'siz değişiklik Codex'in **radar T8 düzeltme turu** (rapor: `.superpowers/sdd/2026-11-03-canli-radar/task-8-fix-1-report.md`, brief `task-8-fix-1-brief.md`). `merit/tsconfig.json` değişikliğini at: `git checkout -- merit/tsconfig.json`. Radar dosyalarını incele; `cd merit && npx tsc --noEmit && npx eslint src/modules/radar` temizse ve `npx vitest run tests/unit/radar-*.test.ts` (DB `merit_test_<ad>`, **tek süreç**) yeşilse commit: `git add merit/src/modules/radar && git commit -m "fix(radar): XP penceresi — Genel Bakış mağazadan, ARIA ızgara, kapsamlı ton seçicileri, pencere başına DOM id" -m "Co-Authored-By: <ajan>"`. Kırmızıysa düzelt ya da raporla.
+2. Codex'in test edilmemiş commit'lerini doğrula: `c29df98` → `npx vitest run tests/unit/radar-replay.test.ts tests/unit/radar-snapshot.test.ts`; `c201ba3` → `npx prisma migrate deploy` (kendi DB'nde) + `npx vitest run tests/unit/env*.test.ts tests/unit/rate-limit*.test.ts tests/unit/settings*.test.ts tests/unit/sse-*.test.ts`; sonra `NEXT_DIST_DIR=.next-<ad> npx next build`. Her kırmızı için küçük `fix(...)` commit'i.
+3. Radar düzeltme turları kapanınca Haiku yeniden inceleme (T6: `task-6-fix-1-rereview.md` ADDRESSED diyor; T8: yeniden inceleme yok → yap).
+4. **P4 T5** (MyBar yaşam döngüsü: `acknowledge/complete/cancel`, `mybar.*` olayları; plan `docs/superpowers/plans/2026-10-31-p4-mybar.md`, defter `.superpowers/sdd/2026-10-31-p4-mybar/progress.md`, T1 raporu `task-1-report.md`) → ardından **radar T3** (minibar/MyBar yayın boşlukları; `canliRadar.spec.ts:93` fixme bununla açılır) → radar T9, T10, T11 (`/radar` duvar ekranı), T12.
+5. UX kalanı: T9 (çıplak kat/depo sayfaları: `/kat/qr`, `/kat/gorevler`, `/kat/dnd`, `/kat/oda-kontrol`, `/depo/gorevler`, `/depo/doluluk-yukle`; `data-mutates`; depo sayıları `depoDashboard`'dan), T10, T12, T13, T14–T15; sonra P4 UI/push, P6, P7, P8.
+6. Her görev kapanışında: defter satırı → `ilerleme-data.js` (`node --check`, `merit/public/` kopyası) → `docs: ilerleme — …` commit; DEVIR §1a'yı bırakırken güncelle.
 
-### Minibar (14/14 uygulandı + incelendi)
-T1 `6042bab`; T2 `5402b6a`+`cb397bf`+`a66895a`; T3 `83e3b50`; T4 `4444d08`+`4385096`; T5 `c64a6e3`; T6 `fd68ecc`; T7 `c6f7f5d`; T8 `7e3e7a8`+`1fff117`; T9 `45680ab`+`734783c`; T10 `be4a7ab`+`9a03ab9`+`499fa64`; T11 `dff58ad` (onaylı); T12 `bad0b42`; T13 `8b25eb1`+`c1525ac`; T14 `8db0269`+`924e3c4`. Kalan: doğrulama sonucu → ilerleme P2/P3 satırları "tamamlandı" (T14 raporundaki öneriler: `docs/superpowers/reports/minibar-tamamlama-task-14-report.md`) ve §1 tablosu. Backlog (T15/kabul): rapor sözleşmesi legacy ile karşılaştırma, kabul e2e'ye gün sonu+rapor, `work` sarmalayıcı pg-boss retry, roomDetail UTC dilimi, QR limiter in-process, vb. (defter).
+### Çalışma düzeni (değişmedi)
+Döngü: brief → uygulayıcı (TDD, tek commit, LF, `Co-Authored-By`) → inceleme (riskli backend güçlü model, diğerleri ucuz) → düzeltme turu → yeniden inceleme → defter → ilerleme. Paralellik `.superpowers/sdd/PARALEL-KURALLAR.md`: ajan başına DB/port/`NEXT_DIST_DIR`, **tek vitest süreci**, tam `npm run check` / tam e2e yalnız dalga sonunda tek ajanla (Postgres 100 bağlantı). Ajan raporuna değil `git log`'a güven. `main`'e birleştirme/push yalnız Erkan onayıyla. Dalga sonu: Opus dal incelemesi → düzeltme → tam doğrulama → DEVIR §1 + ilerleme → onay → birleştirme → Coolify.
 
-### Radar (plan `2026-11-03-canli-radar.md`)
-Kapalı: T1, T2, T4, T5, T7. **Düzeltme turu bekleyen (incelendi, önemli bulgular):**
-- **T6 `0971845`** (`rd6f`): (1) `replay/limits.ts` DST günü 25 sa pencere → duvar saati karşılaştırması; (2) `layers/sparkline.ts` `until ≤ asOf`, `layers/minibar.ts` guestRecord/uploadTask `createdAt ≤ now`; (3) `sources/staff.ts` idle kaynağı sayfa sonlandırmayı süzülmemiş ham satır sayısıyla; (4) `sources/stock.ts` window sorgusu `created_at ≤ range.lte` ile sınırlı; minör: `table.scanned` `kind=MISAFIR`, `from > now` reddi; her madde için test.
-- **T8 `382d6ae`** (`rd8f`): `useOverview` yerel yoklama kaldırılır, Genel Bakış mağazadan okunur (veya action `hotelId` süzer); minör: kat ızgarası `row>gridcell`, durum çubuğu "Otel · Kullanıcı", `[data-tone]` seçicileri `.rd-root` altına, sabit DOM id'leri, boş uploads.
-Sıradaki: **T3** (minibar yayın boşlukları — ön koşul tamam; `canliRadar` e2e'deki fixme bunu bekler), T9, T10, T11 (`/radar` duvar ekranı), T12.
-
-### UX (plan `2026-11-03-ux-yenileme.md`)
-Kapalı: T1–T8, T11 (T7 `41ad912` karar: oda servisi geri alma RO-TAL D; T8 `4d82da4` onaylı). Dalga-1 e2e `1014aaa`, matrix rotaları `b6dfccd`. Sıradaki (radar sonrası): T9 (kat sayfaları — T10/T8/T11 çıplak sayfaları: `/kat/qr`, `/kat/gorevler`, `/kat/dnd`, `/kat/oda-kontrol`, `/depo/gorevler`, `/depo/doluluk-yukle`; `data-mutates` işaretleri; depo sayıları `depoDashboard`'dan), T10, T12, T13, T14–T15. Erkan onayı bekleyen metinler: `docs/kabul/ux-rehber-metinleri.md`.
+### Durum özeti
+- **Minibar (14/14 kapalı, doğrulama yeşil):** T1 `6042bab`; T2 `5402b6a`+`cb397bf`+`a66895a`; T3 `83e3b50`; T4 `4444d08`+`4385096`; T5 `c64a6e3`; T6 `fd68ecc`; T7 `c6f7f5d`; T8 `7e3e7a8`+`1fff117`; T9 `45680ab`+`734783c`; T10 `be4a7ab`+`9a03ab9`+`499fa64`; T11 `dff58ad`; T12 `bad0b42`; T13 `8b25eb1`+`c1525ac`; T14 `8db0269`+`924e3c4`; kapanış `e34a0ee`, `1dd4bc7`; doğrulama düzeltmeleri `7fbfaf0`, `9d6d8b6`. Backlog: defterde (rapor sözleşmesi legacy karşılaştırması P7/kabul; gerçek göç, şifre sıfırlama, SMTP, dağıtım yapılmadı).
+- **Radar:** kapalı T1, T2, T4, T5, T7; T6 `0971845`+`c29df98` (düzeltme statik ADDRESSED, test bekliyor); T8 `382d6ae` + commit'siz düzeltme; sıradaki T3 (P4 T5 sonrası), T9–T12.
+- **UX:** kapalı T1–T8, T11; e2e `1014aaa`, matrix `b6dfccd`; sıradaki T9, T10, T12–T15. Onay bekleyen metinler `docs/kabul/ux-rehber-metinleri.md`.
+- **P4 MyBar:** T1 `c201ba3` (migration `20261103121000_p4_mybar`, `modules/mybar/{constants,events}.ts`, env/ayar/rate-limit; test edilmedi); T5 sırada; T2–T4, T6–T10 sonra.
 
 ### Kararlar (bu dalga)
-DND `dnd.minChecks`/`dnd.recheckMinutes`, 30 sn çift dokunma, gün sonu EKSIK idempotent; `roomcheck.done` SSE_EVENT_TYPES dışında; seed yönetici silmelerini geri getirmez; göçte bcrypt korunur (scrypt/diğer `SIFRE_SIFIRLANMALI`), e-posta küçük harf+tekil, otel tahmini yok, DND birleştirme count=max; POS durum şeridi 44 px, tam ekran kapısı banner; KDS oda servisi geri alma RO-TAL D; StaffBell; "Şifre değiştir" bilgi sayfası.
-
-## 1b. Codex devamı (3 Kasım 2026, 14:51)
-
-- Kullanıcı mevcut devri gerekli becerilerle multiparalel subagent-driven sürdürmeyi istedi. Mevcut `ux/yenileme` dalı kullanılıyor; main/birleştirme/push yapılmadı. Sıra minibar → radar → UX korunuyor.
-- Kapanışta iki göç ve iki operasyon bulgusu giderildi: `e34a0ee` (göç 171/171), `1dd4bc7` (operasyon 96/96, son metin koşusu 33/33). Göç yeniden incelemesi SPEC/QUALITY PASS; bütünleşik minibar incelemesi SPEC/QUALITY APPROVED.
-- Yeni tam doğrulama ajanı `closure_verification`: birim DB `merit_test_cdxv`, e2e DB `merit_cdxv_e2e`, port 3061, `.next-cdxv`. Her iki DB 30 migration ile hazır; check/build/schema diff/chromium sonuçları henüz bekleniyor. Rapor `.superpowers/sdd/2026-11-03-minibar-tamamlama/closure-verification-report.md`.
-- Eski harici `ver` baseline: 1781 birim, 153 chromium geçti; 6 görünüm matrisi 273 geçti/15 başarısız. Üç UI dosyasında (KDS axe, kat/dnd ve depo/gorevler dokunma hedefi) küçük düzeltmeler yapıp 3050 üzerinde hedefli tekrar koşuyor; bu dosyalara dokunulmadı. Önceki dalgaların 3012/3013/3014/3015/3019/3031/3040 test sunucuları proje yolu+PID+port doğrulanıp kapatıldı; kullanıcı 3000/3001 ve çalışan 3050 korundu.
-- Legacy rapor sözleşmesinin bağımsız canlı sistem karşılaştırması P7/kabulde; gerçek göç, şifre sıfırlama, SMTP ve dağıtım yapılmadı.
+DND `dnd.minChecks`/`dnd.recheckMinutes`, 30 sn çift dokunma, gün sonu EKSIK idempotent, geciken gün sonu yeni günü kapatmaz; `roomcheck.done` SSE_EVENT_TYPES dışında; seed yönetici silmelerini geri getirmez; göçte bcrypt korunur, e-posta küçük harf+tekil, otel tahmini yok, DND birleştirme count=max, göç doğrulaması eşlenmiş hedeflerle; POS durum şeridi 44 px, tam ekran kapısı banner; KDS oda servisi geri alma RO-TAL D; StaffBell; "Şifre değiştir" bilgi sayfası; radar tekrar penceresi (from,to], DST günü duvar saati; P4 sunucu temeli öne çekildi.
 
 ## 2. Çalışma ortamı
 

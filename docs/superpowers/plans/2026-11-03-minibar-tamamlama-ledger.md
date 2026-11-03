@@ -38,3 +38,15 @@ Task 14: Haiku review NEEDS FIXES (Part A tamam). Fix round mb14'e: yeniden koş
 Task 14 fix round DONE (924e3c4; tasks 36, validate 15; eslint kontrolörce doğrulandı). Task 14 CLOSED. Minibar: yalnız T11 açık.
 Task 11: DONE (dff58ad; minibar-jobs 14, minibar-reports 9, minibar-* 322 geçti; minibarAcceptance 9/9; build yeşil). Sapmalar: 00:01 işi reconcileAllHotels dahil, /kat/dnd çıplak sayfa, seed SEED_MINIBAR=1. Sonnet review dispatched; /kat/dnd + /depo/gorevler matrix routes.ts → ux8.
 Task 11: review APPROVED (Sonnet). Önemli notlar: rapor sözleşmesi mevcut çıktıya sabitlendi (legacy ile karşılaştırma → P7 rapor merkezi görevi / kabul), kabul e2e gün sonu+rapor adımını içermiyor (birim testleri kapsıyor; dalga sonu kabulde elle). Minör: work sarmalayıcı hataları yutar (pg-boss retry yok) → backlog. Task 11 CLOSED. MİNİBAR UYGULAMASI TAMAM — tam doğrulama ux8 bitince (sessiz DB, tek ajan).
+
+## Codex devamı — 03.11.2026 14:38
+Ruling: Var olan ux/yenileme çalışma dalı ve checkout yeniden kullanıldı; main/merge/push yok. Kullanıcının multiparalel isteği uyarınca dosya sahiplikleri ayrılmış bağımsız görevler eşzamanlı; her ajan tek vitest süreci ve ayrı DB.
+Closure review: göç doğrulamasında stockMovement entity adı ve yerel işlemlerin göç sayımına katılması Important, düzeltme turu açıldı.
+Closure review: gecikmiş 23:59 işinin yeni günü kapatması ve geç dolulukta önceden kontrol edilmiş odaların BEKLIYOR kalması Important olarak yeniden sınıflandı; kapanıştan önce düzeltilecek.
+Verification: harici ver halen chromium e2e koşuyor; mevcut kanıt baseline, kapanış düzeltmelerinden sonra tek koşucuyla yeniden doğrulama.
+
+Closure migration: complete (e34a0ee; RED 4 -> GREEN 4; migrate-* 171/171; closure-migration-rereview SPEC PASS / QUALITY PASS, no Important).
+Closure operations: complete (1dd4bc7; RED 7 -> GREEN 96/96 + final 33/33; Astra integration review SPEC APPROVED / QUALITY APPROVED, no Important).
+Bookkeeping ae7804d: devir P2/P3 stale prototype labels removed; progress notes reflect reviewed implementation with full runtime gate pending. P7 independent legacy report comparison remains deferred.
+Runtime baseline corrections: external ver committed 7fbfaf0 (KDS keyboard focus) and 9d6d8b6 (two bare pages 44px); affected matrix rerun 54/54; initial full matrix 273/288. Post-fix full verification in merit_test_cdxv/merit_cdxv_e2e, :3061 ongoing.
+Carryover working tree: legacy.ts and steps/definitions.ts normalized hashes matched index; explicit git add refreshed index metadata, staged diff remained empty. No content reverted.

@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 14:58",
-  headline: "Minibar planı kapandı: 14 görev uygulandı, incelendi ve tek ajanla tam doğrulama yeşil (1781 birim, 153 chromium e2e, 6 görünüm matrisi, migration farkı yok). Sırada radar (T6/T8 düzeltme turu, T3), ardından UX.",
+  updatedAt: "03.11.2026 15:35",
+  headline: "Minibar planı kapalı ve doğrulandı. Radar T6 düzeltmesi indi, T8 düzeltmesi çalışma ağacında (test bekliyor); P4 MyBar sunucu temeli radar T3 için öne çekildi. Devir: Antigravity sürdürür, Fable sıfırlanınca doğrular (DEVIR §1a).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -147,9 +147,9 @@ window.ILERLEME = {
       tasks: [
         { title: "T1–T4 Olay birliği, yayın boşlukları, migration/CR-RAD/OperationEvent", status: "active", note: "T1, T2 onaylı; T4 uygulandı (0552fe5, inceleme sürüyor); T3 minibar servislerini bekliyor" },
         { title: "T5 Anlık görüntü, kapsam, uyarılar", status: "done", doneAt: "03.11 10:54", note: "f6fbfee (inceleme onaylı): katman kapıları, PII süzgeci, 17 metrik, p95 ~40 ms" },
-        { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "done", doneAt: "03.11 12:32", note: "0971845 (inceleme minibar bitince)" },
+        { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "done", doneAt: "03.11 15:20", note: "0971845 + düzeltme c29df98 (DST penceresi, geçmiş süzgeçleri, idle sayfalama, stok sorgusu; statik yeniden inceleme ADDRESSED, test doğrulaması bekliyor)" },
         { title: "T7 İstemci deposu ve indirgeyiciler", status: "done", doneAt: "03.11 03:21", note: "df77d46 + 63282d3" },
-        { title: "T8–T9 XP penceresi ve altı görünüm", status: "active", note: "T8 uygulandı 382d6ae (Genel Bakış/Kat/Masa; inceleme minibar bitince); T9 bekliyor" },
+        { title: "T8–T9 XP penceresi ve altı görünüm", status: "active", note: "T8 uygulandı 382d6ae; inceleme bulguları için düzeltme turu çalışma ağacında, commit ve test bekliyor; T9 bekliyor" },
         { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "pending" }
       ]
     },
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 15:35", text: "Codex devamı (test koşmadan, statik incelemeyle): minibar kapanış düzeltmeleri e34a0ee ve 1dd4bc7, radar T6 düzeltme turu c29df98, P4 MyBar veri temeli c201ba3 (migration, olaylar, ayarlar), radar T8 düzeltme turu commit'siz. Codex sınırı doldu; Antigravity devam ediyor. DEVIR §1a Antigravity için ilk altı adımla yeniden yazıldı; Fable sıfırlanınca test/doğrulama." },
     { at: "03.11 14:58", text: "Dalga doğrulaması tamamlandı ve yeşil: npm run check (lint 0 hata, tsc temiz, 1781/1781 birim), next build, migration farkı yok, chromium e2e 153 geçti (1 kasıtlı atlama: radar T3), altı görünüm matrisi iki küçük düzeltmeyle temiz (7fbfaf0 KDS klavye odağı, 9d6d8b6 dokunma hedefleri), ratchet 2/2. Minibar P2/P3 görevleri tamamlandı olarak işaretlendi." },
     { at: "03.11 14:51", text: "Codex devamı: dört minibar kapanış bulgusu e34a0ee ve 1dd4bc7 ile düzeltildi. Göç 171/171, operasyon 96/96 hedefli test geçti; bağımsız göç yeniden incelemesi ve bütünleşik minibar incelemesi onayladı. İzole DB/3061 üzerinde tam doğrulama başladı; radar henüz açılmadı." },
     { at: "03.11 06:55", text: "UX T5 (emoji→ikon) uygulandı (72c35cf); minibar T2 katalog onaylandı; UX T6 POS kabuğu ve dalga-1 e2e bütünleştirme başladı." },
