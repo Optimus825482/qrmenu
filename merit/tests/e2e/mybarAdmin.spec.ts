@@ -4,10 +4,10 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { Client } from "pg";
 import { e2eDatabaseUrl } from "./e2eDb";
-import { expect, login, resetAndSeed, test } from "./fixtures";
+import { expect as baseExpect, login, resetAndSeed, test } from "./fixtures";
 
 // ROYAL rooms 101-104 with QR tokens and the Su / Kola products come from SEED_MINIBAR.
-test.describe.configure({ mode: "serial" });
+const expect = baseExpect.configure({ timeout: 20_000 });
 test.use({ viewport: { width: 1366, height: 768 } });
 
 test.beforeAll(() => {
@@ -31,8 +31,14 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
 
 const win = (page: Page) => page.getByRole("region", { name: /^MyBar Talepleri/ });
 
+async function openDepotMybar(page: Page): Promise<void> {
+  await page.getByRole("navigation", { name: "Ana gezinme" }).getByRole("button", { name: "Daha" }).click();
+  await page.getByRole("dialog", { name: "Daha" }).getByRole("link", { name: "MyBar talepleri", exact: true }).click();
+  await expect(page).toHaveURL(/\/depo\/mybar$/);
+}
+
 async function openFromStart(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "başlat" }).click();
+  await page.getByRole("button", { name: "başlat" }).press("Enter");
   await page
     .getByRole("menu", { name: "Başlat menüsü" })
     .getByRole("menuitem", { name: "MyBar Talepleri", exact: true })
@@ -141,4 +147,56 @@ test("sys: Başlat menüsünden açar, durumla süzer, nedenle iptal eder (denet
   await expect(grid.getByRole("row")).toHaveCount(5, { timeout: 10_000 });
   await expect(win(page).getByLabel("Özet")).toContainText("Görülmemiş");
   expect(errors.filter((e) => !/Failed to load resource/.test(e))).toEqual([]);
+});
+
+test("depo ve housekeeping MyBar'a personel menüsünden ulaşır; salt okunur liste canlı yenilenir", async ({ page, browser }) => {
+  await guestRequest(page, "201");
+  await withDb((db) =>
+    db.query("UPDATE users SET role_id = (SELECT id FROM roles WHERE code = 'R-HKS') WHERE username = 'kat2.mr'"),
+  );
+  await login(page, "depo.mr");
+  await expect(page).toHaveURL(/\/depo\/stok$/);
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/yetkisiz/);
+  await page.goto("/depo/stok");
+  await openDepotMybar(page);
+  const depot = page.getByRole("region", { name: "MyBar Talepleri" });
+  await expect(depot.getByRole("button", { name: "CSV'ye aktar" })).toBeVisible();
+
+  const observer = await browser.newPage();
+  try {
+    await login(observer, "kat2.mr");
+    await expect(observer).toHaveURL(/\/depo\/raporlar$/);
+    await Promise.all([
+      observer.waitForResponse((response) => new URL(response.url()).pathname === "/api/sse" && response.ok()),
+      openDepotMybar(observer),
+    ]);
+    const readonly = observer.getByRole("region", { name: "MyBar Talepleri" });
+    await readonly.getByLabel("Durum", { exact: true }).selectOption("BEKLEMEDE");
+    const readonlyRow = readonly.getByRole("row").filter({ hasText: "201" });
+    await readonlyRow.click();
+    await expect(readonly.getByLabel("Talep ayrıntısı")).toBeVisible();
+    await expect(readonly.getByRole("button", { name: "Talebi iptal et" })).toHaveCount(0);
+    await expect(readonly.getByRole("button", { name: "CSV'ye aktar" })).toHaveCount(0);
+
+    await depot.getByRole("row").filter({ hasText: "201" }).click();
+    await depot.getByRole("button", { name: "Talebi iptal et" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Misafir odadan ayrıldı" }).click();
+    await dialog.getByRole("button", { name: "İptal et" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(readonlyRow).toHaveCount(0, { timeout: 10_000 });
+  } finally {
+    await observer.close();
+  }
+});
+
+test("MyBar depo ekranı oturum ve MB-PERS görüntüleme hakkı ister", async ({ page }) => {
+  await page.goto("/depo/mybar");
+  await expect(page).toHaveURL(/\/giris\?next=%2Fdepo%2Fmybar/);
+  await login(page, "garson.havuz");
+  await page.getByRole("button", { name: /Havuz Bar/ }).click();
+  await expect(page).toHaveURL(/\/garson$/);
+  await page.goto("/depo/mybar");
+  await expect(page).toHaveURL(/\/yetkisiz\?ekran=MB-PERS/);
 });

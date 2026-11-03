@@ -5,8 +5,8 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
-import { businessDateStart } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
+import { mybarFilterSchema, mybarFilterWhere } from "./requests";
 
 /**
  * Read-only aggregates of the management window "MyBar Talepleri" (spec §6.6): which actions the
@@ -19,13 +19,7 @@ import { audit } from "@/modules/core/server/audit";
 const SCREEN = "MB-PERS";
 export const EXPORT_MAX = 10_000;
 
-export const mybarExportSchema = z.object({
-  hotelId: z.string().min(1).max(64).optional(),
-  status: z.enum(["BEKLEMEDE", "TAMAMLANDI", "IPTAL"]).optional(),
-  unseenOnly: z.boolean().optional(),
-  from: z.iso.date().optional(),
-  to: z.iso.date().optional(),
-  q: z.string().trim().max(20).optional(),
+export const mybarExportSchema = mybarFilterSchema.extend({
   format: z.enum(["csv", "xlsx"]).default("csv"),
 });
 export type MybarExportInput = z.input<typeof mybarExportSchema>;
@@ -85,20 +79,6 @@ const rowInclude = {
 
 type ExportRow = Prisma.MybarRequestGetPayload<{ include: typeof rowInclude }>;
 
-export function exportWhere(hotelId: string, input: z.output<typeof mybarExportSchema>): Prisma.MybarRequestWhereInput {
-  const where: Prisma.MybarRequestWhereInput = { hotelId };
-  if (input.status) where.status = input.status;
-  if (input.unseenOnly) where.seenAt = null;
-  if (input.q) where.room = { number: { startsWith: input.q, mode: "insensitive" } };
-  if (input.from || input.to) {
-    const createdAt: Prisma.DateTimeFilter = {};
-    if (input.from) createdAt.gte = businessDateStart(input.from);
-    if (input.to) createdAt.lt = new Date(businessDateStart(input.to).getTime() + 86_400_000);
-    where.createdAt = createdAt;
-  }
-  return where;
-}
-
 export type MybarExportFile = { filename: string; mime: string; base64: string; rows: number };
 
 /** Header + rows of display text; both file formats are written from this table. */
@@ -126,19 +106,19 @@ export async function exportRequests(ctx: Ctx, rawInput: MybarExportInput = {}):
   if (!parsed.success) throw fromZod(parsed.error);
   const input = parsed.data;
   const hotelId = input.hotelId ?? ctx.session.hotelId;
+  await assertCan(ctx, SCREEN, "V", hotelId);
   await assertCan(ctx, SCREEN, "A", hotelId);
 
-  const where = exportWhere(hotelId, input);
-  const total = await prisma.mybarRequest.count({ where });
-  if (total > EXPORT_MAX) {
-    throw new DomainError("VALIDATION", "En fazla 10.000 satır dışa aktarılır; süzgeçleri daraltın");
-  }
+  const where = mybarFilterWhere(hotelId, input);
   const rows = await prisma.mybarRequest.findMany({
     where,
     include: rowInclude,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    take: EXPORT_MAX,
+    take: EXPORT_MAX + 1,
   });
+  if (rows.length > EXPORT_MAX) {
+    throw new DomainError("VALIDATION", "En fazla 10.000 satır dışa aktarılır; süzgeçleri daraltın");
+  }
   const table = exportTable(rows);
 
   const stamp = new Date().toISOString().slice(0, 10);

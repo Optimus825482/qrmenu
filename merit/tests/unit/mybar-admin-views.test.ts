@@ -12,7 +12,7 @@ vi.mock("@/lib/realtime", async (importActual) => ({
   publish: vi.fn(),
 }));
 
-const { capabilities, EXPORT_HEADER, exportRequests } = await import("@/modules/mybar/server/adminViews");
+const { capabilities, EXPORT_HEADER, EXPORT_MAX, exportRequests } = await import("@/modules/mybar/server/adminViews");
 const { visibleScreens } = await import("@/lib/rbac");
 
 let fxRoyal: MybarFixture;
@@ -115,5 +115,33 @@ describe("dışa aktarma", () => {
 
   it("geçersiz tarih VALIDATION verir", async () => {
     await expect(exportRequests(dep, { from: "yarın" })).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
+  it("A tek başına dışa aktarma hakkı vermez", async () => {
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "MB-PERS" } });
+    const override = await testDb.roleScreenPermission.create({
+      data: { roleId: dep.user.roleId, hotelId: fxRoyal.hotelId, screenId: screen.id, canView: false, canApprove: true },
+    });
+    try {
+      await expect(exportRequests(dep)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await testDb.auditLog.count({ where: { action: "MYBAR_EXPORT" } })).toBe(0);
+    } finally {
+      await testDb.roleScreenPermission.delete({ where: { id: override.id } });
+    }
+  });
+
+  it("tek sorguda üst sınır aşılırsa dosya ve denetim kaydı oluşturmaz", async () => {
+    const find = vi.spyOn(testDb.mybarRequest, "findMany");
+    const count = vi.spyOn(testDb.mybarRequest, "count");
+    find.mockResolvedValueOnce(Array(EXPORT_MAX + 1).fill({}));
+    try {
+      await expect(exportRequests(dep)).rejects.toMatchObject({ code: "VALIDATION" });
+      expect(find).toHaveBeenCalledWith(expect.objectContaining({ take: EXPORT_MAX + 1 }));
+      expect(count).not.toHaveBeenCalled();
+      expect(await testDb.auditLog.count({ where: { action: "MYBAR_EXPORT" } })).toBe(0);
+    } finally {
+      find.mockRestore();
+      count.mockRestore();
+    }
   });
 });

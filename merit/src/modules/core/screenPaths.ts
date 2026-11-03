@@ -13,6 +13,7 @@ export function routeOf(screen: { path: string }): string {
 const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [
   ["/kat/oda-kontrol", "MB-TUK"],
   ["/kat/mybar", "MB-PERS"],
+  ["/depo/mybar", "MB-PERS"],
 ];
 
 /**

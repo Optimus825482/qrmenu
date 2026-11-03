@@ -68,6 +68,32 @@ const sent = (type: string): MeritEvent[] =>
   publishMock.mock.calls.map((c) => c[0] as MeritEvent).filter((e) => e.type === type);
 
 describe("list and scope", () => {
+  it("management V filters the selected authorized hotel and cannot retrieve old closed rows", async () => {
+    const scope = { ...hks1, hotelIds: [fxRoyal.hotelId, fxDiamond.hotelId] };
+    const recent = await makeRequest(fxDiamond, { status: "TAMAMLANDI" });
+    await makeRequest(fxDiamond, { status: "TAMAMLANDI", createdAt: new Date("2020-01-01") });
+    await makeRequest(fxDiamond, { status: "BEKLEMEDE", createdAt: new Date("2020-01-01") });
+    const own = await makeRequest(fxRoyal);
+
+    const selected = await list(scope, { view: "management", hotelId: fxDiamond.hotelId, status: "TAMAMLANDI" });
+    expect(selected.items.map((row) => row.id)).toEqual([recent.id]);
+    expect((await list(scope, { hotelId: fxDiamond.hotelId })).items.map((row) => row.id)).toEqual([own.id]);
+
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "MB-PERS" } });
+    const override = await testDb.roleScreenPermission.create({
+      data: { roleId: hks1.user.roleId, hotelId: fxRoyal.hotelId, screenId: screen.id, canView: false },
+    });
+    try {
+      await expect(list(scope, { hotelId: fxDiamond.hotelId })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    } finally {
+      await testDb.roleScreenPermission.delete({ where: { id: override.id } });
+    }
+  });
+
+  it("rejects pages above 100", async () => {
+    await expect(list(dep1, { pageSize: 200 as never })).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
   it("kat1 sees only pending requests + last 7 days in own hotel; filters ignored", async () => {
     const now = Date.now();
     const dayMs = 86_400_000;
@@ -104,22 +130,22 @@ describe("list and scope", () => {
       });
     }
 
-    const p1 = await list(dep1, { page: 1, pageSize: 50 });
+    const p1 = await list(dep1, { view: "management", page: 1, pageSize: 50 });
     expect(p1.total).toBe(120);
     expect(p1.items).toHaveLength(50);
 
-    const p3 = await list(dep1, { page: 3, pageSize: 50 });
+    const p3 = await list(dep1, { view: "management", page: 3, pageSize: 50 });
     expect(p3.items).toHaveLength(20);
 
-    const cancelled = await list(dep1, { status: "IPTAL", pageSize: 100 });
+    const cancelled = await list(dep1, { view: "management", status: "IPTAL", pageSize: 100 });
     expect(cancelled.total).toBe(40);
 
-    const byRoom = await list(dep1, { q: "101", pageSize: 100 });
+    const byRoom = await list(dep1, { view: "management", q: "101", pageSize: 100 });
     expect(byRoom.total).toBe(120);
-    const byWrongRoom = await list(dep1, { q: "999", pageSize: 100 });
+    const byWrongRoom = await list(dep1, { view: "management", q: "999", pageSize: 100 });
     expect(byWrongRoom.total).toBe(0);
 
-    const byDate = await list(dep1, { from: "2026-11-01", to: "2026-11-01", pageSize: 100 });
+    const byDate = await list(dep1, { view: "management", from: "2026-11-01", to: "2026-11-01", pageSize: 100 });
     expect(byDate.total).toBe(120);
   });
 

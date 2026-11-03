@@ -107,13 +107,14 @@ describe("MyBar Talepleri penceresi", () => {
 
   it("durum süzgeci listeyi status:IPTAL ile çağırır, tarih ve sayfa boyutu isteğe girer", async () => {
     await open();
-    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ hotelId: "h1", page: 1, pageSize: 100 }));
+    expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ view: "management", hotelId: "h1", page: 1, pageSize: 100 }));
     fireEvent.change(screen.getByLabelText("Durum"), { target: { value: "IPTAL" } });
     await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ status: "IPTAL" })));
     fireEvent.change(screen.getByLabelText("Başlangıç tarihi"), { target: { value: "2026-11-01" } });
     await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ from: "2026-11-01" })));
-    fireEvent.change(screen.getByLabelText("Sayfa başına talep"), { target: { value: "200" } });
-    await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ pageSize: 200, page: 1 })));
+    expect(screen.queryByRole("option", { name: "200" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Sayfa başına talep"), { target: { value: "50" } });
+    await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ pageSize: 50, page: 1 })));
   });
 
   it("canCancel=false iken iptal düğmesi DOM'da yoktur; karşılama düğmesi hiçbir durumda yoktur", async () => {
@@ -162,6 +163,21 @@ describe("MyBar Talepleri penceresi", () => {
     });
     vi.useRealTimers();
     await waitFor(() => expect(screen.getAllByRole("row")).toHaveLength(4));
+  });
+
+  it("liste yenilendiğinde iptal edilen hedefi ve yazılan nedeni korur", async () => {
+    await open();
+    fireEvent.click(screen.getByText("101"));
+    fireEvent.click(await screen.findByRole("button", { name: "Talebi iptal et" }));
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.change(within(dialog).getByLabelText("Diğer sebep"), { target: { value: "misafir odadan ayrıldı" } });
+
+    listMock.mockResolvedValue(page([row("2", { status: "IPTAL" })]));
+    act(() => sseHandler?.({ type: "mybar.cancelled", at: NOW, hotelId: "h1", payload: {} } as MeritEvent));
+    await waitFor(() => expect(screen.queryByText("101")).toBeNull());
+    expect(screen.getByRole("dialog", { name: "Oda 101 talebi iptal edilecek" })).toBe(dialog);
+    fireEvent.click(within(dialog).getByRole("button", { name: "İptal et" }));
+    await waitFor(() => expect(cancelMock).toHaveBeenCalledWith("1", { reason: "misafir odadan ayrıldı" }));
   });
 
   it("detay paneli ürünleri istenen/eklenen olarak salt okunur gösterir", async () => {

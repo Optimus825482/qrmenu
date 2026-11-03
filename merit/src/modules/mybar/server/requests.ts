@@ -4,7 +4,7 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
-import { businessDate, businessDateStart } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { type Page, pageArgs } from "@/modules/core/server/admin/listQuery";
 import { audit } from "@/modules/core/server/audit";
 import { isValidExplanation } from "../constants";
@@ -43,15 +43,21 @@ export type MybarRow = {
   items: MybarItemView[];
 };
 
-export const mybarListSchema = z.object({
-  hotelId: z.string().optional(),
+export const mybarFilterSchema = z.object({
+  hotelId: z.string().min(1).max(64).optional(),
   status: z.enum(["BEKLEMEDE", "TAMAMLANDI", "IPTAL"]).optional(),
   unseenOnly: z.boolean().optional(),
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
   q: z.string().trim().max(20).optional(),
-  page: z.int().min(1).default(1),
-  pageSize: z.literal([50, 100, 200]).default(100),
+});
+
+const MAX_PAGE_SIZE = 100;
+const MAX_SKIP = 2_147_483_647; // Prisma skip is a signed 32-bit integer.
+export const mybarListSchema = mybarFilterSchema.extend({
+  view: z.enum(["floor", "management"]).default("floor"),
+  page: z.int().min(1).max(Math.floor(MAX_SKIP / MAX_PAGE_SIZE) + 1).default(1),
+  pageSize: z.literal([50, MAX_PAGE_SIZE]).default(MAX_PAGE_SIZE),
 });
 
 export type MybarListInput = z.input<typeof mybarListSchema>;
@@ -134,80 +140,72 @@ export async function loadRequestForUpdate(tx: Prisma.TransactionClient, id: str
   return req;
 }
 
+export function mybarFilterWhere(hotelId: string, input: z.output<typeof mybarFilterSchema>): Prisma.MybarRequestWhereInput {
+  const where: Prisma.MybarRequestWhereInput = { hotelId };
+  if (input.status) where.status = input.status;
+  if (input.unseenOnly) where.seenAt = null;
+  if (input.q) where.room = { number: { startsWith: input.q, mode: "insensitive" } };
+  if (input.from || input.to) {
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (input.from) createdAt.gte = businessDateStart(input.from);
+    if (input.to) {
+      const nextDay = businessDay(input.to);
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      createdAt.lt = businessDateStart(nextDay.toISOString().slice(0, 10));
+    }
+    where.createdAt = createdAt;
+  }
+  return where;
+}
+
+const newestFirst = [{ createdAt: "desc" }, { id: "desc" }] satisfies Prisma.MybarRequestOrderByWithRelationInput[];
+
 export async function list(ctx: Ctx, rawInput: MybarListInput = {}): Promise<Page<MybarRow>> {
   const parsed = mybarListSchema.safeParse(rawInput);
   if (!parsed.success) throw fromZod(parsed.error);
   const input = parsed.data;
+  const management = input.view === "management";
+  const hotelId = (management ? input.hotelId : undefined) ?? ctx.session.hotelId;
+  await assertCan(ctx, "MB-PERS", "V", hotelId);
+  const { skip, take } = pageArgs(input);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000);
+  const { page, pageSize } = input;
 
-  const effectiveHotelId = input.hotelId ?? ctx.session.hotelId;
-  await assertCan(ctx, "MB-PERS", "V", effectiveHotelId);
-  const isAdminScope = await can(ctx, "MB-PERS", "A", effectiveHotelId);
-
-  if (isAdminScope) {
-    const where: Prisma.MybarRequestWhereInput = { hotelId: effectiveHotelId };
-    if (input.status) where.status = input.status;
-    if (input.unseenOnly) where.seenAt = null;
-    if (input.q) where.room = { number: { startsWith: input.q, mode: "insensitive" } };
-    if (input.from || input.to) {
-      const createdAt: Prisma.DateTimeFilter = {};
-      if (input.from) createdAt.gte = businessDateStart(input.from);
-      if (input.to) {
-        const nextDay = new Date(businessDateStart(input.to).getTime() + 86_400_000);
-        createdAt.lt = nextDay;
-      }
-      where.createdAt = createdAt;
+  if (management) {
+    const where = mybarFilterWhere(hotelId, input);
+    if (!(await can(ctx, "MB-PERS", "A", hotelId))) {
+      where.OR = [{ status: "BEKLEMEDE" }, { createdAt: { gte: sevenDaysAgo } }];
     }
-
-    const { skip, take } = pageArgs({ page: input.page, pageSize: input.pageSize as never });
     const [rows, total] = await Promise.all([
-      prisma.mybarRequest.findMany({
-        where,
-        include: rowInclude,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        skip,
-        take,
-      }),
+      prisma.mybarRequest.findMany({ where, include: rowInclude, orderBy: newestFirst, skip, take }),
       prisma.mybarRequest.count({ where }),
     ]);
-
-    return {
-      items: rows.map((r) => toMybarRow(r)),
-      total,
-      page: input.page,
-      pageSize: input.pageSize,
-    };
+    return { items: rows.map((row) => toMybarRow(row)), total, page, pageSize };
   }
 
-  // Kat scope (V/D without A): session hotel only, BEKLEMEDE or createdAt >= now - 7 days,
-  // filters ignored, BEKLEMEDE first then createdAt desc.
-  const sevenDaysAgo = new Date(Date.now() - 7 * 86_400_000);
-  const where: Prisma.MybarRequestWhereInput = {
-    hotelId: ctx.session.hotelId,
-    OR: [{ status: "BEKLEMEDE" }, { createdAt: { gte: sevenDaysAgo } }],
+  // The floor view always shows pending requests first, then recently closed requests.
+  const pending: Prisma.MybarRequestWhereInput = { hotelId, status: "BEKLEMEDE" };
+  const recentClosed: Prisma.MybarRequestWhereInput = {
+    hotelId,
+    status: { not: "BEKLEMEDE" },
+    createdAt: { gte: sevenDaysAgo },
   };
-
-  const allMatching = await prisma.mybarRequest.findMany({
-    where,
-    include: rowInclude,
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-  });
-
-  allMatching.sort((a, b) => {
-    const aPending = a.status === "BEKLEMEDE" ? 0 : 1;
-    const bPending = b.status === "BEKLEMEDE" ? 0 : 1;
-    if (aPending !== bPending) return aPending - bPending;
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
-
-  const { skip, take } = pageArgs({ page: input.page, pageSize: input.pageSize as never });
-  const paged = allMatching.slice(skip, skip + take);
-
-  return {
-    items: paged.map((r) => toMybarRow(r)),
-    total: allMatching.length,
-    page: input.page,
-    pageSize: input.pageSize,
-  };
+  return prisma.$transaction(async (tx) => {
+    const pendingCount = await tx.mybarRequest.count({ where: pending });
+    const closedCount = await tx.mybarRequest.count({ where: recentClosed });
+    const pendingTake = Math.min(take, Math.max(0, pendingCount - skip));
+    const closedTake = take - pendingTake;
+    const closedSkip = Math.max(0, skip - pendingCount);
+    const rows = pendingTake > 0
+      ? await tx.mybarRequest.findMany({ where: pending, include: rowInclude, orderBy: newestFirst, skip, take: pendingTake })
+      : [];
+    if (closedTake > 0 && closedSkip < closedCount) {
+      rows.push(...await tx.mybarRequest.findMany({
+        where: recentClosed, include: rowInclude, orderBy: newestFirst, skip: closedSkip, take: closedTake,
+      }));
+    }
+    return { items: rows.map((row) => toMybarRow(row)), total: pendingCount + closedCount, page, pageSize };
+  }, { isolationLevel: "RepeatableRead" });
 }
 
 export async function kpis(

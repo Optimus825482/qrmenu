@@ -69,6 +69,7 @@ const DEPO_PRIMARY: Def[] = [
   { id: "reports", label: "Raporlar", icon: "chart", href: "/depo/raporlar", screen: "MB-RAP" },
 ];
 const DEPO_MORE: Def[] = [
+  { id: "mybar", label: "MyBar talepleri", icon: "bell", href: "/depo/mybar", screen: "MB-PERS" },
   { id: "home", label: "Depo panosu", icon: "home", href: "/depo", screen: ["MB-ZIM", "MB-RAP"] },
   { id: "occupancy", label: "Doluluk yükleme", icon: "trending", href: "/depo/doluluk-yukle", screen: "MB-DOL" },
   { id: "definitions", label: "Tanımlar", icon: "settings", href: "/depo/tanimlar", screen: "MB-TAN" },

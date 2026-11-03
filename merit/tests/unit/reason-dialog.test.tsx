@@ -64,6 +64,16 @@ describe("ReasonDialog", () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
+  it("sunucu bağlantısı kesilirse açıklamayı saklar ve tekrar denemeyi sağlar", async () => {
+    setup({ onConfirm: vi.fn().mockRejectedValue(new Error("network")) });
+    fireEvent.click(screen.getByRole("button", { name: "Hatalı sipariş" }));
+    const button = screen.getByRole<HTMLButtonElement>("button", { name: "Reddet" });
+    fireEvent.click(button);
+    expect((await screen.findByRole("alert")).textContent).toContain("İşlem tamamlanamadı");
+    expect(button.disabled).toBe(false);
+    expect(screen.getByLabelText<HTMLTextAreaElement>("Diğer sebep").value).toBe("Hatalı sipariş");
+  });
+
   it("Tab odağı diyalog içinde döndürür", () => {
     setup();
     const cancel = screen.getByRole("button", { name: "Vazgeç" });

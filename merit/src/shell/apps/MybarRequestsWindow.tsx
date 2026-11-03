@@ -5,7 +5,6 @@ import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { isValidExplanation } from "@/modules/mybar/constants";
 import { exportMybarAction, mybarCapabilitiesAction } from "@/modules/mybar/server/actions/admin";
 import { cancelMybarAction, listMybarAction, mybarKpisAction } from "@/modules/mybar/server/actions/requests";
-import type { AppProps } from "../registry";
 import { type Column, DataGrid } from "../ui/DataGrid";
 import { useSse } from "../useSse";
 import {
@@ -29,7 +28,7 @@ const LIVE_TYPES = [
 ] as const;
 const RELOAD_DEBOUNCE_MS = 300;
 const LOAD_FAILED = "MyBar talepleri alınamadı";
-const PAGE_SIZES = [50, 100, 200] as const;
+const PAGE_SIZES = [50, 100] as const;
 const CANCEL_EXPLANATION_TEXT =
   "İptal edilen MyBar talepleri için en az 3 kelimelik geçerli bir açıklama girmek zorunludur. Bir ya da iki kelimelik açıklamalar kabul edilmez.";
 const CANCEL_REASONS = [
@@ -53,7 +52,7 @@ function base64Blob(base64: string, mime: string): Blob {
  * through the list/KPI actions, refreshes on `mybar.*` events and cancels with a reason. Handing
  * over the products is a floor task, so there is no fulfil control here.
  */
-export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
+export function MybarRequestsWindow({ hotelId, setStatus }: { hotelId?: string; setStatus?: (text: string) => void }) {
   const [rows, setRows] = useState<MybarRowView[]>([]);
   const [total, setTotal] = useState(0);
   const [kpis, setKpis] = useState<MybarKpis | null>(null);
@@ -68,7 +67,7 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [canCancel, setCanCancel] = useState(false);
   const [canExport, setCanExport] = useState(false);
-  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<Pick<MybarRowView, "id" | "roomNumber"> | null>(null);
   const [cancelMessage, setCancelMessage] = useState<string | undefined>(undefined);
   const [exporting, setExporting] = useState(false);
   const latest = useRef(0);
@@ -76,6 +75,7 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
 
   const query = useMemo(
     () => ({
+      view: "management" as const,
       hotelId,
       status: status || undefined,
       unseenOnly: unseenOnly || undefined,
@@ -110,7 +110,7 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
     setRows(list.data.items as unknown as MybarRowView[]);
     setTotal(list.data.total);
     if (summary?.ok) setKpis(summary.data);
-    setStatus(`${list.data.total} talep`);
+    setStatus?.(`${list.data.total} talep`);
   }, [query, hotelId, setStatus]);
 
   // The debounce timer must run the newest load, not the one of the render that armed it.
@@ -147,7 +147,6 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
   useEffect(() => () => clearTimeout(reloadTimer.current), []);
 
   const selected = rows.find((row) => row.id === selectedId);
-  const cancelTarget = rows.find((row) => row.id === cancelId);
 
   const patch = <T,>(set: (value: T) => void) => (value: T) => {
     set(value);
@@ -182,19 +181,19 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
   );
 
   const confirmCancel = async (reason: string) => {
-    if (!cancelId) return;
+    if (!cancelTarget) return;
     if (!isValidExplanation(reason)) {
       setCancelMessage(CANCEL_EXPLANATION_TEXT);
       return;
     }
-    const result = await cancelMybarAction(cancelId, { reason });
+    setCancelMessage(undefined);
+    const result = await cancelMybarAction(cancelTarget.id, { reason });
     if (!result.ok) {
       setCancelMessage(result.error.message);
       return;
     }
-    setCancelId(null);
-    setCancelMessage(undefined);
-    await load();
+    setCancelTarget(null);
+    await loadRef.current();
   };
 
   const exportFile = async (format: "csv" | "xlsx") => {
@@ -322,13 +321,13 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
             canCancel={canCancel}
             onCancel={() => {
               setCancelMessage(undefined);
-              setCancelId(selected.id);
+              setCancelTarget({ id: selected.id, roomNumber: selected.roomNumber });
             }}
           />
         ) : null}
       </div>
       <ReasonDialog
-        open={cancelTarget !== undefined}
+        open={cancelTarget !== null}
         title={cancelTarget ? `Oda ${cancelTarget.roomNumber} talebi iptal edilecek` : "Talebi iptal et"}
         message={cancelMessage ?? "Açıklama en az 3 kelime olmalı; denetim günlüğüne yazılır."}
         reasons={CANCEL_REASONS}
@@ -337,7 +336,7 @@ export function MybarRequestsWindow({ hotelId, setStatus }: AppProps) {
         danger
         onConfirm={confirmCancel}
         onCancel={() => {
-          setCancelId(null);
+          setCancelTarget(null);
           setCancelMessage(undefined);
         }}
       />

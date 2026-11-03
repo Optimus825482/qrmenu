@@ -129,3 +129,32 @@
 .xp-mybar-unseen {
   font-weight: bold;
 }
+
+.depo-mybar {
+  --xp-body: var(--bg);
+  --xp-body-edge: var(--border);
+  --xp-body-light: var(--surface);
+  --xp-body-shade: var(--border);
+  --xp-text: var(--text);
+  --xp-muted: var(--muted);
+  --xp-select: var(--accent);
+  --xp-select-text: #fff;
+  --xp-focus: var(--accent);
+}
+
+.depo-mybar .xp-mybar-split {
+  flex-wrap: wrap;
+}
+
+.depo-mybar .xp-mybar-split > .xp-grid {
+  flex-basis: 32rem;
+}
+
+.depo-mybar .xp-grid-body {
+  max-height: 55dvh;
+}
+
+.depo-mybar .xp-mybar-detail {
+  flex: 1 1 18rem;
+  min-width: 0;
+}

@@ -35,6 +35,7 @@ function ReasonDialogBody({ title, message, reasons, minLength, confirmLabel, da
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(false);
   const length = text.trim().length;
   const valid = length >= minLength;
 
@@ -49,8 +50,11 @@ function ReasonDialogBody({ title, message, reasons, minLength, confirmLabel, da
   const submit = async () => {
     if (!valid || busy) return;
     setBusy(true);
+    setSubmitFailed(false);
     try {
       await onConfirm(text.trim());
+    } catch {
+      setSubmitFailed(true);
     } finally {
       setBusy(false);
     }
@@ -102,6 +106,7 @@ function ReasonDialogBody({ title, message, reasons, minLength, confirmLabel, da
           <span data-reason-counter="">{length}/{minLength}</span>
           {valid ? "" : " karakter gerekli"}
         </p>
+        {submitFailed ? <p role="alert" className="mt-2 text-sm text-danger">İşlem tamamlanamadı. Tekrar deneyin.</p> : null}
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
