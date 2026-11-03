@@ -31,6 +31,7 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
       where: {
         hotelId,
         kind: { in: ["IN_HOUSE", "ARRIVAL"] },
+        ...(env.historical ? { createdAt: { lte: now } } : {}),
         arrivalDate: { lte: todayDay },
         departureDate: { gte: todayDay },
       },
@@ -87,7 +88,7 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
       ORDER BY p.name ASC, hs.product_id ASC`,
     ),
     prisma.uploadTask.findMany({
-      where: { hotelId, date: todayDay },
+      where: { hotelId, date: todayDay, ...(env.historical ? { createdAt: { lte: now } } : {}) },
       select: { kind: true, status: true, updatedAt: true },
     }),
     prisma.qrScanLog.findMany({

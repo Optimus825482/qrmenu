@@ -66,7 +66,7 @@ async function* tableScans(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
     q,
     async (range, take) => {
       const rows = await prisma.qrScanLog.findMany({
-        where: { ok: true, createdAt: timeFilter(range), table: { outlet: { hotelId: q.hotelId } } },
+        where: { ok: true, kind: "MISAFIR", createdAt: timeFilter(range), table: { outlet: { hotelId: q.hotelId } } },
         select: { id: true, tableId: true, createdAt: true, table: { select: { outletId: true } } },
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         ...(take ? { take } : {}),

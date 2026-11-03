@@ -119,12 +119,10 @@ async function* idle(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
           })
         : [];
       const byId = new Map(sessions.map((s) => [s.id, s]));
-      return ops.flatMap((o) => {
-        const s = o.refId ? byId.get(o.refId) : undefined;
-        return s ? [{ ...o, session: s }] : [];
-      });
+      // Keep every raw row for paging; eligibility only controls emitted events.
+      return ops.map((o) => ({ ...o, session: o.refId ? byId.get(o.refId) : undefined }));
     },
-    (o) => [
+    (o) => o.session ? [
       {
         id: `operation_events:${o.id}:presence.idle`,
         at: iso(o.at),
@@ -136,7 +134,7 @@ async function* idle(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
         userId: o.session.userId,
         status: "BOSTA",
       },
-    ],
+    ] : [],
   );
 }
 

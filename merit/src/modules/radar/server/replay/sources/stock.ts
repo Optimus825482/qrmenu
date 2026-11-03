@@ -10,8 +10,8 @@ import { hasLayer, iso, pagedEvents, timeFilter, type ReplaySource, type ReplayS
 type LevelRow = { id: string; product_id: string; at: Date; remaining: bigint | number; critical: bigint | number };
 
 /**
- * Level right after each movement = today's remaining quantity minus every later (signed) movement of the product,
- * which is the same rule the snapshot uses for a past instant.
+ * Subtract later signed movements within the requested upper bound. Movements after the replay window
+ * must not enter the window aggregate.
  */
 function levelSql(q: ReplaySourceArgs, range: TimeRange, take: number | undefined): Prisma.Sql {
   const lower = range.gt ? Prisma.sql`x.at > ${range.gt}` : Prisma.sql`x.at >= ${range.gte!}`;
@@ -23,7 +23,7 @@ function levelSql(q: ReplaySourceArgs, range: TimeRange, take: number | undefine
           ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), 0) AS remaining
       FROM hotel_stock_movements m
       JOIN hotel_stocks hs ON hs.hotel_id = m.hotel_id AND hs.product_id = m.product_id
-      WHERE m.hotel_id = ${q.hotelId}
+      WHERE m.hotel_id = ${q.hotelId} AND m.created_at <= ${range.lte}
     ) x
     WHERE ${lower} AND x.at <= ${range.lte}
     ORDER BY x.at ASC, x.id ASC

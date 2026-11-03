@@ -23,7 +23,7 @@ export type ReplayQuery = {
 };
 
 const DAY_MS = 86_400_000;
-const MAX_WINDOW_MS = DAY_MS;
+const MAX_WINDOW_SECONDS = DAY_MS / 1000;
 const HOTEL_ID_MAX = 64;
 const CURSOR_ID_MAX = 200;
 
@@ -67,6 +67,11 @@ function instantOf(day: string, text: string, field: string): Date {
   return fromZonedTime(`${date}T${pad(h % 24)}:${pad(m)}:${pad(sec)}`, TZ);
 }
 
+function wallClockSeconds(text: string): number {
+  const [h, m, s = 0] = text.split(":").map(Number);
+  return h! * 3600 + m! * 60 + s;
+}
+
 function parseCursor(text: string): { at: Date; id: string } {
   const cut = text.indexOf("|");
   const at = new Date(cut > 0 ? text.slice(0, cut) : "");
@@ -102,8 +107,9 @@ export function parseReplayQuery(sp: URLSearchParams, now: Date, retentionDays: 
   if (Number(fromText.split(":")[0]) > 23) return fail("Başlangıç saati 00:00 ile 23:59 arasında olmalı", "from");
   const from = instantOf(day, fromText, "from");
   const to = instantOf(day, toText, "to");
-  if (from.getTime() >= to.getTime()) return fail("Başlangıç saati bitişten önce olmalı", "from");
-  if (to.getTime() - from.getTime() > MAX_WINDOW_MS) return fail("Pencere en çok 24 saat olabilir", "to");
+  if (wallClockSeconds(fromText) >= wallClockSeconds(toText) || from.getTime() >= to.getTime()) return fail("Başlangıç saati bitişten önce olmalı", "from");
+  if (from.getTime() > now.getTime()) return fail("Başlangıç saati gelecekte olamaz", "from");
+  if (wallClockSeconds(toText) - wallClockSeconds(fromText) > MAX_WINDOW_SECONDS) return fail("Pencere en çok 24 saat olabilir", "to");
 
   const cur = cursor === undefined ? undefined : parseCursor(cursor);
   if (cur && (cur.at.getTime() < from.getTime() || cur.at.getTime() > to.getTime())) {
