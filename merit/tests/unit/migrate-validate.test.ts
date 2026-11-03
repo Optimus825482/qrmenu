@@ -214,6 +214,26 @@ describe("göç doğrulaması ve uçtan uca kabul", () => {
       expect(JSON.stringify(results)).not.toContain("123456");
     });
 
+    it("taşınan odanın token'ı farklı ama boş değilse TOKEN_FARKLI WARN (FAIL değil)", async () => {
+      await testDb.room.update({ where: { qrToken: "123456" }, data: { qrToken: "ZZZ999" } });
+      const results = await validate();
+      expect(level(results, "TOKEN_FARKLI")).toBe("WARN");
+      expect(level(results, "TOKEN_KAYIP")).toBeUndefined();
+    });
+
+    it("legacy token başka bir odada duruyorsa TOKEN_KAYIP FAIL", async () => {
+      const other = await testDb.room.findFirstOrThrow({ where: { number: "101", hotel: { code: "ROYAL" } } });
+      await testDb.room.update({ where: { qrToken: "123456" }, data: { qrToken: "AAA111" } });
+      await testDb.room.update({ where: { id: other.id }, data: { qrToken: "123456" } });
+      expect(level(await validate(), "TOKEN_KAYIP")).toBe("FAIL");
+    });
+
+    it("yalnız tasks adımında da kaybolan günlük görev SAYI_FARKI FAIL verir", async () => {
+      expect(level(await validate(["tasks"]), "SAYI_FARKI")).toBe("PASS");
+      await testDb.dailyTask.deleteMany({ where: { type: "DEPARTURE_KONTROL" } });
+      expect(level(await validate(["tasks"]), "SAYI_FARKI")).toBe("FAIL");
+    });
+
     it("User.passwordHash değişirse HASH_FARKI FAIL (özet yazılmaz)", async () => {
       const user = await testDb.user.findUniqueOrThrow({ where: { username: "kat_diamond" } });
       await testDb.user.update({ where: { id: user.id }, data: { passwordHash: "degisti" } });

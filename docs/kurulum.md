@@ -197,6 +197,11 @@ bilgi niteliğinde `HAVUZ_TUTARSIZ`, `HAREKET_BAKIYE_FARKI` ve `ODA_SAYISI` (UYA
 `toplam = kullanılan + kalan` olarak yazılır; eski kayıtlardaki tutarsızlıklar uyarı olarak listelenir. "Yapılacaklar"
 bölümü göçten sonra elle yapılacakları sayar.
 
+**DND ve görev birleştirme.** Eski sistemde aynı oda/gün için hem bağımsız DND kaydı hem göreve bağlı DND vardı; göçte bunlar tek `RoomDnd` olur
+(sayı = ikisinin en büyüğü, kontroller zamana göre birleşir, aynı anlı kontrol bir kez sayılır). Aynı oda aynı (otel, gün, tür) görevde birden çok kişiye
+atanmışsa tek görev kalemi kalır. Bu yüzden canlı yedekte görev kalemi ~10 bin (%7), DND kaydı ~13 bin satır "taşınmadı" görünür; bunlar veri kaybı değil
+birleştirmedir (`GOREV_KALEM_COBLU`, `DND_CAKISMA` uyarıları).
+
 **Yeniden çalıştırma.** Betik idempotenttir: eşleme tablosu (`legacy_id_map`) sayesinde ikinci çalıştırma yalnız
 **eksikleri** ekler (yarım kalan çalıştırma kaldığı yerden tamamlanır). Eski veritabanından **daha yeni bir dump**
 alındıysa hedefi de sıfırdan kurun (boş veritabanı + migrate + seed) ve göçü baştan çalıştırın; var olan satırlar

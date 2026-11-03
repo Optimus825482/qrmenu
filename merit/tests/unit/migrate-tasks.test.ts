@@ -258,6 +258,17 @@ describe("veritabanı", () => {
 
   // ---------------------------------------------------------------------------------------------- DND
 
+  describe("bilinmeyen durumlar", () => {
+    it("durum günlüğü ve göreve bağlı DND'de bilinmeyen görev durumu uyarı verir", async () => {
+      await legacyExec(`UPDATE gorev_durum_loglari SET yeni_durum = 'garip' WHERE id = 2; UPDATE gorev_detaylari SET durum = 'bozuk' WHERE id = 4`);
+      expect(await run()).toBe(0);
+      // detail 11 (fixture) + detail 4 + log 2
+      expect(warn("GOREV_DURUM_BILINMIYOR")).toBe(3);
+      // independent record 5 (fixture) + task-linked detail 4
+      expect(warn("DND_DURUM_BILINMIYOR")).toBe(2);
+    });
+  });
+
   describe("DND", () => {
     it("bağımsız kayıt + kontroller: sayı, durum, zamanlar ve kontrol numaraları", async () => {
       expect(await run()).toBe(0);
@@ -417,6 +428,20 @@ describe("veritabanı", () => {
 
       expect(await run()).toBe(0);
       expect(await counts()).toEqual(clean);
+    });
+
+    it("hedefte aynı (otel, gün, tür) görevi ve kalemi varsa ikinci çalıştırma hiçbir şey yaratmaz, çıkış 0", async () => {
+      const diamond = await testDb.hotel.findUniqueOrThrow({ where: { code: "DIAMOND" } });
+      const pre = await testDb.dailyTask.create({ data: { hotelId: diamond.id, date: new Date("2026-10-20T00:00:00.000Z"), type: "INHOUSE_KONTROL" } });
+      expect(await run("--only", "definitions,users")).toBe(0);
+      await testDb.dailyTaskItem.create({ data: { taskId: pre.id, roomId: (await roomByNo("DIAMOND", "001")).id } });
+      expect(await run()).toBe(0);
+      expect(warn("GOREV_KALEM_HEDEFTE_VAR")).toBe(1);
+      const first = await counts();
+      expect(await run()).toBe(0);
+      expect(await counts()).toEqual(first);
+      expect(row("dailyTaskItem")[1]).toBe(0);
+      expect(warn("GOREV_KALEM_HEDEFTE_VAR")).toBe(1);
     });
 
     it("kuru çalıştırma satır bırakmaz, sayıları yine de raporlar", async () => {

@@ -491,7 +491,6 @@ async function stepDailyTasks(ctx: StepContext): Promise<void> {
 
   rep.read(groups.size);
   const taskIdOf = await loadMap(ctx, "dailyTask");
-  const foreign = new Set<string>(); // groups whose DailyTask pre-existed in the target (not created by this migration)
   for (const part of chunked([...groups.values()], ctx.cfg.batch)) {
     await ctx.tx(async (db) => {
       const todo = part.filter((g) => !taskIdOf.has(g.key));
@@ -509,7 +508,6 @@ async function stepDailyTasks(ctx: StepContext): Promise<void> {
         if (existing) {
           pairs.push([g.key, existing]);
           taskIdOf.set(g.key, existing);
-          foreign.add(g.key);
           rep.existing();
           ctx.report.warn("GOREV_HEDEFTE_VAR", "Hedefte aynı (otel, gün, tip) için günlük görev var; kalemler ona eklendi", g.key);
           continue;
@@ -544,14 +542,15 @@ async function stepDailyTasks(ctx: StepContext): Promise<void> {
     await ctx.tx(async (db) => {
       const creates: Prisma.DailyTaskItemCreateManyInput[] = [];
       const pairs: [string, string][] = [];
-      // (taskId, roomId) pairs that already exist for tasks the migration did not create
+      // (taskId, roomId) pairs already in the target, for EVERY task of this batch (so a re-run never re-inserts
+      // an item that run 1 dropped because the target already had it).
       const takenForeign = new Set<string>();
-      const foreignTaskIds = [...new Set(rows.flatMap((r) => {
+      const batchTaskIds = [...new Set(rows.flatMap((r) => {
         const c = classify(r);
-        return !c.drop && foreign.has(c.group.key) ? [taskIdOf.get(c.group.key)!] : [];
+        return !c.drop && taskIdOf.has(c.group.key) ? [taskIdOf.get(c.group.key)!] : [];
       }))];
-      if (foreignTaskIds.length > 0) {
-        for (const it of await db.dailyTaskItem.findMany({ where: { taskId: { in: foreignTaskIds } }, select: { taskId: true, roomId: true } })) {
+      if (batchTaskIds.length > 0) {
+        for (const it of await db.dailyTaskItem.findMany({ where: { taskId: { in: batchTaskIds } }, select: { taskId: true, roomId: true } })) {
           takenForeign.add(`${it.taskId}:${it.roomId}`);
         }
       }
@@ -661,6 +660,12 @@ async function stepTaskLogs(ctx: StepContext): Promise<void> {
           continue;
         }
         const createdAt = asDate(row.degisiklik_zamani);
+        for (const col of ["onceki_durum", "yeni_durum"] as const) {
+          const value = clean(row[col]);
+          if (value !== "" && !isKnownTaskStatus(value)) {
+            ctx.report.warn("GOREV_DURUM_BILINMIYOR", "Bilinmeyen görev durumu BEKLIYOR yapıldı", `günlük ${legacyId} ${col}: "${value}"`);
+          }
+        }
         const id = IdMap.newId();
         creates.push({
           id,
@@ -744,14 +749,14 @@ async function stepDnd(ctx: StepContext): Promise<void> {
     key: ["id"],
     cols: [req("gorev_detay_id"), req("kontrol_zamani"), opt("kontrol_eden_id"), opt("notlar")],
   });
-  let details: Row[] = [];
+  const details: Row[] = [];
   if (await ctx.legacy.tableExists("gorev_detaylari")) {
     for await (const rows of ctx.legacy.rows<Row>("gorev_detaylari", {
       key: ["id"],
       cols: [req("gorev_id"), req("oda_id"), opt("durum"), req("dnd_sayisi"), opt("son_dnd_zamani")],
       where: '"dnd_sayisi" > 0',
     })) {
-      details = details.concat(rows);
+      details.push(...rows);
     }
   }
   rep.read(independent.length + details.length);
@@ -766,7 +771,6 @@ async function stepDnd(ctx: StepContext): Promise<void> {
 
   const plan = new Map<string, PlanRecord>(); // by `${roomId}|${day}`
   const planOrder: PlanRecord[] = [];
-  const indepKeyOf = new Map<string, string>(); // legacy record id -> plan key
 
   const add = (rec: PlanRecord, source: string): boolean => {
     const slot = `${rec.roomId}|${rec.day}`;
@@ -836,7 +840,6 @@ async function stepDnd(ctx: StepContext): Promise<void> {
       createdAt: created,
       checks,
     };
-    indepKeyOf.set(legacyId, rec.key);
     add(rec, `oda ${idOf(row.oda_id)}`);
   }
 
@@ -863,6 +866,9 @@ async function stepDnd(ctx: StepContext): Promise<void> {
       if (own.length > 0) checkRep.dropped(own.length, "DND_YOK");
       ctx.report.warn("DND_GOREV_YOK", "Görevdeki DND verisi görev veya odaya bağlanamadı; taşınmadı", `detay ${legacyId}`);
       continue;
+    }
+    if (!isKnownTaskStatus(clean(d.durum))) {
+      ctx.report.warn("DND_DURUM_BILINMIYOR", "Göreve bağlı DND'nin görev durumu bilinmiyor; AKTIF yapıldı", `detay ${legacyId}: "${clean(d.durum)}"`);
     }
     const itemStatus = taskStatusFor(clean(d.durum));
     const lastRaw = asDate(d.son_dnd_zamani);

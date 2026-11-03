@@ -64,6 +64,8 @@ const ENTITY_SOURCES: Record<string, { step: StepName; logs?: boolean; count: (c
   occupancyUpload: { step: "tasks", count: (c) => legacyCount(c, "dosya_yuklemeleri") },
   guestRecord: { step: "tasks", count: (c) => legacyCount(c, "misafir_kayitlari") },
   uploadTask: { step: "tasks", count: (c) => legacyCount(c, "yukleme_gorevleri") },
+  // Groups have no 1:1 legacy table: the step's own group count is the reference, so only the lost-row check is independent.
+  dailyTask: { step: "tasks", count: async (c) => c.report.counts().dailyTask?.read ?? 0 },
   dailyTaskItem: { step: "tasks", count: (c) => legacyCount(c, "gorev_detaylari") },
   taskStatusLog: { step: "tasks", count: (c) => legacyCount(c, "gorev_durum_loglari") },
   roomDnd: {
@@ -241,19 +243,26 @@ async function checkTokens(ctx: StepContext): Promise<ValidationResult> {
     }
   }
   const lost: string[] = [];
-  const kept: string[] = [];
+  const different: string[] = [];
   for (const token of tokens) {
     const migrated = owners.get(token)!.filter((o) => roomOf.has(o.id));
+    const ownerRooms = migrated.map((o) => roomOf.get(o.id)!);
     const holder = present.get(token);
-    if (holder && migrated.some((o) => roomOf.get(o.id) === holder)) continue;
     const label = `oda ${migrated.map((o) => o.no).join("/")}`;
-    // The target room keeps a QR token of its own, or another room already holds this one: reported, not lost.
-    const otherToken = migrated.some((o) => tokenOfRoom.get(roomOf.get(o.id)!) != null);
-    if (holder || otherToken) kept.push(`${label}: legacy QR token taşınmadı, hedefte başka bir QR token var`);
-    else lost.push(`${label}: QR token hedefte bulunamadı`);
+    if (holder && !ownerRooms.includes(holder)) {
+      lost.push(`${label}: legacy QR token hedefte başka bir odada`);
+      continue;
+    }
+    if (holder) continue; // an owner room holds it
+    for (const o of migrated) {
+      const target = tokenOfRoom.get(roomOf.get(o.id)!);
+      if (target == null) lost.push(`oda ${o.no}: QR token hedefte bulunamadı`);
+      else different.push(`oda ${o.no}: hedefte farklı bir QR token var (mevcut token ezilmedi)`);
+    }
   }
   if (lost.length > 0) return outcome("TOKEN_KAYIP", "Her legacy QR token'ı taşınan odada aynen var", lost, "FAIL");
-  return outcome("TOKEN_KAYIP", "Her legacy QR token'ı taşınan odada aynen var (hedefte zaten başka token'ı olan odalar hariç)", kept, "WARN");
+  if (different.length > 0) return outcome("TOKEN_FARKLI", "Taşınan odanın QR token'ı legacy'den farklı (mevcut token korundu)", different, "WARN");
+  return pass("TOKEN_KAYIP", "Her legacy QR token'ı taşınan odada aynen var");
 }
 
 async function checkRooms(ctx: StepContext): Promise<ValidationResult> {
