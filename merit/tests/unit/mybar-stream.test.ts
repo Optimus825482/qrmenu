@@ -9,6 +9,11 @@ import { applyMybarEvent, useMybarStream, type MybarItem } from "@/app/kat/compo
 let sseHandler: ((e: MeritEvent) => void) | null = null;
 let sseStatus: "connecting" | "open" | "closed" = "open";
 
+const listUnseen = vi.hoisted(() => vi.fn());
+const acknowledge = vi.hoisted(() => vi.fn());
+vi.mock("@/modules/mybar/server/actions/ack", () => ({ listUnseenForAckAction: listUnseen }));
+vi.mock("@/modules/mybar/server/actions/requests", () => ({ acknowledgeMybarAction: acknowledge }));
+
 vi.mock("@/shell/useSse", () => ({
   useSse: (cb: (e: MeritEvent) => void) => {
     sseHandler = cb;
@@ -21,6 +26,9 @@ describe("useMybarStream & applyMybarEvent", () => {
     sseHandler = null;
     sseStatus = "open";
     vi.restoreAllMocks();
+    listUnseen.mockReset();
+    acknowledge.mockReset();
+    listUnseen.mockResolvedValue({ ok: true, data: [] });
   });
 
   afterEach(() => {
@@ -77,53 +85,58 @@ describe("useMybarStream & applyMybarEvent", () => {
     expect(r2.next).toEqual([]);
   });
 
-  it("useMybarStream: ilk yüklemede tek GET /api/minibar/dashboard çağrısı yapar, SSE mybar.created ve ack ile güncellenir", async () => {
-    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-      if (url.startsWith("/api/minibar/dashboard")) {
-        return new Response(
-          JSON.stringify({
-            activeMybarCount: 0,
-            floors: [],
-          }),
-          { status: 200 },
-        );
-      }
-      if (url === "/api/minibar/mybar/confirm" && init?.method === "POST") {
-        return new Response(JSON.stringify({ success: true }), { status: 200 });
-      }
-      return new Response("{}", { status: 200 });
-    });
-    vi.stubGlobal("fetch", fetchMock);
+  it("useMybarStream: ilk yüklemede listUnseenForAckAction çağrılır, SSE mybar.created ve ack ile güncellenir", async () => {
+    const row = {
+      id: "req-11", roomId: "r-102", roomNumber: "102", floorName: "1. Kat", createdAt: new Date("2026-11-03T10:00:00Z"),
+      note: "ice please", noteTr: "buz lütfen", noteSrcLang: "en",
+      items: [{ productId: "p1", name: "Su", requestedQty: 2, deliveredQty: 0, remainingQty: 2, poolRemaining: null }],
+    };
+    let served: unknown[] = [];
+    listUnseen.mockImplementation(async () => ({ ok: true, data: served }));
+    acknowledge.mockResolvedValue({ ok: true, data: { firstSeen: true, seenAt: new Date() } });
 
     const { result } = renderHook(() => useMybarStream({ hotelId: "h-1" }));
 
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(() => expect(listUnseen).toHaveBeenCalled());
     expect(result.current.connected).toBe(true);
     expect(result.current.pending).toEqual([]);
 
-    act(() => {
+    // Olay yükü kesik (ürün yok): istemci listeyi sunucudan yeniden çeker.
+    served = [row];
+    await act(async () => {
       sseHandler?.({
         type: "mybar.created",
         at: new Date().toISOString(),
         hotelId: "h-1",
-        roomId: "r-101",
-        payload: {
-          requestId: "req-10",
-          roomId: "r-101",
-          roomNumber: "101",
-          items: [{ productName: "Kola", qty: 1 }],
-        },
+        roomId: "r-102",
+        payload: { requestId: "req-11", roomId: "r-102", roomNumber: "102" },
       });
     });
-
-    expect(result.current.pending).toHaveLength(1);
-    expect(result.current.pending[0]?.id).toBe("req-10");
+    await waitFor(() => expect(result.current.pending).toHaveLength(1));
+    expect(result.current.pending[0]).toMatchObject({
+      id: "req-11",
+      notes: "buz lütfen",
+      noteOriginal: "ice please",
+      noteLang: "en",
+      items: [{ productName: "Su", qty: 2 }],
+    });
 
     await act(async () => {
-      await result.current.ack("req-10");
+      await result.current.ack("req-11");
     });
+    expect(acknowledge).toHaveBeenCalledWith("req-11");
     expect(result.current.pending).toEqual([]);
+  });
+
+  it("ack hatası fırlatılır ve liste değişmez", async () => {
+    listUnseen.mockResolvedValue({
+      ok: true,
+      data: [{ id: "req-12", roomId: "r", roomNumber: "103", floorName: "", createdAt: new Date(), note: null, noteTr: null, noteSrcLang: null, items: [] }],
+    });
+    acknowledge.mockResolvedValue({ ok: false, error: { code: "FORBIDDEN", message: "Bu işlem için yetkiniz yok" } });
+    const { result } = renderHook(() => useMybarStream());
+    await waitFor(() => expect(result.current.pending).toHaveLength(1));
+    await expect(result.current.ack("req-12")).rejects.toThrow("Bu işlem için yetkiniz yok");
+    expect(result.current.pending).toHaveLength(1);
   });
 });

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
+import { acknowledgeMybarAction } from "@/modules/mybar/server/actions/requests";
+import { listUnseenForAckAction } from "@/modules/mybar/server/actions/ack";
+import type { MybarRow } from "@/modules/mybar/server/requests";
 import { useSse } from "@/shell/useSse";
 
 export interface MybarItem {
@@ -12,7 +15,26 @@ export interface MybarItem {
   floorName: string;
   requestedAt: string;
   items: { productName: string; qty: number }[];
+  /** What the attendant reads: the Turkish translation when there is one, else the original. */
   notes: string | null;
+  /** Guest's own wording, only when a translation replaced it. */
+  noteOriginal?: string | null;
+  noteLang?: string | null;
+}
+
+export function toMybarItem(row: MybarRow): MybarItem {
+  return {
+    id: row.id,
+    roomId: row.roomId,
+    roomNumber: row.roomNumber,
+    floorId: "",
+    floorName: row.floorName,
+    requestedAt: new Date(row.createdAt).toISOString(),
+    items: row.items.map((it) => ({ productName: it.name, qty: it.requestedQty })),
+    notes: row.noteTr ?? row.note,
+    noteOriginal: row.noteTr ? row.note : null,
+    noteLang: row.noteTr ? row.noteSrcLang : null,
+  };
 }
 
 const STREAM_EVENTS = [
@@ -92,57 +114,13 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
 
   const loadPending = useCallback(async () => {
     try {
-      const url = hotelId
-        ? `/api/minibar/dashboard?hotelId=${encodeURIComponent(hotelId)}`
-        : "/api/minibar/dashboard";
-      const dashRes = await fetch(url);
-      if (!dashRes.ok) return;
-      const dashJson = (await dashRes.json()) as {
-        activeMybarCount?: number;
-        floors?: { id: string; name: string; mybarCount: number }[];
-      };
-      if (!dashJson.activeMybarCount || dashJson.activeMybarCount === 0) {
-        if (mountedRef.current) setPending([]);
-        return;
-      }
-      const floorsWithMybar = (dashJson.floors ?? []).filter((f) => f.mybarCount > 0);
-      const collected: MybarItem[] = [];
-      for (const fl of floorsWithMybar) {
-        const flRes = await fetch(`/api/minibar/floor/${fl.id}`);
-        if (!flRes.ok) continue;
-        const flJson = (await flRes.json()) as {
-          rooms?: {
-            id: string;
-            number: string;
-            hasMybarRequest?: boolean;
-            mybarDetails?: {
-              id: string;
-              requestedAt: string;
-              items: { productName: string; qty: number }[];
-              notes: string | null;
-            } | null;
-          }[];
-        };
-        for (const rm of flJson.rooms ?? []) {
-          if (rm.hasMybarRequest && rm.mybarDetails) {
-            collected.push({
-              id: rm.mybarDetails.id,
-              roomId: rm.id,
-              roomNumber: rm.number,
-              floorId: fl.id,
-              floorName: fl.name,
-              requestedAt: rm.mybarDetails.requestedAt,
-              items: rm.mybarDetails.items,
-              notes: rm.mybarDetails.notes,
-            });
-          }
-        }
-      }
-      if (mountedRef.current) setPending(collected);
+      const res = await listUnseenForAckAction();
+      if (!res.ok || !mountedRef.current) return;
+      setPending(res.data.map(toMybarItem));
     } catch {
       // Bağlantı hatası sessizce yutulur; SSE resync ile yenilenir.
     }
-  }, [hotelId, setPending]);
+  }, [setPending]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -168,15 +146,8 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
   }, [status, loadPending]);
 
   const ack = useCallback(async (id: string) => {
-    const res = await fetch("/api/minibar/mybar/confirm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId: id }),
-    });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
-      throw new Error(body.error ?? body.message ?? "Talep onaylanamadı.");
-    }
+    const res = await acknowledgeMybarAction(id);
+    if (!res.ok) throw new Error(res.error.message);
     setPending(listRef.current.filter((r) => r.id !== id));
   }, [setPending]);
 

@@ -24,7 +24,6 @@ const roomTypeSetupsRoute = await import("@/app/api/minibar/definitions/room-typ
 const auditRoute = await import("@/app/api/minibar/definitions/audit-logs/route");
 const consumptionRoute = await import("@/app/api/minibar/reports/consumption/route");
 const uploadRoute = await import("@/app/api/minibar/occupancy/upload/route");
-const confirmRoute = await import("@/app/api/minibar/mybar/confirm/route");
 const myCheckRoute = await import("@/app/api/minibar/my-checks/[txId]/route");
 const resolveRoute = await import("@/app/api/minibar/corrections/[requestId]/resolve/route");
 
@@ -71,7 +70,6 @@ describe("oturumsuz istekler 401 alır (demo kullanıcıya düşmez)", () => {
       auditRoute.GET(new Request(url("definitions/audit-logs"))),
       consumptionRoute.GET(new Request(url("reports/consumption"))),
       uploadRoute.POST(new Request(url("occupancy/upload"), { method: "POST", body: new FormData() })),
-      confirmRoute.POST(json("mybar/confirm", "POST", { requestId: "r1" })),
       myCheckRoute.DELETE(new Request(url("my-checks/t"), { method: "DELETE" }), params({ txId: "t" })),
       resolveRoute.POST(json("corrections/r/resolve", "POST", { approved: true }), params({ requestId: "r" })),
     ].map((p) => Promise.resolve(p));

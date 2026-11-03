@@ -90,11 +90,10 @@ test("2. misafir MyBar talebi gönderdiğinde kat sorumlusunda 1 s içinde Persi
   }
   await expect(katPage).toHaveURL(/\/kat$/);
 
-  const guestRes = await katPage.request.post("/api/minibar/mybar/request", {
+  const guestRes = await katPage.request.post(`/api/q/${seedIds.room101Token}/mybar`, {
     data: {
-      token: seedIds.room101Token,
       idempotencyKey: randomUUID(),
-      language: "tr",
+      locale: "tr",
       note: "Lütfen hızlıca su gönderin",
       items: [{ productId: seedIds.suProductId, qty: 1 }],
     },

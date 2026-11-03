@@ -182,7 +182,7 @@ test.describe("rutin kartları ve Kullanıcıya göster", () => {
     await expect(item(page, "mybar-yok")).toHaveAttribute("data-done", "true");
     await expect(item(page, "mybar-yok")).toContainText("otomatik");
 
-    const guest = await page.request.post("/api/minibar/mybar/request", {
+    const guest = await page.request.post(`/api/q/${room101Token}/mybar`, {
       data: {
         token: room101Token,
         idempotencyKey: randomUUID(),

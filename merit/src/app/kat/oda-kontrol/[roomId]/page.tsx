@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { Icon } from "@/components/icons/Icon";
+import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
 import { notify } from "@/shell/notify";
 
 function newRequestKey(): string {
@@ -259,26 +260,6 @@ export default function OdaKontrolPage() {
     }
   };
 
-  const handleConfirmMybar = async () => {
-    if (!data?.mybar) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/minibar/mybar/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: data.mybar.id }),
-      });
-      const json = (await res.json()) as { message?: string; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "MyBar onaylanamadı.");
-      setData((prev) => (prev ? { ...prev, mybar: null } : prev));
-      notify.success(json.message ?? "MyBar talebi onaylandı.");
-    } catch (e) {
-      notify.error(e instanceof Error ? e.message : "Hata");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const totalSelected = Object.values(quantities).reduce((a, b) => a + b, 0);
 
   return (
@@ -342,33 +323,7 @@ export default function OdaKontrolPage() {
             ) : null}
 
             {data.mybar ? (
-              <div className="rounded-2xl border-2 border-danger bg-danger/10 p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-danger">
-                      <Icon name="bell" size={16} />
-                      Aktif Misafir MyBar Talebi
-                    </span>
-                    <p className="mt-1 text-xs text-text">
-                      Ürünler: {data.mybar.items.map((i) => `${i.productName} (${i.qty})`).join(", ")}
-                    </p>
-                    {data.mybar.notes ? (
-                      <p className="mt-1 text-xs text-muted">Not: {data.mybar.notes}</p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    data-mutates=""
-                    onClick={handleConfirmMybar}
-                    disabled={submitting}
-                    style={{ minHeight: "var(--tap-action)" }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-white hover:opacity-95 disabled:opacity-50"
-                  >
-                    <Icon name="check" size={16} />
-                    Gördüm — Onayla
-                  </button>
-                </div>
-              </div>
+              <MybarRoomCard requestId={data.mybar.id} onChanged={() => void loadRoom(false)} />
             ) : null}
 
             {data.taskItem ? (
