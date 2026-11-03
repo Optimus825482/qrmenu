@@ -79,7 +79,7 @@ window.ILERLEME = {
         { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "03.11 10:55: oda kontrolü servisi (kapasiteli +N ikame, Sarfiyat Yok, idempotent istek, sil/güncelle, MMD kaldırıldı) tamamlandı ve incelendi (c64a6e3). 07:10: DND ve görev kalemi çekirdeği (tasks.ts/dnd.ts: ayarlı eşik, 30 sn çift dokunma, 120 dk hatırlatma, gün sonu EKSIK) tamamlandı ve incelendi (4444d08, 4385096). Oda kontrolü servisi (+N ikame, Sarfiyat Yok, sil/güncelle) uygulanıyor; /kat sayfaları UX planında." },
         { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
         { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "03.11 13:40: günlük görev uzlaştırma ve öncelik planı tamamlandı ve incelendi (7e3e7a8 + 1fff117); altı pg-boss kuyruğu, depo panosu ve uçtan uca kabul (T11) uygulanıyor. Göç (T12–T14) tamamlandı: canlı yedekle kuru koşu temiz." }
+        { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "03.11 13:40: günlük görev uzlaştırma ve öncelik planı tamamlandı ve incelendi (7e3e7a8 + 1fff117); altı pg-boss kuyruğu, depo panosu, birebir rapor sözleşmesi ve uçtan uca kabul tamamlandı ve incelendi (dff58ad). Minibar planının 14 görevi bitti; tek ajanla tam doğrulama sürüyor. Göç (T12–T14) tamamlandı: canlı yedekle kuru koşu temiz." }
       ]
     },
     {
@@ -131,8 +131,8 @@ window.ILERLEME = {
         { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "done", doneAt: "03.11 05:55", note: "0d0cc5f + b5f8022 (incelemeler onaylı)" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "done", doneAt: "03.11 06:52", note: "72c35cf — 437 emoji → 0, 32 sürekli animasyon kaldırıldı, formatPrice; inceleme sürüyor" },
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "done", doneAt: "03.11 10:55", note: "c441101 + 1927871 (inceleme onaylı): tam ekran/wake-lock/ses kapısı, 44 px durum şeridi, masa haritası ve yan panel" },
-        { title: "T7 KDS yenilemesi ve sesler", status: "done", doneAt: "03.11 12:10", note: "41ad912 (inceleme minibar bitince): üç sütun, 64 px bump, Hazır geri alma (6 sn), ses ipuçları" },
-        { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "active" },
+        { title: "T7 KDS yenilemesi ve sesler", status: "done", doneAt: "03.11 12:10", note: "41ad912 (inceleme onaylı): üç sütun, 64 px bump, Hazır geri alma (6 sn), ses ipuçları" },
+        { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "done", doneAt: "03.11 14:00", note: "4d82da4 (inceleme onaylı): tek alt gezinme/ray, gezinme modeli, profil menüsü, oturum şeridi, /depo panosu" },
         { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
         { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "pending" },
         { title: "T11 screenGuide, accessSummary, Erişimim", status: "done", doneAt: "03.11 05:55", note: "b5f8022 (inceleme onaylı); rehber metinleri docs/kabul/ux-rehber-metinleri.md onayınızı bekliyor" },
@@ -176,6 +176,7 @@ window.ILERLEME = {
     { at: "03.11 02:22", text: "UX T2 (rol bazlı iniş /baslat, katalog, yetkisiz ekran sayfası) uygulandı (7244d05); T11 Erişimim başladı." },
     { at: "03.11 02:03", text: "Minibar T7 incelemesi onaylandı; Canlı Radar T1 (olay birliği) başladı." },
     { at: "03.11 02:00", text: "Minibar T7 (stok görünümleri, ek talep yaşam döngüsü) uygulandı (c6f7f5d); inceleme ve T6 (oda QR) başladı." },
+    { at: "03.11 14:15", text: "Minibar planının 14 görevinin tamamı uygulandı ve incelendi (son: T11 dff58ad, T14 düzeltmesi 924e3c4); tek ajanla tam doğrulama (check, build, e2e, matris) sürüyor. UX T8 StaffShell (4d82da4) ve T7 KDS incelemeleri onaylandı. Radar T6/T8 incelemelerinde çıkan bulgular düzeltme turuna alındı. DEVIR §1a devir için yeniden yazıldı." },
     { at: "03.11 13:40", text: "Minibar T8 görev üretimi incelendi ve kapandı; göç T13 düzeltmesi ve T14 (doluluk/görev/DND/günlük göçü, doğrulama raporu) uygulandı — canlı yedekle 8 dk kuru koşu temiz. Radar T6 gün tekrarı ve T8 XP penceresi uygulandı (incelemeler minibar sonrası). DEVIR §1a devir için güncellendi; Fable 5 saatlik sınır." },
     { at: "03.11 12:10", text: "Erkan kararı: önce minibar bitirilecek, sonra radar ve UX sırayla. Minibar T5 ve T10 incelendi ve kapandı; T13 göç uygulandı (8b25eb1, düzeltme turu T14 ile); T8 görev üretimi ve T14 göç kapanışı sürüyor, ardından T11. UX T7 KDS uygulandı (41ad912)." },
     { at: "03.11 10:55", text: "UX T6 POS kabuğu ve radar T5 anlık görüntü incelemeleri onaylandı; minibar T5 oda kontrolü servisi uygulandı (inceleme sürüyor). Başlatılan: UX T7 KDS, UX T8 StaffShell, radar T6 gün tekrarı, minibar T10 kat planı/QR. Dalga-1 e2e bütünleştirme (1014aaa): 5 sürüklenme düzeltildi, tam yeşil koşu dalga sonunda tek ajanla tekrarlanacak." },
