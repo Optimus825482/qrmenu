@@ -68,7 +68,7 @@ export default async function DepoGorevlerPage() {
                 ? "border-ok/40 bg-ok/10 text-ok"
                 : i.status === "DND_BEKLIYOR"
                   ? "border-warn/40 bg-warn/10 text-warn"
-                  : "border-accent/40 bg-accent/10 text-accent";
+                  : "border-accent/40 bg-accent/10 text-text";
             return (
               <li
                 key={i.itemId}
