@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 18:40",
-  headline: "Minibar ve radar planları kapalı (radar T13 animasyonlu gösterim dahil). UX: T10/T13 kapandı, T12 sürüyor, T14–T15 kaldı. P4 MyBar: T1–T3, T5–T6 kapalı, T4 misafir sayfası sürüyor.",
+  updatedAt: "03.11.2026 19:40",
+  headline: "Minibar ve radar planları kapalı. UX: T12 düzeltme turu sürüyor, T14–T15 kaldı. P4 MyBar: misafir sayfası ve kat sorumlusu akışları kapandı; yönetim penceresi (T8) ve Web Push düzeltmesi sürüyor, sonra T10 kabul. Ardından P6, P7, P8.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -86,9 +86,9 @@ window.ILERLEME = {
       code: "P4", title: "MyBar ve bildirimler", weight: 8,
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
-        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "active", note: "T1 veri temeli (migration 20261103121000_p4_mybar, mybar.* olayları, ayarlar, hız sınırları — c201ba3) doğrulandı; misafir akışı ve i18n/çeviri görevleri sırada" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "active", note: "T5 talep yaşam döngüsü servisi (gördüm, kapatma, iptal, liste, KPI — d2757e9, 11/11 test yeşil) tamamlandı; personel UI pencereleri sırada" },
-        { title: "Web Push kanalı", status: "active", note: "T9 Web Push ve bildirim zili genişletmesi sırada" }
+        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "03.11 19:01", note: "T1 veri temeli (c201ba3), T2 çeviri servisi (0a40ea8 + 041d49c), T3 misafir API (72c289e + güvenlik sertleştirmeleri 3fe2959/2195e42/49ce303), T4 misafir sayfası 8 dilde + RTL (acdf2e1) — hepsi incelendi" },
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 19:35", note: "T5 yaşam döngüsü (d2757e9), T6 karşılama/havuzdan düşüm (ade0c1f), T7 kat arayüzü: zorunlu onay, /kat/mybar, oda kartı (1922496) — incelendi; gezinme/matris/layout entegrasyonu ve T8 yönetim penceresi sürüyor" },
+        { title: "Web Push kanalı", status: "active", note: "T9 uygulandı ve incelendi (13b3e62: abonelik, dağıtıcı, service worker, SSRF izin listesi; env VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT); çıkışta abonelik silme düzeltmesi sürüyor" }
       ]
     },
     {
@@ -171,6 +171,7 @@ window.ILERLEME = {
     { at: "03.11 16:29", text: "Radar T10 (zaman şeridi, 30 dk geri sarma, NDJSON akış istemcisi ve 1x/10x/60x gün tekrarı oynatıcısı) tamamlandı ve doğrulandı (38/38 radar birim testi yeşil, tsc/eslint temiz). Sıradaki: Radar T11 (/radar duvar ekranı) ve T12." },
     { at: "03.11 16:15", text: "Radar T9 (Kuyruklar, Oda Servisi, Personel görünümleri, uyarı/olay şeritleri, lejant, klavye kısayolları ve ayrıntı balonu) tamamlandı ve doğrulandı (45/45 birim testi yeşil, tsc/eslint temiz). Sıradaki: Radar T10 (zaman şeridi ve gün tekrarı oynatıcısı), T11 (/radar duvar ekranı), T12." },
     { at: "03.11 16:02", text: "Antigravity devamı: Radar T8 düzeltme turu (50e5ffa) ve T6 stok yeniden bazlama düzeltmesi (e8fcb0d) doğrulandı ve kapatıldı (215/215 radar birim testi, next build yeşil). P4 T5 MyBar talep yaşam döngüsü servisi (d2757e9, 11/11 test) ve Radar T3 minibar/MyBar yayın boşlukları (radar-publish-minibar + 9 test paketi 175/175 yeşil, canliRadar e2e 5. test açıldı) tamamlandı. Sıradaki: Radar T9–T12 ve UX T9–T15." },
+    { at: "03.11 19:40", text: "P4 MyBar: T4 misafir sayfası (acdf2e1), T7 kat sorumlusu arayüzü (1922496) ve T9 Web Push (13b3e62) uygulandı ve incelendi; T8 yönetim penceresi ile T7 entegrasyonu (gezinme, matris, tek montaj) ve T9 çıkış düzeltmesi sürüyor. UX T12 inceleme düzeltmeleri sürüyor. Bağlantı doygunluğu için biten ajanların boşta DB bağlantıları kapatıldı." },
     { at: "03.11 18:40", text: "Fable devam: Antigravity devri git ile doğrulandı. Erkan açıklaması: simülatif = animasyonlu → radar T13 animasyon katmanı yazıldı, incelendi ve kapandı (08ff735, 43dbe2e). UX T10 ve T13 kapandı; T12 sürüyor. P4 MyBar T2 çeviri, T3 misafir API (güvenlik sertleştirmeleriyle), T6 karşılama kapandı; T4 misafir sayfası sürüyor." },
     { at: "03.11 15:35", text: "Codex devamı (test koşmadan, statik incelemeyle): minibar kapanış düzeltmeleri e34a0ee ve 1dd4bc7, radar T6 düzeltme turu c29df98, P4 MyBar veri temeli c201ba3 (migration, olaylar, ayarlar), radar T8 düzeltme turu commit'siz. Codex sınırı doldu; Antigravity devam ediyor. DEVIR §1a Antigravity için ilk altı adımla yeniden yazıldı; Fable sıfırlanınca test/doğrulama." },
     { at: "03.11 14:58", text: "Dalga doğrulaması tamamlandı ve yeşil: npm run check (lint 0 hata, tsc temiz, 1781/1781 birim), next build, migration farkı yok, chromium e2e 153 geçti (1 kasıtlı atlama: radar T3), altı görünüm matrisi iki küçük düzeltmeyle temiz (7fbfaf0 KDS klavye odağı, 9d6d8b6 dokunma hedefleri), ratchet 2/2. Minibar P2/P3 görevleri tamamlandı olarak işaretlendi." },
