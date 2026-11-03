@@ -4,6 +4,8 @@ export interface ValidationResult {
   name: string;
   ok: boolean;
   detail?: string;
+  /** WARN: a failed check that is informational only (does not make the run fail). */
+  level?: "WARN";
 }
 
 export interface EntityCounters {
@@ -107,7 +109,7 @@ export class Report {
 
   hasFailures(): boolean {
     if (this.stepFailures.length > 0) return true;
-    if (this.checks.some((c) => !c.ok)) return true;
+    if (this.checks.some((c) => !c.ok && c.level !== "WARN")) return true;
     for (const d of this.entities.values()) if (d.failed > 0) return true;
     return false;
   }
@@ -140,7 +142,7 @@ export class Report {
     out.push("");
     if (this.checks.length === 0) out.push("- (bu çalıştırmada doğrulama yok)");
     for (const c of this.checks) {
-      out.push(`- ${c.ok ? "GEÇTİ" : "KALDI"} — ${c.name}${c.detail ? `: ${redact(c.detail)}` : ""}`);
+      out.push(`- ${c.ok ? "GEÇTİ" : c.level === "WARN" ? "UYARI" : "KALDI"} — ${c.name}${c.detail ? `: ${redact(c.detail)}` : ""}`);
     }
     out.push("");
     out.push("## Uyarılar");

@@ -328,7 +328,7 @@ describe("veritabanı", () => {
       expect(warn("HAVUZ_HAREKET_FARKI")).toBe(4);
       expect(report()).toContain("DIAMOND/Kola: kalan 60, Σ hareket 83");
       expect(report()).toContain("GEÇTİ — Havuz bakiyesi: toplam − kullanılan = kalan");
-      expect(report()).toContain("Havuz kalanı = Σ hareket (bilgi)");
+      expect(report()).toContain("UYARI — Havuz kalanı = Σ hareket");
 
       // Royal/Kola: opening +20, the 'bilinmez' use -1 -> 19 vs remaining 15; make the use 5 so Σ = remaining.
       await resetMigrationTarget();
@@ -337,6 +337,18 @@ describe("veritabanı", () => {
       expect(await run()).toBe(0);
       expect(warn("HAVUZ_HAREKET_FARKI")).toBe(3);
       expect(report()).not.toContain("ROYAL/Kola: kalan");
+    });
+  });
+
+  describe("tarihsiz işlem", () => {
+    it("islem_tarihi boş olan işlem şimdiki zamanla yazılmaz: taşınmaz + uyarı, kalemleri de düşer", async () => {
+      await legacyExec(`UPDATE minibar_islemleri SET islem_tarihi = NULL WHERE id = 7`);
+      expect(await run()).toBe(0);
+      expect(warn("ISLEM_TARIHI_YOK")).toBe(1);
+      expect(await testDb.minibarTransaction.count()).toBe(5);
+      expect(row("minibarTx")[3]).toBeGreaterThanOrEqual(1);
+      expect(row("minibarTx")[5]).toBe(0);
+      expect(row("minibarTxItem")[5]).toBe(0);
     });
   });
 

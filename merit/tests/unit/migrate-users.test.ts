@@ -224,6 +224,31 @@ describe("e-posta", () => {
   });
 });
 
+describe("ek talep otel tahmini ve e-posta", () => {
+  it("birincil oteli olmayan talep eden: tek otel bağı varsa atanır, birden çoksa talep taşınmaz", async () => {
+    await legacyExec(`INSERT INTO kullanici_otel (id, kullanici_id, otel_id, olusturma_tarihi) VALUES (50, 10, 1, '2026-01-10 09:00:00')`);
+    expect(await run()).toBe(0);
+    expect((await testDb.stockRequest.findUniqueOrThrow({ where: { code: "KST-5" }, include: { hotel: true } })).hotel.code).toBe("DIAMOND");
+    expect(warn("TALEP_OTEL_BELIRSIZ")).toBe(0);
+
+    await resetMigrationTarget();
+    await loadLegacyFixture();
+    await legacyExec(`INSERT INTO kullanici_otel (id, kullanici_id, otel_id, olusturma_tarihi) VALUES (50, 10, 1, '2026-01-10 09:00:00'), (51, 10, 3, '2026-01-10 09:00:00')`);
+    expect(await run()).toBe(0);
+    expect(await testDb.stockRequest.findUnique({ where: { code: "KST-5" } })).toBeNull();
+    expect(warn("TALEP_OTEL_BELIRSIZ")).toBe(1);
+  });
+
+  it("e-posta küçük harfe çevrilir, kırpılır; yinelenen ikinci kullanıcıda boş kalır", async () => {
+    await legacyExec(`UPDATE kullanicilar SET email = '  Sistem@Example.TEST ' WHERE id = 2; UPDATE kullanicilar SET email = ' Depo@Example.Test ' WHERE id = 3`);
+    expect(await run()).toBe(0);
+    expect((await userByName("sistem1")).email).toBe("sistem@example.test");
+    expect((await userByName("admin")).email).toBeNull();
+    expect((await userByName("depo_cok")).email).toBe("depo@example.test");
+    expect(warn("EPOSTA_YINELENEN")).toBe(1);
+  });
+});
+
 describe("ek talepler", () => {
   it("durum tablosu, çift talep_no eki, aciliyet, otelsiz talep düşer, tanınmayan depo kullanıcısı aktör olur", async () => {
     expect(await run()).toBe(0);
@@ -236,7 +261,8 @@ describe("ek talepler", () => {
       ["KST-6", "BEKLEMEDE", "DIAMOND"],
     ]);
     expect(row("stockRequest")).toEqual([6, 5, 0, 1, 0, 0]);
-    expect(warn("TALEP_OTELSIZ")).toBe(1);
+    expect(warn("TALEP_OTEL_BELIRSIZ")).toBe(1);
+    expect(warn("TALEP_MIKTAR_DUZELTILDI")).toBe(1);
     expect(warn("DURUM_BILINMIYOR")).toBe(1);
 
     const first = reqs[0];

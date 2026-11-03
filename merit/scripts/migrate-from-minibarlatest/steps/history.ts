@@ -20,7 +20,7 @@ import { chunked, idOf, num, opt, readAll, req, streamRows, type Row } from "./s
 const asDate = (v: unknown): Date | null => (v instanceof Date && !Number.isNaN(v.getTime()) ? v : null);
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-interface RoomInfo {
+export interface RoomInfo {
   id: string;
   hotelId: string;
 }
@@ -48,11 +48,11 @@ export async function runHistory(ctx: StepContext): Promise<void> {
   await stepArchive(ctx);
 }
 
-async function loadMap(ctx: StepContext, entity: Parameters<IdMap["load"]>[0]): Promise<Map<string, string>> {
+export async function loadMap(ctx: StepContext, entity: Parameters<IdMap["load"]>[0]): Promise<Map<string, string>> {
   return ctx.tx((db) => ctx.ids(db).load(entity));
 }
 
-async function loadRooms(ctx: StepContext): Promise<Map<string, RoomInfo>> {
+export async function loadRooms(ctx: StepContext): Promise<Map<string, RoomInfo>> {
   const roomIdOf = await loadMap(ctx, "room");
   const rooms = await ctx.tx((db) =>
     db.room.findMany({ where: { id: { in: [...roomIdOf.values()] } }, select: { id: true, hotelId: true } }),
@@ -67,14 +67,14 @@ async function loadRooms(ctx: StepContext): Promise<Map<string, RoomInfo>> {
 }
 
 /** The migrated user, or the actor with a KULLANICI_YOK_AKTOR warning. */
-function userOrActor(ctx: StepContext, userIdOf: Map<string, string>, legacyId: unknown, where: string): string {
+export function userOrActor(ctx: StepContext, userIdOf: Map<string, string>, legacyId: unknown, where: string): string {
   const known = legacyId === null || legacyId === undefined ? undefined : userIdOf.get(idOf(legacyId));
   if (known) return known;
   ctx.report.warn("KULLANICI_YOK_AKTOR", "Eşlenmemiş kullanıcı yerine aktör yazıldı", where);
   return ctx.actorId;
 }
 
-const optUser = (userIdOf: Map<string, string>, legacyId: unknown): string | null =>
+export const optUser = (userIdOf: Map<string, string>, legacyId: unknown): string | null =>
   legacyId === null || legacyId === undefined ? null : (userIdOf.get(idOf(legacyId)) ?? null);
 
 // ---------------------------------------------------------------- MyBar
@@ -321,8 +321,13 @@ async function stepTransactions(ctx: StepContext): Promise<void> {
           continue;
         }
         const at = asDate(row.islem_tarihi);
-        if (!at) ctx.report.warn("ISLEM_TARIHI_YOK", "İşlem tarihi boş; şimdiki zaman yazıldı", `işlem ${legacyId}`);
-        const occurredAt = at ?? new Date();
+        if (!at) {
+          rep.dropped(1, "ISLEM_TARIHI_YOK");
+          itemRep.dropped(items.length, "ISLEM_TARIHI_YOK");
+          ctx.report.warn("ISLEM_TARIHI_YOK", "İşlem tarihi boş; satır taşınmadı", `işlem ${legacyId}`);
+          continue;
+        }
+        const occurredAt = at;
         const userId = userOrActor(ctx, userIdOf, row.personel_id, `işlem ${legacyId}: personel_id`);
         const matched = clean(row.islem_tipi).toLowerCase() === "ekstra_ekleme"
           ? matchMybar(
@@ -697,8 +702,9 @@ async function verifyPool(ctx: StepContext, pool: Map<string, PoolRow>, stockOf:
   }
   ctx.report.check({
     name: "Havuz kalanı = Σ hareket (bilgi)",
-    ok: true,
-    detail: `${ids.length} satırın ${diffs.length} tanesinde fark var (HAVUZ_HAREKET_FARKI uyarıları)`,
+    ok: diffs.length === 0,
+    level: "WARN",
+    detail: `${ids.length} satırın ${diffs.length} tanesinde fark var (HAVUZ_HAREKET_FARKI uyarıları; legacy hareket geçmişi eksik olabilir)`,
   });
 }
 
@@ -734,7 +740,7 @@ async function stepArchive(ctx: StepContext): Promise<void> {
     rep.existing(parents.length - todo.length);
     for (const part of chunked(todo, ctx.cfg.batch)) {
       await ctx.tx(async (db) => {
-        await db.legacyArchive.createMany({
+        const result = await db.legacyArchive.createMany({
           data: part.map((p) => ({
             legacyTable: a.table,
             legacyId: idOf(p.id),
@@ -742,7 +748,8 @@ async function stepArchive(ctx: StepContext): Promise<void> {
           })),
           skipDuplicates: true,
         });
-        rep.created(part.length);
+        rep.created(result.count);
+        rep.existing(part.length - result.count);
       });
     }
   }

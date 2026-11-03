@@ -59,10 +59,13 @@ async function stepUsers(ctx: StepContext): Promise<void> {
   rep.read(rows.length);
 
   const hotelIdOf = await loadMap(ctx, "hotel");
-  const { mapped, roles, taken } = await ctx.tx(async (db) => ({
+  const { mapped, roles, taken, emails } = await ctx.tx(async (db) => ({
     mapped: await ctx.ids(db).load("user"),
     roles: new Map((await db.role.findMany({ select: { id: true, code: true } })).map((r) => [r.code, r.id])),
     taken: new Set((await db.user.findMany({ select: { username: true } })).map((u) => u.username.toLowerCase())),
+    emails: new Set(
+      (await db.user.findMany({ where: { email: { not: null } }, select: { email: true } })).map((u) => (u.email ?? "").toLowerCase()),
+    ),
   }));
 
   // Hash families (counts only) and the users who must reset their password (names only).
@@ -127,6 +130,12 @@ async function stepUsers(ctx: StepContext): Promise<void> {
           const own = hotelsOfDepo.get(legacyId) ?? [];
           if (own.length === 1) hotelId = own[0];
         }
+        let email = orNull(row.email)?.toLowerCase() ?? null;
+        if (email && emails.has(email)) {
+          ctx.report.warn("EPOSTA_YINELENEN", "E-posta başka bir kullanıcıda var; bu kullanıcıda boş bırakıldı", `${username}: ${email}`);
+          email = null;
+        }
+        if (email) emails.add(email);
         const first = clean(row.ad);
         const last = clean(row.soyad);
         const id = IdMap.newId();
@@ -135,7 +144,7 @@ async function stepUsers(ctx: StepContext): Promise<void> {
           username,
           passwordHash: clean(row.sifre_hash),
           fullName: `${first} ${last}`.trim() || username,
-          email: orNull(row.email),
+          email,
           phone: orNull(row.telefon),
           roleId,
           hotelId: hotelId ?? null,
@@ -354,6 +363,14 @@ async function stepEmailLog(ctx: StepContext): Promise<void> {
 
 // ---------------------------------------------------------------- stock requests
 
+function requestedQty(ctx: StepContext, raw: unknown, row: Row): number {
+  const n = num(raw);
+  if (n === null || n < 1) {
+    ctx.report.warn("TALEP_MIKTAR_DUZELTILDI", "Talep miktarı 0/boş/negatifti; 1 yapıldı", `talep ${clean(row.talep_no)}: ${raw === null || raw === undefined ? "boş" : String(raw)}`);
+  }
+  return Math.max(1, n ?? 1);
+}
+
 async function stepStockRequests(ctx: StepContext): Promise<void> {
   const rep = ctx.report.entity("stockRequest");
   const itemRep = ctx.report.entity("stockRequestItem");
@@ -384,10 +401,13 @@ async function stepStockRequests(ctx: StepContext): Promise<void> {
   const { mapped, codes, userHotel } = await ctx.tx(async (db) => {
     const ids = [...userIdOf.values()];
     const users = await db.user.findMany({ where: { id: { in: ids } }, select: { id: true, hotelId: true } });
-    const links = await db.userHotel.findMany({ where: { userId: { in: ids } }, orderBy: { createdAt: "asc" }, select: { userId: true, hotelId: true } });
+    const links = await db.userHotel.findMany({ where: { userId: { in: ids } }, select: { userId: true, hotelId: true } });
     const hotelOf = new Map<string, string>();
     for (const u of users) if (u.hotelId) hotelOf.set(u.id, u.hotelId);
-    for (const l of links) if (!hotelOf.has(l.userId)) hotelOf.set(l.userId, l.hotelId);
+    // A requester without a primary hotel gets one only when exactly one hotel link exists (never a guess).
+    const linksOf = new Map<string, string[]>();
+    for (const l of links) linksOf.set(l.userId, [...(linksOf.get(l.userId) ?? []), l.hotelId]);
+    for (const [userId, list] of linksOf) if (!hotelOf.has(userId) && list.length === 1) hotelOf.set(userId, list[0]);
     return {
       mapped: await ctx.ids(db).load("stockRequest"),
       codes: new Set((await db.stockRequest.findMany({ select: { code: true } })).map((r) => r.code)),
@@ -424,7 +444,7 @@ async function stepStockRequests(ctx: StepContext): Promise<void> {
         if (!requesterId || !hotelId) {
           rep.dropped(1, "TALEP_OTELSIZ");
           itemRep.dropped(items.length, "TALEP_OTELSIZ");
-          ctx.report.warn("TALEP_OTELSIZ", "Talep eden kullanıcının oteli belirlenemedi; talep taşınmadı", `talep ${clean(row.talep_no)}`);
+          ctx.report.warn("TALEP_OTEL_BELIRSIZ", "Talep eden kullanıcının oteli belirlenemedi (birincil otel yok, otel bağı bire eşit değil); talep taşınmadı", `talep ${clean(row.talep_no)}`);
           continue;
         }
         let handledById: string | null = null;
@@ -468,7 +488,7 @@ async function stepStockRequests(ctx: StepContext): Promise<void> {
           itemCreates.push({
             requestId: id,
             productId,
-            requestedQty: Math.max(1, num(d.talep_miktari) ?? 1),
+            requestedQty: requestedQty(ctx, d.talep_miktari, row),
             approvedQty: num(d.onaylanan_miktar),
             deliveredQty: num(d.teslim_edilen_miktar),
             urgency: clean(d.aciliyet).toLowerCase() === "acil" ? "ACIL" : "NORMAL",
