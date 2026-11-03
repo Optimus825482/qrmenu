@@ -1,6 +1,7 @@
 // Client-safe: shared by the server (lib/realtime.ts, which imports pg) and the browser (useSse).
 // Keep this file free of server imports.
 import type { RoleKind } from "@/generated/prisma/client";
+import { MINIBAR_EVENTS } from "@/modules/minibar/events";
 
 export type MeritEvent = {
   type: string;
@@ -58,6 +59,9 @@ export const SSE_EVENT_TYPES: readonly string[] = [
   "scan.room",
   // Radar G1: published by the minibar module, previously never reached the shell.
   "mybar.created",
+  // Minibar completion: typed events of the stock, room-check, DND, task and occupancy flows.
+  // `roomcheck.done` stays out on purpose: the radar subscribes to it explicitly (radar-normalize.test.ts pins this).
+  ...MINIBAR_EVENTS.filter((t) => t !== "roomcheck.done"),
 ];
 
 /** Event types a guest (QR menu visitor) stream may carry. */

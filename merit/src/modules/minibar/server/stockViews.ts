@@ -8,9 +8,10 @@ import { assertCan } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDateStart, TZ } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
-import { MINIBAR_EVENTS } from "../stockEvents";
+import { STOCK_CHANGED } from "../events";
+import { STATUS_RANK, type StockStatus, stockStatus } from "../stockStatus";
 import { addDays } from "./dates";
-import { isDepoOperator, STATUS_RANK, type StockStatus, stockStatus } from "./stockRequests";
+import { isDepoOperator } from "./stockRequests";
 
 /*
  * Read models of the hotel pool for the floor supervisor ("stoklarım", "kritik stoklar", product history,
@@ -155,7 +156,7 @@ export async function setCriticalLevel(
     });
     await publish(
       {
-        type: MINIBAR_EVENTS.stockChanged,
+        type: STOCK_CHANGED,
         hotelId,
         roleKinds: ["SISTEM", "YONETIM", "MINIBAR"],
         payload: { productId, remainingQty: row.remainingQty, status: stockStatus(row.remainingQty, level) },

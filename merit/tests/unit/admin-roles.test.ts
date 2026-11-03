@@ -164,20 +164,20 @@ describe("roles: yaşam döngüsü", () => {
 });
 
 describe("permissions: matris ve canlı etki", () => {
-  it("R-OTM için MR'de MB-TUK D=false: MR'de can false, PREMIUM'de true; audit + herkese yayın", async () => {
+  it("R-OTM için MR'de MB-TAN D=false: MR'de can false, PREMIUM'de true; audit + herkese yayın", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
     const mr = await hotelId("ROYAL");
     const mrp = await hotelId("PREMIUM");
     const ctxOtm = await otm();
-    expect(await can(ctxOtm, "MB-TUK", "D", mr)).toBe(true);
+    expect(await can(ctxOtm, "MB-TAN", "D", mr)).toBe(true);
 
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", { V: true, O: true, D: false, A: true, R: false });
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", { V: true, O: true, D: false, A: true, R: false });
 
-    expect(await can(ctxOtm, "MB-TUK", "D", mr)).toBe(false);
-    expect(await can(ctxOtm, "MB-TUK", "V", mr)).toBe(true);
-    expect(await can(ctxOtm, "MB-TUK", "D", mrp)).toBe(true);
-    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toMatchObject({ canEdit: false, canView: true });
+    expect(await can(ctxOtm, "MB-TAN", "D", mr)).toBe(false);
+    expect(await can(ctxOtm, "MB-TAN", "V", mr)).toBe(true);
+    expect(await can(ctxOtm, "MB-TAN", "D", mrp)).toBe(true);
+    expect(await permRow("R-OTM", "MB-TAN", "ROYAL")).toMatchObject({ canEdit: false, canView: true });
     expect(await testDb.auditLog.count({ where: { action: "PERM_SET_SCREEN", hotelId: mr } })).toBe(1);
     const changed = permissionEvents();
     expect(changed).toHaveLength(1);
@@ -200,18 +200,18 @@ describe("permissions: matris ve canlı etki", () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
     const mr = await hotelId("ROYAL");
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", ONLY_V);
-    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).not.toBeNull();
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", NONE);
-    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toBeNull();
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", NONE);
-    expect(await permRow("R-OTM", "MB-TUK", null)).not.toBeNull();
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", ONLY_V);
+    expect(await permRow("R-OTM", "MB-TAN", "ROYAL")).not.toBeNull();
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", NONE);
+    expect(await permRow("R-OTM", "MB-TAN", "ROYAL")).toBeNull();
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", NONE);
+    expect(await permRow("R-OTM", "MB-TAN", null)).not.toBeNull();
   });
 
   it("sistem kapsamlı izin yazımı hotelId'siz denetlenir; otel kapsamlısı otel kimliğiyle", async () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
-    await permissions.setScreen(admin, role.id, null, "MB-TUK", ONLY_V);
+    await permissions.setScreen(admin, role.id, null, "MB-TAN", ONLY_V);
     await permissions.setModule(admin, role.id, null, "MINIBAR", false);
     const rows = await testDb.auditLog.findMany({
       where: { action: { in: ["PERM_SET_SCREEN", "PERM_SET_MODULE"] } },
@@ -229,13 +229,13 @@ describe("permissions: matris ve canlı etki", () => {
     expect(system.modules.map((m) => m.moduleKey)).toEqual(["MINIBAR", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"]);
 
     const before = await permissions.matrix(admin, role.id, mr);
-    expect(before.screens.find((s) => s.code === "MB-TUK")).toMatchObject({ inherited: true, V: true, D: true });
+    expect(before.screens.find((s) => s.code === "MB-TAN")).toMatchObject({ inherited: true, V: true, D: true });
     expect(before.modules.find((m) => m.moduleKey === "MINIBAR")).toMatchObject({ enabled: true, inherited: true });
 
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", ONLY_V);
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", ONLY_V);
     await permissions.setModule(admin, role.id, mr, "MINIBAR", false);
     const after = await permissions.matrix(admin, role.id, mr);
-    expect(after.screens.find((s) => s.code === "MB-TUK")).toMatchObject({ inherited: false, V: true, O: false, D: false });
+    expect(after.screens.find((s) => s.code === "MB-TAN")).toMatchObject({ inherited: false, V: true, O: false, D: false });
     expect(after.modules.find((m) => m.moduleKey === "MINIBAR")).toMatchObject({ enabled: false, inherited: false });
     expect(after.screens.find((s) => s.code === "MB-ZIM")?.inherited).toBe(true);
     expect(await testDb.auditLog.count({ where: { action: "PERM_SET_MODULE" } })).toBe(1);
@@ -247,7 +247,7 @@ describe("permissions: matris ve canlı etki", () => {
     const mr = await hotelId("ROYAL");
     const ctxOtm = await otm();
     await permissions.setModule(admin, role.id, mr, "MINIBAR", false);
-    expect(await can(ctxOtm, "MB-TUK", "V", mr)).toBe(false);
+    expect(await can(ctxOtm, "MB-TAN", "V", mr)).toBe(false);
     await expect(permissions.setModule(admin, role.id, mr, "CORE", false)).rejects.toMatchObject({ code: "VALIDATION" });
   });
 
@@ -255,13 +255,13 @@ describe("permissions: matris ve canlı etki", () => {
     const admin = await sys();
     const role = await roleByCode("R-OTM");
     const mr = await hotelId("ROYAL");
-    await permissions.setScreen(admin, role.id, mr, "MB-TUK", ONLY_V);
-    await permissions.setScreen(admin, role.id, await hotelId("PREMIUM"), "MB-TUK", ONLY_V);
+    await permissions.setScreen(admin, role.id, mr, "MB-TAN", ONLY_V);
+    await permissions.setScreen(admin, role.id, await hotelId("PREMIUM"), "MB-TAN", ONLY_V);
     await permissions.setModule(admin, role.id, mr, "MINIBAR", false);
     expect(await permissions.resetHotelOverrides(admin, role.id, mr)).toEqual({ screens: 1, modules: 1 });
-    expect(await permRow("R-OTM", "MB-TUK", "ROYAL")).toBeNull();
-    expect(await permRow("R-OTM", "MB-TUK", "PREMIUM")).not.toBeNull();
-    expect(await permRow("R-OTM", "MB-TUK", null)).not.toBeNull();
+    expect(await permRow("R-OTM", "MB-TAN", "ROYAL")).toBeNull();
+    expect(await permRow("R-OTM", "MB-TAN", "PREMIUM")).not.toBeNull();
+    expect(await permRow("R-OTM", "MB-TAN", null)).not.toBeNull();
     expect(await testDb.auditLog.count({ where: { action: "PERM_RESET_HOTEL" } })).toBe(1);
   });
 

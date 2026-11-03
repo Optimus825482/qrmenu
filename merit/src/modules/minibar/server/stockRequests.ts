@@ -11,7 +11,8 @@ import { businessDate } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import type { Page } from "@/modules/core/server/admin/listQuery";
 import { notify } from "@/modules/core/server/notifications";
-import { MINIBAR_EVENTS } from "../stockEvents";
+import { STOCK_CHANGED, STOCKREQUEST_CREATED, STOCKREQUEST_UPDATED } from "../events";
+import { stockStatus, suggestQty, urgencyFor } from "../stockStatus";
 import { dayRange } from "./dates";
 import { lockStocks } from "./poolStock";
 
@@ -21,32 +22,8 @@ import { lockStocks } from "./poolStock";
  * Every transition is one transaction: FOR UPDATE on the request row, audit, owner notification, event.
  * Prices never appear in any output of this module.
  *
- * Hand-off (Task 1/3): `stockStatus`/`suggestQty`/`urgencyFor` belong in `minibar/stockStatus.ts` and
- * `addToPoolTx` in `server/pool.ts`; they are defined here until those tasks land.
+ * Hand-off (Task 3): `addToPoolTx` moves to `server/pool.ts`.
  */
-
-// ---------------------------------------------------------------- stock status (Task 1 hand-off)
-
-export type StockStatus = "STOKOUT" | "KRITIK" | "DIKKAT" | "NORMAL";
-
-/** 0 -> STOKOUT; <= critical -> KRITIK; <= critical x 1.5 -> DIKKAT; otherwise NORMAL. */
-export function stockStatus(remaining: number, critical: number): StockStatus {
-  if (remaining <= 0) return "STOKOUT";
-  if (remaining <= critical) return "KRITIK";
-  if (remaining <= critical * 1.5) return "DIKKAT";
-  return "NORMAL";
-}
-
-/** How many units to ask for so the pool reaches `critical x factor`. */
-export function suggestQty(remaining: number, critical: number, factor: number): number {
-  return Math.max(0, Math.ceil(critical * factor - remaining));
-}
-
-export function urgencyFor(status: StockStatus): Urgency {
-  return status === "STOKOUT" || status === "KRITIK" ? "ACIL" : "NORMAL";
-}
-
-export const STATUS_RANK: Record<StockStatus, number> = { STOKOUT: 0, KRITIK: 1, DIKKAT: 2, NORMAL: 3 };
 
 // ---------------------------------------------------------------- shared helpers
 
@@ -111,7 +88,7 @@ async function announce(
   );
   await publish(
     {
-      type: MINIBAR_EVENTS.stockRequestUpdated,
+      type: STOCKREQUEST_UPDATED,
       hotelId: req.hotelId,
       roleKinds: AUDIENCE,
       payload: { id: req.id, code: req.code, status },
@@ -288,7 +265,7 @@ export async function createStockRequest(
     await notify(
       {
         recipients: { hotelId, roleCodes: ["R-DEP"] },
-        type: MINIBAR_EVENTS.stockRequestCreated,
+        type: STOCKREQUEST_CREATED,
         title: "Yeni ek talep",
         body: `${code} numaralı ek talep oluşturuldu (${data.items.length} kalem)`,
         refType: "StockRequest",
@@ -298,7 +275,7 @@ export async function createStockRequest(
     );
     await publish(
       {
-        type: MINIBAR_EVENTS.stockRequestCreated,
+        type: STOCKREQUEST_CREATED,
         hotelId,
         roleKinds: AUDIENCE,
         payload: { id: created.id, code },
@@ -491,7 +468,7 @@ export async function deliverRequest(
     for (const p of pool) {
       await publish(
         {
-          type: MINIBAR_EVENTS.stockChanged,
+          type: STOCK_CHANGED,
           hotelId: locked.hotelId,
           roleKinds: AUDIENCE,
           payload: {
@@ -574,7 +551,7 @@ export async function cancelRequest(
     } else {
       await publish(
         {
-          type: MINIBAR_EVENTS.stockRequestUpdated,
+          type: STOCKREQUEST_UPDATED,
           hotelId: locked.hotelId,
           roleKinds: AUDIENCE,
           payload: { id, code: locked.code, status: "IPTAL" },

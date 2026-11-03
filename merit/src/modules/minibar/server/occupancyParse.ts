@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { GuestRecordKind } from "@/generated/prisma/client";
 import { DomainError } from "@/lib/result";
+import { OCCUPANCY_MAX_BYTES } from "../constants";
 
 /**
  * Occupancy workbook parser (pure: no database, no clock). Two layouts are accepted, both as in
@@ -11,8 +12,8 @@ import { DomainError } from "@/lib/result";
 
 export type UploadKind = GuestRecordKind;
 
-/** Upload size limit (.xlsx only). */
-export const OCCUPANCY_MAX_BYTES = 10 * 1024 * 1024;
+/** Upload size limit (.xlsx only): defined in ../constants, re-exported for the callers of this module. */
+export { OCCUPANCY_MAX_BYTES };
 /** Sheet size limits (a hotel has far fewer rows/columns; larger files are rejected before scanning). */
 export const OCCUPANCY_MAX_ROWS = 5000;
 export const OCCUPANCY_MAX_COLUMNS = 64;

@@ -5,13 +5,13 @@ import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import {
   consumedToday,
-  DND_DOUBLE_TAP_MS,
   getBusinessDate,
   lockRow,
   notifyChange,
   roomCatalogue,
 } from "./minibarCommon";
 import { nicosiaInstant } from "./dates";
+import { DEFAULT_ARRIVAL_TIME, DEFAULT_DEPARTURE_TIME, DND_MIN_GAP_SECONDS } from "../constants";
 import { deductFromPool } from "./poolStock";
 import type {
   FloorSummary,
@@ -240,18 +240,18 @@ export async function getFloorRoomsData(floorId: string, hotelId: string) {
       statusLabel = "⚠️ Çakışma (Çıkış + Giriş)";
       const arr = roomGuestRecords.find((g) => g.kind === "ARRIVAL");
       const dep = roomGuestRecords.find((g) => g.kind === "DEPARTURE");
-      arrivalTime = arr?.arrivalTime || taskItem?.arrivalTime || "14:00";
-      departureTime = dep?.departureTime || taskItem?.departureTime || "12:00";
+      arrivalTime = arr?.arrivalTime || taskItem?.arrivalTime || DEFAULT_ARRIVAL_TIME;
+      departureTime = dep?.departureTime || taskItem?.departureTime || DEFAULT_DEPARTURE_TIME;
     } else if (hasArrival) {
       status = "arrival";
       statusLabel = "Giriş (Arrival)";
       const arr = roomGuestRecords.find((g) => g.kind === "ARRIVAL");
-      arrivalTime = arr?.arrivalTime || taskItem?.arrivalTime || "14:00";
+      arrivalTime = arr?.arrivalTime || taskItem?.arrivalTime || DEFAULT_ARRIVAL_TIME;
     } else if (hasDeparture) {
       status = "departure";
       statusLabel = "Çıkış (Departure)";
       const dep = roomGuestRecords.find((g) => g.kind === "DEPARTURE");
-      departureTime = dep?.departureTime || taskItem?.departureTime || "12:00";
+      departureTime = dep?.departureTime || taskItem?.departureTime || DEFAULT_DEPARTURE_TIME;
     } else if (hasInHouse) {
       status = "in_house";
       statusLabel = "Konaklama (In-House)";
@@ -527,7 +527,7 @@ export async function submitRoomDnd(params: {
     if (existing?.status === "TAMAMLANDI") {
       throw new DomainError("CONFLICT", "Bu oda için DND kontrolü bugün zaten tamamlandı.");
     }
-    if (existing && now.getTime() - existing.lastAt.getTime() < DND_DOUBLE_TAP_MS) {
+    if (existing && now.getTime() - existing.lastAt.getTime() < DND_MIN_GAP_SECONDS * 1000) {
       throw new DomainError("CONFLICT", "DND az önce kaydedildi (çift dokunma). Birkaç saniye sonra tekrar deneyin.");
     }
 

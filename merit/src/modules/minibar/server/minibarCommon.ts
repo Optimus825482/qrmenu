@@ -15,9 +15,6 @@ export function getBusinessDate(dateObj: Date = new Date()): Date {
   return businessDay(businessDate(dateObj));
 }
 
-/** A double tap on the DND button: a second mark within this window is rejected. */
-export const DND_DOUBLE_TAP_MS = 30_000;
-
 /** Products of a room's setup catalogue (setups assigned to its room type) with their per-day cap. */
 export type RoomCatalogue = {
   setups: Awaited<ReturnType<typeof loadSetups>>;

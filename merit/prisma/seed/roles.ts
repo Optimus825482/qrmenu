@@ -63,63 +63,109 @@ const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
 
 /**
- * P5 limits on QR_MENU / QR_ORDER screens, applied BEFORE the profile rule (actions intersect limit).
- * A limit lists the actions a screen keeps (empty = no row at all).
- * `approve`: on these screens the A action stays only with the listed roles.
- * Migration 0005 repeats the same rules for databases seeded earlier.
+ * One list of screen limits applied to module screens (never CORE, never `modules: "ALL"` roles). Each entry
+ * names the plan that introduced it and which roles it matches; `keep` maps a screen code to the actions that
+ * survive (intersection with the profile actions, `[]` = no row at all). Entries apply in order.
+ *
+ * Migrations repeat the new entries for databases seeded earlier: 0005 (P5), 20261102214000 (R-KAT) and
+ * 20261103093000 (P2/P3, the `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
-export const P5_SCREEN_LIMITS = {
-  /** Field staff of an outlet (kind OUTLET, profile SAHA). */
-  outletField: {
-    "QM-MEN": ["V"],
-    "QM-TEM": ["V"],
-    "QM-RAP": [],
-    "QS-RAP": [],
-    "QS-KAS": [],
-    "QS-FIS": [],
-    "QS-IPT": [],
-    "QS-KDS": ["V"],
-  } as Record<string, readonly Action[]>,
-  /** Kitchen roles (kind MUTFAK). */
-  kitchen: {
-    "QS-KAS": [],
-    "QS-FIS": [],
-    "QS-IPT": [],
-    "QM-MEN": [],
-    "QM-TEM": [],
-    "QM-RAP": [],
-    "QS-KUY": ["V"],
-  } as Record<string, readonly Action[]>,
-  approve: {
-    screens: ["QS-KUY", "QS-IPT"] as readonly string[],
-    roles: ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS", "R-GAR"] as readonly string[],
+export type ScreenLimit = {
+  plan: "P5" | "P2" | "P3" | "P7";
+  match?: {
+    kind?: RoleKind;
+    profile?: Profile;
+    codes?: readonly string[];
+    exceptCodes?: readonly string[];
+  };
+  keep?: Record<string, readonly Action[]>;
+};
+
+/** P5: field staff of an outlet and kitchen roles see less, the A action on QS-KUY / QS-IPT is role-bound. */
+const P5_APPROVERS = ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS", "R-GAR"] as const;
+
+export const SCREEN_LIMITS: ScreenLimit[] = [
+  {
+    plan: "P5",
+    match: { kind: "OUTLET", profile: "SAHA" },
+    keep: {
+      "QM-MEN": ["V"],
+      "QM-TEM": ["V"],
+      "QM-RAP": [],
+      "QS-RAP": [],
+      "QS-KAS": [],
+      "QS-FIS": [],
+      "QS-IPT": [],
+      "QS-KDS": ["V"],
+    },
   },
-};
+  {
+    plan: "P5",
+    match: { kind: "MUTFAK" },
+    keep: {
+      "QS-KAS": [],
+      "QS-FIS": [],
+      "QS-IPT": [],
+      "QM-MEN": [],
+      "QM-TEM": [],
+      "QM-RAP": [],
+      "QS-KUY": ["V"],
+    },
+  },
+  {
+    plan: "P5",
+    match: { exceptCodes: P5_APPROVERS },
+    keep: { "QS-KUY": ["V", "O", "D", "R"], "QS-IPT": ["V", "O", "D", "R"] },
+  },
+  // P2: definitions and pool (Zimmet Havuzu).
+  { plan: "P2", match: { codes: ["R-OTM"] }, keep: { "MB-TAN": ["V", "O", "D"], "MB-ZIM": ["V"] } },
+  { plan: "P2", match: { codes: ["R-DEP"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "O", "D"] } },
+  { plan: "P2", match: { codes: ["R-HKS"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "R"] } },
+  { plan: "P2", match: { codes: ["R-KAT"] }, keep: { "MB-TAN": [], "MB-ZIM": ["V", "D"] } },
+  // P3: floor operation, requests, occupancy upload, DND.
+  {
+    plan: "P3",
+    match: { codes: ["R-KAT"] },
+    keep: {
+      "MB-KAT": ["V"],
+      "MB-KF": ["V"],
+      "MB-TUK": ["V", "O", "D"],
+      "MB-ZIM": ["V", "D"],
+      "MB-TAL": ["V", "O"],
+      "MB-DND": ["V"],
+      "MB-DOL": [],
+    },
+  },
+  {
+    plan: "P3",
+    match: { codes: ["R-DEP"] },
+    keep: {
+      "MB-KAT": ["V"],
+      "MB-KF": [],
+      "MB-TUK": ["V"],
+      "MB-ZIM": ["V", "O", "D"],
+      "MB-TAL": ["V", "D", "A"],
+      "MB-DOL": ["V", "O", "D"],
+      "MB-DND": ["V"],
+    },
+  },
+  { plan: "P3", match: { codes: ["R-OTM"] }, keep: { "MB-KF": [], "MB-TUK": ["V"] } },
+];
 
-/**
- * P3 limits for the floor supervisor (R-KAT): no definitions or occupancy uploads, and on the pool screen
- * only view + critical-level update (D). R-DEP keeps its profile rights. Migration 20261102214000 repeats
- * the same rules for databases seeded earlier.
- */
-export const P3_SCREEN_LIMITS: Record<string, Record<string, readonly Action[]>> = {
-  "R-KAT": { "MB-TAN": [], "MB-DOL": [], "MB-ZIM": ["V", "D"] },
-};
+function matches(role: RoleDef, m: ScreenLimit["match"]): boolean {
+  if (!m) return true;
+  if (m.kind && role.kind !== m.kind) return false;
+  if (m.profile && role.profile !== m.profile) return false;
+  if (m.codes && !m.codes.includes(role.code)) return false;
+  if (m.exceptCodes && m.exceptCodes.includes(role.code)) return false;
+  return true;
+}
 
-function applyP5Limits(role: RoleDef, screen: ScreenDef, actions: readonly Action[]): readonly Action[] {
+function applyScreenLimits(role: RoleDef, screen: ScreenDef, actions: readonly Action[]): readonly Action[] {
   let result = actions;
-  const byRole =
-    role.kind === "OUTLET" && role.profile === "SAHA"
-      ? P5_SCREEN_LIMITS.outletField
-      : role.kind === "MUTFAK"
-        ? P5_SCREEN_LIMITS.kitchen
-        : undefined;
-  const limit = byRole?.[screen.code];
-  if (limit) result = result.filter((a) => limit.includes(a));
-  const p3 = P3_SCREEN_LIMITS[role.code]?.[screen.code];
-  if (p3) result = result.filter((a) => p3.includes(a));
-  const { screens, roles } = P5_SCREEN_LIMITS.approve;
-  if (screens.includes(screen.code) && !roles.includes(role.code)) {
-    result = result.filter((a) => a !== "A");
+  for (const limit of SCREEN_LIMITS) {
+    const keep = limit.keep?.[screen.code];
+    if (keep && matches(role, limit.match)) result = result.filter((a) => keep.includes(a));
   }
   return result;
 }
@@ -162,5 +208,5 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
   }
 
   if (!role.modules.includes(screen.moduleKey)) return [];
-  return applyP5Limits(role, screen, PROFILE_ACTIONS[role.profile]);
+  return applyScreenLimits(role, screen, PROFILE_ACTIONS[role.profile]);
 }

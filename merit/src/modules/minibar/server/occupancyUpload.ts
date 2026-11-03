@@ -11,11 +11,11 @@ import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
 import { removeUpload, saveUpload } from "@/lib/uploads";
 import { audit } from "@/modules/core/server/audit";
+import { UPLOAD_KINDS } from "../constants";
 import { OCCUPANCY_UPLOADED } from "../events";
 import { OCCUPANCY_MAX_BYTES, parseWorkbook, type ParsedRow, type RowError, type UploadKind } from "./occupancyParse";
 
 const SCREEN = "MB-DOL";
-export const UPLOAD_KINDS: readonly UploadKind[] = ["IN_HOUSE", "ARRIVAL", "DEPARTURE"];
 const MAX_ERRORS = 50;
 const MAX_WARNINGS = 20;
 const MAX_SAMPLE = 20;

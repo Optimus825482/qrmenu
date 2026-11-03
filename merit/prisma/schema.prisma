@@ -235,35 +235,35 @@ model Hotel {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  modules             HotelModule[]
-  floors              Floor[]
-  roomTypes           RoomType[]
-  rooms               Room[]
-  outlets             Outlet[]
-  users               User[]
-  userHotels          UserHotel[]
-  roleScreenPerms     RoleScreenPermission[]
-  roleModuleAccesses  RoleModuleAccess[]
-  sessions            UserSession[]
-  settings            Setting[]
-  notifications       Notification[]
-  auditLogs           AuditLog[]
-  roomTypeSetups      RoomTypeSetup[]
-  stocks              HotelStock[]
-  stockMovements      HotelStockMovement[]
-  minibarTransactions MinibarTransaction[]
-  roomDnds            RoomDnd[]
-  mybarRequests       MybarRequest[]
-  guestRecords        GuestRecord[]
-  occupancyUploads    OccupancyUpload[]
-  uploadTasks         UploadTask[]
-  dailyTasks          DailyTask[]
-  stockRequests       StockRequest[]
+  modules                   HotelModule[]
+  floors                    Floor[]
+  roomTypes                 RoomType[]
+  rooms                     Room[]
+  outlets                   Outlet[]
+  users                     User[]
+  userHotels                UserHotel[]
+  roleScreenPerms           RoleScreenPermission[]
+  roleModuleAccesses        RoleModuleAccess[]
+  sessions                  UserSession[]
+  settings                  Setting[]
+  notifications             Notification[]
+  auditLogs                 AuditLog[]
+  roomTypeSetups            RoomTypeSetup[]
+  stocks                    HotelStock[]
+  stockMovements            HotelStockMovement[]
+  minibarTransactions       MinibarTransaction[]
+  roomDnds                  RoomDnd[]
+  mybarRequests             MybarRequest[]
+  guestRecords              GuestRecord[]
+  occupancyUploads          OccupancyUpload[]
+  uploadTasks               UploadTask[]
+  dailyTasks                DailyTask[]
+  stockRequests             StockRequest[]
   minibarCorrectionRequests MinibarCorrectionRequest[]
-  orders              Order[]
-  orderCounters       OrderCounter[]
-  printers            Printer[]
-  printJobs           PrintJob[]
+  orders                    Order[]
+  orderCounters             OrderCounter[]
+  printers                  Printer[]
+  printJobs                 PrintJob[]
 
   @@map("hotels")
 }
@@ -446,38 +446,38 @@ model User {
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  role                 Role                 @relation(fields: [roleId], references: [id], onDelete: Restrict)
-  hotel                Hotel?               @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  supervisor           User?                @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
-  supervisees          User[]               @relation("UserSupervisor")
-  userHotels           UserHotel[]
-  outletMemberships    OutletMember[]
-  tableAssignments     TableAssignment[]
-  sessions             UserSession[]
-  notifications        Notification[]
-  pushSubscriptions    PushSubscription[]
-  auditLogs            AuditLog[]
-  qrScanLogs           QrScanLog[]
-  stockMovements       HotelStockMovement[]
-  minibarTransactions  MinibarTransaction[]
-  roomChecks           RoomCheck[]
-  roomDndChecks        RoomDndCheck[]
-  mybarSeen            MybarRequest[]       @relation("MybarSeenBy")
-  mybarCompleted       MybarRequest[]       @relation("MybarCompletedBy")
-  mybarCancelled       MybarRequest[]       @relation("MybarCancelledBy")
-  occupancyUploads     OccupancyUpload[]
-  taskStatusLogs       TaskStatusLog[]
-  stockRequestsMade    StockRequest[]       @relation("StockRequestRequestedBy")
-  stockRequestsHandled StockRequest[]       @relation("StockRequestHandledBy")
-  emailLogs            EmailLog[]
-  ordersApproved       Order[]              @relation("OrderApprovedBy")
-  ordersPhoneConfirmed Order[]              @relation("OrderPhoneConfirmedBy")
-  ordersAssigned       Order[]              @relation("OrderAssignedWaiter")
-  ordersServed         Order[]              @relation("OrderServedBy")
-  ordersDelivered      Order[]              @relation("OrderDeliveredBy")
-  orderEvents          OrderEvent[]
-  waiterCallsResolved  WaiterCall[]
-  correctionRequestsMade MinibarCorrectionRequest[] @relation("MinibarCorrectionRequester")
+  role                       Role                       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  hotel                      Hotel?                     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  supervisor                 User?                      @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
+  supervisees                User[]                     @relation("UserSupervisor")
+  userHotels                 UserHotel[]
+  outletMemberships          OutletMember[]
+  tableAssignments           TableAssignment[]
+  sessions                   UserSession[]
+  notifications              Notification[]
+  pushSubscriptions          PushSubscription[]
+  auditLogs                  AuditLog[]
+  qrScanLogs                 QrScanLog[]
+  stockMovements             HotelStockMovement[]
+  minibarTransactions        MinibarTransaction[]
+  roomChecks                 RoomCheck[]
+  roomDndChecks              RoomDndCheck[]
+  mybarSeen                  MybarRequest[]             @relation("MybarSeenBy")
+  mybarCompleted             MybarRequest[]             @relation("MybarCompletedBy")
+  mybarCancelled             MybarRequest[]             @relation("MybarCancelledBy")
+  occupancyUploads           OccupancyUpload[]
+  taskStatusLogs             TaskStatusLog[]
+  stockRequestsMade          StockRequest[]             @relation("StockRequestRequestedBy")
+  stockRequestsHandled       StockRequest[]             @relation("StockRequestHandledBy")
+  emailLogs                  EmailLog[]
+  ordersApproved             Order[]                    @relation("OrderApprovedBy")
+  ordersPhoneConfirmed       Order[]                    @relation("OrderPhoneConfirmedBy")
+  ordersAssigned             Order[]                    @relation("OrderAssignedWaiter")
+  ordersServed               Order[]                    @relation("OrderServedBy")
+  ordersDelivered            Order[]                    @relation("OrderDeliveredBy")
+  orderEvents                OrderEvent[]
+  waiterCallsResolved        WaiterCall[]
+  correctionRequestsMade     MinibarCorrectionRequest[] @relation("MinibarCorrectionRequester")
   correctionRequestsApproved MinibarCorrectionRequest[] @relation("MinibarCorrectionApprover")
 
   @@map("users")
@@ -677,6 +677,7 @@ model Notification {
   hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
 
   @@index([userId, isRead, createdAt])
+  @@index([type, refId, createdAt])
   @@map("notifications")
 }
 
@@ -820,7 +821,7 @@ model RoomTypeSetup {
   @@map("room_type_setups")
 }
 
-// CHECK (remaining_qty >= 0) lives in the migration SQL.
+// CHECKs (remaining/used/total/critical >= 0, total - used = remaining) live in the migration SQL.
 model HotelStock {
   id            String   @id @default(cuid())
   hotelId       String   @map("hotel_id")
@@ -856,50 +857,56 @@ model HotelStockMovement {
   user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([hotelId, productId, createdAt])
+  @@index([hotelId, createdAt])
   @@map("hotel_stock_movements")
 }
 
 model MinibarTransaction {
-  id         String        @id @default(cuid())
-  hotelId    String        @map("hotel_id")
-  roomId     String        @map("room_id")
-  userId     String        @map("user_id")
-  type       MinibarTxType
-  legacyType String?       @map("legacy_type")
-  note       String?
-  occurredAt DateTime      @default(now()) @map("occurred_at") @db.Timestamptz(3)
-  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  id              String        @id @default(cuid())
+  hotelId         String        @map("hotel_id")
+  roomId          String        @map("room_id")
+  userId          String        @map("user_id")
+  type            MinibarTxType
+  legacyType      String?       @map("legacy_type")
+  note            String?
+  clientRequestId String?       @unique @map("client_request_id")
+  occurredAt      DateTime      @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  hotel              Hotel                     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
-  room               Room                      @relation(fields: [roomId], references: [id], onDelete: Restrict)
-  user               User                      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  hotel              Hotel                      @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room               Room                       @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user               User                       @relation(fields: [userId], references: [id], onDelete: Restrict)
   items              MinibarTransactionItem[]
   roomChecks         RoomCheck[]
   correctionRequests MinibarCorrectionRequest[]
 
   @@index([roomId, occurredAt])
   @@index([hotelId, occurredAt])
+  @@index([userId, occurredAt])
   @@map("minibar_transactions")
 }
 
 model MinibarTransactionItem {
-  id            String   @id @default(cuid())
-  transactionId String   @map("transaction_id")
-  productId     String   @map("product_id")
-  setupId       String?  @map("setup_id")
-  setupQty      Int      @default(0) @map("setup_qty")
-  startStock    Int      @default(0) @map("start_stock")
-  endStock      Int      @default(0) @map("end_stock")
-  consumed      Int      @default(0)
-  added         Int      @default(0)
-  purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
-  salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  id              String   @id @default(cuid())
+  transactionId   String   @map("transaction_id")
+  productId       String   @map("product_id")
+  setupId         String?  @map("setup_id")
+  setupQty        Int      @default(0) @map("setup_qty")
+  startStock      Int      @default(0) @map("start_stock")
+  endStock        Int      @default(0) @map("end_stock")
+  consumed        Int      @default(0)
+  added           Int      @default(0)
+  purchasePrice   Decimal? @map("purchase_price") @db.Decimal(10, 2)
+  salePrice       Decimal? @map("sale_price") @db.Decimal(10, 2)
+  legacyExtra     Int?     @map("legacy_extra")
+  isComplimentary Boolean  @default(false) @map("is_complimentary")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   transaction MinibarTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   product     Product            @relation(fields: [productId], references: [id], onDelete: Restrict)
   setup       Setup?             @relation(fields: [setupId], references: [id], onDelete: SetNull)
 
+  @@index([transactionId])
   @@map("minibar_transaction_items")
 }
 
@@ -948,17 +955,18 @@ model RoomCheck {
 }
 
 model RoomDnd {
-  id         String    @id @default(cuid())
-  hotelId    String    @map("hotel_id")
-  roomId     String    @map("room_id")
-  date       DateTime  @db.Date
-  count      Int       @default(1)
-  firstAt    DateTime  @default(now()) @map("first_at") @db.Timestamptz(3)
-  lastAt     DateTime  @default(now()) @map("last_at") @db.Timestamptz(3)
-  status     DndStatus @default(AKTIF)
-  taskItemId String?   @map("task_item_id")
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id             String    @id @default(cuid())
+  hotelId        String    @map("hotel_id")
+  roomId         String    @map("room_id")
+  date           DateTime  @db.Date
+  count          Int       @default(1)
+  firstAt        DateTime  @default(now()) @map("first_at") @db.Timestamptz(3)
+  lastAt         DateTime  @default(now()) @map("last_at") @db.Timestamptz(3)
+  status         DndStatus @default(AKTIF)
+  taskItemId     String?   @map("task_item_id")
+  reminderSentAt DateTime? @map("reminder_sent_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel    Hotel          @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   room     Room           @relation(fields: [roomId], references: [id], onDelete: Restrict)
@@ -966,6 +974,7 @@ model RoomDnd {
   checks   RoomDndCheck[]
 
   @@unique([roomId, date])
+  @@index([status, date])
   @@map("room_dnds")
 }
 
@@ -1053,24 +1062,26 @@ model GuestRecord {
   upload         OccupancyUpload? @relation(fields: [uploadId], references: [id], onDelete: SetNull)
   dailyTaskItems DailyTaskItem[]
 
+  @@index([hotelId, kind, arrivalDate, departureDate])
+  @@index([roomId, kind])
   @@map("guest_records")
 }
 
 model OccupancyUpload {
-  id        String       @id @default(cuid())
-  hotelId   String       @map("hotel_id")
-  code      String       @unique
-  fileName  String       @map("file_name")
-  kind      String
-  status    UploadStatus @default(YUKLENDI)
-  totalRows Int          @default(0) @map("total_rows")
-  okRows    Int          @default(0) @map("ok_rows")
-  errorRows Int          @default(0) @map("error_rows")
-  errors    Json         @default("[]")
-  storedPath String?     @map("stored_path")
-  userId    String       @map("user_id")
-  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id         String       @id @default(cuid())
+  hotelId    String       @map("hotel_id")
+  code       String       @unique
+  fileName   String       @map("file_name")
+  kind       String
+  status     UploadStatus @default(YUKLENDI)
+  totalRows  Int          @default(0) @map("total_rows")
+  okRows     Int          @default(0) @map("ok_rows")
+  errorRows  Int          @default(0) @map("error_rows")
+  errors     Json         @default("[]")
+  storedPath String?      @map("stored_path")
+  userId     String       @map("user_id")
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   hotel        Hotel         @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   user         User          @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -1136,7 +1147,9 @@ model DailyTaskItem {
   statusLogs  TaskStatusLog[]
   roomDnds    RoomDnd[]
 
+  @@unique([taskId, roomId])
   @@index([taskId])
+  @@index([roomId])
   @@map("daily_task_items")
 }
 
@@ -1174,6 +1187,7 @@ model StockRequest {
   handledBy   User?              @relation("StockRequestHandledBy", fields: [handledById], references: [id], onDelete: SetNull)
   items       StockRequestItem[]
 
+  @@index([hotelId, status])
   @@map("stock_requests")
 }
 
@@ -1265,14 +1279,14 @@ model MenuNode {
 }
 
 model MenuNodeTranslation {
-  id        String   @id @default(cuid())
-  nodeId    String   @map("node_id")
-  lang      String
-  name      String
-  detail    String?
-  isVerified Boolean @default(true) @map("is_verified")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id         String   @id @default(cuid())
+  nodeId     String   @map("node_id")
+  lang       String
+  name       String
+  detail     String?
+  isVerified Boolean  @default(true) @map("is_verified")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   node MenuNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
 
@@ -1488,18 +1502,42 @@ model PrintJob {
 }
 
 model OutletCallOption {
-  id           String    @id @default(cuid())
-  outletId     String    @map("outlet_id")
-  label        String    @db.VarChar(60)
-  translations Json      @default("{}")
-  callType     CallType  @map("call_type")
-  sortOrder    Int       @default(0) @map("sort_order")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id           String   @id @default(cuid())
+  outletId     String   @map("outlet_id")
+  label        String   @db.VarChar(60)
+  translations Json     @default("{}")
+  callType     CallType @map("call_type")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet Outlet @relation(fields: [outletId], references: [id], onDelete: Cascade)
 
   @@index([outletId, sortOrder])
   @@map("outlet_call_options")
+}
+
+/// Legacy (minibarlatest) id -> new id; makes the one-off migration idempotent.
+model LegacyIdMap {
+  entity    String   @db.VarChar(40)
+  legacyId  String   @map("legacy_id") @db.VarChar(120)
+  newId     String   @map("new_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@id([entity, legacyId])
+  @@index([entity, newId])
+  @@map("legacy_id_map")
+}
+
+/// Raw legacy rows with no counterpart in the new model (e.g. personel zimmet), kept for reference.
+model LegacyArchive {
+  id          String   @id @default(cuid())
+  legacyTable String   @map("legacy_table")
+  legacyId    String   @map("legacy_id")
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([legacyTable, legacyId])
+  @@map("legacy_personel_zimmet")
 }

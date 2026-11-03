@@ -1,16 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { businessDate, businessDay } from "@/lib/time";
 import { notify } from "@/modules/core/server/notifications";
+import { KIND_LABEL_TR, UPLOAD_KINDS } from "../constants";
 import { OCCUPANCY_MISSING } from "../events";
 import type { UploadKind } from "./occupancyParse";
 
 /** The three files a hotel uploads every day, in display order. */
-const KINDS: readonly UploadKind[] = ["IN_HOUSE", "ARRIVAL", "DEPARTURE"];
-const KIND_LABEL: Record<UploadKind, string> = {
-  IN_HOUSE: "In House",
-  ARRIVAL: "Arrivals",
-  DEPARTURE: "Departures",
-};
+const KINDS: readonly UploadKind[] = UPLOAD_KINDS;
+const KIND_LABEL = KIND_LABEL_TR;
 
 /** Active hotels whose MINIBAR module is on. */
 async function minibarHotels(): Promise<{ id: string; name: string }[]> {

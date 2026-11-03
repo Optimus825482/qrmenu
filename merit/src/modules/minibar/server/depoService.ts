@@ -153,7 +153,8 @@ export async function adjustHotelConsignmentStock(params: {
     const updatedStock = await tx.hotelStock.update({
       where: { id: stock.id },
       data: {
-        totalQty: prevTotal + (changeQuantity > 0 ? changeQuantity : 0),
+        // total and remaining move together so that total - used = remaining (DB CHECK).
+        totalQty: prevTotal + changeQuantity,
         remainingQty: newRem,
       },
     });
