@@ -141,6 +141,81 @@ aktifleştirmez ve elle yaptığınız tanımları ezmez; yalnız seed'deki üç
 varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
 yetkisi yoktur. Rehber yüzdesi seed çalıştırıldıktan sonra anlam kazanır.
 
+### Veri göçü (minibarlatest)
+
+Eski Flask minibar sisteminin geçmişi (kullanıcılar, e-posta, ek talepler, bildirimler, MyBar, işlemler, oda
+kontrolleri, otel havuzu ve hareketleri, doluluk yüklemeleri, günlük görevler, DND, QR/denetim/sistem günlükleri)
+`merit/scripts/migrate-from-minibarlatest/` betiğiyle taşınır. Betik kaynağı **yalnız okur**, hedefe yazar,
+istenirse tek transaction'da deneyip geri alır ve her çalıştırmada bir rapor (`migration-report.md`) üretir.
+
+**Ön koşullar**
+
+- Hedef veritabanında **tüm migrasyonlar uygulanmış** (`npx prisma migrate deploy`) ve referans seed çalışmış olmalı:
+  üç otel (DIAMOND, ROYAL, PREMIUM), roller, ekranlar, ayarlar ve `admin`. Betik otel, kat, oda, ürün ve setup
+  tanımlarını da (eksikse) kendisi ekler; var olanı değiştirmez.
+- Eski sistemin yedeğini **ayrı bir veritabanına** geri yükleyin (üretim eski veritabanına dokunmayın):
+
+  ```bash
+  createdb minibar_legacy
+  pg_restore -d minibar_legacy <yedek-dosyasi>
+  ```
+
+- Aktör olarak taşınacak bir sistem yöneticisi gerekir (varsayılan: en eski aktif `R-SYS`; seçmek için `--actor <kullanıcı>`).
+- Göçten önce eski sistemdeki `update-minibar-setups-products.ts` gibi tanım güncelleme betikleri **çalıştırılmaz**:
+  tanımlar göçle (ve seed ile) zaten gelir.
+
+**Ortam değişkenleri** (bağlantı dizesi hiçbir dosyaya yazılmaz, rapora da girmez)
+
+| Değişken | Anlamı |
+| --- | --- |
+| `LEGACY_DATABASE_URL` | Geri yüklenmiş eski veritabanı (yalnız okunur oturum). |
+| `DATABASE_URL` | Hedef Merit veritabanı. |
+| `LEGACY_SCHEMA` (veya `--legacy-schema`) | Eski tabloların şeması, varsayılan `public`. |
+
+**Çalıştırma**
+
+```bash
+cd merit
+export LEGACY_DATABASE_URL='postgresql://…/minibar_legacy'   # kabukta; dosyaya yazmayın
+npm run migrate:legacy -- --dry-run          # 1) kuru çalıştırma: tek transaction, sonunda geri alınır
+less migration-report.md                     # 2) raporu okuyun
+npm run migrate:legacy -- --actor <sistem-yoneticisi>   # 3) gerçek çalıştırma
+```
+
+Başlıca bayraklar: `--only definitions,users,history,tasks` / `--skip …` (adım seçimi), `--skip-logs` (QR okutma, denetim
+ve sistem günlüklerini atlar; en büyük tablolar bunlardır), `--report <yol>`, `--batch <n>`, `--notifications-days <n>`
+(varsayılan 30), `--hotel-map 1=DIAMOND,…`. Kuru çalıştırma 250 bin+ satırlık canlı yedekte yaklaşık on dakika sürer.
+
+**Çıkış kodları:** `0` temiz; `1` en az bir adım hatası veya **doğrulama FAIL** (rapordaki `KALDI` satırları);
+`2` yapılandırma hatası (eksik/yanlış ortam değişkeni veya bayrak, hiçbir şey yazılmadı).
+
+**Rapor ve doğrulama.** Rapor "Satır sayıları" tablosunda her varlık için Legacy, Aktarılan, Zaten vardı, Taşınmadı ve
+**Fark** (her satırda 0 olmalı) verir. Doğrulamalar legacy sayılarını sayaçlardan değil doğrudan eski veritabanından okur:
+`SAYI_FARKI`, `HAVUZ_FARKI` (kullanılan/kalan eşitliği), `TOKEN_KAYIP` (eski QR token'ları yeni odada aynen duruyor),
+`HASH_FARKI` (parola özetleri aynen taşındı), `MYBAR_DURUM_SAYILARI`, `ISLEM_TIP_SAYILARI`, `LOGO_DOSYASI_YOK`;
+bilgi niteliğinde `HAVUZ_TUTARSIZ`, `HAREKET_BAKIYE_FARKI` ve `ODA_SAYISI` (UYARI, çıkış kodunu bozmaz). Havuz satırları
+`toplam = kullanılan + kalan` olarak yazılır; eski kayıtlardaki tutarsızlıklar uyarı olarak listelenir. "Yapılacaklar"
+bölümü göçten sonra elle yapılacakları sayar.
+
+**Yeniden çalıştırma.** Betik idempotenttir: eşleme tablosu (`legacy_id_map`) sayesinde ikinci çalıştırma yalnız
+**eksikleri** ekler (yarım kalan çalıştırma kaldığı yerden tamamlanır). Eski veritabanından **daha yeni bir dump**
+alındıysa hedefi de sıfırdan kurun (boş veritabanı + migrate + seed) ve göçü baştan çalıştırın; var olan satırlar
+güncellenmez.
+
+**Göçten sonra kontrol listesi**
+
+1. Rapor `Sonuç: temiz`, `Fark` sütunu her satırda 0, `KALDI` satırı yok.
+2. **Şifreler:** eski kullanıcıların parola özeti `scrypt` ise bu uygulamada doğrulanamaz; rapordaki kullanıcıların şifresini
+   Tanımlamalar → Kullanıcılar'dan sıfırlayın. Pasif taşınan `superadmin` hesaplarını gerekirse etkinleştirin.
+3. **QR kodları:** eski biçimli (6 haneli) token'lı odalar için Minibar Tanımları › Oda QR'dan yeni QR üretip basın;
+   eski QR'lar bu arada çalışmaya devam eder.
+4. **E-posta:** SMTP parolası taşınmaz; e-posta ayarında parolayı yeniden girip ayarı etkinleştirin.
+5. Bildirimler yalnız son 30 günü taşır; kesme tarihi raporda yazar.
+6. Havuz (otel zimmet stoku) bakiyelerini depo sorumlusuyla bir ürün örneğinde karşılaştırın; `HAVUZ_HAREKET_FARKI`
+   uyarıları eski hareket geçmişinin eksik olduğu satırlardır (bakiye doğrudur, geçmiş değildir).
+7. Bir odanın Oda Kontrolü, bir günlük görev listesi ve DND geçmişini ekranda açıp eski sistemle karşılaştırın.
+8. Yüklenen doluluk dosyalarının içeriği taşınmaz (saklama 4 gün); yeni yüklemeler normal akışla yapılır.
+
 ## 5. Süreç yöneticisi
 
 ### systemd

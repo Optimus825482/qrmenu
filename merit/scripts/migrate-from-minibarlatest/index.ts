@@ -8,7 +8,9 @@ import { LegacyReader } from "./legacy";
 import { Report, redact } from "./report";
 import { runDefinitions } from "./steps/definitions";
 import { runHistory } from "./steps/history";
+import { runTasks } from "./steps/tasks";
 import { runUsers } from "./steps/users";
+import { recordValidation, runValidation } from "./validate";
 import type { StepContext, StepFn, TxClient } from "./types";
 
 export type { StepContext, StepFn } from "./types";
@@ -26,6 +28,7 @@ const STEPS: Partial<Record<StepName, StepFn>> = {
   definitions: runDefinitions,
   users: runUsers,
   history: runHistory,
+  tasks: runTasks,
 };
 
 export interface MainHooks {
@@ -96,6 +99,13 @@ export async function main(argv: string[], env: Record<string, string | undefine
         }
         return; // later steps depend on earlier ones: stop at the first failure
       }
+    }
+    if (hooks.steps) return;
+    try {
+      const ran = planned.map((p) => p.name);
+      await recordValidation(ctx, ran, await runValidation(ctx, ran));
+    } catch (error) {
+      report.fail("dogrulama", error instanceof Error ? error.message : String(error));
     }
   };
 

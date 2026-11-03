@@ -246,6 +246,7 @@ describe("ek talep otel tahmini ve e-posta", () => {
     expect((await userByName("admin")).email).toBeNull();
     expect((await userByName("depo_cok")).email).toBe("depo@example.test");
     expect(warn("EPOSTA_YINELENEN")).toBe(1);
+    expect(report()).not.toContain("sistem@example.test");
   });
 });
 

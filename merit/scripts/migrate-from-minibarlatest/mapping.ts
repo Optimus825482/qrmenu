@@ -183,3 +183,127 @@ export function movementFor(
       return { type: "KULLANIM", qty: neg, notePrefix: null, known: false };
   }
 }
+
+// ---------------------------------------------------------------- occupancy, tasks, DND, logs (Task 14)
+
+export type UploadKindName = "IN_HOUSE" | "ARRIVAL" | "DEPARTURE";
+export type TaskTypeName = "INHOUSE_KONTROL" | "ARRIVAL_KONTROL" | "DEPARTURE_KONTROL";
+export const TASK_TYPE_FOR_UPLOAD_KIND: Record<UploadKindName, TaskTypeName> = {
+  IN_HOUSE: "INHOUSE_KONTROL",
+  ARRIVAL: "ARRIVAL_KONTROL",
+  DEPARTURE: "DEPARTURE_KONTROL",
+};
+
+/** Upload/guest-record kind from the legacy spelling (in_house, inhouse, arrivals, departure ...); null = unknown. */
+export function uploadKindFor(s: string | null | undefined): UploadKindName | null {
+  switch (fold(String(s ?? "")).replace(/[\s-]+/g, "_")) {
+    case "in_house":
+    case "inhouse":
+      return "IN_HOUSE";
+    case "arrival":
+    case "arrivals":
+      return "ARRIVAL";
+    case "departure":
+    case "departures":
+      return "DEPARTURE";
+    default:
+      return null;
+  }
+}
+
+export type TaskStatusName = "BEKLIYOR" | "DEVAM" | "TAMAMLANDI" | "DND_BEKLIYOR" | "EKSIK";
+const TASK_STATUS: Record<string, TaskStatusName> = {
+  pending: "BEKLIYOR",
+  in_progress: "DEVAM",
+  completed: "TAMAMLANDI",
+  dnd_pending: "DND_BEKLIYOR",
+  incomplete: "EKSIK",
+};
+/** Unknown values become BEKLIYOR (the caller reports them with `isKnownTaskStatus`). */
+export function taskStatusFor(s: string | null | undefined): TaskStatusName {
+  return TASK_STATUS[fold(String(s ?? ""))] ?? "BEKLIYOR";
+}
+export const isKnownTaskStatus = (s: string | null | undefined): boolean => fold(String(s ?? "")) in TASK_STATUS;
+
+/** Control task type of a guest record kind; null/unknown -> INHOUSE_KONTROL (the caller reports GOREV_TIPI_BELIRSIZ). */
+export function taskTypeFor(kayitTipi: string | null | undefined): TaskTypeName {
+  const kind = uploadKindFor(kayitTipi);
+  return kind ? TASK_TYPE_FOR_UPLOAD_KIND[kind] : "INHOUSE_KONTROL";
+}
+
+/** Control task type of a legacy `gunluk_gorevler.gorev_tipi` (inhouse_kontrol ...); upload task types give null. */
+export function taskTypeFromGorevTipi(s: string | null | undefined): TaskTypeName | null {
+  switch (fold(String(s ?? ""))) {
+    case "inhouse_kontrol":
+      return "INHOUSE_KONTROL";
+    case "arrival_kontrol":
+      return "ARRIVAL_KONTROL";
+    case "departure_kontrol":
+      return "DEPARTURE_KONTROL";
+    default:
+      return null;
+  }
+}
+
+export type UploadStatusName = "YUKLENDI" | "ISLENIYOR" | "TAMAMLANDI" | "HATA" | "SILINDI" | "BEKLIYOR";
+const UPLOAD_STATUS: Record<string, UploadStatusName> = {
+  yuklendi: "YUKLENDI",
+  isleniyor: "ISLENIYOR",
+  tamamlandi: "TAMAMLANDI",
+  hata: "HATA",
+  silindi: "SILINDI",
+};
+/** `dosya_yuklemeleri.durum`; unknown -> YUKLENDI. */
+export function uploadStatusFor(s: string | null | undefined): UploadStatusName {
+  return UPLOAD_STATUS[fold(String(s ?? ""))] ?? "YUKLENDI";
+}
+export const isKnownUploadStatus = (s: string | null | undefined): boolean => fold(String(s ?? "")) in UPLOAD_STATUS;
+
+const UPLOAD_TASK_STATUS: Record<string, UploadStatusName> = {
+  pending: "BEKLIYOR",
+  in_progress: "ISLENIYOR",
+  completed: "TAMAMLANDI",
+  incomplete: "HATA",
+};
+/** `yukleme_gorevleri.durum` (a task status in the legacy application); unknown -> BEKLIYOR. */
+export function uploadTaskStatusFor(s: string | null | undefined): UploadStatusName {
+  return UPLOAD_TASK_STATUS[fold(String(s ?? ""))] ?? "BEKLIYOR";
+}
+export const isKnownUploadTaskStatus = (s: string | null | undefined): boolean => fold(String(s ?? "")) in UPLOAD_TASK_STATUS;
+
+export type DndStatusName = "AKTIF" | "TAMAMLANDI" | "IPTAL" | "EKSIK";
+const DND_STATUS: Record<string, DndStatusName> = {
+  aktif: "AKTIF",
+  tamamlandi: "TAMAMLANDI",
+  iptal: "IPTAL",
+  incomplete: "EKSIK",
+  eksik: "EKSIK",
+};
+/** `oda_dnd_kayitlari.durum`; unknown -> EKSIK. */
+export function dndStatusFor(s: string | null | undefined): DndStatusName {
+  return DND_STATUS[fold(String(s ?? ""))] ?? "EKSIK";
+}
+export const isKnownDndStatus = (s: string | null | undefined): boolean => fold(String(s ?? "")) in DND_STATUS;
+
+export type ScanKindName = "MISAFIR" | "PERSONEL" | "SISTEM";
+/** `qr_kod_okutma_loglari.okutma_tipi`; anything else is SISTEM. */
+export function scanKindFor(s: string | null | undefined): ScanKindName {
+  switch (fold(String(s ?? ""))) {
+    case "misafir_okutma":
+    case "misafir":
+      return "MISAFIR";
+    case "personel_kontrol":
+    case "personel":
+      return "PERSONEL";
+    default:
+      return "SISTEM";
+  }
+}
+export const isKnownScanKind = (s: string | null | undefined): boolean =>
+  ["misafir_okutma", "misafir", "personel_kontrol", "personel", "sistem_kontrol", "sistem"].includes(fold(String(s ?? "")));
+
+/** 'HH:mm' of a legacy time value ('14:30:00', a Date or null); null when not a time. */
+export function hhmm(value: unknown): string | null {
+  const m = /^(\d{1,2}):(\d{2})/.exec(clean(value));
+  return m ? `${m[1].padStart(2, "0")}:${m[2]}` : null;
+}

@@ -335,3 +335,151 @@ INSERT INTO zimmet_sablonlari (id, sablon_adi, aciklama, olusturan_id, otel_id, 
 INSERT INTO zimmet_sablon_detaylari (id, sablon_id, urun_id, varsayilan_miktar) VALUES
   (1, 1, 1, 10),
   (2, 1, 4, 5);
+
+-- ============================================================ Task 14: occupancy, tasks, DND, logs
+CREATE TABLE dosya_yuklemeleri (
+  id integer NOT NULL, islem_kodu varchar NOT NULL, dosya_adi varchar, dosya_tipi varchar NOT NULL, durum varchar,
+  toplam_satir integer, basarili_satir integer, hatali_satir integer, hata_detaylari text, yukleme_tarihi timestamp,
+  yukleyen_id integer, otel_id integer NOT NULL, dosya_yolu varchar, dosya_boyutu integer, silme_tarihi timestamp,
+  yuklenen_kullanici_id integer
+);
+CREATE TABLE misafir_kayitlari (
+  id integer NOT NULL, oda_id integer NOT NULL, islem_kodu varchar NOT NULL, misafir_sayisi integer,
+  giris_tarihi date NOT NULL, giris_saati time, cikis_tarihi date NOT NULL, cikis_saati time, kayit_tipi varchar NOT NULL,
+  olusturma_tarihi timestamp, olusturan_id integer, dosya_yukleme_id integer, kaynak varchar, durum varchar,
+  otel_id integer, guncelleme_tarihi timestamp
+);
+CREATE TABLE yukleme_gorevleri (
+  id integer NOT NULL, otel_id integer NOT NULL, depo_sorumlusu_id integer, gorev_tarihi date NOT NULL,
+  dosya_tipi varchar NOT NULL, durum varchar, yukleme_zamani timestamptz, dosya_yukleme_id integer,
+  olusturma_tarihi timestamptz
+);
+CREATE TABLE gunluk_gorevler (
+  id integer NOT NULL, otel_id integer NOT NULL, personel_id integer, gorev_tarihi date NOT NULL, gorev_tipi varchar,
+  durum varchar, olusturma_tarihi timestamptz, tamamlanma_tarihi timestamptz, notlar text
+);
+CREATE TABLE gorev_detaylari (
+  id integer NOT NULL, gorev_id integer NOT NULL, oda_id integer NOT NULL, misafir_kayit_id integer, durum varchar,
+  varis_saati time, cikis_saati time, oncelik_sirasi integer, kontrol_zamani timestamptz, dnd_sayisi integer,
+  son_dnd_zamani timestamptz, notlar text
+);
+CREATE TABLE gorev_durum_loglari (
+  id integer NOT NULL, gorev_detay_id integer NOT NULL, onceki_durum varchar, yeni_durum varchar,
+  degisiklik_zamani timestamptz, degistiren_id integer, aciklama text
+);
+CREATE TABLE oda_dnd_kayitlari (
+  id integer NOT NULL, oda_id integer NOT NULL, otel_id integer, kayit_tarihi date NOT NULL, dnd_sayisi integer,
+  ilk_dnd_zamani timestamp, son_dnd_zamani timestamp, durum varchar, gorev_detay_id integer,
+  olusturma_tarihi timestamp, guncelleme_tarihi timestamp
+);
+CREATE TABLE oda_dnd_kontrolleri (
+  id integer NOT NULL, dnd_kayit_id integer NOT NULL, kontrol_no integer, kontrol_eden_id integer,
+  kontrol_zamani timestamp NOT NULL, notlar text
+);
+CREATE TABLE dnd_kontroller (
+  id integer NOT NULL, gorev_detay_id integer NOT NULL, kontrol_zamani timestamptz NOT NULL, kontrol_eden_id integer,
+  notlar text
+);
+CREATE TABLE qr_kod_okutma_loglari (
+  id integer NOT NULL, oda_id integer, kullanici_id integer, okutma_tarihi timestamp NOT NULL, okutma_tipi varchar NOT NULL,
+  ip_adresi varchar, user_agent varchar, basarili boolean, hata_mesaji text
+);
+CREATE TABLE audit_logs (
+  id integer NOT NULL, kullanici_id integer, kullanici_adi varchar, kullanici_rol varchar, islem_tipi varchar,
+  tablo_adi varchar, kayit_id integer, eski_deger jsonb, yeni_deger jsonb, ip_adresi varchar, user_agent varchar,
+  islem_tarihi timestamp NOT NULL
+);
+CREATE TABLE sistem_loglari (
+  id integer NOT NULL, kullanici_id integer, islem_tipi varchar, modul varchar, islem_detay jsonb, ip_adresi varchar,
+  tarayici varchar, islem_tarihi timestamp NOT NULL
+);
+
+-- Uploads. 2 is deleted and has a file path that must never be copied; 3 has a non-JSON error text and no uploader;
+-- 4 has an unknown file type; 5 belongs to an unmigrated hotel.
+INSERT INTO dosya_yuklemeleri (id, islem_kodu, dosya_adi, dosya_tipi, durum, toplam_satir, basarili_satir, hatali_satir, hata_detaylari, yukleme_tarihi, yukleyen_id, otel_id, dosya_yolu, dosya_boyutu, silme_tarihi, yuklenen_kullanici_id) VALUES
+  (1, 'U-IN-1', 'inhouse.xlsx', 'in_house', 'tamamlandi', 100, 98, 2, '[{"row":5,"message":"oda yok"}]', '2026-10-20 08:00:00', NULL, 1, '/srv/secret/inhouse.xlsx', 1000, NULL, 5),
+  (2, 'U-AR-1', 'arrivals.xlsx', 'arrivals', 'silindi', 10, 10, 0, NULL, '2026-10-20 08:10:00', 4, 1, '/srv/secret/arrivals.xlsx', 500, '2026-10-24 08:10:00', NULL),
+  (3, 'U-DE-1', 'departures.xlsx', 'departures', 'hata', 5, 0, 5, 'dosya bozuk', '2026-10-20 08:20:00', NULL, 4, NULL, NULL, NULL, NULL),
+  (4, 'U-X-1', 'x.xlsx', 'weird', 'tamamlandi', 1, 1, 0, NULL, '2026-10-20 08:30:00', NULL, 3, NULL, NULL, NULL, NULL),
+  (5, 'U-IN-2', 'y.xlsx', 'inhouse', 'tamamlandi', 1, 1, 0, NULL, '2026-10-20 08:40:00', NULL, 99, NULL, NULL, NULL, NULL);
+
+-- Guest records. 4 has no upload; 5 belongs to an unmigrated room; 6 has an unknown kind.
+INSERT INTO misafir_kayitlari (id, oda_id, islem_kodu, misafir_sayisi, giris_tarihi, giris_saati, cikis_tarihi, cikis_saati, kayit_tipi, olusturma_tarihi, olusturan_id, dosya_yukleme_id, kaynak, durum, otel_id, guncelleme_tarihi) VALUES
+  (1, 1, 'U-IN-1', 2, '2026-10-18', '14:30:00', '2026-10-22', '11:00:00', 'in_house', '2026-10-20 08:00:00', 5, 1, 'excel', 'aktif', 1, NULL),
+  (2, 2, 'U-IN-1', 3, '2026-10-19', NULL, '2026-10-23', NULL, 'in_house', '2026-10-20 08:00:00', 5, 1, 'excel', 'aktif', 1, NULL),
+  (3, 3, 'U-AR-1', 2, '2026-10-20', '15:00:00', '2026-10-25', '10:00:00', 'arrival', '2026-10-20 08:10:00', 4, 2, 'excel', 'aktif', 1, NULL),
+  (4, 4, 'ELLE-1', 1, '2026-10-15', '12:00:00', '2026-10-20', '09:30:00', 'departure', '2026-10-20 08:20:00', NULL, NULL, 'excel', 'aktif', 4, NULL),
+  (5, 99, 'U-IN-1', 1, '2026-10-20', NULL, '2026-10-21', NULL, 'in_house', '2026-10-20 08:00:00', NULL, 1, 'excel', 'aktif', 1, NULL),
+  (6, 5, 'U-IN-1', 1, '2026-10-20', NULL, '2026-10-21', NULL, 'garip', '2026-10-20 08:00:00', NULL, 1, 'excel', 'aktif', 4, NULL);
+
+-- Upload tasks. 1 and 3 collide on (hotel 1, 2026-10-20, IN_HOUSE): the newer one (3) wins. 5 has an unknown type.
+INSERT INTO yukleme_gorevleri (id, otel_id, depo_sorumlusu_id, gorev_tarihi, dosya_tipi, durum, yukleme_zamani, dosya_yukleme_id, olusturma_tarihi) VALUES
+  (1, 1, 4, '2026-10-20', 'inhouse', 'completed', '2026-10-20 08:00:00+03', 1, '2026-10-20 07:00:00+03'),
+  (2, 1, 4, '2026-10-20', 'arrivals', 'pending', NULL, NULL, '2026-10-20 07:00:00+03'),
+  (3, 1, 4, '2026-10-20', 'in_house', 'incomplete', NULL, NULL, '2026-10-20 09:00:00+03'),
+  (4, 4, 4, '2026-10-20', 'departures', 'in_progress', NULL, 3, '2026-10-20 07:00:00+03'),
+  (5, 3, 4, '2026-10-20', 'zzz', 'pending', NULL, NULL, '2026-10-20 07:00:00+03');
+
+-- Daily tasks: 4 has a non-control type, so details without a guest record fall back to INHOUSE_KONTROL.
+INSERT INTO gunluk_gorevler (id, otel_id, personel_id, gorev_tarihi, gorev_tipi, durum, olusturma_tarihi, tamamlanma_tarihi, notlar) VALUES
+  (1, 1, 5, '2026-10-20', 'inhouse_kontrol', 'completed', '2026-10-20 06:00:00+03', '2026-10-20 15:00:00+03', NULL),
+  (2, 1, 5, '2026-10-20', 'arrival_kontrol', 'in_progress', '2026-10-20 06:00:00+03', NULL, NULL),
+  (3, 4, 9, '2026-10-20', 'departure_kontrol', 'dnd_pending', '2026-10-20 06:00:00+03', NULL, NULL),
+  (4, 1, 5, '2026-10-21', 'inhouse_yukleme', 'incomplete', '2026-10-21 06:00:00+03', NULL, NULL);
+
+-- Details. 1,2: in_house group (completed); 6 duplicates room 1 of the same group; 3,10,11: arrival group;
+-- 4: departure group with task-linked DND; 5: no guest record, non-control parent type; 7: unmigrated room; 8: no parent.
+INSERT INTO gorev_detaylari (id, gorev_id, oda_id, misafir_kayit_id, durum, varis_saati, cikis_saati, oncelik_sirasi, kontrol_zamani, dnd_sayisi, son_dnd_zamani, notlar) VALUES
+  (1, 1, 1, 1, 'completed', '14:30:00', '11:00:00', 1, '2026-10-20 10:00:00+03', 0, NULL, 'ilk'),
+  (2, 1, 2, 2, 'completed', NULL, NULL, 2, '2026-10-20 11:30:00+03', 0, NULL, NULL),
+  (3, 2, 3, 3, 'in_progress', '15:00:00', '10:00:00', 3, NULL, 0, NULL, NULL),
+  (4, 3, 4, 4, 'dnd_pending', '12:00:00', '09:30:00', 4, NULL, 2, '2026-10-20 18:00:00+03', NULL),
+  (5, 4, 1, NULL, 'incomplete', NULL, NULL, 5, NULL, 0, NULL, 'misafir kaydi yok'),
+  (6, 1, 1, 1, 'pending', NULL, NULL, 6, NULL, 0, NULL, 'cift'),
+  (7, 1, 99, 1, 'pending', NULL, NULL, 7, NULL, 0, NULL, NULL),
+  (8, 999, 1, 1, 'pending', NULL, NULL, 8, NULL, 0, NULL, NULL),
+  (10, 2, 2, 3, 'pending', NULL, NULL, 10, NULL, 1, '2026-10-20 13:00:00+03', NULL),
+  (11, 2, 6, 3, 'garip', NULL, NULL, 11, NULL, 0, NULL, NULL);
+
+INSERT INTO gorev_durum_loglari (id, gorev_detay_id, onceki_durum, yeni_durum, degisiklik_zamani, degistiren_id, aciklama) VALUES
+  (1, 1, NULL, 'in_progress', '2026-10-20 09:00:00+03', 5, NULL),
+  (2, 1, 'in_progress', 'completed', '2026-10-20 10:00:00+03', 5, 'tamam'),
+  (3, 999, 'pending', 'completed', '2026-10-20 10:00:00+03', 5, NULL),
+  (4, 3, 'pending', NULL, '2026-10-20 12:00:00+03', 77, 'yeni durum bos'),
+  (5, 6, 'pending', 'pending', '2026-10-20 12:30:00+03', 5, 'cift kalemin gunlugu');
+
+-- Independent DND records. 1: two checks; 2: collides with the task-linked DND of detail 10; 3: zero count, no times,
+-- 'incomplete'; 4: unmigrated room; 5: unknown status.
+INSERT INTO oda_dnd_kayitlari (id, oda_id, otel_id, kayit_tarihi, dnd_sayisi, ilk_dnd_zamani, son_dnd_zamani, durum, gorev_detay_id, olusturma_tarihi, guncelleme_tarihi) VALUES
+  (1, 1, 1, '2026-10-20', 2, '2026-10-20 09:00:00', '2026-10-20 12:00:00', 'aktif', NULL, '2026-10-20 09:00:00', NULL),
+  (2, 2, 1, '2026-10-20', 1, '2026-10-20 12:30:00', '2026-10-20 12:30:00', 'tamamlandi', 10, '2026-10-20 12:30:00', NULL),
+  (3, 3, 1, '2026-10-20', 0, NULL, NULL, 'incomplete', NULL, '2026-10-20 08:00:00', NULL),
+  (4, 99, 1, '2026-10-20', 1, '2026-10-20 08:00:00', '2026-10-20 08:00:00', 'aktif', NULL, '2026-10-20 08:00:00', NULL),
+  (5, 4, 4, '2026-10-19', 1, '2026-10-19 08:00:00', '2026-10-19 08:00:00', 'garip', NULL, '2026-10-19 08:00:00', NULL);
+INSERT INTO oda_dnd_kontrolleri (id, dnd_kayit_id, kontrol_no, kontrol_eden_id, kontrol_zamani, notlar) VALUES
+  (1, 1, 1, 5, '2026-10-20 09:00:00', NULL),
+  (2, 1, 2, 5, '2026-10-20 12:00:00', 'ikinci'),
+  (3, 2, 1, 5, '2026-10-20 12:30:00', NULL),
+  (4, 999, 1, 5, '2026-10-20 12:30:00', NULL),
+  (5, 5, 1, NULL, '2026-10-19 08:00:00', NULL);
+-- Task-linked checks (inserted newest first on purpose). 4 belongs to a detail without a DND count.
+INSERT INTO dnd_kontroller (id, gorev_detay_id, kontrol_zamani, kontrol_eden_id, notlar) VALUES
+  (1, 4, '2026-10-20 17:00:00+03', 5, 'ikinci'),
+  (2, 4, '2026-10-20 16:00:00+03', 5, 'birinci'),
+  (3, 10, '2026-10-20 13:00:00+03', 5, NULL),
+  (4, 8, '2026-10-20 13:00:00+03', 5, NULL);
+
+INSERT INTO qr_kod_okutma_loglari (id, oda_id, kullanici_id, okutma_tarihi, okutma_tipi, ip_adresi, user_agent, basarili, hata_mesaji) VALUES
+  (1, 1, NULL, '2026-10-20 10:00:00', 'misafir_okutma', '1.2.3.4', 'Mozilla', true, NULL),
+  (2, 2, 5, '2026-10-20 10:05:00', 'personel_kontrol', NULL, NULL, false, 'gecersiz'),
+  (3, 99, NULL, '2026-10-20 10:10:00', 'sistem_kontrol', '5.6.7.8', 'bot', true, NULL),
+  (4, 1, NULL, '2026-10-20 10:15:00', 'misafir', '1.2.3.4', 'Mozilla', true, NULL),
+  (5, 1, NULL, '2026-10-20 10:20:00', 'garip', '1.2.3.4', 'Mozilla', true, NULL);
+
+INSERT INTO audit_logs (id, kullanici_id, kullanici_adi, kullanici_rol, islem_tipi, tablo_adi, kayit_id, eski_deger, yeni_deger, ip_adresi, user_agent, islem_tarihi) VALUES
+  (1, 5, 'kat_diamond', 'kat_sorumlusu', 'update', 'urunler', 5, '{"ad":"a"}', '{"ad":"b"}', '10.0.0.1', 'Mozilla', '2026-10-20 09:00:00'),
+  (2, NULL, 'anon', 'yok', 'login', 'kullanicilar', NULL, NULL, NULL, NULL, NULL, '2026-10-20 09:05:00'),
+  (3, 77, 'x', 'y', NULL, 'odalar', 3, NULL, '{"k":1}', NULL, NULL, '2026-10-20 09:10:00');
+INSERT INTO sistem_loglari (id, kullanici_id, islem_tipi, modul, islem_detay, ip_adresi, tarayici, islem_tarihi) VALUES
+  (1, 5, 'giris', 'auth', '{"ok":true}', '10.0.0.1', 'Mozilla', '2026-10-20 09:20:00'),
+  (2, NULL, 'hata', 'minibar', NULL, NULL, NULL, '2026-10-20 09:30:00');

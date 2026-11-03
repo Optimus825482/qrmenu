@@ -50,7 +50,7 @@ yerel ağdaki ESC/POS yazdırma geçidini ekler.
    | `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çeviri sağlayıcıları. |
    | `RUN_SEED` | hayır | Yalnız Docker girişi; `true` ise açılışta seed çalışır (varsayılan `false`). |
    | `SEED_DEMO` | hayır | `true` ise seed demo outlet, menü, tasarım ve örnek personel de yükler (varsayılan `false`). |
-   | `LEGACY_DATABASE_URL` | hayır | Yalnız `migrate:minibarlatest` göç betiği için eski veritabanı. |
+   | `LEGACY_DATABASE_URL` | hayır | Yalnız `npm run migrate:legacy` göç betiği için eski veritabanı. |
    | `SKIP_ENV_VALIDATION` | hayır | Yalnız Docker derlemesi (`1`); çalışma ortamında ayarlamayın. |
 
 3. **Bağımlılıkları kurun ve veritabanını hazırlayın:**
@@ -146,6 +146,35 @@ aynı olmalıdır. Yazıcıyı Kasa → Yazıcılar'dan tanımlayın; gateway i�
 sonra hatayı kasaya bildirir. cp857 için `CODEPAGE_TABLE=13` başlangıç değeridir ve test fişiyle
 sahada doğrulanmalıdır.
 
+## Minibar
+
+Minibar modülü eski Flask uygulamasının (`minibarlatest`) yerini alır. Kat sorumlusu, depo sorumlusu ve
+yönetim için ayrı yüzeyler vardır; tümü rol/ekran yetkisiyle (`MB-*` ekran kodları) açılır.
+
+| Yüzey | Ne yapar |
+| --- | --- |
+| `/kat` | Kat sorumlusu ana sayfası: günün işleri, kritik stok, kat doluluk haritası. Alt sayfalar: `gorevler` (günlük In House / Arrival / Departure kontrol görevleri), `oda-kontrol/[oda]` (QR ile açılan ürün ekleme, **Sarfiyat Yok**, kapasiteli ikame), `dnd`, `doluluk`, `qr`, `islemlerim` (kendi işlemini silme/düzeltme talebi), `duzeltme-onay`, `stok`, `talep` (depodan ek talep), `tavsiye-is-plani` (öncelik planı), `kritik`. |
+| `/depo` | Depo sorumlusu: `stok` ve `havuz` (otel havuzu: giriş, iade, düzeltme, kritik seviye), `talepler` (ek talep onay/teslim), `doluluk-yukle` ve `doluluk` (günlük üç doluluk dosyası), `gorevler` (yükleme görevleri), `raporlar`, `tanimlar`. |
+| MyBar | Misafir QR'ı ile gelen doldurma talebi; kat sorumlusu onaylar, depo havuzundan düşer. Günde bir kez (ayarlanabilir). |
+| Yönetim (`MB-TAN`, `MB-ZIM`, ...) | Ürün grupları, ürünler, setuplar, oda tipi-setup atamaları, oda QR üretimi ve toplu üretim, misafir mesajı. |
+
+**Arka plan işleri** (pg-boss, `Europe/Nicosia`; `MERIT_DISABLE_JOBS=1` iken çalışmaz): 00:01 günlük görev
+üretimi ve yükleme görevleri, 10:00 ve 18:00 eksik doluluk dosyası uyarısı, her dakika DND hatırlatması, 23:59 DND gün sonu
+kapanışı (kalan DND'ler EKSIK olur), 02:00 doluluk dosyası temizliği (saklama 4 gün). İş günü Nicosia saatine göredir.
+
+### Eski sistemden veri göçü
+
+```bash
+export LEGACY_DATABASE_URL='postgresql://…/minibar_legacy'   # geri yüklenmiş eski yedek; dosyaya yazmayın
+npm run migrate:legacy -- --dry-run     # tek transaction, sonunda geri alınır; migration-report.md üretir
+npm run migrate:legacy                  # gerçek çalıştırma (idempotent); doğrulama FAIL ise çıkış kodu 1
+```
+
+Adımlar: `definitions` (oteller, katlar, odalar, ürünler, setuplar), `users` (kullanıcılar, e-posta, ek talepler,
+bildirimler), `history` (MyBar, işlemler, oda kontrolleri, havuz ve hareketleri) ve `tasks` (doluluk, günlük görevler, DND,
+QR/denetim/sistem günlükleri; `--skip-logs` günlükleri atlar). Rapor, doğrulama kontrolleri ve göç sonrası kontrol listesi
+için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
+
 ## Komutlar
 
 | Komut | Ne yapar |
@@ -159,6 +188,7 @@ sahada doğrulanmalıdır.
 | `npm run lint` / `npm run typecheck` | ESLint / `next typegen && tsc --noEmit`. |
 | `npm run db:migrate` | `prisma migrate dev` (şema değişikliği + istemci üretimi). |
 | `npm run db:seed` | Başlangıç verisini yükler (`SEED_ADMIN_PASSWORD` gerekir). |
+| `npm run migrate:legacy` | Eski minibar verisini taşır (`LEGACY_DATABASE_URL` gerekir; `--dry-run` önce deneyin). |
 | `npm run db:reset` | Veritabanını siler, migrasyonları yeniden uygular (`migrate reset --force`). |
 
 ### Uçtan uca (e2e) testler hakkında

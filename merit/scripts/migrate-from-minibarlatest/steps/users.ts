@@ -132,7 +132,7 @@ async function stepUsers(ctx: StepContext): Promise<void> {
         }
         let email = orNull(row.email)?.toLowerCase() ?? null;
         if (email && emails.has(email)) {
-          ctx.report.warn("EPOSTA_YINELENEN", "E-posta başka bir kullanıcıda var; bu kullanıcıda boş bırakıldı", `${username}: ${email}`);
+          ctx.report.warn("EPOSTA_YINELENEN", "E-posta başka bir kullanıcıda var; bu kullanıcıda boş bırakıldı", username);
           email = null;
         }
         if (email) emails.add(email);

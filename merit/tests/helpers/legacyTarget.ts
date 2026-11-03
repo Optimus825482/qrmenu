@@ -20,6 +20,13 @@ export async function resetMigrationTarget(): Promise<void> {
     "room_checks",
     "hotel_stocks",
     "hotel_stock_movements",
+    "occupancy_uploads",
+    "guest_records",
+    "upload_tasks",
+    "daily_tasks",
+    "room_dnds",
+    "qr_scan_logs",
+    "audit_logs",
   );
 }
 
