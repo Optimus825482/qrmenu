@@ -1,0 +1,76 @@
+/* KDS tahtası: her genişlikte üç sütun; 900 px altında tek yatay kaydırma kabı (sayfa kaymaz). */
+.kds-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.kds-col {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  padding: var(--space-3);
+}
+
+@media (max-width: 899px) {
+  .kds-board {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    padding-bottom: var(--space-2);
+  }
+
+  .kds-col {
+    flex: 0 0 min(88vw, 360px);
+    scroll-snap-align: start;
+  }
+}
+
+.kds-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--bg);
+  padding: var(--space-3);
+}
+
+.kds-card[data-tone="warn"] {
+  border-width: 3px;
+  border-color: var(--warn);
+}
+
+.kds-card[data-tone="late"] {
+  border-style: double;
+  border-width: 5px;
+  border-color: var(--danger);
+}
+
+.kds-age {
+  flex-shrink: 0;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px var(--space-3);
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kds-age[data-tone="ok"] { color: var(--success); background: var(--success-bg); }
+.kds-age[data-tone="warn"] { color: var(--warn); background: var(--warn-bg); }
+.kds-age[data-tone="late"] { color: var(--danger); background: var(--danger-bg); }
+
+.kds-title { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.kds-items { font-size: 20px; line-height: 1.3; }
+.kds-qty { font-weight: 800; }
+.kds-note {
+  margin-top: var(--space-2);
+  border-radius: var(--radius-s);
+  border: 1px solid var(--warn);
+  background: var(--warn-bg);
+  color: var(--warn);
+  padding: var(--space-2) var(--space-3);
+  font-size: 18px;
+  font-weight: 600;
+}

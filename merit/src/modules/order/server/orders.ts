@@ -469,6 +469,57 @@ async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
   });
 }
 
+/** UI undo window is 6 s; the server accepts a late call up to 30 s after `readyAt`. */
+export const REVERT_READY_TOLERANCE_MS = 30_000;
+
+/**
+ * KDS "Hazır" geri alma: yalnız HAZIR ve `readyAt` son 30 sn içindeyse sipariş ONAYLANDI'ya döner
+ * (`prepStartedAt` korunur). Satır kilidi altında; ikinci eşzamanlı çağrı CONFLICT alır.
+ */
+async function revertReady(ctx: Ctx, orderId: string): Promise<{ status: "ONAYLANDI" }> {
+  await prisma.$transaction(async (tx) => {
+    const order = await lockedOrder(tx, ctx, orderId);
+    if (order.kind === "MASA") {
+      await assertCan(ctx, "QS-KDS", "D", order.hotelId);
+    } else if (order.kind === "ODA_SERVISI") {
+      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+    } else {
+      throw new DomainError("CONFLICT", ALREADY);
+    }
+    forbidOutlet(ctx, order);
+    const now = new Date();
+    if (order.status !== "HAZIR" || !order.readyAt || now.getTime() - order.readyAt.getTime() > REVERT_READY_TOLERANCE_MS) {
+      throw new DomainError("CONFLICT", "Geri alma süresi doldu");
+    }
+    const updated = await tx.order.update({ where: { id: order.id }, data: { status: "ONAYLANDI", readyAt: null } });
+    await tx.orderEvent.create({
+      data: { orderId: order.id, userId: ctx.user.id, from: "HAZIR", to: "ONAYLANDI", note: "HAZIR_GERI_ALINDI", at: now },
+    });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "ORDER_READY_REVERT",
+      entity: "Order",
+      entityId: order.id,
+      before: { status: order.status, readyAt: order.readyAt },
+      after: { status: updated.status, readyAt: null },
+    });
+    await publish(
+      {
+        type: "order.prep",
+        hotelId: order.hotelId,
+        outletId: order.outletId,
+        payload: orderPayload(
+          { ...updated, table: order.table, room: order.room },
+          { from: order.status, byUserId: ctx.user.id },
+        ),
+      },
+      tx,
+    );
+  });
+  return { status: "ONAYLANDI" };
+}
+
 async function assertView(ctx: Ctx, hotelId: string): Promise<void> {
   for (const screen of ["QS-KUY", "QS-KDS", "QS-KAS"]) {
     if (await can(ctx, screen, "V", hotelId)) return;
@@ -524,4 +575,4 @@ function durations(
   return out;
 }
 
-export const orders = { transition, confirmPhone, startPrep, get, listForOutlet, durations };
+export const orders = { transition, confirmPhone, startPrep, revertReady, get, listForOutlet, durations };

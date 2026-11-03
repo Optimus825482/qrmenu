@@ -95,3 +95,70 @@ test("KDS canlı mutfak akışı: yeni, hazırlanıyor, hazır ve servis", async
   await kitchen.context().close();
   await cashier.context().close();
 });
+
+test("KDS yenilenmiş tahta: üç sütun, 64 px bump, kart bazlı bekleme, Hazır geri alma, dar ekran kaydırma", async ({ page, browser }) => {
+  const cashier = await openStaff(browser, "kasa.havuz");
+  const first = await sendGuestOrder(page);
+  const second = await sendGuestOrder(page);
+  await approveOrder(cashier, first.orderNo);
+  await approveOrder(cashier, second.orderNo);
+
+  const kitchen = await openStaff(browser, "kds.havuz");
+  await kitchen.setViewportSize({ width: 1024, height: 768 });
+  const column = (name: string) => kitchen.getByRole("region", { name, exact: true });
+  const card = (name: string, orderNo: number) => column(name).getByRole("article").filter({ hasText: new RegExp(`#${orderNo}\\b`) });
+  await expect(card("Yeni", first.orderNo)).toBeVisible();
+  await expect(card("Yeni", second.orderNo)).toBeVisible();
+
+  // Ses henüz açılmadı: durum şeridi nedenini söyler.
+  await expect(kitchen.getByText("Ses: Etkinleştirmek için dokunun")).toBeVisible();
+
+  // Üç sütun yan yana (aynı üst kenar, soldan sağa artan).
+  const boxes = await Promise.all(["Yeni", "Hazırlanıyor", "Hazır"].map((name) => column(name).boundingBox()));
+  const [b1, b2, b3] = boxes.map((box) => box!);
+  expect(Math.abs(b1.y - b2.y)).toBeLessThan(1);
+  expect(Math.abs(b2.y - b3.y)).toBeLessThan(1);
+  expect(b1.x).toBeLessThan(b2.x);
+  expect(b2.x).toBeLessThan(b3.x);
+
+  // Bump düğmesi en az 64 px yüksek ve kart genişliğinde.
+  const bump = card("Yeni", first.orderNo).getByRole("button", { name: "Başla" });
+  const bumpBox = (await bump.boundingBox())!;
+  expect(bumpBox.height).toBeGreaterThanOrEqual(64);
+
+  // Bekleyen işlem yalnız kendi kartını kilitler: sunucu eylemleri geciktirilir.
+  let slow = true;
+  await kitchen.route("**/kds", async (route) => {
+    if (slow && route.request().method() === "POST" && route.request().headers()["next-action"]) await new Promise((r) => setTimeout(r, 2500));
+    await route.continue();
+  });
+  await bump.click();
+  await expect(card("Yeni", first.orderNo).getByRole("button", { name: "Başla" })).toBeDisabled();
+  await expect(card("Yeni", second.orderNo).getByRole("button", { name: "Başla" })).toBeEnabled();
+  slow = false;
+  await expect(card("Hazırlanıyor", first.orderNo)).toBeVisible();
+
+  // Hazır -> Geri al -> kart Hazırlanıyor sütununa döner.
+  await card("Hazırlanıyor", first.orderNo).getByRole("button", { name: "Hazır" }).click();
+  await expect(card("Hazır", first.orderNo)).toBeVisible();
+  await kitchen.getByRole("button", { name: "Geri al" }).click();
+  await expect(card("Hazırlanıyor", first.orderNo)).toBeVisible();
+  await expect(card("Hazır", first.orderNo)).toHaveCount(0);
+
+  // Süre dolunca (8 sn) Geri al düğmesi kalmaz.
+  await card("Hazırlanıyor", first.orderNo).getByRole("button", { name: "Hazır" }).click();
+  await expect(card("Hazır", first.orderNo)).toBeVisible();
+  await expect(kitchen.getByRole("button", { name: "Geri al" })).toBeVisible();
+  await kitchen.waitForTimeout(8000);
+  await expect(kitchen.getByRole("button", { name: "Geri al" })).toHaveCount(0);
+
+  // Dikey tablet: sütunlar tek yatay kaydırma kabında, sayfa kaymaz.
+  await kitchen.setViewportSize({ width: 768, height: 1024 });
+  const scroll = await kitchen.locator("[data-kds-board]").evaluate((el) => ({ scroll: el.scrollWidth, client: el.clientWidth }));
+  expect(scroll.scroll).toBeGreaterThan(scroll.client);
+  const doc = await kitchen.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+  expect(doc.scroll).toBeLessThanOrEqual(doc.client);
+
+  await kitchen.context().close();
+  await cashier.context().close();
+});

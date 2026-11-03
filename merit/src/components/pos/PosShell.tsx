@@ -93,7 +93,7 @@ export function PosShell({ context, outletName, fullName, rail, printer, outletI
   return (
     <DensityRoot density="pos">
       <div className="pos-shell" data-pos-context={context}>
-        <PosRail items={items} />
+        {context === "kds" ? null : <PosRail items={items} />}
         <main className="pos-main">
           {gate.phase === "idle" ? <FullscreenGate onStart={() => void gate.start()} onDismiss={gate.dismiss} /> : null}
           {children}

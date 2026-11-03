@@ -1,11 +1,13 @@
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { KdsOrder } from "@/modules/order/server/kds";
-import KdsCard from "./KdsCard";
+import KdsCard, { type KdsColumnId } from "./KdsCard";
 
 type Props = {
   title: string;
+  column: KdsColumnId;
   orders: KdsOrder[];
   action?: "start" | "ready";
-  pending: boolean;
+  pendingIds: ReadonlySet<string>;
   canEdit: boolean;
   canPrint: boolean;
   now: number;
@@ -13,9 +15,9 @@ type Props = {
   onPrint: (order: KdsOrder) => void;
 };
 
-export default function KdsColumn({ title, orders, action, pending, canEdit, canPrint, now, onAction, onPrint }: Props) {
-  return <section aria-label={title} className="min-w-0 rounded-xl border border-border bg-surface p-3 shadow-sm">
-    <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-lg font-semibold">{title}</h2><span className="rounded-full bg-bg px-2 py-0.5 text-sm text-muted">{orders.length}</span></div>
-    <div className="grid gap-3">{orders.length === 0 ? <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted">Sipariş yok.</p> : orders.map((order) => <KdsCard key={order.id} order={order} now={now} action={action} pending={pending} canEdit={canEdit} canPrint={canPrint} onAction={onAction} onPrint={onPrint} />)}</div>
+export default function KdsColumn({ title, column, orders, action, pendingIds, canEdit, canPrint, now, onAction, onPrint }: Props) {
+  return <section aria-label={title} className="kds-col">
+    <div className="mb-3 flex items-center justify-between gap-2"><h2 style={{ fontSize: 22, fontWeight: 700 }}>{title}</h2><span className="rounded-full border border-border bg-bg px-3 py-0.5 font-semibold" style={{ fontSize: 16 }}>{orders.length}</span></div>
+    <div className="grid gap-3">{orders.length === 0 ? <EmptyState title="Sipariş yok" /> : orders.map((order) => <KdsCard key={order.id} order={order} column={column} now={now} action={action} pending={pendingIds.has(order.id)} canEdit={canEdit} canPrint={canPrint} onAction={onAction} onPrint={onPrint} />)}</div>
   </section>;
 }

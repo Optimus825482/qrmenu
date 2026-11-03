@@ -28,6 +28,9 @@ export async function startPrepAction(orderId: string): Promise<Result<null>> {
 export async function markReadyAction(orderId: string): Promise<Result<null>> {
   return safeAction(id, async (input) => { await orders.transition(await requireUser(), input, "HAZIR"); return null; })(orderId);
 }
+export async function undoReadyAction(orderId: string): Promise<Result<null>> {
+  return safeAction(id, async (input) => { await orders.revertReady(await requireUser(), input); return null; })(orderId);
+}
 export async function kdsBoardAction(outletId: string) {
   return safeAction(id, async (input) => kds.board(await requireUser(), input))(outletId);
 }

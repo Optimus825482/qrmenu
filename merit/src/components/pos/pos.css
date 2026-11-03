@@ -317,3 +317,12 @@ a.pos-strip-item {
   border-color: var(--text);
   color: var(--bg);
 }
+
+/* KDS: ray yok (tek ekran, tek görev); ana alan + durum şeridi. */
+.pos-shell[data-pos-context="kds"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "main"
+    "strip";
+}
