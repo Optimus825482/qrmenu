@@ -98,7 +98,7 @@ export default function KdsClient({ outletId, board: initialBoard, canEdit, canP
   return <section className="space-y-3">
     <div className="flex flex-wrap items-baseline justify-between gap-2"><h1 style={{ fontSize: 24, fontWeight: 700 }}>Mutfak ekranı</h1><p className="text-muted" style={{ fontSize: 16 }}>Siparişler canlı güncellenir.</p></div>
     {error ? <p role="alert" className="rounded-[var(--radius-m)] border border-danger bg-danger-bg p-3 font-semibold text-danger" style={{ fontSize: 16 }}>{error}</p> : null}
-    <div className="kds-board" data-kds-board>
+    <div className="kds-board" data-kds-board role="region" aria-label="Sipariş sütunları" tabIndex={0}>
       <KdsColumn title="Yeni" column="NEW" orders={board.columns.NEW} action="start" pendingIds={pendingIds} canEdit={canEdit} canPrint={canPrint} now={now} onAction={act} onPrint={print} />
       <KdsColumn title="Hazırlanıyor" column="PREP" orders={board.columns.PREP} action="ready" pendingIds={pendingIds} canEdit={canEdit} canPrint={canPrint} now={now} onAction={act} onPrint={print} />
       <KdsColumn title="Hazır" column="READY" orders={board.columns.READY} pendingIds={pendingIds} canEdit={canEdit} canPrint={canPrint} now={now} onAction={act} onPrint={print} />
