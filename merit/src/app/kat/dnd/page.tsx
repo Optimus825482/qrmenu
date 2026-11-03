@@ -49,7 +49,7 @@ export default function DndPage() {
   return (
     <main data-testid="dnd-page">
       <h1>Rahatsız Etmeyin (DND)</h1>
-      <Link href="/kat">Geri</Link>
+      <Link href="/kat" className="inline-flex min-h-11 min-w-11 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium text-text">Geri</Link>
       {error && <p data-testid="dnd-error">{error}</p>}
       {rows && rows.length === 0 && <p data-testid="dnd-empty">Bugün DND kaydı yok.</p>}
       <ul data-testid="dnd-list">

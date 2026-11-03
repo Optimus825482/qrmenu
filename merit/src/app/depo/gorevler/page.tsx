@@ -74,7 +74,7 @@ export default function DepoGorevlerPage() {
   return (
     <main data-testid="depo-gorevler-page">
       <h1>Görev izleme</h1>
-      <Link href="/depo">Geri</Link>
+      <Link href="/depo" className="inline-flex min-h-11 min-w-11 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium text-text">Geri</Link>
       {error && <p data-testid="depo-gorevler-error">{error}</p>}
       {summary && (
         <section data-testid="depo-gorevler-summary">
@@ -93,7 +93,7 @@ export default function DepoGorevlerPage() {
       )}
       <div role="group" aria-label="Süzgeç">
         {FILTERS.map(([value, label]) => (
-          <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>
+          <button key={value} type="button" className="min-h-11 min-w-11 rounded-lg border border-border px-3 text-sm aria-pressed:bg-accent aria-pressed:text-white" aria-pressed={filter === value} onClick={() => setFilter(value)}>
             {label}
           </button>
         ))}
