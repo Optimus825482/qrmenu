@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { Icon } from "@/components/icons/Icon";
 import { askReason } from "@/components/ui/reason";
 import type { RoomCheckHistoryItem } from "@/modules/minibar/server/minibarTypes";
@@ -158,7 +157,6 @@ export default function KatIslemlerimPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <PersistentMybarModal />
 
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between">

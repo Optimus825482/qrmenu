@@ -10,7 +10,10 @@ export function routeOf(screen: { path: string }): string {
  * Sub-routes that belong to a screen whose catalogue path is a shorter route: the room check
  * (`/kat/oda-kontrol/[roomId]`) needs a room id, so MB-TUK is listed under `/kat` and reached from there.
  */
-const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [["/kat/oda-kontrol", "MB-TUK"]];
+const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [
+  ["/kat/oda-kontrol", "MB-TUK"],
+  ["/kat/mybar", "MB-PERS"],
+];
 
 /**
  * The catalogue screen that owns `pathname`: the longest route prefix wins on a segment boundary

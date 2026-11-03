@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Icon } from "@/components/icons/Icon";
 
@@ -53,7 +52,6 @@ export default function KatTavsiyeIsPlaniPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <PersistentMybarModal />
 
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between">

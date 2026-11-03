@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { StaffShell } from "@/components/staff/StaffShell";
 import { loadStaffShellProps, requireStaffLayout } from "@/components/staff/loadShellProps";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
+import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { SnackbarHost } from "@/components/ui/Snackbar";
 import { SessionWatch } from "./SessionWatch";
 
@@ -23,6 +24,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
         <SessionWatch />
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
+        <PersistentMybarModal />
         {children}
       </>
     );
@@ -32,6 +34,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
     <>
       <SessionWatch />
       <ConfirmHost variant="sheet" />
+      <PersistentMybarModal />
       <StaffShell {...shell}>{children}</StaffShell>
     </>
   );

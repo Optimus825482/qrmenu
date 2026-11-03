@@ -40,6 +40,7 @@ const KAT_PRIMARY: Def[] = [
 const KAT_MORE: Def[] = [
   { id: "requests", label: "Düzeltme ve ek talepler", icon: "inbox", href: "/kat/duzeltme-onay", screen: "MB-TAL" },
   { id: "stock", label: "Zimmet stoğu", icon: "box", href: "/kat/stok", screen: "MB-ZIM" },
+  { id: "mybar", label: "MyBar talepleri", icon: "bell", href: "/kat/mybar", screen: "MB-PERS" },
 ];
 
 const GARSON_PRIMARY: Def[] = [

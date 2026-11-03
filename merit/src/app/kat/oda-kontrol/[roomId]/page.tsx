@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { Icon } from "@/components/icons/Icon";
 import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
 import { notify } from "@/shell/notify";
@@ -264,7 +263,6 @@ export default function OdaKontrolPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text pb-36">
-      <PersistentMybarModal />
 
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">

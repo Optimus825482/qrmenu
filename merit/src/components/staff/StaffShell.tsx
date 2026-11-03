@@ -35,6 +35,7 @@ export type StaffShellProps = {
 };
 
 const FALLBACK_TITLES: ReadonlyArray<readonly [string, string]> = [
+  ["/kat/mybar", "MyBar talepleri"],
   ["/depo", "Depo panosu"],
   ["/erisimim", "Erişimim"],
 ];

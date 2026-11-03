@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { Icon } from "@/components/icons/Icon";
 
 export default function KatQrScannerPage() {
@@ -152,7 +151,6 @@ export default function KatQrScannerPage() {
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <PersistentMybarModal />
 
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-2xl items-center justify-between">

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
 import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
@@ -85,7 +84,6 @@ export function KatDashboard({
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <PersistentMybarModal hotelId={selectedHotelId} />
       {showPriorityModal && (
         <PriorityRouteModal
           hotelId={selectedHotelId}
