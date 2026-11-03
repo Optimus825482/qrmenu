@@ -38,7 +38,8 @@ export type ReconcileResult = {
 
 type Wanted = { guestRecordId: string; arrivalTime: string | null; departureTime: string | null; priority: number };
 
-const dayOnly = (d: Date): string => d.toISOString().slice(0, 10);
+/** `@db.Date` değerleri `businessDay(day)` ile aynı anı taşır; karşılaştırma `getTime()` üzerinden yapılır (UTC dize dilimi yok). */
+const sameDay = (d: Date, dayValue: Date): boolean => d.getTime() === dayValue.getTime();
 const timeKey = (t: string | null): number => {
   const m = t ? /^(\d{1,2}):(\d{2})/.exec(t) : null;
   return m ? Number(m[1]) * 60 + Number(m[2]) : Number.POSITIVE_INFINITY;
@@ -59,9 +60,10 @@ function wantedByType(records: Rec[], day: string): Map<TaskType, Map<string, Wa
   const out = new Map<TaskType, Map<string, Wanted>>(TASK_TYPES.map((t) => [t, new Map()]));
   for (const r of records) {
     const type = TASK_TYPE_FOR_KIND[r.kind];
-    const covers = dayOnly(r.arrivalDate) <= day && day <= dayOnly(r.departureDate);
+    const dayValue = businessDay(day);
+    const covers = r.arrivalDate.getTime() <= dayValue.getTime() && dayValue.getTime() <= r.departureDate.getTime();
     const fits =
-      r.kind === "IN_HOUSE" ? covers : r.kind === "ARRIVAL" ? dayOnly(r.arrivalDate) === day : dayOnly(r.departureDate) === day;
+      r.kind === "IN_HOUSE" ? covers : r.kind === "ARRIVAL" ? sameDay(r.arrivalDate, dayValue) : sameDay(r.departureDate, dayValue);
     if (!fits) continue;
     const map = out.get(type)!;
     if (map.has(r.roomId)) continue;
@@ -297,9 +299,14 @@ export async function reconcileAllHotels(now: Date = new Date()): Promise<{ hote
   let created = 0;
   let added = 0;
   for (const h of hotels) {
-    const r = await reconcileDailyTasks(h.id, day, {}, now);
-    created += r.created;
-    added += r.added;
+    // Bir otelin hatası diğerlerini durdurmaz (00:01 işi otel başına yalıtılır).
+    try {
+      const r = await reconcileDailyTasks(h.id, day, {}, now);
+      created += r.created;
+      added += r.added;
+    } catch (err) {
+      console.error(`[minibar.task-gen] otel ${h.id} uzlaştırma hatası`, err);
+    }
   }
   return { hotelCount: hotels.length, created, added };
 }

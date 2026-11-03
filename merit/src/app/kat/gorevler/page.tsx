@@ -17,6 +17,14 @@ type Item = {
 };
 type Summary = { total: number; completed: number; waiting: number; dnd: number; incomplete: number; ratePct: number };
 
+const STATUS_LABEL: Record<string, string> = {
+  BEKLIYOR: "Bekliyor",
+  DEVAM: "Devam ediyor",
+  DND_BEKLIYOR: "DND bekliyor",
+  TAMAMLANDI: "Tamamlandı",
+  DND: "DND",
+  EKSIK: "Eksik",
+};
 const TYPE_LABEL: Record<string, string> = {
   INHOUSE_KONTROL: "In House",
   ARRIVAL_KONTROL: "Arrival",
@@ -61,7 +69,7 @@ export default function GorevlerPage() {
       <ul data-testid="gorevler-list">
         {items?.map((it) => (
           <li key={it.itemId} data-testid="gorevler-item" data-status={it.status}>
-            <Link href={`/kat/oda-kontrol/${it.roomId}`}>Oda {it.roomNumber}</Link> — {it.floorName} — {TYPE_LABEL[it.taskType] ?? it.taskType} — {it.status}
+            <Link href={`/kat/oda-kontrol/${it.roomId}`}>Oda {it.roomNumber}</Link> — {it.floorName} — {TYPE_LABEL[it.taskType] ?? it.taskType} — {STATUS_LABEL[it.status] ?? it.status}
             {it.arrivalTime ? ` — Varış ${it.arrivalTime}` : ""}
             {it.departureTime ? ` — Çıkış ${it.departureTime}` : ""}
           </li>
