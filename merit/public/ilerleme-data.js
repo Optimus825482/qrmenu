@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 06:45",
+  updatedAt: "03.11.2026 06:55",
   headline: "Paralel 2. tur: minibar T2/T3/T4, radar T4, UX T5 uygulanıyor; UX T1 ve radar T2 incelemesi onaylandı.",
   phases: [
     {
@@ -129,8 +129,8 @@ window.ILERLEME = {
         { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "done", doneAt: "03.11 05:54", note: "fce492b (inceleme onaylı)" },
         { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:58", note: "7244d05 + ded9ca7 (inceleme onaylı)" },
         { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "done", doneAt: "03.11 05:55", note: "0d0cc5f + b5f8022 (incelemeler onaylı)" },
-        { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
-        { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
+        { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "done", doneAt: "03.11 06:52", note: "72c35cf — 437 emoji → 0, 32 sürekli animasyon kaldırıldı, formatPrice; inceleme sürüyor" },
+        { title: "T6 POS kabuğu ve kasa masa haritası", status: "active" },
         { title: "T7 KDS yenilemesi ve sesler", status: "pending" },
         { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "pending" },
         { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 06:55", text: "UX T5 (emoji→ikon) uygulandı (72c35cf); minibar T2 katalog onaylandı; UX T6 POS kabuğu ve dalga-1 e2e bütünleştirme başladı." },
     { at: "03.11 06:45", text: "Radar T4 (CR-RAD, OperationEvent, ayarlar) uygulandı (0552fe5); T5 anlık görüntü başladı; minibar T13 göç başladı." },
     { at: "03.11 06:35", text: "Minibar T1 ve T3 (pool.ts) incelemeleri onaylandı; T12 göç iskeleti uygulandı (bad0b42). Çalışan: minibar T2/T4, radar T4, UX T5." },
     { at: "03.11 05:55", text: "UX T1 ve radar T2 incelemeleri onaylandı; minibar T2–T4, radar T4 ve UX T5 paralel başladı; dev DB migration'ları uygulandı." },
