@@ -1,9 +1,21 @@
 // Pure definitions (no server imports) of the setting keys, their zod schemas and defaults
 // (design spec §11). Shared by the settings service and the seed so there is ONE source of truth.
 import { z } from "zod";
+import { WALL_VIEWS } from "@/modules/radar/constants";
 
 const minutes = z.number().int().min(1).max(1440);
 const flag = z.boolean();
+
+/** Comma separated wall views ("genel,kat"): known names only, at least one. */
+const wallViewsCsv = z
+  .string()
+  .refine(
+    (v) => {
+      const parts = v.split(",").map((x) => x.trim());
+      return parts.length > 0 && parts.every((x) => (WALL_VIEWS as readonly string[]).includes(x));
+    },
+    "Duvar görünümleri genel, kat, masa, kuyruk, odaServisi, personel adlarından en az biri olmalı",
+  );
 
 /** Value schema of every setting key. Adding a key here is all that is needed to type it. */
 export const SETTING_SCHEMAS = {
@@ -35,6 +47,14 @@ export const SETTING_SCHEMAS = {
   "email.systemEnabled": flag,
   "occupancy.fileRetentionDays": z.number().int().min(1).max(365),
   "qr.baseUrl": z.url(),
+  "radar.liveBufferMinutes": z.number().int().min(5).max(120),
+  "radar.replayRetentionDays": z.number().int().min(7).max(365),
+  "radar.wallRotateSeconds": z.number().int().min(5).max(300),
+  "radar.wallViews": wallViewsCsv,
+  "radar.soundOnEscalation": flag,
+  "radar.idleMinutes": z.number().int().min(1).max(60),
+  "radar.mybarStaleMinutes": z.number().int().min(5).max(240),
+  "radar.printerSilentSeconds": z.number().int().min(30).max(900),
   "translation.deeplKey": z.string().default(""),
   "translation.geminiKey": z.string().default(""),
   "translation.provider": z.enum(["AUTO", "DEEPL", "GEMINI"]),
@@ -74,6 +94,14 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "email.systemEnabled": false,
   "occupancy.fileRetentionDays": 4,
   "qr.baseUrl": "http://localhost:3000",
+  "radar.liveBufferMinutes": 30,
+  "radar.replayRetentionDays": 90,
+  "radar.wallRotateSeconds": 20,
+  "radar.wallViews": "genel,kat,masa,kuyruk",
+  "radar.soundOnEscalation": false,
+  "radar.idleMinutes": 10,
+  "radar.mybarStaleMinutes": 30,
+  "radar.printerSilentSeconds": 120,
   "translation.deeplKey": "",
   "translation.geminiKey": "",
   "translation.provider": "AUTO",
@@ -96,6 +124,7 @@ export const SETTING_GROUPS = [
   "E-posta",
   "QR",
   "Çeviri",
+  "Radar",
 ] as const;
 export type SettingGroup = (typeof SETTING_GROUPS)[number];
 
@@ -350,6 +379,64 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
       { value: "DEEPL", label: "Yalnızca DeepL" },
       { value: "GEMINI", label: "Yalnızca Google Gemini" },
     ],
+    systemOnly: true,
+  },
+  "radar.liveBufferMinutes": {
+    label: "Radar geri sarma süresi",
+    description: "Canlı radarda tarayıcının bellekte tuttuğu son olay süresi (zaman şeridi geri sarma).",
+    group: "Radar",
+    type: "number",
+    unit: "dk",
+    systemOnly: true,
+  },
+  "radar.replayRetentionDays": {
+    label: "Radar tekrar saklama süresi",
+    description: "Gün tekrarı için operasyon izlerinin saklandığı süre; eskileri her gece 03:30'da silinir.",
+    group: "Radar",
+    type: "number",
+    unit: "gün",
+    systemOnly: true,
+  },
+  "radar.wallRotateSeconds": {
+    label: "Duvar ekranı döngü süresi",
+    description: "Duvar ekranında her görünümün ekranda kalma süresi.",
+    group: "Radar",
+    type: "number",
+    unit: "sn",
+  },
+  "radar.wallViews": {
+    label: "Duvar ekranı görünümleri",
+    description: "Virgülle ayrılmış sıra: genel, kat, masa, kuyruk, odaServisi, personel.",
+    group: "Radar",
+    type: "text",
+    placeholder: "genel,kat,masa,kuyruk",
+  },
+  "radar.soundOnEscalation": {
+    label: "Duvar ekranında yükseltme sesi",
+    description: "Sipariş yükseltildiğinde yalnız duvar ekranı kısa bir uyarı sesi çalsın.",
+    group: "Radar",
+    type: "boolean",
+  },
+  "radar.idleMinutes": {
+    label: "Personel boşta süresi",
+    description: "Bu süre hareketsiz kalan oturum radarda boşta sayılır.",
+    group: "Radar",
+    type: "number",
+    unit: "dk",
+  },
+  "radar.mybarStaleMinutes": {
+    label: "MyBar bekleme uyarısı",
+    description: "Görülmeyen MyBar talebi bu süreyi aşınca radarda uyarı verilir.",
+    group: "Radar",
+    type: "number",
+    unit: "dk",
+  },
+  "radar.printerSilentSeconds": {
+    label: "Yazıcı sessizlik süresi",
+    description: "Ağ geçidinden bu süre haber alınamayan yazıcı radarda sessiz sayılır.",
+    group: "Radar",
+    type: "number",
+    unit: "sn",
     systemOnly: true,
   },
   "translation.geminiModel": {

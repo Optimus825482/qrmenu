@@ -6,7 +6,7 @@ import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 197;
+const EXPECTED_PERMISSION_ROWS = 201;
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -45,12 +45,12 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 17 rol, 33 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
+  it("seed 3 otel, 17 rol, 34 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
     expect(await db.role.count()).toBe(17);
-    expect(await db.appScreen.count()).toBe(33);
+    expect(await db.appScreen.count()).toBe(34);
     expect(await db.outlet.count()).toBe(3);
     expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
     expect(await db.hotelModule.count()).toBe(12);
@@ -111,7 +111,7 @@ describe("seed (gerçek test DB)", () => {
     const sysRows = await db.roleScreenPermission.findMany({
       where: { hotelId: null, role: { code: "R-SYS" } },
     });
-    expect(sysRows).toHaveLength(33);
+    expect(sysRows).toHaveLength(34);
     for (const row of sysRows) {
       expect([row.canView, row.canCreate, row.canEdit, row.canApprove, row.canReport]).toEqual([
         true,
@@ -185,17 +185,42 @@ describe("seed (gerçek test DB)", () => {
     }
     const screens = await db.appScreen.findMany({ where: { code: { in: ["CR-TAN", "CR-REH"] } }, orderBy: { sortOrder: "asc" } });
     expect(screens.map((s) => [s.code, s.name, s.path, s.moduleKey, s.sortOrder])).toEqual([
-      ["CR-TAN", "Tanımlamalar", "/admin#core.tanimlar", "CORE", 32],
-      ["CR-REH", "Kurulum Rehberi", "/admin#core.rehber", "CORE", 33],
+      ["CR-TAN", "Tanımlamalar", "/admin#core.tanimlar", "CORE", 33],
+      ["CR-REH", "Kurulum Rehberi", "/admin#core.rehber", "CORE", 34],
     ]);
+  });
+
+  it("CR-RAD (Canlı Radar): CR-KOM'dan hemen sonra, sortOrder 27; R-SYS V,O,D,A,R; R-ITT/R-OTM/R-FBM V,R; diğer 13 rolde satır yok; ikinci seed satır eklemez", async () => {
+    await runSeed(db);
+    const screens = await db.appScreen.findMany({
+      where: { code: { in: ["CR-KOM", "CR-RAD", "CR-TAN", "CR-REH"] } },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(screens.map((s) => [s.code, s.sortOrder])).toEqual([
+      ["CR-KOM", 26],
+      ["CR-RAD", 27],
+      ["CR-TAN", 33],
+      ["CR-REH", 34],
+    ]);
+    expect(screens[1]).toMatchObject({ name: "Canlı Radar", path: "/radar", moduleKey: "CORE" });
+    expect(await permission("R-SYS", "CR-RAD")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: true, canReport: true });
+    for (const role of ["R-ITT", "R-OTM", "R-FBM"]) {
+      expect(await permission(role, "CR-RAD")).toMatchObject({ canView: true, canReport: true, canCreate: false, canEdit: false, canApprove: false });
+    }
+    const others = (await db.role.findMany({ select: { code: true } })).map((r) => r.code).filter((c) => !["R-SYS", "R-ITT", "R-OTM", "R-FBM"].includes(c));
+    expect(others).toHaveLength(13);
+    for (const role of others) expect(await permission(role, "CR-RAD")).toBeNull();
+    const before = await db.roleScreenPermission.count();
+    await runSeed(db);
+    expect(await db.roleScreenPermission.count()).toBe(before);
   });
 
   it("mevcut veritabanında runSeed yeni iki ekranı ve izinlerini sonradan ekler", async () => {
     await runSeed(db);
     await db.appScreen.deleteMany({ where: { code: { in: ["CR-TAN", "CR-REH"] } } });
-    expect(await db.appScreen.count()).toBe(31);
+    expect(await db.appScreen.count()).toBe(32);
     await runSeed(db);
-    expect(await db.appScreen.count()).toBe(33);
+    expect(await db.appScreen.count()).toBe(34);
     expect(await permission("R-OTM", "CR-TAN")).toMatchObject({ canView: true, canCreate: true, canEdit: true });
   });
 
@@ -208,7 +233,7 @@ describe("seed (gerçek test DB)", () => {
     const first = await db.appScreen.findFirstOrThrow({ orderBy: { sortOrder: "asc" } });
     expect(first).toMatchObject({ code: "MB-KAT", path: "/kat", sortOrder: 1 });
     const orders = (await db.appScreen.findMany({ orderBy: { sortOrder: "asc" } })).map((s) => s.sortOrder);
-    expect(orders).toEqual(Array.from({ length: 33 }, (_, i) => i + 1));
+    expect(orders).toEqual(Array.from({ length: 34 }, (_, i) => i + 1));
   });
 
   it("toplam sistem yetki satırı sayısı sabittir (yeniden seed artırmaz)", async () => {

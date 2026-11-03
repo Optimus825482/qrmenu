@@ -21,7 +21,7 @@ function allTexts(): string[] {
 
 describe("screenGuide kataloğu", () => {
   it("katalogdaki her ekranın rehberi var, fazladan kayıt yok", () => {
-    expect(SCREENS).toHaveLength(33);
+    expect(SCREENS).toHaveLength(34);
     for (const s of SCREENS) {
       const g = SCREEN_GUIDES[s.code];
       expect(g, s.code).toBeDefined();
@@ -48,7 +48,7 @@ describe("screenGuide kataloğu", () => {
     for (const s of SCREENS) {
       const route = routeOf(s);
       const isPos = ["/kasa", "/kds"].some((r) => route === r || route.startsWith(`${r}/`));
-      const expected = route === "/admin" || route.startsWith("/admin/") ? "xp" : isPos ? "pos" : "personel";
+      const expected = route === "/admin" || route.startsWith("/admin/") || route === "/radar" ? "xp" : isPos ? "pos" : "personel";
       expect(SCREEN_GUIDES[s.code].context, s.code).toBe(expected);
     }
   });

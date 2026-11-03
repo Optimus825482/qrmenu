@@ -6,6 +6,7 @@ import { assertCan } from "@/lib/rbac";
 import { publish } from "@/lib/realtime";
 import { DomainError, fromZod } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
+import { recordOperation } from "@/modules/radar/server/operations";
 import { outletAllowed } from "./approvals";
 
 const pairSchema = z.object({ tableId: z.string().min(1), userId: z.string().min(1) });
@@ -47,6 +48,8 @@ async function publishChange(
   userId: string | null,
 ): Promise<void> {
   await publish({ type: "assignment.changed", hotelId, outletId, payload: { tableId, userId } }, tx);
+  // G14: assignment history for the day replay (a cleared table is recorded with userId null).
+  await recordOperation(tx, { hotelId, outletId, type: "table.assigned", refId: tableId, data: { userId } });
 }
 
 async function assign(ctx: Ctx, raw: unknown): Promise<void> {

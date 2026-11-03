@@ -5,6 +5,9 @@ import { TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
 import { rsSlaSweep } from "@/modules/order/server/roomService/sla";
+import { purgeOperations } from "@/modules/radar/server/operations";
+import { presenceSweep } from "@/modules/core/server/sessionPresence";
+import { printers } from "@/modules/order/server/printers";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import {
@@ -18,6 +21,7 @@ import {
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
+export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
 export const MINIBAR_TASK_GEN_QUEUE = "minibar.task-gen";
 export const MINIBAR_OCCUPANCY_ALERT_QUEUE = "minibar.occupancy-alert";
@@ -68,6 +72,12 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
         idleMinutes: await getSetting("session.idleMinutes"),
         notifier: sessionWarnNotifier,
       });
+      // Radar: presence heartbeat + idle transitions. A radar failure must not break the session sweep.
+      try {
+        await presenceSweep(new Date());
+      } catch (err) {
+        console.error("[session.sweep] presence", err);
+      }
     });
     // Receipts stuck in BASILIYOR (gateway died mid-print) go back to the queue after 60 s.
     await boss.createQueue(PRINT_SWEEP_QUEUE); // idempotent
@@ -75,6 +85,8 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(PRINT_SWEEP_QUEUE, async () => {
       const swept = await printJobs.sweepStale(new Date());
       if (swept > 0) console.log(`[print.sweep] ${swept} baskı işi kuyruğa geri alındı`);
+      const silent = await printers.printerSilenceSweep(new Date());
+      if (silent > 0) console.log(`[print.sweep] ${silent} yazıcı sessiz`);
     });
     // Room-service SLA: WARN at 80 % and BREACH at 100 % of rs.slaMinutes, each published once.
     await boss.createQueue(RS_SLA_SWEEP_QUEUE); // idempotent
@@ -84,6 +96,13 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       if (res.warned + res.breached > 0) {
         console.log(`[rs.sla-sweep] ${res.warned} uyarı, ${res.breached} aşım`);
       }
+    });
+    // Radar replay traces older than radar.replayRetentionDays (90) are removed every night.
+    await boss.createQueue(RADAR_PURGE_QUEUE); // idempotent
+    await boss.schedule(RADAR_PURGE_QUEUE, "30 3 * * *", null, { tz: TZ, key: "default" });
+    await boss.work(RADAR_PURGE_QUEUE, async () => {
+      const removed = await purgeOperations(new Date(), await getSetting("radar.replayRetentionDays"));
+      if (removed > 0) console.log(`[radar.purge] ${removed} operasyon izi silindi`);
     });
     await boss.createQueue(ORDER_ESCALATION_QUEUE); // idempotent
     await boss.schedule(ORDER_ESCALATION_QUEUE, "* * * * *", null, { tz: TZ });

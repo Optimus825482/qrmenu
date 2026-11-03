@@ -48,8 +48,8 @@ const VIEW_REPORT: readonly Action[] = ["V", "R"];
 
 /** CORE screens every role may open for reporting. */
 const CORE_ALL_ROLES = new Set(["CR-RAP"]);
-/** Command center: view + report for system and management roles only. */
-const CORE_MANAGEMENT = new Set(["CR-KOM"]);
+/** Command center and live radar: view + report for system and management roles only. */
+const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-RAD"]);
 /** Online users: hotel managers may also force-logout (A). R-SYS already has A via profile TAM. */
 const ONLINE_FORCE: readonly Action[] = ["V", "A", "R"];
 /**

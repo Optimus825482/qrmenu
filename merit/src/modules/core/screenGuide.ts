@@ -517,6 +517,20 @@ const LIST: ScreenGuide[] = [
     ],
   ),
   guide(
+    "CR-RAD",
+    "xp",
+    "Kompleksin anlık operasyonunu tek pencerede salt okunur izlersin.",
+    [
+      ["radar-genel", "Genel bakış", "Seçili oteldeki sipariş, minibar ve personel sayıları canlı güncellenir."],
+      ["radar-zaman", "Zaman şeridi", "Son yarım saate geri sarıp olayları yeniden izleyebilirsin."],
+      ["radar-duvar", "Duvar ekranı", "Tam ekran modu bir ekranda sürekli gösterim içindir."],
+    ],
+    [
+      "Radar yalnız izlemek içindir; buradan kayıt değiştirilmez.",
+      "Bağlantı koptuğunda sayılar bir an eski kalabilir; Kesinti bandını bekle.",
+    ],
+  ),
+  guide(
     "CR-ONL",
     "xp",
     "Şu an sisteme bağlı kullanıcıları görürsün.",

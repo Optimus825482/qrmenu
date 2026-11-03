@@ -642,6 +642,7 @@ model SessionEvent {
 
   session UserSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
+  @@index([createdAt])
   @@map("session_events")
 }
 
@@ -733,6 +734,7 @@ model QrScanLog {
   table OutletTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
   user  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([createdAt])
   @@map("qr_scan_logs")
 }
 
@@ -951,6 +953,7 @@ model RoomCheck {
 
   @@index([roomId, checkDate])
   @@index([userId, checkDate])
+  @@index([checkDate])
   @@map("room_checks")
 }
 
@@ -990,6 +993,7 @@ model RoomDndCheck {
   dnd  RoomDnd @relation(fields: [dndId], references: [id], onDelete: Cascade)
   user User    @relation(fields: [userId], references: [id], onDelete: Restrict)
 
+  @@index([at])
   @@map("room_dnd_checks")
 }
 
@@ -1165,6 +1169,7 @@ model TaskStatusLog {
   taskItem DailyTaskItem @relation(fields: [taskItemId], references: [id], onDelete: Cascade)
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([createdAt])
   @@map("task_status_logs")
 }
 
@@ -1414,6 +1419,7 @@ model OrderEvent {
   user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
+  @@index([at])
   @@map("order_events")
 }
 
@@ -1450,6 +1456,7 @@ model WaiterCall {
 
   @@index([outletId, status])
   @@index([tableId, status])
+  @@index([outletId, createdAt])
   @@map("waiter_calls")
 }
 
@@ -1540,4 +1547,19 @@ model LegacyArchive {
 
   @@unique([legacyTable, legacyId])
   @@map("legacy_personel_zimmet")
+}
+
+// Narrow projection of four operational signals that leave no timestamped trace elsewhere
+// (printer health, table assignment history, staff idle, missing occupancy upload). Live radar replay only.
+model OperationEvent {
+  id       String   @id @default(cuid())
+  hotelId  String   @map("hotel_id")
+  outletId String?  @map("outlet_id")
+  type     String // printer.health | table.assigned | presence.idle | upload.missing
+  refId    String?  @map("ref_id")
+  data     Json     @default("{}")
+  at       DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([hotelId, at])
+  @@map("operation_events")
 }

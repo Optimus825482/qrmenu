@@ -6,6 +6,16 @@ export const RADAR_LAYERS: readonly RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_S
 
 export const WALL_VIEWS = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel"] as const satisfies readonly WallView[];
 
+/** Parses `radar.wallViews` ("genel,kat"): known names only, original order, never empty. */
+export function parseWallViews(csv: string): WallView[] {
+  const out: WallView[] = [];
+  for (const part of csv.split(",")) {
+    const v = part.trim() as WallView;
+    if ((WALL_VIEWS as readonly string[]).includes(v) && !out.includes(v)) out.push(v);
+  }
+  return out.length > 0 ? out : ["genel"];
+}
+
 const MINIBAR_KINDS: RoleKind[] = ["SISTEM", "YONETIM", "MINIBAR"];
 
 /**

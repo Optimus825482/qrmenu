@@ -2,7 +2,9 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { publish } from "@/lib/realtime";
+import { getSetting } from "@/lib/settings";
+import { publishRadar } from "@/modules/radar/publish";
+import { recordOperation } from "@/modules/radar/server/operations";
 import { assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
@@ -65,9 +67,10 @@ async function heartbeat(hotelCode: string, printers: HeartbeatPrinter[]): Promi
   if (updates.length === 0) return;
   const known = await prisma.printer.findMany({
     where: { id: { in: updates.map((p) => p.id) }, hotelId: hotel.id },
-    select: { id: true, lastStatus: true },
+    select: { id: true, lastStatus: true, outletId: true },
   });
   const previous = new Map(known.map((p) => [p.id, p.lastStatus]));
+  const outletOf = new Map(known.map((p) => [p.id, p.outletId]));
   await prisma.$transaction(async (tx) => {
     for (const p of updates) {
       if (!previous.has(p.id)) continue;
@@ -76,11 +79,68 @@ async function heartbeat(hotelCode: string, printers: HeartbeatPrinter[]): Promi
         where: { id: p.id },
         data: { lastSeenAt: new Date(), lastStatus: status },
       });
-      if ((previous.get(p.id) === "OK") !== p.ok) {
-        await publish({ type: "printer.status", hotelId: hotel.id, payload: { printerId: p.id, ok: p.ok } }, tx);
+      const before = previous.get(p.id);
+      if ((before === "OK") !== p.ok) {
+        await publishRadar("printer.status", { hotelId: hotel.id }, { printerId: p.id, ok: p.ok }, tx);
+        // G18: every state change is kept for the replay ("SESSIZ" -> back online reads as HAZIR).
+        const outletId = outletOf.get(p.id);
+        await recordOperation(tx, {
+          hotelId: hotel.id,
+          ...(outletId ? { outletId } : {}),
+          type: "printer.health",
+          refId: p.id,
+          data: { state: p.ok ? "HAZIR" : "HATA" },
+        });
       }
     }
   });
+}
+
+/**
+ * G18: an active printer whose gateway has been silent for `radar.printerSilentSeconds` flips to lastStatus
+ * "SESSIZ" exactly once (conditional update), publishes `printer.status {ok:false, reason:"SESSIZ"}` and leaves
+ * a `printer.health` trace. The next heartbeat answers with `ok:true` (the status is no longer "OK").
+ * Returns how many printers went silent. Run by the `print.sweep` job.
+ */
+async function printerSilenceSweep(now: Date): Promise<number> {
+  const printers = await prisma.printer.findMany({
+    where: { isActive: true, lastSeenAt: { not: null }, OR: [{ lastStatus: null }, { lastStatus: { not: "SESSIZ" } }] },
+    select: { id: true, hotelId: true, outletId: true, lastSeenAt: true },
+  });
+  let silenced = 0;
+  const limits = new Map<string, number>();
+  for (const printer of printers) {
+    let seconds = limits.get(printer.hotelId);
+    if (seconds === undefined) {
+      seconds = await getSetting("radar.printerSilentSeconds", printer.hotelId);
+      limits.set(printer.hotelId, seconds);
+    }
+    if (!printer.lastSeenAt || now.getTime() - printer.lastSeenAt.getTime() < seconds * 1000) continue;
+    const won = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.printer.updateMany({
+        where: { id: printer.id, isActive: true, OR: [{ lastStatus: null }, { lastStatus: { not: "SESSIZ" } }] },
+        data: { lastStatus: "SESSIZ" },
+      });
+      if (count === 0) return false;
+      await publishRadar(
+        "printer.status",
+        { hotelId: printer.hotelId },
+        { printerId: printer.id, ok: false, reason: "SESSIZ" },
+        tx,
+      );
+      await recordOperation(tx, {
+        hotelId: printer.hotelId,
+        ...(printer.outletId ? { outletId: printer.outletId } : {}),
+        type: "printer.health",
+        refId: printer.id,
+        data: { state: "SESSIZ" },
+        at: now,
+      });
+      return true;
+    });
+    if (won) silenced++;
+  }
+  return silenced;
 }
 
 /** The hotel's active printers — the gateway pings exactly these (`heartbeat` route answer). */
@@ -444,6 +504,7 @@ export async function listOrderingOutlets(ctx: Ctx, hotelId: string): Promise<Or
 
 export const printers = {
   heartbeat,
+  printerSilenceSweep,
   listActive,
   list,
   create,
