@@ -1,3 +1,4 @@
+import { formatInTimeZone } from "date-fns-tz";
 import type { PgBoss } from "pg-boss";
 import { businessDate, TZ } from "@/lib/time";
 import { addDays } from "./dates";
@@ -59,7 +60,15 @@ export const MINIBAR_JOBS: readonly MinibarJob[] = [
   { queue: "occupancy.warn.1000", cron: "0 10 * * *", run: (now) => warn(now, "10:00") },
   { queue: "occupancy.warn.1800", cron: "0 18 * * *", run: (now) => warn(now, "18:00") },
   { queue: "dnd.reminder", cron: "* * * * *", run: (now) => runDndReminders(now) },
-  { queue: "dnd.dayend", cron: "59 23 * * *", run: (now) => closeDndDay(businessDate(now), now) },
+  {
+    queue: "dnd.dayend",
+    cron: "59 23 * * *",
+    // Scheduled payload is null; close the latest 23:59 Nicosia day, even after midnight.
+    run: (now) => closeDndDay(
+      formatInTimeZone(now, TZ, "HH:mm") === "23:59" ? businessDate(now) : previousBusinessDay(now),
+      now,
+    ),
+  },
   { queue: "occupancy.cleanup", cron: "0 2 * * *", run: (now) => cleanupOldFiles(now) },
 ];
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { GuestRecordKind, Prisma, TaskType } from "@/generated/prisma/client";
+import type { GuestRecordKind, Prisma, TaskStatus, TaskType } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan } from "@/lib/rbac";
@@ -32,7 +32,7 @@ export type ReconcileResult = {
   added: number;
   /** Pending items removed because their guest record is gone (plus tasks left empty). */
   removed: number;
-  /** Pending items whose times / priority changed. */
+  /** Pending items whose coverage, times or priority changed. */
   updated: number;
 };
 
@@ -114,7 +114,52 @@ async function reconcileInTx(
     select: { id: true, type: true },
     orderBy: { id: "asc" },
   });
-  // Lock order = tasks.ts: items first (id order), then tasks (id order).
+  // Match check writers: room -> DND -> items -> tasks. Dayend locks DND -> items.
+  // Include existing rooms too, so removing pending items cannot race a room check.
+  const existingRooms = await tx.dailyTaskItem.findMany({
+    where: { task: { hotelId, date } },
+    select: { roomId: true },
+  });
+  const roomIds = [...new Set([...records.map((r) => r.roomId), ...existingRooms.map((r) => r.roomId)])].sort();
+  if (roomIds.length > 0) {
+    await tx.$queryRaw`SELECT id FROM rooms WHERE id = ANY(${roomIds}::text[]) ORDER BY id FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM room_dnds WHERE room_id = ANY(${roomIds}::text[]) AND date = ${date}::date ORDER BY id FOR UPDATE`;
+  }
+  const checks = await tx.roomCheck.findMany({
+    where: {
+      roomId: { in: roomIds },
+      checkDate: date,
+      type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] },
+      endedAt: { not: null },
+      transactionId: { not: null },
+    },
+    orderBy: [{ endedAt: "desc" }, { id: "desc" }],
+  });
+  const dnds = await tx.roomDnd.findMany({
+    where: { hotelId, roomId: { in: roomIds }, date },
+    include: { checks: { orderBy: { no: "desc" }, take: 1 } },
+  });
+  const coverage = (roomId: string): {
+    status: TaskStatus;
+    checkedAt: Date | null;
+    dndCount: number;
+    lastDndAt: Date | null;
+    userId: string | null;
+  } => {
+    const check = checks.find((c) => c.roomId === roomId);
+    const dnd = dnds.find((d) => d.roomId === roomId);
+    return {
+      status: check || dnd?.status === "TAMAMLANDI"
+        ? "TAMAMLANDI"
+        : dnd?.status === "AKTIF" ? "DND_BEKLIYOR" : dnd?.status === "EKSIK" ? "EKSIK" : "BEKLIYOR",
+      checkedAt: check?.endedAt ?? (dnd?.status === "TAMAMLANDI" ? dnd.lastAt : null),
+      dndCount: dnd?.count ?? 0,
+      lastDndAt: dnd?.lastAt ?? null,
+      userId: check?.userId ?? dnd?.checks[0]?.userId ?? null,
+    };
+  };
+  const repaired: { taskItemId: string; roomId: string; from: TaskStatus; to: TaskStatus }[] = [];
+  // Items first (id order), then tasks (id order).
   const taskIds = existingTasks.map((t) => t.id);
   if (taskIds.length > 0) {
     await tx.$queryRaw`SELECT id FROM daily_task_items WHERE task_id = ANY(${taskIds}::text[]) ORDER BY id FOR UPDATE`;
@@ -148,7 +193,10 @@ async function reconcileInTx(
     for (const [roomId, w] of want) {
       const item = byRoom.get(roomId);
       if (!item || item.status !== "BEKLIYOR") continue;
+      const { userId, ...state } = coverage(roomId);
+      const recovered = state.status !== "BEKLIYOR";
       if (
+        recovered ||
         item.arrivalTime !== w.arrivalTime ||
         item.departureTime !== w.departureTime ||
         item.priority !== w.priority ||
@@ -157,12 +205,23 @@ async function reconcileInTx(
         await tx.dailyTaskItem.update({
           where: { id: item.id },
           data: {
+            ...(recovered ? state : {}),
             arrivalTime: w.arrivalTime,
             departureTime: w.departureTime,
             priority: w.priority,
             guestRecordId: w.guestRecordId,
           },
         });
+        if (recovered) {
+          await tx.taskStatusLog.create({
+            data: {
+              taskItemId: item.id, from: "BEKLIYOR", to: state.status,
+              userId, note: "Oda gün kontrolü uzlaştırıldı",
+            },
+          });
+          repaired.push({ taskItemId: item.id, roomId, from: "BEKLIYOR", to: state.status });
+          touched.add(task!.id);
+        }
         result.updated += 1;
       }
     }
@@ -185,19 +244,22 @@ async function reconcileInTx(
         taskId: task.id,
         roomId,
         guestRecordId: w.guestRecordId,
-        status: "BEKLIYOR" as const,
+        status: coverage(roomId).status,
+        checkedAt: coverage(roomId).checkedAt,
+        dndCount: coverage(roomId).dndCount,
+        lastDndAt: coverage(roomId).lastDndAt,
         arrivalTime: w.arrivalTime,
         departureTime: w.departureTime,
         priority: w.priority,
       })),
-      select: { id: true },
+      select: { id: true, roomId: true, status: true },
     });
     await tx.taskStatusLog.createMany({
       data: rows.map((r) => ({
         taskItemId: r.id,
         from: null,
-        to: "BEKLIYOR" as const,
-        userId: actorId ?? null,
+        to: r.status,
+        userId: coverage(r.roomId).userId ?? actorId ?? null,
         note: "Görev oluşturuldu",
       })),
     });
@@ -211,6 +273,9 @@ async function reconcileInTx(
     const remaining = await tx.dailyTaskItem.count({ where: { taskId } });
     if (remaining === 0) await tx.dailyTask.delete({ where: { id: taskId } });
     else await recomputeTaskStatus(tx, taskId);
+  }
+  for (let i = 0; i < repaired.length; i += 100) {
+    await publishRadar("task.updated", { hotelId }, { items: repaired.slice(i, i + 100) }, tx);
   }
   return { result, newByType };
 }

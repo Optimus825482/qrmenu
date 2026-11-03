@@ -290,3 +290,16 @@ describe("DND gün sonu yakalaması", () => {
     expect((await dndOf(w.room.id)).status).toBe("EKSIK");
   });
 });
+
+
+it("gecikmiş 23:59 worker gece yarısındaki yeni DND'yi kapatmaz", async () => {
+  const w = await minibarWorld({ rooms: 2 });
+  const kat = await staff("R-KAT", w.hotelCode);
+  const { boss, handlers } = fakeBoss();
+  await registerAt(boss, T0);
+  await dnd.markDnd(kat.ctx, { roomId: w.rooms[0].id }, new Date("2026-07-10T20:58:00Z"));
+  await dnd.markDnd(kat.ctx, { roomId: w.rooms[1].id }, new Date("2026-07-10T21:00:20Z"));
+  await fire(handlers, "dnd.dayend", new Date("2026-07-10T21:00:40Z"));
+  expect((await dndOf(w.rooms[0].id)).status).toBe("EKSIK");
+  expect((await dndOf(w.rooms[1].id)).status).toBe("AKTIF");
+});

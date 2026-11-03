@@ -274,3 +274,84 @@ describe("regenerateTasks", () => {
     expect(log).toMatchObject({ userId: dep.userId, hotelId: w.hotelId });
   });
 });
+
+
+describe("geç görev oda/gün uzlaştırması", () => {
+  const now = new Date("2026-07-10T07:00:00Z");
+  it.each([1, 2])("görevden önce %i DND sayımını ve gerçek durum logunu devralır", async (count) => {
+    const w = await minibarWorld();
+    const kat = await staff("R-KAT", w.hotelCode);
+    const { markDnd } = await import("@/modules/minibar/server/dnd");
+    for (let i = 0; i < count; i++) await markDnd(kat.ctx, { roomId: w.room.id }, new Date(now.valueOf() + i * 3_600_000));
+    await rec(w, w.room.id, "ARRIVAL", DAY, "2026-07-12");
+    await gen.reconcileDailyTasks(w.hotelId, DAY);
+    const task = (await typeTask(w.hotelId, "ARRIVAL_KONTROL"))!;
+    const status = count === 2 ? "TAMAMLANDI" : "DND_BEKLIYOR";
+    expect(task.items[0]).toMatchObject({ status, dndCount: count });
+    expect(task.items[0].checkedAt !== null).toBe(count === 2);
+    expect(await testDb.taskStatusLog.findFirstOrThrow({ where: { taskItemId: task.items[0].id } })).toMatchObject({ from: null, to: status });
+    expect(await gen.reconcileDailyTasks(w.hotelId, DAY)).toEqual({ created: 0, added: 0, removed: 0, updated: 0 });
+  });
+  it.each(["SARFIYAT_YOK", "URUN_EKLENDI"] as const)("%s sonrası ikinci tür tamamlanır ve hatalı bekleyen onarılır", async (type) => {
+    const w = await minibarWorld();
+    const kat = await staff("R-KAT", w.hotelCode);
+    await rec(w, w.room.id, "IN_HOUSE", DAY, "2026-07-12");
+    await gen.reconcileDailyTasks(w.hotelId, DAY);
+    const checks = await import("@/modules/minibar/server/roomCheckService");
+    if (type === "SARFIYAT_YOK") await checks.recordNoConsumption(kat.ctx, { roomId: w.room.id, clientRequestId: crypto.randomUUID() }, now);
+    else await checks.addReplacement(kat.ctx, { roomId: w.room.id, clientRequestId: crypto.randomUUID(), items: [{ productId: w.cola.id, setupId: w.setup.id, qty: 1 }] }, now);
+    const original = (await typeTask(w.hotelId, "INHOUSE_KONTROL"))!.items[0];
+    await testDb.dailyTaskItem.update({ where: { id: original.id }, data: { status: "BEKLIYOR", checkedAt: null } });
+    await rec(w, w.room.id, "ARRIVAL", DAY, "2026-07-12");
+    await gen.reconcileDailyTasks(w.hotelId, DAY);
+    for (const task of await tasksOf(w.hotelId)) {
+      expect(task.status).toBe("TAMAMLANDI");
+      expect(task.items[0]).toMatchObject({ status: "TAMAMLANDI", checkedAt: now });
+    }
+    const before = await tasksOf(w.hotelId);
+    expect(await gen.reconcileDailyTasks(w.hotelId, DAY)).toEqual({ created: 0, added: 0, removed: 0, updated: 0 });
+    expect(await tasksOf(w.hotelId)).toEqual(before);
+  });
+});
+
+
+it("geç EKSIK DND kapalı kalem üretir", async () => {
+  const w = await minibarWorld();
+  await testDb.roomDnd.create({ data: { hotelId: w.hotelId, roomId: w.room.id, date: d(DAY), count: 1, status: "EKSIK" } });
+  await rec(w, w.room.id, "ARRIVAL", DAY, "2026-07-12");
+  await gen.reconcileDailyTasks(w.hotelId, DAY);
+  const task = (await typeTask(w.hotelId, "ARRIVAL_KONTROL"))!;
+  expect(task.status).toBe("EKSIK");
+  expect(task.items[0]).toMatchObject({ status: "EKSIK", dndCount: 1, checkedAt: null });
+});
+
+it("oda kilidindeki eşzamanlı DND commit'i uzlaştırmada kaybolmaz", async () => {
+  const w = await minibarWorld();
+  await rec(w, w.room.id, "ARRIVAL", DAY, "2026-07-12");
+  let started!: () => void;
+  const ready = new Promise<void>((resolve) => { started = resolve; });
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const writer = testDb.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${w.room.id} FOR UPDATE`;
+    await tx.roomDnd.create({ data: { hotelId: w.hotelId, roomId: w.room.id, date: d(DAY), count: 2, status: "TAMAMLANDI", lastAt: new Date("2026-07-10T08:00:00Z") } });
+    started();
+    await gate;
+  });
+  await ready;
+  const reconciling = gen.reconcileDailyTasks(w.hotelId, DAY);
+  try {
+    // A separate connection observes the actual reconciliation transaction waiting on its room lock.
+    let waiting = false;
+    for (let i = 0; i < 100 && !waiting; i++) {
+      const rows = await testDb.$queryRaw<Array<{ waiting: boolean }>>`SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock' AND query LIKE '%FROM rooms%FOR UPDATE%') AS waiting`;
+      waiting = rows[0].waiting;
+    }
+    expect(waiting).toBe(true);
+  } finally {
+    release();
+    await writer;
+    await reconciling;
+  }
+  expect((await typeTask(w.hotelId, "ARRIVAL_KONTROL"))!.items[0]).toMatchObject({ status: "TAMAMLANDI", dndCount: 2 });
+});
