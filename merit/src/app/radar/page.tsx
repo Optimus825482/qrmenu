@@ -64,6 +64,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
 
   return (
     <main style={{ width: "100vw", height: "100dvh", overflow: "hidden" }}>
+      <h1 className="sr-only">Canlı Radar</h1>
       <RadarRoot
         mode="wall"
         initial={{

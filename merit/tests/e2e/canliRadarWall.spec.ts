@@ -51,7 +51,9 @@ for (const viewport of RADAR_VIEWPORTS) {
     expect(calls).toBe(1);
 
     // Mouse move pauses rotation -> "Dönüş duraklatıldı"
-    await page.mouse.move(200, 200);
+    // Two distinct positions: a move to where the pointer already rests dispatches no event.
+    await page.mouse.move(50, 60);
+    await page.mouse.move(200, 200, { steps: 4 });
     await expect(banner).toContainText(/Dönüş duraklatıldı|Kritik uyarı/);
 
     await expectNoHorizontalScroll(page);

@@ -344,8 +344,8 @@ const LIST: ScreenGuide[] = [
     "xp",
     "Menü görüntüleme ve ürün ilgisi raporlarına bakarsın.",
     [
-      ["rapor-donemi", "Dönem", "Rapor dönemini seç."],
-      ["rapor-tablo", "Tablo", "En çok bakılan ürünler ve kategoriler sıralanır."],
+      ["rapor-filtre", "Dönem", "Rapor dönemini seç."],
+      ["rapor-grup", "Rapor grubu", "Menü raporları Rapor Merkezi'nde modül sekmesi olarak durur."],
       ["rapor-indir", "İndir", "Tabloyu Excel olarak indir."],
     ],
     [
@@ -439,8 +439,8 @@ const LIST: ScreenGuide[] = [
     "xp",
     "Sipariş, ciro ve hazırlık süresi raporlarına bakarsın.",
     [
-      ["rapor-donemi", "Dönem", "Gün veya tarih aralığı seç."],
-      ["outlet-filtre", "Outlet", "Raporu tek outlete daralt."],
+      ["rapor-filtre", "Dönem", "Gün veya tarih aralığını seç."],
+      ["rapor-grup", "Rapor grubu", "Outlet raporları Rapor Merkezi'nde Outlet sekmesindedir."],
       ["rapor-indir", "İndir", "Sonucu Excel veya PDF indir."],
     ],
     [
@@ -500,7 +500,7 @@ const LIST: ScreenGuide[] = [
     [
       ["sla-ozeti", "Özet", "Hedef içinde ve dışında kalan siparişlerin oranı görünür."],
       ["sla-detay", "Detay", "Hedefi aşan siparişlerin bekleme süreleri listelenir."],
-      ["sla-indir", "İndir", "Raporu Excel veya PDF indir."],
+      ["sla-indir", "İndir", "Listelenen siparişleri CSV olarak indir; Excel açar."],
     ],
     [
       "Hedef süreler sistem ayarlarından değişir; eski raporlar eski hedefle hesaplanmıştır.",

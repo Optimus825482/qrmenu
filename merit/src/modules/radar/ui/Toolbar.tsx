@@ -88,7 +88,7 @@ export function Toolbar(p: ToolbarProps) {
         ))}
       </div>
       <span className="rd-toolbar-sep" aria-hidden="true" />
-      <div role="tablist" aria-label="Görünümler" className="rd-tabs">
+      <div role="tablist" aria-label="Görünümler" className="rd-tabs" data-guide="radar-genel">
         {p.views.map((v, i) => (
           <button
             key={v}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
+import { formatDayTr } from "@/lib/time";
 import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
 
 export type KatFilter = "mybar" | "dnd" | null;
@@ -131,7 +132,7 @@ export function KatDashboard({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-widest text-accent">
-                    Günün Özeti · {data.today}
+                    Günün Özeti · {formatDayTr(data.today)}
                   </span>
                   <h2 className="text-base font-bold text-text mt-0.5">
                     Günlük Minibar Kontrol Görevleri

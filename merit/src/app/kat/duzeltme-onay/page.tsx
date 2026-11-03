@@ -86,6 +86,14 @@ export default function KatDuzeltmeOnayPage() {
               </p>
             </div>
           </div>
+          <Link
+            href="/kat/talep"
+            data-guide="yeni-talep"
+            style={{ minHeight: "var(--tap-action)" }}
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold text-text hover:bg-bg"
+          >
+            Yeni ek talep
+          </Link>
         </div>
       </header>
 

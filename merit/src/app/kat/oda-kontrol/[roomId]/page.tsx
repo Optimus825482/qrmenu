@@ -533,6 +533,7 @@ export default function OdaKontrolPage() {
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
+                style={{ minHeight: "var(--tap-min)" }}
                 placeholder="Örn: Su şişesi kapağı açık bulundu, yenilendi..."
                 className="w-full rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-text placeholder:text-muted focus:border-accent focus:outline-none"
               />

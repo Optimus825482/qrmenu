@@ -27,6 +27,8 @@ function adaptive(entry: RouteEntry): RouteEntry {
 export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kat", path: "/kat", user: "kat.mr", tier: "personel", ready: /Günlük Minibar Kontrol/ },
   { key: "kat-oda-kontrol", path: "FIRST_ROOM", user: "kat.mr", tier: "personel", ready: /Hepsini Doldur/ },
+  { key: "kat-qr", path: "/kat/qr", user: "kat.mr", tier: "personel", ready: /Oda QR Okut/ },
+  { key: "kat-gorevler", path: "/kat/gorevler", user: "kat.mr", tier: "personel", ready: /Günlük Görevler/ },
   { key: "erisimim", path: "/erisimim", user: "kat.mr", tier: "personel", ready: /Erişimim/ },
   { key: "kat-mybar", path: "/kat/mybar", user: "kat.mr", tier: "personel", ready: /MyBar Talepleri/ },
   { key: "kat-dnd", path: "/kat/dnd", user: "kat.mr", tier: "personel", ready: /Rahatsız Etmeyin/ },
@@ -41,6 +43,7 @@ export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kasa-iptal", path: "/kasa/iptal", user: "kasa.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Sipariş iptali/ },
   { key: "kds", path: "/kds", user: "kds.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Mutfak ekranı/ },
   { key: "oda-servisi", path: "/oda-servisi", user: "fbm.mr", tier: "personel", ready: /Operasyon Paneli/ },
+  { key: "radar", path: "/radar", user: "admin", tier: "xp", ready: /Canlı Radar/ },
   { key: "admin", path: "/admin", user: "admin", tier: "xp", ready: /Komuta Merkezi|Genel Durum/ },
 ] satisfies RouteEntry[]).map(adaptive);
 

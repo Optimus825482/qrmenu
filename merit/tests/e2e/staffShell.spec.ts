@@ -154,12 +154,28 @@ test("depo ana sayfası: yetkili kartlar, her kart ilgili ekrana gider; Geri ba�
   await signIn(page, "depo.cok", ROYAL_MINIBAR);
   await page.goto("/depo");
   const main = page.getByRole("main");
-  await expect(main.getByRole("heading", { name: "Depo panosu" })).toBeVisible();
-  await expect(main.getByRole("link", { name: /Kritik stok/ })).toHaveAttribute("href", "/depo/stok");
-  await expect(main.getByRole("link", { name: /Bekleyen talepler/ })).toHaveAttribute("href", "/kat/duzeltme-onay");
-  await expect(main.getByRole("link", { name: /Doluluk yükleme/ })).toHaveAttribute("href", "/depo/doluluk-yukle");
+  await expect(main).toHaveCount(1);
+  await expect(main.getByRole("heading", { level: 1, name: "Depo panosu" })).toBeVisible();
+  await expect(main.getByRole("link", { name: /Minibar Stok & Talepler/ })).toHaveAttribute("href", "/depo/stok");
+  await expect(main.getByRole("link", { name: /Geçmiş Kayıt Düzeltme Onayları/ })).toHaveAttribute("href", "/kat/duzeltme-onay");
+  await expect(main.getByRole("link", { name: /Doluluk Excel Yükleme/ })).toHaveAttribute("href", "/depo/doluluk-yukle");
   await page.goto("/depo/stok");
   await expect(page.getByRole("link", { name: "Geri" })).toHaveAttribute("href", "/depo");
+});
+
+test("depo panosu otel kapsamı dışındaki havuz kartını göstermez", async ({ page }) => {
+  await signIn(page, "depo.cok", /Minibar · Merit Royal Premium/);
+  await page.goto("/depo");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: "Depo panosu" })).toBeVisible();
+  await expect(main.getByRole("link", { name: /Minibar Stok & Talepler/ })).toHaveCount(0);
+  await expect(main.getByRole("link", { name: /Minibar Raporları/ })).toBeVisible();
+});
+
+test("kat panosu gün özetini yerel tarih biçiminde gösterir", async ({ page }) => {
+  await signIn(page, "kat.mr");
+  await page.goto("/kat");
+  await expect(page.getByText(/^Günün Özeti · \d{2}\.\d{2}\.\d{4}$/)).toBeVisible();
 });
 
 test.describe("telefon görünümü", () => {

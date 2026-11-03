@@ -19,7 +19,7 @@ export default async function DepoGorevlerPage() {
     <div className="mx-auto max-w-5xl px-6 py-8 space-y-6 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+          <span className="text-sm font-semibold uppercase tracking-widest text-text">
             Depo & Operasyon · {day}
           </span>
           <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>

@@ -112,7 +112,7 @@ export function Timeline({
   };
 
   return (
-    <section className="rd-timeline" aria-label="Zaman şeridi">
+    <section className="rd-timeline" aria-label="Zaman şeridi" data-guide="radar-zaman">
       <div className="rd-timeline-controls">
         {mode === "replay" && replay ? (
           <>

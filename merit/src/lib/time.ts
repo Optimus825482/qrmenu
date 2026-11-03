@@ -48,3 +48,15 @@ export function businessDay(day: string): Date {
 export function nowNicosia(): Date {
   return new Date();
 }
+
+/**
+ * Business day ('yyyy-MM-dd', or the ISO instant of its UTC-midnight `@db.Date` value) as the
+ * Turkish 'dd.MM.yyyy' label. Instants that are not a day stamp are read in Europe/Nicosia.
+ */
+export function formatDayTr(value: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T00:00:00(?:\.000)?Z)?$/.exec(value);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return formatInTimeZone(parsed, TZ, "dd.MM.yyyy");
+}

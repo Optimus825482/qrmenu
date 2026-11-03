@@ -68,7 +68,7 @@ test("kat /kat/qr: geçersiz QR kodu satır içi hata", async ({ browser }) => {
   await page.goto("/kat/qr");
   const input = page.getByLabel("QR kodu");
   await input.fill("1234");
-  await page.getByRole("button", { name: "Aç" }).click();
+  await page.getByRole("button", { name: "Aç", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Geçersiz veya tanınmayan QR kod" })).toBeVisible();
   await expect(input).toBeFocused();
   await page.context().close();

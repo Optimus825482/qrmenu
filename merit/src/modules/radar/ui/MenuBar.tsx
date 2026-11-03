@@ -77,6 +77,7 @@ export function MenuBar({ menus }: { menus: MenuDef[] }) {
             type="button"
             role="menuitem"
             className="rd-menu-top"
+            data-guide={menu.label === "Görünüm" ? "radar-duvar" : undefined}
             aria-haspopup="menu"
             aria-expanded={open === i}
             ref={(el) => {

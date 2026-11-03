@@ -164,9 +164,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   }, [initial.views, snap?.config.wallViews, views]);
 
   const wallRotateSec = initial.rotateSeconds ?? snap?.config.wallRotateSeconds ?? 20;
+  // Keyed by content: a new snapshot hands over an equal list in a new array, and rebuilding the controller
+  // would drop the rotation position and an interaction/critical pause that is in progress.
+  const wallRotateKey = wallRotateViews.join("|");
   const wallCtrl = useMemo(
-    () => createWallController({ views: wallRotateViews, rotateSeconds: wallRotateSec }),
-    [wallRotateViews, wallRotateSec],
+    () => createWallController({ views: wallRotateKey.split("|") as WallView[], rotateSeconds: wallRotateSec }),
+    [wallRotateKey, wallRotateSec],
   );
   const wallState = wall ? wallCtrl.state(now) : null;
 

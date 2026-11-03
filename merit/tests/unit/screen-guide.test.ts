@@ -100,16 +100,7 @@ function sourceFiles(dir: string, out: string[] = []): string[] {
  * Targets that cannot exist yet, with the reason; the tour skips a step whose target is absent, so
  * nothing breaks meanwhile. Remove an entry when its element appears.
  */
-const PENDING_TARGETS: Record<string, string> = {
-  "radar-genel": "src/modules/radar/ui belongs to the radar task",
-  "radar-zaman": "src/modules/radar/ui belongs to the radar task",
-  "radar-duvar": "src/modules/radar/ui belongs to the radar task",
-  "rapor-donemi": "QM-RAP / QS-RAP have no window of their own (reports live in the Rapor Merkezi)",
-  "rapor-tablo": "QM-RAP has no window of its own",
-  "outlet-filtre": "QS-RAP has no window of its own",
-  "sla-indir": "the SLA report window has no export button",
-  "yeni-talep": "the request form is the /kat/talep route, not part of MB-TAL",
-};
+const PENDING_TARGETS: Record<string, string> = {};
 
 /** Every string literal inside `data-guide="x"` / `data-guide={cond ? "x" : undefined}` / `newGuide="x"`. */
 function guideAttributeTargets(text: string): Set<string> {

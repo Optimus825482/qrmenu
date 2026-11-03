@@ -7,13 +7,7 @@ import { projectName } from "./viewports";
  *
  * Keys are a route key ("kasa") for every viewport, or "<route key>@<project>" for one viewport only.
  */
-export const KNOWN_TOUCH_VIOLATIONS: Record<string, string> = {
-  "admin@desktop-1366x768": "T14",
-  "admin@tablet-1280x800": "T14",
-  "admin@tablet-1024x768": "T14",
-  "admin@tablet-768x1024": "T14",
-  "admin@tablet-800x1280": "T14",
-};
+export const KNOWN_TOUCH_VIOLATIONS: Record<string, string> = {};
 
 export const KNOWN_AXE_VIOLATIONS: Record<string, string> = {};
 

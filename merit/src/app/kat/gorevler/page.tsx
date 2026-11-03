@@ -19,7 +19,7 @@ export default async function KatGorevlerPage() {
     <div className="mx-auto max-w-4xl px-4 py-6 space-y-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+          <span className="text-sm font-semibold uppercase tracking-widest text-text">
             Günlük Görevler · {day}
           </span>
           <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>
@@ -51,7 +51,7 @@ export default async function KatGorevlerPage() {
           <p className="mt-1 text-2xl font-bold text-warn tabular-nums">{summary.waiting}</p>
         </div>
         <div className="rounded-2xl border border-accent/30 bg-accent/10 p-3.5">
-          <p className="text-xs uppercase tracking-wider text-accent">DND</p>
+          <p className="text-sm uppercase tracking-wider text-text">DND</p>
           <p className="mt-1 text-2xl font-bold text-accent tabular-nums">{summary.dnd}</p>
         </div>
       </section>
