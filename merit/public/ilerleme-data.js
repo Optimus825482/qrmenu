@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 15:35",
-  headline: "Minibar planı kapalı ve doğrulandı. Radar T6 düzeltmesi indi, T8 düzeltmesi çalışma ağacında (test bekliyor); P4 MyBar sunucu temeli radar T3 için öne çekildi. Devir: Antigravity sürdürür, Fable sıfırlanınca doğrular (DEVIR §1a).",
+  updatedAt: "03.11.2026 16:02",
+  headline: "Minibar P2/P3 tamamlandı ve doğrulandı. P4 MyBar veri temeli (T1) ve talep yaşam döngüsü servisi (T5) tamamlandı; Canlı Radar T1–T8 (T3 minibar/MyBar yayın boşlukları dahil) kapandı ve 175/175 hedefli birim testi + build yeşil. Sıradaki: Radar T9–T12 ve UX T9–T15.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -86,9 +86,9 @@ window.ILERLEME = {
       code: "P4", title: "MyBar ve bildirimler", weight: 8,
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
-        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Web Push kanalı", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
+        { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "active", note: "T1 veri temeli (migration 20261103121000_p4_mybar, mybar.* olayları, ayarlar, hız sınırları — c201ba3) doğrulandı; misafir akışı ve i18n/çeviri görevleri sırada" },
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "active", note: "T5 talep yaşam döngüsü servisi (gördüm, kapatma, iptal, liste, KPI — d2757e9, 11/11 test yeşil) tamamlandı; personel UI pencereleri sırada" },
+        { title: "Web Push kanalı", status: "active", note: "T9 Web Push ve bildirim zili genişletmesi sırada" }
       ]
     },
     {
@@ -145,12 +145,12 @@ window.ILERLEME = {
       code: "RADAR", title: "Canlı Operasyon Radarı", weight: 6,
       summary: "Olay birliği ve yayın boşlukları, CR-RAD, anlık görüntü, gün tekrarı, XP penceresi ve görünümler, zaman şeridi, duvar ekranı",
       tasks: [
-        { title: "T1–T4 Olay birliği, yayın boşlukları, migration/CR-RAD/OperationEvent", status: "active", note: "T1, T2 onaylı; T4 uygulandı (0552fe5, inceleme sürüyor); T3 minibar servislerini bekliyor" },
+        { title: "T1–T4 Olay birliği, yayın boşlukları, migration/CR-RAD/OperationEvent", status: "done", doneAt: "03.11 16:00", note: "T1 (3e1be71), T2 (23df08f), T4 (0552fe5) ve T3 minibar/MyBar yayın boşlukları (G2–G10, G12, G15, G16; radar-publish-minibar + 9 paket 175/175 yeşil) tamamlandı" },
         { title: "T5 Anlık görüntü, kapsam, uyarılar", status: "done", doneAt: "03.11 10:54", note: "f6fbfee (inceleme onaylı): katman kapıları, PII süzgeci, 17 metrik, p95 ~40 ms" },
-        { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "done", doneAt: "03.11 15:20", note: "0971845 + düzeltme c29df98 (DST penceresi, geçmiş süzgeçleri, idle sayfalama, stok sorgusu; statik yeniden inceleme ADDRESSED, test doğrulaması bekliyor)" },
+        { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "done", doneAt: "03.11 15:40", note: "0971845 + c29df98 + e8fcb0d (DST penceresi, geçmiş süzgeçleri, idle sayfalama, üst sınır sonrası stok yeniden bazlama; 32/32 replay testi ve yeniden inceleme APPROVED)" },
         { title: "T7 İstemci deposu ve indirgeyiciler", status: "done", doneAt: "03.11 03:21", note: "df77d46 + 63282d3" },
-        { title: "T8–T9 XP penceresi ve altı görünüm", status: "active", note: "T8 uygulandı 382d6ae; inceleme bulguları için düzeltme turu çalışma ağacında, commit ve test bekliyor; T9 bekliyor" },
-        { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "pending" }
+        { title: "T8–T9 XP penceresi ve altı görünüm", status: "active", note: "T8 XP penceresi + düzeltme turu tamamlandı ve onaylandı (382d6ae + 50e5ffa, 215/215 radar birim testi yeşil); T9 (Kuyruklar, Oda Servisi, Personel, uyarı/olay şeridi, ayrıntı balonu) sırada" },
+        { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "pending", note: "T9 sonrası T10 zaman şeridi, T11 /radar duvar ekranı ve T12 bütünleştirme" }
       ]
     },
     {
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 16:02", text: "Antigravity devamı: Radar T8 düzeltme turu (50e5ffa) ve T6 stok yeniden bazlama düzeltmesi (e8fcb0d) doğrulandı ve kapatıldı (215/215 radar birim testi, next build yeşil). P4 T5 MyBar talep yaşam döngüsü servisi (d2757e9, 11/11 test) ve Radar T3 minibar/MyBar yayın boşlukları (radar-publish-minibar + 9 test paketi 175/175 yeşil, canliRadar e2e 5. test açıldı) tamamlandı. Sıradaki: Radar T9–T12 ve UX T9–T15." },
     { at: "03.11 15:35", text: "Codex devamı (test koşmadan, statik incelemeyle): minibar kapanış düzeltmeleri e34a0ee ve 1dd4bc7, radar T6 düzeltme turu c29df98, P4 MyBar veri temeli c201ba3 (migration, olaylar, ayarlar), radar T8 düzeltme turu commit'siz. Codex sınırı doldu; Antigravity devam ediyor. DEVIR §1a Antigravity için ilk altı adımla yeniden yazıldı; Fable sıfırlanınca test/doğrulama." },
     { at: "03.11 14:58", text: "Dalga doğrulaması tamamlandı ve yeşil: npm run check (lint 0 hata, tsc temiz, 1781/1781 birim), next build, migration farkı yok, chromium e2e 153 geçti (1 kasıtlı atlama: radar T3), altı görünüm matrisi iki küçük düzeltmeyle temiz (7fbfaf0 KDS klavye odağı, 9d6d8b6 dokunma hedefleri), ratchet 2/2. Minibar P2/P3 görevleri tamamlandı olarak işaretlendi." },
     { at: "03.11 14:51", text: "Codex devamı: dört minibar kapanış bulgusu e34a0ee ve 1dd4bc7 ile düzeltildi. Göç 171/171, operasyon 96/96 hedefli test geçti; bağımsız göç yeniden incelemesi ve bütünleşik minibar incelemesi onayladı. İzole DB/3061 üzerinde tam doğrulama başladı; radar henüz açılmadı." },
