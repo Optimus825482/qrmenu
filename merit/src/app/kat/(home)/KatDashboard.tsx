@@ -126,6 +126,7 @@ export function KatDashboard({
         ) : data ? (
           <>
             <section
+              data-guide="islemlerim"
               aria-label="Günün özeti"
               className="rounded-2xl border border-border bg-surface p-5 space-y-4"
             >
@@ -165,7 +166,7 @@ export function KatDashboard({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <div data-guide="durum-filtresi" className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <div className="rounded-xl border border-border bg-bg p-3.5">
                   <p className="text-xs uppercase tracking-wider text-muted">Toplam Görev</p>
                   <p className="mt-1 text-2xl font-bold text-text tabular-nums">{data.taskSummary.total}</p>
@@ -221,7 +222,7 @@ export function KatDashboard({
               </div>
             ) : null}
 
-            <section className="space-y-3">
+            <section data-guide="kat-listesi" className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold text-text">Kat Planı ve Oda Doluluk Durumu</h2>
                 <span className="text-xs text-muted">{data.floors.length} Kat</span>
@@ -233,7 +234,7 @@ export function KatDashboard({
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {data.floors.map((floor) => {
+                  {data.floors.map((floor, floorIdx) => {
                     const occupancyRate =
                       floor.totalRooms > 0
                         ? Math.round((floor.occupiedRooms / floor.totalRooms) * 100)
@@ -241,6 +242,7 @@ export function KatDashboard({
                     return (
                       <Link
                         key={floor.id}
+                        data-guide={floorIdx === 0 ? "oda-karti" : undefined}
                         href={`/kat/doluluk/${floor.id}`}
                         className="group relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-accent/60"
                       >

@@ -154,7 +154,7 @@ export function YaziciKuyrugu({
             type="button"
             onClick={() => void sendTest()}
             disabled={!testPrinterId}
-            className="pos-btn" data-primary
+            className="pos-btn" data-primary data-guide="test-fisi"
           >
             Test fişi
           </button>
@@ -172,7 +172,7 @@ export function YaziciKuyrugu({
         </p>
       ) : null}
 
-      <section aria-label="Yazıcı durumu" className="flex flex-wrap gap-2">
+      <section data-guide="yazici-listesi" aria-label="Yazıcı durumu" className="flex flex-wrap gap-2">
         {printers.length === 0 ? (
           <p className="text-sm text-muted">Bu otelde kayıtlı yazıcı yok.</p>
         ) : (
@@ -180,7 +180,7 @@ export function YaziciKuyrugu({
         )}
       </section>
 
-      <section role="region" aria-label="Yazıcı işleri" tabIndex={0} className="overflow-x-auto rounded-[var(--radius-l)] border border-border bg-surface">
+      <section data-guide="bekleyen-fisler" role="region" aria-label="Yazıcı işleri" tabIndex={0} className="overflow-x-auto rounded-[var(--radius-l)] border border-border bg-surface">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-sm text-muted">

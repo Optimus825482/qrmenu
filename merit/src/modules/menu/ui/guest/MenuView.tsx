@@ -234,6 +234,7 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
           <p className="g-empty">{t("menu.empty")}</p>
         ) : (
           <div
+            data-guide="kategori-gezin"
             className="g-tabs"
             role="tablist"
             aria-label={t("menu.title")}

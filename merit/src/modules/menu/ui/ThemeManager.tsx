@@ -238,7 +238,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
 
           return (
             <div className="xp-themes-panel-wrap">
-              <div className="xp-themes-grid">
+              <div className="xp-themes-grid" data-guide="tema-listesi">
                 <DataGrid<ThemeRow>
                   columns={columns}
                   rows={visible}
@@ -278,6 +278,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                           <button
                             type="button"
                             className="xp-button xp-theme-assign-btn"
+                            data-guide="onizle-yayinla"
                             disabled={!selected || !studio.activeOutletId}
                             onClick={() => {
                               if (selected && studio.activeOutletId) {
@@ -355,7 +356,7 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                               <span className="xp-theme-active-tag"><Icon name="phone" size={16} /> Önizleniyor</span>
                             ) : null}
                           </div>
-                          <div className="xp-theme-outlet-actions">
+                          <div className="xp-theme-outlet-actions" data-guide={filteredOutlets[0]?.id === o.id ? "renk-duzenle" : undefined}>
                             {activeTheme ? <Swatches row={activeTheme} /> : null}
                             <select
                               className="xp-theme-select xp-theme-dropdown"

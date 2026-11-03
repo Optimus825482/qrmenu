@@ -312,7 +312,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
           onDelete={(node) => void remove(node)}
           onToggleAvailable={(node) => void toggleAvailable(node)}
         />
-        <div className="xp-mm-side">
+        <div className="xp-mm-side" data-guide="urun-formu">
           {selected ? (
             <NodeForm
               key={selected.id}

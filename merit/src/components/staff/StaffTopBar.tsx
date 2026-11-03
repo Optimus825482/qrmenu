@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { ConnectionBadge } from "./ConnectionBadge";
 import type { OnlineState } from "./useOnline";
 
@@ -29,6 +30,7 @@ export function StaffTopBar({
         {bell}
         {profile}
       </div>
+      <ScreenGuideHost density="personel" f1 />
     </header>
   );
 }

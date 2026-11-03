@@ -33,7 +33,7 @@ export default async function KatDndPage() {
           Bugün için kayıtlı DND odası bulunmuyor.
         </div>
       ) : (
-        <ul className="space-y-2.5">
+        <ul data-guide="dnd-listesi" className="space-y-2.5">
           {rows.map((r) => {
             const tone =
               r.status === "TAMAMLANDI"
@@ -57,7 +57,7 @@ export default async function KatDndPage() {
                       {r.status}
                     </span>
                   </div>
-                  <p className="text-xs text-muted">
+                  <p data-guide="ikinci-kontrol" className="text-xs text-muted">
                     Kontrol sayısı:{" "}
                     <strong className="text-text tabular-nums">
                       {r.count}/{r.required}
@@ -72,6 +72,7 @@ export default async function KatDndPage() {
 
                 <Link
                   href={`/kat/oda-kontrol/${r.roomId}`}
+                  data-guide="tamamla"
                   style={{ minHeight: "var(--tap-action)" }}
                   className="inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-bold text-white hover:opacity-95"
                 >

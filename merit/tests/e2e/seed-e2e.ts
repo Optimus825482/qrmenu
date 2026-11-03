@@ -5,6 +5,7 @@ import { PrismaClient } from "../../src/generated/prisma/client";
 import { hashPassword } from "../../src/lib/password";
 import { runSeed } from "../../prisma/seed";
 import { e2eDatabaseUrl } from "./e2eDb";
+import { SCREEN_GUIDES } from "../../src/modules/core/screenGuide";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 
 // Run through tsx (see fixtures.ts): the generated Prisma client is ESM-only and cannot be loaded
@@ -224,9 +225,12 @@ async function resetAndSeed(): Promise<void> {
       }
     }
     // Existing specs log in as these users and expect their landing page: the mandatory first-login
-    // access summary is pre-acknowledged ("*" matches every hash outside production). guide.spec clears it.
+    // access summary is pre-acknowledged ("*" matches every hash outside production) and every screen
+    // tour is marked seen, so no overlay covers the pages the other specs drive. guide.spec clears it.
+    const seen = Object.fromEntries(Object.values(SCREEN_GUIDES).map((g) => [g.code, g.version]));
+    const guidePrefs = JSON.stringify({ guide: { welcomeSeenHash: "*", seen } });
     await db.$executeRaw`
-      UPDATE "users" SET "prefs" = COALESCE("prefs", '{}'::jsonb) || '{"guide":{"welcomeSeenHash":"*"}}'::jsonb`;
+      UPDATE "users" SET "prefs" = COALESCE("prefs", '{}'::jsonb) || ${guidePrefs}::jsonb`;
   } finally {
     await db.$disconnect();
   }

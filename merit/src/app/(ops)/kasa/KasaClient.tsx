@@ -92,7 +92,7 @@ const usePortrait = (): boolean =>
 function Kpi({ icon, label, value, tone }: { icon: IconName; label: string; value: string | number; tone?: "warn" | "danger" | "success" }) {
   const color = tone ? `var(--${tone})` : "var(--text)";
   return (
-    <div className="flex items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-3" style={{ minHeight: 44, color }}>
+    <div data-guide={label === "Yazıcı" ? "yazici-durumu" : undefined} className="flex items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-3" style={{ minHeight: 44, color }}>
       <Icon name={icon} size={20} />
       <div className="min-w-0">
         <p className="truncate text-sm text-muted">{label}</p>
@@ -313,7 +313,7 @@ export default function KasaClient({
 
       {tab === "tables" ? (
         <div className="pos-split">
-          <div className="pos-split-board">
+          <div data-guide="masa-haritasi" className="pos-split-board">
             <TableBoard
               tables={board.tables}
               areas={board.areas}
@@ -355,7 +355,7 @@ export default function KasaClient({
       ) : null}
 
       {tab === "queue" ? (
-        <section aria-label="Onay kuyruğu" className="space-y-3">
+        <section data-guide="onay-kuyrugu" aria-label="Onay kuyruğu" className="space-y-3">
           {queue.length === 0 ? (
             <div className="rounded-[var(--radius-l)] border border-dashed border-border bg-surface p-12 text-center text-muted">
               <Icon name="check" size={32} className="mb-2 block" />

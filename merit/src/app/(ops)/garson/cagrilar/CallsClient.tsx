@@ -17,12 +17,12 @@ export default function CallsClient({ outletId, initial }: { outletId: string; i
     if (e.outletId === outletId) void load();
   }, ["call.created", "call.resolved"]);
   return (
-    <section className="space-y-3">
+    <section data-guide="cagri-listesi" className="space-y-3">
       <h1 className="text-xl font-semibold">Çağrılar</h1>
-      {calls.length === 0 ? <p className="text-muted">Açık çağrı yok.</p> : calls.map((call) => (
-        <article key={call.id} className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${call.overdue ? "border-danger border-2" : "border-border"}`}>
+      {calls.length === 0 ? <p className="text-muted">Açık çağrı yok.</p> : calls.map((call, callIdx) => (
+        <article key={call.id} data-guide={callIdx === 0 ? "cagri-al" : undefined} className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${call.overdue ? "border-danger border-2" : "border-border"}`}>
           <span>{call.tableLabel} · {call.type}{call.overdue ? " · gecikti" : ""}</span>
-          <Button mutates disabled={pending} onClick={() => start(async () => {
+          <Button mutates data-guide={callIdx === 0 ? "cagri-kapat" : undefined} disabled={pending} onClick={() => start(async () => {
             const r = await resolveCallAction(call.id, "YANITLANDI");
             if (r.ok) await load();
           })}>Yanıtla</Button>

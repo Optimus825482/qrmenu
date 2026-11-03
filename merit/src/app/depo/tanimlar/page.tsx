@@ -709,7 +709,7 @@ export default function MinibarTanimlarPage() {
         )}
 
         {/* Ana Sekmeler */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-800 text-xs font-bold">
+        <div data-guide="tanim-sekmeleri" className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-800 text-xs font-bold">
           <button
             onClick={() => setActiveTab("PRODUCTS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
@@ -813,6 +813,7 @@ export default function MinibarTanimlarPage() {
               </div>
 
               <button
+                data-guide="yeni-kayit"
                 onClick={() => {
                   setCurrentProduct({
                     groupId: groups[0]?.id || "",
@@ -854,7 +855,7 @@ export default function MinibarTanimlarPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                      {filteredProducts.map((p) => (
+                      {filteredProducts.map((p, pIdx) => (
                         <tr key={p.id} className="hover:bg-slate-800/40 transition">
                           <td className="py-3 px-4 font-bold text-white text-sm">
                             {p.name}
@@ -883,6 +884,7 @@ export default function MinibarTanimlarPage() {
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
+                                data-guide={pIdx === 0 ? "duzenle" : undefined}
                                 onClick={() => {
                                   setCurrentProduct({
                                     id: p.id,

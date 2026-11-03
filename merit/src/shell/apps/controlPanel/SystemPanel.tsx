@@ -328,7 +328,7 @@ function SettingRow({
   }
 
   return (
-    <div role="group" aria-label={meta.label} className="xp-cp-choices" style={{ marginBottom: 10, alignItems: "center" }}>
+    <div role="group" aria-label={meta.label} className="xp-cp-choices" data-guide="ayar-degistir" style={{ marginBottom: 10, alignItems: "center" }}>
       <label htmlFor={id} style={{ minWidth: 200, fontWeight: 600 }} title={meta.description}>
         {meta.label}
       </label>
@@ -337,7 +337,7 @@ function SettingRow({
       <span className="xp-badge" data-source={item.source}>
         {SOURCE_LABEL[item.source]}
       </span>
-      <button type="button" className="xp-button" disabled={busy || !canSave} onClick={() => void save()}>
+      <button type="button" className="xp-button" data-guide="ayar-kaydet" disabled={busy || !canSave} onClick={() => void save()}>
         Kaydet
       </button>
       {item.key === "translation.geminiModel" ? (

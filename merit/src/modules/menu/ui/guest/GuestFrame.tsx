@@ -83,7 +83,7 @@ export function GuestFrame({
     >
       <HtmlLangSync locale={locale} />
       <header className="g-header">
-        <div className="g-header-left">
+        <div data-guide="dil-secimi" className="g-header-left">
           <LanguageSwitch token={token} locale={locale} onSelect={onLocaleChange} />
         </div>
         <h1 className="g-title">
@@ -95,7 +95,7 @@ export function GuestFrame({
           {!preview ? <PwaInstallButton /> : null}
         </div>
       </header>
-      <div className="g-body">{children}</div>
+      <div data-guide="onizleme-alani" className="g-body">{children}</div>
       {footer ? <footer className="g-footer">{footer}</footer> : null}
     </div>
   );

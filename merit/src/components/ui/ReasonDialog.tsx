@@ -115,6 +115,7 @@ function ReasonDialogBody({ title, message, reasons, minLength, confirmLabel, da
           <button
             type="button"
             data-primary=""
+            data-guide="onayla"
             disabled={!valid || busy}
             onClick={() => void submit()}
             style={{ minHeight: "var(--tap-pri, 56px)" }}

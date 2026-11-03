@@ -89,7 +89,7 @@ export function TreePane({
   const canCreate = (kind: MenuNodeKind) => kind === "KATEGORI" || selectedChildren.includes(kind);
 
   return (
-    <div className="xp-mm-tree">
+    <div className="xp-mm-tree" data-guide="menu-agaci">
       {canEdit ? (
         <div role="toolbar" aria-label="Menü araçları" className="xp-grid-toolbar xp-mm-tools">
           {KINDS.map((kind) => (

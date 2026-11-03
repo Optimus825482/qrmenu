@@ -190,6 +190,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
         emptyText="Kayıtlı kullanıcı yok"
         toolbar={
           <Toolbar
+            newGuide="yeni-kullanici"
             onNew={() => setDialog({ mode: "new" })}
             onEdit={() => selected && edit(selected)}
             onDelete={() => selected && void removeUser(selected)}
@@ -226,6 +227,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
             <button
               type="button"
               className="xp-button"
+              data-guide="yetki-onizleme"
               disabled={!selected}
               onClick={() => selected && setPreviewRow(selected)}
             >

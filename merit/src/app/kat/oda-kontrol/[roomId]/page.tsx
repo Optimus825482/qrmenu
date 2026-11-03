@@ -437,9 +437,10 @@ export default function OdaKontrolPage() {
               </div>
             )}
 
-            {data.setups.map((setup) => (
+            {data.setups.map((setup, setupIdx) => (
               <section
                 key={setup.setupId}
+                data-guide={setupIdx === 0 ? "urun-listesi" : undefined}
                 className="rounded-2xl border border-border bg-surface overflow-hidden"
               >
                 <div className="flex items-center justify-between border-b border-border bg-bg px-4 py-3">
@@ -589,7 +590,7 @@ export default function OdaKontrolPage() {
 
       {data ? (
         <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
-          <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
+          <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -606,6 +607,7 @@ export default function OdaKontrolPage() {
               <button
                 type="button"
                 data-mutates=""
+                data-guide="dnd-bildir"
                 onClick={() => void handleMarkDnd()}
                 disabled={submitting || (data.taskItem ? !data.taskItem.dndAllowed : false)}
                 style={{ minHeight: "var(--tap-primary)" }}
@@ -620,6 +622,7 @@ export default function OdaKontrolPage() {
               type="button"
               data-primary=""
               data-mutates=""
+              data-guide="kaydet"
               onClick={() => void handleSaveCheck(false)}
               disabled={submitting}
               style={{ minHeight: "var(--tap-primary)" }}

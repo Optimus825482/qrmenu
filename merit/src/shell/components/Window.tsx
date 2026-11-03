@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
   type ComponentType,
+  type KeyboardEvent as ReactKeyboardEvent,
   type LazyExoticComponent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -32,6 +33,9 @@ import {
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { HotelPicker, type HotelInfo } from "./HotelPicker";
 import { Icon } from "@/components/icons/Icon";
+import { requestGuide } from "@/components/guide/guideEvents";
+import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
+import { SCREEN_GUIDES } from "@/modules/core/screenGuide";
 
 const lazyApps = new Map<string, LazyExoticComponent<ComponentType<AppProps>>>();
 
@@ -240,10 +244,29 @@ export function Window({ id, hotels, userName }: Props) {
     handle.addEventListener("pointercancel", onUp);
   };
 
+  // Tour and help follow the screen the app is bound to (the "Erişimim" window itself has none).
+  const guideScreen = app.id !== "core.erisimim" && app.screenCode in SCREEN_GUIDES ? app.screenCode : undefined;
+  const openGuide = (type: "help" | "tour") => {
+    if (ref.current) requestGuide(type, ref.current);
+  };
+  const onWindowKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    if (e.key !== "F1") return;
+    // The browser's own help must not open; F1 means the help of THIS window.
+    e.preventDefault();
+    if (guideScreen) openGuide("help");
+  };
+
   const menus: Record<MenuName, MenuItem[]> = {
     Dosya: [{ label: "Kapat", onSelect: () => void requestClose() }],
     Görünüm: [{ label: "Yenile", onSelect: () => setReloadKey((k) => k + 1) }],
     Yardım: [
+      ...(guideScreen
+        ? [
+            { label: "Bu pencerede neler yapabilirim? (F1)", onSelect: () => openGuide("help") },
+            { label: "Turu başlat", onSelect: () => openGuide("tour") },
+          ]
+        : []),
+      { label: "Erişimim", onSelect: () => appProps.openApp("core.erisimim", { hotelId: win.hotelId }) },
       {
         label: "Hakkında",
         onSelect: () =>
@@ -305,6 +328,7 @@ export function Window({ id, hotels, userName }: Props) {
       style={{ left: win.x, top: win.y, width: win.w, height: win.h, zIndex: win.z }}
       onPointerDownCapture={() => actions.focus(id)}
       onFocusCapture={() => actions.focus(id)}
+      onKeyDown={onWindowKeyDown}
     >
       <div
         className="xp-titlebar"
@@ -359,6 +383,9 @@ export function Window({ id, hotels, userName }: Props) {
         ))}
       </div>
       <div className="xp-window-body">{body}</div>
+      {guideScreen && app.kind === "component" && !(app.needsHotel && !win.hotelId) ? (
+        <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />
+      ) : null}
       <div className="xp-statusbar">
         Otel: {hotel?.name ?? "—"} · Kullanıcı: {userName} · {status}
       </div>

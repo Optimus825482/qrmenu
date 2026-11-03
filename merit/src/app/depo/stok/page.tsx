@@ -167,7 +167,7 @@ export default function DepoStokPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+      <div data-guide="hareketler" className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <Segmented
           label="Havuz bölümleri"
           value={activeTab}
@@ -190,7 +190,7 @@ export default function DepoStokPage() {
       </div>
 
       {activeTab === "STOCK" ? (
-        <div className="overflow-hidden rounded-[var(--radius-l)] border border-border bg-surface">
+        <div data-guide="havuz-listesi" className="overflow-hidden rounded-[var(--radius-l)] border border-border bg-surface">
           {isLoading ? (
             <p className="py-12 text-center text-muted">Stok listesi yükleniyor...</p>
           ) : filteredItems.length === 0 ? (
@@ -203,12 +203,12 @@ export default function DepoStokPage() {
                     <th scope="col" className="px-4 py-3">Ürün adı</th>
                     <th scope="col" className="px-4 py-3">Kategori</th>
                     <th scope="col" className="px-4 py-3 text-center">Mevcut havuz stoğu</th>
-                    <th scope="col" className="px-4 py-3 text-center">Kritik seviye</th>
+                    <th scope="col" data-guide="kritik-seviye" className="px-4 py-3 text-center">Kritik seviye</th>
                     <th scope="col" className="px-4 py-3 text-right">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredItems.map((item) => {
+                  {filteredItems.map((item, itemIdx) => {
                     const isLow = item.quantity <= item.minLevel;
                     return (
                       <tr key={item.id}>
@@ -229,7 +229,7 @@ export default function DepoStokPage() {
                         <td className="px-4 py-3 text-center font-mono text-muted">{item.minLevel} adet</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
-                            <Button mutates variant="primary" icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
+                            <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
                               Zimmet ekle
                             </Button>
                             <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>

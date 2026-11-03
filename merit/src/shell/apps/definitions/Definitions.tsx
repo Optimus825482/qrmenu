@@ -160,6 +160,7 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
             role="tree"
             aria-label="Tanımlama başlıkları"
             className="xp-tree"
+            data-guide="tanim-klasorleri"
             onKeyDown={onKeyDown}
           >
             {nodes.map((n) => {

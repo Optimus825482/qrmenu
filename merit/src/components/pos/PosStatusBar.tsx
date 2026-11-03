@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { requestGuide } from "@/components/guide/guideEvents";
+import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { Icon } from "@/components/icons/Icon";
 import { LogoutButton } from "@/components/LogoutButton";
 import { OutletSwitcher, type OutletTarget } from "@/components/ops/OutletSwitcher";
@@ -103,7 +105,17 @@ export function PosStatusBar({ connection, printer, phase, wake, onStartFullscre
         </span>
       ) : null}
 
-      <span className="pos-strip-item ml-auto">
+      <button
+        type="button"
+        className="pos-strip-item ml-auto"
+        style={{ minWidth: 44 }}
+        aria-label="Yardım"
+        title="Yardım (F1)"
+        onClick={() => requestGuide("help")}
+      >
+        <Icon name="help" size={24} />
+      </button>
+      <span className="pos-strip-item">
         <Clock />
       </span>
       <span className="pos-strip-item">
@@ -111,6 +123,7 @@ export function PosStatusBar({ connection, printer, phase, wake, onStartFullscre
       </span>
       <OutletSwitcher targets={targets} className="pos-strip-select" />
       <LogoutButton className="pos-strip-item font-semibold underline" />
+      <ScreenGuideHost density="pos" f1 />
     </footer>
   );
 }

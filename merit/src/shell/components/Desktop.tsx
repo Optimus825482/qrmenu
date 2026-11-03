@@ -8,6 +8,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { alertDialog, confirm, confirmRemoveShortcut } from "../confirm";
 import { XpIcon } from "../icons";
 import type { AppDefinition } from "../registry";
@@ -144,6 +145,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
       data-wallpaper={wallpaper}
       role="region"
       aria-label="Masaüstü"
+      data-guide="masaustu"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) setSelected(null);
       }}
@@ -182,6 +184,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
           onClose={() => setMenu(null)}
         />
       ) : null}
+      <ScreenGuideHost code="CR-KOM" density="xp" f1 />
     </div>
   );
 }

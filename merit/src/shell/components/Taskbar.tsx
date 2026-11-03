@@ -58,6 +58,7 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef }: Props) {
         ref={startButtonRef}
         type="button"
         className="xp-start-button"
+        data-guide="baslat-menusu"
         aria-haspopup="menu"
         aria-expanded={startOpen}
         aria-controls="xp-start-menu"

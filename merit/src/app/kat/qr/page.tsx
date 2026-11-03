@@ -221,7 +221,7 @@ export default function KatQrScannerPage() {
             </div>
           </div>
 
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-bg flex items-center justify-center">
+          <div data-guide="qr-okut" className="relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-bg flex items-center justify-center">
             <video
               ref={videoRef}
               playsInline
@@ -243,7 +243,7 @@ export default function KatQrScannerPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface p-5 space-y-3">
+        <div data-guide="oda-bilgisi" className="rounded-2xl border border-border bg-surface p-5 space-y-3">
           <div>
             <label htmlFor="qr-code-input" className="block text-sm font-bold text-text">
               Oda numarası yaz veya QR kodu gir
@@ -254,6 +254,7 @@ export default function KatQrScannerPage() {
           </div>
 
           <form
+            data-guide="form-gonder"
             onSubmit={(e) => {
               e.preventDefault();
               void resolveToken(manualToken);

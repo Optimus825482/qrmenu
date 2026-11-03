@@ -1,0 +1,229 @@
+/* Ekran turu (coach marks) ve yardım sayfası. Yalnız tasarım jetonları; sürekli animasyon yok. */
+
+.guide-tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 100020;
+}
+
+.guide-tour-spot {
+  position: fixed;
+  border-radius: var(--radius-m, 10px);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  outline: 2px solid var(--accent-app, #1c4fd8);
+  outline-offset: 2px;
+  pointer-events: none;
+}
+
+.guide-tour-card {
+  position: fixed;
+  width: min(340px, calc(100vw - 16px));
+  box-sizing: border-box;
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m, 10px);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.guide-tour-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.guide-tour-title {
+  margin: 2px 0 var(--space-2, 8px);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.guide-tour-body {
+  margin: 0 0 var(--space-4, 16px);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.guide-tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tap-gap, 8px);
+}
+
+.guide-btn {
+  min-height: var(--tap-primary, 48px);
+  min-width: var(--tap-min, 44px);
+  padding: 0 var(--space-4, 16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s, 6px);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+[data-density="xp"] .guide-btn,
+.guide-tour-layer[data-density="xp"] .guide-btn {
+  min-height: var(--tap-xp, 24px);
+  min-width: var(--tap-xp, 24px);
+  padding: 0 var(--space-3, 12px);
+}
+
+.guide-btn[data-primary] {
+  background: var(--accent-app, #1c4fd8);
+  border-color: var(--accent-app, #1c4fd8);
+  color: #fff;
+}
+
+.guide-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.guide-btn:focus-visible,
+.guide-help-close:focus-visible {
+  outline: 3px solid var(--accent-app, #1c4fd8);
+  outline-offset: 2px;
+}
+
+.guide-tour-actions .guide-btn[data-quiet] {
+  margin-left: auto;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+/* Yardım sayfası */
+.guide-help-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100015;
+  display: flex;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.guide-help-backdrop[data-variant="side"] {
+  justify-content: flex-end;
+}
+
+.guide-help-backdrop[data-variant="bottom"] {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.guide-help {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.guide-help[data-variant="side"] {
+  width: min(420px, 100vw);
+  height: 100%;
+}
+
+.guide-help[data-variant="bottom"] {
+  width: min(560px, 100vw);
+  max-height: 88vh;
+  border-radius: var(--radius-l, 16px) var(--radius-l, 16px) 0 0;
+}
+
+.guide-help-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-help-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.guide-help-close {
+  min-width: var(--tap-min, 44px);
+  min-height: var(--tap-min, 44px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s, 6px);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.guide-help-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4, 16px);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.guide-help-body h3 {
+  margin: var(--space-4, 16px) 0 var(--space-2, 8px);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.guide-help-body h3:first-child {
+  margin-top: 0;
+}
+
+.guide-help-body ul,
+.guide-help-body ol {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.guide-help-body li {
+  margin-bottom: var(--space-2, 8px);
+}
+
+.guide-help-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tap-gap, 8px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-top: 1px solid var(--border);
+}
+
+@media print {
+  html.guide-help-open body > *:not(.guide-help-portal) {
+    display: none !important;
+  }
+
+  html.guide-help-open .guide-help-backdrop {
+    position: static;
+    background: none;
+    display: block;
+  }
+
+  html.guide-help-open .guide-help {
+    width: auto;
+    height: auto;
+    max-height: none;
+    border: 0;
+    box-shadow: none;
+  }
+
+  html.guide-help-open .guide-help-body {
+    overflow: visible;
+  }
+
+  html.guide-help-open .guide-help-foot,
+  html.guide-help-open .guide-help-close {
+    display: none;
+  }
+}

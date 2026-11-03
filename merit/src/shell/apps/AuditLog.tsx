@@ -209,7 +209,7 @@ export function AuditLog({ setStatus }: AppProps) {
   };
 
   return (
-    <div className="xp-audit">
+    <div className="xp-audit" data-guide="denetim-listesi">
       {error ? (
         <p role="alert" className="xp-defs-error">
           {error}
@@ -243,7 +243,7 @@ export function AuditLog({ setStatus }: AppProps) {
         }}
         emptyText="Kayıt yok"
         toolbar={
-          <div className="xp-grid-toolbar xp-audit-filters">
+          <div className="xp-grid-toolbar xp-audit-filters" data-guide="denetim-filtre">
             <label>
               Başlangıç{" "}
               <input
@@ -295,7 +295,7 @@ export function AuditLog({ setStatus }: AppProps) {
         }
       />
       {detail ? (
-        <div className="xp-audit-detail">
+        <div className="xp-audit-detail" data-guide="denetim-detay">
           <section>
             <h3>Önce</h3>
             <pre aria-label="Önce">{jsonText(detail.before)}</pre>

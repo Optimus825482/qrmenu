@@ -91,7 +91,7 @@ export default function KatDuzeltmeOnayPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+      <main data-guide="talep-listesi" className="mx-auto max-w-4xl px-4 py-6 space-y-4">
         {loading ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
             Onay talepleri yükleniyor...
@@ -137,7 +137,7 @@ export default function KatDuzeltmeOnayPage() {
                   </div>
 
                   {req.status === "BEKLIYOR" ? (
-                    <div className="flex items-center gap-2">
+                    <div data-guide={req.id === requests.find((r) => r.status === "BEKLIYOR")?.id ? "onay-reddet" : undefined} className="flex items-center gap-2">
                       <button
                         type="button"
                         data-mutates=""

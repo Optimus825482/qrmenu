@@ -69,6 +69,7 @@ export function ControlPanel({ setStatus }: AppProps) {
           aria-label="Kategoriler"
           aria-orientation="vertical"
           className="xp-cp-tabs"
+          data-guide="ayar-gruplari"
           onKeyDown={onKeyDown}
         >
           {categories.map((c) => {

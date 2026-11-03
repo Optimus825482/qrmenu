@@ -16,7 +16,7 @@ type Props = {
 };
 
 export default function KdsColumn({ title, column, orders, action, pendingIds, canEdit, canPrint, now, onAction, onPrint }: Props) {
-  return <section aria-label={title} className="kds-col">
+  return <section aria-label={title} data-guide={column === "NEW" ? "yeni-siparisler" : column === "PREP" ? "hazirlaniyor" : "hazir"} className="kds-col">
     <div className="mb-3 flex items-center justify-between gap-2"><h2 style={{ fontSize: 22, fontWeight: 700 }}>{title}</h2><span className="rounded-full border border-border bg-bg px-3 py-0.5 font-semibold" style={{ fontSize: 16 }}>{orders.length}</span></div>
     <div className="grid gap-3">{orders.length === 0 ? <EmptyState title="Sipariş yok" /> : orders.map((order) => <KdsCard key={order.id} order={order} column={column} now={now} action={action} pending={pendingIds.has(order.id)} canEdit={canEdit} canPrint={canPrint} onAction={onAction} onPrint={onPrint} />)}</div>
   </section>;

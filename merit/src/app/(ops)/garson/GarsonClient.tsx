@@ -162,7 +162,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
 
     {notice && !composerTable ? <p role="status" className="rounded-lg border border-success bg-[var(--success-bg)] p-3 text-sm text-text">{notice}</p> : null}
     {tab === "queue" ? (
-      <div className="grid gap-3">
+      <div data-guide="gelen-siparis" className="grid gap-3">
         <RoutineCard />
         {queue.length === 0 ? <p className="text-muted">Bekleyen sipariş yok.</p> : queue.map((order) => (
           <article key={order.id} className="rounded-xl border border-border bg-surface p-4">
@@ -182,12 +182,13 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
         ))}
       </div>
     ) : (
-      <div className="grid gap-3">
+      <div data-guide="masalarim" className="grid gap-3">
         {myTables.length === 0 ? <p className="text-muted">Bu outlet için aktif masa yok.</p> : myTables.map((table) => {
           const isScanned = scanAlerts.some((a) => a.tableId === table.tableId);
           return (
             <article
               key={table.tableId}
+              data-guide={myTables[0]?.tableId === table.tableId ? "yeni-siparis" : undefined}
               className={`rounded-2xl p-4 ${isScanned ? "border-2 border-dashed border-accent bg-[var(--info-bg)]" : "border border-border bg-surface"}`}
             >
               <div className="flex items-center justify-between gap-3">
@@ -206,7 +207,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
                 ) : null}
               </div>
               {openOrders.filter((order) => order.tableId === table.tableId).map((order) => (
-                <div key={order.id} className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg p-2 text-sm">
+                <div key={order.id} data-guide={order.id === openOrders[0]?.id ? "siparis-durumu" : undefined} className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg p-2 text-sm">
                   <span>#{order.orderNo} · {statusText(order.status)}</span>
                   {order.status === "HAZIR" && (
                     <Button mutates variant="primary" disabled={pending} onClick={() => act(() => markServedAction(order.id))}>Servis edildi</Button>

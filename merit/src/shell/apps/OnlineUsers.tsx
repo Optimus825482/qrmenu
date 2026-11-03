@@ -247,7 +247,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
   const counts = data?.counts;
 
   return (
-    <div className="xp-online">
+    <div className="xp-online" data-guide="online-listesi">
       {error ? (
         <p role="alert" className="xp-defs-error">
           {error}
@@ -297,7 +297,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
         emptyText="Açık oturum yok"
         toolbar={
           <div className="xp-grid-toolbar">
-            <label>
+            <label data-guide="oturum-durumu">
               Durum{" "}
               <select
                 aria-label="Durum"
@@ -317,6 +317,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
                 <button
                   type="button"
                   className="xp-button"
+                  data-guide="oturum-kapat"
                   disabled={!selected || busy}
                   onClick={() => void forceLogout()}
                 >

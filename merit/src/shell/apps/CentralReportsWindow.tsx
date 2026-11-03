@@ -127,7 +127,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
     <div className="flex flex-col h-full bg-[#ece9d8] text-xs font-sans select-none overflow-hidden p-2 gap-2">
       {/* Üst Araç Çubuğu */}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-[#f0f0f0] p-2 rounded border border-[#7f9db9] shadow-xs">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5" data-guide="rapor-filtre">
           <span className="font-bold text-[#1f2937]">Tarih Aralığı:</span>
           <select
             value={dateRange}
@@ -153,6 +153,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
         <button
           type="button"
           onClick={exportCsv}
+          data-guide="rapor-indir"
           className="xp-button text-xs px-3 py-1 font-black text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border-emerald-400 flex items-center gap-1"
         >
           <Icon name="download" size={16} /> Excel&apos;e Aktar (.CSV)
@@ -160,7 +161,7 @@ export function CentralReportsWindow({ hotelId, setStatus }: AppProps) {
       </div>
 
       {/* Navigasyon Sekmeleri */}
-      <div className="flex gap-1 border-b border-[#7f9db9] pb-0">
+      <div className="flex gap-1 border-b border-[#7f9db9] pb-0" data-guide="rapor-grup">
         <button
           type="button"
           onClick={() => setTab("kpi")}

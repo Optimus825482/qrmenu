@@ -88,7 +88,7 @@ export default function TablePanel({ table, orders, calls, waiters, capabilities
         ) : null}
       </section>
 
-      <section aria-label="Açık siparişler" className="mt-3 grid gap-3 border-t border-border pt-3">
+      <section data-guide="adisyon" aria-label="Açık siparişler" className="mt-3 grid gap-3 border-t border-border pt-3">
         <h3 className="text-base font-bold">Açık siparişler</h3>
         {loading && orders.length === 0 ? <p className="text-sm text-muted" role="status">Siparişler yükleniyor…</p> : null}
         {!loading && orders.length === 0 ? <p className="text-sm text-muted">Bu masada açık sipariş yok.</p> : null}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition, type KeyboardEvent } from "react";
+import { requestGuide } from "@/components/guide/guideEvents";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { LogoutButton } from "@/components/LogoutButton";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
@@ -131,6 +132,19 @@ export function ProfileMenu({ user, hotelName, outletName, targets, currentTarge
               </button>
             ),
           )}
+
+          <button
+            type="button"
+            role="menuitem"
+            className="staff-menu-item"
+            onClick={() => {
+              setOpen(false);
+              requestGuide("help");
+            }}
+          >
+            <Icon name="help" size={20} />
+            Yardım
+          </button>
 
           <button
             type="button"

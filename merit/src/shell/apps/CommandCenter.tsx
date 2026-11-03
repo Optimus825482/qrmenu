@@ -90,7 +90,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             </button>
           ) : null}
         </legend>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge">
           <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
             <div className="flex items-center justify-between text-muted text-[11px]">
               <span><Icon name="building" size={16} /> Canlı Doluluk</span>

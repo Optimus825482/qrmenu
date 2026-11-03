@@ -333,7 +333,7 @@ export default function DolulukYuklePage() {
               Standart veya P4001 biçiminde .xlsx dosyası (en fazla 10 MB).
             </p>
           </div>
-          <div className="flex flex-wrap items-end gap-3">
+          <div data-guide="dosya-sec" className="flex flex-wrap items-end gap-3">
             <input
               ref={fileRef}
               data-testid="occupancy-file"
@@ -378,6 +378,7 @@ export default function DolulukYuklePage() {
 
         {preview && (
           <section
+            data-guide="onizleme"
             data-testid="occupancy-preview-panel"
             className="bg-surface border border-border rounded-2xl p-6 space-y-4"
           >
@@ -463,6 +464,7 @@ export default function DolulukYuklePage() {
                 type="button"
                 data-primary=""
                 data-mutates=""
+                data-guide="yukle"
                 data-testid="occupancy-commit"
                 onClick={() => void commit()}
                 disabled={busy || preview.okRows === 0}
@@ -475,7 +477,7 @@ export default function DolulukYuklePage() {
           </section>
         )}
 
-        <section className="bg-surface border border-border rounded-2xl p-6 space-y-4">
+        <section data-guide="gecmis" className="bg-surface border border-border rounded-2xl p-6 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-base font-bold text-text">Yükleme geçmişi</h2>
             <div className="flex items-center gap-3">

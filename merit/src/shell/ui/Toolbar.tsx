@@ -10,6 +10,8 @@ type Props = {
   newDisabled?: boolean;
   editDisabled?: boolean;
   deleteDisabled?: boolean;
+  /** Optional tour target for the Yeni button (defaults to the definitions tour target). */
+  newGuide?: string;
   /** Extra buttons placed after the standard ones. */
   children?: ReactNode;
 };
@@ -23,17 +25,18 @@ export function Toolbar({
   newDisabled,
   editDisabled,
   deleteDisabled,
+  newGuide,
   children,
 }: Props) {
   return (
     <div role="toolbar" aria-label="Araçlar" className="xp-grid-toolbar">
       {onNew ? (
-        <button type="button" className="xp-button" aria-label="Yeni kayıt" disabled={newDisabled} onClick={onNew}>
+        <button type="button" className="xp-button" aria-label="Yeni kayıt" data-guide={newGuide ?? "tanim-ekle"} disabled={newDisabled} onClick={onNew}>
           Yeni
         </button>
       ) : null}
       {onEdit ? (
-        <button type="button" className="xp-button" aria-label="Seçili kaydı düzenle" disabled={editDisabled} onClick={onEdit}>
+        <button type="button" className="xp-button" aria-label="Seçili kaydı düzenle" data-guide="tanim-duzenle" disabled={editDisabled} onClick={onEdit}>
           Düzenle
         </button>
       ) : null}

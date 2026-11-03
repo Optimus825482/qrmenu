@@ -67,7 +67,7 @@ export function SetupGuide({ hotelId, openApp, setStatus }: AppProps) {
       ) : null}
       {data ? (
         <>
-          <div className="xp-guide-head">
+          <div className="xp-guide-head" data-guide="rehber-durum">
             <h2>Kurulum durumu</h2>
             <span className="xp-guide-percent" data-testid="guide-percent">
               %{data.percent}
@@ -83,8 +83,8 @@ export function SetupGuide({ hotelId, openApp, setStatus }: AppProps) {
           >
             <div className="xp-progress-bar" style={{ width: `${data.percent}%` }} />
           </div>
-          <ol className="xp-guide-steps" aria-label="Kurulum adımları">
-            {data.steps.map((step) => {
+          <ol className="xp-guide-steps" aria-label="Kurulum adımları" data-guide="rehber-adimlari">
+            {data.steps.map((step, stepIndex) => {
               const available = getApp(step.openApp.appId) !== undefined;
               return (
                 <li key={step.key} className="xp-guide-step" data-done={step.done}>
@@ -101,6 +101,7 @@ export function SetupGuide({ hotelId, openApp, setStatus }: AppProps) {
                   <button
                     type="button"
                     className="xp-button"
+                    data-guide={stepIndex === 0 ? "rehber-git" : undefined}
                     disabled={!available}
                     title={available ? undefined : "Bu adım henüz kullanılamıyor"}
                     onClick={() =>

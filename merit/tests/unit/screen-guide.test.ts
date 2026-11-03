@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   GENERIC_ACTION_TEXT,
@@ -82,5 +84,62 @@ describe("screenGuide kataloğu", () => {
 
   it("bilinmeyen ekran için guideFor hata verir", () => {
     expect(() => guideFor("XX-YOK")).toThrow();
+  });
+});
+
+function sourceFiles(dir: string, out: string[] = []): string[] {
+  for (const name of readdirSync(dir)) {
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) sourceFiles(full, out);
+    else if (/\.(tsx|ts)$/.test(name)) out.push(full);
+  }
+  return out;
+}
+
+/**
+ * Targets that cannot exist yet, with the reason; the tour skips a step whose target is absent, so
+ * nothing breaks meanwhile. Remove an entry when its element appears.
+ */
+const PENDING_TARGETS: Record<string, string> = {
+  "radar-genel": "src/modules/radar/ui belongs to the radar task",
+  "radar-zaman": "src/modules/radar/ui belongs to the radar task",
+  "radar-duvar": "src/modules/radar/ui belongs to the radar task",
+  "rapor-donemi": "QM-RAP / QS-RAP have no window of their own (reports live in the Rapor Merkezi)",
+  "rapor-tablo": "QM-RAP has no window of its own",
+  "outlet-filtre": "QS-RAP has no window of its own",
+  "sla-indir": "the SLA report window has no export button",
+  "yeni-talep": "the request form is the /kat/talep route, not part of MB-TAL",
+};
+
+/** Every string literal inside `data-guide="x"` / `data-guide={cond ? "x" : undefined}` / `newGuide="x"`. */
+function guideAttributeTargets(text: string): Set<string> {
+  const found = new Set<string>();
+  for (const match of text.matchAll(/(?:data-guide|newGuide)=(?:"([^"]+)"|\{([^}]*)\})/g)) {
+    if (match[1]) found.add(match[1]);
+    else for (const lit of (match[2] ?? "").matchAll(/"([a-z0-9-]+)"/g)) found.add(lit[1]);
+  }
+  return found;
+}
+
+describe("rehber hedefleri kaynakta", () => {
+  const text = sourceFiles(path.resolve(import.meta.dirname, "../../src"))
+    .map((f) => readFileSync(f, "utf8"))
+    .join("\n");
+  const present = guideAttributeTargets(text);
+
+  it("her adım hedefi için kaynakta data-guide özniteliği vardır", () => {
+    const missing: string[] = [];
+    for (const g of Object.values(SCREEN_GUIDES)) {
+      for (const step of g.steps) {
+        if (step.target in PENDING_TARGETS) continue;
+        if (!present.has(step.target)) missing.push(`${g.code}/${step.target}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("bekleyen listesindeki bir hedef kaynakta belirirse listeden çıkarılır", () => {
+    const stale = Object.keys(PENDING_TARGETS).filter((t) => present.has(t));
+    expect(stale).toEqual([]);
   });
 });

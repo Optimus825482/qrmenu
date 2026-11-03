@@ -241,6 +241,7 @@ export default function RaporlarPage() {
             )}
 
             <button
+              data-guide="indir"
               onClick={() => window.print()}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
             >
@@ -277,7 +278,7 @@ export default function RaporlarPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
         {/* Rapor Sekmeleri */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <div data-guide="rapor-secimi" className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => setActiveTab("CONSUMPTION")}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
@@ -311,7 +312,7 @@ export default function RaporlarPage() {
           </div>
 
           {/* Filtre Barı */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div data-guide="filtreler" className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-300">
               <span className="text-slate-500">Tarih:</span>
               <input

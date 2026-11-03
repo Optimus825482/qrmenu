@@ -27,7 +27,12 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
 /** seed-e2e pre-acknowledges everybody; these tests need the real first-login state. */
 async function forgetWelcome(username: string): Promise<void> {
   await withDb((c) =>
-    c.query(`UPDATE users SET prefs = COALESCE(prefs, '{}'::jsonb) - 'guide' WHERE username = $1`, [username]),
+    // Keeps the seen-tour record (the seed marks every tour seen): only the acknowledgement goes.
+    c.query(
+      `UPDATE users SET prefs = jsonb_set(COALESCE(prefs, '{}'::jsonb), '{guide}', COALESCE(prefs->'guide', '{}'::jsonb) - 'welcomeSeenHash')
+        WHERE username = $1`,
+      [username],
+    ),
   );
 }
 
@@ -283,5 +288,252 @@ test.describe("rutin kartları ve Kullanıcıya göster", () => {
     await expect(panel.locator('[data-code="MB-ZIM"]')).toBeVisible();
     await expect(panel.locator('[data-code="MB-DOL"]')).toHaveCount(0);
     await admin.context().close();
+  });
+});
+
+// Tur motoru ve "?" yardım (P-UX-11). Seed her ekran turunu "görüldü" yazar; bu bölüm gerektiğinde siler.
+test.describe("ekran turu ve yardım", () => {
+  test.beforeAll(() => {
+    process.env.SEED_MINIBAR = "1";
+    try {
+      resetAndSeed({ guestMenu: true });
+    } finally {
+      delete process.env.SEED_MINIBAR;
+    }
+  });
+
+  /** Removes the "seen" record of one screen so its tour is offered again. */
+  async function forgetTour(username: string, screen: string): Promise<void> {
+    await withDb((c) =>
+      c.query(
+        `UPDATE users SET prefs = jsonb_set(prefs, '{guide,seen}', (prefs->'guide'->'seen') - $2::text) WHERE username = $1`,
+        [username, screen],
+      ),
+    );
+  }
+
+  const tour = (page: Page) => page.getByRole("dialog", { name: "Ekran turu" });
+  const help = (page: Page) => page.getByTestId("help-sheet");
+
+  /** Walks a running tour to its end and returns the step titles it showed. */
+  async function walkTour(page: Page): Promise<string[]> {
+    const titles: string[] = [];
+    await expect(tour(page)).toBeVisible({ timeout: 10_000 });
+    for (let guard = 0; guard < 8; guard++) {
+      titles.push((await tour(page).locator(".guide-tour-title").innerText()).trim());
+      const finish = tour(page).getByRole("button", { name: "Bitir" });
+      if (await finish.isVisible()) {
+        await finish.click();
+        break;
+      }
+      await tour(page).getByRole("button", { name: "İleri" }).click();
+    }
+    await expect(tour(page)).toHaveCount(0);
+    return titles;
+  }
+
+  async function seriousViolations(page: Page, selector: string): Promise<string[]> {
+    const { default: AxeBuilder } = await import("@axe-core/playwright");
+    const result = await new AxeBuilder({ page }).include(selector).analyze();
+    return result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id);
+  }
+
+  test("kat.mr /kat ilk açılışta tur kendiliğinden başlar; Esc kapatır; yenileyince tekrar açılmaz", async ({ browser }) => {
+    await forgetTour("kat.mr", "MB-KAT");
+    const page = await newContextPage(browser);
+    await login(page, "kat.mr");
+    await expect(page).toHaveURL(/\/kat$/);
+    await expect(tour(page)).toBeVisible({ timeout: 10_000 });
+    await expect(tour(page).locator(".guide-tour-count")).toHaveText(/^1\/\d/);
+    expect(await seriousViolations(page, '[data-testid="coach-marks"]')).toEqual([]);
+    await expect(tour(page).getByRole("button", { name: "İleri" })).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(tour(page).locator(".guide-tour-count")).toHaveText(/^2\/\d/);
+    await page.keyboard.press("Escape");
+    await expect(tour(page)).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.locator("#icerik")).toBeVisible();
+    await page.waitForTimeout(3_000);
+    await expect(tour(page)).toHaveCount(0);
+    await page.context().close();
+  });
+
+  test("tur yinelenince Esc odağı başlatan öğeye geri verir", async ({ browser }) => {
+    const page = await newContextPage(browser);
+    await login(page, "kat.mr");
+    await expect(page).toHaveURL(/\/kat$/);
+    const avatar = page.getByRole("button", { name: /Profil menüsü/ });
+    await avatar.focus();
+    // The page may still be hydrating when the request is sent: repeat it until the host hears it.
+    await expect(async () => {
+      await page.evaluate(() => window.dispatchEvent(new CustomEvent("merit:guide", { detail: { type: "tour" } })));
+      await expect(tour(page)).toBeVisible({ timeout: 1_500 });
+    }).toPass({ timeout: 15_000 });
+    await expect(tour(page).getByRole("button", { name: "İleri" })).toBeFocused(); // key handlers are attached
+    await page.keyboard.press("Escape");
+    await expect(tour(page)).toHaveCount(0);
+    await expect(avatar).toBeFocused();
+    await page.context().close();
+  });
+
+  test("hoş geldin onaylanmadan tur başlamaz", async ({ browser }) => {
+    await forgetWelcome("kat2.mr");
+    await forgetTour("kat2.mr", "MB-KAT");
+    const page = await newContextPage(browser);
+    await login(page, "kat2.mr");
+    await expect(page).toHaveURL(/\/erisimim\?hos-geldin=1$/);
+    await page.waitForTimeout(2_500);
+    await expect(tour(page)).toHaveCount(0);
+    await page.getByRole("button", { name: "Anladım" }).click();
+    await expect(page).toHaveURL(/\/kat$/);
+    await expect(tour(page)).toBeVisible({ timeout: 10_000 });
+    await page.context().close();
+  });
+
+  test("depo /depo/stok: Havuza giriş adımı depo.cok için var, kat.mr için (yalnız V,D) yok", async ({ browser }) => {
+    for (const [user, expectStep] of [
+      ["depo.cok", true],
+      ["kat.mr", false],
+    ] as const) {
+      await forgetTour(user, "MB-ZIM");
+      const page = await newContextPage(browser);
+      await login(page, user);
+      // depo.cok works in two hotels and picks one first.
+      if (user === "depo.cok") await page.getByRole("button", { name: /Minibar/ }).first().click();
+      await expect(page).not.toHaveURL(/\/giris|\/secim/);
+      await page.goto("/depo/stok");
+      const titles = await walkTour(page);
+      if (expectStep) expect(titles).toContain("Havuza giriş");
+      else expect(titles).not.toContain("Havuza giriş");
+      await page.context().close();
+    }
+  });
+
+  test("/garson: kapalı sekmedeki hedefler atlanır, sayaç kalan adım sayısını gösterir", async ({ browser }) => {
+    await forgetTour("garson.havuz", "QS-KUY");
+    const page = await openStaff(browser, "garson.havuz");
+    await expect(page).toHaveURL(/\/garson/);
+    await expect(tour(page)).toBeVisible({ timeout: 10_000 });
+    const counter = (await tour(page).locator(".guide-tour-count").innerText()).trim();
+    const total = Number(counter.split("/")[1]);
+    expect(total).toBeGreaterThan(0);
+    expect(total).toBeLessThan(4); // QS-KUY defines four steps; the tables tab is closed
+    await page.keyboard.press("Escape");
+    await page.context().close();
+  });
+
+  test("kasa: ? düğmesi yardım sayfasını açar; Turu tekrar oynat çalışır; Yazdır window.print çağırır; axe temiz", async ({ browser }) => {
+    const page = await newContextPage(browser);
+    await page.addInitScript(`window.__printed = 0; window.print = () => { window.__printed++; };`);
+    await login(page, "kasa.havuz");
+    await page.getByRole("button", { name: /Havuz Bar/ }).click();
+    await expect(page).toHaveURL(/\/kasa$/);
+    const trigger = page.getByRole("button", { name: "Yardım", exact: true });
+    const box = await trigger.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    await trigger.click();
+    await expect(help(page)).toBeVisible();
+    await expect(help(page)).toContainText("Burada yapabileceklerin");
+    await expect(help(page).getByTestId("help-abilities").locator("li").first()).toBeVisible();
+    expect(await seriousViolations(page, '[data-testid="help-sheet"]')).toEqual([]);
+
+    await help(page).getByRole("button", { name: "Yazdır" }).click();
+    expect(await page.evaluate(() => (window as unknown as { __printed: number }).__printed)).toBe(1);
+
+    await help(page).getByRole("button", { name: "Turu tekrar oynat" }).click();
+    await expect(help(page)).toHaveCount(0);
+    await expect(tour(page)).toBeVisible();
+    await expect(tour(page).getByRole("button", { name: "İleri" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(tour(page)).toHaveCount(0);
+    await page.context().close();
+  });
+
+  test("personel profil menüsünde Yardım var; yetkisiz eylem anlatılmaz; ayar değişince yardım metni yenilenir", async ({ browser }) => {
+    // R-KAT may only view and change on the pool screen: the "new entry" sentence is not told to them.
+    const kat = await newContextPage(browser);
+    await login(kat, "kat.mr");
+    await expect(kat).toHaveURL(/\/kat$/);
+    await kat.goto("/depo/stok");
+    await kat.getByRole("button", { name: /Profil menüsü/ }).click();
+    await kat.getByRole("menuitem", { name: "Yardım" }).click();
+    await expect(help(kat).getByTestId("help-abilities")).toContainText("Ürünün kritik seviyesini güncellersin.");
+    await expect(help(kat)).not.toContainText("Havuza yeni giriş yaparsın.");
+    await expect(help(kat)).not.toContainText("Yeni kayıt açabilirsin");
+    await kat.context().close();
+
+    const depo = await newContextPage(browser);
+    await login(depo, "depo.cok");
+    await depo.getByRole("button", { name: /Minibar/ }).first().click();
+    await expect(depo).toHaveURL(/\/depo\/stok$/);
+    await depo.getByRole("button", { name: /Profil menüsü/ }).click();
+    await depo.getByRole("menuitem", { name: "Yardım" }).click();
+    await expect(help(depo).getByTestId("help-abilities")).toContainText("Havuza yeni giriş yaparsın.");
+    await depo.context().close();
+
+    // Setting values show as sentences and follow the current value.
+    const page = await newContextPage(browser);
+    await login(page, "kat.mr");
+    await expect(page).toHaveURL(/\/kat$/);
+    await page.goto("/kat/dnd");
+    const open = async () => {
+      await page.getByRole("button", { name: /Profil menüsü/ }).click();
+      await page.getByRole("menuitem", { name: "Yardım" }).click();
+      await expect(help(page)).toBeVisible();
+    };
+    await open();
+    await expect(help(page).getByTestId("help-settings")).toContainText("DND, 2 kontrolde tamamlanır");
+    await expect(help(page).getByRole("button", { name: "Kapat" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(help(page)).toHaveCount(0);
+    await withDb(async (c) => {
+      await c.query(`DELETE FROM settings WHERE key = 'dnd.minChecks' AND hotel_id IS NULL`);
+      await c.query(
+        `INSERT INTO settings (id, hotel_id, key, value, updated_at) VALUES (gen_random_uuid()::text, NULL, 'dnd.minChecks', '3'::jsonb, now())`,
+      );
+    });
+    await open();
+    await expect(help(page).getByTestId("help-settings")).toContainText("DND, 3 kontrolde tamamlanır");
+    await withDb((c) => c.query(`DELETE FROM settings WHERE key = 'dnd.minChecks' AND hotel_id IS NULL`));
+    await page.context().close();
+  });
+
+  test("XP: pencerede F1 yardım panelini açar (tarayıcı yardımı değil); Yardım menüsünden Turu başlat", async ({ browser }) => {
+    await forgetTour("admin", "CR-KUL");
+    const page = await newContextPage(browser);
+    await openAdminShell(page);
+    const users = await appWindow(page, "Kullanıcı Yönetimi");
+    await users.getByRole("searchbox").focus();
+    await page.evaluate(() => {
+      (window as unknown as { __f1: boolean }).__f1 = false;
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "F1") (window as unknown as { __f1: boolean }).__f1 = e.defaultPrevented;
+      });
+    });
+    await page.keyboard.press("F1");
+    await expect(help(page)).toBeVisible();
+    expect(await page.evaluate(() => (window as unknown as { __f1: boolean }).__f1)).toBe(true);
+    expect(await seriousViolations(page, '[data-testid="help-sheet"]')).toEqual([]);
+    await expect(help(page).getByRole("button", { name: "Kapat" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(help(page)).toHaveCount(0);
+
+    await users.getByRole("menuitem", { name: "Yardım" }).click();
+    await page.getByRole("menuitem", { name: "Turu başlat" }).click();
+    await expect(tour(page)).toBeVisible();
+    // XP density: 24 px controls.
+    const next = await tour(page).getByRole("button", { name: "İleri" }).boundingBox();
+    expect(next!.height).toBeGreaterThanOrEqual(24);
+    await tour(page).getByRole("button", { name: "Turu kapat" }).click();
+    await expect(tour(page)).toHaveCount(0);
+
+    // Closing recorded the tour as seen: it does not start by itself again.
+    await page.reload();
+    await expect(page.getByRole("region", { name: "Masaüstü" })).toBeVisible();
+    await page.waitForTimeout(2_000);
+    await expect(tour(page)).toHaveCount(0);
+    await page.context().close();
   });
 });

@@ -21,7 +21,7 @@ export function UserManagement({ hotelId, initialPanel, setStatus }: AppProps) {
     <div className="xp-defs">
       <div className="xp-defs-content">
         <nav className="xp-defs-nav" aria-label="Kullanıcı yönetimi">
-          <div role="tree" aria-label="Kullanıcı yönetimi bölümleri" className="xp-tree">
+          <div role="tree" aria-label="Kullanıcı yönetimi bölümleri" className="xp-tree" data-guide="rol-yetki">
             {PANELS.map((item) => (
               <div
                 key={item.id}
@@ -38,7 +38,7 @@ export function UserManagement({ hotelId, initialPanel, setStatus }: AppProps) {
             ))}
           </div>
         </nav>
-        <div className="xp-defs-main" role="region" aria-label={`${selected.label} paneli`}>
+        <div className="xp-defs-main" data-guide="kullanici-listesi" role="region" aria-label={`${selected.label} paneli`}>
           {selected.id === "users" ? <UsersPanel hotelId={hotelId} setStatus={setStatus} /> : null}
           {selected.id === "roles" ? <RolesPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}
           {selected.id === "permissions" ? <PermissionMatrixPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}

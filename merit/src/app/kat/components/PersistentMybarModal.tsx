@@ -99,7 +99,7 @@ export function PersistentMybarModal({ hotelId }: { hotelId?: string } = {}) {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
               Talep Edilen Ürünler
             </p>
-            <div className="divide-y divide-border rounded-xl border border-border bg-bg">
+            <div data-guide="talep-listesi" className="divide-y divide-border rounded-xl border border-border bg-bg">
               {current.items.map((it, idx) => (
                 <div key={idx} className="flex items-center justify-between px-3.5 py-2.5 text-sm">
                   <span className="font-medium text-text">{it.productName}</span>
@@ -127,6 +127,7 @@ export function PersistentMybarModal({ hotelId }: { hotelId?: string } = {}) {
           <div className="flex flex-col gap-2 pt-1">
             <button
               type="button"
+              data-guide="goruldu"
               data-primary=""
               data-mutates=""
               onClick={handleConfirm}
@@ -140,6 +141,7 @@ export function PersistentMybarModal({ hotelId }: { hotelId?: string } = {}) {
             {current.roomId ? (
               <Link
                 href={`/kat/oda-kontrol/${current.roomId}`}
+                data-guide="oda-ac"
                 style={{ minHeight: "var(--tap-action)" }}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg px-4 py-2.5 text-center text-xs font-semibold text-text hover:bg-surface"
               >

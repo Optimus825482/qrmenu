@@ -105,7 +105,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
     <div className="xp-mm-detail">
       <div className="xp-mm-detail-head">
         <strong>{`${KIND_LABEL[node.kind]}: ${node.name}`}</strong>
-        <label className="xp-module-switch">
+        <label className="xp-module-switch" data-guide="satisa-ac-kapa">
           <input
             type="checkbox"
             role="switch"
@@ -132,6 +132,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
           role="tab"
           aria-selected={tab === "ceviri"}
           className="xp-button"
+          data-guide="ceviriler"
           data-selected={tab === "ceviri" || undefined}
           onClick={() => setTab("ceviri")}
         >

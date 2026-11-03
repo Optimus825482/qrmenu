@@ -353,7 +353,7 @@ export default function OdaServisiClient({
       ) : null}
 
       {/* Sipariş Kartları Grid */}
-      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-guide={tab === "teyit" ? "teyit-listesi" : tab === "teslim" ? "teslim-listesi" : "talep-listesi"} className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
         {filteredOrders.length === 0 ? (
           <div className="col-span-full py-16 text-center text-muted border border-dashed border-border rounded-2xl bg-surface">
             <Icon name="concierge" size={32} className="block mb-2" />
@@ -371,6 +371,7 @@ export default function OdaServisiClient({
           return (
             <article
               key={order.id}
+              data-guide={order.id === filteredOrders[0]?.id ? "talep-ac" : undefined}
               className={`flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all bg-surface ${cfg.border} ${
                 isOverdue ? "ring-2 ring-rose-500 bg-rose-500/5" : ""
               }`}
@@ -449,6 +450,7 @@ export default function OdaServisiClient({
                   <button
                     type="button"
                     disabled={pending}
+                    data-guide={order.id === filteredOrders.find((o) => o.status === "TEYIT_BEKLIYOR")?.id ? "ara" : undefined}
                     onClick={() => {
                       setConfirmModal(order);
                       setConfirmNote("");
@@ -465,6 +467,7 @@ export default function OdaServisiClient({
                     type="button"
                     disabled={pending}
                     data-mutates
+                    data-guide={order.id === filteredOrders.find((o) => o.status === "GONDERILDI" || o.status === "TEYIT_BEKLIYOR")?.id ? "onayla" : undefined}
                     onClick={() => act(() => approveRoomOrderAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
@@ -491,6 +494,7 @@ export default function OdaServisiClient({
                     type="button"
                     disabled={pending}
                     data-mutates
+                    data-guide={order.id === filteredOrders.find((o) => o.status === "HAZIR")?.id ? "yola-cik" : undefined}
                     onClick={() => act(() => markRoomOnWayAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-info text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
@@ -504,6 +508,7 @@ export default function OdaServisiClient({
                     type="button"
                     disabled={pending}
                     data-mutates
+                    data-guide={order.id === filteredOrders.find((o) => o.status === "YOLDA")?.id ? "teslim-edildi" : undefined}
                     onClick={() => act(() => markRoomDeliveredAction({ orderId: order.id }))}
                     className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
@@ -562,6 +567,7 @@ export default function OdaServisiClient({
                 type="button"
                 disabled={pending}
                 data-mutates
+                data-guide="sonuc"
                 onClick={handlePhoneConfirm}
                 className="flex-1 min-h-[44px] rounded-xl bg-warn text-white font-black text-sm"
               >

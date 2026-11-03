@@ -55,7 +55,7 @@ export default function IptalClient({ outletId, initial, canCancel, canPrint }: 
         <p className="text-sm text-muted">Onaylanmış veya hazır siparişler iptal edilebilir. Servis edilen siparişler yalnız görüntülenir.</p>
       </div>
       {error ? <p role="status" className="text-sm font-semibold text-danger">{error}</p> : null}
-      <div className="grid gap-3">
+      <div data-guide="iptal-listesi" className="grid gap-3">
         {orders.length === 0 ? <p className="text-muted">İptal edilebilir son sipariş yok.</p> : orders.map((order) => (
           <article key={order.id} className="flex flex-wrap items-center gap-3 rounded-[var(--radius-l)] border border-border bg-surface p-4">
             <div className="mr-auto">
@@ -63,7 +63,7 @@ export default function IptalClient({ outletId, initial, canCancel, canPrint }: 
               <p className="text-sm text-muted">{STATUS_TEXT[order.status] ?? order.status}</p>
             </div>
             {canPrint ? <button type="button" disabled={pending} onClick={() => print(order)} className="pos-btn">Adisyon yazdır</button> : null}
-            {order.status === "SERVIS_EDILDI" ? <span className="text-sm text-muted">Düzeltme v1&apos;de yok</span> : <button type="button" disabled={!canCancel} onClick={() => void askCancel(order)} className="pos-btn" data-danger>İptal et</button>}
+            {order.status === "SERVIS_EDILDI" ? <span className="text-sm text-muted">Düzeltme v1&apos;de yok</span> : <button type="button" disabled={!canCancel} onClick={() => void askCancel(order)} data-guide={order.id === orders[0]?.id ? "gerekce" : undefined} className="pos-btn" data-danger>İptal et</button>}
           </article>
         ))}
       </div>

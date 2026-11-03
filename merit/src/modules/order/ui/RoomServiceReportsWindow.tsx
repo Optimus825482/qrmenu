@@ -111,7 +111,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-guide="sla-ozeti">
         <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
           <span className="text-gray-500 text-[11px] font-medium block">Toplam Sipariş</span>
           <span className="text-2xl font-bold text-gray-900 mt-1 block">
@@ -152,7 +152,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
       </div>
 
       {/* Status Breakdown & SLA Performance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-guide="sla-detay">
         {/* Status Breakdown Card */}
         <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
           <h3 className="font-bold text-gray-800 text-xs mb-3 border-b pb-1">
