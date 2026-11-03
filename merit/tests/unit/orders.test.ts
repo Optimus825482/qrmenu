@@ -201,6 +201,10 @@ describe("orders.transition", () => {
     const { kds, gar } = await actors(s);
     await openSession(gar.user.id, s.outlet.id, "R-GAR");
     const order = await seedOrder(s, { status: "ONAYLANDI", approvedAt: new Date() });
+    await expect(orders.transition(kds.ctx, order.id, "HAZIR")).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Sipariş hazırlanmaya başlanmadan hazır yapılamaz",
+    });
     await orders.startPrep(kds.ctx, order.id);
     await orders.transition(kds.ctx, order.id, "HAZIR", {});
     expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).readyAt).not.toBeNull();

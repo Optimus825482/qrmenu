@@ -22,7 +22,6 @@ const EVENT_OF: Partial<Record<OrderStatus, string>> = {
   YOLDA: "order.onway",
   TESLIM_EDILDI: "order.delivered",
   IPTAL: "order.cancelled",
-  TEYIT_BEKLIYOR: "order.confirmed",
 };
 
 const REASON_MIN = 3;
@@ -89,19 +88,15 @@ async function authorize(ctx: Ctx, order: Order, to: OrderStatus): Promise<void>
 }
 
 async function authorizeRoomTransition(
+  tx: Prisma.TransactionClient,
   ctx: Ctx,
   order: OrderDetail,
   from: OrderStatus,
   to: OrderStatus,
-  internal?: boolean,
 ): Promise<void> {
-  if (internal) {
-    if (from === "GONDERILDI" && to === "TEYIT_BEKLIYOR") return;
-    throw new DomainError("CONFLICT", ALREADY);
-  }
   switch (to) {
     case "ONAYLANDI": {
-      const outlet = await prisma.outlet.findUnique({
+      const outlet = await tx.outlet.findUnique({
         where: { id: order.outletId },
         select: { phoneConfirmRequired: true },
       });
@@ -238,7 +233,7 @@ export function orderPayload(
   };
 }
 
-export type TransitionOptions = { reason?: string; print?: PrintEnqueuer; internal?: boolean };
+export type TransitionOptions = { reason?: string; print?: PrintEnqueuer };
 
 /**
  * Moves an order along the state machine under a row lock: a second concurrent attempt finds the
@@ -266,13 +261,13 @@ async function transition(
     if (!isAllowed(order.kind, order.status, to)) {
       throw new DomainError("CONFLICT", ALREADY);
     }
-    if (to === "HAZIR" && !order.prepStartedAt) {
+    if (order.kind === "MASA" && to === "HAZIR" && !order.prepStartedAt) {
       throw new DomainError("CONFLICT", "Sipariş hazırlanmaya başlanmadan hazır yapılamaz");
     }
     if (order.kind === "MASA") {
       await authorize(ctx, order, to);
     } else if (order.kind === "ODA_SERVISI") {
-      await authorizeRoomTransition(ctx, order, order.status, to, opts.internal);
+      await authorizeRoomTransition(tx, ctx, order, order.status, to);
     } else {
       throw new DomainError("CONFLICT", ALREADY);
     }
@@ -285,15 +280,15 @@ async function transition(
     await tx.orderEvent.create({
       data: {
         orderId: order.id,
-        userId: opts.internal ? null : ctx.user.id,
+        userId: ctx.user.id,
         from: order.status,
         to,
-        note: reason ?? (opts.internal && to === "TEYIT_BEKLIYOR" ? "TEYIT_GEREKLI" : null),
+        note: reason ?? null,
         at: now,
       },
     });
     await audit(tx, {
-      userId: opts.internal ? undefined : ctx.user.id,
+      userId: ctx.user.id,
       hotelId: order.hotelId,
       action: `ORDER_${to}`,
       entity: "Order",
@@ -321,7 +316,7 @@ async function transition(
           { ...updated, table: order.table, room: order.room },
           {
             from: order.status,
-            byUserId: opts.internal ? null : ctx.user.id,
+            byUserId: ctx.user.id,
             extra: reason ? { rejectReason: reason } : {},
           },
         ),

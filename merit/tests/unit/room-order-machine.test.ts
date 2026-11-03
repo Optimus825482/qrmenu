@@ -263,7 +263,7 @@ describe("orders.transition (ODA_SERVISI)", () => {
     );
   });
 
-  it("R-MUS ve R-ODS HAZIR yapabilir (RO-TAL D); HAZIR -> YOLDA R-ODS ok; YOLDA -> TESLIM_EDILDI ok", async () => {
+  it("R-MUS hazırlık kaydı olmadan oda siparişini HAZIR yapar, R-ODS teslim eder", async () => {
     const mrId = await hotelId("ROYAL");
     const outlet = await getOrCreateRsOutlet(mrId, false);
     const room = await getOrCreateRoom(mrId);
@@ -272,8 +272,8 @@ describe("orders.transition (ODA_SERVISI)", () => {
 
     const order = await createRsOrder(mrId, outlet.id, room.id, {
       status: "ONAYLANDI",
-      prepStartedAt: new Date(),
     });
+    expect(order.prepStartedAt).toBeNull();
 
     // R-MUS -> HAZIR ok
     const ready = await orders.transition(mus.ctx, order.id, "HAZIR");
