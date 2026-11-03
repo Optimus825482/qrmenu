@@ -163,12 +163,16 @@ describe("getRoutines", () => {
     expect((await getRoutines(ctx, NOON))[0].items.map((i) => i.id)).not.toContain("dnd-ikinci");
   });
 
-  it("R-KAS iki rutin (açılış 06–14, kapanış 14–24) ve saate göre expanded", async () => {
+  it("R-KAS iki rutin (açılış 06–16, kapanış 16–24) ve saate göre expanded", async () => {
     const outlet = await makeOutlet("ROYAL", "Havuz", "BAR");
     const { ctx } = await ctxOf("R-KAS", "kasa3", outlet.id);
     const morning = await getRoutines(ctx, NOON);
     expect(morning.map((r) => r.routine.id)).toEqual(["kasa-acilis", "kasa-kapanis"]);
     expect(morning.map((r) => r.expanded)).toEqual([true, false]);
+    const edge = await getRoutines(ctx, new Date("2026-11-03T13:59:00Z")); // 15:59 Nicosia: still opening
+    expect(edge.map((r) => r.expanded)).toEqual([true, false]);
+    const closing = await getRoutines(ctx, new Date("2026-11-03T14:00:00Z")); // 16:00 Nicosia
+    expect(closing.map((r) => r.expanded)).toEqual([false, true]);
     const evening = await getRoutines(ctx, new Date("2026-11-03T18:00:00Z")); // 20:00 Nicosia
     expect(evening.map((r) => r.expanded)).toEqual([false, true]);
     const kuyruk = evening[1].items.find((i) => i.id === "kuyruk-bos")!;

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { businessDate } from "@/lib/time";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { audit } from "./audit";
 import { accessSummary } from "./accessSummary";
@@ -45,6 +46,8 @@ export async function toggleChecklistAction(day: string, itemId: string, checked
     z.object({ day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), itemId: z.string().min(1).max(60), checked: z.boolean() }),
     async (input) => {
       const ctx = await requireUser();
+      // Only today's business day (Europe/Nicosia) can be ticked: yesterday's list is closed.
+      if (input.day !== businessDate()) throw new DomainError("VALIDATION", "Yalnız bugünün listesi işaretlenebilir");
       await setChecklistItem(ctx.user.id, input.day, input.itemId, input.checked);
       return null;
     },

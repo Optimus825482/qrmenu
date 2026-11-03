@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { visibleScreens } from "@/lib/rbac";
 import { businessDate, businessDay, TZ } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
-import { taskSummary } from "@/modules/minibar/server/tasks";
 import { ROUTINE_REFRESH_EVENTS } from "../routineEvents";
 import { guardScreenOf, screenForPath } from "../screenPaths";
 import { ROLE_ROUTINES, type RoleRoutine, type RoutineAuto } from "../screenGuide";
@@ -55,8 +54,12 @@ export async function evaluateAuto(kind: AutoKind, ctx: Ctx, now: Date = new Dat
       return done >= UPLOAD_KINDS.length;
     }
     case "tasksDone": {
-      const summary = await taskSummary(prisma, hotelId, day);
-      return summary.total > 0 && summary.waiting === 0;
+      const where = { task: { hotelId, date: businessDay(day) } };
+      const [total, open] = await Promise.all([
+        prisma.dailyTaskItem.count({ where }),
+        prisma.dailyTaskItem.count({ where: { ...where, status: { in: ["BEKLIYOR", "DEVAM"] } } }),
+      ]);
+      return total > 0 && open === 0;
     }
     case "mybarAllSeen":
       return (await prisma.mybarRequest.count({ where: { hotelId, status: "BEKLEMEDE", seenAt: null } })) === 0;

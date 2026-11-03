@@ -59,11 +59,11 @@ describe("previewAccessAction (gerçek test DB)", () => {
     for (const item of [...result.data.nav.primary, ...result.data.nav.more]) {
       if (item.href) expect(visible.has(item.screen), item.id).toBe(true);
     }
-    // The summary's own `hash` is the permission fingerprint (a 12-hex digest of screens), not a credential:
-    // strip that single key and scan for any secret-looking key or value.
-    const payload = JSON.parse(JSON.stringify(result.data)) as { summary: { hash?: string } };
-    delete payload.summary.hash;
-    expect(JSON.stringify(payload)).not.toMatch(/password|hash|token|secret/i);
+    // `summary.hash` is the permission fingerprint (12 hex chars of sha256 over screens+actions), not a
+    // credential: assert its shape, then scan the payload with exactly that key/value pair masked.
+    expect(result.data.summary.hash).toMatch(/^[0-9a-f]{12}$/);
+    const json = JSON.stringify(result.data).replace(`"hash":"${result.data.summary.hash}"`, '"fingerprint":"-"');
+    expect(json).not.toMatch(/password|hash|token|secret/i);
     expect(Object.keys(result.data)).toEqual(["summary", "nav"]);
   });
 

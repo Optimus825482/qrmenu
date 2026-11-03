@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AccessSummaryView } from "@/components/guide/AccessSummaryView";
+import { useDialogFocus } from "@/components/ui/useDialogFocus";
 import { previewAccessAction, type AccessPreview } from "@/modules/core/server/actions/accessPreview";
 
 const NOTICE = "Bu bir önizlemedir; oturum açılmaz.";
@@ -62,13 +63,8 @@ export function AccessPreviewDialog({ user, hotelId, onClose }: Props) {
     };
   }, [user.id, hotelId]);
 
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    dialogRef.current?.querySelector<HTMLElement>("button")?.focus();
-    return () => {
-      if (previous?.isConnected) previous.focus();
-    };
-  }, []);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useDialogFocus(dialogRef, onClose, () => closeRef.current);
 
   const portalRoot = typeof document === "undefined" ? null : document.getElementById("xp-dialog-root");
   const panel = (
@@ -81,13 +77,6 @@ export function AccessPreviewDialog({ user, hotelId, onClose }: Props) {
         data-testid="access-preview-dialog"
         className="xp-window xp-dialog xp-form-dialog"
         style={{ width: "min(720px, 94vw)", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }
-        }}
       >
         <div className="xp-titlebar">
           <span id={titleId} className="xp-titlebar-text">
@@ -109,7 +98,7 @@ export function AccessPreviewDialog({ user, hotelId, onClose }: Props) {
           )}
         </div>
         <div className="xp-dialog-actions">
-          <button type="button" className="xp-button" onClick={onClose}>
+          <button ref={closeRef} type="button" className="xp-button" onClick={onClose}>
             Kapat
           </button>
         </div>

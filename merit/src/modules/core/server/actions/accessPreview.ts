@@ -18,19 +18,21 @@ const userInput = z.object({ userId: z.string().min(1), hotelId: z.string().min(
 const roleInput = z.object({ roleId: z.string().min(1), hotelId: z.string().min(1) });
 
 async function previewOf(roleId: string, hotelId: string, outletId: string | undefined, fullName: string | undefined): Promise<AccessPreview> {
-  const [summary, perScreen] = await Promise.all([
+  const [summary, perScreen, outlet] = await Promise.all([
     accessSummary({ roleId, hotelId, ...(outletId ? { outletId } : {}), ...(fullName !== undefined ? { fullName } : {}) }),
     actionsByScreen(roleId, hotelId),
+    outletId ? prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } }) : null,
   ]);
   const nav = buildNav(summary.user.roleCode, new Set(perScreen.keys()), {
-    canCreate: perScreen.get("QS-KUY")?.includes("O") ?? false,
+    // Same rule as the real shell (loadShellProps): the outlet takes orders AND the role may open them.
+    canCreate: Boolean(outlet?.hasOrdering) && (perScreen.get("QS-KUY")?.includes("O") ?? false),
   });
   return { summary, nav };
 }
 
 /**
  * What the given user sees in a hotel, for an administrator. Read-only: the caller's session and
- * cookies are untouched, and the result carries the summary and the nav model only (no account data).
+ * cookies are untouched, and the result carries the summary and the nav model only (no password, session or token data).
  * Every preview is audited (`YETKI_ONIZLEME`).
  */
 export async function previewAccessAction(input: {

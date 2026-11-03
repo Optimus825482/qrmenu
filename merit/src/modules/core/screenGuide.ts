@@ -153,6 +153,7 @@ const LIST: ScreenGuide[] = [
       ["havuz-listesi", "Havuz", "Otelin havuzundaki ürünler ve eldeki adetleri burada durur."],
       ["kritik-seviye", "Kritik seviye", "Adet kritik seviyenin altına inince satır uyarı rengine döner."],
       ["hareketler", "Hareketler", "Her giriş ve çıkış kayıt altındadır; bir adet şüpheliyse hareketlere bak."],
+      ["havuz-giris", "Havuza giriş", "Teslim aldığın ürünü havuza giriş olarak kaydet; eldeki adet hemen güncellenir."],
     ],
     [
       "Havuz yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.",
@@ -165,6 +166,7 @@ const LIST: ScreenGuide[] = [
         D: "Ürünün kritik seviyesini güncellersin.",
       },
       settings: ["stock.defaultCriticalLevel"],
+      requires: { "havuz-giris": ["O"] },
     },
   ),
   guide(
@@ -670,7 +672,7 @@ export const ROLE_ROUTINES: RoleRoutine[] = [
     roleCode: "R-KAS",
     title: "Kasa açılış",
     host: { code: "QS-KAS", path: "/kasa" },
-    hours: [6, 14],
+    hours: [6, 16],
     items: [
       { id: "yazici-hazir", label: "Yazıcı hazır ve test fişi basıldı", screen: "QS-FIS", auto: "printerOk" },
       { id: "garson-atama", label: "Garson ataması yapıldı", screen: "QS-KAS" },
@@ -684,7 +686,7 @@ export const ROLE_ROUTINES: RoleRoutine[] = [
     roleCode: "R-KAS",
     title: "Kasa kapanış",
     host: { code: "QS-KAS", path: "/kasa" },
-    hours: [14, 24],
+    hours: [16, 24],
     items: [
       { id: "kuyruk-bos", label: "Onay kuyruğu boş", screen: "QS-KAS", auto: "queueEmpty" },
       { id: "cagri-yok", label: "Açık çağrı yok", screen: "QM-CAG" },

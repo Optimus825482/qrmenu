@@ -87,11 +87,15 @@ describe("userPrefs / guide tercihleri", () => {
     const user = await newUser("gp1");
     const other = await makeUser({ username: "gp2", roleCode: "R-KAT", hotelCode: "ROYAL" });
     expect((await actions.markGuideSeenAction("MB-KAT", 1)).ok).toBe(true);
-    expect((await actions.toggleChecklistAction("2026-11-03", "gorevleri-ac", true)).ok).toBe(true);
+    const { businessDate } = await import("@/lib/time");
+    const today = businessDate();
+    expect((await actions.toggleChecklistAction(today, "gorevleri-ac", true)).ok).toBe(true);
+    // Only today's list can be ticked (a stale page after midnight, or a forged day, is rejected).
+    expect(await actions.toggleChecklistAction("2020-01-01", "a", true)).toMatchObject({ ok: false, error: { code: "VALIDATION" } });
     expect((await actions.toggleChecklistAction("bozuk", "a", true)).ok).toBe(false);
     const mine = await prefsLib.readGuidePrefs(user.id);
     expect(mine.seen).toEqual({ "MB-KAT": 1 });
-    expect(mine.checklist["2026-11-03"]).toEqual(["gorevleri-ac"]);
+    expect(mine.checklist[today]).toEqual(["gorevleri-ac"]);
     expect(await prefsLib.readGuidePrefs(other.id)).toEqual({ seen: {}, checklist: {} });
   });
 

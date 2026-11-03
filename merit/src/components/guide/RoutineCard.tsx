@@ -88,7 +88,7 @@ export function RoutineCard({ routines: initial }: Props) {
           >
             <summary
               className="flex cursor-pointer list-none items-center justify-between gap-3 px-4"
-              style={{ minHeight: "var(--tap-action, 48px)" }}
+              style={{ minHeight: "var(--tap-std, 48px)" }}
             >
               <span className="flex items-center gap-2 text-sm font-bold">
                 <Icon name="clipboard" size={20} />
@@ -114,7 +114,7 @@ export function RoutineCard({ routines: initial }: Props) {
                       <span
                         role="img"
                         aria-label={done ? "Otomatik: tamam" : "Otomatik: bekliyor"}
-                        className={`flex size-11 shrink-0 items-center justify-center ${done ? "text-ok" : "text-muted"}`}
+                        className={`flex size-11 shrink-0 items-center justify-center ${done ? "text-success" : "text-muted"}`}
                       >
                         <Icon name={done ? "check-circle" : "clock"} size={22} />
                       </span>
@@ -125,7 +125,7 @@ export function RoutineCard({ routines: initial }: Props) {
                         aria-checked={done}
                         aria-label={item.label}
                         onClick={() => void toggle(status, item, !done)}
-                        className={`flex size-11 shrink-0 items-center justify-center ${done ? "text-ok" : "text-muted"}`}
+                        className={`flex size-11 shrink-0 items-center justify-center ${done ? "text-success" : "text-muted"}`}
                       >
                         <Icon name={done ? "check-circle" : "circle"} size={22} />
                       </button>
@@ -137,14 +137,14 @@ export function RoutineCard({ routines: initial }: Props) {
                       {item.label}
                     </Link>
                     {item.auto ? (
-                      <span className="shrink-0 pr-3 text-xs font-semibold text-muted">otomatik</span>
+                      <span className="shrink-0 pr-3 text-sm font-semibold text-muted">otomatik</span>
                     ) : null}
                   </li>
                 );
               })}
             </ul>
             {error ? (
-              <p role="alert" className="px-4 pb-3 text-xs font-semibold text-danger">
+              <p role="alert" className="px-4 pb-3 text-sm font-semibold text-danger">
                 {error}
               </p>
             ) : null}
