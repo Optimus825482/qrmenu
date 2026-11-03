@@ -6,12 +6,14 @@ import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
 import { getAbnormalConsumption } from "./abnormalConsumptionService";
+import { publishMailFailed } from "@/modules/radar/publish";
+import { announceMissingUpload } from "@/modules/radar/server/uploadAlerts";
 import { addDays, dayRange } from "./dates";
+import { missingUploadKinds } from "./depoService";
 
 /*
- * Minibar background jobs (pg-boss, Europe/Nicosia):
- *   00:01 task generation · 08:00 daily task report · 08:05 consumption report ·
- *   10:00 / 18:00 missing-occupancy alert · 23:59 DND day-end rollover.
+ * Minibar e-mail jobs (pg-boss, Europe/Nicosia; the queues are wired in `lib/jobs.ts` and `jobs.ts`):
+ *   08:00 daily task report · 08:05 consumption report · 10:00 / 18:00 missing-occupancy mail bridge.
  * Mail jobs send ONE message per hotel containing only that hotel's data, to the active users with
  * the targeted role kinds who are bound to that hotel (User.hotelId or UserHotel). Every send is
  * recorded in EmailLog under a deterministic tracking id (kind, hotel, business day), so a retry
@@ -130,6 +132,8 @@ export async function sendHotelMailOnce(params: {
       ? { status: "GONDERILDI", error: null }
       : { status: "HATA", error: isMailConfigured() ? "Gönderim başarısız" : "SMTP yapılandırılmamış" },
   });
+  // G20: tell the radar (SISTEM sessions) once per failed send; never throws.
+  if (!ok) await publishMailFailed(hotelId, kind);
   return ok ? "sent" : "failed";
 }
 
@@ -176,6 +180,15 @@ export async function checkOccupancyUploadAndAlert(now = new Date()): Promise<{
     });
     if (upload) continue;
     missing.push(hotel.name);
+    // G21: the radar signal does not depend on the mail switches; once per hotel, day and slot.
+    const missingKinds = await missingUploadKinds(hotel.id, day);
+    await announceMissingUpload({
+      hotelId: hotel.id,
+      date: day,
+      slot: slot === "am" ? "10:00" : "18:00",
+      ...(missingKinds.length > 0 ? { missingKinds } : {}),
+      now,
+    });
     if (!(await mailEnabled(hotel, "alert"))) continue;
 
     const recipients = await hotelRecipients(hotel.id);

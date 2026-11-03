@@ -56,6 +56,68 @@ async function seedGuestMenu(db: PrismaClient, outletId: string): Promise<void> 
   });
 }
 
+/**
+ * Minibar acceptance world (SEED_MINIBAR=1): ROYAL has two floors with rooms 101-104 / 201-204 of one room type
+ * (one cabinet) assigned the MINI and ATIŞTIRMA setups, six products with a pool of 100 each, and every room
+ * carries a signed QR token. DIAMOND gets one room (for the "other hotel's QR" check). Occupancy comes from the
+ * Excel files the depot clerk uploads in the spec, so no guest records are seeded.
+ */
+async function seedMinibarWorld(db: PrismaClient, ids: { royal: string; diamond: string; depoUserId: string }): Promise<void> {
+  const { generateQrToken } = await import("../../src/lib/qr");
+  const floors = new Map<number, string>();
+  for (const number of [1, 2]) {
+    floors.set(number, (await db.floor.create({ data: { hotelId: ids.royal, number, name: `${number}. Kat` } })).id);
+  }
+  const roomType = await db.roomType.create({ data: { hotelId: ids.royal, name: "Standart", cabinetCount: 1 } });
+  const drinks = await db.productGroup.create({ data: { name: "İçecek" } });
+  const snacks = await db.productGroup.create({ data: { name: "Atıştırmalık" } });
+  const product = async (groupId: string, name: string, salePrice: string) =>
+    db.product.create({ data: { groupId, name, purchasePrice: "1.00", salePrice } });
+  const water = await product(drinks.id, "Su", "1.00");
+  const cola = await product(drinks.id, "Kola", "3.50");
+  const juice = await product(drinks.id, "Meyve Suyu", "3.00");
+  const chocolate = await product(snacks.id, "Çikolata", "4.00");
+  const chips = await product(snacks.id, "Cips", "4.50");
+  const nuts = await product(snacks.id, "Fıstık", "5.00");
+  for (const p of [water, cola, juice, chocolate, chips, nuts]) {
+    await db.hotelStock.create({
+      data: { hotelId: ids.royal, productId: p.id, totalQty: 100, remainingQty: 100, criticalLevel: 10 },
+    });
+    await db.hotelStockMovement.create({
+      data: { hotelId: ids.royal, productId: p.id, userId: ids.depoUserId, type: "GIRIS", qty: 100, note: "Açılış" },
+    });
+  }
+  const mini = await db.setup.create({
+    data: {
+      name: "MINI",
+      items: { create: [{ productId: water.id, qty: 4 }, { productId: cola.id, qty: 2 }, { productId: juice.id, qty: 2 }] },
+    },
+  });
+  const atistirma = await db.setup.create({
+    data: {
+      name: "ATIŞTIRMA",
+      items: { create: [{ productId: chocolate.id, qty: 2 }, { productId: chips.id, qty: 2 }, { productId: nuts.id, qty: 2 }] },
+    },
+  });
+  for (const setup of [mini, atistirma]) {
+    await db.roomTypeSetup.create({ data: { hotelId: ids.royal, roomTypeId: roomType.id, setupId: setup.id } });
+  }
+  for (const [floorNo, numbers] of [[1, [101, 102, 103, 104]], [2, [201, 202, 203, 204]]] as const) {
+    for (const number of numbers) {
+      const room = await db.room.create({
+        data: { hotelId: ids.royal, floorId: floors.get(floorNo)!, roomTypeId: roomType.id, number: String(number) },
+      });
+      await db.room.update({
+        where: { id: room.id },
+        data: { qrToken: generateQrToken("ROOM", room.id), qrGeneratedAt: new Date() },
+      });
+    }
+  }
+  const dFloor = await db.floor.create({ data: { hotelId: ids.diamond, number: 3, name: "3. Kat" } });
+  const dRoom = await db.room.create({ data: { hotelId: ids.diamond, floorId: dFloor.id, number: "301" } });
+  await db.room.update({ where: { id: dRoom.id }, data: { qrToken: generateQrToken("ROOM", dRoom.id), qrGeneratedAt: new Date() } });
+}
+
 /** Empties every application table, re-runs the seed and creates the e2e staff users. */
 async function resetAndSeed(): Promise<void> {
   const db = new PrismaClient({ adapter: pgAdapter(connectionString()) });
@@ -86,6 +148,12 @@ async function resetAndSeed(): Promise<void> {
     const mrp = await hotel("PREMIUM");
 
     await makeUser("kat.mr", "R-KAT", "ROYAL");
+    // Second floor supervisor and the ROYAL depot clerk of the minibar acceptance spec.
+    await makeUser("kat2.mr", "R-KAT", "ROYAL");
+    const depoMr = await makeUser("depo.mr", "R-DEP", "ROYAL");
+    if (process.env.SEED_MINIBAR === "1") {
+      await seedMinibarWorld(db, { royal: mr, diamond: await hotel("DIAMOND"), depoUserId: depoMr.id });
+    }
 
     const depo = await makeUser("depo.cok", "R-DEP", "ROYAL");
     for (const hotelId of [mr, mrp]) {

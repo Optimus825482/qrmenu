@@ -1,7 +1,7 @@
 import { PgBoss } from "pg-boss";
 import { env } from "@/lib/env";
 import { getSetting } from "@/lib/settings";
-import { businessDate, TZ } from "@/lib/time";
+import { TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
 import { rsSlaSweep } from "@/modules/order/server/roomService/sla";
@@ -10,24 +10,16 @@ import { presenceSweep } from "@/modules/core/server/sessionPresence";
 import { printers } from "@/modules/order/server/printers";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
-import {
-  checkOccupancyUploadAndAlert,
-  sendDailyConsumptionReport,
-  sendDailyTaskReport,
-} from "@/modules/minibar/server/minibarJobs";
-import { closeDndDay } from "@/modules/minibar/server/dnd";
-import { reconcileAllHotels } from "@/modules/minibar/server/taskGeneration";
+import { registerMinibarJobs } from "@/modules/minibar/server/jobs";
+import { sendDailyConsumptionReport, sendDailyTaskReport } from "@/modules/minibar/server/minibarJobs";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
 export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
-export const MINIBAR_TASK_GEN_QUEUE = "minibar.task-gen";
-export const MINIBAR_OCCUPANCY_ALERT_QUEUE = "minibar.occupancy-alert";
 export const MINIBAR_DAILY_REPORT_QUEUE = "minibar.daily-report";
 export const MINIBAR_CONSUMPTION_REPORT_QUEUE = "minibar.consumption-report";
-export const MINIBAR_DND_ROLLOVER_QUEUE = "minibar.dnd-rollover";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -111,17 +103,9 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
     });
 
-    // Recurring minibar jobs. `schedule` upserts on (queue name, key), so a restart never
-    // duplicates a schedule: one stable key per queue, always Europe/Nicosia.
+    // Recurring minibar e-mail reports (P7 takes them over). `schedule` upserts on (queue name, key),
+    // so a restart never duplicates a schedule: one stable key per queue, always Europe/Nicosia.
     const scheduleOpts = { tz: TZ, key: "default" } as const;
-
-    // 00:01 - günlük görev üretimi (yalnız yüklenmiş doluluk verisinden)
-    await boss.createQueue(MINIBAR_TASK_GEN_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_TASK_GEN_QUEUE, "1 0 * * *", null, scheduleOpts);
-    await boss.work(MINIBAR_TASK_GEN_QUEUE, async () => {
-      const res = await reconcileAllHotels(new Date());
-      console.log(`[minibar.task-gen] ${res.hotelCount} otel, ${res.created} görev, ${res.added} eklenen kalem`);
-    });
 
     // 08:00 - dünün tamamlanamayan görevleri ve anormal tüketim raporu
     await boss.createQueue(MINIBAR_DAILY_REPORT_QUEUE); // idempotent
@@ -139,24 +123,9 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       console.log(`[minibar.consumption-report] ${res.reportDate}: ${res.hotelsSent} otel raporu iletildi.`);
     });
 
-    // 10:00 ve 18:00 - günlük doluluk yüklenmediyse uyarı
-    await boss.createQueue(MINIBAR_OCCUPANCY_ALERT_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_OCCUPANCY_ALERT_QUEUE, "0 10,18 * * *", null, scheduleOpts);
-    await boss.work(MINIBAR_OCCUPANCY_ALERT_QUEUE, async () => {
-      const res = await checkOccupancyUploadAndAlert(new Date());
-      if (res.alertSent) {
-        console.log(`[minibar.occupancy-alert] Eksik doluluk uyarısı gönderildi: ${res.missingHotels.join(", ")}`);
-      }
-    });
-
-    // 23:59 - DND gün sonu devri
-    await boss.createQueue(MINIBAR_DND_ROLLOVER_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_DND_ROLLOVER_QUEUE, "59 23 * * *", null, scheduleOpts);
-    await boss.work(MINIBAR_DND_ROLLOVER_QUEUE, async () => {
-      const now = new Date();
-      const closed = await closeDndDay(businessDate(now), now);
-      console.log(`[minibar.dnd-rollover] ${closed} adet DND kaydı gün sonunda kapatıldı.`);
-    });
+    // The six queue/DND/upload jobs: 00:01 daily tasks + DND catch-up, 10:00/18:00 upload warnings,
+    // minute DND reminders, 23:59 DND day end, 02:00 file cleanup (retired schedules are removed there).
+    await registerMinibarJobs(boss);
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;
     throw err;

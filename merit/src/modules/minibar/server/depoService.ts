@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import type { Ctx } from "@/lib/auth";
+import { assertCan } from "@/lib/rbac";
 import { TaskStatus } from "@/generated/prisma/client";
 import { getSettings } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
+import { UPLOAD_KINDS } from "../constants";
 import { dayRange } from "./dates";
 
 export interface ConsumptionReportFilter {
@@ -182,4 +185,24 @@ export async function getDailyTaskCompletionReport(
       note: item.note,
     })),
   };
+}
+
+/**
+ * Occupancy file kinds (IN_HOUSE, ARRIVAL, DEPARTURE) still missing for a hotel and business day, in
+ * display order: no UploadTask row, or one without an upload, or one that is not TAMAMLANDI.
+ */
+export async function missingUploadKinds(hotelId: string, day: string): Promise<(typeof UPLOAD_KINDS)[number][]> {
+  const tasks = await prisma.uploadTask.findMany({
+    where: { hotelId, date: businessDay(day) },
+    select: { kind: true, status: true, uploadId: true },
+  });
+  const done = new Set(tasks.filter((t) => t.status === "TAMAMLANDI" && t.uploadId !== null).map((t) => t.kind));
+  return UPLOAD_KINDS.filter((k) => !done.has(k));
+}
+
+/** The session hotel's missing occupancy files for `day` (default: today). Needs `MB-DOL` view. */
+export async function missingUploads(ctx: Ctx, day: string = businessDate()): Promise<(typeof UPLOAD_KINDS)[number][]> {
+  const hotelId = ctx.session.hotelId;
+  await assertCan(ctx, "MB-DOL", "V", hotelId);
+  return missingUploadKinds(hotelId, day);
 }
