@@ -77,7 +77,13 @@ export type WinState = {
 export type IconPos = { appId: string; x: number; y: number };
 
 /** What is persisted per user in `User.prefs.shell` (and cached in localStorage). */
-export type ShellPrefs = Appearance & { icons: IconPos[]; windows: WinState[]; shortcutVersion?: number };
+export type ShellPrefs = Appearance & {
+  icons: IconPos[];
+  windows: WinState[];
+  shortcutVersion?: number;
+  /** Kullanıcının tercih ettiği kabuk (yalnız rolüne izin verilenler arasından uygulanır, spec 4.1). */
+  preferredShell?: "xp" | "personel" | "pos";
+};
 
 export type HotelRef = { id: string; name: string };
 

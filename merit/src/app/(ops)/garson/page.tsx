@@ -11,7 +11,7 @@ import GarsonClient from "./GarsonClient";
 import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
-export const metadata: Metadata = { title: "Garson · Merit", manifest: "/api/manifest/garson" };
+export const metadata: Metadata = { title: "Garson · Merit", manifest: "/personel.webmanifest" };
 
 export default async function GarsonPage() {
   const ctx = await requireUser();

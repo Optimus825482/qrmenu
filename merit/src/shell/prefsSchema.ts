@@ -49,6 +49,8 @@ export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object({
   windows: z.array(winState).max(MAX_WINDOWS),
   /** One-time shortcut migrations; absent in layouts saved before this field was introduced. */
   shortcutVersion: z.number().int().min(0).default(0),
+  /** Tercih edilen kabuk; yoksa ekranın doğal bağlamı kullanılır. */
+  preferredShell: z.enum(["xp", "personel", "pos"]).optional(),
 });
 
 /** Parsed prefs, or null when missing or malformed (a stale shape is ignored, not trusted). */

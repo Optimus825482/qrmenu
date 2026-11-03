@@ -101,3 +101,24 @@ export function usePwaInstall(): {
     promptInstall,
   };
 }
+
+/** Install offer wording per app (spec 4.4). The admin text is the existing "Uygulama olarak yükle" wording. */
+export type InstallVariant = "admin" | "personel" | "pos";
+
+export const INSTALL_COPY: Record<InstallVariant, { text: string; accept: string; dismiss: string }> = {
+  admin: {
+    text: "F&B Command Center'ı masaüstüne veya ana ekrana ekler; tarayıcı çubukları olmadan kendi penceresinde açılır.",
+    accept: "Uygulama olarak yükle",
+    dismiss: "Şimdi değil",
+  },
+  personel: {
+    text: "Merit Personel'i ana ekrana ekleyin. Tek dokunuşla açılır, bildirimler ekran kapalıyken de gelir.",
+    accept: "Ana ekrana ekle",
+    dismiss: "Şimdi değil",
+  },
+  pos: {
+    text: "Bu cihazı kasa ekranı olarak kurun. Tam ekran açılır, ekran kararmaz, sipariş sesleri çalar.",
+    accept: "Kur",
+    dismiss: "Bu cihaz kasa değil",
+  },
+};

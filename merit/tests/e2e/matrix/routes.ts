@@ -4,12 +4,27 @@ import { Client } from "pg";
 import { e2eDatabaseUrl } from "../e2eDb";
 import { login } from "../fixtures";
 import type { Tier } from "./a11y";
+import { VIEWPORTS, projectName } from "./viewports";
 
 /** `ready`: text that proves the screen finished loading (SSE keeps the network from ever idling). */
 export type RouteEntry = { key: string; path: string; user: string; outlet?: RegExp; tier: Tier; ready: RegExp };
 
+/** Below this width the POS shell gives way to the staff shell (`resolveShell`), so a POS route is held to the staff tier. */
+const POS_MIN_WIDTH = 600;
+
+/** POS routes follow the shell they really render in: the tier is read at test time from the project's viewport. */
+function adaptive(entry: RouteEntry): RouteEntry {
+  if (entry.tier !== "pos") return entry;
+  return {
+    ...entry,
+    get tier(): Tier {
+      return VIEWPORTS[projectName()].width < POS_MIN_WIDTH ? "personel" : "pos";
+    },
+  };
+}
+
 /** Screens covered by the UX matrix. Every UX task adds the routes it touches. */
-export const ROUTE_MATRIX: RouteEntry[] = [
+export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kat", path: "/kat", user: "kat.mr", tier: "personel", ready: /Günlük Minibar Kontrol/ },
   { key: "kat-oda-kontrol", path: "FIRST_ROOM", user: "kat.mr", tier: "personel", ready: /Hepsini Doldur/ },
   { key: "erisimim", path: "/erisimim", user: "kat.mr", tier: "personel", ready: /Erişimim/ },
@@ -26,7 +41,7 @@ export const ROUTE_MATRIX: RouteEntry[] = [
   { key: "kds", path: "/kds", user: "kds.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Mutfak ekranı/ },
   { key: "oda-servisi", path: "/oda-servisi", user: "fbm.mr", tier: "personel", ready: /Operasyon Paneli/ },
   { key: "admin", path: "/admin", user: "admin", tier: "xp", ready: /Komuta Merkezi|Genel Durum/ },
-];
+] satisfies RouteEntry[]).map(adaptive);
 
 /**
  * Id of the first room of the e2e database (the room-control page is addressed by id). The e2e seed

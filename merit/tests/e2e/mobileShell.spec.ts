@@ -154,6 +154,13 @@ test("?mobil=1 ile 1280px'te de mobil; parametresiz 1280px masaüstü; yeniden b
   await expect(tabs(page)).toBeVisible();
   await expect(page.locator(".xp-desktop")).toHaveCount(0);
 
+  // `?mod=personel` and `?kabuk=personel` resolve the same way as the legacy `?mobil=1`.
+  for (const query of ["mod=personel", "kabuk=personel"]) {
+    await page.goto(`/admin?${query}`);
+    await expect(tabs(page)).toBeVisible();
+    await expect(page.locator(".xp-desktop")).toHaveCount(0);
+  }
+
   await page.goto("/admin");
   await expect(desktop(page)).toBeVisible();
   await expect(tabs(page)).toHaveCount(0);

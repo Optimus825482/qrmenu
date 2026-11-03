@@ -173,3 +173,120 @@ test("yerleşim: 1024x768 harita ve panel yan yana; 768x1024 panel altta, ray al
   await railLink(cashier, "Masalar").click();
   await cashier.context().close();
 });
+
+const manifestHref = (page: Page) => page.locator('link[rel="manifest"]').first().getAttribute("href");
+const posRail = (page: Page) => page.getByRole("navigation", { name: "Personel bölümleri" });
+const staffNav = (page: Page) => page.getByRole("navigation", { name: "Ana gezinme" });
+const setupPrompt = (page: Page) => page.getByRole("region", { name: "Cihaz kurulumu" });
+const deviceRecord = (page: Page) => page.evaluate(() => window.localStorage.getItem("merit.device"));
+const wakeCount = (page: Page) => page.evaluate(() => (window as unknown as { __wl: number }).__wl);
+
+test("manifest bağlantıları: kasa pos, KDS pos?ekran=kds, garson personel; üç manifest doğru içerikte", async ({ browser }) => {
+  const cashier = await openCashier(browser, "");
+  await expect.poll(() => manifestHref(cashier)).toBe("/pos.webmanifest");
+  const pos = await (await cashier.request.get("/pos.webmanifest")).json();
+  expect(pos).toMatchObject({ display: "fullscreen", orientation: "landscape", start_url: "/baslat?kabuk=pos", short_name: "Merit Kasa" });
+  const kdsResponse = await cashier.request.get("/pos.webmanifest?ekran=kds");
+  expect(kdsResponse.headers()["content-type"]).toContain("application/manifest+json");
+  expect(await kdsResponse.json()).toMatchObject({ orientation: "any", start_url: "/baslat?kabuk=pos&ekran=kds", short_name: "Merit Mutfak" });
+  const personel = await (await cashier.request.get("/personel.webmanifest")).json();
+  expect(personel).toMatchObject({ display: "standalone", orientation: "portrait", start_url: "/baslat?kabuk=personel" });
+  for (const icon of [...pos.icons, ...personel.icons]) expect((await cashier.request.get(icon.src)).ok()).toBeTruthy();
+  await cashier.context().close();
+
+  const kitchen = await openStaff(browser, "kds.havuz");
+  await expect(kitchen).toHaveURL(/\/kds$/);
+  await expect.poll(() => manifestHref(kitchen)).toBe("/pos.webmanifest?ekran=kds");
+  await kitchen.context().close();
+
+  const waiter = await openStaff(browser, "garson.havuz");
+  await waiter.waitForURL((url) => !url.pathname.startsWith("/giris") && !url.pathname.startsWith("/secim"));
+  await waiter.goto("/garson");
+  await expect.poll(() => manifestHref(waiter)).toBe("/personel.webmanifest");
+  await waiter.context().close();
+});
+
+test("kabuk seçimi: 1280 pos rayı, 390 personel alt gezinmesi; ?mod=personel sekmeye özel", async ({ browser }) => {
+  const cashier = await openCashier(browser, "");
+  await expect(posRail(cashier)).toBeVisible();
+  await expect(staffNav(cashier)).toHaveCount(0);
+  await cashier.setViewportSize({ width: 390, height: 844 });
+  await expect(staffNav(cashier)).toBeVisible();
+  await expect(posRail(cashier)).toHaveCount(0);
+  await expect(staffNav(cashier).getByRole("link", { name: "Masalar" })).toBeVisible();
+  expect(await cashier.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await cashier.setViewportSize({ width: 1280, height: 800 });
+  await expect(posRail(cashier)).toBeVisible();
+  await cashier.goto("/kasa?mod=personel");
+  await expect(staffNav(cashier)).toBeVisible();
+  await expect(posRail(cashier)).toHaveCount(0);
+  await cashier.context().close();
+});
+
+test("Kur: cihaz kaydı yazılır, tam ekran + uyku kilidi açılır; yeniden açılışta öneri çıkmaz ve POS kabuğu sürer", async ({ browser }) => {
+  const cashier = await openCashier(browser, FULLSCREEN_OK);
+  await expect(setupPrompt(cashier)).toBeVisible();
+  expect(await deviceRecord(cashier)).toBeNull();
+  await setupPrompt(cashier).getByRole("button", { name: "Kur" }).click();
+  await expect.poll(() => cashier.evaluate(() => (window as unknown as { __fs: number }).__fs)).toBe(1);
+  await expect.poll(() => wakeCount(cashier)).toBe(1);
+  await expect(setupPrompt(cashier)).toHaveCount(0);
+  const record = JSON.parse((await deviceRecord(cashier)) ?? "null");
+  expect(record).toMatchObject({ shell: "pos", kiosk: true });
+  expect(typeof record.outletId).toBe("string");
+
+  await cashier.reload();
+  await expect(posRail(cashier)).toBeVisible();
+  await expect(setupPrompt(cashier)).toHaveCount(0);
+  await cashier.context().close();
+});
+
+test("'Bu cihaz kasa değil': cihaz personel kabuğuyla açılır, öneri bir daha çıkmaz", async ({ browser }) => {
+  const cashier = await openCashier(browser, "");
+  await setupPrompt(cashier).getByRole("button", { name: "Bu cihaz kasa değil" }).click();
+  expect(JSON.parse((await deviceRecord(cashier)) ?? "null")).toEqual({ shell: "personel" });
+  await expect(staffNav(cashier)).toBeVisible();
+  await expect(posRail(cashier)).toHaveCount(0);
+  await cashier.reload();
+  await expect(staffNav(cashier)).toBeVisible();
+  await expect(setupPrompt(cashier)).toHaveCount(0);
+  await cashier.context().close();
+});
+
+test("bozuk cihaz kaydı yok sayılır; localStorage erişilemezse sayfa varsayılan POS kabuğuyla çalışır", async ({ browser }) => {
+  const cashier = await openCashier(browser, "");
+  await cashier.evaluate(() => window.localStorage.setItem("merit.device", "{bozuk"));
+  await cashier.reload();
+  await expect(posRail(cashier)).toBeVisible();
+  await cashier.context().close();
+
+  const blocked = await newContextPage(browser);
+  await blocked.addInitScript(`
+    Object.defineProperty(window, "localStorage", { configurable: true, get() { throw new DOMException("denied", "SecurityError"); } });
+  `);
+  await login(blocked, "kasa.havuz");
+  await blocked.getByRole("button", { name: /Havuz Bar/ }).click();
+  await expect(blocked.getByRole("region", { name: "Masa panosu" })).toBeVisible();
+  await expect(posRail(blocked)).toBeVisible();
+  await blocked.context().close();
+});
+
+test("uyku kilidi görünürlük değişiminde yeniden alınır", async ({ browser }) => {
+  const stubs = `
+    window.__wl = 0; window.__release = [];
+    Element.prototype.requestFullscreen = async function () {};
+    Object.defineProperty(navigator, "wakeLock", { configurable: true, value: {
+      request: async () => { window.__wl++; let cb = () => {}; window.__release.push(() => cb());
+        return { release: async () => {}, addEventListener(_t, fn) { cb = fn; } }; },
+    } });
+  `;
+  const cashier = await openCashier(browser, stubs);
+  await cashier.getByRole("button", { name: "Tam ekranı başlat" }).click();
+  await expect.poll(() => wakeCount(cashier)).toBe(1);
+  await cashier.evaluate(() => {
+    (window as unknown as { __release: Array<() => void> }).__release[0]();
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect.poll(() => wakeCount(cashier)).toBe(2);
+  await cashier.context().close();
+});

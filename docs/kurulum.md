@@ -312,6 +312,43 @@ PRINT_GATEWAY_KEY=<openssl rand -base64 32>
   (`COOLIFY_DEPLOYMENT.md` → Dağıtım biçimleri).
 - Yalnız HTTP ile erişilen test ortamında (IP/sslip.io) `COOKIE_SECURE=false` verin.
 
+### Kasa/KDS tabletini kurma
+
+Kasa ve mutfak ekranı (KDS) dokunmatik cihazda tam ekran, ekran uyumadan ve sesli uyarılarla çalışmalıdır.
+Önerilen donanım: 10-13" Android tablet (1280x800 ya da 1024x768), yatay. Mutfak ekranı için 15-22" dokunmatik
+ekran; her outlet için bir mutfak ekranı. Misafir ya da personel telefonu kasa olarak kurulmaz.
+
+**Android tablet (önerilen)**
+
+1. Chrome'da `https://<alan-adı>/kasa` adresini açın ve kasa kullanıcısıyla (outlet seçerek) giriş yapın.
+   Mutfak ekranı için `/kds` açın.
+2. Ekranın üstündeki "Bu cihazı kasa ekranı olarak kurun" şeridinde **Kur**'a dokunun. Cihaz kaydı tarayıcıya
+   yazılır; tam ekran, ekran kilidi engeli ve ses tek dokunuşta açılır. Cihaz kasa değilse
+   "Bu cihaz kasa değil" seçilir ve cihaz personel görünümüyle çalışır.
+3. Chrome menüsünden **Ana ekrana ekle / Uygulamayı yükle**'yi seçin. Kasa ve mutfak ekranı ayrı uygulamalar olarak
+   yüklenir ("Merit Kasa", "Merit Mutfak"); ikisi de tam ekran ve yatay açılır (mutfak yönü serbest bırakır).
+   Yüklü uygulama her açılışta oturumu açık kullanıcının kasa ekranına gider.
+4. **Uygulama sabitleme** (Android "Ekran sabitleme / Pin app"): Ayarlar - Güvenlik - Gelişmiş - Uygulama sabitleme'yi
+   açın, son uygulamalar ekranında Merit Kasa simgesine dokunup **Sabitle**'yi seçin. Sabitleme kalkana kadar
+   kullanıcı başka uygulamaya geçemez. Ekran kilidi PIN'i sabitlemeyi kaldırmak için sorulur.
+5. Pil ayarlarında Chrome/Merit Kasa için "Kısıtlama yok" seçin ve cihazı şarjda tutun. Ekran otomatik
+   kapanıyorsa tam ekranı yeniden başlatın ("Tam ekranı başlat"): uyku kilidi ancak bir dokunuşla alınır.
+6. Vardiya sonunda kullanıcı çıkış yapar (cihazda PIN ya da hızlı kullanıcı değişimi yoktur).
+
+**Windows dokunmatik PC**
+
+Edge'i kiosk kipinde açan bir kısayol oluşturun:
+
+```
+msedge --kiosk https://<alan-adı>/kasa --edge-kiosk-type=fullscreen
+```
+
+Mutfak ekranı için adresi `/kds` yapın. Kiosk kipinden `Alt+F4` ile çıkılır. Ses için ilk açılışta ekrana bir kez
+dokunmak gerekir.
+
+**Cihaz kaydını sıfırlama:** tarayıcı site verisini silin ya da cihazda `/kasa?mod=personel` açın (yalnız o sekme için
+personel görünümü). Cihaz kaydı yalnız görünüm tercihidir; yetkiyi sunucu her istekte yeniden denetler.
+
 ## 6. Ters vekil (nginx)
 
 Uygulama düz HTTP dinler; HTTPS vekilde sonlanır. Aşağıdaki örnekteki iki ayar

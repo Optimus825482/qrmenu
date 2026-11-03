@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { StaffShell } from "@/components/staff/StaffShell";
 import { loadStaffShellProps, requireStaffLayout } from "@/components/staff/loadShellProps";
@@ -6,6 +7,8 @@ import { SnackbarHost } from "@/components/ui/Snackbar";
 import { SessionWatch } from "./SessionWatch";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { manifest: "/personel.webmanifest" };
 
 /**
  * Every /kat page: the staff shell (top bar, the single bottom navigation, session strips) wraps the page;

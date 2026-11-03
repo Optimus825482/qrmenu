@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth";
@@ -6,8 +7,11 @@ import { DomainError } from "@/lib/result";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { OpsShell } from "@/components/ops/OpsShell";
 import { loadStaffShellProps } from "@/components/staff/loadShellProps";
+import { loadPreferredShell } from "@/shell/preferredShell";
 import { listTargets } from "@/modules/core/server/targets";
 import { loadPosShellData } from "./posShellData";
+
+export const metadata: Metadata = { manifest: "/personel.webmanifest" };
 
 export default async function OpsLayout({ children }: { children: React.ReactNode }) {
   let ctx;
@@ -33,5 +37,6 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
   const pos = await loadPosShellData(ctx, outlet);
   const path = (await headers()).get("x-merit-current-path") ?? "/garson";
   const staff = await loadStaffShellProps(ctx, path, { outletId: outlet.id });
-  return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos} staff={staff}><ConfirmHost variant="sheet" />{children}</OpsShell>;
+  const preferredShell = await loadPreferredShell(ctx.user.id);
+  return <OpsShell roleKind={ctx.user.roleKind} preferredShell={preferredShell} outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos} staff={staff}><ConfirmHost variant="sheet" />{children}</OpsShell>;
 }

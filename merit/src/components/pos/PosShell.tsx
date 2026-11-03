@@ -25,6 +25,8 @@ export type PosShellProps = {
   /** Ray rozetleri ve ses uyarıları için (kasa). */
   outletId?: string;
   targets?: OutletTarget[];
+  /** Cihaz kurulumu önerisi gibi, tam ekran/ses/uyku kilidi düğmesine bağlanan içerik (OpsShell verir). */
+  setup?: (api: { start: () => Promise<void> }) => ReactNode;
   children: ReactNode;
 };
 
@@ -42,7 +44,7 @@ const COUNT_EVENTS = [
  * Dokunmatik POS kabuğu (kasa, KDS): solda 72 px ray, altta durum şeridi, `data-density="pos"`.
  * Tam ekran / uyku kilidi / ses tek bir kapı düğmesiyle (kullanıcı hareketi) istenir; hiçbiri zorunlu değildir.
  */
-export function PosShell({ context, outletName, fullName, rail, printer, outletId, targets = [], children }: PosShellProps) {
+export function PosShell({ context, outletName, fullName, rail, printer, outletId, targets = [], setup, children }: PosShellProps) {
   const gate = useFullscreenGate();
   const { status } = useSse(() => {}, []);
   const printerStatus = usePrinterStatus(printer?.initial ?? "unknown");
@@ -95,6 +97,7 @@ export function PosShell({ context, outletName, fullName, rail, printer, outletI
       <div className="pos-shell" data-pos-context={context}>
         {context === "kds" ? null : <PosRail items={items} />}
         <main className="pos-main">
+          {setup?.({ start: gate.start })}
           {gate.phase === "idle" ? <FullscreenGate onStart={() => void gate.start()} onDismiss={gate.dismiss} /> : null}
           {children}
         </main>
