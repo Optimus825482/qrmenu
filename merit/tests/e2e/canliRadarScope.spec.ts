@@ -134,6 +134,9 @@ test("Komuta Merkezi: admin için 'Canlı Radar\\'ı aç' pencereyi açar; CR-RA
 }) => {
   await page.setViewportSize(RADAR_VIEWPORTS[0]);
   await openDesktop(page, "admin");
+  // The previous test left its Radar window open in the saved desktop layout; it would cover the desktop icons.
+  const leftover = page.getByRole("region", { name: /^Canlı Radar · / });
+  while (await leftover.count()) await leftover.first().getByRole("button", { name: "Kapat" }).click();
   const desktop = page.getByRole("region", { name: "Masaüstü" });
   await desktop.getByRole("button", { name: "Komuta Merkezi", exact: true }).dblclick();
   const ccWin = page.getByRole("region", { name: "Komuta Merkezi", exact: true });
