@@ -81,8 +81,14 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
   connected: boolean;
 } {
   const { hotelId } = opts;
-  const [pending, setPending] = useState<MybarItem[]>([]);
+  const [pending, setPendingState] = useState<MybarItem[]>([]);
+  // The latest list, readable outside render: a state updater runs later, so "needs a refetch" cannot be read back from it.
+  const listRef = useRef<MybarItem[]>([]);
   const mountedRef = useRef(true);
+  const setPending = useCallback((next: MybarItem[]) => {
+    listRef.current = next;
+    setPendingState(next);
+  }, []);
 
   const loadPending = useCallback(async () => {
     try {
@@ -136,7 +142,7 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
     } catch {
       // Bağlantı hatası sessizce yutulur; SSE resync ile yenilenir.
     }
-  }, [hotelId]);
+  }, [hotelId, setPending]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -149,14 +155,17 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
 
   const { status } = useSse((event) => {
     if (hotelId && event.hotelId && event.hotelId !== hotelId) return;
-    let shouldRefetch = false;
-    setPending((curr) => {
-      const { next, needsRefetch } = applyMybarEvent(curr, event);
-      shouldRefetch = needsRefetch;
-      return next;
-    });
-    if (shouldRefetch) void loadPending();
+    const { next, needsRefetch } = applyMybarEvent(listRef.current, event);
+    if (next !== listRef.current) setPending(next);
+    if (needsRefetch) void loadPending();
   }, STREAM_EVENTS);
+
+  // An event published before the shared SSE connection opened is never replayed: once it is open, read the list again.
+  useEffect(() => {
+    if (status !== "open") return;
+    const t = setTimeout(() => void loadPending(), 0);
+    return () => clearTimeout(t);
+  }, [status, loadPending]);
 
   const ack = useCallback(async (id: string) => {
     const res = await fetch("/api/minibar/mybar/confirm", {
@@ -168,8 +177,8 @@ export function useMybarStream(opts: { hotelId?: string } = {}): {
       const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
       throw new Error(body.error ?? body.message ?? "Talep onaylanamadı.");
     }
-    setPending((prev) => prev.filter((r) => r.id !== id));
-  }, []);
+    setPending(listRef.current.filter((r) => r.id !== id));
+  }, [setPending]);
 
   return {
     pending,
