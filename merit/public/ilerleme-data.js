@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 03:20",
-  headline: "Dal ux/yenileme: UX T2–T3, minibar T1/T6/T7/T9, radar T1/T7 uygulandı; UX T1/T4/T11, radar T2 sürüyor. Devir: docs/DEVIR.md §1a.",
+  updatedAt: "03.11.2026 04:25",
+  headline: "Dal ux/yenileme: UX T1–T4, T11; minibar T1/T6/T7/T9; radar T1/T2/T7 uygulandı (bazıları inceleme bekliyor). Açık ajan yok. Devir: docs/DEVIR.md §1a.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -126,16 +126,16 @@ window.ILERLEME = {
       code: "UX", title: "Arayüz / UX yenilemesi", weight: 10,
       summary: "Belirteçler ve görünüm matrisi, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, personel kabuğu, kabuk seçimi/PWA, yetki rehberi, XP cilası",
       tasks: [
-        { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "active" },
+        { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "done", doneAt: "03.11 04:23", note: "fce492b — inceleme bekliyor" },
         { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:58", note: "7244d05 + ded9ca7 (inceleme onaylı)" },
-        { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "active", note: "T3 uygulandı (0d0cc5f): notify/snackbar, tepsi balonu, 29 başarı modalı kaldırıldı; T4 sürüyor" },
+        { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "done", doneAt: "03.11 03:29", note: "0d0cc5f + b5f8022 — T4 incelemesi bekliyor" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
         { title: "T6 POS kabuğu ve kasa masa haritası", status: "pending" },
         { title: "T7 KDS yenilemesi ve sesler", status: "pending" },
         { title: "T8 Personel kabuğu (StaffShell) ve depo ana sayfası", status: "pending" },
         { title: "T9 Kat sorumlusu akışları (MyBar anlık, +N, QR)", status: "pending" },
         { title: "T10 Kabuk seçimi, PWA manifestleri, kiosk", status: "pending" },
-        { title: "T11 screenGuide, accessSummary, Erişimim", status: "active" },
+        { title: "T11 screenGuide, accessSummary, Erişimim", status: "done", doneAt: "03.11 03:30", note: "b5f8022 içinde — inceleme bekliyor; rehber metinleri docs/kabul/ux-rehber-metinleri.md onayınızı bekliyor" },
         { title: "T12 Tur motoru ve ? yardım", status: "pending" },
         { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "pending" },
         { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "pending" }
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 04:25", text: "UX T1 belirteçler/görünüm matrisi (198/198) ve T4/T11 uygulandı; minibar T1 ve radar T2/T7 bitti. Tüm ajanlar kapandı; inceleme ve bütünleştirme sonraki oturumda." },
     { at: "03.11 03:20", text: "Minibar T1 temel (6042bab) ve radar T7 istemci deposu (df77d46) uygulandı; UX T2 kapandı. Fable sınırı — devir notu güncellendi." },
     { at: "03.11 02:55", text: "UX T3 snackbar/tek onay uygulandı (0d0cc5f, 50 dosya); minibar T6/T9 ve radar T1 kapandı; 02:45 ağ kesintisi sonrası 5 ajan sürdürüldü." },
     { at: "03.11 02:36", text: "Minibar T9 doluluk Excel uygulandı (45680ab); T1 temel (migration, SCREEN_LIMITS, olaylar) başladı." },
