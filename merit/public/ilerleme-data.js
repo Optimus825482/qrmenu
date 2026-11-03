@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 04:25",
-  headline: "Dal ux/yenileme: UX T1–T4, T11; minibar T1/T6/T7/T9; radar T1/T2/T7 uygulandı (bazıları inceleme bekliyor). Açık ajan yok. Devir: docs/DEVIR.md §1a.",
+  updatedAt: "03.11.2026 05:55",
+  headline: "Paralel 2. tur: minibar T2/T3/T4, radar T4, UX T5 uygulanıyor; UX T1 ve radar T2 incelemesi onaylandı.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -126,7 +126,7 @@ window.ILERLEME = {
       code: "UX", title: "Arayüz / UX yenilemesi", weight: 10,
       summary: "Belirteçler ve görünüm matrisi, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, personel kabuğu, kabuk seçimi/PWA, yetki rehberi, XP cilası",
       tasks: [
-        { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "done", doneAt: "03.11 04:23", note: "fce492b — inceleme bekliyor" },
+        { title: "T1 Belirteçler, dokunma kademeleri, görünüm matrisi, axe", status: "done", doneAt: "03.11 05:54", note: "fce492b (inceleme onaylı)" },
         { title: "T2 İniş/katalog düzeltmesi, /baslat, yetkisiz ekran sayfası", status: "done", doneAt: "03.11 02:58", note: "7244d05 + ded9ca7 (inceleme onaylı)" },
         { title: "T3–T4 Tek onay, snackbar, tarayıcı diyaloglarının kaldırılması", status: "done", doneAt: "03.11 03:29", note: "0d0cc5f + b5f8022 — T4 incelemesi bekliyor" },
         { title: "T5 Emoji → SVG ikon, animasyon, para birimi", status: "pending" },
@@ -145,10 +145,10 @@ window.ILERLEME = {
       code: "RADAR", title: "Canlı Operasyon Radarı", weight: 6,
       summary: "Olay birliği ve yayın boşlukları, CR-RAD, anlık görüntü, gün tekrarı, XP penceresi ve görünümler, zaman şeridi, duvar ekranı",
       tasks: [
-        { title: "T1–T4 Olay birliği, yayın boşlukları, migration/CR-RAD/OperationEvent", status: "active" },
+        { title: "T1–T4 Olay birliği, yayın boşlukları, migration/CR-RAD/OperationEvent", status: "active", note: "T1 (8b99c64) ve T2 (23df08f) onaylı; T4 sürüyor; T3 minibar servislerini bekliyor" },
         { title: "T5 Anlık görüntü, kapsam, uyarılar", status: "pending" },
         { title: "T6 Gün tekrarı (NDJSON) ve denetim", status: "pending" },
-        { title: "T7 İstemci deposu ve indirgeyiciler", status: "pending" },
+        { title: "T7 İstemci deposu ve indirgeyiciler", status: "done", doneAt: "03.11 03:21", note: "df77d46 + 63282d3" },
         { title: "T8–T9 XP penceresi ve altı görünüm", status: "pending" },
         { title: "T10–T12 Zaman şeridi, duvar ekranı, bütünleştirme", status: "pending" }
       ]
@@ -164,6 +164,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 05:55", text: "UX T1 ve radar T2 incelemeleri onaylandı; minibar T2–T4, radar T4 ve UX T5 paralel başladı; dev DB migration'ları uygulandı." },
     { at: "03.11 04:25", text: "UX T1 belirteçler/görünüm matrisi (198/198) ve T4/T11 uygulandı; minibar T1 ve radar T2/T7 bitti. Tüm ajanlar kapandı; inceleme ve bütünleştirme sonraki oturumda." },
     { at: "03.11 03:20", text: "Minibar T1 temel (6042bab) ve radar T7 istemci deposu (df77d46) uygulandı; UX T2 kapandı. Fable sınırı — devir notu güncellendi." },
     { at: "03.11 02:55", text: "UX T3 snackbar/tek onay uygulandı (0d0cc5f, 50 dosya); minibar T6/T9 ve radar T1 kapandı; 02:45 ağ kesintisi sonrası 5 ajan sürdürüldü." },
