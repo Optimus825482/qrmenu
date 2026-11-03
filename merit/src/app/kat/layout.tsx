@@ -24,7 +24,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
         <SessionWatch />
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
-        <PersistentMybarModal />
+        <PersistentMybarModal hotelId={ctx.session.hotelId} />
         {children}
       </>
     );
@@ -34,7 +34,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
     <>
       <SessionWatch />
       <ConfirmHost variant="sheet" />
-      <PersistentMybarModal />
+      <PersistentMybarModal hotelId={ctx.session.hotelId} />
       <StaffShell {...shell}>{children}</StaffShell>
     </>
   );
