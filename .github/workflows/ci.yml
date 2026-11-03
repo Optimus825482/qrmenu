@@ -64,7 +64,9 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: End-to-end tests
-        run: npm run test:e2e
+        run: npx playwright test --project=chromium
+      - name: View matrix (6 views)
+        run: npm run test:e2e:matrix
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4

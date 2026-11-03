@@ -5,16 +5,16 @@
  */
 
 .mb-shell {
-  --mb-bg: #f3f5f9;
-  --mb-surface: #ffffff;
-  --mb-text: #14181f;
-  --mb-muted: #5b6472;
-  --mb-line: #e1e5ec;
-  --mb-primary: #1c4fd8;
-  --mb-primary-soft: #e3ebff;
-  --mb-danger: #b3261e;
-  --mb-warn: #b26a00;
-  --mb-ok: #1e7d32;
+  --mb-bg: var(--app-bg);
+  --mb-surface: var(--surface);
+  --mb-text: var(--text);
+  --mb-muted: var(--muted);
+  --mb-line: var(--app-line);
+  --mb-primary: var(--accent-app);
+  --mb-primary-soft: var(--accent-app-soft);
+  --mb-danger: var(--danger);
+  --mb-warn: var(--warn);
+  --mb-ok: var(--success);
   --mb-bar: 56px;
   --mb-tab: 64px;
 
@@ -34,18 +34,18 @@
 
 /* Theme (Denetim Masası → Tema): the accent color of the mobile shell. */
 .mb-shell[data-theme="zeytin"] {
-  --mb-primary: #3f6b2a;
-  --mb-primary-soft: #e4ecd8;
+  --mb-primary: var(--accent-zeytin);
+  --mb-primary-soft: var(--accent-zeytin-soft);
 }
 
 .mb-shell[data-theme="gumus"] {
-  --mb-primary: #56647a;
-  --mb-primary-soft: #e8ecf1;
+  --mb-primary: var(--accent-gumus);
+  --mb-primary-soft: var(--accent-gumus-soft);
 }
 
 .mb-shell[data-theme="royal"] {
-  --mb-primary: #0b1f4b;
-  --mb-primary-soft: #e7eaf2;
+  --mb-primary: var(--accent-royal);
+  --mb-primary-soft: var(--accent-royal-soft);
 }
 
 .mb-shell button {
@@ -69,10 +69,10 @@
   min-height: var(--mb-bar);
   padding: 8px 16px;
   padding-top: calc(8px + env(safe-area-inset-top));
-  color: #ffffff;
+  color: var(--on-accent);
   background:
     linear-gradient(rgba(8, 14, 30, 0.45), rgba(8, 14, 30, 0.6)),
-    var(--xp-wallpaper, #1c2a4a);
+    var(--xp-wallpaper, var(--wallpaper-fallback));
   background-size: cover;
   background-position: center;
 }
@@ -104,15 +104,15 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #f2c12e;
+  background: var(--dot-wait);
 }
 
 .mb-sse[data-status="open"] .mb-sse-dot {
-  background: #53d769;
+  background: var(--dot-open);
 }
 
 .mb-sse[data-status="closed"] .mb-sse-dot {
-  background: #ff6b5e;
+  background: var(--dot-closed);
 }
 
 /* ---- content ---------------------------------------------------------------------------- */
@@ -172,7 +172,7 @@
 .mb-error {
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fdecea;
+  background: var(--danger-bg);
   color: var(--mb-danger);
 }
 
@@ -491,7 +491,7 @@
   width: 52px;
   height: 30px;
   border-radius: 999px;
-  background: #aab2c0;
+  background: var(--toggle-off);
   transition: background 0.15s;
 }
 
@@ -506,7 +506,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--on-accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: transform 0.15s;
 }
@@ -528,7 +528,7 @@
 }
 
 .mb-logout:hover {
-  background: #fdecea;
+  background: var(--danger-bg);
 }
 
 /* ---- bottom tabs ------------------------------------------------------------------------ */
@@ -589,7 +589,7 @@
   padding: 0 5px;
   border-radius: 999px;
   background: var(--mb-danger);
-  color: #ffffff;
+  color: var(--on-accent);
   font-size: calc(var(--mb-font-size) * 11 / 15);
   font-weight: 600;
   line-height: 18px;

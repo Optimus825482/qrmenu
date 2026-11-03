@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { config } from "dotenv";
 import path from "node:path";
+import { VIEWPORTS } from "./tests/e2e/matrix/viewports";
 import { e2eDatabaseUrl } from "./tests/e2e/e2eDb";
 
 config({ path: path.resolve(__dirname, ".env"), quiet: true });
@@ -22,5 +23,18 @@ export default defineConfig({
     // The server under test must talk to the same throwaway database the specs reset.
     env: { DATABASE_URL: e2eDatabaseUrl() },
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    { name: "chromium", testIgnore: ["**/matrix/**"], use: { ...devices["Desktop Chrome"] } },
+    // UX matrix (P-UX-15): the same specs under six views, all touch-capable.
+    ...Object.entries(VIEWPORTS).map(([name, viewport]) => ({
+      name,
+      testMatch: ["**/matrix/**/*.spec.ts"],
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport,
+        hasTouch: true,
+        ...(name.startsWith("phone-") ? { isMobile: true } : {}),
+      },
+    })),
+  ],
 });

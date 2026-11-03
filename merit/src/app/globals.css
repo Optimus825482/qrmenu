@@ -13,6 +13,74 @@
   --gold: #947833;
   --danger: #b91c1c;
   --success: #15803d;
+
+  /* Status tokens: text on its tinted background is >= 4.5:1 (tests/unit/contrast.test.ts). */
+  --warn: #92400e;
+  --warn-bg: #fef3c7;
+  --info: #0369a1;
+  --info-bg: #e0f2fe;
+  --success-bg: #dcfce7;
+  --danger-bg: #fee2e2;
+  --muted-bg: #f1f5f9;
+  --dot-open: #53d769;
+  --dot-wait: #f2c12e;
+  --dot-closed: #ff6b5e;
+  --toggle-off: #aab2c0;
+  --on-accent: #ffffff;
+
+  /* Android shell palette (mobile.css maps --mb-* onto these). */
+  --app-bg: #f3f5f9;
+  --app-line: #e1e5ec;
+  --accent-app: #1c4fd8;
+  --accent-app-soft: #e3ebff;
+  --accent-zeytin: #3f6b2a;
+  --accent-zeytin-soft: #e4ecd8;
+  --accent-gumus: #56647a;
+  --accent-gumus-soft: #e8ecf1;
+  --accent-royal: #0b1f4b;
+  --accent-royal-soft: #e7eaf2;
+  --wallpaper-fallback: #1c2a4a;
+
+  /* Spacing, radius and touch-target scale (spec 5.2). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --tap-xp: 24px;
+  --tap-min: 44px;
+  --tap-std: 48px;
+  --tap-pri: 56px;
+  --tap-pos: 64px;
+
+  /* Active density (default: staff tablet). */
+  --tap-action: var(--tap-std);
+  --tap-primary: var(--tap-pri);
+  --tap-gap: 8px;
+}
+
+[data-density="xp"] {
+  --tap-action: var(--tap-xp);
+  --tap-primary: var(--tap-xp);
+  --tap-gap: 4px;
+}
+
+[data-density="personel"] {
+  --tap-action: var(--tap-std);
+  --tap-primary: var(--tap-pri);
+  --tap-gap: 8px;
+}
+
+[data-density="pos"] {
+  --tap-action: var(--tap-pri);
+  --tap-primary: var(--tap-pos);
+  --tap-gap: 12px;
 }
 
 @theme inline {
@@ -26,6 +94,8 @@
   --color-gold: var(--gold);
   --color-danger: var(--danger);
   --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
 }
 
