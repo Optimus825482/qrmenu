@@ -244,6 +244,19 @@ async function reprintKitchen(ctx: Ctx, orderId: string): Promise<PrintJob | nul
   });
 }
 
+async function jobOutletId(
+  tx: Prisma.TransactionClient,
+  orderId: string | null,
+  printerId: string,
+): Promise<string | undefined> {
+  if (orderId) {
+    const order = await tx.order.findUnique({ where: { id: orderId }, select: { outletId: true } });
+    if (order) return order.outletId;
+  }
+  const printer = await tx.printer.findUnique({ where: { id: printerId }, select: { outletId: true } });
+  return printer?.outletId ?? undefined;
+}
+
 /**
  * Atomically hands the hotel's queued jobs to one gateway: a single UPDATE over
  * `FOR UPDATE SKIP LOCKED`, so concurrent pollers never take the same job.
@@ -305,6 +318,8 @@ async function report(jobId: string, result: ReportResult): Promise<void> {
     if (locked.length === 0) throw new DomainError("NOT_FOUND", "Baskı işi bulunamadı");
     const job = locked[0];
     if (job.status !== "BASILIYOR") throw new DomainError("CONFLICT", "Baskı işi artık raporlanamaz");
+    // Radar scope: the order's outlet, else the printer's (test prints stay outlet-less).
+    const outletId = await jobOutletId(tx, job.order_id, job.printer_id);
     if (result.ok) {
       await tx.printJob.update({
         where: { id: jobId },
@@ -314,6 +329,7 @@ async function report(jobId: string, result: ReportResult): Promise<void> {
         {
           type: "print.printed",
           hotelId: job.hotel_id,
+          ...(outletId ? { outletId } : {}),
           payload: { jobId, orderId: job.order_id, printerId: job.printer_id },
         },
         tx,
@@ -330,6 +346,7 @@ async function report(jobId: string, result: ReportResult): Promise<void> {
       {
         type: "print.failed",
         hotelId: job.hotel_id,
+        ...(outletId ? { outletId } : {}),
         payload: { jobId, orderId: job.order_id, printerId: job.printer_id, reason: "BASILAMADI", error },
       },
       tx,

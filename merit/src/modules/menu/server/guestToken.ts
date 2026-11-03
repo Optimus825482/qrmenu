@@ -2,6 +2,7 @@ import { clientIp, createRateLimiter, type RateLimiter } from "@/lib/rate-limit"
 import { prisma } from "@/lib/prisma";
 import { isSignedToken, verifyQrToken } from "@/lib/qr";
 import { publish } from "@/lib/realtime";
+import { publishRadar } from "@/modules/radar/publish";
 import { type GuestState, guestState } from "./guestState";
 
 export type GuestMeta = { ip: string; userAgent: string };
@@ -94,7 +95,7 @@ async function resolve(
 
   const room = await prisma.room.findUnique({
     where: { qrToken: token },
-    select: { id: true, hotelId: true, hotel: { select: { isActive: true } } },
+    select: { id: true, hotelId: true, floorId: true, number: true, hotel: { select: { isActive: true } } },
   });
   if (room) {
     if (!room.hotel.isActive) {
@@ -102,6 +103,18 @@ async function resolve(
       return none("OTEL_PASIF");
     }
     await logScan(meta, { roomId: room.id, ok: true });
+    if (log) {
+      // Outside any transaction; a radar failure must never break the guest page.
+      try {
+        await publishRadar(
+          "scan.room",
+          { hotelId: room.hotelId, roomId: room.id },
+          { roomId: room.id, roomNumber: room.number, floorId: room.floorId },
+        );
+      } catch (error) {
+        console.error("[guest token] scan.room", error);
+      }
+    }
     return { kind: "ROOM", roomId: room.id, hotelId: room.hotelId };
   }
   return unknown();

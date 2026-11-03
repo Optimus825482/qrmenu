@@ -32,3 +32,16 @@ export async function publishRadar<K extends keyof Wire>(
     tx,
   );
 }
+
+/**
+ * G20 hand-off: announces a failed hotel mail (SISTEM sessions only). Never throws; the mail path
+ * must not break because the radar could not be told. Called by `sendHotelMailOnce` on the "failed"
+ * outcome (minibar Task 11) and by the P7 mail jobs, once per failed send.
+ */
+export async function publishMailFailed(hotelId: string, kind: string): Promise<void> {
+  try {
+    await publishRadar("mail.failed", { hotelId }, { kind: kind.slice(0, 32) });
+  } catch (error) {
+    console.error("[radar] mail.failed", error);
+  }
+}

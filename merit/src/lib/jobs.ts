@@ -4,6 +4,7 @@ import { getSetting } from "@/lib/settings";
 import { TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
+import { rsSlaSweep } from "@/modules/order/server/roomService/sla";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import {
@@ -16,6 +17,7 @@ import {
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
+export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
 export const MINIBAR_TASK_GEN_QUEUE = "minibar.task-gen";
 export const MINIBAR_OCCUPANCY_ALERT_QUEUE = "minibar.occupancy-alert";
@@ -73,6 +75,15 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(PRINT_SWEEP_QUEUE, async () => {
       const swept = await printJobs.sweepStale(new Date());
       if (swept > 0) console.log(`[print.sweep] ${swept} baskı işi kuyruğa geri alındı`);
+    });
+    // Room-service SLA: WARN at 80 % and BREACH at 100 % of rs.slaMinutes, each published once.
+    await boss.createQueue(RS_SLA_SWEEP_QUEUE); // idempotent
+    await boss.schedule(RS_SLA_SWEEP_QUEUE, "* * * * *", null, { tz: TZ });
+    await boss.work(RS_SLA_SWEEP_QUEUE, async () => {
+      const res = await rsSlaSweep(new Date());
+      if (res.warned + res.breached > 0) {
+        console.log(`[rs.sla-sweep] ${res.warned} uyarı, ${res.breached} aşım`);
+      }
     });
     await boss.createQueue(ORDER_ESCALATION_QUEUE); // idempotent
     await boss.schedule(ORDER_ESCALATION_QUEUE, "* * * * *", null, { tz: TZ });
