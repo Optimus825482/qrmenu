@@ -228,6 +228,9 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
   await garson.getByRole("button", { name: "Şifremi kaydet ve devam et" }).click();
   await expect(garson).toHaveURL(/\/secim$/);
   await garson.getByRole("button", { name: /Kabul Restoran/ }).click();
+  // First login: the mandatory "Erişimim" summary comes before the landing screen; acknowledge it.
+  await expect(garson).toHaveURL(/\/erisimim\?hos-geldin=1$/);
+  await garson.getByRole("button", { name: "Anladım" }).click();
   await expect(garson).toHaveURL(/\/garson$/); // the role's landing screen (QS-KUY)
   expect(await canView("R-TST", "QS-KUY")).toBe(true);
 
@@ -250,17 +253,19 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
   await expect.poll(() => canView("R-TST", "QS-KUY")).toBe(true);
 });
 
-test("Kurulum Rehberi: Merit Royal %100", async () => {
+test("Kurulum Rehberi: Merit Royal %90 (9/10 zorunlu adım; ürün ve minibar setup bekliyor)", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
   await startMenuItem(admin, "Kurulum Rehberi").click();
   await pickHotel(admin, "Kurulum Rehberi", MR.name);
   const guide = admin.getByRole("region", { name: `Kurulum Rehberi · ${MR.name}`, exact: true });
   await expect(guide).toBeVisible();
-  await expect(guide.getByTestId("guide-percent")).toHaveText("%100");
+  await expect(guide.getByTestId("guide-percent")).toHaveText("%90");
   const steps = guide.getByRole("list", { name: "Kurulum adımları" }).getByRole("listitem");
   for (const title of ["Katlar", "Oda tipleri", "Odalar", "Outletler", "Sipariş outletlerinde ekip"]) {
     await expect(steps.filter({ hasText: title }).first().getByRole("img", { name: "Tamamlandı" })).toBeVisible();
   }
+  // Minibar is on: the 10th mandatory step (product + setup + assignment) is still open here.
+  await expect(steps.filter({ hasText: "Ürün ve minibar setup" }).getByRole("img", { name: "Eksik" })).toBeVisible();
 });
 
 test("Online Kullanıcılar: garson listede; zorla çıkış → garsonun sonraki gezinmesi /giris", async () => {

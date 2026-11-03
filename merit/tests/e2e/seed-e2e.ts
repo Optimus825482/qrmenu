@@ -164,7 +164,20 @@ async function resetAndSeed(): Promise<void> {
   }
 }
 
-resetAndSeed().catch((error) => {
+/** The shared Postgres can hit max_connections while several suites run in parallel: retry those. */
+async function resetAndSeedWithRetry(): Promise<void> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await resetAndSeed();
+    } catch (error) {
+      const busy = /too many clients|TooManyConnections/i.test(String(error) + JSON.stringify(error));
+      if (!busy || attempt >= 10) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+  }
+}
+
+resetAndSeedWithRetry().catch((error) => {
   console.error(error);
   process.exit(1);
 });

@@ -77,6 +77,7 @@ test("kat.mr ilk girişte zorunlu Erişimim; Anladım /kat'a götürür; ikinci 
   await expect(page).toHaveURL(/\/kat$/);
 
   await context.clearCookies();
+  await page.goto("about:blank"); // end the landing page's in-flight loads so /giris is not aborted
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
 });

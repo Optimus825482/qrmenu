@@ -152,11 +152,13 @@ test("tek SSE bağlantısı: görev çubuğu ve iki Komuta Merkezi penceresi ayn
   expect(streams).toHaveLength(1);
 });
 
-test("/admin/hakkinda: oturumsuz → giriş; yönetim rolü dışı → /secim", async ({ page }) => {
+test("/admin/hakkinda: oturumsuz → giriş; yönetim rolü dışı → /yetkisiz (CR-KOM)", async ({ page }) => {
   await page.goto("/admin/hakkinda");
   await expect(page).toHaveURL(/\/giris/);
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
   await page.goto("/admin/hakkinda");
-  await expect(page).toHaveURL(/\/secim$/);
+  // No CR-SYS: bounced to /admin, where the missing CR-KOM sends them to the "not assigned" page.
+  await expect(page).toHaveURL(/\/yetkisiz\?ekran=CR-KOM$/);
+  await expect(page.getByRole("heading", { name: "Bu ekran sana atanmadı" })).toBeVisible();
 });

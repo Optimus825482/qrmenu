@@ -45,11 +45,12 @@ const FOLDERS = [
   "Kullanıcı Yönetimi",
 ];
 
-test("kat.mr (yönetim rolü değil) /admin → /secim", async ({ page }) => {
+test("kat.mr (CR-KOM yok) /admin → /yetkisiz", async ({ page }) => {
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
   await page.goto("/admin");
-  await expect(page).toHaveURL(/\/secim$/);
+  await expect(page).toHaveURL(/\/yetkisiz\?ekran=CR-KOM$/);
+  await expect(page.getByRole("heading", { name: "Bu ekran sana atanmadı" })).toBeVisible();
 });
 
 test("masaüstü: Komuta Merkezi simgesi; çift tık → pencere; sürükle; görev çubuğu; kapat", async ({

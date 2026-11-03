@@ -55,9 +55,11 @@ test("Kurulum Rehberi: ilerleme ve adımlar görünür; Katlar adımında Aç �
   await expect(steps).toHaveCount(10);
   await expect(steps.first()).toContainText("Otel bilgileri");
   await expect(steps.first().getByRole("img", { name: "Tamamlandı" })).toBeVisible();
-  // Product / minibar setup is optional ("Zorunlu değil") and opens the Minibar definitions app.
+  // Minibar is on for Merit Royal, so "Ürün ve minibar setup" is the 10th mandatory step (pending on
+  // a fresh seed: no product/setup/assignment yet) and opens the Minibar definitions app.
   const product = steps.filter({ hasText: "Ürün ve minibar setup" });
-  await expect(product).toContainText("Zorunlu değil");
+  await expect(product).not.toContainText("Zorunlu değil");
+  await expect(product.getByRole("img", { name: "Eksik" })).toBeVisible();
   await expect(product.getByRole("button", { name: "Aç" })).toBeEnabled();
 
   await steps.filter({ hasText: "Katlar" }).getByRole("button", { name: "Aç" }).click();

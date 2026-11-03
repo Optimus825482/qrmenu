@@ -444,6 +444,8 @@ test("Kullanıcı Yönetimi: Yeni test.garson (R-GAR, MR) listede; Ekip Yönetim
   await expect(wizard.getByLabel("Geçici şifre")).toHaveValue(/.+/);
   await wizard.getByRole("button", { name: "Tamam" }).click();
   await expect(wizard).toHaveCount(0);
+  // The seed has many users (the new one may land on page 2): narrow the grid with its search box.
+  await users.getByRole("searchbox").fill("test.garson");
   await expect(row(users, "test.garson")).toBeVisible();
   await expect(row(users, "test.garson")).toContainText("Garson");
   await expect(row(users, "test.garson")).toContainText("şifre yenilenecek"); // first login must change it

@@ -12,6 +12,7 @@ export type RouteEntry = { key: string; path: string; user: string; outlet?: Reg
 export const ROUTE_MATRIX: RouteEntry[] = [
   { key: "kat", path: "/kat", user: "kat.mr", tier: "personel", ready: /Günlük Minibar Kontrol/ },
   { key: "kat-oda-kontrol", path: "FIRST_ROOM", user: "kat.mr", tier: "personel", ready: /Hepsini Doldur/ },
+  { key: "erisimim", path: "/erisimim", user: "kat.mr", tier: "personel", ready: /Erişimim/ },
   { key: "depo-stok", path: "/depo/stok", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Zimmet Takibi/ },
   { key: "garson", path: "/garson", user: "garson.havuz", outlet: /Havuz Bar/, tier: "personel", ready: /Outlet Masaları/ },
   { key: "garson-cagrilar", path: "/garson/cagrilar", user: "garson.havuz", outlet: /Havuz Bar/, tier: "personel", ready: /Açık çağrı yok/ },
