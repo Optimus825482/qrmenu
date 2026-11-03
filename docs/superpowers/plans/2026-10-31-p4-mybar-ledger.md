@@ -20,3 +20,4 @@ Task 7: review APPROVED (Haiku). Karar: plan dosya listesi ((minibar) kabuğu, A
 Task 9 fix round DONE (5752ab9; çıkışta/forceLogout/sweeper'da abonelikler silinir, istemci 1 s sınırlı unsubscribe, dağıtım yalnız aktif oturum, anahtar base64url, cap sıralaması; push.includeNote ayarı yapılmadı → Erkan onayı/T10). Task 9 CLOSED. LogoutButton değişikliği e2e'de dalga sonunda.
 T7 entegrasyon DONE (51a5700: nav KAT_MORE, FALLBACK_TITLES, ROUTE_OWNERS /kat/mybar→MB-PERS, matrix kat-mybar, layout tek montaj). Kontrolör: layout hotelId={ctx.session.hotelId} geçirir (84f9091).
 Task 8: DONE (32cd5cf; 14 birim, mybarAdmin 1/1, shell 9/9; MB-PERS; CSV/XLSX fiyatsız, A hakkı; kat süzgeci yok). İNCELEME BEKLİYOR (Codex). Rehber hedefleri raporda.
+Ruling: Erkan 03.11.2026 tarihinde genel Web Push metninin korunmasını seçti. Bildirim gövdesine ürün adı ve misafir notu eklenmez. `push.includeNote` T10 kapsamından çıkarıldı.

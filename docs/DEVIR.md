@@ -37,7 +37,7 @@
    Yarım kalanı aynı brief ile taze ajan bitirir; her iki görev de Haiku/Sonnet incelemesinden geçer.
 2. **P6 boşluk analizi** `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md` (ajan çalışıyordu; yoksa aynı görevi yeniden ver: plan `2026-10-31-p6-oda-servisi.md` ile mevcut `order/server/roomService/*`, `(ops)/oda-servisi`, `(guest)/q/[token]/siparis`, `rsSlaSweep`, `RoomServiceReportsWindow` karşılaştırması). Çıkan "YOK/KISMİ" görevler için brief'ler → uygula. Kural: UI'da "sepet" yok → "Seçimler".
 3. **UX T14–T15** (`task-14-brief.md` sonundaki "Doğrulama kalıntıları" listesi dahil; T15 belgeler/final gates). T14 ux12/p4t8 indikten sonra (shell dosyaları çakışır).
-4. **P4 T10** kabul (plan 259–276): e2e verisi, `push.includeNote` kararı (Erkan onayı — push gövdesinde ürün adı + ≤150 kr misafir notu), T4/T7/T9 minörleri (`task-{4,7,9}-report.md`, `task-9-review.md`), eski `/api/manifest/garson` temizliği.
+4. **P4 T10** kabul (plan 259–276): e2e verisi, T4/T7/T9 minörleri (`task-{4,7,9}-report.md`, `task-9-review.md`), eski `/api/manifest/garson` temizliği. Erkan genel Web Push metnini korumayı seçti. `push.includeNote` T10 kapsamından çıkarıldı.
 5. Her kapanışta defter + `ilerleme-data.js` (`node --check`, `merit/public/` kopyası) + commit; ayrılırken bu bölümü güncelle.
 
 ### Çalışma düzeni (değişmedi)
