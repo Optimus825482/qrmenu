@@ -25,33 +25,35 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (3 Kasım 2026, 19:50 — Fable → Codex devri; dal `ux/yenileme`, HEAD `32cd5cf` + 2 ajanın commit'siz işi)
+## 1a. Kalınan yer (4 Kasım 2026, 02:00 — Opus; dal `ux/yenileme`, son kod commit'i `b4e5a17`)
 
-**Sıra (Erkan):** minibar (kapalı+doğrulandı) → radar (13/13 kapalı, T13 animasyon dahil) → UX (T1–T13 kapalı; **T14–T15 kaldı**) → P4 MyBar (T1–T9 uygulandı; **T8 incelemesi ve T10 kaldı**) → **P6** (boşluk analizi sürüyor) → P7 → P8. Codex kalan işleri sürdürür; Fable sınırı sıfırlanınca `git log` ile doğrular ve dalga sonu kapanışını yapar.
+**Sıra (Erkan: alan alan, sırayla):** UX T14 incelemesi → UX T15 → P4 T10 → P6 → P7 → P8 → Opus dal incelemesi → tam doğrulama → Erkan'dan birleştirme onayı. Kapalı: minibar 14/14, radar 13/13, UX T1–T13, P4 T1–T9.
 
-### Codex için ilk adımlar (sırayla)
-1. `git status --short`: çalışma ağacında ux12'nin **commit'siz** işi var (19:47):
-   - **UX T12 düzeltme turu (`ux12`)**: `src/components/guide/{HelpSheet,ScreenGuideHost,guide.css,guideClient,tourModel,useScreenTour}`, `src/modules/core/{screenGuide.ts,server/{guideState,helpActions,helpData}.ts}`, `src/shell/components/Window.tsx`, `src/app/(admin)/admin/ShellClient.tsx`, `tests/e2e/guide.spec.ts`. Hedef: hata ipuçları yetkiye göre süzülür (`requires`), XP penceresinin oteli `helpActions`'a geçirilir (ctx.hotelIds doğrulamalı), 13→14 px POS, guide.css tokenları, pendingStart, sabit bekleme yerine `expect(...).not.toBeVisible`. Testleri (`coach-marks`, `setting-sentences`, `screen-guide`, `guide.spec` port 3022) koşup commit: `fix(ux): tur/yardım — yetkiye göre hata ipuçları, pencere oteli, token renkler`.
-   - **P4 T8 indi: `32cd5cf`** (MyBar Talepleri XP penceresi; 14 birim, mybarAdmin 1/1, shell 9/9; `registerMybarApps()` + ShellClient kaydı; kat süzgeci yok, detay salt okunur). **Haiku incelemesi yapılmadı** → yap (yetki `MB-PERS` V/A, otel kapsamı, fiyatsız dışa aktarma `MYBAR_EXPORT` audit, sayfalama ≤100, ReasonDialog), bulguları düzelt, kapat.
-   - `merit/tsconfig.json` → `git checkout -- merit/tsconfig.json` (next build yan etkisi, asla commit'lenmez).
-   Yarım kalanı aynı brief ile taze ajan bitirir; her iki görev de Haiku/Sonnet incelemesinden geçer.
-2. **P6 boşluk analizi HAZIR:** `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md` (kopya `docs/superpowers/reports/p6-oda-servisi-gap-analysis.md`; Codex'in kısa sürümü `gap-analysis.alt-ajan.md`). Durum: T1 TAM; T2 TAM ama **engelleyici hata**: `orders.ts:269` HAZIR için `prepStartedAt` ister, `OdaServisiClient` `startRoomPrepAction`'ı hiç çağırmaz → "Hazırlandı" çalışmaz (birim test bunu gizliyor); T3 TAM (3 küçük: `scaledMax` bağlı değil, `getSetting` hatası yutuluyor, ROOM misafir SSE'de `roomId` doğrulanmıyor); T4 YOK (`ROOM_SERVICE_READY=false`, `/q/{token}/oda-servisi` yok); T5 KISMİ (prototip; board, SLA rozeti, RO-TEL/RO-TES kapıları, e2e yok); T6 KISMİ (`rsSlaSweep` createdAt kullanıyor, GONDERILDI atlanıyor, notify/stats/test yok; `escalation.ts` yalnız MASA; rapor penceresi RO-TAL ile yetkili, UTC aralık, fiyat gizliyken "€0,00"); T7 YOK. Revize liste belgede: **hemen paralel**: T2R, T3R, T4a, T4b, T5a, T6b, S0 (e2e seed); sonra T4c/T4d, T5b/T5c, T6a/T6c; en son T7. `ROOM_SERVICE_READY` en son çevrilir. Kural: UI'da "sepet" yok → "Seçimler". **Erkan'a 4 soru** (belge §5): SLA başlangıcı plan kuralı mı; rapor penceresi id'si `rs.rapor` mı; menüsü kapalı otelde kart "şu an kullanılamıyor" mı; KDS'ye `kind` süzgeci mi — yanıt gelene kadar plan varsayılanları.
-3. **UX T14–T15** (`task-14-brief.md` sonundaki "Doğrulama kalıntıları" listesi dahil; T15 belgeler/final gates). T14 ux12/p4t8 indikten sonra (shell dosyaları çakışır).
-4. **P4 T10** kabul (plan 259–276): e2e verisi, T4/T7/T9 minörleri (`task-{4,7,9}-report.md`, `task-9-review.md`), eski `/api/manifest/garson` temizliği. Erkan genel Web Push metnini korumayı seçti. `push.includeNote` T10 kapsamından çıkarıldı.
-5. Her kapanışta defter + `ilerleme-data.js` (`node --check`, `merit/public/` kopyası) + commit; ayrılırken bu bölümü güncelle.
+**Token kuralı (Erkan):** basit iş Haiku, orta iş Sonnet, karmaşık iş Opus. Kontrolör konuşmayı kısa tutar. `DEVIR` ve `ilerleme` alan kapanışında toplu güncellenir. Ajan yoklanmaz, ama uzun süren işte Erkan'a ara bilgi verilir.
 
-### Çalışma düzeni (değişmedi)
-brief → uygulayıcı (TDD, tek commit, LF, Co-Authored-By) → inceleme (misafire açık/yetki/para: Sonnet; diğerleri Haiku) → düzeltme turu (aynı ajan) → defter → ilerleme. `.superpowers/sdd/PARALEL-KURALLAR.md`: ajan başına DB/port/`NEXT_DIST_DIR`, **tek vitest süreci**, tam süit yalnız dalga sonu tek ajanla; Postgres 100 bağlantı — biten ajanların e2e DB bağlantıları `pg_terminate_backend` ile kapatılabilir (bugün yapıldı). `git log`'a güven. `main` birleştirme/push yalnız Erkan onayı. Dalga sonu: Opus dal incelemesi → düzeltme → tam doğrulama (tek ajan: check, build, migrate diff, chromium, matris) → DEVIR §1 + ilerleme → onay → birleştirme → Coolify (yeni env: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`; isteğe bağlı `PUSH_ENDPOINT_ALLOWLIST`, `TRANSLATE_PROVIDER`).
+### Sıradaki adımlar
+1. **UX T14 incelemesi (Sonnet):** `434d4e6..b4e5a17` (`d9b46a8`, `f158b60`, `b4e5a17`). Rapor `docs/superpowers/reports/ux-task-14-report.md`. Özellikle bak: `saveShellPrefs` birleştirmesi, `canUsePos` sunucu türetmesi, `RadarRoot` denetleyici anahtarı, `Window.tsx` menü çubuğu ve kısayollar, silinen `/api/manifest/garson`.
+2. **T14'ten açık kalanlar (T15 içinde kapat):**
+   - `landing.spec.ts:78` KIRMIZI: `/kat?filtre=dnd` artık süzmüyor, `KatDashboard.tsx:53` `void filter`. Süzgeç ya geri gelir ya da parametre ve test kaldırılır; ürün davranışı değiştiği için Erkan'a sor.
+   - `canliRadarWall` 1920: tek başına 3/3 yeşil, son tam chromium koşusu düzeltmeden önceydi. T15 tam koşusunda doğrula.
+   - `preferredShell` için arayüz yok, değer yalnız kayıtta korunuyor. Seçim yeri tasarım kararı, Erkan'a sor.
+   - `PushToggle` spec'i VAPID anahtarı ister; e2e sunucusunu geçici üretilmiş anahtarlarla başlat, repoya yazma.
+3. **UX T15:** `.superpowers/sdd/2026-11-03-ux-yenileme/task-15-brief.md`.
+4. **P4 T10:** commit'siz yığın `docs/kurulum.md`, `tests/e2e/mybarFlow.spec.ts` (izlenmiyor). `mybarFlow.spec.ts:26` KIRMIZI. T4/T7/T9 minörleri raporlarda.
+5. **P6:** T2R `9b7dda3`, T3R `299cafc`, T4a `45d0d24` indi. T4b commit'siz yığın: `src/modules/menu/ui/guest/{GuestFooter,GuestFrame,MenuBrowser,MenuView,SelectionsDrawer}.tsx`, `tests/unit/guest-room-mode.test.tsx`. Sonra T5a, T6b, S0, T4c/T4d, T5b/c, T6a/c, T7; `ROOM_SERVICE_READY` en son açılır. Liste `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md`; §5'te Erkan'a 4 soru var (SLA başlangıcı, pencere kimliği `rs.rapor`, kapalı menü kart metni, KDS `kind` süzgeci), yanıt yoksa varsayılanlar.
+6. **P7, P8:** `.superpowers/sdd/2026-10-31-p7-rapor-eposta/gap-analysis.md`, `.superpowers/sdd/2026-10-31-p8-kabul/gap-analysis.md`.
+7. **Yalnız Erkan:** gerçek göç, SMTP, Coolify dağıtımı ve `VAPID_*`, `docs/kabul/ux-rehber-metinleri.md` onayı, birleştirme onayı.
+
+### Çalışma düzeni
+brief → uygulayıcı (TDD, commit, LF, Co-Authored-By) → inceleme (misafire açık/yetki/para: Sonnet, diğerleri Haiku) → düzeltme → defter. `.superpowers/sdd/PARALEL-KURALLAR.md`: ajan başına DB/port/`NEXT_DIST_DIR`, açık yollarla stage, `git add -A`/stash/reset yok, tek vitest süreci, tam süit tek ajanla. `next build` `merit/tsconfig.json`'u değiştirir; commit'lenmez, geri alınır. E2E sunucusu `APP_BASE_URL=http://localhost:<port>` ile başlar, vitest onsuz koşar. 3000/3001 portlarına dokunulmaz. E2E yalnız `*_e2e`/`*_test` DB'lerinde. Postgres sınırı 100 bağlantı; biten ajanların sunucularını kapat.
 
 ### Durum özeti (commit'ler)
-- **Minibar 14/14** kapalı; dalga doğrulaması yeşil (`wave-verification-report.md`), Codex kapanış `e34a0ee`/`1dd4bc7`.
-- **Radar 13/13** kapalı: T3 `86ee6de`, T6 `0971845`+`c29df98`+`e8fcb0d`, T8 `382d6ae`+`50e5ffa`, T9 `70efac6`, T10 `9b77d0b`, T11 `fbf5a56`, T12 `5ea6fd6`, **T13 animasyon `08ff735`+`43dbe2e`** (Erkan: "simülatif" = animasyonlu; `Animasyon` anahtarı, reduced-motion, ≤120 öğe).
-- **UX**: T1–T9, T11 kapalı; T10 `c8d6db1`; T12 `92cf504` (+düzeltme bekliyor); T13 `cb17f17`+`50c4542`; e2e `1014aaa`, `b6dfccd`; Antigravity doğrulaması `antigravity-verification-report.md` (düzeltmeler `2c30516`, `a3ed3bf`, `dfd99a8`+`3587744`, `3fae81c`, `3a7928d`).
-- **P4 MyBar**: T1 `c201ba3`; T2 `0a40ea8`+`041d49c`+`461b01d`; T3 `72c289e`+`3fe2959`+`2195e42`+`6da62f1`+`49ce303`; T4 `acdf2e1`; T5 `d2757e9`; T6 `ade0c1f`; T7 `1922496`+entegrasyon `51a5700`+`84f9091`; T9 `13b3e62`+`5752ab9`. Kalan T8 (sürüyor), T10.
-- Backlog/minörler defterlerde (`docs/superpowers/plans/*-ledger.md`) ve T14 brief'inde.
+- **Minibar 14/14**, dalga doğrulaması yeşil (`wave-verification-report.md`). **Radar 13/13**, T13 `08ff735`+`43dbe2e`. Sürekli animasyon istisnası yalnız `radar/ui/motion/motion.css` (`434d4e6`).
+- **UX** T1–T13 kapalı; T14 `d9b46a8`, `f158b60`, `b4e5a17` (incelenmedi). T14 ajan koşuları: chromium 206 geçti, 3 kaldı, 1 koşmadı (duvar testi düzeltmesinden önce); matris 126/126.
+- **P4** T1–T9 kapalı: T8 `32cd5cf`+`0d5cfe6`, T9 `13b3e62`+`5752ab9`, push genel metin `174d866`.
 
 ### Kararlar (bu dalga, ek)
-Göçte bcrypt korunur; KDS oda servisi geri alma RO-TAL D; "simülatif" = animasyonlu (radar T13, yalnız `radar/ui/motion/**` sürekli animasyon istisnası); P4 misafir API şeması strict değil (servis girdisi ip/userAgent taşır), katalog dışı ürün adı çözümü kabul; çıkışta tüm push abonelikleri silinir (çok cihaz dahil); T7 plan dosya listesi yerine StaffShell/soundGate altyapısı; kat layout MyBar penceresine oturum oteli geçer.
+Göçte bcrypt korunur; KDS oda servisi geri alma RO-TAL D; "simülatif" = animasyonlu (radar T13); push gövdesi genel metin, `push.includeNote` yok; çıkışta tüm push abonelikleri silinir; XP kabuğunda yoğunluk özniteliği `data-xp-density` (genel `data-density` tokenlarıyla çakışmaz); aynı ekranı paylaşan uygulamalar `launchLabel` ile ayrı pencere adı taşır.
 
 ## 2. Çalışma ortamı
 
