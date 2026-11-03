@@ -13,7 +13,7 @@ import {
   roomCatalogue,
 } from "./minibarCommon";
 import type { CorrectionRequestItem } from "./minibarTypes";
-import { deductFromPool, returnToPool } from "./poolStock";
+import { restoreStock, takeManyFromPool } from "./pool";
 
 /**
  * 4. Oda Kontrolünü Tamamla & Sarfiyat / Dolum Kaydet
@@ -99,7 +99,7 @@ export async function submitRoomCheck(params: {
           },
         });
       }
-      await deductFromPool(
+      await takeManyFromPool(
         tx,
         {
           hotelId,
@@ -185,6 +185,26 @@ async function loadOwnTx(
   return { row, isToday };
 }
 
+/** Restores room-check lines to the pool one product at a time, in product-id order (deadlock-free). */
+async function restoreLines(
+  tx: Prisma.TransactionClient,
+  p: { hotelId: string; userId: string; refId: string; note: string; lines: { productId: string; qty: number }[] },
+) {
+  const byProduct = new Map<string, number>();
+  for (const l of p.lines) if (l.qty > 0) byProduct.set(l.productId, (byProduct.get(l.productId) ?? 0) + l.qty);
+  for (const [productId, qty] of [...byProduct].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    await restoreStock(tx, {
+      hotelId: p.hotelId,
+      userId: p.userId,
+      productId,
+      qty,
+      refType: "MinibarTransaction",
+      refId: p.refId,
+      note: p.note,
+    });
+  }
+}
+
 /** Delete inside an open transaction (used directly by the approved-correction flow). */
 export async function deleteRoomCheckTx(
   tx: Prisma.TransactionClient,
@@ -194,18 +214,13 @@ export async function deleteRoomCheckTx(
   const { row, isToday } = await loadOwnTx(tx, transactionId, params, PAST_DELETE);
 
   const returned = row.items.filter((i) => i.added > 0).map((i) => ({ productId: i.productId, qty: i.added }));
-  await returnToPool(
-    tx,
-    {
-      hotelId,
-      userId,
-      type: "IADE",
-      refType: "MinibarTransaction",
-      refId: row.id,
-      note: `Oda ${row.room.number} kontrol kaydı iptal edildi, zimmete iade.`,
-    },
-    returned,
-  );
+  await restoreLines(tx, {
+    hotelId,
+    userId,
+    refId: row.id,
+    note: `Oda ${row.room.number} kontrol kaydı iptal edildi, zimmete iade.`,
+    lines: returned,
+  });
 
   await tx.roomCheck.deleteMany({ where: { transactionId: row.id } });
   await tx.minibarTransactionItem.deleteMany({ where: { transactionId: row.id } });
@@ -295,19 +310,14 @@ export async function updateRoomCheckTx(tx: Prisma.TransactionClient, params: Up
     else if (delta < 0) back.push({ productId: newItem.productId, qty: -delta });
   }
 
-  await returnToPool(
-    tx,
-    {
-      hotelId,
-      userId,
-      type: "IADE",
-      refType: "MinibarTransaction",
-      refId: row.id,
-      note: `Oda ${row.room.number} kaydı güncellendi (ürün azaltıldı/iade).`,
-    },
-    back,
-  );
-  await deductFromPool(
+  await restoreLines(tx, {
+    hotelId,
+    userId,
+    refId: row.id,
+    note: `Oda ${row.room.number} kaydı güncellendi (ürün azaltıldı/iade).`,
+    lines: back,
+  });
+  await takeManyFromPool(
     tx,
     {
       hotelId,

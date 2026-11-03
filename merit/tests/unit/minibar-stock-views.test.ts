@@ -12,6 +12,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const views = await import("@/modules/minibar/server/stockViews");
+const pool = await import("@/modules/minibar/server/pool");
 const stockRoute = await import("@/app/api/minibar/stock/route");
 const exportRoute = await import("@/app/api/minibar/stock/export/route");
 const historyRoute = await import("@/app/api/minibar/stock/product/[productId]/history/route");
@@ -102,20 +103,20 @@ describe("setCriticalLevel", () => {
   it("kat sorumlusu seviyeyi günceller ve audit yazar; geçersiz değerler VALIDATION", async () => {
     const w = await minibarWorld();
     const kat = await makeKat();
-    await views.setCriticalLevel(kat.ctx, { productId: w.cola.id, level: 30 });
+    await pool.setCriticalLevel(kat.ctx, w.hotelId, { productId: w.cola.id, level: 30 });
     const row = await testDb.hotelStock.findUniqueOrThrow({
       where: { hotelId_productId: { hotelId: w.hotelId, productId: w.cola.id } },
     });
     expect(row.criticalLevel).toBe(30);
     expect(await testDb.auditLog.count({ where: { action: "STOCK_CRITICAL_LEVEL", userId: kat.userId } })).toBe(1);
-    expect(await codeOf(views.setCriticalLevel(kat.ctx, { productId: w.cola.id, level: -1 }))).toBe("VALIDATION");
-    expect(await codeOf(views.setCriticalLevel(kat.ctx, { productId: w.cola.id, level: 1.5 }))).toBe("VALIDATION");
+    expect(await codeOf(pool.setCriticalLevel(kat.ctx, w.hotelId, { productId: w.cola.id, level: -1 }))).toBe("VALIDATION");
+    expect(await codeOf(pool.setCriticalLevel(kat.ctx, w.hotelId, { productId: w.cola.id, level: 1.5 }))).toBe("VALIDATION");
   });
 
   it("yetkisiz rol FORBIDDEN alır", async () => {
     const w = await minibarWorld();
     const gar = await staff("R-GAR");
-    expect(await codeOf(views.setCriticalLevel(gar.ctx, { productId: w.cola.id, level: 5 }))).toBe("FORBIDDEN");
+    expect(await codeOf(pool.setCriticalLevel(gar.ctx, w.hotelId, { productId: w.cola.id, level: 5 }))).toBe("FORBIDDEN");
   });
 });
 

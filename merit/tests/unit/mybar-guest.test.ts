@@ -176,7 +176,7 @@ describe("MyBar onayı", () => {
     expect(row.items[0].deliveredQty).toBe(3);
     expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(7);
     const mv = await testDb.hotelStockMovement.findFirstOrThrow({ where: { type: "MYBAR" } });
-    expect(mv).toMatchObject({ refType: "MybarRequest", refId: requestId, qty: 3 });
+    expect(mv).toMatchObject({ refType: "MybarRequest", refId: requestId, qty: -3 });
     const audit = await testDb.auditLog.findFirstOrThrow({ where: { action: "MINIBAR_MYBAR_CONFIRM" } });
     expect(audit.before).toEqual({ status: "BEKLEMEDE" });
     expect(audit.after).toMatchObject({ status: "TAMAMLANDI", completedById: dep.userId });

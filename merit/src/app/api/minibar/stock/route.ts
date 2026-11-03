@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { can } from "@/lib/rbac";
 import { handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
-import { criticalStocks, myStock, setCriticalLevel } from "@/modules/minibar/server/stockViews";
+import { setCriticalLevel } from "@/modules/minibar/server/pool";
+import { criticalStocks, myStock } from "@/modules/minibar/server/stockViews";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,5 +23,9 @@ export async function GET(request: Request) {
 const bodySchema = z.object({ productId: z.string().min(1).max(64), level: z.number() }).strict();
 
 export async function PATCH(request: Request) {
-  return handle(async (ctx) => setCriticalLevel(ctx, await parseBody(request, bodySchema)));
+  return handle(async (ctx) => {
+    const input = await parseBody(request, bodySchema);
+    await setCriticalLevel(ctx, ctx.session.hotelId, input);
+    return { productId: input.productId, level: input.level };
+  });
 }

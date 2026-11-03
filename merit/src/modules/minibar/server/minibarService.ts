@@ -12,7 +12,7 @@ import {
 } from "./minibarCommon";
 import { nicosiaInstant } from "./dates";
 import { DEFAULT_ARRIVAL_TIME, DEFAULT_DEPARTURE_TIME, DND_MIN_GAP_SECONDS } from "../constants";
-import { deductFromPool } from "./poolStock";
+import { takeManyFromPool } from "./pool";
 import type {
   FloorSummary,
   TaskSummary,
@@ -778,7 +778,7 @@ export async function confirmMybarRequest(requestId: string, userId: string, hot
         },
       });
     }
-    await deductFromPool(
+    await takeManyFromPool(
       tx,
       {
         hotelId,

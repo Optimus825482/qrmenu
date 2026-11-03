@@ -1,14 +1,10 @@
 import ExcelJS from "exceljs";
 import { formatInTimeZone } from "date-fns-tz";
-import { z } from "zod";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { publish } from "@/lib/realtime";
 import { assertCan } from "@/lib/rbac";
-import { DomainError, fromZod } from "@/lib/result";
+
 import { businessDate, businessDateStart, TZ } from "@/lib/time";
-import { audit } from "@/modules/core/server/audit";
-import { STOCK_CHANGED } from "../events";
 import { STATUS_RANK, type StockStatus, stockStatus } from "../stockStatus";
 import { addDays } from "./dates";
 import { isDepoOperator } from "./stockRequests";
@@ -16,7 +12,7 @@ import { isDepoOperator } from "./stockRequests";
 /*
  * Read models of the hotel pool for the floor supervisor ("stoklarım", "kritik stoklar", product history,
  * Excel export) and the critical-level edit. Everything is scoped to the session hotel and carries no
- * price field. Hand-off (Task 3): `setCriticalLevel` moves to `pool.setCriticalLevel`.
+ * price field. The critical-level edit lives in `pool.setCriticalLevel`.
  */
 
 const SCREEN = "MB-ZIM";
@@ -117,54 +113,6 @@ export async function criticalStocks(ctx: Ctx): Promise<{
     },
     groups,
   };
-}
-
-const levelSchema = z
-  .object({ productId: z.string().min(1).max(64), level: z.number().int().min(0).max(100000) })
-  .strict();
-
-/** Sets the critical level of one product in the session hotel's pool (opens a zero row when none exists). */
-export async function setCriticalLevel(
-  ctx: Ctx,
-  input: { productId: string; level: number },
-): Promise<{ productId: string; level: number }> {
-  const hotelId = ctx.session.hotelId;
-  await assertCan(ctx, SCREEN, "D", hotelId);
-  const parsed = levelSchema.safeParse(input);
-  if (!parsed.success) throw fromZod(parsed.error);
-  const { productId, level } = parsed.data;
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({ where: { id: productId }, select: { id: true } });
-    if (!product) throw new DomainError("NOT_FOUND", "Ürün bulunamadı");
-    const before = await tx.hotelStock.findUnique({
-      where: { hotelId_productId: { hotelId, productId } },
-      select: { criticalLevel: true },
-    });
-    const row = await tx.hotelStock.upsert({
-      where: { hotelId_productId: { hotelId, productId } },
-      create: { hotelId, productId, criticalLevel: level },
-      update: { criticalLevel: level },
-    });
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId,
-      action: "STOCK_CRITICAL_LEVEL",
-      entity: "HotelStock",
-      entityId: row.id,
-      before: before ? { criticalLevel: before.criticalLevel } : undefined,
-      after: { productId, criticalLevel: level },
-    });
-    await publish(
-      {
-        type: STOCK_CHANGED,
-        hotelId,
-        roleKinds: ["SISTEM", "YONETIM", "MINIBAR"],
-        payload: { productId, remainingQty: row.remainingQty, status: stockStatus(row.remainingQty, level) },
-      },
-      tx,
-    );
-    return { productId, level };
-  });
 }
 
 export type HistoryRow = { at: string; roomNumber?: string; type: string; qty: number };

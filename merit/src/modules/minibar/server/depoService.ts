@@ -1,33 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { StockMovementType, TaskStatus } from "@/generated/prisma/client";
-import { DomainError } from "@/lib/result";
+import { TaskStatus } from "@/generated/prisma/client";
 import { getSettings } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
-import { audit } from "@/modules/core/server/audit";
 import { dayRange } from "./dates";
-import { lockStocks } from "./poolStock";
-
-export interface DepoStockItem {
-  id: string;
-  productId: string;
-  productName: string;
-  categoryName: string;
-  price: number;
-  currency: string;
-  quantity: number;
-  minLevel: number;
-  lastUpdated: string;
-}
-
-export interface StockMovementItem {
-  id: string;
-  productName: string;
-  type: StockMovementType;
-  quantity: number;
-  note: string | null;
-  userName: string;
-  createdAt: string;
-}
 
 export interface ConsumptionReportFilter {
   hotelId: string;
@@ -73,152 +48,7 @@ export interface TaskCompletionReport {
 }
 
 /**
- * 1. Otel Konsinye Stok Havuzunu Getir
- */
-export async function getHotelConsignmentStock(hotelId: string): Promise<DepoStockItem[]> {
-  const products = await prisma.product.findMany({
-    where: { isActive: true },
-    include: {
-      group: true,
-      stocks: {
-        where: { hotelId },
-      },
-    },
-    orderBy: [{ group: { name: "asc" } }, { name: "asc" }],
-  });
-
-  return products.map((p) => {
-    const stock = p.stocks[0];
-    return {
-      id: stock?.id || `new-${p.id}`,
-      productId: p.id,
-      productName: p.name,
-      categoryName: p.group.name,
-      price: Number(p.salePrice || 0),
-      currency: "TL",
-      quantity: stock?.remainingQty ?? 0,
-      minLevel: stock?.criticalLevel ?? 10,
-      lastUpdated: stock?.updatedAt?.toISOString() || new Date().toISOString(),
-    };
-  });
-}
-
-/**
- * 2. Konsinye Havuzuna Ürün Girişi / Stok Ayarlama (Depo Sorumlusu)
- *
- * One transaction; the HotelStock row is locked (FOR UPDATE) before the balance is read, so
- * concurrent adjustments and room-check deductions can never push it below zero.
- */
-export async function adjustHotelConsignmentStock(params: {
-  hotelId: string;
-  productId: string;
-  changeQuantity: number;
-  movementType: StockMovementType;
-  note?: string;
-  userId: string;
-}): Promise<{ success: boolean; newQuantity: number; message: string }> {
-  const { hotelId, productId, changeQuantity, movementType, note, userId } = params;
-
-  if (!Number.isInteger(changeQuantity) || changeQuantity === 0) {
-    throw new DomainError("VALIDATION", "Miktar sıfırdan farklı bir tam sayı olmalı.");
-  }
-  if (movementType === "GIRIS" && changeQuantity < 0) {
-    throw new DomainError("VALIDATION", "Zimmet girişi pozitif olmalı.");
-  }
-
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({ where: { id: productId }, select: { id: true } });
-    if (!product) throw new DomainError("NOT_FOUND", "Ürün bulunamadı.");
-    await tx.hotelStock.upsert({
-      where: { hotelId_productId: { hotelId, productId } },
-      create: { hotelId, productId, criticalLevel: 10 },
-      update: {},
-    });
-    await lockStocks(tx, hotelId, [productId]);
-    const stock = await tx.hotelStock.findUniqueOrThrow({
-      where: { hotelId_productId: { hotelId, productId } },
-    });
-
-    const prevRem = stock.remainingQty;
-    const prevTotal = stock.totalQty;
-    const newRem = prevRem + changeQuantity;
-
-    if (newRem < 0) {
-      throw new DomainError(
-        "STOCK_INSUFFICIENT",
-        `Yetersiz stok! Mevcut: ${prevRem}, düşülmek istenen: ${Math.abs(changeQuantity)}`,
-      );
-    }
-
-    const updatedStock = await tx.hotelStock.update({
-      where: { id: stock.id },
-      data: {
-        // total and remaining move together so that total - used = remaining (DB CHECK).
-        totalQty: prevTotal + changeQuantity,
-        remainingQty: newRem,
-      },
-    });
-
-    await tx.hotelStockMovement.create({
-      data: {
-        hotelId,
-        productId,
-        userId,
-        type: movementType,
-        qty: changeQuantity,
-        refType: "HotelStock",
-        refId: updatedStock.id,
-        note: note || (changeQuantity > 0 ? "Depo sorumlusu zimmet girişi" : "Stok sayım düzeltmesi"),
-      },
-    });
-
-    await audit(tx, {
-      userId,
-      hotelId,
-      action: "STOCK_ADJUSTMENT",
-      entity: "HotelStock",
-      entityId: updatedStock.id,
-      before: { remainingQty: prevRem, totalQty: prevTotal },
-      after: {
-        remainingQty: updatedStock.remainingQty,
-        totalQty: updatedStock.totalQty,
-        movementType,
-        changeQuantity,
-        note,
-      },
-    });
-
-    return { success: true, newQuantity: updatedStock.remainingQty, message: "Stok başarıyla güncellendi." };
-  });
-}
-
-/**
- * 3. Otel Stok Hareket Geçmişi
- */
-export async function getHotelStockMovements(hotelId: string, limit = 50): Promise<StockMovementItem[]> {
-  const movements = await prisma.hotelStockMovement.findMany({
-    where: { hotelId },
-    include: {
-      product: true,
-      user: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
-
-  return movements.map((m) => ({
-    id: m.id,
-    productName: m.product.name,
-    type: m.type,
-    quantity: m.qty,
-    note: m.note,
-    userName: m.user?.fullName || "Sistem",
-    createdAt: m.createdAt.toISOString(),
-  }));
-}
-
-/**
- * 4. Minibar Tüketim Raporu
+ * 1. Minibar Tüketim Raporu
  */
 export async function getMinibarConsumptionReport(filter: ConsumptionReportFilter): Promise<{
   totalAmount: number;
@@ -302,7 +132,7 @@ export async function getMinibarConsumptionReport(filter: ConsumptionReportFilte
 }
 
 /**
- * 5. Günlük Görev Tamamlanma Raporu
+ * 2. Günlük Görev Tamamlanma Raporu
  */
 export async function getDailyTaskCompletionReport(
   hotelId: string,

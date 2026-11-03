@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Prisma, RoleKind, StockRequestStatus, Urgency } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
@@ -11,10 +10,10 @@ import { businessDate } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import type { Page } from "@/modules/core/server/admin/listQuery";
 import { notify } from "@/modules/core/server/notifications";
-import { STOCK_CHANGED, STOCKREQUEST_CREATED, STOCKREQUEST_UPDATED } from "../events";
+import { STOCKREQUEST_CREATED, STOCKREQUEST_UPDATED } from "../events";
 import { stockStatus, suggestQty, urgencyFor } from "../stockStatus";
 import { dayRange } from "./dates";
-import { lockStocks } from "./poolStock";
+import { addToPoolTx } from "./pool";
 
 /*
  * Stock request ("ek talep") lifecycle: the floor supervisor (MB-TAL O) asks the hotel warehouse for pool
@@ -22,7 +21,6 @@ import { lockStocks } from "./poolStock";
  * Every transition is one transaction: FOR UPDATE on the request row, audit, owner notification, event.
  * Prices never appear in any output of this module.
  *
- * Hand-off (Task 3): `addToPoolTx` moves to `server/pool.ts`.
  */
 
 // ---------------------------------------------------------------- shared helpers
@@ -95,43 +93,6 @@ async function announce(
     },
     tx,
   );
-}
-
-/** Adds `lines` to the pool (GIRIS): creates a missing stock row, locks rows in product order. */
-async function addToPoolTx(
-  tx: Prisma.TransactionClient,
-  m: { hotelId: string; userId: string; refType: string; refId: string; criticalLevel: number; note?: string },
-  lines: { productId: string; qty: number }[],
-): Promise<{ productId: string; remainingQty: number; criticalLevel: number }[]> {
-  const sorted = [...lines].sort((a, b) => (a.productId < b.productId ? -1 : 1));
-  for (const l of sorted) {
-    await tx.$executeRaw`INSERT INTO hotel_stocks (id, hotel_id, product_id, total_qty, used_qty, remaining_qty, critical_level, created_at, updated_at)
-      VALUES (${randomUUID()}, ${m.hotelId}, ${l.productId}, 0, 0, 0, ${m.criticalLevel}, now(), now())
-      ON CONFLICT (hotel_id, product_id) DO NOTHING`;
-  }
-  const locked = await lockStocks(tx, m.hotelId, sorted.map((l) => l.productId));
-  const result: { productId: string; remainingQty: number; criticalLevel: number }[] = [];
-  for (const l of sorted) {
-    const stock = locked.get(l.productId)!;
-    const updated = await tx.hotelStock.update({
-      where: { id: stock.id },
-      data: { totalQty: { increment: l.qty }, remainingQty: { increment: l.qty } },
-    });
-    await tx.hotelStockMovement.create({
-      data: {
-        hotelId: m.hotelId,
-        productId: l.productId,
-        userId: m.userId,
-        type: "GIRIS",
-        qty: l.qty,
-        refType: m.refType,
-        refId: m.refId,
-        note: m.note,
-      },
-    });
-    result.push({ productId: l.productId, remainingQty: updated.remainingQty, criticalLevel: updated.criticalLevel });
-  }
-  return result;
 }
 
 // ---------------------------------------------------------------- suggestions
@@ -409,7 +370,6 @@ export async function deliverRequest(
   const req = await loadRequest(id);
   await assertDepo(ctx, req.hotelId, "D");
   const lines = parse(deliverSchema, items);
-  const criticalLevel = await getSetting("stock.defaultCriticalLevel", req.hotelId);
   return prisma.$transaction(async (tx) => {
     // Lock order: request row first, then the stock rows (concurrent double delivery queues here).
     const locked = await lockRequest(tx, id);
@@ -433,18 +393,21 @@ export async function deliverRequest(
     for (const row of rows) {
       await tx.stockRequestItem.update({ where: { id: row.id }, data: { deliveredQty: given.get(row.id) ?? 0 } });
     }
-    const pool = await addToPoolTx(
-      tx,
-      {
+    const delivered = rows
+      .filter((r) => (given.get(r.id) ?? 0) > 0)
+      .map((r) => ({ productId: r.productId, qty: given.get(r.id)! }))
+      .sort((a, b) => (a.productId < b.productId ? -1 : 1));
+    for (const line of delivered) {
+      await addToPoolTx(tx, {
         hotelId: locked.hotelId,
         userId: ctx.user.id,
+        productId: line.productId,
+        qty: line.qty,
         refType: "StockRequest",
         refId: id,
-        criticalLevel,
         note: `Ek talep teslimi ${locked.code}`,
-      },
-      rows.filter((r) => (given.get(r.id) ?? 0) > 0).map((r) => ({ productId: r.productId, qty: given.get(r.id)! })),
-    );
+      });
+    }
     await tx.stockRequest.update({
       where: { id },
       data: { status: "TESLIM_EDILDI", handledById: ctx.user.id, deliveredAt: new Date() },
@@ -465,21 +428,6 @@ export async function deliverRequest(
         })),
       },
     });
-    for (const p of pool) {
-      await publish(
-        {
-          type: STOCK_CHANGED,
-          hotelId: locked.hotelId,
-          roleKinds: AUDIENCE,
-          payload: {
-            productId: p.productId,
-            remainingQty: p.remainingQty,
-            status: stockStatus(p.remainingQty, p.criticalLevel),
-          },
-        },
-        tx,
-      );
-    }
     await announce(
       tx,
       { id, code: locked.code, hotelId: locked.hotelId, ownerId: locked.requestedById },
