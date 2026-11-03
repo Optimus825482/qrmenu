@@ -20,8 +20,9 @@ export const ipLimiter = createRateLimiter({
   max: () => scaledMax(MYBAR_SUBMIT_LIMIT.max),
   windowMs: MYBAR_SUBMIT_LIMIT.windowMs,
 });
+/** Oda başına sınır NAT çarpanından etkilenmez (plan). */
 export const roomLimiter = createRateLimiter({
-  max: () => scaledMax(MYBAR_SUBMIT_LIMIT.max * 2),
+  max: () => MYBAR_SUBMIT_LIMIT.max * 2,
   windowMs: MYBAR_SUBMIT_LIMIT.windowMs,
 });
 /** Status polling: 60 per minute per IP (scaled). */
