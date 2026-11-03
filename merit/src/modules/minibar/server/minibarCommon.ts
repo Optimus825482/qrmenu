@@ -1,9 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { DomainError } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
-import { dayRange } from "./dates";
 
 export type Db = Prisma.TransactionClient | typeof prisma;
 
@@ -53,65 +51,6 @@ export async function roomCatalogue(
     }
   }
   return { setups, caps, setupOf };
-}
-
-/** Quantities already replenished in a room on one business day (optionally ignoring one transaction). */
-export async function consumedToday(
-  db: Db,
-  hotelId: string,
-  roomId: string,
-  day: string,
-  excludeTxId?: string,
-): Promise<Map<string, number>> {
-  const rows = await db.minibarTransactionItem.findMany({
-    where: {
-      transaction: {
-        hotelId,
-        roomId,
-        type: "SETUP_KONTROL",
-        occurredAt: dayRange(day),
-        ...(excludeTxId ? { id: { not: excludeTxId } } : {}),
-      },
-    },
-    select: { productId: true, consumed: true },
-  });
-  const m = new Map<string, number>();
-  for (const r of rows) m.set(r.productId, (m.get(r.productId) ?? 0) + r.consumed);
-  return m;
-}
-
-export function normalizeItems(items: { productId: string; qty: number; setupId?: string }[]) {
-  const merged = new Map<string, number>();
-  for (const it of items) {
-    if (!Number.isInteger(it.qty) || it.qty < 0) {
-      throw new DomainError("VALIDATION", "Adet 0 veya pozitif tam sayı olmalı");
-    }
-    if (it.qty === 0) continue;
-    merged.set(it.productId, (merged.get(it.productId) ?? 0) + it.qty);
-  }
-  return [...merged.entries()].map(([productId, qty]) => ({ productId, qty }));
-}
-
-export function assertWithinCatalogue(
-  lines: { productId: string; qty: number }[],
-  cat: RoomCatalogue,
-  already: Map<string, number>,
-) {
-  for (const line of lines) {
-    const cap = cat.caps.get(line.productId);
-    if (cap === undefined) {
-      throw new DomainError("VALIDATION", "Ürün bu odanın setup tanımında bulunmuyor", {
-        fieldErrors: { productId: [line.productId] },
-      });
-    }
-    const total = (already.get(line.productId) ?? 0) + line.qty;
-    if (total > cap) {
-      throw new DomainError(
-        "DAILY_LIMIT",
-        `Günlük setup sınırı aşıldı (sınır ${cap}, bugün ${already.get(line.productId) ?? 0} + ${line.qty})`,
-      );
-    }
-  }
 }
 
 export async function lockRow(tx: Prisma.TransactionClient, table: "rooms" | "minibar_transactions" | "mybar_requests" | "minibar_correction_requests", id: string) {
