@@ -26,9 +26,15 @@ export type RadarState = {
   businessDate: string;
   layers: RadarStateLayers;
   sparkline: RadarSnapshot["sparkline"];
-  /** Open print jobs seen since the snapshot (counts in `queues.print` are kept in step). */
+  /**
+ * Open print jobs by id (set semantics, status from snapshot-era and later events). Events older than
+ * `generatedAt` only record their claim here; the snapshot counts already include them.
+ */
   jobs: Readonly<Record<string, PrintJobRef>>;
+  /** Count of `mailIds` (derived; kept for the UI). */
   mailFailed: number;
+  /** Failed-mail events seen since the snapshot, by event id (set semantics: replays are idempotent). */
+  mailIds: Readonly<Record<string, true>>;
   /** userId -> display name (waiters, staff). */
   people: Readonly<Record<string, string>>;
   /** Keys the reducers could not resolve ("table:<id>", "room:<id>", "ALL"); the store refetches. */
@@ -50,6 +56,7 @@ export function initialState(s: RadarSnapshot): RadarState {
     sparkline: s.sparkline,
     jobs: {},
     mailFailed: 0,
+    mailIds: {},
     people,
     needsRefresh: new Set(),
   };

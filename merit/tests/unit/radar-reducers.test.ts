@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compareRadarEvents } from "@/modules/radar/events";
-import { initialState, type RadarState } from "@/modules/radar/state";
+import { initialState, toSnapshot, type RadarState } from "@/modules/radar/state";
 import { applyEvents, reduce } from "@/modules/radar/ui/reducers";
 import { H, T0, deepFreeze, ev, makeSnapshot, orderStatus } from "../helpers/radarStateFixtures";
 
@@ -131,6 +131,50 @@ describe("radar reducers", () => {
     s = reduce(s, ev("mail.failed", T0 + 5, { kind: "RAPOR" }));
     s = reduce(s, ev("mail.failed", T0 + 6, { kind: "RAPOR" }));
     expect(s.mailFailed).toBe(2);
+  });
+
+  it("presence.tick dokunmasi (userId bos) yalniz lastSeenAt; idle ve status korunur; bilinmeyen oturum yok sayilir", () => {
+    let s = reduce(fresh(), ev("presence", T0, { sessionId: "s1", userId: "u1", status: "BOSTA", lastSeenAt: new Date(T0).toISOString() }));
+    const before = s.layers.staff!.sessions[0];
+    expect(before.idle).toBe(true);
+    s = reduce(s, ev("presence", T0 + 5000, { sessionId: "s1", userId: "", status: "ONLINE", lastSeenAt: new Date(T0 + 5000).toISOString() }));
+    const after = s.layers.staff!.sessions[0];
+    expect(after.idle).toBe(true);
+    expect(after.status).toBe(before.status);
+    expect(after.lastSeenAt).toBe(new Date(T0 + 5000).toISOString());
+    const same = s;
+    s = reduce(s, ev("presence", T0 + 6000, { sessionId: "yok", userId: "", status: "ONLINE", lastSeenAt: new Date(T0 + 6000).toISOString() }));
+    expect(s).toBe(same);
+    expect(s.needsRefresh.size).toBe(0);
+  });
+
+  it("onceki mybar.closed daha yeni talebi silmez; masaya TEYIT_BEKLIYOR eklenmez", () => {
+    let s = reduce(fresh(), ev("mybar.opened", T0, { requestId: "m2", roomId: "r1" }));
+    s = reduce(s, ev("mybar.closed", T0 + 1, { requestId: "m1", roomId: "r1", outcome: "TAMAM" }));
+    expect(room(s, "r1").mybar).toMatchObject({ requestId: "m2" });
+    s = reduce(s, ev("mybar.closed", T0 + 2, { requestId: "m2", roomId: "r1", outcome: "TAMAM" }));
+    expect(room(s, "r1").mybar).toBeNull();
+    s = reduce(fresh(), orderStatus(T0, "x", "t1", "TEYIT_BEKLIYOR"));
+    expect(table(s, "t1").orders).toHaveLength(0);
+  });
+
+  it("snapshot ortusme penceresi: sayac cift sayilmaz, tekrar oynatma idempotent", () => {
+    const base = fresh();
+    const snap = toSnapshot(base);
+    // snapshot already counts one queued job
+    const o = snap.layers.order!.outlets[0];
+    const counted = { ...snap, layers: { ...snap.layers, order: { outlets: [{ ...o, queues: { ...o.queues, print: { KUYRUKTA: 1, BASILIYOR: 0, HATA: 0 } } }] } } } as typeof snap;
+    const early = ev("print.job", T0 - 500, { jobId: "j1", printerId: "pr1", status: "KUYRUKTA", id: "pj1" });
+    let s = initialState(counted);
+    s = reduce(s, early);
+    expect(outlet(s).queues.print.KUYRUKTA).toBe(1);
+    const again = reduce(s, early);
+    expect(outlet(again).queues.print.KUYRUKTA).toBe(1);
+    s = reduce(s, ev("print.job", T0 + 10, { jobId: "j1", printerId: "pr1", status: "BASILIYOR" }));
+    expect(outlet(s).queues.print).toEqual({ KUYRUKTA: 0, BASILIYOR: 1, HATA: 0 });
+    // mail: same event id twice counts once
+    const m = ev("mail.failed", T0, { kind: "RAPOR", id: "mf1" });
+    expect(reduce(reduce(fresh(), m), m).mailFailed).toBe(1);
   });
 
   it("bilinmeyen masa/oda -> needsRefresh, durum ayni, firlatma yok; baska otel yok sayilir", () => {

@@ -5,12 +5,7 @@ import { addRefresh, replaceAt } from "./util";
 
 type Ev<T extends RadarEvent["type"]> = Extract<RadarEvent, { type: T }>;
 
-const RS_CLOSED: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
-  "SERVIS_EDILDI",
-  "TESLIM_EDILDI",
-  "REDDEDILDI",
-  "IPTAL",
-]);
+const RS_OPEN: ReadonlySet<OrderStatus> = new Set<OrderStatus>(["TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"]);
 
 function roomNumberOf(s: RadarState, roomId: string): string | undefined {
   for (const f of s.layers.minibar?.floors ?? []) {
@@ -25,7 +20,7 @@ export function reduceRoomServiceOrder(s: RadarState, e: Ev<"order.status">): Ra
   const layer = s.layers.roomService;
   if (!layer) return s;
   const idx = layer.orders.findIndex((o) => o.orderId === e.orderId);
-  if (RS_CLOSED.has(e.to)) {
+  if (!RS_OPEN.has(e.to)) {
     if (idx < 0) return s;
     return { ...s, layers: { ...s.layers, roomService: { ...layer, orders: layer.orders.filter((_, i) => i !== idx) } } };
   }

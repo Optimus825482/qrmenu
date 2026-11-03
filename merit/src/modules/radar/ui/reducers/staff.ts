@@ -9,6 +9,16 @@ export function reducePresence(s: RadarState, e: Ev<"presence">): RadarState {
   const layer = s.layers.staff;
   if (!layer) return s;
   const idx = layer.sessions.findIndex((x) => x.sessionId === e.sessionId);
+  if (e.userId === "") {
+    // Normalised `presence.tick` touch: lastSeenAt only; unknown sessions are ignored.
+    if (idx < 0) return s;
+    const lastSeenAt = e.lastSeenAt ?? e.at;
+    if (layer.sessions[idx].lastSeenAt === lastSeenAt) return s;
+    return {
+      ...s,
+      layers: { ...s.layers, staff: { sessions: replaceAt(layer.sessions, idx, { ...layer.sessions[idx], lastSeenAt }) } },
+    };
+  }
   if (e.status === "CIKTI" || e.status === "DUSURULDU") {
     if (idx < 0) return s;
     return { ...s, layers: { ...s.layers, staff: { sessions: layer.sessions.filter((_, i) => i !== idx) } } };

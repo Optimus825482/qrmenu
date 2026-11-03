@@ -74,7 +74,7 @@ export function reduce(state: RadarState, e: RadarEvent): RadarState {
     case "presence":
       return reducePresence(state, e);
     case "mail.failed":
-      return reduceMailFailed(state);
+      return reduceMailFailed(state, e);
     default:
       return state;
   }

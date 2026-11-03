@@ -50,7 +50,21 @@ describe("radar replay metamorphic", () => {
   });
 
   it("karisik gelen olaylar compareRadarEvents siralamasiyla ayni sonucu verir", () => {
-    const shuffled = [...events].reverse().sort(() => 0).sort(compareRadarEvents);
+    // seeded Fisher-Yates (mulberry32) so the arrival order is really scrambled but reproducible
+    let a = 0x9e3779b9;
+    const rnd = () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    const arrival = [...events];
+    for (let i = arrival.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [arrival[i], arrival[j]] = [arrival[j], arrival[i]];
+    }
+    expect(arrival.map((e) => e.id)).not.toEqual(events.map((e) => e.id));
+    const shuffled = arrival.sort(compareRadarEvents);
     expect(comparableState(applyEvents(initialState(makeSnapshot()), shuffled))).toEqual(comparableState(liveState));
     // same-millisecond create + approve, arriving approved-first
     const same = [orderStatus(T0 + 9, "z", "t1", "ONAYLANDI", { id: "b" }), orderStatus(T0 + 9, "z", "t1", "GONDERILDI", { id: "a" })];

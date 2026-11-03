@@ -67,7 +67,9 @@ export function reduceMybar(
       if (!r.mybar || r.mybar.seen) return r;
       return { ...r, mybar: { ...r.mybar, seen: true } };
     }
-    return r.mybar ? { ...r, mybar: null } : r;
+    if (!r.mybar) return r;
+    // A late close of an older request must not clear a newer one.
+    return !r.mybar.requestId || r.mybar.requestId === e.requestId ? { ...r, mybar: null } : r;
   });
 }
 

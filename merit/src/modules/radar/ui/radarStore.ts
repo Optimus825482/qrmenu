@@ -197,6 +197,13 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       }
     };
 
+    const trimNow = () => {
+      const n = buf.length;
+      const c = cps.size;
+      trim();
+      return buf.length !== n || cps.size !== c;
+    };
+
     const scrubState = (time: number): RadarState | null => {
       if (cps.size === 0) return null;
       let key = -Infinity;
@@ -336,6 +343,8 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       void deps.fetchSnapshot(hotelId).then(
         (snap) => {
           if (gen !== generation) return;
+          get().flush(); // compare against live + flushed queue
+          if (queue.length > 0) return; // hidden tab: queue not applied yet, try next round
           const cur = get().live;
           if (!cur) return;
           const fold = (Date.parse(snap.generatedAt) || 0) - SKEW_MS;
@@ -356,6 +365,10 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
       const pulses = expire(s.pulses, nowMs);
       const patch: Partial<RadarStoreState> = {};
       if (pulses !== s.pulses) patch.pulses = pulses;
+      if (trimNow()) {
+        patch.buffer = buf.slice();
+        patch.checkpoints = new Map(cps);
+      }
       if (s.live) {
         patch.alerts = (deps.deriveAlerts ?? defaultAlerts)(s.live, nowMs);
         const today = businessDateOf(nowMs);

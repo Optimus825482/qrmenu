@@ -32,6 +32,11 @@ describe("radar store: akis", () => {
     h.emit(e);
     await h.advance(300);
     expect(h.store.getState().buffer).toHaveLength(1);
+    const once = harness();
+    await once.boot();
+    once.emit(e);
+    await once.advance(300);
+    expect(h.store.getState().live).toEqual(once.store.getState().live);
   });
 
   it("nabiz: firtina yok, 3 olayda var, ayni varliga 2 sn icinde ikinci yok, reducedMotion hic yok", async () => {
@@ -165,6 +170,18 @@ describe("radar store: geri sarma", () => {
   });
 });
 
+describe("radar store: zamanlayici budamasi", () => {
+  it("olay gelmese de nabiz tiki 30 dk disindaki olaylari budar", async () => {
+    const h = harness({ snapshot: () => makeSnapshot({ generatedAt: iso(T0) }) });
+    await h.boot();
+    h.emit(wireScan(T0 + 10, "t1"));
+    await h.advance(300);
+    expect(h.store.getState().buffer).toHaveLength(1);
+    await h.advance(31 * 60_000);
+    expect(h.store.getState().buffer).toHaveLength(0);
+  });
+});
+
 describe("radar store: resync, tazeleme, sapma", () => {
   it("realtime.resync: 1 bant, tek yeni fetch, eski olay yok sayilir, kesinti oncesi olaylar arabellekte", async () => {
     const h = harness();
@@ -260,7 +277,7 @@ describe("radar store: resync, tazeleme, sapma", () => {
 });
 
 describe("radar store: performans", () => {
-  it("10k olay besle; 30 dk icinde geri sarma < 150 ms (toleransli, en iyi 3 deneme)", async () => {
+  it("10k olay besle; 30 dk icinde geri sarma < 150 ms (toleransli, 5 denemenin medyani)", async () => {
     const h = harness({ snapshot: () => tables(300) });
     await h.boot();
     for (let i = 0; i < 10_000; i++) {
@@ -275,13 +292,14 @@ describe("radar store: performans", () => {
     const first = Date.parse(s.buffer[0].at);
     for (const frac of [0.1, 0.5, 0.9]) {
       const t = first + frac * (T0 + 100 + 10_000 * 180 - first);
-      let best = Infinity;
-      for (let k = 0; k < 3; k++) {
+      const runs: number[] = [];
+      for (let k = 0; k < 5; k++) {
         const t0 = performance.now();
         s.scrubTo(t);
-        best = Math.min(best, performance.now() - t0);
+        runs.push(performance.now() - t0);
       }
-      expect(best).toBeLessThan(150);
+      runs.sort((a, b) => a - b);
+      expect(runs[2]).toBeLessThan(150);
     }
   });
 });

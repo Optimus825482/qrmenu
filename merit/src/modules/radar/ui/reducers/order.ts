@@ -6,12 +6,8 @@ import { reduceRoomServiceOrder } from "./roomService";
 
 type Ev<T extends RadarEvent["type"]> = Extract<RadarEvent, { type: T }>;
 
-export const CLOSED_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
-  "SERVIS_EDILDI",
-  "REDDEDILDI",
-  "IPTAL",
-  "TESLIM_EDILDI",
-]);
+/** A table order is "open" (listed on the table) only in these statuses. */
+export const OPEN_TABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>(["GONDERILDI", "ONAYLANDI", "HAZIR"]);
 
 type Loc = { oi: number; ai: number; ti: number };
 
@@ -96,7 +92,7 @@ export function reduceOrderStatus(s: RadarState, e: Ev<"order.status">): RadarSt
   if (!loc) return e.tableId ? addRefresh(s, `table:${e.tableId}`) : s;
   const table = tableAt(s, loc);
   const idx = table.orders.findIndex((o) => o.orderId === e.orderId);
-  if (CLOSED_STATUSES.has(e.to)) {
+  if (!OPEN_TABLE_STATUSES.has(e.to)) {
     if (idx < 0) return s;
     return putTable(s, loc, { ...table, orders: table.orders.filter((_, i) => i !== idx) }, true);
   }
@@ -187,9 +183,21 @@ export function reducePrintJob(s: RadarState, e: Ev<"print.job">): RadarState {
   if (oi < 0) oi = outletOfPrinter(layer.outlets, e.printerId);
   const old = e.jobId ? s.jobs[e.jobId] : undefined;
   if (oi < 0 && old) oi = layer.outlets.findIndex((o) => o.outletId === old.outletId);
-  if (oi < 0) return addRefresh(s, "ALL");
+  const preSnapshot = ms(e.at) < ms(s.generatedAt);
+  if (oi < 0) return preSnapshot ? s : addRefresh(s, "ALL");
   const outlet = layer.outlets[oi];
-  if (!e.jobId) return addRefresh(s, `print:${outlet.outletId}`);
+  if (!e.jobId) return preSnapshot ? s : addRefresh(s, `print:${outlet.outletId}`);
+  if (preSnapshot) {
+    // Already reflected in the snapshot counts (overlap window): record the claim only.
+    if (COUNTED.has(e.status)) {
+      if (old && old.status === e.status) return s;
+      return { ...s, jobs: { ...s.jobs, [e.jobId]: { status: e.status, outletId: outlet.outletId } } };
+    }
+    if (!old) return s;
+    const { [e.jobId]: _gone, ...rest } = s.jobs;
+    void _gone;
+    return { ...s, jobs: rest };
+  }
   // Only a queued event can create a job; any other transition of an unknown job needs a recount.
   if (!old && e.status !== "KUYRUKTA") return addRefresh(s, `print:${outlet.outletId}`);
   if (old && old.status === e.status) return s;
