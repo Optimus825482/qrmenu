@@ -3,7 +3,8 @@
  * - Build assets (/_next/static/*, content-hashed), fonts, and app icons are served cache-first.
  * - Menu sample and uploaded dish images are served Stale-While-Revalidate with offline fallback.
  * - Offline navigation fallback (/offline.html) is precached on install.
- * - Dynamic API, SSE, and server actions go directly to network untouched.
+ * - Dynamic API, SSE, and server actions go directly to network untouched (no authenticated data is cached).
+ * - Web Push: `push` shows a notification (unless a focused window is open), `notificationclick` focuses/opens the url.
  */
 const VERSION = "3";
 const STATIC_CACHE = `merit-static-v${VERSION}`;
@@ -156,4 +157,78 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Everything else (APIs, SSE streams, Server Actions) stays network-only
+});
+
+/* ---- Web Push ---------------------------------------------------------------------------- */
+const FALLBACK_PUSH = { title: "Merit OS", body: "Yeni bildirim", url: "/" };
+
+function parsePush(event) {
+  try {
+    const data = event.data ? event.data.json() : null;
+    if (data && typeof data === "object" && typeof data.title === "string") {
+      return {
+        title: data.title,
+        body: typeof data.body === "string" ? data.body : "",
+        url: typeof data.url === "string" ? data.url : "/",
+        tag: typeof data.tag === "string" ? data.tag : undefined,
+      };
+    }
+  } catch {
+    // bozuk yük: genel bildirim
+  }
+  return { ...FALLBACK_PUSH };
+}
+
+/** Yalnız aynı origin'e giden yollar; aksi halde kök. */
+function safeTarget(raw) {
+  try {
+    const target = new URL(raw, self.location.origin);
+    return target.origin === self.location.origin ? target.href : self.location.origin + "/";
+  } catch {
+    return self.location.origin + "/";
+  }
+}
+
+self.addEventListener("push", (event) => {
+  const payload = parsePush(event);
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const focused = windows.find((client) => client.visibilityState === "visible" && client.focused);
+      if (focused) {
+        focused.postMessage({ type: "push", payload });
+        return;
+      }
+      const tag = payload.tag || "merit";
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        tag,
+        data: { url: payload.url },
+        icon: "/icons/legacy/icon-192.png",
+        badge: "/icons/legacy/icon-192.png",
+        requireInteraction: tag.startsWith("mybar-"),
+      });
+    })()
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = safeTarget(event.notification.data && event.notification.data.url);
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const existing = windows[0];
+      if (existing) {
+        try {
+          await existing.focus();
+          if (typeof existing.navigate === "function") await existing.navigate(target);
+          return;
+        } catch {
+          // odaklanma/gezinme başarısız: yeni pencere aç
+        }
+      }
+      await self.clients.openWindow(target);
+    })()
+  );
 });

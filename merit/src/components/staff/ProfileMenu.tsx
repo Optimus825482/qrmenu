@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { ConfirmSheet } from "@/components/ui/ConfirmSheet";
 import { selectTargetAction } from "@/modules/core/server/loginAction";
+import { PushToggle } from "@/shell/push/PushToggle";
 
 /** Extra profile menu entries added by later tasks (Erişimim, Yardım). */
 export type ProfileExtra = { id: string; label: string; icon: IconName; href?: string; onSelect?: () => void };
@@ -132,6 +133,8 @@ export function ProfileMenu({ user, hotelName, outletName, targets, currentTarge
               </button>
             ),
           )}
+
+          <PushToggle />
 
           <button
             type="button"

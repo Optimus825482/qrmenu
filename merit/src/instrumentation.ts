@@ -17,6 +17,12 @@ export async function register(): Promise<void> {
     console.error("[instrumentation] gerçek zaman dinleyicisi başlatılamadı", err);
   }
   try {
+    const { startPushDispatcher } = await import("@/modules/core/server/pushDispatcher");
+    startPushDispatcher();
+  } catch (err) {
+    console.error("[instrumentation] push dağıtıcısı başlatılamadı", err);
+  }
+  try {
     const { getBoss, registerJobs } = await import("@/lib/jobs");
     await registerJobs(await getBoss());
   } catch (err) {

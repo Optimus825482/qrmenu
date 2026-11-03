@@ -8,6 +8,8 @@ export const envSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   VAPID_PRIVATE_KEY: z.string().min(1).optional(),
   VAPID_SUBJECT: z.string().regex(/^(mailto:|https:\/\/)/).optional(),
+  /** Virgülle ayrılmış izinli Web Push ana makineleri (varsayılan: bilinen push servisleri). */
+  PUSH_ENDPOINT_ALLOWLIST: z.string().optional(),
   TRANSLATE_PROVIDER: z.enum(["none", "gtx"]).default("none"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL tanımlı olmalı"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET en az 32 karakter olmalı"),
