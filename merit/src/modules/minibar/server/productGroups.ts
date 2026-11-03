@@ -116,18 +116,25 @@ export async function create(ctx: Ctx, raw: ProductGroupInput): Promise<ProductG
   }
 }
 
-export async function update(ctx: Ctx, id: string, raw: ProductGroupInput): Promise<ProductGroupRow> {
-  const input = parseInput(productGroupSchema, raw);
+export const productGroupUpdateSchema = productGroupSchema.partial();
+export type ProductGroupUpdateInput = z.input<typeof productGroupUpdateSchema>;
+
+/** Kısmi güncelleme: verilmeyen alanlar işlem içinde okunan mevcut değeri korur (okuma–yazma yarışı yok). */
+export async function update(ctx: Ctx, id: string, raw: ProductGroupUpdateInput): Promise<ProductGroupRow> {
+  const input = parseInput(productGroupUpdateSchema, raw);
   try {
     return await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+      await tx.$queryRaw`SELECT id FROM product_groups WHERE id = ${id} FOR UPDATE`;
       const before = await tx.productGroup.findUnique({ where: { id }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
-      await assertNameFree(tx, input.name, id);
+      const name = input.name ?? before.name;
+      const description = input.description === undefined ? before.description : input.description;
+      if (name !== before.name) await assertNameFree(tx, name, id);
       const updated = await tx.productGroup.update({
         where: { id },
         data: {
-          name: input.name,
-          description: input.description,
+          name,
+          description,
           ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         },
         select: SELECT,
