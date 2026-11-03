@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeAction, type Result } from "@/lib/result";
 import { parseShellPrefs, shellPrefsSchema } from "./prefsSchema";
+import { writeShellPrefs } from "./prefsStore";
 import type { ShellPrefs } from "./types";
 
 /**
@@ -14,12 +15,7 @@ import type { ShellPrefs } from "./types";
 export async function saveShellPrefs(p: ShellPrefs): Promise<Result<null>> {
   return safeAction(shellPrefsSchema, async (prefs) => {
     const ctx = await requireUser();
-    // One statement: concurrent saves cannot drop other prefs keys (no read-modify-write).
-    await prisma.$executeRaw`
-      UPDATE "users"
-      SET "prefs" = jsonb_set(COALESCE("prefs", '{}'::jsonb), '{shell}', ${JSON.stringify(prefs)}::jsonb, true),
-          "updated_at" = CURRENT_TIMESTAMP
-      WHERE "id" = ${ctx.user.id}`;
+    await writeShellPrefs(prisma, ctx.user.id, prefs);
     return null;
   })(p);
 }

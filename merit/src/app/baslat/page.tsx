@@ -38,7 +38,7 @@ export default async function BaslatPage({ searchParams }: { searchParams: Searc
     throw error;
   }
   const visible = await visibleScreens(ctx);
-  const canUsePos = visible.includes("QS-KAS") || visible.includes("QS-KDS");
+  const canUsePos = visible.includes("QS-KAS");
   const requested = parseShellQuery(toParams(raw));
   const shell = requested && allowedShells(ctx.user.roleKind, canUsePos).includes(requested) ? requested : undefined;
   const wantsKitchen = shell === "pos" && toParams(raw).get("ekran") === "kds" && visible.includes("QS-KDS");

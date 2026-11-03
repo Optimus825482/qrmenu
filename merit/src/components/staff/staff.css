@@ -96,6 +96,15 @@
   text-align: center;
 }
 
+.staff-nav-badge {
+  top: 4px;
+  right: calc(50% - 36px);
+}
+.staff-sheet-badge {
+  position: static;
+  margin-left: auto;
+}
+
 /* Bağlantı rozeti: renk + ikon + metin. */
 .staff-conn {
   display: inline-flex;

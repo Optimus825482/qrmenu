@@ -9,6 +9,8 @@ export type NavItem = {
   /** Catalogue screen whose "view" permission the page behind `href` checks on entry. */
   screen: string;
   emphasis?: "qr";
+  /** Count shown on the item (open room-service requests); absent or 0 = no badge. */
+  badge?: number;
 };
 
 export type NavModel = {

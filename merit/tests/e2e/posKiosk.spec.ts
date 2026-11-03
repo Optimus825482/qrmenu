@@ -22,6 +22,8 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
 /** Cashier in a fresh context with browser API stubs installed before any page script runs. */
 async function openCashier(browser: Browser, stubs: string): Promise<Page> {
   const cashier = await newContextPage(browser);
+  // The setup offer is for touch tablets only: the test browser poses as one.
+  await cashier.addInitScript(`Object.defineProperty(Navigator.prototype, "maxTouchPoints", { configurable: true, get: () => 5 });`);
   await cashier.addInitScript(stubs);
   await login(cashier, "kasa.havuz");
   await cashier.getByRole("button", { name: /Havuz Bar/ }).click();

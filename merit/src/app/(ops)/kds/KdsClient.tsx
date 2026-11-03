@@ -42,7 +42,7 @@ export default function KdsClient({ outletId, board: initialBoard, canEdit, canP
     const timer = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(timer);
   }, []);
-  useSse((event) => {
+  const { status } = useSse((event) => {
     if (event.outletId !== outletId) return;
     if (event.type === "order.approved") playCue("new-order");
     else if (event.type === "order.ready") {
@@ -52,6 +52,12 @@ export default function KdsClient({ outletId, board: initialBoard, canEdit, canP
     }
     void refresh();
   }, EVENTS);
+
+  // The "ready" echo of this device can only be matched while the stream is up: after a loss the pending marks
+  // would never be consumed and would silence a later cue for the same order.
+  useEffect(() => {
+    if (status !== "open") localReady.current.clear();
+  }, [status]);
 
   const setPending = (id: string, on: boolean) => setPendingIds((current) => {
     const next = new Set(current);

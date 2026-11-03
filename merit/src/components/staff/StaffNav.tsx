@@ -50,6 +50,11 @@ export function StaffNav({ nav, pathname, sekme }: { nav: NavModel; pathname: st
                 <Icon name={item.icon} size={24} />
               </span>
               <span className="staff-nav-label">{item.label}</span>
+              {item.badge ? (
+                <span className="staff-badge staff-nav-badge" data-testid="nav-badge" aria-label={`${item.badge} açık talep`}>
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              ) : null}
             </Link>
           );
         })}
@@ -75,6 +80,7 @@ function MoreSheet({ nav, pathname, sekme, onClose }: { nav: NavModel; pathname:
               <a href={item.href} className="staff-menu-item" data-current={isNavActive(item, pathname, sekme) ? "true" : undefined}>
                 <Icon name={item.icon} size={24} />
                 {item.label}
+                {item.badge ? <span className="staff-badge staff-sheet-badge" aria-label={`${item.badge} açık talep`}>{item.badge}</span> : null}
               </a>
             </li>
           ))}

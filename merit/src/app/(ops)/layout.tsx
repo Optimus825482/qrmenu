@@ -37,6 +37,8 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
   const pos = await loadPosShellData(ctx, outlet);
   const path = (await headers()).get("x-merit-current-path") ?? "/garson";
   const staff = await loadStaffShellProps(ctx, path, { outletId: outlet.id });
-  const preferredShell = await loadPreferredShell(ctx.user.id);
-  return <OpsShell roleKind={ctx.user.roleKind} preferredShell={preferredShell} outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos} staff={staff}><ConfirmHost variant="sheet" />{children}</OpsShell>;
+  // Only the touch screens (kasa, KDS) can switch to the POS shell, so only they read the saved preference.
+  const preferredShell = /^\/(kasa|kds)(\/|$)/.test(path) ? await loadPreferredShell(ctx.user.id) : null;
+  const canUsePos = pos.kasa !== null; // QS-KAS V, derived in loadPosShellData
+  return <OpsShell roleKind={ctx.user.roleKind} canUsePos={canUsePos} preferredShell={preferredShell} outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets} outletId={outlet.id} pos={pos} staff={staff}><ConfirmHost variant="sheet" />{children}</OpsShell>;
 }

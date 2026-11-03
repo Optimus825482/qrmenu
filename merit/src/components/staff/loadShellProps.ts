@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { can, visibleScreens } from "@/lib/rbac";
 import { listTargets } from "@/modules/core/server/targets";
-import { buildNav } from "./navModel";
+import { CLOSED_STATUSES } from "@/modules/order/server/transitions";
+import { buildNav, type NavModel } from "./navModel";
 import type { StaffShellProps } from "./StaffShell";
 
 export type StaffShellData = Omit<StaffShellProps, "children">;
@@ -52,6 +53,7 @@ export async function loadStaffShellProps(
     pathname,
     canCreate: Boolean(outlet?.hasOrdering) && ordering,
   });
+  await badgeRoomService(nav, hotelId);
 
   return {
     user: { fullName: ctx.user.fullName, roleCode: ctx.user.roleCode, roleName: role?.name ?? ctx.user.roleCode },
@@ -64,6 +66,16 @@ export async function loadStaffShellProps(
     warnMinutes: SESSION_WARN_MINUTES,
     layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
   };
+}
+
+/** Open room-service requests of the hotel as a badge on the "/oda-servisi" entries (only when one is in the nav). */
+async function badgeRoomService(nav: NavModel, hotelId: string): Promise<void> {
+  const items = [...nav.primary, ...nav.more].filter((item) => item.href === "/oda-servisi");
+  if (items.length === 0) return;
+  const open = await prisma.order.count({
+    where: { hotelId, roomId: { not: null }, status: { notIn: [...CLOSED_STATUSES] } },
+  });
+  for (const item of items) item.badge = open;
 }
 
 /**

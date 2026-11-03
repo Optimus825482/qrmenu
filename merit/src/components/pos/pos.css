@@ -266,7 +266,7 @@ a.pos-strip-item {
     height: 60dvh;
     max-height: 60dvh;
     border-radius: var(--radius-l) var(--radius-l) 0 0;
-    box-shadow: 0 -4px 16px rgb(15 23 42 / 0.18);
+    box-shadow: 0 -4px 16px color-mix(in srgb, var(--text) 25%, transparent);
   }
 }
 

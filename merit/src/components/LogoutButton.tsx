@@ -18,7 +18,7 @@ export function LogoutButton({ className, label = "Oturumu Kapat", menuitem }: {
     void unsubscribePushOnLogout().finally(() => form.submit());
   };
   return (
-    <form method="post" action="/cikis" onSubmit={onSubmit}>
+    <form method="post" action="/cikis" onSubmit={onSubmit} role={menuitem ? "none" : undefined}>
       <button
         type="submit"
         role={menuitem ? "menuitem" : undefined}

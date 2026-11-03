@@ -22,6 +22,8 @@ export type OpsShellProps = {
   staff: Omit<StaffShellProps, "children">;
   /** Rol türü ve kayıtlı kabuk tercihi: sunucudan gelir, karar `resolveShell` ile verilir. */
   roleKind: ShellRoleKind;
+  /** Server-derived from QS-KAS (a kitchen-only outlet user does not get the POS shell by this rule). */
+  canUsePos: boolean;
   preferredShell?: ShellKind | null;
 };
 
@@ -46,14 +48,14 @@ function navFromRail(rail: PosRailItem[], screen: string): NavModel {
  * Kasa and KDS use the touch POS shell, waiter and room-service screens (and a phone-width kasa) the staff shell.
  * The choice only changes the chrome; the pages and the server-side permission checks are the same.
  */
-export function OpsShell({ children, outletName, hotelName, fullName, targets, outletId, pos, staff, roleKind, preferredShell }: OpsShellProps) {
+export function OpsShell({ children, outletName, hotelName, fullName, targets, outletId, pos, staff, roleKind, canUsePos, preferredShell }: OpsShellProps) {
   const path = usePathname();
   const isKasa = path.startsWith("/kasa") && Boolean(pos?.kasa);
   const isKds = path.startsWith("/kds") && Boolean(pos?.kds);
   const decision = useResolvedShell({
     screen: isKds ? { code: "QS-KDS", context: "pos" } : isKasa ? { code: "QS-KAS", context: "pos" } : { code: path, context: "personel" },
     roleKind,
-    canUsePos: Boolean(pos?.kasa || pos?.kds),
+    canUsePos,
     preferred: preferredShell ?? null,
   });
 
