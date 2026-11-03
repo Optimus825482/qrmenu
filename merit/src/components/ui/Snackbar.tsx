@@ -1,7 +1,28 @@
 "use client";
 
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { notify, pauseToast, resumeToast, useToasts, type Toast } from "@/shell/notify";
 import "@/shell/ui/snackbar.css";
+
+// A shell and the confirm host may both mount a host on the same page: only one draws the toasts
+// (the one placed above the bottom navigation wins, else the first mounted).
+type HostEntry = { id: number; offset: boolean };
+let hostSeq = 0;
+let hostEntries: HostEntry[] = [];
+const hostListeners = new Set<() => void>();
+const primaryHostId = () => (hostEntries.find((h) => h.offset) ?? hostEntries[0])?.id;
+const subscribeHosts = (cb: () => void) => {
+  hostListeners.add(cb);
+  return () => void hostListeners.delete(cb);
+};
+function registerHost(entry: HostEntry) {
+  hostEntries = [...hostEntries, entry];
+  hostListeners.forEach((cb) => cb());
+  return () => {
+    hostEntries = hostEntries.filter((h) => h !== entry);
+    hostListeners.forEach((cb) => cb());
+  };
+}
 
 /**
  * Snackbar host for the Android shell: bottom-centre, max 3 stacked (newest on top), success/info
@@ -10,7 +31,11 @@ import "@/shell/ui/snackbar.css";
  */
 export function SnackbarHost({ bottomOffset }: { bottomOffset?: string }) {
   const toasts = useToasts();
-  if (toasts.length === 0) return null;
+  const [id] = useState(() => ++hostSeq);
+  const hasOffset = bottomOffset !== undefined;
+  useEffect(() => registerHost({ id, offset: hasOffset }), [id, hasOffset]);
+  const primary = useSyncExternalStore(subscribeHosts, primaryHostId, () => undefined);
+  if (toasts.length === 0 || primary !== id) return null;
   return (
     <div
       className="ui-snackbar-host"
