@@ -4,6 +4,7 @@ import type { PrintJobStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { RadarSnapshot } from "../../types";
 import { nameFor, type LayerEnv } from "../config";
+import { latestOperations, orderStatusesAt } from "./asOf";
 
 export type OrderLayer = NonNullable<RadarSnapshot["layers"]["order"]>;
 type OutletEntry = OrderLayer["outlets"][number];
@@ -27,6 +28,17 @@ function printerState(
   if (p.lastStatus !== null && p.lastStatus !== "OK") return "HATA";
   if (!p.lastSeenAt || now.getTime() - p.lastSeenAt.getTime() > silentSeconds * 1000) return "SESSIZ";
   return "HAZIR";
+}
+
+/** Print job status at `at`: queued until it started/failed/printed (`null`: not created yet or already printed). */
+function jobStatusAt(
+  j: { status: PrintJobStatus; startedAt: Date | null; printedAt: Date | null; updatedAt: Date },
+  at: Date,
+): "KUYRUKTA" | "BASILIYOR" | "HATA" | null {
+  if (j.printedAt && j.printedAt <= at) return null;
+  if (j.status === "HATA" && j.updatedAt <= at) return "HATA";
+  if (j.status === "BASILIYOR" && (j.startedAt ?? j.updatedAt) <= at) return "BASILIYOR";
+  return "KUYRUKTA";
 }
 
 function queueOf(xs: OrderEntry[]): { count: number; oldest?: string } {
@@ -58,7 +70,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     }),
     empty ? [] : prisma.tableAssignment.findMany({
       where: { outletId: { in: outletIds }, isActive: true },
-      select: { tableId: true, userId: true, user: { select: { fullName: true } } },
+      select: { tableId: true, userId: true, createdAt: true, user: { select: { fullName: true } } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     }),
     empty ? [] : prisma.order.findMany({
@@ -66,20 +78,33 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
         hotelId,
         kind: "MASA",
         outletId: { in: outletIds },
-        status: { in: [...OPEN_TABLE_STATUSES] },
-        createdAt: { gte: new Date(now.getTime() - OPEN_WINDOW_MS) },
+        // Replay: the status column is today's; the status at the instant is resolved from OrderEvent below.
+        ...(env.historical ? {} : { status: { in: [...OPEN_TABLE_STATUSES] } }),
+        createdAt: { gte: new Date(now.getTime() - OPEN_WINDOW_MS), ...(env.historical ? { lte: now } : {}) },
       },
       select: { id: true, orderNo: true, status: true, createdAt: true, tableId: true, prepStartedAt: true, escalatedAt: true },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     empty ? [] : prisma.waiterCall.findMany({
-      where: { outletId: { in: outletIds }, status: "ACIK" },
+      where: env.historical
+        ? { outletId: { in: outletIds }, createdAt: { lte: now }, OR: [{ resolvedAt: null }, { resolvedAt: { gt: now } }] }
+        : { outletId: { in: outletIds }, status: "ACIK" },
       select: { id: true, tableId: true, type: true, createdAt: true },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     prisma.printJob.findMany({
-      where: { hotelId, status: { in: COUNTED_JOBS }, createdAt: { gte: env.todayStart } },
-      select: { id: true, status: true, printerId: true, order: { select: { outletId: true } } },
+      where: env.historical
+        ? { hotelId, createdAt: { gte: env.todayStart, lte: now } }
+        : { hotelId, status: { in: COUNTED_JOBS }, createdAt: { gte: env.todayStart } },
+      select: {
+        id: true,
+        status: true,
+        printerId: true,
+        startedAt: true,
+        printedAt: true,
+        updatedAt: true,
+        order: { select: { outletId: true } },
+      },
     }),
     prisma.printer.findMany({
       where: { hotelId, isActive: true },
@@ -96,6 +121,64 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  if (env.historical) {
+    // Past instant: the status, escalation, prep and waiter columns are today's; rebuild them as of `now`.
+    const statusAt = await orderStatusesAt(orders.map((o) => o.id), now);
+    const rebuilt = orders.flatMap((o) => {
+      const status = statusAt(o.id, o.status);
+      if (!status || !(OPEN_TABLE_STATUSES as readonly string[]).includes(status)) return [];
+      return [
+        {
+          ...o,
+          status,
+          prepStartedAt: o.prepStartedAt && o.prepStartedAt <= now ? o.prepStartedAt : null,
+          escalatedAt: o.escalatedAt && o.escalatedAt <= now ? o.escalatedAt : null,
+        },
+      ];
+    });
+    orders.splice(0, orders.length, ...rebuilt);
+    const jobsAt = jobs.flatMap((j) => {
+      const status = jobStatusAt(j, now);
+      return status ? [{ ...j, status }] : [];
+    });
+    jobs.splice(0, jobs.length, ...jobsAt);
+    const [health, moves] = await Promise.all([
+      latestOperations(hotelId, "printer.health", now),
+      latestOperations(hotelId, "table.assigned", now),
+    ]);
+    for (const p of printers) {
+      const s = health.get(p.id)?.state;
+      if (s === "HAZIR" || s === "SESSIZ" || s === "HATA") {
+        p.lastStatus = s === "HAZIR" ? "OK" : s;
+        p.lastSeenAt = s === "HAZIR" ? now : p.lastSeenAt;
+      } else if (p.lastSeenAt && p.lastSeenAt > now) {
+        p.lastSeenAt = now; // seen later than the instant: it was alive then
+        p.lastStatus = "OK";
+      }
+    }
+    // Waiter per table: the last assignment record up to the instant wins over today's active assignment.
+    const movedTo = new Map<string, string | null>();
+    for (const [tableId, data] of moves) movedTo.set(tableId, typeof data.userId === "string" ? data.userId : null);
+    const assigned = assignments as { tableId: string; userId: string; createdAt: Date; user: { fullName: string } }[];
+    for (let i = assigned.length - 1; i >= 0; i--) {
+      const a = assigned[i]!;
+      if (movedTo.has(a.tableId) || a.createdAt > now) assigned.splice(i, 1);
+    }
+    const wanted = [...movedTo.entries()].flatMap(([tableId, userId]) => (userId ? [{ tableId, userId }] : []));
+    if (wanted.length > 0) {
+      const users = await prisma.user.findMany({
+        where: { id: { in: [...new Set(wanted.map((w) => w.userId))] } },
+        select: { id: true, fullName: true },
+      });
+      const fullName = new Map(users.map((u) => [u.id, u.fullName]));
+      for (const w of wanted) {
+        const name = fullName.get(w.userId);
+        if (name !== undefined)
+          assigned.unshift({ tableId: w.tableId, userId: w.userId, createdAt: now, user: { fullName: name } });
+      }
+    }
+  }
 
   const people: Record<string, string> = {};
   const waiterByTable = new Map<string, { userId: string; name: string }>();

@@ -1,10 +1,11 @@
 // Minibar layer: floors/rooms with today's task, check, DND, MyBar and room-QR state, pool stock, uploads and
 // floor-supervisor progress. Read-only; selects only the columns the snapshot carries.
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type DndStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
 import type { RadarSnapshot } from "../../types";
 import { nameFor, type LayerEnv } from "../config";
+import { taskStatusesAt } from "./asOf";
 
 export type MinibarLayer = NonNullable<RadarSnapshot["layers"]["minibar"]>;
 type RoomEntry = MinibarLayer["floors"][number]["rooms"][number];
@@ -37,28 +38,54 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
       distinct: ["roomId"],
     }),
     prisma.dailyTaskItem.findMany({
-      where: { task: { hotelId, date: todayDay } },
-      select: { id: true, roomId: true, status: true, priority: true, task: { select: { type: true } } },
+      where: { task: { hotelId, date: todayDay, ...(env.historical ? { createdAt: { lte: now } } : {}) } },
+      select: { id: true, roomId: true, status: true, priority: true, checkedAt: true, task: { select: { type: true } } },
     }),
     prisma.roomCheck.findMany({
-      where: { checkDate: todayDay, room: { hotelId } },
+      where: { checkDate: todayDay, room: { hotelId }, ...(env.historical ? { startedAt: { lte: now } } : {}) },
       select: { roomId: true, userId: true, type: true, startedAt: true, endedAt: true },
       orderBy: [{ startedAt: "desc" }, { id: "desc" }],
     }),
     prisma.roomDnd.findMany({
-      where: { hotelId, date: todayDay },
-      select: { roomId: true, count: true, status: true, lastAt: true },
+      where: { hotelId, date: todayDay, ...(env.historical ? { firstAt: { lte: now } } : {}) },
+      select: { id: true, roomId: true, count: true, status: true, firstAt: true, lastAt: true, updatedAt: true },
     }),
     prisma.mybarRequest.findMany({
-      where: { hotelId, status: "BEKLEMEDE", businessDate: todayDay },
-      select: { id: true, roomId: true, createdAt: true, seenAt: true },
+      where: env.historical
+        ? { hotelId, businessDate: todayDay, createdAt: { lte: now } }
+        : { hotelId, status: "BEKLEMEDE", businessDate: todayDay },
+      select: {
+        id: true,
+        roomId: true,
+        createdAt: true,
+        seenAt: true,
+        status: true,
+        completedAt: true,
+        cancelledAt: true,
+        updatedAt: true,
+      },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
-    prisma.$queryRaw<{ product_id: string; name: string; remaining_qty: number; critical_level: number }[]>(Prisma.sql`
+    prisma.$queryRaw<{ product_id: string; name: string; remaining_qty: number; critical_level: number }[]>(
+      env.historical
+        ? // Past level = today's remaining minus the signed movements after the instant.
+          Prisma.sql`
+      SELECT s.product_id, s.name, s.remaining_qty, s.critical_level FROM (
+        SELECT hs.product_id, p.name, hs.critical_level,
+          hs.remaining_qty - COALESCE((
+            SELECT SUM(m.qty) FROM hotel_stock_movements m
+            WHERE m.hotel_id = hs.hotel_id AND m.product_id = hs.product_id AND m.created_at > ${now}), 0) AS remaining_qty
+        FROM hotel_stocks hs JOIN products p ON p.id = hs.product_id
+        WHERE hs.hotel_id = ${hotelId}
+      ) s
+      WHERE s.remaining_qty <= s.critical_level * ${STOCK_BAND}::numeric
+      ORDER BY s.name ASC, s.product_id ASC`
+        : Prisma.sql`
       SELECT hs.product_id, p.name, hs.remaining_qty, hs.critical_level
       FROM hotel_stocks hs JOIN products p ON p.id = hs.product_id
       WHERE hs.hotel_id = ${hotelId} AND hs.remaining_qty <= hs.critical_level * ${STOCK_BAND}::numeric
-      ORDER BY p.name ASC, hs.product_id ASC`),
+      ORDER BY p.name ASC, hs.product_id ASC`,
+    ),
     prisma.uploadTask.findMany({
       where: { hotelId, date: todayDay },
       select: { kind: true, status: true, updatedAt: true },
@@ -73,6 +100,39 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  if (env.historical) {
+    // Past instant: rebuild the columns that only hold today's value.
+    const statusAt = await taskStatusesAt(taskItems, now);
+    taskItems.splice(0, taskItems.length, ...taskItems.map((t) => ({ ...t, status: statusAt(t.id, t.status) ?? t.status })));
+    // A check that finished after the instant had not been done yet.
+    checks.splice(0, checks.length, ...checks.filter((c) => !(c.endedAt && c.endedAt > now)));
+    const rounds = dnds.length
+      ? await prisma.roomDndCheck.findMany({ where: { dndId: { in: dnds.map((d) => d.id) } }, select: { dndId: true, at: true } })
+      : [];
+    const kept = dnds.flatMap((d) => {
+      const own = rounds.filter((r) => r.dndId === d.id);
+      if (own.length === 0) return [d]; // legacy row without round records: keep its own counters
+      const upTo = own.filter((r) => r.at <= now);
+      if (upTo.length === 0) return [];
+      const lastAt = upTo.reduce((m, r) => (r.at > m ? r.at : m), upTo[0]!.at);
+      const status: DndStatus =
+        d.status === "EKSIK" ? (d.updatedAt <= now ? "EKSIK" : "AKTIF")
+        : d.status === "TAMAMLANDI" ? (upTo.length >= env.minChecks ? "TAMAMLANDI" : "AKTIF")
+        : d.status;
+      return [{ ...d, count: upTo.length, lastAt, status }];
+    });
+    dnds.splice(0, dnds.length, ...kept);
+    const open = mybars.flatMap((m) => {
+      const closedAt = m.completedAt ?? m.cancelledAt ?? (m.status !== "BEKLEMEDE" ? m.updatedAt : null);
+      if (closedAt && closedAt <= now) return [];
+      return [{ ...m, seenAt: m.seenAt && m.seenAt <= now ? m.seenAt : null }];
+    });
+    mybars.splice(0, mybars.length, ...open);
+    for (const u of uploadRows) {
+      if (u.updatedAt > now) u.status = "BEKLIYOR";
+    }
+  }
 
   const occupied = new Set(guests.map((g) => g.roomId));
   // One task per room: an unfinished one first, then the lowest priority number.

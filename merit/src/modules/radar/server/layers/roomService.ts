@@ -3,13 +3,23 @@ import { prisma } from "@/lib/prisma";
 import { SLA_OPEN_STATUSES, SLA_WARN_RATIO } from "@/modules/order/server/roomService/sla";
 import type { RadarSnapshot } from "../../types";
 import type { LayerEnv } from "../config";
+import { orderStatusesAt } from "./asOf";
+
+/** Room-service orders older than this are not part of a past instant's open list. */
+const HISTORY_WINDOW_MS = 48 * 3_600_000;
 
 export type RoomServiceLayer = NonNullable<RadarSnapshot["layers"]["roomService"]>;
 
 export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer> {
   const slaMinutes = env.config.slaMinutes;
   const rows = await prisma.order.findMany({
-    where: { hotelId: env.hotelId, kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
+    where: env.historical
+      ? {
+          hotelId: env.hotelId,
+          kind: "ODA_SERVISI",
+          createdAt: { gte: new Date(env.now.getTime() - HISTORY_WINDOW_MS), lte: env.now },
+        }
+      : { hotelId: env.hotelId, kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
     select: {
       id: true,
       orderNo: true,
@@ -22,6 +32,23 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
   const slaMs = slaMinutes * 60_000;
+  if (env.historical) {
+    // Past instant: status from OrderEvent, SLA stamps only if they were already set then.
+    const statusAt = await orderStatusesAt(rows.map((r) => r.id), env.now);
+    const kept = rows.flatMap((r) => {
+      const status = statusAt(r.id, r.status);
+      if (!status || !SLA_OPEN_STATUSES.includes(status)) return [];
+      return [
+        {
+          ...r,
+          status,
+          slaWarnedAt: r.slaWarnedAt && r.slaWarnedAt <= env.now ? r.slaWarnedAt : null,
+          slaBreachedAt: r.slaBreachedAt && r.slaBreachedAt <= env.now ? r.slaBreachedAt : null,
+        },
+      ];
+    });
+    rows.splice(0, rows.length, ...kept);
+  }
   return {
     slaMinutes,
     orders: rows.map((o) => {

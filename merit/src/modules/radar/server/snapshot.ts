@@ -15,8 +15,14 @@ import { assertRadarScope } from "./scope";
 
 const FLIGHT_TTL_MS = 2000;
 
-async function build(ctx: Ctx, hotelId: string, now: Date, visible: readonly RadarLayer[]): Promise<RadarSnapshot> {
-  const env = await loadEnv(ctx, hotelId, now);
+async function build(
+  ctx: Ctx,
+  hotelId: string,
+  now: Date,
+  visible: readonly RadarLayer[],
+  historical = false,
+): Promise<RadarSnapshot> {
+  const env = await loadEnv(ctx, hotelId, now, historical);
   const has = (l: RadarLayer) => visible.includes(l);
   const [minibar, order, roomService, staff, sparkline] = await Promise.all([
     has("MINIBAR") ? minibarLayer(env) : undefined,
@@ -47,11 +53,17 @@ async function build(ctx: Ctx, hotelId: string, now: Date, visible: readonly Rad
 }
 
 /**
- * `CR-RAD V` on the hotel, then the layers the caller's screens allow. With an injected `now` (tests, replay start)
- * the result is computed fresh; live calls share one run per role, hotel and layer set for 2 seconds.
+ * `CR-RAD V` on the hotel, then the layers the caller's screens allow. With `asOf` the layers rebuild the state at that
+ * past instant from the event and timestamp columns (day replay). With an injected `now` (tests) the result is computed fresh; live calls share one run per role, hotel and layer set for 2 seconds.
  */
-export async function radarSnapshot(ctx: Ctx, hotelId: string, opts: { now?: Date } = {}): Promise<RadarSnapshot> {
+export async function radarSnapshot(
+  ctx: Ctx,
+  hotelId: string,
+  opts: { now?: Date; asOf?: Date } = {},
+): Promise<RadarSnapshot> {
   const visible = await assertRadarScope(ctx, hotelId, "V");
+  // Day replay: the state at a past instant (never shared between callers, never cached).
+  if (opts.asOf) return build(ctx, hotelId, opts.asOf, visible, true);
   if (opts.now) return build(ctx, hotelId, opts.now, visible);
   return singleFlight(`${ctx.user.roleId}:${hotelId}:${visible.join()}`, FLIGHT_TTL_MS, () =>
     build(ctx, hotelId, new Date(), visible),

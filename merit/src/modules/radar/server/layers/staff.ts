@@ -5,11 +5,28 @@ import { nameFor, type LayerEnv } from "../config";
 
 export type StaffLayer = NonNullable<RadarSnapshot["layers"]["staff"]>;
 
+type SessionTimes = { status: "ONLINE" | "UYARI" | "CIKTI" | "DUSURULDU"; warnedAt: Date | null; loginAt: Date; lastSeenAt: Date };
+
+/** Replay: a session that is closed today but was open at the instant shows ONLINE, or UYARI once warned. */
+function pastStatus(s: SessionTimes, env: LayerEnv): "ONLINE" | "UYARI" {
+  if (!env.historical) return s.status as "ONLINE" | "UYARI"; // the query already limited it to these two
+  if (s.warnedAt && s.warnedAt <= env.now) return "UYARI";
+  return s.status === "UYARI" && !s.warnedAt ? "UYARI" : "ONLINE";
+}
+
+/** Replay: the last-seen stamp is today's; at the instant the session was seen no later than the instant. */
+function pastSeen(s: Pick<SessionTimes, "lastSeenAt">, env: LayerEnv): Date {
+  if (!env.historical || s.lastSeenAt <= env.now) return s.lastSeenAt;
+  return env.now;
+}
+
 export async function staffLayer(env: LayerEnv): Promise<{ layer: StaffLayer; people: Record<string, string> }> {
   const sessions = await prisma.userSession.findMany({
     where: {
       hotelId: env.hotelId,
-      status: { in: ["ONLINE", "UYARI"] },
+      ...(env.historical
+        ? { loginAt: { lte: env.now }, OR: [{ logoutAt: null }, { logoutAt: { gt: env.now } }] }
+        : { status: { in: ["ONLINE", "UYARI"] } }),
       expiresAt: { gt: env.now },
       ...(env.isSystem ? {} : { role: { kind: { not: "SISTEM" } }, user: { role: { kind: { not: "SISTEM" } } } }),
     },
@@ -20,6 +37,7 @@ export async function staffLayer(env: LayerEnv): Promise<{ layer: StaffLayer; pe
       status: true,
       loginAt: true,
       lastSeenAt: true,
+      warnedAt: true,
       user: { select: { fullName: true } },
       role: { select: { code: true, kind: true } },
       outlet: { select: { name: true } },
@@ -29,7 +47,12 @@ export async function staffLayer(env: LayerEnv): Promise<{ layer: StaffLayer; pe
   const userIds = [...new Set(sessions.map((s) => s.userId))];
   const checks = userIds.length
     ? await prisma.roomCheck.findMany({
-        where: { userId: { in: userIds }, checkDate: env.todayDay, room: { hotelId: env.hotelId } },
+        where: {
+          userId: { in: userIds },
+          checkDate: env.todayDay,
+          room: { hotelId: env.hotelId },
+          ...(env.historical ? { startedAt: { lte: env.now } } : {}),
+        },
         select: { userId: true, room: { select: { number: true } } },
         orderBy: [{ startedAt: "desc" }, { id: "desc" }],
       })
@@ -50,9 +73,9 @@ export async function staffLayer(env: LayerEnv): Promise<{ layer: StaffLayer; pe
           roleCode: s.role.code,
           roleKind: s.role.kind,
           ...(s.outletId ? { outletId: s.outletId } : {}),
-          status: s.status,
+          status: pastStatus(s, env),
           loginAt: s.loginAt.toISOString(),
-          lastSeenAt: s.lastSeenAt.toISOString(),
+          lastSeenAt: pastSeen(s, env).toISOString(),
           ...(place ? { lastPlace: place } : {}),
         };
       }),

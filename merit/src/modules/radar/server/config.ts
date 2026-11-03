@@ -21,6 +21,8 @@ export type LayerEnv = {
   /** SISTEM / YONETIM sessions see full names (YONETIM only inside their own hotels). */
   named: boolean;
   isSystem: boolean;
+  /** Replay snapshot: `now` is a past instant and the layers rebuild the state as of then. */
+  historical?: boolean;
 };
 
 const KEYS = [
@@ -38,7 +40,7 @@ const KEYS = [
   "dnd.minChecks",
 ] as const;
 
-export async function loadEnv(ctx: Ctx, hotelId: string, now: Date): Promise<LayerEnv> {
+export async function loadEnv(ctx: Ctx, hotelId: string, now: Date, historical = false): Promise<LayerEnv> {
   const s = await getSettings(KEYS, hotelId);
   const today = businessDate(now);
   return {
@@ -64,6 +66,7 @@ export async function loadEnv(ctx: Ctx, hotelId: string, now: Date): Promise<Lay
     printerSilentSeconds: s["radar.printerSilentSeconds"],
     named: ctx.user.roleKind === "SISTEM" || ctx.user.roleKind === "YONETIM",
     isSystem: ctx.user.roleKind === "SISTEM",
+    ...(historical ? { historical: true } : {}),
   };
 }
 
