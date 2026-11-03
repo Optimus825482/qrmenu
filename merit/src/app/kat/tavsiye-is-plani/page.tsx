@@ -3,52 +3,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { RoomQrModal } from "../components/RoomQrModal";
-import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import type { PriorityRoutePlan, PriorityTaskPlanItem, RoomCardData } from "@/modules/minibar/server/minibarTypes";
 import { Icon } from "@/components/icons/Icon";
-
-interface TaskPlanItem {
-  taskId: string;
-  roomId: string;
-  roomNumber: string;
-  floorId: string;
-  floorNumber: number;
-  floorName: string;
-  priorityRank: number;
-  urgencyType: "CLASH" | "ARRIVAL" | "DEPARTURE" | "IN_HOUSE" | "DND_RETRY";
-  urgencyBadge: string;
-  targetTime: string | null;
-  minutesRemaining: number | null;
-  explanation: string;
-  isCompleted: boolean;
-}
-
-interface FloorSequenceItem {
-  floorNumber: number;
-  floorName: string;
-  taskCount: number;
-  criticalCount: number;
-}
-
-interface PlanResponse {
-  summary: {
-    total: number;
-    critical: number;
-    normal: number;
-    clashCount: number;
-  };
-  recommendedStartFloor: {
-    floorNumber: number;
-    floorName: string;
-    firstRoomNumber: string;
-    reason: string;
-  } | null;
-  floorSequence: FloorSequenceItem[];
-  tasks: TaskPlanItem[];
-  briefing: string;
-}
+import { type PriorityPlanJson, toRoutePlan } from "@/modules/minibar/priorityPlanView";
 
 export default function TavsiyeIsPlaniPage() {
-  const [plan, setPlan] = useState<PlanResponse | null>(null);
+  const [plan, setPlan] = useState<PriorityRoutePlan | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedFloorFilter, setSelectedFloorFilter] = useState<number | "ALL">("ALL");
@@ -62,8 +22,7 @@ export default function TavsiyeIsPlaniPage() {
       setErrorMsg(null);
       const res = await fetch("/api/minibar/priority-plan");
       if (!res.ok) throw new Error("Tavsiye iş planı alınamadı.");
-      const data: PlanResponse = await res.json();
-      setPlan(data);
+      setPlan(toRoutePlan((await res.json()) as PriorityPlanJson));
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Plan yüklenemedi.");
     } finally {
@@ -78,7 +37,7 @@ export default function TavsiyeIsPlaniPage() {
     return () => clearTimeout(timer);
   }, [loadPlan]);
 
-  const handleStartRoomCheck = (task: TaskPlanItem) => {
+  const handleStartRoomCheck = (task: PriorityTaskPlanItem) => {
     setSelectedRoomForQr({
       id: task.roomId,
       number: task.roomNumber,

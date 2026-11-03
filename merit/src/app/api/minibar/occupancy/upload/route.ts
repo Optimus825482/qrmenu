@@ -1,4 +1,5 @@
 import { handle } from "@/modules/minibar/server/apiAuthHelper";
+import "@/modules/minibar/server/taskGeneration"; // wires the daily task reconciler
 import { commitOccupancy } from "@/modules/minibar/server/occupancyUpload";
 import type { UploadKind } from "@/modules/minibar/server/occupancyParse";
 import { readOccupancyForm } from "../_form";

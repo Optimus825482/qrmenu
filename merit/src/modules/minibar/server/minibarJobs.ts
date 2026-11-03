@@ -5,7 +5,6 @@ import { isMailConfigured, sendMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
-import { notify } from "@/modules/core/server/notifications";
 import { getAbnormalConsumption } from "./abnormalConsumptionService";
 import { addDays, dayRange } from "./dates";
 
@@ -343,103 +342,4 @@ export async function sendDailyConsumptionReport(now = new Date()): Promise<{
   }
 
   return { reportDate, sent: hotelsSent > 0, hotelsSent };
-}
-
-/**
- * 00:01 - Günlük minibar görev üretimi.
- *
- * Tasks come from uploaded occupancy data only (guest records whose stay covers today). A hotel
- * without any such data gets no tasks and ONE notification to its depot users per business day.
- */
-export async function runDailyTaskGeneration(now = new Date()): Promise<{
-  hotelCount: number;
-  tasksCreated: number;
-  hotelsWithoutOccupancy: number;
-}> {
-  const day = businessDate(now);
-  const today = businessDay(day);
-  const hotels = await prisma.hotel.findMany({ where: { isActive: true }, select: { id: true, name: true } });
-  let tasksCreated = 0;
-  let hotelsWithoutOccupancy = 0;
-
-  for (const hotel of hotels) {
-    const records = await prisma.guestRecord.findMany({
-      where: { hotelId: hotel.id, arrivalDate: { lte: today }, departureDate: { gte: today } },
-      select: { id: true, roomId: true, arrivalDate: true, arrivalTime: true, departureDate: true, departureTime: true },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (records.length === 0) {
-      hotelsWithoutOccupancy++;
-      const refId = `${hotel.id}:${day}`;
-      const already = await prisma.notification.findFirst({
-        where: { type: "minibar.occupancy-missing", refType: "MinibarDay", refId },
-        select: { id: true },
-      });
-      if (!already) {
-        const depot = await hotelRecipients(hotel.id, ["MINIBAR"]);
-        await notify({
-          recipients: depot.map((u) => u.id),
-          type: "minibar.occupancy-missing",
-          title: `${hotel.name}: doluluk verisi yok`,
-          body: `${day} için yüklenmiş doluluk verisi bulunamadı, minibar görevleri üretilmedi. Lütfen doluluk Excel dosyasını yükleyin.`,
-          refType: "MinibarDay",
-          refId,
-        });
-      }
-      continue;
-    }
-
-    // One entry per room: arrival today / departure today / in-house otherwise.
-    const byRoom = new Map<string, { arrival?: (typeof records)[number]; departure?: (typeof records)[number]; any: (typeof records)[number] }>();
-    for (const r of records) {
-      const e = byRoom.get(r.roomId) ?? { any: r };
-      if (r.arrivalDate.getTime() === today.getTime()) e.arrival ??= r;
-      if (r.departureDate.getTime() === today.getTime()) e.departure ??= r;
-      byRoom.set(r.roomId, e);
-    }
-
-    const taskIds = new Map<string, string>();
-    for (const type of ["INHOUSE_KONTROL", "ARRIVAL_KONTROL", "DEPARTURE_KONTROL"] as const) {
-      const task = await prisma.dailyTask.upsert({
-        where: { hotelId_date_type: { hotelId: hotel.id, date: today, type } },
-        create: { hotelId: hotel.id, date: today, type, status: "BEKLIYOR" },
-        update: {},
-      });
-      taskIds.set(type, task.id);
-    }
-
-    for (const [roomId, e] of byRoom) {
-      const exists = await prisma.dailyTaskItem.findFirst({
-        where: { roomId, task: { hotelId: hotel.id, date: today } },
-        select: { id: true },
-      });
-      if (exists) continue;
-
-      const clash = Boolean(e.arrival && e.departure);
-      const type = e.arrival ? "ARRIVAL_KONTROL" : e.departure ? "DEPARTURE_KONTROL" : "INHOUSE_KONTROL";
-      const priority = clash ? 10 : e.arrival ? 20 : e.departure ? 40 : 30;
-      await prisma.dailyTaskItem.create({
-        data: {
-          taskId: taskIds.get(type)!,
-          roomId,
-          guestRecordId: (e.arrival ?? e.departure ?? e.any).id,
-          status: "BEKLIYOR",
-          arrivalTime: e.arrival?.arrivalTime ?? undefined,
-          departureTime: e.departure?.departureTime ?? undefined,
-          priority,
-          note: clash
-            ? "ÇAKIŞMA: aynı gün çıkış ve giriş"
-            : e.arrival
-              ? "Yeni giriş"
-              : e.departure
-                ? "Çıkış"
-                : "In-House günlük periyodik minibar kontrolü.",
-        },
-      });
-      tasksCreated++;
-    }
-  }
-
-  return { hotelCount: hotels.length, tasksCreated, hotelsWithoutOccupancy };
 }

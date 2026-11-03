@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PriorityRoutePlan } from "@/modules/minibar/server/minibarTypes";
+import { type PriorityPlanJson, toRoutePlan } from "@/modules/minibar/priorityPlanView";
 
 interface PriorityRouteModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export function PriorityRouteModal({ isOpen, onClose, hotelId }: PriorityRouteMo
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        setPlan(data);
+        setPlan(data && Array.isArray(data.entries) ? toRoutePlan(data as PriorityPlanJson) : null);
       })
       .catch((err) => console.error("Priority plan fetch error:", err))
       .finally(() => setIsLoading(false));

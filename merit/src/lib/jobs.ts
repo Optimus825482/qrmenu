@@ -14,9 +14,9 @@ import {
   checkOccupancyUploadAndAlert,
   sendDailyConsumptionReport,
   sendDailyTaskReport,
-  runDailyTaskGeneration,
 } from "@/modules/minibar/server/minibarJobs";
 import { closeDndDay } from "@/modules/minibar/server/dnd";
+import { reconcileAllHotels } from "@/modules/minibar/server/taskGeneration";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
@@ -119,10 +119,8 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.createQueue(MINIBAR_TASK_GEN_QUEUE); // idempotent
     await boss.schedule(MINIBAR_TASK_GEN_QUEUE, "1 0 * * *", null, scheduleOpts);
     await boss.work(MINIBAR_TASK_GEN_QUEUE, async () => {
-      const res = await runDailyTaskGeneration(new Date());
-      console.log(
-        `[minibar.task-gen] ${res.hotelCount} otel, ${res.tasksCreated} görev, doluluk verisi olmayan otel: ${res.hotelsWithoutOccupancy}`,
-      );
+      const res = await reconcileAllHotels(new Date());
+      console.log(`[minibar.task-gen] ${res.hotelCount} otel, ${res.created} görev, ${res.added} eklenen kalem`);
     });
 
     // 08:00 - dünün tamamlanamayan görevleri ve anormal tüketim raporu
