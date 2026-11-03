@@ -7,6 +7,7 @@ import { getSetting } from "@/lib/settings";
 import { loadShellPrefs } from "@/shell/prefsAction";
 import { currentUser, permits } from "./guard";
 import { ShellClient } from "./ShellClient";
+import { loadGuideState } from "@/modules/core/server/guideState";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
 
 /** The admin desktop is for system and management roles only. */
@@ -19,7 +20,7 @@ export default async function AdminPage() {
   if (!(await permits(ctx, "CR-KOM", "V"))) denyScreen("CR-KOM");
   if (!SHELL_ROLE_KINDS.has(ctx.user.roleKind)) redirect("/secim");
 
-  const [hotels, prefs, confirmSimpleActions, mobileDefinitions] = await Promise.all([
+  const [hotels, prefs, confirmSimpleActions, mobileDefinitions, guideState] = await Promise.all([
     prisma.hotel.findMany({
       where: { id: { in: ctx.hotelIds }, isActive: true },
       select: { id: true, name: true, code: true },
@@ -28,6 +29,7 @@ export default async function AdminPage() {
     loadShellPrefs(),
     getSetting("shell.confirmSimpleActions", ctx.session.hotelId),
     getSetting("shell.mobileDefinitions", ctx.session.hotelId),
+    loadGuideState(ctx),
   ]);
   // Permissions and modules are per hotel: the desktop shows the union, a window bound to a hotel
   // only what that hotel allows.
@@ -43,6 +45,8 @@ export default async function AdminPage() {
       prefs={prefs}
       confirmSimpleActions={confirmSimpleActions}
       mobileDefinitions={mobileDefinitions}
+      welcomeNeeded={!guideState.welcomeOk}
+      welcomeHotelId={ctx.session.hotelId}
     />
   );
 }

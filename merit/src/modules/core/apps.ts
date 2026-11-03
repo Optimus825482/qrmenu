@@ -228,6 +228,20 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/ControlPanel").then((m) => ({ default: m.ControlPanel })),
     mobile: "none",
   });
+  // "Erişimim": what the signed-in role may do. Bound to CR-KOM (everyone on the desktop has it).
+  registerApp({
+    id: "core.erisimim",
+    title: "Erişimim",
+    icon: "bilgi",
+    moduleKey: "CORE",
+    screenCode: "CR-KOM",
+    category: "GENEL",
+    needsHotel: true,
+    window: { w: 640, h: 560, minW: 420, minH: 360 },
+    kind: "component",
+    component: () => import("@/components/guide/AccessWindow"),
+    mobile: "none",
+  });
   // The iframe app contract: the window hosts a same-origin page (src/app/(admin)/admin/hakkinda).
   registerApp({
     id: "core.hakkinda",

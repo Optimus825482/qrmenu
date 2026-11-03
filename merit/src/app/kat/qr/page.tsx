@@ -19,6 +19,8 @@ export default function KatQrScannerPage() {
   const [manualRoomNumber, setManualRoomNumber] = useState("");
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [roomError, setRoomError] = useState<string | null>(null);
+  const manualRef = useRef<HTMLInputElement | null>(null);
   const [isScanning, setIsScanning] = useState(true);
 
   // Fetch rooms for quick fallback search
@@ -88,14 +90,16 @@ export default function KatQrScannerPage() {
     const query = manualRoomNumber.trim().toLowerCase();
     if (!query) return;
 
+    setRoomError(null);
     setIsSearching(true);
     const matched = rooms.find((r) => r.number.toLowerCase() === query);
 
     if (matched) {
       router.push(`/kat/oda-kontrol/${matched.id}`);
     } else {
-      alert(`"${manualRoomNumber}" numaralı oda bulunamadı.`);
+      setRoomError(`Oda bulunamadı: ${manualRoomNumber.trim()}. Numarayı kontrol edin.`);
       setIsSearching(false);
+      manualRef.current?.focus();
     }
   }
 
@@ -175,9 +179,12 @@ export default function KatQrScannerPage() {
 
         <form onSubmit={handleManualSubmit} className="flex gap-2">
           <input
+            ref={manualRef}
             type="text"
+            aria-label="Oda numarası"
+            aria-invalid={roomError ? true : undefined}
             value={manualRoomNumber}
-            onChange={(e) => setManualRoomNumber(e.target.value)}
+            onChange={(e) => { setManualRoomNumber(e.target.value); setRoomError(null); }}
             placeholder="Oda no (Örn: 304)..."
             className="flex-1 px-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-600 text-white font-bold placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base"
           />
@@ -189,6 +196,7 @@ export default function KatQrScannerPage() {
             {isSearching ? "Aranıyor..." : "Aç"}
           </button>
         </form>
+        {roomError ? <p role="alert" className="text-sm font-semibold text-rose-300">{roomError}</p> : null}
 
         {rooms.length > 0 && (
           <div className="pt-2">

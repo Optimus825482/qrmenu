@@ -143,3 +143,22 @@ export async function visibleScreens(ctx: Ctx, hotelId?: string): Promise<string
     .filter((s) => allowed(matrix, hotelModules, s, "V", effective))
     .map((s) => s.code);
 }
+
+const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];
+
+/**
+ * Screen code → allowed actions (V,O,D,A,R order) for one role in one hotel; a screen without `V`
+ * is absent. Module gates apply exactly as in can(). Pure read: no session needed (access preview).
+ */
+export async function actionsByScreen(roleId: string, hotelId: string): Promise<Map<string, Action[]>> {
+  const [matrix, hotelModules] = await Promise.all([loadRoleMatrix(roleId), loadHotelModules(hotelId)]);
+  const result = new Map<string, Action[]>();
+  for (const screen of matrix.screens) {
+    if (!allowed(matrix, hotelModules, screen, "V", hotelId)) continue;
+    result.set(
+      screen.code,
+      ACTION_ORDER.filter((a) => allowed(matrix, hotelModules, screen, a, hotelId)),
+    );
+  }
+  return result;
+}

@@ -46,7 +46,7 @@ test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, brow
   await cashier.getByRole("button", { name: "Masalar" }).click();
   await expect(tableTile(cashier, "M1")).toContainText("Hazırlanıyor");
 
-  // Second order: approve, then cancel it from İptal / İade with a reason and the final confirmation.
+  // Second order: approve, then cancel it from İptal / İade with a reason (single reason dialog).
   await cashier.getByRole("button", { name: "Adisyon Kuyruğu" }).click();
   const second = await sendGuestOrder(page);
   await expect(queueCard(cashier, second.orderNo)).toBeVisible({ timeout: 3_000 }); // live, no reload
@@ -55,10 +55,9 @@ test("kasa masa panosu, kuyruk, çağrı ve iptal akışı", async ({ page, brow
   await expect(cashier).toHaveURL(/\/kasa\/iptal$/);
   const secondRow = cashier.getByRole("article").filter({ hasText: `#${second.orderNo} · M1` });
   await secondRow.getByRole("button", { name: "İptal et" }).click();
-  const reasonDialog = cashier.getByRole("dialog", { name: "Siparişi iptal et" });
-  await reasonDialog.getByLabel("İptal sebebi").fill("misafir vazgeçti");
+  const reasonDialog = cashier.getByRole("dialog", { name: /siparişini iptal et$/ });
+  await reasonDialog.getByLabel("Diğer sebep").fill("misafir vazgeçti");
   await reasonDialog.getByRole("button", { name: "İptal et" }).click();
-  await cashier.getByRole("alertdialog", { name: "İptal onayı" }).getByRole("button", { name: "Evet, iptal et" }).click();
   await expect(secondRow).toHaveCount(0);
   await expect(cashier.getByRole("article").filter({ hasText: `#${first.orderNo} · M1` })).toBeVisible(); // untouched
 

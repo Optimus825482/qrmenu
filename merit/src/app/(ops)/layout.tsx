@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
+import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { OpsShell } from "@/components/ops/OpsShell";
 import { listTargets } from "@/modules/core/server/targets";
 
@@ -27,5 +28,5 @@ export default async function OpsLayout({ children }: { children: React.ReactNod
   const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, include: { hotel: { select: { name: true } } } });
   if (!outlet) redirect("/secim");
   const targets = (await listTargets(ctx.user.id)).map((target, index) => ({ target, index })).filter(({ target }) => target.kind === "OUTLET").map(({ target, index }) => ({ index, label: target.label }));
-  return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets}>{children}</OpsShell>;
+  return <OpsShell outletName={outlet.name} hotelName={outlet.hotel.name} fullName={ctx.user.fullName} targets={targets}><ConfirmHost variant="sheet" />{children}</OpsShell>;
 }

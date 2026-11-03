@@ -228,14 +228,9 @@ export function RoomQrModal({ room, onClose }: RoomQrModalProps) {
               />
               <button
                 type="button"
-                onClick={() => {
-                  if (manualCode.trim() === room.number || manualCode.trim().length > 0) {
-                    handleManualBypass();
-                  } else {
-                    alert(`Lütfen ${room.number} yazarak teyit edin veya doğrudan Doğrula'ya basın.`);
-                  }
-                }}
-                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-95 text-white font-bold text-xs cursor-pointer shadow-sm"
+                disabled={manualCode.trim().length === 0}
+                onClick={handleManualBypass}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-95 disabled:opacity-40 text-white font-bold text-xs cursor-pointer shadow-sm"
               >
                 Teyit Et
               </button>

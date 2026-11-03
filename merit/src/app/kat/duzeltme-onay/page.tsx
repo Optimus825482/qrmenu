@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { confirm } from "@/shell/confirm";
 import type { CorrectionRequestItem } from "@/modules/minibar/server/minibarTypes";
 
 export default function DuzeltmeOnayPage() {
@@ -42,9 +43,13 @@ export default function DuzeltmeOnayPage() {
   }, [loadRequests]);
 
   async function handleApprove(req: CorrectionRequestItem) {
-    if (!confirm(`Oda ${req.roomNumber} için ${req.actionType === "SILME" ? "silme" : "düzeltme"} talebini onaylamak istediğinize emin misiniz?`)) {
-      return;
-    }
+    const approved = await confirm({
+      title: `Oda ${req.roomNumber} talebi onaylansın mı?`,
+      message: `${req.actionType === "SILME" ? "Silme" : "Düzeltme"} talebi uygulanır.`,
+      danger: true,
+      confirmLabel: "Onayla",
+    });
+    if (!approved) return;
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/minibar/corrections/${req.id}/resolve`, {

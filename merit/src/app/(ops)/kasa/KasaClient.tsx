@@ -10,6 +10,8 @@ import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/
 import { setOutletPriceDisplayAction } from "@/modules/menu/server/actions/outletSwitches";
 import type { TableBoard as TableBoardData } from "@/modules/order/server/cashier";
 import { useSse } from "@/shell/useSse";
+import { askReason } from "@/components/ui/reason";
+import { ORDER_REJECT_REASONS, REASON_MIN_LENGTH } from "@/modules/order/ui/reasons";
 import AssignDialog from "./AssignDialog";
 import CashierMenu from "./CashierMenu";
 import TableBoard, { type BoardTable } from "./TableBoard";
@@ -66,14 +68,6 @@ const LIVE_EVENTS = [
   "scan.table",
   "price.display",
 ] as const;
-
-const QUICK_REJECT_REASONS = [
-  "Ürün tükendi / stok yok",
-  "Mutfak aşırı yoğun",
-  "Misafir iptali",
-  "Masa hesabı kapandı",
-  "Hatalı sipariş",
-];
 
 function playKioskChime() {
   try {
@@ -186,8 +180,6 @@ export default function KasaClient({
   const [clock, setClock] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [rejectModal, setRejectModal] = useState<{ id: string; orderNo: number; tableLabel: string } | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
   const [activeScans, setActiveScans] = useState<ActiveScan[]>([]);
 
   // Taranan masaları 90 saniye sonra otomatik temizle
@@ -297,18 +289,17 @@ export default function KasaClient({
       await refresh();
     });
 
-  const handleConfirmReject = () => {
-    if (!rejectModal) return;
-    const reason = rejectReason.trim();
-    if (reason.length < 3) {
-      setError("Ret sebebi en az 3 karakter olmalıdır");
-      return;
-    }
-    const orderId = rejectModal.id;
-    setRejectModal(null);
-    setRejectReason("");
-    act(() => rejectOrderAction(orderId, reason));
-  };
+  const rejectOrder = (order: { id: string; orderNo: number; table?: { label: string } | null }) =>
+    void askReason({
+      title: `Sipariş #${order.orderNo} (${order.table?.label ?? "Masa"}) reddedilecek`,
+      message: "Bir ret sebebi seçin veya yazın.",
+      reasons: ORDER_REJECT_REASONS,
+      minLength: REASON_MIN_LENGTH,
+      confirmLabel: "Reddet",
+      danger: true,
+    }).then((reason) => {
+      if (reason) act(() => rejectOrderAction(order.id, reason));
+    });
 
   return (
     <section className="merit-kiosk space-y-4">
@@ -577,13 +568,7 @@ export default function KasaClient({
                       <button
                         type="button"
                         disabled={pending}
-                        onClick={() =>
-                          setRejectModal({
-                            id: order.id,
-                            orderNo: order.orderNo,
-                            tableLabel: order.table?.label ?? "Masa",
-                          })
-                        }
+                        onClick={() => rejectOrder(order)}
                         className="min-h-[52px] px-4 rounded-xl border border-rose-300/80 bg-rose-50 text-rose-700 hover:bg-rose-100 active:scale-98 text-sm font-bold transition flex items-center justify-center gap-1.5 disabled:opacity-50"
                       >
                         <span>✕</span> Reddet
@@ -665,70 +650,6 @@ export default function KasaClient({
           priceDisplay={priceDisplay}
           onPriceDisplayChange={setPriceDisplay}
         />
-      ) : null}
-
-      {/* DOKUNMATİK HIZLI RET DİYALOĞU (KLAVYESİZ KİOSK ÇÖZÜMÜ) */}
-      {rejectModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-2xl space-y-4">
-            <div>
-              <h3 className="text-lg font-black text-text">
-                Sipariş #{rejectModal.orderNo} ({rejectModal.tableLabel}) Reddedilecek
-              </h3>
-              <p className="text-xs text-muted mt-1">Lütfen bir ret sebebi seçin veya yazın:</p>
-            </div>
-
-            {/* Hızlı Dokunmatik Ret Butonları */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {QUICK_REJECT_REASONS.map((reason) => (
-                <button
-                  key={reason}
-                  type="button"
-                  onClick={() => setRejectReason(reason)}
-                  className={`min-h-[44px] px-3 py-2 rounded-xl text-xs font-semibold text-left border transition active:scale-98 ${
-                    rejectReason === reason
-                      ? "bg-rose-600 text-white border-rose-600 shadow-xs"
-                      : "bg-surface-sunken hover:bg-border/60 text-text border-border"
-                  }`}
-                >
-                  {reason}
-                </button>
-              ))}
-            </div>
-
-            {/* İsteğe bağlı özel metin girişi */}
-            <div>
-              <input
-                type="text"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Özel ret sebebi yazın..."
-                className="w-full h-11 rounded-xl border border-border bg-surface-sunken px-3.5 text-xs text-text placeholder:text-muted focus:border-rose-500 focus:outline-none"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2 border-t border-border">
-              <button
-                type="button"
-                onClick={() => {
-                  setRejectModal(null);
-                  setRejectReason("");
-                }}
-                className="flex-1 min-h-[46px] rounded-xl border border-border bg-surface-sunken hover:bg-border text-xs font-bold text-text transition"
-              >
-                Vazgeç
-              </button>
-              <button
-                type="button"
-                disabled={rejectReason.trim().length < 3}
-                onClick={handleConfirmReject}
-                className="flex-1 min-h-[46px] rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-98 text-xs font-black text-white shadow-xs transition disabled:opacity-50"
-              >
-                Reddi Onayla
-              </button>
-            </div>
-          </div>
-        </div>
       ) : null}
 
       {/* Canlı Masa QR Okutma Bildirimleri (Kiosk Floating Alert) */}

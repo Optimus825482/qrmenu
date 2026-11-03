@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { confirm } from "@/shell/confirm";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
 type Kind = "IN_HOUSE" | "ARRIVAL" | "DEPARTURE";
@@ -175,7 +176,7 @@ export default function DolulukYuklePage() {
   };
 
   const remove = async (item: HistoryItem) => {
-    if (!window.confirm(`${item.code} yüklemesi silinsin mi? Bekleyen görev kalemleri de kaldırılır.`)) return;
+    if (!(await confirm({ title: `${item.code} yüklemesi silinsin mi?`, message: "Bekleyen görev kalemleri de kaldırılır.", danger: true, confirmLabel: "Sil" }))) return;
     setBusy(true);
     setError(null);
     setMessage(null);

@@ -154,6 +154,10 @@ async function resetAndSeed(): Promise<void> {
         });
       }
     }
+    // Existing specs log in as these users and expect their landing page: the mandatory first-login
+    // access summary is pre-acknowledged ("*" matches every hash outside production). guide.spec clears it.
+    await db.$executeRaw`
+      UPDATE "users" SET "prefs" = COALESCE("prefs", '{}'::jsonb) || '{"guide":{"welcomeSeenHash":"*"}}'::jsonb`;
   } finally {
     await db.$disconnect();
   }

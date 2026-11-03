@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { confirm } from "@/shell/confirm";
 
 interface ProductGroupItem {
   id: string;
@@ -329,7 +330,7 @@ export default function MinibarTanimlarPage() {
   };
 
   const handleDeleteGroup = async (id: string, name: string) => {
-    if (!confirm(`"${name}" ürün grubunu silmek istediğinizden emin misiniz?`)) return;
+    if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Ürün grubu silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
       const res = await fetch(`/api/minibar/definitions/product-groups?id=${encodeURIComponent(id)}`, {
@@ -380,7 +381,7 @@ export default function MinibarTanimlarPage() {
   };
 
   const handleDeleteProduct = async (id: string, name: string) => {
-    if (!confirm(`"${name}" ürününü silmek / pasife almak istediğinizden emin misiniz?`)) return;
+    if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Ürün silinir; kullanımdaysa pasife alınır.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
       const res = await fetch(`/api/minibar/definitions/products?id=${encodeURIComponent(id)}`, {
@@ -430,7 +431,7 @@ export default function MinibarTanimlarPage() {
   };
 
   const handleDeleteRoomType = async (id: string, name: string) => {
-    if (!confirm(`"${name}" oda tipini silmek istediğinizden emin misiniz?`)) return;
+    if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Oda tipi silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
       const res = await fetch(`/api/minibar/definitions/room-types?id=${encodeURIComponent(id)}`, {
@@ -475,7 +476,7 @@ export default function MinibarTanimlarPage() {
   };
 
   const handleDeleteSetup = async (id: string, name: string) => {
-    if (!confirm(`"${name}" setup'ını silmek istediğinizden emin misiniz?`)) return;
+    if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Setup silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
       const res = await fetch(`/api/minibar/definitions/setups?id=${encodeURIComponent(id)}`, {
@@ -584,7 +585,7 @@ export default function MinibarTanimlarPage() {
   };
 
   const handleRemoveAssignment = async (roomTypeId: string, setupId: string) => {
-    if (!confirm("Bu setup atamasını kaldırmak istediğinizden emin misiniz?")) return;
+    if (!(await confirm({ title: "Setup ataması kaldırılsın mı?", message: "Oda tipinden bu setup kaldırılır.", danger: true, confirmLabel: "Kaldır" }))) return;
     try {
       setErrorMsg(null);
       const params = new URLSearchParams({
@@ -698,7 +699,7 @@ export default function MinibarTanimlarPage() {
         )}
 
         {successMsg && (
-          <div className="p-4 bg-emerald-950/60 border border-emerald-800 rounded-xl text-emerald-200 text-xs flex items-center justify-between">
+          <div role="status" className="p-4 bg-emerald-950/60 border border-emerald-800 rounded-xl text-emerald-200 text-xs flex items-center justify-between">
             <span>✓ {successMsg}</span>
             <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-white ml-2">
               ✕
