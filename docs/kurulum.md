@@ -47,7 +47,7 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 | `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çevirisi sağlayıcıları (DeepL birincil, Gemini yedek); yoksa otomatik çeviri çalışmaz. |
 | `RUN_SEED` | hayır | Yalnız Docker girişi: `true` ise açılışta `prisma/seed.ts` çalışır. Varsayılan `false`. |
 | `SEED_DEMO` | hayır | `true` ise seed ayrıca demo outlet, menü, menü tasarımı ve örnek personel yükler. Varsayılan `false`; **canlı veritabanında kullanmayın**. |
-| `LEGACY_DATABASE_URL` | hayır | Yalnız eski Flask minibar verisini taşıyan `npm run migrate:minibarlatest` betiği için kaynak veritabanı. |
+| `LEGACY_DATABASE_URL` | hayır | Yalnız eski Flask minibar verisini taşıyan `npm run migrate:legacy` betiği için kaynak veritabanı. |
 | `SKIP_ENV_VALIDATION` | hayır | Yalnız Docker derleme aşaması için (`1`); çalışma ortamında **ayarlamayın**. |
 
 `SESSION_SECRET`, `QR_HMAC_SECRET`, `PRINT_GATEWAY_KEY` ve `DATABASE_URL` için varsayılan değer yoktur;
@@ -86,7 +86,7 @@ LEGACY_DATABASE_URL='postgresql://kullanici:sifre@localhost:5432/minibar' npx ts
 ```
 
 Bu komut JSON'u, README özetini ve `public/brand/hotels/<kod>.png` logolarını yeniden yazar. Geçmiş
-işlemler ve kullanıcılar bu adımın kapsamı dışındadır (`scripts/migrate-minibar-data.ts`).
+işlemler ve kullanıcılar bu adımın kapsamı dışındadır (`scripts/migrate-from-minibarlatest/`).
 
 `npm run build` sırasında arka plan işleri başlamaz, ancak `src/lib/env.ts` zorunlu
 değişkenleri modül yüklenirken doğrular: derleme (ve migrasyon/seed) komutlarının

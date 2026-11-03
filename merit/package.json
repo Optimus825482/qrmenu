@@ -15,7 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "migrate:minibarlatest": "tsx scripts/migrate-minibar-data.ts"
+    "migrate:legacy": "tsx scripts/migrate-from-minibarlatest/index.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.10.0",
