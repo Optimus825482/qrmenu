@@ -38,6 +38,9 @@ export default async function BaslatPage({ searchParams }: { searchParams: Searc
     throw error;
   }
   const visible = await visibleScreens(ctx);
+  // Hotel-independent on purpose: this is the sign-in landing, before a session hotel is chosen, so the
+  // POS shell is offered when QS-KAS is visible in any hotel. (ops)/layout.tsx decides per session
+  // outlet (QS-KAS V in that hotel). Both only shape the shell view; actions are checked in the server.
   const canUsePos = visible.includes("QS-KAS");
   const requested = parseShellQuery(toParams(raw));
   const shell = requested && allowedShells(ctx.user.roleKind, canUsePos).includes(requested) ? requested : undefined;

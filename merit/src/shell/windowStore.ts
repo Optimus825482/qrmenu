@@ -192,6 +192,18 @@ export function fitToViewport(rect: Rect, viewport: { w: number; h: number; task
   };
 }
 
+/**
+ * Restore rectangle of a window that opened maximized because its default size exceeds the desktop:
+ * the app's default size capped to the desktop minus a cascade margin on each side (so it is
+ * strictly smaller than the maximized rectangle), at the cascade position.
+ */
+function restoreRect(app: AppDefinition, step: number, vp: ShellState["viewport"]): Rect {
+  const w = Math.max(1, Math.min(app.window.w, vp.w - 2 * CASCADE_ORIGIN));
+  const h = Math.max(1, Math.min(app.window.h, deskHeight(vp) - 2 * CASCADE_ORIGIN));
+  const at = CASCADE_ORIGIN + step * CASCADE_STEP;
+  return { w, h, ...clampWindowPosition(at, at, w, h, vp) };
+}
+
 /** Grid slot of the i-th icon, column by column (XP's auto-arrange). */
 export function gridPosition(i: number, vp: ShellState["viewport"]): { x: number; y: number } {
   const rows = Math.max(1, Math.floor((deskHeight(vp) - ICON_MARGIN) / ICON_CELL_H));
@@ -375,7 +387,8 @@ export function createWindowStore() {
           ...rect,
           minimized: false,
           maximized,
-          ...(maximized ? { prev: rect } : {}),
+          // Opened maximized (default size does not fit): "Önceki boyut" restores a window that fits.
+          ...(maximized ? { prev: restoreRect(app, step, vp) } : {}),
           z: nextZ,
         };
         set({

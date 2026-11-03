@@ -42,4 +42,18 @@ describe("writeShellPrefs (gerçek test DB)", () => {
     await writeShellPrefs(testDb, user.id, { ...layout, preferredShell: "personel" });
     expect((await stored(user.id)).shell).toMatchObject({ preferredShell: "personel" });
   });
+
+  it('saklı shell değeri JSON null ya da nesne olmayan bir değerse temiz bir nesneyle değiştirilir', async () => {
+    for (const [name, bad] of [["null", null], ["dizi", [1]], ["sayı", 5]] as const) {
+      const user = await makeUser({ username: `prefs.bad.${name === "sayı" ? "sayi" : name}`, roleCode: "R-SYS" });
+      await testDb.user.update({ where: { id: user.id }, data: { prefs: { guide: { seen: true }, shell: bad } } });
+
+      await writeShellPrefs(testDb, user.id, layout);
+
+      const prefs = await stored(user.id);
+      expect(prefs.guide).toEqual({ seen: true });
+      expect(Array.isArray(prefs.shell)).toBe(false);
+      expect(prefs.shell).toMatchObject({ wallpaper: "bliss" });
+    }
+  });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fitToViewport } from "@/shell/windowStore";
+import { registerApp } from "@/shell/registry";
+import { createWindowStore, fitToViewport } from "@/shell/windowStore";
 
 const viewport = { w: 1366, h: 768, taskbarH: 30 };
 
@@ -32,5 +33,38 @@ describe("fitToViewport", () => {
       expect(rect.x + rect.w).toBeLessThanOrEqual(bounds.w);
       expect(rect.y + rect.h).toBeLessThanOrEqual(bounds.h - bounds.taskbarH);
     }
+  });
+});
+
+describe("büyütülmüş açılan pencerenin geri yüklemesi", () => {
+  it("toggleMaximize pencereyi görünür alana sığan daha küçük bir boyuta döndürür", () => {
+    registerApp({
+      id: "t.fit.big",
+      title: "Büyük uygulama",
+      icon: "pencere",
+      moduleKey: "CORE",
+      screenCode: "CR-KOM",
+      category: "GENEL",
+      needsHotel: false,
+      window: { w: 1480, h: 900 },
+      kind: "component",
+      component: async () => ({ default: () => null }),
+    });
+    const store = createWindowStore();
+    store.getState().setViewport(1366, 768);
+    const id = store.getState().open("t.fit.big");
+    expect(id).not.toBeNull();
+    const opened = store.getState().windows[id as string];
+    expect(opened).toMatchObject({ maximized: true, w: 1366 });
+
+    store.getState().toggleMaximize(id as string);
+    const restored = store.getState().windows[id as string];
+    expect(restored.maximized).toBe(false);
+    expect(restored.w).toBeLessThan(1366);
+    expect(restored.h).toBeLessThan(opened.h);
+    expect(restored.x).toBeGreaterThanOrEqual(0);
+    expect(restored.y).toBeGreaterThanOrEqual(0);
+    expect(restored.x + restored.w).toBeLessThanOrEqual(1366);
+    expect(restored.y + restored.h).toBeLessThanOrEqual(opened.h);
   });
 });

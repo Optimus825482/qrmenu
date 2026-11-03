@@ -44,6 +44,8 @@ export function adjacentWindow(order: string[], activeId: string | undefined, di
   return order[(index + direction + order.length) % order.length];
 }
 
+const EDITABLE = "input, textarea, select, [contenteditable]:not([contenteditable=false])";
+
 /** First item of the active window's menu bar (F10 and a lone Alt press land here). */
 function activeMenubarItem(): HTMLElement | null {
   return document.querySelector<HTMLElement>(".xp-window.is-active:not([hidden]) .xp-menubar-item");
@@ -52,6 +54,12 @@ function activeMenubarItem(): HTMLElement | null {
 /**
  * Shell-wide keys: Ctrl+Alt+Left/Right switches windows, F10 or a single Alt press activates the
  * menu bar of the active window. A browser shortcut that already used the key is left alone.
+ * A single Alt press is ignored while focus is in a text field and is forgotten when the window
+ * loses focus (Alt+Tab), so a stray keyup cannot steal the focus later.
+ *
+ * Decision: letter shortcuts (Alt+D/G/Y) are NOT bound globally; Alt+D is the browser's address bar
+ * shortcut and must not be overridden. Menu mnemonics work only once the menu bar has focus (F10 or a
+ * single Alt press), handled by the window's own menu bar (`onMenubarKeyDown`).
  */
 export function useShellShortcuts(): void {
   const handle = useEffectEvent((event: KeyboardEvent) => {
@@ -76,7 +84,8 @@ export function useShellShortcuts(): void {
   useEffect(() => {
     let loneAlt = false;
     const onKeyDown = (event: KeyboardEvent) => {
-      loneAlt = event.key === "Alt" && !event.repeat && !event.ctrlKey && !event.shiftKey;
+      const inField = event.target instanceof Element && event.target.closest(EDITABLE) !== null;
+      loneAlt = event.key === "Alt" && !event.repeat && !event.ctrlKey && !event.shiftKey && !inField;
       handle(event);
     };
     const onKeyUp = (event: KeyboardEvent) => {
@@ -93,10 +102,12 @@ export function useShellShortcuts(): void {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("pointerdown", reset, true);
+    window.addEventListener("blur", reset);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("pointerdown", reset, true);
+      window.removeEventListener("blur", reset);
     };
   }, []);
 }

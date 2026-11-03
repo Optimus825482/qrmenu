@@ -142,11 +142,14 @@ function StartPanel({ apps, userName, onOpenApp, onHelp, onClose, startButtonRef
           setFolder(undefined);
         }}
       />
+      <div aria-live="polite">
+        {search && !matches.length ? <p className="xp-start-group">Uygulama bulunamadı.</p> : null}
+      </div>
       <div className="xp-start-columns">
         <div className="xp-start-left" role="menu" aria-label="Başlat menüsü">
           {search ? (
             <div role="group" aria-label="Arama sonuçları">
-              {matches.length ? matches.map(item) : <p className="xp-start-group" role="status">Uygulama bulunamadı.</p>}
+              {matches.map(item)}
             </div>
           ) : (
             <>

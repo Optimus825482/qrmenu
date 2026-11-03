@@ -5,6 +5,7 @@ import { usePrinterStatus, type PrinterState } from "@/components/pos/usePrinter
 import { notify } from "../notify";
 
 export const HEALTH_POLL_MS = 30_000;
+export const HEALTH_TIMEOUT_MS = 5_000;
 
 export type DbState = "ok" | "down" | "unknown";
 
@@ -14,8 +15,9 @@ export function useDbStatus(): DbState {
   useEffect(() => {
     let alive = true;
     const check = async () => {
+      if (document.hidden) return; // background tab: skip the poll, the next tick or visible tab re-checks
       try {
-        const res = await fetch("/api/health", { cache: "no-store" });
+        const res = await fetch("/api/health", { cache: "no-store", signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS) });
         const body = (await res.json()) as { db?: string };
         if (alive) setState(body.db === "ok" ? "ok" : "down");
       } catch {

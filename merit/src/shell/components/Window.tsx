@@ -176,8 +176,23 @@ export function Window({ id, hotels, userName }: Props) {
       },
       refresh: () => {
         const button = commandButton("refresh");
-        if (button) button.click();
-        else setReloadKey((k) => k + 1);
+        // Nothing to refresh in the window and nothing to lose: leave F5 to the browser.
+        if (!button && !dirty) return false;
+        const run = () => {
+          if (button) button.click();
+          else setReloadKey((k) => k + 1);
+        };
+        if (!dirty) {
+          run();
+          return true;
+        }
+        void confirm({
+          title: "Kaydedilmemiş değişiklikler",
+          message: `"${win?.title ?? app?.title ?? ""}" penceresinde kaydedilmemiş değişiklikler var. Yine de yenilensin mi?`,
+          danger: true, confirmLabel: "Yine de yenile",
+        }).then((yes) => {
+          if (yes) run();
+        });
         return true;
       },
     },
