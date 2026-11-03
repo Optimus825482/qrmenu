@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { cache } from "react";
+import { openRoom } from "@/modules/mybar/server/roomGuest";
 import {
   globalUnknownTokenLimiter,
   guestMeta,
@@ -27,3 +28,11 @@ export const getGuestTarget = cache(async (token: string) => {
     log: isDocumentNavigation(h),
   });
 });
+
+/**
+ * The room page state of a room QR, loaded once per request (layout and page share it, so one
+ * `scan.room` pulse per page view). Only called for `kind: "ROOM"` targets.
+ */
+export const getRoomPageState = cache(async (roomId: string, hotelId: string) =>
+  openRoom({ kind: "ROOM", roomId, hotelId }),
+);

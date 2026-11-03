@@ -46,19 +46,19 @@ export async function GET(
     return new Response("Not found", { status: 404, headers: NO_STORE });
   }
 
-  let outletId: string;
+  let outletId: string | undefined;
   let hotelId: string;
+  let roomId: string | undefined;
 
   if (target.kind === "TABLE") {
     outletId = target.state.outletId;
     hotelId = target.state.hotelId;
   } else {
+    // A room stream always carries the room's own MyBar status; room-service events only with an outlet.
     const rsState = await roomServiceState(target.roomId);
-    if (!rsState.rsOutletId) {
-      return new Response("Not found", { status: 404, headers: NO_STORE });
-    }
     outletId = rsState.rsOutletId;
     hotelId = rsState.hotelId;
+    roomId = target.roomId;
   }
 
   const orderIds = (new URL(request.url).searchParams.get("orders") ?? "")
@@ -70,7 +70,7 @@ export async function GET(
   if (!isListening()) await startRealtimeListener();
 
   const stream = createFilteredSseStream(
-    guestEventFilter({ outletId, hotelId, orderIds }),
+    guestEventFilter({ outletId, hotelId, orderIds, roomId }),
     { signal: request.signal, map: sanitizeGuestEvent },
   );
   return new Response(stream, {

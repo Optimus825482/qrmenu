@@ -120,5 +120,64 @@
       "YENI": "Nuovo",
       "ACILI": "Piccante"
     }
+  },
+  "mybar": {
+    "title": "MYBAR",
+    "room": "Camera",
+    "subtitle": "La sua richiesta per il minibar presso {hotel} sarà evasa il prima possibile. Selezioni i prodotti desiderati con le relative quantità.",
+    "groups": "Gruppi di prodotti",
+    "selectedSummary": "Prodotti selezionati",
+    "noProductSelected": "Nessun prodotto selezionato.",
+    "removeItem": "Rimuovi {name}",
+    "increase": "Aggiungi {name}",
+    "decrease": "Riduci {name}",
+    "tickLabel": "Seleziona {name}",
+    "noteLabel": "Note aggiuntive o richieste speciali",
+    "notePlaceholder": "Scriva nella sua lingua (es. più ghiaccio, bicchieri extra...)",
+    "noteCounter": "{count}/{max}",
+    "submit": "INVIA RICHIESTA MYBAR",
+    "submitting": "Invio in corso...",
+    "validationEmpty": "Selezioni almeno un prodotto o scriva una nota.",
+    "noSetupMessage": "Non ci sono prodotti selezionabili per la sua camera. Può comunque lasciare una nota.",
+    "successTitle": "Richiesta ricevuta!",
+    "successDesc": "Il nostro team di piano preparerà presto il suo minibar. Buon soggiorno!",
+    "dailyTitle": "La richiesta di oggi è stata ricevuta",
+    "dailyDesc": "La richiesta MyBar di oggi per la sua camera è stata inviata. È possibile una sola richiesta al giorno.",
+    "err409Daily": "Oggi è già stata inviata una richiesta da questa camera. È possibile una sola richiesta al giorno.",
+    "errRate": "Troppi tentativi. Attenda un minuto.",
+    "errNetwork": "Connessione non riuscita. Riprovi.",
+    "errGeneric": "Errore durante l'invio. Riprovi.",
+    "errItems": "Alcuni prodotti non sono più disponibili. Aggiorni la pagina e riprovi.",
+    "errClosed": "MyBar non è al momento disponibile per questa camera.",
+    "refresh": "Aggiorna la pagina",
+    "statusTitle": "Stato della sua richiesta",
+    "requestedItems": "Prodotti richiesti",
+    "noteOnly": "È stata inviata solo una nota.",
+    "liveRegion": "Stato della richiesta aggiornato: {status}",
+    "status": {
+      "BEKLIYOR": "In attesa",
+      "GORULDU": "Visto",
+      "KARSILANDI": "Evaso",
+      "IPTAL": "Annullato"
+    },
+    "statusDesc": {
+      "BEKLIYOR": "La sua richiesta è stata inoltrata al team di piano.",
+      "GORULDU": "Il nostro addetto ha visto la richiesta e la sta preparando.",
+      "KARSILANDI": "Il suo minibar è pronto. Buon soggiorno!",
+      "IPTAL": "Questa richiesta è stata annullata. Può inviarne una nuova."
+    },
+    "newRequest": "Invia una nuova richiesta",
+    "unavailable": {
+      "title": "MyBar non disponibile",
+      "ODA_PASIF": "Questa camera non è al momento disponibile.",
+      "OTEL_PASIF": "Il servizio non è al momento disponibile per questo hotel.",
+      "MYBAR_KAPALI": "MyBar non è al momento disponibile per questa camera.",
+      "ODA_BOS": "Questa camera non risulta occupata; le richieste MyBar non sono possibili."
+    },
+    "chooser": {
+      "title": "Cosa desidera fare?",
+      "mybar": "Richiesta MyBar",
+      "mybarDesc": "Scelga i prodotti per il minibar"
+    }
   }
 }

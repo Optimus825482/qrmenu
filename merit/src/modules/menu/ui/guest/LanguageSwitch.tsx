@@ -54,7 +54,8 @@ export function LanguageSwitch({
         className="g-lang-btn"
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label={t("selectLanguage", { name: current.nativeName })}
+        // the visible code leads the name (WCAG 2.5.3 label in name)
+        aria-label={`${current.label} ${t("selectLanguage", { name: current.nativeName })}`}
         onClick={() => setOpen((v) => !v)}
       >
         <span className="g-lang-flag">

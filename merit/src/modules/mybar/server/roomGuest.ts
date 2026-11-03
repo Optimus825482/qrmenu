@@ -4,9 +4,10 @@ import { businessDate, businessDay } from "@/lib/time";
 import type { GuestTarget } from "@/modules/menu/server/guestToken";
 import { occupancyHint } from "@/modules/order/server/roomService/occupancy";
 import { MYBAR_EVENT_ROLE_KINDS } from "../constants";
+import { ROOM_SERVICE_READY } from "../ui/guest/RoomServiceSlot";
 
-/** Flipped by P6 when the room-service guest flow ships; until then no room-service card appears. */
-export const ROOM_SERVICE_READY = false;
+// Flipped by P6 (in the slot file) when the room-service guest flow ships; until then no card appears.
+export { ROOM_SERVICE_READY };
 
 export type RoomGuestReason = "ODA_PASIF" | "OTEL_PASIF" | "MYBAR_KAPALI" | "ODA_BOS";
 

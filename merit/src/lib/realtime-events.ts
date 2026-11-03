@@ -79,4 +79,9 @@ export const GUEST_EVENT_TYPES: readonly string[] = [
   "order.served",
   "order.cancelled",
   "call.resolved",
+  // MyBar: the room's own request status changes (filtered by room and reduced to the request id).
+  "mybar.seen",
+  "mybar.fulfilled",
+  "mybar.completed",
+  "mybar.cancelled",
 ];

@@ -5,9 +5,12 @@ import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
 import { GuestFooter } from "@/modules/menu/ui/guest/GuestFooter";
 import { GuestFrame, HtmlLangSync } from "@/modules/menu/ui/guest/GuestFrame";
-import { MybarGuestScreen } from "@/modules/minibar/ui/guest/MybarGuestScreen";
+import { localizeTexts } from "@/modules/mybar/server/translateService";
+import RoomUnavailable from "@/modules/mybar/ui/guest/RoomUnavailable";
+import { RoomFrame } from "@/modules/mybar/ui/guest/RoomFrame";
 import "../../guest.css";
-import { getGuestTarget } from "./guestTarget";
+import "../../mybar.css";
+import { getGuestTarget, getRoomPageState } from "./guestTarget";
 import Unavailable from "./unavailable";
 
 export const dynamic = "force-dynamic";
@@ -86,12 +89,39 @@ export default async function GuestLayout({
   }
 
   if (target.kind === "ROOM") {
+    const room = await getRoomPageState(target.roomId, target.hotelId);
+    if (room.reason) {
+      return (
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <div className="g-root mb-root" dir={rtl ? "rtl" : "ltr"} lang={locale}>
+            <HtmlLangSync locale={locale as Locale} />
+            <RoomUnavailable reason={room.reason} />
+          </div>
+        </NextIntlClientProvider>
+      );
+    }
+    // The room's own message is written in Turkish; it is shown in the guest's language when a translation exists.
+    let info = room.guestMessage ?? "";
+    if (info && locale !== "tr") {
+      try {
+        info = (await localizeTexts([info], locale as Locale)).get(info) ?? info;
+      } catch {
+        // translation is best effort: the original text is shown
+      }
+    }
     return (
-      <div className="g-root" dir={rtl ? "rtl" : "ltr"} lang={locale}>
-        <HtmlLangSync locale={locale as Locale} />
-        <MybarGuestScreen token={token} />
-        {children /* renders nothing, but lets the page apply ?lang= */}
-      </div>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <RoomFrame
+          token={token}
+          locale={locale as Locale}
+          hotelName={room.hotel.name}
+          logoUrl={room.hotel.logoUrl}
+          roomNumber={room.roomNumber}
+          info={info}
+        >
+          {children}
+        </RoomFrame>
+      </NextIntlClientProvider>
     );
   }
 

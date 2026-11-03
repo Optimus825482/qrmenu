@@ -120,5 +120,64 @@
       "openSelections": "My selections ({count})",
       "callFailed": "The request could not be sent, please try again"
     }
+  },
+  "mybar": {
+    "title": "MYBAR",
+    "room": "Room",
+    "subtitle": "Your {hotel} minibar request will be fulfilled as soon as possible. Please select the items you wish to have in your minibar along with their quantities.",
+    "groups": "Product groups",
+    "selectedSummary": "Selected items",
+    "noProductSelected": "No product selected yet",
+    "removeItem": "Remove {name}",
+    "increase": "Add one {name}",
+    "decrease": "Remove one {name}",
+    "tickLabel": "Select {name}",
+    "noteLabel": "Additional notes or special requests",
+    "notePlaceholder": "You may write in your language (e.g. extra ice, extra glasses please...)",
+    "noteCounter": "{count}/{max}",
+    "submit": "SEND MYBAR REQUEST",
+    "submitting": "Sending your request...",
+    "validationEmpty": "Please select at least one item or write a note.",
+    "noSetupMessage": "There are no products to choose for your room. You may still leave a note.",
+    "successTitle": "Request received!",
+    "successDesc": "Our floor team will prepare your minibar as soon as possible. We wish you a wonderful stay.",
+    "dailyTitle": "Today's request has been received",
+    "dailyDesc": "Today's MyBar request for your room has been sent. Only one request per day is possible.",
+    "err409Daily": "A request was already sent from this room today. Only one request per day is possible.",
+    "errRate": "Too many attempts. Please wait a minute.",
+    "errNetwork": "Could not connect. Please try again.",
+    "errGeneric": "Error submitting the request. Please try again.",
+    "errItems": "Some items are no longer available. Please refresh the page and try again.",
+    "errClosed": "MyBar is currently unavailable for this room.",
+    "refresh": "Refresh the page",
+    "statusTitle": "Status of your request",
+    "requestedItems": "Requested items",
+    "noteOnly": "Only a note was sent.",
+    "liveRegion": "Request status updated: {status}",
+    "status": {
+      "BEKLIYOR": "Pending",
+      "GORULDU": "Seen",
+      "KARSILANDI": "Fulfilled",
+      "IPTAL": "Cancelled"
+    },
+    "statusDesc": {
+      "BEKLIYOR": "Your request has been passed to our floor team.",
+      "GORULDU": "Our floor attendant has seen your request and is preparing it.",
+      "KARSILANDI": "Your minibar has been prepared. Enjoy your stay.",
+      "IPTAL": "This request was cancelled. You may send a new one."
+    },
+    "newRequest": "Send a new request",
+    "unavailable": {
+      "title": "MyBar is unavailable",
+      "ODA_PASIF": "This room is currently unavailable.",
+      "OTEL_PASIF": "The service is currently unavailable for this hotel.",
+      "MYBAR_KAPALI": "MyBar is currently unavailable for this room.",
+      "ODA_BOS": "This room does not appear to be occupied, so MyBar requests cannot be taken."
+    },
+    "chooser": {
+      "title": "What would you like to do?",
+      "mybar": "MyBar request",
+      "mybarDesc": "Choose items for your minibar"
+    }
   }
 }

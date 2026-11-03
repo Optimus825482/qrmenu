@@ -120,5 +120,64 @@
       "openSelections": "Meine Auswahl ({count})",
       "callFailed": "Die Anfrage konnte nicht gesendet werden, bitte erneut versuchen"
     }
+  },
+  "mybar": {
+    "title": "MYBAR",
+    "room": "Zimmer",
+    "subtitle": "Ihre Minibar-Anfrage im {hotel} wird schnellstmöglich ausgeführt. Bitte wählen Sie die gewünschten Artikel mit Stückzahlen aus.",
+    "groups": "Produktgruppen",
+    "selectedSummary": "Ausgewählte Artikel",
+    "noProductSelected": "Sie haben noch keine Artikel ausgewählt.",
+    "removeItem": "{name} entfernen",
+    "increase": "{name} erhöhen",
+    "decrease": "{name} verringern",
+    "tickLabel": "{name} auswählen",
+    "noteLabel": "Zusätzliche Notizen oder Wünsche",
+    "notePlaceholder": "In Ihrer Sprache schreiben (z. B. mehr Eis, extra Gläser...)",
+    "noteCounter": "{count}/{max}",
+    "submit": "MYBAR-ANFRAGE SENDEN",
+    "submitting": "Wird gesendet...",
+    "validationEmpty": "Bitte wählen Sie mindestens einen Artikel oder schreiben Sie eine Notiz.",
+    "noSetupMessage": "Für Ihr Zimmer sind keine Artikel wählbar. Sie können trotzdem eine Notiz hinterlassen.",
+    "successTitle": "Anfrage erhalten!",
+    "successDesc": "Unser Etagenteam wird Ihre Minibar schnellstmöglich vorbereiten. Wir wünschen einen schönen Aufenthalt.",
+    "dailyTitle": "Die heutige Anfrage wurde empfangen",
+    "dailyDesc": "Die heutige MyBar-Anfrage für Ihr Zimmer wurde übermittelt. Pro Tag ist nur eine Anfrage möglich.",
+    "err409Daily": "Heute wurde für dieses Zimmer bereits eine Anfrage gesendet. Pro Tag ist nur eine Anfrage möglich.",
+    "errRate": "Zu viele Versuche. Bitte warten Sie eine Minute.",
+    "errNetwork": "Verbindung fehlgeschlagen. Bitte erneut versuchen.",
+    "errGeneric": "Fehler beim Senden der Anfrage. Bitte erneut versuchen.",
+    "errItems": "Einige Artikel sind nicht mehr verfügbar. Bitte laden Sie die Seite neu.",
+    "errClosed": "MyBar ist für dieses Zimmer derzeit nicht verfügbar.",
+    "refresh": "Seite neu laden",
+    "statusTitle": "Status Ihrer Anfrage",
+    "requestedItems": "Angefragte Artikel",
+    "noteOnly": "Es wurde nur eine Notiz gesendet.",
+    "liveRegion": "Anfragestatus aktualisiert: {status}",
+    "status": {
+      "BEKLIYOR": "Ausstehend",
+      "GORULDU": "Gesehen",
+      "KARSILANDI": "Erfüllt",
+      "IPTAL": "Storniert"
+    },
+    "statusDesc": {
+      "BEKLIYOR": "Ihre Anfrage wurde an unser Etagenteam weitergeleitet.",
+      "GORULDU": "Unser Etagenpersonal hat Ihre Anfrage gesehen und bereitet sie vor.",
+      "KARSILANDI": "Ihre Minibar wurde aufgefüllt. Einen schönen Aufenthalt.",
+      "IPTAL": "Diese Anfrage wurde storniert. Sie können eine neue senden."
+    },
+    "newRequest": "Neue Anfrage senden",
+    "unavailable": {
+      "title": "MyBar nicht verfügbar",
+      "ODA_PASIF": "Dieses Zimmer ist derzeit nicht verfügbar.",
+      "OTEL_PASIF": "Der Service ist für dieses Hotel derzeit nicht verfügbar.",
+      "MYBAR_KAPALI": "MyBar ist für dieses Zimmer derzeit nicht verfügbar.",
+      "ODA_BOS": "Dieses Zimmer scheint nicht belegt zu sein, MyBar-Anfragen sind nicht möglich."
+    },
+    "chooser": {
+      "title": "Was möchten Sie tun?",
+      "mybar": "MyBar-Anfrage",
+      "mybarDesc": "Artikel für Ihre Minibar wählen"
+    }
   }
 }

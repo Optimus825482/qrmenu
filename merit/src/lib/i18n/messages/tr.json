@@ -120,5 +120,64 @@
       "openSelections": "Seçimlerim ({count})",
       "callFailed": "Çağrı iletilemedi, lütfen tekrar deneyin"
     }
+  },
+  "mybar": {
+    "title": "MYBAR",
+    "room": "Oda",
+    "subtitle": "{hotel} Minibar talebiniz en kısa sürede yerine getirilecektir. Lütfen minibarınızda olmasını istediğiniz ürünleri adetleriyle beraber işaretleyiniz.",
+    "groups": "Ürün grupları",
+    "selectedSummary": "Seçili ürünler",
+    "noProductSelected": "Henüz bir ürün seçmediniz.",
+    "removeItem": "{name} seçimini kaldır",
+    "increase": "{name} adedini artır",
+    "decrease": "{name} adedini azalt",
+    "tickLabel": "{name} seç",
+    "noteLabel": "Ek notunuz veya özel istekleriniz",
+    "notePlaceholder": "İstediğiniz dilde yazabilirsiniz (örn: Ekstra bardak, bol buz rica ediyoruz...)",
+    "noteCounter": "{count}/{max}",
+    "submit": "MYBAR TALEBİ GÖNDER",
+    "submitting": "Talebiniz iletiliyor...",
+    "validationEmpty": "Lütfen en az bir ürün seçin veya not yazın.",
+    "noSetupMessage": "Odanız için seçilebilir ürün bulunmuyor. İsterseniz yalnızca not bırakabilirsiniz.",
+    "successTitle": "Talebiniz alınmıştır!",
+    "successDesc": "Kat görevlilerimiz en kısa sürede minibarınızı hazırlayacaktır. İyi tatiller dileriz.",
+    "dailyTitle": "Bugünün talebi alınmıştır",
+    "dailyDesc": "Odanız için bugünkü MyBar talebi iletildi. Günde en fazla bir talep gönderilebilir.",
+    "err409Daily": "Bugün bu odadan talep gönderildi. Günde en fazla bir talep gönderilebilir.",
+    "errRate": "Çok fazla deneme. Lütfen 1 dakika bekleyin.",
+    "errNetwork": "Bağlantı kurulamadı. Lütfen tekrar deneyin.",
+    "errGeneric": "Talep gönderilirken hata oluştu. Lütfen tekrar deneyin.",
+    "errItems": "Bazı ürünler artık seçilemiyor. Sayfayı yenileyip tekrar deneyin.",
+    "errClosed": "Bu oda için MyBar şu an kullanılamıyor.",
+    "refresh": "Sayfayı yenile",
+    "statusTitle": "Talebinizin durumu",
+    "requestedItems": "İstenen ürünler",
+    "noteOnly": "Yalnızca not iletildi.",
+    "liveRegion": "Talep durumu güncellendi: {status}",
+    "status": {
+      "BEKLIYOR": "Bekliyor",
+      "GORULDU": "Görüldü",
+      "KARSILANDI": "Karşılandı",
+      "IPTAL": "İptal edildi"
+    },
+    "statusDesc": {
+      "BEKLIYOR": "Talebiniz kat görevlilerimize iletildi.",
+      "GORULDU": "Kat görevlimiz talebinizi gördü ve hazırlıyor.",
+      "KARSILANDI": "Minibarınız hazırlandı. İyi tatiller dileriz.",
+      "IPTAL": "Bu talep iptal edildi. Dilerseniz yeni bir talep gönderebilirsiniz."
+    },
+    "newRequest": "Yeni talep gönder",
+    "unavailable": {
+      "title": "MyBar kullanılamıyor",
+      "ODA_PASIF": "Bu oda şu an kullanılamıyor.",
+      "OTEL_PASIF": "Bu otel için hizmet şu an kullanılamıyor.",
+      "MYBAR_KAPALI": "Bu oda için MyBar şu an kullanılamıyor.",
+      "ODA_BOS": "Bu oda şu an dolu görünmüyor, MyBar talebi alınamıyor."
+    },
+    "chooser": {
+      "title": "Ne yapmak istersiniz?",
+      "mybar": "MyBar talebi",
+      "mybarDesc": "Minibarınız için ürün seçin"
+    }
   }
 }

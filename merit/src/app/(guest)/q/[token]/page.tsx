@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { isLocale, type Locale } from "@/lib/i18n/locales";
 import { getMenu } from "@/modules/menu/server/guestMenu";
 import { MenuBrowser } from "@/modules/menu/ui/guest/MenuBrowser";
-import { getGuestTarget } from "./guestTarget";
+import RoomHome from "@/modules/mybar/ui/guest/RoomHome";
+import { getGuestTarget, getRoomPageState } from "./guestTarget";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,13 @@ export default async function GuestMenuPage({
   }
 
   const target = await getGuestTarget(token);
-  if (target.kind !== "TABLE") return null; // the layout already shows the unavailable / room page
-
   const locale = (await getLocale()) as Locale;
+  if (target.kind === "ROOM") {
+    const state = await getRoomPageState(target.roomId, target.hotelId);
+    return <RoomHome token={token} locale={locale} state={state} />;
+  }
+  if (target.kind !== "TABLE") return null; // the layout already shows the unavailable page
+
   const menu = await getMenu(target.state.outletId, locale, target.table.areaId);
   return <MenuBrowser token={token} locale={locale} menu={menu} />;
 }
