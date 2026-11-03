@@ -45,7 +45,11 @@ const UNSUPPORTED_ENDPOINT = "Bu bildirim servisi desteklenmiyor";
 
 export const subscribeSchema = z.object({
   endpoint: z.string().max(2048).refine((value) => isAllowedPushEndpoint(value), UNSUPPORTED_ENDPOINT),
-  keys: z.object({ p256dh: z.string().min(1).max(200), auth: z.string().min(1).max(100) }),
+  // p256dh: 65 bayt (87 karakter base64url), auth: 16 bayt (22 karakter); dolgu varyantları için ±2.
+  keys: z.object({
+    p256dh: z.string().regex(/^[A-Za-z0-9_-]{85,89}$/, "Geçersiz p256dh anahtarı"),
+    auth: z.string().regex(/^[A-Za-z0-9_-]{20,24}$/, "Geçersiz auth anahtarı"),
+  }),
   userAgent: z.string().max(300).optional(),
 });
 export type SubscribeInput = z.infer<typeof subscribeSchema>;
@@ -76,9 +80,9 @@ export async function subscribePush(ctx: Ctx, raw: SubscribeInput): Promise<{ id
     select: { id: true },
   });
   const extra = await prisma.pushSubscription.findMany({
-    where: { userId: ctx.user.id },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    skip: MAX_SUBSCRIPTIONS_PER_USER,
+    where: { userId: ctx.user.id, id: { not: row.id } },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    skip: MAX_SUBSCRIPTIONS_PER_USER - 1,
     select: { id: true },
   });
   if (extra.length > 0) {

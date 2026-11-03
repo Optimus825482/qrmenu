@@ -212,6 +212,8 @@ async function closeSessionInTx(
   if (count === 0) return false;
 
   const session = await tx.userSession.findUniqueOrThrow({ where: { id }, ...sessionWithNames });
+  // Paylaşılan cihaz: kapanan oturumun sahibine push gitmez (denetimsiz tercih verisi).
+  await tx.pushSubscription.deleteMany({ where: { userId: session.userId } });
   const event = reason === "ZORUNLU" ? "FORCE_LOGOUT" : "LOGOUT";
   await tx.sessionEvent.create({
     data: { sessionId: id, event, detail: { reason, byUserId: byUserId ?? null } },

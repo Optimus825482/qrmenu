@@ -12,9 +12,11 @@ const { DEFAULT_PUSH_ENDPOINT_ALLOWLIST, isAllowedPushEndpoint, MAX_SUBSCRIPTION
   "@/modules/core/server/pushSubscriptions"
 );
 
-const sub = (n: number | string, auth = "auth") => ({
+const P256 = "B".repeat(87);
+const AUTH = "a".repeat(22);
+const sub = (n: number | string, auth = AUTH) => ({
   endpoint: `https://push.example.test/send/${n}`,
-  keys: { p256dh: "p256dh-key", auth },
+  keys: { p256dh: P256, auth },
   userAgent: "UA",
 });
 
@@ -41,13 +43,13 @@ describe("subscribePush", () => {
 
   it("aynı endpoint yeniden abone olunca tek satır kalır ve anahtarlar güncellenir", async () => {
     const { ctx } = await ctxOf("a2");
-    const first = await subscribePush(ctx, sub(1, "eski"));
+    const first = await subscribePush(ctx, sub(1, "e".repeat(22)));
     await testDb.pushSubscription.update({ where: { id: first.id }, data: { failCount: 3 } });
-    const second = await subscribePush(ctx, sub(1, "yeni"));
+    const second = await subscribePush(ctx, sub(1, "y".repeat(22)));
     expect(second.id).toBe(first.id);
     const rows = await testDb.pushSubscription.findMany();
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ auth: "yeni", failCount: 0 });
+    expect(rows[0]).toMatchObject({ auth: "y".repeat(22), failCount: 0 });
   });
 
   it("aynı cihazı başka kullanıcı alırsa sahiplik devralınır", async () => {
@@ -78,6 +80,36 @@ describe("subscribePush", () => {
     expect(rows).toHaveLength(MAX_SUBSCRIPTIONS_PER_USER);
     expect(rows.map((r) => r.endpoint)).not.toContain(sub(0).endpoint);
     expect(rows.map((r) => r.endpoint)).toContain(sub(MAX_SUBSCRIPTIONS_PER_USER + 1).endpoint);
+  });
+});
+
+describe("anahtar doğrulama ve üst sınır", () => {
+  it("base64url olmayan ya da kısa anahtarlar VALIDATION", async () => {
+    const { ctx } = await ctxOf("k1");
+    const base = sub(1);
+    for (const keys of [
+      { p256dh: "B".repeat(87) + "+", auth: AUTH },
+      { p256dh: "kısa", auth: AUTH },
+      { p256dh: P256, auth: "a b".repeat(8) },
+      { p256dh: P256, auth: "a".repeat(10) },
+      { p256dh: "B".repeat(200), auth: AUTH },
+    ]) {
+      await expect(subscribePush(ctx, { ...base, keys })).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+    expect(await testDb.pushSubscription.count()).toBe(0);
+  });
+
+  it("sınır aşıldığında dönen id silinmez (eski satır yeniden abone olsa da)", async () => {
+    const { ctx } = await ctxOf("k2");
+    for (let i = 0; i < MAX_SUBSCRIPTIONS_PER_USER; i += 1) {
+      await subscribePush(ctx, sub(i));
+      await new Promise((r) => setTimeout(r, 5));
+    }
+    const again = await subscribePush(ctx, sub(0));
+    const fresh = await subscribePush(ctx, sub(99));
+    expect(await testDb.pushSubscription.count()).toBe(MAX_SUBSCRIPTIONS_PER_USER);
+    expect(await testDb.pushSubscription.findUnique({ where: { id: fresh.id } })).not.toBeNull();
+    expect(again.id).toBeTruthy();
   });
 });
 

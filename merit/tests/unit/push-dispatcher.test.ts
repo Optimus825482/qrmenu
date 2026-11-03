@@ -71,9 +71,16 @@ async function addSub(userId: string, n: string) {
   });
 }
 
+async function openSession(userId: string, roleId: string, status: "ONLINE" | "CIKTI" = "ONLINE", expiresInMs = 3_600_000) {
+  return testDb.userSession.create({
+    data: { userId, hotelId: await hotelId("ROYAL"), roleId, status, expiresAt: new Date(Date.now() + expiresInMs), ip: "127.0.0.1", userAgent: "vitest" },
+  });
+}
+
 async function setup() {
   const a = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
   const b = await makeUser({ username: "dep1", roleCode: "R-DEP", hotelCode: "ROYAL" });
+  for (const u of [a, b]) await openSession(u.id, u.roleId);
   await addSub(a.id, "a1");
   await addSub(a.id, "a2");
   return { a, b, mr: await hotelId("ROYAL") };
@@ -206,6 +213,18 @@ describe("dispatchNotificationEvent", () => {
     const ctx = await ctxFor(b, { hotelCode: "ROYAL" });
     const list = await listMyNotifications(ctx);
     expect(list.find((n) => n.type === "mybar.created")?.isRead).toBe(false);
+  });
+});
+
+describe("yalnız aktif oturumlu kullanıcılar", () => {
+  it("oturumu kapalı ya da süresi dolmuş kullanıcıya gönderilmez ve pushedAt boş kalır", async () => {
+    const { event, a, b } = await fire("req-s");
+    await testDb.userSession.updateMany({ where: { userId: a.id }, data: { status: "CIKTI" } });
+    await testDb.userSession.updateMany({ where: { userId: b.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    expect(await dispatchNotificationEvent(event)).toMatchObject({ claimed: 0, sent: 0 });
+    expect(sent).toHaveLength(0);
+    const rows = await testDb.notification.findMany({ where: { type: "mybar.created" } });
+    expect(rows.every((r) => r.pushedAt === null)).toBe(true);
   });
 });
 

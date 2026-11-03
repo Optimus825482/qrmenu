@@ -138,3 +138,30 @@ describe("PushBanner", () => {
     expect(screen.queryByTestId("push-banner")).toBeNull();
   });
 });
+
+describe("unsubscribePushOnLogout", () => {
+  it("aboneliği kaldırır ve sunucuya bildirir", async () => {
+    const { fake } = setup({ permission: "granted", sub: true });
+    const { unsubscribePushOnLogout } = await import("@/shell/push/unsubscribeOnLogout");
+    const sub = fake.sub!;
+    await unsubscribePushOnLogout();
+    expect(sub.unsubscribe).toHaveBeenCalled();
+    expect(actions.unsubscribePushAction).toHaveBeenCalledWith("https://fcm.googleapis.com/fcm/send/x");
+  });
+
+  it("takılırsa en çok ~1 sn bekler ve fırlatmaz", async () => {
+    setup({ permission: "granted", sub: true });
+    actions.unsubscribePushAction.mockReturnValue(new Promise(() => {}));
+    const { unsubscribePushOnLogout } = await import("@/shell/push/unsubscribeOnLogout");
+    const t0 = Date.now();
+    await expect(unsubscribePushOnLogout()).resolves.toBeUndefined();
+    expect(Date.now() - t0).toBeLessThan(1600);
+  });
+
+  it("service worker yoksa sessizce biter", async () => {
+    Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: undefined });
+    delete (navigator as unknown as Record<string, unknown>).serviceWorker;
+    const { unsubscribePushOnLogout } = await import("@/shell/push/unsubscribeOnLogout");
+    await expect(unsubscribePushOnLogout()).resolves.toBeUndefined();
+  });
+});

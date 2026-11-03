@@ -118,6 +118,8 @@ export async function logoutAction(): Promise<Result<null>> {
     const session = await getSession();
     try {
       if (session.sessionId) await closeSession(session.sessionId, "MANUEL");
+      // Oturum zaten kapalı olsa bile kullanıcının cihaz abonelikleri kalmasın.
+      if (session.userId) await prisma.pushSubscription.deleteMany({ where: { userId: session.userId } });
     } finally {
       // Even if closing fails, the browser must not keep a working cookie.
       session.destroy();

@@ -46,6 +46,9 @@ export async function dispatchNotificationEvent(e: MeritEvent): Promise<Dispatch
     WHERE user_id = ANY(${e.userIds}) AND type = ${type}
       AND ref_id IS NOT DISTINCT FROM ${refId}
       AND pushed_at IS NULL AND created_at > now() - interval '2 minutes'
+      AND EXISTS (
+        SELECT 1 FROM user_sessions s
+        WHERE s.user_id = notifications.user_id AND s.status IN ('ONLINE', 'UYARI') AND s.expires_at > now())
     RETURNING user_id`;
   const userIds = [...new Set(claimed.map((r) => r.user_id))];
   result.claimed = userIds.length;

@@ -25,7 +25,7 @@ test("profil menüsünde Bildirimler anahtarı abonelik API'sini çağırır ve 
     let current: unknown = null;
     const make = () => ({
       endpoint,
-      toJSON: () => ({ endpoint, keys: { p256dh: "BP-e2e-key", auth: "e2e-auth" } }),
+      toJSON: () => ({ endpoint, keys: { p256dh: "B".repeat(87), auth: "a".repeat(22) } }),
       unsubscribe: async () => {
         current = null;
         return true;
