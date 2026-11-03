@@ -2,11 +2,18 @@
 
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { LAYER_LABELS } from "../labels";
-import type { RadarLayer } from "../types";
+import type { RadarLayer, WallView } from "../types";
 
-export type ViewKey = "genel" | "kat" | "masa";
+export type ViewKey = WallView;
 
-export const VIEW_LABELS: Record<ViewKey, string> = { genel: "Genel Bakış", kat: "Kat", masa: "Masa" };
+export const VIEW_LABELS: Record<ViewKey, string> = {
+  genel: "Genel Bakış",
+  kat: "Kat",
+  masa: "Masa",
+  kuyruk: "Kuyruklar",
+  odaServisi: "Oda Servisi",
+  personel: "Personel",
+};
 
 export const LAYER_ICONS: Record<RadarLayer, IconName> = {
   MINIBAR: "minibar",

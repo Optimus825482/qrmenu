@@ -7,12 +7,18 @@ import { DensityRoot } from "@/components/ui/Density";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { sseClient } from "@/shell/sseStore";
 import { LAYER_LABELS, metricLayer } from "../labels";
-import type { RadarLayer, WallView } from "../types";
+import type { RadarAlert, RadarEvent, RadarLayer, WallView } from "../types";
+import { AlertStrip } from "./AlertStrip";
+import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
+import { Ticker } from "./Ticker";
 import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, type ConnectionState, type ViewKey } from "./Toolbar";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
 import { Overview } from "./views/Overview";
+import { Queues } from "./views/Queues";
+import { RoomService } from "./views/RoomService";
+import { Staff } from "./views/Staff";
 import { Tables } from "./views/Tables";
 import "./radar.css";
 
@@ -32,7 +38,7 @@ export type RadarRootProps = {
   chrome?: { setTitle?(title: string): void; setStatus?(text: string): void };
 };
 
-const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa"];
+const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel"];
 const LAYER_ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 const SKELETON_DELAY_MS = 300;
 
@@ -59,7 +65,7 @@ function useDelayed(on: boolean, ms: number): boolean {
 }
 
 const SHORTCUTS: [string, string][] = [
-  ["1 · 2 · 3", "Genel Bakış · Kat · Masa görünümü"],
+  ["1…6", "Genel Bakış · Kat · Masa · Kuyruklar · Oda Servisi · Personel"],
   ["Alt + 1…5", "Katmanı aç veya kapat"],
   ["F5", "Anlık görüntüyü yenile"],
   ["F1", "Bu yardımı aç veya kapat"],
@@ -74,6 +80,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const [off, setOff] = useState<ReadonlySet<RadarLayer>>(new Set());
   const [outletId, setOutletId] = useState<string | undefined>(initial.outletId);
   const [help, setHelp] = useState(false);
+  const [legendOpen, setLegendOpen] = useState<boolean>(() => consumeInitialLegendOpen());
   const rootRef = useRef<HTMLDivElement | null>(null);
   const helpClose = useRef<HTMLButtonElement | null>(null);
 
@@ -109,11 +116,27 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
 
   const views = useMemo<ViewKey[]>(() => {
     const out: ViewKey[] = ["genel"];
-    if (!all && snap?.layers.minibar && active.has("MINIBAR")) out.push("kat");
-    if (!all && snap?.layers.order && active.has("SIPARIS")) out.push("masa");
+    if (all || !snap) return out;
+    if (snap.layers.minibar && active.has("MINIBAR")) out.push("kat");
+    if (snap.layers.order && active.has("SIPARIS")) out.push("masa");
+    // Kuyruklar is SIPARIS + SISTEM; available in single-hotel view whenever either is active (displays empty state if QR_ORDER is off).
+    if ((snap.layers.order && active.has("SIPARIS")) || active.has("SISTEM")) out.push("kuyruk");
+    if (snap.layers.roomService && active.has("ODA_SERVISI")) out.push("odaServisi");
+    if (snap.layers.staff && active.has("PERSONEL")) out.push("personel");
     return out;
   }, [all, snap, active]);
-  const fallback: ViewKey = all ? "genel" : snap?.layers.minibar ? "kat" : snap?.layers.order ? "masa" : "genel";
+
+  const fallback: ViewKey = all
+    ? "genel"
+    : snap?.layers.minibar
+      ? "kat"
+      : snap?.layers.order
+        ? "masa"
+        : snap?.layers.roomService
+          ? "odaServisi"
+          : snap?.layers.staff
+            ? "personel"
+            : "genel";
   const view: ViewKey = choice && views.includes(choice) ? choice : views.includes(fallback) ? fallback : "genel";
 
   const connection: ConnectionState =
@@ -157,6 +180,41 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       return next;
     });
 
+  const focusAlert = (alert: RadarAlert) => {
+    if (alert.kind === "SIPARIS_ONAY" || alert.kind === "CAGRI") {
+      if (alert.ref.outletId) setOutletId(alert.ref.outletId);
+      if (views.includes("masa")) setChoice("masa");
+    } else if (alert.kind === "YAZICI_IS" || alert.kind === "YAZICI") {
+      if (views.includes("kuyruk")) setChoice("kuyruk");
+    } else if (alert.kind === "RS_SLA") {
+      if (views.includes("odaServisi")) setChoice("odaServisi");
+    } else if (
+      alert.kind === "MYBAR" ||
+      alert.kind === "DND_EKSIK" ||
+      alert.kind === "STOK" ||
+      alert.kind === "YUKLEME"
+    ) {
+      if (views.includes("kat")) setChoice("kat");
+    }
+  };
+
+  const focusEvent = (ev: RadarEvent) => {
+    if (ev.layer === "MINIBAR" && views.includes("kat")) setChoice("kat");
+    else if (ev.layer === "SIPARIS") {
+      if (ev.outletId) setOutletId(ev.outletId);
+      if (ev.type === "print.job" && views.includes("kuyruk")) setChoice("kuyruk");
+      else if (views.includes("masa")) setChoice("masa");
+    } else if (ev.layer === "ODA_SERVISI" && views.includes("odaServisi")) setChoice("odaServisi");
+    else if (ev.layer === "PERSONEL" && views.includes("personel")) setChoice("personel");
+    else if (ev.layer === "SISTEM" && views.includes("kuyruk")) setChoice("kuyruk");
+  };
+
+  const visibleEvents = useMemo(
+    () => (scoped ? state.buffer.filter((e) => active.has(e.layer)) : []),
+    [scoped, state.buffer, active],
+  );
+  const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
+
   const menus: MenuDef[] = [
     {
       label: "Dosya",
@@ -179,6 +237,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           checked: active.has(l),
           onSelect: () => toggleLayer(l),
         })),
+        {
+          kind: "check" as const,
+          label: "Açıklama göster",
+          checked: legendOpen,
+          onSelect: () => setLegendOpen((x) => !x),
+        },
       ],
     },
     {
@@ -204,9 +268,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         e.preventDefault();
         toggleLayer(layer);
       }
-    } else if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-9]$/.test(e.key)) {
+    } else if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-6]$/.test(e.key)) {
       const next = VIEW_SLOTS[Number(e.key) - 1];
-      if (next && views.includes(next)) setChoice(next);
+      if (next && views.includes(next)) {
+        e.preventDefault();
+        setChoice(next);
+      }
     }
   };
 
@@ -262,7 +329,22 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   } else if (view === "kat" && snap) {
     body = <Floor view={snap} now={now} onOpenApp={openApp} />;
   } else if (view === "masa" && snap) {
-    body = <Tables view={snap} now={now} outletId={outletId} onSelectOutlet={setOutletId} />;
+    body = <Tables view={snap} now={now} outletId={outletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
+  } else if (view === "kuyruk" && snap) {
+    body = (
+      <Queues
+        view={snap}
+        now={now}
+        onOpenOutlet={(id) => {
+          setOutletId(id);
+          if (views.includes("masa")) setChoice("masa");
+        }}
+      />
+    );
+  } else if (view === "odaServisi" && snap) {
+    body = <RoomService view={snap} now={now} onOpenApp={openApp} />;
+  } else if (view === "personel" && snap) {
+    body = <Staff view={snap} now={now} nameStyle={wall ? "short" : "full"} />;
   }
 
   return (
@@ -300,14 +382,21 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               </button>
             </div>
           ) : null}
-          <div
-            id={`${idPrefix}-view`}
-            className="rd-main"
-            role="tabpanel"
-            aria-labelledby={`${idPrefix}-tab-${view}`}
-            tabIndex={0}
-          >
-            {body}
+          {!all ? <AlertStrip alerts={visibleAlerts} onFocus={focusAlert} /> : null}
+          <div className="rd-workspace">
+            <div
+              id={`${idPrefix}-view`}
+              className="rd-main"
+              role="tabpanel"
+              aria-labelledby={`${idPrefix}-tab-${view}`}
+              tabIndex={0}
+            >
+              {body}
+              <Legend view={view} open={wall || legendOpen} compact={wall} onClose={() => setLegendOpen(false)} />
+            </div>
+            {!all && !wall ? (
+              <Ticker events={visibleEvents} state={snap} mode="window" nameStyle="full" onSelect={focusEvent} />
+            ) : null}
           </div>
           {help ? (
             <div className="rd-help" role="dialog" aria-label="Klavye kısayolları">

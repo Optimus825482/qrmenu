@@ -120,3 +120,42 @@ test("Oda kontrolü Kat görünümünde 2 sn içinde onay işareti verir", async
 
   await expect(win.getByRole("gridcell", { name: /101:.*kontrol edildi/ })).toBeVisible({ timeout: 2_000 });
 });
+
+test("Kuyruklar, Personel, lejant ve klavye kısayolları canlı çalışır", async ({ page, browser }) => {
+  await page.setViewportSize(RADAR_VIEWPORTS[0]);
+  await openDesktop(page, "admin");
+  const win = await openRadar(page);
+  await radarToolbar(win).getByRole("combobox", { name: "Otel" }).selectOption({ label: MR_NAME });
+
+  // Legend is visible on initial opens, and ticker is present on the right.
+  await expect(win.getByRole("region", { name: "Görünüm açıklaması" })).toBeVisible();
+  await expect(win.getByRole("complementary", { name: "Olay şeridi" })).toBeVisible();
+
+  // Switch to Kuyruklar (key "4" or tab)
+  await radarTab(win, "Kuyruklar").click();
+  await expect(radarTab(win, "Kuyruklar")).toHaveAttribute("aria-selected", "true");
+  const havuzRow = win.locator("tr.rd-queue-row", { hasText: "Havuz Bar" });
+  await expect(havuzRow).toBeVisible();
+
+  const guest = await newContextPage(browser);
+  const order = await sendGuestOrder(guest);
+  await expect(havuzRow).toContainText(/[1-9]\d* bekleyen/, { timeout: 2_000 });
+
+  const cashier = await openStaff(browser, "kasa.havuz");
+  await approveOrder(cashier, order.orderNo);
+  await expect(havuzRow).toContainText(/Yeni [1-9]/, { timeout: 2_000 });
+
+  // Switch to Personel via keyboard shortcut "6"
+  await win.locator(".rd-root").press("6");
+  await expect(radarTab(win, "Personel")).toHaveAttribute("aria-selected", "true");
+
+  // Alt+1 toggles Minibar layer off
+  const minibarBtn = radarToolbar(win).getByRole("group", { name: "Katmanlar" }).getByRole("button", { name: /Minibar/ });
+  await expect(minibarBtn).toHaveAttribute("aria-pressed", "true");
+  await win.locator(".rd-root").press("Alt+1");
+  await expect(minibarBtn).toHaveAttribute("aria-pressed", "false");
+
+  await expectNoHorizontalScroll(page);
+  await expectRadarAxeClean(page, "radar-kuyruk-personel");
+});
+

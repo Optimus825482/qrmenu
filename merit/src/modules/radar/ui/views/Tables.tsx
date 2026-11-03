@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { orderStatusLabel, tableCardModel, type TableCard } from "../../labels";
 import type { RadarState } from "../../state";
+import { DetailBubble } from "../DetailBubble";
 import { usePulse } from "../useRadar";
 
 type Outlet = NonNullable<RadarState["layers"]["order"]>["outlets"][number];
@@ -45,16 +46,29 @@ function Card({ table, now, selected, onSelect }: { table: TableCard; now: numbe
   );
 }
 
-function Detail({ table, now, onClose }: { table: TableCard; now: number; onClose(): void }) {
+function Detail({
+  table,
+  hotelId,
+  now,
+  onOpenApp,
+  onClose,
+}: {
+  table: TableCard;
+  hotelId: string;
+  now: number;
+  onOpenApp?: (appId: string) => void;
+  onClose(): void;
+}) {
   const m = tableCardModel(table, now);
   return (
-    <section className="rd-panel" aria-label={`Masa ${table.label} ayrıntısı`}>
-      <div className="rd-row">
-        <h3>Masa {table.label}</h3>
-        <button type="button" className="rd-link" onClick={onClose}>
-          Kapat
-        </button>
-      </div>
+    <DetailBubble
+      title={`Masa ${table.label}`}
+      ariaLabel={`Masa ${table.label} ayrıntısı`}
+      hotelId={hotelId}
+      appTarget={{ screenCode: "QS-KUY", modulePrefix: "order." }}
+      onOpenApp={onOpenApp}
+      onClose={onClose}
+    >
       <p>
         Durum: <strong>{m.statusText}</strong>
       </p>
@@ -84,7 +98,7 @@ function Detail({ table, now, onClose }: { table: TableCard; now: number; onClos
         <p className="rd-muted">Açık çağrı yok.</p>
       )}
       {m.guestPresent ? <p>Misafir masada (son 15 dk içinde QR okutuldu).</p> : null}
-    </section>
+    </DetailBubble>
   );
 }
 
@@ -93,10 +107,11 @@ export type TablesProps = {
   now: number;
   outletId?: string;
   onSelectOutlet(outletId: string): void;
+  onOpenApp?(appId: string): void;
 };
 
 /** Masa: outlet picker, area grids of table cards and a read-only side panel (nothing here changes an order). */
-export function Tables({ view, now, outletId, onSelectOutlet }: TablesProps) {
+export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: TablesProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const outlets: Outlet[] = view.layers.order?.outlets ?? [];
   if (outlets.length === 0) return <EmptyState title="Bu otelde QR Sipariş kapalı." />;
@@ -153,7 +168,11 @@ export function Tables({ view, now, outletId, onSelectOutlet }: TablesProps) {
               </section>
             ))}
         </div>
-        {sel ? <Detail table={sel} now={now} onClose={() => setSelected(null)} /> : <div />}
+        {sel ? (
+          <Detail table={sel} hotelId={view.hotelId} now={now} onOpenApp={onOpenApp} onClose={() => setSelected(null)} />
+        ) : (
+          <div />
+        )}
       </div>
     </div>
   );

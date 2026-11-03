@@ -5,6 +5,8 @@ import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { UPLOAD_LABELS, roomCellModel, type RoomCell } from "../../labels";
 import type { RadarState } from "../../state";
+import { DetailBubble } from "../DetailBubble";
+import { nextCell, type GridNavKey } from "../gridNav";
 import { usePulse } from "../useRadar";
 
 type Minibar = NonNullable<RadarState["layers"]["minibar"]>;
@@ -98,15 +100,14 @@ function RoomDetail({
   const m = roomCellModel(room, now);
   const who = (id: string) => state.people[id] ?? "Bilinmiyor";
   return (
-    <section className="rd-panel" aria-label={`Oda ${room.number} ayrıntısı`}>
-      <div className="rd-row">
-        <h3>
-          Oda {room.number} · {floorName}
-        </h3>
-        <button type="button" className="rd-link" onClick={onClose}>
-          Kapat
-        </button>
-      </div>
+    <DetailBubble
+      title={`Oda ${room.number} · ${floorName}`}
+      ariaLabel={`Oda ${room.number} ayrıntısı`}
+      hotelId={state.hotelId}
+      appTarget={{ screenCode: "MB-KAT", modulePrefix: "minibar.", fallbackAppId: "minibar.kat" }}
+      onOpenApp={onOpenApp}
+      onClose={onClose}
+    >
       <p>{m.ariaLabel.slice(room.number.length + 2)}</p>
       {room.checkedToday ? (
         <p>
@@ -119,14 +120,11 @@ function RoomDetail({
       {room.mybar ? (
         <p>MyBar isteği {room.mybar.seen ? "görüldü" : "bekliyor"} · {clock(room.mybar.since)}</p>
       ) : null}
-      {onOpenApp ? (
-        <button type="button" className="rd-chip" onClick={() => onOpenApp("minibar.kat")}>
-          Uygulamada aç
-        </button>
-      ) : null}
-    </section>
+    </DetailBubble>
   );
 }
+
+const NAV_KEYS = new Set<GridNavKey>(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"]);
 
 export type FloorProps = {
   view: RadarState;
@@ -147,53 +145,30 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
   const flat = minibar.floors.flatMap((f, fi) => f.rooms.map((r) => ({ room: r, fi })));
   const firstId = flat[0]?.room.roomId ?? null;
   const tabStop = focusId && flat.some((x) => x.room.roomId === focusId) ? focusId : firstId;
+  const dims = { rows: minibar.floors.map((f) => f.rooms.length) };
 
   const move = (fromId: string, e: KeyboardEvent<HTMLDivElement>) => {
     const i = flat.findIndex((x) => x.room.roomId === fromId);
     if (i < 0) return;
-    let to = i;
     const cur = flat[i];
-    const floorRooms = minibar.floors[cur.fi].rooms;
-    const col = floorRooms.findIndex((r) => r.roomId === fromId);
-    switch (e.key) {
-      case "ArrowRight":
-        to = Math.min(flat.length - 1, i + 1);
-        break;
-      case "ArrowLeft":
-        to = Math.max(0, i - 1);
-        break;
-      case "ArrowDown":
-      case "ArrowUp": {
-        const dir = e.key === "ArrowDown" ? 1 : -1;
-        let fi = cur.fi + dir;
-        while (fi >= 0 && fi < minibar.floors.length && minibar.floors[fi].rooms.length === 0) fi += dir;
-        if (fi < 0 || fi >= minibar.floors.length) return;
-        const target = minibar.floors[fi].rooms[Math.min(col, minibar.floors[fi].rooms.length - 1)];
-        to = flat.findIndex((x) => x.room.roomId === target.roomId);
-        break;
-      }
-      case "Home":
-        to = flat.findIndex((x) => x.fi === cur.fi);
-        break;
-      case "End":
-        to = flat.length - 1 - [...flat].reverse().findIndex((x) => x.fi === cur.fi);
-        break;
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        setSelected(fromId);
-        return;
-      case "Escape":
-        setSelected(null);
-        return;
-      default:
-        return;
+    const col = minibar.floors[cur.fi].rooms.findIndex((r) => r.roomId === fromId);
+    if (NAV_KEYS.has(e.key as GridNavKey)) {
+      const next = nextCell(dims, { r: cur.fi, c: col }, e.key as GridNavKey);
+      const target = minibar.floors[next.r]?.rooms[next.c];
+      if (!target || target.roomId === fromId) return;
+      e.preventDefault();
+      const id = target.roomId;
+      setFocusId(id);
+      onFocus?.({ kind: "room", roomId: id });
+      gridRef.current?.querySelector<HTMLElement>(`[data-room-id="${id}"]`)?.focus();
+      return;
     }
-    e.preventDefault();
-    const id = flat[to].room.roomId;
-    setFocusId(id);
-    onFocus?.({ kind: "room", roomId: id });
-    gridRef.current?.querySelector<HTMLElement>(`[data-room-id="${id}"]`)?.focus();
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setSelected(fromId);
+    } else if (e.key === "Escape") {
+      setSelected(null);
+    }
   };
 
   const selectedRoom = selected ? flat.find((x) => x.room.roomId === selected) : undefined;

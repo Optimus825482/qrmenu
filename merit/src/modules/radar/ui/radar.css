@@ -663,3 +663,274 @@ button.rd-counter {
 .rd-small {
   font-size: var(--rd-small);
 }
+
+/* Çalışma alanı ve yan olay şeridi */
+.rd-workspace {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
+.rd-ticker {
+  flex: none;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-left: 1px solid var(--app-line);
+  background: var(--surface);
+  overflow: auto;
+  min-height: 0;
+}
+
+.rd-ticker[data-mode="wall"] {
+  width: 100%;
+  border-left: 0;
+  border-top: 1px solid var(--app-line);
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+}
+
+.rd-ticker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.rd-ticker-list {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-ticker[data-mode="wall"] .rd-ticker-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rd-ticker-row {
+  min-width: 0;
+}
+
+.rd-ticker-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-height: var(--tap-xp);
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  text-align: left;
+  font-size: var(--rd-small);
+}
+
+button.rd-ticker-btn {
+  cursor: pointer;
+}
+
+button.rd-ticker-btn:hover,
+button.rd-ticker-btn:focus-visible {
+  background: var(--accent-app-soft);
+}
+
+.rd-ticker-time {
+  flex: none;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rd-ticker-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Uyarı şeridi */
+.rd-alert-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--app-line);
+  background: var(--surface);
+  flex: none;
+}
+
+.rd-alert-strip-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-alert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap-xp);
+  padding: 0 6px;
+  border: 1px solid var(--tone-line);
+  border-radius: var(--radius-s);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  font-size: var(--rd-small);
+}
+
+button.rd-alert-chip {
+  cursor: pointer;
+}
+
+.rd-alert-more {
+  color: var(--muted);
+  font-size: var(--rd-small);
+  font-weight: 700;
+}
+
+/* Lejant */
+.rd-legend {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+}
+
+.rd-legend[data-compact="1"] {
+  padding: 4px 6px;
+  font-size: var(--rd-small);
+}
+
+.rd-legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--rd-small);
+}
+
+.rd-legend-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 16px;
+  padding: 0 3px;
+  border: 1px solid var(--tone-line);
+  border-radius: var(--radius-s);
+  background: var(--tone-bg);
+  color: var(--tone-fg);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.rd-legend-swatch[data-edge="dashed"] {
+  border-style: dashed;
+}
+
+.rd-legend-swatch[data-edge="double"] {
+  border-style: double;
+  border-width: 3px;
+}
+
+/* Kuyruklar, Oda Servisi, Personel tabloları ve şeritleri */
+.rd-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rd-table caption {
+  text-align: left;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
+.rd-table th,
+.rd-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--app-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rd-queue-row {
+  cursor: pointer;
+}
+
+.rd-queue-row:hover,
+.rd-queue-row:focus-visible {
+  background: var(--accent-app-soft);
+}
+
+.rd-queue-outlet {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rd-queue-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.rd-rs-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.rd-rs-lanes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.rd-rs-lane {
+  align-content: start;
+}
+
+.rd-rs-card {
+  width: 100%;
+  min-height: 72px;
+}
+
+.rd-staff-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 8px;
+  align-items: start;
+}
+
+.rd-staff-groups {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}

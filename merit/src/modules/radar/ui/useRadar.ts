@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { sseClient } from "@/shell/sseStore";
 import { pulseOnce } from "@/components/ui/pulseOnce";
+import { deriveAlerts } from "../alerts";
 import { radarOverviewAction, radarSnapshotAction } from "../server/actions/radar";
 import { createRadarStore, type RadarStore, type RadarStoreDeps, type RadarStoreState } from "./radarStore";
 
@@ -28,6 +29,22 @@ function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
     reducedMotion: () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     hidden: () => document.hidden,
     onDrift: (path) => console.warn("[radar] drift", path),
+    deriveAlerts: (s, nowMs) =>
+      deriveAlerts(
+        s.layers,
+        new Date(nowMs),
+        {
+          callAlertSeconds: s.config.callAlertSeconds,
+          mybarStaleMinutes: s.config.mybarStaleMinutes,
+          idleMinutes: s.config.idleMinutes,
+          approvalEscalationMinutes: s.config.approvalEscalationMinutes,
+        },
+        {
+          hotelId: s.hotelId,
+          isSystem: (s.layers.staff?.sessions ?? []).some((sess) => sess.roleKind === "SISTEM") || s.mailFailed > 0,
+          mailFailed: s.mailFailed,
+        },
+      ),
     bufferMinutes,
   };
 }

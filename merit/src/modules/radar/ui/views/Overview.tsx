@@ -17,7 +17,13 @@ const SEVERITY_TONE: Record<RadarMetric["severity"], string> = { ok: "success", 
 const LAYER_ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 
 /** The view a layer's counters lead to (only those that exist). */
-const LAYER_VIEW: Partial<Record<RadarLayer, ViewKey>> = { MINIBAR: "kat", SIPARIS: "masa" };
+const LAYER_VIEW: Partial<Record<RadarLayer, ViewKey>> = {
+  MINIBAR: "kat",
+  SIPARIS: "masa",
+  ODA_SERVISI: "odaServisi",
+  PERSONEL: "personel",
+  SISTEM: "kuyruk",
+};
 
 export type OverviewProps = {
   overview: RadarOverview;
@@ -85,7 +91,8 @@ export function Overview({ overview, layers, onOpenHotel, onOpenView, views }: O
   if (overview.hotels.length === 0) {
     return <EmptyState title="Bu kapsamda izlenecek otel yok." hint="Canlı Radar yetkisi olan bir otel görünmüyor." />;
   }
-  const hasView = (v: ViewKey | undefined): v is ViewKey => v !== undefined && (views ?? ["kat", "masa"]).includes(v);
+  const hasView = (v: ViewKey | undefined): v is ViewKey =>
+    v !== undefined && (views ?? ["kat", "masa", "kuyruk", "odaServisi", "personel"]).includes(v);
 
   return (
     <div className="rd-overview">
