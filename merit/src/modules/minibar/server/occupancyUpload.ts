@@ -11,6 +11,7 @@ import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
 import { removeUpload, saveUpload } from "@/lib/uploads";
 import { audit } from "@/modules/core/server/audit";
+import { publishRadar } from "@/modules/radar/publish";
 import { UPLOAD_KINDS } from "../constants";
 import { OCCUPANCY_UPLOADED } from "../events";
 import { OCCUPANCY_MAX_BYTES, parseWorkbook, type ParsedRow, type RowError, type UploadKind } from "./occupancyParse";
@@ -420,8 +421,10 @@ export async function commitOccupancy(
           entityId: upload.id,
           after: { code, fileName, kind, format: sheet.format, totalRows: sheet.totalRows, okRows, errorRows, createdRows, updatedRows },
         });
-        await publish(
-          { type: OCCUPANCY_UPLOADED, hotelId, payload: { uploadId: upload.id, code, kind, okRows, errorRows } },
+        await publishRadar(
+          "occupancy.uploaded",
+          { hotelId },
+          { uploadId: upload.id, kind, status: okRows > 0 ? "TAMAMLANDI" : "HATA", okRows, errorRows },
           tx,
         );
 

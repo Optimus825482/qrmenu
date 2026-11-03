@@ -185,9 +185,18 @@ async function notifyIfCritical(
   tx: Prisma.TransactionClient,
   hotelId: string,
   s: { id: string; productId: string; remainingQty: number; criticalLevel: number },
+  prevRemaining: number,
   now: Date,
 ): Promise<void> {
   if (s.remainingQty > s.criticalLevel) return;
+  if (prevRemaining > s.criticalLevel) {
+    await publishRadar(
+      "stock.critical",
+      { hotelId },
+      { productId: s.productId, remainingQty: s.remainingQty, criticalLevel: s.criticalLevel },
+      tx,
+    );
+  }
   const already = await tx.notification.findFirst({
     where: { type: "stock.critical", refType: "HotelStock", refId: s.id, createdAt: dayRange(businessDate(now)) },
     select: { id: true },
@@ -206,12 +215,6 @@ async function notifyIfCritical(
       refType: "HotelStock",
       refId: s.id,
     },
-    tx,
-  );
-  await publishRadar(
-    "stock.critical",
-    { hotelId },
-    { productId: s.productId, remainingQty: s.remainingQty, criticalLevel: s.criticalLevel },
     tx,
   );
 }
@@ -274,7 +277,13 @@ async function takeLines(
       },
     });
     await announce(tx, base.hotelId, { productId: line.productId, remainingQty, criticalLevel: s.criticalLevel }, -line.qty, base.type);
-    await notifyIfCritical(tx, base.hotelId, { id: s.id, productId: line.productId, remainingQty, criticalLevel: s.criticalLevel }, now);
+    await notifyIfCritical(
+      tx,
+      base.hotelId,
+      { id: s.id, productId: line.productId, remainingQty, criticalLevel: s.criticalLevel },
+      s.remainingQty,
+      now,
+    );
     out.push({ remainingQty, status: stockStatus(remainingQty, s.criticalLevel) });
   }
   return out;
@@ -560,7 +569,15 @@ export async function adjustPool(
       after: { productId: input.productId, delta: input.delta, reason: input.reason, totalQty: row.totalQty, remainingQty: row.remainingQty },
     });
     await announce(tx, hotelId, { productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, input.delta, "DUZELTME");
-    if (input.delta < 0) await notifyIfCritical(tx, hotelId, { id: s.id, productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, new Date());
+    if (input.delta < 0) {
+      await notifyIfCritical(
+        tx,
+        hotelId,
+        { id: s.id, productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel },
+        s.remainingQty,
+        new Date(),
+      );
+    }
     return row;
   });
 }

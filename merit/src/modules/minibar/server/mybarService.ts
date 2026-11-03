@@ -2,13 +2,13 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
-import { publish } from "@/lib/realtime";
 import { DomainError, fromZod } from "@/lib/result";
 import { getSetting, getSettings } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 import { normalizeGeminiModel } from "@/modules/menu/server/translations";
+import { publishRadar } from "@/modules/radar/publish";
 import { lockRow, roomCatalogue } from "./minibarCommon";
 import { takeManyFromPool } from "./pool";
 
@@ -319,8 +319,10 @@ export async function createGuestMybarRequest(input: GuestMybarInput) {
         entityId: created.id,
         after: { roomId, roomNumber: room.number, items: lines, language, ip: data.ip },
       });
-      await publish(
-        { type: "mybar.created", hotelId, roomId, payload: { requestId: created.id, roomNumber: room.number } },
+      await publishRadar(
+        "mybar.created",
+        { hotelId, roomId },
+        { requestId: created.id, roomId, roomNumber: room.number },
         tx as Prisma.TransactionClient,
       );
 

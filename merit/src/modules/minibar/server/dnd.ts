@@ -425,9 +425,12 @@ export async function closeDndDay(upToDay: string, now: Date = new Date()): Prom
       }
       for (const [d, roomIds] of byDay) {
         await failDndItems(tx, { hotelId, day: d, roomIds });
-        for (let i = 0; i < roomIds.length; i += 300) {
-          await publishRadar("dnd.missed", { hotelId }, { date: d, roomIds: roomIds.slice(i, i + 300) }, tx);
-        }
+        await publishRadar(
+          "dnd.missed",
+          { hotelId },
+          { date: d, roomIds: roomIds.length > 300 ? [] : roomIds },
+          tx,
+        );
       }
 
       const hotel = await tx.hotel.findUniqueOrThrow({ where: { id: hotelId }, select: { name: true } });

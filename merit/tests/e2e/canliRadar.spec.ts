@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
 import { expect, login, resetAndSeed, test } from "./fixtures";
 import { expectNoHorizontalScroll } from "./matrix/a11y";
@@ -8,7 +9,14 @@ import { RADAR_VIEWPORTS, expectRadarAxeClean, openRadar, radarTab, radarToolbar
 // One database state for the whole file; the order of the second test is approved in the same test.
 test.describe.configure({ mode: "serial" });
 test.use({ locale: "tr-TR" });
-test.beforeAll(() => resetAndSeed({ guestMenu: true }));
+test.beforeAll(() => {
+  process.env.SEED_MINIBAR = "1";
+  try {
+    resetAndSeed({ guestMenu: true });
+  } finally {
+    delete process.env.SEED_MINIBAR;
+  }
+});
 
 const MR_NAME = "Merit Royal";
 
@@ -90,8 +98,25 @@ test("Tek otelli yönetici yalnız kendi otelini ve yetkili katmanları görür"
   await expect(toolbar.getByRole("group", { name: "Katmanlar" }).getByRole("button", { name: /Sistem/ })).toBeVisible();
 });
 
-test.fixme("Oda kontrolü Kat görünümünde 2 sn içinde onay işareti verir (radar Task 3 yayınları birleşince açılır)", async ({ page }) => {
+test("Oda kontrolü Kat görünümünde 2 sn içinde onay işareti verir", async ({ page, browser }) => {
+  await page.setViewportSize(RADAR_VIEWPORTS[0]);
   await openDesktop(page, "admin");
   const win = await openRadar(page);
-  await expect(win.getByRole("gridcell", { name: /kontrol edildi/ })).toBeVisible({ timeout: 2_000 });
+  await radarToolbar(win).getByRole("combobox", { name: "Otel" }).selectOption({ label: MR_NAME });
+  await expect(radarTab(win, "Kat")).toHaveAttribute("aria-selected", "true");
+
+  const cell101 = win.getByRole("gridcell", { name: /^101:/ });
+  await expect(cell101).toBeVisible();
+  const roomId = await cell101.getAttribute("data-room-id");
+  expect(roomId).toBeTruthy();
+
+  const katPage = await newContextPage(browser);
+  await login(katPage, "kat.mr");
+  await katPage.waitForURL((url) => !url.pathname.startsWith("/giris"));
+  const res = await katPage.context().request.post(`/api/minibar/room/${roomId}/no-consumption`, {
+    data: { clientRequestId: randomUUID() },
+  });
+  expect(res.status()).toBe(200);
+
+  await expect(win.getByRole("gridcell", { name: /101:.*kontrol edildi/ })).toBeVisible({ timeout: 2_000 });
 });

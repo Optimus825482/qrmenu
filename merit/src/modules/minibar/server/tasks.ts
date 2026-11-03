@@ -95,9 +95,8 @@ async function announce(tx: Tx, hotelId: string, changes: Change[], userId?: str
     "task.updated",
     { hotelId },
     {
-      items: changes.slice(0, WIRE_ITEM_LIMIT),
+      ...(truncated ? { truncated: true as const } : { items: changes }),
       ...(userId ? { byUserId: userId } : {}),
-      ...(truncated ? { truncated: true as const } : {}),
     },
     tx,
   );

@@ -54,7 +54,7 @@ export type Wire = {
   };
   "mybar.cancelled": { requestId: string; roomId: string; byUserId: string };
   "task.updated": {
-    items: { taskItemId: string; roomId: string; from: TaskStatusName | null; to: TaskStatusName }[];
+    items?: { taskItemId: string; roomId: string; from: TaskStatusName | null; to: TaskStatusName }[];
     byUserId?: string;
     truncated?: true;
   };
@@ -140,7 +140,8 @@ export const RADAR_WIRE: { [K in keyof Wire]: z.ZodType<Wire[K]> } = {
           to: z.enum(TASK_STATUS),
         }),
       )
-      .max(100),
+      .max(100)
+      .optional(),
     byUserId: id.optional(),
     truncated: z.literal(true).optional(),
   }),
@@ -545,6 +546,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
       const date = str(p, "date");
       const roomIds = Array.isArray(p.roomIds) ? p.roomIds.filter((r): r is string => typeof r === "string") : [];
       if (!date) return NONE;
+      if (roomIds.length === 0) return { events: [], refresh: "ALL" };
       return out([make(date, { type: "dnd.missed", layer: "MINIBAR", roomIds })]);
     }
     case "mybar.created":
