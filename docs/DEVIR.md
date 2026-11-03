@@ -25,14 +25,14 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (3 Kasım 2026, 19:50 — Fable → Codex devri; dal `ux/yenileme`, HEAD `1f30a62` + 3 ajanın commit'siz işi)
+## 1a. Kalınan yer (3 Kasım 2026, 19:50 — Fable → Codex devri; dal `ux/yenileme`, HEAD `32cd5cf` + 2 ajanın commit'siz işi)
 
-**Sıra (Erkan):** minibar (kapalı+doğrulandı) → radar (13/13 kapalı, T13 animasyon dahil) → UX (T1–T13 kapalı; **T14–T15 kaldı**) → P4 MyBar (T1–T7, T9 kapalı; **T8 sürüyor, T10 kaldı**) → **P6** (boşluk analizi sürüyor) → P7 → P8. Codex kalan işleri sürdürür; Fable sınırı sıfırlanınca `git log` ile doğrular ve dalga sonu kapanışını yapar.
+**Sıra (Erkan):** minibar (kapalı+doğrulandı) → radar (13/13 kapalı, T13 animasyon dahil) → UX (T1–T13 kapalı; **T14–T15 kaldı**) → P4 MyBar (T1–T9 uygulandı; **T8 incelemesi ve T10 kaldı**) → **P6** (boşluk analizi sürüyor) → P7 → P8. Codex kalan işleri sürdürür; Fable sınırı sıfırlanınca `git log` ile doğrular ve dalga sonu kapanışını yapar.
 
 ### Codex için ilk adımlar (sırayla)
-1. `git status --short`: çalışma ağacında üç ajanın **commit'siz** işi var (19:45):
+1. `git status --short`: çalışma ağacında ux12'nin **commit'siz** işi var (19:47):
    - **UX T12 düzeltme turu (`ux12`)**: `src/components/guide/{HelpSheet,ScreenGuideHost,guide.css,guideClient,tourModel,useScreenTour}`, `src/modules/core/{screenGuide.ts,server/{guideState,helpActions,helpData}.ts}`, `src/shell/components/Window.tsx`, `src/app/(admin)/admin/ShellClient.tsx`, `tests/e2e/guide.spec.ts`. Hedef: hata ipuçları yetkiye göre süzülür (`requires`), XP penceresinin oteli `helpActions`'a geçirilir (ctx.hotelIds doğrulamalı), 13→14 px POS, guide.css tokenları, pendingStart, sabit bekleme yerine `expect(...).not.toBeVisible`. Testleri (`coach-marks`, `setting-sentences`, `screen-guide`, `guide.spec` port 3022) koşup commit: `fix(ux): tur/yardım — yetkiye göre hata ipuçları, pencere oteli, token renkler`.
-   - **P4 T8 (`p4t8`)**: `src/shell/icons.tsx` + (henüz görünmeyen) `src/shell/apps/MybarRequests*.tsx`, registry, `adminViews.ts`, testler, `tests/e2e/mybarAdmin.spec.ts`. Brief: plan Task 8 (`docs/superpowers/plans/2026-10-31-p4-mybar.md` 220–237) + `task-{5,6}-report.md`; ekran kodu `MB-PERS` (seed'de var). Commit mesajı: `feat(p4): MyBar Talepleri XP penceresi — liste, süzgeçler, KPI, iptal, dışa aktarma`.
+   - **P4 T8 indi: `32cd5cf`** (MyBar Talepleri XP penceresi; 14 birim, mybarAdmin 1/1, shell 9/9; `registerMybarApps()` + ShellClient kaydı; kat süzgeci yok, detay salt okunur). **Haiku incelemesi yapılmadı** → yap (yetki `MB-PERS` V/A, otel kapsamı, fiyatsız dışa aktarma `MYBAR_EXPORT` audit, sayfalama ≤100, ReasonDialog), bulguları düzelt, kapat.
    - `merit/tsconfig.json` → `git checkout -- merit/tsconfig.json` (next build yan etkisi, asla commit'lenmez).
    Yarım kalanı aynı brief ile taze ajan bitirir; her iki görev de Haiku/Sonnet incelemesinden geçer.
 2. **P6 boşluk analizi** `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md` (ajan çalışıyordu; yoksa aynı görevi yeniden ver: plan `2026-10-31-p6-oda-servisi.md` ile mevcut `order/server/roomService/*`, `(ops)/oda-servisi`, `(guest)/q/[token]/siparis`, `rsSlaSweep`, `RoomServiceReportsWindow` karşılaştırması). Çıkan "YOK/KISMİ" görevler için brief'ler → uygula. Kural: UI'da "sepet" yok → "Seçimler".
