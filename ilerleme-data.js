@@ -76,7 +76,7 @@ window.ILERLEME = {
       summary: "Kat sorumlusu ve depo ekranları, oda kontrolü, DND, doluluk Excel, günlük görevler",
       tasks: [
         { title: "Kat sorumlusu PWA (/kat): kat planı, kat doluluk, kamera QR okuyucu", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
+        { title: "Oda kontrolü: +N ikame, Sarfiyat Yok, DND (2 kontrol, 120 dk hatırlatma, gün sonu)", status: "active", note: "03.11 07:10: DND ve görev kalemi çekirdeği (tasks.ts/dnd.ts: ayarlı eşik, 30 sn çift dokunma, 120 dk hatırlatma, gün sonu EKSIK) tamamlandı ve incelendi (4444d08, 4385096). Oda kontrolü servisi (+N ikame, Sarfiyat Yok, sil/güncelle) uygulanıyor; /kat sayfaları UX planında." },
         { title: "Stoklarım, kritik stoklar, depodan ek talep; işlemlerim", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
         { title: "Depo ekranları: havuz, talepler, doluluk Excel yükleme (inhouse/arrivals/departures)", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
         { title: "Günlük görevler ve akıllı tavsiye iş planı; 10:00 doluluk ve 09:00 günlük rapor e-posta işleri", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
@@ -176,6 +176,7 @@ window.ILERLEME = {
     { at: "03.11 02:22", text: "UX T2 (rol bazlı iniş /baslat, katalog, yetkisiz ekran sayfası) uygulandı (7244d05); T11 Erişimim başladı." },
     { at: "03.11 02:03", text: "Minibar T7 incelemesi onaylandı; Canlı Radar T1 (olay birliği) başladı." },
     { at: "03.11 02:00", text: "Minibar T7 (stok görünümleri, ek talep yaşam döngüsü) uygulandı (c6f7f5d); inceleme ve T6 (oda QR) başladı." },
+    { at: "03.11 07:10", text: "Minibar T4 (görev kalemi çekirdeği + DND servisi) incelemesi onaylandı ve kapandı; T5 oda kontrolü servisi başladı. T2 düzeltme turu, T13 göç, radar T5, UX T6 ve e2e bütünleştirme paralel sürüyor." },
     { at: "03.11 01:48", text: "Canlı yedekten gerçek otel tanımları (3 otel, 18 kat, 558 oda, 69 ürün, 10 setup) referans seed'e eklendi ve incelemesi onaylandı (dd2995f)." },
     { at: "03.11 01:30", text: "Minibar tamamlama planı (14) ve Canlı Operasyon Radarı spec+planı (12) yazıldı. Ajan başına DB/port ile paralel uygulama başladı." },
     { at: "03.11 01:08", text: "UX yenileme planı yazıldı ve T1 başladı; S1–S6 kararları onaylandı; canlı operasyon radarı modülü istendi (spec yazılıyor)." },
