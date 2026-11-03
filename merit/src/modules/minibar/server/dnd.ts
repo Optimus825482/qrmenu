@@ -115,6 +115,7 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
     });
     if (covered > 0) throw new DomainError("CONFLICT", "Bu oda bugün zaten kontrol edildi");
 
+    await tx.$queryRaw`SELECT id FROM room_dnds WHERE room_id = ${roomId} AND date = ${date}::date FOR UPDATE`;
     const existing = await tx.roomDnd.findUnique({ where: { roomId_date: { roomId, date } } });
     if (existing?.status === "TAMAMLANDI") {
       throw new DomainError("CONFLICT", "Bu oda için DND kontrolü bugün tamamlandı");
