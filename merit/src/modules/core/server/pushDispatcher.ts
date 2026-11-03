@@ -1,4 +1,4 @@
-import { isPushConfigured, type PushOutcome, sendPush } from "@/lib/push";
+import { isPushConfigured, type PushOutcome, type PushPayload, sendPush } from "@/lib/push";
 import { prisma } from "@/lib/prisma";
 import { subscribe, type MeritEvent } from "@/lib/realtime";
 
@@ -8,7 +8,7 @@ const CONCURRENCY = 8;
 const MAX_FAILS = 5;
 
 export type PushNotificationInfo = { refId: string | null; title: string; body: string };
-type PushBuilder = (n: PushNotificationInfo) => { url: string; tag: string };
+type PushBuilder = (n: PushNotificationInfo) => PushPayload;
 
 /** Push gönderilen bildirim türleri. Diğer türler yalnız zil + SSE ile gider. */
 export const PUSH_TYPES = new Map<string, PushBuilder>();
@@ -18,6 +18,8 @@ export function registerPushType(type: string, builder: PushBuilder): void {
 }
 
 registerPushType("mybar.created", (n) => ({
+  title: "Yeni MyBar talebi",
+  body: "Talebi görmek için Merit OS'i açın.",
   url: `/kat/mybar?focus=${encodeURIComponent(n.refId ?? "")}`,
   tag: `mybar-${n.refId ?? "yeni"}`,
 }));
@@ -57,8 +59,7 @@ export async function dispatchNotificationEvent(e: MeritEvent): Promise<Dispatch
   const subs = await prisma.pushSubscription.findMany({ where: { userId: { in: userIds } } });
   const title = str(p?.title) || "Merit OS";
   const body = str(p?.body);
-  const { url, tag } = builder({ refId, title, body });
-  const payload = { title, body, url, tag };
+  const payload = builder({ refId, title, body });
 
   const queue = [...subs];
   const settle = async (sub: (typeof subs)[number], outcome: PushOutcome) => {

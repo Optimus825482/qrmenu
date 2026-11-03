@@ -113,8 +113,8 @@ describe("dispatchNotificationEvent", () => {
     expect(sent).toHaveLength(2);
     const payload = JSON.parse(sent[0]!.json);
     expect(payload).toEqual({
-      title: "Oda 101 - Yeni MyBar talebi",
-      body: expect.stringContaining("Oda 101"),
+      title: "Yeni MyBar talebi",
+      body: "Talebi görmek için Merit OS'i açın.",
       url: "/kat/mybar?focus=req1",
       tag: "mybar-req1",
     });
@@ -124,13 +124,14 @@ describe("dispatchNotificationEvent", () => {
     expect(rows.every((r) => r.pushedAt !== null)).toBe(true);
   });
 
-  it("400 karakterlik not gövdede en çok 150 karakter taşır", async () => {
-    const { event } = await fire("req2", "x".repeat(400));
+  it("oda, ürün ve misafir notunu yalnız uygulama içi bildirimde tutar", async () => {
+    const { event } = await fire("req2", "Misafirin özel notu");
     await dispatchNotificationEvent(event);
-    const body = JSON.parse(sent[0]!.json).body as string;
-    const note = body.split("Not: ")[1]!;
-    expect(note.length).toBeLessThanOrEqual(150);
-    expect(Buffer.byteLength(sent[0]!.json)).toBeLessThanOrEqual(1024);
+    expect(sent[0]!.json).not.toMatch(/101|Su ×2|Misafirin özel notu/);
+    const notification = await testDb.notification.findFirstOrThrow({ where: { refId: "req2" } });
+    expect(notification.body).toContain("Oda 101");
+    expect(notification.body).toContain("Su ×2");
+    expect(notification.body).toContain("Misafirin özel notu");
   });
 
   it("aynı olay iki kez eşzamanlı verilirse yalnız bir kez gönderilir", async () => {

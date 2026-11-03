@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "03.11.2026 19:50",
-  headline: "Minibar ve radar planları kapalı. UX: T12 düzeltme turu sürüyor, T14–T15 kaldı. P4 MyBar: misafir sayfası ve kat sorumlusu akışları kapandı; yönetim penceresi (T8) ve Web Push düzeltmesi sürüyor, sonra T10 kabul. Ardından P6, P7, P8.",
+  updatedAt: "03.11.2026 19:55",
+  headline: "Minibar ve radar planları kapalı. UX T12 doğrulaması sürüyor, T14–T15 kaldı. P4 MyBar Web Push tamamlandı, yönetim penceresinin T8 düzeltmeleri ve T10 kabulü açık. P6, P7 ve P8 boşluk analizleri hazır.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -88,7 +88,7 @@ window.ILERLEME = {
       tasks: [
         { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "03.11 19:01", note: "T1 veri temeli (c201ba3), T2 çeviri servisi (0a40ea8 + 041d49c), T3 misafir API (72c289e + güvenlik sertleştirmeleri 3fe2959/2195e42/49ce303), T4 misafir sayfası 8 dilde + RTL (acdf2e1) — hepsi incelendi" },
         { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 19:35", note: "T5 yaşam döngüsü (d2757e9), T6 karşılama/havuzdan düşüm (ade0c1f), T7 kat arayüzü: zorunlu onay, /kat/mybar, oda kartı (1922496) — incelendi; gezinme/matris/layout entegrasyonu ve T8 yönetim penceresi sürüyor" },
-        { title: "Web Push kanalı", status: "active", note: "T9 uygulandı ve incelendi (13b3e62: abonelik, dağıtıcı, service worker, SSRF izin listesi; env VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT); çıkışta abonelik silme düzeltmesi sürüyor" }
+        { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). Uçtan uca MyBar kabulü T10 kapsamında." }
       ]
     },
     {
@@ -165,6 +165,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "03.11 19:55", text: "Erkan genel MyBar Web Push metnini seçti. Cihaz bildiriminden oda, ürün ve not ayrıntıları çıkarıldı, uygulama içi ayrıntılar korundu. Push dağıtım testleri 14/14 geçti. P6, P7 ve P8 boşluk analizleri hazır." },
     { at: "03.11 17:18", text: "UX T9 (Kat sorumlusu akışları: useMybarStream SSE kancası, PersistentMybarModal 1/N sayacı ve ses/titreşim, oda kontrolünde +1..+4 tek dokunuş ikame + 6 sn Geri al snackbar, /kat/qr kamera reddi + oda numarası çözümü + fener, çıplak kat/depo sayfalarının belirteçlerle yenilenmesi, depo/page.tsx depoDashboard okuması, src/app/kat/** küçük yazı ve ham palet cırcırlarının 0'a indirilmesi) tamamlandı ve doğrulandı (mybar-stream + uxRatchet + uxSourceRules 11/11 yeşil, tsc/eslint 0 hata). DEVIR.md ve ilerleme.html Fable devri için güncellendi; sıradaki: UX T10, T12–T15." },
     { at: "03.11 16:45", text: "Radar T12 (Komuta Merkezi 'Canlı Radar\\'ı aç' düğmesi, radar-sim.ts sahte olay üreticisi, radar-load.test.ts 5/5 yük/sınır kanıtları, canliRadarScope.spec.ts kapsam e2e'si, P7/P8 plan ve DEVIR güncellemeleri) tamamlandı. Canlı Operasyon Radarı modülünün tamamı (T1–T12) kapatıldı. Sıradaki: UX T9–T15." },
     { at: "03.11 16:35", text: "Radar T11 (/radar duvar ekranı rotası, tam ekran ve wakeLock, görünüm dönüş denetleyicisi, kritik uyarıda 60 sn duraklama ve ses kapısı) tamamlandı ve doğrulandı (radar-wall 6/6 + radar-source-rules 11/11 yeşil, tsc/eslint temiz). Sıradaki: Radar T12." },

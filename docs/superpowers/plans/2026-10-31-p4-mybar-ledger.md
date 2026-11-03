@@ -21,3 +21,4 @@ Task 9 fix round DONE (5752ab9; çıkışta/forceLogout/sweeper'da abonelikler s
 T7 entegrasyon DONE (51a5700: nav KAT_MORE, FALLBACK_TITLES, ROUTE_OWNERS /kat/mybar→MB-PERS, matrix kat-mybar, layout tek montaj). Kontrolör: layout hotelId={ctx.session.hotelId} geçirir (84f9091).
 Task 8: DONE (32cd5cf; 14 birim, mybarAdmin 1/1, shell 9/9; MB-PERS; CSV/XLSX fiyatsız, A hakkı; kat süzgeci yok). İNCELEME BEKLİYOR (Codex). Rehber hedefleri raporda.
 Ruling: Erkan 03.11.2026 tarihinde genel Web Push metninin korunmasını seçti. Bildirim gövdesine ürün adı ve misafir notu eklenmez. `push.includeNote` T10 kapsamından çıkarıldı.
+Task 9: MyBar push başlığı ve metni genelleştirildi. Oda, ürün ve misafir notu uygulama içi bildirimde kalır. İzole PostgreSQL ile push dağıtım testleri 14/14, değişen dosyalarda ESLint temiz.
