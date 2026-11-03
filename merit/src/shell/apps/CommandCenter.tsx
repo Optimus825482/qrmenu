@@ -9,6 +9,7 @@ import { useSetupSummary } from "../useSetupSummary";
 import { useSse } from "../useSse";
 import type { AppProps } from "../registry";
 import { Icon } from "@/components/icons/Icon";
+import { useWindowStore } from "../windowStore";
 
 const FEED_LIMIT = 50;
 
@@ -26,6 +27,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
 
   const setup = useSetupSummary();
   const setupRows = hotelId ? setup.rows.filter((r) => r.hotelId === hotelId) : setup.rows;
+  const canOpenRadar = useWindowStore(
+    (s) => s.appIds === null || s.appIds.includes("core.radar"),
+  );
 
   const { status } = useSse((e: MeritEvent) => {
     const parsed = new Date(e.at);
@@ -76,6 +80,15 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
           <span>Canlı Komuta Radarı</span>
+          {canOpenRadar ? (
+            <button
+              type="button"
+              className="xp-button text-xs py-0.5 px-2 ml-2 font-normal"
+              onClick={() => openApp?.("core.radar")}
+            >
+              Canlı Radar&apos;ı aç
+            </button>
+          ) : null}
         </legend>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
           <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
