@@ -172,9 +172,10 @@ describe("fiyatlar yalnız SISTEM/YONETIM'e görünür", () => {
     expect(mine.purchasePrice).toBeNull();
 
     const depStock = (await (await stockRoute.GET(new Request(url("depo/stock")))).json()) as {
-      stockItems: { productId: string; price: number }[];
+      stockItems: { productId: string; price?: number | null }[];
     };
-    expect(depStock.stockItems.find((s) => s.productId === w.cola.id)?.price).toBe(0);
+    // Havuz fiyat taşımaz: fiyat görmeyen role alan 0/null gelir ya da hiç gelmez.
+    expect([0, null, undefined]).toContain(depStock.stockItems.find((s) => s.productId === w.cola.id)?.price);
 
     const setups = (await (await setupsRoute.GET()).json()) as { setups: { items: { salePrice: number }[] }[] };
     expect(setups.setups.flatMap((s) => s.items).every((i) => i.salePrice === 0)).toBe(true);
