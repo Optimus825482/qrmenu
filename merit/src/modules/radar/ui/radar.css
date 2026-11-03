@@ -1039,3 +1039,50 @@ button.rd-alert-chip {
   font-size: var(--rd-small);
   font-weight: 700;
 }
+
+/* Duvar ekranı modu */
+.rd-root.rd-cursor-hidden,
+.rd-root.rd-cursor-hidden * {
+  cursor: none !important;
+}
+
+.rd-wall-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--app-line);
+  background: var(--surface);
+  flex: none;
+}
+
+.rd-wall-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(var(--rd-font) + 2px);
+}
+
+.rd-wall-clock {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.rd-wall-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rd-wall-rotation {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rd-wall-fs-btn {
+  font-weight: 700;
+}

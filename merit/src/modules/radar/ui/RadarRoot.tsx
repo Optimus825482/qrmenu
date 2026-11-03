@@ -15,6 +15,7 @@ import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
 import { CONNECTION_TEXT, Toolbar, VIEW_LABELS, type ConnectionState, type ViewKey } from "./Toolbar";
+import { WallShell } from "./WallShell";
 import type { PlaybackSpeed } from "./playback";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
@@ -23,6 +24,7 @@ import { Queues } from "./views/Queues";
 import { RoomService } from "./views/RoomService";
 import { Staff } from "./views/Staff";
 import { Tables } from "./views/Tables";
+import { createSoundGate, createWallController } from "./wall";
 import "./radar.css";
 
 export type RadarInitial = {
@@ -31,6 +33,7 @@ export type RadarInitial = {
   views?: WallView[];
   rotateSeconds?: number;
   outletId?: string;
+  soundOnEscalation?: boolean;
 };
 
 export type RadarRootProps = {
@@ -73,6 +76,7 @@ const SHORTCUTS: [string, string][] = [
   ["Sol / Sağ ok", "10 saniye geri veya ileri sar (Shift ile 1 dk)"],
   ["End", "Canlıya dön / tekrarda sona atla"],
   ["Space · + / -", "Tekrarda oynat/duraklat ve hız değiştir"],
+  ["Ctrl + Alt + F", "Duvar ekranı modunu aç"],
   ["F5", "Anlık görüntüyü yenile"],
   ["F1", "Bu yardımı aç veya kapat"],
   ["Ok tuşları · Enter · Esc", "Kat ızgarasında gezin, ayrıntı aç, kapat"],
@@ -88,8 +92,13 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const [help, setHelp] = useState(false);
   const [replayDialog, setReplayDialog] = useState(false);
   const [legendOpen, setLegendOpen] = useState<boolean>(() => consumeInitialLegendOpen());
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(Boolean(initial.soundOnEscalation));
+  const [cursorHidden, setCursorHidden] = useState<boolean>(false);
+  const [wakeLockAvailable, setWakeLockAvailable] = useState<boolean>(true);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const helpClose = useRef<HTMLButtonElement | null>(null);
+  const seenCritKeysRef = useRef<Set<string>>(new Set());
+  const soundGateRef = useRef(createSoundGate({ minGapMs: 30_000, enabled: Boolean(initial.soundOnEscalation) }));
 
   const { store, state } = useRadar(hotelId);
   const sse = useStore(sseClient().store, (s) => s.status);
@@ -144,7 +153,75 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
           : snap?.layers.staff
             ? "personel"
             : "genel";
-  const view: ViewKey = choice && views.includes(choice) ? choice : views.includes(fallback) ? fallback : "genel";
+
+  const wallRotateViews = useMemo<WallView[]>(() => {
+    const raw = initial.views ?? snap?.config.wallViews ?? ["genel", "kat", "masa", "kuyruk"];
+    const filtered = raw.filter((v) => views.includes(v));
+    return filtered.length > 0 ? filtered : [views[0] ?? "genel"];
+  }, [initial.views, snap?.config.wallViews, views]);
+
+  const wallRotateSec = initial.rotateSeconds ?? snap?.config.wallRotateSeconds ?? 20;
+  const wallCtrl = useMemo(
+    () => createWallController({ views: wallRotateViews, rotateSeconds: wallRotateSec }),
+    [wallRotateViews, wallRotateSec],
+  );
+  const wallState = wall ? wallCtrl.state(now) : null;
+
+  const view: ViewKey =
+    wall && wallState && (wallState.paused === "critical" || !choice)
+      ? views.includes(wallState.view)
+        ? wallState.view
+        : fallback
+      : choice && views.includes(choice)
+        ? choice
+        : views.includes(fallback)
+          ? fallback
+          : "genel";
+
+  const activeOutletId =
+    wall && wallState?.paused === "critical" && wallState.focus?.outletId
+      ? wallState.focus.outletId
+      : outletId;
+
+  useEffect(() => {
+    soundGateRef.current.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    if (!wall) return;
+    for (const alert of state.alerts) {
+      if (alert.severity !== "crit") continue;
+      if (seenCritKeysRef.current.has(alert.key)) continue;
+      seenCritKeysRef.current.add(alert.key);
+      wallCtrl.critical(alert, Date.now());
+      if (soundGateRef.current.shouldPlay(Date.now()) && typeof Audio !== "undefined") {
+        try {
+          const audio = new Audio("/sounds/error.wav");
+          void audio.play().catch(() => undefined);
+        } catch {
+          // ignore audio errors
+        }
+      }
+    }
+  }, [wall, state.alerts, wallCtrl]);
+
+  useEffect(() => {
+    if (!wall) return;
+    let id: ReturnType<typeof setTimeout> | undefined = setTimeout(() => setCursorHidden(true), 5_000);
+    const onMove = () => {
+      setCursorHidden(false);
+      wallCtrl.interaction(Date.now());
+      if (id) clearTimeout(id);
+      id = setTimeout(() => setCursorHidden(true), 5_000);
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("keydown", onMove, { passive: true });
+    return () => {
+      if (id) clearTimeout(id);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("keydown", onMove);
+    };
+  }, [wall, wallCtrl]);
 
   const connection: ConnectionState =
     state.connection === "offline" || sse === "closed"
@@ -228,10 +305,19 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   );
   const canReplay = currentHotel?.canReplay !== false;
 
+  const openWallTab = () => {
+    const code = currentHotel?.code ?? initial.hotels[0]?.code ?? "";
+    const url = code ? `/radar?duvar=1&otel=${encodeURIComponent(code)}` : "/radar?duvar=1";
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const menus: MenuDef[] = [
     {
       label: "Dosya",
-      items: [{ kind: "action", label: "Anlık görüntüyü yenile", shortcut: "F5", onSelect: () => void store.getState().refresh() }],
+      items: [
+        { kind: "action", label: "Anlık görüntüyü yenile", shortcut: "F5", onSelect: () => void store.getState().refresh() },
+        { kind: "action", label: "Duvar ekranı modu", shortcut: "Ctrl+Alt+F", onSelect: openWallTab },
+      ],
     },
     {
       label: "Görünüm",
@@ -300,6 +386,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     if (e.key === "F5") {
       e.preventDefault();
       void s.refresh();
+    } else if (e.ctrlKey && e.altKey && (e.key === "f" || e.key === "F")) {
+      e.preventDefault();
+      if (!wall) openWallTab();
     } else if (e.key === "F1") {
       e.preventDefault();
       setHelp((h) => !h);
@@ -407,7 +496,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   } else if (view === "kat" && snap) {
     body = <Floor view={snap} now={now} onOpenApp={openApp} />;
   } else if (view === "masa" && snap) {
-    body = <Tables view={snap} now={now} outletId={outletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
+    body = <Tables view={snap} now={now} outletId={activeOutletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
   } else if (view === "kuyruk" && snap) {
     body = (
       <Queues
@@ -430,11 +519,24 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       <DensityRoot density={wall ? "pos" : "xp"}>
         <div
           ref={rootRef}
-          className="rd-root"
+          className={`rd-root${wall && cursorHidden ? " rd-cursor-hidden" : ""}`}
           data-radar-density={wall ? "wall" : "xp"}
           onKeyDown={onKeyDown}
         >
-          {wall ? null : <MenuBar menus={menus} />}
+          {wall ? (
+            <WallShell
+              hotelName={hotelName}
+              clockText={clock(now)}
+              connection={connection}
+              rotationLabel={wallState?.label ?? ""}
+              soundEnabled={soundEnabled}
+              onToggleSound={() => setSoundEnabled((x) => !x)}
+              onWakeLockStatus={setWakeLockAvailable}
+              wakeLockAvailable={wakeLockAvailable}
+            />
+          ) : (
+            <MenuBar menus={menus} />
+          )}
           <Toolbar
             idPrefix={idPrefix}
             hotels={initial.hotels}
@@ -505,6 +607,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               <Ticker events={visibleEvents} state={snap} mode="window" nameStyle="full" onSelect={focusEvent} />
             ) : null}
           </div>
+          {!all && wall ? (
+            <Ticker events={visibleEvents} state={snap} mode="wall" nameStyle="short" onSelect={focusEvent} />
+          ) : null}
           {!all && loaded ? (
             <Timeline
               mode={state.mode}
