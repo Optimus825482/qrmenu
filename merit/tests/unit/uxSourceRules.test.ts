@@ -84,6 +84,8 @@ describe("UX kaynak kuralları", () => {
       for (const f of all) {
         f.text.split("\n").forEach((line, i) => {
           if (/animate-(bounce|ping|pulse)\b/.test(line)) hits.push(`${f.p}:${i + 1}`);
+          // Radar T13: çağrı halkası tek onaylı sürekli animasyondur; istisna yalnız bu dosyaya aittir.
+          if (f.p.replaceAll("\\", "/").endsWith("src/modules/radar/ui/motion/motion.css")) return;
           const m = /animation(?:-[a-z]+)?:[^;]*infinite/.exec(line);
           if (m && !/\bspin\b/.test(m[0])) hits.push(`${f.p}:${i + 1}`);
         });
