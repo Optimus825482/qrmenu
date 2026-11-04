@@ -17,7 +17,7 @@
 | P4 MyBar + bildirimler | **Kısmi prototip**: misafir isteği 02.11'de QR tokena bağlandı; yaşam döngüsü (Gördüm/karşılama/iptal), depo penceresi, Web Push YOK | `docs/superpowers/plans/2026-10-31-p4-mybar.md` |
 | P6 QR Oda Servisi | **Kısmi**: sipariş çekirdeği/durum makinesi/`/oda-servisi` plana uygun ve testli; misafir oda servisi UI, SLA tarama/eskalasyon işi YOK | `docs/superpowers/plans/2026-10-31-p6-oda-servisi.md` |
 | P7 Rapor / e-posta / izleme | **Kısmi prototip**: CR-RAP penceresi (CSV), e-posta işleri 02.11'de otel kapsamlı+EmailLog yapıldı; Excel/PDF motoru, SMTP ayar/mühür, radar KPI kalan 3 metriği YOK | `docs/superpowers/plans/2026-10-31-p7-rapor-eposta.md` |
-| UX Arayüz Yenilemesi | **Kısmi (T1–T9 ve T11 tamamlandı; T10, T12–T15 kaldı)**: belirteçler/matris, iniş/yetkisiz, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, StaffShell, Erişimim ve Kat sorumlusu akışları (`/kat/**`, `useMybarStream`, `+N` tek dokunuş + Geri al, QR/fener) tamamlandı. | `docs/superpowers/plans/2026-11-03-ux-yenileme.md` (+ `.superpowers/sdd/2026-11-03-ux-yenileme/progress.md`) |
+| UX Arayüz Yenilemesi | **Tamamlandı (T1–T15)**: belirteçler/matris, iniş/yetkisiz, tek onay/snackbar, emoji→ikon, POS masa haritası, KDS, StaffShell, kabuk seçimi/PWA, yetki rehberi ve Erişimim, kat sorumlusu akışları, XP cilası. T15 kapanışı `0d75121`: altı görünüm matrisi 472/472 (26 rota + misafir menüsü tr/ar), `KNOWN_*` listeleri ve cırcırlar sıfır, `final-gates`. Kabul: `docs/kabul/2026-11-03-ux-kabul.md`. | `docs/superpowers/plans/2026-11-03-ux-yenileme.md` (+ `.superpowers/sdd/2026-11-03-ux-yenileme/progress.md`) |
 | RADAR Canlı Operasyon Radarı | **Tamamlandı (T1–T12)** (`ux/yenileme` dalında; tüm modüllerin salt-okunur canlı izlemesi, `/radar` duvar ekranı, 30 dk geri sarma ve NDJSON gün tekrarı, `CR-RAD`, `OperationEvent`) | `docs/superpowers/plans/2026-11-03-canli-radar.md` (+ `.superpowers/sdd/2026-11-03-canli-radar/progress.md`) |
 | P8 Kabul / eğitim / kurulum | Başlamadı (Docker/Coolify kurulumu var; kabul paketi, yük testi, kılavuzlar yok) | `docs/superpowers/plans/2026-10-31-p8-kabul.md` |
 
@@ -25,20 +25,16 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (4 Kasım 2026, 02:00 — Opus; dal `ux/yenileme`, son kod commit'i `b4e5a17`)
+## 1a. Kalınan yer (4 Kasım 2026, 03:45 — Opus; dal `ux/yenileme`, son kod commit'i `0d75121`)
 
-**Sıra (Erkan: alan alan, sırayla):** UX T14 incelemesi → UX T15 → P4 T10 → P6 → P7 → P8 → Opus dal incelemesi → tam doğrulama → Erkan'dan birleştirme onayı. Kapalı: minibar 14/14, radar 13/13, UX T1–T13, P4 T1–T9.
+**Sıra (Erkan: alan alan, sırayla):** P4 T10 → P6 → P7 → P8 → Opus dal incelemesi → tam doğrulama → Erkan'dan birleştirme onayı. Kapalı: minibar 14/14, radar 13/13, UX T1–T15 (T14 incelemesi `fa3dcaf`, T15 `0d75121`), P4 T1–T9.
 
 **Token kuralı (Erkan):** basit iş Haiku, orta iş Sonnet, karmaşık iş Opus. Kontrolör konuşmayı kısa tutar. `DEVIR` ve `ilerleme` alan kapanışında toplu güncellenir. Ajan yoklanmaz, ama uzun süren işte Erkan'a ara bilgi verilir.
 
 ### Sıradaki adımlar
-1. **UX T14 incelemesi (Sonnet):** `434d4e6..b4e5a17` (`d9b46a8`, `f158b60`, `b4e5a17`). Rapor `docs/superpowers/reports/ux-task-14-report.md`. Özellikle bak: `saveShellPrefs` birleştirmesi, `canUsePos` sunucu türetmesi, `RadarRoot` denetleyici anahtarı, `Window.tsx` menü çubuğu ve kısayollar, silinen `/api/manifest/garson`.
-2. **T14'ten açık kalanlar (T15 içinde kapat):**
-   - `landing.spec.ts:78` KIRMIZI: `/kat?filtre=dnd` artık süzmüyor, `KatDashboard.tsx:53` `void filter`. Süzgeç ya geri gelir ya da parametre ve test kaldırılır; ürün davranışı değiştiği için Erkan'a sor.
-   - `canliRadarWall` 1920: tek başına 3/3 yeşil, son tam chromium koşusu düzeltmeden önceydi. T15 tam koşusunda doğrula.
-   - `preferredShell` için arayüz yok, değer yalnız kayıtta korunuyor. Seçim yeri tasarım kararı, Erkan'a sor.
-   - `PushToggle` spec'i VAPID anahtarı ister; e2e sunucusunu geçici üretilmiş anahtarlarla başlat, repoya yazma.
-3. **UX T15:** `.superpowers/sdd/2026-11-03-ux-yenileme/task-15-brief.md`.
+1. **UX kapandı (T15, `0d75121`):** T14'ten devreden dört madde kapandı: `/kat?filtre=dnd` süzgeci geri geldi (`landing.spec.ts:78` yeşil), `canliRadarWall` 1366/1920 tam chromium koşusunda yeşil, `pushSubscribe` geçici VAPID anahtarıyla yeşil, `preferredShell` arayüzü Erkan kararına bırakıldı (§4). Koşu sonuçları `docs/kabul/2026-11-03-ux-kabul.md`; rapor `.superpowers/sdd/2026-11-03-ux-yenileme/task-15-report.md`.
+2. **Açık kırmızılar (T15 dışı):** `tests/unit/sse-filtered.test.ts` (P4 `acdf2e1` ile eklenen dört `mybar.*` misafir olayı testte yok) ve `mybarFlow.spec.ts:26` (P4 T10).
+3. **Sıradaki: P4 T10.**
 4. **P4 T10:** commit'siz yığın `docs/kurulum.md`, `tests/e2e/mybarFlow.spec.ts` (izlenmiyor). `mybarFlow.spec.ts:26` KIRMIZI. T4/T7/T9 minörleri raporlarda.
 5. **P6:** T2R `9b7dda3`, T3R `299cafc`, T4a `45d0d24` indi. T4b commit'siz yığın: `src/modules/menu/ui/guest/{GuestFooter,GuestFrame,MenuBrowser,MenuView,SelectionsDrawer}.tsx`, `tests/unit/guest-room-mode.test.tsx`. Sonra T5a, T6b, S0, T4c/T4d, T5b/c, T6a/c, T7; `ROOM_SERVICE_READY` en son açılır. Liste `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md`; §5'te Erkan'a 4 soru var (SLA başlangıcı, pencere kimliği `rs.rapor`, kapalı menü kart metni, KDS `kind` süzgeci), yanıt yoksa varsayılanlar.
 6. **P7, P8:** `.superpowers/sdd/2026-10-31-p7-rapor-eposta/gap-analysis.md`, `.superpowers/sdd/2026-10-31-p8-kabul/gap-analysis.md`.
@@ -49,11 +45,11 @@ brief → uygulayıcı (TDD, commit, LF, Co-Authored-By) → inceleme (misafire 
 
 ### Durum özeti (commit'ler)
 - **Minibar 14/14**, dalga doğrulaması yeşil (`wave-verification-report.md`). **Radar 13/13**, T13 `08ff735`+`43dbe2e`. Sürekli animasyon istisnası yalnız `radar/ui/motion/motion.css` (`434d4e6`).
-- **UX** T1–T13 kapalı; T14 `d9b46a8`, `f158b60`, `b4e5a17` (incelenmedi). T14 ajan koşuları: chromium 206 geçti, 3 kaldı, 1 koşmadı (duvar testi düzeltmesinden önce); matris 126/126.
+- **UX** T1–T15 kapalı: T14 `d9b46a8`, `f158b60`, `b4e5a17` + inceleme düzeltmesi `fa3dcaf`; T15 `0d75121` (matris 472/472, chromium 209/210, tek kırmızı `mybarFlow` P4 T10).
 - **P4** T1–T9 kapalı: T8 `32cd5cf`+`0d5cfe6`, T9 `13b3e62`+`5752ab9`, push genel metin `174d866`.
 
 ### Kararlar (bu dalga, ek)
-Göçte bcrypt korunur; KDS oda servisi geri alma RO-TAL D; "simülatif" = animasyonlu (radar T13); push gövdesi genel metin, `push.includeNote` yok; çıkışta tüm push abonelikleri silinir; XP kabuğunda yoğunluk özniteliği `data-xp-density` (genel `data-density` tokenlarıyla çakışmaz); aynı ekranı paylaşan uygulamalar `launchLabel` ile ayrı pencere adı taşır.
+`/kat?filtre=dnd|mybar` süzgeci geri geldi: yalnız DND kaydı / MyBar talebi olan katlar listelenir, "Süzgeç: …" satırı ve "Süzgeci kaldır" bağlantısı görünür (Erkan'a bildirildi, varsayılan karar); göçte bcrypt korunur; KDS oda servisi geri alma RO-TAL D; "simülatif" = animasyonlu (radar T13); push gövdesi genel metin, `push.includeNote` yok; çıkışta tüm push abonelikleri silinir; XP kabuğunda yoğunluk özniteliği `data-xp-density` (genel `data-density` tokenlarıyla çakışmaz); aynı ekranı paylaşan uygulamalar `launchLabel` ile ayrı pencere adı taşır.
 
 ## 2. Çalışma ortamı
 
@@ -79,6 +75,7 @@ Göçte bcrypt korunur; KDS oda servisi geri alma RO-TAL D; "simülatif" = anima
 - Zaman: tüm kolonlar `timestamptz(3)`, iş günü `Europe/Nicosia` (`lib/time.ts` `businessDate/businessDay`), Prisma bağlantıları UTC'ye sabit (`lib/pgAdapter.ts`).
 - Yetki: rol × otel × modül × ekran × işlem (`lib/rbac.ts`); OUTLET/MUTFAK oturumları yalnız oturum otelini görür; hedef listesi modül kapılarıyla süzülür.
 - Gerçek zaman: Postgres NOTIFY/LISTEN → SSE (`lib/realtime.ts`, `/api/sse`); olay tipleri `lib/realtime-events.ts`; sekme başına tek EventSource (`shell/sseStore.ts`).
+- `preferredShell` yalnız kayıtta (`User.prefs.shell`) korunur; seçim arayüzü Erkan kararı bekliyor (T15'te UI eklenmedi).
 - Kabuk: XP; uygulama kaydı `src/modules/core/apps.ts` (`AppDefinition`); tanım pencereleri `needsHotel: true`; Denetim Masası görünüm/marka ayarları `User.prefs.shell`.
 
 - Terminoloji: arayüzlerde **"sepet" yok, "Seçimler"** (bkz. P5/P6/P4 planlarındaki karar satırı); alışveriş çağrışımlı ifadeler kullanılmaz.

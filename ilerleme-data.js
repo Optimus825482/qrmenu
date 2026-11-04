@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "04.11.2026 02:00",
-  headline: "Minibar, radar ve UX T1–T13 kapalı. UX T14 uygulandı; incelemesi ve T15 kaldı. Ardından P4 T10, P6, P7, P8.",
+  updatedAt: "04.11.2026 03:45",
+  headline: "Minibar, radar ve UX (T1–T15) kapalı: altı görünümlük matris sıfır ihlalle geçti. Sırada P4 T10, ardından P6, P7, P8.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -138,7 +138,7 @@ window.ILERLEME = {
         { title: "T11 screenGuide, accessSummary, Erişimim", status: "done", doneAt: "03.11 05:55", note: "b5f8022 (inceleme onaylı); rehber metinleri docs/kabul/ux-rehber-metinleri.md onayınızı bekliyor" },
         { title: "T12 Tur motoru ve ? yardım", status: "done", doneAt: "03.11 20:10", note: "Düzeltme turu: 24/24 birim, 16 Chromium senaryosu ayrı koşularda geçti, üretim derlemesi yeşil." },
         { title: "T13 Günlük kontrol listeleri ve Kullanıcıya göster", status: "done", doneAt: "03.11 18:06", note: "cb17f17 + 50c4542 (inceleme onaylı): rutin kartları, erişim önizleme penceresi, Bu rol ne görür" },
-        { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "active", note: "T14 uygulandı (d9b46a8, f158b60, b4e5a17): Başlat menüsü, tepsi, klavye, menü çubuğu, doğrulama kalıntıları. İnceleme ve T15 bekliyor; landing.spec.ts:78 kırmızı" }
+        { title: "T14–T15 XP cilası, görünüm matrisi kapanışı, belgeler", status: "done", doneAt: "04.11 03:45", note: "T14 d9b46a8, f158b60, b4e5a17 + inceleme fa3dcaf; T15 0d75121: matris 472/472 (26 rota + misafir menüsü tr/ar), KNOWN_* ve cırcırlar sıfır, /kat?filtre=dnd süzgeci geri geldi" }
       ]
     },
     {
@@ -165,6 +165,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "04.11 03:45", text: "UX tamamlandı (T15, 0d75121). Altı ekran boyutunda 26 sayfa ve misafir menüsü (Türkçe ve Arapça) denetlendi: yatay kaydırma, erişilebilirlik ve dokunma hedefi ihlali yok, 472 test geçti. Depo rapor ve tanım sayfaları açık temaya taşındı, kat panelindeki DND süzgeci geri geldi. Tam Chromium koşusunda 210 testten 209'u geçti; kalan test P4 T10'a ait. Sırada P4 T10." },
     { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },
     { at: "04.11 02:00", text: "UX T14 üç commit ile indi: XP Başlat menüsü, tepsi durumları, pencere menü çubuğu, klavye kısayolları, depo panosu ve eski görevlerin küçük eksikleri. Matris 126/126 geçti. Son tam chromium koşusunda 206 test geçti, 3 test kaldı, 1 test koşmadı; duvar testi sonra düzeltildi, /kat?filtre=dnd kararı ve P4 T10 testi açık. İnceleme ve T15 sırada." },
     { at: "03.11 20:10", text: "UX T12 rehber düzeltmeleri hedefli birim ve Chromium koşularında doğrulandı. Sonraki UX adımı T14 XP cilası." },
