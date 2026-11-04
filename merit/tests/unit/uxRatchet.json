@@ -1,10 +1,4 @@
 {
-  "smallText": {
-    "src/app/depo/raporlar/page.tsx": 9,
-    "src/app/depo/tanimlar/page.tsx": 14
-  },
-  "rawPalette": {
-    "src/app/depo/raporlar/page.tsx": 115,
-    "src/app/depo/tanimlar/page.tsx": 262
-  }
+  "smallText": {},
+  "rawPalette": {}
 }

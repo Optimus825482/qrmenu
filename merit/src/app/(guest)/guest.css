@@ -587,8 +587,9 @@
 .g-root ul {
   list-style: none;
 }
-.g-root button,
-.g-root textarea {
+/* :where() keeps this reset at class specificity, so component classes (.g-button ...) set their own colour. */
+.g-root :where(button),
+.g-root :where(textarea) {
   font: inherit;
   color: inherit;
 }
@@ -689,7 +690,7 @@
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.04em;
-  color: var(--m-ink, #1e293b);
+  color: var(--m-ink, var(--m-text, #1e293b));
 }
 .g-lang-arrow {
   color: var(--m-muted, #64748b);

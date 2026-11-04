@@ -261,7 +261,7 @@ export default function KasaClient({
         <h1 className="text-xl font-extrabold">
           {outletName ?? "Outlet"} <span className="text-muted">· Dokunmatik Kasa</span>
         </h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center" style={{ gap: "var(--tap-gap)" }}>
           {hasMenu ? (
             <button
               type="button"

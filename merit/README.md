@@ -183,6 +183,7 @@ için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
 | `npm run check` | `lint` + `typecheck` + birim testleri; CI'nin ilk kapısı. |
 | `npm test` | Birim testleri (Vitest, `merit_test` veritabanı). |
 | `npm run test:e2e` | Uçtan uca testler (Playwright, Chromium). |
+| `npm run test:e2e:matrix` | UX görünüm matrisi: altı görünümde (1366×768, 1280×800, 1024×768, 768×1024, 800×1280, 390×844) yatay kaydırma, dokunma hedefi/aralığı ve ciddi/kritik axe denetimi. |
 | `npm run build` | `prisma generate && next build`. |
 | `npm start` | Derlenmiş uygulamayı çalıştırır. |
 | `npm run lint` / `npm run typecheck` | ESLint / `next typegen && tsc --noEmit`. |
@@ -190,6 +191,22 @@ için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
 | `npm run db:seed` | Başlangıç verisini yükler (`SEED_ADMIN_PASSWORD` gerekir). |
 | `npm run migrate:legacy` | Eski minibar verisini taşır (`LEGACY_DATABASE_URL` gerekir; `--dry-run` önce deneyin). |
 | `npm run db:reset` | Veritabanını siler, migrasyonları yeniden uygular (`migrate reset --force`). |
+
+### UX kapanış kapıları
+
+- `tests/unit/final-gates.test.ts` (`npm run check` içinde): `KNOWN_TOUCH_VIOLATIONS`,
+  `KNOWN_AXE_VIOLATIONS`, `KNOWN_SCROLL` ve `XP_AXE_EXCLUDE` boş, `tests/unit/uxRatchet.json`
+  sayaçları 0 ve görünüm matrisi kabul listesindeki tüm rotaları kapsar. Yeni ihlal bu listelere
+  eklenerek susturulmaz; kaynağında düzeltilir.
+- `tests/unit/uxSourceRules.test.ts`: emoji, sürekli animasyon, sabit para birimi, tarayıcı
+  diyalogları ve başarı modalı kuralları. `tests/unit/uxRatchet.test.ts`: personel/depo
+  sayfalarında 9–12 px sabit yazı ve ham palet (`slate|indigo|purple|zinc|gray-NNN`) yasak.
+- Matris rotaları `tests/e2e/matrix/routes.ts` (`ROUTE_MATRIX`); misafir menüsü (`/q/<token>`,
+  `?lang=ar` dahil) `tests/e2e/matrix/guestMenu.spec.ts` ile yalnız 390×844'te denetlenir.
+- Web Push e2e testi (`pushSubscribe.spec.ts`) sunucuda VAPID anahtarı ister. Koşu için geçici
+  anahtar üretip yalnız o sunucu sürecine verin, repoya ve `.env`'e yazmayın:
+  `npx web-push generate-vapid-keys --json` → `VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=…
+  VAPID_SUBJECT=mailto:e2e@example.test npx next start -p <port>`.
 
 ### Uçtan uca (e2e) testler hakkında
 

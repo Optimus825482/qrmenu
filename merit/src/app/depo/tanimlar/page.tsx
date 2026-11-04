@@ -621,14 +621,14 @@ export default function MinibarTanimlarPage() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 shadow-md">
+      <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
               href="/kat"
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+              className="p-2 bg-bg hover:bg-border text-text rounded-lg transition"
               title="Dashboard"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -636,10 +636,10 @@ export default function MinibarTanimlarPage() {
               </svg>
             </Link>
             <div>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-text flex items-center gap-2">
                 <span><Icon name="settings" size={20} /> Minibar & Sistem Tanımlamaları</span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Ürün Grupları • Ürünler • Oda Tipleri • Setuplar • <Icon name="shield" size={20} /> Silinemez Denetim Kaydı
               </p>
             </div>
@@ -654,7 +654,7 @@ export default function MinibarTanimlarPage() {
                   setSelectedHotelId(id);
                   void loadHotelSpecificData(id);
                 }}
-                className="bg-slate-800 text-amber-400 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500"
+                className="bg-bg text-warn border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-warn/40"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -666,21 +666,21 @@ export default function MinibarTanimlarPage() {
 
             <Link
               href="/depo/stok"
-              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Stok Havuzu
             </Link>
 
             <Link
               href="/kat/tavsiye-is-plani"
-              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="lightbulb" size={20} /> Tavsiye Planı
             </Link>
 
             <Link
               href="/depo/raporlar"
-              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="trending" size={20} /> Raporlar
             </Link>
@@ -691,31 +691,31 @@ export default function MinibarTanimlarPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
         {/* Bildirim Mesajları */}
         {errorMsg && (
-          <div className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-xs flex items-center justify-between">
+          <div className="p-4 bg-danger/10 border border-danger/40 rounded-xl text-danger text-xs flex items-center justify-between">
             <span><Icon name="warning" size={20} /> {errorMsg}</span>
-            <button aria-label="Kapat" onClick={() => setErrorMsg(null)} className="text-rose-400 hover:text-white ml-2">
+            <button aria-label="Kapat" onClick={() => setErrorMsg(null)} className="text-danger hover:text-text ml-2">
               <Icon name="close" size={20} />
             </button>
           </div>
         )}
 
         {successMsg && (
-          <div role="status" className="p-4 bg-emerald-950/60 border border-emerald-800 rounded-xl text-emerald-200 text-xs flex items-center justify-between">
+          <div role="status" className="p-4 bg-success/10 border border-success/40 rounded-xl text-success text-xs flex items-center justify-between">
             <span><Icon name="check" size={20} /> {successMsg}</span>
-            <button aria-label="Kapat" onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-white ml-2">
+            <button aria-label="Kapat" onClick={() => setSuccessMsg(null)} className="text-success hover:text-text ml-2">
               <Icon name="close" size={20} />
             </button>
           </div>
         )}
 
         {/* Ana Sekmeler */}
-        <div data-guide="tanim-sekmeleri" className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-800 text-xs font-bold">
+        <div data-guide="tanim-sekmeleri" className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-border text-xs font-bold">
           <button
             onClick={() => setActiveTab("PRODUCTS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "PRODUCTS"
-                ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-                : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-text shadow-md font-bold"
+                : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
             <Icon name="minibar" size={20} />
@@ -726,8 +726,8 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("GROUPS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "GROUPS"
-                ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-                : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-text shadow-md font-bold"
+                : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
             <Icon name="tag" size={20} />
@@ -738,8 +738,8 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("SETUPS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "SETUPS"
-                ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-                : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-text shadow-md font-bold"
+                : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
             <Icon name="box" size={20} />
@@ -750,8 +750,8 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("ROOM_TYPES")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "ROOM_TYPES"
-                ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-                : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-text shadow-md font-bold"
+                : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
             <Icon name="bed" size={20} />
@@ -762,8 +762,8 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("ASSIGNMENTS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "ASSIGNMENTS"
-                ? "bg-amber-500 text-slate-950 shadow-md font-bold"
-                : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+                ? "bg-amber-500 text-text shadow-md font-bold"
+                : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
             <Icon name="link" size={20} />
@@ -774,8 +774,8 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("AUDIT")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "AUDIT"
-                ? "bg-purple-600 text-white shadow-md font-bold"
-                : "bg-slate-900 text-purple-300 hover:text-white border border-purple-900/50"
+                ? "bg-info text-white shadow-md font-bold"
+                : "bg-surface text-info hover:text-text border border-info/40"
             }`}
           >
             <Icon name="shield" size={20} />
@@ -795,13 +795,13 @@ export default function MinibarTanimlarPage() {
                   placeholder="Ürün adı, kod veya barkod ara..."
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 w-full sm:w-64"
+                  className="bg-surface border border-border rounded-xl px-3 py-2 text-xs text-text placeholder-muted focus:outline-none focus:border-warn/40 w-full sm:w-64"
                 />
 
                 <select
                   value={selectedGroupFilter}
                   onChange={(e) => setSelectedGroupFilter(e.target.value)}
-                  className="bg-slate-900 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  className="bg-surface text-text border border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-warn/40"
                 >
                   <option value="">Tüm Gruplar</option>
                   {groups.map((g) => (
@@ -828,23 +828,23 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("PRODUCT_FORM");
                 }}
-                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Ürün Tanımla</span>
               </button>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               {isLoading ? (
-                <div className="py-16 text-center text-slate-500 text-sm">Ürünler yükleniyor...</div>
+                <div className="py-16 text-center text-muted text-sm">Ürünler yükleniyor...</div>
               ) : filteredProducts.length === 0 ? (
-                <div className="py-16 text-center text-slate-500 text-sm">Ürün bulunamadı.</div>
+                <div className="py-16 text-center text-muted text-sm">Ürün bulunamadı.</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                         <th className="py-3 px-4">Ürün Adı</th>
                         <th className="py-3 px-4">Grup</th>
                         <th className="py-3 px-4">Barkod / Kod</th>
@@ -854,28 +854,28 @@ export default function MinibarTanimlarPage() {
                         <th className="py-3 px-4 text-right">İşlemler</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className="divide-y divide-border text-text">
                       {filteredProducts.map((p, pIdx) => (
-                        <tr key={p.id} className="hover:bg-slate-800/40 transition">
-                          <td className="py-3 px-4 font-bold text-white text-sm">
+                        <tr key={p.id} className="hover:bg-border transition">
+                          <td className="py-3 px-4 font-bold text-text text-sm">
                             {p.name}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-amber-300 text-[11px] font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-bg text-warn text-xs font-semibold">
                               {p.groupName}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-400">
+                          <td className="py-3 px-4 font-mono text-muted">
                             {p.barcode || p.code || "-"}
                           </td>
                           <td className="py-3 px-4 text-center">{p.unit}</td>
                           <td className="py-3 px-4 text-center font-mono">{p.criticalLevel}</td>
                           <td className="py-3 px-4 text-center">
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                                 p.isActive
-                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                                  : "bg-slate-700 text-slate-400"
+                                  ? "bg-emerald-500/20 text-success border border-success/40"
+                                  : "bg-border text-muted"
                               }`}
                             >
                               {p.isActive ? "Aktif" : "Pasif"}
@@ -900,14 +900,14 @@ export default function MinibarTanimlarPage() {
                                   });
                                   setModalMode("PRODUCT_FORM");
                                 }}
-                                className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                                className="px-2.5 py-1 bg-bg hover:bg-border text-text rounded-lg transition"
                                 title="Düzenle"
                               >
                                 Düzenle
                               </button>
                               <button
                                 onClick={() => handleDeleteProduct(p.id, p.name)}
-                                className="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg transition"
+                                className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
                                 title="Sil"
                               >
                                 Sil
@@ -930,7 +930,7 @@ export default function MinibarTanimlarPage() {
         {activeTab === "GROUPS" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Minibar ürünlerini kategorilendirmek ve raporlamak için ürün gruplarını yönetin.
               </p>
               <button
@@ -938,7 +938,7 @@ export default function MinibarTanimlarPage() {
                   setCurrentGroup({ name: "", description: "", isActive: true });
                   setModalMode("GROUP_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Ürün Grubu</span>
@@ -949,26 +949,26 @@ export default function MinibarTanimlarPage() {
               {groups.map((g) => (
                 <div
                   key={g.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between gap-3 hover:border-slate-700 transition"
+                  className="bg-surface border border-border rounded-2xl p-5 shadow-lg flex flex-col justify-between gap-3 hover:border-border transition"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <h3 className="font-bold text-white text-base">{g.name}</h3>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                      <h3 className="font-bold text-text text-base">{g.name}</h3>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-warn border border-warn/40">
                         {g.productCount} Ürün
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 line-clamp-2">
+                    <p className="text-xs text-muted line-clamp-2">
                       {g.description || "Açıklama belirtilmemiş."}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-800 text-xs">
+                  <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                         g.isActive
-                          ? "bg-emerald-500/20 text-emerald-300"
-                          : "bg-slate-700 text-slate-400"
+                          ? "bg-emerald-500/20 text-success"
+                          : "bg-border text-muted"
                       }`}
                     >
                       {g.isActive ? "Aktif" : "Pasif"}
@@ -985,13 +985,13 @@ export default function MinibarTanimlarPage() {
                           });
                           setModalMode("GROUP_FORM");
                         }}
-                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                        className="px-2.5 py-1 bg-bg hover:bg-border text-text rounded-lg transition"
                       >
                         Düzenle
                       </button>
                       <button
                         onClick={() => handleDeleteGroup(g.id, g.name)}
-                        className="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg transition"
+                        className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
                       >
                         Sil
                       </button>
@@ -1009,7 +1009,7 @@ export default function MinibarTanimlarPage() {
         {activeTab === "SETUPS" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Oda tiplerine atanacak minibar setup konseptlerini ve her konseptin norm hedef içeriklerini yönetin.
               </p>
               <button
@@ -1022,7 +1022,7 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("SETUP_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Setup Konsepti</span>
@@ -1033,32 +1033,32 @@ export default function MinibarTanimlarPage() {
               {setups.map((s) => (
                 <div
                   key={s.id}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between gap-3 hover:border-slate-700 transition"
+                  className="bg-surface border border-border rounded-2xl p-5 shadow-lg flex flex-col justify-between gap-3 hover:border-border transition"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <h3 className="font-bold text-white text-base">{s.name}</h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                      <h3 className="font-bold text-text text-base">{s.name}</h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-info/20 text-info border border-info/40">
                         {s.isInsideCabinet ? "Dolap İçi" : "Açıkta"}
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-400 line-clamp-2">
+                    <p className="text-xs text-muted line-clamp-2">
                       {s.description || "Açıklama belirtilmemiş."}
                     </p>
 
-                    <div className="mt-3 p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 space-y-1 text-xs">
-                      <div className="flex justify-between text-slate-400">
+                    <div className="mt-3 p-3 bg-bg/60 rounded-xl border border-border space-y-1 text-xs">
+                      <div className="flex justify-between text-muted">
                         <span>Farklı Ürün Sayısı:</span>
-                        <strong className="text-white">{s.itemCount} Çeşit</strong>
+                        <strong className="text-text">{s.itemCount} Çeşit</strong>
                       </div>
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between text-muted">
                         <span>Toplam Setup Norm Adedi:</span>
-                        <strong className="text-amber-400">{s.totalNormItems} Adet</strong>
+                        <strong className="text-warn">{s.totalNormItems} Adet</strong>
                       </div>
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between text-muted">
                         <span>Atandığı Oda Tipi Sayısı:</span>
-                        <strong className="text-slate-300">{s.roomTypeAssignmentCount}</strong>
+                        <strong className="text-text">{s.roomTypeAssignmentCount}</strong>
                       </div>
                     </div>
                   </div>
@@ -1069,7 +1069,7 @@ export default function MinibarTanimlarPage() {
                         setActiveSetupForItems(s);
                         setModalMode("SETUP_ITEMS");
                       }}
-                      className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-text font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
                     >
                       <Icon name="clipboard" size={20} />
                       <span>İçerik Normu Düzenle</span>
@@ -1086,7 +1086,7 @@ export default function MinibarTanimlarPage() {
                         });
                         setModalMode("SETUP_FORM");
                       }}
-                      className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition"
+                      className="p-2 bg-bg hover:bg-border text-text rounded-xl transition"
                       title="Setup Düzenle"
                     >
                       <Icon name="settings" size={20} />
@@ -1094,7 +1094,7 @@ export default function MinibarTanimlarPage() {
 
                     <button
                       onClick={() => handleDeleteSetup(s.id, s.name)}
-                      className="p-2 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl transition"
+                      className="p-2 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-xl transition"
                       title="Setup Sil"
                     >
                       <Icon name="trash" size={20} />
@@ -1112,7 +1112,7 @@ export default function MinibarTanimlarPage() {
         {activeTab === "ROOM_TYPES" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Seçili oteldeki oda tiplerini ve dolap kapasitelerini yönetin.
               </p>
               <button
@@ -1124,17 +1124,17 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("ROOM_TYPE_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Oda Tipi Tanımla</span>
               </button>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                  <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                     <th className="py-3 px-4">Oda Tipi Adı</th>
                     <th className="py-3 px-4 text-center">Dolap Sayısı</th>
                     <th className="py-3 px-4 text-center">Oteldeki Oda Sayısı</th>
@@ -1143,14 +1143,14 @@ export default function MinibarTanimlarPage() {
                     <th className="py-3 px-4 text-right">İşlemler</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-border text-text">
                   {roomTypes.map((rt) => (
-                    <tr key={rt.id} className="hover:bg-slate-800/40 transition">
-                      <td className="py-3.5 px-4 font-bold text-white text-sm">{rt.name}</td>
-                      <td className="py-3.5 px-4 text-center font-mono font-bold text-amber-400">
+                    <tr key={rt.id} className="hover:bg-border transition">
+                      <td className="py-3.5 px-4 font-bold text-text text-sm">{rt.name}</td>
+                      <td className="py-3.5 px-4 text-center font-mono font-bold text-warn">
                         {rt.cabinetCount} Dolap
                       </td>
-                      <td className="py-3.5 px-4 text-center font-bold text-white">
+                      <td className="py-3.5 px-4 text-center font-bold text-text">
                         {rt.roomCount} Oda
                       </td>
                       <td className="py-3.5 px-4">
@@ -1159,22 +1159,22 @@ export default function MinibarTanimlarPage() {
                             rt.assignedSetups.map((s) => (
                               <span
                                 key={s.setupId}
-                                className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px]"
+                                className="px-2 py-0.5 rounded bg-info/20 text-info border border-info/40 text-xs"
                               >
                                 {s.setupName}
                               </span>
                             ))
                           ) : (
-                            <span className="text-slate-500 italic">Henüz setup atanmadı</span>
+                            <span className="text-muted italic">Henüz setup atanmadı</span>
                           )}
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                             rt.isActive
-                              ? "bg-emerald-500/20 text-emerald-300"
-                              : "bg-slate-700 text-slate-400"
+                              ? "bg-emerald-500/20 text-success"
+                              : "bg-border text-muted"
                           }`}
                         >
                           {rt.isActive ? "Aktif" : "Pasif"}
@@ -1192,13 +1192,13 @@ export default function MinibarTanimlarPage() {
                               });
                               setModalMode("ROOM_TYPE_FORM");
                             }}
-                            className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
+                            className="px-2.5 py-1 bg-bg hover:bg-border text-text rounded-lg transition"
                           >
                             Düzenle
                           </button>
                           <button
                             onClick={() => handleDeleteRoomType(rt.id, rt.name)}
-                            className="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg transition"
+                            className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
                           >
                             Sil
                           </button>
@@ -1218,7 +1218,7 @@ export default function MinibarTanimlarPage() {
         {activeTab === "ASSIGNMENTS" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Hangi oda tipinde hangi minibar setup konseptinin geçerli olacağını belirleyin.
               </p>
               <button
@@ -1229,22 +1229,22 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("ASSIGN_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Oda Tipine Setup Ata</span>
               </button>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               {assignments.length === 0 ? (
-                <div className="py-16 text-center text-slate-500 text-sm">
+                <div className="py-16 text-center text-muted text-sm">
                   Henüz bu otel için bir oda tipi - setup ataması yapılmamış.
                 </div>
               ) : (
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                    <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                       <th className="py-3 px-4">Otel</th>
                       <th className="py-3 px-4">Oda Tipi</th>
                       <th className="py-3 px-4">Atanan Setup Konsepti</th>
@@ -1253,24 +1253,24 @@ export default function MinibarTanimlarPage() {
                       <th className="py-3 px-4 text-right">İşlem</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  <tbody className="divide-y divide-border text-text">
                     {assignments.map((a, idx) => (
-                      <tr key={idx} className="hover:bg-slate-800/40 transition">
-                        <td className="py-3.5 px-4 font-medium text-slate-300">{a.hotelName}</td>
-                        <td className="py-3.5 px-4 font-bold text-white text-sm">{a.roomTypeName}</td>
-                        <td className="py-3.5 px-4 font-bold text-amber-400">{a.setupName}</td>
+                      <tr key={idx} className="hover:bg-border transition">
+                        <td className="py-3.5 px-4 font-medium text-text">{a.hotelName}</td>
+                        <td className="py-3.5 px-4 font-bold text-text text-sm">{a.roomTypeName}</td>
+                        <td className="py-3.5 px-4 font-bold text-warn">{a.setupName}</td>
                         <td className="py-3.5 px-4 text-center">
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px]">
+                          <span className="px-2 py-0.5 rounded bg-bg text-text text-xs">
                             {a.isInsideCabinet ? "Dolap İçi" : "Açıkta"}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-white">
+                        <td className="py-3.5 px-4 text-center font-bold text-text">
                           {a.itemCount} Ürün
                         </td>
                         <td className="py-3.5 px-4 text-right">
                           <button
                             onClick={() => handleRemoveAssignment(a.roomTypeId, a.setupId)}
-                            className="px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg transition"
+                            className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
                           >
                             Atamayı Kaldır
                           </button>
@@ -1289,7 +1289,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "AUDIT" && (
           <div className="space-y-4">
-            <div className="p-4 bg-purple-950/40 border border-purple-800/60 rounded-2xl flex items-center justify-between gap-3 text-purple-200 text-xs">
+            <div className="p-4 bg-info/10 border border-info/40 rounded-2xl flex items-center justify-between gap-3 text-info text-xs">
               <div className="flex items-center gap-2.5">
                 <Icon name="shield" size={24} />
                 <div>
@@ -1298,20 +1298,20 @@ export default function MinibarTanimlarPage() {
               </div>
               <button
                 onClick={() => void loadAuditLogs()}
-                className="px-3 py-1.5 bg-purple-900/60 hover:bg-purple-800 text-white rounded-lg transition shrink-0"
+                className="px-3 py-1.5 bg-info/10 hover:bg-info/10 text-text rounded-lg transition shrink-0"
               >
                 Yenile
               </button>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               {auditLogs.length === 0 ? (
-                <div className="py-16 text-center text-slate-500 text-sm">Henüz denetim kaydı bulunamadı.</div>
+                <div className="py-16 text-center text-muted text-sm">Henüz denetim kaydı bulunamadı.</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                         <th className="py-3 px-4">Tarih / Saat Damgası</th>
                         <th className="py-3 px-4 text-center">İşlem (Action)</th>
                         <th className="py-3 px-4">Varlık (Entity)</th>
@@ -1320,14 +1320,14 @@ export default function MinibarTanimlarPage() {
                         <th className="py-3 px-4 text-right">Eski vs Yeni Veri</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className="divide-y divide-border text-text">
                       {auditLogs.map((log) => {
                         const isDelete = log.action === "DELETE" || log.action === "DEACTIVATE";
                         const isUpdate = log.action === "UPDATE";
 
                         return (
-                          <tr key={log.id} className="hover:bg-slate-800/40 transition">
-                            <td className="py-3 px-4 font-mono text-slate-400">
+                          <tr key={log.id} className="hover:bg-border transition">
+                            <td className="py-3 px-4 font-mono text-muted">
                               {new Date(log.createdAt).toLocaleString("tr-TR", {
                                 dateStyle: "short",
                                 timeStyle: "medium",
@@ -1335,34 +1335,34 @@ export default function MinibarTanimlarPage() {
                             </td>
                             <td className="py-3 px-4 text-center">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                className={`px-2 py-0.5 rounded text-xs font-bold ${
                                   isDelete
-                                    ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                                    ? "bg-rose-500/20 text-danger border border-danger/40"
                                     : isUpdate
-                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                                    : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                                    ? "bg-amber-500/20 text-warn border border-warn/40"
+                                    : "bg-emerald-500/20 text-success border border-success/40"
                                 }`}
                               >
                                 {log.action}
                               </span>
                             </td>
-                            <td className="py-3 px-4 font-bold text-white">
+                            <td className="py-3 px-4 font-bold text-text">
                               {log.entity}
                               {log.entityId && (
-                                <span className="block font-mono text-[10px] text-slate-500 truncate max-w-[120px]">
+                                <span className="block font-mono text-xs text-muted truncate max-w-[120px]">
                                   {log.entityId}
                                 </span>
                               )}
                             </td>
-                            <td className="py-3 px-4 text-slate-300 font-medium">{log.userName}</td>
-                            <td className="py-3 px-4 font-mono text-slate-500 text-[11px]">{log.ip || "-"}</td>
+                            <td className="py-3 px-4 text-text font-medium">{log.userName}</td>
+                            <td className="py-3 px-4 font-mono text-muted text-xs">{log.ip || "-"}</td>
                             <td className="py-3 px-4 text-right">
                               <button
                                 onClick={() => {
                                   setActiveAuditLog(log);
                                   setModalMode("AUDIT_DIFF");
                                 }}
-                                className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 rounded-lg text-xs font-semibold transition"
+                                className="px-2.5 py-1 bg-info/20 hover:bg-info/30 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
                               >
                                 <Icon name="search" size={20} /> Snapshot Gör
                               </button>
@@ -1384,31 +1384,31 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "GROUP_FORM" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-white">
+          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-text">
               {currentGroup.id ? "Ürün Grubunu Düzenle" : "Yeni Ürün Grubu"}
             </h3>
 
             <form onSubmit={handleSaveGroup} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Grup Adı</label>
+                <label className="block text-xs font-semibold text-text mb-1">Grup Adı</label>
                 <input
                   type="text"
                   required
                   value={currentGroup.name}
                   onChange={(e) => setCurrentGroup({ ...currentGroup, name: e.target.value })}
                   placeholder="Örn: Meşrubat, Alkol & Şarap, Atıştırmalık"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Açıklama (Opsiyonel)</label>
+                <label className="block text-xs font-semibold text-text mb-1">Açıklama (Opsiyonel)</label>
                 <textarea
                   rows={3}
                   value={currentGroup.description}
                   onChange={(e) => setCurrentGroup({ ...currentGroup, description: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
@@ -1418,9 +1418,9 @@ export default function MinibarTanimlarPage() {
                   id="grpActive"
                   checked={currentGroup.isActive}
                   onChange={(e) => setCurrentGroup({ ...currentGroup, isActive: e.target.checked })}
-                  className="rounded border-slate-800 text-amber-500 focus:ring-0"
+                  className="rounded border-border text-warn focus:ring-0"
                 />
-                <label htmlFor="grpActive" className="text-xs text-slate-300">
+                <label htmlFor="grpActive" className="text-xs text-text">
                   Aktif Grup
                 </label>
               </div>
@@ -1429,13 +1429,13 @@ export default function MinibarTanimlarPage() {
                 <button
                   type="button"
                   onClick={() => setModalMode("NONE")}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-bg hover:bg-border text-text rounded-xl text-xs font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1450,20 +1450,20 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "PRODUCT_FORM" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-white">
+          <div className="w-full max-w-lg bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-text">
               {currentProduct.id ? "Ürünü Düzenle" : "Yeni Ürün Tanımla"}
             </h3>
 
             <form onSubmit={handleSaveProduct} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ürün Grubu</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Ürün Grubu</label>
                   <select
                     required
                     value={currentProduct.groupId}
                     onChange={(e) => setCurrentProduct({ ...currentProduct, groupId: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   >
                     <option value="">Seçiniz...</option>
                     {groups.map((g) => (
@@ -1475,62 +1475,62 @@ export default function MinibarTanimlarPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ürün Adı</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Ürün Adı</label>
                   <input
                     type="text"
                     required
                     placeholder="Örn: Coca Cola 330ml"
                     value={currentProduct.name}
                     onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Ürün Kodu</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Ürün Kodu</label>
                   <input
                     type="text"
                     placeholder="Örn: KOLA-330"
                     value={currentProduct.code}
                     onChange={(e) => setCurrentProduct({ ...currentProduct, code: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Barkod</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Barkod</label>
                   <input
                     type="text"
                     placeholder="8690..."
                     value={currentProduct.barcode}
                     onChange={(e) => setCurrentProduct({ ...currentProduct, barcode: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Birim</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Birim</label>
                   <input
                     type="text"
                     value={currentProduct.unit}
                     onChange={(e) => setCurrentProduct({ ...currentProduct, unit: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Kritik Stok Seviyesi</label>
+                  <label className="block text-xs font-semibold text-text mb-1">Kritik Stok Seviyesi</label>
                   <input
                     type="number"
                     value={currentProduct.criticalLevel}
                     onChange={(e) =>
                       setCurrentProduct({ ...currentProduct, criticalLevel: parseInt(e.target.value, 10) || 0 })
                     }
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                   />
                 </div>
               </div>
@@ -1541,9 +1541,9 @@ export default function MinibarTanimlarPage() {
                   id="prodActive"
                   checked={currentProduct.isActive}
                   onChange={(e) => setCurrentProduct({ ...currentProduct, isActive: e.target.checked })}
-                  className="rounded border-slate-800 text-amber-500 focus:ring-0"
+                  className="rounded border-border text-warn focus:ring-0"
                 />
-                <label htmlFor="prodActive" className="text-xs text-slate-300">
+                <label htmlFor="prodActive" className="text-xs text-text">
                   Aktif Ürün
                 </label>
               </div>
@@ -1552,13 +1552,13 @@ export default function MinibarTanimlarPage() {
                 <button
                   type="button"
                   onClick={() => setModalMode("NONE")}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-bg hover:bg-border text-text rounded-xl text-xs font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1573,51 +1573,51 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "SETUP_FORM" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-white">
+          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-text">
               {currentSetup.id ? "Setup Konseptini Düzenle" : "Yeni Setup Konsepti"}
             </h3>
 
             <form onSubmit={handleSaveSetup} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Setup Adı</label>
+                <label className="block text-xs font-semibold text-text mb-1">Setup Adı</label>
                 <input
                   type="text"
                   required
                   placeholder="Örn: Standart Minibar, VIP Setup, Suite Konsept"
                   value={currentSetup.name}
                   onChange={(e) => setCurrentSetup({ ...currentSetup, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Açıklama</label>
+                <label className="block text-xs font-semibold text-text mb-1">Açıklama</label>
                 <textarea
                   rows={3}
                   value={currentSetup.description}
                   onChange={(e) => setCurrentSetup({ ...currentSetup, description: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentSetup.isInsideCabinet}
                     onChange={(e) => setCurrentSetup({ ...currentSetup, isInsideCabinet: e.target.checked })}
-                    className="rounded border-slate-800 text-amber-500 focus:ring-0"
+                    className="rounded border-border text-warn focus:ring-0"
                   />
                   <span>Dolap İçi Ürünler</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentSetup.isActive}
                     onChange={(e) => setCurrentSetup({ ...currentSetup, isActive: e.target.checked })}
-                    className="rounded border-slate-800 text-amber-500 focus:ring-0"
+                    className="rounded border-border text-warn focus:ring-0"
                   />
                   <span>Aktif</span>
                 </label>
@@ -1627,13 +1627,13 @@ export default function MinibarTanimlarPage() {
                 <button
                   type="button"
                   onClick={() => setModalMode("NONE")}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-bg hover:bg-border text-text rounded-xl text-xs font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1648,30 +1648,30 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "SETUP_ITEMS" && activeSetupForItems && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <h3 className="font-bold text-base text-text flex items-center gap-2">
                   <span><Icon name="clipboard" size={20} /> {activeSetupForItems.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">
+                  <span className="text-xs px-2 py-0.5 rounded bg-info/20 text-info">
                     Setup İçerik Normu
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted">
                   Kat görevlilerinin odada eksik tamamlaması gereken hedef minibar norm sayıları
                 </p>
               </div>
-              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
+              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-muted hover:text-text p-1">
                 <Icon name="close" size={20} />
               </button>
             </div>
 
             {/* Yeni Ürün Ekleme Çubuğu */}
-            <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 flex flex-wrap items-center gap-2">
+            <div className="p-3 bg-bg/80 rounded-xl border border-border flex flex-wrap items-center gap-2">
               <select
                 value={selectedProductToAdd}
                 onChange={(e) => setSelectedProductToAdd(e.target.value)}
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 min-w-[200px]"
+                className="flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40 min-w-[200px]"
               >
                 <option value="">Setup&apos;a eklenecek ürünü seçin...</option>
                 {products
@@ -1684,14 +1684,14 @@ export default function MinibarTanimlarPage() {
               </select>
 
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-400">Norm Adet:</span>
+                <span className="text-xs text-muted">Norm Adet:</span>
                 <input
                   type="number"
                   min="1"
                   max="50"
                   value={selectedQtyToAdd}
                   onChange={(e) => setSelectedQtyToAdd(parseInt(e.target.value, 10) || 1)}
-                  className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-center text-white font-bold"
+                  className="w-16 bg-surface border border-border rounded-lg px-2 py-2 text-xs text-center text-text font-bold"
                 />
               </div>
 
@@ -1699,7 +1699,7 @@ export default function MinibarTanimlarPage() {
                 type="button"
                 onClick={handleAddSetupItem}
                 disabled={!selectedProductToAdd}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold rounded-lg text-xs transition"
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-text font-bold rounded-lg text-xs transition"
               >
                 + Ekle
               </button>
@@ -1708,27 +1708,27 @@ export default function MinibarTanimlarPage() {
             {/* Mevcut Liste */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {activeSetupForItems.items.length === 0 ? (
-                <div className="py-12 text-center text-slate-500 text-sm">
+                <div className="py-12 text-center text-muted text-sm">
                   Bu setup konseptinde henüz tanımlı ürün yok. Yukarıdan ürün seçerek ekleyebilirsiniz.
                 </div>
               ) : (
-                <div className="divide-y divide-slate-800/60">
+                <div className="divide-y divide-border">
                   {activeSetupForItems.items.map((it) => (
                     <div key={it.id} className="py-2.5 flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-bold text-white text-xs">{it.productName}</p>
-                        <span className="text-[10px] text-slate-400">Birim: {it.unit}</span>
+                        <p className="font-bold text-text text-xs">{it.productName}</p>
+                        <span className="text-xs text-muted">Birim: {it.unit}</span>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-black text-xs">
+                        <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-warn/40 text-warn font-black text-xs">
                           Setup: {it.qty} {it.unit}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleDeleteSetupItem(it.id)}
-                          className="px-2 py-1 bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg text-xs"
+                          className="px-2 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg text-xs"
                           title="Çıkar"
                         >
                           <Icon name="close" size={20} /> Kaldır
@@ -1740,11 +1740,11 @@ export default function MinibarTanimlarPage() {
               )}
             </div>
 
-            <div className="border-t border-slate-800 pt-3 flex justify-end">
+            <div className="border-t border-border pt-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => setModalMode("NONE")}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs"
+                className="px-5 py-2 bg-bg hover:bg-border text-text font-bold rounded-xl text-xs"
               >
                 Tamamla
               </button>
@@ -1758,26 +1758,26 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "ROOM_TYPE_FORM" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-white">
+          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-text">
               {currentRoomType.id ? "Oda Tipini Düzenle" : "Yeni Oda Tipi"}
             </h3>
 
             <form onSubmit={handleSaveRoomType} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Oda Tipi Adı</label>
+                <label className="block text-xs font-semibold text-text mb-1">Oda Tipi Adı</label>
                 <input
                   type="text"
                   required
                   placeholder="Örn: Standard King, Deluxe Suite, Presidential"
                   value={currentRoomType.name}
                   onChange={(e) => setCurrentRoomType({ ...currentRoomType, name: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-text mb-1">
                   Odadaki Minibar Dolap Sayısı
                 </label>
                 <input
@@ -1788,7 +1788,7 @@ export default function MinibarTanimlarPage() {
                   onChange={(e) =>
                     setCurrentRoomType({ ...currentRoomType, cabinetCount: parseInt(e.target.value, 10) || 0 })
                   }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 />
               </div>
 
@@ -1798,9 +1798,9 @@ export default function MinibarTanimlarPage() {
                   id="rtActive"
                   checked={currentRoomType.isActive}
                   onChange={(e) => setCurrentRoomType({ ...currentRoomType, isActive: e.target.checked })}
-                  className="rounded border-slate-800 text-amber-500 focus:ring-0"
+                  className="rounded border-border text-warn focus:ring-0"
                 />
-                <label htmlFor="rtActive" className="text-xs text-slate-300">
+                <label htmlFor="rtActive" className="text-xs text-text">
                   Aktif Oda Tipi
                 </label>
               </div>
@@ -1809,13 +1809,13 @@ export default function MinibarTanimlarPage() {
                 <button
                   type="button"
                   onClick={() => setModalMode("NONE")}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-bg hover:bg-border text-text rounded-xl text-xs font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1830,17 +1830,17 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "ASSIGN_FORM" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <h3 className="font-bold text-base text-white">Oda Tipine Setup Konsepti Ata</h3>
+          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+            <h3 className="font-bold text-base text-text">Oda Tipine Setup Konsepti Ata</h3>
 
             <form onSubmit={handleAssignSetup} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Oda Tipi</label>
+                <label className="block text-xs font-semibold text-text mb-1">Oda Tipi</label>
                 <select
                   required
                   value={assignForm.roomTypeId}
                   onChange={(e) => setAssignForm({ ...assignForm, roomTypeId: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 >
                   <option value="">Oda tipi seçiniz...</option>
                   {roomTypes.map((rt) => (
@@ -1852,12 +1852,12 @@ export default function MinibarTanimlarPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Atanacak Setup Konsepti</label>
+                <label className="block text-xs font-semibold text-text mb-1">Atanacak Setup Konsepti</label>
                 <select
                   required
                   value={assignForm.setupId}
                   onChange={(e) => setAssignForm({ ...assignForm, setupId: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-bg border border-border rounded-xl px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40"
                 >
                   <option value="">Setup seçiniz...</option>
                   {setups.map((s) => (
@@ -1872,13 +1872,13 @@ export default function MinibarTanimlarPage() {
                 <button
                   type="button"
                   onClick={() => setModalMode("NONE")}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
+                  className="px-4 py-2 bg-bg hover:bg-border text-text rounded-xl text-xs font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
                 >
                   Atamayı Kaydet
                 </button>
@@ -1893,22 +1893,22 @@ export default function MinibarTanimlarPage() {
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "AUDIT_DIFF" && activeAuditLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-2xl bg-slate-900 border border-purple-700/60 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="w-full max-w-2xl bg-surface border border-info/40 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <h3 className="font-bold text-base text-text flex items-center gap-2">
                   <span><Icon name="shield" size={20} /> Denetim Kaydı Snapshot</span>
-                  <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">
+                  <span className="text-xs px-2 py-0.5 rounded bg-info/20 text-info font-mono">
                     {activeAuditLog.action} • {activeAuditLog.entity}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted">
                   {new Date(activeAuditLog.createdAt).toLocaleString("tr-TR")} • İşlemi Yapan:{" "}
-                  <strong className="text-white">{activeAuditLog.userName}</strong> • IP:{" "}
+                  <strong className="text-text">{activeAuditLog.userName}</strong> • IP:{" "}
                   {activeAuditLog.ip || "Yerel"}
                 </p>
               </div>
-              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-slate-400 hover:text-white p-1">
+              <button aria-label="Kapat" onClick={() => setModalMode("NONE")} className="text-muted hover:text-text p-1">
                 <Icon name="close" size={20} />
               </button>
             </div>
@@ -1916,11 +1916,11 @@ export default function MinibarTanimlarPage() {
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs font-mono">
               {/* BEFORE */}
               <div>
-                <div className="flex items-center justify-between bg-rose-950/40 border border-rose-900/60 px-3 py-1.5 rounded-t-xl text-rose-300 font-bold">
+                <div className="flex items-center justify-between bg-danger/10 border border-danger/40 px-3 py-1.5 rounded-t-xl text-danger font-bold">
                   <span><Icon name="arrow-left" size={20} /> ÖNCEKİ DEĞER (BEFORE / SİLİNEN KAYIT)</span>
                   <span>{activeAuditLog.before ? "Mevcut" : "Yok (Yeni Kayıt)"}</span>
                 </div>
-                <pre className="p-3 bg-black/60 border border-t-0 border-slate-800 rounded-b-xl text-rose-200 overflow-x-auto text-[11px] max-h-48">
+                <pre className="p-3 bg-black/60 border border-t-0 border-border rounded-b-xl text-danger overflow-x-auto text-xs max-h-48">
                   {activeAuditLog.before
                     ? JSON.stringify(activeAuditLog.before, null, 2)
                     : "// Bu işlem yeni bir kayıt oluşturma olduğundan önceki değer bulunmuyor."}
@@ -1929,11 +1929,11 @@ export default function MinibarTanimlarPage() {
 
               {/* AFTER */}
               <div>
-                <div className="flex items-center justify-between bg-emerald-950/40 border border-emerald-900/60 px-3 py-1.5 rounded-t-xl text-emerald-300 font-bold">
+                <div className="flex items-center justify-between bg-success/10 border border-success/40 px-3 py-1.5 rounded-t-xl text-success font-bold">
                   <span><Icon name="arrow-right" size={20} /> SONRAKİ DEĞER (AFTER / GÜNCEL KAYIT)</span>
                   <span>{activeAuditLog.after ? "Mevcut" : "Yok (Silinmiş Kayıt)"}</span>
                 </div>
-                <pre className="p-3 bg-black/60 border border-t-0 border-slate-800 rounded-b-xl text-emerald-200 overflow-x-auto text-[11px] max-h-48">
+                <pre className="p-3 bg-black/60 border border-t-0 border-border rounded-b-xl text-success overflow-x-auto text-xs max-h-48">
                   {activeAuditLog.after
                     ? JSON.stringify(activeAuditLog.after, null, 2)
                     : "// Bu işlem silme işlemi olduğundan sonraki değer bulunmuyor."}
@@ -1941,11 +1941,11 @@ export default function MinibarTanimlarPage() {
               </div>
             </div>
 
-            <div className="border-t border-slate-800 pt-3 flex justify-end">
+            <div className="border-t border-border pt-3 flex justify-end">
               <button
                 type="button"
                 onClick={() => setModalMode("NONE")}
-                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs"
+                className="px-5 py-2 bg-bg hover:bg-border text-text font-bold rounded-xl text-xs"
               >
                 Kapat
               </button>

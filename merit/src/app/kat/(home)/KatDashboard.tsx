@@ -9,6 +9,11 @@ import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
 
 export type KatFilter = "mybar" | "dnd" | null;
 
+const FILTER_LABEL: Record<Exclude<KatFilter, null>, string> = {
+  mybar: "MyBar talebi olan katlar",
+  dnd: "DND kaydı olan katlar",
+};
+
 export interface KatDashboardLinks {
   occupancy?: boolean;
   definitions?: boolean;
@@ -50,7 +55,6 @@ export function KatDashboard({
   filter?: KatFilter;
   links?: KatDashboardLinks;
 }) {
-  void filter;
   const [selectedHotelId, setSelectedHotelId] = useState(initialHotelId);
   const [data, setData] = useState<DashboardState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,6 +86,11 @@ export function KatDashboard({
     const t = setTimeout(() => void fetchDashboard(selectedHotelId), 0);
     return () => clearTimeout(t);
   }, [selectedHotelId, fetchDashboard]);
+
+  // `?filtre=` (MB-PERS / MB-DND shortcuts): only floors with an open MyBar request or a DND record.
+  const floors = (data?.floors ?? []).filter((floor) =>
+    filter === "mybar" ? floor.mybarCount > 0 : filter === "dnd" ? floor.dndCount > 0 : true,
+  );
 
   return (
     <div className="min-h-screen bg-bg text-text">
@@ -224,16 +233,36 @@ export function KatDashboard({
             <section data-guide="kat-listesi" className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold text-text">Kat Planı ve Oda Doluluk Durumu</h2>
-                <span className="text-xs text-muted">{data.floors.length} Kat</span>
+                <span className="text-xs text-muted">{floors.length} Kat</span>
               </div>
+
+              {filter ? (
+                <p
+                  role="status"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-text"
+                >
+                  <span>Süzgeç: {FILTER_LABEL[filter]}</span>
+                  <Link
+                    href="/kat"
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="inline-flex items-center rounded-xl border border-border bg-bg px-3 text-sm font-semibold text-accent hover:bg-surface"
+                  >
+                    Süzgeci kaldır
+                  </Link>
+                </p>
+              ) : null}
 
               {data.floors.length === 0 ? (
                 <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
                   Bu otel için tanımlı kat bulunamadı.
                 </div>
+              ) : floors.length === 0 ? (
+                <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+                  Süzgece uyan kat yok.
+                </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {data.floors.map((floor, floorIdx) => {
+                  {floors.map((floor, floorIdx) => {
                     const occupancyRate =
                       floor.totalRooms > 0
                         ? Math.round((floor.occupiedRooms / floor.totalRooms) * 100)

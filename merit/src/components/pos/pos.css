@@ -37,7 +37,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 16px;
+  /* Wrapped rows keep the tier gap between targets. */
+  gap: var(--tap-gap) 16px;
   min-height: 44px;
   padding: 0 12px;
   font-size: 14px;
@@ -124,7 +125,8 @@ a.pos-strip-item {
   .pos-rail {
     flex-direction: row;
     width: auto;
-    padding: 4px 8px;
+    /* The bottom padding keeps the rail targets a tier gap away from the status strip below. */
+    padding: 4px 8px var(--tap-gap);
     overflow-x: auto;
     overflow-y: hidden;
     border-right: 0;

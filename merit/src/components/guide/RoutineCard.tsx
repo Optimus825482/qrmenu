@@ -108,7 +108,8 @@ export function RoutineCard({ routines: initial }: Props) {
                     data-item={item.id}
                     data-done={done ? "true" : "false"}
                     data-auto={item.auto ? "true" : "false"}
-                    className="flex items-center gap-1 border-b border-border last:border-b-0"
+                    className="flex items-center border-b border-border py-1.5 last:border-b-0"
+                    style={{ gap: "var(--tap-gap)" }}
                   >
                     {item.auto ? (
                       <span

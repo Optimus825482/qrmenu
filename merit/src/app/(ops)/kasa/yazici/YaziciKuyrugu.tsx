@@ -136,7 +136,7 @@ export function YaziciKuyrugu({
           <h1 className="text-xl font-extrabold">Fiş Yazıcı Kuyruğu</h1>
           <p className="text-sm text-muted">Bugünün işleri</p>
         </div>
-        {canTestPrint ? <div className="flex items-center gap-2">
+        {canTestPrint ? <div className="flex items-center" style={{ gap: "var(--tap-gap)" }}>
           <select
             aria-label="Yazıcı"
             value={testPrinterId}

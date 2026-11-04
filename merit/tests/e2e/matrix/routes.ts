@@ -6,8 +6,20 @@ import { login } from "../fixtures";
 import type { Tier } from "./a11y";
 import { VIEWPORTS, projectName } from "./viewports";
 
-/** `ready`: text that proves the screen finished loading (SSE keeps the network from ever idling). */
-export type RouteEntry = { key: string; path: string; user: string; outlet?: RegExp; tier: Tier; ready: RegExp };
+/**
+ * `ready`: text that proves the screen finished loading (SSE keeps the network from ever idling).
+ * `user: null` opens the route without a session; `picker: true` stops at the login form's target
+ * choice (the user has several outlets/hotels) and opens `path` with that pending choice.
+ */
+export type RouteEntry = {
+  key: string;
+  path: string;
+  user: string | null;
+  outlet?: RegExp;
+  picker?: boolean;
+  tier: Tier;
+  ready: RegExp;
+};
 
 /** Below this width the POS shell gives way to the staff shell (`resolveShell`), so a POS route is held to the staff tier. */
 const POS_MIN_WIDTH = 600;
@@ -27,6 +39,7 @@ function adaptive(entry: RouteEntry): RouteEntry {
 export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kat", path: "/kat", user: "kat.mr", tier: "personel", ready: /Günlük Minibar Kontrol/ },
   { key: "kat-oda-kontrol", path: "FIRST_ROOM", user: "kat.mr", tier: "personel", ready: /Hepsini Doldur/ },
+  { key: "kat-islemlerim", path: "/kat/islemlerim", user: "kat.mr", tier: "personel", ready: /İşlemlerim ve Oda Kontrol Kayıtları/ },
   { key: "kat-qr", path: "/kat/qr", user: "kat.mr", tier: "personel", ready: /Oda QR Okut/ },
   { key: "kat-gorevler", path: "/kat/gorevler", user: "kat.mr", tier: "personel", ready: /Günlük Görevler/ },
   { key: "erisimim", path: "/erisimim", user: "kat.mr", tier: "personel", ready: /Erişimim/ },
@@ -34,6 +47,8 @@ export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kat-dnd", path: "/kat/dnd", user: "kat.mr", tier: "personel", ready: /Rahatsız Etmeyin/ },
   { key: "depo-gorevler", path: "/depo/gorevler", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Günlük Görevler/ },
   { key: "depo-stok", path: "/depo/stok", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Zimmet havuzu/ },
+  { key: "depo-raporlar", path: "/depo/raporlar", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Detaylı Minibar/ },
+  { key: "kat-duzeltme-onay", path: "/kat/duzeltme-onay", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Düzeltme Onayları/ },
   { key: "depo-pano", path: "/depo", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Depo panosu/ },
   { key: "garson", path: "/garson", user: "garson.havuz", outlet: /Havuz Bar/, tier: "personel", ready: /Masalarım/ },
   { key: "garson-masalar", path: "/garson?sekme=masalar", user: "garson.havuz", outlet: /Havuz Bar/, tier: "personel", ready: /Yeni adisyon/ },
@@ -43,6 +58,9 @@ export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kasa-iptal", path: "/kasa/iptal", user: "kasa.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Sipariş iptali/ },
   { key: "kds", path: "/kds", user: "kds.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Mutfak ekranı/ },
   { key: "oda-servisi", path: "/oda-servisi", user: "fbm.mr", tier: "personel", ready: /Operasyon Paneli/ },
+  { key: "yetkisiz", path: "/yetkisiz?ekran=MB-DOL", user: "kat.mr", tier: "personel", ready: /Bu ekran sana atanmadı/ },
+  { key: "giris", path: "/giris", user: null, tier: "personel", ready: /Giriş Yap/ },
+  { key: "secim", path: "/secim", user: "garson.havuz", picker: true, tier: "personel", ready: /Nerede çalışacaksınız/ },
   { key: "radar", path: "/radar", user: "admin", tier: "xp", ready: /Canlı Radar/ },
   { key: "admin", path: "/admin", user: "admin", tier: "xp", ready: /Komuta Merkezi|Genel Durum/ },
 ] satisfies RouteEntry[]).map(adaptive);
@@ -99,7 +117,18 @@ export async function openFirstRoom(page: Page): Promise<void> {
 
 /** Logs `entry.user` in, picks the outlet when asked to, and opens the route. */
 export async function openRoute(page: Page, entry: RouteEntry): Promise<void> {
+  if (entry.user === null) {
+    await page.goto(entry.path);
+    await expect(page.getByText(entry.ready).first()).toBeVisible({ timeout: 20_000 });
+    return;
+  }
   await login(page, entry.user);
+  if (entry.picker) {
+    await expect(page.getByRole("heading", { name: "Çalışacağınız outleti seçin" })).toBeVisible({ timeout: 20_000 });
+    await page.goto(entry.path);
+    await expect(page.getByText(entry.ready).first()).toBeVisible({ timeout: 20_000 });
+    return;
+  }
   // Field users pick their outlet on the login page itself; everyone else leaves /giris.
   if (entry.outlet) await page.getByRole("button", { name: entry.outlet }).first().click();
   await page.waitForURL((url) => !url.pathname.startsWith("/giris"));

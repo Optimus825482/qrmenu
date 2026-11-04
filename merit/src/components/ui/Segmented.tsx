@@ -28,7 +28,7 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
       role="tablist"
       aria-label={label}
       className={`inline-flex max-w-full rounded-[var(--radius-m)] border border-border bg-surface p-1 ${className ?? ""}`}
-      style={{ gap: "var(--space-1)" }}
+      style={{ gap: "var(--tap-gap)" }}
     >
       {options.map((option, index) => {
         const selected = option.value === value;

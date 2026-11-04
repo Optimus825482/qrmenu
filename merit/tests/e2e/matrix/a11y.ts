@@ -37,13 +37,28 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   expect(scrollWidth, `horizontal scroll: ${scrollWidth} > ${innerWidth}`).toBeLessThanOrEqual(innerWidth);
 }
 
-type Box = { selector: string; text: string; x: number; y: number; w: number; h: number; primary: boolean };
+/**
+ * `layer`: index of the closest fixed/sticky ancestor (-1: page flow). Scrolling content and pinned
+ * chrome (sticky bottom nav, fixed header) have no fixed distance, so they are not gap neighbours.
+ */
+type Box = { selector: string; text: string; x: number; y: number; w: number; h: number; primary: boolean; layer: number };
 
 /** Visible, non-exempt interactive boxes of the page. */
 async function collectBoxes(page: Page): Promise<Box[]> {
   await settle(page);
   return page.evaluate((targets) => {
     const out: Box[] = [];
+    const layers: Element[] = [];
+    const layerOf = (el: Element): number => {
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const pos = getComputedStyle(n).position;
+        if (pos === "fixed" || pos === "sticky") {
+          if (!layers.includes(n)) layers.push(n);
+          return layers.indexOf(n);
+        }
+      }
+      return -1;
+    };
     const describe = (el: Element): string => {
       const id = el.id ? `#${el.id}` : "";
       const cls = typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
@@ -67,6 +82,7 @@ async function collectBoxes(page: Page): Promise<Box[]> {
         w: r.width,
         h: r.height,
         primary: el.hasAttribute("data-primary"),
+        layer: layerOf(el),
       });
     }
     return out;
@@ -87,7 +103,7 @@ export async function touchViolations(page: Page, tier: Tier): Promise<TouchViol
   return found;
 }
 
-/** Neighbouring targets closer than the tier gap (0 < gap < min). Touching targets (gap 0) belong to one control. */
+/** Neighbouring targets of one layer closer than the tier gap (0 < gap < min). Touching targets (gap 0) belong to one control. */
 export async function gapViolations(page: Page, tier: Tier): Promise<{ a: string; b: string; gap: number }[]> {
   const min = GAP[tier];
   if (min === 0) return [];
@@ -97,6 +113,7 @@ export async function gapViolations(page: Page, tier: Tier): Promise<{ a: string
     for (let j = i + 1; j < boxes.length; j++) {
       const a = boxes[i];
       const c = boxes[j];
+      if (a.layer !== c.layer) continue;
       const dx = Math.max(c.x - (a.x + a.w), a.x - (c.x + c.w));
       const dy = Math.max(c.y - (a.y + a.h), a.y - (c.y + c.h));
       // Boxes separated on one axis and overlapping on the other are neighbours.
@@ -139,7 +156,7 @@ export async function expectNoSeriousAxe(page: Page, key: string, opts: { exclud
     ).toBeGreaterThan(0);
   } else {
     expect(
-      serious.map((v) => `${v.id}: ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`),
+      serious.map((v) => `${v.id}: ${v.nodes.slice(0, 3).map((n) => n.target.join(" ") + " :: " + (n.any[0]?.message ?? "")).join(" | ")}`),
       `axe violations of "${key}"`,
     ).toEqual([]);
   }

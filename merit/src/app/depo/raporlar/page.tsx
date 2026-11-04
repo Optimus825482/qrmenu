@@ -201,25 +201,25 @@ export default function RaporlarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
+    <div className="min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 shadow-md print:hidden">
+      <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md print:hidden">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
               href="/kat"
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition"
-              title="Dashboard"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center bg-bg hover:bg-border text-text rounded-lg transition"
+              aria-label="Kat paneline dön"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-text flex items-center gap-2">
                 <span><Icon name="chart" size={20} /> Detaylı Minibar & Operasyon Raporları</span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted">
                 Tüketim Analitiği • Görev Tamamlanma & DND İstatistikleri
               </p>
             </div>
@@ -230,7 +230,8 @@ export default function RaporlarPage() {
               <select
                 value={selectedHotelId}
                 onChange={handleHotelChange}
-                className="bg-slate-800 text-amber-400 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500"
+                aria-label="Otel"
+                className="min-h-11 bg-bg text-warn border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-warn/40"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -242,8 +243,9 @@ export default function RaporlarPage() {
 
             <button
               data-guide="indir"
+              type="button"
               onClick={() => window.print()}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+              className="min-h-11 px-3 py-1.5 bg-bg hover:bg-border text-text border border-border rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -253,21 +255,21 @@ export default function RaporlarPage() {
 
             <Link
               href="/depo/doluluk-yukle"
-              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="chart" size={20} /> Doluluk Girişi
             </Link>
 
             <Link
               href="/depo/stok"
-              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Stok Havuzu
             </Link>
 
             <Link
               href="/depo/tanimlar"
-              className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="settings" size={20} /> Tanımlamalar & Audit
             </Link>
@@ -278,33 +280,36 @@ export default function RaporlarPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
         {/* Rapor Sekmeleri */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
-          <div data-guide="rapor-secimi" className="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+          <div data-guide="rapor-secimi" className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-border">
             <button
               onClick={() => setActiveTab("CONSUMPTION")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
+              type="button"
+              className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "CONSUMPTION"
-                  ? "bg-amber-500 text-slate-950 shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-500 text-text shadow-md"
+                  : "text-muted hover:text-text"
               }`}
             >
               Minibar Tüketim Raporu
             </button>
             <button
               onClick={() => setActiveTab("TASKS")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
+              type="button"
+              className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "TASKS"
-                  ? "bg-amber-500 text-slate-950 shadow-md"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-amber-500 text-text shadow-md"
+                  : "text-muted hover:text-text"
               }`}
             >
               Görev Tamamlanma Raporu
             </button>
             <button
               onClick={() => setActiveTab("ABNORMAL")}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition ${
+              type="button"
+              className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "ABNORMAL"
-                  ? "bg-red-500 text-white shadow-md shadow-red-500/20"
-                  : "text-slate-400 hover:text-red-400"
+                  ? "bg-danger text-white shadow-md"
+                  : "text-muted hover:text-danger"
               }`}
             >
               <Icon name="warning" size={20} /> Anormal Tüketim Raporu
@@ -313,22 +318,24 @@ export default function RaporlarPage() {
 
           {/* Filtre Barı */}
           <div data-guide="filtreler" className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1 text-xs text-slate-300">
-              <span className="text-slate-500">Tarih:</span>
+            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl px-2.5 py-1 text-xs text-text">
+              <span className="text-muted">Tarih:</span>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent border-0 text-white text-xs focus:outline-none"
+                aria-label={activeTab === "CONSUMPTION" ? "Başlangıç tarihi" : "Tarih"}
+                className="min-h-11 bg-transparent border-0 text-text text-xs focus:outline-none"
               />
               {activeTab === "CONSUMPTION" && (
                 <>
-                  <span className="text-slate-500">-</span>
+                  <span className="text-muted">-</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-transparent border-0 text-white text-xs focus:outline-none"
+                    aria-label="Bitiş tarihi"
+                    className="min-h-11 bg-transparent border-0 text-text text-xs focus:outline-none"
                   />
                 </>
               )}
@@ -338,7 +345,8 @@ export default function RaporlarPage() {
               <select
                 value={selectedFloorId}
                 onChange={(e) => setSelectedFloorId(e.target.value)}
-                className="bg-slate-900 text-slate-300 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-amber-500"
+                aria-label="Kat"
+                className="min-h-11 bg-surface text-text border border-border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-warn/40"
               >
                 <option value="">Tüm Katlar</option>
                 {floors.map((f) => (
@@ -352,7 +360,7 @@ export default function RaporlarPage() {
         </div>
 
         {errorMsg && (
-          <div className="p-4 bg-rose-950/60 border border-rose-800 rounded-xl text-rose-200 text-sm">
+          <div className="p-4 bg-danger/10 border border-danger/40 rounded-xl text-danger text-sm">
             {errorMsg}
           </div>
         )}
@@ -362,58 +370,58 @@ export default function RaporlarPage() {
           <div className="space-y-6">
             {/* Metrik Kartları */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-                <span className="text-xs text-slate-400 font-medium">Toplam Tüketilen Ürün Adedi</span>
-                <p className="text-2xl font-black text-emerald-400 mt-1">{totalQty} Adet</p>
+              <div className="p-4 bg-surface border border-border rounded-2xl shadow-lg">
+                <span className="text-xs text-muted font-medium">Toplam Tüketilen Ürün Adedi</span>
+                <p className="text-2xl font-black text-success mt-1">{totalQty} Adet</p>
               </div>
 
-              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-                <span className="text-xs text-slate-400 font-medium">Toplam Oda Kontrol &amp; Dolum İşlemi</span>
-                <p className="text-2xl font-black text-white mt-1">{txCount} İşlem</p>
+              <div className="p-4 bg-surface border border-border rounded-2xl shadow-lg">
+                <span className="text-xs text-muted font-medium">Toplam Oda Kontrol &amp; Dolum İşlemi</span>
+                <p className="text-2xl font-black text-text mt-1">{txCount} İşlem</p>
               </div>
             </div>
 
             {/* Tüketim Tablosu */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               {isLoading ? (
-                <div className="py-16 text-center text-slate-500 text-sm">Tüketim verileri yükleniyor...</div>
+                <div className="py-16 text-center text-muted text-sm">Tüketim verileri yükleniyor...</div>
               ) : consumptionItems.length === 0 ? (
-                <div className="py-16 text-center text-slate-500 text-sm">
+                <div className="py-16 text-center text-muted text-sm">
                   Seçilen tarih aralığında tüketim kaydı bulunamadı.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                         <th className="py-3 px-4">Tarih</th>
                         <th className="py-3 px-4">Oda / Kat</th>
                         <th className="py-3 px-4">Personel</th>
                         <th className="py-3 px-4">Tüketilen / İkame Edilen Ürünler</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className="divide-y divide-border text-text">
                       {consumptionItems.map((tx) => (
-                        <tr key={tx.transactionId} className="hover:bg-slate-800/40 transition">
-                          <td className="py-3.5 px-4 font-mono text-slate-400 text-xs">
+                        <tr key={tx.transactionId} className="hover:bg-border transition">
+                          <td className="py-3.5 px-4 font-mono text-muted text-xs">
                             {new Date(tx.date).toLocaleString("tr-TR", {
                               dateStyle: "short",
                               timeStyle: "short",
                             })}
                           </td>
                           <td className="py-3.5 px-4">
-                            <span className="font-bold text-white text-sm">Oda {tx.roomNumber}</span>
-                            <span className="block text-[11px] text-slate-400">{tx.floorName}</span>
+                            <span className="font-bold text-text text-sm">Oda {tx.roomNumber}</span>
+                            <span className="block text-xs text-muted">{tx.floorName}</span>
                           </td>
-                          <td className="py-3.5 px-4 text-slate-300 font-medium">{tx.staffName}</td>
+                          <td className="py-3.5 px-4 text-text font-medium">{tx.staffName}</td>
                           <td className="py-3.5 px-4">
                             <div className="flex flex-wrap gap-1.5">
                               {tx.items.map((it, idx) => (
                                 <span
                                   key={idx}
-                                  className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700/60 text-slate-200 text-[11px]"
+                                  className="px-2 py-0.5 rounded bg-bg border border-border text-text text-xs"
                                 >
-                                  {it.productName}: <strong className="text-amber-400">{it.quantity} adet</strong>
+                                  {it.productName}: <strong className="text-warn">{it.quantity} adet</strong>
                                 </span>
                               ))}
                             </div>
@@ -434,27 +442,27 @@ export default function RaporlarPage() {
             {taskReport ? (
               <>
                 {/* Görev Başarı Özeti */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
                     <div>
-                      <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">
+                      <span className="text-xs text-muted uppercase font-bold tracking-wider">
                         Tarih: {taskReport.date}
                       </span>
-                      <h2 className="text-lg font-bold text-white mt-0.5">
+                      <h2 className="text-lg font-bold text-text mt-0.5">
                         Günlük Görev Tamamlanma Raporu
                       </h2>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-400 font-medium">Tamamlanma Oranı:</span>
-                      <span className="text-2xl font-black text-emerald-400">
+                      <span className="text-xs text-muted font-medium">Tamamlanma Oranı:</span>
+                      <span className="text-2xl font-black text-success">
                         %{taskReport.completionRate}
                       </span>
                     </div>
                   </div>
 
                   {/* İlerleme Çubuğu */}
-                  <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
+                  <div className="w-full bg-bg rounded-full h-3 overflow-hidden">
                     <div
                       className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                       style={{ width: `${taskReport.completionRate}%` }}
@@ -462,28 +470,28 @@ export default function RaporlarPage() {
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                    <div className="p-3 bg-slate-800/60 rounded-xl">
-                      <span className="text-xs text-slate-400">Toplam Atanan Görev</span>
-                      <p className="text-lg font-bold text-white mt-0.5">{taskReport.totalTasks} Oda</p>
+                    <div className="p-3 bg-bg rounded-xl">
+                      <span className="text-xs text-muted">Toplam Atanan Görev</span>
+                      <p className="text-lg font-bold text-text mt-0.5">{taskReport.totalTasks} Oda</p>
                     </div>
 
-                    <div className="p-3 bg-emerald-950/40 border border-emerald-800/40 rounded-xl">
-                      <span className="text-xs text-emerald-300 font-semibold">Kontrol Edilenler</span>
-                      <p className="text-lg font-bold text-emerald-400 mt-0.5">
+                    <div className="p-3 bg-success/10 border border-success/40 rounded-xl">
+                      <span className="text-xs text-success font-semibold">Kontrol Edilenler</span>
+                      <p className="text-lg font-bold text-success mt-0.5">
                         {taskReport.completedTasks} Oda
                       </p>
                     </div>
 
-                    <div className="p-3 bg-amber-950/40 border border-amber-800/40 rounded-xl">
-                      <span className="text-xs text-amber-300 font-semibold">3x DND İle Kapananlar</span>
-                      <p className="text-lg font-bold text-amber-400 mt-0.5">
+                    <div className="p-3 bg-warn/10 border border-warn/40 rounded-xl">
+                      <span className="text-xs text-warn font-semibold">3x DND İle Kapananlar</span>
+                      <p className="text-lg font-bold text-warn mt-0.5">
                         {taskReport.dndClosedTasks} Oda
                       </p>
                     </div>
 
-                    <div className="p-3 bg-rose-950/40 border border-rose-800/40 rounded-xl">
-                      <span className="text-xs text-rose-300 font-semibold">Açık / Bekleyenler</span>
-                      <p className="text-lg font-bold text-rose-400 mt-0.5">
+                    <div className="p-3 bg-danger/10 border border-danger/40 rounded-xl">
+                      <span className="text-xs text-danger font-semibold">Açık / Bekleyenler</span>
+                      <p className="text-lg font-bold text-danger mt-0.5">
                         {taskReport.pendingTasks} Oda
                       </p>
                     </div>
@@ -491,10 +499,10 @@ export default function RaporlarPage() {
                 </div>
 
                 {/* Görev Oda Listesi */}
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                  <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <h3 className="font-bold text-white text-sm">Oda Bazlı Tamamlanma Durumları</h3>
-                    <span className="text-xs text-slate-400">
+                <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
+                  <div className="p-4 border-b border-border flex items-center justify-between">
+                    <h3 className="font-bold text-text text-sm">Oda Bazlı Tamamlanma Durumları</h3>
+                    <span className="text-xs text-muted">
                       * 3 kez üst üste DND girilen odalar sistem tarafından kontrol edilmiş kabul edilir.
                     </span>
                   </div>
@@ -502,7 +510,7 @@ export default function RaporlarPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                        <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                           <th className="py-3 px-4">Oda / Kat</th>
                           <th className="py-3 px-4">Görev Tipi</th>
                           <th className="py-3 px-4 text-center">Öncelik</th>
@@ -512,43 +520,43 @@ export default function RaporlarPage() {
                           <th className="py-3 px-4 text-right">Durum</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                      <tbody className="divide-y divide-border text-text">
                         {taskReport.items.map((it, idx) => {
                           const isDone = it.status === "TAMAMLANDI";
                           return (
-                            <tr key={idx} className="hover:bg-slate-800/40 transition">
-                              <td className="py-3.5 px-4 font-bold text-white">
+                            <tr key={idx} className="hover:bg-border transition">
+                              <td className="py-3.5 px-4 font-bold text-text">
                                 Oda {it.roomNumber}
-                                <span className="block text-[11px] font-normal text-slate-400">
+                                <span className="block text-xs font-normal text-muted">
                                   {it.floorName}
                                 </span>
                               </td>
-                              <td className="py-3.5 px-4 font-mono text-slate-300">{it.taskType}</td>
+                              <td className="py-3.5 px-4 font-mono text-text">{it.taskType}</td>
                               <td className="py-3.5 px-4 text-center font-bold">
                                 {it.priority === 10 ? (
-                                  <span className="text-red-400">1. Öncelik</span>
+                                  <span className="text-danger">1. Öncelik</span>
                                 ) : it.priority === 20 ? (
-                                  <span className="text-amber-400">2. Öncelik</span>
+                                  <span className="text-warn">2. Öncelik</span>
                                 ) : (
-                                  <span className="text-slate-400">Standart</span>
+                                  <span className="text-muted">Standart</span>
                                 )}
                               </td>
                               <td className="py-3.5 px-4 text-center">
                                 {it.dndCount > 0 ? (
                                   <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    className={`px-2 py-0.5 rounded text-xs font-bold ${
                                       it.dndCount >= 3
-                                        ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-                                        : "bg-amber-500/20 text-amber-300"
+                                        ? "bg-info/20 text-info border border-info/40"
+                                        : "bg-amber-500/20 text-warn"
                                     }`}
                                   >
                                     {it.dndCount}/3 DND
                                   </span>
                                 ) : (
-                                  <span className="text-slate-600">-</span>
+                                  <span className="text-muted">-</span>
                                 )}
                               </td>
-                              <td className="py-3.5 px-4 font-mono text-slate-400">
+                              <td className="py-3.5 px-4 font-mono text-muted">
                                 {it.checkedAt
                                   ? new Date(it.checkedAt).toLocaleTimeString("tr-TR", {
                                       hour: "2-digit",
@@ -556,13 +564,13 @@ export default function RaporlarPage() {
                                     })
                                   : "-"}
                               </td>
-                              <td className="py-3.5 px-4 text-slate-400 max-w-xs truncate">{it.note || "-"}</td>
+                              <td className="py-3.5 px-4 text-muted max-w-xs truncate">{it.note || "-"}</td>
                               <td className="py-3.5 px-4 text-right">
                                 <span
-                                  className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
                                     isDone
-                                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                                      : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                                      ? "bg-emerald-500/20 text-success border border-success/40"
+                                      : "bg-rose-500/20 text-danger border border-danger/40"
                                   }`}
                                 >
                                   {it.status}
@@ -577,7 +585,7 @@ export default function RaporlarPage() {
                 </div>
               </>
             ) : (
-              <div className="py-16 text-center text-slate-500 text-sm">
+              <div className="py-16 text-center text-muted text-sm">
                 Seçilen tarihte görev kaydı bulunamadı.
               </div>
             )}
@@ -588,49 +596,49 @@ export default function RaporlarPage() {
         {activeTab === "ABNORMAL" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-900 border border-red-900/40 rounded-2xl shadow-lg">
-                <span className="text-xs text-red-400 font-bold uppercase tracking-wider">Oda Bazlı Anormal Sarfiyat</span>
-                <p className="text-2xl font-black text-red-500 mt-1">
+              <div className="p-4 bg-surface border border-danger/40 rounded-2xl shadow-lg">
+                <span className="text-xs text-danger font-bold uppercase tracking-wider">Oda Bazlı Anormal Sarfiyat</span>
+                <p className="text-2xl font-black text-danger mt-1">
                   {abnormalReport?.roomAnomalies.length || 0} Oda
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   Günlük eşiğin üzerinde veya mükerrer dolum yapılan odalar
                 </p>
               </div>
 
-              <div className="p-4 bg-slate-900 border border-amber-900/40 rounded-2xl shadow-lg">
-                <span className="text-xs text-amber-400 font-bold uppercase tracking-wider">Ürün Bazlı Aşırı Tüketim</span>
-                <p className="text-2xl font-black text-amber-400 mt-1">
+              <div className="p-4 bg-surface border border-warn/40 rounded-2xl shadow-lg">
+                <span className="text-xs text-warn font-bold uppercase tracking-wider">Ürün Bazlı Aşırı Tüketim</span>
+                <p className="text-2xl font-black text-warn mt-1">
                   {abnormalReport?.productAnomalies.length || 0} Ürün
                 </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-xs text-muted mt-0.5">
                   14 günlük ortalamanın 2.2 katından fazla tüketilen ürünler
                 </p>
               </div>
             </div>
 
             {/* Oda Anomalileri Tablosu */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-              <div className="px-5 py-3.5 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
-                <h3 className="font-bold text-sm text-red-400 flex items-center gap-2">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
+              <div className="px-5 py-3.5 bg-bg/60 border-b border-border flex items-center justify-between">
+                <h3 className="font-bold text-sm text-danger flex items-center gap-2">
                   <Icon name="warning" size={20} /> Oda Bazlı Anormal Tüketim Detayları
                 </h3>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-muted">
                   Eşik: Günde 6+ adet veya mükerrer dolum
                 </span>
               </div>
 
               {isLoading ? (
-                <div className="py-12 text-center text-slate-500 text-sm">Anormal tüketim verileri taranıyor...</div>
+                <div className="py-12 text-center text-muted text-sm">Anormal tüketim verileri taranıyor...</div>
               ) : !abnormalReport || abnormalReport.roomAnomalies.length === 0 ? (
-                <div className="py-12 text-center text-emerald-400 text-sm font-semibold">
+                <div className="py-12 text-center text-success text-sm font-semibold">
                   <Icon name="check" size={20} /> Seçilen tarihte anormal tüketim tespit edilen oda bulunmamaktadır.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                         <th className="py-3 px-4">Oda / Kat</th>
                         <th className="py-3 px-4">Otel</th>
                         <th className="py-3 px-4 text-center">Dolum Sayısı</th>
@@ -638,18 +646,18 @@ export default function RaporlarPage() {
                         <th className="py-3 px-4 text-right">Toplam Tüketim</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className="divide-y divide-border text-text">
                       {abnormalReport.roomAnomalies.map((a, idx) => (
-                        <tr key={idx} className="hover:bg-red-950/10 transition">
-                          <td className="py-3.5 px-4 font-bold text-white">
+                        <tr key={idx} className="hover:bg-danger/20 transition">
+                          <td className="py-3.5 px-4 font-bold text-text">
                             Oda {a.roomNumber}
-                            <span className="block text-[11px] font-normal text-slate-400">
+                            <span className="block text-xs font-normal text-muted">
                               {a.floorName}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-slate-300">{a.hotelName}</td>
+                          <td className="py-3.5 px-4 text-text">{a.hotelName}</td>
                           <td className="py-3.5 px-4 text-center">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-amber-300 font-bold text-xs">
+                            <span className="px-2 py-0.5 rounded bg-bg text-warn font-bold text-xs">
                               {a.replenishmentCount} Kez
                             </span>
                           </td>
@@ -658,14 +666,14 @@ export default function RaporlarPage() {
                               {a.details.map((d, dIdx) => (
                                 <span
                                   key={dIdx}
-                                  className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 text-[11px]"
+                                  className="px-2 py-0.5 rounded bg-bg text-text text-xs"
                                 >
-                                  {d.productName}: <strong className="text-red-400">{d.quantity}</strong>
+                                  {d.productName}: <strong className="text-danger">{d.quantity}</strong>
                                 </span>
                               ))}
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-right font-black text-red-400 font-mono text-sm">
+                          <td className="py-3.5 px-4 text-right font-black text-danger font-mono text-sm">
                             {a.totalQuantity} Adet
                           </td>
                         </tr>
@@ -678,18 +686,18 @@ export default function RaporlarPage() {
 
             {/* Ürün Anomalileri Tablosu */}
             {abnormalReport && abnormalReport.productAnomalies.length > 0 && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-                <div className="px-5 py-3.5 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
-                  <h3 className="font-bold text-sm text-amber-400 flex items-center gap-2">
+              <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
+                <div className="px-5 py-3.5 bg-bg/60 border-b border-border flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-warn flex items-center gap-2">
                     <Icon name="trending" size={20} /> Ürün Bazlı Olağandışı Tüketim Artışı (Spike)
                   </h3>
-                  <span className="text-xs text-slate-400">14 Günlük Hareketli Ortalamaya Göre</span>
+                  <span className="text-xs text-muted">14 Günlük Hareketli Ortalamaya Göre</span>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider bg-slate-950/40">
+                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
                         <th className="py-3 px-4">Ürün Adı</th>
                         <th className="py-3 px-4">Kategori</th>
                         <th className="py-3 px-4 text-center">Günlük Ortalama</th>
@@ -697,18 +705,18 @@ export default function RaporlarPage() {
                         <th className="py-3 px-4 text-right">Artış Katsayısı</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    <tbody className="divide-y divide-border text-text">
                       {abnormalReport.productAnomalies.map((p, idx) => (
-                        <tr key={idx} className="hover:bg-amber-950/10 transition">
-                          <td className="py-3.5 px-4 font-bold text-white text-sm">{p.productName}</td>
-                          <td className="py-3.5 px-4 text-slate-400">{p.categoryName}</td>
-                          <td className="py-3.5 px-4 text-center font-mono text-slate-300">
+                        <tr key={idx} className="hover:bg-warn/10 transition">
+                          <td className="py-3.5 px-4 font-bold text-text text-sm">{p.productName}</td>
+                          <td className="py-3.5 px-4 text-muted">{p.categoryName}</td>
+                          <td className="py-3.5 px-4 text-center font-mono text-text">
                             {p.averageDailyConsumed} adet/gün
                           </td>
-                          <td className="py-3.5 px-4 text-center font-bold text-amber-400 font-mono text-sm">
+                          <td className="py-3.5 px-4 text-center font-bold text-warn font-mono text-sm">
                             {p.todayConsumed} Adet
                           </td>
-                          <td className="py-3.5 px-4 text-right font-black text-rose-400 font-mono text-sm">
+                          <td className="py-3.5 px-4 text-right font-black text-danger font-mono text-sm">
                             +{p.spikeRatio}x
                           </td>
                         </tr>

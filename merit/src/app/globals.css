@@ -10,7 +10,7 @@
   --muted: #475569;
   --brand: #0f172a;
   --accent: #2563eb;
-  --gold: #947833;
+  --gold: #806629; /* >= 4.5:1 on --surface (target picker hotel name) */
   --danger: #b91c1c;
   --success: #15803d;
 

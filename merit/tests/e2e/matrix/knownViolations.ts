@@ -14,6 +14,12 @@ export const KNOWN_AXE_VIOLATIONS: Record<string, string> = {};
 /** Route/project pairs that scroll horizontally today: "<route key>@<project>". */
 export const KNOWN_SCROLL: Record<string, string> = {};
 
+/**
+ * CSS selectors axe skips on XP routes (deliberate limits of the XP theme). Every entry needs a reason
+ * next to it and is pinned by tests/unit/final-gates.test.ts; the list starts (and stays) empty.
+ */
+export const XP_AXE_EXCLUDE: string[] = [];
+
 /** `key@project` wins over `key`. */
 export function knownFor(list: Record<string, string>, key: string): string | undefined {
   return list[`${key}@${projectName()}`] ?? list[key];
