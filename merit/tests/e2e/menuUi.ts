@@ -28,6 +28,8 @@ export async function newContextPage(browser: Browser, locale = "tr-TR"): Promis
 /** Logs `user` into the admin shell and waits for the desktop. */
 export async function openAdminShell(page: Page, user = "admin"): Promise<void> {
   await login(page, user);
+  // fbm.mr also belongs to the room service outlet: the login page offers the management target first.
+  if (user === "fbm.mr") await page.getByRole("button", { name: /^Yönetim/ }).first().click();
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole("region", { name: "Masaüstü" })).toBeVisible();
 }

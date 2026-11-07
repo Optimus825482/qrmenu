@@ -78,6 +78,12 @@ async function guestSend(page: Page, token: string, items: { productId: string; 
   expect(res.status(), await res.text()).toBe(200);
 }
 
+/** The room QR now lands on a chooser (MyBar / room service): `?lang=` is set there, the MyBar form lives one level down. */
+async function openMyBar(page: Page, token: string, lang?: string): Promise<void> {
+  if (lang) await page.goto(`/q/${token}?lang=${lang}`);
+  await page.goto(`/q/${token}/mybar`);
+}
+
 test("kat sorumlusu: zorunlu onay, kısmi karşılama, eksiklerle kapatma; misafir sayfası canlı güncellenir", async ({ browser }) => {
   const kat = await staffPage(browser, "kat.mr", { width: 390, height: 844 });
   await kat.goto("/kat/mybar");
@@ -86,7 +92,7 @@ test("kat sorumlusu: zorunlu onay, kısmi karşılama, eksiklerle kapatma; misaf
 
   const guest = await newContextPage(browser, "en-US");
   await guestSend(guest, ids.token101, [{ productId: ids.su, qty: 2 }, { productId: ids.kola, qty: 1 }], "Ice please");
-  await guest.goto(`/q/${ids.token101}?lang=en`);
+  await openMyBar(guest, ids.token101, "en");
   await expect(guest.locator(".mb-status")).toHaveAttribute("data-status", "BEKLIYOR");
 
   // Mandatory acknowledgement: the dialog appears, Escape and a click outside do not dismiss it.

@@ -63,7 +63,7 @@ test("tek gezinme: garson, iç sekmeler tablist; depo ve oda servisi de tek nav"
   await depot.context().close();
 
   const rs = await newContextPage(browser);
-  await signIn(rs, "fbm.mr");
+  await signIn(rs, "fbm.mr", /Oda Servisi/);
   for (const path of ["/oda-servisi", "/oda-servisi?sekme=teslim"]) await expectSingleNav(rs, path);
   await expect(nav(rs).getByRole("link", { name: "Teyit" })).toBeVisible();
   await rs.context().close();

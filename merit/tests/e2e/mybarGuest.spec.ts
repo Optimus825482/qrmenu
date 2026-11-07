@@ -18,6 +18,12 @@ test.beforeAll(() => {
   }
 });
 
+/** The room QR now lands on a chooser (MyBar / room service): `?lang=` is set there, the MyBar form lives one level down. */
+async function openMyBar(page: Page, token: string, lang?: string): Promise<void> {
+  if (lang) await page.goto(`/q/${token}?lang=${lang}`);
+  await page.goto(`/q/${token}/mybar`);
+}
+
 async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
   const client = new Client({ connectionString: e2eDatabaseUrl() });
   await client.connect();
@@ -54,8 +60,8 @@ const noteBox = (page: Page) => page.getByLabel("Additional notes or special req
 
 test("AR: sağdan sola, Arapça başlık; Su ×2 + not gönderilir, durum Bekleyen; sayfa yenilenince günlük sınır mesajı", async ({ page }) => {
   const token = await roomToken("101");
-  await page.goto(`/q/${token}?lang=ar`);
-  await expect(page).toHaveURL(new RegExp(`/q/${token}$`));
+  await openMyBar(page, token, "ar");
+  await expect(page).toHaveURL(new RegExp(`/q/${token}/mybar$`));
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
   await expect(page.getByRole("heading", { level: 1, name: "MYBAR" })).toBeVisible();
@@ -90,8 +96,8 @@ test("ikinci cihaz aynı gün gönderirse: günlük sınır mesajı, başarı ku
   const context = await browser.newContext({ locale: "en-US" });
   const one = await context.newPage();
   const two = await context.newPage();
-  await one.goto(`/q/${token}?lang=en`);
-  await two.goto(`/q/${token}`);
+  await openMyBar(one, token, "en");
+  await openMyBar(two, token);
   await expect(send(two)).toBeVisible();
 
   await drinks(one);
@@ -111,7 +117,7 @@ test("ikinci cihaz aynı gün gönderirse: günlük sınır mesajı, başarı ku
 
 test("canlı durum: kat sorumlusu görünce sayfa Pending -> Seen olur (sayfa yenilenmeden)", async ({ page }) => {
   const token = await roomToken("103");
-  await page.goto(`/q/${token}?lang=en`);
+  await openMyBar(page, token, "en");
   await drinks(page);
   await plusOf(page, "Kola").click();
   await send(page).click();
@@ -140,10 +146,10 @@ test("canlı durum: kat sorumlusu görünce sayfa Pending -> Seen olur (sayfa ye
 
 test("dil seçimi çerezle ve localStorage ile kalıcı; menüden dil değişir", async ({ page }) => {
   const token = await roomToken("104");
-  await page.goto(`/q/${token}?lang=de`);
+  await openMyBar(page, token, "de");
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
   await expect(page.getByRole("button", { name: /MYBAR-ANFRAGE SENDEN/ })).toBeVisible();
-  await page.goto(`/q/${token}`);
+  await openMyBar(page, token);
   await expect(page.locator("html")).toHaveAttribute("lang", "de");
 
   await page.locator(".g-lang-btn").click();
@@ -153,14 +159,14 @@ test("dil seçimi çerezle ve localStorage ile kalıcı; menüden dil değişir"
 
   // Cookie cleared, localStorage kept: the remembered language is re-applied on the next visit.
   await page.context().clearCookies();
-  await page.goto(`/q/${token}`);
+  await openMyBar(page, token);
   await expect(page.locator("html")).toHaveAttribute("lang", "ru");
 });
 
 test("boş gönderim istek atmaz; not 501 karakterde gönder pasif; sayaç; 375 px yatay kaydırma yok, dokunma hedefleri >= 44 px", async ({ page }) => {
   const token = await roomToken("201");
   await page.setViewportSize({ width: 375, height: 800 });
-  await page.goto(`/q/${token}?lang=en`);
+  await openMyBar(page, token, "en");
   let posted = 0;
   page.on("request", (r) => {
     if (r.method() === "POST" && r.url().includes("/mybar")) posted += 1;
@@ -192,7 +198,7 @@ test("boş gönderim istek atmaz; not 501 karakterde gönder pasif; sayaç; 375 
 test("pasif oda 'kullanılamıyor' sayfası; masa tokenına MyBar gönderimi 404; bilinmeyen token 404", async ({ page, request }) => {
   const token = await roomToken("202");
   await withDb((db) => db.query(`UPDATE rooms SET is_active = false WHERE number = '202'`));
-  await page.goto(`/q/${token}?lang=en`);
+  await openMyBar(page, token, "en");
   await expect(page.getByRole("heading", { name: "MyBar is unavailable" })).toBeVisible();
   await expect(page.getByText("This room is currently unavailable.")).toBeVisible();
   await expect(page.getByRole("button", { name: /SEND MYBAR REQUEST/ })).toHaveCount(0);
@@ -207,7 +213,7 @@ test("pasif oda 'kullanılamıyor' sayfası; masa tokenına MyBar gönderimi 404
 test("ürünsüz oda tipi: noSetupMessage ve yalnız notla gönderim başarılı", async ({ page }) => {
   const token = await roomToken("203");
   await withDb((db) => db.query(`UPDATE rooms SET room_type_id = NULL WHERE number = '203'`));
-  await page.goto(`/q/${token}?lang=en`);
+  await openMyBar(page, token, "en");
   await expect(page.getByTestId("mybar-no-setup")).toContainText("There are no products to choose for your room.");
   await noteBox(page).fill("Please bring two extra towels");
   await send(page).click();

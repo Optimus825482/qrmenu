@@ -123,7 +123,8 @@ test("Katlar: Yeni 9. Kat → listede; aynı numara CONFLICT; düzenle (onaylı)
   const win = await definitions(page, MR);
 
   await node(win, "Katlar").click();
-  await expect(win.getByText("Bu otelde kayıtlı kat yok")).toBeVisible();
+  // The e2e seed already holds the room service floor "1. Kat" (rooms 101/102).
+  await expect(row(win, "1. Kat")).toBeVisible();
 
   await win.getByRole("button", { name: "Yeni kayıt" }).click();
   const dialog = page.getByRole("dialog", { name: "Yeni kat" });
@@ -131,7 +132,7 @@ test("Katlar: Yeni 9. Kat → listede; aynı numara CONFLICT; düzenle (onaylı)
   await dialog.getByLabel("Kat adı").fill("9. Kat");
   await saveNew(page, dialog);
   await expect(row(win, "9. Kat")).toBeVisible();
-  await expect(win.getByText("1 kayıt")).toBeVisible();
+  await expect(win.getByText("2 kayıt")).toBeVisible();
 
   // Same number again: Turkish CONFLICT in the dialog, nothing added.
   await win.getByRole("button", { name: "Yeni kayıt" }).click();
@@ -144,7 +145,7 @@ test("Katlar: Yeni 9. Kat → listede; aynı numara CONFLICT; düzenle (onaylı)
   await dialog.getByRole("button", { name: "Kaydet" }).click();
   await expect(dialog.getByText("Kat numarası gerekli")).toBeVisible();
   await dialog.getByRole("button", { name: "Vazgeç" }).click();
-  await expect(win.getByText("1 kayıt")).toBeVisible();
+  await expect(win.getByText("2 kayıt")).toBeVisible();
 
   // Edit: the change is confirmed first.
   await row(win, "9. Kat").click();
@@ -161,7 +162,7 @@ test("Katlar: Yeni 9. Kat → listede; aynı numara CONFLICT; düzenle (onaylı)
   await expect(row(win, "Dokuzuncu Kat")).toBeVisible();
   await deleteSelected(page, win, "Katı sil");
   await expect(row(win, "Dokuzuncu Kat")).toHaveCount(0);
-  await expect(win.getByText("Bu otelde kayıtlı kat yok")).toBeVisible();
+  await expect(win.getByText("1 kayıt")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -231,7 +232,7 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   }
 
   await node(win, "Odalar").click();
-  await expect(win.getByText("Bu filtreyle kayıtlı oda yok")).toBeVisible();
+  await expect(row(win, "101")).toBeVisible(); // seed: room service rooms 101/102
   const filters = win.getByRole("group", { name: "Oda filtreleri" });
 
   // Toplu Ekle 901–903: the preview lists the numbers before anything is written.
@@ -245,7 +246,7 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   await expect(preview).toContainText("901, 902, 903");
   await saveNew(page, bulk, "Ekle");
   for (const number of ["901", "902", "903"]) await expect(row(win, number)).toBeVisible();
-  await expect(win.getByText("3 kayıt")).toBeVisible();
+  await expect(win.getByText("5 kayıt")).toBeVisible();
   await expect(row(win, "901").getByRole("gridcell").nth(6)).toHaveText("yok"); // QR column
 
   // The same range again: the preview warns and nothing is written.
@@ -262,7 +263,7 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   await bulk.getByRole("button", { name: "Ekle" }).click();
   await expect(bulk.getByText("Atlanacak numaraları virgülle ayırarak")).toBeVisible();
   await bulk.getByRole("button", { name: "Vazgeç" }).click();
-  await expect(win.getByText("3 kayıt")).toBeVisible();
+  await expect(win.getByText("5 kayıt")).toBeVisible();
 
   // Edit 901: capacity 3.
   await row(win, "901").click();
@@ -285,14 +286,14 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   await fresh.getByLabel("Kat", { exact: true }).selectOption({ label: "6. Kat" });
   await saveNew(page, fresh);
   await expect(row(win, "601")).toBeVisible();
-  await expect(win.getByText("4 kayıt")).toBeVisible();
+  await expect(win.getByText("6 kayıt")).toBeVisible();
   await filters.getByLabel("Kat").selectOption({ label: "6. Kat" });
   await expect(win.getByText("1 kayıt")).toBeVisible();
   await expect(row(win, "901")).toHaveCount(0);
   await filters.getByLabel("Kat").selectOption({ label: "5. Kat" });
   await expect(win.getByText("3 kayıt")).toBeVisible();
   await filters.getByLabel("Kat").selectOption({ label: "Tümü" });
-  await expect(win.getByText("4 kayıt")).toBeVisible();
+  await expect(win.getByText("6 kayıt")).toBeVisible();
 
   // Excel export downloads odalar-<otel kodu>.xlsx.
   const download = page.waitForEvent("download");
@@ -306,7 +307,7 @@ test("Odalar: Toplu Ekle 901–903 → 3 satır; çakışma uyarısı; 901 kapas
   await row(win, "601").click();
   await deleteSelected(page, win, "Odayı sil");
   await expect(row(win, "601")).toHaveCount(0);
-  await expect(win.getByText("3 kayıt")).toBeVisible();
+  await expect(win.getByText("5 kayıt")).toBeVisible();
   expect(errors).toEqual([]);
 });
 

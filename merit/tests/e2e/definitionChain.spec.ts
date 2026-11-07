@@ -253,17 +253,19 @@ test("yetki: R-TST için QS-KUY görüntüle kapanınca garsonda görünmez, aç
   await expect.poll(() => canView("R-TST", "QS-KUY")).toBe(true);
 });
 
-test("Kurulum Rehberi: Merit Royal %90 (9/10 zorunlu adım; ürün ve minibar setup bekliyor)", async () => {
+test("Kurulum Rehberi: Merit Royal %80 (8/10 zorunlu adım; oda tipi ataması ve minibar setup bekliyor)", async () => {
   await admin.getByRole("button", { name: "başlat" }).click();
   await (await findStartItem(admin, "Kurulum Rehberi")).click();
   await pickHotel(admin, "Kurulum Rehberi", MR.name);
   const guide = admin.getByRole("region", { name: `Kurulum Rehberi · ${MR.name}`, exact: true });
   await expect(guide).toBeVisible();
-  await expect(guide.getByTestId("guide-percent")).toHaveText("%90");
+  await expect(guide.getByTestId("guide-percent")).toHaveText("%80");
   const steps = guide.getByRole("list", { name: "Kurulum adımları" }).getByRole("listitem");
   for (const title of ["Katlar", "Oda tipleri", "Odalar", "Outletler", "Sipariş outletlerinde ekip"]) {
     await expect(steps.filter({ hasText: title }).first().getByRole("img", { name: "Tamamlandı" })).toBeVisible();
   }
+  // The e2e seed's room service rooms 101/102 have no room type, so "Odalara oda tipi atama" stays open.
+  await expect(steps.filter({ hasText: "Odalara oda tipi atama" }).getByRole("img", { name: "Eksik" })).toBeVisible();
   // Minibar is on: the 10th mandatory step (product + setup + assignment) is still open here.
   await expect(steps.filter({ hasText: "Ürün ve minibar setup" }).getByRole("img", { name: "Eksik" })).toBeVisible();
 });
