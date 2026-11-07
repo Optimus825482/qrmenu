@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 16:30",
-  headline: "P6 oda servisi ve P7 raporlar/e-posta kapandı (check 2514/2514, build, chromium 227/228, matris yeşil). P8 kabul/eğitim/kurulum başladı: T1, T5, T7 sürüyor; T2–T4, T6, T8 sırada. Pazartesi Opus dal incelemeleri.",
+  updatedAt: "07.11.2026 16:45",
+  headline: "P4, P6 ve P7 kapandı; P8 T1/T5/T7 indi. Kalan P8 görevleri (T2/T3/T4/T6/T8) Codex'e devredildi (docs/DEVIR.md §1a). Pazartesi: Opus dal incelemeleri ve son kapılar (Fable).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -181,18 +181,19 @@ window.ILERLEME = {
       code: "P8", title: "Kabul, eğitim ve kurulum", weight: 6,
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
-        { title: "T1 Kabul altyapısı: izlenebilirlik haritası, @kabul etiketleri, kontrollü iş koşucusu, K01/K02/K03/K10", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
-        { title: "T2 Minibar kabul kriterleri K04/K05/K06", status: "pending", note: "T1 sonrası" },
-        { title: "T3 QR sipariş, oda servisi ve göç kabulü K07/K08/K09 + modüller arası otel günü", status: "pending", note: "T1 sonrası" },
-        { title: "T4 Yük denemesi (300 misafir + 40 personel), SSE ve DB havuzu ölçümü", status: "pending", note: "T1 sonrası; uzak yük hedefi yalnız Erkan onayıyla" },
-        { title: "T5 Eğitim/demo seed'i, ayrı eğitim DB'si, ENV_LABEL ortam rozeti", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
-        { title: "T6 Kullanım kılavuzları ve Playwright ekran görüntüleri", status: "pending", note: "T5 sonrası" },
-        { title: "T7 Dağıtım paketi: nginx, systemd, yedek/geri yükleme/güncelleme, on-prem runbook", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
-        { title: "T8 CI yeniden düzenleme, GitHub push doğrulaması, teslim kontrol listesi", status: "pending", note: "En son; push yalnız Erkan" }
+        { title: "T1 Kabul altyapısı: izlenebilirlik haritası, @kabul etiketleri, kontrollü iş koşucusu, K01/K02/K03/K10", status: "done", doneAt: "07.11 16:44", note: "c262f73 — test:kabul 54/56 (+2 tekrarla yeşil), 13 işlik run-jobs.ts, docs/kabul/izlenebilirlik.md" },
+        { title: "T2 Minibar kabul kriterleri K04/K05/K06", status: "pending", note: "Codex — DEVIR §1a" },
+        { title: "T3 QR sipariş, oda servisi ve göç kabulü K07/K08/K09 + modüller arası otel günü", status: "pending", note: "Codex — DEVIR §1a" },
+        { title: "T4 Yük denemesi (300 misafir + 40 personel), SSE ve DB havuzu ölçümü", status: "pending", note: "Codex — DEVIR §1a; uzak yük hedefi yalnız Erkan onayıyla" },
+        { title: "T5 Eğitim/demo seed'i, ayrı eğitim DB'si, ENV_LABEL ortam rozeti", status: "done", doneAt: "07.11 16:25", note: "636fda1 — 13 egitim.* kullanıcı, 7 iş günü örnek veri, DB adı koruması; 101/101 test" },
+        { title: "T6 Kullanım kılavuzları ve Playwright ekran görüntüleri", status: "pending", note: "Codex — DEVIR §1a" },
+        { title: "T7 Dağıtım paketi: nginx, systemd, yedek/geri yükleme/güncelleme, on-prem runbook", status: "done", doneAt: "07.11 16:15", note: "4c6ec5c + 775cfcd + güvenlik 9967b05/5ed3f5f/2a8bac5 — 31 statik test; nginx -t/shellcheck Linux'ta koşulacak" },
+        { title: "T8 CI yeniden düzenleme, GitHub push doğrulaması, teslim kontrol listesi", status: "pending", note: "Codex, en son; push yalnız Erkan" }
       ]
     }
   ],
   log: [
+    { at: "07.11 16:45", text: "Fable → Codex devri: P8 T1 (c262f73), T5 (636fda1), T7 (4c6ec5c) ve P4 T10 (31c45f9, 4186bba) kapandı. Bütçe: tüm modeller %81, Fable %62. Kalan P8 T2/T3/T4/T6/T8 ve Pazartesi Opus incelemeleri DEVIR §1a'da." },
     { at: "07.11 16:30", text: "P4 T10 kapandı: MyBar kabul senaryoları (depo iptali, kısa gerekçe, eksik ürünle kapatma) mybarAcceptance.spec.ts ile eklendi, mybarFlow push beklentisi ortama göre düzeltildi (31c45f9). Minörler 4186bba: sessionStorage idempotency anahtarı, eşzamanlı karşılama CONFLICT, dil menüsü inset-inline-end, özel rol ack testi. Birim 98+59 yeşil; e2e her senaryo yeşil, tam koşu ortak DB bağlantı doygunluğundan kesintili." },
     { at: "07.11 16:15", text: "P8 başladı: T1 kabul altyapısı, T5 eğitim seed'i ve T7 dağıtım paketi paralel (Sonnet). P7 kapanış doğrulaması: npm run check 2514/2514, build ve migrate diff temiz, chromium 227/228 (tek kırmızı mybarFlow:26 — P4 T10 artığı), altı görünüm matrisi yeşil. Güvenlik taraması düzeltmeleri 1edd214, b5f29f2, e011e3d, 5395053." },
     { at: "07.11 15:25", text: "P7 raporlar ve e-posta kapandı (T1–T12: a09bbac 1be8528 64056c2 6ef7836 474c012 b1bae39 5aede97 85cc031 6df7a31 d288b20 247ab0c ve güvenlik düzeltmeleri 1edd214 b5f29f2 e011e3d 5395053; kabul fa3ff24). Rapor Merkezi 16 yerleşik rapor, Excel/PDF; SMTP ayarları sırlı saklanır, Test gönder, günlük görev/sarfiyat e-postaları ve Tekrar kuyruğa al uçtan uca doğrulandı. Belgeler: docs/kurulum.md E-posta bölümü, merit/README P7." },
