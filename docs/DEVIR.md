@@ -25,18 +25,26 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (7 Kasım 2026, 16:45 — Fable → **Codex devri**; dal `ux/yenileme`, son kod commit'i `c262f73`; Fable'ın tüm ajanları bitti, **Codex hemen başlayabilir**)
+## 1a. Kalınan yer (7 Kasım 2026, 17:30 — Codex 5 saatlik sınırı doldu → **Antigravity devri**; dal `ux/yenileme`, son commit `c565b2c`, **çalışma ağacında Codex'in commit'siz T4/T6/T8 işi var**)
 
-**Bütçe:** 7.11 16:23'te tüm-modeller %81, Fable %62 (sıfırlama Pzt 9.11 12:00). Erkan kararı: kalan işi **Codex** sürdürür; Fable Pazartesi son kontrolleri yapar. Dalga defteri: `.superpowers/sdd/2026-11-07-butce-plani.md` (git dışı, yerel).
+**Bütçe/kural:** Fable ve Codex sınırda; Antigravity sürdürür. Model kuralı aynen (basit Haiku, orta Sonnet, karmaşık Opus). Pazartesi 9.11 12:00 sonrası Fable: Opus dal incelemeleri + §6 son kapılar.
 
-### Codex için başlangıç talimatı
-1. **Önce ortam:** paylaşılan `merit_test` DB'si bugün yanlışlıkla seed'lenmiş/kesilmiş ve P7 migration'ı eksik olabilir → `DATABASE_URL=<merit_test url> npx prisma migrate deploy` koş; artık `merit_test_*`/`merit_*_e2e` adlı çok sayıda ajan DB'si var (`psql -l`), istersen temizle. Çalışma ağacı temiz olmalı (`git status --short` yalnız `sunum/` ve `merit_proforma_*`). Kalan ajan yok.
-   Hazır altyapı: `npm run test:kabul` (`@kabul-N` etiketleri, `tests/e2e/acceptance/ACCEPTANCE_MAP.ts`, `docs/kabul/izlenebilirlik.md`), kontrollü iş koşucusu `npx tsx tests/e2e/helpers/run-jobs.ts --job=<ad> [--now=<ISO>]` (13 iş: session.sweep, print.sweep, order.escalation, rs.sla, dnd.recheck, dnd.endOfDay, task.generate, upload.warn.1000/1800, occupancy.cleanup, mail.daily-gorev/-sarfiyat, mail.process; spec içinden `helpers/runJob.ts`), eğitim seed'i `npm run db:seed:demo` (`DEMO_PASSWORD` zorunlu, DB adı `_egitim|_demo|_test`), `deploy/` paketi.
-2. **Sıra:** P8 T2 (K04/K05/K06) + T3 (K07/K08/K09 + "otel günü") + T4 (yük denemesi, `LOAD_ALLOW_HOST` yalnız Erkan onayıyla; yerel smoke yeter) paralel → T6 (kılavuzlar + ekran görüntüsü projesi; T5 eğitim seed'ine kilitli) → T8 (CI yeniden düzenleme, `workflow_dispatch`, concurrency, migrate diff, build/start/health, teslim kontrol listesi `docs/teslim-kontrol-listesi.md`; **push yok**, Erkan yapar).
-3. **Model kuralı:** basit Haiku, orta Sonnet, karmaşık Opus (yalnız alt proje sonu dal incelemesi). Görev başına ≈ %0,25 tüm-modeller bütçesi; **%90'da yeni ajan açma**, DEVIR + ilerleme güncelle, Pazartesi'ye bırak.
-4. **Her görev:** TDD, `.superpowers/sdd/PARALEL-KURALLAR.md` (ajan başına DB/port/`NEXT_DIST_DIR`, açık yollarla stage, stash/reset yok, 3000/3001 dokunma), Türkçe Conventional Commit + `Co-Authored-By`, LF; bitince `ilerleme-data.js` (+`merit/public/` kopyası) satırı `done`.
-5. **Güvenlik taraması** bulgularını ciddiye al; bugünkü örnekler: `1edd214` `b5f29f2` `e011e3d` `5395053` `9967b05` `5ed3f5f` `2a8bac5`.
-6. **P8 kapanışında** tam doğrulama tek ajanla temiz DB'de: `npm run check`, `migrate diff` boş, `next build`, chromium + altı matris projesi; sonuç `docs/kabul/2026-11-0X-p8-kabul.md`.
+### Codex'in bitirdiği (commit'li)
+- **P8 T2** `724c8a5` (K04/K05/K06 minibar kabul) + `41c911a` (oda ikamesi/doluluk gerçek formlarla).
+- **P8 T3** `4357762` (K07/K08/K09 + otel günü) + `e848d24` (göç tekrarında tüm hedef tablolar).
+- `a9e8f23` üretimde süreç başına tek Prisma havuzu; `c565b2c` eski belgelerden yönetici parolası kaldırıldı.
+
+### Codex'in yarım bıraktığı (çalışma ağacında, **commit'siz, test edilmemiş**) — Antigravity ilk işi
+`git status --short` ile doğrula; üç gruba ayır, her grubu doğrulayıp ayrı commit'le (Türkçe Conventional Commit + `Co-Authored-By`). `git add -A`/stash/reset YOK; `merit/.tmp/` çöp, silinebilir; `merit/tsconfig.json` build sonrası değişirse `git checkout -- merit/tsconfig.json`.
+1. **T4 Yük denemesi:** `merit/tools/load/**` (ayrı paket; `node_modules` commit'lenmez — `.gitignore` kontrol et), `merit/prisma/seed-load.ts`, `docs/yuk-denemesi.md`, `.github/workflows/load-smoke.yml`, `merit/src/lib/{rate-limit,pgAdapter,env,jobs}.ts` (+ `menu/server/guestToken.ts`, `order/server/guestOrder.ts` — ölçekli limiter), `tests/unit/{rate-limit-scale,pg-pool}.test.ts`, `tests/unit/room-order.test.ts`. Doğrula: ilgili birim testleri + `npx tsc`; yerel smoke koşusu (uzak hedef yalnız Erkan onayı + `LOAD_ALLOW_HOST`). `DB_POOL_MAX` eklendiyse `deploy/env.production.example`'a da yaz.
+2. **T6 Kılavuzlar:** `docs/kilavuz/{README,yonetici,depo,kat-sorumlusu,garson-kasa,mutfak,misafir}.md` + `img/*.png`, `merit/playwright.guide.config.ts`, `tests/e2e/guide/**`, `tests/unit/guides.test.ts`, `tests/e2e/stockResponsive.spec.ts`, `playwright.config.ts` değişikliği (ekran görüntüsü projesi opt-in, varsayılan chromium projesi `guide/` dosyalarını dışlamalı; mevcut 6 görünüm korunur). Doğrula: `guides.test.ts`, `npx playwright test --list` ile proje ayrımı.
+3. **T8 CI + teslim:** `.github/workflows/ci.yml` (168 satır değişti: bağımsız job'lar, `workflow_dispatch`, concurrency, migrate diff, build/start/health), `tests/unit/ci-workflow.test.ts`, `docs/teslim-kontrol-listesi.md`, `docs/kabul/izlenebilirlik.md` + `tests/e2e/acceptance/ACCEPTANCE_MAP.ts` (K04–K09 kanıt satırları), `merit/package.json` script'leri. Doğrula: `ci-workflow.test.ts`, `acceptance-map.test.ts`; YAML gerçek Actions koşusu yerine geçmez — **push yalnız Erkan**.
+4. **P8 kapanış doğrulaması** (tek ajan, temiz DB `merit_<ad>_e2e`): `npm run check`, `migrate diff` boş, `next build`, chromium + altı matris + `npm run test:kabul`; MyBar 5 spec'i bu koşuda tam yeşil olmalı (7.11'de bağlantı doygunluğu yüzünden doğrulanamadı). Sonuç `docs/kabul/2026-11-0X-p8-kabul.md`; `ilerleme-data.js` (+`merit/public/`) P8 satırları `done`.
+5. Bittiğinde iş durur; `main` birleştirme ve GitHub push Erkan'da; Opus incelemeleri Pazartesi Fable'da.
+
+### Ortam notları
+- 7.11 17:00 temizliği: artık Next sunucuları kapatıldı, 140 ajan DB'si düşürüldü (kalan `merit`, `merit_e2e`, `merit_test`; `merit_test` güncel), `.next-*` dizinleri silindi. PARALEL-KURALLAR aynen: ajan başına DB/port/`NEXT_DIST_DIR`, 3000/3001 dokunma, iş bitince sunucuyu **gerçekten** durdur (`Get-Process node` ile doğrula).
+- Hazır altyapı: `npm run test:kabul`, `tests/e2e/helpers/run-jobs.ts --job=<ad> [--now=<ISO>]` (13 iş), `npm run db:seed:demo` (`DEMO_PASSWORD`), `deploy/` paketi, `docs/kabul/izlenebilirlik.md`.
 
 ### Pazartesi Fable (sıfırlama sonrası)
 - Opus dal incelemeleri: **P6** (`28bcec6..06fd68c` + fixA `fd2b4c4..47827b8`), **P7** (`a09bbac..6a0cdce`), **P8**; tek düzeltme dalgası.
@@ -46,7 +54,7 @@
 ### Durum özeti (7.11)
 - **P6 kapandı:** T6b `c8f255b`, T5a `44ae315`, S0 `e926aa3`, T4c `b85e22b`, T6c `e5770ee`, T5b `def7254`+`7985d97`, T4d `468f211`+`1270126`, T6a `efe8761`, T5c `5877214`, T7 `90b35f8`+`380c7b7`+`06fd68c`; fixA `fd2b4c4` `96197e4` `84ba32c` `47827b8`. Kararlar: SLA plan kuralı (`slaConstants.ts` tek kaynak), `rs.rapor` "Oda Servisi SLA", boş menü MENU_KAPALI, KDS yalnız MASA, nav "Geçmiş" kaldırıldı; kabul edilen sapmalar 24:00 WARN, tam SLA'da DONE_LATE, avgDeliverySec 1515.
 - **P7 kapandı:** T1 `a09bbac`, T7 `1be8528`, T2 `64056c2` (Opus), T9 `6ef7836`, T3 `b1bae39`, T4 `5aede97`, T5 `474c012`, T6 `85cc031`, T10 `6df7a31`, T8 `d288b20`, T11 `247ab0c`, T12 `fa3ff24`+`f6325f6`+`6a0cdce`. Doğrulama 16:00: check 2514/2514, build, migrate diff boş, chromium 227/228 (kırmızı `mybarFlow:26`, P4 T10b düzeltiyor), matris 6 proje yeşil.
-- **P8:** T1 `c262f73` (K01 3, K02 3, K03 4, K10 14 test; K04–K06 T2'ye, K07–K09 T3'e açık), T5 `636fda1` (13 `egitim.*` kullanıcı, `ENV_LABEL` rozeti), T7 `4c6ec5c`+`775cfcd` (+ `9967b05` `5ed3f5f` `2a8bac5`); **T2/T3/T4/T6/T8 Codex.**
+- **P8:** T1 `c262f73`, T5 `636fda1`, T7 `4c6ec5c`+`775cfcd` (+ `9967b05` `5ed3f5f` `2a8bac5`), T2 `724c8a5`+`41c911a`, T3 `4357762`+`e848d24` (Codex); **T4/T6/T8 çalışma ağacında commit'siz → Antigravity.**
 - **P4 kapandı:** T10 `33b8cde` + `31c45f9` `4186bba` `9e1a400` (mybarAcceptance 3 senaryo; mybarFlow `pushed` 0|1 ortama göre; sessionStorage idempotency, eşzamanlı karşılama CONFLICT). Doğrulanmadı: 5 MyBar spec'inin tek seferde tam yeşil koşusu (Postgres bağlantı doygunluğu) → P8 kapanış doğrulamasında tekrar koş. Açık minör: `bg-black/50` kaplama için ortak belirteç; `push.includeNote` Erkan.
 - **Yalnız Erkan:** gerçek göç, SMTP/VAPID/`SETTINGS_SECRET_KEY` değerleri, domain/sertifika/`qr.baseUrl`, Coolify veya on-prem kurulum (`deploy/README.md`), GitHub push, `main` birleştirme.
 

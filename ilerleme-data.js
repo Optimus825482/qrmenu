@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 16:45",
-  headline: "P4, P6 ve P7 kapandı; P8 T1/T5/T7 indi. Kalan P8 görevleri (T2/T3/T4/T6/T8) Codex'e devredildi (docs/DEVIR.md §1a). Pazartesi: Opus dal incelemeleri ve son kapılar (Fable).",
+  updatedAt: "07.11.2026 17:30",
+  headline: "P4, P6, P7 kapandı; P8 T1/T2/T3/T5/T7 indi. Codex sınırı doldu: T4/T6/T8 çalışma ağacında commit’siz, Antigravity doğrulayıp commit’leyecek ve P8 kapanış doğrulamasını koşacak (docs/DEVIR.md §1a). Pazartesi: Fable Opus incelemeleri ve son kapılar.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -182,17 +182,18 @@ window.ILERLEME = {
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
         { title: "T1 Kabul altyapısı: izlenebilirlik haritası, @kabul etiketleri, kontrollü iş koşucusu, K01/K02/K03/K10", status: "done", doneAt: "07.11 16:44", note: "c262f73 — test:kabul 54/56 (+2 tekrarla yeşil), 13 işlik run-jobs.ts, docs/kabul/izlenebilirlik.md" },
-        { title: "T2 Minibar kabul kriterleri K04/K05/K06", status: "pending", note: "Codex — DEVIR §1a" },
-        { title: "T3 QR sipariş, oda servisi ve göç kabulü K07/K08/K09 + modüller arası otel günü", status: "pending", note: "Codex — DEVIR §1a" },
-        { title: "T4 Yük denemesi (300 misafir + 40 personel), SSE ve DB havuzu ölçümü", status: "pending", note: "Codex — DEVIR §1a; uzak yük hedefi yalnız Erkan onayıyla" },
+        { title: "T2 Minibar kabul kriterleri K04/K05/K06", status: "done", doneAt: "07.11 17:05", note: "724c8a5 + 41c911a (Codex) — gerçek form etkileşimleri" },
+        { title: "T3 QR sipariş, oda servisi ve göç kabulü K07/K08/K09 + modüller arası otel günü", status: "done", doneAt: "07.11 17:15", note: "4357762 + e848d24 (Codex) — göç tekrarında tüm hedef tablolar" },
+        { title: "T4 Yük denemesi (300 misafir + 40 personel), SSE ve DB havuzu ölçümü", status: "active", note: "Codex yarım bıraktı (tools/load, seed-load, ölçekli limiter, pg havuzu; commit’siz, test edilmedi) → Antigravity: doğrula + commit; uzak hedef yalnız Erkan onayıyla" },
         { title: "T5 Eğitim/demo seed'i, ayrı eğitim DB'si, ENV_LABEL ortam rozeti", status: "done", doneAt: "07.11 16:25", note: "636fda1 — 13 egitim.* kullanıcı, 7 iş günü örnek veri, DB adı koruması; 101/101 test" },
-        { title: "T6 Kullanım kılavuzları ve Playwright ekran görüntüleri", status: "pending", note: "Codex — DEVIR §1a" },
+        { title: "T6 Kullanım kılavuzları ve Playwright ekran görüntüleri", status: "active", note: "Codex yarım bıraktı (docs/kilavuz 7 rol + png, playwright.guide.config, guides.test; commit’siz) → Antigravity: doğrula + commit" },
         { title: "T7 Dağıtım paketi: nginx, systemd, yedek/geri yükleme/güncelleme, on-prem runbook", status: "done", doneAt: "07.11 16:15", note: "4c6ec5c + 775cfcd + güvenlik 9967b05/5ed3f5f/2a8bac5 — 31 statik test; nginx -t/shellcheck Linux'ta koşulacak" },
-        { title: "T8 CI yeniden düzenleme, GitHub push doğrulaması, teslim kontrol listesi", status: "pending", note: "Codex, en son; push yalnız Erkan" }
+        { title: "T8 CI yeniden düzenleme, GitHub push doğrulaması, teslim kontrol listesi", status: "active", note: "Codex yarım bıraktı (ci.yml, load-smoke.yml, ci-workflow.test, teslim-kontrol-listesi.md; commit’siz) → Antigravity: doğrula + commit; push yalnız Erkan" }
       ]
     }
   ],
   log: [
+    { at: "07.11 17:30", text: "Codex → Antigravity devri: Codex P8 T2 (724c8a5, 41c911a) ve T3 (4357762, e848d24) ile tek Prisma havuzu (a9e8f23), belge parola temizliği (c565b2c) indirdi; T4 yük denemesi, T6 kılavuzlar, T8 CI/teslim listesi çalışma ağacında commit’siz kaldı. Antigravity talimatı DEVIR §1a." },
     { at: "07.11 16:45", text: "Fable → Codex devri: P8 T1 (c262f73), T5 (636fda1), T7 (4c6ec5c) ve P4 T10 (31c45f9, 4186bba) kapandı. Bütçe: tüm modeller %81, Fable %62. Kalan P8 T2/T3/T4/T6/T8 ve Pazartesi Opus incelemeleri DEVIR §1a'da." },
     { at: "07.11 16:30", text: "P4 T10 kapandı: MyBar kabul senaryoları (depo iptali, kısa gerekçe, eksik ürünle kapatma) mybarAcceptance.spec.ts ile eklendi, mybarFlow push beklentisi ortama göre düzeltildi (31c45f9). Minörler 4186bba: sessionStorage idempotency anahtarı, eşzamanlı karşılama CONFLICT, dil menüsü inset-inline-end, özel rol ack testi. Birim 98+59 yeşil; e2e her senaryo yeşil, tam koşu ortak DB bağlantı doygunluğundan kesintili." },
     { at: "07.11 16:15", text: "P8 başladı: T1 kabul altyapısı, T5 eğitim seed'i ve T7 dağıtım paketi paralel (Sonnet). P7 kapanış doğrulaması: npm run check 2514/2514, build ve migrate diff temiz, chromium 227/228 (tek kırmızı mybarFlow:26 — P4 T10 artığı), altı görünüm matrisi yeşil. Güvenlik taraması düzeltmeleri 1edd214, b5f29f2, e011e3d, 5395053." },
