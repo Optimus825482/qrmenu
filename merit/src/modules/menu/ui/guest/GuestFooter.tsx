@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { GuestCallOption } from "../../callOptions";
 import { CallWaiterButton } from "./CallWaiterButton";
+import type { GuestMenuMode } from "./MenuView";
 import { SelectionsDrawer } from "./SelectionsDrawer";
 import { RECENT_ORDERS, totalQuantity, useSelectionStore } from "./selectionStore";
 
@@ -16,6 +17,7 @@ export function GuestFooter({
   orderingOpen,
   pricesShown,
   currency,
+  mode = "table",
   callOptions = [],
   callWaiterText,
 }: {
@@ -24,6 +26,7 @@ export function GuestFooter({
   orderingOpen: boolean;
   pricesShown: boolean;
   currency: string;
+  mode?: GuestMenuMode;
   callOptions?: GuestCallOption[];
   callWaiterText?: string;
 }) {
@@ -35,8 +38,8 @@ export function GuestFooter({
   const [open, setOpen] = useState(false);
   const count = totalQuantity(items);
   const recent = orderIds.slice(-RECENT_ORDERS).reverse();
-  // A closed shop still shows pending selections so the guest can read the closed notice and keep them.
-  const showSelections = orderingOpen || count > 0;
+  // Table guests can still open pending selections and read the closed notice.
+  const showSelections = orderingOpen || (mode === "table" && count > 0);
 
   return (
     <>
@@ -55,7 +58,9 @@ export function GuestFooter({
         </nav>
       ) : null}
       <div className="g-footer-actions">
-        <CallWaiterButton token={token} locale={locale} options={callOptions} customText={callWaiterText} />
+        {mode === "table" ? (
+          <CallWaiterButton token={token} locale={locale} options={callOptions} customText={callWaiterText} />
+        ) : null}
         {showSelections ? (
           <button type="button" className="g-button" onClick={() => setOpen(true)}>
             {t("cart.title")}
@@ -74,6 +79,7 @@ export function GuestFooter({
           pricesShown={pricesShown}
           currency={currency}
           orderingOpen={orderingOpen}
+          mode={mode}
           onClose={() => setOpen(false)}
         />
       ) : null}

@@ -31,7 +31,9 @@ export function GuestFrame({
   theme,
   design,
   outletName,
+  placeLabel,
   tableLabel,
+  embedded = false,
   preview = false,
   device,
   onLocaleChange,
@@ -43,7 +45,11 @@ export function GuestFrame({
   theme: GuestTheme;
   design: OutletDesign;
   outletName: string;
-  tableLabel: string;
+  /** Label of the room or table. Older callers can supply tableLabel. */
+  placeLabel?: string;
+  tableLabel?: string;
+  /** Apply the menu theme and design inside an existing guest shell. */
+  embedded?: boolean;
   /** Studio preview: the language links would navigate the iframe away from the live menu. */
   preview?: boolean;
   device?: string;
@@ -58,6 +64,7 @@ export function GuestFrame({
     "--m-soft": theme.soft,
     "--m-text-on-accent": theme.textOnAccent,
     "--m-text": readableText(theme.bg),
+    ...(embedded ? { minHeight: 0 } : {}),
   } as CSSProperties;
   return (
     <div
@@ -81,20 +88,24 @@ export function GuestFrame({
       lang={locale}
       style={style}
     >
-      <HtmlLangSync locale={locale} />
-      <header className="g-header">
-        <div data-guide="dil-secimi" className="g-header-left">
-          <LanguageSwitch token={token} locale={locale} onSelect={onLocaleChange} />
-        </div>
-        <h1 className="g-title">
-          <span>{outletName}</span>
-          <span aria-hidden="true"> · </span>
-          <span>{tableLabel}</span>
-        </h1>
-        <div className="g-header-right">
-          {!preview ? <PwaInstallButton /> : null}
-        </div>
-      </header>
+      {!embedded ? (
+        <>
+          <HtmlLangSync locale={locale} />
+          <header className="g-header">
+            <div data-guide="dil-secimi" className="g-header-left">
+              <LanguageSwitch token={token} locale={locale} onSelect={onLocaleChange} />
+            </div>
+            <h1 className="g-title">
+              <span>{outletName}</span>
+              <span aria-hidden="true"> · </span>
+              <span>{placeLabel ?? tableLabel}</span>
+            </h1>
+            <div className="g-header-right">
+              {!preview ? <PwaInstallButton /> : null}
+            </div>
+          </header>
+        </>
+      ) : null}
       <div data-guide="onizleme-alani" className="g-body">{children}</div>
       {footer ? <footer className="g-footer">{footer}</footer> : null}
     </div>

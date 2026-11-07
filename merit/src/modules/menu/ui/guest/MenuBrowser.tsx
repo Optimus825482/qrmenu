@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { GuestItem, GuestMenu } from "../../server/guestMenu";
-import { MenuView } from "./MenuView";
+import { MenuView, type GuestMenuMode } from "./MenuView";
 import { useGuestEvents } from "./useGuestEvents";
 
 const NO_ORDERS: readonly string[] = [];
@@ -30,7 +30,12 @@ function withAvailability(menu: GuestMenu, availability: Record<string, boolean>
  * The guest menu. `menu.availability` flips a card in place from the SSE stream; every other change
  * arrives as new server props (the hook refreshes the route).
  */
-export function MenuBrowser({ token, locale, menu }: { token: string; locale: Locale; menu: GuestMenu }) {
+export function MenuBrowser({ token, locale, menu, mode = "table" }: {
+  token: string;
+  locale: Locale;
+  menu: GuestMenu;
+  mode?: GuestMenuMode;
+}) {
   const t = useTranslations("guest");
   const [seen, setSeen] = useState(menu);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
@@ -66,7 +71,7 @@ export function MenuBrowser({ token, locale, menu }: { token: string; locale: Lo
           {t("menu.orderingClosed")}
         </p>
       ) : null}
-      <MenuView menu={live} locale={locale} token={token} />
+      <MenuView menu={live} locale={locale} token={token} mode={mode} />
     </>
   );
 }

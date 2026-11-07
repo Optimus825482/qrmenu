@@ -6,6 +6,7 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Result } from "@/lib/result";
 import { MAX_QUANTITY, NOTE_MAX } from "./ItemSheet";
+import type { GuestMenuMode } from "./MenuView";
 import { priceFormatter } from "./priceFormat";
 import { useSelectionStore } from "./selectionStore";
 import { useModalFocusTrap } from "./useModalFocusTrap";
@@ -36,6 +37,7 @@ export function SelectionsDrawer({
   pricesShown,
   currency,
   orderingOpen,
+  mode = "table",
   onClose,
 }: {
   token: string;
@@ -43,6 +45,7 @@ export function SelectionsDrawer({
   pricesShown: boolean;
   currency: string;
   orderingOpen: boolean;
+  mode?: GuestMenuMode;
   onClose: () => void;
 }) {
   const t = useTranslations("guest");
@@ -68,9 +71,10 @@ export function SelectionsDrawer({
   const total = items.reduce((sum, i) => sum + (i.unitPrice ? Number(i.unitPrice) * i.qty : 0), 0);
   const unavailable = problem?.kind === "unavailable" ? problem.names : [];
   const closed = problem?.kind === "closed" || !orderingOpen;
+  const submitDisabled = items.length === 0 || !online || sending || (mode === "room" && !orderingOpen);
 
   async function submit() {
-    if (sending || items.length === 0) return;
+    if (submitDisabled) return;
     setSending(true);
     setProblem(null);
     try {
@@ -211,8 +215,8 @@ export function SelectionsDrawer({
               ) : null}
             </>
           ) : null}
-          <button type="button" className="g-button" disabled={items.length === 0 || !online || sending} onClick={submit}>
-            {sending ? t("selections.sending") : t("cart.submit")}
+          <button type="button" className="g-button" disabled={submitDisabled} onClick={submit}>
+            {sending ? t("selections.sending") : t(mode === "room" ? "rs.selections.submit" : "cart.submit")}
           </button>
         </div>
       </div>

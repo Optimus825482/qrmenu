@@ -13,6 +13,8 @@ import { Icon } from "@/components/icons/Icon";
 
 const FEATURED_TAGS = new Set<ItemTagId>(["SEFIN_SECIMI", "POPULER"]);
 
+export type GuestMenuMode = "table" | "room";
+
 function categoryItemCount(category: GuestCategory): number {
   let count = category.items.length;
   for (const sub of category.subcategories) {
@@ -124,9 +126,14 @@ function TagList({ tags }: { tags: readonly string[] }) {
 
 /**
  * The guest menu surface shared by the public QR page and the design studio.
- * Ordering controls appear only when the outlet is taking orders and a table token is present.
+ * Ordering controls appear only when the outlet is taking orders and a guest token is present.
  */
-export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Locale; token?: string }) {
+export function MenuView({ menu, locale, token, mode = "table" }: {
+  menu: GuestMenu;
+  locale: Locale;
+  token?: string;
+  mode?: GuestMenuMode;
+}) {
   const t = useTranslations("guest");
   const { state, categories } = menu;
   const [query, setQuery] = useState("");
@@ -237,7 +244,7 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
             data-guide="kategori-gezin"
             className="g-tabs"
             role="tablist"
-            aria-label={t("menu.title")}
+            aria-label={t(mode === "room" ? "rs.menu.title" : "menu.title")}
             onKeyDown={handleTabKeyDown}
           >
             {visible.map((category) => (
@@ -439,8 +446,9 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
     ),
   };
 
+  const Container = mode === "room" ? "div" : "main";
   return (
-    <main className="g-menu">
+    <Container className="g-menu">
       {state.design.layout.map((block) => blocks[block])}
       {visibleOpenItem ? (
         <ItemSheet
@@ -459,6 +467,6 @@ export function MenuView({ menu, locale, token }: { menu: GuestMenu; locale: Loc
           }
         />
       ) : null}
-    </main>
+    </Container>
   );
 }
