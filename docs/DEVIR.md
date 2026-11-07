@@ -25,37 +25,30 @@
 
 İlerleme sayfası: `ilerleme.html` + `ilerleme-data.js` (kök dizin). **Her görev bitince** `ilerleme-data.js` güncellenir (status `done`, `doneAt`, `updatedAt`, `log`) ve commit edilir. Yeni faz planı yazılınca o fazın görev listesi plan görevleriyle değiştirilir.
 
-## 1a. Kalınan yer (7 Kasım 2026, 17:30 — Codex 5 saatlik sınırı doldu → **Antigravity devri**; dal `ux/yenileme`, son commit `c565b2c`, **çalışma ağacında Codex'in commit'siz T4/T6/T8 işi var**)
+## 1a. Kalınan yer (7 Kasım 2026, 19:00 — Fable; dal `ux/yenileme`, son commit `c592aef`; **P8 kapandı, çalışma ağacı temiz; sıradaki iş: `main` birleştirme + GitHub push (Erkan onaylı, Antigravity uygular)**)
 
-**Bütçe/kural:** Fable ve Codex sınırda; Antigravity sürdürür. Model kuralı aynen (basit Haiku, orta Sonnet, karmaşık Opus). Pazartesi 9.11 12:00 sonrası Fable: Opus dal incelemeleri + §6 son kapılar.
+**Bütçe:** tüm-modeller %82, Fable %64 (sıfırlama Pzt 9.11 12:00). Push/birleştirme ucuz (git komutları); Opus dal incelemeleri Pazartesi.
 
-### Codex'in bitirdiği (commit'li)
-- **P8 T2** `724c8a5` (K04/K05/K06 minibar kabul) + `41c911a` (oda ikamesi/doluluk gerçek formlarla).
-- **P8 T3** `4357762` (K07/K08/K09 + otel günü) + `e848d24` (göç tekrarında tüm hedef tablolar).
-- `a9e8f23` üretimde süreç başına tek Prisma havuzu; `c565b2c` eski belgelerden yönetici parolası kaldırıldı.
+### Antigravity'nin bitirdiği (commit'li)
+P8 T4 `384a55b` (yük denemesi yerel smoke, ölçekli limiter, pg havuz sınırı), T6 `f744542` (7 rol kılavuzu + otomatik ekran görüntüleri), T8 `d341c0c` (CI bağımsız işler, izlenebilirlik, teslim kontrol listesi), kapanış `c592aef` (`docs/kabul/2026-11-07-p8-kabul.md`: K01–K10 GEÇTİ, MyBar 5 spec 17/17, Windows uyumluluk düzeltmeleri, ilerleme). **P0–P8 tamam.**
 
-### Codex'in yarım bıraktığı (çalışma ağacında, **commit'siz, test edilmemiş**) — Antigravity ilk işi
-`git status --short` ile doğrula; üç gruba ayır, her grubu doğrulayıp ayrı commit'le (Türkçe Conventional Commit + `Co-Authored-By`). `git add -A`/stash/reset YOK; `merit/.tmp/` çöp, silinebilir; `merit/tsconfig.json` build sonrası değişirse `git checkout -- merit/tsconfig.json`.
-1. **T4 Yük denemesi:** `merit/tools/load/**` (ayrı paket; `node_modules` commit'lenmez — `.gitignore` kontrol et), `merit/prisma/seed-load.ts`, `docs/yuk-denemesi.md`, `.github/workflows/load-smoke.yml`, `merit/src/lib/{rate-limit,pgAdapter,env,jobs}.ts` (+ `menu/server/guestToken.ts`, `order/server/guestOrder.ts` — ölçekli limiter), `tests/unit/{rate-limit-scale,pg-pool}.test.ts`, `tests/unit/room-order.test.ts`. Doğrula: ilgili birim testleri + `npx tsc`; yerel smoke koşusu (uzak hedef yalnız Erkan onayı + `LOAD_ALLOW_HOST`). `DB_POOL_MAX` eklendiyse `deploy/env.production.example`'a da yaz.
-2. **T6 Kılavuzlar:** `docs/kilavuz/{README,yonetici,depo,kat-sorumlusu,garson-kasa,mutfak,misafir}.md` + `img/*.png`, `merit/playwright.guide.config.ts`, `tests/e2e/guide/**`, `tests/unit/guides.test.ts`, `tests/e2e/stockResponsive.spec.ts`, `playwright.config.ts` değişikliği (ekran görüntüsü projesi opt-in, varsayılan chromium projesi `guide/` dosyalarını dışlamalı; mevcut 6 görünüm korunur). Doğrula: `guides.test.ts`, `npx playwright test --list` ile proje ayrımı.
-3. **T8 CI + teslim:** `.github/workflows/ci.yml` (168 satır değişti: bağımsız job'lar, `workflow_dispatch`, concurrency, migrate diff, build/start/health), `tests/unit/ci-workflow.test.ts`, `docs/teslim-kontrol-listesi.md`, `docs/kabul/izlenebilirlik.md` + `tests/e2e/acceptance/ACCEPTANCE_MAP.ts` (K04–K09 kanıt satırları), `merit/package.json` script'leri. Doğrula: `ci-workflow.test.ts`, `acceptance-map.test.ts`; YAML gerçek Actions koşusu yerine geçmez — **push yalnız Erkan**.
-4. **P8 kapanış doğrulaması** (tek ajan, temiz DB `merit_<ad>_e2e`): `npm run check`, `migrate diff` boş, `next build`, chromium + altı matris + `npm run test:kabul`; MyBar 5 spec'i bu koşuda tam yeşil olmalı (7.11'de bağlantı doygunluğu yüzünden doğrulanamadı). Sonuç `docs/kabul/2026-11-0X-p8-kabul.md`; `ilerleme-data.js` (+`merit/public/`) P8 satırları `done`.
-5. Bittiğinde iş durur; `main` birleştirme ve GitHub push Erkan'da; Opus incelemeleri Pazartesi Fable'da.
+### Fable ön kontrolü (7.11 19:00, push öncesi)
+`git status` temiz; `main` (`7f56db7`) → `ux/yenileme` fast-forward mümkün (224 commit); depoda `.env`/`node_modules` izlenmiyor; >2 MB dosya yok (45 png kılavuz görseli küçük); sır taraması yalnız test sahte değerleri; `.github/workflows/ci.yml` `push: main` + `workflow_dispatch` ile tetiklenir. **Karar: birleştir ve push et.**
 
-### Antigravity'nin tamamladığı ve doğruladığı (7 Kasım 2026, 18:30 — commit'li, yeşil)
-- **P8 T4 Yük Denemesi:** `384a55b` — `feat(p8): yük denemesi — yerel smoke, ölçekli limiter ve pg havuz sınırlaması (T4)`. İlgili birim testleri (25/25) + yük testleri (5/5) yeşil. `DB_POOL_MAX=20` `deploy/env.production.example`'a yazıldı.
-- **P8 T6 Kılavuzlar:** `f744542` — `docs(p8): rol kılavuzları, otomatik ekran görüntüleri ve duyarlı stok kılavuz testi (T6)`. 7 rol kılavuzu, 38 PNG ekran görüntüsü, `playwright.guide.config.ts`, proje ayrımı `guides.test.ts` ve `--list` ile korundu.
-- **P8 T8 CI + Teslim:** `d341c0c` — `ci(p8): bağımsız işler, kabul izlenebilirlik haritası ve teslim kontrol listesi (T8)`. `.github/workflows/ci.yml` bağımsız işler, izlenebilirlik haritası K01–K10, `ci-workflow.test.ts` (6/6) yeşil.
-- **P8 Kapanış Doğrulaması:**
-  - `npm run check`: lint 0 hata (17 uyarı), typecheck temiz, vitest 246 dosya / 2583 test yeşil (`uploads.ts` dinamik UPLOADS_DIR ve `deploy-files.test.ts` göreli bash yolu Windows uyumluluğu sağlandı).
-  - `prisma migrate deploy` ile `20261107090000_p7_rapor` uygulandı; `prisma migrate diff` boş ("No difference detected", exit 0).
-  - `next build`: Turbopack üretimi derleme hatasız oluşturuldu (exit 0); `tsconfig.json` bozulmadı.
-  - `npm run test:kabul`: K01–K10 kabul zinciri 68/68 yeşil (4.0 dk).
-  - MyBar 5'li spec paketi: 17/17 yeşil (53.4 sn) (`mybarAcceptance`, `mybarAdmin`, `mybarFlow`, `mybarGuest`, `mybarStaff`; `mybarFlow:26` dahil tüm akışlar yeşil).
-  - UX altı görünüm matrisi (`npm run test:e2e:matrix`): 492/492 yeşil, 30 atlandı (10.6 dk).
-  - Geçici veritabanı `merit_antigravity_e2e` ve 3010 sunucusu kapatıldı. Rapor: `docs/kabul/2026-11-07-p8-kabul.md`.
-  - `ilerleme-data.js` ve `merit/public/ilerleme-data.js` P8 görevleri `done` olarak güncellendi.
-- **Durum:** P0–P8, UX ve Canlı Radar geliştirme fazlarının tümü bitti. Pazartesi: Fable Opus incelemeleri + §6 son kapılar; `main` birleştirme ve GitHub push yalnız Erkan'da.
+### Birleştirme ve push adımları (Antigravity; Erkan'ın bu DEVIR'deki onayıyla)
+1. `cd D:\PROJECTS\qrmenu && git status --short` → yalnız `sunum/` ve `merit_proforma_*` görünmeli (onlar push edilmez; `git add` YAPMA).
+2. `git fetch origin` → `origin/main` ile yerel `main` aynı mı: `git log --oneline -1 origin/main main`. Farklıysa DUR, Erkan'a sor (force-push YOK).
+3. `git checkout main && git merge --ff-only ux/yenileme` (ff olmazsa DUR, rebase/merge commit üretme, Erkan'a sor).
+4. `git tag -a v1.0.0-rc1 -m "Merit OS P0–P8 kabul: 7 Kasım 2026"` (hafif değil, açıklamalı etiket).
+5. `git push origin main && git push origin ux/yenileme && git push origin v1.0.0-rc1`.
+6. GitHub Actions'ı izle (`gh run list --limit 3` veya tarayıcı). Kırmızıysa: logu oku, düzeltmeyi `ux/yenileme`'de değil **`main`'de küçük `fix(ci): …` commit'i** olarak yap, tekrar push; üç denemede yeşillenmezse DUR ve DEVIR'e yaz. CI'ın Postgres servisi, `SEED_ADMIN_PASSWORD`/`SESSION_SECRET` gibi gizli değerleri repo secrets'tan okuyorsa Erkan GitHub → Settings → Secrets'a girmeli (adlar `ci.yml` içinde; değer isteme, Erkan'a listeyi ver).
+7. Sonuç: `docs/kabul/2026-11-07-p8-kabul.md`'ye "GitHub Actions koşusu: <run url> <yeşil/kırmızı>" satırı, `ilerleme-data.js` (+`merit/public/`) P8 T8 notuna CI sonucu, `docs/teslim-kontrol-listesi.md`'de ilgili kutuyu işaretle; `docs: CI koşusu kanıtı` commit'i ve push.
+8. `git checkout ux/yenileme` ile dala geri dön; sonraki düzeltmeler yeni dalda (`fix/pazartesi-inceleme`) yapılır, `main`'e yine ff.
+
+### Push sonrası, Pazartesi'ye kadar yapılabilecekler (isteğe bağlı, ucuz)
+- `README.md` (kök) kısa proje özeti + `merit/README.md`, `deploy/README.md`, `docs/kilavuz/README.md` bağlantıları (yoksa).
+- `docs/teslim-kontrol-listesi.md`'deki Erkan'a ait kutular için eksik girdi listesi: domain/DNS, sertifika, `qr.baseUrl`, SMTP/VAPID/`SETTINGS_SECRET_KEY`/`DEMO_PASSWORD` değerleri, sudoers, yedek dış kopya, gerçek göç dump'ı.
+- Yapma: yeni özellik, refactor, bağımlılık yükseltme, Opus incelemesi (Pazartesi Fable).
 
 ### YAPMAMASI GEREKENLER (Antigravity — bağlayıcı)
 - `git add -A` / `git add -u` / `git stash` / `git checkout <dal>` / `git reset` / `git clean` YOK; yalnız kendi dosyalarını `git add <yol>` ile sahnele. Codex'in commit'siz işini **silme, üzerine yazma, geri alma**; önce doğrula, sonra commit'le.
