@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { renderOdaServisi } from "../renderOdaServisi";
 
-export default function TeslimRedirectPage() {
-  redirect("/oda-servisi?sekme=teslim");
+/** /oda-servisi/teslim renders the delivery tab directly; the RO-TES gate lives in the shared renderer. */
+export default async function TeslimPage() {
+  return renderOdaServisi(Promise.resolve({}), "teslim");
 }

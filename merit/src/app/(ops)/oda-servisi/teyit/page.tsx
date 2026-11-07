@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { renderOdaServisi } from "../renderOdaServisi";
 
-export default function TeyitRedirectPage() {
-  redirect("/oda-servisi?sekme=teyit");
+/** /oda-servisi/teyit renders the confirmation tab directly; the RO-TEL gate lives in the shared renderer. */
+export default async function TeyitPage() {
+  return renderOdaServisi(Promise.resolve({}), "teyit");
 }
