@@ -89,6 +89,7 @@ export function useShellPersistence({
       "folder.outlet",
       "folder.room-service",
       "folder.minibar",
+      "folder.radar",
       "folder.sistem",
       "folder.kullanici",
     ];

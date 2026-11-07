@@ -110,16 +110,48 @@ export function registerCoreApps(): void {
     mobile: "readonly",
   });
   registerCatalogApp({
-    id: "core.radar",
-    title: "Canlı Radar",
+    id: "folder.radar",
+    title: "Operasyon Radarı",
+    launchLabel: "Operasyon Radarı",
     icon: "radar",
     moduleKey: "CORE",
     screenCode: "CR-RAD",
-    category: "GENEL",
+    category: "RADAR",
+    needsHotel: false,
+    window: { w: 880, h: 540, minW: 640, minH: 380 },
+    kind: "component",
+    component: () =>
+      import("@/shell/apps/CategoryFolderWindow").then((m) => ({
+        default: m.RadarFolderWindow,
+      })),
+    mobile: "none",
+  });
+  registerCatalogApp({
+    id: "core.radar",
+    title: "Canlı Radar",
+    launchLabel: "Canlı Radar",
+    icon: "radar",
+    moduleKey: "CORE",
+    screenCode: "CR-RAD",
+    category: "RADAR",
     needsHotel: false,
     window: { w: 1280, h: 760, minW: 1024, minH: 640 },
     kind: "component",
     component: () => import("@/modules/radar/ui/RadarWindow").then((m) => ({ default: m.RadarWindow })),
+    mobile: "none",
+  });
+  registerCatalogApp({
+    id: "core.radar.duvar",
+    title: "Duvar Ekranı",
+    launchLabel: "Duvar Ekranı",
+    icon: "radar",
+    moduleKey: "CORE",
+    screenCode: "CR-RAD",
+    category: "RADAR",
+    needsHotel: false,
+    window: { w: 1280, h: 760, minW: 1024, minH: 640 },
+    kind: "component",
+    external: { href: "/radar" },
     mobile: "none",
   });
   registerCatalogApp({

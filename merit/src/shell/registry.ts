@@ -5,6 +5,7 @@ import { SCREENS } from "@/modules/core/screens";
 /** Start-menu group of an app (spec §5.1). */
 export type AppCategory =
   | "GENEL"
+  | "RADAR"
   | "OUTLET"
   | "ROOM_SERVICE"
   | "MINIBAR"

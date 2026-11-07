@@ -145,3 +145,14 @@ export function KullaniciFolderWindow(props: AppProps) {
     />
   );
 }
+
+export function RadarFolderWindow(props: AppProps) {
+  return (
+    <CategoryFolderWindow
+      {...props}
+      categoryKey="radar"
+      categoryTitle="Operasyon Radarı"
+      categorySubtitle="Canlı Radar penceresi ve tam ekran Duvar Ekranı"
+    />
+  );
+}

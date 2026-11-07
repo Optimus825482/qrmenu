@@ -28,6 +28,7 @@ import { APP_DRAG_TYPE } from "./StartMenu";
 
 const CATEGORY_LABEL: Record<AppDefinition["category"], string> = {
   GENEL: "Genel",
+  RADAR: "Operasyon Radarı",
   OUTLET: "Outlet Operasyonları",
   ROOM_SERVICE: "Oda Servisi Operasyonları",
   MINIBAR: "Minibar Operasyonları",
