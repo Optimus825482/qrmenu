@@ -18,6 +18,10 @@ if [[ "$_rest" == *@* ]]; then
   fi
   DB_URL="${_scheme}://${_userinfo}@${_hostpart}"
 fi
+# Parola sorgu parametresi olarak verilmisse (password=, sslpassword=) argv'ye sizar: reddet.
+if [[ "$DB_URL" =~ [\?\&](ssl)?password= ]]; then
+  echo "REDDEDILDI: DATABASE_URL icinde password= sorgu parametresi var; parolayi URL kullanici bilgisine tasiyin." >&2; exit 2
+fi
 unset _scheme _rest _userinfo _hostpart
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/merit}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
