@@ -103,7 +103,7 @@ export function useShellPersistence({
       ...DEFAULT_APPEARANCE,
       icons: defaultIcons,
       windows: [],
-      shortcutVersion: 5,
+      shortcutVersion: 6,
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
     store.restore(chosen);
@@ -137,6 +137,18 @@ export function useShellPersistence({
         }));
       store.setIcons(newIcons);
       store.setShortcutVersion(5);
+      migratedShortcuts = true;
+    }
+    // Operasyon Radarı folder arrived after the clean desktop layout: add it once to saved desktops
+    // that may see it (CR-RAD V). Appended, so the user's own icon order is untouched; after this
+    // version is persisted, deliberately removing the folder stays removed.
+    if ((chosen.shortcutVersion ?? 0) < 6) {
+      const now = windowStore.getState();
+      if (visible.includes("folder.radar") && !now.icons.some((icon) => icon.appId === "folder.radar")) {
+        const pos = gridPosition(now.icons.length, effectiveViewport(now));
+        now.addIcon("folder.radar", pos.x, pos.y);
+      }
+      windowStore.getState().setShortcutVersion(6);
       migratedShortcuts = true;
     }
 
