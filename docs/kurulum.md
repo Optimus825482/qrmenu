@@ -45,6 +45,9 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 | `COOKIE_SECURE` | hayır | Üretimde oturum çerezi varsayılan olarak `secure`'dür. **Yalnız HTTP ile erişilen test ortamları** (IP adresi, sslip.io) için `false` verin; gerçek kurulumda ayarlamayın. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | hayır | E-posta bildirimleri; tanımsızsa e-postalar yalnız günlüğe yazılır. Port varsayılanı 587. |
 | `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çevirisi sağlayıcıları (DeepL birincil, Gemini yedek); yoksa otomatik çeviri çalışmaz. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | hayır | MyBar cihaz bildirimlerini açmak için iki anahtarı birlikte ayarlayın. |
+| `VAPID_SUBJECT`, `PUSH_ENDPOINT_ALLOWLIST` | hayır | VAPID iletişim adresi ve gerektiğinde virgülle ayrılmış push sunucusu alan adları. |
+| `TRANSLATE_PROVIDER` | hayır | MyBar metin çevirisi. Varsayılan `none`. |
 | `RUN_SEED` | hayır | Yalnız Docker girişi: `true` ise açılışta `prisma/seed.ts` çalışır. Varsayılan `false`. |
 | `SEED_DEMO` | hayır | `true` ise seed ayrıca demo outlet, menü, menü tasarımı ve örnek personel yükler. Varsayılan `false`; **canlı veritabanında kullanmayın**. |
 | `LEGACY_DATABASE_URL` | hayır | Yalnız eski Flask minibar verisini taşıyan `npm run migrate:legacy` betiği için kaynak veritabanı. |
@@ -56,6 +59,23 @@ eksikse uygulama açılışta hata vererek durur. Rastgele anahtar üretmek içi
 `qr.baseUrl` ortam değişkeni değildir. Migrasyon/seed sonrasında **Denetim Masası → Sistem → QR
 taban adresi** alanına misafirin erişeceği genel HTTPS adresini (örn.
 `https://menu.otel.example`) yazın; üretilmiş masa QR'ları bu değeri kullanır.
+
+### MyBar Web Push ve çeviri
+
+`merit/` dizininde `npx web-push generate-vapid-keys` ile anahtar çifti üretin. Çıktıyı
+`VAPID_PUBLIC_KEY` ve `VAPID_PRIVATE_KEY` olarak uygulamanın ortamına tanımlayın.
+`VAPID_SUBJECT=mailto:it@otel.example` örneğindeki adresi otelinizin teknik iletişim adresiyle değiştirin.
+Ters vekilde HTTPS'yi ve aşağıdaki `X-Forwarded-Proto` başlığını yapılandırın. Yerel denemede
+`localhost` kullanılabilir. iOS'ta önce Personel uygulamasını ana ekrana ekleyin, sonra
+uygulamada cihaz bildirimlerine izin verin.
+
+VAPID anahtarları tanımsızsa MyBar, uygulama içi bildirim ve SSE üzerinden çalışır.
+Cihaz bildiriminde genel metin görünür. Oda, ürün ve not bilgileri yetkili personelin uygulama içi
+bildiriminde yer alır.
+
+`TRANSLATE_PROVIDER=gtx` MyBar metinlerini Google'ın resmî olmayan çeviri ucuna gönderir.
+Bu tercihi, misafir notlarının üçüncü tarafa aktarımı otel tarafından onaylandığında etkinleştirin.
+Varsayılan `none` değerinde ürün adları Türkçe kalır ve personel özgün misafir notunu görür.
 
 ## 4. Derleme, migrasyon ve seed
 
