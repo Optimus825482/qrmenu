@@ -119,6 +119,49 @@ async function seedMinibarWorld(db: PrismaClient, ids: { royal: string; diamond:
   await db.room.update({ where: { id: dRoom.id }, data: { qrToken: generateQrToken("ROOM", dRoom.id), qrGeneratedAt: new Date() } });
 }
 
+/**
+ * Room service world (S0): ROYAL rooms 101 (internal extension 4101) and 102 (no internal line) and the DIAMOND
+ * room 301 of the other-hotel check, each with a signed ROOM token. Upserts, so the minibar world (SEED_MINIBAR=1)
+ * may share rooms 101 and 301. Adds the "Oda Servisi" menu (Çay, Club Sandviç) to the room-service outlet.
+ */
+async function seedRoomServiceWorld(db: PrismaClient, ids: { royal: string; diamond: string; roomService: string }): Promise<void> {
+  const { generateQrToken } = await import("../../src/lib/qr");
+  const room = async (hotelId: string, floorNo: number, floorName: string, number: string, extension: string | null) => {
+    const floor = await db.floor.upsert({
+      where: { hotelId_number: { hotelId, number: floorNo } },
+      update: {},
+      create: { hotelId, number: floorNo, name: floorName },
+    });
+    const row = await db.room.upsert({
+      where: { hotelId_number: { hotelId, number } },
+      update: { extension },
+      create: { hotelId, floorId: floor.id, number, extension },
+    });
+    if (!row.qrToken) {
+      await db.room.update({ where: { id: row.id }, data: { qrToken: generateQrToken("ROOM", row.id), qrGeneratedAt: new Date() } });
+    }
+  };
+  await room(ids.royal, 1, "1. Kat", "101", "4101");
+  await room(ids.royal, 1, "1. Kat", "102", null);
+  await room(ids.diamond, 3, "3. Kat", "301", null);
+
+  const node = (data: {
+    kind: "KATEGORI" | "ALT_KATEGORI" | "GRUP" | "OGE";
+    name: string;
+    parentId?: string;
+    price?: number;
+    sortOrder?: number;
+    allergens?: string[];
+  }) => db.menuNode.create({ data: { outletId: ids.roomService, ...data } });
+  const category = await node({ kind: "KATEGORI", name: "Oda Servisi" });
+  const drinks = await node({ kind: "ALT_KATEGORI", name: "İçecekler", parentId: category.id, sortOrder: 0 });
+  const hot = await node({ kind: "GRUP", name: "Sıcak", parentId: drinks.id });
+  await node({ kind: "OGE", name: "Çay", parentId: hot.id, price: 25, sortOrder: 0 });
+  const food = await node({ kind: "ALT_KATEGORI", name: "Yemekler", parentId: category.id, sortOrder: 1 });
+  const sandwiches = await node({ kind: "GRUP", name: "Sandviçler", parentId: food.id });
+  await node({ kind: "OGE", name: "Club Sandviç", parentId: sandwiches.id, price: 320, sortOrder: 0, allergens: ["gluten", "yumurta"] });
+}
+
 /** Empties every application table, re-runs the seed and creates the e2e staff users. */
 async function resetAndSeed(): Promise<void> {
   const db = new PrismaClient({ adapter: pgAdapter(connectionString()) });
@@ -196,7 +239,7 @@ async function resetAndSeed(): Promise<void> {
       await db.outletMember.create({ data: { userId: staff.id, outletId: pool } });
     }
     // F&B manager of the MR hotel (QR menu / order management).
-    await makeUser("fbm.mr", "R-FBM", "ROYAL");
+    const fbm = await makeUser("fbm.mr", "R-FBM", "ROYAL");
 
     await makeUser("bos.kullanici", "R-OUT", "ROYAL");
     // Management role without the system screens (CR-SYS): sees Komuta Merkezi only.
@@ -224,6 +267,17 @@ async function resetAndSeed(): Promise<void> {
         });
       }
     }
+    // S0: room service rooms and menu, plus the room-service staff logins (password Test!2026).
+    await seedRoomServiceWorld(db, { royal: mr, diamond: await hotel("DIAMOND"), roomService: roomService.id });
+    const odaMr = await makeUser("oda.mr", "R-ODS", "ROYAL");
+    const mutfakOda = await makeUser("mutfak.oda", "R-MUS", "ROYAL");
+    await db.outletMember.createMany({
+      data: [
+        { userId: odaMr.id, outletId: roomService.id },
+        { userId: mutfakOda.id, outletId: roomService.id },
+        { userId: fbm.id, outletId: roomService.id },
+      ],
+    });
     // Existing specs log in as these users and expect their landing page: the mandatory first-login
     // access summary is pre-acknowledged ("*" matches every hash outside production) and every screen
     // tour is marked seen, so no overlay covers the pages the other specs drive. guide.spec clears it.
