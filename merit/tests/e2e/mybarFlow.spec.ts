@@ -86,7 +86,16 @@ test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ula
       );
       return rows[0];
     });
-    expect(state).toMatchObject({ remaining: 98, transactions: 1, pushed: 0 });
+    // Push is only dispatched when the server under test has VAPID keys (the Playwright config generates a throwaway pair for
+    // a server it starts itself; a reused server may have none): 1 with keys, 0 without. Never more than the one floor supervisor.
+    expect(state).toMatchObject({ remaining: 98, transactions: 1 });
+    expect([0, 1]).toContain(state.pushed);
+    if (state.pushed === 1) {
+      const pushedTo = await fixture(async (db) =>
+        (await db.query(`SELECT u.username FROM notifications n JOIN users u ON u.id = n.user_id WHERE n.type = 'mybar.created' AND n.pushed_at IS NOT NULL`)).rows.map((r) => r.username),
+      );
+      expect(pushedTo).toEqual(["kat.mr"]);
+    }
 
     const conflict = duplicate.waitForResponse((response) =>
       response.request().method() === "POST" && response.url().endsWith("/mybar"),
