@@ -29,6 +29,9 @@
 
 **Bütçe:** tüm-modeller %82, Fable %64 (sıfırlama Pzt 9.11 12:00). Push/birleştirme ucuz (git komutları); Opus dal incelemeleri Pazartesi.
 
+### 7.11 22:05 ek (Fable): Operasyon Radarı modülü ve demo
+`fec5afe` XP'de ayrı "Operasyon Radarı" klasörü/kategori `RADAR` (Canlı Radar penceresi + "Duvar Ekranı" `/radar` başlatıcısı; `CR-RAD` değişmedi), `23b67d7` radar araç çubuğunda "Demo başlat" (sentetik 30 dk senaryo, `enterReplay(loader)` üzerinden 10x, DEMO rozeti, DB/realtime yazmaz; `radar-demo` 11 + `radar-module` 3 test, `radarDemo.spec.ts`), `465bdf4` ilerleme, `70a2e55` e2e giriş beklemesi. `main` ff `70a2e55`, origin push edildi. Minör: otel değiştirip geri dönünce demo rozeti kalabilir; kayıtlı masaüstlerine klasör simgesi otomatik eklenmez.
+
 ### Antigravity'nin bitirdiği (commit'li)
 P8 T4 `384a55b` (yük denemesi yerel smoke, ölçekli limiter, pg havuz sınırı), T6 `f744542` (7 rol kılavuzu + otomatik ekran görüntüleri), T8 `d341c0c` (CI bağımsız işler, izlenebilirlik, teslim kontrol listesi), kapanış `c592aef` (`docs/kabul/2026-11-07-p8-kabul.md`: K01–K10 GEÇTİ, MyBar 5 spec 17/17, Windows uyumluluk düzeltmeleri, ilerleme). **P0–P8 tamam.**
 
