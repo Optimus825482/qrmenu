@@ -621,7 +621,7 @@ export default function MinibarTanimlarPage() {
   });
 
   return (
-    <div className="min-h-screen bg-bg text-text flex flex-col font-sans select-none">
+    <div className="depo-touch min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
       <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">

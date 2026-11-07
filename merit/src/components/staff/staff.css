@@ -415,6 +415,14 @@
 .staff-shell[data-layout="rail"] .staff-fab {
   bottom: var(--space-4);
 }
+/* Sayfaya sabit alt eylem şeridi (örn. oda kontrolü kaydet): alt gezinmenin üstünde, rayda rayın sağında. */
+.staff-shell .staff-action-bar {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+.staff-shell[data-layout="rail"] .staff-action-bar {
+  left: 80px;
+  bottom: 0;
+}
 @media (min-width: 1024px) {
   .staff-shell {
     grid-template-columns: 80px minmax(0, 1fr);
@@ -446,6 +454,10 @@
   }
   .staff-shell .staff-fab {
     bottom: var(--space-4);
+  }
+  .staff-shell .staff-action-bar {
+    left: 80px;
+    bottom: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

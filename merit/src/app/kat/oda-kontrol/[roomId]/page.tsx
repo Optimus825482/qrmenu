@@ -543,7 +543,7 @@ export default function OdaKontrolPage() {
       </main>
 
       {data ? (
-        <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
+        <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
           <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <button

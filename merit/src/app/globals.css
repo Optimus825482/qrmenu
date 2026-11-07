@@ -146,3 +146,15 @@ body {
     animation: none;
   }
 }
+
+/* Yoğun yönetim ekranları (Minibar & Sistem Tanımlamaları): Tailwind ile küçültülmüş denetimler personel dokunma
+   katmanına (44 px) çıkar. Katmansız kural, katmanlı yardımcı sınıfların dolgu (padding) yüksekliğini aşağı çekmesini önler. */
+.depo-touch :is(a, button, select, input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="file"])) {
+  min-height: var(--tap-min);
+}
+.depo-touch :is(a, button):has(> svg:only-child) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+}

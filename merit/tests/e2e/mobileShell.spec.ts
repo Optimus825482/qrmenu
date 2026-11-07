@@ -92,13 +92,16 @@ test("390px: masaüstü yok, alt sekmeler var, Tanımlar sekmesi yok", async ({ 
   expect(errors).toEqual([]);
 });
 
-test("Raporlar: boş durum", async ({ page }) => {
+test("Raporlar: Rapor Merkezi kataloğu tek sütunda listelenir; rapor seçilince filtreler açılır", async ({ page }) => {
   await openMobile(page);
   await tab(page, "Raporlar").click();
   await expect(tab(page, "Raporlar")).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("tabpanel", { name: "Raporlar" })).toContainText(
-    "Rapor Merkezi P7'de",
-  );
+  const panel = page.getByRole("tabpanel", { name: "Raporlar" });
+  const catalogue = panel.getByRole("navigation", { name: "Raporlar" });
+  await expect(catalogue.getByRole("button", { name: /Minibar Tüketim Raporu/ })).toBeVisible();
+  await catalogue.getByRole("button", { name: /Minibar Tüketim Raporu/ }).click();
+  await expect(panel.getByRole("form", { name: "Rapor filtreleri" })).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Raporu Göster" })).toBeVisible();
 });
 
 test("Ayarlar: anahtar → Tanımlar sekmesi gelir ve yer tutucuyu gösterir; oturum boyunca kalır", async ({

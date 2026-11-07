@@ -88,7 +88,7 @@ export function KpiChips({ data, error, stale, choice, hotels, onScopeChange, ca
           const openable = !!onOpen && (canOpen ? canOpen(m.screenCode) : true);
           const body = (
             <>
-              <span className="flex items-center gap-1 text-[11px] opacity-90">
+              <span className="flex items-center gap-1 text-[11px]">
                 <Icon name={sev.icon} size={14} />
                 <span>{m.label}</span>
               </span>

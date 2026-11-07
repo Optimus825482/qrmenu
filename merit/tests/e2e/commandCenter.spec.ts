@@ -71,7 +71,7 @@ test("Komuta Merkezi: 3 Otel KPI'sı; olay akışı pg_notify ile canlı güncel
   await expect(win.getByText(/Son güncelleme \d{2}:\d{2}:\d{2}/)).toBeVisible();
 
   // Connected: the amber offline badge is gone.
-  await expect(win.getByText("çevrimdışı")).toBeHidden();
+  await expect(win.getByText("çevrimdışı", { exact: true })).toBeHidden();
   const feed = win.getByRole("list", { name: "Canlı Akış" });
   await expect(feed).toContainText("Henüz olay yok");
 
@@ -130,8 +130,8 @@ test("tek SSE bağlantısı: görev çubuğu ve iki Komuta Merkezi penceresi ayn
   await openFromStart(page, "Komuta Merkezi");
   const windows = page.getByRole("region", { name: "Komuta Merkezi", exact: true });
   await expect(windows).toHaveCount(2);
-  await expect(windows.nth(0).getByText("çevrimdışı")).toBeHidden();
-  await expect(windows.nth(1).getByText("çevrimdışı")).toBeHidden();
+  await expect(windows.nth(0).getByText("çevrimdışı", { exact: true })).toBeHidden();
+  await expect(windows.nth(1).getByText("çevrimdışı", { exact: true })).toBeHidden();
 
   const id = await adminId();
   await pgNotify({ type: "notification.created", userIds: [id], at: new Date().toISOString() });

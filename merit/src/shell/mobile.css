@@ -611,7 +611,7 @@
   --rc-text: var(--mb-text);
   --rc-muted: var(--mb-muted);
   --rc-accent: var(--mb-primary);
-  --rc-accent-text: #fff;
+  --rc-accent-text: var(--on-accent);
   --rc-danger: var(--mb-danger);
   display: flex;
   flex-direction: column;
@@ -718,7 +718,7 @@
 .rc[data-variant="mobile"] .rc-btn-primary {
   border-color: var(--mb-primary);
   background: var(--mb-primary);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .rc[data-variant="mobile"] .rc-btn:disabled {

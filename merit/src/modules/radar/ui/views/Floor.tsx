@@ -68,11 +68,9 @@ function Cell({
     >
       <span>{room.number}</span>
       {m.corner.length > 0 ? (
-        <span className="rd-cell-corner" aria-hidden="true">
-          {m.corner.map((c) => (
-            <span key={c}>{c}</span>
-          ))}
-        </span>
+        // Painted by CSS from data-marks: the marks are not text content, so the visible label of the cell stays
+        // the room number and the accessible name (which starts with it and spells the marks out) matches it.
+        <span className="rd-cell-corner" aria-hidden="true" data-marks={m.corner.join(" ")} />
       ) : null}
       {m.checked ? (
         <span className="rd-cell-tick" aria-hidden="true">
