@@ -121,7 +121,7 @@ Hangisi doğru? **İlerleme de DEVIR tablosu da tam doğru değil.** Kod P2–P4
 | §5 P2 | "`scripts/migrate-from-minibarlatest` (idempotent, `legacy_id_map`, `--dry-run`, rapor)" | Gerçek dosya `scripts/migrate-minibar-data.ts`; bunların hiçbiri yok. |
 | §5 P5 | "P5 planı hazır ve uygulanıyor (dal `p5/qr-menu`)" | Bitti, `main`'de. |
 | §6 | Pazartesi (3 Kasım) kontrol listesi | `npm run check` baseline'da kırık (27 birim test, 4 lint hatası); `prisma migrate diff` boş **değil** (N-01). |
-| §7 | "`merit/.env` ve gerçek şifreler belgelere yazılmaz" | `scripts/migrate-minibar-data.ts:4` gerçek Postgres şifresini içeriyor (commit'li, itilmiş). `COOLIFY_DEPLOYMENT.md` ve `docker-compose.yaml` varsayılan `SEED_ADMIN_PASSWORD=Merit!2026` ve sabit varsayılan `SESSION_SECRET/QR_HMAC_SECRET/PRINT_GATEWAY_KEY` taşıyor. |
+| §7 | "`merit/.env` ve gerçek şifreler belgelere yazılmaz" | `scripts/migrate-minibar-data.ts:4` gerçek Postgres şifresini içeriyor (commit'li, itilmiş). `COOLIFY_DEPLOYMENT.md` ve `docker-compose.yaml` varsayılan `SEED_ADMIN_PASSWORD=[ORTAMDAKI_YONETICI_PAROLASI]` ve sabit varsayılan `SESSION_SECRET/QR_HMAC_SECRET/PRINT_GATEWAY_KEY` taşıyor. |
 | §7 | "push yalnız kullanıcı isteğiyle" | 13 CI koşusu itilmiş commit'lere ait (1–2 Kasım); kullanıcı isteği belgelenmemiş. |
 | Genel | Docker/Coolify, `COOKIE_SECURE`, seed'in admin şifresini her başlangıçta eşitlemesi, minibar prototipi hiç anılmıyor | Eklenmeli. |
 
