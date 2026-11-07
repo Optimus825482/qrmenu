@@ -7,7 +7,7 @@ import type { RoomGuestState } from "../../server/roomGuest";
  * `/q/{token}/oda-servisi`. While the flag is off the room state reports `roomServiceOpen: false`,
  * so the slot is not even reached.
  */
-export const ROOM_SERVICE_READY = false;
+export const ROOM_SERVICE_READY = true;
 
 export default async function RoomServiceSlot({ token, locale, state }: { token: string; locale: Locale; state: RoomGuestState }) {
   // Called as a function: the card is itself an async server component.
