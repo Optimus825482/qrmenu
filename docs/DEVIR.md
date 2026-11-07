@@ -42,6 +42,19 @@
 4. **P8 kapanış doğrulaması** (tek ajan, temiz DB `merit_<ad>_e2e`): `npm run check`, `migrate diff` boş, `next build`, chromium + altı matris + `npm run test:kabul`; MyBar 5 spec'i bu koşuda tam yeşil olmalı (7.11'de bağlantı doygunluğu yüzünden doğrulanamadı). Sonuç `docs/kabul/2026-11-0X-p8-kabul.md`; `ilerleme-data.js` (+`merit/public/`) P8 satırları `done`.
 5. Bittiğinde iş durur; `main` birleştirme ve GitHub push Erkan'da; Opus incelemeleri Pazartesi Fable'da.
 
+### YAPMAMASI GEREKENLER (Antigravity — bağlayıcı)
+- `git add -A` / `git add -u` / `git stash` / `git checkout <dal>` / `git reset` / `git clean` YOK; yalnız kendi dosyalarını `git add <yol>` ile sahnele. Codex'in commit'siz işini **silme, üzerine yazma, geri alma**; önce doğrula, sonra commit'le.
+- `merit/tools/load/node_modules`, `merit/.tmp/`, `.next*`, `test-results*`, ekran görüntüsü dışındaki ikili dosyalar commit'lenmez; `docs/kilavuz/img/*.png` dışında büyük dosya ekleme.
+- GitHub'a **push yok**, `main`'e **birleştirme yok**, uzak dal/remote ayarı yok, `git tag` yok — hepsi Erkan.
+- `merit/.env`, gerçek parola/anahtar/`SETTINGS_SECRET_KEY`/VAPID/SMTP değerleri hiçbir belgeye, teste, commit'e yazılmaz; `.env.example` yalnız ad taşır.
+- Uzak yük hedefi, gerçek SMTP gönderimi, gerçek göç dump'ı, Coolify/sunucu dağıtımı, Vercel/Cloudflare araçları **kullanılmaz** (yalnız yerel, `_e2e`/`_test` sonekli DB).
+- 3000/3001 portlarına dokunma; `merit`, `merit_test`, `merit_e2e`, `minibar_legacy` DB'lerini **düşürme/kesme**; ajan DB'leri `merit_<ad>_e2e` / `merit_test_<ad>` adıyla aç, işi bitince sunucuyu durdur.
+- `prisma migrate reset`, `db push`, elle şema değişikliği YOK; P8 yeni migration öngörmez. `tsconfig.json`'daki `next build` değişikliğini commit'leme.
+- Spec/plan kararlarını değiştirme: "sepet" kelimesi yok ("Seçimler"), fiyatlar misafir arayüzünde gizli kuralı, SLA plan kuralı, `rs.rapor` kimliği, `ROOM_SERVICE_READY=true`.
+- Kırmızı testi `skip`/`only`/`fixme` ile geçiştirme, eşik düşürme, `eslint-disable`/`@ts-ignore` ekleme yok; gerçek nedeni düzelt ya da deftere yaz.
+- `docs/DEVIR.md` §2–§7'yi ve geçmiş kabul belgelerini silme/yeniden yazma; yalnız §1a'ya durum ekle. `ilerleme-data.js`'te yalnız gerçekten yeşil olanı `done` yap.
+- Erkan'a ait kararları (`push.includeNote`, `preferredShell`, `merkez-ozet` yetkisi, uzak yük, dağıtım) kendi başına verme; varsayılan kullan ve deftere "Erkan kararı bekliyor" yaz.
+
 ### Ortam notları
 - 7.11 17:00 temizliği: artık Next sunucuları kapatıldı, 140 ajan DB'si düşürüldü (kalan `merit`, `merit_e2e`, `merit_test`; `merit_test` güncel), `.next-*` dizinleri silindi. PARALEL-KURALLAR aynen: ajan başına DB/port/`NEXT_DIST_DIR`, 3000/3001 dokunma, iş bitince sunucuyu **gerçekten** durdur (`Get-Process node` ile doğrula).
 - Hazır altyapı: `npm run test:kabul`, `tests/e2e/helpers/run-jobs.ts --job=<ad> [--now=<ISO>]` (13 iş), `npm run db:seed:demo` (`DEMO_PASSWORD`), `deploy/` paketi, `docs/kabul/izlenebilirlik.md`.
