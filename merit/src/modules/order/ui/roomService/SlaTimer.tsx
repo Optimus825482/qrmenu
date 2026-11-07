@@ -23,7 +23,7 @@ export function formatSlaClock(dueMs: number, nowMs: number): string {
 const TONE: Record<SlaTimerState, string> = {
   OK: "border-success text-success",
   WARN: "border-warn bg-warn/15 text-warn",
-  BREACH: "border-danger bg-danger/10 text-danger animate-pulse",
+  BREACH: "border-danger bg-danger/10 text-danger font-semibold",
 };
 const LABEL: Record<SlaTimerState, string> = { OK: "Süre var", WARN: "Süre azalıyor", BREACH: "Süre aşıldı" };
 
@@ -36,7 +36,7 @@ type Props = {
   nowMs?: number;
 };
 
-/** Countdown to the SLA deadline; colour follows the live state (OK green, WARN amber, BREACH red + pulse). */
+/** Countdown to the SLA deadline; colour follows the live state (OK green, WARN amber, BREACH red, bold). */
 export function SlaTimer({ startAt, dueAt, paused, nowMs }: Props) {
   const [tick, setTick] = useState<number | null>(null);
   useEffect(() => {

@@ -53,7 +53,6 @@ const COLUMN_TITLE: Record<RoomBoardColumn, string> = {
   ONWAY: "Yolda",
 };
 
-const GUIDE_LIST: Record<RoomOpsTab, string> = { tumu: "talep-listesi", teyit: "teyit-listesi", teslim: "teslim-listesi" };
 
 const CONFIRM_FAIL_REASONS = ["Açmadı", "Misafir istemedi", "Hatalı sipariş"] as const;
 const CANCEL_REASONS = ["Stok yok", "Misafir vazgeçti", "Hatalı sipariş", "Mutfak yoğun"] as const;
@@ -246,7 +245,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
 
       {data ? (
         <div
-          data-guide={GUIDE_LIST[tab]}
+          data-guide={tab === "teyit" ? "teyit-listesi" : tab === "teslim" ? "teslim-listesi" : "talep-listesi"}
           className={`grid gap-4 ${columns.length === 1 ? "" : columns.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3 xl:grid-cols-5"}`}
         >
           {columns.map((col, colIndex) => {
