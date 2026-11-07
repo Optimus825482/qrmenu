@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { EnvLabel } from "@/components/EnvLabel";
 import type { Locale } from "@/lib/i18n/locales";
 import type { GuestCallOption } from "../../callOptions";
 import { CallWaiterButton } from "./CallWaiterButton";
@@ -43,6 +44,7 @@ export function GuestFooter({
 
   return (
     <>
+      <EnvLabel />
       {recent.length > 0 ? (
         <nav className="g-orders" aria-label={t("selections.mine")}>
           <span>{t("selections.mine")}</span>

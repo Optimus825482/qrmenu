@@ -10,10 +10,12 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:kabul": "playwright test --grep @kabul",
     "test:e2e:matrix": "playwright test --project=desktop-1366x768 --project=tablet-1280x800 --project=tablet-1024x768 --project=tablet-768x1024 --project=tablet-800x1280 --project=phone-390x844",
     "check": "npm run lint && npm run typecheck && npm run test",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:reset": "prisma migrate reset --force",
     "migrate:legacy": "tsx scripts/migrate-from-minibarlatest/index.ts"
   },

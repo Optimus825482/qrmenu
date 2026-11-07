@@ -40,6 +40,8 @@ yerel ağdaki ESC/POS yazdırma geçidini ekler.
    | `QR_HMAC_SECRET` | evet | QR kodu imzaları için gizli anahtar, en az 32 karakter rastgele; varsayılanı yoktur. |
    | `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidi anahtarı; geçidin `GATEWAY_KEY` değeriyle aynı. Varsayılanı yoktur. |
    | `APP_BASE_URL` | üretimde evet | Uygulamanın dış adresi (Origin denetimleri için). Geliştirmede boşsa `http://localhost:3000`; üretimde varsayılanı yoktur. |
+   | `DEMO_PASSWORD` | `db:seed:demo` | Eğitim kullanıcılarının (`egitim.*`) parolası, en az 10 karakter; varsayılanı yoktur. Yalnız `*_egitim`/`*_demo`/`*_test` veritabanı. |
+   | `ENV_LABEL` | çalışma zamanı | Boş değilse (ör. `EĞİTİM`) durum çubuklarında ve misafir sayfasında ortam rozeti. Üretimde boş. |
    | `SEED_ADMIN_PASSWORD` | `db:seed` (admin yoksa) | İlk `admin` kullanıcısının parolası, en az 10 karakter; varsayılanı yoktur. Var olan admin'e seed dokunmaz. |
    | `TZ` | önerilir | `Europe/Nicosia` (iş saatleri ve zamanlanmış işler bu saat dilimine göre). |
    | `MERIT_DISABLE_JOBS` | hayır | `1` ise pg-boss işleri ve dinleyici başlamaz (yalnız test/CI); aşağıya bakın. |
@@ -257,6 +259,7 @@ için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
 | `npm run lint` / `npm run typecheck` | ESLint / `next typegen && tsc --noEmit`. |
 | `npm run db:migrate` | `prisma migrate dev` (şema değişikliği + istemci üretimi). |
 | `npm run db:seed` | Başlangıç verisini yükler (`SEED_ADMIN_PASSWORD` gerekir). |
+| `npm run db:seed:demo` | Eğitim senaryosunu yükler (`DEMO_PASSWORD`; yalnız eğitim veritabanı, idempotent; bkz. `docs/kurulum.md` "Eğitim ortamı"). |
 | `npm run migrate:legacy` | Eski minibar verisini taşır (`LEGACY_DATABASE_URL` gerekir; `--dry-run` önce deneyin). |
 | `npm run db:reset` | Veritabanını siler, migrasyonları yeniden uygular (`migrate reset --force`). |
 

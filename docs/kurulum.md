@@ -217,6 +217,36 @@ aktifleştirmez ve elle yaptığınız tanımları ezmez; yalnız seed'deki üç
 varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
 yetkisi yoktur. Rehber yüzdesi seed çalıştırıldıktan sonra anlam kazanır.
 
+### Eğitim ortamı
+
+Eğitim, gerçek veriye dokunmayan **ayrı bir örnek**tir: ayrı veritabanı (`merit_egitim`), ayrı süreç
+(örn. `PORT=3100`) ve ekranda **ENV_LABEL** rozeti. Demo verisi yalnız adı `_egitim`, `_demo` veya
+`_test` ile biten veritabanlarına yüklenir; `merit` gibi bir adda betik hiçbir şey yazmadan hata verir
+(`Demo verisi yalnız eğitim veritabanına yüklenebilir`).
+
+```bash
+createdb -U postgres merit_egitim
+export DATABASE_URL='postgresql://<kullanıcı>:<parola>@localhost:5432/merit_egitim'
+npx prisma migrate deploy
+SEED_ADMIN_PASSWORD='<yönetici parolası>' npm run db:seed          # temel seed (önkoşul)
+DEMO_PASSWORD='<en az 10 karakter>' npm run db:seed:demo           # eğitim senaryosu
+```
+
+- `DEMO_PASSWORD` zorunludur, varsayılanı yoktur ve hiçbir yere yazdırılmaz; tüm `egitim.*` kullanıcıları bu parolayla girer.
+  Parolayı değiştirip betiği yeniden çalıştırırsanız kullanıcıların parolası güncellenir.
+- Betik **idempotenttir**: art arda çalıştırmak satır sayısını değiştirmez. Her çalıştırma "bugün"ü (ve son 7 iş gününü)
+  tamamlar; eski günlerin kayıtları silinmez. Eğitim gününü tazelemek için aynı komutu sabah yeniden çalıştırmak yeter.
+- Senaryo: Merit Royal (tam: 3 kat × 10 oda, Standart/Suit, QR'lı odalar, minibar setup'ları ve havuz stoku — bir ürün kritik
+  seviyede) ve Merit Royal Diamond (5 oda); Havuz Bar, Beach Bar, Ana Restoran (her biri 10 masa, QR'lı, menüler 5 dilde)
+  ve Oda Servisi menüsü; bugünün doluluğu, günlük görevler, MyBar (1 bekleyen, 2 kapalı), DND, son 7 güne yayılmış masa ve oda
+  servisi siparişleri (rapor ve radar boş görünmesin), 1 açık garson çağrısı, pasif yazıcı kaydı (`192.0.2.50`) ve test fişi örneği.
+- Kullanıcılar (`egitim.` + rol): `admin` (Otel Müdürü), `fbm`, `sgf`, `garson1`–`garson3`, `kasa`, `mutfak`, `kds`, `oda`,
+  `kat1`–`kat2`, `depo`. E-posta adresleri `@example.invalid` uzantılıdır ve rapor e-postası kapalıdır; eğitim ortamı dışarıya
+  e-posta göndermez.
+- Eğitim örneğinin ortamında `ENV_LABEL=EĞİTİM` tanımlayın (en çok 20 karakter): XP kabuğunun görev çubuğunda, personel kabuğu
+  oturum şeridinde, Kasa/KDS durum şeridinde ve misafir sayfasının altında küçük bir rozet görünür. Üretimde boş bırakın.
+  Etiket çalışma zamanında okunur; ortam değişkenini değiştirince süreci yeniden başlatın.
+
 ### Oda Servisi (P6)
 
 Her otelin tek bir "Oda Servisi" outleti vardır (seed oluşturur). Kurulum sırası:

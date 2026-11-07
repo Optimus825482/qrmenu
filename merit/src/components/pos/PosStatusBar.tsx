@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { requestGuide } from "@/components/guide/guideEvents";
 import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
+import { EnvLabel } from "@/components/EnvLabel";
 import { Icon } from "@/components/icons/Icon";
 import { LogoutButton } from "@/components/LogoutButton";
 import { OutletSwitcher, type OutletTarget } from "@/components/ops/OutletSwitcher";
@@ -47,6 +48,7 @@ export function PosStatusBar({ connection, printer, phase, wake, onStartFullscre
   const conn = CONNECTION[connection];
   return (
     <footer className="pos-strip" aria-label="Durum şeridi">
+      <EnvLabel />
       <span className="pos-strip-item" data-state={conn.state} role="status">
         <Icon name={connection === "open" ? "wifi" : "wifi-off"} size={20} />
         {conn.text}

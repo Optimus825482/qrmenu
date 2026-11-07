@@ -6,6 +6,7 @@ import { getApp } from "../registry";
 import { useSse, type SseStatus } from "../useSse";
 import { selectActiveId, useWindowStore, windowStore } from "../windowStore";
 import { NotificationBell } from "./NotificationBell";
+import { EnvLabel } from "@/components/EnvLabel";
 import { TrayStatusText } from "./TrayBalloon";
 import { DbTray, PrinterTray } from "./TrayStatus";
 import type { PrinterState } from "@/components/pos/usePrinterStatus";
@@ -96,6 +97,7 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef, printerIniti
         })}
       </div>
       <div className="xp-tray">
+        <EnvLabel />
         <TrayStatusText />
         <PrinterTray initial={printerInitial} />
         <DbTray />

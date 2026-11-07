@@ -21,6 +21,8 @@ export const envSchema = z.object({
   /** Where uploaded files (menu images) live; defaults to <cwd>/uploads. */
   UPLOADS_DIR: z.string().min(1).optional(),
   /** Trusted reverse proxies in front of the app; the client IP is the Nth `x-forwarded-for` entry from the right. */
+  /** Kısa ortam etiketi (ör. EĞİTİM); doluysa durum çubuklarında rozet çizilir. Üretimde boş bırakılır. */
+  ENV_LABEL: z.string().trim().max(20).optional(),
   TRUSTED_PROXY_HOPS: z.coerce.number().int().min(1).default(1),
 }).refine(
   (value) => Boolean(value.VAPID_PUBLIC_KEY) === Boolean(value.VAPID_PRIVATE_KEY),

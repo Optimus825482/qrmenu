@@ -11,6 +11,7 @@ import { screenForPath } from "@/modules/core/screenPaths";
 import { InstallPrompt } from "./InstallPrompt";
 import { isNavActive, type NavModel } from "./navModel";
 import { ProfileMenu, type ProfileExtra } from "./ProfileMenu";
+import { EnvLabel } from "@/components/EnvLabel";
 import { SessionBanner } from "./SessionBanner";
 import { StaffBell } from "./StaffBell";
 import { StaffNav } from "./StaffNav";
@@ -111,6 +112,7 @@ export function StaffShell({
                 {lastOnline ? <small>Son güncelleme {formatTime(lastOnline)}</small> : null}
               </div>
             ) : null}
+            <EnvLabel className="staff-env-label" />
             <SessionBanner sessionEndsAt={sessionEndsAt} warnMinutes={warnMinutes} />
             <InstallPrompt />
           </div>
