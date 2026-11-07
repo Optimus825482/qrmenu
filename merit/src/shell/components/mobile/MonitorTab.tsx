@@ -2,11 +2,15 @@
 
 import { useEffect } from "react";
 import { affectsKpis, useCommandCenterKpis } from "../../useCommandCenterKpis";
+import { KpiChips } from "@/modules/reporting/ui/KpiChips";
+import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
 import type { SubscribeEvents } from "./events";
 
 /** İzleme: the Komuta Merkezi numbers as cards (same data action as the desktop window). */
 export function MonitorTab({ subscribe }: { subscribe: SubscribeEvents }) {
   const { kpis, error, scheduleRefresh } = useCommandCenterKpis();
+
+  const radarKpi = useRadarKpi({ scope: "total" }, subscribe);
 
   useEffect(
     () =>
@@ -38,6 +42,15 @@ export function MonitorTab({ subscribe }: { subscribe: SubscribeEvents }) {
           <span className="mb-kpi-label">Bugünkü bildirim</span>
         </div>
       </div>
+      <KpiChips
+        compact
+        data={radarKpi.data}
+        error={radarKpi.error}
+        stale={radarKpi.stale}
+        choice={radarKpi.choice}
+        hotels={radarKpi.hotels}
+        onScopeChange={radarKpi.selectScope}
+      />
       <section className="mb-card" aria-labelledby="mb-online-by-hotel">
         <h3 className="mb-subheading" id="mb-online-by-hotel">
           Otellere göre online

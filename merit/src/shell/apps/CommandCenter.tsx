@@ -10,6 +10,9 @@ import { useSse } from "../useSse";
 import type { AppProps } from "../registry";
 import { Icon } from "@/components/icons/Icon";
 import { useWindowStore } from "../windowStore";
+import { getApps } from "../registry";
+import { KpiChips } from "@/modules/reporting/ui/KpiChips";
+import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
 
 const FEED_LIMIT = 50;
 
@@ -24,6 +27,11 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
   const { kpis, error, scheduleRefresh } = useCommandCenterKpis(hotelId, (at) =>
     setStatus(`Son güncelleme ${clock(at)}`),
   );
+
+  const radarKpi = useRadarKpi(hotelId ? { scope: "hotel", hotelId } : { scope: "total" });
+  const appIds = useWindowStore((s) => s.appIds);
+  const appForScreen = (code: string) =>
+    getApps().find((a) => a.screenCode === code && (appIds === null || appIds.includes(a.id)));
 
   const setup = useSetupSummary();
   const setupRows = hotelId ? setup.rows.filter((r) => r.hotelId === hotelId) : setup.rows;
@@ -58,6 +66,21 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           {error}
         </div>
       ) : null}
+      <div className="my-2" data-guide="kpi-cipleri">
+        <KpiChips
+          data={radarKpi.data}
+          error={radarKpi.error}
+          stale={radarKpi.stale}
+          choice={radarKpi.choice}
+          hotels={radarKpi.hotels}
+          onScopeChange={radarKpi.selectScope}
+          canOpen={(code) => !!appForScreen(code)}
+          onOpen={(code) => {
+            const app = appForScreen(code);
+            if (app) openApp?.(app.id);
+          }}
+        />
+      </div>
       <div className="xp-kpis">
         <div className="xp-kpi" data-testid="kpi-hotels">
           <span className="xp-kpi-value">{kpis?.hotels ?? "—"}</span>

@@ -516,6 +516,7 @@ const LIST: ScreenGuide[] = [
     [
       ["masaustu", "Masaüstü", "Uygulama simgelerine çift tıklayarak pencere aç."],
       ["gosterge", "Göstergeler", "Komuta merkezi anlık sayıları gösterir."],
+      ["kpi-cipleri", "KPI çipleri", "Bekleyen iş ve tüketim sayıları renk ve yazıyla durumunu söyler; tıklayınca ilgili ekran açılır."],
       ["baslat-menusu", "Başlat menüsü", "Tüm ekranlara ve Erişimim özetine buradan ulaşırsın."],
     ],
     [
