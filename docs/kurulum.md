@@ -161,6 +161,27 @@ aktifleştirmez ve elle yaptığınız tanımları ezmez; yalnız seed'deki üç
 varsayılana döner (adı Tanımlamalar'dan değiştirdiyseniz seed sonrası yeniden düzeltin). Çalıştırmazsanız yeni pencereler Başlat menüsünde görünmez, çünkü rollerin ekran
 yetkisi yoktur. Rehber yüzdesi seed çalıştırıldıktan sonra anlam kazanır.
 
+### Oda Servisi (P6)
+
+Her otelin tek bir "Oda Servisi" outleti vardır (seed oluşturur). Kurulum sırası:
+
+1. Seed'i yeniden çalıştırın (yeni `RO-*` ekranları ve rol yetkileri için), sonra Tanımlamalar → Odalar'da
+   dahili numaraları girin (dahilisiz oda panoda "Dahili tanımlı değil" görünür).
+2. Oda Servisi outletine üye ekleyin: onay/teslim için `R-ODS`, mutfak için `R-MUS`; iptal yetkisi `R-FBM`'dedir.
+3. Menüyü "Oda Servisi Menüsü" penceresinden (`rs.menu`) girin. Menüsü boş outlet misafire kapalı görünür.
+4. **Telefon teyidi:** Outletler penceresinde Oda Servisi outletinin `phoneConfirmRequired` anahtarı; açıkken sipariş
+   "Teyit bekliyor" olur ve "Telefonla teyit edildi" kaydedilmeden hazırlanamaz.
+5. **Sipariş alımı:** outletin sipariş anahtarı (`orderingEnabled`) kapalıyken misafir gönderimi 409 döner,
+   mevcut siparişlerin durum sayfası açık kalır. Mutfak panosundaki "Sipariş alımı" düğmesi aynı anahtardır.
+6. **Ayarlar** (Denetim Masası → Sistem, otel bazında): `rs.slaMinutes` (varsayılan 30; uyarı eşiği süresinin %80'i),
+   `rs.maxOpenPerRoom` (oda başına açık sipariş sınırı, varsayılan 3), `order.approvalEscalationMinutes`
+   (onay bekleyen siparişte F&B ve outlet yöneticilerine eskalasyon).
+7. Yazıcı isteğe bağlıdır: outlete bağlı yazıcı yoksa fiş üretilmez ve "yazıcı yok" bildirimi gönderilmez.
+
+SLA taraması ve eskalasyon zamanlanmış işlerdir. Beklemeden denemek için e2e veritabanında
+`npx tsx tests/e2e/helpers/run-rs-jobs.ts 2026-11-07T12:30:00Z [--only=sla|escalation]` (benzetilmiş saat; çıktı
+`{"sla":{warned,breached},"escalated"}`). Yardımcı yalnız `*_e2e`/`*_test` adlı yerel veritabanını kabul eder.
+
 ### Veri göçü (minibarlatest)
 
 Eski Flask minibar sisteminin geçmişi (kullanıcılar, e-posta, ek talepler, bildirimler, MyBar, işlemler, oda

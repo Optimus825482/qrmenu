@@ -175,6 +175,26 @@ bildirimler), `history` (MyBar, işlemler, oda kontrolleri, havuz ve hareketleri
 QR/denetim/sistem günlükleri; `--skip-logs` günlükleri atlar). Rapor, doğrulama kontrolleri ve göç sonrası kontrol listesi
 için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
 
+## P6 Oda Servisi
+
+- **Misafir:** oda QR'ı `/q/{oda-token}` iki kart sunar (MyBar, Oda Servisi). Menü `/q/{oda-token}/oda-servisi`,
+  sipariş durumu `/q/{oda-token}/siparis/{id}` adresindedir; durum sayfası sayfa yenilenmeden canlı güncellenir,
+  sekiz dilde ve RTL'dir. Misafir "Seçimler" ile gönderir; onaydan önce "Vazgeç" diyebilir. Menüsü boş, pasif ya da modülü
+  kapalı otelde kart bağlantısız "Şu an kullanılamıyor" gösterir; sipariş alımı kapalıysa menü görünür, gönderim 409 döner.
+- **Personel:** `/oda-servisi` beş sütunlu pano (Teyit, Yeni, Hazırlanıyor, Hazır, Yolda), `/oda-servisi/teyit` ve
+  `/oda-servisi/teslim` aynı panonun sekmeleridir. Ekran kodları: `RO-TAL` talepler, `RO-TEL` telefon teyidi,
+  `RO-TES` teslim takibi, `RO-SLA` Oda Servisi SLA penceresi (`rs.rapor`); XP pencereleri `rs.menu`, `rs.tema`,
+  `rs.kayitlar`, `rs.rapor`.
+- **Roller:** `R-ODS` oda servisi görevlisi (onay, yola çıkar, teslim), `R-MUS` mutfak (Hazır), `R-FBM` F&B müdürü
+  (onay sonrası iptal dahil). Oda servisi siparişi `/kds` ve `/garson` kuyruğunda görünmez (`kds.ts` yalnız `MASA`).
+- **Akış:** `GONDERILDI → (TEYIT_BEKLIYOR) → ONAYLANDI → HAZIR → YOLDA → TESLIM_EDILDI`, `IPTAL` sebepli.
+  Telefon teyidi Oda Servisi outletinin `phoneConfirmRequired` anahtarıyla açılır. Yazıcı isteğe bağlıdır (yoksa fiş ve uyarı yoktur).
+- **SLA:** süre başlangıcı telefon teyidi (varsa) yoksa oluşturma anıdır; teyit bekleyen sipariş sayılmaz. %80'de uyarı,
+  %100'de aşım bildirimi gider (tekrarlanmaz). Yardımcılar `order/server/roomService/slaConstants.ts`'tedir.
+- **Kabul zinciri:** `tests/e2e/roomServiceChain.spec.ts` (A teyit kapalı + yazıcı/fiyat, B teyit açık, C iptal, D SLA,
+  E kapsam/KDS/409, F `?lang=de`); SLA saati `tests/e2e/helpers/run-rs-jobs.ts <şimdi-ISO>` ile ilerletilir.
+  Ayarlar için `docs/kurulum.md` › "Oda Servisi".
+
 ## Komutlar
 
 | Komut | Ne yapar |

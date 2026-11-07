@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 12:40",
-  headline: "P4 MyBar kapandı: Arapça misafir talebi kat sorumlusu onayı, havuz düşümü ve canlı durum uçtan uca yeşil. Minibar, radar ve UX kapalı. Sırada P6, P7, P8.",
+  updatedAt: "07.11.2026 12:55",
+  headline: "P6 oda servisi kapandı: misafir akışı, personel panosu, telefon teyidi, SLA ve A–F kabul zinciri uçtan uca yeşil (19/19 e2e, build temiz). P4 T10 kısmen açık. Sırada P7 ve P8 (Dalga B).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -87,8 +87,9 @@ window.ILERLEME = {
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
         { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "03.11 19:01", note: "T1 veri temeli (c201ba3), T2 çeviri servisi (0a40ea8 + 041d49c), T3 misafir API (72c289e + güvenlik sertleştirmeleri 3fe2959/2195e42/49ce303), T4 misafir sayfası 8 dilde + RTL (acdf2e1) — hepsi incelendi" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 20:10", note: "T5–T8: yaşam döngüsü, havuzdan karşılama, kat akışı, XP ve depo yönetim ekranları. T8 düzeltmeleri 56/56 birim, 3/3 Chromium; tam paket T10 kapsamında.; T10 kabul testi bu ekranları uçtan uca doğruladı" },
-        { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). T10 uçtan uca kabul (mybarFlow.spec.ts) ve VAPID/TRANSLATE_PROVIDER belgeleri tamam." }
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 20:10", note: "T5–T8: yaşam döngüsü, havuzdan karşılama, kat akışı, XP ve depo yönetim ekranları. T8 düzeltmeleri 56/56 birim, 3/3 Chromium; tam paket T10 kapsamında" },
+        { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). T10 kapsamındaki Arapça akış testi ayrı satırda." },
+        { title: "T10 MyBar uçtan uca kabul ve belgeler", status: "active", note: "Arapça akış 1/1 yeşil (33b8cde); depo iptal / kısa gerekçe / eksik ürün kapatma / VAPID tanımsız senaryoları ve 4 minör açık" }
       ]
     },
     {
@@ -109,17 +110,30 @@ window.ILERLEME = {
       code: "P6", title: "Oda servisi", weight: 6,
       summary: "Oda servisi menüsü, misafir akışı, mutfak ekranı, telefon teyidi, SLA",
       tasks: [
-        { title: "Oda servisi menüsü, şema migration'ı ve misafir akışı", status: "active", note: "T3R oda SSE kapsamı ve hız sınırı doğrulandı. T4a sekiz dilde hazır. Misafir menüsü ve durum rotası açık." },
-        { title: "Oda servisi mutfak/servis operasyon ekranı, teyit adımı, teslim takibi", status: "active", note: "T2R oda siparişi Hazırlandı geçişi doğrulandı. Personel panosu ve SLA işleri açık." }
+        { title: "T1 Oda servisi outleti, modül ve oda durumu (mevcut kod)", status: "done", doneAt: "02.11 20:03", note: "getRoomServiceOutlet ve guestState modül eşlemesi (b52da3b)" },
+        { title: "T2R Oda siparişi Hazır geçişi", status: "done", doneAt: "03.11 20:10", note: "9b7dda3" },
+        { title: "T3R Misafir sipariş olayları oda kapsamında, hız sınırı", status: "done", doneAt: "03.11 20:10", note: "299cafc" },
+        { title: "T4a Oda servisi metinleri sekiz dilde", status: "done", doneAt: "03.11 20:10", note: "45d0d24" },
+        { title: "T4b Misafir menü bileşenlerinde mode=room", status: "done", doneAt: "07.11 12:02", note: "28bcec6" },
+        { title: "S0 e2e seed: odalar, menü, oda servisi kullanıcıları", status: "done", doneAt: "07.11 12:07", note: "e926aa3" },
+        { title: "T5a SLA saf yardımcıları ve pano veri katmanı", status: "done", doneAt: "07.11 12:05", note: "44ae315" },
+        { title: "T6b Eskalasyon oda dalı (R-FBM + R-MUS)", status: "done", doneAt: "07.11 12:02", note: "c8f255b" },
+        { title: "T4c Misafir oda servisi kartı, sayfası ve ODA durum adımları", status: "done", doneAt: "07.11 12:08", note: "b85e22b" },
+        { title: "T6c SLA istatistikleri ve Oda Servisi SLA penceresi", status: "done", doneAt: "07.11 12:14", note: "e5770ee" },
+        { title: "T5b Personel panosu: sunucu sayfası ve istemci (beş sütun, SLA sayacı)", status: "done", doneAt: "07.11 12:14", note: "def7254 + 7985d97" },
+        { title: "T4d Misafir oda servisi e2e, ROOM_SERVICE_READY açık", status: "done", doneAt: "07.11 12:16", note: "468f211 + 1270126; 7/7 e2e" },
+        { title: "T6a SLA taraması plan kuralına, aynı işlemde bildirim ve denetim", status: "done", doneAt: "07.11 12:18", note: "efe8761" },
+        { title: "T5c Personel oda servisi e2e (pano, teyit, dahili/doluluk, alım kapalı)", status: "done", doneAt: "07.11 12:22", note: "5877214; 4/4 e2e" },
+        { title: "T7 Kabul zinciri A–F, kapanış düzeltmeleri, belgeler", status: "done", doneAt: "07.11 12:55", note: "90b35f8 (KDS yalnız MASA, SLA ortak yardımcılar, boş menü kapalı) + 380c7b7 (roomServiceChain 7/7); P6 e2e toplam 19/19, next build temiz. Açık: MRD personelinin MR odasını göremediği e2e'de yok (birim testte var)." }
       ]
     },
     {
       code: "P7", title: "Raporlar, e-posta ve izleme", weight: 8,
       summary: "Rapor merkezi (Excel/PDF), SMTP ve zamanlanmış e-postalar, canlı radar",
       tasks: [
-        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" },
-        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "active", note: "Son kontrol 02.11: prototip, plan görevleri tamamlanmadı — bkz. docs/kabul/2026-11-02-tutarlilik-denetimi.md" }
+        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
+        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
+        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" }
       ]
     },
     {
@@ -158,14 +172,15 @@ window.ILERLEME = {
       code: "P8", title: "Kabul, eğitim ve kurulum", weight: 6,
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
-        { title: "Uçtan uca kabul paketi ve yük denemesi (300 misafir + 40 personel)", status: "active" },
-        { title: "Kullanım kılavuzları ve eğitim verisi", status: "pending" },
-        { title: "Kurulum (bulut/on-prem), CI'ın GitHub'da doğrulanması", status: "pending" }
+        { title: "Uçtan uca kabul paketi ve yük denemesi (300 misafir + 40 personel)", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
+        { title: "Kullanım kılavuzları ve eğitim verisi", status: "pending", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
+        { title: "Kurulum (bulut/on-prem), CI'ın GitHub'da doğrulanması", status: "pending", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" }
       ]
     }
   ],
   log: [
-    { at: "07.11 12:40", text: "P4 T10 tamam: Arapça misafir talebi kat sorumlusu zorunlu onayı, Tümünü Karşıla (havuz 98, MYBAR_KARSILAMA 1), canlı misafir durumu ve aynı gün ikinci talebin 409 yanıtı uçtan uca yeşil. Spec, oda seçici sayfasının (/q/[token]) yeni yapısına uyarlandı; misafir durum akışı akış açılışında yeniden okuyor; kat sorumlusu işlem yetkisi varsayılanı kapalı. VAPID ve TRANSLATE_PROVIDER belgeleri ile README güncellendi." },
+    { at: "07.11 12:55", text: "P6 oda servisi kapandı: T2R/T3R/T4a/T4b, S0 seed, T5a/T5b/T5c, T6a/T6b/T6c, T4c/T4d ve T7 indi (9b7dda3 299cafc 45d0d24 28bcec6 e926aa3 44ae315 c8f255b b85e22b e5770ee def7254 7985d97 468f211 1270126 efe8761 5877214 90b35f8 380c7b7). A–F kabul zinciri (teyit kapalı/açık, iptal, SLA, kapsam, Almanca) ile P6 e2e 19/19 ve next build yeşil; KDS yalnız MASA gösterir, SLA hesapları ortak yardımcıda. P4 T10 kısmen açık. P7 ve P8 Dalga B'de." },
+    { at: "07.11 12:40", text: "P4 T10 kısmen (Arapça akış 1/1 yeşil; kalan senaryolar açık): Arapça misafir talebi kat sorumlusu zorunlu onayı, Tümünü Karşıla (havuz 98, MYBAR_KARSILAMA 1), canlı misafir durumu ve aynı gün ikinci talebin 409 yanıtı uçtan uca yeşil. Spec, oda seçici sayfasının (/q/[token]) yeni yapısına uyarlandı; misafir durum akışı akış açılışında yeniden okuyor; kat sorumlusu işlem yetkisi varsayılanı kapalı. VAPID ve TRANSLATE_PROVIDER belgeleri ile README güncellendi." },
     { at: "04.11 03:45", text: "UX tamamlandı (T15, 0d75121). Altı ekran boyutunda 26 sayfa ve misafir menüsü (Türkçe ve Arapça) denetlendi: yatay kaydırma, erişilebilirlik ve dokunma hedefi ihlali yok, 472 test geçti. Depo rapor ve tanım sayfaları açık temaya taşındı, kat panelindeki DND süzgeci geri geldi. Tam Chromium koşusunda 210 testten 209'u geçti; kalan test P4 T10'a ait. Sırada P4 T10." },
     { at: "04.11 02:00", text: "UX T14 üç commit ile indi: XP Başlat menüsü, tepsi durumları, pencere menü çubuğu, klavye kısayolları, depo panosu ve eski görevlerin küçük eksikleri. Matris 126/126 geçti. Son tam chromium koşusunda 206 test geçti, 3 test kaldı, 1 test koşmadı; duvar testi sonra düzeltildi, /kat?filtre=dnd kararı ve P4 T10 testi açık. İnceleme ve T15 sırada." },
     { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },
