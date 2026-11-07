@@ -44,7 +44,7 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 | `UPLOADS_DIR` | hayır | Menü görselleri için kalıcı dizin; boşsa `<uygulama>/uploads`. Uygulama kullanıcısı yazabilmelidir. |
 | `TRUSTED_PROXY_HOPS` | hayır | Uygulamanın önündeki güvenilir vekil sayısı (varsayılan 1); bkz. bölüm 6. |
 | `COOKIE_SECURE` | hayır | Üretimde oturum çerezi varsayılan olarak `secure`'dür. **Yalnız HTTP ile erişilen test ortamları** (IP adresi, sslip.io) için `false` verin; gerçek kurulumda ayarlamayın. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | hayır | E-posta bildirimleri; tanımsızsa e-postalar yalnız günlüğe yazılır. Port varsayılanı 587. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | hayır | **Yedek (eski) SMTP kaynağı.** Yalnız Sistem ayarlarında hiçbir yerde `smtp.host` kayıtlı değilken kullanılır; ayar ekranından host girildiği anda ortam değişkenleri yoksayılır. `SMTP_HOST` ve `SMTP_USER` birlikte gerekir; port varsayılanı 587 (465 → SSL, diğerleri STARTTLS). Kurulumda ayar ekranını kullanın; bkz. [E-posta (SMTP)](#e-posta-smtp-ve-günlük-raporlar). |
 | `DEEPL_AUTH_KEY`, `GEMINI_API_KEY` | hayır | Menü çevirisi sağlayıcıları (DeepL birincil, Gemini yedek); yoksa otomatik çeviri çalışmaz. |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | hayır | MyBar cihaz bildirimlerini açmak için iki anahtarı birlikte ayarlayın. |
 | `VAPID_SUBJECT`, `PUSH_ENDPOINT_ALLOWLIST` | hayır | VAPID iletişim adresi ve gerektiğinde virgülle ayrılmış push sunucusu alan adları. |
@@ -77,6 +77,54 @@ bildiriminde yer alır.
 `TRANSLATE_PROVIDER=gtx` MyBar metinlerini Google'ın resmî olmayan çeviri ucuna gönderir.
 Bu tercihi, misafir notlarının üçüncü tarafa aktarımı otel tarafından onaylandığında etkinleştirin.
 Varsayılan `none` değerinde ürün adları Türkçe kalır ve personel özgün misafir notunu görür.
+
+### E-posta (SMTP) ve günlük raporlar
+
+E-posta ayarları ortam değişkeniyle değil, veritabanında **ayar anahtarları** olarak tutulur ve ekrandan girilir:
+
+1. **Şifreleme anahtarı.** `SETTINGS_SECRET_KEY` (en az 32 baytlık rastgele değer, `openssl rand -base64 48`)
+   uygulamanın ortamında tanımlı olsun; tanımsızsa `SESSION_SECRET` kullanılır. SMTP parolası bu
+   anahtardan türetilen AES-256-GCM ile `enc:v1:…` zarfı olarak saklanır; ekranda, denetim kaydında ve hata
+   metinlerinde görünmez. Anahtar kaybolur veya değişirse parola açılamaz ve **yeniden girilmelidir**; anahtarı
+   yedekleyin.
+2. **SMTP ayarları.** *Denetim Masası → QR Menü ve Sistem → E-posta* grubu (yalnız CR-SYS yetkisi olan roller):
+   `smtp.host`, `smtp.port`, `smtp.security` (Şifresiz / STARTTLS / SSL-TLS), `smtp.user`, `smtp.password`,
+   `smtp.fromEmail`, `smtp.fromName`. Kullanıcı ve parola birlikte girilir (ikisi de boş = kimlik doğrulamasız
+   sunucu); yalnız biri doluysa ayar geçersiz sayılır. Parola alanı kayıttan sonra `••••••••` ile maskelenir; boş
+   bırakıp kaydetmek (veya *Değeri temizle*) parolayı siler.
+3. **Kapsam ve öncelik.** Sistem satırı tüm otellere uygulanır. Bir otel kapsamında **kendi `smtp.host`** değerini
+   girerse yalnız kendi satırlarını kullanır: sistem kullanıcı adı ve parolası o otelin sunucusuna **asla** gönderilmez
+   (yalnız gönderen adı/adresi sistemden devralınabilir). Çözüm sırası: otel satırı (host varsa) → sistem satırı →
+   yedek `SMTP_*` ortam değişkenleri (yalnız hiçbir yerde `smtp.host` yoksa).
+4. **Test.** *Denetim Masası → E-posta*: kapsamı seçip **Test gönder**; ileti oturum açan kullanıcının kendi
+   adresine gider (hesapta e-posta tanımlı olmalı). Sonuç panelde ve gönderim günlüğünde (tür *Test*) görünür; parola
+   hiçbir yerde yazılmaz. Dakikada 5 deneme sınırı vardır.
+5. **Alıcı koşulları.** Rapor e-postası almak için: otelde e-posta ana anahtarı ve ilgili tür anahtarı (rapor/uyarı)
+   açık, sistem ayarları `email.reportEnabled` / `email.alertEnabled` açık, kullanıcıda **e-posta bildirimi
+   (`emailOptIn`)** işaretli, geçerli adres ve otelde *Minibar Raporları* (MB-RAP) için **R** yetkisi. Koşullar
+   gönderim anında yeniden denetlenir; değişmişse satır *İptal* olur. Açık rıza KVKK gereği kullanıcıya aittir:
+   toplu açmayın.
+
+**Zamanlanmış işler** (pg-boss, `Europe/Nicosia`; `MERIT_DISABLE_JOBS` üretimde yoksayıldığından her zaman çalışır):
+
+| İş | Zaman | Görev |
+| --- | --- | --- |
+| `mail.process` | her dakika | Sırada bekleyen e-postaları atomik olarak (`SKIP LOCKED`) alıp gönderir; geçici hatada 60 sn’den başlayıp her denemede ikiye katlanan (en çok 30 dk) beklemeyle en çok 5 kez dener, kalıcı hata veya 5. başarısızlıkta satır *Hata* olur ve radara bildirilir |
+| `mail.daily-gorev` | 08:00 | Önceki iş gününün **görev raporunu** (Excel ekli) yetkili alıcılar için kuyruğa alır |
+| `mail.daily-sarfiyat` | 08:05 | Önceki iş gününün **sarfiyat raporunu** (Excel + PDF ekli) kuyruğa alır |
+| `mail.upload-alert` | 10:00 ve 18:00 | Doluluk Excel dosyası yüklenmemiş oteller için eksik yükleme uyarısı |
+| `mail.purge` | 03:40 | 90 günden eski gönderim kayıtlarını siler (saklama süresi) |
+
+Alıcı başına tek ileti üretilir (`şablon:otel:gün:kullanıcı` anahtarı); aynı gün işin yeniden çalışması tekrar
+göndermez. Eski `minibar.daily-report` ve `minibar.consumption-report` zamanlamaları her açılışta kaldırılır;
+eski sürümden güncellerken ek bir işlem gerekmez. Başarısız bir satırı yönetici *Denetim Masası → E-posta*
+ekranından **Tekrar kuyruğa al** ile yeniden başlatır. Eski göç edilen `email_ayarlari` verisi pasif arşivdir;
+`EmailSetting` tablosu kullanılmaz, `smtp.*` ayarları elle girilir.
+
+**Rapor dışa aktarma bağımlılığı.** PDF çıktısı `merit/assets/fonts/` altındaki DejaVu yazı tiplerini ister
+(Türkçe karakterler için). Derleme bunları `outputFileTracingIncludes` ile izlenen çıktıya ekler; elle kopyaladığınız
+bir dağıtımda `assets/fonts/` dizininin uygulamayla birlikte bulunduğundan emin olun. Raporların gün sınırları
+`TZ=Europe/Nicosia` iş gününe göredir.
 
 ## 4. Derleme, migrasyon ve seed
 
@@ -256,7 +304,7 @@ güncellenmez.
    Tanımlamalar → Kullanıcılar'dan sıfırlayın. Pasif taşınan `superadmin` hesaplarını gerekirse etkinleştirin.
 3. **QR kodları:** eski biçimli (6 haneli) token'lı odalar için Minibar Tanımları › Oda QR'dan yeni QR üretip basın;
    eski QR'lar bu arada çalışmaya devam eder.
-4. **E-posta:** SMTP parolası taşınmaz; e-posta ayarında parolayı yeniden girip ayarı etkinleştirin.
+4. **E-posta:** SMTP parolası taşınmaz; *Denetim Masası → QR Menü ve Sistem → E-posta* grubunda `smtp.*` ayarlarını (parola dâhil) yeniden girin, *E-posta* ekranından test gönderin ve kullanıcıların `emailOptIn` onayını kontrol edin (bkz. E-posta bölümü).
 5. Bildirimler yalnız son 30 günü taşır; kesme tarihi raporda yazar.
 6. Havuz (otel zimmet stoku) bakiyelerini depo sorumlusuyla bir ürün örneğinde karşılaştırın; `HAVUZ_HAREKET_FARKI`
    uyarıları eski hareket geçmişinin eksik olduğu satırlardır (bakiye doğrudur, geçmiş değildir).

@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 14:30",
-  headline: "P6 oda servisi kapandı: misafir akışı, personel panosu, telefon teyidi, SLA ve A–F kabul zinciri uçtan uca yeşil (19/19 e2e, build temiz). P4 T10 kısmen açık. Sırada P7 ve P8 (Dalga B).",
+  updatedAt: "07.11.2026 15:25",
+  headline: "P7 raporlar ve e-posta kapandı: Rapor Merkezi (16 rapor, Excel/PDF), SMTP ayarı ve test gönderimi, 08:00/08:05 günlük e-postalar, Komuta Merkezi KPI çipleri ve rapor/e-posta kabul zinciri. P4 T10 kısmen açık. Sırada P8 (Kabul, eğitim, kurulum).",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -131,9 +131,18 @@ window.ILERLEME = {
       code: "P7", title: "Raporlar, e-posta ve izleme", weight: 8,
       summary: "Rapor merkezi (Excel/PDF), SMTP ve zamanlanmış e-postalar, canlı radar",
       tasks: [
-        { title: "Rapor merkezi: tüketim, zimmet, görev, DND, MyBar ve Anormal Tüketim raporları", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
-        { title: "SMTP motoru, 10:00 doluluk ikazı ve 09:00 günlük özet e-postaları", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
-        { title: "Komuta Merkezi canlı radar ve KPI genişletmeleri, PDF/Excel dışa aktarım", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" }
+        { title: "T1 Şema: alıcı teslim kaydı, SMTP sır kutusu, rapor yetkileri", status: "done", doneAt: "14:19", note: "a09bbac + 1edd214 (güvenlik taraması): EmailLog genişletmesi, AES-GCM sır kutusu (enc:v1), MB-RAP/QM-RAP/QS-RAP R yetkileri; maske kısayolu gerçek yazma kapılarından geçer" },
+        { title: "T7 E-posta çekirdeği: SMTP çözümü, alıcı politikası, atomik kuyruk, test gönderimi", status: "done", doneAt: "14:30", note: "1be8528 + b5f29f2 (güvenlik taraması): otel/sistem/ortam SMTP sırası, SKIP LOCKED kuyruk, sınıflı yeniden deneme, test gönderimi; otel kendi sunucusunu seçince sistem kimlik bilgileri devralınmaz" },
+        { title: "T2 Rapor motoru: kayıt defteri, kapsam çözümü, XLSX/PDF çiziciler, dışa aktarma ucu", status: "done", doneAt: "14:30", note: "64056c2: otel/self-servis/outlet kapsamı, 366 gün sınırı, /api/reports/[id]/export, dakikada 10 istek, REPORT_EXPORT denetim kaydı" },
+        { title: "T9 Eksik yükleme uyarısı, E-posta paneli ve kuyruk zamanlaması", status: "done", doneAt: "14:38", note: "6ef7836: 10:00/18:00 uyarı, Denetim Masası → E-posta (kaynak, Test gönder, son 50 kayıt, Tekrar kuyruğa al), mail.process dakikalık, mail.purge 03:40" },
+        { title: "T5 Menü, sipariş, oda servisi SLA ve oturum raporları", status: "done", doneAt: "14:39", note: "474c012: menu-durum, qr-tarama, siparis-ozet/-sure/-urun, rs-sla, oturum" },
+        { title: "T3 Minibar raporları I: tüketim, gün sonu, zimmet durumu ve hareketleri", status: "done", doneAt: "14:39", note: "b1bae39: tuketim (altı kırılım), gun-sonu (self-servis), zimmet-durum, zimmet-hareket" },
+        { title: "T4 Minibar raporları II: görev performansı, DND, MyBar, doluluk", status: "done", doneAt: "14:43", note: "5aede97: gorev-performans, dnd, mybar, doluluk" },
+        { title: "T6 Rapor Merkezi penceresi ve mobil Raporlar sekmesi", status: "done", doneAt: "14:52", note: "85cc031: core.rapor, katalog, ortak filtreler, grid ve toplamlar, Excel/PDF indirme" },
+        { title: "T10 Radar KPI: açık stok talebi, bugünkü tüketim, ağırlıklı görev tamamlama", status: "done", doneAt: "14:54", note: "6df7a31 + e011e3d (güvenlik taraması): kapsamlı KPI API; rapor arama listeleri katalog kapsamına, kişiler yalnız FULL yetkili otellerde" },
+        { title: "T8 08:00 görev ve 08:05 sarfiyat günlük e-postaları", status: "done", doneAt: "14:55", note: "d288b20: alıcı başına tek ileti, Excel/PDF ekler, eski minibar cronları kaldırıldı" },
+        { title: "T11 Komuta Merkezi KPI çipleri, kapsam seçici ve mobil İzleme", status: "done", doneAt: "14:58", note: "247ab0c + 5395053 (güvenlik taraması): SSE + 60 sn yedek yenileme; gönderim anında alıcı yetkisi ve adresi yeniden doğrulanır, değişmişse IPTAL" },
+        { title: "T12 Kabul: rapor ve e-posta zinciri, belgeler", status: "done", doneAt: "15:25", note: "fa3ff24 (reportsChain + mail e2e, güvenlik düzeltmesi birim testleri, ölü centralReports kaldırıldı) + belgeler: kurulum.md E-posta bölümü, README P7" }
       ]
     },
     {
@@ -179,6 +188,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "07.11 15:25", text: "P7 raporlar ve e-posta kapandı (T1–T12: a09bbac 1be8528 64056c2 6ef7836 474c012 b1bae39 5aede97 85cc031 6df7a31 d288b20 247ab0c ve güvenlik düzeltmeleri 1edd214 b5f29f2 e011e3d 5395053; kabul fa3ff24). Rapor Merkezi 16 yerleşik rapor, Excel/PDF; SMTP ayarları sırlı saklanır, Test gönder, günlük görev/sarfiyat e-postaları ve Tekrar kuyruğa al uçtan uca doğrulandı. Belgeler: docs/kurulum.md E-posta bölümü, merit/README P7." },
     { at: "07.11 14:30", text: "P6 doğrulama düzeltme turu: rehber hedefleri ve sürekli animasyon kuralı düzeltildi (fd2b4c4), oda servisi panosu ve depo sayfalarının erişilebilirliği düzeltildi (84ba32c), e2e özel durumları güncellendi (96197e4). Altı görünümlü matriste 483/492 geçti (kalan: depo tanımlar dokunma hedefleri ve kat oda kontrol alt çubuk çakışması); Chromium 223 geçti, 3 koşu hatası (bildirim anahtarı VAPID anahtarı yok, duvar ekranı etiket uyumsuzluğu, ortak veritabanı bağlantı sınırı)." },
     { at: "07.11 12:55", text: "P6 oda servisi kapandı: T2R/T3R/T4a/T4b, S0 seed, T5a/T5b/T5c, T6a/T6b/T6c, T4c/T4d ve T7 indi (9b7dda3 299cafc 45d0d24 28bcec6 e926aa3 44ae315 c8f255b b85e22b e5770ee def7254 7985d97 468f211 1270126 efe8761 5877214 90b35f8 380c7b7). A–F kabul zinciri (teyit kapalı/açık, iptal, SLA, kapsam, Almanca) ile P6 e2e 19/19 ve next build yeşil; KDS yalnız MASA gösterir, SLA hesapları ortak yardımcıda. P4 T10 kısmen açık. P7 ve P8 Dalga B'de." },
     { at: "07.11 12:40", text: "P4 T10 kısmen (Arapça akış 1/1 yeşil; kalan senaryolar açık): Arapça misafir talebi kat sorumlusu zorunlu onayı, Tümünü Karşıla (havuz 98, MYBAR_KARSILAMA 1), canlı misafir durumu ve aynı gün ikinci talebin 409 yanıtı uçtan uca yeşil. Spec, oda seçici sayfasının (/q/[token]) yeni yapısına uyarlandı; misafir durum akışı akış açılışında yeniden okuyor; kat sorumlusu işlem yetkisi varsayılanı kapalı. VAPID ve TRANSLATE_PROVIDER belgeleri ile README güncellendi." },

@@ -195,6 +195,54 @@ için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
   E kapsam/KDS/409, F `?lang=de`); SLA saati `tests/e2e/helpers/run-rs-jobs.ts <şimdi-ISO>` ile ilerletilir.
   Ayarlar için `docs/kurulum.md` › "Oda Servisi".
 
+## P7 Rapor Merkezi ve e-posta
+
+- **Rapor Merkezi** (`core.rapor`, ekran `CR-RAP`; mobilde *Raporlar* sekmesi): yetkili olunan raporlar modül
+  gruplarında listelenir; ortak filtreler otel(ler), tarih (Bugün, Dün, Bu hafta, Bu ay, Son 30 gün, Özel; en çok 366 gün),
+  outlet ve rapora özgü alanlardır. Sonuç tabloda (500 satıra kadar, fazlası "kesildi" notuyla) ve toplam satırıyla gelir;
+  **Excel** (50 000 satır) ve **PDF** (2 000 satır) dışa aktarılır. Yetki otel bazında çözülür: `R` = tam, yalnız `V`
+  ve rapor "self-servis" ise yalnız çağıranın kendi satırları (örn. kat sorumlusunun Gün Sonu raporu); OUTLET/MUTFAK
+  oturumları yalnız outlet kapsamlı raporları ve yalnız oturum outletini görür.
+- **Dışa aktarma ucu:** `GET /api/reports/<anahtar>/export?format=xlsx|pdf&hotelIds=a,b&from=yyyy-MM-dd&to=yyyy-MM-dd[&outletId=…][&p.<alan>=…]`;
+  oturum şart, kullanıcı başına dakikada 10 istek, her indirme denetim günlüğüne `REPORT_EXPORT` yazar. PDF yazı tipleri
+  `assets/fonts/` altındadır.
+- **Rapor anahtarları ve ekran kodları** (16 yerleşik rapor, `src/modules/reporting/server/reports/`):
+
+  | Anahtar | Rapor | Ekran |
+  | --- | --- | --- |
+  | `merkez-ozet` | Otel Özeti | `CR-RAP` |
+  | `oturum` | Oturumlar (self-servis) | `CR-ONL` |
+  | `tuketim` | Minibar Tüketim (ürün, oda, kat, personel, gün, otel kırılımı) | `MB-RAP` |
+  | `gun-sonu` | Gün Sonu (self-servis) | `MB-RAP` |
+  | `zimmet-durum` | Zimmet Durumu (anlık, kritik stok) | `MB-RAP` |
+  | `zimmet-hareket` | Zimmet Hareketleri | `MB-RAP` |
+  | `gorev-performans` | Görev Performansı | `MB-RAP` |
+  | `dnd` | DND Raporu | `MB-RAP` |
+  | `mybar` | MyBar Talepleri | `MB-RAP` |
+  | `doluluk` | Doluluk Raporu | `MB-RAP` |
+  | `menu-durum` | Menü Durumu | `QM-RAP` |
+  | `qr-tarama` | QR Tarama | `QM-RAP` |
+  | `siparis-ozet` | Sipariş Özeti | `QS-RAP` |
+  | `siparis-sure` | Sipariş Süreleri | `QS-RAP` |
+  | `siparis-urun` | Sipariş Ürünleri | `QS-RAP` |
+  | `rs-sla` | Oda Servisi SLA | `RO-SLA` |
+
+- **Komuta Merkezi:** KPI çipleri (açık stok talebi, bugünkü tüketim, ağırlıklı görev tamamlama vb.) kapsam seçiciyle
+  (sistem rolleri tek otel veya toplam arasında seçer), SSE ile canlı, 60 sn'de bir yedek yenilemeyle gelir; mobilde *İzleme* sekmesindedir.
+- **E-posta paneli** (*Denetim Masası → E-posta*, `CR-SYS`): SMTP kaynağı (otel / sistem / ortam), **Test gönder**, son
+  50 gönderim (durum, tür, deneme sayısı, hata) ve hatalı satırlar için **Tekrar kuyruğa al**. SMTP ayarları
+  *QR Menü ve Sistem → E-posta* grubundaki `smtp.*` anahtarlarıdır; parola `SETTINGS_SECRET_KEY` ile şifreli saklanır.
+  Kurulum ve zamanlama tablosu (`mail.process` dakikalık, `mail.daily-gorev` 08:00, `mail.daily-sarfiyat` 08:05,
+  `mail.upload-alert` 10:00/18:00, `mail.purge` 03:40) için `docs/kurulum.md` › "E-posta (SMTP) ve günlük raporlar".
+- **`emailOptIn` ve KVKK:** otomatik raporlar yalnız e-posta onayı (`emailOptIn`) işaretli, geçerli adresi olan ve
+  `MB-RAP` için `R` yetkisi bulunan kullanıcılara gider; koşullar gönderim anında yeniden denetlenir.
+- **Kabul zinciri:** `tests/e2e/reportsChain.spec.ts` (Rapor Merkezi, Excel/PDF, rol kapsamları, KPI çipleri) ve
+  `tests/e2e/mail.spec.ts` (SMTP ayarı, test gönder, günlük rapor, tekrar kuyruğa alma). e2e süreci uygulama
+  sunucusundan ayrı olduğundan SMTP taslağı spec içinde çalışır, kuyruk
+  `npx tsx tests/e2e/helpers/run-mail-jobs.ts [--template=GOREV|SARFIYAT|ALL] [--only=enqueue|process]` ile sürülür;
+  e2e sunucusunda `SETTINGS_SECRET_KEY` (yoksa `SESSION_SECRET`) tanımlı olmalıdır. Tohum bayrakları `SEED_REPORTS=1` (tüketim işlemleri) ve `SEED_MAIL=1`
+  (opt-in müdür, opt-out depo sorumlusu, otel e-posta anahtarları).
+
 ## Komutlar
 
 | Komut | Ne yapar |
@@ -226,7 +274,8 @@ için `docs/kurulum.md` › "Veri göçü (minibarlatest)".
 - Web Push e2e testi (`pushSubscribe.spec.ts`) sunucuda VAPID anahtarı ister. Koşu için geçici
   anahtar üretip yalnız o sunucu sürecine verin, repoya ve `.env`'e yazmayın:
   `npx web-push generate-vapid-keys --json` → `VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=…
-  VAPID_SUBJECT=mailto:e2e@example.test npx next start -p <port>`.
+  VAPID_SUBJECT=mailto:e2e@example.test npx next start -p <port>`. Sunucuyu Playwright başlatıyorsa
+  (`webServer`, mevcut sunucu yoksa) `playwright.config.ts` anahtar tanımlı değilse kendisi geçici bir çift üretir.
 
 ### Uçtan uca (e2e) testler hakkında
 
