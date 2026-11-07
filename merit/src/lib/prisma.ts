@@ -15,6 +15,7 @@ function createClient(): PrismaClient {
 
 export const prisma: PrismaClient = globalThis.__prisma ?? createClient();
 
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
-}
+// Next's production route/instrumentation bundles may evaluate this module independently.
+// Keep the process-wide client in production too: DB_POOL_MAX must cap one pool per process,
+// rather than a new pool for each bundle that imports Prisma.
+globalThis.__prisma = prisma;
