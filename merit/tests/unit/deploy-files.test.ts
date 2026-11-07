@@ -113,8 +113,8 @@ describe("deploy/scripts", () => {
     expect(t).toMatch(/-mtime/);
     expect(t).toContain("merit-uploads-");
     // Parola komut satirina degil ortam degiskenine gider (argv /proc ile okunabilir, ortam okunamaz).
-    expect(t).not.toMatch(/--dbname=/);
     expect(t).toContain("export PGPASSWORD=");
+    expect(t).toMatch(/DB_URL="\$\{_scheme\}:\/\/\$\{_userinfo\}@/);
   });
 
   it("restore.sh refuses the production database without --force", () => {

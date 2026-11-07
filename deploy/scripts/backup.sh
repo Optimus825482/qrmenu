@@ -6,18 +6,19 @@ set -euo pipefail
 
 : "${DATABASE_URL:?DATABASE_URL tanimli olmali}"
 DB_URL="${BACKUP_DATABASE_URL:-$DATABASE_URL}"
-# URL hicbir zaman komut satirina yazilmaz (ps/proc ile okunabilir): parcalanip PG* ortam degiskenlerine aktarilir.
-# Bicim: postgres[ql]://kullanici[:parola]@sunucu[:port]/veritabani[?...]
-_rest="${DB_URL#*://}"; _rest="${_rest%%\?*}"
-_userinfo="${_rest%%@*}"; _hostpart="${_rest#*@}"
-if [[ "$_rest" != *@* ]]; then _userinfo=""; _hostpart="$_rest"; fi
+# Parola komut satirina yazilmaz (ps/proc ile okunabilir): URL'den yalniz parola cikarilip PGPASSWORD'e alinir;
+# kalan URL (sslmode, sslrootcert gibi sorgu parametreleri dahil) oldugu gibi --dbname ile gecer.
 _urldecode() { local v="${1//+/ }"; printf '%b' "${v//%/\\x}"; }
-export PGUSER="$(_urldecode "${_userinfo%%:*}")"
-if [[ "$_userinfo" == *:* ]]; then export PGPASSWORD="$(_urldecode "${_userinfo#*:}")"; fi
-_hp="${_hostpart%%/*}"; export PGDATABASE="${_hostpart#*/}"
-export PGHOST="${_hp%%:*}"
-if [[ "$_hp" == *:* ]]; then export PGPORT="${_hp#*:}"; fi
-unset _rest _userinfo _hostpart _hp DB_URL
+_scheme="${DB_URL%%://*}"; _rest="${DB_URL#*://}"
+if [[ "$_rest" == *@* ]]; then
+  _userinfo="${_rest%%@*}"; _hostpart="${_rest#*@}"
+  if [[ "$_userinfo" == *:* ]]; then
+    export PGPASSWORD="$(_urldecode "${_userinfo#*:}")"
+    _userinfo="${_userinfo%%:*}"
+  fi
+  DB_URL="${_scheme}://${_userinfo}@${_hostpart}"
+fi
+unset _scheme _rest _userinfo _hostpart
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/merit}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 UPLOADS_DIR="${UPLOADS_DIR:-/var/lib/merit/uploads}"
@@ -27,7 +28,7 @@ mkdir -p "$BACKUP_DIR"
 umask 077
 
 dump="$BACKUP_DIR/merit-$STAMP.dump"
-pg_dump -Fc -f "$dump.tmp"
+pg_dump -Fc --dbname="$DB_URL" -f "$dump.tmp"
 pg_restore --list "$dump.tmp" > /dev/null
 mv "$dump.tmp" "$dump"
 echo "dump: $dump ($(du -h "$dump" | cut -f1))"
