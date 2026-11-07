@@ -4,7 +4,7 @@ import path from "node:path";
 import { env } from "@/lib/env";
 import { DomainError } from "@/lib/result";
 
-export const UPLOADS_ROOT = env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+export const UPLOADS_ROOT = process.env.UPLOADS_DIR ?? env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
 
 export const UPLOAD_CONTENT_TYPES: Record<string, string> = {
   ".webp": "image/webp",
@@ -25,7 +25,7 @@ function resolveInside(relPath: string): string {
   ) {
     throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
   }
-  const root = path.resolve(UPLOADS_ROOT);
+  const root = path.resolve(process.env.UPLOADS_DIR ?? UPLOADS_ROOT);
   const full = path.resolve(root, normalized);
   if (!full.startsWith(root + path.sep)) throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
   return full;

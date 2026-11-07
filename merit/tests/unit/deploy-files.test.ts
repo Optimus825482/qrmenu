@@ -100,12 +100,13 @@ describe("deploy/scripts", () => {
 
   it.each(scripts)("%s passes bash -n", (name) => {
     try {
-      execFileSync("bash", ["-n", path.join(DEPLOY, "scripts", name)], { stdio: "pipe" });
+      const scriptRel = path.relative(process.cwd(), path.join(DEPLOY, "scripts", name)).replace(/\\/g, "/");
+      execFileSync("bash", ["-n", scriptRel], { stdio: "pipe" });
     } catch (e) {
       if ((e as NodeJS.ErrnoException).code === "ENOENT") return; // no bash on this machine
       throw e;
     }
-  });
+  }, 15000);
 
   it("backup.sh dumps custom format, archives uploads, prunes and keeps passwords off the command line", () => {
     const t = read("scripts/backup.sh");

@@ -42,6 +42,21 @@
 4. **P8 kapanış doğrulaması** (tek ajan, temiz DB `merit_<ad>_e2e`): `npm run check`, `migrate diff` boş, `next build`, chromium + altı matris + `npm run test:kabul`; MyBar 5 spec'i bu koşuda tam yeşil olmalı (7.11'de bağlantı doygunluğu yüzünden doğrulanamadı). Sonuç `docs/kabul/2026-11-0X-p8-kabul.md`; `ilerleme-data.js` (+`merit/public/`) P8 satırları `done`.
 5. Bittiğinde iş durur; `main` birleştirme ve GitHub push Erkan'da; Opus incelemeleri Pazartesi Fable'da.
 
+### Antigravity'nin tamamladığı ve doğruladığı (7 Kasım 2026, 18:30 — commit'li, yeşil)
+- **P8 T4 Yük Denemesi:** `384a55b` — `feat(p8): yük denemesi — yerel smoke, ölçekli limiter ve pg havuz sınırlaması (T4)`. İlgili birim testleri (25/25) + yük testleri (5/5) yeşil. `DB_POOL_MAX=20` `deploy/env.production.example`'a yazıldı.
+- **P8 T6 Kılavuzlar:** `f744542` — `docs(p8): rol kılavuzları, otomatik ekran görüntüleri ve duyarlı stok kılavuz testi (T6)`. 7 rol kılavuzu, 38 PNG ekran görüntüsü, `playwright.guide.config.ts`, proje ayrımı `guides.test.ts` ve `--list` ile korundu.
+- **P8 T8 CI + Teslim:** `d341c0c` — `ci(p8): bağımsız işler, kabul izlenebilirlik haritası ve teslim kontrol listesi (T8)`. `.github/workflows/ci.yml` bağımsız işler, izlenebilirlik haritası K01–K10, `ci-workflow.test.ts` (6/6) yeşil.
+- **P8 Kapanış Doğrulaması:**
+  - `npm run check`: lint 0 hata (17 uyarı), typecheck temiz, vitest 246 dosya / 2583 test yeşil (`uploads.ts` dinamik UPLOADS_DIR ve `deploy-files.test.ts` göreli bash yolu Windows uyumluluğu sağlandı).
+  - `prisma migrate deploy` ile `20261107090000_p7_rapor` uygulandı; `prisma migrate diff` boş ("No difference detected", exit 0).
+  - `next build`: Turbopack üretimi derleme hatasız oluşturuldu (exit 0); `tsconfig.json` bozulmadı.
+  - `npm run test:kabul`: K01–K10 kabul zinciri 68/68 yeşil (4.0 dk).
+  - MyBar 5'li spec paketi: 17/17 yeşil (53.4 sn) (`mybarAcceptance`, `mybarAdmin`, `mybarFlow`, `mybarGuest`, `mybarStaff`; `mybarFlow:26` dahil tüm akışlar yeşil).
+  - UX altı görünüm matrisi (`npm run test:e2e:matrix`): 492/492 yeşil, 30 atlandı (10.6 dk).
+  - Geçici veritabanı `merit_antigravity_e2e` ve 3010 sunucusu kapatıldı. Rapor: `docs/kabul/2026-11-07-p8-kabul.md`.
+  - `ilerleme-data.js` ve `merit/public/ilerleme-data.js` P8 görevleri `done` olarak güncellendi.
+- **Durum:** P0–P8, UX ve Canlı Radar geliştirme fazlarının tümü bitti. Pazartesi: Fable Opus incelemeleri + §6 son kapılar; `main` birleştirme ve GitHub push yalnız Erkan'da.
+
 ### YAPMAMASI GEREKENLER (Antigravity — bağlayıcı)
 - `git add -A` / `git add -u` / `git stash` / `git checkout <dal>` / `git reset` / `git clean` YOK; yalnız kendi dosyalarını `git add <yol>` ile sahnele. Codex'in commit'siz işini **silme, üzerine yazma, geri alma**; önce doğrula, sonra commit'le.
 - `merit/tools/load/node_modules`, `merit/.tmp/`, `.next*`, `test-results*`, ekran görüntüsü dışındaki ikili dosyalar commit'lenmez; `docs/kilavuz/img/*.png` dışında büyük dosya ekleme.
