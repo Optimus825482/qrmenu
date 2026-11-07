@@ -7,6 +7,43 @@ import type { RadarConfig, RadarEvent, RadarSnapshot } from "../../types";
 /** Virtual length of the script (minutes); at the default 10x speed it plays for DEMO_SPAN_MIN / 10 minutes. */
 export const DEMO_SPAN_MIN = 30;
 export const DEMO_SPEED = 10 as const;
+/** The module a focused scenario is about. */
+export type DemoFocus = "MINIBAR" | "OUTLET" | "ROOM_SERVICE";
+export const DEMO_FOCUS_LABELS: Record<DemoFocus, string> = {
+  MINIBAR: "Minibar",
+  OUTLET: "Outlet (QR Sipariş)",
+  ROOM_SERVICE: "Oda Servisi",
+};
+/** Short module name for the DEMO badge. */
+export const DEMO_FOCUS_SHORT: Record<DemoFocus, string> = {
+  MINIBAR: "Minibar",
+  OUTLET: "Outlet",
+  ROOM_SERVICE: "Oda Servisi",
+};
+/** A focused script runs at half the virtual time, so its first events come within seconds. */
+const FOCUS_TIME_SCALE = 0.5;
+/** Virtual length of a focused script (minutes). */
+const FOCUS_SPAN_MIN = 20;
+/** Share of events of the other modules kept next to the focused one (at most). */
+const FOCUS_BACKGROUND_SHARE = 0.25;
+/** Event types that stand alone (no earlier event needed), so thinning the background never breaks a lifecycle. */
+const BACKGROUND_TYPES: ReadonlySet<string> = new Set([
+  "presence",
+  "mail.failed",
+  "room.scanned",
+  "table.scanned",
+  "stock.level",
+  "task.generated",
+  "upload.status",
+]);
+
+function moduleOf(e: RadarEvent): DemoFocus | null {
+  if (e.layer === "MINIBAR") return "MINIBAR";
+  if (e.layer === "ODA_SERVISI") return "ROOM_SERVICE";
+  if (e.layer === "SIPARIS" || e.type === "printer.health") return "OUTLET";
+  return null;
+}
+
 /** Slack after the last event so the final state stays on screen for a moment. */
 const TAIL_SEC = 20;
 
@@ -31,6 +68,8 @@ export type DemoOptions = {
   seed?: number;
   /** The loaded live snapshot; its ids are reused. Absent: a small built-in fake hotel. */
   base?: RadarSnapshot | null;
+  /** Weights about 80% of the events to one module; a few standalone events of the others stay as background. */
+  focus?: DemoFocus;
 };
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
@@ -229,8 +268,11 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
   const rng = createRng(opts.seed ?? 20261107);
   const snapshot = opts.base ? calmSnapshot(opts.base, hotelId, startMs) : fakeDemoSnapshot(hotelId, startMs);
   const events: RadarEvent[] = [];
+  const { focus } = opts;
+  const timeScale = focus ? FOCUS_TIME_SCALE : 1;
   let seq = 0;
-  const add = (sec: number, draft: Draft): void => {
+  const add = (virtualSec: number, draft: Draft): void => {
+    const sec = virtualSec * timeScale;
     seq += 1;
     events.push({
       ...draft,
@@ -274,8 +316,8 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
     add(14, { type: "upload.status", layer: "MINIBAR", kind: "DOLULUK", status: "TAMAMLANDI" });
     add(16, { type: "task.generated", layer: "MINIBAR", date: snapshot.businessDate, itemCount: Math.min(rooms.length, 24) });
 
-    // Nine rooms checked across the first twenty minutes: scan, then the check with its task.
-    for (let i = 0; i < 9; i++) {
+    // Nine rooms (fourteen when Minibar is the focus) checked across the first twenty minutes: scan, then the check with its task.
+    for (let i = 0; i < (focus === "MINIBAR" ? 14 : 9); i++) {
       const r = room(i);
       const t = 30 + i * 120 + jit(40);
       add(t, { type: "room.scanned", layer: "MINIBAR", roomId: r.roomId });
@@ -341,8 +383,8 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
       const waiter = (i: number) => actor(i);
       const base = oi * 25;
 
-      // Seven table orders walk the whole kitchen path; two of them also print.
-      for (let i = 0; i < Math.min(7, tables.length); i++) {
+      // Seven table orders (ten when Outlet is the focus) walk the whole kitchen path; two of them also print.
+      for (let i = 0; i < Math.min(focus === "OUTLET" ? 10 : 7, tables.length); i++) {
         const tb = tables[i];
         const orderId = `demo-order-${oi}-${i}`;
         const no = ++orderNo;
@@ -398,19 +440,23 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
     }
   }
 
-  // ───────── ODA_SERVISI: three orders, one slides from WARN to BREACH ─────────
-  const rsRooms = (mb?.floors.flatMap((f) => f.rooms) ?? []).filter((r) => r.occupied);
+  // ───────── ODA_SERVISI: three orders (ten when it is the focus), some slide from WARN to BREACH ─────────
+  const allRooms = mb?.floors.flatMap((f) => f.rooms) ?? [];
+  // Occupancy is often not loaded yet; a Room Service demo then uses any room rather than showing nothing.
+  const occupiedRooms = allRooms.filter((r) => r.occupied);
+  const rsRooms = occupiedRooms.length === 0 && focus === "ROOM_SERVICE" ? allRooms : occupiedRooms;
   if (L.roomService && rsRooms.length > 0) {
-    const rs = shuffle(rsRooms).slice(0, 3);
+    const pool = shuffle(rsRooms);
+    const rs = focus === "ROOM_SERVICE" ? Array.from({ length: 10 }, (_, i) => pool[i % pool.length]) : pool.slice(0, 3);
     let no = 4400;
     rs.forEach((r, i) => {
       const orderId = `demo-rs-${i}`;
       const orderNo = ++no;
-      const t = 100 + i * 330 + jit(40);
+      const t = 100 + i * (focus === "ROOM_SERVICE" ? 150 : 330) + jit(40);
       const common = { layer: "ODA_SERVISI" as const, orderId, orderNo, kind: "ODA_SERVISI" as const, roomId: r.roomId };
       add(t, { type: "order.status", ...common, to: "TEYIT_BEKLIYOR" });
       add(t + 45, { type: "order.status", ...common, from: "TEYIT_BEKLIYOR", to: "ONAYLANDI" });
-      if (i === 0) {
+      if (i % 4 === 0) {
         add(t + 700, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "WARN" });
         add(t + 1000, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "BREACH" });
         add(t + 1150, { type: "order.status", ...common, from: "ONAYLANDI", to: "YOLDA" });
@@ -442,9 +488,19 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
   add(480, { type: "mail.failed", layer: "SISTEM", kind: "RAPOR" });
   add(1180, { type: "mail.failed", layer: "SISTEM", kind: "DOLULUK" });
 
+  if (focus) {
+    const own = events.filter((e) => moduleOf(e) === focus);
+    const background = events.filter((e) => moduleOf(e) !== focus && BACKGROUND_TYPES.has(e.type));
+    const budget = Math.floor(own.length * FOCUS_BACKGROUND_SHARE);
+    const stride = Math.max(1, background.length / Math.max(1, budget));
+    const kept = new Set<RadarEvent>(own);
+    for (let k = 0; k < budget && Math.floor(k * stride) < background.length; k++) kept.add(background[Math.floor(k * stride)]);
+    events.splice(0, events.length, ...events.filter((e) => kept.has(e)));
+  }
   events.sort(compareRadarEvents);
+  const spanMinutes = focus ? FOCUS_SPAN_MIN : DEMO_SPAN_MIN;
   const lastMs = events.length > 0 ? Date.parse(events[events.length - 1].at) : startMs;
-  const endMs = Math.max(lastMs + TAIL_SEC * 1000, startMs + DEMO_SPAN_MIN * 60_000 - 1000);
+  const endMs = Math.max(lastMs + TAIL_SEC * 1000, startMs + spanMinutes * 60_000 - 1000);
   const spanMin = Math.ceil((endMs - startMs) / 60_000);
   return {
     hotelId,

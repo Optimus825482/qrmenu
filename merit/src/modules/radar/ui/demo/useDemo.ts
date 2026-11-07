@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReplayLine } from "../../server/replay/stream";
 import type { RadarStore } from "../radarStore";
-import { buildDemoScenario, DEMO_SPAN_MIN, DEMO_SPEED, type DemoScenario } from "./demoScenario";
+import { buildDemoScenario, DEMO_FOCUS_LABELS, DEMO_SPAN_MIN, DEMO_SPEED, type DemoFocus, type DemoScenario } from "./demoScenario";
 
 /** How long the finished script stays on screen before the demo returns to live. */
 export const DEMO_END_HOLD_MS = 2500;
@@ -19,7 +19,10 @@ export async function* demoStream(scenario: DemoScenario): AsyncGenerator<Replay
 
 export type DemoControl = {
   running: boolean;
-  start(): void;
+  /** The module the running demo is about (undefined: the general scenario). */
+  focus: DemoFocus | undefined;
+  /** `focus` weights the script to one module; anything else (a click event) starts the general scenario. */
+  start(focus?: DemoFocus): void;
   stop(): void;
 };
 
@@ -28,20 +31,29 @@ export type DemoControl = {
  * `MotionLayer` sprites, alert strip, ticker, timeline), so nothing is read from or written to the server and
  * no realtime event is published. Stopping, finishing or switching the hotel returns the store to live.
  */
-export function useDemo(store: RadarStore, opts: { hotelId: string; enabled: boolean }): DemoControl {
+export function useDemo(store: RadarStore, opts: { hotelId: string; enabled: boolean; onEnd?: () => void }): DemoControl {
   // The hotel the demo runs for: switching hotels (the store restarts live) ends it without an effect.
-  const [runFor, setRunFor] = useState<string | null>(null);
+  const [run, setRun] = useState<{ hotelId: string; focus?: DemoFocus } | null>(null);
   const entered = useRef(false);
   const { hotelId, enabled } = opts;
-  const running = runFor === hotelId;
+  // Called whenever a running demo ends here (stopped, finished, left by another route); the latest callback wins.
+  const onEnd = useRef(opts.onEnd);
+  useEffect(() => {
+    onEnd.current = opts.onEnd;
+  });
+  // Switching hotels ended it (the store restarted live): forget the run, so coming back does not show it as running.
+  if (run && run.hotelId !== hotelId) setRun(null);
+  const running = run?.hotelId === hotelId;
+  const focus = running ? run?.focus : undefined;
 
-  const start = useCallback(() => {
+  const start = useCallback((picked?: DemoFocus) => {
     if (!enabled || hotelId === "ALL") return;
     const s = store.getState();
     if (s.mode === "replay") return;
-    const scenario = buildDemoScenario({ hotelId, startMs: Date.now() - LEAD_MS, base: s.base });
+    const chosen = typeof picked === "string" && Object.hasOwn(DEMO_FOCUS_LABELS, picked) ? picked : undefined;
+    const scenario = buildDemoScenario({ hotelId, startMs: Date.now() - LEAD_MS, base: s.base, focus: chosen });
     entered.current = false;
-    setRunFor(hotelId);
+    setRun({ hotelId, focus: chosen });
     void s
       .enterReplay({
         hotelId,
@@ -51,13 +63,17 @@ export function useDemo(store: RadarStore, opts: { hotelId: string; enabled: boo
         speed: DEMO_SPEED,
         loader: () => demoStream(scenario),
       })
-      .catch(() => setRunFor(null));
+      .catch(() => {
+        setRun(null);
+        onEnd.current?.();
+      });
   }, [enabled, hotelId, store]);
 
   const stop = useCallback(() => {
     entered.current = false;
-    setRunFor(null);
+    setRun(null);
     if (store.getState().mode === "replay") store.getState().exitReplay();
+    onEnd.current?.();
   }, [store]);
 
   useEffect(() => {
@@ -71,14 +87,16 @@ export function useDemo(store: RadarStore, opts: { hotelId: string; enabled: boo
           hold = setTimeout(() => {
             hold = undefined;
             entered.current = false;
-            setRunFor(null);
+            setRun(null);
             if (store.getState().mode === "replay") store.getState().exitReplay();
+            onEnd.current?.();
           }, DEMO_END_HOLD_MS);
         }
       } else if (entered.current) {
         // Left replay by another route (Esc, "Canlıya dön", a hotel switch): the demo is over.
         entered.current = false;
-        setRunFor(null);
+        setRun(null);
+        onEnd.current?.();
       }
     };
     check();
@@ -89,5 +107,5 @@ export function useDemo(store: RadarStore, opts: { hotelId: string; enabled: boo
     };
   }, [running, store]);
 
-  return { running, start, stop };
+  return { running, focus, start, stop };
 }

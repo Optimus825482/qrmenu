@@ -47,9 +47,12 @@ export type ToolbarProps = {
   /** Extra mode text of the connection area ("Geçmiş 14:12:30"). */
   modeText?: string;
   /** The "Animasyon" switch of the scene layer; `reduced` locks it off (system reduced-motion setting). */
-  motion?: { on: boolean; reduced: boolean; onToggle(): void };
-  /** Client-side demo scenario: the start button, and the badge while it runs. `disabled` carries its reason in `hint`. */
-  demo?: { running: boolean; disabled: boolean; hint?: string; onStart(): void; onStop(): void };
+  motion?: { on: boolean; reduced: boolean; onToggle(): void; hint?: string };
+  /**
+   * Client-side demo scenario: the start button (opens the module picker), and the badge while it runs
+   * (`focusLabel` = the module it is about). `disabled` carries its reason in `hint`.
+   */
+  demo?: { running: boolean; disabled: boolean; hint?: string; focusLabel?: string; onStart(): void; onStop(): void };
 };
 
 export function Toolbar(p: ToolbarProps) {
@@ -116,7 +119,9 @@ export function Toolbar(p: ToolbarProps) {
           title={
             p.motion.reduced
               ? "Sistem hareketi azalt ayarı açık: animasyon kapalı"
-              : p.motion.on
+              : p.motion.hint
+                ? p.motion.hint
+                : p.motion.on
                 ? "Animasyon: Açık"
                 : "Animasyon: Kapalı"
           }
@@ -142,7 +147,7 @@ export function Toolbar(p: ToolbarProps) {
           </button>
           {p.demo.running ? (
             <span className="rd-demo-badge" data-testid="radar-demo-badge" role="status" title="Gösterilen veriler sentetiktir">
-              DEMO
+              {p.demo.focusLabel ? `DEMO · ${p.demo.focusLabel}` : "DEMO"}
             </span>
           ) : null}
         </>

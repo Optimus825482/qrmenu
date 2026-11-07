@@ -13,7 +13,9 @@ import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
 import { MotionLayer } from "./motion/MotionLayer";
 import { useMotionPreference } from "./motion/useMotionPreference";
+import { DEMO_FOCUS_SHORT, type DemoFocus } from "./demo/demoScenario";
 import { useDemo } from "./demo/useDemo";
+import { DemoDialog } from "./DemoDialog";
 import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
@@ -50,6 +52,10 @@ export type RadarRootProps = {
 const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel"];
 const LAYER_ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 const SKELETON_DELAY_MS = 300;
+/** The hotel, view and outlet a module demo replaced. */
+type DemoPrev = { hotelId: string; choice: ViewKey | null; outletId?: string };
+/** The view each demo module opens on. */
+const DEMO_VIEW: Record<DemoFocus, ViewKey> = { MINIBAR: "kat", OUTLET: "masa", ROOM_SERVICE: "odaServisi" };
 
 const clock = (ms: number) =>
   new Intl.DateTimeFormat("tr-TR", {
@@ -94,6 +100,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const [outletId, setOutletId] = useState<string | undefined>(initial.outletId);
   const [help, setHelp] = useState(false);
   const [replayDialog, setReplayDialog] = useState(false);
+  const [demoDialog, setDemoDialog] = useState(false);
+  // Picked in the dialog, waiting for the chosen hotel's snapshot (the demo builds on its ids). `demoKick` only re-renders.
+  const pendingDemo = useRef<{ hotelId: string; focus: DemoFocus; prev: DemoPrev } | null>(null);
+  const [demoKick, setDemoKick] = useState(0);
+  // The module demo that is running: what it replaced, to put back when it ends.
+  const demoSession = useRef<DemoPrev | null>(null);
   const [legendOpen, setLegendOpen] = useState<boolean>(() => consumeInitialLegendOpen());
   const [soundEnabled, setSoundEnabled] = useState<boolean>(Boolean(initial.soundOnEscalation));
   const [cursorHidden, setCursorHidden] = useState<boolean>(false);
@@ -108,7 +120,20 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const sse = useStore(sseClient().store, (s) => s.status);
   const now = useNow(1000);
   const all = hotelId === "ALL";
-  const demo = useDemo(store, { hotelId, enabled: !all });
+  const demo = useDemo(store, {
+    hotelId,
+    enabled: !all,
+    onEnd: () => {
+      // Stopped, finished or left: put the hotel and view back (a hotel picked by hand has dropped the session).
+      const prev = demoSession.current;
+      demoSession.current = null;
+      if (!prev) return;
+      setHotelId(prev.hotelId);
+      setChoice(prev.choice);
+      setOutletId(prev.outletId);
+    },
+  });
+  const demoStart = demo.start;
   // A scope switch renders before the effect restarts the store; hide the old scope immediately.
   const scoped = state.hotelId === hotelId;
   const snap = scoped ? state.view : null;
@@ -259,10 +284,41 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const failed = scoped && !loaded && state.connection === "offline";
   const skeleton = useDelayed((!loaded || (view === "genel" && !overview && !overviewError)) && !failed, SKELETON_DELAY_MS);
 
+  useEffect(() => {
+    const pick = pendingDemo.current;
+    if (!pick || hotelId !== pick.hotelId) return;
+    if (failed) {
+      pendingDemo.current = null;
+    } else if (scoped && snap && state.mode === "live") {
+      pendingDemo.current = null;
+      demoSession.current = pick.prev;
+      demoStart(pick.focus);
+    }
+  }, [hotelId, failed, scoped, snap, state.mode, demoKick, demoStart]);
+
   const pickHotel = (id: string, next: ViewKey | null) => {
+    // Picking a hotel by hand ends the claim of a module demo on the view it will restore.
+    pendingDemo.current = null;
+    demoSession.current = null;
     setHotelId(id);
     setChoice(next);
     setOutletId(undefined);
+  };
+  // The overview has no moving scene: the switch goes to the first hotel and switches the scene on there.
+  const toggleMotion = () => {
+    if (!all) return motionPref.toggle();
+    const first = initial.hotels[0];
+    if (!first) return;
+    if (!motionPref.on) motionPref.toggle();
+    pickHotel(first.id, null);
+  };
+  const beginDemo = ({ focus, hotelId: target }: { focus: DemoFocus; hotelId: string }) => {
+    setDemoDialog(false);
+    const prev: DemoPrev = { hotelId, choice, outletId };
+    if (store.getState().mode === "scrub") store.getState().goLive();
+    pickHotel(target, DEMO_VIEW[focus]);
+    pendingDemo.current = { hotelId: target, focus, prev };
+    setDemoKick((n) => n + 1);
   };
   const toggleLayer = (layer: RadarLayer) =>
     setOff((prev) => {
@@ -308,7 +364,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
   // The animated scene follows the live stream and the day replay (at the replay speed); a scrubbed past is still.
   const motionSpeed = state.mode === "replay" && state.replay ? state.replay.speed : 1;
-  const motionOn = motionPref.on && !all && state.mode !== "scrub";
+  // A module demo shows its moving scene whatever the toolbar switch says; the system's reduced-motion setting still wins.
+  const demoMotion = demo.running && demo.focus !== undefined && !motionPref.reduced;
+  const animationOn = (motionPref.on || demoMotion) && !all;
+  const motionOn = animationOn && state.mode !== "scrub";
 
   const currentHotel = useMemo(
     () => initial.hotels.find((h) => h.id === hotelId) ?? initial.hotels[0],
@@ -562,16 +621,21 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             view={view}
             onView={setChoice}
             connection={connection}
-            motion={{ on: motionPref.on, reduced: motionPref.reduced, onToggle: motionPref.toggle }}
+            motion={{
+              on: animationOn,
+              reduced: motionPref.reduced,
+              onToggle: toggleMotion,
+              hint: all ? "Animasyon otel görünümünde çalışır: ilk otele geçip açar" : undefined,
+            }}
             demo={{
               running: demo.running,
-              disabled: all || (state.mode === "replay" && !demo.running),
-              hint: all
-                ? "Demo için önce bir otel seçin"
-                : state.mode === "replay" && !demo.running
+              disabled: state.mode === "replay" && !demo.running,
+              hint:
+                state.mode === "replay" && !demo.running
                   ? "Gün tekrarı sürerken demo başlatılamaz"
-                  : undefined,
-              onStart: demo.start,
+                  : "Bir modül seçip örnek bir gün senaryosunu oynat",
+              focusLabel: demo.focus ? DEMO_FOCUS_SHORT[demo.focus] : undefined,
+              onStart: () => setDemoDialog(true),
               onStop: demo.stop,
             }}
             modeText={
@@ -663,6 +727,14 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             onClose={() => setReplayDialog(false)}
           />
           <MotionLayer rootRef={rootRef} state={snap} events={visibleEvents} speed={motionSpeed} enabled={motionOn} />
+          {demoDialog ? (
+            <DemoDialog
+              hotels={initial.hotels}
+              defaultHotelId={all ? (initial.hotels[0]?.id ?? "") : hotelId}
+              onStart={beginDemo}
+              onCancel={() => setDemoDialog(false)}
+            />
+          ) : null}
           {help ? (
             <div className="rd-help" role="dialog" aria-label="Klavye kısayolları">
               <div className="rd-row">

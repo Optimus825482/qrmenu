@@ -8,13 +8,47 @@ import type { RadarEventType } from "@/modules/radar/types";
 import { reduce } from "@/modules/radar/ui/reducers";
 import { deriveAlerts } from "@/modules/radar/alerts";
 import { initialState, type RadarState } from "@/modules/radar/state";
-import { buildDemoScenario, DEMO_SPAN_MIN } from "@/modules/radar/ui/demo/demoScenario";
+import { buildDemoScenario, DEMO_SPAN_MIN, type DemoFocus } from "@/modules/radar/ui/demo/demoScenario";
+import { DemoDialog } from "@/modules/radar/ui/DemoDialog";
+import { RadarRoot } from "@/modules/radar/ui/RadarRoot";
 import { DEMO_END_HOLD_MS, useDemo } from "@/modules/radar/ui/demo/useDemo";
 import { Toolbar } from "@/modules/radar/ui/Toolbar";
 import { H, iso, makeSnapshot } from "../helpers/radarStateFixtures";
 import { harness } from "../helpers/radarStoreHarness";
 
 const START = Date.parse("2026-11-07T10:00:00.000Z");
+
+vi.mock("@/modules/radar/server/actions/radar", async () => {
+  const { makeSnapshot: make } = await import("../helpers/radarStateFixtures");
+  return {
+    radarSnapshotAction: async ({ hotelId }: { hotelId: string }) => ({
+      ok: true,
+      data: {
+        ...make({ generatedAt: new Date().toISOString() }),
+        hotelId,
+        people: {},
+        config: {
+          liveBufferMinutes: 30,
+          idleMinutes: 15,
+          mybarStaleMinutes: 12,
+          callAlertSeconds: 120,
+          approvalEscalationMinutes: 4,
+          slaMinutes: 20,
+          wallRotateSeconds: 20,
+          wallViews: ["genel", "kat", "masa", "kuyruk"],
+          soundOnEscalation: false,
+          replayRetentionDays: 90,
+        },
+      },
+    }),
+    radarOverviewAction: async () => ({ ok: true, data: { generatedAt: new Date().toISOString(), hotels: [] } }),
+  };
+});
+vi.mock("@/shell/sseStore", async () => {
+  const { createStore } = await import("zustand/vanilla");
+  const sse = { store: createStore(() => ({ status: "open" })), subscribe: () => () => undefined };
+  return { sseClient: () => sse };
+});
 
 /** Compile-time exhaustive: adding a RadarEvent type without listing it here fails the build. */
 const ALL_TYPES: Record<RadarEventType, true> = {
@@ -249,5 +283,160 @@ describe("Demo başlat / durdur", () => {
     expect(h.store.getState().mode).toBe("replay");
     expect(h.store.getState().view?.layers.minibar?.floors.length).toBeGreaterThan(0);
     h.store.getState().stop();
+  });
+});
+
+const FOCI: [DemoFocus, (type: string, layer: string) => boolean][] = [
+  ["MINIBAR", (_t, layer) => layer === "MINIBAR"],
+  ["OUTLET", (t, layer) => layer === "SIPARIS" || t === "printer.health"],
+  ["ROOM_SERVICE", (_t, layer) => layer === "ODA_SERVISI"],
+];
+
+describe("modüle odaklı senaryo", () => {
+  for (const [focus, isOwn] of FOCI) {
+    for (const withBase of [false, true]) {
+      it(`${focus} (${withBase ? "yüklü otel" : "yerleşik otel"}): olayların en az %70 kadarı o modüldendir ve ilk 200 sn içinde en az 3 olay vardır`, () => {
+        const base = withBase ? makeSnapshot({ tables: 12, generatedAt: iso(START) }) : undefined;
+        const s = buildDemoScenario({ hotelId: H, startMs: START, base, focus });
+        const own = s.events.filter((e) => isOwn(e.type, e.layer)).length;
+        expect(own / s.events.length).toBeGreaterThanOrEqual(0.7);
+        expect(s.events.length - own).toBeGreaterThan(0); // a few background events stay
+        const early = s.events.filter((e) => Date.parse(e.at) - START <= 200_000);
+        expect(early.length).toBeGreaterThanOrEqual(3);
+        expect(new Set(s.events.map((e) => e.id)).size).toBe(s.events.length);
+        let st = initialState(s.snapshot);
+        for (const e of s.events) st = reduce(st, e);
+        expect([...st.needsRefresh].filter((k) => k !== "ALL")).toEqual([]);
+      });
+    }
+  }
+
+  it("ROOM_SERVICE: doluluk yüklenmemişse (hiç dolu oda yok) yine de oda servisi akışı üretilir", () => {
+    const base = makeSnapshot({ generatedAt: iso(START) });
+    for (const f of base.layers.minibar!.floors) for (const r of f.rooms) r.occupied = false;
+    const s = buildDemoScenario({ hotelId: H, startMs: START, base, focus: "ROOM_SERVICE" });
+    expect(s.events.filter((e) => e.layer === "ODA_SERVISI").length).toBeGreaterThanOrEqual(20);
+    // The general scenario is unchanged: no occupied room, no room service orders.
+    expect(buildDemoScenario({ hotelId: H, startMs: START, base }).events.some((e) => e.layer === "ODA_SERVISI")).toBe(false);
+  });
+
+  it("odaksız senaryo değişmez ve odaklı olanlardan farklıdır", () => {
+    const plain = buildDemoScenario({ hotelId: H, startMs: START });
+    expect(JSON.stringify(plain)).toBe(JSON.stringify(buildDemoScenario({ hotelId: H, startMs: START, focus: undefined })));
+    expect(JSON.stringify(buildDemoScenario({ hotelId: H, startMs: START, focus: "OUTLET" }).events)).not.toBe(
+      JSON.stringify(plain.events),
+    );
+  });
+});
+
+describe("Demo senaryosu penceresi", () => {
+  afterEach(() => cleanup());
+  const hotels = [
+    { id: "h1", name: "Merit Royal" },
+    { id: "h2", name: "Merit Crystal" },
+  ];
+
+  it("üç modülü sunar, Minibar seçili gelir; Başlat seçileni ve oteli bildirir, Vazgeç kapatır", () => {
+    const onStart = vi.fn();
+    const onCancel = vi.fn();
+    render(<DemoDialog hotels={hotels} defaultHotelId="h2" onStart={onStart} onCancel={onCancel} />);
+    expect(screen.getByRole("dialog", { name: "Demo senaryosu" })).toBeTruthy();
+    expect(screen.getAllByRole("radio").map((r) => r.parentElement?.textContent)).toEqual([
+      "Minibar",
+      "Outlet (QR Sipariş)",
+      "Oda Servisi",
+    ]);
+    expect((screen.getByLabelText("Demo oteli") as HTMLSelectElement).value).toBe("h2");
+    fireEvent.click(screen.getByLabelText("Oda Servisi"));
+    fireEvent.click(screen.getByRole("button", { name: "Başlat" }));
+    expect(onStart).toHaveBeenCalledWith({ focus: "ROOM_SERVICE", hotelId: "h2" });
+    fireEvent.click(screen.getByRole("button", { name: "Vazgeç" }));
+    expect(onCancel).toHaveBeenCalled();
+  });
+
+  it("tek otel varsa otel seçimi gizlidir", () => {
+    render(<DemoDialog hotels={hotels.slice(0, 1)} defaultHotelId="h1" onStart={() => undefined} onCancel={() => undefined} />);
+    expect(screen.queryByLabelText("Demo oteli")).toBeNull();
+  });
+});
+
+describe("Radar penceresinde modül demosu", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.matchMedia = ((q: string) => ({
+      matches: false,
+      media: q,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      dispatchEvent: () => false,
+      onchange: null,
+    })) as unknown as typeof window.matchMedia;
+  });
+  afterEach(() => cleanup());
+
+  const initial = {
+    hotels: [
+      { id: "h1", code: "R", name: "Merit Royal" },
+      { id: "h2", code: "C", name: "Merit Crystal" },
+    ],
+    hotelId: "ALL",
+  };
+  const until = async (check: () => void) => {
+    let last: unknown;
+    for (let i = 0; i < 60; i++) {
+      try {
+        check();
+        return;
+      } catch (e) {
+        last = e;
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 25));
+        });
+      }
+    }
+    throw last;
+  };
+
+  it("Tüm kompleks'te Demo başlat ve Animasyon etkindir; Animasyon ilk otele geçip açar", async () => {
+    render(<RadarRoot mode="window" initial={initial} />);
+    expect((screen.getByTestId("radar-demo-start") as HTMLButtonElement).disabled).toBe(false);
+    const motion = screen.getByRole("button", { name: "Animasyon" }) as HTMLButtonElement;
+    expect(motion.disabled).toBe(false);
+    fireEvent.click(motion);
+    await until(() => expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("h1"));
+    expect(window.localStorage.getItem("merit.u.radar.motion")).not.toBe("0");
+    expect(screen.getByRole("button", { name: "Animasyon" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("Başlat oteli ve görünümü değiştirir, rozet modülü yazar, Demo durdur öncekini geri koyar", async () => {
+    window.localStorage.setItem("merit.u.radar.motion", "0");
+    render(<RadarRoot mode="window" initial={initial} />);
+    fireEvent.click(screen.getByTestId("radar-demo-start"));
+    expect(screen.getByRole("dialog", { name: "Demo senaryosu" })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Demo oteli"), { target: { value: "h2" } });
+    fireEvent.click(screen.getByLabelText("Oda Servisi"));
+    fireEvent.click(screen.getByTestId("radar-demo-go"));
+
+    await until(() => expect(screen.getByTestId("radar-demo-badge").textContent).toBe("DEMO · Oda Servisi"));
+    expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("h2");
+    expect(screen.getByRole("tab", { name: "Oda Servisi" }).getAttribute("aria-selected")).toBe("true");
+    // The toolbar switch is off, yet the scene runs for the demo.
+    expect(screen.getByRole("button", { name: "Animasyon" }).getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(screen.getByTestId("radar-demo-stop"));
+    await until(() => expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("ALL"));
+    expect(screen.queryByTestId("radar-demo-badge")).toBeNull();
+    expect(screen.getByRole("button", { name: "Animasyon" }).getAttribute("aria-pressed")).toBe("false");
+    expect(window.localStorage.getItem("merit.u.radar.motion")).toBe("0");
+  });
+
+  it("Vazgeç hiçbir şeyi değiştirmez", () => {
+    render(<RadarRoot mode="window" initial={initial} />);
+    fireEvent.click(screen.getByTestId("radar-demo-start"));
+    fireEvent.click(screen.getByTestId("radar-demo-cancel"));
+    expect(screen.queryByRole("dialog", { name: "Demo senaryosu" })).toBeNull();
+    expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("ALL");
   });
 });

@@ -1107,3 +1107,74 @@ button.rd-alert-chip {
 .rd-wall-fs-btn {
   font-weight: 700;
 }
+
+/* Demo senaryosu seçimi: radar penceresinin içinde modal. */
+.rd-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--text) 35%, transparent);
+}
+
+.rd-modal-box {
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100% - 24px));
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  box-shadow: 0 4px 12px var(--app-line);
+}
+
+.rd-modal-title {
+  margin: 0;
+  font-size: calc(var(--rd-font) + 2px);
+}
+
+.rd-modal-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--rd-small);
+}
+
+.rd-modal-group {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rd-modal-legend {
+  padding: 0;
+  margin-bottom: 2px;
+  font-weight: 700;
+}
+
+.rd-modal-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-xp);
+  cursor: pointer;
+}
+
+.rd-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--tap-gap);
+}
+
+.rd-modal-actions .rd-chip[data-primary] {
+  border-color: var(--accent-app);
+  background: var(--accent-app-soft);
+  font-weight: 700;
+}
+
+.rd-modal-actions .rd-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
