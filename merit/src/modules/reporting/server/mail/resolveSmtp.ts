@@ -71,8 +71,13 @@ export async function resolveSmtp(hotelId?: string | null): Promise<ResolvedSmtp
   const systemHasHost = str(system["smtp.host"]) !== "";
 
   if (hotelHasHost) {
-    // Hotel row overrides the system row key by key.
-    const cfg = toConfig({ ...system, ...hotel });
+    // A hotel that names its own host uses only its own rows: system credentials must never be sent to a
+    // host chosen in hotel scope. Cosmetic sender fields may still fall back to the system row.
+    const cfg = toConfig({
+      "smtp.fromName": system["smtp.fromName"],
+      "smtp.fromEmail": system["smtp.fromEmail"],
+      ...hotel,
+    });
     return cfg ? { config: cfg, source: "hotel" } : null;
   }
   if (systemHasHost) {
