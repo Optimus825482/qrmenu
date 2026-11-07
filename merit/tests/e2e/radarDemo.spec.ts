@@ -13,6 +13,7 @@ test.beforeAll(() => {
 
 test("Duvar ekranında Demo başlat: rozet görünür, akış dolar, Demo durdur canlıya döner", async ({ page }) => {
   await login(page, "admin");
+  await expect(page).toHaveURL(/\/admin$/);
   await page.goto("/radar");
   const start = page.getByTestId("radar-demo-start");
   await expect(start).toBeEnabled({ timeout: 20_000 });
