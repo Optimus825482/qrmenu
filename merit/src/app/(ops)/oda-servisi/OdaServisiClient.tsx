@@ -1,25 +1,34 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Icon } from "@/components/icons/Icon";
+import { useSound } from "@/components/ops/useSound";
+import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { setOutletOrderingEnabledAction } from "@/modules/menu/server/actions/outletSwitches";
+import { getRoomBoardAction } from "@/modules/order/server/actions/roomServiceBoard";
 import {
   approveRoomOrderAction,
-  confirmRoomPhoneAction,
   cancelRoomOrderAction,
-  markRoomReadyAction,
-  markRoomOnWayAction,
+  confirmRoomPhoneAction,
   markRoomDeliveredAction,
+  markRoomOnWayAction,
+  markRoomReadyAction,
 } from "@/modules/order/server/actions/roomService";
-import {
-  listRoomServiceOrdersAction,
-  type RoomOrderListItem,
-  type RoomServiceStats,
-} from "@/modules/order/server/actions/roomServiceRecords";
+import type {
+  RoomBoard,
+  RoomBoardColumn,
+  RoomOrderCard as RoomOrderData,
+} from "@/modules/order/server/roomService/board";
+import { RoomOrderCard, type RoomCardActions, type RoomOpsFlags, type RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
+import { REASON_MIN_LENGTH } from "@/modules/order/ui/reasons";
 import { useSse } from "@/shell/useSse";
-import { Icon, type IconName } from "@/components/icons/Icon";
 
+export type { RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
+
+/** Events that change the board; filtered by `outletId`. */
 const LIVE_EVENTS = [
   "order.created",
+  "order.confirmed",
   "order.approved",
   "order.prep",
   "order.ready",
@@ -29,321 +38,185 @@ const LIVE_EVENTS = [
   "order.sla",
 ] as const;
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; badge: string; border: string; bg: string; icon: IconName }
-> = {
-  TEYIT_BEKLIYOR: {
-    label: "Telefon Teyidi Bekliyor",
-    badge: "bg-[var(--warn-bg)] text-warn border border-warn",
-    border: "border-warn ring-2 ring-warn/40",
-    bg: "bg-warn/10",
-    icon: "call",
-  },
-  GONDERILDI: {
-    label: "Yeni Talep",
-    badge: "bg-warn text-bg",
-    border: "border-warn",
-    bg: "bg-warn/10",
-    icon: "bell",
-  },
-  ONAYLANDI: {
-    label: "Mutfakta / Hazırlanıyor",
-    badge: "bg-sky-600 text-white",
-    border: "border-sky-500",
-    bg: "bg-sky-500/10",
-    icon: "flame",
-  },
-  HAZIR: {
-    label: "Hazır / Servis Bekliyor",
-    badge: "bg-success text-bg",
-    border: "border-success",
-    bg: "bg-success/10",
-    icon: "utensils",
-  },
-  YOLDA: {
-    label: "Yolda / Serviste",
-    badge: "bg-info text-white",
-    border: "border-info",
-    bg: "bg-[var(--info-bg)]",
-    icon: "walk",
-  },
-  TESLIM_EDILDI: {
-    label: "Teslim Edildi",
-    badge: "bg-success text-bg",
-    border: "border-success/40",
-    bg: "bg-surface",
-    icon: "check",
-  },
-  IPTAL: {
-    label: "İptal Edildi",
-    badge: "bg-danger text-bg",
-    border: "border-danger/40",
-    bg: "bg-danger/5",
-    icon: "close",
-  },
-  REDDEDILDI: {
-    label: "Reddedildi",
-    badge: "bg-danger text-bg",
-    border: "border-danger/40",
-    bg: "bg-danger/5",
-    icon: "close",
-  },
+/** Visible columns of each tab, in display order. */
+const TAB_COLUMNS: Record<RoomOpsTab, readonly RoomBoardColumn[]> = {
+  tumu: ["CONFIRM", "NEW", "PREP", "READY", "ONWAY"],
+  teyit: ["CONFIRM"],
+  teslim: ["READY", "ONWAY"],
 };
 
-function playRoomServiceChime() {
-  try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "triangle";
-    const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(659.25, now);
-    osc.frequency.setValueAtTime(987.77, now + 0.12);
-    gain.gain.setValueAtTime(0.2, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-    osc.start(now);
-    osc.stop(now + 0.5);
-  } catch {
-    // ses izin verilmediyse sessiz geç
-  }
-}
+const COLUMN_TITLE: Record<RoomBoardColumn, string> = {
+  CONFIRM: "Teyit",
+  NEW: "Yeni",
+  PREP: "Hazırlanıyor",
+  READY: "Hazır",
+  ONWAY: "Yolda",
+};
+
+const GUIDE_LIST: Record<RoomOpsTab, string> = { tumu: "talep-listesi", teyit: "teyit-listesi", teslim: "teslim-listesi" };
+
+const CONFIRM_FAIL_REASONS = ["Açmadı", "Misafir istemedi", "Hatalı sipariş"] as const;
+const CANCEL_REASONS = ["Stok yok", "Misafir vazgeçti", "Hatalı sipariş", "Mutfak yoğun"] as const;
+
+/** Safety refresh while the push channel is healthy / while it is down. */
+const POLL_OPEN_MS = 60_000;
+const POLL_DOWN_MS = 10_000;
 
 type Props = {
-  hotelId: string;
+  outletId: string;
   hotelName: string;
-  initialOrders: RoomOrderListItem[];
-  initialStats: RoomServiceStats;
-  canEdit: boolean;
-  /** rs.slaMinutes of the hotel (read server-side). */
-  slaMinutes: number;
+  tab: RoomOpsTab;
+  initialBoard: RoomBoard | null;
+  /** Message of a failed first load (the board keeps retrying through polling). */
+  loadError?: string | null;
+  /** Permission flags computed on the server. */
+  flags: RoomOpsFlags;
 };
 
-export default function OdaServisiClient({
-  hotelId,
-  hotelName,
-  initialOrders,
-  initialStats,
-  canEdit,
-  slaMinutes,
-}: Props) {
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("sekme") || "talepler";
+type ActionResult = { ok: boolean; error?: { message: string } };
 
-  const [now, setNow] = useState(() => Date.now());
+function minutes(sec: number): string {
+  return `${Math.round(sec / 60)} dk`;
+}
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setNow(Date.now());
-    }, 30000);
-    return () => clearInterval(timer);
-  }, []);
+export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags }: Props) {
+  const [data, setData] = useState<RoomBoard | null>(initialBoard);
+  const [error, setError] = useState<string>(loadError ?? "");
+  const [busy, setBusy] = useState(false);
+  const [activeColumn, setActiveColumn] = useState<RoomBoardColumn>(tab === "tumu" ? "NEW" : TAB_COLUMNS[tab][0]);
+  const [phoneFor, setPhoneFor] = useState<RoomOrderData | null>(null);
+  const [phoneNote, setPhoneNote] = useState("");
+  const [cancelFor, setCancelFor] = useState<RoomOrderData | null>(null);
 
-  const [orders, setOrders] = useState<RoomOrderListItem[]>(initialOrders);
-  const [stats, setStats] = useState<RoomServiceStats>(initialStats);
-  const [search, setSearch] = useState("");
-  const [error, setError] = useState("");
-  const [pending, startTransition] = useTransition();
-
-  // Telefon teyit modalı
-  const [confirmModal, setConfirmModal] = useState<RoomOrderListItem | null>(null);
-  const [confirmNote, setConfirmNote] = useState("");
-
-  // İptal modalı
-  const [cancelModal, setCancelModal] = useState<RoomOrderListItem | null>(null);
-  const [cancelReason, setCancelReason] = useState("");
+  const playNew = useSound("new-order");
+  const playReady = useSound("ready");
+  const playAlarm = useSound("call");
 
   const refresh = useCallback(async () => {
-    const res = await listRoomServiceOrdersAction({
-      hotelId,
-      search: search.trim() || undefined,
-      limit: 100,
-    });
+    const res = await getRoomBoardAction(outletId);
     if (res.ok) {
-      setOrders(res.data.orders);
-      setStats(res.data.stats);
+      setData(res.data);
+      setError((current) => (current === loadError ? "" : current));
+    } else {
+      setError(res.error.message);
     }
-  }, [hotelId, search]);
+  }, [outletId, loadError]);
 
-  useSse((event) => {
-    if (event.hotelId === hotelId || !event.hotelId) {
-      if (event.type === "order.created") {
-        playRoomServiceChime();
-      }
-      void refresh();
-    }
+  const { status } = useSse((event) => {
+    if (event.outletId !== outletId) return;
+    if (event.type === "order.created") playNew();
+    else if (event.type === "order.ready" && flags.teslimD) playReady();
+    else if (event.type === "order.sla" && (event.payload as { level?: string } | undefined)?.level === "BREACH") playAlarm();
+    void refresh();
   }, LIVE_EVENTS);
 
-  const act = (fn: () => Promise<{ ok: boolean; error?: { message: string } }>) => {
-    if (!canEdit || pending) return;
-    startTransition(async () => {
-      const res = await fn();
-      if (!res.ok) {
-        setError(res.error?.message ?? "İşlem gerçekleştirilemedi");
-        return;
+  useEffect(() => {
+    const timer = window.setInterval(() => void refresh(), status === "open" ? POLL_OPEN_MS : POLL_DOWN_MS);
+    return () => window.clearInterval(timer);
+  }, [refresh, status]);
+
+  const run = useCallback(
+    async (fn: () => Promise<ActionResult>) => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const res = await fn();
+        setError(res.ok ? "" : (res.error?.message ?? "İşlem gerçekleştirilemedi"));
+        await refresh();
+      } finally {
+        setBusy(false);
       }
-      setError("");
-      await refresh();
+    },
+    [busy, refresh],
+  );
+
+  const actions: RoomCardActions = useMemo(
+    () => ({
+      approve: (card) => void run(() => approveRoomOrderAction({ orderId: card.id })),
+      confirmPhone: (card) => {
+        setPhoneNote("");
+        setPhoneFor(card);
+      },
+      cancel: (card) => setCancelFor(card),
+      ready: (card) => void run(() => markRoomReadyAction({ orderId: card.id })),
+      onWay: (card) => void run(() => markRoomOnWayAction({ orderId: card.id })),
+      delivered: (card) => void run(() => markRoomDeliveredAction({ orderId: card.id })),
+    }),
+    [run],
+  );
+
+  const toggleOrdering = () => {
+    if (!data || !flags.talepA) return;
+    void run(async () => {
+      const res = await setOutletOrderingEnabledAction({ id: outletId, enabled: !data.orderingEnabled });
+      return res.ok ? { ok: true } : { ok: false, error: res.error };
     });
   };
 
-  const handlePhoneConfirm = () => {
-    if (!confirmModal) return;
-    const orderId = confirmModal.id;
-    const note = confirmNote.trim() || undefined;
-    setConfirmModal(null);
-    setConfirmNote("");
-    act(() => confirmRoomPhoneAction({ orderId, note }));
-  };
-
-  const handleCancel = () => {
-    if (!cancelModal) return;
-    const orderId = cancelModal.id;
-    const reason = cancelReason.trim();
-    if (reason.length < 3) {
-      setError("İptal sebebi en az 3 karakter olmalıdır");
-      return;
-    }
-    setCancelModal(null);
-    setCancelReason("");
-    act(() => cancelRoomOrderAction({ orderId, reason }));
-  };
-
-  // Sekmeye göre filtrele
-  const filteredOrders = orders.filter((order) => {
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      const matchRoom = order.roomNumber.toLowerCase().includes(q);
-      const matchOrder = order.orderNo.toLowerCase().includes(q);
-      const matchItems = order.itemsSummary.toLowerCase().includes(q);
-      if (!matchRoom && !matchOrder && !matchItems) return false;
-    }
-
-    if (tab === "teyit") {
-      return order.status === "TEYIT_BEKLIYOR";
-    }
-    if (tab === "teslim") {
-      return (
-        order.status === "ONAYLANDI" ||
-        order.status === "HAZIR" ||
-        order.status === "YOLDA"
-      );
-    }
-    if (tab === "gecmis") {
-      return (
-        order.status === "TESLIM_EDILDI" ||
-        order.status === "IPTAL" ||
-        order.status === "REDDEDILDI"
-      );
-    }
-    // "talepler" varsayılan: açık ve bekleyen tüm operasyon siparişleri
-    return (
-      order.status !== "TESLIM_EDILDI" &&
-      order.status !== "IPTAL" &&
-      order.status !== "REDDEDILDI"
-    );
-  });
+  const columns = TAB_COLUMNS[tab];
+  const confirmRequired = data?.confirmRequired ?? false;
 
   return (
     <section aria-label="Oda servisi operasyon paneli" className="space-y-4">
-      {/* Üst Kiosk / Tablet Kontrol Barı */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div>
-          <h1 className="text-xl font-black tracking-tight text-text flex items-center gap-2">
-            <span><Icon name="concierge" size={20} /> Oda Servisi Operasyon Paneli</span>
-            <span className="text-[13px] px-2 py-0.5 rounded-full border border-accent bg-surface text-accent font-bold">
-              {hotelName}
-            </span>
+          <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-text">
+            <Icon name="concierge" size={20} />
+            <span>Oda Servisi</span>
+            <span className="rounded-full border border-accent px-2 py-0.5 text-[13px] font-bold text-accent">{hotelName}</span>
           </h1>
-          <p className="text-[13px] text-muted mt-0.5">
-            Canlı oda siparişleri, mutfak hazırlık, telefon teyidi ve SLA takibi
-          </p>
-        </div>
-
-        {/* Hızlı Arama */}
-        <div className="relative min-w-[200px] w-full sm:w-64">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Oda no veya sipariş ara..."
-            className="w-full h-11 rounded-xl border border-border bg-surface-sunken px-3 pl-8 text-[13px] font-medium placeholder:text-muted focus:border-accent focus:outline-none"
-          />
-          <Icon name="search" size={16} className="absolute left-2.5 top-3.5 text-muted pointer-events-none" />
-          {search ? (
-            <button aria-label="Kapat"
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute right-2.5 top-2.5 h-5 w-5 rounded-full bg-border text-[13px] flex items-center justify-center text-muted hover:text-text"
-            >
-              <Icon name="close" size={20} />
-            </button>
+          {status !== "open" ? (
+            <p role="status" className="mt-0.5 text-[13px] text-warn">
+              Canlı bağlantı yok, pano düzenli aralıklarla yenileniyor
+            </p>
           ) : null}
         </div>
+
+        {data ? (
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-muted">Sipariş alımı</span>
+            {flags.talepA ? (
+              <button
+                type="button"
+                role="switch"
+                aria-checked={data.orderingEnabled}
+                aria-label="Sipariş alımı"
+                data-mutates
+                disabled={busy}
+                onClick={toggleOrdering}
+                className={`min-h-11 min-w-20 rounded-xl border px-3 text-sm font-black disabled:opacity-50 ${
+                  data.orderingEnabled ? "border-success bg-success/15 text-success" : "border-danger bg-danger/10 text-danger"
+                }`}
+              >
+                {data.orderingEnabled ? "Açık" : "Kapalı"}
+              </button>
+            ) : (
+              <span
+                data-testid="ordering-state"
+                className={`rounded-xl border px-3 py-2 text-sm font-black ${
+                  data.orderingEnabled ? "border-success text-success" : "border-danger text-danger"
+                }`}
+              >
+                {data.orderingEnabled ? "Açık" : "Kapalı"}
+              </span>
+            )}
+          </div>
+        ) : null}
       </div>
 
-      {/* KPI Kartları */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-5">
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <Icon name="clipboard" size={24} />
-          <div>
-            <p className="text-[13px] font-medium text-muted">Toplam Sipariş</p>
-            <p className="text-lg font-black text-text">{stats.total}</p>
-          </div>
-        </div>
+      {data ? (
+        <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <Kpi label="Açık sipariş" value={String(data.kpis.open)} />
+          <Kpi label="Süresi aşan" value={String(data.kpis.overdue)} tone={data.kpis.overdue > 0 ? "danger" : undefined} />
+          <Kpi label="Bugün" value={String(data.kpis.today)} />
+          <Kpi label="Ort. teslim" value={data.kpis.avgDeliverySec !== undefined ? minutes(data.kpis.avgDeliverySec) : "—"} />
+        </dl>
+      ) : null}
 
-        <div
-          className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-2xs ${
-            stats.pending > 0
-              ? "bg-warn/15 border-warn/40 text-warn"
-              : "border-border bg-surface text-text"
-          }`}
-        >
-          <Icon name="call" size={24} />
-          <div>
-            <p className="text-[13px] font-medium text-muted">Teyit Bekleyen</p>
-            <p className="text-lg font-black">{stats.pending}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <Icon name="flame" size={24} />
-          <div>
-            <p className="text-[13px] font-medium text-muted">Mutfakta / Hazırlık</p>
-            <p className="text-lg font-black text-text">{stats.approved}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <Icon name="walk" size={24} />
-          <div>
-            <p className="text-[13px] font-medium text-muted">Yolda / Serviste</p>
-            <p className="text-lg font-black text-text">{stats.onWay}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface px-3.5 py-2.5 shadow-2xs">
-          <Icon name="check" size={24} />
-          <div>
-            <p className="text-[13px] font-medium text-muted">Teslim Edildi</p>
-            <p className="text-lg font-black text-success">
-              {stats.delivered}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Hata Uyarısı */}
       {error ? (
         <div
           role="alert"
-          className="flex items-center justify-between rounded-xl bg-danger/10 border border-danger/30 p-3 text-sm text-danger font-semibold"
+          className="flex items-center justify-between rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm font-semibold text-danger"
         >
           <span>{error}</span>
           <button type="button" onClick={() => setError("")} className="min-h-11 min-w-11 px-2 text-[13px] underline">
@@ -352,272 +225,136 @@ export default function OdaServisiClient({
         </div>
       ) : null}
 
-      {/* Sipariş Kartları Grid */}
-      <div data-guide={tab === "teyit" ? "teyit-listesi" : tab === "teslim" ? "teslim-listesi" : "talep-listesi"} className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredOrders.length === 0 ? (
-          <div className="col-span-full py-16 text-center text-muted border border-dashed border-border rounded-2xl bg-surface">
-            <Icon name="concierge" size={32} className="block mb-2" />
-            <p className="text-base font-semibold">Bu görünümde bekleyen sipariş bulunmuyor.</p>
-            <p className="text-[13px] mt-1">Misafirlerden yeni oda servisi talebi geldiğinde anında burada listelenir.</p>
-          </div>
-        ) : null}
-
-        {filteredOrders.map((order) => {
-          const cfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.GONDERILDI;
-          const orderDate = new Date(order.createdAt);
-          const elapsedMin = Math.max(0, Math.floor((now - orderDate.getTime()) / 60000));
-          const isOverdue = elapsedMin > slaMinutes && order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL";
-
-          return (
-            <article
-              key={order.id}
-              data-guide={order.id === filteredOrders[0]?.id ? "talep-ac" : undefined}
-              className={`flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all bg-surface ${cfg.border} ${
-                isOverdue ? "ring-2 ring-danger bg-danger/5" : ""
+      {columns.length > 1 && data ? (
+        <div role="tablist" aria-label="Sütunlar" className="flex gap-2 overflow-x-auto md:hidden">
+          {columns.map((col) => (
+            <button
+              key={col}
+              type="button"
+              role="tab"
+              aria-selected={activeColumn === col}
+              onClick={() => setActiveColumn(col)}
+              className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-bold ${
+                activeColumn === col ? "border-accent bg-accent text-bg" : "border-border bg-surface text-text"
               }`}
             >
-              <div>
-                {/* Kart Başlığı */}
-                <div className="flex items-start justify-between gap-2 border-b border-border/50 pb-2.5">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-black text-text">Oda #{order.roomNumber}</span>
-                      <span className="text-[13px] font-mono font-bold text-muted">
-                        #{order.orderNo}
-                      </span>
-                    </div>
-                    <p className="text-[13px] text-muted mt-0.5">
-                      {orderDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} &bull; {elapsedMin} dk önce
-                    </p>
-                  </div>
+              {COLUMN_TITLE[col]} ({data.columns[col].length})
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[13px] font-black tracking-wide ${cfg.badge}`}
-                  >
-                    <Icon name={cfg.icon} size={20} />
-                    <span>{cfg.label}</span>
-                  </span>
-                </div>
+      {data ? (
+        <div
+          data-guide={GUIDE_LIST[tab]}
+          className={`grid gap-4 ${columns.length === 1 ? "" : columns.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3 xl:grid-cols-5"}`}
+        >
+          {columns.map((col, colIndex) => {
+            const list = data.columns[col];
+            const firstColumnWithCards = columns.findIndex((c) => data.columns[c].length > 0);
+            return (
+              <section
+                key={col}
+                data-column-id={col}
+                aria-label={COLUMN_TITLE[col]}
+                className={`${columns.length > 1 && activeColumn !== col ? "hidden" : "block"} min-w-0 space-y-3 md:block`}
+              >
+                <h2 className="flex items-center justify-between text-base font-black text-text">
+                  <span>{COLUMN_TITLE[col]}</span>
+                  <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-[13px] text-muted">{list.length}</span>
+                </h2>
+                {list.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-border p-6 text-center text-[13px] text-muted">Sipariş yok</p>
+                ) : (
+                  list.map((card, index) => (
+                    <RoomOrderCard
+                      key={card.id}
+                      card={card}
+                      column={col}
+                      flags={flags}
+                      confirmRequired={confirmRequired}
+                      actions={actions}
+                      busy={busy}
+                      tab={tab}
+                      first={index === 0 && colIndex === firstColumnWithCards}
+                    />
+                  ))
+                )}
+              </section>
+            );
+          })}
+        </div>
+      ) : null}
 
-                {/* SLA Uyarı Çubuğu */}
-                {order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL" ? (
-                  <div className="mt-2.5 flex items-center justify-between text-[13px] rounded-xl p-2 bg-surface-sunken border border-border/50">
-                    <span className="text-muted font-medium">SLA Hedefi ({slaMinutes} dk):</span>
-                    <span
-                      className={`font-black ${
-                        isOverdue
-                          ? "text-danger"
-                          : elapsedMin > 20
-                            ? "text-warn"
-                            : "text-success"
-                      }`}
-                    >
-                      {elapsedMin} / {slaMinutes} dk {isOverdue ? "GECİKTİ" : ""}
-                    </span>
-                  </div>
-                ) : null}
-
-                {/* Ürün Özeti */}
-                <div className="mt-3">
-                  <p className="text-[13px] font-bold text-muted mb-1">Seçilen Ürünler ({order.itemCount} adet):</p>
-                  <p className="text-sm font-semibold text-text leading-snug">
-                    {order.itemsSummary}
-                  </p>
-                </div>
-
-                {/* Varsa Misafir Notu */}
-                {order.note ? (
-                  <div className="mt-2.5 rounded-xl bg-warn/10 border border-warn/30 p-2 text-[13px] text-warn">
-                    <strong>Misafir Notu:</strong> {order.note}
-                  </div>
-                ) : null}
-
-                {/* Telefon Teyidi Bilgisi */}
-                {order.phoneConfirmedAt ? (
-                  <p className="mt-2 text-[13px] text-success font-semibold flex items-center gap-1">
-                    <span><Icon name="check" size={20} /> Telefon teyidi alındı:</span>
-                    <span>
-                      {new Date(order.phoneConfirmedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </p>
-                ) : null}
-              </div>
-
-              {/* Dokunmatik Aksiyon Butonları (SLA Adımları) */}
-              <div className="mt-4 pt-3 border-t border-border/50 flex flex-wrap gap-2">
-                {/* 1. Telefon Teyidi */}
-                {order.status === "TEYIT_BEKLIYOR" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    data-guide={order.id === filteredOrders.find((o) => o.status === "TEYIT_BEKLIYOR")?.id ? "ara" : undefined}
-                    onClick={() => {
-                      setConfirmModal(order);
-                      setConfirmNote("");
-                    }}
-                    className="flex-1 min-h-[48px] rounded-xl bg-warn text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <Icon name="call" size={20} /> Telefonla Teyit Et
-                  </button>
-                ) : null}
-
-                {/* 2. Mutfak Onayı / Hazırlığa Başla */}
-                {order.status === "GONDERILDI" || order.status === "TEYIT_BEKLIYOR" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    data-mutates
-                    data-guide={order.id === filteredOrders.find((o) => o.status === "GONDERILDI" || o.status === "TEYIT_BEKLIYOR")?.id ? "onayla" : undefined}
-                    onClick={() => act(() => approveRoomOrderAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <Icon name="flame" size={20} /> Mutfakta Hazırla
-                  </button>
-                ) : null}
-
-                {/* 3. Hazırlandı */}
-                {order.status === "ONAYLANDI" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    data-mutates
-                    onClick={() => act(() => markRoomReadyAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-success hover:opacity-90 text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <Icon name="utensils" size={20} /> Hazırlandı (Servise Ver)
-                  </button>
-                ) : null}
-
-                {/* 4. Yola Çıktı */}
-                {order.status === "HAZIR" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    data-mutates
-                    data-guide={order.id === filteredOrders.find((o) => o.status === "HAZIR")?.id ? "yola-cik" : undefined}
-                    onClick={() => act(() => markRoomOnWayAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-info text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <Icon name="walk" size={20} /> Odaya Çıkar (Yolda)
-                  </button>
-                ) : null}
-
-                {/* 5. Teslim Edildi */}
-                {order.status === "YOLDA" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    data-mutates
-                    data-guide={order.id === filteredOrders.find((o) => o.status === "YOLDA")?.id ? "teslim-edildi" : undefined}
-                    onClick={() => act(() => markRoomDeliveredAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-success hover:opacity-90 text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <Icon name="check" size={20} /> Odaya Teslim Edildi
-                  </button>
-                ) : null}
-
-                {/* İptal Butonu */}
-                {order.status !== "TESLIM_EDILDI" && order.status !== "IPTAL" && order.status !== "REDDEDILDI" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => {
-                      setCancelModal(order);
-                      setCancelReason("");
-                    }}
-                    className="min-h-[48px] px-3.5 rounded-xl border border-danger text-danger hover:bg-danger/10 text-[13px] font-bold transition active:scale-95"
-                  >
-                    İptal / Ret
-                  </button>
-                ) : null}
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      {/* Telefon Teyit Modalı */}
-      {confirmModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      {phoneFor ? (
+        <div role="dialog" aria-modal="true" aria-label="Telefon teyidi" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
-            <h2 className="text-lg font-black text-text">
-              <Icon name="call" size={20} /> Oda #{confirmModal.roomNumber} Telefon Teyidi
-            </h2>
-            <p className="text-[13px] text-muted mt-1">
-              Sipariş #{confirmModal.orderNo} için misafir arandı ve teyit alındı. İsteğe bağlı not ekleyebilirsiniz:
+            <h2 className="text-lg font-black text-text">{`Oda ${phoneFor.roomNumber} telefon teyidi`}</h2>
+            <p className="mt-1 text-[13px] text-muted">
+              {`#${phoneFor.orderNo} için misafirle görüştün mü? İsteğe bağlı not ekleyebilirsin.`}
             </p>
-
             <textarea
-              value={confirmNote}
-              onChange={(e) => setConfirmNote(e.target.value)}
-              placeholder="Örn: Misafir buz ve ekstra bardak rica etti..."
+              value={phoneNote}
+              onChange={(e) => setPhoneNote(e.target.value)}
               rows={3}
-              className="w-full mt-3 rounded-xl border border-border bg-surface-sunken p-3 text-[13px] focus:border-accent focus:outline-none"
+              maxLength={200}
+              aria-label="Teyit notu"
+              className="mt-3 w-full rounded-xl border border-border bg-surface-sunken p-3 text-[13px] focus:border-accent focus:outline-none"
             />
-
             <div className="mt-4 flex gap-2">
               <button
                 type="button"
-                onClick={() => setConfirmModal(null)}
-                className="flex-1 min-h-[44px] rounded-xl border border-border text-[13px] font-bold"
+                onClick={() => setPhoneFor(null)}
+                className="min-h-11 flex-1 rounded-xl border border-border text-[13px] font-bold"
               >
                 Vazgeç
               </button>
               <button
                 type="button"
-                disabled={pending}
                 data-mutates
                 data-guide="sonuc"
-                onClick={handlePhoneConfirm}
-                className="flex-1 min-h-[44px] rounded-xl bg-warn text-bg font-black text-sm"
+                disabled={busy}
+                onClick={() => {
+                  const orderId = phoneFor.id;
+                  const note = phoneNote.trim() || undefined;
+                  setPhoneFor(null);
+                  void run(() => confirmRoomPhoneAction({ orderId, note }));
+                }}
+                className="min-h-11 flex-1 rounded-xl bg-warn text-sm font-black text-bg"
               >
-                Teyidi Kaydet &amp; Onayla
+                Teyidi kaydet
               </button>
             </div>
           </div>
         </div>
       ) : null}
 
-      {/* İptal Modalı */}
-      {cancelModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
-            <h2 className="text-lg font-black text-danger">
-              <Icon name="close" size={20} /> Siparişi İptal Et / Reddet
-            </h2>
-            <p className="text-[13px] text-muted mt-1">
-              Oda #{cancelModal.roomNumber} - Sipariş #{cancelModal.orderNo} iptal edilecek. Lütfen gerekçe belirtin:
-            </p>
-
-            <input
-              type="text"
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Örn: Misafir iptal etti / Mutfakta stok kalmadı"
-              className="w-full mt-3 h-10 rounded-xl border border-border bg-surface-sunken px-3 text-[13px] focus:border-accent focus:outline-none"
-            />
-
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCancelModal(null)}
-                className="flex-1 min-h-[44px] rounded-xl border border-border text-[13px] font-bold"
-              >
-                Vazgeç
-              </button>
-              <button
-                type="button"
-                disabled={pending || cancelReason.trim().length < 3}
-                data-mutates
-                onClick={handleCancel}
-                className="flex-1 min-h-[44px] rounded-xl bg-danger text-bg font-black text-[13px] hover:opacity-90 disabled:opacity-50"
-              >
-                İptali Kesinleştir
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ReasonDialog
+        open={cancelFor !== null}
+        title={cancelFor ? `Oda ${cancelFor.roomNumber} · #${cancelFor.orderNo} iptal` : ""}
+        message={cancelFor?.status === "GONDERILDI" || cancelFor?.status === "TEYIT_BEKLIYOR" ? "Sipariş teyit edilemedi veya iptal ediliyor. Sebebi yaz." : "Onaylanmış sipariş iptal ediliyor. Sebebi yaz."}
+        reasons={cancelFor?.status === "TEYIT_BEKLIYOR" ? CONFIRM_FAIL_REASONS : CANCEL_REASONS}
+        minLength={REASON_MIN_LENGTH}
+        confirmLabel="İptal et"
+        danger
+        onCancel={() => setCancelFor(null)}
+        onConfirm={async (reason) => {
+          const target = cancelFor;
+          setCancelFor(null);
+          if (target) await run(() => cancelRoomOrderAction({ orderId: target.id, reason }));
+        }}
+      />
     </section>
+  );
+}
+
+function Kpi({ label, value, tone }: { label: string; value: string; tone?: "danger" }) {
+  return (
+    <div
+      className={`rounded-2xl border px-3.5 py-2.5 ${tone === "danger" ? "border-danger/40 bg-danger/10 text-danger" : "border-border bg-surface text-text"}`}
+    >
+      <dt className="text-[13px] font-medium text-muted">{label}</dt>
+      <dd className="text-lg font-black">{value}</dd>
+    </div>
   );
 }
