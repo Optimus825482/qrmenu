@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // pdfkit reads its own data files from node_modules at runtime: keep it out of the bundle.
+  serverExternalPackages: ["pdfkit"],
+  // P7 report PDFs embed DejaVu Sans read via process.cwd(); tracing cannot see that path. The job
+  // worker (instrumentation, every route) renders PDFs too, hence "/**" as well.
+  outputFileTracingIncludes: {
+    "/api/reports/**": ["./assets/fonts/**"],
+    "/**": ["./assets/fonts/**"],
+  },
   // Menu images are uploaded through a Server Action (up to 2 MB + form overhead).
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
   turbopack: {
