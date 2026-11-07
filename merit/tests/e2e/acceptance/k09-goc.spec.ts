@@ -36,14 +36,31 @@ test.describe("@kabul-9 sentetik legacy göçü", () => {
       const run = (dry = false) => execFileSync(process.execPath, [path.join(root, "node_modules/tsx/dist/cli.mjs"),
         path.join(root, "scripts/migrate-from-minibarlatest/index.ts"), "--report", report, "--logo-dir", path.join(tmp, "logos"),
         ...(dry ? ["--dry-run"] : [])], { cwd: root, env: { ...process.env, DATABASE_URL: target, LEGACY_DATABASE_URL: source.href }, encoding: "utf8" });
-      const snapshot = () => sql<{ entity: string; n: number }>(`SELECT 'map' AS entity,count(*)::int AS n FROM legacy_id_map
-        UNION ALL SELECT 'room',count(*)::int FROM rooms UNION ALL SELECT 'user',count(*)::int FROM users
-        UNION ALL SELECT 'tx',count(*)::int FROM minibar_transactions UNION ALL SELECT 'dnd',count(*)::int FROM room_dnds
-        UNION ALL SELECT 'mybar',count(*)::int FROM mybar_requests UNION ALL SELECT 'pool',count(*)::int FROM hotel_stocks ORDER BY entity`);
+      // Discover all public application tables, including relationship/detail tables with no id-map row.
+      // Hash inside PostgreSQL: snapshot failures expose table/count/digest, never passwords or row data.
+      const snapshot = async () => {
+        const tables = await sql<{ tablename: string }>(`SELECT tablename FROM pg_tables
+          WHERE schemaname='public' AND tablename <> '_prisma_migrations' ORDER BY tablename`);
+        const statements = tables.map(({ tablename }) => {
+          const identifier = `"${tablename.replaceAll('"', '""')}"`;
+          const label = `'${tablename.replaceAll("'", "''")}'`;
+          // Each real CLI invocation intentionally adds one audit record; assert those separately below.
+          // Imported legacy audit records and every other audit record remain in the content snapshot.
+          const where = tablename === "audit_logs" ? "WHERE action <> 'LEGACY_MIGRATION'" : "";
+          return `SELECT ${label} AS entity,count(*)::int AS n,
+            md5(COALESCE(jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text)::text,'[]')) AS digest
+            FROM public.${identifier} t ${where}`;
+        });
+        return sql<{ entity: string; n: number; digest: string }>(`${statements.join(" UNION ALL ")} ORDER BY entity`);
+      };
+      const migrationAudits = async () => (await sql<{ n: number }>("SELECT count(*)::int AS n FROM audit_logs WHERE action='LEGACY_MIGRATION'"))[0].n;
       const before = await snapshot();
+      const auditBefore = await migrationAudits();
       run(true);
       expect(await snapshot()).toEqual(before);
+      expect(await migrationAudits()).toBe(auditBefore);
       run();
+      expect(await migrationAudits()).toBe(auditBefore + 1);
       const markdown = fs.readFileSync(report, "utf8");
       expect(markdown).toContain("- Sonuç: temiz");
       expect(markdown).not.toContain("- KALDI");
@@ -62,6 +79,7 @@ test.describe("@kabul-9 sentetik legacy göçü", () => {
       const after = await snapshot();
       run();
       expect(await snapshot()).toEqual(after);
+      expect(await migrationAudits()).toBe(auditBefore + 2);
       await page.goto("/q/123456");
       await expect(page.locator(".mb-room-badge")).toContainText("K901");
       await login(page, "kabul.legacy", TEST_PASSWORD);
