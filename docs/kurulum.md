@@ -32,6 +32,7 @@ dosya izinleri `600` olsun ve depoya eklemeyin.
 | `DATABASE_URL` | evet | Üretim veritabanı bağlantı dizesi (varsayılanı yok). |
 | `SESSION_SECRET` | evet | Oturum çerezini şifreleyen anahtar; en az 32 baytlık rastgele değer. |
 | `QR_HMAC_SECRET` | evet | QR imza anahtarı; en az 32 baytlık rastgele değer. |
+| `SETTINGS_SECRET_KEY` | hayır | Veritabanında şifreli saklanan sırların (SMTP parolası, `enc:v1:` biçimi) anahtarı; en az 32 baytlık rastgele değer. Tanımsızsa `SESSION_SECRET` kullanılır. Değer sonradan değişirse (veya `SESSION_SECRET` değişir ve bu tanımsızsa) kayıtlı SMTP parolası açılamaz; parola Sistem ayarlarından yeniden girilmelidir. |
 | `PRINT_GATEWAY_KEY` | evet | Yazdırma geçidi anahtarı (varsayılanı yok); geçidin `GATEWAY_KEY` değeriyle aynı olmalı. |
 | `APP_BASE_URL` | evet (üretimde) | Dış adres, örn. `https://merit.otel.example` (Origin denetimleri bunu kullanır). Üretimde varsayılanı yoktur; geliştirmede `http://localhost:3000`. |
 | `SEED_ADMIN_PASSWORD` | yalnız ilk seed | `admin` kullanıcısı **yoksa** oluşturulurken kullanılan parola, en az 10 karakter. Admin varsa seed ona dokunmaz; seed sonrası ortamdan kaldırın. |
@@ -481,6 +482,9 @@ journald'ın varsayılanı yeterlidir.
 - `SESSION_SECRET` ve `QR_HMAC_SECRET` en az 32 baytlık rastgele değerler olmalı; örnek
   değerleri (`change-me...`) üretimde kullanmayın. `SESSION_SECRET` değişirse açık
   oturumlar geçersiz olur.
+- SMTP parolası ayar anahtarı olarak (`smtp.password`) AES-256-GCM ile şifreli saklanır; ekranda ve denetim
+  kaydında gösterilmez. Şifreleme anahtarı `SETTINGS_SECRET_KEY` (yoksa `SESSION_SECRET`) ortam değişkeninden türetilir; bu
+  değişkeni yedekleyin, kaybolursa parola yeniden girilir.
 - **HTTPS zorunludur.** Üretimde oturum çerezi `secure` işaretlidir; düz HTTP üzerinden
   giriş çalışmaz. Yalnızca HTTP ile erişilen geçici test ortamları için `COOKIE_SECURE=false`
   verilebilir; gerçek kurulumda kullanmayın.

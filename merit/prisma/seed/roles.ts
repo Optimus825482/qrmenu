@@ -67,8 +67,8 @@ const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
  * names the plan that introduced it and which roles it matches; `keep` maps a screen code to the actions that
  * survive (intersection with the profile actions, `[]` = no row at all). Entries apply in order.
  *
- * Migrations repeat the new entries for databases seeded earlier: 0005 (P5), 20261102214000 (R-KAT) and
- * 20261103093000 (P2/P3, the `@limits` block). `match.exceptCodes` selects every role except those listed.
+ * Migrations repeat the new entries for databases seeded earlier: 0005 (P5), 20261102214000 (R-KAT),
+ * 20261103093000 (P2/P3, the `@limits` block) and 20261107090000 (P7 `grant`, its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
   plan: "P5" | "P2" | "P3" | "P7";
@@ -79,6 +79,8 @@ export type ScreenLimit = {
     exceptCodes?: readonly string[];
   };
   keep?: Record<string, readonly Action[]>;
+  /** Actions added on top of the earlier entries' result (only for screens the role's modules already open). */
+  grant?: Record<string, readonly Action[]>;
 };
 
 /** P5: field staff of an outlet and kitchen roles see less, the A action on QS-KUY / QS-IPT is role-bound. */
@@ -150,7 +152,15 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
     },
   },
   { plan: "P3", match: { codes: ["R-OTM"] }, keep: { "MB-KF": [], "MB-TUK": ["V"] } },
+  // P7: the ISLET profile has no R, so these managers could not open the reports of their own modules.
+  // `grant` runs after every `keep` above; none of P5/P2/P3 restricts R on these role × screen pairs.
+  { plan: "P7", match: { codes: ["R-OTM"] }, grant: { "MB-RAP": ["R"], "QM-RAP": ["R"], "QS-RAP": ["R"] } },
+  { plan: "P7", match: { codes: ["R-FBM"] }, grant: { "QM-RAP": ["R"], "QS-RAP": ["R"], "RO-SLA": ["R"] } },
+  { plan: "P7", match: { codes: ["R-DEP"] }, grant: { "MB-RAP": ["R"] } },
+  { plan: "P7", match: { codes: ["R-SGF"] }, grant: { "QM-RAP": ["R"], "QS-RAP": ["R"] } },
 ];
+
+const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];
 
 function matches(role: RoleDef, m: ScreenLimit["match"]): boolean {
   if (!m) return true;
@@ -166,6 +176,10 @@ function applyScreenLimits(role: RoleDef, screen: ScreenDef, actions: readonly A
   for (const limit of SCREEN_LIMITS) {
     const keep = limit.keep?.[screen.code];
     if (keep && matches(role, limit.match)) result = result.filter((a) => keep.includes(a));
+    const grant = limit.grant?.[screen.code];
+    if (grant && matches(role, limit.match)) {
+      result = ACTION_ORDER.filter((a) => result.includes(a) || grant.includes(a));
+    }
   }
   return result;
 }

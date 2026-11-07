@@ -6,16 +6,33 @@ import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { assertCan } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
+import { sealSecret } from "@/lib/secret-box";
 import { audit } from "@/modules/core/server/audit";
 import {
   DEFAULT_SETTINGS,
   isSettingKey,
+  SETTING_META,
   SETTING_SCHEMAS,
+  SMTP_PASSWORD_MAX,
   type SettingKey,
   type SettingValue,
 } from "./settings-defs";
 
 export { DEFAULT_SETTINGS, SETTING_SCHEMAS, type SettingKey, type SettingValue };
+
+/** What the settings table holds for a validated value: `sealed` keys are encrypted (empty stays empty). */
+export function storedValue(key: SettingKey, parsed: unknown): unknown {
+  if (!SETTING_META[key].sealed || typeof parsed !== "string" || parsed === "") return parsed;
+  if (parsed.length > SMTP_PASSWORD_MAX) {
+    throw new DomainError("VALIDATION", `En fazla ${SMTP_PASSWORD_MAX} karakter olabilir`, {
+      fieldErrors: { value: [`En fazla ${SMTP_PASSWORD_MAX} karakter olabilir`] },
+    });
+  }
+  return sealSecret(parsed);
+}
+
+const maskedForAudit = (key: SettingKey, value: unknown): unknown =>
+  SETTING_META[key].secret && value !== "" && value !== null && value !== undefined ? "••••••••" : value;
 
 type Row = { hotelId: string | null; key: string; value: unknown };
 
@@ -120,7 +137,7 @@ export async function setSetting<K extends SettingKey>(
   }
   const parsed = SETTING_SCHEMAS[key].safeParse(value);
   if (!parsed.success) throw fromZod(parsed.error as ZodError);
-  const next = parsed.data as Prisma.InputJsonValue;
+  const next = storedValue(key, parsed.data) as Prisma.InputJsonValue;
 
   await prisma.$transaction(async (tx) => {
     // Prisma's upsert cannot target the (null, key) pair, so find-then-write for both scopes;
@@ -138,8 +155,8 @@ export async function setSetting<K extends SettingKey>(
       action: "SETTING_UPDATE",
       entity: "Setting",
       entityId: key,
-      before: existing?.value,
-      after: next,
+      before: maskedForAudit(key, existing?.value),
+      after: maskedForAudit(key, next),
     });
     await publish({ type: "settings.changed", hotelId: scope, payload: { key } }, tx);
     // Guest menus follow price changes live.

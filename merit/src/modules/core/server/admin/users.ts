@@ -38,6 +38,8 @@ export type UserRow = {
   fullName: string;
   jobTitle: string | null;
   email: string | null;
+  /** Rapor/uyarı e-postası almayı kabul etti (varsayılan kapalı). */
+  emailOptIn: boolean;
   phone: string | null;
   roleId: string;
   roleCode: string;
@@ -62,6 +64,7 @@ const SELECT = {
   fullName: true,
   jobTitle: true,
   email: true,
+  emailOptIn: true,
   phone: true,
   roleId: true,
   role: { select: { code: true, name: true, kind: true } },
@@ -88,6 +91,7 @@ function toRow(user: UserWithRelations): UserRow {
     fullName: user.fullName,
     jobTitle: user.jobTitle,
     email: user.email,
+    emailOptIn: user.emailOptIn,
     phone: user.phone,
     roleId: user.roleId,
     roleCode: user.role.code,
@@ -141,6 +145,8 @@ const profileFields = {
     (v) => v === undefined || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
     "Geçerli bir e-posta girin",
   ),
+  /** Update: omitted leaves the stored choice untouched; create: omitted means off. */
+  emailOptIn: z.boolean().optional(),
   phone: optionalText(30),
   roleId: z.string("Rol seçin").min(1, "Rol seçin"),
   hotelId: optionalId,
@@ -428,6 +434,7 @@ type NewUserInput = {
   fullName: string;
   jobTitle: string;
   email?: string;
+  emailOptIn?: boolean;
   phone?: string;
   roleId: string;
   hotelId?: string;
@@ -461,6 +468,7 @@ async function createRecord(
             fullName: input.fullName,
             jobTitle: input.jobTitle,
             email: input.email,
+            emailOptIn: input.emailOptIn ?? false,
             phone: input.phone,
             mustChangePassword,
             roleId: input.roleId,
@@ -568,6 +576,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
           fullName: input.fullName,
           jobTitle: input.jobTitle ?? "",
           email: input.email ?? null,
+          emailOptIn: input.emailOptIn,
           phone: input.phone ?? null,
           roleId: input.roleId,
           hotelId: input.hotelId ?? null,

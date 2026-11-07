@@ -46,6 +46,14 @@ export const SETTING_SCHEMAS = {
   "email.alertEnabled": flag,
   "email.reportEnabled": flag,
   "email.systemEnabled": flag,
+  "smtp.host": z.string().max(255),
+  "smtp.port": z.number().int().min(1).max(65535),
+  "smtp.security": z.enum(["NONE", "STARTTLS", "SSL"]),
+  "smtp.user": z.string().max(255),
+  /** Stored sealed (`enc:v1:…`, see lib/secret-box); the plain text is limited by `SMTP_PASSWORD_MAX`. */
+  "smtp.password": z.string().max(512),
+  "smtp.fromEmail": z.union([z.literal(""), z.email()]),
+  "smtp.fromName": z.string().min(1).max(100),
   "occupancy.fileRetentionDays": z.number().int().min(1).max(365),
   "qr.baseUrl": z.url(),
   "radar.liveBufferMinutes": z.number().int().min(5).max(120),
@@ -61,6 +69,9 @@ export const SETTING_SCHEMAS = {
   "translation.provider": z.enum(["AUTO", "DEEPL", "GEMINI"]),
   "translation.geminiModel": z.enum(["gemini-3.8-flash", "gemini-flash-latest", "gemini-flash-lite-latest"]),
 } as const;
+
+/** Longest plain SMTP password; its sealed form stays within the 512 characters of the schema. */
+export const SMTP_PASSWORD_MAX = 256;
 
 export type SettingKey = keyof typeof SETTING_SCHEMAS;
 export type SettingValue<K extends SettingKey> = z.infer<(typeof SETTING_SCHEMAS)[K]>;
@@ -94,6 +105,13 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "email.alertEnabled": false,
   "email.reportEnabled": false,
   "email.systemEnabled": false,
+  "smtp.host": "",
+  "smtp.port": 587,
+  "smtp.security": "STARTTLS",
+  "smtp.user": "",
+  "smtp.password": "",
+  "smtp.fromEmail": "",
+  "smtp.fromName": "Merit Royal",
   "occupancy.fileRetentionDays": 4,
   "qr.baseUrl": "http://localhost:3000",
   "radar.liveBufferMinutes": 30,
@@ -146,6 +164,8 @@ export type SettingMeta = {
   step?: number;
   /** Never echoed back or written to the audit log in clear. */
   secret?: boolean;
+  /** Encrypted at rest (`enc:v1:`, lib/secret-box); readers use `openSecret`. Secrets without it stay plain (legacy). */
+  sealed?: boolean;
   /** Only the system scope may hold it (a hotel row is refused). */
   systemOnly?: boolean;
   placeholder?: string;
@@ -347,6 +367,58 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     description: "Sistem e-postaları (parola, güvenlik) gönderilsin mi.",
     group: "E-posta",
     type: "boolean",
+  },
+  "smtp.host": {
+    label: "SMTP sunucusu",
+    description: "Giden e-posta sunucusunun adresi (örn. smtp.ornek.com). Otel satırı sistem satırını ezer.",
+    group: "E-posta",
+    type: "text",
+    placeholder: "smtp.ornek.com",
+  },
+  "smtp.port": {
+    label: "SMTP bağlantı noktası",
+    description: "Genelde STARTTLS için 587, SSL/TLS için 465.",
+    group: "E-posta",
+    type: "number",
+    step: 1,
+  },
+  "smtp.security": {
+    label: "SMTP güvenliği",
+    description: "Sunucuyla bağlantı şifreleme biçimi.",
+    group: "E-posta",
+    type: "enum",
+    options: [
+      { value: "NONE", label: "Şifresiz" },
+      { value: "STARTTLS", label: "STARTTLS" },
+      { value: "SSL", label: "SSL-TLS" },
+    ],
+  },
+  "smtp.user": {
+    label: "SMTP kullanıcı adı",
+    description: "Sunucu kimlik doğrulaması istiyorsa kullanıcı adı; yoksa boş bırakın.",
+    group: "E-posta",
+    type: "text",
+  },
+  "smtp.password": {
+    label: "SMTP parolası",
+    description: "Veritabanında şifreli saklanır, ekranda gösterilmez. Boş bırakmak parolayı siler.",
+    group: "E-posta",
+    type: "text",
+    secret: true,
+    sealed: true,
+  },
+  "smtp.fromEmail": {
+    label: "Gönderen e-posta adresi",
+    description: "Giden iletilerin gönderen adresi (From).",
+    group: "E-posta",
+    type: "text",
+    placeholder: "rapor@ornek.com",
+  },
+  "smtp.fromName": {
+    label: "Gönderen adı",
+    description: "Giden iletilerde görünen gönderen adı.",
+    group: "E-posta",
+    type: "text",
   },
   "qr.baseUrl": {
     label: "QR taban adresi",

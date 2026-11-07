@@ -125,6 +125,12 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     for (const statement of matrixSql.split(/;\s*\n/).map((x) => x.trim()).filter((x) => x.length > 0)) {
       await db.$executeRawUnsafe(statement);
     }
+    // P7 later adds R grants on some of these screens (its own @limits block, applied after 0005).
+    const p7 = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261107090000_p7_rapor/migration.sql"), "utf8");
+    const p7Block = p7.slice(p7.indexOf("-- @limits:begin"), p7.indexOf("-- @limits:end"));
+    for (const statement of p7Block.split(/;\s*\n/).map((x) => x.replace(/^\s*--.*$/gm, "").trim()).filter((x) => x.length > 0)) {
+      await db.$executeRawUnsafe(statement);
+    }
 
     const actual = toMap(await db.roleScreenPermission.findMany({ where, include: { role: true, screen: true } }));
     expect(actual).toEqual(expected);

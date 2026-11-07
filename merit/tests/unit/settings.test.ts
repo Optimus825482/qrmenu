@@ -20,6 +20,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const { getSetting, getSettings, setSetting } = await import("@/lib/settings");
 const { startRealtimeListener, stopRealtimeListener, subscribe } = await import("@/lib/realtime");
 const { DEFAULT_SETTINGS } = await import("@/lib/settings-defs");
+const { openSecret } = await import("@/lib/secret-box");
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -284,5 +285,50 @@ describe("setSetting", () => {
     expect(await row("dnd.minChecks", null)).toBeNull();
     await sleep(150);
     expect(received).toHaveLength(0);
+  });
+});
+
+describe("smtp.* anahtarları ve sır kutusu", () => {
+  it("smtp.password diskte mühürlenir, audit düz şifre içermez", async () => {
+    const ctx = await admin();
+    await setSetting(ctx, "smtp.password", "s3cret!", null);
+    const stored = (await row("smtp.password", null))?.value as string;
+    expect(stored.startsWith("enc:v1:")).toBe(true);
+    expect(stored).not.toContain("s3cret!");
+    expect(openSecret(stored)).toBe("s3cret!");
+    const audits = await testDb.auditLog.findMany({ where: { entityId: "smtp.password" } });
+    expect(audits).toHaveLength(1);
+    expect(JSON.stringify(audits)).not.toContain("s3cret!");
+    expect(JSON.stringify(audits)).not.toContain(stored);
+  });
+
+  it("boş şifre mühürlenmez; çok uzun şifre VALIDATION", async () => {
+    const ctx = await admin();
+    await setSetting(ctx, "smtp.password", "", null);
+    expect((await row("smtp.password", null))?.value).toBe("");
+    await expect(setSetting(ctx, "smtp.password", "x".repeat(300), null)).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
+  it("port ve gönderen adresi doğrulanır", async () => {
+    const ctx = await admin();
+    await expect(setSetting(ctx, "smtp.port", 70000, null)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(setSetting(ctx, "smtp.fromEmail", "abc", null)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(setSetting(ctx, "smtp.security", "TLS" as never, null)).rejects.toMatchObject({ code: "VALIDATION" });
+    await setSetting(ctx, "smtp.fromEmail", "", null);
+    await setSetting(ctx, "smtp.fromEmail", "rapor@example.test", null);
+    expect(await getSetting("smtp.fromEmail")).toBe("rapor@example.test");
+  });
+
+  it("varsayılanlar; otel satırı sistem satırını ezer", async () => {
+    expect(await getSetting("smtp.port")).toBe(587);
+    expect(await getSetting("smtp.security")).toBe("STARTTLS");
+    expect(await getSetting("smtp.fromName")).toBe("Merit Royal");
+    expect(await getSetting("smtp.host")).toBe("");
+    const ctx = await admin();
+    const mr = await hotelId("ROYAL");
+    await setSetting(ctx, "smtp.host", "sistem.example.test", null);
+    await setSetting(ctx, "smtp.host", "mr.example.test", mr);
+    expect(await getSetting("smtp.host", mr)).toBe("mr.example.test");
+    expect(await getSetting("smtp.host", await hotelId("DIAMOND"))).toBe("sistem.example.test");
   });
 });

@@ -166,6 +166,7 @@ enum EmailStatus {
   GONDERILDI
   HATA
   BEKLEMEDE
+  IPTAL
 }
 
 enum MenuNodeKind {
@@ -248,6 +249,7 @@ model Hotel {
   settings                  Setting[]
   notifications             Notification[]
   auditLogs                 AuditLog[]
+  emailLogs                 EmailLog[]
   roomTypeSetups            RoomTypeSetup[]
   stocks                    HotelStock[]
   stockMovements            HotelStockMovement[]
@@ -434,6 +436,8 @@ model User {
   fullName           String    @map("full_name")
   jobTitle           String?   @map("job_title")
   email              String?
+  /** Rapor/uyarı e-postası almayı kabul etti; varsayılan kapalı, yalnız kullanıcı formundan açılır. */
+  emailOptIn         Boolean   @default(false) @map("email_opt_in")
   phone              String?
   mustChangePassword Boolean   @default(false) @map("must_change_password")
   roleId             String    @map("role_id")
@@ -1252,11 +1256,22 @@ model EmailLog {
   trackingId String      @unique @map("tracking_id")
   refType    String?     @map("ref_type")
   refId      String?     @map("ref_id")
+  /** Alıcı başına teslim kaydı (P7): otel, şablon, parametreler, tekrar gönderimi önleyen anahtar. */
+  hotelId    String?     @map("hotel_id")
+  template   String?
+  params     Json?
+  dedupeKey  String?     @unique @map("dedupe_key")
+  attempts   Int         @default(0)
+  sentAt     DateTime?   @map("sent_at") @db.Timestamptz(3)
+  messageId  String?     @map("message_id")
   createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt  DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  hotel Hotel? @relation(fields: [hotelId], references: [id], onDelete: SetNull)
 
+  @@index([hotelId, createdAt])
+  @@index([status, createdAt])
   @@map("email_logs")
 }
 

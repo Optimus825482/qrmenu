@@ -56,7 +56,7 @@ describe("SCREEN_LIMITS tek liste", () => {
     expect(acts("R-SYS", "MB-TAN")).toBe(set(...PROFILE_ACTIONS.TAM));
     expect(acts("R-DEP", "MB-PERS")).toBe(set(...PROFILE_ACTIONS.ISLET));
     expect(acts("R-KAT", "MB-PERS")).toBe(set(...PROFILE_ACTIONS.SAHA));
-    expect(acts("R-OTM", "MB-RAP")).toBe(set(...PROFILE_ACTIONS.ISLET));
+    expect(acts("R-OTM", "MB-RAP")).toBe(set(...PROFILE_ACTIONS.ISLET, "R")); // P7 grant
     expect(acts("R-HKS", "MB-RAP")).toBe(set("V", "R"));
   });
 
@@ -120,17 +120,17 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
     }
     expect(await read()).not.toEqual(expected);
 
-    const file = readFileSync(
-      path.resolve(__dirname, "../../prisma/migrations/20261103093000_minibar_tamamlama_temel/migration.sql"),
-      "utf8",
-    );
-    const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));
-    expect(block.length).toBeGreaterThan(0);
-    const statements = block
-      .split(/;\s*\n/)
-      .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
-      .filter((x) => x.length > 0);
-    for (const statement of statements) await testDb.$executeRawUnsafe(statement);
+    // The @limits blocks of the migrations in order: P2/P3, then the P7 report grants.
+    for (const migration of ["20261103093000_minibar_tamamlama_temel", "20261107090000_p7_rapor"]) {
+      const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
+      const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));
+      expect(block.length).toBeGreaterThan(0);
+      const statements = block
+        .split(/;\s*\n/)
+        .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
+        .filter((x) => x.length > 0);
+      for (const statement of statements) await testDb.$executeRawUnsafe(statement);
+    }
     expect(await read()).toEqual(expected);
   });
 });

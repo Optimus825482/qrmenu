@@ -328,3 +328,37 @@ describe("scopes", () => {
     expect(m.hotels.map((h) => h.code)).toEqual(["ROYAL"]);
   });
 });
+
+describe("smtp.password (mühürlü sır)", () => {
+  it("set mühürler; listGrouped ve set sonucu maske gösterir; audit düz şifre içermez", async () => {
+    const ctx = await sys();
+    const item = await settingsAdmin.set(ctx, null, "smtp.password", "s3cret!");
+    expect(item.value).toBe("••••••••");
+    const stored = (await testDb.setting.findFirstOrThrow({ where: { key: "smtp.password", hotelId: null } })).value as string;
+    expect(stored.startsWith("enc:v1:")).toBe(true);
+    const listed = (await settingsAdmin.listGrouped(ctx, null)).flatMap((g) => g.items).find((i) => i.key === "smtp.password");
+    expect(listed?.value).toBe("••••••••");
+    const audits = JSON.stringify(await testDb.auditLog.findMany({ where: { entityId: "smtp.password" } }));
+    expect(audits).not.toContain("s3cret!");
+    expect(audits).not.toContain(stored);
+  });
+
+  it("maskeyi geri göndermek kayıtlı şifreyi değiştirmez", async () => {
+    const ctx = await sys();
+    await settingsAdmin.set(ctx, null, "smtp.password", "s3cret!");
+    const before = (await testDb.setting.findFirstOrThrow({ where: { key: "smtp.password", hotelId: null } })).value;
+    await settingsAdmin.set(ctx, null, "smtp.password", "••••••••");
+    expect((await testDb.setting.findFirstOrThrow({ where: { key: "smtp.password", hotelId: null } })).value).toBe(before);
+  });
+
+  it("smtp.port 70000 VALIDATION, smtp.fromEmail abc VALIDATION, boş OK; otel satırı sistemi ezer", async () => {
+    const ctx = await sys();
+    await expect(settingsAdmin.set(ctx, null, "smtp.port", 70000)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(settingsAdmin.set(ctx, null, "smtp.fromEmail", "abc")).rejects.toMatchObject({ code: "VALIDATION" });
+    await settingsAdmin.set(ctx, null, "smtp.fromEmail", "");
+    const mr = await hotelId("ROYAL");
+    await settingsAdmin.set(ctx, null, "smtp.host", "sistem.example.test");
+    await settingsAdmin.set(ctx, mr, "smtp.host", "mr.example.test");
+    expect(await getSetting("smtp.host", mr)).toBe("mr.example.test");
+  });
+});

@@ -14,6 +14,7 @@ import {
   type SettingKey,
   type SettingMeta,
 } from "@/lib/settings-defs";
+import { storedValue } from "@/lib/settings";
 import { audit } from "@/modules/core/server/audit";
 import { withAdminTx } from "./crud";
 
@@ -140,8 +141,13 @@ export async function set(
   value: unknown,
 ): Promise<SettingItem> {
   const k = parseWrite(key, value, hotelId);
-  const next = SETTING_SCHEMAS[k].parse(value) as Prisma.InputJsonValue;
   const meta = SETTING_META[k];
+  // The mask the window shows for a stored secret is not a new value: sending it back keeps the stored one.
+  if (meta.sealed && value === MASK) {
+    await assertCan(ctx, SCREEN, "D", hotelId ?? undefined);
+    return resolveItem(k, await loadRows(prisma, [k], hotelId), hotelId);
+  }
+  const next = storedValue(k, SETTING_SCHEMAS[k].parse(value)) as Prisma.InputJsonValue;
   const scope = hotelId === null ? "SYSTEM" : "HOTEL";
   return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: hotelId ?? undefined }, async (tx) => {
     // Prisma's upsert cannot target the (null, key) pair; the advisory lock serializes first writes.

@@ -14,6 +14,8 @@ export const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL tanımlı olmalı"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET en az 32 karakter olmalı"),
   QR_HMAC_SECRET: z.string().min(32, "QR_HMAC_SECRET en az 32 karakter olmalı"),
+  /** Anahtar kutusu (SMTP parolası) için ayrı anahtar; boşsa SESSION_SECRET kullanılır. Değişirse mühürlü değerler açılamaz. */
+  SETTINGS_SECRET_KEY: z.string().min(32, "SETTINGS_SECRET_KEY en az 32 karakter olmalı").optional(),
   APP_BASE_URL: z.url("APP_BASE_URL geçerli bir URL olmalı"),
   PRINT_GATEWAY_KEY: z.string().min(1, "PRINT_GATEWAY_KEY tanımlı olmalı"),
   /** Where uploaded files (menu images) live; defaults to <cwd>/uploads. */

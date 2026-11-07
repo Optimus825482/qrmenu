@@ -554,3 +554,28 @@ describe("createOnboarding geçici şifre", () => {
     expect(logs).toContain("tempPasswordIssued");
   });
 });
+
+describe("users: emailOptIn", () => {
+  it("varsayılan false; güncelleme true yapar, audit before/after'da görünür; alan verilmezse korunur", async () => {
+    const ctx = await sys();
+    const created = await newUser(ctx, "optin.kisi");
+    expect(created.emailOptIn).toBe(false);
+    const base = {
+      username: "optin.kisi",
+      fullName: "Kişi",
+      roleId: created.roleId,
+      hotelId: created.hotelId ?? undefined,
+      hotelIds: [],
+    };
+    const on = await users.update(ctx, created.id, { ...base, emailOptIn: true });
+    expect(on.emailOptIn).toBe(true);
+    expect((await testDb.user.findUniqueOrThrow({ where: { id: created.id } })).emailOptIn).toBe(true);
+    const audit = await testDb.auditLog.findFirstOrThrow({ where: { action: "USER_UPDATE", entityId: created.id }, orderBy: { createdAt: "asc" } });
+    expect(audit.before).toMatchObject({ emailOptIn: false });
+    expect(audit.after).toMatchObject({ emailOptIn: true });
+    const kept = await users.update(ctx, created.id, base);
+    expect(kept.emailOptIn).toBe(true);
+    const off = await users.update(ctx, created.id, { ...base, emailOptIn: false });
+    expect(off.emailOptIn).toBe(false);
+  });
+});

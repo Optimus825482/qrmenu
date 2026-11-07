@@ -32,6 +32,9 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
       <Field name="email" label="E-posta">
         <input type="text" defaultValue={editing?.email ?? ""} maxLength={120} />
       </Field>
+      <Field name="emailOptIn" label="Rapor/uyarı e-postaları al">
+        <input type="checkbox" defaultChecked={editing?.emailOptIn ?? false} />
+      </Field>
       <Field name="phone" label="Telefon">
         <input type="text" defaultValue={editing?.phone ?? ""} maxLength={30} />
       </Field>
@@ -87,6 +90,7 @@ export function userInputFromValues(values: FormValues, includePassword: boolean
     fullName: values.fullName ?? "",
     jobTitle: values.jobTitle ?? "",
     email: values.email ?? "",
+    emailOptIn: values.emailOptIn !== undefined,
     phone: values.phone ?? "",
     roleId: values.roleId ?? "",
     hotelId,
