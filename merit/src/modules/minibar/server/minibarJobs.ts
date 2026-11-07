@@ -125,12 +125,12 @@ export async function sendHotelMailOnce(params: {
     logId = existing.id;
   }
 
-  const ok = await sendMail({ to: recipients.map((r) => r.email), subject, html });
+  const ok = await sendMail({ to: recipients.map((r) => r.email), subject, html, hotelId });
   await prisma.emailLog.update({
     where: { id: logId },
     data: ok
       ? { status: "GONDERILDI", error: null }
-      : { status: "HATA", error: isMailConfigured() ? "Gönderim başarısız" : "SMTP yapılandırılmamış" },
+      : { status: "HATA", error: (await isMailConfigured(hotelId)) ? "Gönderim başarısız" : "SMTP yapılandırılmamış" },
   });
   // G20: tell the radar (SISTEM sessions) once per failed send; never throws.
   if (!ok) await publishMailFailed(hotelId, kind);

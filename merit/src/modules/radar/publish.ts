@@ -38,9 +38,9 @@ export async function publishRadar<K extends keyof Wire>(
  * must not break because the radar could not be told. Called by `sendHotelMailOnce` on the "failed"
  * outcome (minibar Task 11) and by the P7 mail jobs, once per failed send.
  */
-export async function publishMailFailed(hotelId: string, kind: string): Promise<void> {
+export async function publishMailFailed(hotelId: string, kind: string, template?: string): Promise<void> {
   try {
-    await publishRadar("mail.failed", { hotelId }, { kind: kind.slice(0, 32) });
+    await publishRadar("mail.failed", { hotelId }, { kind: kind.slice(0, 32), ...(template ? { template: template.slice(0, 32) } : {}) });
   } catch (error) {
     console.error("[radar] mail.failed", error);
   }

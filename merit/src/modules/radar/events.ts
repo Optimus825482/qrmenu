@@ -70,7 +70,7 @@ export type Wire = {
   };
   "occupancy.missing": { date: string; missingKinds: string[]; slot: "10:00" | "18:00" };
   "presence.tick": { sessions: { sessionId: string; lastSeenAt: string }[] };
-  "mail.failed": { kind: string };
+  "mail.failed": { kind: string; template?: string };
   "order.sla": {
     orderId: string;
     orderNo: number;
@@ -173,7 +173,7 @@ export const RADAR_WIRE: { [K in keyof Wire]: z.ZodType<Wire[K]> } = {
   "presence.tick": z.strictObject({
     sessions: z.array(z.strictObject({ sessionId: id, lastSeenAt: z.string().max(40) })).max(80),
   }),
-  "mail.failed": z.strictObject({ kind: z.string().max(32) }),
+  "mail.failed": z.strictObject({ kind: z.string().max(32), template: z.string().max(32).optional() }),
   "order.sla": z.strictObject({
     orderId: id,
     orderNo: count,
