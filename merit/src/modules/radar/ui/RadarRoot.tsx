@@ -13,6 +13,7 @@ import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
 import { MotionLayer } from "./motion/MotionLayer";
 import { useMotionPreference } from "./motion/useMotionPreference";
+import { useDemo } from "./demo/useDemo";
 import { ReplayPlayer } from "./ReplayPlayer";
 import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
@@ -107,6 +108,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const sse = useStore(sseClient().store, (s) => s.status);
   const now = useNow(1000);
   const all = hotelId === "ALL";
+  const demo = useDemo(store, { hotelId, enabled: !all });
   // A scope switch renders before the effect restarts the store; hide the old scope immediately.
   const scoped = state.hotelId === hotelId;
   const snap = scoped ? state.view : null;
@@ -561,9 +563,20 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             onView={setChoice}
             connection={connection}
             motion={{ on: motionPref.on, reduced: motionPref.reduced, onToggle: motionPref.toggle }}
+            demo={{
+              running: demo.running,
+              disabled: all || (state.mode === "replay" && !demo.running),
+              hint: all
+                ? "Demo için önce bir otel seçin"
+                : state.mode === "replay" && !demo.running
+                  ? "Gün tekrarı sürerken demo başlatılamaz"
+                  : undefined,
+              onStart: demo.start,
+              onStop: demo.stop,
+            }}
             modeText={
               state.mode === "replay" && state.replay
-                ? `Tekrar ${clock(state.replay.virtualMs)}`
+                ? `${demo.running ? "Demo" : "Tekrar"} ${clock(state.replay.virtualMs)}`
                 : state.mode === "scrub" && state.cursor
                   ? `Geçmiş ${clock(state.cursor)}`
                   : CONNECTION_TEXT[connection]
@@ -585,10 +598,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             <div className="rd-banner" data-tone="info" role="status">
               <Icon name="play" size={14} />
               <span>
-                Tekrar · {state.replay.day} · {clock(state.replay.virtualMs)} · {state.replay.speed}×
+                {demo.running ? "Demo senaryosu" : `Tekrar · ${state.replay.day}`} · {clock(state.replay.virtualMs)} · {state.replay.speed}×
               </span>
-              <button type="button" className="rd-chip" onClick={() => store.getState().exitReplay()}>
-                Canlıya dön (Esc)
+              <button type="button" className="rd-chip" onClick={() => (demo.running ? demo.stop() : store.getState().exitReplay())}>
+                {demo.running ? "Demoyu durdur" : "Canlıya dön (Esc)"}
               </button>
             </div>
           ) : null}

@@ -73,7 +73,15 @@ export type RadarStoreState = {
   refresh(): Promise<void>;
   scrubTo(ms: number): void;
   goLive(): void;
-  enterReplay(params: { hotelId: string; day: string; from?: string; to?: string; speed?: PlaybackSpeed }): Promise<void>;
+  /** `loader` replaces the replay source for this one call (the client-side demo scenario); it never touches the server. */
+  enterReplay(params: {
+    hotelId: string;
+    day: string;
+    from?: string;
+    to?: string;
+    speed?: PlaybackSpeed;
+    loader?(params: LoadReplayParams): AsyncIterable<ReplayLine>;
+  }): Promise<void>;
   exitReplay(): void;
   replaySeek(ms: number): void;
   replaySetSpeed(speed: PlaybackSpeed): void;
@@ -617,13 +625,13 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
         set({ mode: "live", cursor: null, view: s.live, pending: 0 });
       },
 
-      async enterReplay({ hotelId, day, from = "00:00", to = "24:00", speed = 1 }) {
+      async enterReplay({ hotelId, day, from = "00:00", to = "24:00", speed = 1, loader: callLoader }) {
         const gen = ++generation;
         for (const c of [flushCancel, refreshCancel, replayTickCancel]) c?.();
         flushCancel = refreshCancel = replayTickCancel = undefined;
         queue = [];
 
-        const loader = deps.loadReplay ?? ((p: LoadReplayParams) => loadReplay(p));
+        const loader = callLoader ?? deps.loadReplay ?? ((p: LoadReplayParams) => loadReplay(p));
         let snap: RadarSnapshot | null = null;
         let snapAtMs = 0;
         const evs: RadarEvent[] = [];

@@ -532,6 +532,7 @@ const LIST: ScreenGuide[] = [
       ["radar-genel", "Genel bakış", "Seçili oteldeki sipariş, minibar ve personel sayıları canlı güncellenir."],
       ["radar-zaman", "Zaman şeridi", "Son yarım saate geri sarıp olayları yeniden izleyebilirsin."],
       ["radar-duvar", "Duvar ekranı", "Tam ekran modu bir ekranda sürekli gösterim içindir."],
+      ["radar-demo", "Demo başlat", "Gerçek kayıt kullanmadan örnek bir gün senaryosunu oynatır; bitince veya durdurunca canlıya döner."],
     ],
     [
       "Radar yalnız izlemek içindir; buradan kayıt değiştirilmez.",

@@ -182,6 +182,19 @@
   font-weight: 700;
 }
 
+.rd-demo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  min-height: var(--tap-xp);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-s);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
 .rd-conn[data-state="offline"] {
   color: var(--danger);
 }

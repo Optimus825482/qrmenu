@@ -48,6 +48,8 @@ export type ToolbarProps = {
   modeText?: string;
   /** The "Animasyon" switch of the scene layer; `reduced` locks it off (system reduced-motion setting). */
   motion?: { on: boolean; reduced: boolean; onToggle(): void };
+  /** Client-side demo scenario: the start button, and the badge while it runs. `disabled` carries its reason in `hint`. */
+  demo?: { running: boolean; disabled: boolean; hint?: string; onStart(): void; onStop(): void };
 };
 
 export function Toolbar(p: ToolbarProps) {
@@ -123,6 +125,27 @@ export function Toolbar(p: ToolbarProps) {
           <Icon name="sparkles" size={14} />
           Animasyon
         </button>
+      ) : null}
+      {p.demo ? (
+        <>
+          <button
+            type="button"
+            className="rd-chip"
+            data-testid={p.demo.running ? "radar-demo-stop" : "radar-demo-start"}
+            data-guide="radar-demo"
+            disabled={!p.demo.running && p.demo.disabled}
+            title={p.demo.running ? "Demoyu durdur ve canlıya dön" : (p.demo.hint ?? "Sentetik bir gün senaryosunu oynat")}
+            onClick={p.demo.running ? p.demo.onStop : p.demo.onStart}
+          >
+            <Icon name={p.demo.running ? "pause" : "play"} size={14} />
+            {p.demo.running ? "Demo durdur" : "Demo başlat"}
+          </button>
+          {p.demo.running ? (
+            <span className="rd-demo-badge" data-testid="radar-demo-badge" role="status" title="Gösterilen veriler sentetiktir">
+              DEMO
+            </span>
+          ) : null}
+        </>
       ) : null}
       <span className="rd-conn" data-state={p.connection} role="status">
         <Icon name={p.connection === "offline" ? "wifi-off" : "wifi"} size={14} />
