@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "04.11.2026 03:45",
-  headline: "Minibar, radar ve UX (T1–T15) kapalı: altı görünümlük matris sıfır ihlalle geçti. Sırada P4 T10, ardından P6, P7, P8.",
+  updatedAt: "07.11.2026 12:40",
+  headline: "P4 MyBar kapandı: Arapça misafir talebi kat sorumlusu onayı, havuz düşümü ve canlı durum uçtan uca yeşil. Minibar, radar ve UX kapalı. Sırada P6, P7, P8.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -87,8 +87,8 @@ window.ILERLEME = {
       summary: "5 dilli misafir oda sayfası, günde 1 talep (ayarlanabilir), karşılama/kapatma/iptal, Web Push",
       tasks: [
         { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "03.11 19:01", note: "T1 veri temeli (c201ba3), T2 çeviri servisi (0a40ea8 + 041d49c), T3 misafir API (72c289e + güvenlik sertleştirmeleri 3fe2959/2195e42/49ce303), T4 misafir sayfası 8 dilde + RTL (acdf2e1) — hepsi incelendi" },
-        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 20:10", note: "T5–T8: yaşam döngüsü, havuzdan karşılama, kat akışı, XP ve depo yönetim ekranları. T8 düzeltmeleri 56/56 birim, 3/3 Chromium; tam paket T10 kapsamında." },
-        { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). Uçtan uca MyBar kabulü T10 kapsamında." }
+        { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 20:10", note: "T5–T8: yaşam döngüsü, havuzdan karşılama, kat akışı, XP ve depo yönetim ekranları. T8 düzeltmeleri 56/56 birim, 3/3 Chromium; tam paket T10 kapsamında.; T10 kabul testi bu ekranları uçtan uca doğruladı" },
+        { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). T10 uçtan uca kabul (mybarFlow.spec.ts) ve VAPID/TRANSLATE_PROVIDER belgeleri tamam." }
       ]
     },
     {
@@ -165,6 +165,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "07.11 12:40", text: "P4 T10 tamam: Arapça misafir talebi kat sorumlusu zorunlu onayı, Tümünü Karşıla (havuz 98, MYBAR_KARSILAMA 1), canlı misafir durumu ve aynı gün ikinci talebin 409 yanıtı uçtan uca yeşil. Spec, oda seçici sayfasının (/q/[token]) yeni yapısına uyarlandı; misafir durum akışı akış açılışında yeniden okuyor; kat sorumlusu işlem yetkisi varsayılanı kapalı. VAPID ve TRANSLATE_PROVIDER belgeleri ile README güncellendi." },
     { at: "04.11 03:45", text: "UX tamamlandı (T15, 0d75121). Altı ekran boyutunda 26 sayfa ve misafir menüsü (Türkçe ve Arapça) denetlendi: yatay kaydırma, erişilebilirlik ve dokunma hedefi ihlali yok, 472 test geçti. Depo rapor ve tanım sayfaları açık temaya taşındı, kat panelindeki DND süzgeci geri geldi. Tam Chromium koşusunda 210 testten 209'u geçti; kalan test P4 T10'a ait. Sırada P4 T10." },
     { at: "04.11 02:00", text: "UX T14 üç commit ile indi: XP Başlat menüsü, tepsi durumları, pencere menü çubuğu, klavye kısayolları, depo panosu ve eski görevlerin küçük eksikleri. Matris 126/126 geçti. Son tam chromium koşusunda 206 test geçti, 3 test kaldı, 1 test koşmadı; duvar testi sonra düzeltildi, /kat?filtre=dnd kararı ve P4 T10 testi açık. İnceleme ve T15 sırada." },
     { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },

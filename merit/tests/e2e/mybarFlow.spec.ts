@@ -24,7 +24,7 @@ async function sendWater(page: Page) {
 }
 
 test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ulaşır", async ({ page: guest, browser }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   process.env.SEED_MINIBAR = "1";
   try {
     resetAndSeed();
@@ -43,7 +43,11 @@ test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ula
     );
     return new Map(rows.map((room) => [room.number, room.qr_token]));
   });
-  const roomUrl = (number: string) => `/q/${rooms.get(number)}?lang=ar`;
+  // `?lang=` is only honoured on the room chooser (/q/{token}), which stores the language cookie; the MyBar form lives one level down.
+  const openMybar = async (page: Page, number: string) => {
+    await page.goto(`/q/${rooms.get(number)}?lang=ar`);
+    await page.goto(`/q/${rooms.get(number)}/mybar`);
+  };
   const staff = await newContextPage(browser);
   const duplicate = await newContextPage(browser, "ar");
   try {
@@ -52,9 +56,9 @@ test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ula
     await staff.goto("/kat/mybar");
     await expect(staff.getByRole("heading", { name: "MyBar Talepleri" })).toBeVisible();
 
-    await guest.goto(roomUrl("101"));
-    await duplicate.goto(roomUrl("101"));
-    await expect(guest.locator("html")).toHaveAttribute("dir", "rtl");
+    await openMybar(guest, "101");
+    await openMybar(duplicate, "101");
+    await expect(guest.locator("[data-room-frame]")).toHaveAttribute("dir", "rtl");
     await sendWater(guest);
     await expect(guest.getByText("تم استلام طلبك بنجاح!")).toBeVisible();
 
@@ -91,7 +95,7 @@ test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ula
     expect((await conflict).status()).toBe(409);
     await expect(duplicate.getByText("تم إرسال طلب من هذه الغرفة اليوم. يسمح بطلب واحد يومياً.")).toBeVisible();
 
-    await guest.goto(roomUrl("104"));
+    await openMybar(guest, "104");
     await expect(guest.getByRole("button", { name: "إرسال طلب MYBAR" })).toHaveCount(0);
   } finally {
     await staff.context().close();

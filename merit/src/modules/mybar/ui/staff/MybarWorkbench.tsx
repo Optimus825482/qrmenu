@@ -71,7 +71,7 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
   if (!row) return <p className="text-sm text-muted" aria-busy="true">Yükleniyor...</p>;
 
   const waiting = row.status === "BEKLEMEDE";
-  const mayAct = caps?.canAct ?? true;
+  const mayAct = caps?.canAct ?? false;
   const mayCancel = canCancel ?? caps?.canCancel ?? false;
   const missing = row.items.some((i) => i.remainingQty > 0);
 
@@ -135,7 +135,7 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
             </button>
           ) : null}
           <FulfillPanel
-            key={row.items.map((i) => i.remainingQty).join("-")}
+            key={row.items.map((i) => `${i.remainingQty}:${i.poolRemaining ?? "-"}`).join("-")}
             row={row}
             onFulfilled={(r) => {
               notify.success(

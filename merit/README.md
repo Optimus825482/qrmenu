@@ -155,7 +155,7 @@ yönetim için ayrı yüzeyler vardır; tümü rol/ekran yetkisiyle (`MB-*` ekra
 | --- | --- |
 | `/kat` | Kat sorumlusu ana sayfası: günün işleri, kritik stok, kat doluluk haritası. Alt sayfalar: `gorevler` (günlük In House / Arrival / Departure kontrol görevleri), `oda-kontrol/[oda]` (QR ile açılan ürün ekleme, **Sarfiyat Yok**, kapasiteli ikame), `dnd`, `doluluk`, `qr`, `islemlerim` (kendi işlemini silme/düzeltme talebi), `duzeltme-onay`, `stok`, `talep` (depodan ek talep), `tavsiye-is-plani` (öncelik planı), `kritik`. |
 | `/depo` | Depo sorumlusu: `stok` ve `havuz` (otel havuzu: giriş, iade, düzeltme, kritik seviye), `talepler` (ek talep onay/teslim), `doluluk-yukle` ve `doluluk` (günlük üç doluluk dosyası), `gorevler` (yükleme görevleri), `raporlar`, `tanimlar`. |
-| MyBar | Misafir QR'ı ile gelen doldurma talebi; kat sorumlusu onaylar, depo havuzundan düşer. Günde bir kez (ayarlanabilir). |
+| MyBar | Misafir QR'ı ile gelen doldurma talebi; kat sorumlusu onaylar, depo havuzundan düşer. Günde bir kez (ayarlanabilir). Rotalar: misafir `/q/[token]/mybar` (oda seçici `/q/[token]`; `?lang=` yalnız seçicide çerezi yazar; sekiz dil, Arapçada RTL), kat sorumlusu `/kat/mybar` (zorunlu sesli onay penceresi "Gördüm", "Tümünü Karşıla", "Talebi Kapat"), depo/yönetim `/depo/mybar` ve XP kabuğunda "MyBar Talepleri" (KPI, iptal, dışa aktarma). Web Push ve `TRANSLATE_PROVIDER` kurulumu için `docs/kurulum.md`. Kabul testi: `tests/e2e/mybarFlow.spec.ts`. |
 | Yönetim (`MB-TAN`, `MB-ZIM`, ...) | Ürün grupları, ürünler, setuplar, oda tipi-setup atamaları, oda QR üretimi ve toplu üretim, misafir mesajı. |
 
 **Arka plan işleri** (pg-boss, `Europe/Nicosia`; `MERIT_DISABLE_JOBS=1` iken çalışmaz): 00:01 günlük görev

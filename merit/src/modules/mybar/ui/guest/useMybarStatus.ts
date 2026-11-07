@@ -52,7 +52,6 @@ export function useMybarStatus(token: string, locale: Locale, initial: MybarRequ
     let source: EventSource | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempt = 0;
-    let dropped = false;
     let stopped = false;
 
     const connect = () => {
@@ -60,10 +59,8 @@ export function useMybarStatus(token: string, locale: Locale, initial: MybarRequ
       source = es;
       es.addEventListener("hello", () => {
         attempt = 0;
-        if (dropped) {
-          dropped = false;
-          void refresh(); // events may have been missed while the stream was down
-        }
+        // Events may have fired before the stream opened (first connect) or while it was down (reconnect).
+        void refresh();
       });
       es.addEventListener("reconnect", () => {
         es.close();
@@ -72,7 +69,6 @@ export function useMybarStatus(token: string, locale: Locale, initial: MybarRequ
       es.onerror = () => {
         if (stopped) return;
         es.close();
-        dropped = true;
         timer = setTimeout(connect, backoffMs(attempt));
         attempt += 1;
       };
