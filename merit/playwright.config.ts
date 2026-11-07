@@ -34,7 +34,7 @@ export default defineConfig({
     env: { DATABASE_URL: e2eDatabaseUrl(), ...vapid },
   },
   projects: [
-    { name: "chromium", testIgnore: ["**/matrix/**"], use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", testIgnore: ["**/matrix/**", "**/guide/**"], use: { ...devices["Desktop Chrome"] } },
     // UX matrix (P-UX-15): the same specs under six views, all touch-capable.
     ...Object.entries(VIEWPORTS).map(([name, viewport]) => ({
       name,
