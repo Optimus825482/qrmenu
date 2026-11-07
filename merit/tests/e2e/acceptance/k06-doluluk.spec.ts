@@ -16,17 +16,39 @@ test.describe("@kabul-6 Doluluk yükleme, görevler ve öncelik planı", () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "merit-k06-"));
     try {
       const files = await makeOccupancyFiles(today(), dir);
+      const uploadPage = await depo.newPage();
+      await uploadPage.goto("/depo/doluluk-yukle");
+      await expect(uploadPage.getByRole("heading", { name: "Günlük Doluluk Yükleme (Excel)" })).toBeVisible();
       for (const [file, kind, okRows, errorRows] of [[files.inhouse, "IN_HOUSE", 1, 1], [files.arrivals, "ARRIVAL", 2, 0], [files.departures, "DEPARTURE", 2, 0]] as const) {
-        const preview = await upload(depo, file, kind, true);
+        await uploadPage.getByTestId("occupancy-file").setInputFiles(file);
+        await uploadPage.getByTestId("occupancy-kind").selectOption(kind);
+        const previewResponse = uploadPage.waitForResponse(response => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/minibar/occupancy/preview");
+        await uploadPage.getByTestId("occupancy-preview").click();
+        const preview = await previewResponse;
         expect(preview.status(), await preview.text()).toBe(200);
         const body = await preview.json();
         expect(body).toMatchObject({ okRows, errorRows, detectedKind: kind });
-        if (errorRows) { expect(body.unknownRooms).toEqual(["9999"]); expect(body.errors[0].message).toContain("9999"); }
+        const panel = uploadPage.getByTestId("occupancy-preview-panel");
+        await expect(panel.getByText("Kaydedilecek", { exact: true }).locator("..").locator("p")).toHaveText(String(okRows));
+        await expect(panel.getByText("Hatalı", { exact: true }).locator("..").locator("p")).toHaveText(String(errorRows));
+        await expect(panel.getByText("Toplam satır", { exact: true }).locator("..").locator("p")).toHaveText(String(okRows + errorRows));
+        if (errorRows) {
+          expect(body.unknownRooms).toEqual(["9999"]);
+          expect(body.errors[0].message).toContain("9999");
+          await expect(panel.getByTestId("occupancy-errors")).toContainText("Oda '9999' sistemde bulunamadı");
+        }
         expect(await count("SELECT count(*) AS n FROM occupancy_uploads WHERE kind=$1", [kind])).toBe(0);
-        const committed = await upload(depo, file, kind);
+        const commitResponse = uploadPage.waitForResponse(response => response.request().method() === "POST" && new URL(response.url()).pathname === "/api/minibar/occupancy/upload");
+        await panel.getByTestId("occupancy-commit").click();
+        const committed = await commitResponse;
         expect(committed.status(), await committed.text()).toBe(200);
         expect(await committed.json()).toMatchObject({ okRows, errorRows, tasksGenerated: kind === "DEPARTURE" });
+        const result = uploadPage.getByTestId("occupancy-result");
+        await expect(result).toContainText(`${okRows + errorRows} satır: ${okRows} kaydedildi, ${errorRows} hatalı.`);
+        await expect(result).toContainText(kind === "DEPARTURE" ? "Günlük görevler oluşturuldu." : "Görevler üç dosya da yüklenince oluşturulur.");
+        await expect(panel).toHaveCount(0);
       }
+      await uploadPage.close();
       expect(await count("SELECT count(*) AS n FROM daily_tasks")).toBe(3);
       expect(await count("SELECT count(*) AS n FROM daily_task_items")).toBe(5);
       expect(await count("SELECT count(*) AS n FROM notifications n JOIN users u ON u.id=n.user_id WHERE u.username='kat.mr' AND n.type='task.generated'")).toBeGreaterThan(0);

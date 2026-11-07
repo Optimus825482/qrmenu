@@ -27,9 +27,15 @@ test.describe("@kabul-4 Oda kontrolü, havuz, rapor ve DND", () => {
       const balance = () => count("SELECT remaining_qty AS n FROM hotel_stocks WHERE product_id=$1", [cola]);
       const before = await balance();
       const add = (qty: number) => kat.request.post(`/api/minibar/room/${id}/check`, { data: { items: [{ productId: cola, setupId: mini, qty }], clientRequestId: randomUUID() } });
-      const first = await add(1);
+      const checkPage = await kat.newPage();
+      await checkPage.goto(`/kat/oda-kontrol/${id}`);
+      await checkPage.getByRole("button", { name: "Kola artır" }).click();
+      const firstResponse = checkPage.waitForResponse(response => response.request().method() === "POST" && new URL(response.url()).pathname === `/api/minibar/room/${id}/check`);
+      await checkPage.getByRole("button", { name: "Kaydet (1 ürün ikame)" }).click();
+      const first = await firstResponse;
       expect(first.status(), await first.text()).toBe(200);
       expect(await first.json()).toMatchObject({ added: 1, taskCompleted: true });
+      await expect(checkPage.getByTestId("added-today-Kola")).toContainText("1");
       expect(await balance()).toBe(before - 1);
       const report = await depo.request.get(`/api/minibar/reports/consumption?startDate=${today()}&endDate=${today()}&roomId=${id}`);
       expect(report.status(), await report.text()).toBe(200);
@@ -42,7 +48,6 @@ test.describe("@kabul-4 Oda kontrolü, havuz, rapor ve DND", () => {
       expect(excess.status(), await excess.text()).toBe(409);
       expect(await excess.json()).toMatchObject({ code: "DAILY_LIMIT" });
       expect(await balance()).toBe(before - 2);
-      const checkPage = await kat.newPage();
       await checkPage.goto(`/kat/oda-kontrol/${id}`);
       await expect(checkPage.getByRole("button", { name: "Kola artır" })).toBeDisabled();
       await checkPage.goto("/kat/stok");
