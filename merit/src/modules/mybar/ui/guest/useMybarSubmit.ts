@@ -30,6 +30,25 @@ function newKey(): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
+const keyStore = (token: string) => `mybar-idem:${token}`;
+
+/** The key survives a reload (sessionStorage, per room): a retry after a lost response replays the first submission. */
+function readKey(token: string): string {
+  try {
+    const stored = window.sessionStorage.getItem(keyStore(token));
+    if (stored) return stored;
+  } catch {
+    // Storage blocked: fall back to a key that lives as long as the page.
+  }
+  const fresh = newKey();
+  try {
+    window.sessionStorage.setItem(keyStore(token), fresh);
+  } catch {
+    // Same fallback.
+  }
+  return fresh;
+}
+
 /** Maps a refused response to the message key the guest sees (the server text is never shown). */
 export function errorKeyFor(status: number, body: ApiBody | null): GuestErrorKey {
   const code = body?.error?.code;
@@ -42,7 +61,7 @@ export function errorKeyFor(status: number, body: ApiBody | null): GuestErrorKey
 
 /**
  * Sends the MyBar request. One idempotency key per form: a retry after a network error replays the
- * first submission instead of creating a second one; `reset()` issues a fresh key (a new request).
+ * first submission instead of creating a second one, even after a reload; `reset()` issues a fresh key (a new request).
  */
 export function useMybarSubmit(token: string, locale: Locale) {
   const key = useRef<string | null>(null);
@@ -50,7 +69,7 @@ export function useMybarSubmit(token: string, locale: Locale) {
 
   const submit = useCallback(
     async (items: { productId: string; qty: number }[], note: string): Promise<SubmitOutcome> => {
-      key.current ??= newKey();
+      key.current ??= readKey(token);
       setSending(true);
       try {
         const trimmed = note.trim();
@@ -83,7 +102,12 @@ export function useMybarSubmit(token: string, locale: Locale) {
 
   const reset = useCallback(() => {
     key.current = null;
-  }, []);
+    try {
+      window.sessionStorage.removeItem(keyStore(token));
+    } catch {
+      // Nothing stored.
+    }
+  }, [token]);
 
   return { submit, sending, reset };
 }

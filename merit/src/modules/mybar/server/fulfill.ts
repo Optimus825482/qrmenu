@@ -52,7 +52,7 @@ export async function fulfill(ctx: Ctx, requestId: string, rawInput: unknown): P
         const rest = it.requestedQty - it.deliveredQty;
         if (rest > 0) wanted.set(it.productId, rest);
       }
-      if (wanted.size === 0) throw new DomainError("VALIDATION", "Eklenecek ürün yok");
+      if (wanted.size === 0) throw new DomainError("CONFLICT", "Bu talep zaten işlenmiş");
     } else {
       const unknown: string[] = [];
       const tooMany: string[] = [];

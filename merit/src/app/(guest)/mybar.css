@@ -62,13 +62,10 @@
 .mb-root .g-lang-btn { color: var(--mb-ink); }
 .mb-root .g-lang-menu {
   left: auto;
-  right: 0;
+  right: auto;
+  inset-inline-end: 0;
   min-width: 11rem;
   border: 2px solid var(--mb-gold);
-}
-.mb-root[dir="rtl"] .g-lang-menu {
-  left: 0;
-  right: auto;
 }
 .mb-root .g-lang-item {
   min-height: 44px;

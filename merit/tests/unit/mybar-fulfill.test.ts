@@ -129,8 +129,8 @@ describe("fulfill", () => {
 
     await fulfill(kat1, reqId, { all: true });
     await expect(fulfill(kat1, reqId, { all: true })).rejects.toMatchObject({
-      code: "VALIDATION",
-      message: "Eklenecek ürün yok",
+      code: "CONFLICT",
+      message: "Bu talep zaten işlenmiş",
     });
   });
 
@@ -159,7 +159,7 @@ describe("fulfill", () => {
     ]);
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
     const lost = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
-    expect(["VALIDATION", "CONFLICT"]).toContain(lost.reason.code);
+    expect(lost.reason).toMatchObject({ code: "CONFLICT", message: "Bu talep zaten işlenmiş" });
     expect(await delivered()).toEqual({ [fx.products.su]: 2, [fx.products.kola]: 2 });
     expect(await remaining(fx.products.su)).toBe(98);
     expect(await remaining(fx.products.kola)).toBe(98);

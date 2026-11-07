@@ -34,6 +34,20 @@ describe("shouldShowAckHost", () => {
     expect(await shouldShowAckHost(otm)).toBe(false);
   });
 
+  it("özel rol: MB-PERS'te tüm haklara sahip olsa da rol kodu kat sorumlusu değilse false", async () => {
+    const role = await testDb.role.create({ data: { code: "R-OZEL-ACK", name: "Özel ack rolü", kind: "MINIBAR" } });
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "MB-PERS" } });
+    await testDb.roleScreenPermission.create({
+      data: { roleId: role.id, screenId: screen.id, hotelId: null, canView: true, canCreate: true, canEdit: true, canApprove: true },
+    });
+    await testDb.roleModuleAccess.create({ data: { roleId: role.id, hotelId: null, moduleKey: "MINIBAR", enabled: true } });
+    const custom = await ctxFor(
+      await makeUser({ username: "ozel-ack7", roleCode: "R-OZEL-ACK", hotelCode: "ROYAL" }),
+      { hotelCode: "ROYAL" },
+    );
+    expect(await shouldShowAckHost(custom)).toBe(false);
+  });
+
   it("MINIBAR modülü kapalı otelde kat sorumlusu için de false", async () => {
     await testDb.hotelModule.updateMany({
       where: { hotelId: katDiamond.session.hotelId, moduleKey: "MINIBAR" },
