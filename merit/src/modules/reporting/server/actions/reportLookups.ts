@@ -23,8 +23,14 @@ const CAP = 500;
 export async function reportLookupsAction(hotelIds: string[]): Promise<Result<ReportLookups>> {
   return safeAction(schema, async (i) => {
     const ctx = await requireUser();
-    const ids = [...new Set(i.hotelIds)].filter((h) => ctx.hotelIds.includes(h));
-    const full = (await listReports(ctx)).some((r) => r.mode === "FULL");
+    const catalog = await listReports(ctx);
+    // Lookup scope follows the catalogue: only hotels some runnable report covers, and people only for
+    // hotels where the caller runs at least one report in FULL mode (never for self-service-only hotels).
+    const runnable = new Set(catalog.flatMap((r) => r.hotelIds));
+    const fullHotels = new Set(catalog.filter((r) => r.mode === "FULL").flatMap((r) => r.hotelIds));
+    const ids = [...new Set(i.hotelIds)].filter((h) => ctx.hotelIds.includes(h) && runnable.has(h));
+    const userIds = ids.filter((h) => fullHotels.has(h));
+    const full = userIds.length > 0;
     const [hotels, outlets, floors, productGroups, products, users] = await Promise.all([
       prisma.hotel.findMany({ where: { id: { in: ids } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
       isOutletSession(ctx)
@@ -48,7 +54,7 @@ export async function reportLookupsAction(hotelIds: string[]): Promise<Result<Re
             where: {
               isActive: true,
               deletedAt: null,
-              OR: [{ hotelId: { in: ids } }, { userHotels: { some: { hotelId: { in: ids } } } }],
+              OR: [{ hotelId: { in: userIds } }, { userHotels: { some: { hotelId: { in: userIds } } } }],
             },
             select: { id: true, fullName: true },
             orderBy: { fullName: "asc" },
