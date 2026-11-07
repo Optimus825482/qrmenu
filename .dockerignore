@@ -30,5 +30,6 @@ MENNN
 /ilerleme-data.js
 merit/*.md
 merit/tools
+merit/prisma/seed-load.ts
 merit/playwright.config.ts
 merit/vitest.config.mts

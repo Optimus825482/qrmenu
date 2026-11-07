@@ -16,6 +16,7 @@
 /uploads
 *.md
 tools
+prisma/seed-load.ts
 playwright.config.ts
 vitest.config.mts
 .next-*

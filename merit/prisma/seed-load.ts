@@ -76,7 +76,7 @@ export async function runLoadSeed(db: PrismaClient): Promise<Targets> {
     }
   }
   // Ensure the smoke mix contains each active order persona before the remaining staff.
-  staff.sort((a, b) => Number(b.username.endsWith("1")) - Number(a.username.endsWith("1")));
+  staff.sort((a: Targets["staff"][number], b: Targets["staff"][number]) => Number(b.username.endsWith("1")) - Number(a.username.endsWith("1")));
   const result = targetSchema.parse({ baseUrl, tables, rooms, staff });
   const dir = path.resolve("tools/load/.tmp"); await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, "targets.json"), JSON.stringify(result, null, 2) + "\n", { mode: 0o600 });
