@@ -21,7 +21,8 @@ export type RoomOrderListItem = {
   orderNo: string;
   roomNumber: string;
   status: OrderStatus;
-  subtotal: number;
+  /** Present only when prices were shown for the order. */
+  subtotal?: number;
   currency: string;
   itemCount: number;
   itemsSummary: string;
@@ -41,6 +42,7 @@ export type RoomServiceStats = {
   onWay: number;
   delivered: number;
   cancelled: number;
+  /** Sum of the orders whose prices were shown. */
   totalRevenue: number;
 };
 
@@ -93,7 +95,7 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       if (input.dateTo) where.createdAt.lte = new Date(input.dateTo);
     }
 
-    const [orders, statsGroup] = await Promise.all([
+    const [orders, statsGroup, revenue] = await Promise.all([
       prisma.order.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -117,6 +119,9 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
           hotelId: { in: hotelIds },
         },
         _count: { id: true },
+      }),
+      prisma.order.aggregate({
+        where: { kind: "ODA_SERVISI", hotelId: { in: hotelIds }, pricesShown: true, status: { notIn: ["IPTAL", "REDDEDILDI"] } },
         _sum: { subtotal: true },
       }),
     ]);
@@ -128,13 +133,12 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       onWay: 0,
       delivered: 0,
       cancelled: 0,
-      totalRevenue: 0,
+      totalRevenue: Number(revenue._sum.subtotal ?? 0),
     };
 
     for (const group of statsGroup) {
       const count = group._count.id;
       stats.total += count;
-      stats.totalRevenue += Number(group._sum.subtotal ?? 0);
 
       if (group.status === "TEYIT_BEKLIYOR" || group.status === "GONDERILDI") {
         stats.pending += count;
@@ -154,7 +158,7 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       orderNo: String(o.orderNo),
       roomNumber: o.room?.number ?? "—",
       status: o.status,
-      subtotal: Number(o.subtotal),
+      ...(o.pricesShown && o.subtotal !== null ? { subtotal: Number(o.subtotal) } : {}),
       currency: o.currency,
       itemCount: o.items.reduce((acc, i) => acc + i.qty, 0),
       itemsSummary: o.items.map((i) => `${i.qty}× ${i.nameSnapshot}`).join(", "),

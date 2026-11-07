@@ -1,52 +1,87 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppProps } from "@/shell/registry";
-import {
-  listRoomServiceOrdersAction,
-  type RoomOrderListItem,
-  type RoomServiceStats,
-} from "../server/actions/roomServiceRecords";
 import { formatPrice } from "@/lib/formatPrice";
+import { businessDate, businessDateStart, formatDayTr } from "@/lib/time";
+import { listRoomServiceOrdersAction, type RoomOrderListItem, type RoomServiceStats } from "../server/actions/roomServiceRecords";
+import { getSlaStatsAction, getSlowestOrdersAction } from "../server/actions/roomServiceStats";
+import type { SlaStats, SlowOrder } from "../server/roomService/stats";
+
+const DAY_MS = 86_400_000;
+const WEEK = "week";
+
+/** Last 7 business days (Nicosia), newest first. */
+function lastSevenDays(now: number): string[] {
+  return Array.from({ length: 7 }, (_, i) => businessDate(new Date(now - i * DAY_MS)));
+}
+
+/** Seconds as "12 dk 05 sn" (or "45 sn"); "—" when there is nothing to show. */
+function fmtDuration(sec: number | undefined): string {
+  if (sec === undefined) return "—";
+  const m = Math.floor(sec / 60);
+  const s = Math.round(sec % 60);
+  return m === 0 ? `${s} sn` : `${m} dk ${String(s).padStart(2, "0")} sn`;
+}
+
+function nextDay(day: string): string {
+  return new Date(Date.parse(`${day}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
+}
+
+function Card({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface p-3">
+      <span className="block text-[11px] font-medium text-muted">{label}</span>
+      <span className={`mt-1 block text-2xl font-bold ${tone ?? "text-text"}`}>{value}</span>
+      {hint ? <span className="text-[10px] text-muted">{hint}</span> : null}
+    </div>
+  );
+}
 
 export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
-  const [stats, setStats] = useState<RoomServiceStats | null>(null);
+  const [days] = useState(() => lastSevenDays(Date.now()));
+  const [pick, setPick] = useState<string>(days[0]);
+  const [stats, setStats] = useState<SlaStats | null>(null);
+  const [slowest, setSlowest] = useState<SlowOrder[]>([]);
   const [orders, setOrders] = useState<RoomOrderListItem[]>([]);
+  const [revenue, setRevenue] = useState<RoomServiceStats["totalRevenue"]>(0);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState<"today" | "week" | "month" | "all">("today");
+  const [error, setError] = useState<string | null>(null);
+
+  const range = useMemo(
+    () => (pick === WEEK ? { from: days[6], to: days[0] } : { from: pick, to: pick }),
+    [pick, days],
+  );
 
   const loadData = useCallback(async () => {
+    if (!hotelId) return;
     setLoading(true);
+    setError(null);
     try {
-      const now = new Date();
-      let dateFrom: string | undefined;
-
-      if (dateRange === "today") {
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        dateFrom = start.toISOString();
-      } else if (dateRange === "week") {
-        const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        dateFrom = start.toISOString();
-      } else if (dateRange === "month") {
-        const start = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        dateFrom = start.toISOString();
+      const [s, w, list] = await Promise.all([
+        getSlaStatsAction(hotelId, range),
+        getSlowestOrdersAction(hotelId, range),
+        listRoomServiceOrdersAction({
+          hotelId,
+          dateFrom: businessDateStart(range.from).toISOString(),
+          dateTo: new Date(businessDateStart(nextDay(range.to)).getTime() - 1).toISOString(),
+          limit: 200,
+        }),
+      ]);
+      if (!s.ok) {
+        setError(s.error.message);
+        setStats(null);
+        return;
       }
-
-      const res = await listRoomServiceOrdersAction({
-        hotelId: hotelId || undefined,
-        dateFrom,
-        limit: 200,
-      });
-
-      if (res.ok) {
-        setStats(res.data.stats);
-        setOrders(res.data.orders);
-        setStatus("Oda servisi raporları güncellendi");
-      }
+      setStats(s.data);
+      setSlowest(w.ok ? w.data : []);
+      setOrders(list.ok ? list.data.orders : []);
+      setRevenue(list.ok ? list.data.stats.totalRevenue : 0);
+      setStatus("Oda servisi SLA raporu güncellendi");
     } finally {
       setLoading(false);
     }
-  }, [hotelId, dateRange, setStatus]);
+  }, [hotelId, range, setStatus]);
 
   useEffect(() => {
     const t = setTimeout(() => void loadData(), 0);
@@ -55,8 +90,8 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
 
   /** Report rows as a semicolon CSV (Excel opens it as is); quotes are doubled, formulas are neutralised. */
   const exportCsv = () => {
-    const cell = (value: string | number | null): string => {
-      const text = value === null ? "" : String(value);
+    const cell = (value: string | number | null | undefined): string => {
+      const text = value === null || value === undefined ? "" : String(value);
       const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
       return `"${safe.replace(/"/g, '""')}"`;
     };
@@ -71,7 +106,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `oda-servisi-sla-${dateRange}.csv`;
+    link.download = `oda-servisi-sla-${range.from}${range.to === range.from ? "" : `_${range.to}`}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -79,58 +114,40 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
     setStatus(`${orders.length} satır indirildi`);
   };
 
-  // Calculate SLA compliance (orders with slaBreachedAt vs total delivered)
-  const deliveredCount = stats?.delivered ?? 0;
-  const breachedCount = orders.filter((o) => o.slaBreachedAt !== null).length;
-  const slaCompliancePercent =
-    deliveredCount > 0 ? Math.round(((deliveredCount - breachedCount) / deliveredCount) * 100) : 100;
+  const show = (v: string) => (loading ? "..." : v);
+  const hourMax = Math.max(1, ...(stats?.byHour.map((h) => h.count) ?? [0]));
+  const byHour = new Map(stats?.byHour.map((h) => [h.hour, h]) ?? []);
+  const pricesShown = orders.some((o) => o.subtotal !== undefined);
+  const slaLabel = stats ? `${stats.slaMinutes} dk hedef` : undefined;
 
   return (
-    <div className="flex flex-col h-full bg-[#f4f6f8] text-xs font-sans overflow-auto p-4 gap-4">
-      {/* Header & Date Filter */}
-      <div className="flex flex-wrap items-center justify-between bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+    <div className="flex h-full flex-col gap-4 overflow-auto bg-bg p-4 text-xs text-text">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface p-3">
         <div>
-          <h2 className="text-base font-bold text-gray-800">Oda Servisi Operasyon & SLA Raporu</h2>
-          <p className="text-gray-500 text-[11px]">
-            Oda servisi sipariş akışı, teslimat süreleri, ciro ve servis performans metrikleri
-          </p>
+          <h2 className="text-base font-bold">Oda Servisi SLA</h2>
+          <p className="text-[11px] text-muted">Teslim süreleri, hedef uyumu ve iş günü bazında oda servisi performansı</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded border border-[#7f9db9] overflow-hidden bg-[#ece9d8]">
-            <button
-              type="button"
-              onClick={() => setDateRange("today")}
-              className={`px-3 py-1 font-medium ${dateRange === "today" ? "bg-[#316ac5] text-white" : "text-gray-700 hover:bg-gray-200"}`}
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5">
+            <span className="text-muted">İş günü</span>
+            <select
+              value={pick}
+              onChange={(e) => setPick(e.target.value)}
+              className="rounded border border-border bg-surface px-2 py-1"
             >
-              Bugün
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateRange("week")}
-              className={`px-3 py-1 font-medium ${dateRange === "week" ? "bg-[#316ac5] text-white" : "text-gray-700 hover:bg-gray-200"}`}
-            >
-              Son 7 Gün
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateRange("month")}
-              className={`px-3 py-1 font-medium ${dateRange === "month" ? "bg-[#316ac5] text-white" : "text-gray-700 hover:bg-gray-200"}`}
-            >
-              Son 30 Gün
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateRange("all")}
-              className={`px-3 py-1 font-medium ${dateRange === "all" ? "bg-[#316ac5] text-white" : "text-gray-700 hover:bg-gray-200"}`}
-            >
-              Tümü
-            </button>
-          </div>
+              <option value={WEEK}>Son 7 gün</option>
+              {days.map((d) => (
+                <option key={d} value={d}>
+                  {formatDayTr(d)}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             onClick={() => void loadData()}
             data-xp-command="refresh"
-            className="border border-[#7f9db9] px-3 py-1 rounded bg-white hover:bg-gray-50 font-bold"
+            className="rounded border border-border bg-surface px-3 py-1 font-bold hover:bg-bg"
           >
             Yenile
           </button>
@@ -140,139 +157,101 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
             data-xp-command="export"
             disabled={loading || orders.length === 0}
             onClick={exportCsv}
-            className="border border-[#7f9db9] px-3 py-1 rounded bg-white hover:bg-gray-50 font-bold disabled:opacity-50"
+            className="rounded border border-border bg-surface px-3 py-1 font-bold hover:bg-bg disabled:opacity-50"
           >
             CSV indir
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-guide="sla-ozeti">
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <span className="text-gray-500 text-[11px] font-medium block">Toplam Sipariş</span>
-          <span className="text-2xl font-bold text-gray-900 mt-1 block">
-            {loading ? "..." : stats?.total ?? 0}
-          </span>
-          <span className="text-emerald-600 text-[10px] font-semibold">Tüm oda talepleri</span>
-        </div>
+      {error ? (
+        <p role="alert" className="rounded-lg border border-danger p-3 font-semibold text-danger">
+          {error}
+        </p>
+      ) : null}
 
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <span className="text-gray-500 text-[11px] font-medium block">Teslim Edilen</span>
-          <span className="text-2xl font-bold text-green-700 mt-1 block">
-            {loading ? "..." : stats?.delivered ?? 0}
-          </span>
-          <span className="text-gray-500 text-[10px]">
-            {stats && stats.total > 0
-              ? `%${Math.round((stats.delivered / stats.total) * 100)} tamamlama`
-              : "—"}
-          </span>
-        </div>
-
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <span className="text-gray-500 text-[11px] font-medium block">SLA Uyumluluk Oranı</span>
-          <span className="text-2xl font-bold text-blue-700 mt-1 block">
-            {loading ? "..." : `%${slaCompliancePercent}`}
-          </span>
-          <span className="text-gray-500 text-[10px]">30 dk taahhüt başarımı</span>
-        </div>
-
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <span className="text-gray-500 text-[11px] font-medium block">Toplam Oda Ciro</span>
-          <span className="text-2xl font-bold text-purple-700 mt-1 block">
-            {loading
-              ? "..."
-              : formatPrice(stats?.totalRevenue ?? 0, orders[0]?.currency ?? "EUR")}
-          </span>
-          <span className="text-gray-500 text-[10px]">Faturalandırılan oda servisi</span>
-        </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4" data-guide="sla-ozeti">
+        <Card label="Toplam sipariş" value={show(String(stats?.total ?? 0))} hint={stats ? `${stats.open} açık, ${stats.cancelled} iptal` : undefined} />
+        <Card
+          label="Teslim edilen"
+          value={show(String(stats?.delivered ?? 0))}
+          hint={stats && stats.total > 0 ? `%${Math.round((stats.delivered / stats.total) * 100)} tamamlama` : "—"}
+          tone="text-success"
+        />
+        <Card
+          label="Hedefte teslim"
+          value={show(stats?.onTimePct === undefined ? "—" : `%${stats.onTimePct}`)}
+          hint={slaLabel}
+          tone="text-accent"
+        />
+        <Card
+          label="SLA ihlali"
+          value={show(String(stats?.breaches ?? 0))}
+          hint="ihlal işaretli sipariş"
+          tone={stats && stats.breaches > 0 ? "text-danger" : undefined}
+        />
+        <Card label="Ortalama teslim" value={show(fmtDuration(stats?.avgDeliverySec))} />
+        <Card label="Teslim süresi P90" value={show(fmtDuration(stats?.p90DeliverySec))} hint="siparişlerin %90'ı bu sürede" />
+        <Card label="Ortalama teyit" value={show(fmtDuration(stats?.avgConfirmSec))} hint="oluşma - telefon teyidi" />
+        {pricesShown ? <Card label="Toplam tutar" value={show(formatPrice(revenue, orders[0]?.currency ?? "EUR"))} hint="fiyatı gösterilen siparişler" /> : null}
       </div>
 
-      {/* Status Breakdown & SLA Performance */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-guide="sla-detay">
-        {/* Status Breakdown Card */}
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="font-bold text-gray-800 text-xs mb-3 border-b pb-1">
-            Sipariş Durum Dağılımı
-          </h3>
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-amber-800 font-medium">Telefon Teyidi & Hazırlık:</span>
-              <span className="font-bold">{stats?.pending ?? 0}</span>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-guide="sla-detay">
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <h3 className="mb-3 border-b border-border pb-1 text-xs font-bold">Saate göre sipariş sayısı</h3>
+          {!stats || stats.total === 0 ? (
+            <p className="py-6 text-center text-muted">Veri yok</p>
+          ) : (
+            <div className="flex h-36 items-end gap-0.5" role="img" aria-label="Saate göre sipariş sayısı">
+              {Array.from({ length: 24 }, (_, hour) => {
+                const h = byHour.get(hour);
+                const count = h?.count ?? 0;
+                return (
+                  <div
+                    key={hour}
+                    className="flex h-full flex-1 flex-col items-center justify-end gap-0.5"
+                    title={`${String(hour).padStart(2, "0")}:00 — ${count} sipariş${h?.avgSec !== undefined ? `, ort. ${fmtDuration(h.avgSec)}` : ""}`}
+                  >
+                    <span className="text-[9px] text-muted">{count || ""}</span>
+                    <div className="w-full rounded-t bg-accent" style={{ height: `${(count / hourMax) * 100}%`, minHeight: count ? 2 : 0 }} />
+                    <span className="text-[9px] text-muted">{hour % 3 === 0 ? hour : ""}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div className="w-full bg-gray-100 h-2 rounded overflow-hidden">
-              <div
-                className="bg-amber-400 h-full"
-                style={{
-                  width: `${stats && stats.total > 0 ? (stats.pending / stats.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-
-            <div className="flex justify-between items-center text-xs mt-1">
-              <span className="text-indigo-800 font-medium">Yolda / Serviste:</span>
-              <span className="font-bold">{stats?.onWay ?? 0}</span>
-            </div>
-            <div className="w-full bg-gray-100 h-2 rounded overflow-hidden">
-              <div
-                className="bg-indigo-500 h-full"
-                style={{
-                  width: `${stats && stats.total > 0 ? (stats.onWay / stats.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-
-            <div className="flex justify-between items-center text-xs mt-1">
-              <span className="text-green-800 font-medium">Başarıyla Teslim Edildi:</span>
-              <span className="font-bold">{stats?.delivered ?? 0}</span>
-            </div>
-            <div className="w-full bg-gray-100 h-2 rounded overflow-hidden">
-              <div
-                className="bg-green-600 h-full"
-                style={{
-                  width: `${stats && stats.total > 0 ? (stats.delivered / stats.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-
-            <div className="flex justify-between items-center text-xs mt-1">
-              <span className="text-red-800 font-medium">İptal Edilen / Reddedilen:</span>
-              <span className="font-bold">{stats?.cancelled ?? 0}</span>
-            </div>
-            <div className="w-full bg-gray-100 h-2 rounded overflow-hidden">
-              <div
-                className="bg-red-500 h-full"
-                style={{
-                  width: `${stats && stats.total > 0 ? (stats.cancelled / stats.total) * 100 : 0}%`,
-                }}
-              />
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* SLA Summary & Top Rooms */}
-        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-          <h3 className="font-bold text-gray-800 text-xs mb-3 border-b pb-1">
-            En Çok Sipariş Veren Odalar
-          </h3>
-          <div className="flex flex-col gap-1.5 overflow-auto max-h-[160px]">
-            {orders.length === 0 ? (
-              <span className="text-gray-400 text-center py-4">Veri yok</span>
-            ) : (
-              orders.slice(0, 5).map((o) => (
-                <div
-                  key={o.id}
-                  className="flex justify-between items-center bg-gray-50 p-1.5 rounded border border-gray-100 text-[11px]"
-                >
-                  <span className="font-bold text-gray-800">Oda {o.roomNumber}</span>
-                  <span className="text-gray-500 truncate max-w-[150px]">{o.itemsSummary}</span>
-                  <span className="font-mono font-bold text-blue-700">
-                    {formatPrice(o.subtotal, o.currency)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+        <div className="rounded-lg border border-border bg-surface p-3">
+          <h3 className="mb-3 border-b border-border pb-1 text-xs font-bold">En yavaş 20 sipariş</h3>
+          {slowest.length === 0 ? (
+            <p className="py-6 text-center text-muted">Teslim edilen sipariş yok</p>
+          ) : (
+            <div className="max-h-52 overflow-auto">
+              <table className="w-full text-left text-[11px]">
+                <thead className="text-muted">
+                  <tr>
+                    <th className="p-1">Sipariş</th>
+                    <th className="p-1">Oda</th>
+                    <th className="p-1">Gün</th>
+                    <th className="p-1 text-right">Süre</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slowest.map((o) => (
+                    <tr key={o.orderId} className="border-t border-border">
+                      <td className="p-1 font-mono">#{o.orderNo}</td>
+                      <td className="p-1">{o.roomNumber}</td>
+                      <td className="p-1">{formatDayTr(o.businessDate)}</td>
+                      <td className={`p-1 text-right font-semibold ${o.breached ? "text-danger" : "text-success"}`}>
+                        {fmtDuration(o.sec)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

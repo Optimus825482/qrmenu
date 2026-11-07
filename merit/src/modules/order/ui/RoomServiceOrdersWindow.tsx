@@ -178,7 +178,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
                         {o.itemsSummary}
                       </td>
                       <td className="p-1.5 font-mono font-semibold text-right border-r border-[#f0f0f0]">
-                        {formatPrice(o.subtotal, o.currency)}
+                        {o.subtotal === undefined ? "—" : formatPrice(o.subtotal, o.currency)}
                       </td>
                       <td className="p-1.5 text-gray-500 border-r border-[#f0f0f0]">
                         {new Date(o.createdAt).toLocaleTimeString("tr-TR", {
@@ -261,7 +261,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             <div className="mt-auto p-2 bg-blue-50 border border-blue-200 rounded flex justify-between items-center">
               <span className="font-bold text-blue-900">Toplam Tutar:</span>
               <span className="font-mono font-bold text-base text-blue-900">
-                {formatPrice(selectedOrder.subtotal, selectedOrder.currency)}
+                {selectedOrder.subtotal === undefined ? "—" : formatPrice(selectedOrder.subtotal, selectedOrder.currency)}
               </span>
             </div>
           </div>
