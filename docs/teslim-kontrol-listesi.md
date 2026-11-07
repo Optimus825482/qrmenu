@@ -33,7 +33,7 @@ Commit'ler ve son toplu sonuçlar [P8 kabul raporunda](kabul/2026-11-07-p8-kabul
 | Outletler | 18 outletin kesin otel dağılımı panelden girilir | Bekleniyor |
 | Ortak Wi-Fi | guest.ipRateMultiplier saha değeri, NAT ölçümü ve onayı | Bekleniyor |
 | Eğitim | [Altı kılavuz ve üç oturum](kilavuz/README.md); gerçek kullanıcıya yetki kapsamı açıklanır | Bekleniyor |
-| GitHub | Ajan push yapmadı; check/e2e/gateway/load-tools gerçek Actions koşusu | Kullanıcı push sonrası |
+| GitHub | main ve ux/yenileme push edildi, tag v1.0.0-rc1; GitHub Actions hesabı faturalandırma (billing lock) sebebiyle runner başlatamadı | https://github.com/Optimus825482/qrmenu/actions/runs/42389047505 (hesap kilidi açılınca otomatik/yeniden tetiklenecek) |
 
 ### GitHub yerel ön kontrol ve kullanıcı adımları
 
