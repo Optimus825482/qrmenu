@@ -2,7 +2,7 @@ import type { Transporter } from "nodemailer";
 import type { EmailLog } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publishMailFailed } from "@/modules/radar/publish";
-import { mailPolicy, MAIL_TEMPLATES, type MailTemplate } from "./policy";
+import { mailPolicy, usersEntitledTo, MAIL_TEMPLATES, type MailTemplate } from "./policy";
 import { resolveSmtp } from "./resolveSmtp";
 import { configError, createMailTransport, mapSmtpError } from "./transport";
 
@@ -81,6 +81,17 @@ export async function deliverClaimed(log: EmailLog, deps: DeliverDeps): Promise<
       if (!policy.allowed) {
         await finish(log.id, "IPTAL", now, { error: `Gönderim iptal: ${policy.reason ?? "politika"}` });
         return "CANCELLED";
+      }
+      // Entitlement is re-checked at send time: a role/hotel/e-mail change between enqueue and delivery
+      // (retries can lag up to 30 minutes) must not leak a report to a recipient who no longer qualifies.
+      if (log.userId) {
+        const still = (await usersEntitledTo(log.template as MailTemplate, log.hotelId)).find(
+          (r) => r.userId === log.userId,
+        );
+        if (!still || still.email.trim().toLowerCase() !== (log.to ?? "").trim().toLowerCase()) {
+          await finish(log.id, "IPTAL", now, { error: "Gönderim iptal: alıcı artık yetkili değil" });
+          return "CANCELLED";
+        }
       }
     }
   }
