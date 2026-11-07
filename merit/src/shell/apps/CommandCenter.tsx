@@ -223,7 +223,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="users" size={16} /> Ekip Yönetimi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-blue-800 bg-blue-50/80 hover:bg-blue-100" onClick={() => openApp?.("core.rapor")}>
-            <Icon name="chart" size={16} /> Merkezi Raporlama &amp; KPI
+            <Icon name="chart" size={16} /> Rapor Merkezi
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.ayarlar")}>
             <Icon name="monitor" size={16} /> Denetim Masası

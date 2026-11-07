@@ -204,19 +204,20 @@ export function registerCoreApps(): void {
   });
   registerCatalogApp({
     id: "core.rapor",
-    title: "Merkezi Raporlama & KPI",
+    title: "Rapor Merkezi",
+    launchLabel: "Rapor Merkezi",
     icon: "rapor",
     moduleKey: "CORE",
     screenCode: "CR-RAP",
-    category: "SISTEM",
+    category: "RAPOR",
     needsHotel: false,
-    window: { w: 980, h: 620, minW: 720, minH: 450 },
+    window: { w: 1000, h: 640, minW: 700, minH: 420 },
     kind: "component",
     component: () =>
-      import("@/shell/apps/CentralReportsWindow").then((m) => ({
-        default: m.CentralReportsWindow,
+      import("@/modules/reporting/ui/ReportCenterWindow").then((m) => ({
+        default: m.ReportCenterWindow,
       })),
-    mobile: "none",
+    mobile: "readonly",
   });
   registerCatalogApp({
     id: "core.outlet-tanim",

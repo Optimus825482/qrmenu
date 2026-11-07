@@ -1,12 +1,12 @@
-/** Raporlar: empty until the Rapor Merkezi (P7). */
+"use client";
+
+import { ReportCenter } from "@/modules/reporting/ui/ReportCenter";
+
+/** Raporlar: the Rapor Merkezi catalogue in a single-column layout (same filters, cards instead of a grid). */
 export function ReportsTab() {
   return (
     <div className="mb-stack">
-      <h2 className="mb-heading">Raporlar</h2>
-      <div className="mb-empty">
-        <p className="mb-empty-title">Henüz rapor yok</p>
-        <p>Rapor Merkezi P7&apos;de</p>
-      </div>
+      <ReportCenter variant="mobile" />
     </div>
   );
 }
