@@ -4,6 +4,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { getSetting } from "@/lib/settings";
 import { DomainError } from "@/lib/result";
 import { businessDate, businessDateStart } from "@/lib/time";
+import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
 
 export type CommandCenterKpis = {
   /** Active hotels in scope (1 when a single hotel is asked for). */
@@ -50,7 +51,7 @@ export async function getCommandCenterKpis(
   const slaMinutes = new Map<string, number>();
   for (const h of scope) slaMinutes.set(h, await getSetting("rs.slaMinutes", h));
 
-  const [hotels, sessions, notificationsToday, totalRooms, occupiedRooms, activeMybarRequests, delayedRoomOrders, pendingPosOrders] = await Promise.all([
+  const [hotels, sessions, notificationsToday, totalRooms, occupiedRooms, activeMybarRequests, openRoomOrders, pendingPosOrders] = await Promise.all([
     prisma.hotel.findMany({
       where: { id: { in: scope }, isActive: true },
       select: { id: true, code: true, name: true },
@@ -90,16 +91,14 @@ export async function getCommandCenterKpis(
         status: "BEKLEMEDE",
       },
     }),
-    prisma.order.count({
+    // Open room-service orders; the SLA state (clock start, phone-confirm pause) is computed below.
+    prisma.order.findMany({
       where: {
+        hotelId: { in: scope },
         kind: "ODA_SERVISI",
         status: { in: ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] },
-        // Each hotel's own rs.slaMinutes threshold.
-        OR: scope.map((h) => ({
-          hotelId: h,
-          createdAt: { lte: new Date(Date.now() - (slaMinutes.get(h) ?? 30) * 60000) },
-        })),
       },
+      select: { hotelId: true, status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
     }),
     prisma.order.count({
       where: {
@@ -109,6 +108,11 @@ export async function getCommandCenterKpis(
       },
     }),
   ]);
+
+  const now = new Date();
+  const delayedRoomOrders = openRoomOrders.filter(
+    (o) => slaStateOf(o, now, slaMinutes.get(o.hotelId) ?? 30) === "BREACH",
+  ).length;
 
   const usersByHotel = new Map<string, number>();
   for (const s of sessions) usersByHotel.set(s.hotelId, (usersByHotel.get(s.hotelId) ?? 0) + 1);

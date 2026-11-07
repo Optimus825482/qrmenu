@@ -50,6 +50,17 @@ describe("kds.board", () => {
     expect(board.columns.NEW[0]).toMatchObject({ tableLabel: "M1", items: [{ name: "Mojito", qty: 2 }] });
   });
 
+  it("oda servisi siparişini göstermez (yalnız MASA)", async () => {
+    const { order, kitchen } = await setup();
+    const table = await seedOrder(order, { status: "ONAYLANDI", approvedAt: new Date() });
+    const room = await seedOrder(order, { kind: "ODA_SERVISI", tableId: null, status: "ONAYLANDI", approvedAt: new Date() });
+
+    const board = await kds.board(kitchen.ctx, order.outlet.id);
+
+    expect(ids(board)).toEqual({ NEW: [table.id], PREP: [], READY: [] });
+    expect(JSON.stringify(board)).not.toContain(room.id);
+  });
+
   it("başlananı Hazırlanıyor'a, hazır olanı Hazır'a taşır; servis edileni çıkarır", async () => {
     const { order, kitchen, waiter } = await setup();
     const row = await seedOrder(order, { status: "ONAYLANDI", approvedAt: new Date() });

@@ -100,8 +100,14 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
   // 4. Delegate to guestState for the ODA_SERVISI outlet
   const state = await guestState(rsOutlet.id);
 
+  // An outlet without a single orderable item is as good as closed (the card must not link to an empty menu).
+  const hasItems =
+    !state.menuOpen ||
+    (await prisma.menuNode.count({ where: { outletId: rsOutlet.id, kind: "OGE", isActive: true, isAvailable: true } })) > 0;
+  const menuOpen = state.menuOpen && hasItems;
+
   let reason: RoomServiceState["reason"] = undefined;
-  if (!state.menuOpen) {
+  if (!menuOpen) {
     reason = "MENU_KAPALI";
   } else if (!state.orderingOpen) {
     reason = "SIPARIS_KAPALI";
@@ -112,8 +118,8 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
     hotelId: hotel.id,
     roomNumber: room.number,
     hotelName: hotel.name,
-    roomServiceOpen: state.menuOpen,
-    orderingOpen: state.orderingOpen,
+    roomServiceOpen: menuOpen,
+    orderingOpen: menuOpen && state.orderingOpen,
     rsOutletId: rsOutlet.id,
     confirmRequired: rsOutlet.phoneConfirmRequired,
     slaMinutes,

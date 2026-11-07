@@ -61,9 +61,7 @@ const ODS_PRIMARY: Def[] = [
   { id: "confirm", label: "Teyit", icon: "call", href: "/oda-servisi?sekme=teyit", screen: "RO-TEL" },
   { id: "delivery", label: "Teslim", icon: "walk", href: "/oda-servisi?sekme=teslim", screen: "RO-TES" },
 ];
-const ODS_MORE: Def[] = [
-  { id: "history", label: "Geçmiş", icon: "clock", href: "/oda-servisi?sekme=gecmis", screen: "RO-TAL" },
-];
+const ODS_MORE: Def[] = []; // no history screen on the room-service board (the "Geçmiş" link had no target)
 
 const DEPO_PRIMARY: Def[] = [
   { id: "pool", label: "Havuz", icon: "box", href: "/depo/stok", screen: "MB-ZIM" },

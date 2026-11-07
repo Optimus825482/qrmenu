@@ -33,7 +33,7 @@ async function board(ctx: Ctx, outletId: string): Promise<KdsBoard> {
   if (!outlet.kdsEnabled) throw new DomainError("CONFLICT", "Bu outlette KDS kapalı");
 
   const rows = await prisma.order.findMany({
-    where: { outletId, OR: [{ status: "ONAYLANDI" }, { status: "HAZIR" }] },
+    where: { outletId, kind: "MASA", OR: [{ status: "ONAYLANDI" }, { status: "HAZIR" }] }, // room service has its own board
     select: {
       id: true,
       orderNo: true,

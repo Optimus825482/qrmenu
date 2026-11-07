@@ -8,6 +8,7 @@ import { DomainError, safeAction } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
 import { dayRange } from "@/modules/minibar/server/dates";
+import { slaStart, slaStateOf } from "@/modules/order/server/roomService/slaConstants";
 
 const filterSchema = z.object({
   hotelId: z.string().optional(),
@@ -177,12 +178,12 @@ export async function getCentralReportAction(raw: unknown) {
       if (isDelivered) rsDelivered++;
       if (ro.phoneConfirmedAt) rsPhoneConfirmed++;
 
-      const start = ro.createdAt.getTime();
+      const start = slaStart(ro).getTime(); // plan rule: the phone confirmation starts the clock
       const end = ro.deliveredAt ? ro.deliveredAt.getTime() : Date.now();
       const durationMin = Math.max(0, Math.round((end - start) / 60000));
       const sla = slaByHotel.get(ro.hotelId) ?? 30;
-      const isCancelled = ro.status === "IPTAL" || ro.status === "REDDEDILDI";
-      const slaBreached = ro.slaBreachedAt !== null || (!isCancelled && durationMin > sla);
+      const state = slaStateOf(ro, new Date(), sla);
+      const slaBreached = ro.slaBreachedAt !== null || state === "BREACH" || state === "DONE_LATE";
       if (slaBreached) rsBreached++;
 
       return {

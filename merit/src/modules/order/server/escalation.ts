@@ -1,4 +1,4 @@
-import type { Prisma } from "@/generated/prisma/client";
+import type { OrderKind, Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { getSetting } from "@/lib/settings";
@@ -25,7 +25,7 @@ async function activeMembers(tx: Prisma.TransactionClient, outletId: string, use
  */
 async function recipients(
   tx: Prisma.TransactionClient,
-  order: { hotelId: string; outletId: string; kind: string },
+  order: { hotelId: string; outletId: string; kind: OrderKind },
 ): Promise<string[]> {
   const outletRole = order.kind === "ODA_SERVISI" ? "R-MUS" : "R-SGF";
   const [fbm, outletUsers] = await Promise.all([

@@ -23,6 +23,7 @@ async function setupRoomAndOutlet(over: {
   roomActive?: boolean;
   moduleEnabled?: boolean;
   createOutlet?: boolean;
+  emptyMenu?: boolean;
 } = {}) {
   const mrId = await hotelId("ROYAL");
 
@@ -72,6 +73,13 @@ async function setupRoomAndOutlet(over: {
     await testDb.outlet.deleteMany({ where: { hotelId: mrId, type: "ODA_SERVISI" } });
   }
 
+  // The outlet needs one orderable item to count as open (an empty menu reads as closed).
+  const rsOutlet = await testDb.outlet.findFirst({ where: { hotelId: mrId, type: "ODA_SERVISI" } });
+  if (rsOutlet) {
+    await testDb.menuNode.deleteMany({ where: { outletId: rsOutlet.id } });
+    if (!over.emptyMenu) await testDb.menuNode.create({ data: { outletId: rsOutlet.id, kind: "OGE", name: "Çay", price: 25 } });
+  }
+
   if (over.moduleEnabled !== undefined) {
     await testDb.hotelModule.updateMany({
       where: { hotelId: mrId, moduleKey: "ROOM_SERVICE" },
@@ -114,6 +122,14 @@ describe("roomServiceState", () => {
     expect(state.roomServiceOpen).toBe(false);
     expect(state.orderingOpen).toBe(false);
     expect(state.reason).toBe("ODA_PASIF");
+  });
+
+  it("menüsü boş outlet -> kapalı sayılır (MENU_KAPALI), sipariş alımı da kapalı", async () => {
+    const { room } = await setupRoomAndOutlet({ emptyMenu: true });
+    const state = await roomServiceState(room.id);
+    expect(state.roomServiceOpen).toBe(false);
+    expect(state.orderingOpen).toBe(false);
+    expect(state.reason).toBe("MENU_KAPALI");
   });
 
   it("outlet yok -> ikisi false, reason 'MENU_KAPALI'", async () => {

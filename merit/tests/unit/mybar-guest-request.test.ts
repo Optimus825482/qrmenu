@@ -162,10 +162,15 @@ describe("katalog", () => {
   });
 });
 
+/** The S0 seed gives every hotel an Oda Servisi outlet; `getRoomGuestState` omits `reason` while it is open. */
+const closeRoomService = (hotelId: string) =>
+  testDb.outlet.updateMany({ where: { hotelId, type: "ODA_SERVISI" }, data: { isActive: false } });
+
 describe("oda durumu", () => {
   it("pasif oda ODA_PASIF, modül kapalı MYBAR_KAPALI, otel pasif OTEL_PASIF", async () => {
     const w = await minibarWorld();
     expect((await getRoomGuestState(w.room.id)).mybarOpen).toBe(true);
+    await closeRoomService(w.hotelId); // `reason` is only reported when room service is closed as well (P6)
     await testDb.room.update({ where: { id: w.room.id }, data: { isActive: false } });
     expect(await getRoomGuestState(w.room.id)).toMatchObject({ mybarOpen: false, reason: "ODA_PASIF" });
     await testDb.room.update({ where: { id: w.room.id }, data: { isActive: true } });
@@ -179,6 +184,7 @@ describe("oda durumu", () => {
   it("doluluk yüklendiyse ve oda boşsa ODA_BOS; doluysa açık; veri yoksa açık", async () => {
     const w = await minibarWorld({ rooms: 2 });
     const [a, b] = w.rooms;
+    await closeRoomService(w.hotelId);
     const rec = (roomId: string) =>
       testDb.guestRecord.create({
         data: {

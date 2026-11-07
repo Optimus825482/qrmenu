@@ -58,11 +58,11 @@ export function registerRoomServiceApps(): void {
     mobile: "full",
   });
 
-  // 4. Oda Servisi Raporları
+  // 4. Oda Servisi SLA
   registerCatalogApp({
     id: "rs.rapor",
-    title: "Oda Servisi Raporları",
-    launchLabel: "Oda Servisi Raporları",
+    title: "Oda Servisi SLA",
+    launchLabel: "Oda Servisi SLA",
     icon: "denetim",
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-SLA",

@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-/** Share of the SLA window after which the timer turns to the warning colour (mirrors `SLA_WARN_RATIO`). */
-const WARN_RATIO = 0.8;
+import { SLA_WARN_RATIO } from "@/modules/order/server/roomService/slaConstants";
 
 export type SlaTimerState = "OK" | "WARN" | "BREACH";
 
 /** Pure timer state at `nowMs` for a clock that started at `startMs` and is due at `dueMs`. */
 export function slaTimerState(startMs: number, dueMs: number, nowMs: number): SlaTimerState {
   if (nowMs >= dueMs) return "BREACH";
-  return nowMs - startMs >= (dueMs - startMs) * WARN_RATIO ? "WARN" : "OK";
+  return nowMs - startMs >= (dueMs - startMs) * SLA_WARN_RATIO ? "WARN" : "OK";
 }
 
 /** "12:05" remaining, or "+03:10" once overdue. */
