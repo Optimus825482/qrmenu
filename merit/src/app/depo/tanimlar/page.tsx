@@ -648,6 +648,7 @@ export default function MinibarTanimlarPage() {
           <div className="flex items-center gap-2 flex-wrap">
             {hotels.length > 0 && (
               <select
+                aria-label="Otel"
                 value={selectedHotelId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -666,7 +667,7 @@ export default function MinibarTanimlarPage() {
 
             <Link
               href="/depo/stok"
-              className="px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Stok Havuzu
             </Link>
@@ -700,7 +701,7 @@ export default function MinibarTanimlarPage() {
         )}
 
         {successMsg && (
-          <div role="status" className="p-4 bg-success/10 border border-success/40 rounded-xl text-success text-xs flex items-center justify-between">
+          <div role="status" className="p-4 bg-surface border border-success/40 rounded-xl text-success text-xs flex items-center justify-between">
             <span><Icon name="check" size={20} /> {successMsg}</span>
             <button aria-label="Kapat" onClick={() => setSuccessMsg(null)} className="text-success hover:text-text ml-2">
               <Icon name="close" size={20} />
@@ -799,6 +800,7 @@ export default function MinibarTanimlarPage() {
                 />
 
                 <select
+                  aria-label="Ürün grubu filtresi"
                   value={selectedGroupFilter}
                   onChange={(e) => setSelectedGroupFilter(e.target.value)}
                   className="bg-surface text-text border border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-warn/40"
@@ -1669,6 +1671,7 @@ export default function MinibarTanimlarPage() {
             {/* Yeni Ürün Ekleme Çubuğu */}
             <div className="p-3 bg-bg/80 rounded-xl border border-border flex flex-wrap items-center gap-2">
               <select
+                aria-label="Eklenecek ürün"
                 value={selectedProductToAdd}
                 onChange={(e) => setSelectedProductToAdd(e.target.value)}
                 className="flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40 min-w-[200px]"
@@ -1929,7 +1932,7 @@ export default function MinibarTanimlarPage() {
 
               {/* AFTER */}
               <div>
-                <div className="flex items-center justify-between bg-success/10 border border-success/40 px-3 py-1.5 rounded-t-xl text-success font-bold">
+                <div className="flex items-center justify-between bg-surface border border-success/40 px-3 py-1.5 rounded-t-xl text-success font-bold">
                   <span><Icon name="arrow-right" size={20} /> SONRAKİ DEĞER (AFTER / GÜNCEL KAYIT)</span>
                   <span>{activeAuditLog.after ? "Mevcut" : "Yok (Silinmiş Kayıt)"}</span>
                 </div>

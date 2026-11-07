@@ -22,8 +22,8 @@ export function formatSlaClock(dueMs: number, nowMs: number): string {
 
 const TONE: Record<SlaTimerState, string> = {
   OK: "border-success text-success",
-  WARN: "border-warn bg-warn/15 text-warn",
-  BREACH: "border-danger bg-danger/10 text-danger font-semibold",
+  WARN: "border-warn bg-surface text-warn",
+  BREACH: "border-danger bg-surface text-danger font-semibold",
 };
 const LABEL: Record<SlaTimerState, string> = { OK: "Süre var", WARN: "Süre azalıyor", BREACH: "Süre aşıldı" };
 

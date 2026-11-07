@@ -184,7 +184,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
                 disabled={busy}
                 onClick={toggleOrdering}
                 className={`min-h-11 min-w-20 rounded-xl border px-3 text-sm font-black disabled:opacity-50 ${
-                  data.orderingEnabled ? "border-success bg-success/15 text-success" : "border-danger bg-danger/10 text-danger"
+                  data.orderingEnabled ? "border-success bg-surface text-success" : "border-danger bg-surface text-danger"
                 }`}
               >
                 {data.orderingEnabled ? "Açık" : "Kapalı"}

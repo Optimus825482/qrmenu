@@ -58,7 +58,7 @@ export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kasa-yazici", path: "/kasa/yazici", user: "kasa.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Fiş Yazıcı Kuyruğu/ },
   { key: "kasa-iptal", path: "/kasa/iptal", user: "kasa.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Sipariş iptali/ },
   { key: "kds", path: "/kds", user: "kds.havuz", outlet: /Havuz Bar/, tier: "pos", ready: /Mutfak ekranı/ },
-  { key: "oda-servisi", path: "/oda-servisi", user: "fbm.mr", tier: "personel", ready: /Operasyon Paneli/ },
+  { key: "oda-servisi", path: "/oda-servisi", user: "fbm.mr", outlet: /Oda Servisi/, tier: "personel", ready: /Süresi aşan/ },
   { key: "yetkisiz", path: "/yetkisiz?ekran=MB-DOL", user: "kat.mr", tier: "personel", ready: /Bu ekran sana atanmadı/ },
   { key: "giris", path: "/giris", user: null, tier: "personel", ready: /Giriş Yap/ },
   { key: "secim", path: "/secim", user: "garson.havuz", picker: true, tier: "personel", ready: /Nerede çalışacaksınız/ },

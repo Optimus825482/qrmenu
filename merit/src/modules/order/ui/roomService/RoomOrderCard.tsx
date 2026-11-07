@@ -104,7 +104,7 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
             {card.guestLanguage.toUpperCase()}
           </span>
           {card.occupancy === "BOS" ? (
-            <span className="inline-flex items-center rounded-full border border-warn bg-warn/15 px-2 py-0.5 text-[13px] font-bold text-warn">
+            <span className="inline-flex items-center rounded-full border border-warn bg-surface px-2 py-0.5 text-[13px] font-bold text-warn">
               Oda boş görünüyor
             </span>
           ) : null}
@@ -120,7 +120,7 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
         </ul>
 
         {card.note ? (
-          <p className="rounded-xl border border-warn/30 bg-warn/10 p-2 text-[13px] text-warn" dir={rtl ? "rtl" : undefined}>
+          <p className="rounded-xl border border-warn/30 bg-surface p-2 text-[13px] text-warn" dir={rtl ? "rtl" : undefined}>
             <strong>Misafir notu:</strong> {card.note}
           </p>
         ) : null}
