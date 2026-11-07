@@ -68,16 +68,17 @@ describe("enqueue", () => {
     await openMail("ROYAL");
     await mailUser("q-mgr", "R-OTM", "ROYAL");
     const hid = await hotelId("ROYAL");
-    const denied = await queue.enqueue({ ...base, hotelId: hid, scheduled: true });
-    expect(denied.created).toBe(0);
-    expect(denied.denied).toMatch(/eski minibar/);
-    // T8 note: when the legacy cron for a slot is removed, T8 deletes the template from this set.
-    guard.LEGACY_CRON_TEMPLATES.delete("GOREV");
+    // T8 retired the legacy 08:00/08:05 crons: the set is empty; the mechanism still works for a listed template.
+    expect(guard.LEGACY_CRON_TEMPLATES.size).toBe(0);
+    guard.LEGACY_CRON_TEMPLATES.add("GOREV");
     try {
-      expect((await queue.enqueue({ ...base, hotelId: hid, scheduled: true })).created).toBe(1);
+      const denied = await queue.enqueue({ ...base, hotelId: hid, scheduled: true });
+      expect(denied.created).toBe(0);
+      expect(denied.denied).toMatch(/eski minibar/);
     } finally {
-      guard.LEGACY_CRON_TEMPLATES.add("GOREV");
+      guard.LEGACY_CRON_TEMPLATES.delete("GOREV");
     }
+    expect((await queue.enqueue({ ...base, hotelId: hid, scheduled: true })).created).toBe(1);
   });
 });
 

@@ -9,8 +9,8 @@ import { reconcileAllHotels } from "./taskGeneration";
 import { runDailyUploadTasks, runUploadWarnings } from "./uploadTasks";
 
 /*
- * The six recurring minibar queues (Europe/Nicosia). The e-mail report queues `minibar.daily-report`
- * (08:00) and `minibar.consumption-report` (08:05) stay in `lib/jobs.ts` until P7 takes them over.
+ * The six recurring minibar queues (Europe/Nicosia). The 08:00 / 08:05 e-mail reports are P7's
+ * `mail.daily-gorev` / `mail.daily-sarfiyat` (reporting/server/jobs.ts), which also unschedules the legacy crons.
  *
  * Every body is idempotent, so a retried or double-fired job never repeats a side effect.
  */

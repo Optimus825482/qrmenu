@@ -33,16 +33,24 @@ describe("registerReportingJobs", () => {
       ["mail.purge", "40 3 * * *", null, { tz: TZ, key: "default" }],
       ["mail.upload-alert", "0 10 * * *", { slot: "10:00" }, { tz: TZ, key: "u10" }],
       ["mail.upload-alert", "0 18 * * *", { slot: "18:00" }, { tz: TZ, key: "u18" }],
+      ["mail.daily-gorev", "0 8 * * *", null, { tz: TZ, key: "default" }],
+      ["mail.daily-sarfiyat", "5 8 * * *", null, { tz: TZ, key: "default" }],
     ]);
-    expect(boss.createQueue.mock.calls.map((c) => c[0])).toEqual(["mail.process", "mail.purge", "mail.upload-alert"]);
-    expect([...handlers.keys()].sort()).toEqual(["mail.process", "mail.purge", "mail.upload-alert"]);
+    expect(boss.createQueue.mock.calls.map((c) => c[0])).toEqual([
+      "mail.process",
+      "mail.purge",
+      "mail.upload-alert",
+      "mail.daily-gorev",
+      "mail.daily-sarfiyat",
+    ]);
+    expect([...handlers.keys()].sort()).toEqual(["mail.daily-gorev", "mail.daily-sarfiyat", "mail.process", "mail.purge", "mail.upload-alert"]);
   });
 
   it("bir kuyruğun kaydı fırlatırsa diğerleri kayıtlı kalır", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { boss, handlers } = fakeBoss("mail.purge");
     await expect(reporting.registerReportingJobs(boss as never)).resolves.toBeUndefined();
-    expect([...handlers.keys()].sort()).toEqual(["mail.process", "mail.upload-alert"]);
+    expect([...handlers.keys()].sort()).toEqual(["mail.daily-gorev", "mail.daily-sarfiyat", "mail.process", "mail.upload-alert"]);
     err.mockRestore();
   });
 

@@ -11,7 +11,6 @@ vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const { publish } = await import("@/lib/realtime");
 const jobs = await import("@/modules/minibar/server/jobs");
-const mailJobs = await import("@/modules/minibar/server/minibarJobs");
 const dnd = await import("@/modules/minibar/server/dnd");
 
 beforeAll(resetReferenceData);
@@ -253,30 +252,6 @@ describe("kuyruk gövdeleri", () => {
     const { boss, handlers } = fakeBoss();
     await jobs.registerMinibarJobs(boss as never);
     await expect(fire(handlers, "occupancy.cleanup", T0)).resolves.toBeUndefined();
-  });
-});
-
-describe("e-posta başarısızlığı (radar G20)", () => {
-  it("gönderim başarısızsa tek mail.failed yayınlanır; başarıda yayınlanmaz", async () => {
-    const w = await minibarWorld();
-    const mgr = await makeUser({ username: "mudur-posta", roleCode: "R-OTM", hotelCode: w.hotelCode });
-    const failed = () => vi.mocked(publish).mock.calls.filter(([e]) => e.type === "mail.failed");
-    const common = {
-      hotelId: w.hotelId,
-      kind: "minibar.test",
-      subject: "x",
-      html: "<p>x</p>",
-      recipients: [{ id: mgr.id, email: "mudur@royal.test" }],
-    };
-
-    sendMail.mockResolvedValue(true);
-    expect(await mailJobs.sendHotelMailOnce({ ...common, day: "2026-07-10" })).toBe("sent");
-    expect(failed()).toHaveLength(0);
-
-    sendMail.mockResolvedValue(false);
-    expect(await mailJobs.sendHotelMailOnce({ ...common, day: "2026-07-11" })).toBe("failed");
-    expect(failed()).toHaveLength(1);
-    expect(failed()[0][0]).toMatchObject({ hotelId: w.hotelId, payload: { kind: "minibar.test" } });
   });
 });
 

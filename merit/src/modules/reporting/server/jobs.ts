@@ -1,6 +1,7 @@
 import type { PgBoss } from "pg-boss";
 import { TZ } from "@/lib/time";
 import { processQueue, purgeOldLogs } from "./mail/queue";
+import { enqueueDailyReports, type DailyTemplate } from "./mail/dailyReports";
 import { enqueueUploadAlerts, type UploadSlot } from "./mail/uploadAlert";
 
 /*
@@ -8,14 +9,36 @@ import { enqueueUploadAlerts, type UploadSlot } from "./mail/uploadAlert";
  *   mail.process       every minute  - claims due EmailLog rows and sends them (atomic, SKIP LOCKED)
  *   mail.purge         03:40         - removes EmailLog rows older than the retention window
  *   mail.upload-alert  10:00 / 18:00 - queues the missing-upload mails (slot in the job data)
- * The daily report queues (T8) register here too.
+ *   mail.daily-gorev   08:00         - queues the previous business day's task report (one row per recipient)
+ *   mail.daily-sarfiyat 08:05        - queues the previous business day's consumption report
+ * The legacy minibar crons `minibar.daily-report` / `minibar.consumption-report` are unscheduled on every
+ * start (`retireLegacyMailCrons`), so the old and the new path never send the same slot.
+ * Ordering: `mail.process` (every minute) claims the rows the 08:00 / 08:05 jobs queued at its next tick.
  */
 
 export const MAIL_PROCESS_QUEUE = "mail.process";
 export const MAIL_PURGE_QUEUE = "mail.purge";
 export const MAIL_UPLOAD_ALERT_QUEUE = "mail.upload-alert";
 
-export type ReportingBoss = Pick<PgBoss, "createQueue" | "schedule" | "work">;
+export const MAIL_DAILY_GOREV_QUEUE = "mail.daily-gorev";
+export const MAIL_DAILY_SARFIYAT_QUEUE = "mail.daily-sarfiyat";
+/** Pre-P7 schedules (key "default" and the keyless form); removed on every start. */
+export const LEGACY_MAIL_QUEUES = ["minibar.daily-report", "minibar.consumption-report"] as const;
+
+export type ReportingBoss = Pick<PgBoss, "createQueue" | "schedule" | "work"> & Partial<Pick<PgBoss, "unschedule">>;
+
+/** Removes the legacy 08:00 / 08:05 hotel-level crons; the schedules may not exist (errors swallowed). */
+export async function retireLegacyMailCrons(boss: ReportingBoss): Promise<void> {
+  for (const queue of LEGACY_MAIL_QUEUES) {
+    for (const key of ["default", undefined]) {
+      try {
+        await boss.unschedule?.(queue, key);
+      } catch {
+        // fresh install or already removed
+      }
+    }
+  }
+}
 
 type Job<T> = { data?: T | null };
 type Handler<T> = (jobs: Job<T>[]) => Promise<void>;
@@ -43,6 +66,7 @@ async function register<T>(
 }
 
 export async function registerReportingJobs(boss: ReportingBoss): Promise<void> {
+  await retireLegacyMailCrons(boss);
   await register(boss, MAIL_PROCESS_QUEUE, [{ cron: "* * * * *", data: null, key: "default" }], async () => {
     const res = await processQueue({ limit: 25 });
     if (res.claimed > 0) {
@@ -72,4 +96,15 @@ export async function registerReportingJobs(boss: ReportingBoss): Promise<void> 
       }
     },
   );
+
+  for (const [queue, cron, template] of [
+    [MAIL_DAILY_GOREV_QUEUE, "0 8 * * *", "GOREV"],
+    [MAIL_DAILY_SARFIYAT_QUEUE, "5 8 * * *", "SARFIYAT"],
+  ] as [string, string, DailyTemplate][]) {
+    await register(boss, queue, [{ cron, data: null, key: "default" }], async () => {
+      const res = await enqueueDailyReports(template);
+      console.log(`[${queue}] ${res.date}: ${res.enqueued} satır kuyruğa alındı`);
+      for (const s of res.skipped) console.info(`[${queue}] atlandı ${s.hotelId}: ${s.reason}`);
+    });
+  }
 }

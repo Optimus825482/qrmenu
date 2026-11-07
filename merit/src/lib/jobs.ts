@@ -12,15 +12,12 @@ import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import { registerMinibarJobs } from "@/modules/minibar/server/jobs";
 import { registerReportingJobs } from "@/modules/reporting/server/jobs";
-import { sendDailyConsumptionReport, sendDailyTaskReport } from "@/modules/minibar/server/minibarJobs";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
 export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
-export const MINIBAR_DAILY_REPORT_QUEUE = "minibar.daily-report";
-export const MINIBAR_CONSUMPTION_REPORT_QUEUE = "minibar.consumption-report";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -104,31 +101,12 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
     });
 
-    // Recurring minibar e-mail reports (P7 takes them over). `schedule` upserts on (queue name, key),
-    // so a restart never duplicates a schedule: one stable key per queue, always Europe/Nicosia.
-    const scheduleOpts = { tz: TZ, key: "default" } as const;
-
-    // 08:00 - dünün tamamlanamayan görevleri ve anormal tüketim raporu
-    await boss.createQueue(MINIBAR_DAILY_REPORT_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_DAILY_REPORT_QUEUE, "0 8 * * *", null, scheduleOpts);
-    await boss.work(MINIBAR_DAILY_REPORT_QUEUE, async () => {
-      const res = await sendDailyTaskReport(new Date());
-      console.log(`[minibar.daily-report] ${res.reportDate}: ${res.hotelsSent} otel raporu iletildi.`);
-    });
-
-    // 08:05 - dünün tüketim toplamları
-    await boss.createQueue(MINIBAR_CONSUMPTION_REPORT_QUEUE); // idempotent
-    await boss.schedule(MINIBAR_CONSUMPTION_REPORT_QUEUE, "5 8 * * *", null, scheduleOpts);
-    await boss.work(MINIBAR_CONSUMPTION_REPORT_QUEUE, async () => {
-      const res = await sendDailyConsumptionReport(new Date());
-      console.log(`[minibar.consumption-report] ${res.reportDate}: ${res.hotelsSent} otel raporu iletildi.`);
-    });
-
     // The six queue/DND/upload jobs: 00:01 daily tasks + DND catch-up, 10:00/18:00 upload warnings,
     // minute DND reminders, 23:59 DND day end, 02:00 file cleanup (retired schedules are removed there).
     await registerMinibarJobs(boss);
 
-    // P7: mail queue worker (every minute), log retention and the 10:00/18:00 missing-upload mails.
+    // P7: mail queue worker (every minute), log retention, 08:00/08:05 daily reports and the 10:00/18:00 upload mails;
+    // also unschedules the legacy minibar.daily-report / minibar.consumption-report crons.
     await registerReportingJobs(boss);
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;
