@@ -122,8 +122,10 @@
         "eta": "Voraussichtliche Wartezeit: {min} Min.",
         "cancel": "Bestellung stornieren",
         "cancelConfirm": "Möchten Sie Ihre Bestellung stornieren?",
-        "cancelled": "Ihre Bestellung wurde storniert."
-      }
+        "cancelled": "Ihre Bestellung wurde storniert.",
+        "keep": "Bestellung behalten"
+      },
+      "unavailable": "Derzeit nicht verfügbar"
     },
     "unavailable": {
       "title": "Diese Speisekarte ist derzeit nicht verfügbar",

@@ -6,21 +6,24 @@ import { DomainError } from "@/lib/result";
 import { guestMeta } from "@/modules/menu/server/guestToken";
 import { OrderStatus } from "@/modules/menu/ui/guest/OrderStatus";
 import { guestOrder } from "@/modules/order/server/guestOrder";
+import { roomOrder } from "@/modules/order/server/roomService/roomOrder";
 import { getGuestTarget } from "../../guestTarget";
 
 export const dynamic = "force-dynamic";
 
 /**
  * One order's status, rendered on the server (a reload shows the same state) and kept live by the
- * client component. Works while ordering is switched off: only the table token and the menu matter.
+ * client component. Works while ordering is switched off: only the table or room token matters.
  */
 export default async function OrderStatusPage({ params }: { params: Promise<{ token: string; orderId: string }> }) {
   const { token, orderId } = await params;
   const target = await getGuestTarget(token);
-  if (target.kind !== "TABLE") return null; // the layout already shows the unavailable / room page
+  if (target.kind !== "TABLE" && target.kind !== "ROOM") return null; // the layout already shows the unavailable page
 
   const [locale, t] = await Promise.all([getLocale(), getTranslations("guest")]);
-  const order = await guestOrder.get(token, orderId, guestMeta(await headers())).catch((error: unknown) => {
+  // A room token only ever reads orders of its own room (another room's order is "not found").
+  const read = target.kind === "ROOM" ? roomOrder.get : guestOrder.get;
+  const order = await read(token, orderId, guestMeta(await headers())).catch((error: unknown) => {
     if (error instanceof DomainError) return null;
     throw error;
   });

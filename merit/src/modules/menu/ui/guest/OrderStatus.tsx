@@ -9,6 +9,7 @@ import type { GuestOrderView } from "@/modules/order/server/guestOrder";
 import { priceFormatter } from "./priceFormat";
 import { useGuestEvents } from "./useGuestEvents";
 import { Icon } from "@/components/icons/Icon";
+import { RoomOrderStatus } from "@/modules/order/ui/guest/RoomOrderStatus";
 
 const STEPS = ["GONDERILDI", "ONAYLANDI", "HAZIR", "SERVIS_EDILDI"] as const;
 type Step = (typeof STEPS)[number];
@@ -30,6 +31,7 @@ export function OrderStatus({ token, locale, order }: { token: string; locale: L
   );
   const format = priceFormatter(locale, order.currency);
   const stopped = order.status === "REDDEDILDI" || order.status === "IPTAL";
+  const room = order.kind === "ODA_SERVISI";
   const current = STEPS.indexOf(order.status as Step);
 
   return (
@@ -40,9 +42,10 @@ export function OrderStatus({ token, locale, order }: { token: string; locale: L
         </p>
       ) : null}
       <h2>{t("order.number", { no: `#${order.orderNo}` })}</h2>
-      {order.status === "GONDERILDI" ? <p className="g-detail">{t("order.thanks")}</p> : null}
+      {room ? <RoomOrderStatus token={token} order={order} /> : null}
+      {!room && order.status === "GONDERILDI" ? <p className="g-detail">{t("order.thanks")}</p> : null}
 
-      {stopped ? (
+      {room ? null : stopped ? (
         <div className="g-banner g-banner-warn" role="status" data-status={order.status}>
           <strong>{order.status === "REDDEDILDI" ? t("order.rejected") : t("order.status.IPTAL")}</strong>
           {order.rejectReason ? <p>{t("selections.reason", { reason: order.rejectReason })}</p> : null}

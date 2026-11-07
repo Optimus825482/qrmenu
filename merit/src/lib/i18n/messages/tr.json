@@ -122,8 +122,10 @@
         "eta": "Tahmini süre: {min} dk",
         "cancel": "Vazgeç",
         "cancelConfirm": "Siparişinizden vazgeçmek istiyor musunuz?",
-        "cancelled": "Siparişiniz iptal edildi."
-      }
+        "cancelled": "Siparişiniz iptal edildi.",
+        "keep": "Siparişi koru"
+      },
+      "unavailable": "Şu an kullanılamıyor"
     },
     "unavailable": {
       "title": "Bu menü şu an kullanılamıyor",

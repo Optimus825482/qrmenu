@@ -122,8 +122,10 @@
         "eta": "Estimated time: {min} min",
         "cancel": "Cancel order",
         "cancelConfirm": "Would you like to cancel your order?",
-        "cancelled": "Your order has been cancelled."
-      }
+        "cancelled": "Your order has been cancelled.",
+        "keep": "Keep my order"
+      },
+      "unavailable": "Currently unavailable"
     },
     "unavailable": {
       "title": "This menu is not available right now",

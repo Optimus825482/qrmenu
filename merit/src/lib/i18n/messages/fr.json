@@ -113,8 +113,10 @@
         "eta": "Délai estimé : {min} min",
         "cancel": "Annuler la commande",
         "cancelConfirm": "Souhaitez-vous annuler votre commande ?",
-        "cancelled": "Votre commande a été annulée."
-      }
+        "cancelled": "Votre commande a été annulée.",
+        "keep": "Garder ma commande"
+      },
+      "unavailable": "Indisponible pour le moment"
     },
     "unavailable": {
       "title": "Ce menu est actuellement indisponible",

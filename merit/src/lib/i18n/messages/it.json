@@ -113,8 +113,10 @@
         "eta": "Tempo stimato: {min} min",
         "cancel": "Annulla ordine",
         "cancelConfirm": "Vuoi annullare il tuo ordine?",
-        "cancelled": "Il tuo ordine è stato annullato."
-      }
+        "cancelled": "Il tuo ordine è stato annullato.",
+        "keep": "Mantieni l'ordine"
+      },
+      "unavailable": "Al momento non disponibile"
     },
     "unavailable": {
       "title": "Questo menu non è disponibile al momento",
