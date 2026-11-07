@@ -4,24 +4,28 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: merit_test
-          # A non-UTC server zone: wall-clock (timestamp without time zone) bugs surface in CI.
           TZ: Europe/Istanbul
           PGTZ: Europe/Istanbul
-        ports:
-          - 5432:5432
+        ports: [5432:5432]
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 5s
@@ -30,6 +34,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:test@localhost:5432/merit
       DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/merit_test
+      E2E_DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_e2e
+      E2E_BASE_URL: http://localhost:3000
       SESSION_SECRET: ci-session-secret-0123456789abcdef0123456789
       QR_HMAC_SECRET: ci-qr-hmac-secret-0123456789abcdef012345678
       PRINT_GATEWAY_KEY: ci-print-gateway-key
@@ -49,29 +55,155 @@ jobs:
           cache-dependency-path: merit/package-lock.json
       - run: npm ci
       - run: npx prisma generate
-      - name: Create dev database
-        run: psql postgresql://postgres:test@localhost:5432/postgres -c "CREATE DATABASE merit;"
-      - name: Migrate dev database
+      - name: Create development database
+        run: psql postgresql://postgres:test@localhost:5432/postgres -c 'CREATE DATABASE merit;'
+      - name: Migrate development database
         run: npx prisma migrate deploy
-      - name: Migrate test database
+      - name: Migrate unit database
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
       - run: npm run check
-      - name: Print gateway tests
-        run: npm ci && npm test
-        working-directory: merit/tools/print-gateway
-      - name: Install Playwright browser
+      - name: Schema drift (applied migrations versus Prisma schema)
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL_TEST }}
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: merit_test
+          TZ: Europe/Istanbul
+          PGTZ: Europe/Istanbul
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/merit
+      DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/merit_test
+      E2E_DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_e2e
+      E2E_BASE_URL: http://localhost:3000
+      SESSION_SECRET: ci-session-secret-0123456789abcdef0123456789
+      QR_HMAC_SECRET: ci-qr-hmac-secret-0123456789abcdef012345678
+      PRINT_GATEWAY_KEY: ci-print-gateway-key
+      APP_BASE_URL: http://localhost:3000
+      SEED_ADMIN_PASSWORD: ci-admin-password
+      TZ: Europe/Nicosia
+    defaults:
+      run:
+        working-directory: merit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Create isolated E2E database
+        run: psql postgresql://postgres:test@localhost:5432/postgres -c 'CREATE DATABASE merit_e2e;'
+      - name: Migrate E2E database
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ env.E2E_DATABASE_URL }}
+      - run: npm run build
+      - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: End-to-end tests
-        run: npx playwright test --project=chromium
-      - name: View matrix (6 views)
-        run: npm run test:e2e:matrix
-      - name: Upload Playwright report
+      - name: Start production server and wait for readiness
+        run: |
+          npm start -- -H 127.0.0.1 -p 3000 > /tmp/merit-server.log 2>&1 &
+          echo $! > /tmp/merit-server.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:3000/api/health > /tmp/merit-health.json; then
+              node -e 'if (!JSON.parse(require("fs").readFileSync("/tmp/merit-health.json", "utf8")).ok) process.exit(1)'
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/merit-server.log
+          exit 1
+        env:
+          DATABASE_URL: ${{ env.E2E_DATABASE_URL }}
+      - name: Chromium and six view projects, including acceptance
+        run: npm run test:e2e
+      - name: Upload failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: merit/playwright-report/
+          name: e2e-evidence
+          path: |
+            merit/playwright-report/
+            merit/test-results/
+            /tmp/merit-server.log
           if-no-files-found: ignore
           retention-days: 7
+      - name: Stop owned server
+        if: always()
+        run: |
+          if [ -f /tmp/merit-server.pid ]; then kill "$(cat /tmp/merit-server.pid)" || true; fi
+
+  gateway:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: merit/tools/print-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/tools/print-gateway/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  load-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: merit/tools/load
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/tools/load/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: merit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/package-lock.json
+      - run: npm ci
+      - name: Production dependency advisory report
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high > /tmp/merit-audit.txt 2>&1
+          result=$?
+          cat /tmp/merit-audit.txt
+          echo '### Dependency audit (advisory)' >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/merit-audit.txt >> "$GITHUB_STEP_SUMMARY"
+          exit "$result"

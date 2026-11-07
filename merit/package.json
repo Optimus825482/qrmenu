@@ -17,7 +17,11 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:reset": "prisma migrate reset --force",
-    "migrate:legacy": "tsx scripts/migrate-from-minibarlatest/index.ts"
+    "migrate:legacy": "tsx scripts/migrate-from-minibarlatest/index.ts",
+    "load:smoke": "tsx tools/load/src/run.ts --smoke",
+    "load:full": "tsx tools/load/src/run.ts --guests 300 --staff 40 --radar 5 --minutes 10 --ramp 60",
+    "db:seed:load": "tsx prisma/seed-load.ts",
+    "kilavuz:resim": "playwright test --config=playwright.guide.config.ts --project=kilavuz"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.10.0",

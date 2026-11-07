@@ -2,20 +2,19 @@
 
 Spec §15'in 10 kabul kriteri ve her birinin kanıtı. Kaynak: `merit/tests/e2e/acceptance/ACCEPTANCE_MAP.ts`
 (`merit/tests/unit/acceptance-map.test.ts` haritayı diske karşı denetler). Durum: **kanıtlı** = ayrılmış kabul
-dosyası var ve yeşil; **kısmi** = mevcut e2e dosyaları kriteri kısmen kapsıyor, ayrılmış kabul dosyası sıradaki
-görevde; **açık** = e2e kanıtı henüz yok.
+dosyası var ve yeşil; **kısmi** = kapsam veya görev incelemesi henüz kapanmadı; **açık** = e2e kanıtı henüz yok.
 
 | # | Kriter | Durum | Kabul dosyası (`merit/tests/e2e/acceptance/`) | Etiketli destek dosyaları (`merit/tests/e2e/`) | Birim kanıtı (`merit/tests/unit/`) | Zamanlı işler | Sahip |
 |---|---|---|---|---|---|---|---|
 | @kabul-1 | 3 otel seed'de, silinemez; otel bazlı modül kapatılabilir | kanıtlı | `k01-oteller.spec.ts` | `definitions.spec.ts` | `admin-hotels.test.ts`, `seed.test.ts` | — | T1 |
 | @kabul-2 | Yetkisiz ekran/veri erişimi engellenir ve günlüğe yazılır; XP'de yetkisiz simge görünmez | kanıtlı | `k02-yetki.spec.ts` | `shell.spec.ts` | `rbac.test.ts` | — | T1 |
 | @kabul-3 | Oturum: azami süre, uyarı, hareketsizlik, tek cihaz, zorla çıkış; online liste ≤ 2 sn | kanıtlı | `k03-oturum.spec.ts` | `onlineUsers.spec.ts` | `sessionSweeper.test.ts`, `sessions.test.ts` | `session.sweep` | T1 |
-| @kabul-4 | Oda kontrolü: +N → havuz → rapor; setup sınırı; Sarfiyat Yok/DND; 120 dk hatırlatma; gün sonu EKSIK | kısmi | — (K04 sıradaki görev) | `minibarAcceptance.spec.ts` | `minibar-dnd.test.ts` | `dnd.recheck`, `dnd.endOfDay` | T2 |
-| @kabul-5 | MyBar: günlük tek talep; ≤ 3 sn kat sorumlusunda; eksik kapatma açıklama ister; iptal yalnız depo/yönetim | kısmi | — (K05 sıradaki görev) | `mybarFlow.spec.ts`, `mybarGuest.spec.ts` | `mybar-guest-request.test.ts`, `mybar-fulfill.test.ts`, `mybar-requests.test.ts` | — | T2 |
-| @kabul-6 | Doluluk: 3 dosya yüklenince görevler üretilir; öncelik planı doğru sıralar | kısmi | — (K06 sıradaki görev) | `minibarAcceptance.spec.ts` | `minibar-occupancy-upload.test.ts`, `minibar-occupancy-parse.test.ts` | `task.generate`, `occupancy.cleanup` | T2 |
-| @kabul-7 | QR sipariş: onaysız sipariş KDS/yazıcıya gitmez; fiyat kapalıyken tutar yok; `orderingEnabled=false` | kısmi | — (K07 sıradaki görev) | `qrOrderAcceptance.spec.ts`, `qrOrder.spec.ts` | `guest-order.test.ts` | `order.escalation`, `print.sweep` | T3 |
-| @kabul-8 | Oda servisi: teyit adımı ayara göre var/yok; durumlar misafir ekranında canlı | kısmi | — (K08 sıradaki görev) | `roomServiceChain.spec.ts`, `roomServiceOps.spec.ts`, `guestRoomService.spec.ts` | `room-sla.test.ts` | `rs.sla`, `order.escalation` | T3 |
-| @kabul-9 | Göç: satır sayıları ve bakiyeler raporda sıfır fark; eski QR tokenları çalışır | açık | — (K09 sıradaki görev) | — | `migrate-core.test.ts`, `migrate-validate.test.ts`, `migrate-history.test.ts` | — | T3 |
+| @kabul-4 | Oda kontrolü: +N → havuz → rapor; setup sınırı; Sarfiyat Yok/DND; 120 dk hatırlatma; gün sonu EKSIK | kanıtlı | `k04-oda-kontrol.spec.ts` | `minibarAcceptance.spec.ts` | `minibar-dnd.test.ts` | `dnd.recheck`, `dnd.endOfDay` | T2 |
+| @kabul-5 | MyBar: günlük tek talep; ≤ 3 sn kat sorumlusunda; eksik kapatma açıklama ister; iptal yalnız depo/yönetim | kanıtlı | `k05-mybar.spec.ts` | `mybarFlow.spec.ts`, `mybarGuest.spec.ts` | `mybar-guest-request.test.ts`, `mybar-fulfill.test.ts`, `mybar-requests.test.ts` | — | T2 |
+| @kabul-6 | Doluluk: 3 dosya yüklenince görevler üretilir; öncelik planı doğru sıralar | kanıtlı | `k06-doluluk.spec.ts` | `minibarAcceptance.spec.ts` | `minibar-occupancy-upload.test.ts`, `minibar-occupancy-parse.test.ts` | `task.generate`, `occupancy.cleanup` | T2 |
+| @kabul-7 | QR sipariş: onaysız sipariş KDS/yazıcıya gitmez; fiyat kapalıyken tutar yok; `orderingEnabled=false` | kanıtlı | `k07-qr-siparis.spec.ts` | `qrOrderAcceptance.spec.ts`, `qrOrder.spec.ts` | `guest-order.test.ts` | `order.escalation`, `print.sweep` | T3 |
+| @kabul-8 | Oda servisi: teyit adımı ayara göre var/yok; durumlar misafir ekranında canlı | kanıtlı | `k08-oda-servisi.spec.ts` | `roomServiceChain.spec.ts`, `roomServiceOps.spec.ts`, `guestRoomService.spec.ts` | `room-sla.test.ts` | `rs.sla`, `order.escalation` | T3 |
+| @kabul-9 | Göç: satır sayıları ve bakiyeler raporda sıfır fark; eski QR tokenları çalışır | kanıtlı | `k09-goc.spec.ts` | — | `migrate-core.test.ts`, `migrate-validate.test.ts`, `migrate-history.test.ts` | — | T3 |
 | @kabul-10 | Misafir ekranları 5 dilde, AR RTL; XP kabuğu dar ekranda Android görünümüne düşer | kanıtlı | `k10-diller-mobil.spec.ts` | `guestMenu.spec.ts`, `guestRoomService.spec.ts`, `mobileShell.spec.ts` | `i18n.test.ts` | — | T1 |
 
 ## Kanıt notları
@@ -56,3 +55,9 @@ npx tsx tests/e2e/helpers/run-jobs.ts --job=<ad> --now=<ISO an>
 `task.generate`, `upload.warn.1000`, `upload.warn.1800`, `occupancy.cleanup`, `mail.daily-gorev`,
 `mail.daily-sarfiyat`, `mail.process`. Çıktı tek satır JSON: `{"job","now","result"}`. Veritabanı `e2eDb.ts` ile aynı
 korumadan geçer (`*_e2e` / `*_test`, localhost). Testlerden `helpers/runJob.ts` içindeki `runJob(ad, tarih)` ile çağrılır.
+
+## P8 T2/T3 ek kanıtları
+
+K04 ilk +1 ve K06 üç Excel önizleme/yükleme gerçek form etkileşimleriyle sınanır; HTTP/DB ve rapor/havuz doğrulamaları korunur. K05 canlı zorunlu onay, günlük sınır, kısa/eksik gerekçe ve rol bazlı iptali kapsar. K07 fiyat anahtarı açık misafir sayfasında değişir. K08 iki telefon teyidi yolu ve canlı durumlar en çok üç saniye içinde ölçülür. K09 sentetik legacy kaynakta dry-run, sıfır fark, idempotency, eski QR ve parola yükseltmesini sınar; gerçek dump için [göç kontrolü](goc-kontrol.md) ayrı kabul gerektirir.
+
+`x01-otel-gunu.spec.ts` doluluk → kontrol → MyBar → oda servisi → masa siparişi → XLSX → canlı radar zinciridir. Güncel Sipariş Özeti raporu yalnız MASA, Oda Servisi SLA raporu yalnız ODA_SERVISI siparişlerini sayar; iki dışa aktarım ayrı denetlenir. Misafir sipariş oluşturma olayları order_events, personel geçişleri audit_logs üzerinden doğrulanır.
