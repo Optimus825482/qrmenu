@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 12:55",
+  updatedAt: "07.11.2026 14:30",
   headline: "P6 oda servisi kapandı: misafir akışı, personel panosu, telefon teyidi, SLA ve A–F kabul zinciri uçtan uca yeşil (19/19 e2e, build temiz). P4 T10 kısmen açık. Sırada P7 ve P8 (Dalga B).",
   phases: [
     {
@@ -179,6 +179,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "07.11 14:30", text: "P6 doğrulama düzeltme turu: rehber hedefleri ve sürekli animasyon kuralı düzeltildi (fd2b4c4), oda servisi panosu ve depo sayfalarının erişilebilirliği düzeltildi (84ba32c), e2e özel durumları güncellendi (96197e4). Altı görünümlü matriste 483/492 geçti (kalan: depo tanımlar dokunma hedefleri ve kat oda kontrol alt çubuk çakışması); Chromium 223 geçti, 3 koşu hatası (bildirim anahtarı VAPID anahtarı yok, duvar ekranı etiket uyumsuzluğu, ortak veritabanı bağlantı sınırı)." },
     { at: "07.11 12:55", text: "P6 oda servisi kapandı: T2R/T3R/T4a/T4b, S0 seed, T5a/T5b/T5c, T6a/T6b/T6c, T4c/T4d ve T7 indi (9b7dda3 299cafc 45d0d24 28bcec6 e926aa3 44ae315 c8f255b b85e22b e5770ee def7254 7985d97 468f211 1270126 efe8761 5877214 90b35f8 380c7b7). A–F kabul zinciri (teyit kapalı/açık, iptal, SLA, kapsam, Almanca) ile P6 e2e 19/19 ve next build yeşil; KDS yalnız MASA gösterir, SLA hesapları ortak yardımcıda. P4 T10 kısmen açık. P7 ve P8 Dalga B'de." },
     { at: "07.11 12:40", text: "P4 T10 kısmen (Arapça akış 1/1 yeşil; kalan senaryolar açık): Arapça misafir talebi kat sorumlusu zorunlu onayı, Tümünü Karşıla (havuz 98, MYBAR_KARSILAMA 1), canlı misafir durumu ve aynı gün ikinci talebin 409 yanıtı uçtan uca yeşil. Spec, oda seçici sayfasının (/q/[token]) yeni yapısına uyarlandı; misafir durum akışı akış açılışında yeniden okuyor; kat sorumlusu işlem yetkisi varsayılanı kapalı. VAPID ve TRANSLATE_PROVIDER belgeleri ile README güncellendi." },
     { at: "04.11 03:45", text: "UX tamamlandı (T15, 0d75121). Altı ekran boyutunda 26 sayfa ve misafir menüsü (Türkçe ve Arapça) denetlendi: yatay kaydırma, erişilebilirlik ve dokunma hedefi ihlali yok, 472 test geçti. Depo rapor ve tanım sayfaları açık temaya taşındı, kat panelindeki DND süzgeci geri geldi. Tam Chromium koşusunda 210 testten 209'u geçti; kalan test P4 T10'a ait. Sırada P4 T10." },
