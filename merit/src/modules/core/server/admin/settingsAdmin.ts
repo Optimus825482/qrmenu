@@ -144,6 +144,8 @@ export async function set(
   const meta = SETTING_META[k];
   // The mask the window shows for a stored secret is not a new value: sending it back keeps the stored one.
   if (meta.sealed && value === MASK) {
+    // Same gates as the real write: scope readability (system scope = SISTEM only) and CR-SYS edit.
+    await assertReadable(ctx, hotelId);
     await assertCan(ctx, SCREEN, "D", hotelId ?? undefined);
     return resolveItem(k, await loadRows(prisma, [k], hotelId), hotelId);
   }
