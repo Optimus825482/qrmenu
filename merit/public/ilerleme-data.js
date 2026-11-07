@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 16:15",
-  headline: "P6 oda servisi ve P7 raporlar/e-posta kapandı (check 2514/2514, build, chromium 227/228, matris yeşil). P8 kabul/eğitim/kurulum başladı: T1, T5, T7 sürüyor; T2–T4, T6, T8 sırada. Açık: mybarFlow:26 (P4 T10), Pazartesi Opus dal incelemeleri.",
+  updatedAt: "07.11.2026 16:30",
+  headline: "P6 oda servisi ve P7 raporlar/e-posta kapandı (check 2514/2514, build, chromium 227/228, matris yeşil). P8 kabul/eğitim/kurulum başladı: T1, T5, T7 sürüyor; T2–T4, T6, T8 sırada. Pazartesi Opus dal incelemeleri.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -89,7 +89,7 @@ window.ILERLEME = {
         { title: "Misafir oda sayfası (TR/EN/DE/RU/AR, RTL) ve MyBar talebi (/q/[token])", status: "done", doneAt: "03.11 19:01", note: "T1 veri temeli (c201ba3), T2 çeviri servisi (0a40ea8 + 041d49c), T3 misafir API (72c289e + güvenlik sertleştirmeleri 3fe2959/2195e42/49ce303), T4 misafir sayfası 8 dilde + RTL (acdf2e1) — hepsi incelendi" },
         { title: "Kat sorumlusu zorunlu onay penceresi, karşılama, kapatma, iptal ekranları", status: "done", doneAt: "03.11 20:10", note: "T5–T8: yaşam döngüsü, havuzdan karşılama, kat akışı, XP ve depo yönetim ekranları. T8 düzeltmeleri 56/56 birim, 3/3 Chromium; tam paket T10 kapsamında" },
         { title: "Web Push kanalı", status: "done", doneAt: "03.11 19:55", note: "T9 abonelik ve dağıtım (13b3e62), çıkış düzeltmesi (5752ab9), genel push metni (14/14 dağıtım testi). T10 kapsamındaki Arapça akış testi ayrı satırda." },
-        { title: "T10 MyBar uçtan uca kabul ve belgeler", status: "active", note: "Arapça akış 1/1 yeşil (33b8cde); depo iptal / kısa gerekçe / eksik ürün kapatma / VAPID tanımsız senaryoları ve 4 minör açık" }
+        { title: "T10 MyBar uçtan uca kabul ve belgeler", status: "done", doneAt: "07.11 16:30", note: "Arapça akış (33b8cde); depo iptali, kısa gerekçe, eksik ürünle kapatma (31c45f9); push beklentisi ortama göre. VAPID'siz yol push-dispatcher birim testinde. Minörler 4186bba: sessionStorage idempotency, eşzamanlı karşılama CONFLICT, g-lang-menu inset-inline-end, özel rol ack testi." },
       ]
     },
     {
@@ -193,6 +193,7 @@ window.ILERLEME = {
     }
   ],
   log: [
+    { at: "07.11 16:30", text: "P4 T10 kapandı: MyBar kabul senaryoları (depo iptali, kısa gerekçe, eksik ürünle kapatma) mybarAcceptance.spec.ts ile eklendi, mybarFlow push beklentisi ortama göre düzeltildi (31c45f9). Minörler 4186bba: sessionStorage idempotency anahtarı, eşzamanlı karşılama CONFLICT, dil menüsü inset-inline-end, özel rol ack testi. Birim 98+59 yeşil; e2e her senaryo yeşil, tam koşu ortak DB bağlantı doygunluğundan kesintili." },
     { at: "07.11 16:15", text: "P8 başladı: T1 kabul altyapısı, T5 eğitim seed'i ve T7 dağıtım paketi paralel (Sonnet). P7 kapanış doğrulaması: npm run check 2514/2514, build ve migrate diff temiz, chromium 227/228 (tek kırmızı mybarFlow:26 — P4 T10 artığı), altı görünüm matrisi yeşil. Güvenlik taraması düzeltmeleri 1edd214, b5f29f2, e011e3d, 5395053." },
     { at: "07.11 15:25", text: "P7 raporlar ve e-posta kapandı (T1–T12: a09bbac 1be8528 64056c2 6ef7836 474c012 b1bae39 5aede97 85cc031 6df7a31 d288b20 247ab0c ve güvenlik düzeltmeleri 1edd214 b5f29f2 e011e3d 5395053; kabul fa3ff24). Rapor Merkezi 16 yerleşik rapor, Excel/PDF; SMTP ayarları sırlı saklanır, Test gönder, günlük görev/sarfiyat e-postaları ve Tekrar kuyruğa al uçtan uca doğrulandı. Belgeler: docs/kurulum.md E-posta bölümü, merit/README P7." },
     { at: "07.11 14:30", text: "P6 doğrulama düzeltme turu: rehber hedefleri ve sürekli animasyon kuralı düzeltildi (fd2b4c4), oda servisi panosu ve depo sayfalarının erişilebilirliği düzeltildi (84ba32c), e2e özel durumları güncellendi (96197e4). Altı görünümlü matriste 483/492 geçti (kalan: depo tanımlar dokunma hedefleri ve kat oda kontrol alt çubuk çakışması); Chromium 223 geçti, 3 koşu hatası (bildirim anahtarı VAPID anahtarı yok, duvar ekranı etiket uyumsuzluğu, ortak veritabanı bağlantı sınırı)." },
