@@ -29,7 +29,7 @@ declare global {
 }
 
 async function startBoss(): Promise<PgBoss> {
-  const boss = new PgBoss({ connectionString: env.DATABASE_URL, schema: "pgboss" });
+  const boss = new PgBoss({ connectionString: env.DATABASE_URL, schema: "pgboss", max: 4 });
   boss.on("error", (err) => console.error("[pg-boss]", err));
   await boss.start();
   return boss;

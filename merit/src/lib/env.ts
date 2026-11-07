@@ -12,6 +12,7 @@ export const envSchema = z.object({
   PUSH_ENDPOINT_ALLOWLIST: z.string().optional(),
   TRANSLATE_PROVIDER: z.enum(["none", "gtx"]).default("none"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL tanımlı olmalı"),
+  DB_POOL_MAX: z.coerce.number().int().min(5).max(100).default(20),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET en az 32 karakter olmalı"),
   QR_HMAC_SECRET: z.string().min(32, "QR_HMAC_SECRET en az 32 karakter olmalı"),
   /** Anahtar kutusu (SMTP parolası) için ayrı anahtar; boşsa SESSION_SECRET kullanılır. Değişirse mühürlü değerler açılamaz. */
@@ -38,6 +39,7 @@ function load(): Env {
       ...process.env,
       TRANSLATE_PROVIDER: process.env.TRANSLATE_PROVIDER ?? "none",
       TRUSTED_PROXY_HOPS: Number(process.env.TRUSTED_PROXY_HOPS) || 1,
+      DB_POOL_MAX: Number(process.env.DB_POOL_MAX) || 20,
     } as unknown as Env;
   }
   const raw = { ...process.env };

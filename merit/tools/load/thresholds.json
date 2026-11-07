@@ -1,0 +1,6 @@
+{
+  "pageP95Ms": 800, "pageP99Ms": 2000, "orderP95Ms": 1200,
+  "serverErrorRatio": 0.005, "sseUnexpectedCloseRatio": 0.01,
+  "fullSsePeakMin": 335, "eventP95Ms": 1500, "eventP99Ms": 3000,
+  "dbConnectionsMax": 60, "rssGrowthRatioMax": 0.2
+}

@@ -6,6 +6,7 @@ import { generateQrToken } from "@/lib/qr";
 import { openSession, staffCtx } from "../helpers/orderFixtures";
 import { guestEventFilter } from "@/modules/menu/guestEventFilter";
 import type { MeritEvent } from "@/lib/realtime-events";
+import { invalidateRateMultiplier } from "@/lib/rate-limit";
 
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 const publishMock = vi.hoisted(() => vi.fn());
@@ -16,6 +17,8 @@ const { occupancyHint } = await import("@/modules/order/server/roomService/occup
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
+  // Fixtures write settings directly and do not publish settings.changed.
+  invalidateRateMultiplier();
   await testDb.guestRecord.deleteMany({});
   await testDb.notification.deleteMany({});
   await testDb.orderEvent.deleteMany({});

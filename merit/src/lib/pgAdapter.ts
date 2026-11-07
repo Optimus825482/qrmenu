@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import { env } from "@/lib/env";
 
 /**
  * The one way to build a Prisma pg adapter. The session TimeZone is pinned to UTC because
@@ -9,5 +10,6 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * `CURRENT_TIMESTAMP` both hold the true instant (spec §10).
  */
 export function pgAdapter(connectionString: string): PrismaPg {
-  return new PrismaPg({ connectionString, options: "-c TimeZone=UTC" });
+  return new PrismaPg({ connectionString, options: "-c TimeZone=UTC", max: env.DB_POOL_MAX,
+    connectionTimeoutMillis: 5000, idleTimeoutMillis: 30_000 });
 }

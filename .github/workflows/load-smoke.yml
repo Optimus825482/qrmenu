@@ -1,0 +1,103 @@
+name: Local load smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: merit_test
+          TZ: Europe/Istanbul
+          PGTZ: Europe/Istanbul
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/merit
+      DATABASE_URL_TEST: postgresql://postgres:test@localhost:5432/merit_test
+      E2E_DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_e2e
+      E2E_BASE_URL: http://localhost:3000
+      SESSION_SECRET: ci-session-secret-0123456789abcdef0123456789
+      QR_HMAC_SECRET: ci-qr-hmac-secret-0123456789abcdef012345678
+      PRINT_GATEWAY_KEY: ci-print-gateway-key
+      APP_BASE_URL: http://localhost:3000
+      SEED_ADMIN_PASSWORD: ci-admin-password
+      TZ: Europe/Nicosia
+      LOAD_BASE_URL: http://localhost:3000
+      LOAD_PASSWORD: ci-load-password-local-only
+    defaults:
+      run:
+        working-directory: merit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: merit/package-lock.json
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Install load-tool dependencies
+        run: npm ci
+        working-directory: merit/tools/load
+      - name: Create isolated local load database
+        run: psql postgresql://postgres:test@localhost:5432/postgres -c 'CREATE DATABASE merit_load;'
+      - name: Migrate and seed load world
+        run: |
+          npx prisma migrate deploy
+          npm run db:seed
+          npm run db:seed:load
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_load
+      - run: npm run build
+      - name: Install Chromium for real staff sessions
+        run: npx playwright install --with-deps chromium
+      - name: Start production server and wait for readiness
+        run: |
+          npm start -- -H 127.0.0.1 -p 3000 > /tmp/merit-server.log 2>&1 &
+          echo $! > /tmp/merit-server.pid
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:3000/api/health > /tmp/merit-health.json; then
+              node -e 'if (!JSON.parse(require("fs").readFileSync("/tmp/merit-health.json", "utf8")).ok) process.exit(1)'
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/merit-server.log
+          exit 1
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_load
+      - name: 30 guests and 5 staff for 60 seconds
+        run: npm run load:smoke
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/merit_load
+      - name: Upload measured results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-smoke-evidence
+          path: |
+            merit/tools/load/.tmp/run-*.json
+            /tmp/merit-server.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Stop owned server
+        if: always()
+        run: |
+          if [ -f /tmp/merit-server.pid ]; then kill "$(cat /tmp/merit-server.pid)" || true; fi

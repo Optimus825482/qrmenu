@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { createRateLimiter } from "@/lib/rate-limit";
+import { createRateLimiter, scaledMax } from "@/lib/rate-limit";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
 import { notify } from "@/modules/core/server/notifications";
@@ -15,7 +15,7 @@ import { orderNo } from "./orderNo";
 import { validateCartItems } from "./cart";
 
 /** Guest orders: 10 per minute per IP. */
-export const orderLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
+export const orderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
 
 const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
 const UNKNOWN_ITEM = "Bilinmeyen öğe";
@@ -130,7 +130,7 @@ async function resolveTable(token: string, meta: GuestMeta) {
 const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
 
 async function create(input: GuestOrderInput): Promise<GuestOrderView> {
-  if (!orderLimiter.hit(input.ip).allowed) {
+  if (!(await orderLimiter.hit(input.ip)).allowed) {
     throw new DomainError("RATE_LIMITED", "Çok fazla sipariş denemesi, biraz sonra tekrar deneyin");
   }
   const parsed = inputSchema.safeParse(input);

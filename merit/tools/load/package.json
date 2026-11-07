@@ -1,0 +1,25 @@
+{
+  "name": "merit-load",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "run": "tsx src/run.ts",
+    "seed": "tsx ../../prisma/seed-load.ts"
+  },
+  "dependencies": {
+    "autocannon": "^8.0.0",
+    "dotenv": "^18.0.9",
+    "hdr-histogram-js": "^3.0.1",
+    "pg": "^8.23.1",
+    "undici": "^7.16.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/autocannon": "^7.12.7",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}

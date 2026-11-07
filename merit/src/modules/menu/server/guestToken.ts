@@ -1,4 +1,4 @@
-import { clientIp, createRateLimiter, type RateLimiter } from "@/lib/rate-limit";
+import { clientIp, createRateLimiter, scaledMax, type AsyncRateLimiter, type RateLimiter } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { isSignedToken, verifyQrToken } from "@/lib/qr";
 import { publish } from "@/lib/realtime";
@@ -146,7 +146,7 @@ export async function resolveGuestToken(
 }
 
 /** Unknown tokens per IP: 60 per minute. */
-export const unknownTokenLimiter: RateLimiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+export const unknownTokenLimiter = createRateLimiter({ max: () => scaledMax(60), windowMs: 60_000 });
 /** Backstop across all IPs (the IP is spoofable behind a misconfigured proxy): 600 per minute. */
 export const globalUnknownTokenLimiter: RateLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
 const GLOBAL_KEY = "*";
@@ -167,14 +167,14 @@ export const rateLimitDelay = { ms: 250 };
 export async function resolveGuestTokenLimited(
   token: string,
   meta: GuestMeta,
-  limiter: RateLimiter = unknownTokenLimiter,
+  limiter: RateLimiter | AsyncRateLimiter = unknownTokenLimiter,
   globalLimiter: RateLimiter = globalUnknownTokenLimiter,
   options: ResolveOptions = {},
 ): Promise<GuestTarget> {
-  const perIpBlocked = !limiter.peek(meta.ip).allowed;
+  const perIpBlocked = !(await limiter.peek(meta.ip)).allowed;
   const globallyBlocked = !globalLimiter.peek(GLOBAL_KEY).allowed;
   const refuse = async (): Promise<GuestTarget> => {
-    limiter.hit(meta.ip);
+    await limiter.hit(meta.ip);
     globalLimiter.hit(GLOBAL_KEY);
     if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
     return none("RATE_LIMITED");
@@ -195,7 +195,7 @@ export async function resolveGuestTokenLimited(
   }
   const result = await resolveGuestToken(token, meta, options);
   if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
-    const perIp = limiter.hit(meta.ip);
+    const perIp = await limiter.hit(meta.ip);
     const global = globalLimiter.hit(GLOBAL_KEY);
     if (!perIp.allowed || !global.allowed) {
       if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));

@@ -22,15 +22,47 @@ export interface AsyncRateLimiter extends Omit<RateLimiter, "hit" | "peek"> {
 
 type RateLimiterOptions = { windowMs: number; maxKeys?: number };
 
-/** System-only NAT multiplier; unavailable settings leave the base limit unchanged. */
+let multiplierCache: { value: number; until: number } | undefined;
+let multiplierPending: Promise<number> | undefined;
+let multiplierGeneration = 0;
+let subscribed = false;
+
+/** Used after settings.changed (and by isolated DB fixtures which bypass setSetting). */
+export function invalidateRateMultiplier(): void {
+  multiplierGeneration++;
+  multiplierCache = undefined;
+  multiplierPending = undefined;
+}
+
+/** System-only NAT multiplier: one read per 30s, coalesced across simultaneous requests. */
 export async function scaledMax(base: number): Promise<number> {
-  try {
-    const { getSetting } = await import("@/lib/settings");
-    const multiplier = await getSetting("guest.ipRateMultiplier");
-    return base * (Number.isInteger(multiplier) && multiplier >= 1 && multiplier <= 20 ? multiplier : 1);
-  } catch {
-    return base;
+  if (!subscribed) {
+    subscribed = true;
+    try {
+      const { subscribe } = await import("@/lib/realtime");
+      subscribe((e) => e.type === "settings.changed" || e.type === "realtime.resync", (e) => {
+        const key = e.payload && typeof e.payload === "object" && "key" in e.payload ? e.payload.key : undefined;
+        if (e.type === "realtime.resync" || !e.hotelId && (!key || key === "guest.ipRateMultiplier")) invalidateRateMultiplier();
+      });
+    } catch { subscribed = false; }
   }
+  if (multiplierCache && multiplierCache.until > Date.now()) return base * multiplierCache.value;
+  if (!multiplierPending) {
+    const generation = multiplierGeneration;
+    const pending = (async () => {
+      let value = 1;
+      try {
+        const { getSetting } = await import("@/lib/settings");
+        const n = await getSetting("guest.ipRateMultiplier");
+        if (Number.isInteger(n) && n >= 1 && n <= 20) value = n;
+      } catch { /* A settings outage leaves the base limit in force. */ }
+      if (generation === multiplierGeneration) multiplierCache = { value, until: Date.now() + 30_000 };
+      return value;
+    })();
+    multiplierPending = pending;
+    void pending.finally(() => { if (multiplierPending === pending) multiplierPending = undefined; });
+  }
+  return base * await multiplierPending;
 }
 
 /**
