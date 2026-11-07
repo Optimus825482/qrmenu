@@ -73,6 +73,32 @@ describe("resolveSmtp", () => {
     await setSmtp({ password: "" }, "ROYAL");
     expect(await resolveSmtp(await hotelId("ROYAL"))).toBeNull();
   });
+
+  it("kendi sunucusunu seçen otel sistem kimlik bilgilerini devralmaz; yalnız gönderen alanları sistemden gelir", async () => {
+    await setSmtp({
+      host: "smtp.sys.test",
+      user: "sys-user",
+      password: sealSecret("sys-secret"),
+      fromEmail: "sys@merit.test",
+      fromName: "Sistem Adı",
+    });
+    // The hotel names a host of its own but no credentials: the system user/password must NOT be sent there.
+    await setSmtp({ host: "smtp.hotel.test", port: 25, security: "NONE" }, "ROYAL");
+    const hotel = await resolveSmtp(await hotelId("ROYAL"));
+    expect(hotel?.source).toBe("hotel");
+    expect(hotel?.config).toMatchObject({
+      host: "smtp.hotel.test",
+      port: 25,
+      user: "",
+      password: "",
+      fromEmail: "sys@merit.test",
+      fromName: "Sistem Adı",
+    });
+    expect(JSON.stringify(hotel)).not.toContain("sys-secret");
+    expect(JSON.stringify(hotel)).not.toContain("sys-user");
+    // Other hotels still use the system row with its credentials.
+    expect((await resolveSmtp(await hotelId("DIAMOND")))?.config).toMatchObject({ user: "sys-user", password: "sys-secret" });
+  });
 });
 
 describe("mapSmtpError", () => {
@@ -170,6 +196,41 @@ describe("gönderici (processQueue)", () => {
       expect((await queue.processQueue()).CANCELLED).toBe(1);
       expect(stub.received).toHaveLength(0);
       expect((await testDb.emailLog.findFirstOrThrow()).error).toBe("Gönderim iptal: koşul ortadan kalktı");
+    } finally {
+      await stub.close();
+    }
+  });
+
+  it("gönderim anında yetki geri alınmış: IPTAL, ileti gitmez", async () => {
+    const stub = await startSmtpStub("accept");
+    const screen = await testDb.appScreen.findFirstOrThrow({ where: { code: "MB-RAP" } });
+    const role = await testDb.role.findFirstOrThrow({ where: { code: "R-OTM" } });
+    const where = { roleId: role.id, screenId: screen.id, hotelId: null };
+    try {
+      await stubSmtp(stub.port);
+      await queued();
+      await testDb.roleScreenPermission.updateMany({ where, data: { canReport: false } });
+      expect((await queue.processQueue()).CANCELLED).toBe(1);
+      expect(stub.received).toHaveLength(0);
+      expect(await testDb.emailLog.findFirstOrThrow()).toMatchObject({
+        status: "IPTAL",
+        error: "Gönderim iptal: alıcı artık yetkili değil",
+      });
+    } finally {
+      await testDb.roleScreenPermission.updateMany({ where, data: { canReport: true } });
+      await stub.close();
+    }
+  });
+
+  it("gönderim anında alıcının adresi değişmiş: IPTAL (eski adrese gitmez)", async () => {
+    const stub = await startSmtpStub("accept");
+    try {
+      await stubSmtp(stub.port);
+      await queued();
+      await testDb.user.updateMany({ where: { username: "s-u0" }, data: { email: "yeni.adres@merit.test" } });
+      expect((await queue.processQueue()).CANCELLED).toBe(1);
+      expect(stub.received).toHaveLength(0);
+      expect((await testDb.emailLog.findFirstOrThrow()).status).toBe("IPTAL");
     } finally {
       await stub.close();
     }

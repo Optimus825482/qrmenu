@@ -162,6 +162,49 @@ async function seedRoomServiceWorld(db: PrismaClient, ids: { royal: string; diam
   await node({ kind: "OGE", name: "Club Sandviç", parentId: sandwiches.id, price: 320, sortOrder: 0, allergens: ["gluten", "yumurta"] });
 }
 
+
+/**
+ * Report world (SEED_REPORTS=1, needs SEED_MINIBAR=1): three minibar transactions of the floor supervisor kat.mr in
+ * ROYAL rooms 101/102 today (Su, Kola; consumed and refilled), so the Rapor Merkezi grid has rows and totals.
+ */
+async function seedReportsWorld(db: PrismaClient, royal: string): Promise<void> {
+  const user = await db.user.findUniqueOrThrow({ where: { username: "kat.mr" } });
+  const room = async (number: string) => db.room.findUniqueOrThrow({ where: { hotelId_number: { hotelId: royal, number } } });
+  const product = async (name: string) => db.product.findFirstOrThrow({ where: { name } });
+  const lines: [string, string, number, number][] = [
+    ["101", "Su", 2, 2],
+    ["101", "Kola", 1, 1],
+    ["102", "Su", 3, 3],
+  ];
+  for (const [number, name, consumed, added] of lines) {
+    await db.minibarTransaction.create({
+      data: {
+        hotelId: royal,
+        roomId: (await room(number)).id,
+        userId: user.id,
+        type: "SETUP_KONTROL",
+        items: { create: [{ productId: (await product(name)).id, consumed, added, salePrice: name === "Su" ? "1.00" : "3.50" }] },
+      },
+    });
+  }
+}
+
+/**
+ * Mail world (SEED_MAIL=1): ROYAL may send report mail (hotel flags + system setting), the manager mudur.mr (R-OTM,
+ * MB-RAP R) is opted in and the depot clerk depo.mr (R-DEP, MB-RAP R) has an address but is opted out.
+ */
+async function seedMailWorld(db: PrismaClient, royal: string): Promise<void> {
+  await db.hotel.update({ where: { id: royal }, data: { emailNotifyEnabled: true, emailReportEnabled: true, emailAlertEnabled: true } });
+  for (const key of ["email.reportEnabled", "email.alertEnabled"]) {
+    await db.setting.deleteMany({ where: { key, hotelId: null } });
+    await db.setting.create({ data: { key, hotelId: null, value: true } });
+  }
+  await db.user.update({ where: { username: "mudur.mr" }, data: { email: "mudur.mr@merit.test", emailOptIn: true } });
+  await db.user.update({ where: { username: "depo.mr" }, data: { email: "depo.mr@merit.test", emailOptIn: false } });
+  const admin = await db.user.findUnique({ where: { username: "admin" } });
+  if (admin) await db.user.update({ where: { id: admin.id }, data: { email: "admin@merit.test" } });
+}
+
 /** Empties every application table, re-runs the seed and creates the e2e staff users. */
 async function resetAndSeed(): Promise<void> {
   const db = new PrismaClient({ adapter: pgAdapter(connectionString()) });
@@ -198,6 +241,8 @@ async function resetAndSeed(): Promise<void> {
     if (process.env.SEED_MINIBAR === "1") {
       await seedMinibarWorld(db, { royal: mr, diamond: await hotel("DIAMOND"), depoUserId: depoMr.id });
     }
+
+    if (process.env.SEED_REPORTS === "1" && process.env.SEED_MINIBAR === "1") await seedReportsWorld(db, mr);
 
     const depo = await makeUser("depo.cok", "R-DEP", "ROYAL");
     for (const hotelId of [mr, mrp]) {
@@ -255,6 +300,8 @@ async function resetAndSeed(): Promise<void> {
         canEdit: true,
       },
     });
+
+    if (process.env.SEED_MAIL === "1") await seedMailWorld(db, mr);
 
     // One user per role (`rol.<kod>`, e.g. rol.r-dep) for the landing spec. Outlet and kitchen roles
     // belong to Havuz Bar, the room service role to the hotel's room service outlet.
