@@ -112,7 +112,9 @@ describe("deploy/scripts", () => {
     expect(t).toContain("pg_dump -Fc");
     expect(t).toMatch(/-mtime/);
     expect(t).toContain("merit-uploads-");
-    expect(t).not.toContain("PGPASSWORD=");
+    // Parola komut satirina degil ortam degiskenine gider (argv /proc ile okunabilir, ortam okunamaz).
+    expect(t).not.toMatch(/--dbname=/);
+    expect(t).toContain("export PGPASSWORD=");
   });
 
   it("restore.sh refuses the production database without --force", () => {
