@@ -1,8 +1,8 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 15:25",
-  headline: "P7 raporlar ve e-posta kapandı: Rapor Merkezi (16 rapor, Excel/PDF), SMTP ayarı ve test gönderimi, 08:00/08:05 günlük e-postalar, Komuta Merkezi KPI çipleri ve rapor/e-posta kabul zinciri. P4 T10 kısmen açık. Sırada P8 (Kabul, eğitim, kurulum).",
+  updatedAt: "07.11.2026 16:15",
+  headline: "P6 oda servisi ve P7 raporlar/e-posta kapandı (check 2514/2514, build, chromium 227/228, matris yeşil). P8 kabul/eğitim/kurulum başladı: T1, T5, T7 sürüyor; T2–T4, T6, T8 sırada. Açık: mybarFlow:26 (P4 T10), Pazartesi Opus dal incelemeleri.",
   phases: [
     {
       code: "A", title: "Analiz ve tasarım", weight: 5,
@@ -181,13 +181,19 @@ window.ILERLEME = {
       code: "P8", title: "Kabul, eğitim ve kurulum", weight: 6,
       summary: "Uçtan uca paket, yük denemesi, kılavuzlar, bulut/on-prem kurulum",
       tasks: [
-        { title: "Uçtan uca kabul paketi ve yük denemesi (300 misafir + 40 personel)", status: "active", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
-        { title: "Kullanım kılavuzları ve eğitim verisi", status: "pending", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" },
-        { title: "Kurulum (bulut/on-prem), CI'ın GitHub'da doğrulanması", status: "pending", note: "Dalga B — Pazartesi 9.11 sıfırlama sonrası (bütçe planı .superpowers/sdd/2026-11-07-butce-plani.md)" }
+        { title: "T1 Kabul altyapısı: izlenebilirlik haritası, @kabul etiketleri, kontrollü iş koşucusu, K01/K02/K03/K10", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
+        { title: "T2 Minibar kabul kriterleri K04/K05/K06", status: "pending", note: "T1 sonrası" },
+        { title: "T3 QR sipariş, oda servisi ve göç kabulü K07/K08/K09 + modüller arası otel günü", status: "pending", note: "T1 sonrası" },
+        { title: "T4 Yük denemesi (300 misafir + 40 personel), SSE ve DB havuzu ölçümü", status: "pending", note: "T1 sonrası; uzak yük hedefi yalnız Erkan onayıyla" },
+        { title: "T5 Eğitim/demo seed'i, ayrı eğitim DB'si, ENV_LABEL ortam rozeti", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
+        { title: "T6 Kullanım kılavuzları ve Playwright ekran görüntüleri", status: "pending", note: "T5 sonrası" },
+        { title: "T7 Dağıtım paketi: nginx, systemd, yedek/geri yükleme/güncelleme, on-prem runbook", status: "active", note: "07.11 16:10 başladı (Sonnet)" },
+        { title: "T8 CI yeniden düzenleme, GitHub push doğrulaması, teslim kontrol listesi", status: "pending", note: "En son; push yalnız Erkan" }
       ]
     }
   ],
   log: [
+    { at: "07.11 16:15", text: "P8 başladı: T1 kabul altyapısı, T5 eğitim seed'i ve T7 dağıtım paketi paralel (Sonnet). P7 kapanış doğrulaması: npm run check 2514/2514, build ve migrate diff temiz, chromium 227/228 (tek kırmızı mybarFlow:26 — P4 T10 artığı), altı görünüm matrisi yeşil. Güvenlik taraması düzeltmeleri 1edd214, b5f29f2, e011e3d, 5395053." },
     { at: "07.11 15:25", text: "P7 raporlar ve e-posta kapandı (T1–T12: a09bbac 1be8528 64056c2 6ef7836 474c012 b1bae39 5aede97 85cc031 6df7a31 d288b20 247ab0c ve güvenlik düzeltmeleri 1edd214 b5f29f2 e011e3d 5395053; kabul fa3ff24). Rapor Merkezi 16 yerleşik rapor, Excel/PDF; SMTP ayarları sırlı saklanır, Test gönder, günlük görev/sarfiyat e-postaları ve Tekrar kuyruğa al uçtan uca doğrulandı. Belgeler: docs/kurulum.md E-posta bölümü, merit/README P7." },
     { at: "07.11 14:30", text: "P6 doğrulama düzeltme turu: rehber hedefleri ve sürekli animasyon kuralı düzeltildi (fd2b4c4), oda servisi panosu ve depo sayfalarının erişilebilirliği düzeltildi (84ba32c), e2e özel durumları güncellendi (96197e4). Altı görünümlü matriste 483/492 geçti (kalan: depo tanımlar dokunma hedefleri ve kat oda kontrol alt çubuk çakışması); Chromium 223 geçti, 3 koşu hatası (bildirim anahtarı VAPID anahtarı yok, duvar ekranı etiket uyumsuzluğu, ortak veritabanı bağlantı sınırı)." },
     { at: "07.11 12:55", text: "P6 oda servisi kapandı: T2R/T3R/T4a/T4b, S0 seed, T5a/T5b/T5c, T6a/T6b/T6c, T4c/T4d ve T7 indi (9b7dda3 299cafc 45d0d24 28bcec6 e926aa3 44ae315 c8f255b b85e22b e5770ee def7254 7985d97 468f211 1270126 efe8761 5877214 90b35f8 380c7b7). A–F kabul zinciri (teyit kapalı/açık, iptal, SLA, kapsam, Almanca) ile P6 e2e 19/19 ve next build yeşil; KDS yalnız MASA gösterir, SLA hesapları ortak yardımcıda. P4 T10 kısmen açık. P7 ve P8 Dalga B'de." },
