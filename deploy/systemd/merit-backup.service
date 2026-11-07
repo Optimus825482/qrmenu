@@ -1,0 +1,11 @@
+[Unit]
+Description=Merit OS yedegi (pg_dump + uploads)
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=merit
+Group=merit
+EnvironmentFile=/etc/merit/merit.env
+Environment=TZ=Europe/Nicosia
+ExecStart=/opt/merit/deploy/scripts/backup.sh

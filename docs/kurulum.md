@@ -3,6 +3,13 @@
 Bu belge P0 iskeletinin, P1 çekirdek tanımlarının ve P5 QR Menü/Sipariş bileşenlerinin bulut veya şirket içi (on-prem) bir sunucuya kurulumunu anlatır.
 Geliştirme ortamı için `merit/README.md` dosyasına bakın.
 
+## Üretim kurulumu → deploy/
+
+Şirket içi (on-prem) üretim kurulumu için hazır dosyalar kök dizindeki `deploy/` klasöründedir: nginx yapılandırması,
+systemd birimleri (üretim, eğitim, print gateway, yedek zamanlayıcısı), yedek / geri yükleme / güncelleme / sağlık betikleri,
+ortam örneği, adım adım runbook (`deploy/README.md`) ve go-live listesi (`deploy/CHECKLIST.md`). Aşağıdaki bölümler
+referans ve bulut/Docker alternatifleri içindir.
+
 ## 1. Gereksinimler
 
 - Linux sunucu (örnekler Debian/Ubuntu içindir)

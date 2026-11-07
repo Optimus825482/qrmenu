@@ -1,0 +1,20 @@
+[Unit]
+Description=Merit OS yazdirma gecidi (print gateway)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=merit
+Group=merit
+WorkingDirectory=/opt/merit/merit/tools/print-gateway
+EnvironmentFile=/etc/merit/gateway.env
+Environment=TZ=Europe/Nicosia
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

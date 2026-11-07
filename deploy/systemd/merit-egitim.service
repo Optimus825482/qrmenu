@@ -1,0 +1,26 @@
+[Unit]
+Description=Merit OS (egitim ornegi, ayri veritabani)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=merit
+Group=merit
+WorkingDirectory=/opt/merit/merit
+# DATABASE_URL (merit_egitim), SESSION_SECRET, QR_HMAC_SECRET, PRINT_GATEWAY_KEY, APP_BASE_URL, UPLOADS_DIR
+# bu dosyada; degerler uretimden FARKLI olmali.
+EnvironmentFile=/etc/merit/merit-egitim.env
+Environment=NODE_ENV=production
+Environment=TZ=Europe/Nicosia
+Environment=PORT=3100
+Environment=ENV_LABEL=EĞİTİM
+ExecStart=/usr/bin/npm start -- -H 127.0.0.1
+Restart=always
+RestartSec=5
+LimitNOFILE=16384
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

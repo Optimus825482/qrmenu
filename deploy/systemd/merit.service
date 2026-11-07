@@ -1,0 +1,24 @@
+[Unit]
+Description=Merit OS (uretim)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=merit
+Group=merit
+WorkingDirectory=/opt/merit/merit
+EnvironmentFile=/etc/merit/merit.env
+Environment=NODE_ENV=production
+Environment=TZ=Europe/Nicosia
+Environment=PORT=3000
+ExecStart=/usr/bin/npm start -- -H 127.0.0.1
+Restart=always
+RestartSec=5
+# 340+ eszamanli SSE baglantisi icin
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
