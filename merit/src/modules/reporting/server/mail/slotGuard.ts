@@ -2,7 +2,7 @@ import type { MailTemplate } from "./policy";
 
 /**
  * DOUBLE-SEND GUARD (T7 -> T8). Until T8 rewires the daily mails, the legacy minibar cron
- * (`minibarJobs.ts`: 08:00 task report, 08:05 consumption report, 10:00/18:00 warning bridge; hotel
+ * (`minibarJobs.ts`: 08:00 task report, 08:05 consumption report, hotel
  * level, `trackingId = kind:hotel:day`) still sends these slots. The new queue's dedupe key is
  * per USER (`template:hotel:day:user`), so the two paths do NOT dedupe against each other.
  * `enqueue({ scheduled: true })` therefore refuses a template listed here. T8 MUST, in the same
@@ -11,7 +11,6 @@ import type { MailTemplate } from "./policy";
 export const LEGACY_CRON_TEMPLATES: Set<MailTemplate> = new Set<MailTemplate>([
   "GOREV",
   "SARFIYAT",
-  "YUKLEME_UYARI",
 ]);
 
 /** Reason text when the legacy cron still owns the slot, else `null`. */

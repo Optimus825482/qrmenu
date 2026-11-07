@@ -13,7 +13,7 @@ import { missingUploadKinds } from "./depoService";
 
 /*
  * Minibar e-mail jobs (pg-boss, Europe/Nicosia; the queues are wired in `lib/jobs.ts` and `jobs.ts`):
- *   08:00 daily task report · 08:05 consumption report · 10:00 / 18:00 missing-occupancy mail bridge.
+ *   08:00 daily task report · 08:05 consumption report · 10:00 / 18:00 missing-occupancy radar bridge (the 10:00/18:00 mail is P7's `mail.upload-alert`).
  * Mail jobs send ONE message per hotel containing only that hotel's data, to the active users with
  * the targeted role kinds who are bound to that hotel (User.hotelId or UserHotel). Every send is
  * recorded in EmailLog under a deterministic tracking id (kind, hotel, business day), so a retry
@@ -159,19 +159,19 @@ function shell(title: string, subtitle: string, body: string, cta?: { href: stri
 }
 
 /**
- * 10:00 / 18:00 - Günlük doluluk yüklenmediyse, o otelin yetkililerine (yalnız o otel) uyarı.
+ * 10:00 / 18:00 - Radar köprüsü (G21): doluluk yüklenmeyen her oteli radara bildirir (otel, gün ve
+ * slot başına bir kez). E-posta artık burada gönderilmez: P7 `mail.upload-alert` kuyruğu
+ * (`reporting/server/mail/uploadAlert.ts`) alıcı başına satırlarla gönderir.
  */
-export async function checkOccupancyUploadAndAlert(now = new Date()): Promise<{
+export async function announceOccupancyGaps(now = new Date()): Promise<{
   checkedHotels: number;
   missingHotels: string[];
-  alertSent: boolean;
 }> {
   const day = businessDate(now);
-  // 10:00 and 18:00 are separate alerts: each slot has its own once-per-day mail.
-  const slot = Number(formatInTimeZone(now, TZ, "H")) < 14 ? "am" : "pm";
+  // 10:00 and 18:00 are separate alerts: each slot has its own once-per-day signal.
+  const slot = Number(formatInTimeZone(now, TZ, "H")) < 14 ? "10:00" : "18:00";
   const hotels = await activeHotels();
   const missing: string[] = [];
-  let sentAny = false;
 
   for (const hotel of hotels) {
     const upload = await prisma.occupancyUpload.findFirst({
@@ -185,35 +185,13 @@ export async function checkOccupancyUploadAndAlert(now = new Date()): Promise<{
     await announceMissingUpload({
       hotelId: hotel.id,
       date: day,
-      slot: slot === "am" ? "10:00" : "18:00",
+      slot,
       ...(missingKinds.length > 0 ? { missingKinds } : {}),
       now,
     });
-    if (!(await mailEnabled(hotel, "alert"))) continue;
-
-    const recipients = await hotelRecipients(hotel.id);
-    const html = shell(
-      "MERIT ROYAL HOTELS & RESORTS",
-      "F&B Command Center · Minibar Takip Sistemi",
-      `<div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
-         <h3 style="margin: 0 0 4px; color: #991b1b; font-size: 15px;">DİKKAT: Günlük doluluk verisi eksik</h3>
-         <p style="margin: 0; font-size: 13px; color: #7f1d1d;">${esc(day)} için <strong>${esc(hotel.name)}</strong> oda doluluk Excel girişi henüz tamamlanmamıştır.</p>
-       </div>
-       <p style="font-size: 13px; color: #475569;">Kat sorumlularının görevleri doğru önceliklendirebilmesi için lütfen doluluk dosyasını yükleyiniz.</p>`,
-      { href: link("/depo/doluluk-yukle"), label: "Doluluk Giriş Ekranını Aç" },
-    );
-    const outcome = await sendHotelMailOnce({
-      hotelId: hotel.id,
-      kind: `minibar.occupancy-alert.${slot}`,
-      day,
-      subject: `[DİKKAT] ${hotel.name} - Doluluk girişi eksik - ${day}`,
-      html,
-      recipients,
-    });
-    if (outcome === "sent") sentAny = true;
   }
 
-  return { checkedHotels: hotels.length, missingHotels: missing, alertSent: sentAny };
+  return { checkedHotels: hotels.length, missingHotels: missing };
 }
 
 /** Business day before `now`. */

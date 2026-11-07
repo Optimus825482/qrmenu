@@ -4757,3 +4757,19 @@
 .xp-call-option-missing { color: #80601d; font-size: 10px; font-weight: 700; }
 .xp-call-option-actions { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; justify-content: flex-end; }
 .xp-call-option-fixed { border-style: dashed !important; background: #f7f9fc !important; }
+
+/* ---- Denetim Masası → E-posta ---- */
+.xp-mail-grid {
+  min-height: 220px;
+}
+
+.xp-mail-badge[data-status="GONDERILDI"] {
+  border-color: var(--xp-select);
+  color: var(--xp-select);
+}
+
+.xp-mail-badge[data-status="HATA"] {
+  border-color: var(--xp-close-2);
+  color: var(--xp-close-2);
+  font-weight: bold;
+}

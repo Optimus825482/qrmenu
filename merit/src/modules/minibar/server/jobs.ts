@@ -3,7 +3,7 @@ import type { PgBoss } from "pg-boss";
 import { businessDate, TZ } from "@/lib/time";
 import { addDays } from "./dates";
 import { closeDndDay, runDndReminders } from "./dnd";
-import { checkOccupancyUploadAndAlert } from "./minibarJobs";
+import { announceOccupancyGaps } from "./minibarJobs";
 import { cleanupOldFiles } from "./occupancyUpload";
 import { reconcileAllHotels } from "./taskGeneration";
 import { runDailyUploadTasks, runUploadWarnings } from "./uploadTasks";
@@ -48,11 +48,11 @@ export async function runMidnightJobs(now: Date): Promise<{ uploadTasks: number;
   return { uploadTasks, tasksCreated, dndClosed };
 }
 
-/** 10:00 / 18:00: in-app warning, then the legacy e-mail bridge (K9; P7 `mail.upload-alert` takes it over). */
-async function warn(now: Date, slot: "10:00" | "18:00"): Promise<{ notified: number; mailed: boolean }> {
+/** 10:00 / 18:00: in-app warning and the radar signal. The e-mail is P7's `mail.upload-alert` queue. */
+async function warn(now: Date, slot: "10:00" | "18:00"): Promise<{ notified: number; missingHotels: number }> {
   const notified = await runUploadWarnings(now, slot);
-  const mail = await checkOccupancyUploadAndAlert(now);
-  return { notified, mailed: mail.alertSent };
+  const gaps = await announceOccupancyGaps(now);
+  return { notified, missingHotels: gaps.missingHotels.length };
 }
 
 export const MINIBAR_JOBS: readonly MinibarJob[] = [

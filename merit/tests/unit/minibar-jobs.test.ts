@@ -219,7 +219,7 @@ describe("kuyruk gövdeleri", () => {
     expect((await dndOf(r2.id)).status).toBe("AKTIF");
   });
 
-  it("occupancy.warn.1000/1800: uygulama içi uyarı, e-posta köprüsü ve radar işareti; tekrar sessiz", async () => {
+  it("occupancy.warn.1000/1800: uygulama içi uyarı ve radar işareti (e-posta yok); tekrar sessiz", async () => {
     const w = await minibarWorld();
     const depo = await staff("R-DEP", w.hotelCode);
     const mgr = await makeUser({ username: "mudur-uyari", roleCode: "R-OTM", hotelCode: w.hotelCode });
@@ -233,7 +233,7 @@ describe("kuyruk gövdeleri", () => {
 
     await fire(handlers, "occupancy.warn.1000", T0);
     expect(await notes(depo.userId, "occupancy.missing")).toBe(1);
-    expect(sendMail).toHaveBeenCalledTimes(1);
+    expect(sendMail).not.toHaveBeenCalled();
     expect(
       await testDb.operationEvent.count({ where: { hotelId: w.hotelId, type: "upload.missing", refId: `${DAY}@10:00` } }),
     ).toBe(1);

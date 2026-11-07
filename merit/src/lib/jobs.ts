@@ -11,6 +11,7 @@ import { printers } from "@/modules/order/server/printers";
 import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import { registerMinibarJobs } from "@/modules/minibar/server/jobs";
+import { registerReportingJobs } from "@/modules/reporting/server/jobs";
 import { sendDailyConsumptionReport, sendDailyTaskReport } from "@/modules/minibar/server/minibarJobs";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
@@ -126,6 +127,9 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     // The six queue/DND/upload jobs: 00:01 daily tasks + DND catch-up, 10:00/18:00 upload warnings,
     // minute DND reminders, 23:59 DND day end, 02:00 file cleanup (retired schedules are removed there).
     await registerMinibarJobs(boss);
+
+    // P7: mail queue worker (every minute), log retention and the 10:00/18:00 missing-upload mails.
+    await registerReportingJobs(boss);
   } catch (err) {
     globalThis.__pgBossJobsRegistered = false;
     throw err;

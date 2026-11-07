@@ -146,8 +146,8 @@ describe("günlük rapor e-postaları", () => {
   });
 });
 
-describe("eksik doluluk uyarısı", () => {
-  it("yükleme yapılmayan otelin yetkililerine gider; yükleyen otel uyarılmaz", async () => {
+describe("eksik doluluk radar köprüsü (G21)", () => {
+  it("yükleme yapılmayan oteli radara bildirir, e-posta GÖNDERMEZ (e-posta P7 kuyruğunda); slot başına bir kez", async () => {
     await twoHotels();
     const royal = await hotelId("ROYAL");
     const uploader = await makeUser({ username: "up", roleCode: "R-DEP", hotelCode: "ROYAL" });
@@ -162,18 +162,20 @@ describe("eksik doluluk uyarısı", () => {
         createdAt: new Date("2026-07-11T06:30:00.000Z"),
       },
     });
-    // 10:00 Nicosia = 07:00Z; only DIAMOND (and PREMIUM, no recipients) are missing
-    const res = await jobs.checkOccupancyUploadAndAlert(new Date("2026-07-11T07:00:00.000Z"));
+    // 10:00 Nicosia = 07:00Z; only DIAMOND (and PREMIUM) are missing
+    const res = await jobs.announceOccupancyGaps(new Date("2026-07-11T07:00:00.000Z"));
     expect(res.missingHotels).toContain("Merit Royal Diamond");
     expect(res.missingHotels).not.toContain("Merit Royal");
-    expect(res.alertSent).toBe(true);
-    expect(sendMail).toHaveBeenCalledTimes(1);
-    expect(recipientsOf(sendMail.mock.calls[0])).toEqual(["mgr@diamond.test"]);
+    expect(sendMail).not.toHaveBeenCalled();
+    const diamond = await hotelId("DIAMOND");
+    const count = (refId: string) => testDb.operationEvent.count({ where: { hotelId: diamond, type: "upload.missing", refId } });
+    expect(await count("2026-07-11@10:00")).toBe(1);
 
-    // 10:00 and 18:00 are separate alerts but each only once per day
-    await jobs.checkOccupancyUploadAndAlert(new Date("2026-07-11T07:00:00.000Z"));
-    expect(sendMail).toHaveBeenCalledTimes(1);
-    await jobs.checkOccupancyUploadAndAlert(new Date("2026-07-11T15:00:00.000Z"));
-    expect(sendMail).toHaveBeenCalledTimes(2);
+    // same slot again: silent; 18:00 is a separate signal
+    await jobs.announceOccupancyGaps(new Date("2026-07-11T07:00:00.000Z"));
+    expect(await count("2026-07-11@10:00")).toBe(1);
+    await jobs.announceOccupancyGaps(new Date("2026-07-11T15:00:00.000Z"));
+    expect(await count("2026-07-11@18:00")).toBe(1);
+    expect(sendMail).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState, type KeyboardEvent } from "react";
 import { settingsScopesAction } from "@/modules/core/server/admin/actions/settingsAdmin";
+import { MailPanel } from "@/modules/reporting/ui/MailPanel";
 import { XpIcon } from "../icons";
 import type { AppProps } from "../registry";
 import { AppearancePanel } from "./controlPanel/AppearancePanel";
@@ -15,6 +16,7 @@ type Category =
   | "minibar"
   | "servis"
   | "sistem"
+  | "eposta"
   | "uygulama";
 
 const CATEGORIES: { id: Category; label: string; icon: string; system?: boolean }[] = [
@@ -24,6 +26,7 @@ const CATEGORIES: { id: Category; label: string; icon: string; system?: boolean 
   { id: "minibar", label: "Minibar ve Kat", icon: "otel", system: true },
   { id: "servis", label: "Oda Servisi ve Sipariş", icon: "menu", system: true },
   { id: "sistem", label: "QR Menü ve Sistem", icon: "qr", system: true },
+  { id: "eposta", label: "E-posta", icon: "rapor", system: true },
   { id: "uygulama", label: "Uygulama", icon: "komuta" },
 ];
 
@@ -136,6 +139,8 @@ export function ControlPanel({ setStatus }: AppProps) {
             title="QR Menü ve Sistem Ayarları"
             description="Masa ve alan QR kodlarının taban web adresi ile otomatik e-posta bildirim ayarları."
           />
+        ) : current === "eposta" ? (
+          <MailPanel setStatus={setStatus} onOpenSettings={() => setCurrent("sistem")} />
         ) : (
           <InstallPanel setStatus={setStatus} />
         )}
