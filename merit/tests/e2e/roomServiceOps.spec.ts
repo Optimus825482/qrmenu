@@ -81,7 +81,7 @@ test.afterAll(async () => {
   await setPhoneConfirm("ROYAL", false);
 });
 
-test("oda.mr: Yeni → Onayla → mutfak Hazır → Yola çıktı → Teslim edildi, misafir durumu her adımı yansıtır", async ({ browser, page: guest }) => {
+test("oda.mr: Yeni → Onayla → mutfak Hazır → Yola çıktı → Teslim edildi, misafir durumu her adımı yansıtır @kabul-8", async ({ browser, page: guest }) => {
   ops = await staffPage(browser, "oda.mr");
   kitchen = await staffPage(browser, "mutfak.oda");
 
@@ -112,7 +112,7 @@ test("oda.mr: Yeni → Onayla → mutfak Hazır → Yola çıktı → Teslim edi
   await guestStep(guest, order.token, order.id!, /Teslim edildi/);
 });
 
-test("dahilisiz oda 102 ve doluluk: \"Dahili tanımlı değil\"; yalnız 102 dolu → 101 \"Oda boş görünüyor\"", async ({ page: guest }) => {
+test("dahilisiz oda 102 ve doluluk: \"Dahili tanımlı değil\"; yalnız 102 dolu → 101 \"Oda boş görünüyor\" @kabul-8", async ({ page: guest }) => {
   const order = await guestOrder(guest, "102");
   expect(order.status).toBe(200);
   const heading102 = /^#2 · Oda 102 · Dahili tanımlı değil$/;
@@ -139,7 +139,7 @@ test("dahilisiz oda 102 ve doluluk: \"Dahili tanımlı değil\"; yalnız 102 dol
   await expect(ops.getByText("Oda boş görünüyor")).toHaveCount(0);
 });
 
-test("teyit varyantı: sipariş Teyit sütununda, Onayla pasif; Telefonla teyit edildi → Hazırlanıyor", async ({ page: guest }) => {
+test("teyit varyantı: sipariş Teyit sütununda, Onayla pasif; Telefonla teyit edildi → Hazırlanıyor @kabul-8", async ({ page: guest }) => {
   await setPhoneConfirm("ROYAL", true);
   await ops.reload();
 
@@ -169,7 +169,7 @@ test("teyit varyantı: sipariş Teyit sütununda, Onayla pasif; Telefonla teyit 
   await setPhoneConfirm("ROYAL", false);
 });
 
-test("sipariş alımı kapatılınca misafir gönderimi 409 döner; açılınca yeniden 200", async ({ page: guest }) => {
+test("sipariş alımı kapatılınca misafir gönderimi 409 döner; açılınca yeniden 200 @kabul-8", async ({ page: guest }) => {
   const toggle = kitchen.getByRole("switch", { name: "Sipariş alımı" });
   await kitchen.reload();
   await expect(toggle).toHaveAttribute("aria-checked", "true");

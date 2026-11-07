@@ -115,7 +115,7 @@ test.afterAll(async () => {
   await setPhoneConfirm("ROYAL", false);
 });
 
-test("A: teyit kapalı — sipariş → onay → hazır → yolda → teslim, misafir her adımı görür; yazıcı yok = fiş ve uyarı yok, fiyat gizli", async ({ page: guest }) => {
+test("A: teyit kapalı — sipariş → onay → hazır → yolda → teslim, misafir her adımı görür; yazıcı yok = fiş ve uyarı yok, fiyat gizli @kabul-8", async ({ page: guest }) => {
   await setRs("price_display", "HIDE");
   const order = await guestOrder(guest);
   expect(order.status).toBe(200);
@@ -135,7 +135,7 @@ test("A: teyit kapalı — sipariş → onay → hazır → yolda → teslim, mi
   expect((await sql(`SELECT count(*)::int AS n FROM notifications WHERE title ILIKE '%yazıcı%'`)).rows[0].n).toBe(0);
 });
 
-test("A2: yazıcı tanımlıyken tek fiş üretilir ve fiyat gizliyken fişte subtotal yoktur", async ({ page: guest }) => {
+test("A2: yazıcı tanımlıyken tek fiş üretilir ve fiyat gizliyken fişte subtotal yoktur @kabul-8", async ({ page: guest }) => {
   const printerId = randomUUID();
   await sql(
     `INSERT INTO printers (id, hotel_id, name, ip, port, codepage, paper_width, is_active, created_at, updated_at)
@@ -157,7 +157,7 @@ test("A2: yazıcı tanımlıyken tek fiş üretilir ve fiyat gizliyken fişte su
   }
 });
 
-test("B: teyit açık — Teyit bekliyor, Onayla pasif; telefonla teyit sonrası zincir tamamlanır", async ({ page: guest }) => {
+test("B: teyit açık — Teyit bekliyor, Onayla pasif; telefonla teyit sonrası zincir tamamlanır @kabul-8", async ({ page: guest }) => {
   await setPhoneConfirm("ROYAL", true);
   await ops.reload();
   const order = await guestOrder(guest);
@@ -186,7 +186,7 @@ test("B: teyit açık — Teyit bekliyor, Onayla pasif; telefonla teyit sonrası
   await ops.reload();
 });
 
-test("C: iptal — onaydan sonra oda.mr iptal edemez, fbm.mr sebepli iptal eder, misafir İptal görür", async ({ page: guest }) => {
+test("C: iptal — onaydan sonra oda.mr iptal edemez, fbm.mr sebepli iptal eder, misafir İptal görür @kabul-8", async ({ page: guest }) => {
   const order = await guestOrder(guest);
   expect(order.status).toBe(200);
   const heading = headingOf(await orderNo(order.id));
@@ -211,7 +211,7 @@ test("C: iptal — onaydan sonra oda.mr iptal edemez, fbm.mr sebepli iptal eder,
   expect(row.status).toBe("IPTAL");
 });
 
-test("D: SLA — rs.slaMinutes=1, simüle saatle aşım bildirimi; ikinci çalıştırma yenisini üretmez", async ({ page: guest }) => {
+test("D: SLA — rs.slaMinutes=1, simüle saatle aşım bildirimi; ikinci çalıştırma yenisini üretmez @kabul-8", async ({ page: guest }) => {
   const root = path.resolve(__dirname, "../..");
   const runJobs = (now: Date): { sla: { warned: number; breached: number } } =>
     JSON.parse(
@@ -263,7 +263,7 @@ test("D: SLA — rs.slaMinutes=1, simüle saatle aşım bildirimi; ikinci çalı
   }
 });
 
-test("E: kapsam — MASA siparişi oda servisi panosunda yok; ODA siparişi /kds ve /garson kuyruğunda yok; alım kapalıyken 409", async ({ page: guest, browser }) => {
+test("E: kapsam — MASA siparişi oda servisi panosunda yok; ODA siparişi /kds ve /garson kuyruğunda yok; alım kapalıyken 409 @kabul-8", async ({ page: guest, browser }) => {
   // A MASA order of Havuz Bar (guest table token of the seed).
   const mojito = (await sql(`SELECT id FROM menu_nodes WHERE name = 'Mojito' LIMIT 1`)).rows[0].id as string;
   const masa = await guest.request.post(`/api/q/e2e-guest-m1/order`, {
@@ -314,7 +314,7 @@ test("E: kapsam — MASA siparişi oda servisi panosunda yok; ODA siparişi /kds
   }
 });
 
-test("F: ?lang=de — Almanca durum başlıkları aynı zincirde", async ({ page: guest }) => {
+test("F: ?lang=de — Almanca durum başlıkları aynı zincirde @kabul-8", async ({ page: guest }) => {
   const order = await guestOrder(guest);
   expect(order.status).toBe(200);
   const heading = headingOf(await orderNo(order.id));

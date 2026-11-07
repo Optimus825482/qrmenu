@@ -78,7 +78,7 @@ async function sendSelections(page: Page): Promise<void> {
 
 let firstOrderUrl = "";
 
-test("kart → menü → Çay ×2 + not → Seçimlerim 2 → gönder → Gönderildi #1; yenileyince aynı", async ({ page }) => {
+test("kart → menü → Çay ×2 + not → Seçimlerim 2 → gönder → Gönderildi #1; yenileyince aynı @kabul-8", async ({ page }) => {
   const token = await roomToken("101");
   await page.goto(`/q/${token}`);
   await expect(roomServiceLink(page)).toBeVisible();
@@ -110,7 +110,7 @@ test("kart → menü → Çay ×2 + not → Seçimlerim 2 → gönder → Gönde
   await expect(page.getByRole("main").locator('li[aria-current="step"]')).toContainText("Gönderildi");
 });
 
-test("teyit varyantı: Teyit adımı görünür, Vazgeç siparişi İptal durumuna çevirir", async ({ page }) => {
+test("teyit varyantı: Teyit adımı görünür, Vazgeç siparişi İptal durumuna çevirir @kabul-8", async ({ page }) => {
   await setPhoneConfirm("ROYAL", true);
   try {
     const token = await roomToken("102");
@@ -137,7 +137,7 @@ test("teyit varyantı: Teyit adımı görünür, Vazgeç siparişi İptal durumu
   }
 });
 
-test("?lang=ar: sağdan sola, Arapça arayüz", async ({ page }) => {
+test("?lang=ar: sağdan sola, Arapça arayüz @kabul-10", async ({ page }) => {
   const token = await roomToken("101");
   await page.goto(`/q/${token}?lang=ar`);
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

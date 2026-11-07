@@ -24,7 +24,7 @@ async function openMenuAdmin(browser: Browser): Promise<{ page: Page; win: Locat
 
 let firstOrderUrl = "";
 
-test("seçim ekle, gönder, durum sayfası, yenile ve garson çağır", async ({ page }) => {
+test("seçim ekle, gönder, durum sayfası, yenile ve garson çağır @kabul-7", async ({ page }) => {
   await page.goto(M1);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("M1");
   await expect(page.locator("body")).not.toContainText(/sepet|cart/i);
@@ -75,7 +75,7 @@ test("seçim ekle, gönder, durum sayfası, yenile ve garson çağır", async ({
   await expect(page.getByRole("status").filter({ hasText: "iletildi" })).toHaveCount(0, { timeout: 6_000 }); // gone after ~3 s
 });
 
-test("sipariş kapanınca gönderim reddedilir, seçimler korunur, durum sayfası açılır", async ({ page, browser }) => {
+test("sipariş kapanınca gönderim reddedilir, seçimler korunur, durum sayfası açılır @kabul-7", async ({ page, browser }) => {
   expect(firstOrderUrl).not.toBe("");
   await page.goto(M1);
   await card(page, "Aperol Spritz").click();

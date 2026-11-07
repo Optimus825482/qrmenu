@@ -45,7 +45,7 @@ const FOLDERS = [
   "Kullanıcı Yönetimi",
 ];
 
-test("kat.mr (CR-KOM yok) /admin → /yetkisiz", async ({ page }) => {
+test("kat.mr (CR-KOM yok) /admin → /yetkisiz @kabul-2", async ({ page }) => {
   await login(page, "kat.mr");
   await expect(page).toHaveURL(/\/kat$/);
   await page.goto("/admin");
@@ -271,7 +271,7 @@ test("simge sağ tık → Kısayolu kaldır → onay: Esc vazgeçer, Enter kald�
   await expect(icon(page, "Sistem Yönetimi")).toBeVisible();
 });
 
-test("mudur.mr (R-OTM): yetkisiz klasör ve simgeler görünmez; /admin/hakkinda → /admin", async ({ page }) => {
+test("mudur.mr (R-OTM): yetkisiz klasör ve simgeler görünmez; /admin/hakkinda → /admin @kabul-2", async ({ page }) => {
   await login(page, "mudur.mr");
   await expect(page).toHaveURL(/\/admin(#.*)?$/);
   await expect(desktop(page)).toBeVisible();

@@ -18,7 +18,7 @@ function trackErrors(page: Page): string[] {
   return errors;
 }
 
-test("admin listesi açıkken kat.mr 2 sn içinde görünür; zorla çıkış kat.mr sekmesini /giris yapar ve satırı düşürür", async ({
+test("admin listesi açıkken kat.mr 2 sn içinde görünür; zorla çıkış kat.mr sekmesini /giris yapar ve satırı düşürür @kabul-3", async ({
   page,
   browser,
 }) => {

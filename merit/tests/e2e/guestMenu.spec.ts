@@ -57,7 +57,7 @@ test("alerjen listesi: her alerjende SVG ikon (aria-hidden) ve dilin metin etike
   await page.keyboard.press("Escape");
 });
 
-test("?lang=ar sağdan sola ve Arapça; ?lang=de çerezle kalıcı", async ({ page }) => {
+test("?lang=ar sağdan sola ve Arapça; ?lang=de çerezle kalıcı @kabul-10", async ({ page }) => {
   await page.goto(`${M1}?lang=ar`);
   await expect(page).toHaveURL(new RegExp(`${M1}$`)); // the lang route sent us back without the query
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

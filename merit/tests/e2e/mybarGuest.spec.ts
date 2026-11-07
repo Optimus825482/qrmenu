@@ -58,7 +58,7 @@ const plusOf = (page: Page, name: string) => page.getByRole("button", { name: `A
 const send = (page: Page) => page.getByRole("button", { name: /SEND MYBAR REQUEST/ });
 const noteBox = (page: Page) => page.getByLabel("Additional notes or special requests");
 
-test("AR: sağdan sola, Arapça başlık; Su ×2 + not gönderilir, durum Bekleyen; sayfa yenilenince günlük sınır mesajı", async ({ page }) => {
+test("AR: sağdan sola, Arapça başlık; Su ×2 + not gönderilir, durum Bekleyen; sayfa yenilenince günlük sınır mesajı @kabul-5", async ({ page }) => {
   const token = await roomToken("101");
   await openMyBar(page, token, "ar");
   await expect(page).toHaveURL(new RegExp(`/q/${token}/mybar$`));
@@ -91,7 +91,7 @@ test("AR: sağdan sola, Arapça başlık; Su ×2 + not gönderilir, durum Bekley
   expect(text).not.toMatch(/sepet|cart|basket|€|₺|\$|price/i);
 });
 
-test("ikinci cihaz aynı gün gönderirse: günlük sınır mesajı, başarı kutusu yok, mevcut talep gösterilir", async ({ browser }) => {
+test("ikinci cihaz aynı gün gönderirse: günlük sınır mesajı, başarı kutusu yok, mevcut talep gösterilir @kabul-5", async ({ browser }) => {
   const token = await roomToken("102");
   const context = await browser.newContext({ locale: "en-US" });
   const one = await context.newPage();

@@ -23,7 +23,7 @@ async function sendWater(page: Page) {
   await page.getByRole("button", { name: "إرسال طلب MYBAR" }).click();
 }
 
-test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ulaşır", async ({ page: guest, browser }) => {
+test("Arapça misafir talebi kat sorumlusu, havuz ve canlı misafir durumuna ulaşır @kabul-5", async ({ page: guest, browser }) => {
   test.setTimeout(240_000);
   process.env.SEED_MINIBAR = "1";
   try {

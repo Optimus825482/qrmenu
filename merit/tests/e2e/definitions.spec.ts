@@ -47,7 +47,7 @@ const definitions = (page: Page, hotel: { name: string }) => appWindow(page, "Ta
 const userManagement = (page: Page) => appWindow(page, "Kullanıcı Yönetimi");
 const teamManagement = (page: Page, hotel: { name: string }) => appWindow(page, "Ekip Yönetimi", hotel.name);
 
-test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve modül anahtarları", async ({ page }) => {
+test("Tanımlamalar: ağaç düğümleri, Otel paneli kaydı ve modül anahtarları @kabul-1", async ({ page }) => {
   const errors = trackErrors(page);
   await openAdmin(page);
   const win = await definitions(page, MR);

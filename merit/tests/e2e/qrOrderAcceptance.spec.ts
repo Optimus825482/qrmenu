@@ -36,7 +36,7 @@ test.beforeAll(async () => {
   await createReceiptPrinter();
 });
 
-test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay eskalasyonu", async ({ page, browser }) => {
+test("QR sipariş kabul zinciri: fiyat gizli/göster, KDS-servis, fiş ve onay eskalasyonu @kabul-7", async ({ page, browser }) => {
   // HIDE is the default: the guest and KDS must not expose a currency or totals.
   await page.goto(`/q/${M1_TOKEN}`);
   await expect(page.locator(".g-price")).toHaveCount(0);

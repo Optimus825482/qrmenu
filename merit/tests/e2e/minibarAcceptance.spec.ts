@@ -118,7 +118,7 @@ test.afterAll(async () => {
   await Promise.all(Object.values(ctxs).map((c) => c.close()));
 });
 
-test("1. depo üç Excel'i önizleyip yükler; kat sorumlusu görev bildirimi alır", async () => {
+test("1. depo üç Excel'i önizleyip yükler; kat sorumlusu görev bildirimi alır @kabul-6", async () => {
   const files = {
     IN_HOUSE: await sheet([
       ["101", excelDate(shift(today, -2)), excelDate(shift(today, 3)), 2, null, null],
@@ -170,7 +170,7 @@ test("1. depo üç Excel'i önizleyip yükler; kat sorumlusu görev bildirimi al
   ).toBe(3);
 });
 
-test("2. öncelik planı çakışma odasını ilk sıraya koyar", async () => {
+test("2. öncelik planı çakışma odasını ilk sıraya koyar @kabul-6", async () => {
   const plan = await json(await get(ctxs.kat, "/api/minibar/priority-plan"));
   expect(plan.entries.length).toBeGreaterThan(0);
   expect(plan.entries[0]).toMatchObject({ roomNumber: "202", rank: 1 });
@@ -178,7 +178,7 @@ test("2. öncelik planı çakışma odasını ilk sıraya koyar", async () => {
   expect(plan.summary.clashes).toBe(1);
 });
 
-test("3. 101'de Su +2: kalem tamamlanır, havuz 2 azalır; işlem silinince hepsi geri döner", async () => {
+test("3. 101'de Su +2: kalem tamamlanır, havuz 2 azalır; işlem silinince hepsi geri döner @kabul-4", async () => {
   const before = await poolQty("Su");
   expect(before).toBe(100);
   expect(await itemStatus("101")).toEqual(["BEKLIYOR"]);
@@ -200,7 +200,7 @@ test("3. 101'de Su +2: kalem tamamlanır, havuz 2 azalır; işlem silinince heps
   expect(await count("SELECT count(*) AS n FROM minibar_transactions WHERE id = $1", [body.transactionId])).toBe(0);
 });
 
-test("4. aynı clientRequestId ağ tekrarı tek düşüm yapar", async () => {
+test("4. aynı clientRequestId ağ tekrarı tek düşüm yapar @kabul-4", async () => {
   const before = await poolQty("Kola");
   const rid = randomUUID();
   const payload = { items: [{ productId: ids.kola, setupId: ids.mini, qty: 1 }], clientRequestId: rid };
@@ -214,7 +214,7 @@ test("4. aynı clientRequestId ağ tekrarı tek düşüm yapar", async () => {
   expect(await count("SELECT count(*) AS n FROM minibar_transactions WHERE client_request_id = $1", [rid])).toBe(1);
 });
 
-test("5. Sarfiyat Yok 102: kalem tamamlanır, depoya 'Sarfiyat yok — Oda 102' bildirimi gider", async () => {
+test("5. Sarfiyat Yok 102: kalem tamamlanır, depoya 'Sarfiyat yok — Oda 102' bildirimi gider @kabul-4", async () => {
   const res = await post(ctxs.kat, `/api/minibar/room/${ids.rooms["102"]}/no-consumption`, { clientRequestId: randomUUID() });
   expect(res.status(), await res.text()).toBe(200);
   expect(await json(res)).toMatchObject({ taskCompleted: true, replayed: false });
@@ -227,7 +227,7 @@ test("5. Sarfiyat Yok 102: kalem tamamlanır, depoya 'Sarfiyat yok — Oda 102' 
   ).toBe(1);
 });
 
-test("6. DND: 103'te iki farklı personel kalemi tamamlar; 104'te tek işaret AKTIF kalır", async () => {
+test("6. DND: 103'te iki farklı personel kalemi tamamlar; 104'te tek işaret AKTIF kalır @kabul-4", async () => {
   const first = await post(ctxs.kat, `/api/minibar/room/${ids.rooms["103"]}/dnd`, {});
   expect(first.status(), await first.text()).toBe(200);
   expect(await json(first)).toMatchObject({ count: 1, completed: false });

@@ -67,7 +67,7 @@ async function openMobile(page: Page) {
   await expect(tabs(page)).toBeVisible();
 }
 
-test("390px: masaüstü yok, alt sekmeler var, Tanımlar sekmesi yok", async ({ page }) => {
+test("390px: masaüstü yok, alt sekmeler var, Tanımlar sekmesi yok @kabul-10", async ({ page }) => {
   const errors = trackErrors(page);
   await openMobile(page);
   await expect(page.locator(".xp-desktop")).toHaveCount(0);
@@ -143,7 +143,7 @@ test("Ayarlar: duvar kağıdı seçilir; oturum kapatma düğmesi var", async ({
   await expect(wallpapers.getByRole("radio", { name: "Royal Gold" })).toBeChecked();
 });
 
-test("?mobil=1 ile 1280px'te de mobil; parametresiz 1280px masaüstü; yeniden boyutlandırma", async ({
+test("?mobil=1 ile 1280px'te de mobil; parametresiz 1280px masaüstü; yeniden boyutlandırma @kabul-10", async ({
   page,
 }) => {
   const errors = trackErrors(page);
