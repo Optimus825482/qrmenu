@@ -237,10 +237,7 @@ export function KatDashboard({
               </div>
 
               {filter ? (
-                <p
-                  role="status"
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-text"
-                >
+                <p className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-text">
                   <span>Süzgeç: {FILTER_LABEL[filter]}</span>
                   <Link
                     href="/kat"

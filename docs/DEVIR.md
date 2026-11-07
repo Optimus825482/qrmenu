@@ -34,11 +34,10 @@
 ### Sıradaki adımlar
 1. **UX kapandı (T15, `0d75121`):** T14'ten devreden dört madde kapandı: `/kat?filtre=dnd` süzgeci geri geldi (`landing.spec.ts:78` yeşil), `canliRadarWall` 1366/1920 tam chromium koşusunda yeşil, `pushSubscribe` geçici VAPID anahtarıyla yeşil, `preferredShell` arayüzü Erkan kararına bırakıldı (§4). Koşu sonuçları `docs/kabul/2026-11-03-ux-kabul.md`; rapor `.superpowers/sdd/2026-11-03-ux-yenileme/task-15-report.md`.
 2. **Açık kırmızılar (T15 dışı):** `tests/unit/sse-filtered.test.ts` (P4 `acdf2e1` ile eklenen dört `mybar.*` misafir olayı testte yok) ve `mybarFlow.spec.ts:26` (P4 T10).
-3. **Sıradaki: P4 T10.**
-4. **P4 T10:** commit'siz yığın `docs/kurulum.md`, `tests/e2e/mybarFlow.spec.ts` (izlenmiyor). `mybarFlow.spec.ts:26` KIRMIZI. T4/T7/T9 minörleri raporlarda.
-5. **P6:** T2R `9b7dda3`, T3R `299cafc`, T4a `45d0d24` indi. T4b commit'siz yığın: `src/modules/menu/ui/guest/{GuestFooter,GuestFrame,MenuBrowser,MenuView,SelectionsDrawer}.tsx`, `tests/unit/guest-room-mode.test.tsx`. Sonra T5a, T6b, S0, T4c/T4d, T5b/c, T6a/c, T7; `ROOM_SERVICE_READY` en son açılır. Liste `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md`; §5'te Erkan'a 4 soru var (SLA başlangıcı, pencere kimliği `rs.rapor`, kapalı menü kart metni, KDS `kind` süzgeci), yanıt yoksa varsayılanlar.
-6. **P7, P8:** `.superpowers/sdd/2026-10-31-p7-rapor-eposta/gap-analysis.md`, `.superpowers/sdd/2026-10-31-p8-kabul/gap-analysis.md`.
-7. **Yalnız Erkan:** gerçek göç, SMTP, Coolify dağıtımı ve `VAPID_*`, `docs/kabul/ux-rehber-metinleri.md` onayı, birleştirme onayı.
+3. **Sıradaki: P4 T10:** commit'siz yığın `docs/kurulum.md`, `tests/e2e/mybarFlow.spec.ts` (izlenmiyor). `mybarFlow.spec.ts:26` KIRMIZI. T4/T7/T9 minörleri raporlarda.
+4. **P6:** T2R `9b7dda3`, T3R `299cafc`, T4a `45d0d24` indi. T4b commit'siz yığın: `src/modules/menu/ui/guest/{GuestFooter,GuestFrame,MenuBrowser,MenuView,SelectionsDrawer}.tsx`, `tests/unit/guest-room-mode.test.tsx`. Sonra T5a, T6b, S0, T4c/T4d, T5b/c, T6a/c, T7; `ROOM_SERVICE_READY` en son açılır. Liste `.superpowers/sdd/2026-10-31-p6-oda-servisi/gap-analysis.md`; §5'te Erkan'a 4 soru var (SLA başlangıcı, pencere kimliği `rs.rapor`, kapalı menü kart metni, KDS `kind` süzgeci), yanıt yoksa varsayılanlar.
+5. **P7, P8:** `.superpowers/sdd/2026-10-31-p7-rapor-eposta/gap-analysis.md`, `.superpowers/sdd/2026-10-31-p8-kabul/gap-analysis.md`.
+6. **Yalnız Erkan:** gerçek göç, SMTP, Coolify dağıtımı ve `VAPID_*`, `docs/kabul/ux-rehber-metinleri.md` onayı, birleştirme onayı.
 
 ### Çalışma düzeni
 brief → uygulayıcı (TDD, commit, LF, Co-Authored-By) → inceleme (misafire açık/yetki/para: Sonnet, diğerleri Haiku) → düzeltme → defter. `.superpowers/sdd/PARALEL-KURALLAR.md`: ajan başına DB/port/`NEXT_DIST_DIR`, açık yollarla stage, `git add -A`/stash/reset yok, tek vitest süreci, tam süit tek ajanla. `next build` `merit/tsconfig.json`'u değiştirir; commit'lenmez, geri alınır. E2E sunucusu `APP_BASE_URL=http://localhost:<port>` ile başlar, vitest onsuz koşar. 3000/3001 portlarına dokunulmaz. E2E yalnız `*_e2e`/`*_test` DB'lerinde. Postgres sınırı 100 bağlantı; biten ajanların sunucularını kapat.

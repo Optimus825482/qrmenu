@@ -166,8 +166,8 @@ window.ILERLEME = {
   ],
   log: [
     { at: "04.11 03:45", text: "UX tamamlandı (T15, 0d75121). Altı ekran boyutunda 26 sayfa ve misafir menüsü (Türkçe ve Arapça) denetlendi: yatay kaydırma, erişilebilirlik ve dokunma hedefi ihlali yok, 472 test geçti. Depo rapor ve tanım sayfaları açık temaya taşındı, kat panelindeki DND süzgeci geri geldi. Tam Chromium koşusunda 210 testten 209'u geçti; kalan test P4 T10'a ait. Sırada P4 T10." },
-    { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },
     { at: "04.11 02:00", text: "UX T14 üç commit ile indi: XP Başlat menüsü, tepsi durumları, pencere menü çubuğu, klavye kısayolları, depo panosu ve eski görevlerin küçük eksikleri. Matris 126/126 geçti. Son tam chromium koşusunda 206 test geçti, 3 test kaldı, 1 test koşmadı; duvar testi sonra düzeltildi, /kat?filtre=dnd kararı ve P4 T10 testi açık. İnceleme ve T15 sırada." },
+    { at: "03.11 20:11", text: "P6 T2R (durum geçişi), T3R (misafir SSE ve hız sınırı), T4a (sekiz dil) için 79 hedefli test ve TypeScript geçti." },
     { at: "03.11 20:10", text: "UX T12 rehber düzeltmeleri hedefli birim ve Chromium koşularında doğrulandı. Sonraki UX adımı T14 XP cilası." },
     { at: "03.11 20:10", text: "P4 T8 otel kapsamı, depo erişimi, dışa aktarma yetkisi, sayfalama ve iptal diyaloğu düzeltmeleri hedefli testlerde doğrulandı. Tam check göç testi hatası sonrası durduruldu; P4 T10 açık." },
     { at: "03.11 19:55", text: "Erkan genel MyBar Web Push metnini seçti. Cihaz bildiriminden oda, ürün ve not ayrıntıları çıkarıldı, uygulama içi ayrıntılar korundu. Push dağıtım testleri 14/14 geçti. P6, P7 ve P8 boşluk analizleri hazır." },

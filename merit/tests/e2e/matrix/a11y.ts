@@ -38,10 +38,21 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
 }
 
 /**
- * `layer`: index of the closest fixed/sticky ancestor (-1: page flow). Scrolling content and pinned
- * chrome (sticky bottom nav, fixed header) have no fixed distance, so they are not gap neighbours.
+ * `layer`: index of the closest fixed/sticky ancestor (-1: page flow). `pinnedBottom`: that ancestor is
+ * anchored to the bottom edge (bottom set, top auto: sticky/fixed bottom navigation). Only a pair of
+ * "page-flow content" and "bottom-pinned bar" has no fixed distance (content scrolls under the bar), see gapViolations.
  */
-type Box = { selector: string; text: string; x: number; y: number; w: number; h: number; primary: boolean; layer: number };
+type Box = {
+  selector: string;
+  text: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  primary: boolean;
+  layer: number;
+  pinnedBottom: boolean;
+};
 
 /** Visible, non-exempt interactive boxes of the page. */
 async function collectBoxes(page: Page): Promise<Box[]> {
@@ -49,15 +60,15 @@ async function collectBoxes(page: Page): Promise<Box[]> {
   return page.evaluate((targets) => {
     const out: Box[] = [];
     const layers: Element[] = [];
-    const layerOf = (el: Element): number => {
+    const layerOf = (el: Element): { layer: number; pinnedBottom: boolean } => {
       for (let n: Element | null = el; n; n = n.parentElement) {
-        const pos = getComputedStyle(n).position;
-        if (pos === "fixed" || pos === "sticky") {
+        const cs = getComputedStyle(n);
+        if (cs.position === "fixed" || cs.position === "sticky") {
           if (!layers.includes(n)) layers.push(n);
-          return layers.indexOf(n);
+          return { layer: layers.indexOf(n), pinnedBottom: cs.bottom !== "auto" && cs.top === "auto" };
         }
       }
-      return -1;
+      return { layer: -1, pinnedBottom: false };
     };
     const describe = (el: Element): string => {
       const id = el.id ? `#${el.id}` : "";
@@ -74,6 +85,7 @@ async function collectBoxes(page: Page): Promise<Box[]> {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
       if (r.bottom < 0 || r.right < 0) continue;
+      const { layer, pinnedBottom } = layerOf(el);
       out.push({
         selector: describe(el),
         text: (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40) || el.getAttribute("aria-label") || "",
@@ -82,7 +94,8 @@ async function collectBoxes(page: Page): Promise<Box[]> {
         w: r.width,
         h: r.height,
         primary: el.hasAttribute("data-primary"),
-        layer: layerOf(el),
+        layer,
+        pinnedBottom,
       });
     }
     return out;
@@ -103,23 +116,54 @@ export async function touchViolations(page: Page, tier: Tier): Promise<TouchViol
   return found;
 }
 
-/** Neighbouring targets of one layer closer than the tier gap (0 < gap < min). Touching targets (gap 0) belong to one control. */
+/** Gap between two boxes: Infinity when diagonal, negative when they intersect, 0 when they touch. */
+function gapOf(a: Box, c: Box): number {
+  const dx = Math.max(c.x - (a.x + a.w), a.x - (c.x + c.w));
+  const dy = Math.max(c.y - (a.y + a.h), a.y - (c.y + c.h));
+  // Boxes separated on one axis and overlapping on the other are neighbours.
+  return dx > 0 && dy > 0 ? Infinity : Math.max(dx, dy);
+}
+
+/** True for the one pair with no fixed distance: page-flow content and a bottom-pinned bar. */
+function flowVsPinnedBottom(a: Box, c: Box): boolean {
+  return (a.layer === -1 && c.pinnedBottom) || (c.layer === -1 && a.pinnedBottom);
+}
+
+/**
+ * Neighbouring targets closer than the tier gap (0 < gap < min); touching targets (gap 0) belong to one control.
+ * Every pair is measured (same layer, two different fixed/sticky containers, flow vs sticky header) except
+ * page-flow content vs a bottom-pinned bar (sticky/fixed bottom navigation): content scrolls under the bar, so
+ * their distance depends on the scroll offset. That pair is instead checked for intersection with the page
+ * scrolled to the very bottom, where the bar must not cover a button. An intersection (gap < 0) is
+ * reported for every other pair at any scroll offset.
+ */
 export async function gapViolations(page: Page, tier: Tier): Promise<{ a: string; b: string; gap: number }[]> {
   const min = GAP[tier];
   if (min === 0) return [];
-  const boxes = await collectBoxes(page);
+  const label = (b: Box) => `${b.selector} ${b.text}`;
   const found: { a: string; b: string; gap: number }[] = [];
+  const boxes = await collectBoxes(page);
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
       const a = boxes[i];
       const c = boxes[j];
-      if (a.layer !== c.layer) continue;
-      const dx = Math.max(c.x - (a.x + a.w), a.x - (c.x + c.w));
-      const dy = Math.max(c.y - (a.y + a.h), a.y - (c.y + c.h));
-      // Boxes separated on one axis and overlapping on the other are neighbours.
-      const gap = dx > 0 && dy > 0 ? Infinity : Math.max(dx, dy);
-      if (gap > 0 && gap + 0.5 < min) found.push({ a: `${a.selector} ${a.text}`, b: `${c.selector} ${c.text}`, gap: Math.round(gap) });
+      if (flowVsPinnedBottom(a, c)) continue;
+      const gap = gapOf(a, c);
+      if (gap !== 0 && gap + 0.5 < min) found.push({ a: label(a), b: label(c), gap: Math.round(gap) });
     }
+  }
+  // Scrolled to the bottom: no flow button may sit under a bottom-pinned bar.
+  if (boxes.some((b) => b.pinnedBottom)) {
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const bottom = await collectBoxes(page);
+    for (const a of bottom) {
+      for (const c of bottom) {
+        if (a === c || !(a.layer === -1 && c.pinnedBottom)) continue;
+        const gap = gapOf(a, c);
+        if (gap < 0) found.push({ a: label(a), b: label(c), gap: Math.round(gap) });
+      }
+    }
+    await page.evaluate(() => window.scrollTo(0, 0));
   }
   return found;
 }

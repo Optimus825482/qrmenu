@@ -14,7 +14,7 @@ const ratchet = JSON.parse(readFileSync(join(__dirname, "uxRatchet.json"), "utf8
 };
 
 /** Spec P-UX-15 route list; matrix keys that differ from the brief's names are mapped here. */
-const REQUIRED_ROUTES = [
+const REQUIRED_ROUTES: string[] = [
   "kat",
   "kat-oda-kontrol",
   "kat-islemlerim",
@@ -35,7 +35,12 @@ const REQUIRED_ROUTES = [
   "giris",
   "secim",
   "admin",
+  "depo-tanimlar", // added by the T15 review: depo/tanimlar was rewritten but missing from the matrix
 ];
+
+/** Route keys held to a non-default tier; every other route is a staff ("personel") screen. */
+const POS_ROUTES = new Set(["kasa", "kasa-yazici", "kasa-iptal", "kds"]);
+const XP_ROUTES = new Set(["admin", "radar"]);
 
 describe("UX kapanış kapıları", () => {
   it("KNOWN_TOUCH_VIOLATIONS boş", () => expect(KNOWN_TOUCH_VIOLATIONS).toEqual({}));
@@ -51,5 +56,24 @@ describe("UX kapanış kapıları", () => {
   it("görünüm matrisi kabul listesindeki tüm rotaları içerir", () => {
     const keys = new Set(ROUTE_MATRIX.map((r) => r.key));
     expect(REQUIRED_ROUTES.filter((k) => !keys.has(k))).toEqual([]);
+  });
+
+  it("her rota doğru katmanda: pos (kasa*, kds), xp (admin, radar), kalanı personel", () => {
+    // POS entries expose `tier` as a viewport-dependent getter (Playwright only), so the declared tier is read from the source.
+    const src = readFileSync(join(__dirname, "..", "e2e", "matrix", "routes.ts"), "utf8");
+    const declared = [...src.matchAll(/\{\s*key:\s*"([^"]+)"[^\n]*?\btier:\s*"([^"]+)"/g)].map((m) => ({ key: m[1], tier: m[2] }));
+    expect(declared.map((d) => d.key).sort()).toEqual(ROUTE_MATRIX.map((r) => r.key).sort());
+    const wrong = declared
+      .filter((d) => d.tier !== (POS_ROUTES.has(d.key) ? "pos" : XP_ROUTES.has(d.key) ? "xp" : "personel"))
+      .map((d) => `${d.key}: ${d.tier}`);
+    expect(wrong).toEqual([]);
+    for (const d of declared) expect(["personel", "pos", "xp"]).toContain(d.tier);
+  });
+
+  it("axe.spec.ts XP rotalarında yalnız XP_AXE_EXCLUDE'u kullanır (satır içi hariç tutma yok)", () => {
+    const src = readFileSync(join(__dirname, "..", "e2e", "matrix", "axe.spec.ts"), "utf8");
+    expect(src).toMatch(/exclude:\s*XP_AXE_EXCLUDE/);
+    expect(src.match(/exclude\s*:/g) ?? []).toHaveLength(1);
+    expect(src).not.toMatch(/\.exclude\(/);
   });
 });

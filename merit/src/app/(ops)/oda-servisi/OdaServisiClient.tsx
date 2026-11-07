@@ -36,15 +36,15 @@ const STATUS_CONFIG: Record<
   TEYIT_BEKLIYOR: {
     label: "Telefon Teyidi Bekliyor",
     badge: "bg-[var(--warn-bg)] text-warn border border-warn",
-    border: "border-amber-400 ring-2 ring-amber-400/40",
-    bg: "bg-amber-500/10",
+    border: "border-warn ring-2 ring-warn/40",
+    bg: "bg-warn/10",
     icon: "call",
   },
   GONDERILDI: {
     label: "Yeni Talep",
-    badge: "bg-amber-600 text-white",
-    border: "border-amber-500",
-    bg: "bg-amber-500/10",
+    badge: "bg-warn text-bg",
+    border: "border-warn",
+    bg: "bg-warn/10",
     icon: "bell",
   },
   ONAYLANDI: {
@@ -56,9 +56,9 @@ const STATUS_CONFIG: Record<
   },
   HAZIR: {
     label: "Hazır / Servis Bekliyor",
-    badge: "bg-emerald-600 text-white",
-    border: "border-emerald-500",
-    bg: "bg-emerald-500/10",
+    badge: "bg-success text-bg",
+    border: "border-success",
+    bg: "bg-success/10",
     icon: "utensils",
   },
   YOLDA: {
@@ -70,23 +70,23 @@ const STATUS_CONFIG: Record<
   },
   TESLIM_EDILDI: {
     label: "Teslim Edildi",
-    badge: "bg-emerald-700 text-white",
-    border: "border-emerald-600/40",
+    badge: "bg-success text-bg",
+    border: "border-success/40",
     bg: "bg-surface",
     icon: "check",
   },
   IPTAL: {
     label: "İptal Edildi",
-    badge: "bg-rose-700 text-white",
-    border: "border-rose-400/40",
-    bg: "bg-rose-500/5",
+    badge: "bg-danger text-bg",
+    border: "border-danger/40",
+    bg: "bg-danger/5",
     icon: "close",
   },
   REDDEDILDI: {
     label: "Reddedildi",
-    badge: "bg-rose-800 text-white",
-    border: "border-rose-400/40",
-    bg: "bg-rose-500/5",
+    badge: "bg-danger text-bg",
+    border: "border-danger/40",
+    bg: "bg-danger/5",
     icon: "close",
   },
 };
@@ -301,7 +301,7 @@ export default function OdaServisiClient({
         <div
           className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 shadow-2xs ${
             stats.pending > 0
-              ? "bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-100"
+              ? "bg-warn/15 border-warn/40 text-warn"
               : "border-border bg-surface text-text"
           }`}
         >
@@ -332,7 +332,7 @@ export default function OdaServisiClient({
           <Icon name="check" size={24} />
           <div>
             <p className="text-[13px] font-medium text-muted">Teslim Edildi</p>
-            <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">
+            <p className="text-lg font-black text-success">
               {stats.delivered}
             </p>
           </div>
@@ -343,7 +343,7 @@ export default function OdaServisiClient({
       {error ? (
         <div
           role="alert"
-          className="flex items-center justify-between rounded-xl bg-rose-500/10 border border-rose-500/30 p-3 text-sm text-rose-700 dark:text-rose-300 font-semibold"
+          className="flex items-center justify-between rounded-xl bg-danger/10 border border-danger/30 p-3 text-sm text-danger font-semibold"
         >
           <span>{error}</span>
           <button type="button" onClick={() => setError("")} className="min-h-11 min-w-11 px-2 text-[13px] underline">
@@ -373,7 +373,7 @@ export default function OdaServisiClient({
               key={order.id}
               data-guide={order.id === filteredOrders[0]?.id ? "talep-ac" : undefined}
               className={`flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all bg-surface ${cfg.border} ${
-                isOverdue ? "ring-2 ring-rose-500 bg-rose-500/5" : ""
+                isOverdue ? "ring-2 ring-danger bg-danger/5" : ""
               }`}
             >
               <div>
@@ -406,10 +406,10 @@ export default function OdaServisiClient({
                     <span
                       className={`font-black ${
                         isOverdue
-                          ? "text-rose-600 dark:text-rose-400"
+                          ? "text-danger"
                           : elapsedMin > 20
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-emerald-600 dark:text-emerald-400"
+                            ? "text-warn"
+                            : "text-success"
                       }`}
                     >
                       {elapsedMin} / {slaMinutes} dk {isOverdue ? "GECİKTİ" : ""}
@@ -427,14 +427,14 @@ export default function OdaServisiClient({
 
                 {/* Varsa Misafir Notu */}
                 {order.note ? (
-                  <div className="mt-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-[13px] text-amber-900 dark:text-amber-200">
+                  <div className="mt-2.5 rounded-xl bg-warn/10 border border-warn/30 p-2 text-[13px] text-warn">
                     <strong>Misafir Notu:</strong> {order.note}
                   </div>
                 ) : null}
 
                 {/* Telefon Teyidi Bilgisi */}
                 {order.phoneConfirmedAt ? (
-                  <p className="mt-2 text-[13px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
+                  <p className="mt-2 text-[13px] text-success font-semibold flex items-center gap-1">
                     <span><Icon name="check" size={20} /> Telefon teyidi alındı:</span>
                     <span>
                       {new Date(order.phoneConfirmedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
@@ -455,7 +455,7 @@ export default function OdaServisiClient({
                       setConfirmModal(order);
                       setConfirmNote("");
                     }}
-                    className="flex-1 min-h-[48px] rounded-xl bg-warn text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-warn text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="call" size={20} /> Telefonla Teyit Et
                   </button>
@@ -482,7 +482,7 @@ export default function OdaServisiClient({
                     disabled={pending}
                     data-mutates
                     onClick={() => act(() => markRoomReadyAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-success hover:opacity-90 text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="utensils" size={20} /> Hazırlandı (Servise Ver)
                   </button>
@@ -510,7 +510,7 @@ export default function OdaServisiClient({
                     data-mutates
                     data-guide={order.id === filteredOrders.find((o) => o.status === "YOLDA")?.id ? "teslim-edildi" : undefined}
                     onClick={() => act(() => markRoomDeliveredAction({ orderId: order.id }))}
-                    className="flex-1 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
+                    className="flex-1 min-h-[48px] rounded-xl bg-success hover:opacity-90 text-bg font-black text-sm shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5"
                   >
                     <Icon name="check" size={20} /> Odaya Teslim Edildi
                   </button>
@@ -525,7 +525,7 @@ export default function OdaServisiClient({
                       setCancelModal(order);
                       setCancelReason("");
                     }}
-                    className="min-h-[48px] px-3.5 rounded-xl border border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 text-[13px] font-bold transition active:scale-95"
+                    className="min-h-[48px] px-3.5 rounded-xl border border-danger text-danger hover:bg-danger/10 text-[13px] font-bold transition active:scale-95"
                   >
                     İptal / Ret
                   </button>
@@ -569,7 +569,7 @@ export default function OdaServisiClient({
                 data-mutates
                 data-guide="sonuc"
                 onClick={handlePhoneConfirm}
-                className="flex-1 min-h-[44px] rounded-xl bg-warn text-white font-black text-sm"
+                className="flex-1 min-h-[44px] rounded-xl bg-warn text-bg font-black text-sm"
               >
                 Teyidi Kaydet &amp; Onayla
               </button>
@@ -582,7 +582,7 @@ export default function OdaServisiClient({
       {cancelModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
-            <h2 className="text-lg font-black text-rose-700 dark:text-rose-400">
+            <h2 className="text-lg font-black text-danger">
               <Icon name="close" size={20} /> Siparişi İptal Et / Reddet
             </h2>
             <p className="text-[13px] text-muted mt-1">
@@ -610,7 +610,7 @@ export default function OdaServisiClient({
                 disabled={pending || cancelReason.trim().length < 3}
                 data-mutates
                 onClick={handleCancel}
-                className="flex-1 min-h-[44px] rounded-xl bg-rose-600 text-white font-black text-[13px] hover:bg-rose-500 disabled:opacity-50"
+                className="flex-1 min-h-[44px] rounded-xl bg-danger text-bg font-black text-[13px] hover:opacity-90 disabled:opacity-50"
               >
                 İptali Kesinleştir
               </button>

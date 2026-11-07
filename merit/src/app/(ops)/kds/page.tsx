@@ -31,7 +31,7 @@ export default async function KdsPage() {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
         <div className="max-w-md rounded-2xl border border-border bg-surface p-8 shadow-sm">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-amber-500/10 text-2xl">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-warn/10 text-2xl">
             <Icon name="flame" size={20} />
           </div>
           <h1 className="text-xl font-bold text-text">Mutfak Ekranı (KDS) Kapalı</h1>

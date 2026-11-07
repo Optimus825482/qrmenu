@@ -666,21 +666,21 @@ export default function MinibarTanimlarPage() {
 
             <Link
               href="/depo/stok"
-              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Stok Havuzu
             </Link>
 
             <Link
               href="/kat/tavsiye-is-plani"
-              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="lightbulb" size={20} /> Tavsiye Planı
             </Link>
 
             <Link
               href="/depo/raporlar"
-              className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="trending" size={20} /> Raporlar
             </Link>
@@ -714,7 +714,7 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("PRODUCTS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "PRODUCTS"
-                ? "bg-amber-500 text-text shadow-md font-bold"
+                ? "bg-warn text-bg shadow-md font-bold"
                 : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
@@ -726,7 +726,7 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("GROUPS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "GROUPS"
-                ? "bg-amber-500 text-text shadow-md font-bold"
+                ? "bg-warn text-bg shadow-md font-bold"
                 : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
@@ -738,7 +738,7 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("SETUPS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "SETUPS"
-                ? "bg-amber-500 text-text shadow-md font-bold"
+                ? "bg-warn text-bg shadow-md font-bold"
                 : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
@@ -750,7 +750,7 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("ROOM_TYPES")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "ROOM_TYPES"
-                ? "bg-amber-500 text-text shadow-md font-bold"
+                ? "bg-warn text-bg shadow-md font-bold"
                 : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
@@ -762,7 +762,7 @@ export default function MinibarTanimlarPage() {
             onClick={() => setActiveTab("ASSIGNMENTS")}
             className={`px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
               activeTab === "ASSIGNMENTS"
-                ? "bg-amber-500 text-text shadow-md font-bold"
+                ? "bg-warn text-bg shadow-md font-bold"
                 : "bg-surface text-muted hover:text-text border border-border"
             }`}
           >
@@ -828,7 +828,7 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("PRODUCT_FORM");
                 }}
-                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
+                className="px-4 py-2.5 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Ürün Tanımla</span>
@@ -874,7 +874,7 @@ export default function MinibarTanimlarPage() {
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                                 p.isActive
-                                  ? "bg-emerald-500/20 text-success border border-success/40"
+                                  ? "bg-success/20 text-success border border-success/40"
                                   : "bg-border text-muted"
                               }`}
                             >
@@ -938,7 +938,7 @@ export default function MinibarTanimlarPage() {
                   setCurrentGroup({ name: "", description: "", isActive: true });
                   setModalMode("GROUP_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Ürün Grubu</span>
@@ -954,7 +954,7 @@ export default function MinibarTanimlarPage() {
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <h3 className="font-bold text-text text-base">{g.name}</h3>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-warn border border-warn/40">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-warn/10 text-warn border border-warn/40">
                         {g.productCount} Ürün
                       </span>
                     </div>
@@ -967,7 +967,7 @@ export default function MinibarTanimlarPage() {
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                         g.isActive
-                          ? "bg-emerald-500/20 text-success"
+                          ? "bg-success/20 text-success"
                           : "bg-border text-muted"
                       }`}
                     >
@@ -1022,7 +1022,7 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("SETUP_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Setup Konsepti</span>
@@ -1069,7 +1069,7 @@ export default function MinibarTanimlarPage() {
                         setActiveSetupForItems(s);
                         setModalMode("SETUP_ITEMS");
                       }}
-                      className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-text font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2 bg-warn hover:opacity-90 text-bg font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
                     >
                       <Icon name="clipboard" size={20} />
                       <span>İçerik Normu Düzenle</span>
@@ -1124,7 +1124,7 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("ROOM_TYPE_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Yeni Oda Tipi Tanımla</span>
@@ -1173,7 +1173,7 @@ export default function MinibarTanimlarPage() {
                         <span
                           className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                             rt.isActive
-                              ? "bg-emerald-500/20 text-success"
+                              ? "bg-success/20 text-success"
                               : "bg-border text-muted"
                           }`}
                         >
@@ -1229,7 +1229,7 @@ export default function MinibarTanimlarPage() {
                   });
                   setModalMode("ASSIGN_FORM");
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
+                className="px-4 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5"
               >
                 <Icon name="plus" size={20} />
                 <span>Oda Tipine Setup Ata</span>
@@ -1337,10 +1337,10 @@ export default function MinibarTanimlarPage() {
                               <span
                                 className={`px-2 py-0.5 rounded text-xs font-bold ${
                                   isDelete
-                                    ? "bg-rose-500/20 text-danger border border-danger/40"
+                                    ? "bg-danger/20 text-danger border border-danger/40"
                                     : isUpdate
-                                    ? "bg-amber-500/20 text-warn border border-warn/40"
-                                    : "bg-emerald-500/20 text-success border border-success/40"
+                                    ? "bg-warn/20 text-warn border border-warn/40"
+                                    : "bg-success/20 text-success border border-success/40"
                                 }`}
                               >
                                 {log.action}
@@ -1435,7 +1435,7 @@ export default function MinibarTanimlarPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1558,7 +1558,7 @@ export default function MinibarTanimlarPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1633,7 +1633,7 @@ export default function MinibarTanimlarPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1699,7 +1699,7 @@ export default function MinibarTanimlarPage() {
                 type="button"
                 onClick={handleAddSetupItem}
                 disabled={!selectedProductToAdd}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-text font-bold rounded-lg text-xs transition"
+                className="px-4 py-2 bg-warn hover:opacity-90 disabled:opacity-50 text-bg font-bold rounded-lg text-xs transition"
               >
                 + Ekle
               </button>
@@ -1721,7 +1721,7 @@ export default function MinibarTanimlarPage() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 rounded-full bg-amber-500/10 border border-warn/40 text-warn font-black text-xs">
+                        <span className="px-3 py-1 rounded-full bg-warn/10 border border-warn/40 text-warn font-black text-xs">
                           Setup: {it.qty} {it.unit}
                         </span>
 
@@ -1815,7 +1815,7 @@ export default function MinibarTanimlarPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold"
                 >
                   Kaydet
                 </button>
@@ -1878,7 +1878,7 @@ export default function MinibarTanimlarPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-text rounded-xl text-xs font-bold"
+                  className="px-5 py-2 bg-warn hover:opacity-90 text-bg rounded-xl text-xs font-bold"
                 >
                   Atamayı Kaydet
                 </button>

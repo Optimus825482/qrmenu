@@ -80,4 +80,9 @@ test("kat.mr: /kat?filtre=dnd kat kartlarını süzer", async ({ page }) => {
   await expect(page).toHaveURL(/\/kat$/);
   await page.goto("/kat?filtre=dnd");
   await expect(page.getByText("Süzgeç: DND kaydı olan katlar")).toBeVisible();
+  await page.goto("/kat?filtre=mybar");
+  await expect(page.getByText("Süzgeç: MyBar talebi olan katlar")).toBeVisible();
+  await page.getByRole("link", { name: "Süzgeci kaldır" }).click();
+  await expect(page).toHaveURL(/\/kat$/);
+  await expect(page.getByText(/Süzgeç:/)).toHaveCount(0);
 });

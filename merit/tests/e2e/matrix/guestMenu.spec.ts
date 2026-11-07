@@ -24,4 +24,13 @@ for (const [key, lang, dir] of [
     await expectNoHorizontalScroll(page);
     await expectNoSeriousAxe(page, key);
   });
+
+  // The open language menu has its own colours (.g-lang-item); a closed menu hides contrast bugs there.
+  test(`${key}-dil-menusu: dil menüsü açıkken ciddi/kritik axe ihlali yok (${dir})`, async ({ page }) => {
+    await page.goto(`${M1}?lang=${lang}`);
+    await expect(page.locator("html")).toHaveAttribute("dir", dir);
+    await page.locator(".g-lang-btn").click();
+    await expect(page.getByRole("menu")).toBeVisible();
+    await expectNoSeriousAxe(page, `${key}-dil-menusu`);
+  });
 }

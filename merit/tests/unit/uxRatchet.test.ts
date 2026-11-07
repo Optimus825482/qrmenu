@@ -53,7 +53,7 @@ describe("UX cırcır sayaçları", () => {
   it("küçük yazı (9–12 px sabit) kayıtla eşleşir", () => {
     expect(compare(scanRatchet(/text-\[(?:9|10|11|12)px\]/, STAFF_SCOPE), record.smallText)).toEqual([]);
   });
-  it("ham palet (slate|indigo|purple|zinc|gray-NNN) kayıtla eşleşir", () => {
-    expect(compare(scanRatchet(/\b(?:slate|indigo|purple|zinc|gray)-\d{2,3}\b/, PALETTE_SCOPE), record.rawPalette)).toEqual([]);
+  it("ham palet (slate|indigo|purple|zinc|gray|amber|emerald|rose|blue-NNN) kayıtla eşleşir", () => {
+    expect(compare(scanRatchet(/\b(?:slate|indigo|purple|zinc|gray|amber|emerald|rose|blue)-\d{2,3}\b/, PALETTE_SCOPE), record.rawPalette)).toEqual([]);
   });
 });

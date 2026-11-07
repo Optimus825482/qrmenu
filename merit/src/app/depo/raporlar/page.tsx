@@ -255,14 +255,14 @@ export default function RaporlarPage() {
 
             <Link
               href="/depo/doluluk-yukle"
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="chart" size={20} /> Doluluk Girişi
             </Link>
 
             <Link
               href="/depo/stok"
-              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Stok Havuzu
             </Link>
@@ -286,7 +286,7 @@ export default function RaporlarPage() {
               type="button"
               className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "CONSUMPTION"
-                  ? "bg-amber-500 text-text shadow-md"
+                  ? "bg-warn text-bg shadow-md"
                   : "text-muted hover:text-text"
               }`}
             >
@@ -297,7 +297,7 @@ export default function RaporlarPage() {
               type="button"
               className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "TASKS"
-                  ? "bg-amber-500 text-text shadow-md"
+                  ? "bg-warn text-bg shadow-md"
                   : "text-muted hover:text-text"
               }`}
             >
@@ -308,7 +308,7 @@ export default function RaporlarPage() {
               type="button"
               className={`inline-flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition ${
                 activeTab === "ABNORMAL"
-                  ? "bg-danger text-white shadow-md"
+                  ? "bg-danger text-bg shadow-md"
                   : "text-muted hover:text-danger"
               }`}
             >
@@ -464,7 +464,7 @@ export default function RaporlarPage() {
                   {/* İlerleme Çubuğu */}
                   <div className="w-full bg-bg rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                      className="bg-success h-full rounded-full transition-all duration-500"
                       style={{ width: `${taskReport.completionRate}%` }}
                     />
                   </div>
@@ -547,7 +547,7 @@ export default function RaporlarPage() {
                                     className={`px-2 py-0.5 rounded text-xs font-bold ${
                                       it.dndCount >= 3
                                         ? "bg-info/20 text-info border border-info/40"
-                                        : "bg-amber-500/20 text-warn"
+                                        : "bg-warn/20 text-warn"
                                     }`}
                                   >
                                     {it.dndCount}/3 DND
@@ -569,8 +569,8 @@ export default function RaporlarPage() {
                                 <span
                                   className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
                                     isDone
-                                      ? "bg-emerald-500/20 text-success border border-success/40"
-                                      : "bg-rose-500/20 text-danger border border-danger/40"
+                                      ? "bg-success/20 text-success border border-success/40"
+                                      : "bg-danger/20 text-danger border border-danger/40"
                                   }`}
                                 >
                                   {it.status}
