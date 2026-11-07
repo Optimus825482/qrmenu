@@ -28,3 +28,8 @@ export async function singleFlight<T>(key: string, ttlMs: number, fn: () => Prom
 export function resetSingleFlight(): void {
   entries.clear();
 }
+
+/** Forgets the cached flights whose key starts with `prefix` (event-driven invalidation). */
+export function invalidateSingleFlight(prefix: string): void {
+  for (const k of entries.keys()) if (k.startsWith(prefix)) entries.delete(k);
+}

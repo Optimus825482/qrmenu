@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
-import { SLA_OPEN_STATUSES } from "@/modules/order/server/roomService/sla";
+import { SLA_OPEN_STATUSES, SLA_SWEEP_STATUSES } from "@/modules/order/server/roomService/sla";
+import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
 import type { RadarMetric, RadarMetricKey } from "@/modules/radar/types";
 
 export type { RadarMetric, RadarMetricKey };
@@ -19,9 +20,18 @@ export type RadarMetricDef = {
   unit?: "adet" | "%";
   warnAt?: number;
   critAt?: number;
+  /** True when the counter can be narrowed to one outlet (`opt.outletId`); the others are hotel-level only. */
+  outletScoped?: true;
   /** Hotel id -> value; hotels without rows are absent (read as 0). */
-  collect(hotelIds: string[], now: Date): Promise<Map<string, number>>;
+  collect(hotelIds: string[], now: Date, opt?: CollectOpts): Promise<Map<string, number>>;
+  /**
+   * Ratio metrics only: the numerator/denominator behind each hotel value, so a total over several hotels is
+   * weighted (sum num / sum den) instead of an average of percentages.
+   */
+  parts?(hotelIds: string[], now: Date): Promise<Map<string, { num: number; den: number }>>;
 };
+
+export type CollectOpts = { outletId?: string };
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 3_600_000;
@@ -37,12 +47,30 @@ async function perHotel(hotelIds: string[], fn: (hotelId: string) => Promise<num
   return new Map(entries);
 }
 
+const outletOf = (opt?: CollectOpts) => (opt?.outletId ? { outletId: opt.outletId } : {});
+
 const todayDay = (now: Date) => businessDay(businessDate(now));
 const openOrderSince = (now: Date) => new Date(now.getTime() - DAY_MS);
 
 async function rawCounts(query: Prisma.Sql): Promise<Map<string, number>> {
   const rows = await prisma.$queryRaw<{ hotel_id: string; n: bigint | number }[]>(query);
   return new Map(rows.map((r) => [r.hotel_id, Number(r.n)]));
+}
+
+async function rawParts(query: Prisma.Sql): Promise<Map<string, { num: number; den: number }>> {
+  const rows = await prisma.$queryRaw<{ hotel_id: string; num: bigint | number; den: bigint | number }[]>(query);
+  return new Map(rows.map((r) => [r.hotel_id, { num: Number(r.num), den: Number(r.den) }]));
+}
+
+/** Whole percent (0 when there is nothing to complete). */
+export const pct = (num: number, den: number) => (den > 0 ? Math.round((num / den) * 100) : 0);
+
+function taskParts(hotelIds: string[], now: Date) {
+  return rawParts(Prisma.sql`
+    SELECT t.hotel_id, count(*) FILTER (WHERE i.status = 'TAMAMLANDI') AS num, count(*) AS den
+    FROM daily_task_items i JOIN daily_tasks t ON t.id = i.task_id
+    WHERE t.hotel_id IN (${Prisma.join(hotelIds)}) AND t.date = ${todayDay(now)}
+    GROUP BY t.hotel_id`);
 }
 
 export const RADAR_METRICS: RadarMetricDef[] = [
@@ -144,15 +172,69 @@ export const RADAR_METRICS: RadarMetricDef[] = [
         GROUP BY hotel_id`),
   },
   {
+    key: "stockRequestsOpen",
+    label: "Açık stok talebi",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-TAL",
+    unit: "adet",
+    warnAt: 1,
+    // Requests the warehouse still has to act on: waiting for approval or approved but not yet delivered.
+    collect: async (hotelIds) => {
+      const g = await prisma.stockRequest.groupBy({
+        by: ["hotelId"],
+        where: { hotelId: { in: hotelIds }, status: { in: ["BEKLEMEDE", "ONAYLANDI"] } },
+        _count: { _all: true },
+      });
+      return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
+    },
+  },
+  {
+    key: "consumptionToday",
+    label: "Bugünkü tüketim",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-RAP",
+    unit: "adet",
+    // Units consumed in today's business day (Nicosia 00:00 -> next 00:00), summed over every minibar transaction.
+    collect: (hotelIds, now) => {
+      const from = businessDateStart(businessDate(now));
+      const to = new Date(from.getTime() + DAY_MS);
+      return rawCounts(Prisma.sql`
+        SELECT t.hotel_id, COALESCE(sum(i.consumed), 0) AS n
+        FROM minibar_transaction_items i JOIN minibar_transactions t ON t.id = i.transaction_id
+        WHERE t.hotel_id IN (${Prisma.join(hotelIds)}) AND t.occurred_at >= ${from} AND t.occurred_at < ${to}
+        GROUP BY t.hotel_id`);
+    },
+  },
+  {
+    key: "taskCompletionPct",
+    label: "Görev tamamlama",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-KAT",
+    unit: "%",
+    // Done items / all items of today's tasks; a total over hotels is weighted by item count (see `parts`).
+    parts: taskParts,
+    collect: async (hotelIds, now) => {
+      const parts = await taskParts(hotelIds, now);
+      return new Map([...parts].map(([id, p]) => [id, pct(p.num, p.den)]));
+    },
+  },
+  {
     key: "ordersAwaiting",
     label: "Onay bekleyen sipariş",
     moduleKey: "QR_ORDER",
     screenCode: "QS-KUY",
     unit: "adet",
-    collect: async (hotelIds, now) => {
+    outletScoped: true,
+    collect: async (hotelIds, now, opt) => {
       const g = await prisma.order.groupBy({
         by: ["hotelId"],
-        where: { hotelId: { in: hotelIds }, kind: "MASA", status: "GONDERILDI", createdAt: { gte: openOrderSince(now) } },
+        where: {
+          hotelId: { in: hotelIds },
+          ...outletOf(opt),
+          kind: "MASA",
+          status: "GONDERILDI",
+          createdAt: { gte: openOrderSince(now) },
+        },
         _count: { _all: true },
       });
       return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
@@ -165,12 +247,14 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     screenCode: "QS-KUY",
     unit: "adet",
     critAt: 1,
-    collect: (hotelIds, now) =>
+    outletScoped: true,
+    collect: (hotelIds, now, opt) =>
       perHotel(hotelIds, async (hotelId) => {
         const minutes = await getSetting("order.approvalEscalationMinutes", hotelId);
         return prisma.order.count({
           where: {
             hotelId,
+            ...outletOf(opt),
             kind: "MASA",
             status: "GONDERILDI",
             createdAt: { gte: openOrderSince(now), lt: new Date(now.getTime() - minutes * MINUTE_MS) },
@@ -184,11 +268,13 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     moduleKey: "QR_ORDER",
     screenCode: "QS-KDS",
     unit: "adet",
-    collect: async (hotelIds, now) => {
+    outletScoped: true,
+    collect: async (hotelIds, now, opt) => {
       const g = await prisma.order.groupBy({
         by: ["hotelId"],
         where: {
           hotelId: { in: hotelIds },
+          ...outletOf(opt),
           kind: "MASA",
           status: { in: ["ONAYLANDI", "HAZIR"] },
           createdAt: { gte: openOrderSince(now) },
@@ -204,10 +290,12 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     moduleKey: "QR_MENU",
     screenCode: "QM-CAG",
     unit: "adet",
-    collect: (hotelIds) =>
+    outletScoped: true,
+    collect: (hotelIds, _now, opt) =>
       rawCounts(Prisma.sql`
         SELECT o.hotel_id, count(*) AS n FROM waiter_calls c JOIN outlets o ON o.id = c.outlet_id
         WHERE o.hotel_id IN (${Prisma.join(hotelIds)}) AND c.status = 'ACIK'
+          ${opt?.outletId ? Prisma.sql`AND c.outlet_id = ${opt.outletId}` : Prisma.empty}
         GROUP BY o.hotel_id`),
   },
   {
@@ -217,12 +305,14 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     screenCode: "QM-CAG",
     unit: "adet",
     critAt: 1,
-    collect: (hotelIds, now) =>
+    outletScoped: true,
+    collect: (hotelIds, now, opt) =>
       perHotel(hotelIds, async (hotelId) => {
         const seconds = await getSetting("order.callAlertSeconds", hotelId);
         return prisma.waiterCall.count({
           where: {
             outlet: { hotelId },
+            ...outletOf(opt),
             status: "ACIK",
             createdAt: { lt: new Date(now.getTime() - seconds * 1000) },
           },
@@ -252,12 +342,14 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     screenCode: "QS-FIS",
     unit: "adet",
     critAt: 1,
-    collect: (hotelIds, now) =>
+    outletScoped: true,
+    collect: (hotelIds, now, opt) =>
       perHotel(hotelIds, async (hotelId) => {
         const seconds = await getSetting("radar.printerSilentSeconds", hotelId);
         return prisma.printer.count({
           where: {
             hotelId,
+            ...outletOf(opt),
             isActive: true,
             OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: new Date(now.getTime() - seconds * 1000) } }],
           },
@@ -270,10 +362,11 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
     unit: "adet",
-    collect: async (hotelIds) => {
+    outletScoped: true,
+    collect: async (hotelIds, _now, opt) => {
       const g = await prisma.order.groupBy({
         by: ["hotelId"],
-        where: { hotelId: { in: hotelIds }, kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
+        where: { hotelId: { in: hotelIds }, ...outletOf(opt), kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
         _count: { _all: true },
       });
       return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
@@ -286,17 +379,16 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     screenCode: "RO-SLA",
     unit: "adet",
     critAt: 1,
-    collect: (hotelIds, now) =>
+    outletScoped: true,
+    // The SLA state comes from the P6 single source (clock start = phone confirmation, paused while it is pending).
+    collect: (hotelIds, now, opt) =>
       perHotel(hotelIds, async (hotelId) => {
         const minutes = await getSetting("rs.slaMinutes", hotelId);
-        return prisma.order.count({
-          where: {
-            hotelId,
-            kind: "ODA_SERVISI",
-            status: { in: SLA_OPEN_STATUSES },
-            createdAt: { lt: new Date(now.getTime() - minutes * MINUTE_MS) },
-          },
+        const open = await prisma.order.findMany({
+          where: { hotelId, ...outletOf(opt), kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES } },
+          select: { status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
         });
+        return open.filter((o) => slaStateOf(o, now, minutes) === "BREACH").length;
       }),
   },
   {
