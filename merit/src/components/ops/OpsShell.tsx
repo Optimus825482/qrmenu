@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { DeviceSetupPrompt } from "@/components/pos/DeviceSetupPrompt";
 import { PosShell, type PosRailItem } from "@/components/pos/PosShell";
 import { StaffShell, type StaffShellProps } from "@/components/staff/StaffShell";
+import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
 import type { NavItem, NavModel } from "@/components/staff/navModel";
 import type { PosShellData } from "@/app/(ops)/posShellData";
 import type { ShellKind, ShellRoleKind } from "@/shell/resolveShell";
@@ -52,6 +53,10 @@ export function OpsShell({ children, outletName, hotelName, fullName, targets, o
   const path = usePathname();
   const isKasa = path.startsWith("/kasa") && Boolean(pos?.kasa);
   const isKds = path.startsWith("/kds") && Boolean(pos?.kds);
+  const isGarson = path.startsWith("/garson");
+  const requireNotification = isGarson || isKds;
+  const screenLabel = isKds ? "Şef / Mutfak" : "Garson";
+
   const decision = useResolvedShell({
     screen: isKds ? { code: "QS-KDS", context: "pos" } : isKasa ? { code: "QS-KAS", context: "pos" } : { code: path, context: "personel" },
     roleKind,
@@ -95,9 +100,15 @@ export function OpsShell({ children, outletName, hotelName, fullName, targets, o
         targets={targets}
         setup={({ start }) => <DeviceSetupPrompt outletId={outletId} start={start} />}
       >
+        <NotificationPermissionGate screen="Şef / Mutfak" />
         {children}
       </PosShell>
     );
   }
-  return <StaffShell {...staff} nav={railNav ?? staff.nav}>{children}</StaffShell>;
+  return (
+    <StaffShell {...staff} nav={railNav ?? staff.nav}>
+      {requireNotification ? <NotificationPermissionGate screen={screenLabel} /> : null}
+      {children}
+    </StaffShell>
+  );
 }

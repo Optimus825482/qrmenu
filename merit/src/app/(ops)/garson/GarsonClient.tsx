@@ -16,6 +16,8 @@ import { formatPrice } from "@/lib/formatPrice";
 import { Button } from "@/components/ui/Button";
 import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Segmented } from "@/components/ui/Segmented";
+import { showOpsNotification } from "@/components/ops/opsNotification";
+import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
 
 type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note: string | null; pricesShown: boolean; canApprove: boolean; table: { label: string } | null; items: { id: string; nameSnapshot: string; qty: number; unitPrice: { toString(): string } | null }[] };
 type OpenOrder = { id: string; orderNo: number; tableId: string | null; status: string };
@@ -76,13 +78,20 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     if (event.outletId !== outletId) return;
     if (event.type === "order.created") {
       const createdOrderId = (event.payload as { orderId?: string }).orderId;
+      showOpsNotification("🍽️ Yeni Sipariş Geldi", { body: "Onay bekleyen yeni bir sipariş var." });
       void refresh().then((nextQueue) => {
         if (createdOrderId && nextQueue?.some((order) => order.id === createdOrderId)) newOrder();
       });
       return;
     }
-    if (event.type === "order.ready" && myTables.some((table) => table.tableId === (event.payload as { tableId?: string }).tableId)) ready();
-    if (event.type === "call.created") call();
+    if (event.type === "order.ready" && myTables.some((table) => table.tableId === (event.payload as { tableId?: string }).tableId)) {
+      ready();
+      showOpsNotification("✅ Sipariş Hazır", { body: "Masanıza ait sipariş mutfaktan hazırlandı." });
+    }
+    if (event.type === "call.created") {
+      call();
+      showOpsNotification("🛎️ Garson Çağrısı", { body: "Masadan yeni bir garson çağrısı geldi." });
+    }
     if (event.type === "scan.table") {
       const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
       if (payload?.tableId) {
@@ -91,6 +100,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
           payload.tableLabel ??
           myTables.find((t) => t.tableId === payload.tableId)?.label ??
           "Masa";
+        showOpsNotification("📱 Menü İnceleniyor", { body: `${tableLabel} masasında misafir QR okuttu.` });
         setScanAlerts((prev) => [
           { tableId: payload.tableId!, tableLabel, timestamp: Date.now() },
           ...prev.filter((s) => s.tableId !== payload.tableId),
@@ -104,6 +114,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
   const tab = params.get("sekme") === "masalar" ? "tables" : "queue";
   const wantsNew = params.get("yeni") === "1";
   return <section className="space-y-4">
+    <NotificationPermissionGate screen="Garson" />
     <Segmented
       label="Garson bölümleri"
       value={tab}

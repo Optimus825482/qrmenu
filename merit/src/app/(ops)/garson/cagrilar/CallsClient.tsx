@@ -3,6 +3,7 @@ import { useCallback, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/calls";
 import { useSse } from "@/shell/useSse";
+import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
 
 type Call = { id: string; tableLabel: string; type: string; overdue: boolean };
 
@@ -18,6 +19,7 @@ export default function CallsClient({ outletId, initial }: { outletId: string; i
   }, ["call.created", "call.resolved"]);
   return (
     <section data-guide="cagri-listesi" className="space-y-3">
+      <NotificationPermissionGate screen="Garson" />
       <h1 className="text-xl font-semibold">Çağrılar</h1>
       {calls.length === 0 ? <p className="text-muted">Açık çağrı yok.</p> : calls.map((call, callIdx) => (
         <article key={call.id} data-guide={callIdx === 0 ? "cagri-al" : undefined} className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${call.overdue ? "border-danger border-2" : "border-border"}`}>

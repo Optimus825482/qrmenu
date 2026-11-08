@@ -10,6 +10,8 @@ import type { KdsBoard, KdsOrder } from "@/modules/order/server/kds";
 import { notify } from "@/shell/notify";
 import { useSse } from "@/shell/useSse";
 import { RoutineCard } from "@/components/guide/RoutineCard";
+import { showOpsNotification } from "@/components/ops/opsNotification";
+import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
 import KdsColumn from "./KdsColumn";
 import "./kds.css";
 
@@ -44,8 +46,10 @@ export default function KdsClient({ outletId, board: initialBoard, canEdit, canP
   }, []);
   const { status } = useSse((event) => {
     if (event.outletId !== outletId) return;
-    if (event.type === "order.approved") playCue("new-order");
-    else if (event.type === "order.ready") {
+    if (event.type === "order.approved") {
+      playCue("new-order");
+      showOpsNotification("👨‍🍳 Mutfak: Yeni Sipariş", { body: "Hazırlanacak yeni sipariş KDS ekranına düştü." });
+    } else if (event.type === "order.ready") {
       const id = payloadOrderId(event.payload);
       // Bu cihazda basılan "Hazır" için ses çalınmaz; başka cihazdakiler için çalınır.
       if (!(id && localReady.current.delete(id))) playCue("ready");
@@ -103,6 +107,7 @@ export default function KdsClient({ outletId, board: initialBoard, canEdit, canP
   }, []);
 
   return <section className="space-y-3">
+    <NotificationPermissionGate screen="Şef / Mutfak" />
     <div className="flex flex-wrap items-baseline justify-between gap-2"><h1 style={{ fontSize: 24, fontWeight: 700 }}>Mutfak ekranı</h1><p className="text-muted" style={{ fontSize: 16 }}>Siparişler canlı güncellenir.</p></div>
     <RoutineCard />
     {error ? <p role="alert" className="rounded-[var(--radius-m)] border border-danger bg-danger-bg p-3 font-semibold text-danger" style={{ fontSize: 16 }}>{error}</p> : null}
