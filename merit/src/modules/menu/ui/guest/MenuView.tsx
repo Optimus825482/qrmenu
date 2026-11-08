@@ -8,6 +8,7 @@ import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { categoryItems, curatedPhotoIds } from "./menuPresentation";
 import { priceFormatter } from "./priceFormat";
+import { resetMobileZoomAndOpen } from "./zoomReset";
 import { useSelectionStore } from "./selectionStore";
 import { Icon } from "@/components/icons/Icon";
 
@@ -140,6 +141,9 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const [tagFilters, setTagFilters] = useState<ItemTagId[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const handleOpenItem = (id: string) => {
+    resetMobileZoomAndOpen(() => setOpenId(id));
+  };
   const store = useSelectionStore(token ?? "studio-onizleme");
   const addSelection = store((s) => s.add);
 
@@ -403,7 +407,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             <ul className="g-featured">
               {featured.map((item) => (
                 <li key={item.id}>
-                  <button type="button" className="g-featured-card" onClick={() => setOpenId(item.id)}>
+                  <button type="button" className="g-featured-card" onClick={() => handleOpenItem(item.id)}>
                     {options.showImages && item.imageUrl && (photoIds === null || photoIds.has(item.id)) ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.imageUrl} alt="" />
@@ -419,7 +423,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
           <section id="g-direct-items" className="g-sub">
             <ItemCards
               items={directItems}
-              onOpen={setOpenId}
+              onOpen={handleOpenItem}
               format={format}
               soldOutLabel={t("menu.soldOut")}
               photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
@@ -434,7 +438,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             {sub.items.length > 0 ? (
               <ItemCards
                 items={sub.items}
-                onOpen={setOpenId}
+                onOpen={handleOpenItem}
                 format={format}
                 soldOutLabel={t("menu.soldOut")}
                 photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
@@ -448,7 +452,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 {group.detail ? <p className="g-detail">{group.detail}</p> : null}
                 <ItemCards
                   items={group.items}
-                  onOpen={setOpenId}
+                  onOpen={handleOpenItem}
                   format={format}
                   soldOutLabel={t("menu.soldOut")}
                   photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
