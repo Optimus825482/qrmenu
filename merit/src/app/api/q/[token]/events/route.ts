@@ -49,10 +49,12 @@ export async function GET(
   let outletId: string | undefined;
   let hotelId: string;
   let roomId: string | undefined;
+  let tableId: string | undefined;
 
   if (target.kind === "TABLE") {
     outletId = target.state.outletId;
     hotelId = target.state.hotelId;
+    tableId = target.table.id;
   } else {
     // A room stream always carries the room's own MyBar status; room-service events only with an outlet.
     const rsState = await roomServiceState(target.roomId);
@@ -70,7 +72,7 @@ export async function GET(
   if (!isListening()) await startRealtimeListener();
 
   const stream = createFilteredSseStream(
-    guestEventFilter({ outletId, hotelId, orderIds, roomId }),
+    guestEventFilter({ outletId, hotelId, orderIds, roomId, tableId }),
     { signal: request.signal, map: sanitizeGuestEvent },
   );
   return new Response(stream, {

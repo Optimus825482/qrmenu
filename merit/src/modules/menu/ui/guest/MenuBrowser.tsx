@@ -6,6 +6,7 @@ import type { Locale } from "@/lib/i18n/locales";
 import type { GuestItem, GuestMenu } from "../../server/guestMenu";
 import { MenuView, type GuestMenuMode } from "./MenuView";
 import { useGuestEvents } from "./useGuestEvents";
+import { CallResolvedDialog } from "./CallResolvedDialog";
 
 const NO_ORDERS: readonly string[] = [];
 
@@ -39,6 +40,8 @@ export function MenuBrowser({ token, locale, menu, mode = "table" }: {
   const t = useTranslations("guest");
   const [seen, setSeen] = useState(menu);
   const [availability, setAvailability] = useState<Record<string, boolean>>({});
+  const [resolvedCall, setResolvedCall] = useState<{ waiterName?: string } | null>(null);
+
   if (seen !== menu) {
     setSeen(menu);
     setAvailability({});
@@ -48,11 +51,18 @@ export function MenuBrowser({ token, locale, menu, mode = "table" }: {
     token,
     NO_ORDERS,
     useCallback((event) => {
-      if (event.type !== "menu.availability") return;
-      const payload = event.payload as { nodeId?: unknown; available?: unknown } | undefined;
-      if (typeof payload?.nodeId === "string" && typeof payload.available === "boolean") {
-        const { nodeId, available } = payload as { nodeId: string; available: boolean };
-        setAvailability((prev) => ({ ...prev, [nodeId]: available }));
+      if (event.type === "menu.availability") {
+        const payload = event.payload as { nodeId?: unknown; available?: unknown } | undefined;
+        if (typeof payload?.nodeId === "string" && typeof payload.available === "boolean") {
+          const { nodeId, available } = payload as { nodeId: string; available: boolean };
+          setAvailability((prev) => ({ ...prev, [nodeId]: available }));
+        }
+      } else if (event.type === "call.resolved") {
+        const payload = event.payload as { waiterName?: string } | undefined;
+        setResolvedCall({ waiterName: payload?.waiterName });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("merit:call-resolved", { detail: payload }));
+        }
       }
     }, []),
   );
@@ -67,6 +77,12 @@ export function MenuBrowser({ token, locale, menu, mode = "table" }: {
         </p>
       ) : null}
       <MenuView menu={live} locale={locale} token={token} mode={mode} />
+      {resolvedCall ? (
+        <CallResolvedDialog
+          waiterName={resolvedCall.waiterName}
+          onClose={() => setResolvedCall(null)}
+        />
+      ) : null}
     </>
   );
 }

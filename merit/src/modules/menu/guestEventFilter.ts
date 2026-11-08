@@ -7,6 +7,8 @@ export type GuestStreamScope = {
   orderIds: readonly string[];
   /** Room of a room QR: its own `mybar.*` and requested `order.*` events reach the stream. */
   roomId?: string;
+  /** Table of a table QR: its own `call.*` events reach the stream. */
+  tableId?: string;
 };
 
 /**
@@ -20,6 +22,13 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
     if (!GUEST_EVENT_TYPES.includes(e.type)) return false;
     if (e.type.startsWith("mybar.")) {
       return scope.roomId !== undefined && e.roomId === scope.roomId && e.hotelId === scope.hotelId;
+    }
+    if (e.type === "call.resolved") {
+      const p = e.payload as { tableId?: unknown } | undefined;
+      if (scope.tableId !== undefined && p?.tableId !== undefined) {
+        return p.tableId === scope.tableId;
+      }
+      return true;
     }
     if (e.outletId !== undefined) {
       if (scope.outletId === undefined || e.outletId !== scope.outletId) return false;
@@ -57,6 +66,17 @@ export function sanitizeGuestEvent(e: MeritEvent): MeritEvent {
     // Only the request id: no staff ids, wait times or closing flags; the page re-reads its own status.
     const requestId = (e.payload as { requestId?: unknown } | undefined)?.requestId;
     return { ...e, payload: typeof requestId === "string" ? { requestId } : {} };
+  }
+  if (e.type === "call.resolved") {
+    const src = (typeof e.payload === "object" && e.payload !== null ? e.payload : {}) as Record<string, unknown>;
+    return {
+      ...e,
+      payload: {
+        tableId: src.tableId,
+        status: src.status,
+        waiterName: typeof src.waiterName === "string" ? src.waiterName : undefined,
+      },
+    };
   }
   if (!e.type.startsWith("order.")) return e;
   const src = (typeof e.payload === "object" && e.payload !== null ? e.payload : {}) as Record<string, unknown>;
