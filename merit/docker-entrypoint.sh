@@ -43,5 +43,11 @@ if [ "${RUN_SEED:-false}" = "true" ]; then
   npm run db:seed
 fi
 
+# SYNC_MERIT_MENUS (varsayılan true): 20 Merit outletini ve gerçek menülerini idempotent olarak senkronize eder.
+if [ "${SYNC_MERIT_MENUS:-true}" = "true" ]; then
+  echo "Merit outlet ve menüleri senkronize ediliyor..."
+  npx tsx prisma/seed/meritMenus.ts
+fi
+
 echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
 exec npm run start

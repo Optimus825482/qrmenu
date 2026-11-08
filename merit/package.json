@@ -15,6 +15,7 @@
     "check": "npm run lint && npm run typecheck && npm run test",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
+    "db:merit-menus": "tsx prisma/seed/meritMenus.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:reset": "prisma migrate reset --force",
     "migrate:legacy": "tsx scripts/migrate-from-minibarlatest/index.ts",
