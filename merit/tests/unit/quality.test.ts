@@ -75,8 +75,37 @@ describe("evaluateQuality", () => {
     expect(ids(evaluateQuality({ design: design({ showAllergens: false }), theme: white, items }))).not.toContain("allergens");
   });
 
-  it("140 karakteri aşan açıklama bilgi verir", () => {
-    const items = [item({ detail: "x".repeat(141) })];
-    expect(evaluateQuality({ design: design(), theme: white, items }).find((f) => f.id === "long-detail")?.level).toBe("info");
+  it("140 karakteri aşan açıklama bilgi verir ve ilgili ürünleri affectedItems içinde listeler", () => {
+    const items = [item({ id: "inci-1", name: "İNCİ", categoryPath: "SNACK MENÜ › GÜN BATIMI", detail: "x".repeat(141) })];
+    const finding = evaluateQuality({ design: design(), theme: white, items }).find((f) => f.id === "long-detail");
+    expect(finding?.level).toBe("info");
+    expect(finding?.affectedItems).toHaveLength(1);
+    expect(finding?.affectedItems?.[0]).toMatchObject({
+      id: "inci-1",
+      name: "İNCİ",
+      categoryPath: "SNACK MENÜ › GÜN BATIMI",
+    });
+  });
+
+  it("alerjen ve çeviri bulguları eksik olan ürünleri ve akıllı alerjen önerilerini döndürür", async () => {
+    const { ALLERGEN_PRESETS, inferAllergensForItem, shortenMenuDetail } = await import("@/modules/menu/allergens");
+    expect(ALLERGEN_PRESETS.length).toBeGreaterThanOrEqual(15);
+
+    const inferred = inferAllergensForItem({ name: "CAPPUCCINO", categoryPath: "SICAK İÇECEKLER" });
+    expect(inferred.allergens).toContain("sut");
+
+    const items = [
+      item({ id: "capp-1", name: "CAPPUCCINO", categoryPath: "SICAK İÇECEKLER", allergens: [], translationLangs: ["en"] }),
+    ];
+    const findings = evaluateQuality({ design: design({ showAllergens: true }), theme: white, items });
+    const algFinding = findings.find((f) => f.id === "allergens");
+    expect(algFinding?.affectedItems?.[0].name).toBe("CAPPUCCINO");
+    expect(algFinding?.affectedItems?.[0].suggestedAllergens).toContain("sut");
+
+    const transFinding = findings.find((f) => f.id === "translations");
+    expect(transFinding?.affectedItems?.[0].missingLangs).toEqual(["Almanca", "Rusça", "Arapça"]);
+
+    const short = shortenMenuDetail("Sıcak ekmek, tulum peyniri (MEZELER: Girit Ezmesi, Deniz Börülcesi, Levrek Marin, Babagannuş · SALATA: Karpuzlu Ezine Salatası · ARA SICAK: Karides Güveç)", 135);
+    expect(short.length).toBeLessThanOrEqual(135);
   });
 });

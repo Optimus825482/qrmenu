@@ -4487,9 +4487,9 @@
 }
 
 .xp-design-canvas-aside {
-  flex: 0 0 300px;
-  width: 300px;
-  max-width: 340px;
+  flex: 0 0 340px;
+  width: 340px;
+  max-width: 380px;
   padding: 12px 14px 14px 0;
   display: flex;
   flex-direction: column;

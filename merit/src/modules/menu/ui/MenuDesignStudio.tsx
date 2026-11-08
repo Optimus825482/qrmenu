@@ -103,13 +103,16 @@ function reorder(items: DesignBlockId[], from: DesignBlockId, to: DesignBlockId)
 }
 
 /** Every active dish of the (nested) menu tree, as the quality checks need to see it. */
-function qualityItems(nodes: MenuTreeNode[], parentActive = true): QualityItem[] {
+function qualityItems(nodes: MenuTreeNode[], parentActive = true, path: string[] = []): QualityItem[] {
   return nodes.flatMap((node) => {
     const active = parentActive && node.isActive;
     if (!active) return [];
     if (node.kind === "OGE") {
       return [
         {
+          id: node.id,
+          name: node.name,
+          categoryPath: path.join(" › "),
           detail: node.detail,
           imageUrl: node.imageUrl,
           allergens: node.allergens,
@@ -118,7 +121,7 @@ function qualityItems(nodes: MenuTreeNode[], parentActive = true): QualityItem[]
         },
       ];
     }
-    return qualityItems(node.children, active);
+    return qualityItems(node.children, active, [...path, node.name]);
   });
 }
 
@@ -695,7 +698,18 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
               </div>
             </div>
             <aside className="xp-design-canvas-aside">
-              <QualityPanel findings={findings} />
+              <QualityPanel
+                findings={findings}
+                outletId={activeOutletId}
+                onRefreshNodes={() => {
+                  if (activeOutletId) {
+                    void listMenuTreeAction({ outletId: activeOutletId }).then((result) =>
+                      setNodes(result.ok ? result.data : []),
+                    );
+                  }
+                }}
+                onEnableCuratedPhotos={() => patchOptions({ curatedPhotos: true })}
+              />
             </aside>
           </div>
         </div>
