@@ -209,4 +209,21 @@ describe("menuImages", () => {
     fs.mkdirSync(path.join(dir, "menu", "x", "d.webp"));
     await expect(saveUploadExclusive("menu/x/d.webp", data)).rejects.toMatchObject({ code: "VALIDATION" });
   });
+
+  it("reorder ve replace galeri sırasını ve stüdyo çıktısını günceller", async () => {
+    const { ctx, cat } = await setup();
+    const first = await images.upload(ctx, cat.id, file(await png("#aa1122")));
+    const second = await images.upload(ctx, cat.id, file(await png("#22aa11")));
+    const [urlA, urlB] = second.imageUrls;
+
+    await images.reorder(ctx, cat.id, [urlB, urlA]);
+    let node = await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } });
+    expect(node.imageUrl).toBe(urlB);
+    expect(node.imageUrls).toEqual([urlB, urlA]);
+
+    const replaced = await images.replace(ctx, cat.id, urlB, file(await png("#1122aa")));
+    node = await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } });
+    expect(node.imageUrl).toBe(replaced.imageUrl);
+    expect(node.imageUrls).toEqual([replaced.imageUrl, urlA]);
+  });
 });

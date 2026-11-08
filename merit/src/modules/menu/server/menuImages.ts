@@ -298,6 +298,61 @@ export async function setPrimary(ctx: Ctx, nodeId: string, primaryUrl: string): 
   });
 }
 
+export async function reorder(ctx: Ctx, nodeId: string, orderedUrls: string[]): Promise<void> {
+  const scope = await loadNodeScope(nodeId);
+  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
+  assertOutletScope(ctx, scope.outletId);
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
+    const node = await tx.menuNode.findUnique({
+      where: { id: nodeId },
+      select: { imageUrl: true, imageUrls: true },
+    });
+    if (!node) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
+
+    const existing: string[] = [];
+    if (node.imageUrl) existing.push(node.imageUrl);
+    for (const u of node.imageUrls ?? []) {
+      if (!existing.includes(u)) existing.push(u);
+    }
+
+    const validOrdered = orderedUrls.filter((u) => existing.includes(u));
+    for (const u of existing) {
+      if (!validOrdered.includes(u)) validOrdered.push(u);
+    }
+
+    const nextPrimary = validOrdered[0] ?? null;
+
+    await tx.menuNode.update({
+      where: { id: nodeId },
+      data: {
+        imageUrl: nextPrimary,
+        imageUrls: validOrdered,
+      },
+    });
+
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: scope.hotelId,
+      action: "MENU_IMAGE_SET",
+      entity: "MenuNode",
+      entityId: nodeId,
+      before: { imageUrl: node.imageUrl, imageUrls: node.imageUrls },
+      after: { imageUrl: nextPrimary, imageUrls: validOrdered },
+    });
+
+    await publish(
+      {
+        type: "menu.changed",
+        hotelId: scope.hotelId,
+        outletId: scope.outletId,
+        payload: { nodeId, op: "image" },
+      },
+      tx,
+    );
+  });
+}
+
 export async function replace(
   ctx: Ctx,
   nodeId: string,

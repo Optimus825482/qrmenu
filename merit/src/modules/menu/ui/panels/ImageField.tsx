@@ -5,6 +5,7 @@ import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 import {
   removeMenuImageAction,
+  reorderMenuImagesAction,
   setPrimaryMenuImageAction,
   uploadMenuImagesAction,
 } from "../../server/actions/menuTree";
@@ -15,13 +16,60 @@ import { Icon } from "@/components/icons/Icon";
 type Props = { node: MenuTreeNode; canEdit: boolean; onChanged(): void };
 
 /**
- * Item photos: multi-image gallery, multi-file upload, automatic WebP format conversion,
- * auto-enhancement, full-featured Image Studio (interactive crop, background removal,
- * temperature, color adjustment), and primary cover photo selection.
+ * High-res client-side pre-optimizer:
+ * If a user selects a >1.85 MB camera photo, downscale it on an offscreen canvas
+ * so it never exceeds the 2 MB server upload validation limit.
+ */
+async function optimizeFileIfLarge(file: File): Promise<File> {
+  const SAFE_LIMIT = Math.floor(1.85 * 1024 * 1024);
+  if (file.size <= SAFE_LIMIT) return file;
+
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const maxDim = 1500;
+      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+            return;
+          }
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          resolve(new File([blob], `${baseName}.webp`, { type: "image/webp" }));
+        },
+        "image/webp",
+        0.86,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Item photos: multi-image gallery, drag-and-drop & multi-file upload, automatic WebP format conversion,
+ * auto-enhancement, full-featured Image Studio (interactive crop, background removal & studio backdrop,
+ * temperature, shadows/highlights, gourmet filters, badges, undo/redo), gallery reordering, and cover selection.
  */
 export function ImageField({ node, canEdit, onChanged }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Advanced Image Studio Modal State
@@ -37,7 +85,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
 
   const primaryImage = images[0] ?? node.imageUrl;
 
-  const handleFiles = async (files: FileList | null) => {
+  const handleFiles = async (files: FileList | File[] | null) => {
     if (!files || files.length === 0) return;
     setBusy(true);
     setError(null);
@@ -45,7 +93,8 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
     const form = new FormData();
     form.set("nodeId", node.id);
     for (let i = 0; i < files.length; i++) {
-      form.append("files", files[i]);
+      const optimized = await optimizeFileIfLarge(files[i]);
+      form.append("files", optimized);
     }
 
     try {
@@ -80,6 +129,29 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
   const openStudioFor = (url: string) => {
     setStudioTargetUrl(url);
     setStudioOpen(true);
+  };
+
+  const moveImage = async (index: number, direction: -1 | 1) => {
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= images.length) return;
+    const nextOrder = [...images];
+    const [moved] = nextOrder.splice(index, 1);
+    nextOrder.splice(targetIdx, 0, moved);
+
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await reorderMenuImagesAction({ nodeId: node.id, orderedUrls: nextOrder });
+      if (!result.ok) {
+        setError(result.error.message);
+      } else {
+        onChanged();
+      }
+    } catch {
+      setError("Görsel sırası değiştirilemedi");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const removeOne = async (imageUrl: string) => {
@@ -152,8 +224,36 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canEdit || busy) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragActive) setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!canEdit || busy) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      void handleFiles(e.dataTransfer.files);
+    }
+  };
+
   return (
-    <div className="xp-mm-image-section">
+    <div
+      className="xp-mm-image-section"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div className="xp-mm-image-header">
         <span>Fotoğraf Galerisi {images.length > 0 ? `(${images.length})` : ""}</span>
         {images.length > 0 && primaryImage ? (
@@ -164,10 +264,24 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
       </div>
 
       {/* Gallery thumbnail area */}
-      <div className="xp-mm-gallery-grid" role="region" aria-label="Yüklenmiş Görseller">
+      <div
+        className="xp-mm-gallery-grid"
+        role="region"
+        aria-label="Yüklenmiş Görseller"
+        style={
+          dragActive
+            ? {
+                outline: "2px dashed #0055ea",
+                background: "#eef5ff",
+              }
+            : undefined
+        }
+      >
         {images.length === 0 ? (
           <div className="xp-mm-empty-gallery">
-            Henüz görsel yüklenmedi. Görsel eklemek için aşağıdaki butonu kullanın.
+            {dragActive
+              ? "Yüklemek için görselleri buraya bırakın..."
+              : "Henüz görsel yüklenmedi. Görsel eklemek için aşağıdaki butonu kullanın veya dosyaları buraya sürükleyin."}
           </div>
         ) : (
           images.map((url, idx) => {
@@ -178,7 +292,11 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
                 className={`xp-mm-thumb-card ${isPrimary ? "is-primary" : ""}`}
                 title={isPrimary ? "Ana Kapak Görseli" : `Görsel ${idx + 1}`}
               >
-                <div className="xp-mm-thumb-img-wrap">
+                <div
+                  className="xp-mm-thumb-img-wrap"
+                  style={{ cursor: canEdit ? "pointer" : "default" }}
+                  onClick={() => canEdit && openStudioFor(url)}
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
@@ -202,6 +320,18 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
                     </button>
 
                     <div style={{ display: "flex", gap: 2, width: "100%" }}>
+                      {images.length > 1 && idx > 0 ? (
+                        <button
+                          type="button"
+                          className="xp-button xp-mm-thumb-btn"
+                          style={{ flex: "0 0 20px", padding: "1px 0" }}
+                          disabled={busy}
+                          onClick={() => void moveImage(idx, -1)}
+                          title="Sola taşı"
+                        >
+                          ←
+                        </button>
+                      ) : null}
                       {!isPrimary ? (
                         <button
                           type="button"
@@ -222,6 +352,18 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
                       >
                         Sil
                       </button>
+                      {images.length > 1 && idx < images.length - 1 ? (
+                        <button
+                          type="button"
+                          className="xp-button xp-mm-thumb-btn"
+                          style={{ flex: "0 0 20px", padding: "1px 0" }}
+                          disabled={busy}
+                          onClick={() => void moveImage(idx, 1)}
+                          title="Sağa taşı"
+                        >
+                          →
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 ) : null}
@@ -254,6 +396,18 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
             {busy ? "Yükleniyor..." : "Görsel(ler) Seç / Yükle..."}
           </button>
 
+          {primaryImage ? (
+            <button
+              type="button"
+              className="xp-button xp-studio-btn-primary"
+              disabled={busy}
+              onClick={() => openStudioFor(primaryImage)}
+              title="Kapak görselini Profesyonel Görsel Stüdyosunda düzenle"
+            >
+              <Icon name="wand" size={16} /> Stüdyoyu Aç
+            </button>
+          ) : null}
+
           {images.length > 0 ? (
             <button
               type="button"
@@ -268,7 +422,7 @@ export function ImageField({ node, canEdit, onChanged }: Props) {
       ) : null}
 
       <span className="xp-mm-hint">
-        JPEG, PNG veya WebP · Birden fazla dosya seçebilirsiniz · Otomatik WebP dönüştürme ve renk optimizasyonu uygulanır
+        JPEG, PNG veya WebP · Sürükle-bırak veya çoklu seçim desteklenir · Yüksek çözünürlüklü fotoğraflar otomatik optimize edilir
       </span>
 
       {error ? (

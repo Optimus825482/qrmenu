@@ -132,6 +132,13 @@ export async function setPrimaryMenuImageAction(raw: unknown): Promise<Result<nu
   })(raw);
 }
 
+export async function reorderMenuImagesAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(z.object({ nodeId: id, orderedUrls: z.array(z.string().min(1)) }), async (i) => {
+    await images.reorder(await requireUser(), i.nodeId, i.orderedUrls);
+    return null;
+  })(raw);
+}
+
 export async function replaceMenuImageAction(formData: FormData): Promise<Result<{ imageUrl: string }>> {
   return safeAction(
     z.object({
