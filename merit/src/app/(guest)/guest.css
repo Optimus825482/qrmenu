@@ -968,6 +968,128 @@ body {
   margin-left: 6px;
   transition: all 0.15s ease;
 }
+
+/* ==========================================================================
+   KATEGORİ GEZİNTİ STİLLERİ (CHIPS_ROW / UNDERLINE_TABS / SEGMENT_CARDS / GRID_PILLS)
+   ========================================================================== */
+
+/* 1. YATAY KAYAN LÜKS ÇİP BAR (CHIPS_ROW - ÖNERİLEN LÜKS OTEL STANDARDI) */
+.g-frame[data-category-style="CHIPS_ROW"] .g-tabs,
+.g-frame:not([data-category-style]) .g-tabs {
+  display: flex;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px calc(14px + env(safe-area-inset-right, 0px)) 8px calc(14px + env(safe-area-inset-left, 0px));
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  align-items: center;
+}
+.g-frame[data-category-style="CHIPS_ROW"] .g-tabs button,
+.g-frame:not([data-category-style]) .g-tabs button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid var(--m-line);
+  background: var(--m-soft);
+  color: var(--m-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  word-break: normal;
+  scroll-snap-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.g-frame[data-category-style="CHIPS_ROW"] .g-tabs button .g-tab-label,
+.g-frame:not([data-category-style]) .g-tabs button .g-tab-label {
+  flex: none;
+}
+.g-frame[data-category-style="CHIPS_ROW"] .g-tabs button[aria-selected="true"],
+.g-frame:not([data-category-style]) .g-tabs button[aria-selected="true"] {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  border-color: var(--m-accent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--m-accent) 35%, transparent);
+}
+.g-frame[data-category-style="CHIPS_ROW"] .g-tabs button:last-child:nth-child(odd),
+.g-frame:not([data-category-style]) .g-tabs button:last-child:nth-child(odd) {
+  grid-column: auto;
+}
+
+/* 2. MİNİMALİST ALT ÇİZGİLİ SEKMELER (UNDERLINE_TABS - MİCHELİN & FINE DINING) */
+.g-frame[data-category-style="UNDERLINE_TABS"] .g-tabs {
+  display: flex;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 18px;
+  padding: 4px calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--m-line);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  align-items: center;
+}
+.g-frame[data-category-style="UNDERLINE_TABS"] .g-tabs button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px 10px 4px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--m-muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+  white-space: nowrap;
+  word-break: normal;
+  scroll-snap-align: center;
+  box-shadow: none;
+}
+.g-frame[data-category-style="UNDERLINE_TABS"] .g-tabs button .g-tab-label {
+  flex: none;
+}
+.g-frame[data-category-style="UNDERLINE_TABS"] .g-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--m-accent);
+  color: var(--m-accent);
+  background: transparent;
+  font-weight: 700;
+}
+.g-frame[data-category-style="UNDERLINE_TABS"] .g-tabs button:last-child:nth-child(odd) {
+  grid-column: auto;
+}
+
+/* 3. KOMPAKT SEGMENT KARTLAR (SEGMENT_CARDS - 12PX YUMUŞAK KÖŞELİ 2 SÜTUN) */
+.g-frame[data-category-style="SEGMENT_CARDS"] .g-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.g-frame[data-category-style="SEGMENT_CARDS"] .g-tabs button {
+  border-radius: 12px;
+  min-height: 42px;
+  padding: 8px 12px;
+  font-size: 0.86rem;
+}
+
+/* 4. KLASİK 2 SÜTUNLU OVAL KAPSÜL (GRID_PILLS - 999PX) */
+.g-frame[data-category-style="GRID_PILLS"] .g-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.g-frame[data-category-style="GRID_PILLS"] .g-tabs button {
+  border-radius: 999px;
+  min-height: 44px;
+}
 .g-tabs button[aria-selected="true"] .g-tab-count {
   background: color-mix(in srgb, var(--m-text-on-accent) 25%, transparent);
   color: var(--m-text-on-accent);

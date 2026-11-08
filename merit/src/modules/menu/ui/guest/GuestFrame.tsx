@@ -172,6 +172,7 @@ export function GuestFrame({
       data-concept={design.concept}
       data-template={DESIGN_TEMPLATES.find((template) => template.id === design.template)?.style ?? "royal"}
       data-card={design.options.cardStyle.toLowerCase()}
+      data-category-style={design.options.categoryTabStyle ?? "CHIPS_ROW"}
       data-images={design.options.showImages ? "on" : "off"}
       data-allergens={design.options.showAllergens ? "on" : "off"}
       data-tags={design.options.showTags ? "on" : "off"}

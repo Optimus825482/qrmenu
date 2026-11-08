@@ -16,6 +16,7 @@ import {
   AMBIENCES,
   CONCEPTS,
   CARD_STYLES,
+  CATEGORY_TAB_STYLES,
   DENSITIES,
   DESIGN_BLOCKS,
   DESIGN_TEMPLATES,
@@ -494,6 +495,23 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                   className="xp-button"
                   data-selected={design.options.cardStyle === item.id || undefined}
                   onClick={() => patchOptions({ cardStyle: item.id })}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="xp-design-choices" role="group" aria-label="Kategori sekme stili" style={{ marginTop: 6 }}>
+              <b style={{ display: "block", width: "100%", fontSize: 11, marginBottom: 2 }}>Kategori Sekme Düzeni</b>
+              {CATEGORY_TAB_STYLES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="xp-button"
+                  data-selected={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id || undefined}
+                  aria-pressed={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id}
+                  onClick={() => patchOptions({ categoryTabStyle: item.id })}
+                  title={item.desc}
                 >
                   {item.label}
                 </button>

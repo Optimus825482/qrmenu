@@ -256,7 +256,10 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 aria-selected={category.id === activeId}
                 tabIndex={category.id === activeId ? 0 : -1}
                 aria-controls="g-panel"
-                onClick={() => setPicked(category.id)}
+                onClick={(e) => {
+                  setPicked(category.id);
+                  e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                }}
               >
                 <span className="g-tab-label">{category.name}</span>
                 <span className="g-tab-count" aria-label={t("menu.itemsFound", { count: categoryItemCount(category) })}>

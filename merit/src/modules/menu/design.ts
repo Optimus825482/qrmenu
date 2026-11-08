@@ -75,8 +75,19 @@ export type TypographyId = (typeof TYPOGRAPHIES)[number]["id"];
 export type DensityId = (typeof DENSITIES)[number]["id"];
 export type HeroStyle = (typeof HERO_STYLES)[number]["id"];
 
+export const CATEGORY_TAB_STYLES = [
+  { id: "CHIPS_ROW", label: "Yatay Çip Bar", desc: "Tek satır, yatay kayan lüks çip bar (Lüks Otel Standardı)" },
+  { id: "UNDERLINE_TABS", label: "Minimalist Çizgi", desc: "Çerçevesiz, altı çizgili zarif sekmeler (Michelin & Fine Dining)" },
+  { id: "SEGMENT_CARDS", label: "Kompakt Kartlar", desc: "12px modern köşeli 2 sütunlu kartlar" },
+  { id: "GRID_PILLS", label: "Klasik Kapsül", desc: "2 sütunlu oval kapsül ızgara" },
+] as const;
+
+export type CategoryTabStyle = (typeof CATEGORY_TAB_STYLES)[number]["id"];
+const CATEGORY_TAB_STYLE_IDS = new Set<string>(CATEGORY_TAB_STYLES.map((item) => item.id));
+
 export type DesignOptions = {
   cardStyle: CardStyle;
+  categoryTabStyle?: CategoryTabStyle;
   showImages: boolean;
   showAllergens: boolean;
   showTags: boolean;
@@ -98,6 +109,7 @@ export type DesignOptions = {
 
 /** Values for the options added after the first designs were saved; a saved design without them looks as before. */
 export const NEUTRAL_NEW_OPTIONS = {
+  categoryTabStyle: "CHIPS_ROW",
   typography: "SYSTEM",
   density: "BALANCED",
   hero: "TITLE",
@@ -108,7 +120,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   callWaiterText: "",
 } as const satisfies Pick<
   DesignOptions,
-  "typography" | "density" | "hero" | "heroImageUrl" | "curatedPhotos" | "showSearch" | "showFilters" | "callWaiterText"
+  "categoryTabStyle" | "typography" | "density" | "hero" | "heroImageUrl" | "curatedPhotos" | "showSearch" | "showFilters" | "callWaiterText"
 >;
 
 const options = (partial: Partial<DesignOptions> = {}): DesignOptions => ({
@@ -291,6 +303,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
   const featured = typeof raw.featuredTitle === "string" ? raw.featuredTitle.trim().slice(0, 40) : preset.featuredTitle;
   return {
     cardStyle: raw.cardStyle && CARD_STYLE_IDS.has(raw.cardStyle) ? raw.cardStyle : preset.cardStyle,
+    categoryTabStyle: raw.categoryTabStyle && CATEGORY_TAB_STYLE_IDS.has(raw.categoryTabStyle) ? raw.categoryTabStyle : (preset.categoryTabStyle ?? "CHIPS_ROW"),
     showImages: typeof raw.showImages === "boolean" ? raw.showImages : preset.showImages,
     showAllergens: typeof raw.showAllergens === "boolean" ? raw.showAllergens : preset.showAllergens,
     showTags: typeof raw.showTags === "boolean" ? raw.showTags : preset.showTags,
