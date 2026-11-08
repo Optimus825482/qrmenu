@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { inferAllergensForItem, shortenMenuDetail } from "../src/modules/menu/allergens.ts";
+import { inferAllergensForItem, shortenMenuDetail } from "../src/modules/menu/allergens";
 
 interface MenuItem {
   catPath: string[];

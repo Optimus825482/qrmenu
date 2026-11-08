@@ -10,7 +10,7 @@ export interface OutletDesignPreset {
   showPrices?: boolean;
 }
 
-export const ROOM_SERVICE_DESIGN_PRESETS: Record<"DIAMOND" | "ROYAL" | "PREMIUM", OutletDesignPreset> = {
+export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   DIAMOND: {
     ambience: "RESORT",
     concept: "DAYLIGHT",
