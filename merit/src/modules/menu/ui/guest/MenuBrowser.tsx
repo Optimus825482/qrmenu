@@ -66,11 +66,6 @@ export function MenuBrowser({ token, locale, menu, mode = "table" }: {
           {t("common.offline")}
         </p>
       ) : null}
-      {!menu.state.orderingOpen ? (
-        <p className="g-banner" role="status">
-          {t("menu.orderingClosed")}
-        </p>
-      ) : null}
       <MenuView menu={live} locale={locale} token={token} mode={mode} />
     </>
   );
