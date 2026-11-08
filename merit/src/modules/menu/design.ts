@@ -87,7 +87,54 @@ const CATEGORY_TAB_STYLE_IDS = new Set<string>(CATEGORY_TAB_STYLES.map((item) =>
 
 export type HeroAlign = "left" | "center" | "right";
 export type HeroFontSize = "small" | "medium" | "large" | "xlarge";
-export type HeroFontFamily = "serif" | "sans" | "playfair" | "cinzel" | "montserrat";
+
+export const HERO_FONT_FAMILIES = [
+  { id: "playfair", label: "Playfair Display (Lüks Editoryal)", font: "'Playfair Display', Georgia, serif" },
+  { id: "cormorant", label: "Cormorant Garamond (Michelin Zarafeti)", font: "'Cormorant Garamond', Garamond, serif" },
+  { id: "cinzel", label: "Cinzel (Kraliyet Roma)", font: "Cinzel, 'Times New Roman', serif" },
+  { id: "cinzel-dec", label: "Cinzel Decorative (İhtişamlı Saray)", font: "'Cinzel Decorative', Cinzel, serif" },
+  { id: "bodoni", label: "Bodoni Moda (İtalyan Haute Couture)", font: "'Bodoni Moda', Didot, serif" },
+  { id: "marcellus", label: "Marcellus (Antik Akdeniz)", font: "Marcellus, Georgia, serif" },
+  { id: "greatvibes", label: "Great Vibes (İmza / Kaligrafi)", font: "'Great Vibes', cursive" },
+  { id: "bebas", label: "Bebas Neue (Beach Club / Modern Güçlü)", font: "'Bebas Neue', Impact, sans-serif" },
+  { id: "montserrat", label: "Montserrat (Zarif Geometrik)", font: "Montserrat, -apple-system, sans-serif" },
+  { id: "jakarta", label: "Plus Jakarta Sans (Ultra Modern)", font: "'Plus Jakarta Sans', system-ui, sans-serif" },
+  { id: "serif", label: "Klasik Serif (Georgia / Times)", font: "Georgia, 'Times New Roman', serif" },
+  { id: "sans", label: "Modern Sans (Sistem / Minimalist)", font: "system-ui, -apple-system, sans-serif" },
+] as const;
+
+export type HeroFontFamily = (typeof HERO_FONT_FAMILIES)[number]["id"];
+export const HERO_FONT_FAMILY_IDS = new Set<string>(HERO_FONT_FAMILIES.map((item) => item.id));
+
+export function resolveHeroFont(id?: HeroFontFamily): { fontFamily: string; letterSpacing?: string } {
+  switch (id) {
+    case "playfair":
+      return { fontFamily: "'Playfair Display', Georgia, serif" };
+    case "cormorant":
+      return { fontFamily: "'Cormorant Garamond', Garamond, Georgia, serif", letterSpacing: "0.02em" };
+    case "cinzel":
+      return { fontFamily: "Cinzel, 'Times New Roman', serif", letterSpacing: "0.05em" };
+    case "cinzel-dec":
+      return { fontFamily: "'Cinzel Decorative', Cinzel, serif", letterSpacing: "0.04em" };
+    case "bodoni":
+      return { fontFamily: "'Bodoni Moda', Didot, Georgia, serif", letterSpacing: "0.03em" };
+    case "marcellus":
+      return { fontFamily: "Marcellus, Georgia, serif", letterSpacing: "0.03em" };
+    case "greatvibes":
+      return { fontFamily: "'Great Vibes', cursive", letterSpacing: "0.02em" };
+    case "bebas":
+      return { fontFamily: "'Bebas Neue', Impact, sans-serif", letterSpacing: "0.06em" };
+    case "montserrat":
+      return { fontFamily: "Montserrat, -apple-system, sans-serif", letterSpacing: "0.02em" };
+    case "jakarta":
+      return { fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: "-0.01em" };
+    case "sans":
+      return { fontFamily: "system-ui, -apple-system, sans-serif" };
+    case "serif":
+    default:
+      return { fontFamily: "Georgia, 'Times New Roman', serif" };
+  }
+}
 
 export type DesignOptions = {
   cardStyle: CardStyle;
@@ -346,7 +393,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
     heroAlign: raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign,
     heroFontSize: raw.heroFontSize && ["small", "medium", "large", "xlarge"].includes(raw.heroFontSize) ? raw.heroFontSize : preset.heroFontSize,
-    heroFontFamily: raw.heroFontFamily && ["serif", "sans", "playfair", "cinzel", "montserrat"].includes(raw.heroFontFamily) ? raw.heroFontFamily : preset.heroFontFamily,
+    heroFontFamily: raw.heroFontFamily && HERO_FONT_FAMILY_IDS.has(raw.heroFontFamily) ? (raw.heroFontFamily as HeroFontFamily) : preset.heroFontFamily,
     heroBgColor: typeof raw.heroBgColor === "string" ? raw.heroBgColor.trim() : preset.heroBgColor,
     heroTextColor: typeof raw.heroTextColor === "string" ? raw.heroTextColor.trim() : preset.heroTextColor,
     callWaiterText: typeof raw.callWaiterText === "string" ? raw.callWaiterText.trim().slice(0, 40) : preset.callWaiterText,

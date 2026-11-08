@@ -88,22 +88,32 @@ export type TableCardModel = {
   badges: string[];
   waiter: string;
   callSeconds?: number;
+  callOverdue?: boolean;
   guestPresent: boolean;
+  scanMinutes?: number;
 };
 
-/** Status of a table card in UX 5.6 priority: awaiting approval > ready > preparing > guest present > empty. */
+/** Status of a table card in UX priority: call overdue > awaiting approval > active call > ready > preparing > guest present > empty. */
 export function tableCardModel(t: TableCard, now: number): TableCardModel {
   const open = t.orders;
   const awaiting = open.filter((o) => o.status === "GONDERILDI").length;
-  const guestPresent = t.scannedAt !== undefined && now - (Date.parse(t.scannedAt) || 0) <= GUEST_PRESENT_MS;
+  const scanMs = t.scannedAt !== undefined ? now - (Date.parse(t.scannedAt) || 0) : undefined;
+  const guestPresent = scanMs !== undefined && scanMs >= 0 && scanMs <= GUEST_PRESENT_MS;
+  const scanMinutes = scanMs !== undefined && scanMs >= 0 ? Math.floor(scanMs / 60_000) : undefined;
   const callSeconds = t.call ? Math.max(0, Math.floor((now - (Date.parse(t.call.since) || now)) / 1000)) : undefined;
   const callOverdue = callSeconds !== undefined && callSeconds >= CALL_OVERDUE_SECONDS;
 
   let tone: Tone;
   let statusText: string;
-  if (awaiting > 0) {
+  if (callOverdue) {
+    tone = "danger";
+    statusText = t.call?.type === "HESAP" ? "Hesap Gecikti" : "Çağrı Gecikti";
+  } else if (awaiting > 0) {
     tone = "warn";
     statusText = orderStatusLabel("GONDERILDI", "MASA");
+  } else if (t.call) {
+    tone = "warn";
+    statusText = t.call.type === "HESAP" ? "Hesap İstendi" : "Garson Çağrısı";
   } else if (open.some((o) => o.status === "HAZIR")) {
     tone = "success";
     statusText = orderStatusLabel("HAZIR", "MASA");
@@ -113,18 +123,20 @@ export function tableCardModel(t: TableCard, now: number): TableCardModel {
   } else if (guestPresent) {
     tone = "accent";
     statusText = "Misafir masada";
-  } else if (t.call) {
-    tone = "muted";
-    statusText = "Çağrı var";
   } else {
     tone = "muted";
     statusText = "Boş";
   }
-  if (callOverdue) tone = "danger";
 
   const badges: string[] = [];
   if (open.length > 0) badges.push(`${open.length} sipariş`);
-  if (t.call) badges.push("Çağrı");
+  if (t.call) {
+    badges.push("Çağrı");
+    if (t.call.type === "HESAP") badges.push("Hesap");
+  }
+  if (guestPresent) {
+    badges.push(scanMinutes !== undefined && scanMinutes > 0 ? `QR Menü (${scanMinutes} dk)` : "QR Menü");
+  }
   if (open.some((o) => o.escalated)) badges.push("Yükseltildi");
 
   return {
@@ -132,8 +144,9 @@ export function tableCardModel(t: TableCard, now: number): TableCardModel {
     statusText,
     badges,
     waiter: t.waiterName ?? "Atanmadı",
-    ...(callSeconds !== undefined ? { callSeconds } : {}),
+    ...(callSeconds !== undefined ? { callSeconds, callOverdue } : {}),
     guestPresent,
+    ...(scanMinutes !== undefined ? { scanMinutes } : {}),
   };
 }
 

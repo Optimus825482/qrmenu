@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { type ReactNode, useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
-import { ITEM_TAG_IDS, type ItemTagId } from "../../design";
+import { ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { categoryItems, curatedPhotoIds } from "./menuPresentation";
@@ -256,11 +256,9 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   options.heroFontSize === "medium" ? { fontSize: "1.35rem" } :
                   options.heroFontSize === "large" ? { fontSize: "1.65rem" } :
                   options.heroFontSize === "xlarge" ? { fontSize: "2rem" } : {}),
-              ...(options.heroFontFamily === "serif" ? { fontFamily: "Georgia, 'Times New Roman', serif" } :
-                  options.heroFontFamily === "sans" ? { fontFamily: "system-ui, -apple-system, sans-serif" } :
-                  options.heroFontFamily === "playfair" ? { fontFamily: "'Playfair Display', Didot, Georgia, serif" } :
-                  options.heroFontFamily === "cinzel" ? { fontFamily: "Cinzel, 'Trajan Pro', Georgia, serif" } :
-                  options.heroFontFamily === "montserrat" ? { fontFamily: "Montserrat, -apple-system, sans-serif" } : {}),
+              ...resolveHeroFont(options.heroFontFamily),
+              ...(options.heroFontFamily === "greatvibes" ? { fontSize: "2.1rem", lineHeight: 1.15 } : {}),
+              ...(options.heroFontFamily === "bebas" ? { fontSize: "1.75rem", letterSpacing: "0.06em" } : {}),
               ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
             }}
           >

@@ -1,12 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { AllergenKey } from "../../allergens";
 import type { GuestItem } from "../../server/guestMenu";
 import { Icon, isIconName, type IconName } from "@/components/icons/Icon";
 import { useModalFocusTrap } from "./useModalFocusTrap";
-import { resetMobileZoomAndOpen } from "./zoomReset";
 
 /** Her alerjen anahtarının SVG ikonu (`allergen-<anahtar>`); metin etiketi her zaman yanında gösterilir. */
 export function allergenIconName(key: string): IconName {
@@ -87,11 +86,6 @@ export function ItemSheet({
   });
 
   const soldOut = !item.isAvailable;
-
-  useEffect(() => {
-    resetMobileZoomAndOpen(() => {});
-  }, []);
-
   return (
     <div className="g-sheet-backdrop" onClick={onClose}>
       <div

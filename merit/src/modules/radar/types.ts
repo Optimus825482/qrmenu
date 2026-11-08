@@ -202,6 +202,8 @@ export type RadarSnapshot = {
         name: string;
         type: OutletType;
         orderingEnabled: boolean;
+        hasOrdering?: boolean;
+        hasMenu?: boolean;
         areas: {
           areaId: string;
           name: string;

@@ -34,13 +34,21 @@ function Card({ table, now, selected, onSelect }: { table: TableCard; now: numbe
       <span className="rd-card-label">{table.label}</span>
       <span>{m.statusText}</span>
       <span className="rd-card-badges">
-        {m.badges.map((b) => (
-          <span key={b} className="rd-badge" data-tone={m.tone}>
-            {b === "Çağrı" ? <Icon name="call" size={11} /> : null}
-            {b}
-            {b === "Çağrı" && m.callSeconds !== undefined ? ` ${m.callSeconds} sn` : ""}
-          </span>
-        ))}
+        {m.badges.map((b) => {
+          const isCall = b === "Çağrı" || b.includes("Çağrı") || b.includes("Garson") || b.includes("Hesap");
+          const isQr = b.startsWith("QR");
+          return (
+            <span
+              key={b}
+              className="rd-badge"
+              data-tone={isCall && m.callOverdue ? "danger" : isCall ? "warn" : isQr ? "accent" : m.tone}
+            >
+              {isCall ? <Icon name="call" size={11} /> : isQr ? <Icon name="qr" size={11} /> : null}
+              {b}
+              {isCall && m.callSeconds !== undefined && b === "Çağrı" ? ` ${m.callSeconds} sn` : ""}
+            </span>
+          );
+        })}
       </span>
       <span className="rd-card-waiter">{m.waiter}</span>
     </button>
@@ -93,12 +101,21 @@ function Detail({
       <h4>Çağrı</h4>
       {table.call ? (
         <p>
-          {CALL_LABELS[table.call.type]} · {m.callSeconds} sn
+          <Icon name="call" size={13} /> {CALL_LABELS[table.call.type]} · {m.callSeconds} sn{m.callOverdue ? " (Gecikti)" : ""}
         </p>
       ) : (
         <p className="rd-muted">Açık çağrı yok.</p>
       )}
-      {m.guestPresent ? <p>Misafir masada (son 15 dk içinde QR okutuldu).</p> : null}
+      <h4>QR Menü</h4>
+      {m.guestPresent ? (
+        <p>
+          <Icon name="qr" size={13} /> Misafir masada · {m.scanMinutes === 0 ? "Yeni okutuldu" : `${m.scanMinutes} dk önce okutuldu`} (son 15 dk aktif).
+        </p>
+      ) : table.scannedAt ? (
+        <p className="rd-muted">Son QR okutma: {Math.floor((now - (Date.parse(table.scannedAt) || now)) / 60_000)} dk önce</p>
+      ) : (
+        <p className="rd-muted">Bugün QR menü okutulmadı.</p>
+      )}
     </DetailBubble>
   );
 }
@@ -115,7 +132,7 @@ export type TablesProps = {
 export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: TablesProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const outlets: Outlet[] = view.layers.order?.outlets ?? [];
-  if (outlets.length === 0) return <EmptyState title="Bu otelde QR Sipariş kapalı." />;
+  if (outlets.length === 0) return <EmptyState title="Bu otelde aktif QR Menü veya Masa bulunamadı." />;
 
   const outlet = outlets.find((o) => o.outletId === outletId) ?? outlets[0];
   const tables = outlet.areas.flatMap((a) => a.tables);
@@ -140,7 +157,13 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             </option>
           ))}
         </select>
-        {!outlet.orderingEnabled ? (
+        {outlet.hasMenu ? (
+          <span className="rd-badge" data-tone="accent">
+            <Icon name="qr" size={12} />
+            QR Menü
+          </span>
+        ) : null}
+        {!outlet.orderingEnabled || !outlet.hasOrdering ? (
           <span className="rd-badge" data-tone="warn">
             <Icon name="ban" size={12} />
             Sipariş alımı kapalı

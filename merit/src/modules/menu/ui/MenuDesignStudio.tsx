@@ -22,6 +22,7 @@ import {
   DESIGN_TEMPLATES,
   DEFAULT_OUTLET_DESIGN,
   HERO_STYLES,
+  HERO_FONT_FAMILIES,
   TYPOGRAPHIES,
   templatePreset,
   type CategoryTabStyle,
@@ -578,11 +579,11 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                     onChange={(e) => patchOptions({ heroFontFamily: e.target.value as HeroFontFamily })}
                     style={{ width: "100%", fontSize: 11, padding: "4px 5px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff" }}
                   >
-                    <option value="serif">Klasik Serif (Georgia)</option>
-                    <option value="sans">Modern Sans (Sistem)</option>
-                    <option value="playfair">Playfair Display (Lüks)</option>
-                    <option value="cinzel">Cinzel (Kraliyet)</option>
-                    <option value="montserrat">Montserrat (Zarif)</option>
+                    {HERO_FONT_FAMILIES.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
