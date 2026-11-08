@@ -776,6 +776,32 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
           <div className="xp-design-canvas-toolbar">
             <div className="xp-design-canvas-status">
               <span><i />{preview.sample ? "ÖRNEK MENÜ" : "CANLI MENÜ"}</span>
+              {activeOutletId ? (
+                <a
+                  href={`/q/onizleme/${activeOutletId}?theme=${selectedTheme.id}&lang=${previewLocale}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="xp-button"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    marginLeft: 8,
+                    padding: "3px 9px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    color: "#0369a1",
+                    background: "#e0f2fe",
+                    border: "1px solid #bae6fd",
+                    borderRadius: 6,
+                  }}
+                  title="Menüyü ayrı bir tarayıcı sekmesinde tam ekran olarak aç"
+                >
+                  <Icon name="link" size={13} />
+                  <span>Tarayıcıda Önizle</span>
+                </a>
+              ) : null}
               {themeOverride ? (
                 <span className="xp-theme-override-pill">
                   Önizlenen Tema: <strong>{selectedTheme.name}</strong>

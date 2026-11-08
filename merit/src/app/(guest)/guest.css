@@ -731,6 +731,93 @@ body {
   background: var(--m-bg);
   border-bottom: 1px solid var(--m-line);
 }
+
+.g-chrome-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 31;
+  position: relative;
+  animation: gFadeIn 0.2s ease-out;
+}
+.g-chrome-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.g-chrome-bar-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.g-chrome-bar-info strong {
+  color: #60a5fa;
+}
+.g-chrome-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.g-chrome-launch-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.g-chrome-launch-btn:hover {
+  background: #1d4ed8;
+}
+.g-chrome-launch-btn:active {
+  transform: scale(0.96);
+}
+.g-chrome-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.g-chrome-dismiss-btn:hover {
+  color: #ffffff;
+}
+.g-chrome-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 9999px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.g-chrome-chip:hover {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: #2563eb;
+}
 .g-header-left {
   flex: none;
   display: flex;

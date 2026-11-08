@@ -53,6 +53,27 @@ function hasExplicitLangCookie(): boolean {
   return document.cookie.split(";").some((part) => part.trim().startsWith(`${LANG_COOKIE}=`));
 }
 
+function detectIsChrome(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return true;
+  const ua = navigator.userAgent || "";
+  if (/CriOS/i.test(ua)) return true;
+  const isOther = /SamsungBrowser|MiuiBrowser|HuaweiBrowser|OppoBrowser|VivoBrowser|HeyTapBrowser|Edg|OPR|UCBrowser/i.test(ua);
+  if (/Chrome/i.test(ua) && !isOther) return true;
+  return false;
+}
+
+function handleOpenInChrome(): void {
+  if (typeof window === "undefined") return;
+  const { host, pathname, search, hash } = window.location;
+  const full = `${host}${pathname}${search}${hash}`;
+  const ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/i.test(ua)) {
+    window.location.href = `googlechromes://${full}`;
+  } else {
+    window.location.href = `intent://${full}#Intent;scheme=https;package=com.android.chrome;end`;
+  }
+}
+
 /**
  * 1) Detects the guest mobile device's OS first (`ios`, `android`, `harmonyos`, etc.) and marks `<html>`.
  * 2) Detects the mobile device's preferred language (`navigator.languages`) when no explicit cookie is set.
@@ -154,6 +175,16 @@ export function GuestFrame({
   footer?: ReactNode;
 }) {
   const [deviceInfo] = useState<{ os: GuestDeviceOs; isMobile: boolean }>(() => detectMobileOs());
+  const [isChrome, setIsChrome] = useState(true);
+  const [chromeDismissed, setChromeDismissed] = useState(false);
+
+  useEffect(() => {
+    setIsChrome(detectIsChrome());
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("merit_chrome_banner_closed")) {
+      setChromeDismissed(true);
+    }
+  }, []);
+
   const style = {
     "--m-bg": theme.bg,
     "--m-accent": theme.accent,
@@ -199,8 +230,60 @@ export function GuestFrame({
               <span aria-hidden="true"> · </span>
               <span>{placeLabel ?? tableLabel}</span>
             </h1>
-            <div className="g-header-right" aria-hidden="true" />
+            <div className="g-header-right">
+              {!preview && !isChrome ? (
+                <button
+                  type="button"
+                  className="g-chrome-chip"
+                  onClick={handleOpenInChrome}
+                  title="Google Chrome ile Aç"
+                >
+                  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" fill="#ffffff" />
+                    <path d="M12 2a10 10 0 0 1 8.66 5l-4.33 7.5A5 5 0 0 0 12 7h-.01L12 2z" fill="#EA4335" />
+                    <path d="M20.66 7A10 10 0 0 1 12 22l4.33-7.5a5 5 0 0 0 0-5l4.33-2.5z" fill="#FBBC04" />
+                    <path d="M12 22A10 10 0 0 1 3.34 7l4.33 2.5a5 5 0 0 0 4.33 7.5L12 22z" fill="#34A853" />
+                    <circle cx="12" cy="12" r="4.2" fill="#ffffff" />
+                    <circle cx="12" cy="12" r="3.2" fill="#1A73E8" />
+                  </svg>
+                  <span>Chrome</span>
+                </button>
+              ) : null}
+            </div>
           </header>
+          {!preview && !isChrome && !chromeDismissed ? (
+            <aside className="g-chrome-bar" aria-label="Tarayıcı önerisi">
+              <div className="g-chrome-bar-info">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" fill="#ffffff" />
+                  <path d="M12 2a10 10 0 0 1 8.66 5l-4.33 7.5A5 5 0 0 0 12 7h-.01L12 2z" fill="#EA4335" />
+                  <path d="M20.66 7A10 10 0 0 1 12 22l4.33-7.5a5 5 0 0 0 0-5l4.33-2.5z" fill="#FBBC04" />
+                  <path d="M12 22A10 10 0 0 1 3.34 7l4.33 2.5a5 5 0 0 0 4.33 7.5L12 22z" fill="#34A853" />
+                  <circle cx="12" cy="12" r="4.2" fill="#ffffff" />
+                  <circle cx="12" cy="12" r="3.2" fill="#1A73E8" />
+                </svg>
+                <span>Daha hızlı menü için <strong>Chrome</strong> ile açın</span>
+              </div>
+              <div className="g-chrome-bar-actions">
+                <button type="button" className="g-chrome-launch-btn" onClick={handleOpenInChrome}>
+                  Chrome&apos;da Aç ↗
+                </button>
+                <button
+                  type="button"
+                  className="g-chrome-dismiss-btn"
+                  onClick={() => {
+                    setChromeDismissed(true);
+                    if (typeof sessionStorage !== "undefined") {
+                      sessionStorage.setItem("merit_chrome_banner_closed", "1");
+                    }
+                  }}
+                  aria-label="Kapat"
+                >
+                  ×
+                </button>
+              </div>
+            </aside>
+          ) : null}
         </>
       ) : null}
       <div data-guide="onizleme-alani" className="g-body">{children}</div>

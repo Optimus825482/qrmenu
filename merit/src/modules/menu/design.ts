@@ -119,6 +119,11 @@ export type DesignOptions = {
 /** Values for the options added after the first designs were saved; a saved design without them looks as before. */
 export const NEUTRAL_NEW_OPTIONS = {
   categoryTabStyle: "CHIPS_ROW",
+  heroAlign: "left",
+  heroFontSize: "medium",
+  heroFontFamily: "serif",
+  heroBgColor: "",
+  heroTextColor: "",
   typography: "SYSTEM",
   density: "BALANCED",
   hero: "TITLE",
@@ -129,7 +134,20 @@ export const NEUTRAL_NEW_OPTIONS = {
   callWaiterText: "",
 } as const satisfies Pick<
   DesignOptions,
-  "categoryTabStyle" | "typography" | "density" | "hero" | "heroImageUrl" | "curatedPhotos" | "showSearch" | "showFilters" | "callWaiterText"
+  | "categoryTabStyle"
+  | "heroAlign"
+  | "heroFontSize"
+  | "heroFontFamily"
+  | "heroBgColor"
+  | "heroTextColor"
+  | "typography"
+  | "density"
+  | "hero"
+  | "heroImageUrl"
+  | "curatedPhotos"
+  | "showSearch"
+  | "showFilters"
+  | "callWaiterText"
 >;
 
 const options = (partial: Partial<DesignOptions> = {}): DesignOptions => ({
@@ -220,7 +238,7 @@ export const DESIGN_TEMPLATES = [
   { id: "SUNLIT_VERANDA", name: "Sunlit Veranda & Pergola", ambience: "PATIO", concept: "DAYLIGHT", style: "daylight", options: options({ cardStyle: "CARD", typography: "HUMANIST", density: "AIRY" }) },
 
   // 14. SUNDECK (Güneşlenme Terası & Sundeck) - Açık & Ferah Şablonlar
-  { id: "WHITE_RIVIERA", name: "White Riviera Sundeck", ambience: "SUNDECK", concept: "RIVIERA", style: "daylight", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "AIRY" }) },
+  { id: "WHITE_RIVIERA", name: "White Riviera Sundeck", ambience: "SUNDECK", concept: "RIVIERA", style: "daylight", options: options({ cardStyle: "CARD", categoryTabStyle: "SEGMENT_CARDS", heroAlign: "center", typography: "COASTAL", density: "AIRY" }) },
   { id: "SANTORINI_TERRACE", name: "Santorini Breeze Terrace", ambience: "SUNDECK", concept: "DAYLIGHT", style: "santorini", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "BALANCED" }) },
   { id: "LINEN_LOUNGER", name: "Linen & Sun Lounger", ambience: "SUNDECK", concept: "NORDIC", style: "linen", options: options({ cardStyle: "LIST", typography: "SERENITY", density: "AIRY" }) },
 

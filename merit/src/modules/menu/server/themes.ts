@@ -215,6 +215,12 @@ const designSchema = z.object({
   layout: z.array(z.enum(DESIGN_BLOCKS.map((item) => item.id))).length(DESIGN_BLOCKS.length),
   options: z.object({
     cardStyle: z.enum(["LIST", "CARD", "PHOTO"]),
+    categoryTabStyle: z.enum(["CHIPS_ROW", "UNDERLINE_TABS", "SEGMENT_CARDS", "GRID_PILLS"]).optional().default("CHIPS_ROW"),
+    heroAlign: z.enum(["left", "center", "right"]).optional().default("left"),
+    heroFontSize: z.enum(["small", "medium", "large", "xlarge"]).optional().default("medium"),
+    heroFontFamily: z.enum(["serif", "sans", "playfair", "cinzel", "montserrat"]).optional().default("serif"),
+    heroBgColor: z.string().optional().default(""),
+    heroTextColor: z.string().optional().default(""),
     showImages: z.boolean(),
     showAllergens: z.boolean(),
     showTags: z.boolean(),
