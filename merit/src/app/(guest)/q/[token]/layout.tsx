@@ -26,6 +26,7 @@ export async function generateViewport({
   return {
     width: "device-width",
     initialScale: 1,
+    maximumScale: 5,
     viewportFit: "cover",
     themeColor,
   };
@@ -42,27 +43,13 @@ export async function generateMetadata({
     target.kind === "TABLE"
       ? `${target.state.outletName} · Menü`
       : "Menü";
-  const appTitle =
-    target.kind === "TABLE"
-      ? `${target.state.outletName} Menü`
-      : "Merit Menü";
 
   return {
     title,
     robots: { index: false, follow: false },
     referrer: "no-referrer",
-    manifest: `/api/manifest/guest/${encodeURIComponent(token)}`,
-    appleWebApp: {
-      capable: true,
-      title: appTitle,
-      statusBarStyle: "black-translucent",
-    },
     formatDetection: {
       telephone: false,
-    },
-    other: {
-      "mobile-web-app-capable": "yes",
-      "apple-mobile-web-app-capable": "yes",
     },
   };
 }

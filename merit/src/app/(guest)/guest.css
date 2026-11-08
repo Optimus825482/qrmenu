@@ -1974,6 +1974,63 @@
   }
 }
 
+/* ==========================================================================
+   MOBİL İŞLETİM SİSTEMİ (iOS / Android / HarmonyOS) & TAM RESPONSIVE UYUM
+   ========================================================================== */
+.g-root[data-os="ios"] {
+  -webkit-overflow-scrolling: touch;
+  font-feature-settings: "kern" 1;
+}
+
+/* iOS Safari'de arama ve sipariş notu alanlarına dokunulduğunda otomatik yakınlaştırmayı (auto-zoom) engeller */
+.g-root[data-os="ios"] input,
+.g-root[data-os="ios"] textarea,
+.g-root[data-os="ios"] select,
+.g-root .g-search {
+  font-size: max(16px, 0.95rem);
+}
+
+.g-root[data-os="android"],
+.g-root[data-os="harmonyos"] {
+  overscroll-behavior-y: contain;
+  text-rendering: optimizeLegibility;
+}
+
+/* Küçük ve dar mobil ekranlar (320px - 380px) için taşma önleyici esnek yerleşim */
+@media (max-width: 380px) {
+  .g-header {
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+  }
+  .g-header-left,
+  .g-header-right {
+    min-width: 48px;
+  }
+  .g-title {
+    font-size: 0.86rem;
+  }
+  .g-tabs {
+    padding-inline: calc(12px + env(safe-area-inset-left, 0px));
+    gap: 6px;
+  }
+  .g-tabs button {
+    padding: 6px 10px;
+    font-size: 0.82rem;
+  }
+  .g-sub {
+    padding-inline: calc(12px + env(safe-area-inset-left, 0px));
+  }
+  .g-card {
+    grid-template-columns: 60px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 9px;
+  }
+  .g-thumb {
+    width: 60px;
+    height: 60px;
+  }
+}
+
 @media all and (display-mode: standalone) {
   .g-root {
     user-select: none;

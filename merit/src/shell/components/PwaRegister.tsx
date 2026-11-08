@@ -13,6 +13,12 @@ const CACHE_PREFIX = "merit-";
  */
 export function PwaRegister() {
   useEffect(() => {
+    // Guest QR menu pages (/q/...) are pure responsive mobile web pages and must NOT show PWA install prompts.
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/q/")) {
+      const suppress = (e: Event) => e.preventDefault();
+      window.addEventListener("beforeinstallprompt", suppress);
+      return () => window.removeEventListener("beforeinstallprompt", suppress);
+    }
     listenForInstall();
     if (!("serviceWorker" in navigator)) return;
     if (process.env.NODE_ENV === "production") {

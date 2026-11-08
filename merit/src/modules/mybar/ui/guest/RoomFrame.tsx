@@ -42,7 +42,7 @@ export function RoomFrame({
   const t = useTranslations("mybar");
   return (
     <div className="g-root mb-root" dir={isRtl(locale) ? "rtl" : "ltr"} lang={locale} data-room-frame>
-      <HtmlLangSync locale={locale} />
+      <HtmlLangSync locale={locale} token={token} />
       <div className="mb-shell">
         <div className="mb-card">
           <div className="mb-lang">
