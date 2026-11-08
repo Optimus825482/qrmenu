@@ -6,6 +6,7 @@ import { generateQrToken } from "../../src/lib/qr";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 import { HOTELS, HOTEL_MODULES } from "./hotels";
 import { seedOutletMenuDesigns } from "./menuDesigns";
+import { MENU_THEMES } from "./menuThemes";
 import { SEED_OUTLETS } from "./outlets";
 
 export interface MeritMenuItemSeed {
@@ -177,6 +178,23 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
     }
   }
 
+  // Ensure all built-in menu themes (including light & airy themes) exist
+  for (const theme of MENU_THEMES) {
+    const existingTheme = await db.menuTheme.findFirst({ where: { name: theme.name }, select: { id: true } });
+    if (!existingTheme) {
+      await db.menuTheme.create({
+        data: {
+          name: theme.name,
+          bg: theme.bg,
+          accent: theme.accent,
+          soft: theme.soft,
+          textOnAccent: theme.textOnAccent,
+          isDefault: Boolean(theme.isDefault),
+        },
+      });
+    }
+  }
+
   await seedOutletMenuDesigns(db);
 
   // 3. Populate or upgrade each outlet's menu from merit-menus.json
@@ -196,8 +214,48 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/uploads/merit-menus/" } } }),
     ]);
 
-    // If the outlet already has its Merit menu loaded with /merit-menus/ URLs, skip untouched!
+    // If the outlet already has its Merit menu loaded with /merit-menus/ URLs, upgrade any missing (null) or generic hookah images in-place and skip full rebuild!
     if (totalItems >= 50 && meritImgItems > 0 && legacyUploadItems === 0) {
+      const nodesToUpgrade = await db.menuNode.findMany({
+        where: {
+          outletId: outlet.id,
+          kind: "OGE",
+          OR: [
+            { imageUrl: null },
+            {
+              imageUrl: {
+                in: [
+                  "/merit-menus/068b7ffd16e5a0b1eba98c58.webp",
+                  "/merit-menus/e9b7b2eaf9edf35ca392cc42.webp",
+                ],
+              },
+            },
+          ],
+        },
+        select: { id: true, name: true },
+      });
+      if (nodesToUpgrade.length > 0) {
+        const imageByName = new Map<string, string>();
+        for (const item of spec.items) {
+          if (item.imageUrl) {
+            imageByName.set(item.name, item.imageUrl);
+          }
+        }
+        let upgraded = 0;
+        for (const node of nodesToUpgrade) {
+          const newUrl = imageByName.get(node.name);
+          if (newUrl) {
+            await db.menuNode.update({
+              where: { id: node.id },
+              data: { imageUrl: newUrl, imageUrls: [newUrl] },
+            });
+            upgraded++;
+          }
+        }
+        if (upgraded > 0) {
+          console.log(`Menü Görselleri Güncellendi: [${spec.hotelCode}] ${outlet.name} (${upgraded} ürün)`);
+        }
+      }
       continue;
     }
 

@@ -27,4 +27,17 @@ export const MENU_THEMES: MenuThemeDef[] = [
   { name: "St. Moritz Chalet", bg: "#0f1713", accent: "#cba36b", soft: "#1c2b22", textOnAccent: "#0f1713" },
   { name: "Caviar & Deniz İncisi", bg: "#0a121e", accent: "#7ec8e3", soft: "#142236", textOnAccent: "#0a121e" },
   { name: "Monaco Grand Prix", bg: "#120c10", accent: "#f05454", soft: "#26141e", textOnAccent: "#120c10" },
+  // Açık, Ferah & Gün Işığı Temaları (Light & Airy)
+  { name: "Akdeniz Beyazı & Turkuaz", bg: "#f8fcff", accent: "#006994", soft: "#e6f4fa", textOnAccent: "#ffffff" },
+  { name: "Sahil Kumu & Mercan", bg: "#fffaf4", accent: "#b84326", soft: "#f7ede1", textOnAccent: "#ffffff" },
+  { name: "Pudra & Gül Bahçesi", bg: "#fff8f9", accent: "#9e3a58", soft: "#f8eaee", textOnAccent: "#ffffff" },
+  { name: "Fildişi & Altın Zarafet", bg: "#fdfbf7", accent: "#8c6218", soft: "#f4eee1", textOnAccent: "#ffffff" },
+  { name: "Adaçayı & Botanik", bg: "#f7fbf8", accent: "#2d6a4f", soft: "#e6f2ea", textOnAccent: "#ffffff" },
+  { name: "Santorini Mavi & Beyaz", bg: "#ffffff", accent: "#124e96", soft: "#edf4fc", textOnAccent: "#ffffff" },
+  { name: "Şampanya & Kaşmir", bg: "#fcf9f2", accent: "#7c5832", soft: "#f2eadb", textOnAccent: "#ffffff" },
+  { name: "Lavanta & Sabah Çiyi", bg: "#faf8ff", accent: "#5b3e96", soft: "#eee9fa", textOnAccent: "#ffffff" },
+  { name: "Narenciye & Güneş", bg: "#fffdf6", accent: "#a84b00", soft: "#faefd8", textOnAccent: "#ffffff" },
+  { name: "İskandinav Keten & Taş", bg: "#f9f9f7", accent: "#3d4f58", soft: "#ecece7", textOnAccent: "#ffffff" },
+  { name: "Ege İncisi & Mercan", bg: "#f5fbfc", accent: "#0d6973", soft: "#e1f1f4", textOnAccent: "#ffffff" },
+  { name: "Porselen & Safir", bg: "#f9fbff", accent: "#1e3f7a", soft: "#eaeff8", textOnAccent: "#ffffff" },
 ];

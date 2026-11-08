@@ -12,6 +12,9 @@ export const AMBIENCES = [
   { id: "NIGHTCLUB", label: "Gece Kulübü & Canlı Müzik" },
   { id: "CABANA", label: "Özel Kabana & VIP Loca" },
   { id: "PATIO", label: "Avlu & Kış Bahçesi" },
+  { id: "SUNDECK", label: "Güneşlenme Terası & Sundeck" },
+  { id: "BRUNCH", label: "Sabah Kahvaltısı & Brunch" },
+  { id: "SEAFOOD", label: "Deniz Ürünleri & Marina" },
 ] as const;
 
 export const CONCEPTS = [
@@ -24,6 +27,11 @@ export const CONCEPTS = [
   { id: "MINIMALIST", label: "Zen & Minimalist" },
   { id: "ART_DECO", label: "Art Deco & Gatsby" },
   { id: "RUSTIC", label: "Rustik & Taş Fırın" },
+  { id: "DAYLIGHT", label: "Gün Işığı & Ferah" },
+  { id: "PASTEL", label: "Pastel & Pudra Zarafeti" },
+  { id: "RIVIERA", label: "Beyaz Riviera & Sahil" },
+  { id: "BOTANICAL", label: "Botanik & Organik" },
+  { id: "NORDIC", label: "İskandinav Açık & Sade" },
 ] as const;
 
 /** Dietary and merchandising marks a dish can carry. Labels for guests live in i18n under guest.tag. */
@@ -188,6 +196,29 @@ export const DESIGN_TEMPLATES = [
   { id: "BOTANICAL_BISTRO", name: "Botanical Glasshouse", ambience: "PATIO", concept: "NATURAL", style: "botanical", options: options({ cardStyle: "CARD", typography: "HUMANIST" }) },
   { id: "COURTYARD_TAPAS", name: "Courtyard Olive Grove", ambience: "PATIO", concept: "RUSTIC", style: "courtyard", options: options({ cardStyle: "LIST", typography: "HUMANIST", density: "BALANCED" }) },
   { id: "WINTER_ORANGERIE", name: "Winter Orangerie Salon", ambience: "PATIO", concept: "CLASSIC", style: "orangerie", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "AIRY" }) },
+  { id: "SUNLIT_VERANDA", name: "Sunlit Veranda & Pergola", ambience: "PATIO", concept: "DAYLIGHT", style: "daylight", options: options({ cardStyle: "CARD", typography: "HUMANIST", density: "AIRY" }) },
+
+  // 14. SUNDECK (Güneşlenme Terası & Sundeck) - Açık & Ferah Şablonlar
+  { id: "WHITE_RIVIERA", name: "White Riviera Sundeck", ambience: "SUNDECK", concept: "RIVIERA", style: "daylight", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "AIRY" }) },
+  { id: "SANTORINI_TERRACE", name: "Santorini Breeze Terrace", ambience: "SUNDECK", concept: "DAYLIGHT", style: "santorini", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "BALANCED" }) },
+  { id: "LINEN_LOUNGER", name: "Linen & Sun Lounger", ambience: "SUNDECK", concept: "NORDIC", style: "linen", options: options({ cardStyle: "LIST", typography: "SERENITY", density: "AIRY" }) },
+
+  // 15. BRUNCH (Sabah Kahvaltısı & Brunch) - Açık & Ferah Şablonlar
+  { id: "MORNING_TERRACE", name: "Morning Sun & Croissant", ambience: "BRUNCH", concept: "DAYLIGHT", style: "brunch", options: options({ cardStyle: "PHOTO", typography: "HUMANIST", density: "AIRY" }) },
+  { id: "PASTEL_BOULANGERIE", name: "Pastel Boulangerie & Tea", ambience: "BRUNCH", concept: "PASTEL", style: "pastel", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "AIRY" }) },
+  { id: "NORDIC_BREAKFAST", name: "Nordic Daylight Table", ambience: "BRUNCH", concept: "NORDIC", style: "nordic", options: options({ cardStyle: "LIST", typography: "MODERN", density: "BALANCED" }) },
+
+  // 16. SEAFOOD (Deniz Ürünleri & Marina) - Açık & Ferah Şablonlar
+  { id: "AEGEAN_MARINA", name: "Aegean White Marina", ambience: "SEAFOOD", concept: "RIVIERA", style: "marina", options: options({ cardStyle: "PHOTO", typography: "COASTAL", density: "AIRY" }) },
+  { id: "PEARL_OYSTER", name: "Pearl & Oyster Raw Bar", ambience: "SEAFOOD", concept: "DAYLIGHT", style: "pearl", options: options({ cardStyle: "LIST", typography: "EDITORIAL", density: "AIRY", uppercaseCategories: true }) },
+  { id: "BLUE_LAGOON_FISH", name: "Blue Sea Fish House", ambience: "SEAFOOD", concept: "MEDITERRANEAN", style: "coastal", options: options({ cardStyle: "CARD", typography: "COASTAL", density: "BALANCED" }) },
+
+  // Ek Açık & Gün Işığı Şablonları (Mevcut Ambiyanslar İçin)
+  { id: "IVORY_PALACE", name: "Ivory Daylight Palace", ambience: "RESORT", concept: "DAYLIGHT", style: "daylight", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "AIRY", uppercaseCategories: true }) },
+  { id: "SUNLIGHT_POOL", name: "Sunlight Aqua Deck", ambience: "POOL", concept: "DAYLIGHT", style: "santorini", options: options({ cardStyle: "CARD", typography: "MODERN", density: "AIRY" }) },
+  { id: "DAYLIGHT_LOUNGE", name: "Daylight Lobby Conservatory", ambience: "LOUNGE", concept: "DAYLIGHT", style: "linen", options: options({ cardStyle: "CARD", typography: "SERENITY", density: "AIRY" }) },
+  { id: "LUMIERE_DINING", name: "Lumière Fine Dining", ambience: "GOURMET", concept: "DAYLIGHT", style: "pearl", options: options({ cardStyle: "CARD", typography: "EDITORIAL", density: "AIRY", uppercaseCategories: true }) },
+  { id: "ROSE_PATISSERIE", name: "Rose & Champagne Salon", ambience: "CAFE", concept: "PASTEL", style: "pastel", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "AIRY" }) },
 ] as const;
 
 export const DESIGN_BLOCKS = [
