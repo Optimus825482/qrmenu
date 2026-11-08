@@ -292,9 +292,28 @@ export function inferAllergensForItem(input: {
   let presetId: string | undefined;
   let reason = "";
 
+  // 0. Hookah / Shisha items: only alcoholic hookah contains alcohol; tobacco/fruit flavors have no food allergens
+  if (/nargile|shisha/.test(hay)) {
+    if (/alkollü/.test(hay)) {
+      return {
+        allergens: ["alkol"],
+        presetId: "saf_distile_icki",
+        reason: "Alkollü nargile sunumu",
+        isNaturallyAllergenFree: false,
+      };
+    }
+    return {
+      allergens: [],
+      reason: "Nargile / tütün ürünü (Gıda alerjeni içermez)",
+      isNaturallyAllergenFree: true,
+    };
+  }
+
   // 1. Check milk-based coffee & drinks first
   if (
-    /milkshake|cappuccino|flat white|latte|macchiato|mocha|sicak çikolata|sahlep|ayran|kefir|frappe/.test(nameLow)
+    /milkshake|cappuccino|flat white|latte|macchiato|cortado|affogato|iced coffee cream|frappuccino|mocha|sicak çikolata|sicak beyaz çikolata|salep|sahlep|ayran|kefir|frappe/.test(
+      nameLow,
+    )
   ) {
     found.add("sut");
     presetId = "sutlu_kahve_icecek";
@@ -302,7 +321,7 @@ export function inferAllergensForItem(input: {
   }
 
   // 2. Check breaded / schnitzel items
-  if (/şinitzel|schnitzel|pane|nugget|çitir tavuk|soğan halkasi|tempura/.test(hay)) {
+  if (/şinitzel|schnitzel|pane|nugget|finger|çitir tavuk|soğan halkasi|tempura|kentaki|arancini|kalamar tava/.test(hay)) {
     found.add("gluten");
     found.add("yumurta");
     presetId = "schnitzel_pane";
@@ -310,7 +329,7 @@ export function inferAllergensForItem(input: {
   }
 
   // 3. Check wings with buffalo / honey sauce
-  if (/kanat|wings/.test(nameLow) && /buffalo|sos/.test(hay)) {
+  if (/kanat|wings/.test(nameLow) && /buffalo|sos|acili/.test(hay)) {
     found.add("sut");
     found.add("hardal");
     found.add("kereviz");
@@ -320,7 +339,7 @@ export function inferAllergensForItem(input: {
 
   // 4. Check bread / lavash / flour items
   if (
-    /lavaş|ekmek|pide|simit|poğaça|börek|pişi|lahmacun|manti|makarna|spaghetti|penne|tagliatelle|fettuccine|pizza|burger|sandviç|tost|tortilla|wrap|kruvasan|kek|pasta|waffle|pankek|tart|cheesecake|tiramisu|baklava|künefe|kadayif|oreo|cookies|bisküvi/.test(
+    /lavaş|ekmek|pide|simit|poğaça|börek|pişi|lahmacun|manti|makarna|spaghetti|penne|tagliatelle|tagliolini|fettuccine|fazzoletti|agnolotti|ravioli|gnocchi|pappardelle|lasagna|lazanya|pizza|burger|köfte|şaşlik|külbasti|karski|kebab|kebap|sandviç|sandwich|sando|tost|tortilla|wrap|quesadilla|burrito|taco|kruvasan|kek|cake|pasta|waffle|pankek|pancake|krep|tart|turta|strudel|cannoli|profiterol|browni|magnolia|cheesecake|tiramisu|baklava|künefe|kadayif|sufle|soufle|mille-feuille|milföy|paris brest|oreo|cookies|bisküvi|tabule|tabulleh|kuskus|wonton|won-ton/.test(
       hay,
     )
   ) {
@@ -333,7 +352,7 @@ export function inferAllergensForItem(input: {
 
   // 5. Check dairy / cheese / butter / ice cream
   if (
-    /peynir|cheddar|parmesan|mozzarella|hellim|ezine|kaşar|tulum|lor|tereyağ|kaymak|krema|yoğurt|süt|dondurma|mascarpone|nutella|çikolata/.test(
+    /peynir|cheddar|çedar|parmesan|parmigiana|mozzarella|burrata|stracciatella|ricotta|caprino|rokfor|hellim|ezine|kaşar|tulum|lor|tereyağ|kaymak|krema|yoğurt|cacik|caciği|tarator|haydari|mütebbel|atom|girit ezmesi|püre|cafe de paris|café de paris|hollandez|süt|sütlaç|kazandibi|panna cotta|crème brûlée|dondurma|gelato|plombir|banana split|mascarpone|nutella|gianduja|çikolata|meze seçkisi/.test(
       hay,
     )
   ) {
@@ -345,12 +364,12 @@ export function inferAllergensForItem(input: {
   }
 
   // 6. Check egg
-  if (/yumurta|omlet|menemen|mayonez|sezar sos|pankek|waffle|pasta|kek|börek|tiramisu/.test(hay)) {
+  if (/yumurta|omlet|menemen|mayonez|hollandez|zabaione|carbonara|sezar sos|pankek|pancake|krep|waffle|pasta|kek|cake|strudel|profiterol|browni|sufle|soufle|börek|tiramisu/.test(hay)) {
     found.add("yumurta");
   }
 
   // 7. Check nuts
-  if (/ceviz|findik|fistik|antep fistiği|badem|kaju|müsli|musli|granola|gavurdaği|pestolu|pesto/.test(hay)) {
+  if (/ceviz|findik|fistik|antep fistiği|badem|kaju|kestane|chestnut|müsli|musli|granola|gavurdaği|gavurdağ|pestolu|pesto|girit ezmesi|muhammara|baklava|strudel|gianduja|paris brest|meze seçkisi/.test(hay)) {
     found.add("kuruyemis");
     if (!presetId) {
       presetId = "cevizli_salata_musli";
@@ -359,19 +378,19 @@ export function inferAllergensForItem(input: {
   }
 
   // 8. Check shellfish & molluscs
-  if (/karides|istakoz|yengeç|kerevit|shrimp|prawn/.test(hay)) {
+  if (/karides|gamberi|carabinero|ebi\b|istakoz|langustin|yengeç|kerevit|shrimp|prawn|frutti di mare|insalata di mare/.test(hay)) {
     found.add("deniz_urunu");
     presetId = "deniz_urunleri_kabuklu";
     reason = "Kabuklu deniz ürünü (karides vb.) içerir";
   }
-  if (/kalamar|ahtapot|midye|istiridye|calamari|octopus/.test(hay)) {
+  if (/kalamar|calamari|ika\b|ahtapot|polpo|midye|istiridye|octopus|frutti di mare|insalata di mare|eftelya/.test(hay)) {
     found.add("yumusakca");
     presetId = "deniz_urunleri_kabuklu";
     reason = "Yumuşakça (kalamar/ahtapot/midye) içerir";
   }
 
   // 9. Check fish
-  if (/balik|levrek|çipura|somon|ton baliğı|akya|trança|kalkan|lüfer|palamut|anchovy|ançüez|sezar sos/.test(hay)) {
+  if (/balik|levrek|suzuki|çipura|tai\b|somon|sake\b|salmon|ton baliğı|tuna|akami|maguro|hamachi|hiramasa|unagi|yilan baliği|ikura|morina|lago|cernia|ombrina|sogliola|dil baliği|çiroz|lakerda|ceviche|gravlax|vitello tonnato|akya|trança|kalkan|lüfer|palamut|anchovy|ançüez|sezar sos/.test(hay)) {
     found.add("balik");
     if (!presetId) {
       presetId = "balik_izgara_tava";
@@ -379,32 +398,44 @@ export function inferAllergensForItem(input: {
     }
   }
 
-  // 10. Check sesame & soy
-  if (/susam|tahin|humus|babagannuş|simit/.test(hay)) {
+  // 10. Check sesame & soy & celery/mustard
+  if (/susam|tahin|humus|hibeş|babagannuş|mütebbel|simit|meze seçkisi/.test(hay)) {
     found.add("susam");
     if (!presetId) {
       presetId = "humus_tahin_meze";
       reason = "Susam / tahin içerir";
     }
   }
-  if (/soya|sushi|edamame|teriyaki|wok/.test(hay)) {
+  if (/soya|tofu|miso|sushi|sashimi|nigiri|maki|roll|edamame|teriyaki|szechuan|kung pao|kanton|pekin ördeği|wok|noodle|tataki|asya çorba|mantarli tavuk çorbasi|misirli tavuk çorbasi/.test(hay)) {
     found.add("soya");
+  }
+  if (/kereviz|minestrone|osso buco|guancia|dana yanaği|bloody mary/.test(hay)) {
+    found.add("kereviz");
+  }
+  if (/hardal|cafe de paris|café de paris|steak tartar|carne cruda|carpaccio/.test(hay)) {
+    found.add("hardal");
   }
 
   // 11. Check wine, beer, alcohol
-  if (/şarap|wine|merlot|cabernet|shiraz|syrah|chardonnay|sauvignon|prosecco|champagne|şampanya|rose|roze|amarone|barolo|chianti|malbec|tempranillo/.test(hay)) {
+  if (/şarap|wine|porto sos|zabaione|marsala|merlot|cabernet|shiraz|syrah|chardonnay|sauvignon|prosecco|champagne|şampanya|rose|roze|amarone|barolo|chianti|malbec|tempranillo|sancerre|chablis|gavi|soave|vermentino|pinot|garnacha|cotes|sultaniye|port wine|sherry/.test(hay)) {
     found.add("alkol");
     found.add("sulfit");
     presetId = "sarap_kokteyl";
     reason = "Şarap / fermente üzüm ürünü (alkol ve sülfit)";
-  } else if (/bira|beer|efes|miller|corona|heineken|carlsberg|bomonti|guinness|becks/.test(hay)) {
+  } else if (/bira|beer|efes|miller|corona|heineken|carlsberg|bomonti|guinness|becks|beck's|tuborg|stella artois|bud\b|budweiser|van pur/.test(hay)) {
     found.add("alkol");
     found.add("gluten");
     found.add("sulfit");
     presetId = "bira_malt";
     reason = "Arpa maltı bazlı fermente içecek";
-  } else if (/viski|whisky|whiskey|votka|vodka|cin\b|gin\b|rom\b|rum\b|tekila|tequila|raki|likör|konyak|cognac|kokteyl|mojito|margarita|negroni|martini/.test(hay)) {
+  } else if (/viski|whisky|whiskey|single malt|bourbon|iskoç|irlanda viski|konyak|cognac|hennessy|remy martin|martell|courvoisier|metaxa|napoleon|votka|vodka|smirnoff|absolut|beluga|grey goose|belvedere|ciroc|ketel one|titos|haku|cin\b|gin\b|beefeater|bombay|gordons|hendricks|tanqueray|botanist|roku|monkey 47|malfy|rom\b|rum\b|bacardi|captain morgan|havana club|malibu|zacapa|caçhaca|tekila|tequila|olmeca|milagro|patron|don julio|clase azul|classe azul|herradura|jimador|raki|incı|iki tek|2 tek|likör|aperatif|aperol|campari|martini|limoncello|lemoncello|grappa|frangelico|st\. germain|benedictine|benetictine|galliano|absenth|drambuie|pimms|pisang|cointreau|passoa|skinoss|archers|archer's|safari|grand marnier|jagermeister|fernet|tia maria|sambuca|amaretto|disaronno|kahlua|cardinal|southern comfort|chambord|underberg|kokteyl|mojito|margarita|negroni|spritz|sour|old fashioned|cosmopolitan|caipirinha|daiquiri|bellini|french 75|long island|alkollü nargile/.test(hay)) {
     found.add("alkol");
+    if (/baileys|sheridan|white russian/.test(hay)) {
+      found.add("sut");
+    }
+    if (/frangelico|amaretto|disaronno/.test(hay)) {
+      found.add("kuruyemis");
+    }
     presetId = "saf_distile_icki";
     reason = "Alkollü içecek";
   }
@@ -418,9 +449,9 @@ export function inferAllergensForItem(input: {
     };
   }
 
-  // Check if naturally allergen-free (water, pure tea, black coffee, soda, fresh fruit, soft drinks)
+  // Check if naturally allergen-free (water, pure tea, black coffee, soda, fresh fruit, pure vegetable/meat dishes, hookah)
   const isNaturallyFree =
-    /su\b|soda|pellegrino|türk çayi|türk kahvesi|espresso|americano|filtre kahve|bitki çay|poşet çay|meyve suyu|limonata|coca cola|sprite|fanta|ice tea|britvic|enerji içeceği|şalgam|meyve tabaği|smoothie|frozen|nargile|shisha/.test(
+    /su\b|cam 330|soda|pellegrino|türk çayi|türk kahvesi|espresso|americano|filtre kahve|v60|chemex|syphon|cold brew|bitki çay|poşet çay|demleme çay|ronnefeldt|soğuk çay|matcha çayi|rooibos|english breakfast|papatya|nane|winterdream|green angel|greenleaf|earl grey|jasmine|morgentau|masala|camomile|ginger|ayurveda|meyve suyu|limonata|coca cola|sprite|fanta|ice tea|britvic|enerji içeceği|şalgam|meyve|sorbe|sorbetto|smoothie|frozen|nargile|shisha|salata|söğüş|avokado|enginar|bakla|fasulye|börülce|semizotu|patlican|şakşuka|ezme|karpuz|kavun|ananas|muz|portakal|elma|çilek|üzüm|şeftali|limon|turşu|zeytinyağli|kaya koruğu|kabak|ispanak|kuşkonmaz|brokoli|lahana|domates|patates|sebze|kase|wagyu|kobe|chateaubriand|antrikot|kontrfile|bonfile|lokum|tomahawk|dallas|t-bone|kansas|pirzola|assado|asado|kuzu|küşleme|kafes|dana iliği|sucuk|sosis|kanat|ördek|ev yemeği/.test(
       hay,
     );
 

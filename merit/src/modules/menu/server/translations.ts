@@ -74,7 +74,7 @@ async function googleGtxTranslateSingle(text: string, targetLang: TranslationLan
   return trimmed;
 }
 
-async function autoCloudTranslate(
+export async function autoCloudTranslate(
   name: string,
   detail: string | null,
 ): Promise<Record<TranslationLang, { name: string; detail: string | null }>> {

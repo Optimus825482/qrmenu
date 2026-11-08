@@ -263,12 +263,13 @@ const TYPOGRAPHY_IDS = new Set<string>(TYPOGRAPHIES.map((item) => item.id));
 const DENSITY_IDS = new Set<string>(DENSITIES.map((item) => item.id));
 const HERO_IDS = new Set<string>(HERO_STYLES.map((item) => item.id));
 const UPLOAD_PREFIX = "/uploads/";
+const MERIT_MENU_PREFIX = "/merit-menus/";
 const MAX_HERO_URL = 300;
 
 function heroUrl(value: unknown): string {
   if (typeof value !== "string") return "";
   const url = value.trim();
-  return url.startsWith(UPLOAD_PREFIX) && url.length <= MAX_HERO_URL ? url : "";
+  return (url.startsWith(UPLOAD_PREFIX) || url.startsWith(MERIT_MENU_PREFIX)) && url.length <= MAX_HERO_URL ? url : "";
 }
 
 function normalizeLayout(value: unknown): DesignBlockId[] {

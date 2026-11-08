@@ -195,10 +195,11 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
     }
   }
 
-  await seedOutletMenuDesigns(db);
+  await seedOutletMenuDesigns(db, false);
 
   // 3. Populate or upgrade each outlet's menu from merit-menus.json
   const dataset = loadMeritMenusDataset();
+  let rebuiltAny = false;
   for (const spec of dataset.outlets) {
     const hotelId = hotelIdByCode.get(spec.hotelCode);
     if (!hotelId) continue;
@@ -208,14 +209,25 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       : await db.outlet.findFirst({ where: { hotelId, name: spec.outletName ?? "" }, select: { id: true, name: true } });
     if (!outlet) continue;
 
-    const [totalItems, meritImgItems, legacyUploadItems] = await Promise.all([
+    const [totalItems, meritImgItems, legacyUploadItems, existingCats, directUnderCatCount] = await Promise.all([
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE" } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/merit-menus/" } } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/uploads/merit-menus/" } } }),
+      db.menuNode.findMany({
+        where: { outletId: outlet.id, kind: "KATEGORI", parentId: null },
+        orderBy: { sortOrder: "asc" },
+        select: { name: true },
+      }),
+      db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", parent: { kind: "KATEGORI" } } }),
     ]);
 
-    // If the outlet already has its Merit menu loaded with /merit-menus/ URLs, upgrade any missing (null) or generic hookah images in-place and skip full rebuild!
-    if (totalItems >= 50 && meritImgItems > 0 && legacyUploadItems === 0) {
+    const expectedCats = Array.from(new Set(spec.items.map((i) => i.catPath[0])));
+    const hasV2Categories =
+      existingCats.length === expectedCats.length &&
+      existingCats.every((c, idx) => c.name === expectedCats[idx]);
+
+    // If the outlet already has its v2 Merit menu loaded with clean 2-level categories and /merit-menus/ URLs, preserve it!
+    if (hasV2Categories && directUnderCatCount === 0 && totalItems >= spec.items.length && meritImgItems > 0 && legacyUploadItems === 0) {
       const nodesToUpgrade = await db.menuNode.findMany({
         where: {
           outletId: outlet.id,
@@ -339,7 +351,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
         for (const item of spec.items) {
           let parentId: string;
           if (item.catPath.length === 1) {
-            parentId = await ensureCategory(item.catPath[0]);
+            parentId = await ensureSubcategory(item.catPath[0], "Genel Seçki");
           } else if (item.catPath.length === 2) {
             parentId = await ensureSubcategory(item.catPath[0], item.catPath[1]);
           } else {
@@ -368,7 +380,12 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       },
       { timeout: 120_000 },
     );
+    rebuiltAny = true;
     console.log(`Merit Menü Senkronize Edildi: [${spec.hotelCode}] ${outlet.name} (${spec.items.length} ürün)`);
+  }
+
+  if (rebuiltAny) {
+    await seedOutletMenuDesigns(db, true);
   }
 }
 
@@ -378,6 +395,7 @@ async function main() {
     await syncMeritMenus(prisma);
   } finally {
     await prisma.$disconnect();
+    process.exit(0);
   }
 }
 

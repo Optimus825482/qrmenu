@@ -143,7 +143,16 @@ export function evaluateQuality(input: { design: OutletDesign; theme: GuestTheme
   }
 
   if (design.options.showAllergens) {
-    const missingItems = items.filter((item) => item.allergens.length === 0);
+    const missingItems = items.filter((item) => {
+      if (item.allergens.length > 0) return false;
+      if (!item.name) return true;
+      const inferred = inferAllergensForItem({
+        name: item.name,
+        detail: item.detail,
+        categoryPath: item.categoryPath,
+      });
+      return !inferred.isNaturallyAllergenFree;
+    });
     const missing = missingItems.length;
     if (missing > 0) {
       found.push({
