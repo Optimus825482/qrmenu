@@ -24,8 +24,12 @@ import {
   HERO_STYLES,
   TYPOGRAPHIES,
   templatePreset,
+  type CategoryTabStyle,
   type DesignBlockId,
   type DesignOptions,
+  type HeroAlign,
+  type HeroFontSize,
+  type HeroFontFamily,
   type OutletDesign,
   type TemplateId,
 } from "../design";
@@ -501,21 +505,142 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
               ))}
             </div>
 
-            <div className="xp-design-choices" role="group" aria-label="Kategori sekme stili" style={{ marginTop: 6 }}>
-              <b style={{ display: "block", width: "100%", fontSize: 11, marginBottom: 2 }}>Kategori Sekme Düzeni</b>
-              {CATEGORY_TAB_STYLES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="xp-button"
-                  data-selected={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id || undefined}
-                  aria-pressed={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id}
-                  onClick={() => patchOptions({ categoryTabStyle: item.id })}
-                  title={item.desc}
-                >
-                  {item.label}
-                </button>
-              ))}
+            <div style={{ marginTop: 10, marginBottom: 8 }}>
+              <b style={{ display: "block", fontSize: 11, fontWeight: "bold", marginBottom: 5, color: "#1e293b" }}>
+                Kategori Sekme Düzeni
+              </b>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
+                {CATEGORY_TAB_STYLES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="xp-button"
+                    data-selected={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id || undefined}
+                    aria-pressed={(design.options.categoryTabStyle ?? "CHIPS_ROW") === item.id}
+                    onClick={() => patchOptions({ categoryTabStyle: item.id })}
+                    title={item.desc}
+                    style={{ padding: "6px 8px", fontSize: "11px", minHeight: "32px", whiteSpace: "normal", lineHeight: 1.25, textAlign: "center" }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Outlet Başlığı Manuel Özelleştirme (2. Görsel: Hizalama, Font, Boyut, Renkler) */}
+            <div style={{ marginTop: 10, marginBottom: 10, padding: "8px 10px", background: "rgba(0,0,0,0.03)", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.08)" }}>
+              <b style={{ display: "block", fontSize: 11, fontWeight: "bold", marginBottom: 6, color: "#1e293b" }}>
+                Outlet Başlığı & Hero Alanı
+              </b>
+
+              {/* Hizalama (Ortala, Sola, Sağa) */}
+              <div style={{ marginBottom: 6 }}>
+                <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Hizalama:</span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4 }}>
+                  {[
+                    { id: "left", label: "⬅ Sola" },
+                    { id: "center", label: "⬌ Ortala" },
+                    { id: "right", label: "➡ Sağa" },
+                  ].map((align) => (
+                    <button
+                      key={align.id}
+                      type="button"
+                      className="xp-button"
+                      data-selected={(design.options.heroAlign ?? "left") === align.id || undefined}
+                      onClick={() => patchOptions({ heroAlign: align.id as HeroAlign })}
+                      style={{ fontSize: 10, padding: "4px" }}
+                    >
+                      {align.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Font Boyutu & Yazı Fontu */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 6 }}>
+                <div>
+                  <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Font Boyutu:</span>
+                  <select
+                    value={design.options.heroFontSize ?? "medium"}
+                    onChange={(e) => patchOptions({ heroFontSize: e.target.value as HeroFontSize })}
+                    style={{ width: "100%", fontSize: 11, padding: "4px 5px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff" }}
+                  >
+                    <option value="small">Küçük (18px)</option>
+                    <option value="medium">Standart (22px)</option>
+                    <option value="large">Büyük (26px)</option>
+                    <option value="xlarge">İhtişamlı (32px)</option>
+                  </select>
+                </div>
+                <div>
+                  <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Yazı Fontu:</span>
+                  <select
+                    value={design.options.heroFontFamily ?? "serif"}
+                    onChange={(e) => patchOptions({ heroFontFamily: e.target.value as HeroFontFamily })}
+                    style={{ width: "100%", fontSize: 11, padding: "4px 5px", borderRadius: 4, border: "1px solid #cbd5e1", background: "#fff" }}
+                  >
+                    <option value="serif">Klasik Serif (Georgia)</option>
+                    <option value="sans">Modern Sans (Sistem)</option>
+                    <option value="playfair">Playfair Display (Lüks)</option>
+                    <option value="cinzel">Cinzel (Kraliyet)</option>
+                    <option value="montserrat">Montserrat (Zarif)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Arka Plan Rengi & Yazı Rengi */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                <div>
+                  <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Arka Plan:</span>
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <input
+                      type="color"
+                      value={design.options.heroBgColor && design.options.heroBgColor !== "transparent" ? design.options.heroBgColor : "#1d1a14"}
+                      onChange={(e) => patchOptions({ heroBgColor: e.target.value })}
+                      style={{ width: 26, height: 24, padding: 1, border: "1px solid #cbd5e1", borderRadius: 4, cursor: "pointer" }}
+                      title="Özel arka plan rengi seç"
+                    />
+                    <button
+                      type="button"
+                      className="xp-button"
+                      onClick={() => patchOptions({ heroBgColor: "" })}
+                      style={{ fontSize: 9, padding: "2px 4px", minWidth: 0 }}
+                      title="Varsayılan tema rengine dön"
+                    >
+                      Oto
+                    </button>
+                    <button
+                      type="button"
+                      className="xp-button"
+                      onClick={() => patchOptions({ heroBgColor: "transparent" })}
+                      style={{ fontSize: 9, padding: "2px 4px", minWidth: 0 }}
+                      title="Arka planı saydam/şeffaf yap"
+                    >
+                      Şeffaf
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Yazı Rengi:</span>
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <input
+                      type="color"
+                      value={design.options.heroTextColor || "#c9a24a"}
+                      onChange={(e) => patchOptions({ heroTextColor: e.target.value })}
+                      style={{ width: 26, height: 24, padding: 1, border: "1px solid #cbd5e1", borderRadius: 4, cursor: "pointer" }}
+                      title="Özel yazı rengi seç"
+                    />
+                    <button
+                      type="button"
+                      className="xp-button"
+                      onClick={() => patchOptions({ heroTextColor: "" })}
+                      style={{ fontSize: 9, padding: "2px 4px", minWidth: 0 }}
+                      title="Varsayılan tema rengine dön"
+                    >
+                      Oto
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.showImages} onChange={(event) => patchOptions({ showImages: event.target.checked })} />Fotoğraflar</label>
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.showPrices} onChange={(event) => patchOptions({ showPrices: event.target.checked })} />Fiyatlar</label>

@@ -220,7 +220,19 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const blocks: Record<string, ReactNode> = {
     hero:
       options.hero === "NONE" ? null : (
-        <section className="g-design-hero" key="hero" data-photo={heroPhoto ? "true" : undefined}>
+        <section
+          className="g-design-hero"
+          key="hero"
+          data-photo={heroPhoto ? "true" : undefined}
+          style={{
+            ...(options.heroAlign ? {
+              textAlign: options.heroAlign,
+              alignItems: options.heroAlign === "center" ? "center" : options.heroAlign === "right" ? "flex-end" : "flex-start",
+            } : {}),
+            ...(options.heroBgColor ? { background: options.heroBgColor } : {}),
+            ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
+          }}
+        >
           {heroPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -231,8 +243,25 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               fetchPriority="high"
             />
           ) : null}
-          <span>{state.hotelName}</span>
-          <h2>{state.outletName}</h2>
+          <span style={{ ...(options.heroTextColor ? { color: options.heroTextColor } : {}) }}>
+            {state.hotelName}
+          </span>
+          <h2
+            style={{
+              ...(options.heroFontSize === "small" ? { fontSize: "1.1rem" } :
+                  options.heroFontSize === "medium" ? { fontSize: "1.35rem" } :
+                  options.heroFontSize === "large" ? { fontSize: "1.65rem" } :
+                  options.heroFontSize === "xlarge" ? { fontSize: "2rem" } : {}),
+              ...(options.heroFontFamily === "serif" ? { fontFamily: "Georgia, 'Times New Roman', serif" } :
+                  options.heroFontFamily === "sans" ? { fontFamily: "system-ui, -apple-system, sans-serif" } :
+                  options.heroFontFamily === "playfair" ? { fontFamily: "'Playfair Display', Didot, Georgia, serif" } :
+                  options.heroFontFamily === "cinzel" ? { fontFamily: "Cinzel, 'Trajan Pro', Georgia, serif" } :
+                  options.heroFontFamily === "montserrat" ? { fontFamily: "Montserrat, -apple-system, sans-serif" } : {}),
+              ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
+            }}
+          >
+            {state.outletName}
+          </h2>
         </section>
       ),
     categories: (

@@ -85,9 +85,18 @@ export const CATEGORY_TAB_STYLES = [
 export type CategoryTabStyle = (typeof CATEGORY_TAB_STYLES)[number]["id"];
 const CATEGORY_TAB_STYLE_IDS = new Set<string>(CATEGORY_TAB_STYLES.map((item) => item.id));
 
+export type HeroAlign = "left" | "center" | "right";
+export type HeroFontSize = "small" | "medium" | "large" | "xlarge";
+export type HeroFontFamily = "serif" | "sans" | "playfair" | "cinzel" | "montserrat";
+
 export type DesignOptions = {
   cardStyle: CardStyle;
   categoryTabStyle?: CategoryTabStyle;
+  heroAlign?: HeroAlign;
+  heroFontSize?: HeroFontSize;
+  heroFontFamily?: HeroFontFamily;
+  heroBgColor?: string;
+  heroTextColor?: string;
   showImages: boolean;
   showAllergens: boolean;
   showTags: boolean;
@@ -317,6 +326,11 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
+    heroAlign: raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign,
+    heroFontSize: raw.heroFontSize && ["small", "medium", "large", "xlarge"].includes(raw.heroFontSize) ? raw.heroFontSize : preset.heroFontSize,
+    heroFontFamily: raw.heroFontFamily && ["serif", "sans", "playfair", "cinzel", "montserrat"].includes(raw.heroFontFamily) ? raw.heroFontFamily : preset.heroFontFamily,
+    heroBgColor: typeof raw.heroBgColor === "string" ? raw.heroBgColor.trim() : preset.heroBgColor,
+    heroTextColor: typeof raw.heroTextColor === "string" ? raw.heroTextColor.trim() : preset.heroTextColor,
     callWaiterText: typeof raw.callWaiterText === "string" ? raw.callWaiterText.trim().slice(0, 40) : preset.callWaiterText,
   };
 }
