@@ -2,6 +2,7 @@ import type { MenuNodeKind } from "@/generated/prisma/client";
 import type { Locale } from "@/lib/i18n/locales";
 import { prisma } from "@/lib/prisma";
 import { type GuestState, guestState } from "./guestState";
+import { syncOutletMissingTranslations } from "./translations";
 
 export type GuestItem = {
   id: string;
@@ -35,6 +36,10 @@ export async function getMenu(outletId: string, locale: Locale, areaId?: string)
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     }),
   ]);
+
+  if (locale !== "tr" && rows.some((r) => r.translations.length === 0)) {
+    void syncOutletMissingTranslations(outletId, state.hotelId).catch(() => {});
+  }
 
   type Row = (typeof rows)[number];
   const children = new Map<string | null, Row[]>();

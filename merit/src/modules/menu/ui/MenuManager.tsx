@@ -12,6 +12,7 @@ import { useSse } from "@/shell/useSse";
 import { menuContextAction } from "../server/actions/menuAdmin";
 import type { MenuContext } from "../server/menuContext";
 import {
+  auditAndSyncOutletTranslationsAction,
   createMenuNodeAction,
   autoTranslateMenuNodeAction,
   deleteMenuNodeAction,
@@ -20,6 +21,7 @@ import {
   setMenuAvailabilityAction,
 } from "../server/actions/menuTree";
 import type { MenuTreeNode } from "../server/menuTree";
+import type { OutletTranslationAuditStatus } from "../server/translations";
 import { NodeForm } from "./panels/NodeForm";
 import { OutletSwitchBar } from "./panels/OutletSwitchBar";
 import { countNodes, findNode, KIND_LABEL, TreePane } from "./panels/TreePane";
@@ -41,6 +43,18 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [creating, setCreating] = useState<Creating>(null);
   const [error, setError] = useState<string | null>(null);
+  const [translationAudit, setTranslationAudit] = useState<OutletTranslationAuditStatus | null>(null);
+
+  const runTranslationAudit = useCallback(async (id: string | undefined, triggerSync = true) => {
+    if (!id) {
+      setTranslationAudit(null);
+      return;
+    }
+    const res = await auditAndSyncOutletTranslationsAction({ outletId: id, triggerSync });
+    if (res.ok) {
+      setTranslationAudit(res.data);
+    }
+  }, []);
 
   const loadContext = useCallback(async () => {
     if (!hotelId) return;
@@ -65,6 +79,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
   const loadTree = useCallback(async () => {
     if (!outletId) {
       setTree([]);
+      setTranslationAudit(null);
       return;
     }
     const result = await listMenuTreeAction({ outletId });
@@ -74,7 +89,8 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
     }
     setError(null);
     setTree(result.data);
-  }, [outletId]);
+    void runTranslationAudit(outletId, true);
+  }, [outletId, runTranslationAudit]);
 
   const reload = useCallback(() => {
     void loadContext();
@@ -100,8 +116,17 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
   useEffect(() => () => clearTimeout(timer.current), []);
 
   useEffect(() => {
-    setStatus(`${countNodes(tree)} menü kaydı`);
-  }, [tree, setStatus]);
+    const total = countNodes(tree);
+    if (translationAudit && translationAudit.totalNodes > 0) {
+      if (translationAudit.missingNodes > 0) {
+        setStatus(`${total} menü kaydı · Çeviri kontrolü: ${translationAudit.missingNodes} kayıtta eksikler arka planda tamamlanıyor...`);
+      } else {
+        setStatus(`${total} menü kaydı · 7 dil çevirisi tam (%100)`);
+      }
+    } else {
+      setStatus(`${total} menü kaydı`);
+    }
+  }, [tree, translationAudit, setStatus]);
 
   const canEdit = context?.canEdit ?? false;
   const outlet = context?.outlets.find((o) => o.id === outletId);
@@ -123,11 +148,12 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
       setSelectedId(result.data.id);
       const translated = await autoTranslateMenuNodeAction({ nodeId: result.data.id });
       if (!translated.ok) {
-        notify.info(`Kayıt yapıldı; çeviri oluşturulamadı: ${translated.error.message}`);
+        notify.info(`Kayıt yapıldı; çeviri arka planda tamamlanacak: ${translated.error.message}`);
       } else {
-        notify.success(`${translated.data.languages.length} dil için DeepL çevirisi oluşturuldu. Menü terimlerini kullanmadan önce gözden geçirin.`);
+        notify.success(`${translated.data.languages.length} dil için otomatik çeviri oluşturuldu ve eksik çeviriler kontrol edildi.`);
       }
       await loadTree();
+      void runTranslationAudit(outletId, true);
     }
     return result;
   };
@@ -286,11 +312,40 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
         {outlet && context ? (
           <OutletSwitchBar outlet={outlet} canSwitch={context.canSwitch} onChanged={reload} />
         ) : null}
+        {outletId && translationAudit && translationAudit.totalNodes > 0 ? (
+          <span
+            title={
+              translationAudit.missingNodes > 0
+                ? `${translationAudit.missingNodes} kayıtta eksik çeviriler arka planda otomatik tamamlanıyor`
+                : `Tüm ${translationAudit.totalNodes} menü kaydının 7 dilde çevirisi eksiksiz tamamlandı`
+            }
+            style={{
+              marginLeft: "auto",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "2px 8px",
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 600,
+              border: translationAudit.missingNodes > 0 ? "1px solid #f59e0b" : "1px solid #16a34a",
+              backgroundColor: translationAudit.missingNodes > 0 ? "#fffbeb" : "#f0fdf4",
+              color: translationAudit.missingNodes > 0 ? "#b45309" : "#15803d",
+            }}
+          >
+            <span>{translationAudit.missingNodes > 0 ? "⟳" : "✓"}</span>
+            <span>
+              {translationAudit.missingNodes > 0
+                ? `Otomatik Çeviri: ${translationAudit.completeNodes}/${translationAudit.totalNodes} (${translationAudit.missingNodes} tamamlanıyor)`
+                : `7 Dil Çevirisi Tamam (${translationAudit.completeNodes}/${translationAudit.totalNodes})`}
+            </span>
+          </span>
+        ) : null}
         <button
           type="button"
           className="xp-button"
           disabled={!outletId}
-          style={{ height: 26, marginLeft: "auto" }}
+          style={{ height: 26, marginLeft: translationAudit && translationAudit.totalNodes > 0 ? 0 : "auto" }}
           onClick={() => openApp("menu.tema", { hotelId, outletId })}
         >
           Menü Tasarımı

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
-import { removeTranslationAction, setTranslationAction, verifyTranslationAction } from "../../server/actions/menuTree";
+import { autoTranslateMenuNodeAction, removeTranslationAction, setTranslationAction, verifyTranslationAction } from "../../server/actions/menuTree";
 import type { MenuTreeNode } from "../../server/menuTree";
 
 const LANGS = [
@@ -72,6 +72,18 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
     const result = await verifyTranslationAction({ nodeId: node.id, lang });
     setMessage(result.ok ? { ok: true, text: `${current.label} çevirisi onaylandı ve misafir menüsünde gösterilecek.` } : { ok: false, text: result.error.message });
     if (result.ok) onChanged();
+  };
+
+  const autoCompleteAll = async () => {
+    setMessage({ ok: true, text: "7 dil için çeviriler otomatik kontrol ediliyor ve tamamlanıyor..." });
+    const res = await autoTranslateMenuNodeAction({ nodeId: node.id });
+    if (res.ok) {
+      notify.success(`“${node.name}” için ${res.data.languages.length} dil çevirisi otomatik tamamlandı.`);
+      setMessage({ ok: true, text: `${res.data.languages.length} dil çevirisi otomatik tamamlandı ve onaylandı.` });
+      onChanged();
+    } else {
+      setMessage({ ok: false, text: res.error.message });
+    }
   };
 
   return (
@@ -144,6 +156,9 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
           <div className="xp-dialog-actions">
             <button type="submit" className="xp-button">
               Düzenle ve onayla
+            </button>
+            <button type="button" className="xp-button" onClick={() => void autoCompleteAll()}>
+              7 Dilde Otomatik Tamamla
             </button>
             {existing ? (
               <button type="button" className="xp-button" disabled={existing.isVerified} onClick={() => void verify()}>

@@ -61,6 +61,15 @@ export async function autoTranslateMenuNodeAction(
   );
 }
 
+export async function auditAndSyncOutletTranslationsAction(
+  raw: unknown,
+): Promise<Result<translations.OutletTranslationAuditStatus>> {
+  return safeAction(
+    z.object({ outletId: id, triggerSync: z.boolean().optional() }),
+    async (i) => translations.auditAndSyncOutletTranslations(await requireUser(), i.outletId, i.triggerSync ?? true),
+  )(raw);
+}
+
 export async function verifyTranslationAction(raw: unknown): Promise<Result<null>> {
   return safeAction(z.object({ nodeId: id, lang: z.string() }), async (i) => {
     await translations.verify(await requireUser(), i.nodeId, i.lang);
