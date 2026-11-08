@@ -407,7 +407,18 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
       const callId = str(p, "callId");
       const tableId = str(p, "tableId");
       if (!callId || !tableId) return NONE;
-      return out([make(callId, { type: "call.closed", layer: "SIPARIS", callId, tableId })]);
+      const waiterId = str(p, "waiterId") ?? str(p, "resolvedById");
+      const waiterName = str(p, "waiterName") ?? str(p, "resolvedByName");
+      return out([
+        make(callId, {
+          type: "call.closed",
+          layer: "SIPARIS",
+          callId,
+          tableId,
+          ...(waiterId ? { waiterId } : {}),
+          ...(waiterName ? { waiterName } : {}),
+        }),
+      ]);
     }
     case "assignment.changed": {
       const tableId = str(p, "tableId");

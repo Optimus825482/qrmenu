@@ -47,7 +47,7 @@ export type RadarEvent = RadarEventBase &
     | { type: "order.escalated"; orderId: string; orderNo: number }
     | { type: "order.sla"; orderId: string; orderNo: number; level: "WARN" | "BREACH" }
     | { type: "call.opened"; callId: string; tableId: string; callType: CallType }
-    | { type: "call.closed"; callId: string; tableId: string }
+    | { type: "call.closed"; callId: string; tableId: string; waiterId?: string; waiterName?: string }
     | { type: "table.scanned"; tableId: string }
     | { type: "table.assigned"; tableId: string; waiterId: string | null }
     | {

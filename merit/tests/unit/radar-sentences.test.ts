@@ -66,6 +66,38 @@ describe("describeEvent", () => {
     expect(describeEvent(ev, people, "full", ctx)).toContain("· Personel");
   });
 
+  it("formats call.closed with the resolving waiter name when available", () => {
+    const withWaiterId: RadarEvent = {
+      ...BASE,
+      layer: "SIPARIS",
+      type: "call.closed",
+      callId: "c1",
+      tableId: "t1",
+      waiterId: "u2",
+    };
+    expect(describeEvent(withWaiterId, people, "full", ctx)).toBe("Havuz Bar · M12 · çağrı kapatıldı (Mehmet Ali Yılmaz)");
+    expect(describeEvent(withWaiterId, people, "short", ctx)).toBe("Havuz Bar · M12 · çağrı kapatıldı (Mehmet Ali Y.)");
+
+    const withWaiterName: RadarEvent = {
+      ...BASE,
+      layer: "SIPARIS",
+      type: "call.closed",
+      callId: "c1",
+      tableId: "t1",
+      waiterName: "Ahmet Garson",
+    };
+    expect(describeEvent(withWaiterName, people, "full", ctx)).toBe("Havuz Bar · M12 · çağrı kapatıldı (Ahmet Garson)");
+
+    const withoutWaiter: RadarEvent = {
+      ...BASE,
+      layer: "SIPARIS",
+      type: "call.closed",
+      callId: "c1",
+      tableId: "t1",
+    };
+    expect(describeEvent(withoutWaiter, people, "full", ctx)).toBe("Havuz Bar · M12 · çağrı kapatıldı");
+  });
+
   it("never leaks forbidden fields (subtotal, unitPrice, rejectReason, note) from dirty inputs", () => {
     const dirty = {
       ...ALL_EVENTS[0]!,

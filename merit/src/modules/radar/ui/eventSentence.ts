@@ -156,7 +156,14 @@ export function describeEvent(
     case "call.closed": {
       if (outlet) parts.push(outlet);
       parts.push(tableLbl(e.tableId));
-      parts.push("çağrı kapatıldı");
+      const closedBy =
+        (e as { waiterName?: string }).waiterName ??
+        (e.waiterId ? resolveActor(e.waiterId, people, nameStyle) : undefined);
+      if (closedBy) {
+        parts.push(`çağrı kapatıldı (${closedBy})`);
+      } else {
+        parts.push("çağrı kapatıldı");
+      }
       break;
     }
     case "table.scanned": {
@@ -261,7 +268,7 @@ export function describeEvent(
     }
   }
 
-  if (actor && e.type !== "presence") {
+  if (actor && e.type !== "presence" && e.type !== "call.closed") {
     parts.push(actor);
   }
   return parts.join(" · ");

@@ -156,12 +156,13 @@ async function resolve(ctx: Ctx, callId: string, status: "YANITLANDI" | "KAPANDI
       where: { id: callId },
       data: { status, resolvedById: ctx.user.id, resolvedAt: new Date() },
     });
+    const waiterName = ctx.user.fullName || ctx.user.username;
     await publish(
       {
         type: "call.resolved",
         hotelId: call.outlet.hotelId,
         outletId: call.outletId,
-        payload: { callId, tableId: call.tableId, tableLabel: call.table.label, status },
+        payload: { callId, tableId: call.tableId, tableLabel: call.table.label, status, waiterId: ctx.user.id, waiterName },
       },
       tx,
     );

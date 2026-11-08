@@ -184,7 +184,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
           </span>
         ) : null}
       </div>
-      <div className="rd-tables">
+      <div className="rd-tables" data-has-detail={Boolean(sel)}>
         <div className="rd-areas">
           {tables.length === 0 ? <EmptyState title="Bu outlette masa tanımlı değil." /> : null}
           {outlet.areas
@@ -216,9 +216,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             onOpenApp={onOpenApp}
             onClose={() => setSelected(null)}
           />
-        ) : (
-          <div />
-        )}
+        ) : null}
       </div>
     </div>
   );

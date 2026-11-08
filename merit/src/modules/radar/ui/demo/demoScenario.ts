@@ -417,9 +417,9 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
       const t1 = tables[tables.length - 1];
       const t2 = tables[tables.length - 2] ?? t1;
       add(base + 120, { type: "call.opened", layer: "SIPARIS", callId: `demo-call-${oi}-1`, tableId: t1.tableId, callType: "GARSON" });
-      add(base + 170, { type: "call.closed", layer: "SIPARIS", callId: `demo-call-${oi}-1`, tableId: t1.tableId });
+      add(base + 170, { type: "call.closed", layer: "SIPARIS", callId: `demo-call-${oi}-1`, tableId: t1.tableId, waiterName: "Ahmet Yılmaz" });
       add(base + 640, { type: "call.opened", layer: "SIPARIS", callId: `demo-call-${oi}-2`, tableId: t2.tableId, callType: "HESAP" });
-      if (oi === 1) add(base + 1000, { type: "call.closed", layer: "SIPARIS", callId: `demo-call-${oi}-2`, tableId: t2.tableId });
+      if (oi === 1) add(base + 1000, { type: "call.closed", layer: "SIPARIS", callId: `demo-call-${oi}-2`, tableId: t2.tableId, waiterName: "Mehmet Demir" });
 
       // A print job that fails, and the printer that goes quiet and returns.
       if (printer) {

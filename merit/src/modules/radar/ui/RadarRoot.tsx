@@ -727,13 +727,16 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               {body}
               <Legend view={view} open={wall || legendOpen} compact={wall} onClose={() => setLegendOpen(false)} />
             </div>
-            {!all && !wall ? (
-              <Ticker events={visibleEvents} state={snap} mode="window" nameStyle="full" onSelect={focusEvent} />
+            {!all ? (
+              <Ticker
+                events={visibleEvents}
+                state={snap}
+                mode={wall ? "wall" : "window"}
+                nameStyle={wall ? "short" : "full"}
+                onSelect={focusEvent}
+              />
             ) : null}
           </div>
-          {!all && wall ? (
-            <Ticker events={visibleEvents} state={snap} mode="wall" nameStyle="short" onSelect={focusEvent} />
-          ) : null}
           {!all && loaded ? (
             <Timeline
               mode={state.mode}

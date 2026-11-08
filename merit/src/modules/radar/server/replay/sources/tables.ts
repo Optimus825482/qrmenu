@@ -39,7 +39,7 @@ async function* callClosed(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
     async (range, take) => {
       const rows = await prisma.waiterCall.findMany({
         where: { outlet: { hotelId: q.hotelId }, resolvedAt: timeFilter(range) },
-        select: { id: true, outletId: true, tableId: true, resolvedById: true, resolvedAt: true },
+        select: { id: true, outletId: true, tableId: true, resolvedById: true, resolvedAt: true, resolvedBy: { select: { fullName: true } } },
         orderBy: [{ resolvedAt: "asc" }, { id: "asc" }],
         ...(take ? { take } : {}),
       });
@@ -56,6 +56,8 @@ async function* callClosed(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
         type: "call.closed",
         callId: c.id,
         tableId: c.tableId,
+        waiterId: c.resolvedById ?? undefined,
+        waiterName: c.resolvedBy?.fullName ?? undefined,
       },
     ],
   );

@@ -570,9 +570,13 @@ button.rd-counter {
 /* Masa görünümü */
 .rd-tables {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   align-items: start;
+}
+
+.rd-tables[data-has-detail="true"] {
+  grid-template-columns: minmax(0, 1fr) 280px;
 }
 
 .rd-areas {
@@ -691,29 +695,30 @@ button.rd-counter {
   display: flex;
   min-height: 0;
   min-width: 0;
+  position: relative;
 }
 
 .rd-ticker {
   flex: none;
-  width: 280px;
+  width: 320px;
+  max-width: 35vw;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
+  gap: 8px;
+  padding: 8px 10px;
   border-left: 1px solid var(--app-line);
   background: var(--surface);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 
 .rd-ticker[data-mode="wall"] {
-  width: 100%;
-  border-left: 0;
-  border-top: 1px solid var(--app-line);
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 8px;
+  width: 350px;
+  border-left: 1px solid var(--app-line);
+  border-top: 0;
+  flex-direction: column;
+  padding: 10px 12px;
 }
 
 .rd-ticker-head {
@@ -721,11 +726,32 @@ button.rd-counter {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--app-line);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 2;
+}
+
+.rd-ticker-title-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rd-ticker-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 6px var(--success);
 }
 
 .rd-ticker-list {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -733,8 +759,8 @@ button.rd-counter {
 
 .rd-ticker[data-mode="wall"] .rd-ticker-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .rd-ticker-row {
@@ -743,16 +769,42 @@ button.rd-counter {
 
 .rd-ticker-btn {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
   width: 100%;
-  min-height: var(--tap-xp);
-  padding: 2px 4px;
-  border: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
   border-radius: var(--radius-s);
-  background: transparent;
+  background: var(--surface);
   text-align: left;
   font-size: var(--rd-small);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rd-ticker-btn[data-tone="warn"] {
+  border-left-color: #f59e0b;
+}
+.rd-ticker-btn[data-tone="success"] {
+  border-left-color: #10b981;
+}
+.rd-ticker-btn[data-tone="purple"] {
+  border-left-color: #a855f7;
+}
+.rd-ticker-btn[data-tone="info"] {
+  border-left-color: #0284c7;
+}
+.rd-ticker-btn[data-tone="accent"] {
+  border-left-color: #1c4fd8;
+}
+.rd-ticker-btn[data-tone="danger"] {
+  border-left-color: #ef4444;
+}
+.rd-ticker-btn[data-tone="teal"] {
+  border-left-color: #14b8a6;
+}
+.rd-ticker-btn[data-tone="muted"] {
+  border-left-color: #94a3b8;
 }
 
 button.rd-ticker-btn {
@@ -762,19 +814,86 @@ button.rd-ticker-btn {
 button.rd-ticker-btn:hover,
 button.rd-ticker-btn:focus-visible {
   background: var(--accent-app-soft);
+  border-color: var(--accent-app);
+}
+
+.rd-ticker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.rd-ticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-s);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.rd-ticker-badge[data-tone="warn"] {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.rd-ticker-badge[data-tone="success"] {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.rd-ticker-badge[data-tone="purple"] {
+  background: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
+.rd-ticker-badge[data-tone="info"] {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.rd-ticker-badge[data-tone="accent"] {
+  background: #e3ebff;
+  color: #1c4fd8;
+  border: 1px solid #bfdbfe;
+}
+.rd-ticker-badge[data-tone="danger"] {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.rd-ticker-badge[data-tone="teal"] {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+.rd-ticker-badge[data-tone="muted"] {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .rd-ticker-time {
   flex: none;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  font-size: 11px;
 }
 
 .rd-ticker-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.35;
+  color: var(--text);
+  word-break: break-word;
+  font-size: 12px;
 }
 
 /* Uyarı şeridi */
