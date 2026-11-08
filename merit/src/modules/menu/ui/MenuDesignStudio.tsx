@@ -15,6 +15,7 @@ import { useSse } from "@/shell/useSse";
 import {
   AMBIENCES,
   CONCEPTS,
+  CALL_WAITER_POSITIONS,
   CARD_STYLES,
   CATEGORY_TAB_STYLES,
   DENSITIES,
@@ -25,6 +26,7 @@ import {
   HERO_FONT_FAMILIES,
   TYPOGRAPHIES,
   templatePreset,
+  type CallWaiterPosition,
   type CategoryTabStyle,
   type DesignBlockId,
   type DesignOptions,
@@ -418,6 +420,22 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
               </label>
               <small>Boş bırakıldığında misafirin diline göre otomatik gösterilir (TR: Garson çağır, EN: Call waiter vb.).</small>
             </div>
+            <div className="xp-call-button-config" style={{ marginTop: 10 }}>
+              <label className="xp-design-field">
+                <strong>Buton Konumu</strong>
+                <select
+                  value={design.options.callWaiterPosition ?? "STICKY_FOOTER"}
+                  onChange={(e) => patchOptions({ callWaiterPosition: e.target.value as CallWaiterPosition })}
+                >
+                  {CALL_WAITER_POSITIONS.map((pos) => (
+                    <option key={pos.id} value={pos.id}>
+                      {pos.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <small>Butonun misafir ekranındaki yerleşimi: alt sabit bar, üst başlık veya hero/başlık altı.</small>
+            </div>
             <CallOptionsPanel
               outletId={activeOutletId}
               onChanged={(options) => setCallOptions(options.filter((option) => option.isActive))}
@@ -731,6 +749,19 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 onChange={(event) => patchOptions({ callWaiterText: event.target.value })}
               />
             </label>
+            <label className="xp-design-field">
+              Garson çağır butonu konumu
+              <select
+                value={design.options.callWaiterPosition ?? "STICKY_FOOTER"}
+                onChange={(event) => patchOptions({ callWaiterPosition: event.target.value as CallWaiterPosition })}
+              >
+                {CALL_WAITER_POSITIONS.map((pos) => (
+                  <option key={pos.id} value={pos.id}>
+                    {pos.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="xp-design-inspector-palette">
               <span>Arka plan<i style={{ background: selectedTheme.bg }} /></span>
               <span>Vurgu<i style={{ background: selectedTheme.accent }} /></span>
@@ -847,8 +878,8 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                       design={design}
                       outletName={outlet?.name ?? "Menü"}
                       tableLabel="Masa 12"
-                      footer={
-                        <div className="g-footer-actions">
+                      headerCallWaiter={
+                        design.options.callWaiterPosition === "STICKY_HEADER" ? (
                           <CallWaiterButton
                             token="onizleme"
                             locale={previewLocale}
@@ -856,10 +887,34 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                             preview
                             customText={design.options.callWaiterText}
                           />
-                        </div>
+                        ) : undefined
+                      }
+                      footer={
+                        design.options.callWaiterPosition === "STICKY_FOOTER" || !design.options.callWaiterPosition ? (
+                          <div className="g-footer-actions">
+                            <CallWaiterButton
+                              token="onizleme"
+                              locale={previewLocale}
+                              options={callOptions}
+                              preview
+                              customText={design.options.callWaiterText}
+                            />
+                          </div>
+                        ) : undefined
                       }
                     >
-                      <MenuView menu={preview.menu} locale={previewLocale} />
+                      <MenuView
+                        menu={{
+                          ...preview.menu,
+                          state: {
+                            ...preview.menu.state,
+                            design,
+                            callOptions,
+                          },
+                        }}
+                        locale={previewLocale}
+                        token="onizleme"
+                      />
                     </GuestFrame>
                   </NextIntlClientProvider>
                 </DesignPreviewFrame>

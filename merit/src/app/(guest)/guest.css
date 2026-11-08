@@ -1722,6 +1722,88 @@ body {
   color: var(--m-text-on-accent, #ffffff);
   border-style: solid;
 }
+/* Call waiter position variants (Sticky Header & Hero Bottom) */
+.g-header-call-wrap {
+  display: flex;
+  align-items: center;
+}
+.g-header-call-wrap .g-call {
+  position: static;
+  flex: none;
+}
+.g-header-call-wrap .g-button {
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: var(--m-accent, #c9a24a);
+  color: var(--m-text-on-accent, #ffffff);
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
+  white-space: nowrap;
+  line-height: 1.25;
+}
+.g-header-call-wrap .g-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.g-header-call-wrap .g-call-msg {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--m-bg, #ffffff);
+  color: var(--m-text, #111827);
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--m-line, #e5e7eb);
+  white-space: nowrap;
+  z-index: 50;
+}
+
+.g-hero-block-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.g-hero-call-wrap {
+  padding: 10px 16px 6px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.g-hero-call-wrap .g-call {
+  width: 100%;
+  max-width: 480px;
+}
+.g-hero-call-wrap .g-button {
+  width: 100%;
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--m-accent, #c9a24a) 12%, var(--m-bg, #ffffff));
+  border: 1.5px solid var(--m-accent, #c9a24a);
+  color: var(--m-accent, #c9a24a);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--m-accent, #c9a24a) 15%, transparent);
+  transition: background 0.15s ease, color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.g-hero-call-wrap .g-button:hover:not(:disabled) {
+  background: var(--m-accent, #c9a24a);
+  color: var(--m-text-on-accent, #ffffff);
+}
+.g-hero-call-wrap .g-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.g-footer:empty,
+.g-footer-actions:empty {
+  display: none !important;
+}
 @media (prefers-reduced-motion: reduce) {
   .g-call-option {
     transition: none;

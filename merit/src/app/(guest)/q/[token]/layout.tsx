@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
+import { CallWaiterButton } from "@/modules/menu/ui/guest/CallWaiterButton";
 import { GuestFooter } from "@/modules/menu/ui/guest/GuestFooter";
 import { GuestFrame, HtmlLangSync } from "@/modules/menu/ui/guest/GuestFrame";
 import { localizeTexts } from "@/modules/mybar/server/translateService";
@@ -113,6 +114,8 @@ export default async function GuestLayout({
   }
 
   const { state, table } = target;
+  const callWaiterPosition = state.design?.options?.callWaiterPosition ?? "STICKY_FOOTER";
+
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       <GuestFrame
@@ -122,6 +125,16 @@ export default async function GuestLayout({
         design={state.design}
         outletName={state.outletName}
         tableLabel={table.label}
+        headerCallWaiter={
+          callWaiterPosition === "STICKY_HEADER" ? (
+            <CallWaiterButton
+              token={token}
+              locale={locale as Locale}
+              options={state.callOptions}
+              customText={state.design?.options?.callWaiterText}
+            />
+          ) : undefined
+        }
         footer={
           <GuestFooter
             token={token}
@@ -131,6 +144,7 @@ export default async function GuestLayout({
             currency={state.currency}
             callOptions={state.callOptions}
             callWaiterText={state.design?.options?.callWaiterText}
+            callWaiterPosition={callWaiterPosition}
           />
         }
       >

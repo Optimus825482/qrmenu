@@ -6,6 +6,7 @@ import { useState } from "react";
 import { EnvLabel } from "@/components/EnvLabel";
 import type { Locale } from "@/lib/i18n/locales";
 import type { GuestCallOption } from "../../callOptions";
+import type { CallWaiterPosition } from "../../design";
 import { CallWaiterButton } from "./CallWaiterButton";
 import type { GuestMenuMode } from "./MenuView";
 import { SelectionsDrawer } from "./SelectionsDrawer";
@@ -21,6 +22,7 @@ export function GuestFooter({
   mode = "table",
   callOptions = [],
   callWaiterText,
+  callWaiterPosition = "STICKY_FOOTER",
 }: {
   token: string;
   locale: Locale;
@@ -30,6 +32,7 @@ export function GuestFooter({
   mode?: GuestMenuMode;
   callOptions?: GuestCallOption[];
   callWaiterText?: string;
+  callWaiterPosition?: CallWaiterPosition;
 }) {
   const t = useTranslations("guest");
   const store = useSelectionStore(token);
@@ -41,6 +44,11 @@ export function GuestFooter({
   const recent = orderIds.slice(-RECENT_ORDERS).reverse();
   // Table guests can still open pending selections and read the closed notice.
   const showSelections = orderingOpen || (mode === "table" && count > 0);
+  const showCallWaiter = mode === "table" && callWaiterPosition === "STICKY_FOOTER";
+
+  if (!showCallWaiter && !showSelections && recent.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -60,7 +68,7 @@ export function GuestFooter({
         </nav>
       ) : null}
       <div className="g-footer-actions">
-        {mode === "table" ? (
+        {showCallWaiter ? (
           <CallWaiterButton token={token} locale={locale} options={callOptions} customText={callWaiterText} />
         ) : null}
         {showSelections ? (

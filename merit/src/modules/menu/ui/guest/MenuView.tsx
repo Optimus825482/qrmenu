@@ -6,6 +6,7 @@ import type { Locale } from "@/lib/i18n/locales";
 import { ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
+import { CallWaiterButton } from "./CallWaiterButton";
 import { categoryItems, curatedPhotoIds } from "./menuPresentation";
 import { priceFormatter } from "./priceFormat";
 import { resetMobileZoomAndOpen } from "./zoomReset";
@@ -221,50 +222,69 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
     }
   };
 
+  const isTable = mode === "table";
+  const heroCallButton =
+    isTable && options.callWaiterPosition === "HERO_BOTTOM" ? (
+      <div className="g-hero-call-wrap" key="hero-call">
+        <CallWaiterButton
+          token={token ?? "onizleme"}
+          locale={locale}
+          options={state.callOptions ?? []}
+          preview={!token || token === "onizleme"}
+          customText={options.callWaiterText}
+        />
+      </div>
+    ) : null;
+
   const blocks: Record<string, ReactNode> = {
     hero:
-      options.hero === "NONE" ? null : (
-        <section
-          className="g-design-hero"
-          key="hero"
-          data-photo={heroPhoto ? "true" : undefined}
-          style={{
-            ...(options.heroAlign ? {
-              textAlign: options.heroAlign,
-              alignItems: options.heroAlign === "center" ? "center" : options.heroAlign === "right" ? "flex-end" : "flex-start",
-            } : {}),
-            ...(options.heroBgColor ? { background: options.heroBgColor } : {}),
-            ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
-          }}
-        >
-          {heroPhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="g-hero-img"
-              src={heroPhoto}
-              alt={`${state.outletName} · ${state.hotelName}`}
-              loading="eager"
-              fetchPriority="high"
-            />
+      options.hero === "NONE" && !heroCallButton ? null : (
+        <div key="hero-wrap" className="g-hero-block-wrap">
+          {options.hero !== "NONE" ? (
+            <section
+              className="g-design-hero"
+              key="hero"
+              data-photo={heroPhoto ? "true" : undefined}
+              style={{
+                ...(options.heroAlign ? {
+                  textAlign: options.heroAlign,
+                  alignItems: options.heroAlign === "center" ? "center" : options.heroAlign === "right" ? "flex-end" : "flex-start",
+                } : {}),
+                ...(options.heroBgColor ? { background: options.heroBgColor } : {}),
+                ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
+              }}
+            >
+              {heroPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  className="g-hero-img"
+                  src={heroPhoto}
+                  alt={`${state.outletName} · ${state.hotelName}`}
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              ) : null}
+              <span style={{ ...(options.heroTextColor ? { color: options.heroTextColor } : {}) }}>
+                {state.hotelName}
+              </span>
+              <h2
+                style={{
+                  ...(options.heroFontSize === "small" ? { fontSize: "1.1rem" } :
+                      options.heroFontSize === "medium" ? { fontSize: "1.35rem" } :
+                      options.heroFontSize === "large" ? { fontSize: "1.65rem" } :
+                      options.heroFontSize === "xlarge" ? { fontSize: "2rem" } : {}),
+                  ...resolveHeroFont(options.heroFontFamily),
+                  ...(options.heroFontFamily === "greatvibes" ? { fontSize: "2.1rem", lineHeight: 1.15 } : {}),
+                  ...(options.heroFontFamily === "bebas" ? { fontSize: "1.75rem", letterSpacing: "0.06em" } : {}),
+                  ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
+                }}
+              >
+                {state.outletName}
+              </h2>
+            </section>
           ) : null}
-          <span style={{ ...(options.heroTextColor ? { color: options.heroTextColor } : {}) }}>
-            {state.hotelName}
-          </span>
-          <h2
-            style={{
-              ...(options.heroFontSize === "small" ? { fontSize: "1.1rem" } :
-                  options.heroFontSize === "medium" ? { fontSize: "1.35rem" } :
-                  options.heroFontSize === "large" ? { fontSize: "1.65rem" } :
-                  options.heroFontSize === "xlarge" ? { fontSize: "2rem" } : {}),
-              ...resolveHeroFont(options.heroFontFamily),
-              ...(options.heroFontFamily === "greatvibes" ? { fontSize: "2.1rem", lineHeight: 1.15 } : {}),
-              ...(options.heroFontFamily === "bebas" ? { fontSize: "1.75rem", letterSpacing: "0.06em" } : {}),
-              ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
-            }}
-          >
-            {state.outletName}
-          </h2>
-        </section>
+          {heroCallButton}
+        </div>
       ),
     categories: (
       <div key="categories">

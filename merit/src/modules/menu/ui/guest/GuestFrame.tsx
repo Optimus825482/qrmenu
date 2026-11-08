@@ -154,6 +154,7 @@ export function GuestFrame({
   device,
   onLocaleChange,
   children,
+  headerCallWaiter,
   footer,
 }: {
   token: string;
@@ -171,6 +172,8 @@ export function GuestFrame({
   device?: string;
   onLocaleChange?: (locale: Locale) => void;
   children: ReactNode;
+  /** Header slot: call-waiter button when configured as STICKY_HEADER */
+  headerCallWaiter?: ReactNode;
   /** Bottom bar slot: the selections button arrives with the ordering flow. */
   footer?: ReactNode;
 }) {
@@ -231,6 +234,9 @@ export function GuestFrame({
               <span>{placeLabel ?? tableLabel}</span>
             </h1>
             <div className="g-header-right">
+              {headerCallWaiter ? (
+                <div className="g-header-call-wrap">{headerCallWaiter}</div>
+              ) : null}
               {!preview && !isChrome ? (
                 <button
                   type="button"

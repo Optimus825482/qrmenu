@@ -30,6 +30,21 @@ describe("yeni tasarım seçenekleri", () => {
     expect(stored("https://evil.example/x.png")).toBe("");
     expect(stored(`/uploads/${"a".repeat(300)}`)).toBe("");
   });
+
+  it("callWaiterPosition geçerli değerleri korur, bozuk değerleri STICKY_FOOTER'a düşürür", () => {
+    expect(
+      designFromStored({ template: "ROYAL", options: { cardStyle: "LIST", callWaiterPosition: "STICKY_HEADER" } }).options
+        .callWaiterPosition,
+    ).toBe("STICKY_HEADER");
+    expect(
+      designFromStored({ template: "ROYAL", options: { cardStyle: "LIST", callWaiterPosition: "HERO_BOTTOM" } }).options
+        .callWaiterPosition,
+    ).toBe("HERO_BOTTOM");
+    expect(
+      designFromStored({ template: "ROYAL", options: { cardStyle: "LIST", callWaiterPosition: "INVALID" } }).options
+        .callWaiterPosition,
+    ).toBe("STICKY_FOOTER");
+  });
 });
 
 describe("designFromStored", () => {

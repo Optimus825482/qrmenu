@@ -136,6 +136,15 @@ export function resolveHeroFont(id?: HeroFontFamily): { fontFamily: string; lett
   }
 }
 
+export const CALL_WAITER_POSITIONS = [
+  { id: "STICKY_FOOTER", label: "Alt Sabit Bar (Sticky Footer)" },
+  { id: "STICKY_HEADER", label: "Üst Sabit Başlık (Sticky Header)" },
+  { id: "HERO_BOTTOM", label: "Başlığın / Hero'nun Hemen Altında" },
+] as const;
+
+export type CallWaiterPosition = (typeof CALL_WAITER_POSITIONS)[number]["id"];
+export const CALL_WAITER_POSITION_IDS = new Set<string>(CALL_WAITER_POSITIONS.map((p) => p.id));
+
 export type DesignOptions = {
   cardStyle: CardStyle;
   categoryTabStyle?: CategoryTabStyle;
@@ -161,6 +170,8 @@ export type DesignOptions = {
   showFilters: boolean;
   /** Customizable label for the Call Waiter button; empty falls back to the localized default. */
   callWaiterText: string;
+  /** Placement of the Call Waiter button in the guest menu. */
+  callWaiterPosition: CallWaiterPosition;
 };
 
 /** Values for the options added after the first designs were saved; a saved design without them looks as before. */
@@ -179,6 +190,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   showSearch: true,
   showFilters: true,
   callWaiterText: "",
+  callWaiterPosition: "STICKY_FOOTER",
 } as const satisfies Pick<
   DesignOptions,
   | "categoryTabStyle"
@@ -195,6 +207,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "showSearch"
   | "showFilters"
   | "callWaiterText"
+  | "callWaiterPosition"
 >;
 
 const options = (partial: Partial<DesignOptions> = {}): DesignOptions => ({
@@ -397,6 +410,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     heroBgColor: typeof raw.heroBgColor === "string" ? raw.heroBgColor.trim() : preset.heroBgColor,
     heroTextColor: typeof raw.heroTextColor === "string" ? raw.heroTextColor.trim() : preset.heroTextColor,
     callWaiterText: typeof raw.callWaiterText === "string" ? raw.callWaiterText.trim().slice(0, 40) : preset.callWaiterText,
+    callWaiterPosition: raw.callWaiterPosition && CALL_WAITER_POSITION_IDS.has(raw.callWaiterPosition) ? (raw.callWaiterPosition as CallWaiterPosition) : (preset.callWaiterPosition ?? NEUTRAL_NEW_OPTIONS.callWaiterPosition),
   };
 }
 
