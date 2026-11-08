@@ -51,7 +51,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
   const { hotelId, now } = env;
   const outlets = await prisma.outlet.findMany({
     where: { hotelId, isActive: true, OR: [{ hasOrdering: true }, { hasMenu: true }], type: { not: "ODA_SERVISI" } },
-    select: { id: true, name: true, type: true, orderingEnabled: true, hasOrdering: true, hasMenu: true, printerId: true },
+    select: { id: true, name: true, type: true, orderingEnabled: true, hasOrdering: true, hasMenu: true, waiterAssignmentEnabled: true, printerId: true },
     orderBy: [{ name: "asc" }, { id: "asc" }],
   });
   const outletIds = outlets.map((o) => o.id);
@@ -257,6 +257,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
       orderingEnabled: o.orderingEnabled,
       hasOrdering: o.hasOrdering,
       hasMenu: o.hasMenu,
+      waiterAssignmentEnabled: o.waiterAssignmentEnabled,
       areas: areaEntries,
       queues: {
         kasa: queueOf(kasa),

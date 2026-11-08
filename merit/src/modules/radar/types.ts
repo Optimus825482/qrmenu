@@ -204,6 +204,7 @@ export type RadarSnapshot = {
         orderingEnabled: boolean;
         hasOrdering?: boolean;
         hasMenu?: boolean;
+        waiterAssignmentEnabled?: boolean;
         areas: {
           areaId: string;
           name: string;

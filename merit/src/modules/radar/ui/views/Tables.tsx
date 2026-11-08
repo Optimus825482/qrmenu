@@ -17,8 +17,20 @@ const mmss = (ms: number) => {
   return `${Math.floor(s / 60)} dk ${String(s % 60).padStart(2, "0")} sn`;
 };
 
-function Card({ table, now, selected, onSelect }: { table: TableCard; now: number; selected: boolean; onSelect(): void }) {
-  const m = tableCardModel(table, now);
+function Card({
+  table,
+  now,
+  selected,
+  waiterAssignmentEnabled,
+  onSelect,
+}: {
+  table: TableCard;
+  now: number;
+  selected: boolean;
+  waiterAssignmentEnabled?: boolean;
+  onSelect(): void;
+}) {
+  const m = tableCardModel(table, now, waiterAssignmentEnabled);
   const ref = usePulse<HTMLButtonElement>(`table:${table.tableId}`);
   return (
     <button
@@ -50,7 +62,7 @@ function Card({ table, now, selected, onSelect }: { table: TableCard; now: numbe
           );
         })}
       </span>
-      <span className="rd-card-waiter">{m.waiter}</span>
+      {m.waiter ? <span className="rd-card-waiter">{m.waiter}</span> : null}
     </button>
   );
 }
@@ -59,16 +71,18 @@ function Detail({
   table,
   hotelId,
   now,
+  waiterAssignmentEnabled,
   onOpenApp,
   onClose,
 }: {
   table: TableCard;
   hotelId: string;
   now: number;
+  waiterAssignmentEnabled?: boolean;
   onOpenApp?: (appId: string) => void;
   onClose(): void;
 }) {
-  const m = tableCardModel(table, now);
+  const m = tableCardModel(table, now, waiterAssignmentEnabled);
   return (
     <DetailBubble
       title={`Masa ${table.label}`}
@@ -81,7 +95,7 @@ function Detail({
       <p>
         Durum: <strong>{m.statusText}</strong>
       </p>
-      <p>Garson: {m.waiter}</p>
+      {m.waiter ? <p>Garson: {m.waiter}</p> : null}
       <h4>Siparişler</h4>
       {table.orders.length === 0 ? (
         <p className="rd-muted">Açık sipariş yok.</p>
@@ -185,6 +199,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
                       table={t}
                       now={now}
                       selected={t.tableId === selected}
+                      waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
                       onSelect={() => setSelected(t.tableId === selected ? null : t.tableId)}
                     />
                   ))}
@@ -193,7 +208,14 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             ))}
         </div>
         {sel ? (
-          <Detail table={sel} hotelId={view.hotelId} now={now} onOpenApp={onOpenApp} onClose={() => setSelected(null)} />
+          <Detail
+            table={sel}
+            hotelId={view.hotelId}
+            now={now}
+            waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
+            onOpenApp={onOpenApp}
+            onClose={() => setSelected(null)}
+          />
         ) : (
           <div />
         )}

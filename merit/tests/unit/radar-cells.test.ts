@@ -141,6 +141,8 @@ describe("tableCardModel", () => {
   it("no waiter -> Atanmadı", () => {
     expect(tableCardModel(table(), NOW).waiter).toBe("Atanmadı");
     expect(tableCardModel(table({ waiterId: "w", waiterName: "Ayşe Kaya" }), NOW).waiter).toBe("Ayşe Kaya");
+    expect(tableCardModel(table(), NOW, false).waiter).toBe("");
+    expect(tableCardModel(table({ waiterId: "w", waiterName: "Ayşe Kaya" }), NOW, false).waiter).toBe("Ayşe Kaya");
   });
 
   it("empty table is Boş / muted", () => {

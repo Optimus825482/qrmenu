@@ -94,7 +94,7 @@ export type TableCardModel = {
 };
 
 /** Status of a table card in UX priority: call overdue > awaiting approval > active call > ready > preparing > guest present > empty. */
-export function tableCardModel(t: TableCard, now: number): TableCardModel {
+export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnabled?: boolean): TableCardModel {
   const open = t.orders;
   const awaiting = open.filter((o) => o.status === "GONDERILDI").length;
   const scanMs = t.scannedAt !== undefined ? now - (Date.parse(t.scannedAt) || 0) : undefined;
@@ -139,11 +139,13 @@ export function tableCardModel(t: TableCard, now: number): TableCardModel {
   }
   if (open.some((o) => o.escalated)) badges.push("Yükseltildi");
 
+  const showWaiter = waiterAssignmentEnabled !== false;
+
   return {
     tone,
     statusText,
     badges,
-    waiter: t.waiterName ?? "Atanmadı",
+    waiter: t.waiterName ?? (showWaiter ? "Atanmadı" : ""),
     ...(callSeconds !== undefined ? { callSeconds, callOverdue } : {}),
     guestPresent,
     ...(scanMinutes !== undefined ? { scanMinutes } : {}),

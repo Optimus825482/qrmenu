@@ -40,6 +40,7 @@ export type OutletRow = {
   phoneConfirmRequired: boolean;
   autoPrintReceipt: boolean;
   autoPrintKitchen: boolean;
+  waiterAssignmentEnabled: boolean;
   isActive: boolean;
   tableCount: number;
   areaCount: number;
@@ -66,6 +67,7 @@ const SELECT = {
   phoneConfirmRequired: true,
   autoPrintReceipt: true,
   autoPrintKitchen: true,
+  waiterAssignmentEnabled: true,
   isActive: true,
   areas: {
     select: {
@@ -98,13 +100,25 @@ export const outletSchema = z
     type: z.enum(OutletType, "Outlet türünü seçin"),
     hasMenu: z.boolean().default(true),
     hasOrdering: z.boolean().default(false),
-    orderingEnabled: z.boolean().default(true),
+    orderingEnabled: z.boolean().default(false),
     priceDisplay: z.enum(PriceDisplay, "Fiyat gösterimini seçin").default("INHERIT"),
     phoneConfirmRequired: z.boolean().default(false),
     kdsEnabled: z.boolean().default(false),
     autoPrintReceipt: z.boolean().default(true),
     autoPrintKitchen: z.boolean().default(false),
+    waiterAssignmentEnabled: z.boolean().default(false),
     isActive: z.boolean().optional(),
+  })
+  .transform((value) => {
+    if (value.type === "ODA_SERVISI") {
+      return {
+        ...value,
+        hasOrdering: value.hasOrdering ?? true,
+        orderingEnabled: value.orderingEnabled ?? true,
+        kdsEnabled: value.kdsEnabled ?? true,
+      };
+    }
+    return value;
   })
   .superRefine((value, ctx) => {
     if (value.hasOrdering && !value.hasMenu) {

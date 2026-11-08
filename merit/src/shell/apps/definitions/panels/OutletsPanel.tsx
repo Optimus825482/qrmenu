@@ -76,6 +76,7 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
           {row.outlet.hasMenu ? <span className="xp-outlet-module-badge" data-module="menu">QR Menü</span> : null}
           {row.outlet.hasOrdering ? <span className="xp-outlet-module-badge" data-module="ordering">QR Sipariş</span> : null}
           {row.outlet.kdsEnabled ? <span className="xp-outlet-module-badge" data-module="kds">KDS</span> : null}
+          {row.outlet.waiterAssignmentEnabled ? <span className="xp-outlet-module-badge" data-module="staff">Garson Atama</span> : null}
           {!row.outlet.isActive ? <span className="xp-badge">Pasif</span> : null}
         </span>
       ),
@@ -96,6 +97,7 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       phoneConfirmRequired: flag("phoneConfirmRequired"),
       autoPrintReceipt: flag("autoPrintReceipt"),
       autoPrintKitchen: flag("autoPrintKitchen"),
+      waiterAssignmentEnabled: flag("waiterAssignmentEnabled"),
       isActive: flag("isActive"),
     };
     const result =
@@ -245,13 +247,36 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
 }
 
 function OutletFields({ editing }: { editing?: OutletRow }) {
+  const isNew = !editing;
+  const [selectedType, setSelectedType] = useState<OutletType>(editing?.type ?? "GENEL");
+  const [hasOrdering, setHasOrdering] = useState(editing?.hasOrdering ?? false);
+  const [orderingEnabled, setOrderingEnabled] = useState(editing?.orderingEnabled ?? false);
+  const [kdsEnabled, setKdsEnabled] = useState(editing?.kdsEnabled ?? false);
+  const [waiterAssignmentEnabled, setWaiterAssignmentEnabled] = useState(editing?.waiterAssignmentEnabled ?? false);
+
+  const onTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newType = e.target.value as OutletType;
+    setSelectedType(newType);
+    if (isNew) {
+      if (newType === "ODA_SERVISI") {
+        setHasOrdering(true);
+        setOrderingEnabled(true);
+        setKdsEnabled(true);
+      } else {
+        setHasOrdering(false);
+        setOrderingEnabled(false);
+        setKdsEnabled(false);
+      }
+    }
+  };
+
   return (
     <>
       <Field name="name" label="Outlet adı">
         <input type="text" defaultValue={editing?.name ?? ""} maxLength={80} />
       </Field>
       <Field name="type" label="Tür">
-        <select defaultValue={editing?.type ?? "GENEL"}>
+        <select value={selectedType} onChange={onTypeChange}>
           {Object.values(OutletType).map((t) => (
             <option key={t} value={t}>
               {OUTLET_TYPE_LABELS[t]}
@@ -263,10 +288,18 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
         <input type="checkbox" defaultChecked={editing?.hasMenu ?? true} />
       </Field>
       <Field name="hasOrdering" label="Sipariş modülü (garson / kasa)">
-        <input type="checkbox" defaultChecked={editing?.hasOrdering ?? false} />
+        <input
+          type="checkbox"
+          checked={hasOrdering}
+          onChange={(e) => setHasOrdering(e.target.checked)}
+        />
       </Field>
       <Field name="orderingEnabled" label="QR sipariş açık">
-        <input type="checkbox" defaultChecked={editing?.orderingEnabled ?? true} />
+        <input
+          type="checkbox"
+          checked={orderingEnabled}
+          onChange={(e) => setOrderingEnabled(e.target.checked)}
+        />
       </Field>
       <Field name="priceDisplay" label="Fiyat gösterimi">
         <select defaultValue={editing?.priceDisplay ?? "INHERIT"}>
@@ -278,7 +311,11 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
         </select>
       </Field>
       <Field name="kdsEnabled" label="Mutfak ekranı (KDS)">
-        <input type="checkbox" defaultChecked={editing?.kdsEnabled ?? false} />
+        <input
+          type="checkbox"
+          checked={kdsEnabled}
+          onChange={(e) => setKdsEnabled(e.target.checked)}
+        />
       </Field>
       <Field name="autoPrintReceipt" label="Adisyonu otomatik yazdır">
         <input type="checkbox" defaultChecked={editing?.autoPrintReceipt ?? true} />
@@ -288,6 +325,13 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
       </Field>
       <Field name="phoneConfirmRequired" label="Telefon onayı gerekli">
         <input type="checkbox" defaultChecked={editing?.phoneConfirmRequired ?? false} />
+      </Field>
+      <Field name="waiterAssignmentEnabled" label="Masa garson ataması">
+        <input
+          type="checkbox"
+          checked={waiterAssignmentEnabled}
+          onChange={(e) => setWaiterAssignmentEnabled(e.target.checked)}
+        />
       </Field>
       <Field name="isActive" label="Aktif">
         <input type="checkbox" defaultChecked={editing?.isActive ?? true} />
