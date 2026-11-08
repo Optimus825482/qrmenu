@@ -30,6 +30,7 @@ import { RoomService } from "./views/RoomService";
 import { Staff } from "./views/Staff";
 import { Tables } from "./views/Tables";
 import { createSoundGate, createWallController } from "./wall";
+import { playRadarSound } from "./radarSound";
 import "./radar.css";
 
 export type RadarInitial = {
@@ -216,27 +217,57 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       ? wallState.focus.outletId
       : outletId;
 
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      if (next) {
+        playRadarSound("ready");
+      }
+      return next;
+    });
+  };
+
+  const initializedEventsRef = useRef(false);
+  const seenEventIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!initializedEventsRef.current) {
+      for (const ev of state.buffer) seenEventIdsRef.current.add(ev.id);
+      initializedEventsRef.current = true;
+      return;
+    }
+    if (!soundEnabled) return;
+    for (const ev of state.buffer) {
+      if (seenEventIdsRef.current.has(ev.id)) continue;
+      seenEventIdsRef.current.add(ev.id);
+      if (ev.type === "call.opened") {
+        playRadarSound("call");
+      } else if (ev.type === "order.status" && ev.to === "GONDERILDI") {
+        playRadarSound("new-order");
+      }
+    }
+  }, [soundEnabled, state.buffer]);
+
   useEffect(() => {
     soundGateRef.current.setEnabled(soundEnabled);
   }, [soundEnabled]);
 
   useEffect(() => {
-    if (!wall) return;
     for (const alert of state.alerts) {
-      if (alert.severity !== "crit") continue;
       if (seenCritKeysRef.current.has(alert.key)) continue;
       seenCritKeysRef.current.add(alert.key);
-      wallCtrl.critical(alert, Date.now());
-      if (soundGateRef.current.shouldPlay(Date.now()) && typeof Audio !== "undefined") {
-        try {
-          const audio = new Audio("/sounds/error.wav");
-          void audio.play().catch(() => undefined);
-        } catch {
-          // ignore audio errors
+      if (wall) wallCtrl.critical(alert, Date.now());
+      if (soundEnabled && alert.severity === "crit" && soundGateRef.current.shouldPlay(Date.now())) {
+        if (alert.kind === "CAGRI") {
+          playRadarSound("call");
+        } else if (alert.kind === "SIPARIS_ONAY") {
+          playRadarSound("new-order");
+        } else {
+          playRadarSound("error");
         }
       }
     }
-  }, [wall, state.alerts, wallCtrl]);
+  }, [wall, soundEnabled, state.alerts, wallCtrl]);
 
   useEffect(() => {
     if (!wall) return;
@@ -602,7 +633,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               connection={connection}
               rotationLabel={wallState?.label ?? ""}
               soundEnabled={soundEnabled}
-              onToggleSound={() => setSoundEnabled((x) => !x)}
+              onToggleSound={toggleSound}
               onWakeLockStatus={setWakeLockAvailable}
               wakeLockAvailable={wakeLockAvailable}
             />
@@ -626,6 +657,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               reduced: motionPref.reduced,
               onToggle: toggleMotion,
               hint: all ? "Animasyon otel görünümünde çalışır: ilk otele geçip açar" : undefined,
+            }}
+            sound={{
+              enabled: soundEnabled,
+              onToggle: toggleSound,
             }}
             demo={{
               running: demo.running,

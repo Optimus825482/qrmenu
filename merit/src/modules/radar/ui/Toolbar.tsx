@@ -53,6 +53,7 @@ export type ToolbarProps = {
    * (`focusLabel` = the module it is about). `disabled` carries its reason in `hint`.
    */
   demo?: { running: boolean; disabled: boolean; hint?: string; focusLabel?: string; onStart(): void; onStop(): void };
+  sound?: { enabled: boolean; onToggle(): void };
 };
 
 export function Toolbar(p: ToolbarProps) {
@@ -129,6 +130,18 @@ export function Toolbar(p: ToolbarProps) {
         >
           <Icon name="sparkles" size={14} />
           Animasyon
+        </button>
+      ) : null}
+      {p.sound ? (
+        <button
+          type="button"
+          className="rd-chip"
+          aria-pressed={p.sound.enabled}
+          title={p.sound.enabled ? "Sesli uyarılar açık (tıklayarak kapatabilirsiniz)" : "Sesli uyarılar kapalı (tıklayarak açabilirsiniz)"}
+          onClick={p.sound.onToggle}
+        >
+          <Icon name={p.sound.enabled ? "volume" : "volume-off"} size={14} />
+          Ses
         </button>
       ) : null}
       {p.demo ? (
