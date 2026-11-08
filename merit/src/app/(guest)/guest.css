@@ -1079,56 +1079,86 @@
   cursor: not-allowed;
 }
 
+@keyframes gDialogPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .g-sheet-backdrop {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgb(0 0 0 / 0.55);
+  background: rgb(0 0 0 / 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  padding: 16px;
+  animation: gFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .g-sheet {
   position: relative;
   width: 100%;
-  max-width: 560px;
-  max-height: 90dvh;
+  max-width: 520px;
+  max-height: min(88dvh, 760px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--m-bg);
   color: var(--m-text);
-  border-radius: 20px 20px 0 0;
+  border-radius: 24px;
   border: 1px solid var(--m-line);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px var(--m-line);
+  animation: gDialogPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .g-sheet-close {
   position: absolute;
-  top: 10px;
-  inset-inline-end: 10px;
-  z-index: 1;
-  width: 40px;
-  height: 40px;
+  top: 12px;
+  inset-inline-end: 12px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: 0;
-  background: rgb(0 0 0 / 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: #fff;
   font-size: 1.5rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.g-sheet-close:hover {
+  background: rgb(0 0 0 / 0.85);
+  transform: scale(1.06);
+}
+.g-sheet-close:active {
+  transform: scale(0.94);
 }
 .g-sheet-image {
   width: 100%;
-  height: 220px;
+  height: 240px;
   object-fit: cover;
   display: block;
-  border-radius: 20px 20px 0 0;
+  border-radius: 23px 23px 0 0;
 }
 .g-sheet-gallery {
   position: relative;
   width: 100%;
-  height: 220px;
+  height: 240px;
   overflow: hidden;
-  border-radius: 20px 20px 0 0;
+  border-radius: 23px 23px 0 0;
   background: #000;
 }
 .g-sheet-gallery .g-sheet-image {
@@ -1255,10 +1285,10 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .g-sheet-body {
-  padding: 16px calc(16px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+  padding: 20px 22px 24px 22px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .g-sheet-body h2 {
   font-size: 1.3rem;

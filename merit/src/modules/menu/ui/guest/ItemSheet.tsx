@@ -90,7 +90,7 @@ export function ItemSheet({
     <div className="g-sheet-backdrop" onClick={onClose}>
       <div
         ref={sheetRef}
-        className="g-sheet"
+        className="g-sheet g-item-dialog"
         role="dialog"
         aria-modal="true"
         aria-label={item.name}
