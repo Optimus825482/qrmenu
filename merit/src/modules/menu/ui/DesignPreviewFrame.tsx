@@ -99,6 +99,8 @@ function DragScrollArea({ children }: { children: ReactNode }) {
       const clampTop = Math.max(0, Math.min(maxTop, top));
       if (target === win) {
         win.scrollTo({ top: clampTop, behavior: "instant" });
+        doc.documentElement.scrollTop = clampTop;
+        doc.body.scrollTop = clampTop;
       } else {
         (target as HTMLElement).scrollTop = clampTop;
       }
@@ -232,12 +234,21 @@ function DragScrollArea({ children }: { children: ReactNode }) {
       e.preventDefault();
     };
 
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      const { v } = findScrollables(target);
+      const curTop = getScrollTop(v);
+      setScrollTop(v, curTop + e.deltaY);
+    };
+
     doc.addEventListener("pointerdown", onPointerDown, { capture: true });
     doc.addEventListener("pointermove", onPointerMove, { capture: true });
     doc.addEventListener("pointerup", onPointerUp, { capture: true });
     doc.addEventListener("pointercancel", onPointerUp, { capture: true });
     doc.addEventListener("click", onClickCapture, { capture: true });
     doc.addEventListener("dragstart", onDragStart, { capture: true });
+    doc.addEventListener("wheel", onWheel, { passive: false, capture: true });
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
@@ -250,6 +261,7 @@ function DragScrollArea({ children }: { children: ReactNode }) {
       doc.removeEventListener("pointercancel", onPointerUp, { capture: true });
       doc.removeEventListener("click", onClickCapture, { capture: true });
       doc.removeEventListener("dragstart", onDragStart, { capture: true });
+      doc.removeEventListener("wheel", onWheel, { capture: true });
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
@@ -283,7 +295,17 @@ export function DesignPreviewFrame({ children }: { children: ReactNode }) {
       initialContent={FRAME_DOCUMENT}
       head={
         <style>{`${css}
-          html, body {
+          html {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: 100% !important;
+            -webkit-overflow-scrolling: touch !important;
+            scroll-behavior: smooth;
+          }
+          body {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            min-height: 100% !important;
             margin: 0;
             background: transparent;
             cursor: grab;

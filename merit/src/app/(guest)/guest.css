@@ -1,5 +1,17 @@
 /* Guest QR menu. Plain CSS scoped to .g-root; colours come from the outlet theme variables
    (--m-bg --m-accent --m-soft --m-text-on-accent, --m-text derived from the background). */
+html {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 100%;
+}
+
 .g-root {
   --m-bg: #0f0d0a;
   --m-accent: #c9a24a;
@@ -13,9 +25,9 @@
   min-height: 100dvh;
   min-height: -webkit-fill-available;
   overflow-x: hidden;
+  overflow-y: visible;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: contain;
   background: var(--m-bg);
   color: var(--m-text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", sans-serif;
@@ -1101,6 +1113,8 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: gFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .g-sheet {
@@ -1108,8 +1122,11 @@
   width: 100%;
   max-width: 520px;
   max-height: min(88dvh, 760px);
+  margin: auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   background: var(--m-bg);
   color: var(--m-text);
   border-radius: 24px;
@@ -2022,7 +2039,6 @@
 
 .g-root[data-os="android"],
 .g-root[data-os="harmonyos"] {
-  overscroll-behavior-y: contain;
   text-rendering: optimizeLegibility;
 }
 
