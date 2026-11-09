@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { runningStandalone } from "./usePwaInstall";
+import { APP_VERSION, BUILD_ID } from "@/lib/version";
 
 export interface VersionMetadata {
   name: string;
@@ -13,8 +14,8 @@ export interface VersionMetadata {
   timestamp: number;
 }
 
-const CLIENT_VERSION = process.env.MERIT_VERSION ?? "2.5.0";
-const CLIENT_BUILD_ID = process.env.MERIT_BUILD_ID ?? CLIENT_VERSION;
+const CLIENT_VERSION = APP_VERSION;
+const CLIENT_BUILD_ID = BUILD_ID;
 const SNOOZE_KEY = "merit_update_snoozed_until";
 const CHECK_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
