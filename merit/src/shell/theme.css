@@ -2219,6 +2219,7 @@
 }
 
 .xp-user-profile-intro,
+.xp-user-category-box,
 .xp-user-username-note {
   grid-column: 1 / -1;
 }
@@ -2741,6 +2742,21 @@
   min-height: 0;
   flex: 1;
   gap: 4px;
+}
+
+.xp-matrix.xp-role-screen {
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  height: 100%;
+  max-height: 100%;
+}
+
+.xp-matrix.xp-role-screen section[role="tabpanel"],
+.xp-matrix.xp-role-screen section[data-testid="role-preview"] {
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .xp-matrix-modules {

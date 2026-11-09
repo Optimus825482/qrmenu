@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createUserOnboardingAction } from "@/modules/core/server/admin/actions/users";
 import type { CreatedUserCredentials, UserOptions, UserRow } from "@/modules/core/server/admin/users";
 import { CUSTOM_JOB_TITLE, USER_JOB_TITLE_GROUPS } from "@/modules/core/jobTitles";
@@ -21,6 +21,29 @@ type Props = {
 type Profile = { fullName: string; username: string; jobTitle: string; phone: string; email: string };
 const emptyProfile = (): Profile => ({ fullName: "", username: "", jobTitle: "", phone: "", email: "" });
 
+export type UserCategory = "SISTEM" | "YONETICI" | "KULLANICI";
+
+export function roleMatchesCategory(role: { code: string; kind: string }, cat: UserCategory): boolean {
+  if (cat === "SISTEM") {
+    return role.kind === "SISTEM" || role.code === "R-SYS" || role.code === "R-ITT";
+  }
+  if (cat === "YONETICI") {
+    return (
+      role.kind === "YONETIM" ||
+      ["R-OTM", "R-FBM", "R-DEP", "R-HKS", "R-SGF", "R-MUS", "R-KAS"].includes(role.code)
+    );
+  }
+  if (cat === "KULLANICI") {
+    return (
+      role.kind === "MINIBAR" ||
+      role.kind === "OUTLET" ||
+      role.kind === "MUTFAK" ||
+      ["R-KAT", "R-GAR", "R-BAR", "R-BUT", "R-ODS", "R-MUP", "R-KDS", "R-OUT"].includes(role.code)
+    );
+  }
+  return true;
+}
+
 export function UserCreateDialog({
   open,
   options,
@@ -34,6 +57,21 @@ export function UserCreateDialog({
   const [step, setStep] = useState<"profile" | "assignment" | "credentials">("profile");
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [customJobTitle, setCustomJobTitle] = useState(false);
+
+  // Dialog dragging state
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // User type category: SISTEM, YONETICI, KULLANICI
+  const detectCategory = (rId: string): UserCategory => {
+    const r = options?.roles.find((item) => item.id === rId);
+    if (!r) return "KULLANICI";
+    if (roleMatchesCategory(r, "SISTEM")) return "SISTEM";
+    if (roleMatchesCategory(r, "YONETICI")) return "YONETICI";
+    return "KULLANICI";
+  };
+
+  const [category, setCategory] = useState<UserCategory>(() => detectCategory(initialRoleId));
   const [roleId, setRoleId] = useState(initialRoleId);
   const [hotelId, setHotelId] = useState(initialHotelId);
   const [hotelIds, setHotelIds] = useState<string[]>([]);
@@ -43,7 +81,46 @@ export function UserCreateDialog({
   const [copied, setCopied] = useState(false);
 
   if (!open) return null;
-  const selectedRole = options?.roles.find((role) => role.id === roleId);
+
+  const startDrag = (e: ReactPointerEvent<HTMLElement>) => {
+    if (e.button !== 0 || (e.target as Element).closest("button")) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    e.preventDefault();
+    const bar = e.currentTarget;
+    bar.setPointerCapture(e.pointerId);
+    const start = { px: e.clientX, py: e.clientY, ...dragOffset.current };
+    let next = { x: start.x, y: start.y };
+    const onMove = (event: PointerEvent) => {
+      const x = start.x + event.clientX - start.px;
+      const y = start.y + event.clientY - start.py;
+      next = { x, y };
+      dialog.style.transform = `translate(${x}px, ${y}px)`;
+    };
+    const onUp = () => {
+      bar.removeEventListener("pointermove", onMove);
+      bar.removeEventListener("pointerup", onUp);
+      bar.removeEventListener("pointercancel", onUp);
+      dragOffset.current = next;
+    };
+    bar.addEventListener("pointermove", onMove);
+    bar.addEventListener("pointerup", onUp);
+    bar.addEventListener("pointercancel", onUp);
+  };
+
+  const allRoles = options?.roles ?? [];
+  const categoryRoles = allRoles.filter((r) => roleMatchesCategory(r, category));
+  const effectiveRoles = categoryRoles.length > 0 ? categoryRoles : allRoles;
+
+  const handleCategoryChange = (newCat: UserCategory) => {
+    setCategory(newCat);
+    const matching = allRoles.filter((r) => roleMatchesCategory(r, newCat));
+    if (matching.length > 0 && !matching.some((r) => r.id === roleId)) {
+      setRoleId(matching[0].id);
+    }
+  };
+
+  const selectedRole = allRoles.find((role) => role.id === roleId);
   const requireHotel = selectedRole?.kind !== "SISTEM";
 
   const close = () => {
@@ -51,12 +128,15 @@ export function UserCreateDialog({
     setStep("profile");
     setProfile(emptyProfile());
     setCustomJobTitle(false);
+    setCategory(detectCategory(initialRoleId));
     setRoleId(initialRoleId);
     setHotelId(initialHotelId);
     setHotelIds([]);
     setCredentials(null);
     setError("");
     setCopied(false);
+    dragOffset.current = { x: 0, y: 0 };
+    if (dialogRef.current) dialogRef.current.style.transform = "";
     onClose();
   };
 
@@ -72,8 +152,14 @@ export function UserCreateDialog({
       return;
     }
     if (step !== "assignment") return;
-    if (!roleId) { setError("Kullanıcı için bir rol seçin."); return; }
-    if (requireHotel && !hotelId && hotelIds.length === 0) { setError("En az bir otel atayın."); return; }
+    if (!roleId) {
+      setError("Kullanıcı için bir rol seçin.");
+      return;
+    }
+    if (requireHotel && !hotelId && hotelIds.length === 0) {
+      setError("En az bir otel atayın.");
+      return;
+    }
 
     setPending(true);
     setError("");
@@ -103,7 +189,9 @@ export function UserCreateDialog({
   const copyCredentials = async () => {
     if (!credentials) return;
     try {
-      await navigator.clipboard.writeText(`Kullanıcı adı: ${credentials.user.username}\nGeçici şifre: ${credentials.temporaryPassword}`);
+      await navigator.clipboard.writeText(
+        `Kullanıcı adı: ${credentials.user.username}\nGeçici şifre: ${credentials.temporaryPassword}`,
+      );
       setCopied(true);
     } catch {
       setError("Kopyalama başarısız. Bilgileri seçip elle kopyalayın.");
@@ -112,21 +200,58 @@ export function UserCreateDialog({
 
   return (
     <div className="xp-form-backdrop">
-      <section role="dialog" aria-modal="true" aria-labelledby="user-create-title" className="xp-window xp-dialog xp-form-dialog" style={{ width: "min(760px, calc(100% - 24px))", maxHeight: "calc(100% - 16px)", overflow: step === "assignment" ? "auto" : "hidden" }}>
-        <header className="xp-titlebar">
-          <span id="user-create-title" className="xp-titlebar-text">{step === "profile" ? "Yeni kullanıcı · Kişi bilgileri" : step === "assignment" ? "Yeni kullanıcı · Otel ve rol ataması" : "Geçici giriş bilgileri"}</span>
-          <button type="button" className="xp-title-button is-close" aria-label="Kapat" onClick={close}>×</button>
+      <section
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-create-title"
+        className="xp-window xp-dialog xp-form-dialog"
+        style={{
+          width: "min(760px, calc(100% - 24px))",
+          maxHeight: "calc(100% - 16px)",
+          overflow: step === "assignment" ? "auto" : "hidden",
+        }}
+      >
+        <header
+          className="xp-titlebar cursor-move"
+          style={{ cursor: "move", userSelect: "none" }}
+          onPointerDown={startDrag}
+        >
+          <span id="user-create-title" className="xp-titlebar-text">
+            {step === "profile"
+              ? "Yeni kullanıcı · Kişi bilgileri"
+              : step === "assignment"
+                ? "Yeni kullanıcı · Otel ve rol ataması"
+                : "Geçici giriş bilgileri"}
+          </span>
+          <button type="button" className="xp-title-button is-close" aria-label="Kapat" onClick={close}>
+            ×
+          </button>
         </header>
+
         {step === "credentials" && credentials ? (
           <div className="xp-form-fields">
-            <p><strong>{credentials.user.fullName}</strong> için hesap oluşturuldu.</p>
-            <Field name="username" label="Sisteme giriş kullanıcı adı"><input readOnly value={credentials.user.username} /></Field>
-            <Field name="temporaryPassword" label="Geçici şifre"><input readOnly value={credentials.temporaryPassword} /></Field>
-            <p className="xp-defs-note">Bu şifre yalnızca şimdi gösterilir ve tekrar görüntülenemez. Bilgileri şimdi personele iletin; ilk girişte yeni bir şifre belirlemesi zorunludur.</p>
+            <p>
+              <strong>{credentials.user.fullName}</strong> için hesap oluşturuldu.
+            </p>
+            <Field name="username" label="Sisteme giriş kullanıcı adı">
+              <input readOnly value={credentials.user.username} />
+            </Field>
+            <Field name="temporaryPassword" label="Geçici şifre">
+              <input readOnly value={credentials.temporaryPassword} />
+            </Field>
+            <p className="xp-defs-note">
+              Bu şifre yalnızca şimdi gösterilir ve tekrar görüntülenemez. Bilgileri şimdi personele iletin; ilk girişte
+              yeni bir şifre belirlemesi zorunludur.
+            </p>
             {error ? <p role="alert" className="xp-form-banner">{error}</p> : null}
             <div className="xp-dialog-actions">
-              <button type="button" className="xp-button" onClick={() => void copyCredentials()}>{copied ? "Kopyalandı" : "Bilgileri kopyala"}</button>
-              <button type="button" className="xp-button" onClick={close}>Tamam</button>
+              <button type="button" className="xp-button" onClick={() => void copyCredentials()}>
+                {copied ? "Kopyalandı" : "Bilgileri kopyala"}
+              </button>
+              <button type="button" className="xp-button" onClick={close}>
+                Tamam
+              </button>
             </div>
           </div>
         ) : (
@@ -135,57 +260,304 @@ export function UserCreateDialog({
               {error ? <p role="alert" className="xp-form-banner">{error}</p> : null}
               {step === "profile" ? (
                 <>
-                  <p className="xp-defs-note xp-user-profile-intro">Personelin kişi, görev ve rol bilgilerini girin. Otel ataması sonraki adımda yapılır.</p>
-                  <Field name="fullName" label="Ad soyad"><input autoFocus required maxLength={100} value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} /></Field>
-                  <Field name="jobTitle" label="Görev (F&B)">
-                    <select required value={customJobTitle ? CUSTOM_JOB_TITLE : profile.jobTitle} onChange={(e) => {
-                      const custom = e.target.value === CUSTOM_JOB_TITLE;
-                      setCustomJobTitle(custom);
-                      setProfile({ ...profile, jobTitle: custom ? "" : e.target.value });
-                    }}>
+                  <p className="xp-defs-note xp-user-profile-intro">
+                    Personelin kullanıcı tipini, görevini ve rolünü belirleyin. Otel ataması sonraki adımda yapılır.
+                  </p>
+
+                  {/* KULLANICI TİPİ SEÇİMİ */}
+                  <div className="xp-user-category-box" style={{ marginBottom: "14px" }}>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        marginBottom: "6px",
+                        color: "var(--xp-heading, #1e3a8a)",
+                      }}
+                    >
+                      Kullanıcı Tipi
+                    </label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                      <button
+                        type="button"
+                        className={`xp-button ${category === "SISTEM" ? "is-selected font-bold" : ""}`}
+                        style={{
+                          padding: "8px 6px",
+                          fontWeight: category === "SISTEM" ? "bold" : "normal",
+                          background: category === "SISTEM" ? "var(--xp-accent, #0055ea)" : undefined,
+                          color: category === "SISTEM" ? "#fff" : undefined,
+                        }}
+                        onClick={() => handleCategoryChange("SISTEM")}
+                      >
+                        👑 Sistem Yöneticisi
+                      </button>
+                      <button
+                        type="button"
+                        className={`xp-button ${category === "YONETICI" ? "is-selected font-bold" : ""}`}
+                        style={{
+                          padding: "8px 6px",
+                          fontWeight: category === "YONETICI" ? "bold" : "normal",
+                          background: category === "YONETICI" ? "var(--xp-accent, #0055ea)" : undefined,
+                          color: category === "YONETICI" ? "#fff" : undefined,
+                        }}
+                        onClick={() => handleCategoryChange("YONETICI")}
+                      >
+                        👔 Yönetici
+                      </button>
+                      <button
+                        type="button"
+                        className={`xp-button ${category === "KULLANICI" ? "is-selected font-bold" : ""}`}
+                        style={{
+                          padding: "8px 6px",
+                          fontWeight: category === "KULLANICI" ? "bold" : "normal",
+                          background: category === "KULLANICI" ? "var(--xp-accent, #0055ea)" : undefined,
+                          color: category === "KULLANICI" ? "#fff" : undefined,
+                        }}
+                        onClick={() => handleCategoryChange("KULLANICI")}
+                      >
+                        👤 Kullanıcı
+                      </button>
+                    </div>
+                    <p
+                      className="xp-defs-note"
+                      style={{
+                        marginTop: "5px",
+                        fontSize: "11px",
+                        lineHeight: "1.4",
+                        color: "var(--xp-text-muted, #475569)",
+                      }}
+                    >
+                      {category === "SISTEM" &&
+                        "Sistem Yöneticisi: Tüm otellerde, minibar ve outlet operasyonlarında en üst düzey tam yetkiye sahiptir."}
+                      {category === "YONETICI" &&
+                        "Yönetici: Minibar takip sorumlusu, depo sorumlusu, outlet yöneticisi, outlet şefi, kasa yöneticisi veya mutfak şefi."}
+                      {category === "KULLANICI" &&
+                        "Operasyonel Kullanıcı: Minibar kat görevlisi, servis garsonu, barmen, komi veya mutfak personeli."}
+                    </p>
+                  </div>
+
+                  <Field name="fullName" label="Ad soyad">
+                    <input
+                      autoFocus
+                      required
+                      maxLength={100}
+                      value={profile.fullName}
+                      onChange={(e) => setProfile({ ...profile, fullName: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field name="jobTitle" label="Görev (F&B / Operasyon)">
+                    <select
+                      required
+                      value={customJobTitle ? CUSTOM_JOB_TITLE : profile.jobTitle}
+                      onChange={(e) => {
+                        const custom = e.target.value === CUSTOM_JOB_TITLE;
+                        setCustomJobTitle(custom);
+                        setProfile({ ...profile, jobTitle: custom ? "" : e.target.value });
+                      }}
+                    >
                       <option value="">Görev seçin</option>
-                      {USER_JOB_TITLE_GROUPS.map((group) => <optgroup key={group.label} label={group.label}>{group.options.map((title) => <option key={title} value={title}>{title}</option>)}</optgroup>)}
+                      {category === "SISTEM" ? (
+                        <optgroup label="Sistem & IT Görevleri">
+                          <option value="Sistem Yöneticisi">Sistem Yöneticisi</option>
+                          <option value="IT Yöneticisi">IT Yöneticisi</option>
+                          <option value="Sistem Destek Sorumlusu">Sistem Destek Sorumlusu</option>
+                        </optgroup>
+                      ) : null}
+                      {category === "YONETICI" ? (
+                        <optgroup label="Yönetim & Süpervizör Görevleri">
+                          <option value="Otel Müdürü">Otel Müdürü</option>
+                          <option value="F&B Müdürü">F&B Müdürü</option>
+                          <option value="Minibar Takip Sorumlusu">Minibar Takip Sorumlusu</option>
+                          <option value="Depo Sorumlusu">Depo Sorumlusu</option>
+                          <option value="Housekeeping Süpervizörü">Housekeeping Süpervizörü</option>
+                          <option value="Outlet Müdürü">Outlet Müdürü</option>
+                          <option value="Outlet Şefi">Outlet Şefi</option>
+                          <option value="Restoran Müdürü">Restoran Müdürü</option>
+                          <option value="Şef Garson">Şef Garson / Süpervizör</option>
+                          <option value="Mutfak Şefi">Mutfak Şefi</option>
+                          <option value="Kasa Yöneticisi">Kasa Yöneticisi</option>
+                        </optgroup>
+                      ) : null}
+                      {category === "KULLANICI" ? (
+                        <optgroup label="Operasyonel Personel Görevleri">
+                          <option value="Kat Sorumlusu">Kat Sorumlusu (Minibar Takip)</option>
+                          <option value="Kat Görevlisi">Kat Görevlisi</option>
+                          <option value="Garson">Garson</option>
+                          <option value="Komi">Komi</option>
+                          <option value="Runner">Runner</option>
+                          <option value="Barmen / Barmaid">Barmen / Barmaid</option>
+                          <option value="Barista">Barista</option>
+                          <option value="Mutfak Personeli">Mutfak Personeli</option>
+                          <option value="Aşçı">Aşçı</option>
+                          <option value="Kasiyer">Kasiyer</option>
+                          <option value="Oda Servisi Görevlisi">Oda Servisi Görevlisi</option>
+                          <option value="Butler (VIP)">Butler (VIP)</option>
+                          <option value="KDS Operatörü">KDS Operatörü</option>
+                        </optgroup>
+                      ) : null}
+                      {USER_JOB_TITLE_GROUPS.map((group) => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.options.map((title) => (
+                            <option key={title} value={title}>
+                              {title}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                       <option value={CUSTOM_JOB_TITLE}>Diğer (elle yaz)</option>
                     </select>
                   </Field>
-                  {customJobTitle ? <Field name="customJobTitle" label="Görev unvanı"><input required maxLength={100} value={profile.jobTitle} onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })} /></Field> : null}
+
+                  {customJobTitle ? (
+                    <Field name="customJobTitle" label="Görev unvanı">
+                      <input
+                        required
+                        maxLength={100}
+                        value={profile.jobTitle}
+                        onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })}
+                      />
+                    </Field>
+                  ) : null}
+
                   <Field name="roleId" label="Rol ve yetkiler">
-                    <select required value={roleId} disabled={lockRole} onChange={(e) => setRoleId(e.target.value)}>
+                    <select
+                      required
+                      value={roleId}
+                      disabled={lockRole}
+                      onChange={(e) => setRoleId(e.target.value)}
+                    >
                       <option value="">Rol seçin</option>
-                      {(options?.roles ?? []).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                      {effectiveRoles.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name} ({role.code})
+                        </option>
+                      ))}
                     </select>
                   </Field>
-                  {selectedRole ? <p className="xp-defs-note xp-user-role-note">Giriş sonrası açılış ekranı: <strong>{selectedRole.defaultScreenName ?? "Rol için ekran tanımlanmamış"}</strong>. Ekran yetkileri seçilen rolden alınır.</p> : null}
-                  <Field name="phone" label="Telefon numarası (isteğe bağlı)"><input type="tel" maxLength={30} value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} /></Field>
-                  <Field name="email" label="E-posta adresi"><input required type="email" maxLength={120} value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} /></Field>
-                  <Field name="username" label="Sisteme giriş kullanıcı adı">
-                    <input required autoComplete="off" maxLength={40} value={profile.username || suggestedUsername(profile.fullName)} onChange={(e) => {
-                      setProfile({ ...profile, username: e.target.value });
-                    }} />
+
+                  {selectedRole ? (
+                    <div
+                      className="xp-defs-note xp-user-role-note"
+                      style={{
+                        padding: "6px 8px",
+                        background: "var(--xp-body, #f8fafc)",
+                        border: "1px solid var(--xp-body-edge, #cbd5e1)",
+                        borderRadius: "4px",
+                        fontSize: "11px",
+                      }}
+                    >
+                      <p>
+                        Giriş sonrası açılış ekranı:{" "}
+                        <strong style={{ color: "var(--xp-accent, #0055ea)" }}>
+                          {selectedRole.defaultScreenName ?? "Rol için varsayılan ekran tanımlanmamış"}
+                        </strong>
+                      </p>
+                      <p style={{ marginTop: "2px", opacity: 0.85 }}>
+                        Ekran yetkileri ve menü görünümü sistem yöneticisi tarafından Yetki Matrisi panelinden
+                        düzenlenebilir.
+                      </p>
+                    </div>
+                  ) : null}
+
+                  <Field name="phone" label="Telefon numarası (isteğe bağlı)">
+                    <input
+                      type="tel"
+                      maxLength={30}
+                      value={profile.phone}
+                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                    />
                   </Field>
-                  <p className="xp-defs-note xp-user-username-note">Kullanıcı adı ad.soyad biçiminde önerilir ve bu alandan değiştirilebilir. Önerilen ad kullanımda ise sonuna sayı eklenir.</p>
+
+                  <Field name="email" label="E-posta adresi">
+                    <input
+                      required
+                      type="email"
+                      maxLength={120}
+                      value={profile.email}
+                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                    />
+                  </Field>
+
+                  <Field name="username" label="Sisteme giriş kullanıcı adı">
+                    <input
+                      required
+                      autoComplete="off"
+                      maxLength={40}
+                      value={profile.username || suggestedUsername(profile.fullName)}
+                      onChange={(e) => {
+                        setProfile({ ...profile, username: e.target.value });
+                      }}
+                    />
+                  </Field>
+
+                  <p className="xp-defs-note xp-user-username-note">
+                    Kullanıcı adı ad.soyad biçiminde önerilir ve bu alandan değiştirilebilir. Önerilen ad kullanımda ise
+                    sonuna sayı eklenir.
+                  </p>
                 </>
               ) : (
                 <>
-                  <p className="xp-defs-note">{profile.fullName} · {profile.jobTitle}</p>
+                  <p className="xp-defs-note">
+                    {profile.fullName} · {profile.jobTitle}
+                  </p>
                   <Field name="hotelId" label="Ana otel">
                     <select value={hotelId} disabled={lockHotel} onChange={(e) => setHotelId(e.target.value)}>
-                      <option value="">{requireHotel ? "Otel seçin" : "Sistem kullanıcısı · otel ataması isteğe bağlı"}</option>
-                      {(options?.hotels ?? []).map((hotel) => <option key={hotel.id} value={hotel.id}>{hotel.name}</option>)}
+                      <option value="">
+                        {requireHotel ? "Otel seçin" : "Sistem kullanıcısı · otel ataması isteğe bağlı"}
+                      </option>
+                      {(options?.hotels ?? []).map((hotel) => (
+                        <option key={hotel.id} value={hotel.id}>
+                          {hotel.name}
+                        </option>
+                      ))}
                     </select>
                   </Field>
-                  {!lockHotel ? options?.hotels.filter((hotel) => hotel.id !== hotelId).map((hotel) => (
-                    <Field key={hotel.id} name={`hotel:${hotel.id}`} label={`Ek otel · ${hotel.name}`}>
-                      <input type="checkbox" checked={hotelIds.includes(hotel.id)} onChange={(e) => setHotelIds((current) => e.target.checked ? [...current, hotel.id] : current.filter((id) => id !== hotel.id))} />
-                    </Field>
-                  )) : null}
+                  {!lockHotel
+                    ? options?.hotels
+                        .filter((hotel) => hotel.id !== hotelId)
+                        .map((hotel) => (
+                          <Field key={hotel.id} name={`hotel:${hotel.id}`} label={`Ek otel · ${hotel.name}`}>
+                            <input
+                              type="checkbox"
+                              checked={hotelIds.includes(hotel.id)}
+                              onChange={(e) =>
+                                setHotelIds((current) =>
+                                  e.target.checked ? [...current, hotel.id] : current.filter((id) => id !== hotel.id),
+                                )
+                              }
+                            />
+                          </Field>
+                        ))
+                    : null}
                 </>
               )}
             </div>
             <div className="xp-dialog-actions">
-              {step === "assignment" ? <button type="button" disabled={pending} className="xp-button" onClick={() => { setStep("profile"); setError(""); }}>Geri</button> : null}
-              <button type="submit" disabled={pending} className="xp-button" aria-busy={pending || undefined}>{pending ? "Kaydediliyor…" : step === "profile" ? "İleri" : "Kullanıcıyı kaydet"}</button>
-              <button type="button" disabled={pending} className="xp-button" onClick={close}>Vazgeç</button>
+              {step === "assignment" ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  className="xp-button"
+                  onClick={() => {
+                    setStep("profile");
+                    setError("");
+                  }}
+                >
+                  Geri
+                </button>
+              ) : null}
+              <button
+                type="submit"
+                disabled={pending}
+                className="xp-button"
+                aria-busy={pending || undefined}
+              >
+                {pending ? "Kaydediliyor…" : step === "profile" ? "İleri" : "Kullanıcıyı kaydet"}
+              </button>
+              <button type="button" disabled={pending} className="xp-button" onClick={close}>
+                Vazgeç
+              </button>
             </div>
           </form>
         )}
