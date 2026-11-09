@@ -587,18 +587,20 @@ export default function OdaKontrolPage() {
                 Sarfiyat Yok
               </button>
 
-              <button
-                type="button"
-                data-mutates=""
-                data-guide="dnd-bildir"
-                onClick={() => void handleMarkDnd()}
-                disabled={submitting || (data.taskItem ? !data.taskItem.dndAllowed : false)}
-                style={{ minHeight: "var(--tap-primary)" }}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-4 py-3 text-xs font-semibold text-warn hover:bg-warn/25 disabled:opacity-40"
-              >
-                <Icon name="moon" size={18} />
-                DND İşaretle
-              </button>
+              {!data.emptyRoomWarning && data.guestStatus.kind !== "EMPTY" ? (
+                <button
+                  type="button"
+                  data-mutates=""
+                  data-guide="dnd-bildir"
+                  onClick={() => void handleMarkDnd()}
+                  disabled={submitting || (data.taskItem ? !data.taskItem.dndAllowed : false)}
+                  style={{ minHeight: "var(--tap-primary)" }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-4 py-3 text-xs font-semibold text-warn hover:bg-warn/25 disabled:opacity-40"
+                >
+                  <Icon name="moon" size={18} />
+                  DND İşaretle
+                </button>
+              ) : null}
             </div>
 
             <button

@@ -175,7 +175,7 @@ export default function KatDolulukDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedRoom) {
+    if (selectedRoom && selectedRoom.status !== "empty") {
       setDndNote("");
       void loadRoomDnd(selectedRoom.id);
     } else {
@@ -538,7 +538,7 @@ export default function KatDolulukDetailPage() {
             <div className="flex items-start justify-between border-b border-border pb-3">
               <div>
                 <h2 id="room-detail-title" className="text-lg font-bold text-text">
-                  Oda {selectedRoom.number} — Detay ve İşlemler
+                  Oda {selectedRoom.number} — {selectedRoom.status === "empty" ? "Oda Detayı" : "Detay ve İşlemler"}
                 </h2>
                 <p className="text-xs text-muted">
                   {selectedRoom.floorName} · {selectedRoom.roomTypeName}
@@ -599,73 +599,75 @@ export default function KatDolulukDetailPage() {
             </div>
 
             {/* DND Section */}
-            <div className="rounded-xl border border-warn/30 bg-warn/5 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-warn flex items-center gap-1.5">
-                  <Icon name="moon" size={16} />
-                  Rahatsız Etmeyin (DND) İşlemi
-                </h3>
-                {selectedRoom.dndCount > 0 ? (
-                  <span className="rounded-full bg-warn/20 px-2.5 py-0.5 text-xs font-bold text-warn">
-                    {selectedRoom.dndCount}. Kontrol
-                  </span>
-                ) : null}
-              </div>
+            {selectedRoom.status !== "empty" ? (
+              <div className="rounded-xl border border-warn/30 bg-warn/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-warn flex items-center gap-1.5">
+                    <Icon name="moon" size={16} />
+                    Rahatsız Etmeyin (DND) İşlemi
+                  </h3>
+                  {selectedRoom.dndCount > 0 ? (
+                    <span className="rounded-full bg-warn/20 px-2.5 py-0.5 text-xs font-bold text-warn">
+                      {selectedRoom.dndCount}. Kontrol
+                    </span>
+                  ) : null}
+                </div>
 
-              <div className="space-y-2">
-                <label htmlFor="dnd-note-input" className="block text-xs font-semibold text-muted">
-                  DND Açıklaması / Not (İsteğe bağlı)
-                </label>
-                <input
-                  id="dnd-note-input"
-                  type="text"
-                  placeholder="Örn: Kapıda DND kartı asılıydı..."
-                  value={dndNote}
-                  onChange={(e) => setDndNote(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-xs text-text placeholder:text-muted focus:border-warn focus:outline-none"
-                />
-                <button
-                  type="button"
-                  data-mutates=""
-                  onClick={handleMarkDndFromDialog}
-                  disabled={submittingDnd}
-                  style={{ minHeight: "var(--tap-action)" }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-warn px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition"
-                >
-                  <Icon name="moon" size={16} />
-                  {submittingDnd ? "Kaydediliyor..." : "Odayı DND Olarak İşaretle"}
-                </button>
-              </div>
+                <div className="space-y-2">
+                  <label htmlFor="dnd-note-input" className="block text-xs font-semibold text-muted">
+                    DND Açıklaması / Not (İsteğe bağlı)
+                  </label>
+                  <input
+                    id="dnd-note-input"
+                    type="text"
+                    placeholder="Örn: Kapıda DND kartı asılıydı..."
+                    value={dndNote}
+                    onChange={(e) => setDndNote(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-xs text-text placeholder:text-muted focus:border-warn focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    data-mutates=""
+                    onClick={handleMarkDndFromDialog}
+                    disabled={submittingDnd}
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-warn px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition"
+                  >
+                    <Icon name="moon" size={16} />
+                    {submittingDnd ? "Kaydediliyor..." : "Odayı DND Olarak İşaretle"}
+                  </button>
+                </div>
 
-              {/* DND History */}
-              <div className="pt-2 border-t border-warn/20">
-                <h4 className="text-xs font-bold text-text mb-2">DND Kayıtları ve Geçmişi</h4>
-                {loadingDnd ? (
-                  <p className="text-xs text-muted italic">DND geçmişi yükleniyor...</p>
-                ) : roomDndData && roomDndData.history.length > 0 ? (
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {roomDndData.history.map((h, idx) => (
-                      <div key={idx} className="rounded-lg border border-border bg-bg p-2 text-xs space-y-1">
-                        <div className="flex items-center justify-between text-muted">
-                          <span className="font-semibold text-text">{h.date}</span>
-                          <span>Toplam {h.count} kontrol · Durum: {h.status}</span>
-                        </div>
-                        {h.checks.map((c, cIdx) => (
-                          <div key={cIdx} className="flex items-center justify-between text-muted text-[11px] pl-2 border-l-2 border-warn/40">
-                            <span>
-                              {c.no}. Kontrol: {c.userName} ({new Date(c.at).toLocaleTimeString("tr-TR")})
-                            </span>
-                            {c.note ? <span className="italic text-text">"{c.note}"</span> : null}
+                {/* DND History */}
+                <div className="pt-2 border-t border-warn/20">
+                  <h4 className="text-xs font-bold text-text mb-2">DND Kayıtları ve Geçmişi</h4>
+                  {loadingDnd ? (
+                    <p className="text-xs text-muted italic">DND geçmişi yükleniyor...</p>
+                  ) : roomDndData && roomDndData.history.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {roomDndData.history.map((h, idx) => (
+                        <div key={idx} className="rounded-lg border border-border bg-bg p-2 text-xs space-y-1">
+                          <div className="flex items-center justify-between text-muted">
+                            <span className="font-semibold text-text">{h.date}</span>
+                            <span>Toplam {h.count} kontrol · Durum: {h.status}</span>
                           </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted italic">Bu odaya ait önceki DND kaydı bulunmuyor.</p>
-                )}
+                          {h.checks.map((c, cIdx) => (
+                            <div key={cIdx} className="flex items-center justify-between text-muted text-[11px] pl-2 border-l-2 border-warn/40">
+                              <span>
+                                {c.no}. Kontrol: {c.userName} ({new Date(c.at).toLocaleTimeString("tr-TR")})
+                              </span>
+                              {c.note ? <span className="italic text-text">"{c.note}"</span> : null}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted italic">Bu odaya ait önceki DND kaydı bulunmuyor.</p>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : null}
 
             {/* Room Control / QR Action Button */}
             <div className="pt-2 border-t border-border flex flex-col gap-2">
