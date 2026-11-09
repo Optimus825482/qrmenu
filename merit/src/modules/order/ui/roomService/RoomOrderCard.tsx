@@ -1,6 +1,7 @@
 "use client";
 
 import type { RoomBoardColumn, RoomOrderCard as RoomOrderData } from "@/modules/order/server/roomService/board";
+import { formatPrice } from "@/lib/formatPrice";
 import { SlaTimer } from "./SlaTimer";
 
 export type RoomOpsFlags = {
@@ -126,7 +127,7 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
         ) : null}
 
         {card.subtotal ? (
-          <p className="text-[13px] font-semibold text-muted">{`${card.subtotal} ${card.currency ?? ""}`.trim()}</p>
+          <p className="text-[13px] font-semibold text-muted">{formatPrice(card.subtotal, card.currency ?? "EUR")}</p>
         ) : null}
       </div>
 

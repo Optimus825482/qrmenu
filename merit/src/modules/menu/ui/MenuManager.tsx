@@ -392,7 +392,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
           <input type="text" maxLength={120} />
         </Field>
         {creating?.kind === "OGE" ? (
-          <Field name="price" label="Fiyat">
+          <Field name="price" label={`Fiyat (${context?.currency ?? "EUR"})`}>
             <input type="text" inputMode="decimal" />
           </Field>
         ) : null}

@@ -6,6 +6,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { DomainError, safeAction } from "@/lib/result";
 import { prisma } from "@/lib/prisma";
 import type { OrderStatus } from "@/generated/prisma/client";
+import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
 
 const querySchema = z.object({
   hotelId: z.string().optional(),
@@ -171,6 +172,8 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       hotelName: o.hotel.name,
     }));
 
-    return { orders: items, stats };
+    const targetHotelId = input.hotelId ?? hotelIds[0] ?? ctx.session.hotelId ?? "";
+    const currency = await resolveCurrency(targetHotelId);
+    return { orders: items, stats, currency };
   })(raw);
 }

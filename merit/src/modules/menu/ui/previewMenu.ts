@@ -350,6 +350,7 @@ export function previewMenu(input: {
   outletName: string;
   callOptions?: GuestCallOption[];
   locale?: Locale;
+  currency?: string;
 }): { menu: GuestMenu; sample: boolean } {
   const categories = categoriesFromTree(input.nodes, input.locale);
   const sampleMenu = categories.length === 0;
@@ -365,7 +366,7 @@ export function previewMenu(input: {
         menuOpen: true,
         orderingOpen: false,
         pricesShown: input.design.options.showPrices,
-        currency: "EUR",
+        currency: input.currency ?? "EUR",
         theme: input.theme,
         design: input.design,
         callOptions:

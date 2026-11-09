@@ -24,6 +24,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
 export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
   const [orders, setOrders] = useState<RoomOrderListItem[]>([]);
   const [stats, setStats] = useState<RoomServiceStats | null>(null);
+  const [currency, setCurrency] = useState("EUR");
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("HEPSI");
   const [search, setSearch] = useState("");
@@ -41,6 +42,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
       if (res.ok) {
         setOrders(res.data.orders);
         setStats(res.data.stats);
+        if (res.data.currency) setCurrency(res.data.currency);
         setStatus(`${res.data.orders.length} oda servisi kaydı`);
       }
     } finally {
@@ -103,7 +105,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               Teslim: {stats.delivered}
             </span>
             <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold">
-              Ciro: {formatPrice(stats.totalRevenue, orders[0]?.currency ?? "EUR")}
+              Ciro: {formatPrice(stats.totalRevenue, currency)}
             </span>
           </div>
         )}

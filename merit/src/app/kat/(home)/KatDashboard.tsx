@@ -108,27 +108,6 @@ export function KatDashboard({
       )}
 
       <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        {canSwitchHotel && hotels.length > 1 ? (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3.5">
-            <label htmlFor="kat-hotel-select" className="text-xs font-semibold text-muted">
-              Aktif Otel
-            </label>
-            <select
-              id="kat-hotel-select"
-              value={selectedHotelId}
-              onChange={(e) => setSelectedHotelId(e.target.value)}
-              style={{ minHeight: "var(--tap-action)" }}
-              className="rounded-xl border border-border bg-bg px-3 py-2 text-xs font-medium text-text focus:border-accent focus:outline-none"
-            >
-              {hotels.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name} ({h.code})
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-
         {loading && !data ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
             Kat planı ve günlük görevler yükleniyor...

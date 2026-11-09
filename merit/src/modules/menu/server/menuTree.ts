@@ -12,6 +12,7 @@ import { ALLERGENS } from "../allergens";
 import { ITEM_TAG_IDS } from "../design";
 import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
+import { resolveCurrency } from "./priceDisplay";
 import { autoTranslateMenuNode } from "./translations";
 
 const SCREEN = "QM-MEN";
@@ -141,7 +142,7 @@ async function emitChanged(
 
 type NodeRow = Prisma.MenuNodeGetPayload<{ include: { translations: true } }>;
 
-function toNode(row: NodeRow): MenuTreeNode {
+function toNode(row: NodeRow, currency?: string): MenuTreeNode {
   const urls: string[] = [];
   if (row.imageUrl) urls.push(row.imageUrl);
   for (const u of row.imageUrls ?? []) {
@@ -156,7 +157,7 @@ function toNode(row: NodeRow): MenuTreeNode {
     name: row.name,
     detail: row.detail,
     price: row.price === null ? null : row.price.toFixed(2),
-    currency: row.currency,
+    currency: currency ?? row.currency,
     allergens: row.allergens,
     tags: row.tags,
     isAvailable: row.isAvailable,
@@ -179,12 +180,13 @@ export async function list(ctx: Ctx, outletId: string): Promise<MenuTreeNode[]> 
     await assertMenuAccess(ctx, outlet, "V");
   }
   assertOutletScope(ctx, outletId);
+  const currency = await resolveCurrency(outlet.hotelId);
   const rows = await prisma.menuNode.findMany({
     where: { outletId },
     include: { translations: true },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
   });
-  const byId = new Map(rows.map((r) => [r.id, toNode(r)]));
+  const byId = new Map(rows.map((r) => [r.id, toNode(r, currency)]));
   const roots: MenuTreeNode[] = [];
   for (const row of rows) {
     const node = byId.get(row.id) as MenuTreeNode;
@@ -199,6 +201,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
   const outlet = await outletScope(outletId);
   await assertMenuAccess(ctx, outlet, "D");
   assertOutletScope(ctx, outletId);
+  const currency = await resolveCurrency(outlet.hotelId);
   return prisma.$transaction(async (tx) => {
     const parent = input.parentId
       ? await tx.menuNode.findFirst({
@@ -225,6 +228,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
         name: input.name,
         detail: input.detail,
         price: input.price,
+        currency,
         allergens: input.allergens ?? [],
         tags: input.kind === "OGE" ? (input.tags ?? []) : [],
         isAvailable: input.isAvailable ?? true,
@@ -242,7 +246,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
     });
     await emitChanged(tx, outlet.hotelId, outletId, row.id, "create");
     void autoTranslateMenuNode(row.id, row.name, row.detail, outlet.hotelId, outletId);
-    return toNode(row);
+    return toNode(row, currency);
   });
 }
 
@@ -251,6 +255,7 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
   const scope = await loadNodeScope(nodeId);
   await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
   assertOutletScope(ctx, scope.outletId);
+  const currency = await resolveCurrency(scope.hotelId);
   return prisma.$transaction(async (tx) => {
     const before = await tx.menuNode.findUnique({ where: { id: nodeId } });
     if (!before) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
@@ -289,7 +294,7 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
     if (input.name !== undefined || input.detail !== undefined) {
       void autoTranslateMenuNode(nodeId, row.name, row.detail, scope.hotelId, scope.outletId);
     }
-    return toNode(row);
+    return toNode(row, currency);
   });
 }
 

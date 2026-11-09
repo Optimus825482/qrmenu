@@ -170,6 +170,22 @@ export async function set(
       { type: "settings.changed", hotelId: hotelId ?? undefined, payload: { key: k } },
       tx,
     );
+    if (k === "price.display" || k === "price.currency") {
+      await publish({ type: "price.display", hotelId: hotelId ?? undefined }, tx);
+      await publish({ type: "menu.changed", hotelId: hotelId ?? undefined }, tx);
+      if (k === "price.currency" && typeof value === "string") {
+        if (hotelId) {
+          await tx.menuNode.updateMany({
+            where: { outlet: { hotelId } },
+            data: { currency: value },
+          });
+        } else {
+          await tx.menuNode.updateMany({
+            data: { currency: value },
+          });
+        }
+      }
+    }
     return resolveItem(k, await loadRows(tx, [k], hotelId), hotelId);
   });
 }
@@ -200,6 +216,10 @@ export async function clearHotelOverride(
         before: { scope: "HOTEL", value: mask(meta, existing.value) },
       });
       await publish({ type: "settings.changed", hotelId, payload: { key } }, tx);
+      if (key === "price.display" || key === "price.currency") {
+        await publish({ type: "price.display", hotelId }, tx);
+        await publish({ type: "menu.changed", hotelId }, tx);
+      }
     }
     return resolveItem(key, await loadRows(tx, [key], hotelId), hotelId);
   });

@@ -3,6 +3,7 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
+import { resolveCurrency } from "./priceDisplay";
 
 export type MenuOutletInfo = {
   id: string;
@@ -17,6 +18,7 @@ export type MenuOutletInfo = {
 
 export type MenuContext = {
   hotelName: string;
+  currency: string;
   /** May edit the tree (QM-MEN D or RO-TAL D). */
   canEdit: boolean;
   /** May flip the ordering / price switches (QM-MEN D, CR-TAN D or RO-TAL A). */
@@ -70,8 +72,10 @@ export async function menuContext(ctx: Ctx, hotelId: string): Promise<MenuContex
       },
     }),
   ]);
+  const currency = await resolveCurrency(hotelId);
   return {
     hotelName: hotel?.name ?? "Otel",
+    currency,
     canEdit,
     canSwitch,
     fixedOutlet: Boolean(ctx.session.outletId),

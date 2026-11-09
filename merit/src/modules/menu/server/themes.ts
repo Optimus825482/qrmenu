@@ -25,6 +25,7 @@ import {
 } from "../design";
 import { blockingFindings } from "../quality";
 import { assertOutletScope } from "./menuNodeAccess";
+import { resolveCurrency } from "./priceDisplay";
 
 const SCREEN = "QM-TEM";
 const NAME_TAKEN = "Bu adda bir tema zaten var";
@@ -205,6 +206,7 @@ export async function assign(ctx: Ctx, outletId: string, themeId: string | null)
 export type AssignTarget = {
   hotelId: string;
   hotelName: string;
+  currency: string;
   outlets: { id: string; name: string; themeId: string | null; design: OutletDesign }[];
 };
 
@@ -332,9 +334,11 @@ export async function assignTargets(ctx: Ctx): Promise<AssignTarget[]> {
       select: { id: true, name: true, themeId: true, menuDesign: true },
     });
     if (outlets.length > 0) {
+      const currency = await resolveCurrency(hotel.id);
       result.push({
         hotelId: hotel.id,
         hotelName: hotel.name,
+        currency,
         outlets: outlets.map(({ menuDesign, ...outlet }) => ({
           ...outlet,
           design: designFromStored(menuDesign),

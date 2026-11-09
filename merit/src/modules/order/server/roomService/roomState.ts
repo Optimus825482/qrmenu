@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { DomainError } from "@/lib/result";
 import { guestState, type GuestTheme } from "@/modules/menu/server/guestState";
+import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
 import { getRoomServiceOutlet } from "./outlet";
 
 const DEFAULT_THEME: GuestTheme = {
@@ -40,7 +41,10 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
   if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
 
   const hotel = room.hotel;
-  const slaMinutes = await getSetting("rs.slaMinutes", hotel.id);
+  const [slaMinutes, currency] = await Promise.all([
+    getSetting("rs.slaMinutes", hotel.id),
+    resolveCurrency(hotel.id),
+  ]);
 
   // 1. Room is inactive
   if (!room.isActive) {
@@ -54,7 +58,7 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       confirmRequired: false,
       slaMinutes,
       pricesShown: false,
-      currency: "EUR",
+      currency,
       theme: DEFAULT_THEME,
       reason: "ODA_PASIF",
     };
@@ -72,7 +76,7 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       confirmRequired: false,
       slaMinutes,
       pricesShown: false,
-      currency: "EUR",
+      currency,
       theme: DEFAULT_THEME,
       reason: "OTEL_PASIF",
     };
@@ -91,7 +95,7 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       confirmRequired: false,
       slaMinutes,
       pricesShown: false,
-      currency: "EUR",
+      currency,
       theme: DEFAULT_THEME,
       reason: "MENU_KAPALI",
     };

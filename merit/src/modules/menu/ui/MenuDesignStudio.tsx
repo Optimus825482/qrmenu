@@ -155,7 +155,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
   const [selectedHotelId, setSelectedHotelId] = useState(hotelId ?? availableHotels[0]?.hotelId ?? "");
   const selectedHotel = availableHotels.find((target) => target.hotelId === selectedHotelId) ?? availableHotels[0];
   const availableTargets = useMemo(
-    () => selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName })) ?? [],
+    () => selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName, currency: selectedHotel.currency })) ?? [],
     [selectedHotel],
   );
   const [outletId, setOutletId] = useState(initialOutletId ?? "");
@@ -270,6 +270,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
     outletName: outlet?.name ?? "Menü",
     callOptions,
     locale: previewLocale,
+    currency: outlet?.currency,
   });
 
   const findings = evaluateQuality({ design, theme: selectedTheme, items: qualityItems(nodes) });

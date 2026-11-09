@@ -366,7 +366,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
               name: item.name,
               detail: item.detail,
               price: item.price,
-              currency: "USD",
+              currency: "EUR",
               imageUrl: item.imageUrl,
               imageUrls: item.imageUrl ? [item.imageUrl] : [],
               allergens: item.allergens,
