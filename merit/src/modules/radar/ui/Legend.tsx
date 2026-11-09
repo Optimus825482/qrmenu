@@ -40,7 +40,7 @@ const VIEW_LEGEND: Record<ViewKey, LegendItem[]> = {
   ],
   masa: [
     { tone: "muted", text: "Boş masa" },
-    { tone: "accent", edge: "dashed", text: "Misafir masada (son 15 dk QR)" },
+    { tone: "accent", edge: "dashed", text: "Dolu masa (son 40 dk aktivite)" },
     { tone: "warn", text: "Onay bekliyor (kalın kenar)" },
     { tone: "info", text: "Hazırlanıyor" },
     { tone: "success", edge: "double", text: "Hazır (çift kenar)" },

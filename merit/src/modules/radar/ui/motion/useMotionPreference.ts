@@ -28,10 +28,20 @@ export function storeMotion(on: boolean): void {
   }
 }
 
-/** Reduced motion always wins; then the URL; then the saved choice; the default is on. */
+/** User stored choice always wins; then the URL; then if none set, system reduced-motion is respected; default is on. */
 export function resolveMotion(opts: { reduced: boolean; query: boolean | null; stored: boolean | null }): boolean {
+  if (opts.stored !== null) return opts.stored;
+  if (opts.query !== null) return opts.query;
   if (opts.reduced) return false;
-  return opts.query ?? opts.stored ?? true;
+  return true;
+}
+
+export function isMotionEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const query = motionFromQuery(window.location.search);
+  const stored = readStoredMotion();
+  return resolveMotion({ reduced, query, stored });
 }
 
 export type MotionPreference = {
@@ -74,7 +84,6 @@ export function useMotionPreference(): MotionPreference {
   const on = snap !== null && resolveMotion({ reduced, query, stored });
 
   const toggle = useCallback(() => {
-    if (reduced) return;
     storeMotion(!resolveMotion({ reduced, query, stored }));
     // The explicit choice replaces a `?motion=` of the address.
     const url = new URL(window.location.href);

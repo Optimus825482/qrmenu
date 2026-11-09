@@ -388,16 +388,17 @@ model Outlet {
 }
 
 model OutletTable {
-  id        String   @id @default(cuid())
-  outletId  String   @map("outlet_id")
+  id        String    @id @default(cuid())
+  outletId  String    @map("outlet_id")
   number    Int?
-  name      String?  @db.VarChar(80)
+  name      String?   @db.VarChar(80)
   capacity  Int?
-  areaId    String   @map("area_id")
+  areaId    String    @map("area_id")
   label     String
-  qrToken   String?  @unique @map("qr_token")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  qrToken   String?   @unique @map("qr_token")
+  isActive  Boolean   @default(true) @map("is_active")
+  emptiedAt DateTime? @map("emptied_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   outlet      Outlet               @relation(fields: [outletId], references: [id], onDelete: Restrict)

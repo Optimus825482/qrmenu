@@ -46,13 +46,13 @@ export type ToolbarProps = {
   connection: ConnectionState;
   /** Extra mode text of the connection area ("Geçmiş 14:12:30"). */
   modeText?: string;
-  /** The "Animasyon" switch of the scene layer; `reduced` locks it off (system reduced-motion setting). */
+  /** The "Animasyon" switch of the scene layer. */
   motion?: { on: boolean; reduced: boolean; onToggle(): void; hint?: string };
   /**
    * Client-side demo scenario: the start button (opens the module picker), and the badge while it runs
    * (`focusLabel` = the module it is about). `disabled` carries its reason in `hint`.
    */
-  demo?: { running: boolean; disabled: boolean; hint?: string; focusLabel?: string; onStart(): void; onStop(): void };
+  demo?: { enabled?: boolean; running: boolean; disabled: boolean; hint?: string; focusLabel?: string; onStart(): void; onStop(): void };
   sound?: { enabled: boolean; onToggle(): void };
 };
 
@@ -116,15 +116,14 @@ export function Toolbar(p: ToolbarProps) {
           type="button"
           className="rd-chip"
           aria-pressed={p.motion.on}
-          disabled={p.motion.reduced}
           title={
-            p.motion.reduced
-              ? "Sistem hareketi azalt ayarı açık: animasyon kapalı"
-              : p.motion.hint
-                ? p.motion.hint
-                : p.motion.on
-                ? "Animasyon: Açık"
-                : "Animasyon: Kapalı"
+            p.motion.hint
+              ? p.motion.hint
+              : p.motion.on
+              ? "Animasyon: Açık"
+              : p.motion.reduced
+              ? "Sistem hareketi azalt ayarı açık. Tıklayarak animasyonu açabilirsiniz."
+              : "Animasyon: Kapalı"
           }
           onClick={p.motion.onToggle}
         >
@@ -144,7 +143,7 @@ export function Toolbar(p: ToolbarProps) {
           Ses
         </button>
       ) : null}
-      {p.demo ? (
+      {p.demo && (p.demo.running || p.demo.enabled !== false) ? (
         <>
           <button
             type="button"

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { approveOrderAction, rejectOrderAction, listQueueAction } from "@/modules/order/actions/orders";
-import { tableBoardAction } from "@/modules/order/actions/cashier";
+import { clearTableAction, tableBoardAction } from "@/modules/order/actions/cashier";
 import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/calls";
 import { assignTableAction, unassignTableAction } from "@/modules/order/actions/assignments";
 import { reprintAction } from "@/modules/order/actions/printJobs";
@@ -77,6 +77,7 @@ const LIVE_EVENTS = [
   "print.failed",
   "printer.status",
   "scan.table",
+  "table.cleared",
   "price.display",
 ] as const;
 
@@ -349,6 +350,13 @@ export default function KasaClient({
               onResolveCall={(call) => act(() => resolveCallAction(call.id, "YANITLANDI"))}
               onAssign={(userId) => act(() => (userId ? assignTableAction(selected.id, userId) : unassignTableAction(selected.id)), userId ? "Garson atandı" : "Atama kaldırıldı")}
               onCreateOrder={() => setComposer({ tableId: selected.id, label: selected.label })}
+              onClearTable={(tableId) =>
+                act(async () => {
+                  const res = await clearTableAction(tableId);
+                  if (res.ok) closePanel();
+                  return res;
+                }, `${selected.label} boş duruma alındı`)
+              }
             />
           ) : null}
         </div>

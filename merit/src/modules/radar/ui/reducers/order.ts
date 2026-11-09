@@ -154,6 +154,14 @@ export function reduceTableScanned(s: RadarState, e: Ev<"table.scanned">): Radar
   return putTable(s, loc, { ...tableAt(s, loc), scannedAt: e.at }, false);
 }
 
+export function reduceTableCleared(s: RadarState, e: Ev<"table.cleared">): RadarState {
+  const layer = s.layers.order;
+  if (!layer) return s;
+  const loc = findTable(layer.outlets, e.tableId);
+  if (!loc) return addRefresh(s, `table:${e.tableId}`);
+  return putTable(s, loc, { ...tableAt(s, loc), scannedAt: undefined, call: null, emptiedAt: e.at }, false);
+}
+
 export function reduceTableAssigned(s: RadarState, e: Ev<"table.assigned">): RadarState {
   const layer = s.layers.order;
   if (!layer) return s;

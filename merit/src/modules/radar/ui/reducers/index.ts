@@ -9,6 +9,7 @@ import {
   reducePrinterHealth,
   reducePrintJob,
   reduceTableAssigned,
+  reduceTableCleared,
   reduceTableScanned,
 } from "./order";
 import {
@@ -41,6 +42,8 @@ export function reduce(state: RadarState, e: RadarEvent): RadarState {
       return reduceCall(state, e);
     case "table.scanned":
       return reduceTableScanned(state, e);
+    case "table.cleared":
+      return reduceTableCleared(state, e);
     case "table.assigned":
       return reduceTableAssigned(state, e);
     case "print.job":

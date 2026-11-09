@@ -49,6 +49,7 @@ export type RadarEvent = RadarEventBase &
     | { type: "call.opened"; callId: string; tableId: string; callType: CallType }
     | { type: "call.closed"; callId: string; tableId: string; waiterId?: string; waiterName?: string }
     | { type: "table.scanned"; tableId: string }
+    | { type: "table.cleared"; tableId: string }
     | { type: "table.assigned"; tableId: string; waiterId: string | null }
     | {
         type: "print.job";
@@ -224,6 +225,7 @@ export type RadarSnapshot = {
             }[];
             call: { callId: string; type: CallType; since: string } | null;
             scannedAt?: string;
+            emptiedAt?: string;
           }[];
         }[];
         queues: {

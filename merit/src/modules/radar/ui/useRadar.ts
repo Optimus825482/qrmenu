@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { sseClient } from "@/shell/sseStore";
+import { isMotionEnabled } from "./motion/useMotionPreference";
 import { pulseOnce } from "@/components/ui/pulseOnce";
 import { deriveAlerts } from "../alerts";
 import { radarOverviewAction, radarSnapshotAction } from "../server/actions/radar";
@@ -26,7 +27,7 @@ function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
       const id = setTimeout(cb, ms);
       return () => clearTimeout(id);
     },
-    reducedMotion: () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    reducedMotion: () => !isMotionEnabled(),
     hidden: () => document.hidden,
     onDrift: (path) => console.warn("[radar] drift", path),
     deriveAlerts: (s, nowMs) =>

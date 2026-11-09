@@ -13,7 +13,13 @@ const pairSchema = z.object({ tableId: z.string().min(1), userId: z.string().min
 const assignSchema = pairSchema;
 const bulkSchema = z.object({ outletId: z.string().min(1), pairs: z.array(pairSchema).min(1).max(500) });
 
-export type AssignmentRow = { tableId: string; label: string; waiter?: { id: string; fullName: string } };
+export type AssignmentRow = {
+  tableId: string;
+  label: string;
+  waiter?: { id: string; fullName: string };
+  isOccupied?: boolean;
+  scannedAt?: string;
+};
 
 type TableScope = { id: string; outletId: string; outlet: { hotelId: string } };
 
@@ -158,12 +164,47 @@ async function myTables(ctx: Ctx): Promise<AssignmentRow[]> {
   if (!ctx.session.outletId) return [];
   await assertCan(ctx, "QS-KUY", "V", ctx.session.hotelId);
   if (!outletAllowed(ctx, ctx.session.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
-  const rows = await prisma.outletTable.findMany({
-    where: { outletId: ctx.session.outletId, isActive: true },
-    select: { id: true, label: true },
-    orderBy: [{ label: "asc" }, { id: "asc" }],
+  const outletId = ctx.session.outletId;
+  const now = new Date();
+  const window40Min = new Date(now.getTime() - 40 * 60_000);
+
+  const [rows, openOrders, openCalls, scans] = await Promise.all([
+    prisma.outletTable.findMany({
+      where: { outletId, isActive: true },
+      select: { id: true, label: true, emptiedAt: true },
+      orderBy: [{ label: "asc" }, { id: "asc" }],
+    }),
+    prisma.order.findMany({
+      where: { outletId, tableId: { not: null }, status: { in: ["GONDERILDI", "ONAYLANDI", "HAZIR"] } },
+      select: { tableId: true },
+    }),
+    prisma.waiterCall.findMany({
+      where: { outletId, status: "ACIK" },
+      select: { tableId: true },
+    }),
+    prisma.qrScanLog.findMany({
+      where: { table: { outletId }, ok: true, createdAt: { gte: window40Min } },
+      select: { tableId: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const orderTableIds = new Set(openOrders.map((o) => o.tableId));
+  const callTableIds = new Set(openCalls.map((c) => c.tableId));
+  const scanByTable = new Map<string, Date>();
+  for (const s of scans) if (s.tableId && !scanByTable.has(s.tableId)) scanByTable.set(s.tableId, s.createdAt);
+
+  return rows.map((row) => {
+    const scanDate = scanByTable.get(row.id);
+    const validScan = scanDate && (!row.emptiedAt || scanDate > row.emptiedAt);
+    const isOccupied = orderTableIds.has(row.id) || callTableIds.has(row.id) || Boolean(validScan);
+    return {
+      tableId: row.id,
+      label: row.label,
+      isOccupied,
+      scannedAt: validScan ? scanDate.toISOString() : undefined,
+    };
   });
-  return rows.map((row) => ({ tableId: row.id, label: row.label }));
 }
 
 export const tableAssignments = { assign, unassign, bulkAssign, listForOutlet, myTables };

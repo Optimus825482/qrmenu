@@ -120,15 +120,15 @@ function Detail({
       ) : (
         <p className="rd-muted">Açık çağrı yok.</p>
       )}
-      <h4>QR Menü</h4>
+      <h4>Masa Durumu & Aktivite</h4>
       {m.guestPresent ? (
         <p>
-          <Icon name="qr" size={13} /> Misafir masada · {m.scanMinutes === 0 ? "Yeni okutuldu" : `${m.scanMinutes} dk önce okutuldu`} (son 15 dk aktif).
+          <Icon name="qr" size={13} /> Dolu · {m.scanMinutes === 0 ? "Yeni aktivite" : `${m.scanMinutes} dk önce aktivite`} (son 40 dk aktif).
         </p>
       ) : table.scannedAt ? (
-        <p className="rd-muted">Son QR okutma: {Math.floor((now - (Date.parse(table.scannedAt) || now)) / 60_000)} dk önce</p>
+        <p className="rd-muted">Son aktivite: {Math.floor((now - (Date.parse(table.scannedAt) || now)) / 60_000)} dk önce</p>
       ) : (
-        <p className="rd-muted">Bugün QR menü okutulmadı.</p>
+        <p className="rd-muted">Aktif istek veya çağrı yok (Boş masa).</p>
       )}
     </DetailBubble>
   );

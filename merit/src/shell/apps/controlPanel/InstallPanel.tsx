@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { useDemoMode } from "@/modules/radar/ui/demoPreference";
 import { usePwaInstall, type InstallOutcome } from "../../usePwaInstall";
 
 // Inlined by next.config.ts (env).
@@ -17,6 +18,7 @@ const OUTCOME_TEXT: Record<InstallOutcome, string> = {
 export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
   const { canInstall, installed, isIos, promptInstall } = usePwaInstall();
   const [outcome, setOutcome] = useState<InstallOutcome | null>(null);
+  const [demoMode, setDemoMode] = useDemoMode();
   const id = useId();
 
   const install = async () => {
@@ -60,6 +62,28 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
           {note}
         </p>
         {outcome ? <p role="status">{OUTCOME_TEXT[outcome]}</p> : null}
+      </section>
+      <section className="xp-cp-section" aria-labelledby={`${id}-demo`}>
+        <h3 className="xp-cp-heading" id={`${id}-demo`}>
+          Operasyon Radarı Demo Modu
+        </h3>
+        <p className="xp-cp-note">
+          Operasyon Radarı ekranında sentetik demo senaryoları yürütme düğmesini (&quot;Demo Başlat&quot;) gösterir veya gizler.
+        </p>
+        <div style={{ marginTop: 8 }}>
+          <label className="xp-cp-choice">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={demoMode}
+              onChange={(e) => {
+                setDemoMode(e.target.checked);
+                setStatus(e.target.checked ? "Operasyon Radarı Demo Modu aktif edildi." : "Operasyon Radarı Demo Modu kapatıldı.");
+              }}
+            />
+            <span>Demo Mod (Radarda &quot;Demo Başlat&quot; düğmesi görünsün)</span>
+          </label>
+        </div>
       </section>
       <section className="xp-cp-section" aria-labelledby={`${id}-version`}>
         <h3 className="xp-cp-heading" id={`${id}-version`}>

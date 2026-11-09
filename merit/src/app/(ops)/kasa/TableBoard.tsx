@@ -62,10 +62,12 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
     for (const t of tables) {
       const order = t.openOrders.length > 0;
       const call = t.openCalls > 0 || calls.some((c) => c.tableLabel === t.label);
-      if (order) occupied++;
+      const isScanned = (scannedTableIds.includes(t.id) || t.lastScanAt !== undefined) && (!t.emptiedAt || (t.lastScanAt && new Date(t.lastScanAt).getTime() > new Date(t.emptiedAt).getTime()));
+      const isOcc = t.isOccupied ?? (order || call || isScanned);
+      if (isOcc) occupied++;
+      else empty++;
       if (call) withCalls++;
-      if (scannedTableIds.includes(t.id)) scanned++;
-      if (!order && !call) empty++;
+      if (isScanned) scanned++;
     }
     return { occupied, withCalls, empty, scanned, total: tables.length };
   }, [tables, calls, scannedTableIds]);
@@ -76,10 +78,12 @@ export default function TableBoard({ tables, areas = [], calls, scannedTableIds 
         if (selectedAreaId !== "ALL" && table.areaId !== selectedAreaId) return false;
         const order = table.openOrders.length > 0;
         const call = table.openCalls > 0 || calls.some((c) => c.tableLabel === table.label);
-        if (statusFilter === "OCCUPIED" && !order) return false;
+        const isScanned = (scannedTableIds.includes(table.id) || table.lastScanAt !== undefined) && (!table.emptiedAt || (table.lastScanAt && new Date(table.lastScanAt).getTime() > new Date(table.emptiedAt).getTime()));
+        const isOcc = table.isOccupied ?? (order || call || isScanned);
+        if (statusFilter === "OCCUPIED" && !isOcc) return false;
         if (statusFilter === "CALLS" && !call) return false;
-        if (statusFilter === "EMPTY" && (order || call)) return false;
-        if (statusFilter === "SCANNED" && !scannedTableIds.includes(table.id)) return false;
+        if (statusFilter === "EMPTY" && isOcc) return false;
+        if (statusFilter === "SCANNED" && !isScanned) return false;
         const q = search.trim().toLowerCase();
         if (q) {
           const hit =

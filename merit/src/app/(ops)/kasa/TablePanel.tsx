@@ -28,6 +28,7 @@ export type TablePanelProps = {
   /** `null` = atamayı kaldır. */
   onAssign(userId: string | null): void;
   onCreateOrder(): void;
+  onClearTable?(tableId: string): void;
   loading?: boolean;
   busy?: boolean;
 };
@@ -36,7 +37,7 @@ const STATUS_LABEL: Record<string, string> = { GONDERILDI: "Onay bekliyor", ONAY
 
 const minutes = (iso: string, now: number): string => `${Math.max(0, Math.round((now - new Date(iso).getTime()) / 60_000))} dk`;
 
-export default function TablePanel({ table, orders, calls, waiters, capabilities, currency, pricesShown, layout, onClose, onApprove, onReject, onReprint, onResolveCall, onAssign, onCreateOrder, loading = false, busy = false }: TablePanelProps) {
+export default function TablePanel({ table, orders, calls, waiters, capabilities, currency, pricesShown, layout, onClose, onApprove, onReject, onReprint, onResolveCall, onAssign, onCreateOrder, onClearTable, loading = false, busy = false }: TablePanelProps) {
   const [editing, setEditing] = useState(false);
   const [waiterId, setWaiterId] = useState(table.waiter?.id ?? "");
   // Yaş metni için bir kez alınan zaman (render saf kalsın); liste yenilenince panel yeniden bağlanır.
@@ -46,12 +47,37 @@ export default function TablePanel({ table, orders, calls, waiters, capabilities
     <>
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 id={labelId} className="text-2xl font-extrabold">{table.label}</h2>
+          <div className="flex items-center gap-2">
+            <h2 id={labelId} className="text-2xl font-extrabold">{table.label}</h2>
+            {table.isOccupied ? (
+              <span className="rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] px-2 py-0.5 text-xs font-bold border border-[var(--accent)]">
+                Dolu
+              </span>
+            ) : (
+              <span className="rounded-full bg-[var(--surface-sunken)] text-muted px-2 py-0.5 text-xs font-semibold">
+                Boş
+              </span>
+            )}
+          </div>
           {table.areaLabel ? <p className="text-sm text-muted">{table.areaLabel}</p> : null}
         </div>
-        <button type="button" className="pos-btn" aria-label="Paneli kapat" onClick={onClose}>
-          <Icon name="close" size={24} />
-        </button>
+        <div className="flex items-center gap-2">
+          {onClearTable && table.isOccupied ? (
+            <button
+              type="button"
+              className="pos-btn"
+              disabled={busy}
+              onClick={() => onClearTable(table.id)}
+              title="Masayı boş duruma getir"
+            >
+              <Icon name="check" size={18} />
+              Masayı Boşa Al
+            </button>
+          ) : null}
+          <button type="button" className="pos-btn" aria-label="Paneli kapat" onClick={onClose}>
+            <Icon name="close" size={24} />
+          </button>
+        </div>
       </header>
 
       <section aria-label="Garson" className="mt-3 border-t border-border pt-3">

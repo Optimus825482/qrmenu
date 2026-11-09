@@ -9,8 +9,8 @@ export type RoomCell = NonNullable<RadarSnapshot["layers"]["minibar"]>["floors"]
 export type TableCard = StateTable;
 
 const MIN_MS = 60_000;
-/** A QR scan this recent means the guest is still at the table / room. */
-export const GUEST_PRESENT_MS = 15 * MIN_MS;
+/** Table activity (QR scan, waiter call, order): active within 40 minutes makes the table occupied (Dolu). */
+export const GUEST_PRESENT_MS = 40 * MIN_MS;
 /** An open call older than this is overdue (UX `CALL_OVERDUE_SEC`). */
 export const CALL_OVERDUE_SECONDS = 60;
 
@@ -98,7 +98,11 @@ export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnable
   const open = t.orders;
   const awaiting = open.filter((o) => o.status === "GONDERILDI").length;
   const scanMs = t.scannedAt !== undefined ? now - (Date.parse(t.scannedAt) || 0) : undefined;
-  const guestPresent = scanMs !== undefined && scanMs >= 0 && scanMs <= GUEST_PRESENT_MS;
+  const isEmptied =
+    t.emptiedAt !== undefined &&
+    t.scannedAt !== undefined &&
+    Date.parse(t.emptiedAt) >= Date.parse(t.scannedAt);
+  const guestPresent = !isEmptied && scanMs !== undefined && scanMs >= 0 && scanMs <= GUEST_PRESENT_MS;
   const scanMinutes = scanMs !== undefined && scanMs >= 0 ? Math.floor(scanMs / 60_000) : undefined;
   const callSeconds = t.call ? Math.max(0, Math.floor((now - (Date.parse(t.call.since) || now)) / 1000)) : undefined;
   const callOverdue = callSeconds !== undefined && callSeconds >= CALL_OVERDUE_SECONDS;
@@ -122,7 +126,7 @@ export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnable
     statusText = orderStatusLabel("ONAYLANDI", "MASA");
   } else if (guestPresent) {
     tone = "accent";
-    statusText = "Misafir masada";
+    statusText = "Dolu";
   } else {
     tone = "muted";
     statusText = "Boş";
@@ -135,7 +139,7 @@ export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnable
     if (t.call.type === "HESAP") badges.push("Hesap");
   }
   if (guestPresent) {
-    badges.push(scanMinutes !== undefined && scanMinutes > 0 ? `QR Menü (${scanMinutes} dk)` : "QR Menü");
+    badges.push(scanMinutes !== undefined && scanMinutes > 0 ? `Dolu (${scanMinutes} dk)` : "Dolu");
   }
   if (open.some((o) => o.escalated)) badges.push("Yükseltildi");
 

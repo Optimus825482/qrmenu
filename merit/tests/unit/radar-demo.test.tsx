@@ -58,6 +58,7 @@ const ALL_TYPES: Record<RadarEventType, true> = {
   "call.opened": true,
   "call.closed": true,
   "table.scanned": true,
+  "table.cleared": true,
   "table.assigned": true,
   "print.job": true,
   "printer.health": true,
@@ -382,6 +383,7 @@ describe("Radar penceresinde modül demosu", () => {
       { id: "h2", code: "C", name: "Merit Crystal" },
     ],
     hotelId: "ALL",
+    demoMode: true,
   };
   const until = async (check: () => void) => {
     let last: unknown;
@@ -438,5 +440,10 @@ describe("Radar penceresinde modül demosu", () => {
     fireEvent.click(screen.getByTestId("radar-demo-cancel"));
     expect(screen.queryByRole("dialog", { name: "Demo senaryosu" })).toBeNull();
     expect((screen.getByLabelText("Otel") as HTMLSelectElement).value).toBe("ALL");
+  });
+
+  it("demoMode: false iken Demo başlat butonu gizlenir", () => {
+    render(<RadarRoot mode="window" initial={{ ...initial, demoMode: false }} />);
+    expect(screen.queryByTestId("radar-demo-start")).toBeNull();
   });
 });

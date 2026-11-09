@@ -14,7 +14,7 @@ type PrinterEntry = OutletEntry["printers"][number];
 
 const OPEN_TABLE_STATUSES = ["GONDERILDI", "ONAYLANDI", "HAZIR"] as const;
 const COUNTED_JOBS: PrintJobStatus[] = ["KUYRUKTA", "BASILIYOR", "HATA"];
-const SCAN_WINDOW_MS = 15 * 60_000;
+const SCAN_WINDOW_MS = 40 * 60_000;
 /** An order older than this is stale data, not an open order of the live floor. */
 const OPEN_WINDOW_MS = 24 * 3_600_000;
 const AREA_LABEL = { ACIK: "Açık alan", KAPALI: "Kapalı alan" } as const;
@@ -65,7 +65,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     }),
     empty ? [] : prisma.outletTable.findMany({
       where: { outletId: { in: outletIds }, isActive: true },
-      select: { id: true, outletId: true, areaId: true, label: true },
+      select: { id: true, outletId: true, areaId: true, label: true, emptiedAt: true },
       orderBy: [{ label: "asc" }, { id: "asc" }],
     }),
     empty ? [] : prisma.tableAssignment.findMany({
@@ -222,13 +222,18 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
         .map((t): TableEntry => {
           const waiter = waiterByTable.get(t.id);
           const scanned = scanByTable.get(t.id);
+          const validScan =
+            scanned && (!t.emptiedAt || scanned.getTime() > t.emptiedAt.getTime())
+              ? scanned
+              : undefined;
           return {
             tableId: t.id,
             label: t.label,
             ...(waiter ? { waiterId: waiter.userId, ...(env.named ? { waiterName: nameFor(env, waiter.name) } : {}) } : {}),
             orders: ordersByTable.get(t.id) ?? [],
             call: callByTable.get(t.id) ?? null,
-            ...(scanned ? { scannedAt: scanned.toISOString() } : {}),
+            ...(validScan ? { scannedAt: validScan.toISOString() } : {}),
+            ...(t.emptiedAt ? { emptiedAt: t.emptiedAt.toISOString() } : {}),
           };
         }),
     }));

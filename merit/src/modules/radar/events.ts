@@ -212,6 +212,7 @@ export const RADAR_EVENT_TYPES: readonly string[] = [
   "print.failed",
   "printer.status",
   "scan.table",
+  "table.cleared",
   "scan.room",
   "session.changed",
   "ordering.changed",
@@ -457,6 +458,11 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
       const tableId = str(p, "tableId");
       if (!tableId) return NONE;
       return out([make(tableId, { type: "table.scanned", layer: "SIPARIS", tableId })]);
+    }
+    case "table.cleared": {
+      const tableId = str(p, "tableId");
+      if (!tableId) return NONE;
+      return out([make(tableId, { type: "table.cleared", layer: "SIPARIS", tableId })]);
     }
     case "scan.room": {
       const roomId = str(p, "roomId") ?? e.roomId;

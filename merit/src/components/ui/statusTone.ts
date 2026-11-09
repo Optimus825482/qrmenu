@@ -11,7 +11,7 @@ export type ToneBorder = "solid" | "dashed" | "thick" | "double";
 
 export const TONES: Record<StatusTone, { label: string; fg: string; bg: string; border: ToneBorder }> = {
   neutral: { label: "Boş", fg: "var(--muted)", bg: "var(--surface)", border: "solid" },
-  scanned: { label: "Misafir masada", fg: "var(--accent)", bg: "var(--surface)", border: "dashed" },
+  scanned: { label: "Dolu", fg: "var(--accent)", bg: "var(--surface)", border: "dashed" },
   pending: { label: "Onay bekliyor", fg: "var(--warn)", bg: "var(--warn-bg)", border: "thick" },
   preparing: { label: "Hazırlanıyor", fg: "var(--info)", bg: "var(--info-bg)", border: "solid" },
   ready: { label: "Hazır", fg: "var(--success)", bg: "var(--success-bg)", border: "double" },

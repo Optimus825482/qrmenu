@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { approveOrderAction, listQueueAction, markServedAction, rejectOrderAction } from "@/modules/order/actions/orders";
+import { clearTableAction } from "@/modules/order/actions/cashier";
 import { listOpenCallsAction, resolveCallAction } from "@/modules/order/actions/calls";
 import { listMyOpenOrdersAction, listMyTablesAction } from "@/modules/order/actions/assignments";
 import { StaffOrderComposer } from "@/modules/order/ui/StaffOrderComposer";
@@ -23,7 +24,8 @@ type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note:
 type OpenOrder = { id: string; orderNo: number; tableId: string | null; status: string };
 type OpenCall = { id: string; tableLabel: string; type: string; note?: string | null; overdue: boolean };
 type ScanAlert = { tableId: string; tableLabel: string; timestamp: number };
-type Props = { outletId: string; queue: QueueOrder[]; tables: { tableId: string; label: string }[]; calls: OpenCall[]; openOrders: OpenOrder[]; canCreateOrder: boolean; currency: string };
+type TableItem = { tableId: string; label: string; isOccupied?: boolean; scannedAt?: string };
+type Props = { outletId: string; queue: QueueOrder[]; tables: TableItem[]; calls: OpenCall[]; openOrders: OpenOrder[]; canCreateOrder: boolean; currency: string };
 
 const EVENTS = [
   "order.created",
@@ -38,6 +40,7 @@ const EVENTS = [
   "call.resolved",
   "assignment.changed",
   "scan.table",
+  "table.cleared",
 ];
 const statusText = (status: string) => status.replaceAll("_", " ");
 
@@ -109,7 +112,14 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     }
     void refresh();
   }, EVENTS);
-  const act = (fn: () => Promise<{ ok: boolean }>) => startTransition(async () => { const result = await fn(); if (result.ok) await refresh(); });
+  const act = (fn: () => Promise<{ ok: boolean }>, success?: string) =>
+    startTransition(async () => {
+      const result = await fn();
+      if (result.ok) {
+        if (success) notify.success(success);
+        await refresh();
+      }
+    });
   const openComposer = (table: { tableId: string; label: string }) => { setNotice(""); setComposerTable(table); };
   const tab = params.get("sekme") === "masalar" ? "tables" : "queue";
   const wantsNew = params.get("yeni") === "1";
@@ -205,17 +215,37 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-bold">{table.label}</h2>
+                  {table.isOccupied ? (
+                    <span className="rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] px-2 py-0.5 text-xs font-bold border border-[var(--accent)]">
+                      Dolu
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-[var(--surface-sunken)] text-muted px-2 py-0.5 text-xs font-semibold">
+                      Boş
+                    </span>
+                  )}
                   {isScanned ? (
                     <span className="inline-flex items-center gap-1 rounded-full border border-accent px-2 py-0.5 text-[13px] font-bold text-accent">
                       <Icon name="zap" size={16} /> Misafir masada
                     </span>
                   ) : null}
                 </div>
-                {canCreateOrder ? (
-                  <Button variant="primary" disabled={pending} onClick={() => openComposer(table)}>
-                    {isScanned ? "Adisyon aç" : "Yeni adisyon"}
-                  </Button>
-                ) : null}
+                <div className="flex items-center gap-2">
+                  {table.isOccupied ? (
+                    <Button
+                      variant="secondary"
+                      disabled={pending}
+                      onClick={() => act(() => clearTableAction(table.tableId), `${table.label} boş duruma alındı`)}
+                    >
+                      Boşa al
+                    </Button>
+                  ) : null}
+                  {canCreateOrder ? (
+                    <Button variant="primary" disabled={pending} onClick={() => openComposer(table)}>
+                      {isScanned ? "Adisyon aç" : "Yeni adisyon"}
+                    </Button>
+                  ) : null}
+                </div>
               </div>
               {openOrders.filter((order) => order.tableId === table.tableId).map((order) => (
                 <div key={order.id} data-guide={order.id === openOrders[0]?.id ? "siparis-durumu" : undefined} className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg p-2 text-sm">

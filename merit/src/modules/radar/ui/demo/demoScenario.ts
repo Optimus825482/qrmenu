@@ -32,6 +32,7 @@ const BACKGROUND_TYPES: ReadonlySet<string> = new Set([
   "mail.failed",
   "room.scanned",
   "table.scanned",
+  "table.cleared",
   "stock.level",
   "task.generated",
   "upload.status",
@@ -404,6 +405,9 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
         add(t + 70, { type: "order.status", ...common, from: "ONAYLANDI", to: "ONAYLANDI", prep: true });
         add(t + 150, { type: "order.status", ...common, from: "ONAYLANDI", to: "HAZIR" });
         add(t + 200, { type: "order.status", ...common, from: "HAZIR", to: "SERVIS_EDILDI" });
+        if (i === 0) {
+          add(t + 240, { type: "table.cleared", layer: "SIPARIS", tableId: tb.tableId });
+        }
         if (printer && i < 2) {
           const jobId = `demo-job-${oi}-${++jobNo}`;
           const pr = { layer: "SIPARIS" as const, outletId: outlet.outletId, printerId: printer.printerId, orderId, jobId };

@@ -2,7 +2,8 @@ import { z } from "zod";
 import type { OrderStatus } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
+import { publish } from "@/lib/realtime";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
 import { outletAllowed } from "./approvals";
@@ -24,6 +25,8 @@ export type TableBoard = {
     areaId?: string;
     areaLabel?: string;
     isActive: boolean;
+    isOccupied?: boolean;
+    emptiedAt?: Date;
     waiter?: { id: string; fullName: string };
     openOrders: {
       id: string;
@@ -74,6 +77,7 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
         id: true,
         label: true,
         isActive: true,
+        emptiedAt: true,
         areaId: true,
         area: { select: { id: true, name: true, type: true } },
         assignments: {
@@ -106,7 +110,7 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       orderBy: { createdAt: "desc" },
     }),
     prisma.qrScanLog.findMany({
-      where: { table: { outletId }, ok: true },
+      where: { table: { outletId }, ok: true, createdAt: { gte: new Date(now.getTime() - 40 * 60_000) } },
       select: { tableId: true, createdAt: true },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     }),
@@ -170,18 +174,31 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
 
   return {
     areas,
-    tables: tables.map((table) => ({
-      id: table.id,
-      label: table.label,
-      areaId: table.areaId,
-      areaLabel: table.area?.name?.trim() || (table.area?.type === "ACIK" ? "Açık alan" : "Kapalı alan"),
-      isActive: table.isActive,
-      ...(table.assignments[0] ? { waiter: table.assignments[0].user } : {}),
-      openOrders: ordersByTable.get(table.id) ?? [],
-      openCalls: callsByTable.get(table.id) ?? 0,
-      ...(callDetailByTable.has(table.id) ? { callDetail: callDetailByTable.get(table.id)! } : {}),
-      ...(scanByTable.has(table.id) ? { lastScanAt: scanByTable.get(table.id)! } : {}),
-    })),
+    tables: tables.map((table) => {
+      const scanDate = scanByTable.get(table.id);
+      const validScan =
+        scanDate && (!table.emptiedAt || scanDate.getTime() > table.emptiedAt.getTime())
+          ? scanDate
+          : undefined;
+      const openOrders = ordersByTable.get(table.id) ?? [];
+      const openCalls = callsByTable.get(table.id) ?? 0;
+      const isOccupied = openOrders.length > 0 || openCalls > 0 || validScan !== undefined;
+
+      return {
+        id: table.id,
+        label: table.label,
+        areaId: table.areaId,
+        areaLabel: table.area?.name?.trim() || (table.area?.type === "ACIK" ? "Açık alan" : "Kapalı alan"),
+        isActive: table.isActive,
+        isOccupied,
+        ...(table.emptiedAt ? { emptiedAt: table.emptiedAt } : {}),
+        ...(table.assignments[0] ? { waiter: table.assignments[0].user } : {}),
+        openOrders,
+        openCalls,
+        ...(callDetailByTable.has(table.id) ? { callDetail: callDetailByTable.get(table.id)! } : {}),
+        ...(validScan ? { lastScanAt: validScan } : {}),
+      };
+    }),
     kpis: {
       todayOrders: todayOrders.length,
       pending: todayOrders.filter((order) => order.status === "GONDERILDI").length,
@@ -191,6 +208,42 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       printerOnline,
     },
   };
+}
+
+/** Manually sets a table to empty (BOŞ), clears active calls and records emptiedAt. */
+async function clearTable(ctx: Ctx, tableId: string): Promise<void> {
+  const table = await prisma.outletTable.findUnique({
+    where: { id: tableId },
+    include: { outlet: { select: { hotelId: true } } },
+  });
+  if (!table) throw new DomainError("NOT_FOUND", "Masa bulunamadı");
+  const hotelId = table.outlet.hotelId;
+  const isAllowed =
+    can(ctx, "QS-KAS", "D", hotelId) ||
+    can(ctx, "QS-KUY", "D", hotelId) ||
+    can(ctx, "QM-CAG", "D", hotelId);
+  if (!isAllowed) throw new DomainError("FORBIDDEN", "Bu masayı boşaltma yetkiniz yok");
+
+  await prisma.$transaction(async (tx) => {
+    const now = new Date();
+    await tx.outletTable.update({
+      where: { id: tableId },
+      data: { emptiedAt: now },
+    });
+    await tx.waiterCall.updateMany({
+      where: { tableId, status: "ACIK" },
+      data: { status: "KAPANDI", resolvedById: ctx.user.id, resolvedAt: now },
+    });
+    await publish(
+      {
+        type: "table.cleared",
+        hotelId: table.outlet.hotelId,
+        outletId: table.outletId,
+        payload: { tableId, tableLabel: table.label, emptiedAt: now.toISOString(), byUserId: ctx.user.id },
+      },
+      tx,
+    );
+  });
 }
 
 /** Recent orders for the cancellation screen; served orders are deliberately view-only in its UI. */
@@ -213,4 +266,4 @@ async function recentOrders(
   });
 }
 
-export const cashier = { tableBoard, recentOrders };
+export const cashier = { tableBoard, recentOrders, clearTable };

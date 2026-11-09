@@ -32,10 +32,10 @@ describe("tableTone", () => {
     expect(r.tone).toBe("pending");
     expect(r.label).toBe("Onay bekliyor · 2");
   });
-  it("öncelik: hazır > hazırlanıyor > misafir masada", () => {
+  it("öncelik: hazır > hazırlanıyor > dolu", () => {
     expect(tableTone({ openOrders: [{ status: "ONAYLANDI" }, { status: "HAZIR" }], openCalls: 0, scannedRecently: true }).label).toBe("Hazır");
     expect(tableTone({ openOrders: [{ status: "ONAYLANDI" }], openCalls: 0, scannedRecently: true }).label).toBe("Hazırlanıyor");
-    expect(tableTone({ openOrders: [], openCalls: 0, scannedRecently: true }).label).toBe("Misafir masada");
+    expect(tableTone({ openOrders: [], openCalls: 0, scannedRecently: true }).label).toBe("Dolu");
   });
   it("çağrı rozeti ve 60 sn eşiği", () => {
     const a = tableTone({ openOrders: [], openCalls: 1, oldestCallAgeSec: 45, scannedRecently: false });

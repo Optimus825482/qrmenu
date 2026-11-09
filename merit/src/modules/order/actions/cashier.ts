@@ -15,3 +15,9 @@ export async function tableBoardAction(value: string): Promise<Result<Awaited<Re
 export async function recentOrdersAction(value: z.input<typeof recentInput>): Promise<Result<Awaited<ReturnType<typeof cashier.recentOrders>>>> {
   return safeAction(recentInput, async (input) => cashier.recentOrders(await requireUser(), input.outletId, input))(value);
 }
+
+const tableIdSchema = z.string().min(1);
+
+export async function clearTableAction(value: string): Promise<Result<void>> {
+  return safeAction(tableIdSchema, async (id) => cashier.clearTable(await requireUser(), id))(value);
+}

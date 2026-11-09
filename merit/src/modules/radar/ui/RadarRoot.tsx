@@ -13,6 +13,7 @@ import { Legend, consumeInitialLegendOpen } from "./Legend";
 import { MenuBar, type MenuDef } from "./MenuBar";
 import { MotionLayer } from "./motion/MotionLayer";
 import { useMotionPreference } from "./motion/useMotionPreference";
+import { useDemoMode } from "./demoPreference";
 import { DEMO_FOCUS_SHORT, type DemoFocus } from "./demo/demoScenario";
 import { useDemo } from "./demo/useDemo";
 import { DemoDialog } from "./DemoDialog";
@@ -40,6 +41,7 @@ export type RadarInitial = {
   rotateSeconds?: number;
   outletId?: string;
   soundOnEscalation?: boolean;
+  demoMode?: boolean;
 };
 
 export type RadarRootProps = {
@@ -118,6 +120,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
 
   const { store, state } = useRadar(hotelId);
   const motionPref = useMotionPreference();
+  const [storedDemoMode] = useDemoMode();
+  const demoModeActive = initial.demoMode ?? storedDemoMode;
   const sse = useStore(sseClient().store, (s) => s.status);
   const now = useNow(1000);
   const all = hotelId === "ALL";
@@ -395,8 +399,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const visibleAlerts = useMemo(() => (scoped ? state.alerts : []), [scoped, state.alerts]);
   // The animated scene follows the live stream and the day replay (at the replay speed); a scrubbed past is still.
   const motionSpeed = state.mode === "replay" && state.replay ? state.replay.speed : 1;
-  // A module demo shows its moving scene whatever the toolbar switch says; the system's reduced-motion setting still wins.
-  const demoMotion = demo.running && demo.focus !== undefined && !motionPref.reduced;
+  // A module demo shows its moving scene whatever the toolbar switch says.
+  const demoMotion = demo.running && demo.focus !== undefined;
   const animationOn = (motionPref.on || demoMotion) && !all;
   const motionOn = animationOn && state.mode !== "scrub";
 
@@ -663,6 +667,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               onToggle: toggleSound,
             }}
             demo={{
+              enabled: demoModeActive,
               running: demo.running,
               disabled: state.mode === "replay" && !demo.running,
               hint:

@@ -149,13 +149,16 @@ describe("tableCardModel", () => {
     expect(tableCardModel(table(), NOW)).toMatchObject({ statusText: "Boş", tone: "muted", guestPresent: false });
   });
 
-  it("guest presence: 14 min scan yes, 16 min no", () => {
-    expect(tableCardModel(table({ scannedAt: ago(14 * MIN) }), NOW).guestPresent).toBe(true);
-    expect(tableCardModel(table({ scannedAt: ago(16 * MIN) }), NOW).guestPresent).toBe(false);
-    expect(tableCardModel(table({ scannedAt: ago(14 * MIN) }), NOW)).toMatchObject({
-      statusText: "Misafir masada",
+  it("guest presence: 39 min scan yes, 41 min no, emptiedAt cancels", () => {
+    expect(tableCardModel(table({ scannedAt: ago(39 * MIN) }), NOW).guestPresent).toBe(true);
+    expect(tableCardModel(table({ scannedAt: ago(41 * MIN) }), NOW).guestPresent).toBe(false);
+    expect(tableCardModel(table({ scannedAt: ago(39 * MIN) }), NOW)).toMatchObject({
+      statusText: "Dolu",
       tone: "accent",
     });
+    expect(
+      tableCardModel(table({ scannedAt: ago(10 * MIN), emptiedAt: ago(5 * MIN) }), NOW).guestPresent,
+    ).toBe(false);
   });
 });
 
