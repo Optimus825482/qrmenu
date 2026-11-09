@@ -255,19 +255,37 @@ export function computePriorityPlan(input: {
 }
 
 const loadSchema = z
-  .object({ day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih yyyy-MM-dd olmalı").optional() })
+  .object({
+    day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tarih yyyy-MM-dd olmalı").optional(),
+    hotelId: z.string().optional(),
+  })
   .strict();
 
-/** Priority plan of the session hotel's open task items (default: today). */
+export type HotelPlanSummary = {
+  hotelId: string;
+  hotelName: string;
+  hotelCode: string;
+  requireQrForControl: boolean;
+  plan: PriorityPlan;
+};
+
+export type ExtendedPriorityPlan = PriorityPlan & {
+  requireQrForControl?: boolean;
+  multiHotels?: HotelPlanSummary[];
+  hotels?: Array<{ id: string; name: string; code: string }>;
+  selectedHotelId?: string;
+};
+
+/** Priority plan of the open task items (supports single hotel, multi-hotel for system admin, default: today). */
 export async function loadPriorityPlan(
   ctx: Ctx,
   q: z.input<typeof loadSchema> = {},
   now: Date = new Date(),
-): Promise<PriorityPlan> {
+): Promise<ExtendedPriorityPlan> {
   const parsed = loadSchema.safeParse(q);
   if (!parsed.success) throw fromZod(parsed.error);
-  const hotelId = ctx.session.hotelId;
-  await assertCan(ctx, SCREEN, "V", hotelId);
+  const requestedHotelId = parsed.data.hotelId;
+  const isSuper = ctx.user.roleKind === "SISTEM";
   const day = parsed.data.day ?? businessDate(now);
   let date: Date;
   try {
@@ -275,12 +293,116 @@ export async function loadPriorityPlan(
   } catch {
     throw new DomainError("VALIDATION", "Geçersiz tarih");
   }
+
+  // Get all hotels the user can access
+  const availableHotels = await prisma.hotel.findMany({
+    where: { isActive: true, ...(isSuper ? {} : { id: { in: ctx.hotelIds } }) },
+    select: { id: true, name: true, code: true },
+    orderBy: { name: "asc" },
+  });
+
+  const isMulti = requestedHotelId === "ALL" || (!requestedHotelId && isSuper && availableHotels.length > 1);
+
+  if (isMulti) {
+    // Multi-hotel mode: load priority plan for all 3 hotels
+    const multiHotels: HotelPlanSummary[] = await Promise.all(
+      availableHotels.map(async (h) => {
+        const [recheckMinutes, requireQrForControl] = await Promise.all([
+          getSetting("dnd.recheckMinutes", h.id),
+          getSetting("minibar.requireQrForControl", h.id),
+        ]);
+        const rows = await prisma.dailyTaskItem.findMany({
+          where: { status: { in: [...OPEN] }, task: { hotelId: h.id, date }, room: { hotelId: h.id } },
+          select: {
+            id: true,
+            roomId: true,
+            status: true,
+            arrivalTime: true,
+            departureTime: true,
+            lastDndAt: true,
+            dndCount: true,
+            task: { select: { type: true } },
+            room: { select: { number: true, floor: { select: { number: true, name: true } } } },
+          },
+          orderBy: { id: "asc" },
+        });
+        const plan = computePriorityPlan({
+          now,
+          day,
+          recheckMinutes,
+          items: rows.map((r) => ({
+            itemId: r.id,
+            roomId: r.roomId,
+            roomNumber: r.room.number,
+            floorNumber: r.room.floor.number,
+            floorName: r.room.floor.name,
+            type: r.task.type,
+            status: r.status,
+            arrivalTime: r.arrivalTime,
+            departureTime: r.departureTime,
+            dndLastAt: r.lastDndAt,
+            dndCount: r.dndCount,
+          })),
+        });
+        return {
+          hotelId: h.id,
+          hotelName: h.name,
+          hotelCode: h.code,
+          requireQrForControl: Boolean(requireQrForControl),
+          plan,
+        };
+      }),
+    );
+
+    const allHotelItems = multiHotels.flatMap((h) =>
+      h.plan.entries.map((e) => ({
+        ...e,
+        floorName: `${h.hotelName} · ${e.floorName ?? `Kat ${e.floorNumber}`}`,
+        label: `${e.label} (${h.hotelCode})`,
+      })),
+    );
+    const total = allHotelItems.length;
+    const critical = multiHotels.reduce((sum, h) => sum + h.plan.summary.critical, 0);
+    const clashes = multiHotels.reduce((sum, h) => sum + h.plan.summary.clashes, 0);
+    const briefing: string[] = [
+      `Tüm Oteller Özeti: Toplam ${total} görev bekliyor (${clashes} çakışma, ${critical} kritik).`,
+      ...multiHotels.map(
+        (h) => `${h.hotelName}: ${h.plan.summary.total} görev (${h.plan.summary.clashes} çakışma, ${h.plan.summary.critical} kritik)`,
+      ),
+    ];
+
+    const allFloors = multiHotels.flatMap((h) =>
+      h.plan.floors.map((f) => ({
+        ...f,
+        name: `${h.hotelCode} · ${f.name}`,
+      })),
+    );
+
+    return {
+      entries: allHotelItems,
+      floors: allFloors,
+      summary: { total, critical, normal: total - critical, clashes },
+      briefing,
+      multiHotels,
+      hotels: availableHotels,
+      selectedHotelId: "ALL",
+      requireQrForControl: multiHotels.some((h) => h.requireQrForControl),
+    };
+  }
+
+  // Single hotel mode
+  const targetHotelId =
+    requestedHotelId && availableHotels.some((h) => h.id === requestedHotelId)
+      ? requestedHotelId
+      : ctx.session.hotelId;
+  await assertCan(ctx, SCREEN, "V", targetHotelId);
+
   const [recheckMinutes, requireQrForControl] = await Promise.all([
-    getSetting("dnd.recheckMinutes", hotelId),
-    getSetting("minibar.requireQrForControl", hotelId),
+    getSetting("dnd.recheckMinutes", targetHotelId),
+    getSetting("minibar.requireQrForControl", targetHotelId),
   ]);
   const rows = await prisma.dailyTaskItem.findMany({
-    where: { status: { in: [...OPEN] }, task: { hotelId, date }, room: { hotelId } },
+    where: { status: { in: [...OPEN] }, task: { hotelId: targetHotelId, date }, room: { hotelId: targetHotelId } },
     select: {
       id: true,
       roomId: true,
@@ -312,5 +434,10 @@ export async function loadPriorityPlan(
       dndCount: r.dndCount,
     })),
   });
-  return { ...plan, requireQrForControl: Boolean(requireQrForControl) };
+  return {
+    ...plan,
+    hotels: availableHotels,
+    selectedHotelId: targetHotelId,
+    requireQrForControl: Boolean(requireQrForControl),
+  };
 }

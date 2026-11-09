@@ -344,6 +344,12 @@ export function Window({ id, hotels, userName }: Props) {
       { label: "Yeni…", mnemonic: "y", disabled: !offered.includes("new"), onSelect: () => commandButton("new")?.click() },
       { label: "Dışa aktar", mnemonic: "d", disabled: !offered.includes("export"), onSelect: () => commandButton("export")?.click() },
       { kind: "separator" },
+      ...(pickable.length > 1 && app.needsHotel
+        ? [
+            { label: "Otel Değiştir…", mnemonic: "o", onSelect: () => actions.clearHotel(id) },
+            { kind: "separator" as const },
+          ]
+        : []),
       { label: "Kapat", mnemonic: "k", onSelect: () => void requestClose() },
     ],
     Görünüm: [
@@ -440,12 +446,15 @@ F&B Command Center uygulaması (${app.id})`,
       </AppErrorBoundary>
     );
   } else if (isSameOriginPath(app.url)) {
+    const targetUrl = win.hotelId
+      ? `${app.url}${app.url.includes("?") ? "&" : "?"}hotelId=${encodeURIComponent(win.hotelId)}`
+      : app.url;
     body = (
       <iframe
-        key={reloadKey}
-        src={appFrameUrl(app.url, { fontFamily, theme })}
+        key={`${reloadKey}-${win.hotelId ?? ""}`}
+        src={appFrameUrl(targetUrl, { fontFamily, theme })}
         title={app.launchLabel ?? app.title}
-        sandbox="allow-same-origin allow-scripts allow-forms"
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
         className="xp-iframe"
       />
     );
@@ -541,7 +550,18 @@ F&B Command Center uygulaması (${app.id})`,
         <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} hotelId={win.hotelId} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />
       ) : null}
       <div className="xp-statusbar">
-        Otel: {hotel?.name ?? "—"} · Kullanıcı: {userName} · {status}
+        Otel: {hotel?.name ?? "—"}
+        {pickable.length > 1 && app.needsHotel ? (
+          <button
+            type="button"
+            className="xp-statusbar-switch-btn ml-1.5 text-blue-700 hover:text-blue-900 underline font-normal cursor-pointer bg-transparent border-0 p-0"
+            onClick={() => actions.clearHotel(id)}
+            title="Çalışılan oteli değiştir"
+          >
+            [Değiştir]
+          </button>
+        ) : null}
+        {" "}· Kullanıcı: {userName} · {status}
       </div>
       {resizable && !win.maximized ? (
         <>

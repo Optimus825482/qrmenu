@@ -61,6 +61,12 @@ export function KatDashboard({
   const [error, setError] = useState<string | null>(null);
   const [showPriorityModal, setShowPriorityModal] = useState(false);
 
+  useEffect(() => {
+    if (initialHotelId && initialHotelId !== selectedHotelId) {
+      setSelectedHotelId(initialHotelId);
+    }
+  }, [initialHotelId]);
+
   const fetchDashboard = useCallback(async (hotelId: string) => {
     setLoading(true);
     setError(null);

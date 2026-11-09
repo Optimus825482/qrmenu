@@ -26,8 +26,9 @@ export async function GET(request: Request) {
       listPoolAll(ctx, hotelId, { includeEmpty: true }),
       listMovements(ctx, hotelId, { page: 1, pageSize: 50 }),
       prisma.hotel.findMany({
-        where: { isActive: true, id: { in: ctx.hotelIds } },
+        where: { isActive: true, ...(ctx.user.roleKind === "SISTEM" ? {} : { id: { in: ctx.hotelIds } }) },
         select: { id: true, name: true, code: true },
+        orderBy: { name: "asc" },
       }),
     ]);
     // The old field names stay (the page reads them); `status` and `criticalLevel` are new.

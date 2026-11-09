@@ -87,14 +87,21 @@ export default function DepoStokPage() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialHotel = params.get("hotelId");
+    if (initialHotel) {
+      setSelectedHotelId(initialHotel);
+      void loadData(initialHotel);
+    } else {
       void loadData();
-    }, 0);
-    return () => clearTimeout(timer);
+    }
   }, [loadData]);
 
   const handleHotelChange = (id: string) => {
     setSelectedHotelId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("hotelId", id);
+    window.history.replaceState({}, "", url.toString());
     void loadData(id);
   };
 
@@ -122,19 +129,29 @@ export default function DepoStokPage() {
           </h1>
           <p className="text-sm text-muted">Depo sorumlusu zimmet takibi, otel bazlı ortak havuz</p>
         </div>
-        {hotels.length > 1 ? (
-          <select
-            aria-label="Otel"
-            value={selectedHotelId}
-            onChange={(e) => handleHotelChange(e.target.value)}
-            className={`${FIELD} w-auto font-semibold`}
-          >
-            {hotels.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.name}
-              </option>
-            ))}
-          </select>
+        {hotels.length > 0 ? (
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
+            <span className="text-xs font-bold text-muted whitespace-nowrap flex items-center gap-1">
+              <Icon name="building" size={16} />
+              Otel:
+            </span>
+            {hotels.length > 1 ? (
+              <select
+                aria-label="Otel Seçimi"
+                value={selectedHotelId}
+                onChange={(e) => handleHotelChange(e.target.value)}
+                className="bg-transparent text-sm font-bold text-text focus:outline-none cursor-pointer"
+              >
+                {hotels.map((h) => (
+                  <option key={h.id} value={h.id} className="bg-surface text-text">
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm font-bold text-text">{hotels[0]?.name}</span>
+            )}
+          </div>
         ) : null}
       </div>
 
