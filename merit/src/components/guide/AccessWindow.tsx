@@ -30,14 +30,7 @@ export default function AccessWindow({ hotelId, close }: AppProps) {
     <div className="flex h-full flex-col gap-4 overflow-auto p-4" data-testid="access-window">
       <AccessSummaryView summary={data.summary} mode="self" />
       {data.needsAck && !acked ? (
-        <WelcomeGate
-          hash={data.ackHash}
-          showDismissButton
-          onDone={() => {
-            setAcked(true);
-            close();
-          }}
-        />
+        <WelcomeGate hash={data.ackHash} onDone={() => { setAcked(true); close(); }} />
       ) : null}
     </div>
   );

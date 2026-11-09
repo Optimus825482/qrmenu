@@ -137,7 +137,7 @@ export default function TableSettingsDialog({
                     }}
                   >
                     <span className="text-sm">{p.label}</span>
-                    {p.desc ? <span className="text-[10px] text-muted">{p.desc}</span> : null}
+                    {p.desc ? <span className="text-xs text-muted">{p.desc}</span> : null}
                   </button>
                 );
               })}

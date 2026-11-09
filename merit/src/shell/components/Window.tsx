@@ -34,6 +34,8 @@ import {
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { HotelPicker, type HotelInfo } from "./HotelPicker";
 import { Icon } from "@/components/icons/Icon";
+import { notify } from "../notify";
+import { acknowledgeWelcomeAction } from "@/modules/core/server/guideActions";
 import { requestGuide } from "@/components/guide/guideEvents";
 import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { SCREEN_GUIDES } from "@/modules/core/screenGuide";
@@ -139,6 +141,15 @@ export function Window({ id, hotels, userName }: Props) {
     }),
     [id],
   );
+
+  const handleDismissErisimim = useCallback(async () => {
+    try {
+      localStorage.setItem("merit_welcome_dismissed", "true");
+    } catch {}
+    void acknowledgeWelcomeAction({ hash: "*", dismissForever: true });
+    windowStore.getState().close(id);
+    notify.success("Erişimim penceresi kapatıldı ve bir daha gösterilmeyecek.");
+  }, [id]);
 
   /** The app's own toolbar button for a command (New, Edit, Delete, Refresh, Export), if enabled. */
   const commandButton = (name: string): HTMLButtonElement | null =>
@@ -507,6 +518,16 @@ F&B Command Center uygulaması (${app.id})`,
             {name.slice(1)}
           </button>
         ))}
+        {win.appId === "core.erisimim" ? (
+          <button
+            type="button"
+            className="xp-menubar-dismiss"
+            onClick={handleDismissErisimim}
+            title="Bu pencereyi kapat ve bir daha başlangıçta otomatik gösterme"
+          >
+            Bir daha gösterme
+          </button>
+        ) : null}
       </div>
       <div className="xp-window-body">{body}</div>
       {guideScreen && app.kind === "component" && !(app.needsHotel && !win.hotelId) ? (

@@ -598,6 +598,35 @@
   color: var(--xp-select-text);
 }
 
+.xp-menubar-dismiss {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(2px * var(--xp-ui-scale)) calc(8px * var(--xp-ui-scale));
+  border: 1px solid var(--xp-body-shade, #b4b4b4);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff, #ece9d8);
+  color: var(--xp-text, #000);
+  font-size: calc(var(--xp-font-size) - 1px);
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1.2;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+.xp-menubar-dismiss:hover {
+  background: linear-gradient(180deg, #ffffff, #e1eafc);
+  border-color: #316ac5;
+  color: #000;
+}
+
+.xp-menubar-dismiss:active {
+  background: #ceb88b;
+  border-color: #7b633a;
+}
+
 .xp-window-body {
   position: relative; /* anchors modal form panels (.xp-form-backdrop) */
   flex: 1;
