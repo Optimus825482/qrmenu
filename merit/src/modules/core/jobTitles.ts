@@ -8,6 +8,15 @@ export const USER_JOB_TITLE_GROUPS = [
     options: ["F&B Müdürü", "F&B Manager Assistant", "Servis Müdürü", "Restoran Müdürü", "Outlet Müdürü", "Outlet Şefi", "Bar Müdürü"],
   },
   {
+    label: "Minibar Takip Operasyonu",
+    options: [
+      "Minibar Takip Operasyonu",
+      "Minibar Takip Süpervizör",
+      "Minibar Takip Depo Sorumlusu",
+      "Minibar Takip Kat Sorumlusu",
+    ],
+  },
+  {
     label: "Restoran ve servis",
     options: ["Restoran Şefi", "Şef Garson", "Servis Süpervizörü", "Garson", "Komi", "Runner", "Host / Hostes"],
   },

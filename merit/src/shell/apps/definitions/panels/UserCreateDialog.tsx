@@ -401,6 +401,8 @@ export function UserCreateDialog({
                         <optgroup label="Yönetim & Süpervizör Görevleri">
                           <option value="Otel Müdürü">Otel Müdürü</option>
                           <option value="F&B Müdürü">F&B Müdürü</option>
+                          <option value="Minibar Takip Süpervizör">Minibar Takip Süpervizör</option>
+                          <option value="Minibar Takip Depo Sorumlusu">Minibar Takip Depo Sorumlusu</option>
                           <option value="Minibar Takip Sorumlusu">Minibar Takip Sorumlusu</option>
                           <option value="Depo Sorumlusu">Depo Sorumlusu</option>
                           <option value="Housekeeping Süpervizörü">Housekeeping Süpervizörü</option>
@@ -414,6 +416,8 @@ export function UserCreateDialog({
                       ) : null}
                       {category === "KULLANICI" ? (
                         <optgroup label="Operasyonel Personel Görevleri">
+                          <option value="Minibar Takip Operasyonu">Minibar Takip Operasyonu</option>
+                          <option value="Minibar Takip Kat Sorumlusu">Minibar Takip Kat Sorumlusu</option>
                           <option value="Kat Sorumlusu">Kat Sorumlusu (Minibar Takip)</option>
                           <option value="Kat Görevlisi">Kat Görevlisi</option>
                           <option value="Garson">Garson</option>
