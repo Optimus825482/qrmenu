@@ -223,6 +223,7 @@ export type RoomCheckView = {
     dndWaitMinutes: number;
   } | null;
   mybar: { id: string; createdAt: string; notes: string | null; items: { productName: string; qty: number }[] } | null;
+  requireQrForControl?: boolean;
 };
 
 /** Everything the room check screen needs: badge, check list with copies, allowed-left and pool per product. */
@@ -328,7 +329,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
       select: { type: true, occurredAt: true },
     }),
     prisma.roomDnd.findUnique({ where: { roomId_date: { roomId, date } } }),
-    getSettings(["dnd.minChecks", "dnd.recheckMinutes"], hotelId),
+    getSettings(["dnd.minChecks", "dnd.recheckMinutes", "minibar.requireQrForControl"], hotelId),
   ]);
   const required = settings["dnd.minChecks"];
 
@@ -368,6 +369,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
       hotelItems > 0 && !taskItem
         ? "Bu oda bugünkü doluluk listesinde yok; boş görünüyor. Yine de kontrol edebilirsiniz."
         : null,
+    requireQrForControl: Boolean(settings["minibar.requireQrForControl"]),
     checklistError,
     checklist: checklistView,
     setups,

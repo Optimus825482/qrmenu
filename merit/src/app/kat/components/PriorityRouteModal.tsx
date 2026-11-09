@@ -30,6 +30,7 @@ export function PriorityRouteModal({
   onClose: () => void;
 }) {
   const [rooms, setRooms] = useState<PriorityPlanEntry[]>([]);
+  const [requireQrForControl, setRequireQrForControl] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,8 +48,12 @@ export function PriorityRouteModal({
         const json = (await res.json()) as {
           rooms?: PriorityPlanEntry[];
           entries?: PriorityPlanEntry[];
+          requireQrForControl?: boolean;
         };
-        if (active) setRooms(json.rooms ?? json.entries ?? []);
+        if (active) {
+          setRooms(json.rooms ?? json.entries ?? []);
+          setRequireQrForControl(Boolean(json.requireQrForControl));
+        }
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : "Hata oluştu.");
       } finally {
@@ -177,15 +182,27 @@ export function PriorityRouteModal({
                     </div>
                   </div>
 
-                  <Link
-                    href={`/kat/oda-kontrol/${rm.roomId}`}
-                    onClick={onClose}
-                    style={{ minHeight: "var(--tap-action)" }}
-                    className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
-                  >
-                    Kontrol Et
-                    <Icon name="arrow-right" size={14} />
-                  </Link>
+                  {requireQrForControl ? (
+                    <Link
+                      href="/kat/qr"
+                      onClick={onClose}
+                      style={{ minHeight: "var(--tap-action)" }}
+                      className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
+                    >
+                      <Icon name="camera" size={14} />
+                      QR Okut
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/kat/oda-kontrol/${rm.roomId}`}
+                      onClick={onClose}
+                      style={{ minHeight: "var(--tap-action)" }}
+                      className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
+                    >
+                      Kontrol Et
+                      <Icon name="arrow-right" size={14} />
+                    </Link>
+                  )}
                 </div>
               );
             })

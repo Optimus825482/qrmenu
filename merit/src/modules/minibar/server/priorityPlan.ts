@@ -47,12 +47,14 @@ export type PlanEntry = {
   roomId: string;
   roomNumber: string;
   floorNumber: number;
+  floorName?: string;
   rank: 1 | 2 | 3 | 4 | 5;
   targetAt?: Date;
   remainingMin?: number;
   overdue: boolean;
   label: string;
   clash?: { departure: string; arrival: string; gapMin: number; critical: boolean };
+  isCritical?: boolean;
 };
 
 export type PlanFloor = { floorNumber: number; name: string; count: number; critical: number; firstSeq: number };
@@ -62,6 +64,7 @@ export type PriorityPlan = {
   floors: PlanFloor[];
   summary: { total: number; critical: number; normal: number; clashes: number };
   briefing: string[];
+  requireQrForControl?: boolean;
 };
 
 type Candidate = PlanEntry & { floorName: string; isCritical: boolean };
@@ -218,7 +221,7 @@ export function computePriorityPlan(input: {
   candidates.forEach((c, index) => {
     const seq = index + 1;
     const { floorName, isCritical, ...entry } = c;
-    entries.push({ ...entry, seq });
+    entries.push({ ...entry, floorName: c.floorName, isCritical: c.isCritical, seq });
     if (c.rank === 1) clashes += 1;
     if (isCritical) critical += 1;
     const floor = floors.get(c.floorNumber) ?? {
@@ -272,7 +275,10 @@ export async function loadPriorityPlan(
   } catch {
     throw new DomainError("VALIDATION", "Geçersiz tarih");
   }
-  const recheckMinutes = await getSetting("dnd.recheckMinutes", hotelId);
+  const [recheckMinutes, requireQrForControl] = await Promise.all([
+    getSetting("dnd.recheckMinutes", hotelId),
+    getSetting("minibar.requireQrForControl", hotelId),
+  ]);
   const rows = await prisma.dailyTaskItem.findMany({
     where: { status: { in: [...OPEN] }, task: { hotelId, date }, room: { hotelId } },
     select: {
@@ -288,7 +294,7 @@ export async function loadPriorityPlan(
     },
     orderBy: { id: "asc" },
   });
-  return computePriorityPlan({
+  const plan = computePriorityPlan({
     now,
     day,
     recheckMinutes,
@@ -306,4 +312,5 @@ export async function loadPriorityPlan(
       dndCount: r.dndCount,
     })),
   });
+  return { ...plan, requireQrForControl: Boolean(requireQrForControl) };
 }

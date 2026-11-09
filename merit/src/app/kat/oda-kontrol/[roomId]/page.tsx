@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
@@ -68,12 +68,15 @@ interface RoomCheckData {
     notes: string | null;
     items: { productName: string; qty: number }[];
   } | null;
+  requireQrForControl?: boolean;
 }
 
 export default function OdaKontrolPage() {
   const params = useParams<{ roomId: string }>();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const roomId = params?.roomId;
+  const fromQr = searchParams?.get("fromQr") === "1";
 
   const [data, setData] = useState<RoomCheckData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -307,6 +310,26 @@ export default function OdaKontrolPage() {
         ) : error ? (
           <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-6 text-sm text-danger">
             {error}
+          </div>
+        ) : data?.requireQrForControl && !fromQr ? (
+          <div className="rounded-2xl border border-warn/40 bg-warn/10 p-8 text-center space-y-4 max-w-lg mx-auto">
+            <div className="flex items-center justify-center text-warn">
+              <Icon name="warning" size={36} />
+            </div>
+            <h2 className="text-base font-bold text-text">Oda Kontrolü İçin QR Okutulmalıdır</h2>
+            <p className="text-xs text-muted leading-relaxed">
+              Bu otelde oda kontrol sayfasına doğrudan erişim güvenlik gereği kapatılmıştır. Lütfen oda kapısındaki veya dolabındaki QR kodu okutunuz.
+            </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => router.push("/kat/qr")}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:opacity-90 shadow transition"
+              >
+                <Icon name="camera" size={18} />
+                QR Okut
+              </button>
+            </div>
           </div>
         ) : data ? (
           <>
@@ -548,7 +571,7 @@ export default function OdaKontrolPage() {
         ) : null}
       </main>
 
-      {data ? (
+      {data && (!data.requireQrForControl || fromQr) ? (
         <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
           <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">

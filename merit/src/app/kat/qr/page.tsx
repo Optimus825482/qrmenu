@@ -58,7 +58,7 @@ export default function KatQrScannerPage() {
         if (!roomId) throw new Error("Oda bilgisi çözümlenemedi.");
 
         stopCamera();
-        router.push(`/kat/oda-kontrol/${roomId}`);
+        router.push(`/kat/oda-kontrol/${roomId}?fromQr=1`);
       } catch (e) {
         setError(e instanceof Error ? e.message : "QR çözümlenemedi.");
         inputRef.current?.focus();
