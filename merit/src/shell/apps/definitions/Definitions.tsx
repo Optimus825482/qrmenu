@@ -149,11 +149,6 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
 
   return (
     <div className="xp-defs">
-      <header className="xp-defs-hotel-nav">
-        <button type="button" className="xp-history-button" aria-label="Geri" title="Geri" disabled={currentHotelIndex < 0} onClick={moveBack}>
-          <span className="xp-history-icon" aria-hidden="true">‹</span>
-        </button>
-      </header>
       <div className="xp-defs-content">
         <nav className="xp-defs-nav" aria-label="Tanımlamalar">
           <div
