@@ -63,7 +63,15 @@ export function useLiveList<T>(
     loadRef.current = load;
   });
 
-  // Fetch whenever the query changes; a response that is no longer the latest request is dropped.
+  const prevHotelId = useRef(hotelId);
+  useEffect(() => {
+    if (prevHotelId.current !== hotelId) {
+      prevHotelId.current = hotelId;
+      setPageState(1);
+    }
+  }, [hotelId]);
+
+  // Fetch whenever the query or hotel changes; a response that is no longer the latest request is dropped.
   const latest = useRef(0);
   useEffect(() => {
     const request = ++latest.current;
@@ -94,7 +102,7 @@ export function useLiveList<T>(
       }
       setLoading(false);
     })();
-  }, [page, pageSize, appliedQ, sort, tick]);
+  }, [hotelId, page, pageSize, appliedQ, sort, tick]);
 
   // Search debounce.
   useEffect(() => {
