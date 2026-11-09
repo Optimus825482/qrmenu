@@ -277,13 +277,28 @@ export function createWindowStore() {
 
     /**
      * Hotel context for a window: a choice where the app is visible, the only such hotel, or none
-     * (picker).
+     * (picker). Defaults to Merit Royal Diamond for OUTLET, ROOM_SERVICE and MINIBAR operations,
+     * or all hotels (undefined) for cross-hotel/system modules.
      */
     const resolveHotel = (app: AppDefinition, wanted?: string): string | undefined => {
-      if (!app.needsHotel) return undefined;
       if (wanted && appVisibleInHotel(get(), app, wanted)) return wanted;
       const choices = hotelsForApp(get(), app.id);
-      return choices.length === 1 ? choices[0].id : undefined;
+
+      const isDiamondModule =
+        ["OUTLET", "QR_MENU", "QR_ORDER", "ROOM_SERVICE", "MINIBAR"].includes(app.category) ||
+        ["folder.outlet", "folder.room-service", "folder.minibar"].includes(app.id);
+
+      if (isDiamondModule) {
+        const pool = choices.length > 0 ? choices : get().hotels;
+        const diamond = pool.find(
+          (h) => h.code?.toUpperCase() === "DIAMOND" || h.name?.toLowerCase().includes("diamond")
+        );
+        if (diamond) return diamond.id;
+        if (pool.length > 0) return pool[0].id;
+      }
+
+      if (choices.length === 1) return choices[0].id;
+      return undefined;
     };
 
     const titleFor = (app: AppDefinition, hotelId?: string): string => {
@@ -488,7 +503,7 @@ export function createWindowStore() {
       clearHotel(id) {
         update(id, (w) => {
           const app = getApp(w.appId);
-          if (!app?.needsHotel) return w;
+          if (!app) return w;
           return { ...w, hotelId: undefined, title: titleFor(app) };
         });
       },

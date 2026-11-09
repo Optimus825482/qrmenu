@@ -33,6 +33,7 @@ import {
 } from "../windowStore";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { HotelPicker, type HotelInfo } from "./HotelPicker";
+import { WindowBanner } from "./WindowBanner";
 import { Icon } from "@/components/icons/Icon";
 import { notify } from "../notify";
 import { acknowledgeWelcomeAction } from "@/modules/core/server/guideActions";
@@ -545,6 +546,17 @@ F&B Command Center uygulaması (${app.id})`,
           </button>
         ) : null}
       </div>
+      <WindowBanner
+        windowId={id}
+        app={app}
+        hotelId={win.hotelId}
+        hotels={hotels}
+        pickableHotels={pickable}
+        onHotelChange={(newHotelId) => {
+          if (newHotelId) actions.setHotel(id, newHotelId);
+          else actions.clearHotel(id);
+        }}
+      />
       <div className="xp-window-body">{body}</div>
       {guideScreen && app.kind === "component" && !(app.needsHotel && !win.hotelId) ? (
         <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} hotelId={win.hotelId} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />

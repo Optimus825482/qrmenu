@@ -17,6 +17,7 @@ export function CategoryFolderWindow({
   categoryKey,
   categoryTitle,
   categorySubtitle,
+  hotelId,
   openApp,
 }: CategoryFolderAppProps) {
   const allowedIds = useWindowStore((s) => s.appIds);
@@ -33,30 +34,6 @@ export function CategoryFolderWindow({
 
   return (
     <div className="flex flex-col h-full bg-[#ece9d8] text-xs font-sans select-none overflow-hidden">
-      {/* Windows XP Explorer Address / Header Bar */}
-      <div className="bg-gradient-to-r from-[#0055ea] via-[#2070f0] to-[#0055ea] text-white px-3 py-2 flex items-center justify-between shadow-inner">
-        <div className="flex items-center gap-2">
-          <XpIcon name="klasor" size={24} />
-          <div>
-            <h2 className="font-bold text-sm tracking-wide text-white drop-shadow-sm">
-              {categoryTitle}
-            </h2>
-            <p className="text-[11px] text-blue-100 opacity-90">{categorySubtitle}</p>
-          </div>
-        </div>
-        <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-semibold">
-          {folderApps.length} Uygulama
-        </span>
-      </div>
-
-      {/* Explorer Path Breadcrumb Bar */}
-      <div className="bg-[#f0ede0] border-b border-[#d4d0c8] px-3 py-1 text-[11px] text-gray-600 flex items-center gap-1.5">
-        <span className="text-gray-400">Konum:</span>
-        <span className="font-semibold text-gray-700">Masaüstü</span>
-        <span className="text-gray-400">›</span>
-        <span className="font-bold text-blue-800">{categoryTitle}</span>
-      </div>
-
       {/* Folder Content Grid */}
       <div className="flex-1 bg-white p-5 overflow-auto">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -64,7 +41,7 @@ export function CategoryFolderWindow({
             <button
               key={app.id}
               type="button"
-              onClick={() => openApp?.(app.id)}
+              onClick={() => openApp?.(app.id, { hotelId: hotelId || undefined })}
               className="group flex flex-col items-center justify-center p-3.5 rounded-lg border border-transparent hover:border-[#7f9db9] hover:bg-[#eef4fc] active:bg-[#dbe9fa] transition-all cursor-pointer text-center"
             >
               <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-gradient-to-b from-white to-[#f4f7fb] border border-slate-200/90 shadow-[0_4px_10px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,1)] group-hover:border-blue-400 group-hover:from-blue-50/60 group-hover:to-white group-hover:shadow-[0_8px_18px_rgba(59,130,246,0.22),inset_0_1px_0_rgba(255,255,255,1)] group-hover:-translate-y-1 group-active:translate-y-0.5 transition-all duration-150 mb-2">
@@ -153,6 +130,17 @@ export function RadarFolderWindow(props: AppProps) {
       categoryKey="radar"
       categoryTitle="Operasyon Radarı"
       categorySubtitle="Canlı Radar penceresi ve tam ekran Duvar Ekranı"
+    />
+  );
+}
+
+export function ReportsFolderWindow(props: AppProps) {
+  return (
+    <CategoryFolderWindow
+      {...props}
+      categoryKey="reports"
+      categoryTitle="Raporlar"
+      categorySubtitle="F&B, Minibar ve Oda Servisi Operasyonel Performans ve Gelir Raporları"
     />
   );
 }
