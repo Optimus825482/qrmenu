@@ -209,16 +209,24 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
   }, []);
 
   const minibarRoles = (options?.roles ?? []).filter(
-    (role) => role.kind === "MINIBAR" || ["R-KAT", "R-HKS"].includes(role.code) || role.name.toLocaleLowerCase("tr-TR").includes("minibar")
+    (role) =>
+      role.kind === "MINIBAR" ||
+      ["R-KAT", "R-HKS", "R-DEP"].includes(role.code) ||
+      role.name.toLocaleLowerCase("tr-TR").includes("minibar") ||
+      role.name.toLocaleLowerCase("tr-TR").includes("kat") ||
+      role.name.toLocaleLowerCase("tr-TR").includes("depo")
   );
-  const defaultMinibarRoleId = minibarRoles[0]?.id ?? "";
-
-  const effectiveRoleId = selectedRoleId || defaultMinibarRoleId;
 
   const list = useLiveList<UserRow>(
-    (query) => effectiveRoleId
-      ? listUsersAction({ ...query, hotelId, roleId: effectiveRoleId })
-      : Promise.resolve(ok({ items: [] as UserRow[], total: 0, page: 1, pageSize: query.pageSize })),
+    (query) => {
+      const minibarRoleIds = minibarRoles.map((r) => r.id);
+      return listUsersAction({
+        ...query,
+        hotelId,
+        roleId: selectedRoleId || undefined,
+        roleIds: selectedRoleId ? undefined : (minibarRoleIds.length > 0 ? minibarRoleIds : undefined),
+      });
+    },
     { hotelId, entities: ["user"], pageSize: 100 },
   );
 
@@ -244,16 +252,17 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         emptyText="Bu otelde minibar ekibi bulunmuyor"
         toolbar={
           <Toolbar onRefresh={list.reload}>
-            {minibarRoles.length > 1 ? (
+            {minibarRoles.length > 0 ? (
               <label className="xp-user-filter">
                 <span>Rol</span>
                 <select
-                  value={effectiveRoleId}
+                  value={selectedRoleId}
                   onChange={(e) => {
                     setSelectedRoleId(e.target.value);
                     list.setPage(1);
                   }}
                 >
+                  <option value="">Tüm Roller (Minibar, Kat &amp; Depo)</option>
                   {minibarRoles.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
@@ -277,7 +286,7 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         open={creating}
         options={options}
         initialHotelId={hotelId}
-        initialRoleId={effectiveRoleId || (options?.roles[0]?.id ?? "")}
+        initialRoleId={selectedRoleId || (minibarRoles[0]?.id ?? options?.roles[0]?.id ?? "")}
         lockHotel
         lockRole={false}
         onClose={() => setCreating(false)}

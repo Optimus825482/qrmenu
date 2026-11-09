@@ -176,6 +176,7 @@ export type CreatedUserCredentials = { user: UserRow; temporaryPassword: string 
 
 export const userListQuerySchema = listQuerySchema.extend({
   roleId: z.string().min(1).optional(),
+  roleIds: z.array(z.string().min(1)).optional(),
   hotelId: z.string().min(1).optional(),
   jobTitle: z.string().min(1).optional(),
   active: z.boolean().optional(),
@@ -331,6 +332,7 @@ export async function list(ctx: Ctx, rawQuery: UserListQuery): Promise<Page<User
     });
   }
   if (query.roleId) and.push({ roleId: query.roleId });
+  else if (query.roleIds && query.roleIds.length > 0) and.push({ roleId: { in: query.roleIds } });
   if (query.jobTitle) and.push({ jobTitle: query.jobTitle });
   if (query.active !== undefined) and.push({ isActive: query.active });
   const where: Prisma.UserWhereInput = and.length > 0 ? { AND: and } : {};
