@@ -121,9 +121,9 @@ export function ControlPanel({ setStatus }: AppProps) {
         ) : current === "minibar" ? (
           <SystemPanel
             setStatus={setStatus}
-            filterGroups={["MyBar", "DND"]}
+            filterGroups={["Minibar", "MyBar", "DND"]}
             title="Minibar ve Kat Hizmetleri"
-            description="MyBar günlük giriş sınırları, tüketim miktar modları ve Rahatsız Etmeyin (DND) kontrol kuralları."
+            description="Oda kontrolünde QR zorunluluğu, MyBar günlük giriş sınırları, tüketim miktar modları ve Rahatsız Etmeyin (DND) kontrol kuralları."
           />
         ) : current === "servis" ? (
           <SystemPanel
