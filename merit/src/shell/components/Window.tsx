@@ -440,7 +440,7 @@ F&B Command Center uygulaması (${app.id})`,
     body = <HotelPicker hotels={pickable} onPick={(hotelId) => actions.setHotel(id, hotelId)} />;
   } else if (app.kind === "component") {
     body = (
-      <AppErrorBoundary key={reloadKey}>
+      <AppErrorBoundary key={`${win.hotelId ?? "all"}-${reloadKey}`}>
         <Suspense fallback={<div className="xp-app-loading">Yükleniyor…</div>}>
           <AppHost app={app} props={{ ...appProps, hotelId: win.hotelId, initialPanel: win.initialPanel, initialOutletId: win.initialOutletId }} />
         </Suspense>
@@ -452,7 +452,7 @@ F&B Command Center uygulaması (${app.id})`,
       : app.url;
     body = (
       <iframe
-        key={`${reloadKey}-${win.hotelId ?? ""}`}
+        key={`${win.hotelId ?? "all"}-${reloadKey}`}
         src={appFrameUrl(targetUrl, { fontFamily, theme })}
         title={app.launchLabel ?? app.title}
         sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
