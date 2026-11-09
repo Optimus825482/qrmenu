@@ -454,3 +454,87 @@ export async function closeDndDay(upToDay: string, now: Date = new Date()): Prom
   }
   return closed;
 }
+
+/** Loads the current day's DND info and recent DND checks history for a specific room. */
+export async function getRoomDndDetails(ctx: Ctx, roomId: string) {
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    select: {
+      id: true,
+      number: true,
+      hotelId: true,
+      floor: { select: { id: true, name: true } },
+      roomType: { select: { name: true } },
+    },
+  });
+  if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
+  await assertCan(ctx, "MB-KAT", "V", room.hotelId);
+
+  const today = businessDate(new Date());
+  const date = businessDay(today);
+
+  const [currentDnd, history, settings] = await Promise.all([
+    prisma.roomDnd.findUnique({
+      where: { roomId_date: { roomId, date } },
+      include: {
+        checks: {
+          include: { user: { select: { fullName: true } } },
+          orderBy: { at: "desc" },
+        },
+      },
+    }),
+    prisma.roomDnd.findMany({
+      where: { roomId },
+      include: {
+        checks: {
+          include: { user: { select: { fullName: true } } },
+          orderBy: { at: "desc" },
+        },
+      },
+      orderBy: { date: "desc" },
+      take: 7,
+    }),
+    getSettings(["dnd.minChecks", "dnd.recheckMinutes", "minibar.requireQrForControl"], room.hotelId),
+  ]);
+
+  return {
+    room: {
+      id: room.id,
+      number: room.number,
+      floorName: room.floor.name,
+      roomTypeName: room.roomType?.name ?? "Standart Oda",
+    },
+    currentDnd: currentDnd
+      ? {
+          id: currentDnd.id,
+          count: currentDnd.count,
+          status: currentDnd.status,
+          firstAt: currentDnd.firstAt.toISOString(),
+          lastAt: currentDnd.lastAt.toISOString(),
+          checks: currentDnd.checks.map((c) => ({
+            no: c.no,
+            at: c.at.toISOString(),
+            userName: c.user.fullName,
+            note: c.note,
+          })),
+        }
+      : null,
+    history: history.map((h) => ({
+      date: businessDate(h.date),
+      count: h.count,
+      status: h.status,
+      lastAt: h.lastAt.toISOString(),
+      checks: h.checks.map((c) => ({
+        no: c.no,
+        at: c.at.toISOString(),
+        userName: c.user.fullName,
+        note: c.note,
+      })),
+    })),
+    settings: {
+      minChecks: settings["dnd.minChecks"],
+      recheckMinutes: settings["dnd.recheckMinutes"],
+      requireQrForControl: settings["minibar.requireQrForControl"],
+    },
+  };
+}

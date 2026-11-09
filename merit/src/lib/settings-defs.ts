@@ -34,6 +34,7 @@ export const SETTING_SCHEMAS = {
   "mybar.translateNotes": flag,
   "dnd.minChecks": z.number().int().min(1).max(10),
   "dnd.recheckMinutes": minutes,
+  "minibar.requireQrForControl": flag,
   "stock.defaultCriticalLevel": z.number().min(0),
   "stock.requestSafetyFactor": z.number().min(1).max(5),
   "price.display": z.enum(["SHOW", "HIDE"]),
@@ -93,6 +94,7 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "mybar.translateNotes": true,
   "dnd.minChecks": 2,
   "dnd.recheckMinutes": 120,
+  "minibar.requireQrForControl": false,
   "stock.defaultCriticalLevel": 50,
   "stock.requestSafetyFactor": 1.5,
   "price.display": "HIDE",
@@ -135,6 +137,7 @@ export function isSettingKey(key: string): key is SettingKey {
 export const SETTING_GROUPS = [
   "Oturum",
   "MyBar",
+  "Minibar",
   "Misafir",
   "DND",
   "Stok",
@@ -271,6 +274,12 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     group: "MyBar",
     type: "number",
     unit: "gün",
+  },
+  "minibar.requireQrForControl": {
+    label: "Oda kontrolünde QR zorunluluğu",
+    description: "Açıksa oda kontrol ekranı yalnızca odadaki QR kod okutularak açılabilir; kapalıysa kat planından doğrudan açılabilir.",
+    group: "Minibar",
+    type: "boolean",
   },
   "dnd.minChecks": {
     label: "DND asgari kontrol sayısı",

@@ -353,11 +353,14 @@ export default function OdaKontrolPage() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleSetAllMax}
+                    data-mutates=""
+                    onClick={() => void handleSaveCheck(true)}
+                    disabled={submitting}
                     style={{ minHeight: "var(--tap-action)" }}
-                    className="rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text hover:bg-surface"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-ok/40 bg-ok/10 px-3 py-2 text-xs font-bold text-ok hover:bg-ok/20 disabled:opacity-50 transition"
                   >
-                    Hepsini Doldur
+                    <Icon name="check-circle" size={16} />
+                    Sarfiyat Yok
                   </button>
                   <button
                     type="button"
@@ -373,11 +376,14 @@ export default function OdaKontrolPage() {
               <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={handleSetAllMax}
+                  data-mutates=""
+                  onClick={() => void handleSaveCheck(true)}
+                  disabled={submitting}
                   style={{ minHeight: "var(--tap-action)" }}
-                  className="rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-ok/40 bg-ok/10 px-3 py-2 text-xs font-bold text-ok hover:bg-ok/20 disabled:opacity-50 transition"
                 >
-                  Hepsini Doldur
+                  <Icon name="check-circle" size={16} />
+                  Sarfiyat Yok
                 </button>
                 <button
                   type="button"

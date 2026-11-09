@@ -30,9 +30,14 @@ export default function KatIslemlerimPage() {
     setError(null);
     try {
       const res = await fetch("/api/minibar/my-checks");
-      const json = (await res.json()) as { checks?: RoomCheckHistoryItem[]; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "İşlemler alınamadı.");
-      setItems(json.checks ?? []);
+      const json = await res.json();
+      if (!res.ok) throw new Error((json as { error?: string })?.error ?? "İşlemler alınamadı.");
+      const checks: RoomCheckHistoryItem[] = Array.isArray(json)
+        ? json
+        : Array.isArray((json as { checks?: RoomCheckHistoryItem[] })?.checks)
+          ? (json as { checks: RoomCheckHistoryItem[] }).checks
+          : [];
+      setItems(checks);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {

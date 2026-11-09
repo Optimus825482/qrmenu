@@ -91,6 +91,10 @@ export type FloorView = {
     dnd: number;
     mybar: number;
   };
+  settings?: {
+    dndRecheckMinutes: number;
+    requireQrForControl: boolean;
+  };
 };
 
 // ---------------------------------------------------------------- shared
@@ -303,7 +307,7 @@ export async function floorOccupancy(
       where: { roomId: { in: roomIds }, date },
       select: { roomId: true, status: true, count: true, lastAt: true },
     }),
-    getSettings(["dnd.minChecks"], floor.hotelId),
+    getSettings(["dnd.minChecks", "dnd.recheckMinutes", "minibar.requireQrForControl"], floor.hotelId),
   ]);
   const required = settings["dnd.minChecks"];
   const guestsBy = groupByRoom(guests);
@@ -395,6 +399,10 @@ export async function floorOccupancy(
       completed: cards.filter((c) => c.checkStatus === "completed").length,
       dnd: cards.filter((c) => c.checkStatus === "dnd").length,
       mybar: cards.filter((c) => c.hasMybarRequest).length,
+    },
+    settings: {
+      dndRecheckMinutes: settings["dnd.recheckMinutes"],
+      requireQrForControl: settings["minibar.requireQrForControl"],
     },
   };
 }
