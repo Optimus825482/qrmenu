@@ -281,11 +281,11 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        overflowX: "hidden",
-        height: "100%",
-        maxHeight: "100%",
+        overflowX: "auto",
+        flex: 1,
         minHeight: 0,
-        padding: "4px 8px 16px",
+        height: "100%",
+        padding: "4px 8px 24px",
       }}
     >
       <div role="tablist" aria-label="Rol görünümü" className="xp-defs-filters" style={{ flexShrink: 0 }}>
@@ -315,11 +315,11 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
           aria-label="Bu rol ne görür?"
           data-testid="role-preview"
           style={{
-            overflowY: "auto",
-            overflowX: "hidden",
-            flex: 1,
-            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "min-content",
             paddingRight: "6px",
+            paddingBottom: "16px",
           }}
         >
           <div className="xp-defs-filters" style={{ flexShrink: 0, marginBottom: "8px" }}>
@@ -353,14 +353,12 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
       ) : (
         <section
           style={{
-            overflowY: "auto",
-            overflowX: "hidden",
-            flex: 1,
-            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             gap: "10px",
+            minHeight: "min-content",
             paddingRight: "6px",
+            paddingBottom: "16px",
           }}
         >
           <div className="xp-defs-filters xp-role-screen-selectors" style={{ flexShrink: 0 }}>

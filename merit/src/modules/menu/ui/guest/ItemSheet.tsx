@@ -113,6 +113,7 @@ export function ItemSheet({
                 className="g-sheet-image"
                 src={images[activeImageIdx]}
                 alt={`${item.name} (${activeImageIdx + 1}/${images.length})`}
+                decoding="async"
               />
               <button
                 type="button"
@@ -166,7 +167,7 @@ export function ItemSheet({
           </>
         ) : images.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="g-sheet-image" src={images[0]} alt={item.name} />
+          <img className="g-sheet-image" src={images[0]} alt={item.name} decoding="async" />
         ) : (
           <div className="g-sheet-image g-placeholder" aria-hidden="true" />
         )}

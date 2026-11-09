@@ -206,6 +206,13 @@ export function Window({ id, hotels, userName }: Props) {
         });
         return true;
       },
+      escape: () => {
+        if (app?.id === "core.erisimim") {
+          void requestClose();
+          return true;
+        }
+        return false;
+      },
     },
     active && !!win && !win.minimized,
   );

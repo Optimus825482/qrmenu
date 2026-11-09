@@ -27,6 +27,7 @@ export const viewport: Viewport = {
   themeColor: APP_THEME_COLOR,
   // Lets the PWA draw under the OS bars; the footer band and mobile tab bar pad env(safe-area-inset-bottom).
   viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

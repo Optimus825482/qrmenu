@@ -2461,6 +2461,8 @@
 .xp-defs-main > .xp-grid {
   flex: 1;
   min-height: 150px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .xp-table-details {
@@ -2782,6 +2784,8 @@
   order: 2;
   flex: 1 1 0;
   min-height: 70px;
+  min-width: 0;
+  max-width: 100%;
   overflow: auto;
   margin: 0 6px 6px;
   border: 1px solid var(--xp-body-edge);

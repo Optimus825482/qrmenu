@@ -2163,8 +2163,10 @@ body {
 .g-featured-card img {
   width: 100%;
   height: 110px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   border-radius: 15px 15px 0 0;
+  background-color: var(--m-soft);
 }
 .g-featured li:last-child:nth-child(odd) .g-featured-card img {
   height: 140px;
