@@ -4,6 +4,7 @@ import { requireUser, type Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { can, visibleScreens } from "@/lib/rbac";
+import { getSetting } from "@/lib/settings";
 import { listTargets } from "@/modules/core/server/targets";
 import { CLOSED_STATUSES } from "@/modules/order/server/transitions";
 import { buildNav, type NavModel } from "./navModel";
@@ -12,7 +13,7 @@ import type { StaffShellProps } from "./StaffShell";
 export type StaffShellData = Omit<StaffShellProps, "children">;
 
 /** Minutes before the session end at which the persistent strip appears. */
-export const SESSION_WARN_MINUTES = 60;
+export const SESSION_WARN_MINUTES = 5;
 
 /** Roles whose navigation is a rail even on a phone-width screen (depot: tables of numbers). */
 const RAIL_ROLES = new Set(["R-DEP", "R-HKS"]);
@@ -30,14 +31,15 @@ export async function loadStaffShellProps(
 ): Promise<StaffShellData> {
   const hotelId = ctx.session.hotelId;
   const outletId = options.outletId ?? ctx.session.outletId;
-  const [hotel, outlet, role, session, visible, targets, ordering] = await Promise.all([
+  const [hotel, outlet, role, session, visible, targets, ordering, idleMinutes] = await Promise.all([
     prisma.hotel.findUnique({ where: { id: hotelId }, select: { name: true } }),
     outletId ? prisma.outlet.findUnique({ where: { id: outletId }, select: { name: true, hasOrdering: true } }) : null,
     prisma.role.findUnique({ where: { id: ctx.user.roleId }, select: { name: true } }),
-    prisma.userSession.findUnique({ where: { id: ctx.session.id }, select: { expiresAt: true } }),
+    prisma.userSession.findUnique({ where: { id: ctx.session.id }, select: { expiresAt: true, lastSeenAt: true } }),
     visibleScreens(ctx, hotelId),
     listTargets(ctx.user.id),
     can(ctx, "QS-KUY", "O", hotelId),
+    getSetting("session.idleMinutes", hotelId),
   ]);
 
   const switchable = targets
@@ -55,6 +57,11 @@ export async function loadStaffShellProps(
   });
   await badgeRoomService(nav, hotelId);
 
+  const idleCloseAt = session ? new Date(session.lastSeenAt.getTime() + idleMinutes * 60_000) : null;
+  const effectiveEndsAt = session
+    ? (idleCloseAt && idleCloseAt.getTime() < session.expiresAt.getTime() ? idleCloseAt : session.expiresAt)
+    : null;
+
   return {
     user: { fullName: ctx.user.fullName, roleCode: ctx.user.roleCode, roleName: role?.name ?? ctx.user.roleCode },
     hotelName: hotel?.name ?? "",
@@ -62,7 +69,7 @@ export async function loadStaffShellProps(
     nav,
     targets: switchable.map(({ target, index }) => ({ index, label: target.label })),
     currentTargetIndex: current?.index,
-    sessionEndsAt: session?.expiresAt.toISOString() ?? null,
+    sessionEndsAt: effectiveEndsAt?.toISOString() ?? null,
     warnMinutes: SESSION_WARN_MINUTES,
     layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
   };

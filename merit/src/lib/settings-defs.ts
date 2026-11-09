@@ -80,7 +80,7 @@ export type SettingValue<K extends SettingKey> = z.infer<(typeof SETTING_SCHEMAS
 export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "session.maxOnlineMinutes": 480,
   "session.minibarMaxOnlineMinutes": 600,
-  "session.warnBeforeMinutes": 60,
+  "session.warnBeforeMinutes": 5,
   "session.idleMinutes": 45,
   "session.singleDevice": true,
   "session.singleTargetAuto": true,

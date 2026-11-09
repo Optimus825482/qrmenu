@@ -18,10 +18,11 @@ export function minutesLeft(endsAt: number, now: number, offsetMs: number): numb
 }
 
 /**
- * Kalıcı oturum şeridi: oturumun bitişine `warnMinutes` kala "Oturum 42 dk sonra kapanacak". Bitiş
+ * Kalıcı oturum şeridi: oturumun bitişine `warnMinutes` kala "Oturum 5 dk sonra kapanacak". Bitiş
  * zamanı ve sunucu saati /api/session/status'tan dakikada bir (yalnız sayfa görünürken) yenilenir.
+ * Kullanıcı etkileşimi (tıklama, tuş basma) oturumu otomatik olarak uzatır ve uyarıyı kapatır.
  */
-export function SessionBanner({ sessionEndsAt, warnMinutes = 60 }: SessionBannerProps) {
+export function SessionBanner({ sessionEndsAt, warnMinutes = 5 }: SessionBannerProps) {
   // The end time the server last reported (polling); until then the one rendered with the page.
   const [polledEnd, setEndsAt] = useState<number | null>(null);
   const endsAt = polledEnd ?? (sessionEndsAt ? Date.parse(sessionEndsAt) : null);
@@ -30,6 +31,8 @@ export function SessionBanner({ sessionEndsAt, warnMinutes = 60 }: SessionBanner
 
   useEffect(() => {
     let stopped = false;
+    let lastActivitySent = 0;
+
     const poll = async () => {
       if (document.visibilityState !== "visible") return;
       try {
@@ -45,23 +48,44 @@ export function SessionBanner({ sessionEndsAt, warnMinutes = 60 }: SessionBanner
         // offline or restarting: keep the last known end time
       }
     };
+
     const timer = setInterval(() => {
       setNow(Date.now());
       void poll();
     }, POLL_MS);
+
     const onVisible = () => {
       if (document.visibilityState === "visible") {
         setNow(Date.now());
         void poll();
       }
     };
+
+    const onUserActivity = () => {
+      const nowMs = Date.now();
+      // Uyarı açıksa hemen/5 sn'de bir yenile; normal çalışırken 30 sn'de bir heartbeat yap
+      const leftMins = endsAt !== null ? minutesLeft(endsAt, nowMs, offset) : 999;
+      const isWarningVisible = leftMins <= warnMinutes;
+      const minInterval = isWarningVisible ? 5_000 : 30_000;
+      if (nowMs - lastActivitySent >= minInterval) {
+        lastActivitySent = nowMs;
+        setNow(nowMs);
+        void poll();
+      }
+    };
+
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pointerdown", onUserActivity, { passive: true });
+    window.addEventListener("keydown", onUserActivity, { passive: true });
+
     return () => {
       stopped = true;
       clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pointerdown", onUserActivity);
+      window.removeEventListener("keydown", onUserActivity);
     };
-  }, []);
+  }, [endsAt, offset, warnMinutes]);
 
   if (endsAt === null) return null;
   const left = minutesLeft(endsAt, now, offset);

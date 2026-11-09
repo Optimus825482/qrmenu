@@ -132,12 +132,45 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
   });
 }
 
-/** Records activity on an open session. Callers throttle (requireUser: at most once a minute). */
+/** Records activity on an open session and extends expiration (sliding window). Callers throttle (requireUser: at most once a minute). */
 export async function touchSession(id: string): Promise<void> {
-  await prisma.userSession.updateMany({
-    where: { id, status: { in: ACTIVE_STATUSES } },
-    data: { lastSeenAt: new Date() },
+  const session = await prisma.userSession.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      hotelId: true,
+      status: true,
+      role: { select: { kind: true, maxOnlineMinutes: true } },
+    },
   });
+  if (!session || !ACTIVE_STATUSES.includes(session.status)) return;
+  const minutes = await maxOnlineMinutes(session.role, session.hotelId);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + minutes * MINUTE_MS);
+
+  if (session.status === "UYARI") {
+    await prisma.$transaction(async (tx) => {
+      await tx.userSession.updateMany({
+        where: { id, status: { in: ACTIVE_STATUSES } },
+        data: {
+          lastSeenAt: now,
+          expiresAt,
+          status: "ONLINE",
+          warnedAt: null,
+        },
+      });
+      const named = await tx.userSession.findUnique({ where: { id }, ...sessionWithNames });
+      if (named) await publishSessionChanged(tx, named);
+    });
+  } else {
+    await prisma.userSession.updateMany({
+      where: { id, status: { in: ACTIVE_STATUSES } },
+      data: {
+        lastSeenAt: now,
+        expiresAt,
+      },
+    });
+  }
 }
 
 /**
