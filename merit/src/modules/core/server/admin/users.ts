@@ -596,15 +596,20 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
   }
 }
 
-const passwordSchema = z.object({ password: passwordField });
+const tempPasswordSchema = z.object({
+  password: z
+    .string("Geçici şifre gerekli")
+    .trim()
+    .min(6, "Geçici şifre en az 6 karakter olmalı")
+    .max(128, "En fazla 128 karakter olabilir"),
+});
 
 /**
- * Sets a new password. The user's open sessions end at once (reason SISTEM, `session.closed`
- * published) so nobody keeps working on the old credentials. The hash never appears in a result
- * or an audit entry.
+ * Sets a new temporary password. The user's open sessions end at once (reason SISTEM, `session.closed`
+ * published) so nobody keeps working on the old credentials. Must change password on first login is enforced.
  */
 export async function setPassword(ctx: Ctx, id: string, newPassword: string): Promise<void> {
-  const { password } = parseInput(passwordSchema, { password: newPassword });
+  const { password } = parseInput(tempPasswordSchema, { password: newPassword });
   const anchor = await anchorHotel(id);
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const target = await loadTarget(tx, id);

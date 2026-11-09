@@ -284,9 +284,17 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
           {dialog?.mode === "password" ? `${dialog.row.username}: ` : ""}Açık oturumlar kapatılır.
         </p>
         <Field name="password" label="Geçici şifre">
-          <input type="password" autoComplete="new-password" maxLength={128} />
+          <input
+            type="text"
+            autoComplete="off"
+            defaultValue="123456"
+            minLength={6}
+            maxLength={128}
+          />
         </Field>
-        <p className="xp-defs-note">En az 10 karakter; büyük harf, küçük harf ve rakam içermeli. Kullanıcı ilk girişte bu şifreyi değiştirmek zorundadır.</p>
+        <p className="xp-defs-note">
+          Geçici şifre için en az 6 haneli bir değer girilmesi yeterlidir (varsayılan: 123456). Kullanıcı ilk girişte bu şifreyi değiştirmek zorundadır.
+        </p>
       </FormDialog>
     </>
   );

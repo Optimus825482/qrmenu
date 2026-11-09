@@ -394,6 +394,7 @@ describe("users: pasife alma ve şifre belirleme oturumları kapatır", () => {
 
     const NEW = "YeniSifre987";
     await expect(users.setPassword(ctx, user.id, "zayif")).rejects.toMatchObject({ code: "VALIDATION" });
+    await users.setPassword(ctx, user.id, "123456");
     await users.setPassword(ctx, user.id, NEW);
 
     expect(await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).toMatchObject({
