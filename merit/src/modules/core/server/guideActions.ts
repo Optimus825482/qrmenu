@@ -14,23 +14,31 @@ import { readGuidePrefs, setChecklistItem, setGuideSeen, setWelcomeSeen, welcome
  * permission is involved, an arbitrary user may acknowledge their own summary.
  */
 
-export async function acknowledgeWelcomeAction(hash: string): Promise<Result<{ hash: string }>> {
-  return safeAction(z.string().min(1).max(40), async (value) => {
+export async function acknowledgeWelcomeAction(
+  raw: string | { hash: string; dismissForever?: boolean },
+): Promise<Result<{ hash: string }>> {
+  const schema = z.union([
+    z.string().min(1).max(40),
+    z.object({ hash: z.string().min(1).max(40), dismissForever: z.boolean().optional() }),
+  ]);
+  return safeAction(schema, async (input) => {
+    const hash = typeof input === "string" ? input : input.hash;
+    const dismissForever = typeof input === "string" ? false : Boolean(input.dismissForever);
     const ctx = await requireUser();
     // The server's current fingerprint decides: a stale page must not mark a newer summary as read.
     const current = (await accessSummary(ctx)).hash;
-    if (value !== current) throw new DomainError("CONFLICT", "Yetkilerin değişti; özet yenileniyor");
-    await setWelcomeSeen(ctx.user.id, current);
+    if (hash !== current && !dismissForever) throw new DomainError("CONFLICT", "Yetkilerin değişti; özet yenileniyor");
+    await setWelcomeSeen(ctx.user.id, current, dismissForever);
     await audit(prisma, {
       userId: ctx.user.id,
       hotelId: ctx.session.hotelId,
       action: "WELCOME_ACK",
       entity: "User",
       entityId: ctx.user.id,
-      after: { hash: current },
+      after: { hash: current, dismissForever },
     });
     return { hash: current };
-  })(hash);
+  })(raw);
 }
 
 export async function markGuideSeenAction(code: string, version: number): Promise<Result<null>> {
@@ -71,6 +79,10 @@ export async function myAccessAction(hotelId?: string): Promise<Result<MyAccess>
     }
     const [own, prefs] = await Promise.all([accessSummary(ctx), readGuidePrefs(ctx.user.id)]);
     const summary = requested && requested !== ctx.session.hotelId ? await accessSummary(ctx, requested) : own;
-    return { summary, ackHash: own.hash, needsAck: !welcomeMatches(prefs.welcomeSeenHash, own.hash) };
+    return {
+      summary,
+      ackHash: own.hash,
+      needsAck: !welcomeMatches(prefs.welcomeSeenHash, own.hash, prefs.welcomeDismissedForever),
+    };
   })(hotelId);
 }

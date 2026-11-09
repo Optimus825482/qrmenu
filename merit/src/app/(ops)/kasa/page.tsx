@@ -26,7 +26,7 @@ export default async function CashierPage() {
     }),
     prisma.outlet.findUnique({
       where: { id: outletId },
-      select: { hasMenu: true, hasOrdering: true, priceDisplay: true, name: true },
+      select: { hasMenu: true, hasOrdering: true, priceDisplay: true, name: true, tableOccupancyMinutes: true },
     }),
     resolveCurrency(ctx.session.hotelId),
     can(ctx, "QS-KUY", "A", ctx.session.hotelId).then(async (all) => all || can(ctx, "QS-KUY", "D", ctx.session.hotelId)),
@@ -40,6 +40,7 @@ export default async function CashierPage() {
       outletName={outlet?.name ?? "Outlet"}
       hasMenu={outlet?.hasMenu === true}
       initialPriceDisplay={outlet?.priceDisplay ?? "INHERIT"}
+      initialOccupancyMinutes={outlet?.tableOccupancyMinutes ?? 40}
       board={board}
       queue={queue}
       calls={calls}

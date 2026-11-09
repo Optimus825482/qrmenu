@@ -58,6 +58,7 @@ export const SSE_EVENT_TYPES: readonly string[] = [
   "printer.status",
   "scan.table",
   "table.cleared",
+  "table.occupancy",
   ...MYBAR_EVENTS,
   // Minibar completion: typed events of the stock, room-check, DND, task and occupancy flows.
   // `roomcheck.done` stays out on purpose: the radar subscribes to it explicitly (radar-normalize.test.ts pins this).

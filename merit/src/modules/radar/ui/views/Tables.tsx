@@ -22,15 +22,17 @@ function Card({
   now,
   selected,
   waiterAssignmentEnabled,
+  occupancyMinutes,
   onSelect,
 }: {
   table: TableCard;
   now: number;
   selected: boolean;
   waiterAssignmentEnabled?: boolean;
+  occupancyMinutes?: number | null;
   onSelect(): void;
 }) {
-  const m = tableCardModel(table, now, waiterAssignmentEnabled);
+  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes);
   const ref = usePulse<HTMLButtonElement>(`table:${table.tableId}`);
   return (
     <button
@@ -72,6 +74,7 @@ function Detail({
   hotelId,
   now,
   waiterAssignmentEnabled,
+  occupancyMinutes,
   onOpenApp,
   onClose,
 }: {
@@ -79,10 +82,12 @@ function Detail({
   hotelId: string;
   now: number;
   waiterAssignmentEnabled?: boolean;
+  occupancyMinutes?: number | null;
   onOpenApp?: (appId: string) => void;
   onClose(): void;
 }) {
-  const m = tableCardModel(table, now, waiterAssignmentEnabled);
+  const m = tableCardModel(table, now, waiterAssignmentEnabled, occupancyMinutes);
+  const occLabel = occupancyMinutes === null || occupancyMinutes === 0 ? "kapalı" : `son ${occupancyMinutes ?? 40} dk`;
   return (
     <DetailBubble
       title={`Masa ${table.label}`}
@@ -123,7 +128,7 @@ function Detail({
       <h4>Masa Durumu & Aktivite</h4>
       {m.guestPresent ? (
         <p>
-          <Icon name="qr" size={13} /> Dolu · {m.scanMinutes === 0 ? "Yeni aktivite" : `${m.scanMinutes} dk önce aktivite`} (son 40 dk aktif).
+          <Icon name="qr" size={13} /> Dolu · {m.scanMinutes === 0 ? "Yeni aktivite" : `${m.scanMinutes} dk önce aktivite`} ({occLabel} aktif).
         </p>
       ) : table.scannedAt ? (
         <p className="rd-muted">Son aktivite: {Math.floor((now - (Date.parse(table.scannedAt) || now)) / 60_000)} dk önce</p>
@@ -200,6 +205,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
                       now={now}
                       selected={t.tableId === selected}
                       waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
+                      occupancyMinutes={outlet.tableOccupancyMinutes}
                       onSelect={() => setSelected(t.tableId === selected ? null : t.tableId)}
                     />
                   ))}
@@ -213,6 +219,7 @@ export function Tables({ view, now, outletId, onSelectOutlet, onOpenApp }: Table
             hotelId={view.hotelId}
             now={now}
             waiterAssignmentEnabled={outlet.waiterAssignmentEnabled}
+            occupancyMinutes={outlet.tableOccupancyMinutes}
             onOpenApp={onOpenApp}
             onClose={() => setSelected(null)}
           />

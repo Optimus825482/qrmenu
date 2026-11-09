@@ -19,6 +19,7 @@ const recentOptionsSchema = z.object({
 
 export type TableBoard = {
   areas?: { id: string; label: string }[];
+  tableOccupancyMinutes?: number | null;
   tables: {
     id: string;
     label: string;
@@ -50,8 +51,11 @@ export type TableBoard = {
   };
 };
 
-async function outletScope(ctx: Ctx, outletId: string, screen: "QS-KAS" | "QS-IPT"): Promise<{ hotelId: string; printerId: string | null }> {
-  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hotelId: true, printerId: true } });
+async function outletScope(ctx: Ctx, outletId: string, screen: "QS-KAS" | "QS-IPT"): Promise<{ hotelId: string; printerId: string | null; tableOccupancyMinutes: number | null }> {
+  const outlet = await prisma.outlet.findUnique({
+    where: { id: outletId },
+    select: { hotelId: true, printerId: true, tableOccupancyMinutes: true },
+  });
   if (!outlet || !ctx.hotelIds.includes(outlet.hotelId)) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
   if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   await assertCan(ctx, screen, "V", outlet.hotelId);
@@ -70,6 +74,8 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
   const outlet = await outletScope(ctx, outletId, "QS-KAS");
   const today = businessDay(businessDate());
   const now = new Date();
+  const occMinutes = outlet.tableOccupancyMinutes;
+  const scanCutoff = occMinutes !== null && occMinutes > 0 ? new Date(now.getTime() - occMinutes * 60_000) : null;
   const [tables, todayOrders, calls, scans, printer, areaDefs] = await Promise.all([
     prisma.outletTable.findMany({
       where: { outletId },
@@ -109,11 +115,13 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       select: { tableId: true, type: true, createdAt: true, note: true },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.qrScanLog.findMany({
-      where: { table: { outletId }, ok: true, createdAt: { gte: new Date(now.getTime() - 40 * 60_000) } },
-      select: { tableId: true, createdAt: true },
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-    }),
+    scanCutoff
+      ? prisma.qrScanLog.findMany({
+          where: { table: { outletId }, ok: true, createdAt: { gte: scanCutoff } },
+          select: { tableId: true, createdAt: true },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        })
+      : Promise.resolve([]),
     prisma.printer.findFirst({
       where: { hotelId: outlet.hotelId, isActive: true, OR: [{ id: outlet.printerId ?? "" }, { outletId: null }] },
       select: { lastSeenAt: true, lastStatus: true },
@@ -174,6 +182,7 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
 
   return {
     areas,
+    tableOccupancyMinutes: outlet.tableOccupancyMinutes,
     tables: tables.map((table) => {
       const scanDate = scanByTable.get(table.id);
       const validScan =

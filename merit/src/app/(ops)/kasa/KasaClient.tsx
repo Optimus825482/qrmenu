@@ -19,6 +19,7 @@ import { playCue } from "@/components/pos/soundGate";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
 import AssignDialog from "./AssignDialog";
+import TableSettingsDialog from "./TableSettingsDialog";
 import CashierMenu from "./CashierMenu";
 import { RoutineCard } from "@/components/guide/RoutineCard";
 import TableBoard, { type BoardTable } from "./TableBoard";
@@ -47,6 +48,7 @@ type Props = {
   outletName?: string;
   hasMenu: boolean;
   initialPriceDisplay?: "INHERIT" | "SHOW" | "HIDE";
+  initialOccupancyMinutes?: number | null;
   board: TableBoardData;
   queue: QueueOrder[];
   calls: OpenCall[];
@@ -78,6 +80,7 @@ const LIVE_EVENTS = [
   "printer.status",
   "scan.table",
   "table.cleared",
+  "table.occupancy",
   "price.display",
 ] as const;
 
@@ -121,6 +124,7 @@ export default function KasaClient({
   outletName,
   hasMenu,
   initialPriceDisplay = "INHERIT",
+  initialOccupancyMinutes = 40,
   board: initialBoard,
   queue: initialQueue,
   calls: initialCalls,
@@ -138,6 +142,8 @@ export default function KasaClient({
   const [queue, setQueue] = useState(initialQueue);
   const [calls, setCalls] = useState(initialCalls);
   const [priceDisplay, setPriceDisplay] = useState<"INHERIT" | "SHOW" | "HIDE">(initialPriceDisplay);
+  const [occupancyMinutes, setOccupancyMinutes] = useState<number | null>(initialOccupancyMinutes);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [panelOrders, setPanelOrders] = useState<PanelOrder[]>([]);
   const [panelLoading, setPanelLoading] = useState(false);
@@ -215,6 +221,12 @@ export default function KasaClient({
 
   useSse((event) => {
     if (event.outletId !== outletId) return;
+    if (event.type === "table.occupancy") {
+      const payload = event.payload as { minutes?: number | null } | undefined;
+      if (payload && typeof payload.minutes !== "undefined") {
+        setOccupancyMinutes(payload.minutes);
+      }
+    }
     if (event.type === "scan.table") {
       const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
       if (payload?.tableId) {
@@ -275,10 +287,22 @@ export default function KasaClient({
             </button>
           ) : null}
           {tab === "tables" ? (
-            <button type="button" className="pos-btn" disabled={!canEdit} onClick={() => setBulk(true)}>
-              <Icon name="users" size={20} />
-              Toplu atama
-            </button>
+            <>
+              <button type="button" className="pos-btn" disabled={!canEdit} onClick={() => setBulk(true)}>
+                <Icon name="users" size={20} />
+                Toplu atama
+              </button>
+              <button
+                type="button"
+                className="pos-btn"
+                disabled={!canEdit}
+                onClick={() => setSettingsOpen(true)}
+                title="Masa otomatik doluluk süresini ayarla"
+              >
+                <Icon name="settings" size={20} />
+                Masa ayarları
+              </button>
+            </>
           ) : null}
         </div>
       </div>
@@ -470,6 +494,20 @@ export default function KasaClient({
       ) : null}
 
       {bulk ? <AssignDialog tables={board.tables} waiters={waiters} outletId={outletId} canEdit={canEdit} onClose={() => setBulk(false)} onDone={refresh} /> : null}
+
+      {settingsOpen ? (
+        <TableSettingsDialog
+          outletId={outletId}
+          outletName={outletName ?? "Outlet"}
+          currentMinutes={occupancyMinutes}
+          canEdit={canEdit}
+          onClose={() => setSettingsOpen(false)}
+          onSaved={(mins) => {
+            setOccupancyMinutes(mins);
+            void refresh();
+          }}
+        />
+      ) : null}
     </section>
   );
 }

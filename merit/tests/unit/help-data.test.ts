@@ -66,6 +66,10 @@ describe("yardım içeriği", () => {
     await setWelcomeSeen(ctx.user.id, royalState.summary.hash);
     expect((await loadGuideState(ctx, premium)).welcomeOk).toBe(true);
 
+    // welcomeDismissedForever persists even if hash differs
+    await setWelcomeSeen(ctx.user.id, "different-hash", true);
+    expect((await loadGuideState(ctx, premium)).welcomeOk).toBe(true);
+
     const diamond = await hotelId("DIAMOND");
     await expect(helpFor(ctx, "MB-ZIM", diamond)).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(loadGuideState(ctx, diamond)).rejects.toMatchObject({ code: "FORBIDDEN" });

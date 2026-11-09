@@ -166,9 +166,12 @@ async function myTables(ctx: Ctx): Promise<AssignmentRow[]> {
   if (!outletAllowed(ctx, ctx.session.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   const outletId = ctx.session.outletId;
   const now = new Date();
-  const window40Min = new Date(now.getTime() - 40 * 60_000);
 
-  const [rows, openOrders, openCalls, scans] = await Promise.all([
+  const [outlet, rows, openOrders, openCalls] = await Promise.all([
+    prisma.outlet.findUnique({
+      where: { id: outletId },
+      select: { tableOccupancyMinutes: true },
+    }),
     prisma.outletTable.findMany({
       where: { outletId, isActive: true },
       select: { id: true, label: true, emptiedAt: true },
@@ -182,12 +185,17 @@ async function myTables(ctx: Ctx): Promise<AssignmentRow[]> {
       where: { outletId, status: "ACIK" },
       select: { tableId: true },
     }),
-    prisma.qrScanLog.findMany({
-      where: { table: { outletId }, ok: true, createdAt: { gte: window40Min } },
-      select: { tableId: true, createdAt: true },
-      orderBy: { createdAt: "desc" },
-    }),
   ]);
+
+  const occMinutes = outlet?.tableOccupancyMinutes;
+  const scanCutoff = occMinutes !== null && occMinutes !== undefined && occMinutes > 0 ? new Date(now.getTime() - occMinutes * 60_000) : null;
+  const scans = scanCutoff
+    ? await prisma.qrScanLog.findMany({
+        where: { table: { outletId }, ok: true, createdAt: { gte: scanCutoff } },
+        select: { tableId: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
 
   const orderTableIds = new Set(openOrders.map((o) => o.tableId));
   const callTableIds = new Set(openCalls.map((c) => c.tableId));

@@ -19,3 +19,10 @@ export async function setOutletPriceDisplayAction(raw: unknown): Promise<Result<
     async (input) => switches.setPriceDisplay(await requireUser(), input.id, input.value),
   )(raw);
 }
+
+export async function setOutletTableOccupancyAction(raw: unknown): Promise<Result<{ id: string; hotelId: string; tableOccupancyMinutes: number | null }>> {
+  return safeAction(
+    z.object({ id, minutes: z.union([z.number().int().min(10).max(60), z.literal(0), z.null()]) }),
+    async (input) => switches.setTableOccupancyMinutes(await requireUser(), input.id, input.minutes),
+  )(raw);
+}

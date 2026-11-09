@@ -7,6 +7,11 @@ import { windowStore } from "@/shell/windowStore";
 export function WelcomeOpener({ needed, hotelId }: { needed: boolean; hotelId: string }) {
   useEffect(() => {
     if (!needed) return;
+    try {
+      if (typeof window !== "undefined" && localStorage.getItem("merit_welcome_dismissed") === "true") {
+        return;
+      }
+    } catch {}
     const store = windowStore.getState();
     if (!store.ready) return;
     const already = Object.values(store.windows).some((w) => w.appId === "core.erisimim");

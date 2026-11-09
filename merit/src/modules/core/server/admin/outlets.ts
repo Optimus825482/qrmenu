@@ -41,6 +41,7 @@ export type OutletRow = {
   autoPrintReceipt: boolean;
   autoPrintKitchen: boolean;
   waiterAssignmentEnabled: boolean;
+  tableOccupancyMinutes?: number | null;
   isActive: boolean;
   tableCount: number;
   areaCount: number;
@@ -68,6 +69,7 @@ const SELECT = {
   autoPrintReceipt: true,
   autoPrintKitchen: true,
   waiterAssignmentEnabled: true,
+  tableOccupancyMinutes: true,
   isActive: true,
   areas: {
     select: {
@@ -107,6 +109,7 @@ export const outletSchema = z
     autoPrintReceipt: z.boolean().default(true),
     autoPrintKitchen: z.boolean().default(false),
     waiterAssignmentEnabled: z.boolean().default(false),
+    tableOccupancyMinutes: z.coerce.number().int().min(0).max(60).nullable().optional(),
     isActive: z.boolean().optional(),
   })
   .transform((value) => {
@@ -218,6 +221,8 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,
+          waiterAssignmentEnabled: input.waiterAssignmentEnabled,
+          tableOccupancyMinutes: input.tableOccupancyMinutes === 0 ? null : (input.tableOccupancyMinutes ?? 40),
           isActive: input.isActive ?? true,
         },
         select: SELECT,
@@ -259,6 +264,12 @@ async function publishSwitchChanges(
       tx,
     );
   }
+  if (before.tableOccupancyMinutes !== after.tableOccupancyMinutes) {
+    await publish(
+      { type: "table.occupancy", hotelId, outletId, payload: { minutes: after.tableOccupancyMinutes } },
+      tx,
+    );
+  }
 }
 
 export async function update(
@@ -287,6 +298,10 @@ export async function update(
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,
+          waiterAssignmentEnabled: input.waiterAssignmentEnabled,
+          ...(input.tableOccupancyMinutes !== undefined
+            ? { tableOccupancyMinutes: input.tableOccupancyMinutes === 0 ? null : input.tableOccupancyMinutes }
+            : {}),
           ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
         },
         select: SELECT,

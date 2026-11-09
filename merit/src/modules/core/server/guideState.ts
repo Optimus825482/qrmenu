@@ -23,5 +23,9 @@ export async function loadGuideState(ctx: Ctx, hotelId?: string): Promise<GuideS
   const hotel = guideHotelId(ctx, hotelId);
   const [own, prefs] = await Promise.all([accessSummary(ctx), readGuidePrefs(ctx.user.id)]);
   const summary = hotel === ctx.session.hotelId ? own : await accessSummary(ctx, hotel);
-  return { summary, prefs, welcomeOk: welcomeMatches(prefs.welcomeSeenHash, own.hash) };
+  return {
+    summary,
+    prefs,
+    welcomeOk: welcomeMatches(prefs.welcomeSeenHash, own.hash, prefs.welcomeDismissedForever),
+  };
 }

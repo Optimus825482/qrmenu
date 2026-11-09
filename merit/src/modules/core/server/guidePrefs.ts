@@ -5,6 +5,7 @@ import { businessDate } from "@/lib/time";
 /** `User.prefs.guide`: welcome acknowledgement, seen tour versions and the daily checklist ticks. */
 export const guidePrefsSchema = z.object({
   welcomeSeenHash: z.string().max(40).optional(),
+  welcomeDismissedForever: z.boolean().optional(),
   seen: z.record(z.string(), z.number().int()).default({}),
   checklist: z.record(z.string(), z.array(z.string().max(60)).max(40)).default({}),
 });
@@ -26,7 +27,8 @@ function onTestDatabase(): boolean {
  * e2e escape hatch: a stored "*" counts as every hash, but only outside production or on a
  * `*_e2e` / `*_test` database (the e2e server runs `next start`, i.e. NODE_ENV=production).
  */
-export function welcomeMatches(stored: string | undefined, hash: string): boolean {
+export function welcomeMatches(stored: string | undefined, hash: string, dismissedForever?: boolean): boolean {
+  if (dismissedForever) return true;
   if (stored === undefined) return false;
   if (stored === "*") return process.env.NODE_ENV !== "production" || onTestDatabase();
   return stored === hash;
@@ -68,8 +70,12 @@ export async function readGuidePrefs(userId: string): Promise<GuidePrefs> {
   return parseGuidePrefs(user?.prefs);
 }
 
-export function setWelcomeSeen(userId: string, hash: string): Promise<GuidePrefs> {
-  return updateGuide(userId, (g) => ({ ...g, welcomeSeenHash: hash }));
+export function setWelcomeSeen(userId: string, hash: string, dismissForever?: boolean): Promise<GuidePrefs> {
+  return updateGuide(userId, (g) => ({
+    ...g,
+    welcomeSeenHash: hash,
+    ...(dismissForever ? { welcomeDismissedForever: true } : {}),
+  }));
 }
 
 export function setGuideSeen(userId: string, code: string, version: number): Promise<GuidePrefs> {

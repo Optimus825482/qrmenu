@@ -14,7 +14,7 @@ type PrinterEntry = OutletEntry["printers"][number];
 
 const OPEN_TABLE_STATUSES = ["GONDERILDI", "ONAYLANDI", "HAZIR"] as const;
 const COUNTED_JOBS: PrintJobStatus[] = ["KUYRUKTA", "BASILIYOR", "HATA"];
-const SCAN_WINDOW_MS = 40 * 60_000;
+const SCAN_WINDOW_MS = 60 * 60_000;
 /** An order older than this is stale data, not an open order of the live floor. */
 const OPEN_WINDOW_MS = 24 * 3_600_000;
 const AREA_LABEL = { ACIK: "Açık alan", KAPALI: "Kapalı alan" } as const;
@@ -51,7 +51,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
   const { hotelId, now } = env;
   const outlets = await prisma.outlet.findMany({
     where: { hotelId, isActive: true, OR: [{ hasOrdering: true }, { hasMenu: true }], type: { not: "ODA_SERVISI" } },
-    select: { id: true, name: true, type: true, orderingEnabled: true, hasOrdering: true, hasMenu: true, waiterAssignmentEnabled: true, printerId: true },
+    select: { id: true, name: true, type: true, orderingEnabled: true, hasOrdering: true, hasMenu: true, waiterAssignmentEnabled: true, tableOccupancyMinutes: true, printerId: true },
     orderBy: [{ name: "asc" }, { id: "asc" }],
   });
   const outletIds = outlets.map((o) => o.id);
@@ -213,6 +213,8 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     const ownedPrinters = printers.filter((p) => p.outletId === o.id || p.id === o.printerId);
     const outletTables = tables.filter((t) => t.outletId === o.id);
     const outletAreas = areas.filter((a) => a.outletId === o.id);
+    const occMinutes = o.tableOccupancyMinutes;
+    const scanCutoff = occMinutes !== null && occMinutes !== undefined && occMinutes > 0 ? now.getTime() - occMinutes * 60_000 : null;
     // Tables without a matching area row cannot exist (FK), so every table lands in its area.
     const areaEntries = outletAreas.map((a) => ({
       areaId: a.id,
@@ -223,7 +225,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
           const waiter = waiterByTable.get(t.id);
           const scanned = scanByTable.get(t.id);
           const validScan =
-            scanned && (!t.emptiedAt || scanned.getTime() > t.emptiedAt.getTime())
+            scanCutoff !== null && scanned && scanned.getTime() >= scanCutoff && (!t.emptiedAt || scanned.getTime() > t.emptiedAt.getTime())
               ? scanned
               : undefined;
           return {
@@ -263,6 +265,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
       hasOrdering: o.hasOrdering,
       hasMenu: o.hasMenu,
       waiterAssignmentEnabled: o.waiterAssignmentEnabled,
+      tableOccupancyMinutes: o.tableOccupancyMinutes,
       areas: areaEntries,
       queues: {
         kasa: queueOf(kasa),

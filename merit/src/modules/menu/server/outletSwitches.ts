@@ -13,9 +13,11 @@ export type OutletSwitches = {
   hotelId: string;
   orderingEnabled: boolean;
   priceDisplay: "INHERIT" | "SHOW" | "HIDE";
+  tableOccupancyMinutes?: number | null;
 };
 
 const priceSchema = z.enum(["INHERIT", "SHOW", "HIDE"], "Geçersiz fiyat gösterimi");
+const occupancySchema = z.union([z.number().int().min(10).max(60), z.literal(0), z.null()]);
 
 async function outletInfo(outletId: string): Promise<{ id: string; hotelId: string; type: OutletType }> {
   const found = await prisma.outlet.findUnique({
@@ -94,6 +96,47 @@ export async function setPriceDisplay(
       after: { priceDisplay: parsed.data },
     });
     await publish({ type: "price.display", hotelId: outlet.hotelId, outletId }, tx);
+    return after;
+  });
+}
+
+/** Configures table inactivity / auto-occupancy timeout in minutes (10..60), or null/0 to disable. */
+export async function setTableOccupancyMinutes(
+  ctx: Ctx,
+  outletId: string,
+  value: number | null,
+): Promise<{ id: string; hotelId: string; tableOccupancyMinutes: number | null }> {
+  const parsed = occupancySchema.safeParse(value);
+  if (!parsed.success) throw fromZod(parsed.error);
+  const normalized = parsed.data === 0 ? null : parsed.data;
+  const outlet = await outletInfo(outletId);
+  await authorize(ctx, outlet.hotelId, outlet.type);
+  assertOutletScope(ctx, outletId);
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.outlet.findFirst({
+      where: { id: outletId, hotelId: outlet.hotelId },
+      select: { id: true, hotelId: true, tableOccupancyMinutes: true },
+    });
+    if (!before) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+    if (before.tableOccupancyMinutes === normalized) return before;
+    const after = await tx.outlet.update({
+      where: { id: outletId },
+      data: { tableOccupancyMinutes: normalized },
+      select: { id: true, hotelId: true, tableOccupancyMinutes: true },
+    });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: outlet.hotelId,
+      action: "OUTLET_TABLE_OCCUPANCY",
+      entity: "Outlet",
+      entityId: outletId,
+      before: { tableOccupancyMinutes: before.tableOccupancyMinutes },
+      after: { tableOccupancyMinutes: normalized },
+    });
+    await publish(
+      { type: "table.occupancy", hotelId: outlet.hotelId, outletId, payload: { minutes: normalized } },
+      tx,
+    );
     return after;
   });
 }

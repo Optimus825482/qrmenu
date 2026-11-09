@@ -94,7 +94,12 @@ export type TableCardModel = {
 };
 
 /** Status of a table card in UX priority: call overdue > awaiting approval > active call > ready > preparing > guest present > empty. */
-export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnabled?: boolean): TableCardModel {
+export function tableCardModel(
+  t: TableCard,
+  now: number,
+  waiterAssignmentEnabled?: boolean,
+  occupancyMinutes?: number | null,
+): TableCardModel {
   const open = t.orders;
   const awaiting = open.filter((o) => o.status === "GONDERILDI").length;
   const scanMs = t.scannedAt !== undefined ? now - (Date.parse(t.scannedAt) || 0) : undefined;
@@ -102,7 +107,12 @@ export function tableCardModel(t: TableCard, now: number, waiterAssignmentEnable
     t.emptiedAt !== undefined &&
     t.scannedAt !== undefined &&
     Date.parse(t.emptiedAt) >= Date.parse(t.scannedAt);
-  const guestPresent = !isEmptied && scanMs !== undefined && scanMs >= 0 && scanMs <= GUEST_PRESENT_MS;
+  const effectiveWindowMs =
+    occupancyMinutes === null || occupancyMinutes === 0
+      ? 0
+      : (occupancyMinutes ?? 40) * MIN_MS;
+  const guestPresent =
+    !isEmptied && effectiveWindowMs > 0 && scanMs !== undefined && scanMs >= 0 && scanMs <= effectiveWindowMs;
   const scanMinutes = scanMs !== undefined && scanMs >= 0 ? Math.floor(scanMs / 60_000) : undefined;
   const callSeconds = t.call ? Math.max(0, Math.floor((now - (Date.parse(t.call.since) || now)) / 1000)) : undefined;
   const callOverdue = callSeconds !== undefined && callSeconds >= CALL_OVERDUE_SECONDS;

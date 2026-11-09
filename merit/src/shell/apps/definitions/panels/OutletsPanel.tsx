@@ -98,6 +98,7 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       autoPrintReceipt: flag("autoPrintReceipt"),
       autoPrintKitchen: flag("autoPrintKitchen"),
       waiterAssignmentEnabled: flag("waiterAssignmentEnabled"),
+      tableOccupancyMinutes: values.tableOccupancyMinutes !== undefined ? Number(values.tableOccupancyMinutes) : 40,
       isActive: flag("isActive"),
     };
     const result =
@@ -332,6 +333,22 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
           checked={waiterAssignmentEnabled}
           onChange={(e) => setWaiterAssignmentEnabled(e.target.checked)}
         />
+      </Field>
+      <Field name="tableOccupancyMinutes" label="Masa otomatik doluluk süresi">
+        <select defaultValue={editing?.tableOccupancyMinutes ?? 40}>
+          <option value="0">Kapalı (Otomatik doluluk kapalı)</option>
+          <option value="10">10 dakika</option>
+          <option value="15">15 dakika</option>
+          <option value="20">20 dakika</option>
+          <option value="25">25 dakika</option>
+          <option value="30">30 dakika</option>
+          <option value="35">35 dakika</option>
+          <option value="40">40 dakika (Varsayılan)</option>
+          <option value="45">45 dakika</option>
+          <option value="50">50 dakika</option>
+          <option value="55">55 dakika</option>
+          <option value="60">60 dakika</option>
+        </select>
       </Field>
       <Field name="isActive" label="Aktif">
         <input type="checkbox" defaultChecked={editing?.isActive ?? true} />
