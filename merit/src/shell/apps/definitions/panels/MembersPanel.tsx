@@ -530,13 +530,44 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
                   onChange={(e) => setSelectedOverrideRoleId(e.target.value)}
                 >
                   <option value="">Varsayılan (Personelin Kendi Rolü: {roleModalMember.roleName})</option>
-                  {(options?.roles ?? [])
-                    .filter((r) => r.kind === "OUTLET" || r.kind === "MUTFAK")
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name} ({r.code})
-                      </option>
-                    ))}
+                  <optgroup label="Outlet &amp; Servis Rolleri">
+                    {(options?.roles ?? [])
+                      .filter((r) => r.kind === "OUTLET")
+                      .map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} ({r.code})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Yönetim &amp; Şef Rolleri">
+                    {(options?.roles ?? [])
+                      .filter((r) => r.kind === "YONETIM")
+                      .map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} ({r.code})
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="Mutfak Rolleri">
+                    {(options?.roles ?? [])
+                      .filter((r) => r.kind === "MUTFAK")
+                      .map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} ({r.code})
+                        </option>
+                      ))}
+                  </optgroup>
+                  {(options?.roles ?? []).some((r) => !["OUTLET", "YONETIM", "MUTFAK", "SISTEM"].includes(r.kind)) ? (
+                    <optgroup label="Diğer Roller">
+                      {(options?.roles ?? [])
+                        .filter((r) => !["OUTLET", "YONETIM", "MUTFAK", "SISTEM"].includes(r.kind))
+                        .map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name} ({r.code})
+                          </option>
+                        ))}
+                    </optgroup>
+                  ) : null}
                 </select>
               </Field>
             </div>
