@@ -38,9 +38,9 @@ export function columnTotals(columns: ReportColumn[], rows: Record<string, Cell>
 }
 
 export const GROUP_LABEL: Record<string, string> = {
-  MINIBAR: "Minibar",
-  QR_MENU: "QR Menü",
-  QR_ORDER: "QR Sipariş",
-  ROOM_SERVICE: "Oda Servisi",
-  SISTEM: "Sistem",
+  QR_ORDER: "F&B, Restoran & Bar Satışları",
+  ROOM_SERVICE: "Oda Servisi (In-Room Dining)",
+  MINIBAR: "Minibar Operasyonları",
+  QR_MENU: "QR Menü & Misafir İlgi Analizi",
+  SISTEM: "Merkez & Konsolide Yönetim",
 };
