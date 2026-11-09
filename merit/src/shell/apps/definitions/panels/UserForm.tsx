@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import type { UserOptions, UserRow } from "@/modules/core/server/admin/users";
+import { CUSTOM_JOB_TITLE, USER_JOB_TITLE_GROUPS } from "@/modules/core/jobTitles";
 import { Field } from "@/shell/ui/Field";
 import type { FormValues } from "@/shell/ui/FormDialog";
 
@@ -18,6 +20,13 @@ const EXTRA_PREFIX = "extra:";
 export function UserForm({ options, editing, defaultHotelId }: Props) {
   const hotels = options?.hotels ?? [];
   const primary = editing ? (editing.hotelId ?? "") : defaultHotelId;
+  const initialJobTitle = editing?.jobTitle ?? "";
+  const allStandardTitles: readonly string[] = USER_JOB_TITLE_GROUPS.flatMap((g) => g.options);
+  const isCustomInitially = initialJobTitle !== "" && !allStandardTitles.includes(initialJobTitle);
+
+  const [customJob, setCustomJob] = useState(isCustomInitially);
+  const [jobTitleVal, setJobTitleVal] = useState(initialJobTitle);
+
   return (
     <>
       <Field name="username" label="Kullanıcı adı">
@@ -26,11 +35,44 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
       <Field name="fullName" label="Ad soyad">
         <input type="text" defaultValue={editing?.fullName ?? ""} maxLength={100} />
       </Field>
-      <Field name="jobTitle" label="Görev">
-        <input type="text" defaultValue={editing?.jobTitle ?? ""} maxLength={100} />
+      <Field name="jobTitleSelect" label="Görev (F&B / Operasyon)">
+        <select
+          value={customJob ? CUSTOM_JOB_TITLE : jobTitleVal}
+          onChange={(e) => {
+            const isCust = e.target.value === CUSTOM_JOB_TITLE;
+            setCustomJob(isCust);
+            if (!isCust) setJobTitleVal(e.target.value);
+          }}
+        >
+          <option value="">Görev seçin</option>
+          {USER_JOB_TITLE_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.options.map((title) => (
+                <option key={title} value={title}>
+                  {title}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value={CUSTOM_JOB_TITLE}>Diğer (elle yaz)</option>
+        </select>
       </Field>
-      <Field name="email" label="E-posta">
-        <input type="text" defaultValue={editing?.email ?? ""} maxLength={120} />
+
+      {/* Hidden input to pass jobTitle to form values if select is standard, or text input if custom */}
+      <Field name="jobTitle" label={customJob ? "Özel görev unvanı" : "Seçili görev"}>
+        <input
+          type="text"
+          value={jobTitleVal}
+          readOnly={!customJob}
+          maxLength={100}
+          onChange={(e) => setJobTitleVal(e.target.value)}
+          placeholder={customJob ? "Görev unvanını yazın..." : ""}
+          style={!customJob ? { background: "var(--xp-body, #f8fafc)", color: "#475569" } : {}}
+        />
+      </Field>
+
+      <Field name="email" label="E-posta (isteğe bağlı)">
+        <input type="text" defaultValue={editing?.email ?? ""} maxLength={120} placeholder="ornek@merithotels.com (isteğe bağlı)" />
       </Field>
       <Field name="emailOptIn" label="Rapor/uyarı e-postaları al">
         <input type="checkbox" defaultChecked={editing?.emailOptIn ?? false} />
@@ -44,7 +86,7 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
           <option value="">Rol seçin</option>
           {(options?.roles ?? []).map((r) => (
             <option key={r.id} value={r.id}>
-              {r.name}
+              {r.name} ({r.code})
             </option>
           ))}
         </select>
@@ -89,9 +131,9 @@ export function userInputFromValues(values: FormValues, includePassword: boolean
     username: values.username ?? "",
     fullName: values.fullName ?? "",
     jobTitle: values.jobTitle ?? "",
-    email: values.email ?? "",
+    email: values.email ? values.email.trim() : undefined,
     emailOptIn: values.emailOptIn !== undefined,
-    phone: values.phone ?? "",
+    phone: values.phone ? values.phone.trim() : undefined,
     roleId: values.roleId ?? "",
     hotelId,
     hotelIds,

@@ -39,3 +39,13 @@ export async function removeMemberAction(raw: unknown): Promise<Result<null>> {
     return null;
   })(raw);
 }
+
+export async function updateMemberRoleAction(raw: unknown): Promise<Result<members.MemberRow>> {
+  return safeAction(
+    z.object({
+      id,
+      roleId: z.string().nullable().transform((v) => v || null),
+    }),
+    async (input) => members.updateRole(await requireUser(), input.id, input.roleId),
+  )(raw);
+}

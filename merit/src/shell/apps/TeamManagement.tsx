@@ -92,6 +92,12 @@ export function TeamManagement({ hotelId, setStatus }: AppProps) {
             ) : <p className="xp-defs-note">Oda Servisi modülü açık, ancak bu otelde Oda Servisi outleti tanımlı değil.</p>
           ) : selectedNode === "minibar" ? (
             <MinibarTeamPanel hotelId={hotelId} setStatus={setStatus} />
+          ) : selectedNode === "outlets" ? (
+            <AllOutletsSummaryPanel
+              outlets={regularOutlets}
+              onSelectOutlet={(id) => setPanel(`outlet:${id}`)}
+              onRefresh={outlets.reload}
+            />
           ) : regularOutlets.length === 0 ? (
             <p className="xp-defs-note">Bu otelde ekip yönetimi için outlet bulunmuyor.</p>
           ) : null}
@@ -108,26 +114,120 @@ const MINIBAR_COLUMNS: Column<UserRow>[] = [
   { key: "isActive", title: "Durum", width: 90, render: (row) => row.isActive ? "Aktif" : "Pasif" },
 ];
 
+const OUTLET_SUMMARY_COLUMNS: Column<OutletRow>[] = [
+  { key: "name", title: "Outlet Adı", width: 220, sortable: true },
+  { key: "type", title: "Türü", width: 140, sortable: true },
+  {
+    key: "hasMenu",
+    title: "Modüller",
+    width: 220,
+    render: (row) => (
+      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+        {row.hasMenu ? <span className="xp-badge is-ok">QR Menü</span> : null}
+        {row.hasOrdering ? <span className="xp-badge" style={{ background: "#e0f2fe", color: "#0369a1" }}>Sipariş</span> : null}
+        {row.kdsEnabled ? <span className="xp-badge" style={{ background: "#fef3c7", color: "#92400e" }}>KDS</span> : null}
+      </div>
+    ),
+  },
+  {
+    key: "isActive",
+    title: "Durum",
+    width: 90,
+    render: (row) => <span className="xp-badge" data-on={row.isActive}>{row.isActive ? "Aktif" : "Pasif"}</span>,
+  },
+];
+
+function AllOutletsSummaryPanel({
+  outlets,
+  onSelectOutlet,
+  onRefresh,
+}: {
+  outlets: OutletRow[];
+  onSelectOutlet(id: string): void;
+  onRefresh(): void;
+}) {
+  const [q, setQ] = useState("");
+  const filtered = q
+    ? outlets.filter((o) => o.name.toLocaleLowerCase("tr-TR").includes(q.toLocaleLowerCase("tr-TR")))
+    : outlets;
+
+  return (
+    <DataGrid<OutletRow>
+      columns={[
+        ...OUTLET_SUMMARY_COLUMNS,
+        {
+          key: "id",
+          title: "İşlem",
+          width: 140,
+          render: (row) => (
+            <button
+              type="button"
+              className="xp-button"
+              style={{ padding: "2px 8px", fontSize: "11px", fontWeight: "600" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectOutlet(row.id);
+              }}
+            >
+              Ekibi Yönet →
+            </button>
+          ),
+        },
+      ]}
+      rows={filtered}
+      total={filtered.length}
+      page={1}
+      pageSize={100}
+      onPage={() => {}}
+      onPageSize={() => {}}
+      onSort={() => {}}
+      onSearch={setQ}
+      q={q}
+      onSelect={(row) => onSelectOutlet(row.id)}
+      onActivate={(row) => onSelectOutlet(row.id)}
+      emptyText="Aramaya uygun outlet bulunamadı"
+      toolbar={
+        <Toolbar onRefresh={onRefresh}>
+          <span style={{ fontSize: "12px", color: "var(--xp-text-muted, #64748b)" }}>
+            Toplam <strong>{outlets.length}</strong> outlet. Ekibini yönetmek istediğiniz outlete tıklayın.
+          </span>
+        </Toolbar>
+      }
+    />
+  );
+}
+
 function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(text: string): void }) {
   const [options, setOptions] = useState<UserOptions | null>(null);
   const [creating, setCreating] = useState(false);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+
   useEffect(() => {
     let live = true;
     void userOptionsAction().then((result) => { if (live && result.ok) setOptions(result.data); });
     return () => { live = false; };
   }, []);
-  const minibarRoleId = options?.roles.find((role) => role.kind === "MINIBAR")?.id ?? "";
+
+  const minibarRoles = (options?.roles ?? []).filter(
+    (role) => role.kind === "MINIBAR" || ["R-KAT", "R-HKS"].includes(role.code) || role.name.toLocaleLowerCase("tr-TR").includes("minibar")
+  );
+  const defaultMinibarRoleId = minibarRoles[0]?.id ?? "";
+
+  const effectiveRoleId = selectedRoleId || defaultMinibarRoleId;
+
   const list = useLiveList<UserRow>(
-    (query) => minibarRoleId
-      ? listUsersAction({ ...query, hotelId, roleId: minibarRoleId })
+    (query) => effectiveRoleId
+      ? listUsersAction({ ...query, hotelId, roleId: effectiveRoleId })
       : Promise.resolve(ok({ items: [] as UserRow[], total: 0, page: 1, pageSize: query.pageSize })),
     { hotelId, entities: ["user"], pageSize: 100 },
   );
-  useEffect(() => { setStatus(`${list.total} minibar kullanıcısı`); }, [list.total, setStatus]);
+
+  useEffect(() => {
+    setStatus(`${list.total} minibar & kat kullanıcısı`);
+  }, [list.total, setStatus]);
 
   return (
     <>
-      {options && !minibarRoleId ? <p role="alert" className="xp-defs-error">Minibar rolü tanımlı değil.</p> : null}
       <DataGrid<UserRow>
         columns={MINIBAR_COLUMNS}
         rows={list.rows}
@@ -144,7 +244,32 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         emptyText="Bu otelde minibar ekibi bulunmuyor"
         toolbar={
           <Toolbar onRefresh={list.reload}>
-            <button type="button" className="xp-button" disabled={!options} onClick={() => setCreating(true)}>Hızlı kullanıcı ekle</button>
+            {minibarRoles.length > 1 ? (
+              <label className="xp-user-filter">
+                <span>Rol</span>
+                <select
+                  value={effectiveRoleId}
+                  onChange={(e) => {
+                    setSelectedRoleId(e.target.value);
+                    list.setPage(1);
+                  }}
+                >
+                  {minibarRoles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            <button
+              type="button"
+              className="xp-button"
+              disabled={!options}
+              onClick={() => setCreating(true)}
+            >
+              Hızlı kullanıcı ekle
+            </button>
           </Toolbar>
         }
       />
@@ -152,7 +277,7 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         open={creating}
         options={options}
         initialHotelId={hotelId}
-        initialRoleId={minibarRoleId || (options?.roles[0]?.id ?? "")}
+        initialRoleId={effectiveRoleId || (options?.roles[0]?.id ?? "")}
         lockHotel
         lockRole={false}
         onClose={() => setCreating(false)}

@@ -60,12 +60,14 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [hotelFilter, setHotelFilter] = useState("");
   const [jobTitleFilter, setJobTitleFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
   const active = statusFilter === "ACTIVE" ? true : statusFilter === "INACTIVE" ? false : undefined;
   const requestedHotelId = hotelFilter || hotelId;
   const list = useLiveList<UserRow>((query) => listUsersAction({
     ...query,
     ...(requestedHotelId ? { hotelId: requestedHotelId } : {}),
     ...(jobTitleFilter ? { jobTitle: jobTitleFilter } : {}),
+    ...(roleFilter ? { roleId: roleFilter } : {}),
     ...(active !== undefined ? { active } : {}),
   }), {
     hotelId,
@@ -84,7 +86,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
 
   useEffect(() => {
     reloadList();
-  }, [active, requestedHotelId, jobTitleFilter, reloadList]);
+  }, [active, requestedHotelId, jobTitleFilter, roleFilter, reloadList]);
 
   useEffect(() => {
     let live = true;
@@ -222,6 +224,13 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
               <select aria-label="Görev filtresi" value={jobTitleFilter} onChange={(event) => { setJobTitleFilter(event.target.value); list.setPage(1); }}>
                 <option value="">Hepsi</option>
                 {(options?.jobTitles ?? []).map((title) => <option key={title} value={title}>{title}</option>)}
+              </select>
+            </label>
+            <label className="xp-user-filter">
+              <span>Rol</span>
+              <select aria-label="Rol filtresi" value={roleFilter} onChange={(event) => { setRoleFilter(event.target.value); list.setPage(1); }}>
+                <option value="">Hepsi</option>
+                {(options?.roles ?? []).map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
               </select>
             </label>
             <button

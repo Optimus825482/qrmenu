@@ -302,3 +302,37 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
     return row;
   });
 }
+
+export async function updateRole(ctx: Ctx, id: string, roleId: string | null): Promise<MemberRow> {
+  const hotelId = await memberHotel(id);
+  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
+    const before = await tx.outletMember.findUnique({ where: { id }, select: SELECT });
+    if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
+    await assertTargetAllowed(ctx, hotelId, { id: before.userId, kind: before.user.role.kind }, "updateRole");
+    if (roleId) {
+      const role = await tx.role.findUnique({ where: { id: roleId }, select: { kind: true } });
+      if (!role || !OUTLET_ROLE_KINDS.includes(role.kind)) {
+        throw new DomainError("VALIDATION", INVALID, {
+          fieldErrors: { roleId: ["Ekip rolü bir outlet veya mutfak rolü olmalı"] },
+        });
+      }
+    }
+    const updated = await tx.outletMember.update({
+      where: { id },
+      data: { roleId },
+      select: SELECT,
+    });
+    const row = toRow(updated);
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId,
+      action: "MEMBER_ROLE_UPDATE",
+      entity: "OutletMember",
+      entityId: id,
+      before: toRow(before),
+      after: row,
+    });
+    await publishDefinition(tx, { hotelId, entity: "member", id, op: "update" });
+    return row;
+  });
+}
