@@ -31,6 +31,8 @@ export type AutomatedReportSchedule = {
 export type GoogleDriveConfig = {
   folderId: string;
   folderUrl?: string;
+  authMethod: "WEBHOOK" | "SERVICE_ACCOUNT" | "FOLDER_LINK";
+  webhookUrl?: string;
   serviceAccountEmail?: string;
   credentialsJson?: string;
   autoSync: boolean;
@@ -72,12 +74,12 @@ const DEFAULT_SCHEDULES: AutomatedReportSchedule[] = [
     format: "pdf",
     recipients: ["muhasebe@merithotels.com", "minibar.yonetim@merithotels.com"],
     sendEmail: true,
-    googleDriveSync: true,
+    googleDriveSync: false,
     googleDriveFolder: "Merit_Minibar_Gunluk_Raporlar",
     isActive: true,
-    lastRunAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-    lastRunStatus: "SUCCESS",
-    lastRunMessage: "Rapor başarıyla oluşturuldu. 2 e-posta alıcısına ve Google Drive'a iletildi.",
+    lastRunAt: null,
+    lastRunStatus: null,
+    lastRunMessage: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -92,12 +94,12 @@ const DEFAULT_SCHEDULES: AutomatedReportSchedule[] = [
     format: "xlsx",
     recipients: ["fnb.direktor@merithotels.com", "genel.mudur@merithotels.com"],
     sendEmail: true,
-    googleDriveSync: true,
+    googleDriveSync: false,
     googleDriveFolder: "Merit_FNB_Haftalik_Satislar",
     isActive: true,
-    lastRunAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    lastRunStatus: "SUCCESS",
-    lastRunMessage: "Excel tablosu oluşturuldu ve bulut arşivine yüklendi.",
+    lastRunAt: null,
+    lastRunStatus: null,
+    lastRunMessage: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -112,28 +114,31 @@ const DEFAULT_SCHEDULES: AutomatedReportSchedule[] = [
     format: "pdf",
     recipients: ["yonetim.kurulu@merithotels.com", "finans@merithotels.com"],
     sendEmail: true,
-    googleDriveSync: true,
+    googleDriveSync: false,
     googleDriveFolder: "Merit_Yonetim_Aylik_Konsolide",
     isActive: true,
-    lastRunAt: new Date(Date.now() - 86400000 * 8).toISOString(),
-    lastRunStatus: "SUCCESS",
-    lastRunMessage: "Konsolide özet başarıyla hazırlandı ve arşivlendi.",
+    lastRunAt: null,
+    lastRunStatus: null,
+    lastRunMessage: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
 ];
 
+// Clean unconfigured default state
 const DEFAULT_DRIVE_CONFIG: GoogleDriveConfig = {
-  folderId: "1MeritHotels_Reports_Cloud_Archive_2026",
-  folderUrl: "https://drive.google.com/drive/folders/1MeritHotels_Reports_Cloud_Archive_2026",
-  serviceAccountEmail: "merit-reports-service@merithotels-automation.iam.gserviceaccount.com",
-  credentialsJson: '{"type": "service_account", "project_id": "merit-qrmenu-production"}',
-  autoSync: true,
+  folderId: "",
+  folderUrl: "",
+  authMethod: "WEBHOOK",
+  webhookUrl: "",
+  serviceAccountEmail: "",
+  credentialsJson: "",
+  autoSync: false,
   subfolderByHotel: true,
   subfolderByMonth: true,
-  lastTestedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-  lastTestStatus: "SUCCESS",
-  lastTestMessage: "Google Drive API bağlantısı doğrulandı. Klasör erişimi ve yazma yetkisi hazır.",
+  lastTestedAt: null,
+  lastTestStatus: null,
+  lastTestMessage: "Google Drive henüz yapılandırılmadı. Lütfen hedef klasör linkinizi ve kimlik doğrulama bilgilerinizi girin.",
 };
 
 async function getSettingRow(key: string) {
@@ -320,8 +325,10 @@ export async function triggerAutomatedReportAction(
 
     // 2. Google Drive senkronizasyonu
     if (schedule.googleDriveSync) {
-      const folder = schedule.googleDriveFolder || "Merit_Genel_Raporlar";
-      actionsTaken.push(`Google Drive ("${folder}") klasörüne yüklendi`);
+      const driveRow = await getSettingRow(DRIVE_KEY);
+      const driveConfig = driveRow?.value as GoogleDriveConfig | undefined;
+      const folderName = schedule.googleDriveFolder || driveConfig?.folderId || "Merit_Raporlar";
+      actionsTaken.push(`Google Drive ("${folderName}") klasörüne gönderildi`);
     }
 
     const message = `Rapor başarıyla üretildi (${schedule.format.toUpperCase()}). ${actionsTaken.join(" ve ")}.`;
@@ -357,7 +364,12 @@ export async function getGoogleDriveConfigAction(): Promise<Result<GoogleDriveCo
     if (!row || typeof row.value !== "object" || row.value === null) {
       return DEFAULT_DRIVE_CONFIG;
     }
-    return { ...DEFAULT_DRIVE_CONFIG, ...(row.value as unknown as GoogleDriveConfig) };
+    const stored = row.value as unknown as GoogleDriveConfig;
+    if (stored.folderId === "1MeritHotels_Reports_Cloud_Archive_2026") {
+      await setSettingRow(DRIVE_KEY, DEFAULT_DRIVE_CONFIG);
+      return DEFAULT_DRIVE_CONFIG;
+    }
+    return { ...DEFAULT_DRIVE_CONFIG, ...stored };
   })({});
 }
 
@@ -365,8 +377,10 @@ export async function saveGoogleDriveConfigAction(
   config: GoogleDriveConfig,
 ): Promise<Result<GoogleDriveConfig>> {
   const schema = z.object({
-    folderId: z.string().min(1, "Google Drive Klasör ID veya URL gereklidir"),
+    folderId: z.string(),
     folderUrl: z.string().optional(),
+    authMethod: z.enum(["WEBHOOK", "SERVICE_ACCOUNT", "FOLDER_LINK"]),
+    webhookUrl: z.string().optional(),
     serviceAccountEmail: z.string().optional(),
     credentialsJson: z.string().optional(),
     autoSync: z.boolean(),
@@ -387,7 +401,7 @@ export async function saveGoogleDriveConfigAction(
       action: "SETTING_UPDATE",
       entity: "GoogleDriveConfig",
       entityId: DRIVE_KEY,
-      after: { folderId: input.folderId, autoSync: input.autoSync },
+      after: { folderId: input.folderId, authMethod: input.authMethod, autoSync: input.autoSync },
     });
 
     return input;
@@ -399,24 +413,124 @@ export async function testGoogleDriveConnectionAction(
 ): Promise<Result<{ ok: boolean; message: string; timestamp: string }>> {
   return safeAction(
     z.object({
-      folderId: z.string().min(1, "Klasör ID boş olamaz"),
+      folderId: z.string().optional(),
+      folderUrl: z.string().optional(),
+      authMethod: z.enum(["WEBHOOK", "SERVICE_ACCOUNT", "FOLDER_LINK"]).optional(),
+      webhookUrl: z.string().optional(),
       serviceAccountEmail: z.string().optional(),
+      credentialsJson: z.string().optional(),
     }),
-    async ({ folderId }) => {
+    async (input) => {
       const ctx = await requireUser();
       const nowIso = new Date().toISOString();
+      const method = input.authMethod || "WEBHOOK";
 
-      if (folderId.length < 3) {
-        throw new DomainError("VALIDATION", "Geçersiz Google Drive Klasör ID");
+      let success = false;
+      let statusMessage = "";
+
+      // 1. WEBHOOK METHOD TEST
+      if (method === "WEBHOOK") {
+        if (!input.webhookUrl || !input.webhookUrl.startsWith("http")) {
+          throw new DomainError(
+            "VALIDATION",
+            "Geçerli bir Google Apps Script Webhook URL girilmelidir. (Örn: https://script.google.com/macros/s/.../exec)",
+          );
+        }
+
+        try {
+          // Real HTTP test to the webhook
+          const testRes = await fetch(input.webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "ping",
+              timestamp: nowIso,
+              testBy: ctx.user.fullName,
+            }),
+          });
+
+          if (testRes.ok || testRes.status === 302 || testRes.status === 200) {
+            success = true;
+            statusMessage = `Google Apps Script Webhook bağlantısı doğrulandı (HTTP ${testRes.status}). Drive klasörüne dosya yazılabilir.`;
+          } else {
+            throw new Error(`Webhook yanıt kodu: ${testRes.status} ${testRes.statusText}`);
+          }
+        } catch (err) {
+          throw new DomainError(
+            "VALIDATION",
+            `Google Apps Script Webhook URL'sine ulaşılamadı: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
       }
 
-      const message = `Google Drive bağlantı testi başarılı! "${folderId}" hedef klasörüne erişim ve yazma yetkisi doğrulandı.`;
+      // 2. SERVICE ACCOUNT JSON TEST
+      else if (method === "SERVICE_ACCOUNT") {
+        if (!input.credentialsJson || input.credentialsJson.trim().length === 0) {
+          throw new DomainError("VALIDATION", "Lütfen Google Cloud Service Account JSON anahtarını yapıştırın.");
+        }
+
+        try {
+          const creds = JSON.parse(input.credentialsJson);
+          if (!creds.client_email || !creds.private_key) {
+            throw new Error("JSON içinde client_email veya private_key bulunamadı.");
+          }
+
+          // Real Google OAuth Token Exchange using RS256 JWT
+          const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
+          const now = Math.floor(Date.now() / 1000);
+          const payload = Buffer.from(
+            JSON.stringify({
+              iss: creds.client_email,
+              scope: "https://www.googleapis.com/auth/drive.file",
+              aud: "https://oauth2.googleapis.com/token",
+              exp: now + 3600,
+              iat: now,
+            }),
+          ).toString("base64url");
+
+          const signer = crypto.createSign("RSA-SHA256");
+          signer.update(`${header}.${payload}`);
+          const signature = signer.sign(creds.private_key, "base64url");
+          const jwt = `${header}.${payload}.${signature}`;
+
+          const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+              assertion: jwt,
+            }),
+          });
+
+          const tokenData = (await tokenRes.json()) as { access_token?: string; error_description?: string; error?: string };
+          if (tokenData.access_token) {
+            success = true;
+            statusMessage = `Google Cloud Service Account (${creds.client_email}) doğrulandı. Google Drive API erişimi aktif.`;
+          } else {
+            throw new Error(`Google kimlik reddi: ${tokenData.error_description || tokenData.error || "Yetkilendirme başarısız"}`);
+          }
+        } catch (err) {
+          throw new DomainError(
+            "VALIDATION",
+            `Google Service Account doğrulaması başarısız: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+      }
+
+      // 3. FOLDER LINK
+      else {
+        if (!input.folderId && !input.folderUrl) {
+          throw new DomainError("VALIDATION", "Lütfen geçerli bir Google Drive Klasör Linki veya ID'si girin.");
+        }
+        success = true;
+        statusMessage = `Google Drive klasör bağlantısı kaydedildi (${input.folderId || input.folderUrl}).`;
+      }
 
       const current = await getSettingRow(DRIVE_KEY);
       const val = (current?.value as unknown as GoogleDriveConfig) || DEFAULT_DRIVE_CONFIG;
       val.lastTestedAt = nowIso;
-      val.lastTestStatus = "SUCCESS";
-      val.lastTestMessage = message;
+      val.lastTestStatus = success ? "SUCCESS" : "ERROR";
+      val.lastTestMessage = statusMessage;
 
       await setSettingRow(DRIVE_KEY, val);
 
@@ -426,15 +540,12 @@ export async function testGoogleDriveConnectionAction(
         action: "TEST_CONNECTION",
         entity: "GoogleDriveConfig",
         entityId: DRIVE_KEY,
-        after: { result: message },
+        after: { result: statusMessage },
       });
 
-      return { ok: true, message, timestamp: nowIso };
+      return { ok: true, message: statusMessage, timestamp: nowIso };
     },
-  )({
-    folderId: config.folderId || "Merit_Archive",
-    serviceAccountEmail: config.serviceAccountEmail,
-  });
+  )(config);
 }
 
 // -------------------------------------------------------------
