@@ -125,8 +125,7 @@ export default function KatDolulukDetailPage() {
   const [dndNote, setDndNote] = useState("");
   const [submittingDnd, setSubmittingDnd] = useState(false);
 
-  // QR Required alert modal
-  const [qrWarningRoom, setQrWarningRoom] = useState<RoomCardData | null>(null);
+
 
   // Periodic clock update for live countdowns
   useEffect(() => {
@@ -208,9 +207,7 @@ export default function KatDolulukDetailPage() {
 
   const handleControlClick = (room: RoomCardData, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (data?.settings?.requireQrForControl) {
-      setQrWarningRoom(room);
-    } else {
+    if (!data?.settings?.requireQrForControl) {
       router.push(`/kat/oda-kontrol/${room.id}`);
     }
   };
@@ -355,13 +352,48 @@ export default function KatDolulukDetailPage() {
                             ? "bg-ok/20 text-ok border border-ok/40"
                             : "bg-bg text-muted border border-border";
 
+                  const isCompleted = room.checkStatus === "completed";
                   const isDndActive = room.checkStatus === "dnd" || room.dndCount > 0;
                   const dndStatus = isDndActive ? getDndRecheckStatus(room.lastDndAt, recheckMinutes, now) : null;
 
                   const hasUpcomingArrival = room.status === "arrival" || room.status === "clash" || Boolean(room.arrivalTime);
-                  const arrivalInspection = hasUpcomingArrival && room.checkStatus !== "completed"
+                  const arrivalInspection = hasUpcomingArrival && !isCompleted
                     ? getArrivalInspectionStatus(room.arrivalTime, now)
                     : null;
+
+                  const isPriorityArrival = Boolean(arrivalInspection && (arrivalInspection.isUrgent || arrivalInspection.isOverdue));
+                  const isPriorityDnd = Boolean(dndStatus && dndStatus.isDue);
+                  const isPriorityMybar = Boolean(room.hasMybarRequest);
+                  const isPriority = isPriorityArrival || isPriorityDnd || isPriorityMybar;
+
+                  // Kontrol edilen, kontrol bekleyen ve DND odalar için belirgin renk tonları
+                  let cardTone = "border-border bg-surface";
+                  if (isPriority) {
+                    cardTone = "border-danger/80 bg-danger/10 ring-2 ring-danger/30";
+                  } else if (isCompleted) {
+                    cardTone = "border-ok/60 bg-ok/10";
+                  } else if (isDndActive) {
+                    cardTone = "border-warn/60 bg-warn/10";
+                  } else if (room.status === "arrival") {
+                    cardTone = "border-accent/60 bg-accent/10";
+                  } else if (room.status === "departure") {
+                    cardTone = "border-amber-500/50 bg-amber-500/10";
+                  } else if (room.status === "in_house") {
+                    cardTone = "border-sky-500/40 bg-sky-500/5";
+                  } else {
+                    cardTone = "border-border/80 bg-surface/80";
+                  }
+
+                  const badgeTone =
+                    room.status === "clash"
+                      ? "bg-danger/20 text-danger border border-danger/40"
+                      : room.status === "arrival"
+                        ? "bg-accent/20 text-accent border border-accent/40"
+                        : room.status === "departure"
+                          ? "bg-warn/20 text-warn border border-warn/40"
+                          : room.status === "in_house"
+                            ? "bg-ok/20 text-ok border border-ok/40"
+                            : "bg-bg text-muted border border-border";
 
                   return (
                     <div
@@ -375,7 +407,7 @@ export default function KatDolulukDetailPage() {
                           setSelectedRoom(room);
                         }
                       }}
-                      className={`group flex flex-col justify-between rounded-2xl border p-4 transition hover:border-accent hover:shadow-md cursor-pointer text-left ${statusTone}`}
+                      className={`group flex flex-col justify-between rounded-2xl border p-4 transition hover:border-accent hover:shadow-md cursor-pointer text-left ${cardTone}`}
                     >
                       <div>
                         <div className="flex items-start justify-between gap-2">
@@ -386,15 +418,35 @@ export default function KatDolulukDetailPage() {
                             <p className="text-xs text-muted">{room.roomTypeName}</p>
                           </div>
                           <div className="flex flex-col items-end gap-1">
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${badgeTone}`}>
-                              {room.statusLabel}
-                            </span>
-                            {isDndActive ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-warn/20 border border-warn/40 px-2 py-0.5 text-xs font-bold text-warn">
-                                <Icon name="moon" size={11} />
-                                DND ({room.dndCount})
+                            {/* Öncelikli kontrol yanıp sönen rozet */}
+                            {isPriorityArrival ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                                <Icon name="warning" size={12} />
+                                🚨 Öncelikli Giriş
+                              </span>
+                            ) : isPriorityDnd ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                                <Icon name="warning" size={12} />
+                                ⚠️ DND Kontrolü!
+                              </span>
+                            ) : isPriorityMybar ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                                <Icon name="bell" size={12} />
+                                🛎️ MyBar Talebi
                               </span>
                             ) : null}
+
+                            <div className="flex items-center gap-1">
+                              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${badgeTone}`}>
+                                {room.statusLabel}
+                              </span>
+                              {isDndActive ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-warn/20 border border-warn/40 px-2 py-0.5 text-xs font-bold text-warn">
+                                  <Icon name="moon" size={11} />
+                                  DND ({room.dndCount})
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
 
@@ -453,27 +505,30 @@ export default function KatDolulukDetailPage() {
                         ) : null}
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between border-t border-border pt-2.5 text-xs">
+                      <div className="mt-4 flex items-center justify-between border-t border-border/80 pt-2.5 text-xs">
                         <div>
                           {room.checkStatus === "completed" ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-ok">
-                              <Icon name="check" size={14} />
+                            <span className="inline-flex items-center gap-1.5 font-bold text-ok">
+                              <Icon name="check" size={15} />
                               Kontrol Edildi
                             </span>
                           ) : room.checkStatus === "dnd" ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-warn">
-                              <Icon name="moon" size={14} />
+                            <span className="inline-flex items-center gap-1.5 font-bold text-warn">
+                              <Icon name="moon" size={15} />
                               DND Bekliyor
                             </span>
                           ) : (
-                            <span className="text-muted">Kontrol Bekliyor</span>
+                            <span className="text-muted font-medium">Kontrol Bekliyor</span>
                           )}
                         </div>
 
                         {room.hasMybarRequest ? (
-                          <span className="rounded-md bg-danger px-2 py-0.5 text-xs font-bold text-white">
+                          <span className="rounded-md bg-danger px-2 py-0.5 text-xs font-bold text-white animate-pulse">
                             MyBar!
                           </span>
+                        ) : data?.settings?.requireQrForControl ? (
+                          // QR zorunluluğu aktifse Kontrol linki tamamen kaldırıldı!
+                          null
                         ) : (
                           <button
                             type="button"
@@ -634,28 +689,9 @@ export default function KatDolulukDetailPage() {
               </div>
             </div>
 
-            {/* Room Control Action Button */}
-            <div className="pt-2 border-t border-border flex flex-col gap-2">
-              {data?.settings?.requireQrForControl ? (
-                <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-xs space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-warn">
-                    <Icon name="warning" size={16} />
-                    <span>Oda Kontrolü İçin QR Okutulmalıdır</span>
-                  </div>
-                  <p className="text-muted">
-                    Sistem ayarlarında QR zorunluluğu açık olduğundan oda kontrol sayfası yalnızca odadaki QR kod okutularak açılabilir.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/kat/qr")}
-                    style={{ minHeight: "var(--tap-action)" }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white hover:opacity-90"
-                  >
-                    <Icon name="camera" size={16} />
-                    Kamerayı Aç ve QR Kod Okut
-                  </button>
-                </div>
-              ) : (
+            {/* Room Control Action Button - Yalnızca QR zorunluluğu kapalıysa gösterilir */}
+            {!data?.settings?.requireQrForControl ? (
+              <div className="pt-2 border-t border-border flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => router.push(`/kat/oda-kontrol/${selectedRoom.id}`)}
@@ -665,49 +701,8 @@ export default function KatDolulukDetailPage() {
                   <Icon name="check" size={16} />
                   Minibar Kontrol Ekranını Aç →
                 </button>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* QR Required Alert Modal */}
-      {qrWarningRoom ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-        >
-          <div className="w-full max-w-sm rounded-2xl border border-border bg-surface text-text p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-2 text-warn font-bold text-base">
-              <Icon name="warning" size={20} />
-              <span>QR Kod Okutma Zorunlu</span>
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              <strong>Oda {qrWarningRoom.number}</strong> kontrolünü yapabilmek için oda içindeki QR kodu okutmanız gerekmektedir. Kat listesinden doğrudan kontrol bu otelde yönetici tarafından kapatılmıştır.
-            </p>
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setQrWarningRoom(null)}
-                style={{ minHeight: "var(--tap-action)" }}
-                className="flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-muted hover:bg-surface"
-              >
-                Vazgeç
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setQrWarningRoom(null);
-                  router.push("/kat/qr");
-                }}
-                style={{ minHeight: "var(--tap-action)" }}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-xs font-bold text-white hover:opacity-90"
-              >
-                <Icon name="camera" size={16} />
-                QR Okut
-              </button>
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}
