@@ -33,6 +33,7 @@ export type ReportCenterProps = {
   /** Report key to open straight away (window `initialPanel`). */
   initialKey?: string;
   setStatus?(text: string): void;
+  onScheduleReport?(report: { title: string; key: string; group: string }): void;
 };
 
 /** Groups the catalogue by module in a stable order. */
@@ -50,7 +51,7 @@ function fieldErrorText(error: { message: string; fieldErrors?: Record<string, s
 }
 
 /** Rapor Merkezi body shared by the XP window and the mobile Raporlar tab. */
-export function ReportCenter({ variant = "window", initialKey, setStatus }: ReportCenterProps) {
+export function ReportCenter({ variant = "window", initialKey, setStatus, onScheduleReport }: ReportCenterProps) {
   const uid = useId();
   const mobile = variant === "mobile";
   const [items, setItems] = useState<ReportCatalogItem[] | null>(null);
@@ -428,6 +429,16 @@ export function ReportCenter({ variant = "window", initialKey, setStatus }: Repo
           {exportLink("xlsx", "Excel")}
           {exportLink("pdf", "PDF")}
         </span>
+        {onScheduleReport && item ? (
+          <button
+            type="button"
+            onClick={() => onScheduleReport({ title: item.title, key: item.key, group: item.group })}
+            className={mobile ? "rc-btn" : "xp-button rc-btn"}
+            style={{ marginLeft: "auto" }}
+          >
+            ⏱️ Bu Raporu Otomatikleştir
+          </button>
+        ) : null}
       </div>
       {filters.hotelIds.length === 0 ? (
         <p className="rc-error" role="alert">

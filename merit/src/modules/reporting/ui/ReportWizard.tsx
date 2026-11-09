@@ -1,0 +1,690 @@
+"use client";
+
+import { useState } from "react";
+import { Icon } from "@/components/icons/Icon";
+import { DataGrid, type Column } from "@/shell/ui/DataGrid";
+import { notify } from "@/shell/notify";
+import {
+  runWizardReportAction,
+  saveWizardTemplateAction,
+  type WizardQueryResult,
+  type WizardTemplate,
+} from "../server/actions/automatedReports";
+import { PRESET_LABELS, presetRange, type Preset } from "./datePresets";
+
+type Step = 1 | 2 | 3 | 4 | 5;
+
+const MODULE_OPTIONS = [
+  {
+    id: "MINIBAR" as const,
+    title: "Minibar Operasyonları",
+    desc: "Oda tüketimleri, iadeler, ürün bazlı sarfiyat ve minibar gelirleri",
+    icon: "minibar",
+    color: "from-blue-500 to-indigo-600",
+  },
+  {
+    id: "OUTLET" as const,
+    title: "Outlet & Restoran Satışları",
+    desc: "Masa siparişleri, F&B ürün satışları, adisyonlar ve ciro analizi",
+    icon: "menu",
+    color: "from-amber-500 to-orange-600",
+  },
+  {
+    id: "ROOM_SERVICE" as const,
+    title: "Oda Servisi Operasyonları",
+    desc: "Oda siparişleri, menü talepleri ve oda servisi teslimatları",
+    icon: "servis",
+    color: "from-emerald-500 to-teal-600",
+  },
+  {
+    id: "DEPO" as const,
+    title: "Depo & Stok Hareketleri",
+    desc: "Giriş/çıkış, konsinye zimmet ve kritik stok hareketleri",
+    icon: "otel",
+    color: "from-purple-500 to-violet-600",
+  },
+  {
+    id: "CHECK" as const,
+    title: "Kat Görevleri & Oda Kontrol",
+    desc: "Personel oda kontrolleri, tamamlanma süreleri ve oda durumları",
+    icon: "kullanicilar",
+    color: "from-rose-500 to-pink-600",
+  },
+];
+
+type Props = {
+  hotels?: { id: string; name: string }[];
+  onScheduleReport?: (wizardSummary: { name: string; module: string; format: "pdf" | "xlsx" | "csv" }) => void;
+  setStatus?: (status: string) => void;
+};
+
+export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props) {
+  const [step, setStep] = useState<Step>(1);
+  const [module, setModule] = useState<"OUTLET" | "ROOM_SERVICE" | "MINIBAR" | "DEPO" | "CHECK">("MINIBAR");
+  const [selectedHotels, setSelectedHotels] = useState<string[]>([]);
+  const [datePreset, setDatePreset] = useState<Preset | "ozel">("buAy");
+  const [dateFrom, setDateFrom] = useState(() => presetRange("buAy").from);
+  const [dateTo, setDateTo] = useState(() => presetRange("buAy").to);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    "date",
+    "hotel",
+    "room",
+    "product",
+    "qty",
+    "price",
+    "amount",
+    "staff",
+  ]);
+  const [groupBy, setGroupBy] = useState<string>("none");
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Query Result
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<WizardQueryResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Template Save Dialog
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
+
+  const applyPreset = (p: Preset) => {
+    setDatePreset(p);
+    const r = presetRange(p);
+    setDateFrom(r.from);
+    setDateTo(r.to);
+  };
+
+  const toggleHotel = (hId: string) => {
+    setSelectedHotels((prev) =>
+      prev.includes(hId) ? prev.filter((id) => id !== hId) : [...prev, hId],
+    );
+  };
+
+  const handleRunReport = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await runWizardReportAction({
+        module,
+        hotelIds: selectedHotels,
+        from: dateFrom,
+        to: dateTo,
+        selectedColumns,
+        groupBy,
+        sortBy,
+        sortOrder,
+      });
+
+      if (res.ok) {
+        setResult(res.data);
+        setStatus?.(`${res.data.rows.length} satır hazırlandı`);
+      } else {
+        setError(res.error.message);
+        notify.error("Rapor oluşturulamadı");
+      }
+    } catch {
+      setError("Sunucu hatası nedeniyle rapor oluşturulamadı");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim()) {
+      notify.error("Lütfen şablon için bir isim girin");
+      return;
+    }
+    setSavingTemplate(true);
+    try {
+      const res = await saveWizardTemplateAction({
+        id: `wiz-${Date.now()}`,
+        name: templateName.trim(),
+        module,
+        hotelIds: selectedHotels,
+        datePreset,
+        dateFrom,
+        dateTo,
+        selectedColumns,
+        groupBy,
+        sortBy,
+        sortOrder,
+        createdAt: new Date().toISOString(),
+      });
+      if (res.ok) {
+        notify.success(`"${templateName}" şablonu başarıyla kaydedildi!`);
+        setTemplateName("");
+      } else {
+        notify.error(res.error.message);
+      }
+    } catch {
+      notify.error("Şablon kaydedilemedi");
+    } finally {
+      setSavingTemplate(false);
+    }
+  };
+
+  const downloadCsv = () => {
+    if (!result || result.rows.length === 0) return;
+    const header = result.columns.map((c) => `"${c.title.replace(/"/g, '""')}"`).join(";");
+    const lines = result.rows.map((r) =>
+      result.columns.map((c) => `"${String(r[c.key] ?? "").replace(/"/g, '""')}"`).join(";"),
+    );
+    const content = "\uFEFF" + header + "\n" + lines.join("\n");
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sihirbaz-rapor-${module.toLowerCase()}-${dateFrom}-${dateTo}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    notify.success("CSV raporu indirildi");
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 text-xs overflow-hidden select-none">
+      {/* Wizard Step Bar */}
+      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            {step}
+          </div>
+          <div>
+            <h2 className="font-bold text-sm text-slate-900">
+              {step === 1 && "Adım 1: Operasyon ve Modül Seçimi"}
+              {step === 2 && "Adım 2: Otel & Tarih Kapsamı"}
+              {step === 3 && "Adım 3: Sütun & Metrik Tercihleri"}
+              {step === 4 && "Adım 4: Gruplama ve Sıralama"}
+              {step === 5 && "Adım 5: Canlı Önizleme & Dışa Aktarma"}
+            </h2>
+            <p className="text-[11px] text-slate-500">
+              {step === 1 && "Raporunu hazırlamak istediğiniz operasyonel veri alanını seçin."}
+              {step === 2 && "Raporun kapsayacağı otelleri ve analiz tarih aralığını belirleyin."}
+              {step === 3 && "Çıktıda görünmesini istediğiniz kolonları özelleştirin."}
+              {step === 4 && "Verilerin nasıl gruplanacağını ve sıralanacağını yapılandırın."}
+              {step === 5 && "Sorguyu çalıştırın, tabloyu inceleyin ve Excel/PDF/CSV olarak indirin."}
+            </p>
+          </div>
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center gap-1.5">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setStep(s as Step);
+                if (s === 5 && !result) void handleRunReport();
+              }}
+              className={`w-7 h-7 rounded-full text-xs font-bold transition flex items-center justify-center ${
+                step === s
+                  ? "bg-blue-600 text-white shadow"
+                  : step > s
+                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                  : "bg-slate-100 text-slate-400"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Wizard Content Area */}
+      <div className="flex-1 overflow-auto p-6">
+        {/* STEP 1: MODULE SELECTION */}
+        {step === 1 && (
+          <div className="max-w-4xl mx-auto space-y-4">
+            <h3 className="font-bold text-slate-800 text-sm">Hangi operasyonel modülün raporunu hazırlamak istiyorsunuz?</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {MODULE_OPTIONS.map((opt) => {
+                const active = module === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setModule(opt.id)}
+                    className={`flex items-start gap-4 p-5 rounded-xl border text-left transition cursor-pointer ${
+                      active
+                        ? "border-blue-500 bg-blue-50/60 shadow-md ring-2 ring-blue-500/20"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 shadow-sm"
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${opt.color} text-white flex items-center justify-center shadow-md flex-shrink-0`}
+                    >
+                      <Icon name="folder" size={24} />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                        {opt.title}
+                        {active ? <Icon name="check" size={16} className="text-blue-600" /> : null}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">{opt.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: SCOPE & DATE */}
+        {step === 2 && (
+          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            {/* Hotel Scope */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-slate-800">Kapsamdaki Oteller</label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedHotels(selectedHotels.length === hotels.length ? [] : hotels.map((h) => h.id))
+                  }
+                  className="text-xs text-blue-600 hover:underline font-semibold"
+                >
+                  {selectedHotels.length === hotels.length ? "Seçimi Temizle" : "Tüm Otelleri Seç"}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {hotels.map((h) => {
+                  const sel = selectedHotels.includes(h.id);
+                  return (
+                    <button
+                      key={h.id}
+                      type="button"
+                      onClick={() => toggleHotel(h.id)}
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                        sel
+                          ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                          : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {h.name}
+                    </button>
+                  );
+                })}
+                {hotels.length === 0 ? (
+                  <span className="text-slate-400 italic">Kayıtlı otel bulunamadı</span>
+                ) : null}
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Hiçbir otel seçilmezse yetkili olunan tüm oteller otomatik rapora dahil edilir.
+              </p>
+            </div>
+
+            {/* Date Presets */}
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <label className="font-bold text-slate-800">Tarih Aralığı</label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_LABELS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => applyPreset(p.id)}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                      datePreset === p.id
+                        ? "border-blue-600 bg-blue-50 text-blue-700"
+                        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setDatePreset("ozel")}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                    datePreset === "ozel"
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Özel Aralık
+                </button>
+              </div>
+
+              {/* Custom Date Inputs */}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Başlangıç Tarihi</label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => {
+                      setDatePreset("ozel");
+                      setDateFrom(e.target.value);
+                    }}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Bitiş Tarihi</label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => {
+                      setDatePreset("ozel");
+                      setDateTo(e.target.value);
+                    }}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: COLUMN SELECTION */}
+        {step === 3 && (
+          <div className="max-w-3xl mx-auto space-y-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-slate-800 text-sm">Raporda Yer Alacak Sütunlar ve Veri Alanları</h3>
+            <p className="text-xs text-slate-500">
+              İhtiyaç duyduğunuz alanları işaretleyerek rapor çıktısını sadeleştirebilir veya detaylandırabilirsiniz.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+              {[
+                { id: "date", label: "İşlem Tarihi" },
+                { id: "time", label: "İşlem Saati" },
+                { id: "hotel", label: "Otel Adı" },
+                { id: "room", label: "Oda / Masa No" },
+                { id: "floor", label: "Kat Bilgisi" },
+                { id: "product", label: "Ürün / Hizmet Adı" },
+                { id: "qty", label: "Adet / Miktar" },
+                { id: "price", label: "Birim Fiyat" },
+                { id: "amount", label: "Toplam Tutar" },
+                { id: "staff", label: "Personel / Görevli" },
+                { id: "type", label: "İşlem / Hareket Türü" },
+                { id: "status", label: "İşlem Durumu" },
+              ].map((col) => {
+                const checked = selectedColumns.includes(col.id);
+                return (
+                  <label
+                    key={col.id}
+                    className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition ${
+                      checked
+                        ? "border-blue-300 bg-blue-50/50 text-blue-900 font-semibold"
+                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedColumns([...selectedColumns, col.id]);
+                        else setSelectedColumns(selectedColumns.filter((id) => id !== col.id));
+                      }}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>{col.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: GROUPING & SORTING */}
+        {step === 4 && (
+          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="space-y-3">
+              <label className="font-bold text-slate-800 text-sm">Veri Gruplama Tercihi</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { id: "none", label: "Düz Liste (Gruplama Yok)", desc: "Tüm satırlar kronolojik ayrıntılı liste olarak listelenir." },
+                  { id: "hotel", label: "Otele Göre Grupla", desc: "Veriler otel başlıkları altında ayrı ayrı toplanır." },
+                  { id: "product", label: "Ürüne Göre Grupla", desc: "Ürün bazlı toplam adet ve cirolar konsolide edilir." },
+                  { id: "staff", label: "Personele Göre Grupla", desc: "İşlem yapan personel bazında performans gruplanır." },
+                ].map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGroupBy(g.id)}
+                    className={`p-4 rounded-xl border text-left transition ${
+                      groupBy === g.id
+                        ? "border-blue-600 bg-blue-50/70 font-semibold text-blue-900"
+                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{g.label}</div>
+                    <p className="text-[11px] text-slate-500 mt-1">{g.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <label className="font-bold text-slate-800 text-sm">Sıralama Düzeni</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Sıralama Alanı</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="date">Tarih</option>
+                    <option value="amount">Toplam Tutar</option>
+                    <option value="qty">Miktar / Adet</option>
+                    <option value="product">Ürün Adı</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Yön</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-500 focus:outline-none"
+                  >
+                    <option value="desc">Yeniden Eskiye / En Yüksekten En Düşüğe</option>
+                    <option value="asc">Eskiden Yeniye / En Düşükten En Yükseğe</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 5: PREVIEW & OUTPUT */}
+        {step === 5 && (
+          <div className="space-y-4 max-w-6xl mx-auto">
+            {/* Header / Action Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleRunReport}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-sm inline-flex items-center gap-1.5"
+                >
+                  <Icon name="refresh" size={14} className={loading ? "animate-spin" : ""} />
+                  {loading ? "Sorgulanıyor..." : "Raporu Yeniden Çalıştır"}
+                </button>
+
+                {result ? (
+                  <span className="text-xs text-slate-600 font-semibold">
+                    Toplam {result.totalCount} satır bulundu ({dateFrom} — {dateTo})
+                  </span>
+                ) : null}
+              </div>
+
+              {/* Downloads & Scheduling */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={downloadCsv}
+                  disabled={!result || result.rows.length === 0}
+                  className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-40 transition"
+                >
+                  CSV İndir
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadCsv}
+                  disabled={!result || result.rows.length === 0}
+                  className="px-3 py-1.5 rounded-lg border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 disabled:opacity-40 transition"
+                >
+                  Excel (XLSX)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.print();
+                  }}
+                  disabled={!result || result.rows.length === 0}
+                  className="px-3 py-1.5 rounded-lg border border-rose-600 bg-rose-50 text-rose-700 font-bold hover:bg-rose-100 disabled:opacity-40 transition"
+                >
+                  PDF Yazdır
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onScheduleReport?.({
+                      name: `Sihirbaz - ${module} (${datePreset})`,
+                      module,
+                      format: "xlsx",
+                    })
+                  }
+                  className="px-3.5 py-1.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition shadow-sm inline-flex items-center gap-1"
+                >
+                  <Icon name="clock" size={14} />
+                  Otomatik Rapor Yap
+                </button>
+              </div>
+            </div>
+
+            {/* Save as Template Bar */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-1 max-w-md">
+                <input
+                  type="text"
+                  placeholder="Bu rapor tanımını şablon olarak kaydet (Örn: Haftalık Minibar Özeti)..."
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveTemplate}
+                  disabled={savingTemplate || !templateName.trim()}
+                  className="px-4 py-1.5 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-900 disabled:opacity-40 transition flex-shrink-0"
+                >
+                  {savingTemplate ? "Kaydediliyor..." : "Şablonu Kaydet"}
+                </button>
+              </div>
+              <span className="text-[11px] text-slate-500">
+                Kaydettiğiniz şablonlar daha sonra tek tıkla yeniden çalıştırılabilir.
+              </span>
+            </div>
+
+            {/* Summary KPI Chips */}
+            {result?.summary?.length ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {result.summary.map((s, idx) => (
+                  <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+                      {s.label}
+                    </span>
+                    <div className="text-base font-bold text-slate-900 mt-0.5">{s.value}</div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Error view */}
+            {error ? (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                {error}
+              </div>
+            ) : null}
+
+            {/* Table Grid */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[300px]">
+              {loading ? (
+                <div className="p-16 text-center text-slate-400">
+                  <Icon name="refresh" size={24} className="animate-spin mx-auto mb-2 text-blue-500" />
+                  Rapor verileri hazırlanıyor...
+                </div>
+              ) : !result || result.rows.length === 0 ? (
+                <div className="p-16 text-center text-slate-400">
+                  Bu kriterlere uygun kayıt bulunamadı. Filtreleri değiştirip tekrar deneyin.
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[420px]">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-100/80 sticky top-0 border-b border-slate-200 text-slate-700 font-bold">
+                      <tr>
+                        {result.columns.map((c) => (
+                          <th key={c.key} className="p-3">
+                            {c.title}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {result.rows.map((row, i) => (
+                        <tr key={i} className="hover:bg-blue-50/40 transition">
+                          {result.columns.map((c) => (
+                            <td key={c.key} className="p-3 text-slate-800">
+                              {c.type === "badge" ? (
+                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                  {String(row[c.key] ?? "")}
+                                </span>
+                              ) : (
+                                String(row[c.key] ?? "—")
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Wizard Footer Navigation */}
+      <div className="bg-white border-t border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+        <button
+          type="button"
+          onClick={() => setStep((s) => Math.max(1, s - 1) as Step)}
+          disabled={step === 1}
+          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-40 transition"
+        >
+          ← Önceki Adım
+        </button>
+
+        <div className="flex items-center gap-3">
+          {step < 5 ? (
+            <button
+              type="button"
+              onClick={() => {
+                const next = (step + 1) as Step;
+                setStep(next);
+                if (next === 5) void handleRunReport();
+              }}
+              className="px-6 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-sm"
+            >
+              Sonraki Adım →
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="px-5 py-2 rounded-lg border border-slate-300 bg-slate-50 text-slate-700 font-bold hover:bg-slate-100 transition"
+            >
+              Başa Dön / Yeni Rapor
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

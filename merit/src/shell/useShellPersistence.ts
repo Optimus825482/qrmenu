@@ -90,6 +90,7 @@ export function useShellPersistence({
       "folder.room-service",
       "folder.minibar",
       "folder.radar",
+      "core.rapor",
       "folder.sistem",
       "folder.kullanici",
     ];
@@ -103,7 +104,7 @@ export function useShellPersistence({
       ...DEFAULT_APPEARANCE,
       icons: defaultIcons,
       windows: [],
-      shortcutVersion: 6,
+      shortcutVersion: 7,
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
     store.restore(chosen);
@@ -149,6 +150,16 @@ export function useShellPersistence({
         now.addIcon("folder.radar", pos.x, pos.y);
       }
       windowStore.getState().setShortcutVersion(6);
+      migratedShortcuts = true;
+    }
+    // Raporlar desktop shortcut added directly to the desktop (CR-RAP)
+    if ((chosen.shortcutVersion ?? 0) < 7) {
+      const now = windowStore.getState();
+      if (visible.includes("core.rapor") && !now.icons.some((icon) => icon.appId === "core.rapor")) {
+        const pos = gridPosition(now.icons.length, effectiveViewport(now));
+        now.addIcon("core.rapor", pos.x, pos.y);
+      }
+      windowStore.getState().setShortcutVersion(7);
       migratedShortcuts = true;
     }
 

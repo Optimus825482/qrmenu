@@ -236,14 +236,14 @@ export function registerCoreApps(): void {
   });
   registerCatalogApp({
     id: "core.rapor",
-    title: "Rapor Merkezi",
-    launchLabel: "Rapor Merkezi",
+    title: "Raporlar",
+    launchLabel: "Raporlar",
     icon: "rapor",
     moduleKey: "CORE",
     screenCode: "CR-RAP",
     category: "RAPOR",
     needsHotel: false,
-    window: { w: 1000, h: 640, minW: 700, minH: 420 },
+    window: { w: 1140, h: 720, minW: 860, minH: 520 },
     kind: "component",
     component: () =>
       import("@/modules/reporting/ui/ReportCenterWindow").then((m) => ({

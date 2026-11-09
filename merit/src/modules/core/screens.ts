@@ -53,7 +53,7 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["CORE", "CR-KOM", "Komuta Merkezi", "/admin"],
   ["CORE", "CR-RAD", "Canlı Radar", "/radar"],
   ["CORE", "CR-ONL", "Online Kullanıcılar", "/admin#core.online"],
-  ["CORE", "CR-RAP", "Rapor Merkezi", "/admin#core.rapor"],
+  ["CORE", "CR-RAP", "Raporlar", "/admin#core.rapor"],
   ["CORE", "CR-KUL", "Kullanıcı Yönetimi", "/admin#core.kullanici"],
   ["CORE", "CR-SYS", "Sistem Ayarları", "/admin#core.ayarlar"],
   ["CORE", "CR-DEN", "Denetim Günlüğü", "/admin#core.denetim"],
