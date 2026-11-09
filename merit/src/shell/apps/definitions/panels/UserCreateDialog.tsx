@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { createUserOnboardingAction } from "@/modules/core/server/admin/actions/users";
 import type { CreatedUserCredentials, UserOptions, UserRow } from "@/modules/core/server/admin/users";
@@ -80,6 +80,19 @@ export function UserCreateDialog({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      if (initialHotelId) setHotelId(initialHotelId);
+      if (initialRoleId) {
+        setRoleId(initialRoleId);
+        setCategory(detectCategory(initialRoleId));
+      } else if (options?.roles && options.roles.length > 0) {
+        const matching = options.roles.find((r) => roleMatchesCategory(r, category)) ?? options.roles[0];
+        if (matching) setRoleId(matching.id);
+      }
+    }
+  }, [open, initialHotelId, initialRoleId, options]);
 
   if (!open) return null;
 
@@ -164,14 +177,16 @@ export function UserCreateDialog({
 
     setPending(true);
     setError("");
+    const emailVal = profile.email.trim();
+    const phoneVal = profile.phone.trim();
     const result = await createUserOnboardingAction({
       data: {
         ...profile,
         fullName: profile.fullName.trim(),
         username: profile.username.trim() || suggestedUsername(profile.fullName),
         jobTitle: profile.jobTitle.trim(),
-        email: profile.email.trim(),
-        phone: profile.phone.trim(),
+        email: emailVal ? emailVal : undefined,
+        phone: phoneVal ? phoneVal : undefined,
         roleId,
         hotelId: hotelId || undefined,
         hotelIds: hotelIds.filter((id) => id !== hotelId),
@@ -253,11 +268,14 @@ export function UserCreateDialog({
               <input readOnly value={credentials.user.username} />
             </Field>
             <Field name="temporaryPassword" label="Geçici şifre">
-              <input readOnly value={credentials.temporaryPassword} />
+              <input
+                readOnly
+                value={credentials.temporaryPassword}
+                style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "2px", color: "var(--xp-accent, #0055ea)" }}
+              />
             </Field>
             <p className="xp-defs-note">
-              Bu şifre yalnızca şimdi gösterilir ve tekrar görüntülenemez. Bilgileri şimdi personele iletin; ilk girişte
-              yeni bir şifre belirlemesi zorunludur.
+              Personele geçici giriş şifresi olarak <strong>{credentials.temporaryPassword}</strong> atanmıştır. Bilgileri şimdi personele iletin; ilk girişte en az 6 haneli (büyük harf, küçük harf ve rakam içeren) kişisel şifresini belirlemesi zorunludur.
             </p>
             {error ? <p role="alert" className="xp-form-banner">{error}</p> : null}
             <div className="xp-dialog-actions">
@@ -439,7 +457,6 @@ export function UserCreateDialog({
                     <select
                       required
                       value={roleId}
-                      disabled={lockRole}
                       onChange={(e) => setRoleId(e.target.value)}
                     >
                       <option value="">Rol seçin</option>
@@ -448,6 +465,17 @@ export function UserCreateDialog({
                           {role.name} ({role.code})
                         </option>
                       ))}
+                      {effectiveRoles.length < allRoles.length ? (
+                        <optgroup label="Diğer Tüm Roller">
+                          {allRoles
+                            .filter((r) => !effectiveRoles.some((er) => er.id === r.id))
+                            .map((role) => (
+                              <option key={role.id} value={role.id}>
+                                {role.name} ({role.code})
+                              </option>
+                            ))}
+                        </optgroup>
+                      ) : null}
                     </select>
                   </Field>
 
@@ -484,12 +512,12 @@ export function UserCreateDialog({
                     />
                   </Field>
 
-                  <Field name="email" label="E-posta adresi">
+                  <Field name="email" label="E-posta adresi (isteğe bağlı)">
                     <input
-                      required
                       type="email"
                       maxLength={120}
                       value={profile.email}
+                      placeholder="ornek@merithotels.com (isteğe bağlı)"
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                     />
                   </Field>

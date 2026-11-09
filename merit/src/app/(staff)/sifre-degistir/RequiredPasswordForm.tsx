@@ -33,13 +33,13 @@ export function RequiredPasswordForm({ username }: { username: string }) {
       {error ? <p role="alert" className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">{error}</p> : null}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="new-password" className="text-sm font-medium">Yeni şifre</label>
-        <input id="new-password" type="password" autoComplete="new-password" required minLength={10} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className={inputClass} />
+        <input id="new-password" type="password" autoComplete="new-password" required minLength={6} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} className={inputClass} />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="confirm-password" className="text-sm font-medium">Yeni şifre tekrar</label>
-        <input id="confirm-password" type="password" autoComplete="new-password" required minLength={10} maxLength={128} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={inputClass} />
+        <input id="confirm-password" type="password" autoComplete="new-password" required minLength={6} maxLength={128} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={inputClass} />
       </div>
-      <p className="text-xs text-muted">En az 10 karakter; büyük harf, küçük harf ve rakam içermeli.</p>
+      <p className="text-xs text-muted">En az 6 karakter; büyük harf, küçük harf ve rakam içermeli.</p>
       <button type="submit" disabled={pending} className="min-h-11 rounded-lg bg-brand px-4 text-base font-semibold text-white disabled:opacity-60">{pending ? "Kaydediliyor…" : "Şifremi kaydet ve devam et"}</button>
     </form>
   );

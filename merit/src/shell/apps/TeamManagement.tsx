@@ -144,7 +144,7 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         emptyText="Bu otelde minibar ekibi bulunmuyor"
         toolbar={
           <Toolbar onRefresh={list.reload}>
-            <button type="button" className="xp-button" disabled={!options || !minibarRoleId} onClick={() => setCreating(true)}>Hızlı kullanıcı ekle</button>
+            <button type="button" className="xp-button" disabled={!options} onClick={() => setCreating(true)}>Hızlı kullanıcı ekle</button>
           </Toolbar>
         }
       />
@@ -152,9 +152,9 @@ function MinibarTeamPanel({ hotelId, setStatus }: { hotelId: string; setStatus(t
         open={creating}
         options={options}
         initialHotelId={hotelId}
-        initialRoleId={minibarRoleId}
+        initialRoleId={minibarRoleId || (options?.roles[0]?.id ?? "")}
         lockHotel
-        lockRole
+        lockRole={false}
         onClose={() => setCreating(false)}
         onCreated={() => list.reload()}
       />

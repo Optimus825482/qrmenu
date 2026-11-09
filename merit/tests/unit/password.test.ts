@@ -54,14 +54,15 @@ describe("hashPassword / verifyPassword", () => {
 });
 
 describe('passwordPolicyError', () => {
-  it('en az 10 karakter, büyük + küçük harf + rakam ister (Türkçe harfler sayılır)', async () => {
+  it('en az 6 karakter, büyük + küçük harf + rakam ister (Türkçe harfler sayılır)', async () => {
     const { passwordPolicyError } = await import('@/lib/password');
-    expect(passwordPolicyError('Parola12345')).toBeNull();
-    expect(passwordPolicyError('ÖzelŞifre123')).toBeNull();
-    expect(passwordPolicyError('Kisa1A')).toMatch(/10/);
-    expect(passwordPolicyError('kucukharf12345')).toMatch(/büyük/);
-    expect(passwordPolicyError('BUYUKHARF12345')).toMatch(/küçük/);
-    expect(passwordPolicyError('HarfHarfHarfHarf')).toMatch(/rakam/);
+    expect(passwordPolicyError('Parola1')).toBeNull();
+    expect(passwordPolicyError('ÖzelŞ1')).toBeNull();
+    expect(passwordPolicyError('Kisa1A')).toBeNull();
+    expect(passwordPolicyError('Ab1')).toMatch(/6/);
+    expect(passwordPolicyError('kucukharf1')).toMatch(/büyük/);
+    expect(passwordPolicyError('BUYUKHARF1')).toMatch(/küçük/);
+    expect(passwordPolicyError('HarfHarf')).toMatch(/rakam/);
     expect(passwordPolicyError('A'.repeat(200) + 'a1')).toMatch(/128/);
   });
 });

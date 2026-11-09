@@ -527,7 +527,7 @@ describe("members", () => {
 });
 
 describe("createOnboarding geçici şifre", () => {
-  it("rastgele ≥12 karakter (harf+rakam), mustChangePassword, audit'te açık metin yok", async () => {
+  it("standart 123456 geçici şifresi atanır, mustChangePassword true olur, audit'te açık metin yok", async () => {
     const ctx = await sys();
     const role = await roleByCode("R-GAR");
     const input = {
@@ -540,18 +540,28 @@ describe("createOnboarding geçici şifre", () => {
     const a = await users.createOnboarding(ctx, { ...input, username: "rastgele.bir" });
     const b = await users.createOnboarding(ctx, { ...input, username: "rastgele.iki" });
     for (const { temporaryPassword: pw } of [a, b]) {
-      expect(pw.length).toBeGreaterThanOrEqual(12);
-      expect(pw).toMatch(/[A-Z]/);
-      expect(pw).toMatch(/[a-z]/);
-      expect(pw).toMatch(/\d/);
-      expect(pw).not.toBe("123456");
+      expect(pw).toBe("123456");
     }
-    expect(a.temporaryPassword).not.toBe(b.temporaryPassword);
     const stored = await testDb.user.findUniqueOrThrow({ where: { id: a.user.id } });
     expect(stored.mustChangePassword).toBe(true);
     const logs = JSON.stringify(await testDb.auditLog.findMany({ where: { entityId: a.user.id } }));
-    expect(logs).not.toContain(a.temporaryPassword);
+    expect(logs).not.toContain("123456");
     expect(logs).toContain("tempPasswordIssued");
+  });
+
+  it("email adresi verilmeden de kullanıcı başarıyla oluşturulabilir", async () => {
+    const ctx = await sys();
+    const role = await roleByCode("R-GAR");
+    const created = await users.createOnboarding(ctx, {
+      fullName: "Epostasiz Garson",
+      jobTitle: "Garson",
+      roleId: role.id,
+      hotelId: await hotelId("ROYAL"),
+      username: "epostasiz.garson",
+    });
+    expect(created.user.id).toBeTruthy();
+    expect(created.user.email).toBeNull();
+    expect(created.temporaryPassword).toBe("123456");
   });
 });
 

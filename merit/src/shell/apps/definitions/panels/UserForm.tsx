@@ -71,7 +71,7 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
           <Field name="password" label="Şifre">
             <input type="password" autoComplete="new-password" maxLength={128} />
           </Field>
-          <p className="xp-defs-note">En az 10 karakter; büyük harf, küçük harf ve rakam içermeli.</p>
+          <p className="xp-defs-note">En az 6 karakter; büyük harf, küçük harf ve rakam içermeli.</p>
         </>
       )}
     </>

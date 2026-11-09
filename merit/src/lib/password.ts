@@ -58,11 +58,11 @@ export async function verifyPassword(plain: string, stored: string): Promise<Pas
   return REJECT;
 }
 
-export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MIN_LENGTH = 6;
 export const PASSWORD_MAX_LENGTH = 128;
 
 /**
- * The staff password policy: at least 10 characters with an upper-case letter, a lower-case
+ * The staff password policy: at least 6 characters with an upper-case letter, a lower-case
  * letter and a digit (Turkish letters count). Returns the Turkish reason a password is rejected,
  * or `null` when it is acceptable. Applies to passwords being set, never to logins.
  */

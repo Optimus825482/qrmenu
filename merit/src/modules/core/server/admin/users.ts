@@ -160,7 +160,10 @@ const onboardingSchema = z.object({
   username: profileFields.username.optional(),
   fullName: profileFields.fullName,
   jobTitle: z.string().trim().min(1, "Görev gerekli").max(100, "En fazla 100 karakter olabilir"),
-  email: z.string().trim().min(1, "E-posta adresi gerekli").max(120).refine((v) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "Geçerli bir e-posta girin"),
+  email: optionalText(120).refine(
+    (v) => v === undefined || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+    "Geçerli bir e-posta girin",
+  ),
   phone: optionalText(30).refine((v) => v === undefined || (v.match(/\d/g)?.length ?? 0) >= 7, "Geçerli bir telefon numarası girin"),
   roleId: profileFields.roleId,
   hotelId: profileFields.hotelId,
@@ -410,21 +413,11 @@ async function nextUsername(tx: Prisma.TransactionClient, fullName: string): Pro
   throw new DomainError("CONFLICT", "Otomatik kullanıcı adı oluşturulamadı");
 }
 
-const TEMP_UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-const TEMP_LOWER = "abcdefghijkmnpqrstuvwxyz";
-const TEMP_DIGITS = "23456789";
+export const DEFAULT_TEMPORARY_PASSWORD = "123456";
 
-/** Random one-time password (14 chars, upper + lower + digits, no look-alike characters) from crypto. */
+/** Standard temporary password for newly onboarded staff users (must be changed on first login). */
 function temporaryPassword(): string {
-  const pick = (set: string) => set[randomInt(set.length)];
-  const all = TEMP_UPPER + TEMP_LOWER + TEMP_DIGITS;
-  const chars = [pick(TEMP_UPPER), pick(TEMP_LOWER), pick(TEMP_DIGITS)];
-  while (chars.length < 14) chars.push(pick(all));
-  for (let i = chars.length - 1; i > 0; i--) {
-    const j = randomInt(i + 1);
-    [chars[i], chars[j]] = [chars[j], chars[i]];
-  }
-  return chars.join("");
+  return DEFAULT_TEMPORARY_PASSWORD;
 }
 
 type NewUserInput = {
