@@ -291,7 +291,7 @@ export function createWindowStore() {
       if (isDiamondModule) {
         const pool = choices.length > 0 ? choices : get().hotels;
         const diamond = pool.find(
-          (h) => h.code?.toUpperCase() === "DIAMOND" || h.name?.toLowerCase().includes("diamond")
+          (h) => (h.code && h.code.toUpperCase() === "DIAMOND") || h.name?.toLowerCase().includes("diamond")
         );
         if (diamond) return diamond.id;
         if (pool.length > 0) return pool[0].id;

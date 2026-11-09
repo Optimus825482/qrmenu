@@ -87,7 +87,7 @@ export type ShellPrefs = Appearance & {
   preferredShell?: "xp" | "personel" | "pos";
 };
 
-export type HotelRef = { id: string; name: string };
+export type HotelRef = { id: string; name: string; code?: string };
 
 /** At most this many windows are open (and persisted) at once. */
 export const MAX_WINDOWS = 30;
