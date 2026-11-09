@@ -9,6 +9,7 @@ import { AppearancePanel } from "./controlPanel/AppearancePanel";
 import { InstallPanel } from "./controlPanel/InstallPanel";
 import { SystemPanel } from "./controlPanel/SystemPanel";
 import { GoogleDrivePanel } from "./controlPanel/GoogleDrivePanel";
+import { DiagnosticWindow } from "./DiagnosticWindow";
 
 type Category =
   | "gorunum"
@@ -19,6 +20,7 @@ type Category =
   | "sistem"
   | "eposta"
   | "drive"
+  | "diagnostik"
   | "uygulama";
 
 const CATEGORIES: { id: Category; label: string; icon: string; system?: boolean }[] = [
@@ -30,6 +32,7 @@ const CATEGORIES: { id: Category; label: string; icon: string; system?: boolean 
   { id: "sistem", label: "QR Menü ve Sistem", icon: "qr", system: true },
   { id: "eposta", label: "E-posta", icon: "rapor", system: true },
   { id: "drive", label: "Google Drive", icon: "klasor", system: true },
+  { id: "diagnostik", label: "Hata Denetimi & Tanı", icon: "denetim", system: true },
   { id: "uygulama", label: "Uygulama", icon: "komuta" },
 ];
 
@@ -146,6 +149,8 @@ export function ControlPanel({ setStatus }: AppProps) {
           <MailPanel setStatus={setStatus} onOpenSettings={() => setCurrent("sistem")} />
         ) : current === "drive" ? (
           <GoogleDrivePanel setStatus={setStatus} />
+        ) : current === "diagnostik" ? (
+          <DiagnosticWindow setStatus={setStatus} {...({} as any)} />
         ) : (
           <InstallPanel setStatus={setStatus} />
         )}

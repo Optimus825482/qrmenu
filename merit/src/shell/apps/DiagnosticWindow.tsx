@@ -1,0 +1,630 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { notify } from "@/shell/notify";
+import { confirm } from "@/shell/confirm";
+import { Toolbar } from "@/shell/ui/Toolbar";
+import { Field } from "@/shell/ui/Field";
+import type { AppProps } from "@/shell/registry";
+import {
+  clearResolvedIncidentsAction,
+  getSystemHealthAction,
+  listDiagnosticIncidentsAction,
+  resolveDiagnosticIncidentAction,
+  sendTestDiagnosticAlertAction,
+  triggerManualDiagnosticAction,
+} from "@/modules/core/server/diagnostic/actions";
+import type {
+  DiagnosticIncidentData,
+  DiagnosticIncidentRow,
+  DiagnosticSeverity,
+  SystemHealthReport,
+} from "@/modules/core/server/diagnostic/types";
+import { setSettingAction } from "@/modules/core/server/admin/actions/settingsAdmin";
+
+type Tab = "probes" | "incidents" | "settings";
+
+export function DiagnosticWindow({ setStatus }: AppProps) {
+  const [tab, setTab] = useState<Tab>("probes");
+  const [health, setHealth] = useState<SystemHealthReport | null>(null);
+  const [incidents, setIncidents] = useState<DiagnosticIncidentRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [inspecting, setInspecting] = useState<DiagnosticIncidentRow | null>(null);
+  const [filterSeverity, setFilterSeverity] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [developerEmail, setDeveloperEmail] = useState("");
+  const [autoNotify, setAutoNotify] = useState(true);
+  const [minSeverity, setMinSeverity] = useState<DiagnosticSeverity>("HIGH");
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const loadData = async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [healthRes, incRes] = await Promise.all([
+        getSystemHealthAction(),
+        listDiagnosticIncidentsAction({}),
+      ]);
+
+      if (healthRes.ok) {
+        setHealth(healthRes.data);
+        setStatus(`Sistem Sağlığı: %${healthRes.data.healthScore} (${healthRes.data.overallStatus})`);
+      }
+      if (incRes.ok) {
+        setIncidents(incRes.data);
+      }
+    } catch {
+      notify.error("Diagnostik verileri yüklenirken hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadData();
+    const interval = setInterval(() => void loadData(true), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRunDiagnostics = () => {
+    startTransition(async () => {
+      const res = await triggerManualDiagnosticAction();
+      if (res.ok) {
+        setHealth(res.data);
+        notify.success(`Diagnostik tanı tamamlandı. Sağlık Skoru: %${res.data.healthScore}`);
+      } else {
+        notify.error("Tanı çalıştırılamadı: " + res.error.message);
+      }
+    });
+  };
+
+  const handleSendTestAlert = async () => {
+    const res = await sendTestDiagnosticAlertAction({ email: developerEmail || undefined });
+    if (res.ok && res.data.sent) {
+      notify.success("Geliştiriciye test diagnostik e-posta bildirimi başarıyla iletildi.");
+    } else {
+      notify.error(res.ok ? (res.data.error || "Mail iletilemedi") : res.error.message);
+    }
+  };
+
+  const handleResolveIncident = async (row: DiagnosticIncidentRow) => {
+    const res = await resolveDiagnosticIncidentAction({ id: row.id, note: "Yönetici tarafından incelendi." });
+    if (res.ok) {
+      notify.success("Hata olayı çözüldü olarak işaretlendi.");
+      setInspecting(null);
+      void loadData(true);
+    } else {
+      notify.error(res.error.message);
+    }
+  };
+
+  const handleClearResolved = async () => {
+    const ok = await confirm({
+      title: "Eski Logları Temizle",
+      message: "7 günden eski çözülmüş tüm diagnostik log kayıtları silinsin mi?",
+    });
+    if (!ok) return;
+
+    const res = await clearResolvedIncidentsAction();
+    if (res.ok) {
+      notify.success(`${res.data} eski diagnostik kaydı temizlendi.`);
+      void loadData(true);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const p1 = setSettingAction({ hotelId: null, key: "diagnostic.developerEmail", value: developerEmail });
+      const p2 = setSettingAction({ hotelId: null, key: "diagnostic.autoNotify", value: autoNotify });
+      const p3 = setSettingAction({ hotelId: null, key: "diagnostic.minSeverity", value: minSeverity });
+      await Promise.all([p1, p2, p3]);
+      notify.success("Geliştirici tanı bildirim ayarları kaydedildi.");
+    } catch {
+      notify.error("Ayarlar kaydedilemedi.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const filteredIncidents = incidents.filter((row) => {
+    if (filterSeverity && row.data.severity !== filterSeverity) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const match =
+        row.data.module.toLowerCase().includes(q) ||
+        row.data.errorMessage.toLowerCase().includes(q) ||
+        row.data.rootCause.toLowerCase().includes(q) ||
+        row.data.errorId.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "#16a34a";
+    if (score >= 70) return "#ea580c";
+    return "#dc2626";
+  };
+
+  return (
+    <div className="xp-defs flex flex-col h-full bg-[#ece9d8] select-none text-xs font-sans overflow-hidden">
+      {/* Top Header Card */}
+      <div className="bg-white border-b border-[#cbd5e1] p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-md transition-all"
+            style={{ backgroundColor: getScoreColor(health?.healthScore ?? 100) }}
+          >
+            %{health?.healthScore ?? "—"}
+          </div>
+          <div>
+            <h2 className="font-bold text-sm text-[#0f172a] flex items-center gap-2">
+              Sistem Hata Denetimi &amp; Kendi Kendini Teşhis Merkezi
+              <span
+                className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-white"
+                style={{ backgroundColor: getScoreColor(health?.healthScore ?? 100) }}
+              >
+                {health?.overallStatus === "HEALTHY"
+                  ? "Sistem Kararlı"
+                  : health?.overallStatus === "DEGRADED"
+                    ? "Dikkat Gerekli"
+                    : "Kritik Durum"}
+              </span>
+            </h2>
+            <p className="text-[11px] text-[#64748b]">
+              Çalışma Süresi: <strong>{health?.uptimeFormatted ?? "—"}</strong> · Veritabanı Gecikmesi:{" "}
+              <strong>{health?.dbLatencyMs ?? 0} ms</strong> · Canlı Oturumlar:{" "}
+              <strong>{health?.activeOnlineSessions ?? 0}</strong>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="xp-button font-bold text-blue-900"
+            disabled={isPending || loading}
+            onClick={handleRunDiagnostics}
+          >
+            {isPending ? "🩺 Denetleniyor..." : "🩺 Şimdi Tanı Çalıştır"}
+          </button>
+          <button
+            type="button"
+            className="xp-button"
+            disabled={loading}
+            onClick={() => void loadData()}
+          >
+            Yenile
+          </button>
+        </div>
+      </div>
+
+      {/* Metric Cards Banner */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
+        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
+          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Bellek (Heap Kullanımı)</span>
+          <span className="text-base font-bold text-[#0f172a]">
+            {health?.memory.heapUsedMb ?? 0} MB
+            <span className="text-xs font-normal text-[#64748b]"> / {health?.memory.heapTotalMb ?? 0} MB</span>
+          </span>
+          <div className="w-full bg-[#f1f5f9] h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{
+                width: `${health?.memory.heapUsagePct ?? 0}%`,
+                backgroundColor: (health?.memory.heapUsagePct ?? 0) > 80 ? "#dc2626" : "#2563eb",
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
+          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Veritabanı Yanıt Süresi</span>
+          <span className="text-base font-bold text-[#0f172a]">
+            {health?.dbLatencyMs ?? 0} <span className="text-xs font-normal text-[#64748b]">ms</span>
+          </span>
+          <span className="text-[10px] block text-[#16a34a] font-medium mt-1">
+            {(health?.dbLatencyMs ?? 0) < 50 ? "✓ Mükemmel Tepki Süresi" : "Normal Bağlantı"}
+          </span>
+        </div>
+
+        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
+          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Kayıtlı Hata / Teşhis Olayları</span>
+          <span className="text-base font-bold text-[#0f172a]">{incidents.length}</span>
+          <span className="text-[10px] block text-[#64748b] font-medium mt-1">
+            {incidents.filter((i) => !i.data.resolved).length} çözülmemiş olay
+          </span>
+        </div>
+
+        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
+          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Geliştirici Bildirim Kanalı</span>
+          <span className="text-xs font-bold text-blue-700 block truncate mt-0.5">
+            {autoNotify ? "Aktif (Otomatik E-posta)" : "Devre Dışı"}
+          </span>
+          <button
+            type="button"
+            className="text-[10px] text-blue-600 hover:underline font-semibold mt-1 inline-block"
+            onClick={() => void handleSendTestAlert()}
+          >
+            🧪 Test Maili Gönder
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs Bar */}
+      <div className="flex border-b border-[#cbd5e1] bg-[#e2e8f0] px-3 pt-2 gap-1">
+        <button
+          type="button"
+          className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
+            tab === "probes"
+              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
+              : "text-[#475569] hover:bg-[#cbd5e1]"
+          }`}
+          onClick={() => setTab("probes")}
+        >
+          🩺 Sistem Sağlık Probları ({health?.probes.length ?? 0})
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
+            tab === "incidents"
+              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
+              : "text-[#475569] hover:bg-[#cbd5e1]"
+          }`}
+          onClick={() => setTab("incidents")}
+        >
+          🚨 Hata Günlüğü &amp; Teşhis Raporları ({incidents.length})
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
+            tab === "settings"
+              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
+              : "text-[#475569] hover:bg-[#cbd5e1]"
+          }`}
+          onClick={() => setTab("settings")}
+        >
+          ⚙️ Geliştirici Bildirim Ayarları
+        </button>
+      </div>
+
+      {/* Tab Contents */}
+      <div className="flex-1 bg-white p-3.5 overflow-auto">
+        {/* TAB 1: HEALTH PROBES */}
+        {tab === "probes" && (
+          <div className="flex flex-col gap-2.5">
+            <p className="text-[11px] text-[#64748b]">
+              Kendi kendini denetleme motoru arka planda veritabanı, bellek, e-posta ve bulut servislerini sürekli test eder.
+            </p>
+
+            <div className="grid grid-cols-1 gap-2">
+              {(health?.probes ?? []).map((probe, i) => (
+                <div
+                  key={i}
+                  className="flex items-start justify-between p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f1f5f9] transition-all"
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded font-bold uppercase mt-0.5 ${
+                        probe.status === "PASS"
+                          ? "bg-green-100 text-green-800"
+                          : probe.status === "WARN"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {probe.status === "PASS" ? "BAŞARILI" : probe.status === "WARN" ? "UYARI" : "HATA"}
+                    </span>
+                    <div>
+                      <h4 className="font-bold text-xs text-[#0f172a]">{probe.name}</h4>
+                      <p className="text-[11px] text-[#475569] mt-0.5">{probe.message}</p>
+                      {probe.recommendation ? (
+                        <p className="text-[11px] text-blue-700 font-medium mt-1 bg-blue-50/70 p-1.5 rounded border border-blue-200/60">
+                          💡 <strong>Öneri:</strong> {probe.recommendation}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  {probe.latencyMs !== undefined ? (
+                    <span className="text-[11px] font-mono text-[#64748b] bg-white px-2 py-1 rounded border border-[#e2e8f0]">
+                      {probe.latencyMs} ms
+                    </span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: INCIDENTS & ROOT CAUSE LOGS */}
+        {tab === "incidents" && (
+          <div className="flex flex-col h-full gap-2.5">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <input
+                  type="search"
+                  placeholder="Hata veya modül ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-2.5 py-1 border border-[#cbd5e1] rounded text-xs w-56"
+                />
+                <select
+                  value={filterSeverity}
+                  onChange={(e) => setFilterSeverity(e.target.value)}
+                  className="px-2 py-1 border border-[#cbd5e1] rounded text-xs bg-white"
+                >
+                  <option value="">Tüm Şiddet Seviyeleri</option>
+                  <option value="CRITICAL">🚨 Kritik</option>
+                  <option value="HIGH">⚠️ Yüksek</option>
+                  <option value="MEDIUM">ℹ️ Orta</option>
+                  <option value="LOW">Düşük</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="xp-button text-[11px]"
+                  onClick={() => void handleClearResolved()}
+                >
+                  Çözülenleri Temizle
+                </button>
+              </div>
+            </div>
+
+            {filteredIncidents.length === 0 ? (
+              <div className="text-center p-8 bg-[#f8fafc] rounded-lg border border-dashed border-[#cbd5e1]">
+                <p className="text-sm font-semibold text-[#64748b]">Kayıtlı sistem hatası bulunamadı.</p>
+                <p className="text-[11px] text-[#94a3b8] mt-1">Sistem modülleri hatasız ve kararlı çalışmaktadır.</p>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-auto border border-[#cbd5e1] rounded-lg">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-[#f1f5f9] text-[#475569] font-bold border-b border-[#cbd5e1] sticky top-0">
+                    <tr>
+                      <th className="p-2 w-28">Zaman</th>
+                      <th className="p-2 w-24">Modül</th>
+                      <th className="p-2 w-24">Şiddet</th>
+                      <th className="p-2">Hata &amp; Kök Neden Teşhisi</th>
+                      <th className="p-2 w-24">E-posta</th>
+                      <th className="p-2 w-24">Durum</th>
+                      <th className="p-2 w-20 text-center">İncele</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e2e8f0]">
+                    {filteredIncidents.map((row) => (
+                      <tr key={row.id} className="hover:bg-[#f8fafc] transition-colors">
+                        <td className="p-2 font-mono text-[11px] text-[#64748b]">
+                          {new Date(row.createdAt).toLocaleTimeString("tr-TR")}
+                          <br />
+                          <small>{new Date(row.createdAt).toLocaleDateString("tr-TR")}</small>
+                        </td>
+                        <td className="p-2 font-semibold text-[#0f172a]">{row.data.module}</td>
+                        <td className="p-2">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              row.data.severity === "CRITICAL"
+                                ? "bg-red-100 text-red-800"
+                                : row.data.severity === "HIGH"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {row.data.severity}
+                          </span>
+                        </td>
+                        <td className="p-2 max-w-md">
+                          <strong className="block text-[#0f172a] truncate">{row.data.errorMessage}</strong>
+                          <span className="text-[11px] text-[#64748b] truncate block mt-0.5">
+                            🔍 {row.data.rootCause}
+                          </span>
+                        </td>
+                        <td className="p-2 text-[11px]">
+                          {row.data.mailSent ? (
+                            <span className="text-green-700 font-semibold">✓ Gönderildi</span>
+                          ) : (
+                            <span className="text-[#94a3b8]">—</span>
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {row.data.resolved ? (
+                            <span className="text-green-700 font-bold text-[11px]">✓ Çözüldü</span>
+                          ) : (
+                            <span className="text-red-700 font-bold text-[11px]">● Açık</span>
+                          )}
+                        </td>
+                        <td className="p-2 text-center">
+                          <button
+                            type="button"
+                            className="xp-button text-[11px] font-bold"
+                            onClick={() => setInspecting(row)}
+                          >
+                            Rapor
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: SETTINGS */}
+        {tab === "settings" && (
+          <div className="max-w-xl flex flex-col gap-3.5">
+            <p className="text-[11px] text-[#64748b]">
+              Sistemde beklenmeyen bir çalışma zamanı hatası veya modül arızası meydana geldiğinde, diagnostik motoru
+              otomatik olarak hatayı analiz eder ve bu adrese bildirim gönderir.
+            </p>
+
+            <Field name="developerEmail" label="Sistem Geliştiricisi / Uyarı E-postası">
+              <input
+                type="email"
+                placeholder="gelistirici@merithotels.com"
+                value={developerEmail}
+                onChange={(e) => setDeveloperEmail(e.target.value)}
+                className="w-full px-2.5 py-1.5 border border-[#cbd5e1] rounded text-xs"
+              />
+            </Field>
+
+            <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-[#0f172a]">
+              <input
+                type="checkbox"
+                checked={autoNotify}
+                onChange={(e) => setAutoNotify(e.target.checked)}
+              />
+              Kritik sistem hatalarında geliştiriciye otomatik e-posta gönderilsin
+            </label>
+
+            <Field name="minSeverity" label="Asgari Bildirim Şiddeti Eşiği">
+              <select
+                value={minSeverity}
+                onChange={(e) => setMinSeverity(e.target.value as DiagnosticSeverity)}
+                className="w-full px-2.5 py-1.5 border border-[#cbd5e1] rounded text-xs bg-white"
+              >
+                <option value="CRITICAL">🚨 Yalnızca Kritik Hatalar</option>
+                <option value="HIGH">⚠️ Yüksek ve Kritik (Önerilen)</option>
+                <option value="MEDIUM">ℹ️ Orta, Yüksek ve Kritik</option>
+                <option value="LOW">Tüm Seviyeler (Hata ve Uyarılar)</option>
+              </select>
+            </Field>
+
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                className="xp-button font-bold text-blue-900"
+                disabled={savingSettings}
+                onClick={() => void handleSaveSettings()}
+              >
+                {savingSettings ? "Kaydediliyor..." : "Ayarları Kaydet"}
+              </button>
+              <button
+                type="button"
+                className="xp-button"
+                onClick={() => void handleSendTestAlert()}
+              >
+                🧪 Test Bildirimi Gönder
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* INSPECT INCIDENT MODAL */}
+      {inspecting && (
+        <div className="xp-form-backdrop">
+          <section
+            role="dialog"
+            aria-modal="true"
+            className="xp-window xp-dialog xp-form-dialog"
+            style={{ width: "min(680px, calc(100% - 24px))", maxHeight: "calc(100% - 24px)" }}
+          >
+            <header className="xp-titlebar">
+              <span className="xp-titlebar-text">
+                Diagnostik Teşhis Raporu · #{inspecting.data.errorId} ({inspecting.data.module})
+              </span>
+              <button
+                type="button"
+                className="xp-title-button is-close"
+                aria-label="Kapat"
+                onClick={() => setInspecting(null)}
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="xp-form-fields flex flex-col gap-2.5 overflow-auto max-h-[70vh] p-4">
+              <div className="flex items-center justify-between p-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+                <div>
+                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Hata Zamanı</span>
+                  <strong className="text-xs">{new Date(inspecting.createdAt).toLocaleString("tr-TR")}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Modül</span>
+                  <strong className="text-xs text-blue-700">{inspecting.data.module}</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Şiddet</span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                      inspecting.data.severity === "CRITICAL"
+                        ? "bg-red-100 text-red-800"
+                        : inspecting.data.severity === "HIGH"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
+                    {inspecting.data.severity}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">Hata Mesajı</span>
+                <div className="p-2.5 bg-red-50 text-red-900 border border-red-200 rounded font-mono text-xs">
+                  {inspecting.data.errorMessage}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">🔍 Kök Neden Teşhisi</span>
+                <div className="p-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded text-xs">
+                  {inspecting.data.rootCause}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">💡 Önerilen Çözüm</span>
+                <div className="p-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-xs">
+                  {inspecting.data.recommendation}
+                </div>
+              </div>
+
+              {inspecting.data.stackTrace ? (
+                <div>
+                  <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">
+                    Teknik Hata Yığını (Stack Trace)
+                  </span>
+                  <pre className="p-2.5 bg-[#0f172a] text-[#f8fafc] rounded font-mono text-[10px] overflow-auto max-h-40 leading-relaxed">
+                    {inspecting.data.stackTrace}
+                  </pre>
+                </div>
+              ) : null}
+
+              {inspecting.data.context ? (
+                <div>
+                  <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">Olay Bağlamı</span>
+                  <pre className="p-2 bg-[#f8fafc] border border-[#e2e8f0] rounded font-mono text-[10px] overflow-auto max-h-24">
+                    {JSON.stringify(inspecting.data.context, null, 2)}
+                  </pre>
+                </div>
+              ) : null}
+            </div>
+
+            <footer className="xp-dialog-actions justify-between">
+              <div>
+                {!inspecting.data.resolved ? (
+                  <button
+                    type="button"
+                    className="xp-button font-bold text-green-800"
+                    onClick={() => void handleResolveIncident(inspecting)}
+                  >
+                    ✓ Çözüldü Olarak İşaretle
+                  </button>
+                ) : (
+                  <span className="text-green-700 text-xs font-bold">✓ Bu olay çözüldü</span>
+                )}
+              </div>
+              <button type="button" className="xp-button" onClick={() => setInspecting(null)}>
+                Kapat
+              </button>
+            </footer>
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}

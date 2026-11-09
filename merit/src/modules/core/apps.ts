@@ -282,6 +282,21 @@ export function registerCoreApps(): void {
     component: () => import("@/shell/apps/ControlPanel").then((m) => ({ default: m.ControlPanel })),
     mobile: "none",
   });
+  registerCatalogApp({
+    id: "core.diagnostik",
+    title: "Hata Denetimi & Tanı",
+    launchLabel: "Hata Denetimi & Tanı",
+    icon: "denetim",
+    moduleKey: "CORE",
+    screenCode: "CR-SYS",
+    category: "SISTEM",
+    needsHotel: false,
+    window: { w: 1060, h: 680, minW: 800, minH: 500 },
+    kind: "component",
+    component: () =>
+      import("@/shell/apps/DiagnosticWindow").then((m) => ({ default: m.DiagnosticWindow })),
+    mobile: "none",
+  });
   // "Erişimim": what the signed-in role may do. Bound to CR-KOM (everyone on the desktop has it).
   registerCatalogApp({
     id: "core.erisimim",

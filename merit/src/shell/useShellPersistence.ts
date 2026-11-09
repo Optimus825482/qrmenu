@@ -91,6 +91,7 @@ export function useShellPersistence({
       "folder.minibar",
       "folder.radar",
       "core.rapor",
+      "core.diagnostik",
       "folder.sistem",
       "folder.kullanici",
     ];

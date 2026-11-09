@@ -69,6 +69,10 @@ export const SETTING_SCHEMAS = {
   "translation.geminiKey": z.string().default(""),
   "translation.provider": z.enum(["AUTO", "DEEPL", "GEMINI"]),
   "translation.geminiModel": z.enum(["gemini-3.8-flash", "gemini-flash-latest", "gemini-flash-lite-latest"]),
+  "diagnostic.enabled": flag,
+  "diagnostic.developerEmail": z.string().default(""),
+  "diagnostic.autoNotify": flag,
+  "diagnostic.minSeverity": z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
 } as const;
 
 /** Longest plain SMTP password; its sealed form stays within the 512 characters of the schema. */
@@ -128,6 +132,10 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "translation.geminiKey": "",
   "translation.provider": "AUTO",
   "translation.geminiModel": "gemini-3.8-flash",
+  "diagnostic.enabled": true,
+  "diagnostic.developerEmail": "",
+  "diagnostic.autoNotify": true,
+  "diagnostic.minSeverity": "HIGH",
 };
 
 export function isSettingKey(key: string): key is SettingKey {
@@ -149,6 +157,7 @@ export const SETTING_GROUPS = [
   "QR",
   "Çeviri",
   "Radar",
+  "Sistem",
 ] as const;
 export type SettingGroup = (typeof SETTING_GROUPS)[number];
 
@@ -540,6 +549,41 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
       { value: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Önerilen — En Güncel ve Kararlı)" },
       { value: "gemini-flash-latest", label: "Gemini Flash Latest (Dinamik En Son Sürüm)" },
       { value: "gemini-flash-lite-latest", label: "Gemini Flash-Lite Latest (Ultra Hızlı / Hafif)" },
+    ],
+    systemOnly: true,
+  },
+  "diagnostic.enabled": {
+    label: "Otomatik Hata Denetimi ve Tanı Sistemi",
+    description: "Sistem hatalarını arka planda yakalar, kök neden analizi yapar ve veritabanına kaydeder.",
+    group: "Sistem",
+    type: "boolean",
+    systemOnly: true,
+  },
+  "diagnostic.developerEmail": {
+    label: "Sistem Geliştiricisi / Uyarı E-postası",
+    description: "Kritik sistem hatalarında ve tanı analizlerinde bildirim mailinin iletileceği geliştirici adresi.",
+    group: "Sistem",
+    type: "text",
+    placeholder: "gelistirici@merithotels.com",
+    systemOnly: true,
+  },
+  "diagnostic.autoNotify": {
+    label: "Otomatik Hata Bildirimi Gönder",
+    description: "Kritik sistem hataları oluştuğunda geliştiriciye otomatik tanı e-postası gönderilsin.",
+    group: "Sistem",
+    type: "boolean",
+    systemOnly: true,
+  },
+  "diagnostic.minSeverity": {
+    label: "Asgari Bildirim Şiddeti",
+    description: "Hangi seviyedeki hata ve anomalilerde e-posta bildirimi tetiklensin.",
+    group: "Sistem",
+    type: "enum",
+    options: [
+      { value: "LOW", label: "Düşük ve Üzeri (Tüm Hatalar)" },
+      { value: "MEDIUM", label: "Orta ve Üzeri" },
+      { value: "HIGH", label: "Yüksek ve Kritik (Önerilen)" },
+      { value: "CRITICAL", label: "Yalnızca Kritik Hatalar" },
     ],
     systemOnly: true,
   },

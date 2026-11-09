@@ -95,6 +95,14 @@ export function safeAction<I, O>(
       if (err instanceof DomainError) return { ok: false, error: err.toResultError() };
       const errorId = randomBytes(4).toString("hex");
       console.error(`[safeAction] ${errorId}`, err);
+
+      // Trigger diagnostic engine and alert developer asynchronously (server-only)
+      if (typeof window === "undefined") {
+        import("@/modules/core/server/diagnostic/diagnosticService")
+          .then(({ captureException }) => captureException(err, { errorId }))
+          .catch((e) => console.error("[safeAction Diagnostic Catch]", e));
+      }
+
       return fail("INTERNAL", "Beklenmeyen bir hata oluştu", { errorId });
     }
   };
