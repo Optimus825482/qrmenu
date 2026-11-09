@@ -330,28 +330,6 @@ export default function KatDolulukDetailPage() {
             ) : (
               <div className="grid gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {filteredRooms.map((room) => {
-                  const statusTone =
-                    room.status === "clash"
-                      ? "border-danger/60 bg-danger/10"
-                      : room.status === "arrival"
-                        ? "border-accent/50 bg-accent/10"
-                        : room.status === "departure"
-                          ? "border-warn/50 bg-warn/10"
-                          : room.status === "in_house"
-                            ? "border-ok/40 bg-surface"
-                            : "border-border bg-surface opacity-80";
-
-                  const badgeTone =
-                    room.status === "clash"
-                      ? "bg-danger/20 text-danger border border-danger/40"
-                      : room.status === "arrival"
-                        ? "bg-accent/20 text-accent border border-accent/40"
-                        : room.status === "departure"
-                          ? "bg-warn/20 text-warn border border-warn/40"
-                          : room.status === "in_house"
-                            ? "bg-ok/20 text-ok border border-ok/40"
-                            : "bg-bg text-muted border border-border";
-
                   const isCompleted = room.checkStatus === "completed";
                   const isDndActive = room.checkStatus === "dnd" || room.dndCount > 0;
                   const dndStatus = isDndActive ? getDndRecheckStatus(room.lastDndAt, recheckMinutes, now) : null;
@@ -689,20 +667,30 @@ export default function KatDolulukDetailPage() {
               </div>
             </div>
 
-            {/* Room Control Action Button - Yalnızca QR zorunluluğu kapalıysa gösterilir */}
-            {!data?.settings?.requireQrForControl ? (
-              <div className="pt-2 border-t border-border flex flex-col gap-2">
+            {/* Room Control / QR Action Button */}
+            <div className="pt-2 border-t border-border flex flex-col gap-2">
+              {data?.settings?.requireQrForControl ? (
+                <button
+                  type="button"
+                  onClick={() => router.push("/kat/qr")}
+                  style={{ minHeight: "var(--tap-action)" }}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
+                >
+                  <Icon name="camera" size={16} />
+                  QR Okut
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => router.push(`/kat/oda-kontrol/${selectedRoom.id}`)}
                   style={{ minHeight: "var(--tap-action)" }}
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white hover:opacity-90"
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
                 >
                   <Icon name="check" size={16} />
                   Minibar Kontrol Ekranını Aç →
                 </button>
-              </div>
-            ) : null}
+              )}
+            </div>
           </div>
         </div>
       ) : null}
