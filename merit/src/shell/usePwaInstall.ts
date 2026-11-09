@@ -28,7 +28,8 @@ function update(next: Partial<PwaState>): void {
   listeners.forEach((l) => l());
 }
 
-function runningStandalone(): boolean {
+export function runningStandalone(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
   const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
   return iosStandalone || window.matchMedia?.("(display-mode: standalone)").matches === true;
 }

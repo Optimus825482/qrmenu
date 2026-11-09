@@ -2,11 +2,8 @@ import "@/shell/theme.css";
 import { redirect } from "next/navigation";
 import { FONT_STACKS, FONT_WEIGHTS, parseFrameAppearance } from "@/shell/appearance";
 import { XpIcon } from "@/shell/icons";
-import pkg from "../../../../../package.json";
+import { APP_VERSION, BUILD_DATE, RELEASE_CODENAME } from "@/lib/version";
 import { currentUser, permits } from "../guard";
-
-// Set by next.config.ts when the build (or dev server) starts.
-const BUILD_DATE = process.env.MERIT_BUILD_DATE ?? "—";
 
 const SHELL_ROLE_KINDS = new Set(["SISTEM", "YONETIM"]);
 
@@ -36,11 +33,11 @@ export default async function AboutPage({
         <div>
           <h1>F&amp;B Command Center</h1>
           <p style={{ margin: "2px 0 8px 0", color: "#64748b", fontSize: "11px", fontWeight: "600" }}>
-            Merit Royal Hotels &amp; Resorts
+            Merit Royal Hotels &amp; Resorts • {RELEASE_CODENAME}
           </p>
           <dl>
             <dt>Sürüm</dt>
-            <dd>{pkg.version}</dd>
+            <dd>v{APP_VERSION}</dd>
             <dt>Derleme tarihi</dt>
             <dd>{BUILD_DATE}</dd>
           </dl>

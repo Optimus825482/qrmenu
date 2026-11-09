@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { useDemoMode } from "@/modules/radar/ui/demoPreference";
 import { usePwaInstall, type InstallOutcome } from "../../usePwaInstall";
+import { useAppUpdate } from "../../useAppUpdate";
 
 // Inlined by next.config.ts (env).
 const VERSION = process.env.MERIT_VERSION ?? "—";
@@ -17,9 +18,31 @@ const OUTCOME_TEXT: Record<InstallOutcome, string> = {
 /** Denetim Masası → Uygulama: "Uygulama olarak yükle", version and build date. */
 export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
   const { canInstall, installed, isIos, promptInstall } = usePwaInstall();
+  const {
+    hasUpdate,
+    isChecking,
+    isUpdating,
+    serverInfo,
+    lastChecked,
+    checkForUpdate,
+    applyUpdate,
+  } = useAppUpdate();
   const [outcome, setOutcome] = useState<InstallOutcome | null>(null);
+  const [checkResult, setCheckResult] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useDemoMode();
   const id = useId();
+
+  const handleManualCheck = async () => {
+    setCheckResult("Güncellemeler denetleniyor...");
+    const res = await checkForUpdate(true);
+    if (res.hasUpdate) {
+      setCheckResult(`Yeni bir güncelleme mevcut (v${res.info?.version ?? "yeni"})!`);
+      setStatus("Yeni sistem güncellemesi hazır.");
+    } else {
+      setCheckResult(`Sisteminiz güncel (v${VERSION}). En son sürümdesiniz.`);
+      setStatus("Sistem güncel, yeni güncelleme yok.");
+    }
+  };
 
   const install = async () => {
     const result = await promptInstall();
@@ -87,14 +110,64 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
       </section>
       <section className="xp-cp-section" aria-labelledby={`${id}-version`}>
         <h3 className="xp-cp-heading" id={`${id}-version`}>
-          Sürüm bilgisi
+          Sürüm ve Canlı Güncelleme
         </h3>
         <dl className="xp-cp-facts">
           <dt>Sürüm</dt>
-          <dd>{VERSION}</dd>
+          <dd>
+            <strong style={{ color: "#1e3a8a" }}>v{VERSION}</strong>
+          </dd>
           <dt>Derleme tarihi</dt>
           <dd>{BUILD_DATE}</dd>
+          <dt>Cihaz durumu</dt>
+          <dd>{installed ? "Uygulama olarak kurulu (PWA Standalone)" : "Web Tarayıcısı"}</dd>
+          {lastChecked ? (
+            <>
+              <dt>Son denetleme</dt>
+              <dd>{lastChecked.toLocaleTimeString("tr-TR")}</dd>
+            </>
+          ) : null}
         </dl>
+
+        <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="xp-button"
+            disabled={isChecking || isUpdating}
+            onClick={() => void handleManualCheck()}
+          >
+            {isChecking ? "Denetleniyor..." : "🔍 Güncellemeleri Denetle"}
+          </button>
+
+          {hasUpdate ? (
+            <button
+              type="button"
+              className="xp-button"
+              style={{
+                background: "linear-gradient(135deg, #16a34a 0%, #15803d 100%)",
+                color: "#ffffff",
+                fontWeight: "bold",
+              }}
+              disabled={isUpdating}
+              onClick={() => void applyUpdate()}
+            >
+              {isUpdating ? "Güncelleniyor..." : `🚀 Şimdi Güncelle (v${serverInfo?.version ?? "yeni"})`}
+            </button>
+          ) : null}
+        </div>
+
+        {checkResult ? (
+          <p
+            className="xp-cp-note"
+            style={{
+              marginTop: 8,
+              fontWeight: 600,
+              color: hasUpdate ? "#b45309" : "#15803d",
+            }}
+          >
+            {checkResult}
+          </p>
+        ) : null}
       </section>
     </>
   );

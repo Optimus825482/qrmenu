@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { listenForInstall } from "../usePwaInstall";
+import { AppUpdateNotifier } from "./AppUpdateNotifier";
 
 /** Cache names of public/sw.js start with this. */
 const CACHE_PREFIX = "merit-";
@@ -40,5 +41,5 @@ export function PwaRegister() {
         .catch(() => {});
     }
   }, []);
-  return null;
+  return <AppUpdateNotifier />;
 }
