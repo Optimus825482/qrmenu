@@ -40,7 +40,12 @@ export function PriorityRouteModal({
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/minibar/priority-plan");
+        // One hotel's plan: its entries carry that hotel's own QR rule (never a merged multi-hotel flag).
+        const res = await fetch(
+          hotelId && hotelId !== "ALL"
+            ? `/api/minibar/priority-plan?hotelId=${encodeURIComponent(hotelId)}`
+            : "/api/minibar/priority-plan",
+        );
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { error?: string };
           throw new Error(body.error ?? "Tavsiye planı yüklenemedi.");

@@ -21,12 +21,14 @@ describe("registered XP apps", () => {
   });
 
   it("opens every former minibar frame on a real route owned by its catalogue screen", () => {
-    const externalApps = getApps().filter((app) => app.external);
+    // The minibar screens are now iframe apps (kind "iframe" + url); other apps may still use external.href.
+    const hrefOf = (app: ReturnType<typeof getApps>[number]) => app.external?.href ?? (app.kind === "iframe" ? app.url : undefined);
+    const externalApps = getApps().filter((app) => app.id.startsWith("minibar.") && hrefOf(app));
     expect(externalApps.map((app) => app.id)).toEqual(expect.arrayContaining([
       "minibar.kat", "minibar.rota", "minibar.doluluk", "minibar.stok", "minibar.rapor", "minibar.tanim",
     ]));
     for (const app of externalApps) {
-      const href = app.external!.href;
+      const href = hrefOf(app)!;
       expect(hasPage(href), href).toBe(true);
       expect(screenForPath(href)?.code, href).toBe(app.screenCode);
     }

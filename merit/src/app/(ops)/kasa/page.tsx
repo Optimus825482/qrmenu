@@ -28,7 +28,7 @@ export default async function CashierPage() {
       where: { id: outletId },
       select: { hasMenu: true, hasOrdering: true, priceDisplay: true, name: true, tableOccupancyMinutes: true },
     }),
-    resolveCurrency(ctx.session.hotelId),
+    resolveCurrency(outletId),
     can(ctx, "QS-KUY", "A", ctx.session.hotelId).then(async (all) => all || can(ctx, "QS-KUY", "D", ctx.session.hotelId)),
     can(ctx, "QS-FIS", "O", ctx.session.hotelId),
     can(ctx, "QS-KUY", "O", ctx.session.hotelId),

@@ -14,6 +14,8 @@ import { printJobs } from "./printJobs";
 import { resolveCurrency, resolvePriceDisplay } from "@/modules/menu/server/priceDisplay";
 
 const inputSchema = z.object({
+  /** Client-generated per dialog; stays the same until the order succeeds so a retry cannot double-book. */
+  idempotencyKey: z.uuid("Geçersiz istek anahtarı").optional(),
   outletId: z.string().min(1),
   tableId: z.string().min(1),
   items: z.array(z.object({
@@ -55,7 +57,7 @@ async function menu(ctx: Ctx, outletId: string): Promise<StaffOrderMenu> {
   });
   return {
     pricesShown: priceDisplay === "SHOW",
-    currency: await resolveCurrency(outlet.hotelId),
+    currency: await resolveCurrency(outlet.id),
     items: rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -83,6 +85,17 @@ async function create(ctx: Ctx, raw: unknown) {
   });
   if (!table) throw new DomainError("FORBIDDEN", "Bu masa aktif değil veya size atanmamış");
 
+  const id = input.idempotencyKey ?? randomUUID();
+  const replayOf = (found: { id: string; orderNo: number; tableId: string | null; assignedWaiterId: string | null } | null) =>
+    found && found.tableId === table.id && found.assignedWaiterId === ctx.user.id
+      ? { id: found.id, orderNo: found.orderNo, tableLabel: table.label }
+      : null;
+  const select = { id: true, orderNo: true, tableId: true, assignedWaiterId: true } as const;
+  if (input.idempotencyKey) {
+    const existing = replayOf(await prisma.order.findUnique({ where: { idempotencyKey: id }, select }));
+    if (existing) return existing;
+  }
+
   const priceDisplay = await resolvePriceDisplay({
     hotelId: outlet.hotelId,
     priceDisplay: table.area.priceDisplay ?? outlet.priceDisplay,
@@ -98,70 +111,78 @@ async function create(ctx: Ctx, raw: unknown) {
     });
   }
 
-  const currency = await resolveCurrency(outlet.hotelId);
+  const currency = await resolveCurrency(outlet.id);
   const now = new Date();
   const day = businessDate();
-  const id = randomUUID();
-  const order = await prisma.$transaction(async (tx) => {
-    const orderNumber = await orderNo.next(tx, outlet.hotelId, day);
-    const items = input.items.map((item) => {
-      const menuItem = byId.get(item.menuNodeId)!;
-      const unitPrice = priceDisplay === "SHOW" && menuItem.price !== null
-        ? menuItem.price.toDecimalPlaces(2)
+  let order;
+  try {
+    order = await prisma.$transaction(async (tx) => {
+      const orderNumber = await orderNo.next(tx, outlet.hotelId, day);
+      const items = input.items.map((item) => {
+        const menuItem = byId.get(item.menuNodeId)!;
+        // Snapshotted whatever the display setting; display is gated by Order.pricesShown.
+        const unitPrice = menuItem.price !== null ? menuItem.price.toDecimalPlaces(2) : null;
+        return { item, menuItem, unitPrice };
+      });
+      const subtotal = priceDisplay === "SHOW"
+        ? items.reduce((sum, item) => item.unitPrice ? sum.plus(item.unitPrice.mul(item.item.qty)) : sum, new Prisma.Decimal(0)).toDecimalPlaces(2)
         : null;
-      return { item, menuItem, unitPrice };
-    });
-    const subtotal = priceDisplay === "SHOW"
-      ? items.reduce((sum, item) => item.unitPrice ? sum.plus(item.unitPrice.mul(item.item.qty)) : sum, new Prisma.Decimal(0)).toDecimalPlaces(2)
-      : null;
-    const created = await tx.order.create({
-      data: {
+      const created = await tx.order.create({
+        data: {
+          hotelId: outlet.hotelId,
+          outletId: outlet.id,
+          kind: "MASA",
+          tableId: table.id,
+          businessDate: businessDay(day),
+          orderNo: orderNumber,
+          status: "ONAYLANDI",
+          guestLanguage: "tr",
+          pricesShown: priceDisplay === "SHOW",
+          currency,
+          subtotal,
+          note: input.note || null,
+          assignedWaiterId: ctx.user.id,
+          approvedById: ctx.user.id,
+          approvedAt: now,
+          idempotencyKey: id,
+          clientIp: "staff",
+          items: { create: items.map(({ item, menuItem, unitPrice }) => ({
+            menuNodeId: menuItem.id,
+            nameSnapshot: menuItem.name,
+            qty: item.qty,
+            unitPrice,
+            note: item.note || null,
+          })) },
+          events: { create: [{ userId: ctx.user.id, from: null, to: "ONAYLANDI", at: now, note: "Garson adisyonu" }] },
+        },
+        include: { items: true },
+      });
+      await audit(tx, {
+        userId: ctx.user.id,
+        hotelId: outlet.hotelId,
+        action: "ORDER_STAFF_CREATE",
+        entity: "Order",
+        entityId: created.id,
+        after: { orderNo: created.orderNo, tableId: table.id, itemCount: created.items.length, pricesShown: created.pricesShown },
+      });
+      await printJobs.enqueueReceipt(tx, created);
+      if (outlet.kdsEnabled) await printJobs.enqueueKitchen(tx, created);
+      await publish({
+        type: "order.approved",
         hotelId: outlet.hotelId,
         outletId: outlet.id,
-        kind: "MASA",
-        tableId: table.id,
-        businessDate: businessDay(day),
-        orderNo: orderNumber,
-        status: "ONAYLANDI",
-        guestLanguage: "tr",
-        pricesShown: priceDisplay === "SHOW",
-        currency,
-        subtotal,
-        note: input.note || null,
-        assignedWaiterId: ctx.user.id,
-        approvedById: ctx.user.id,
-        approvedAt: now,
-        idempotencyKey: id,
-        clientIp: "staff",
-        items: { create: items.map(({ item, menuItem, unitPrice }) => ({
-          menuNodeId: menuItem.id,
-          nameSnapshot: menuItem.name,
-          qty: item.qty,
-          unitPrice,
-          note: item.note || null,
-        })) },
-        events: { create: [{ userId: ctx.user.id, from: null, to: "ONAYLANDI", at: now, note: "Garson adisyonu" }] },
-      },
-      include: { items: true },
+        payload: { orderId: created.id, orderNo: created.orderNo, tableId: table.id, tableLabel: table.label, status: created.status, from: null, kind: "MASA", roomId: null, roomNumber: null, assignedWaiterId: ctx.user.id, byUserId: ctx.user.id, source: "GARSON" },
+      }, tx);
+      return created;
     });
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: outlet.hotelId,
-      action: "ORDER_STAFF_CREATE",
-      entity: "Order",
-      entityId: created.id,
-      after: { orderNo: created.orderNo, tableId: table.id, itemCount: created.items.length, pricesShown: created.pricesShown },
-    });
-    await printJobs.enqueueReceipt(tx, created);
-    if (outlet.kdsEnabled) await printJobs.enqueueKitchen(tx, created);
-    await publish({
-      type: "order.approved",
-      hotelId: outlet.hotelId,
-      outletId: outlet.id,
-      payload: { orderId: created.id, orderNo: created.orderNo, tableId: table.id, tableLabel: table.label, status: created.status, from: null, kind: "MASA", roomId: null, roomNumber: null, assignedWaiterId: ctx.user.id, byUserId: ctx.user.id, source: "GARSON" },
-    }, tx);
-    return created;
-  });
+  } catch (error) {
+    // Two submits with one key raced: the loser returns the winner's order.
+    if ((error as { code?: string } | null)?.code === "P2002" && input.idempotencyKey) {
+      const winner = replayOf(await prisma.order.findUnique({ where: { idempotencyKey: id }, select }));
+      if (winner) return winner;
+    }
+    throw error;
+  }
   return { id: order.id, orderNo: order.orderNo, tableLabel: table.label };
 }
 

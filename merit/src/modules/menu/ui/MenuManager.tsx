@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MenuNodeKind } from "@/generated/prisma/client";
 import type { MeritEvent } from "@/lib/realtime-events";
 import type { AppProps } from "@/shell/registry";
+import { Icon } from "@/components/icons/Icon";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 import { Field } from "@/shell/ui/Field";
@@ -333,7 +334,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
               color: translationAudit.missingNodes > 0 ? "#b45309" : "#15803d",
             }}
           >
-            <span>{translationAudit.missingNodes > 0 ? "⟳" : "✓"}</span>
+            <Icon name={translationAudit.missingNodes > 0 ? "refresh" : "check"} size={12} />
             <span>
               {translationAudit.missingNodes > 0
                 ? `Otomatik Çeviri: ${translationAudit.completeNodes}/${translationAudit.totalNodes} (${translationAudit.missingNodes} tamamlanıyor)`

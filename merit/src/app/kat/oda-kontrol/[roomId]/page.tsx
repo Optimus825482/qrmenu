@@ -1,17 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
+import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 
-function newRequestKey(): string {
-  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
+/** Writes give up after this long; the same request key is sent again on the next tap. */
+const WRITE_TIMEOUT_MS = 15_000;
+
+const errorText = (e: unknown, fallback: string): string =>
+  e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")
+    ? "Sunucu zamanında yanıt vermedi. Lütfen tekrar deneyin."
+    : e instanceof Error
+      ? e.message
+      : fallback;
 
 interface RoomCheckItem {
   productId: string;
@@ -69,14 +75,14 @@ interface RoomCheckData {
     items: { productName: string; qty: number }[];
   } | null;
   requireQrForControl?: boolean;
+  /** The server holds a fresh QR scan of this user for the room (the only source of the QR permission). */
+  qrVerified?: boolean;
 }
 
 export default function OdaKontrolPage() {
   const params = useParams<{ roomId: string }>();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const roomId = params?.roomId;
-  const fromQr = searchParams?.get("fromQr") === "1";
 
   const [data, setData] = useState<RoomCheckData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +92,10 @@ export default function OdaKontrolPage() {
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
+  // Idempotency keys: each stays the same until its request succeeds, so a retry is not a second record.
+  const [saveKey, setSaveKey] = useState(newRequestKey);
+  const [dndKey, setDndKey] = useState(newRequestKey);
+  const quickKeys = useRef<Record<string, string>>({});
 
   const loadRoom = useCallback(async (showSpinner = false) => {
     if (!roomId) return;
@@ -121,14 +131,17 @@ export default function OdaKontrolPage() {
   const handleQuickAdd = async (setupId: string, item: RoomCheckItem, n: number) => {
     if (!data || submitting || addingProductId) return;
     setAddingProductId(item.productId);
+    const quickId = `${setupId}:${item.productId}:${n}`;
+    const clientRequestId = (quickKeys.current[quickId] ??= newRequestKey());
     try {
       const res = await fetch(`/api/minibar/room/${data.room.id}/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: [{ productId: item.productId, setupId, qty: n }],
-          clientRequestId: newRequestKey(),
+          clientRequestId,
         }),
+        signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
       const json = (await res.json()) as {
         transactionId?: string;
@@ -140,6 +153,7 @@ export default function OdaKontrolPage() {
         notify.error(json.error ?? json.message ?? "İkame kaydedilemedi.");
         return;
       }
+      delete quickKeys.current[quickId];
       await loadRoom(false);
       const txId = json.transactionId;
       notify.success(
@@ -160,7 +174,7 @@ export default function OdaKontrolPage() {
           : undefined,
       );
     } catch (e) {
-      notify.error(e instanceof Error ? e.message : "Bağlantı hatası");
+      notify.error(errorText(e, "Bağlantı hatası"));
     } finally {
       setAddingProductId(null);
     }
@@ -198,6 +212,18 @@ export default function OdaKontrolPage() {
 
   const handleSaveCheck = async (noConsumption = false) => {
     if (!data) return;
+    const nothingSelected = Object.values(quantities).every((q) => q <= 0);
+    if (!noConsumption && nothingSelected) {
+      // "Kaydet" without a selection is a "Sarfiyat Yok" record: ask explicitly instead of saving silently.
+      const ok = await confirm({
+        title: "Sarfiyat yok",
+        message: "Hiç ürün seçmediniz. Bu odada sarfiyat yok olarak kaydedilsin mi?",
+        danger: true,
+        confirmLabel: "Sarfiyat Yok Kaydet",
+        cancelLabel: "Vazgeç",
+      });
+      if (!ok) return;
+    }
     setSubmitting(true);
     try {
       const consumedItems = noConsumption
@@ -212,8 +238,9 @@ export default function OdaKontrolPage() {
         body: JSON.stringify({
           consumedItems,
           note: note.trim() || undefined,
-          clientRequestId: newRequestKey(),
+          clientRequestId: saveKey,
         }),
+        signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
       const json = (await res.json()) as {
         replenishedCount?: number;
@@ -222,6 +249,7 @@ export default function OdaKontrolPage() {
         message?: string;
       };
       if (!res.ok) throw new Error(json.error ?? json.message ?? "Kaydedilemedi.");
+      setSaveKey(newRequestKey());
 
       const count = json.replenishedCount ?? json.added ?? 0;
       notify.success(
@@ -236,7 +264,7 @@ export default function OdaKontrolPage() {
         return cleared;
       });
     } catch (e) {
-      notify.error(e instanceof Error ? e.message : "Kayıt hatası");
+      notify.error(errorText(e, "Kayıt hatası"));
     } finally {
       setSubmitting(false);
     }
@@ -249,14 +277,16 @@ export default function OdaKontrolPage() {
       const res = await fetch(`/api/minibar/room/${data.room.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: note.trim() || undefined }),
+        body: JSON.stringify({ note: note.trim() || undefined, clientRequestId: dndKey }),
+        signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
+      setDndKey(newRequestKey());
       notify.success(json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`);
       await loadRoom(false);
     } catch (e) {
-      notify.error(e instanceof Error ? e.message : "DND hatası");
+      notify.error(errorText(e, "DND hatası"));
     } finally {
       setSubmitting(false);
     }
@@ -311,7 +341,7 @@ export default function OdaKontrolPage() {
           <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-6 text-sm text-danger">
             {error}
           </div>
-        ) : data?.requireQrForControl && !fromQr ? (
+        ) : data?.requireQrForControl && !data.qrVerified ? (
           <div className="rounded-2xl border border-warn/40 bg-warn/10 p-8 text-center space-y-4 max-w-lg mx-auto">
             <div className="flex items-center justify-center text-warn">
               <Icon name="warning" size={36} />
@@ -571,7 +601,7 @@ export default function OdaKontrolPage() {
         ) : null}
       </main>
 
-      {data && (!data.requireQrForControl || fromQr) ? (
+      {data && (!data.requireQrForControl || data.qrVerified) ? (
         <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
           <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">

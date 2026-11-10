@@ -9,11 +9,18 @@ import { deriveAlerts } from "../alerts";
 import { radarOverviewAction, radarSnapshotAction } from "../server/actions/radar";
 import { createRadarStore, type RadarStore, type RadarStoreDeps, type RadarStoreState } from "./radarStore";
 
+/** Server minus browser clock (ms), learned from each snapshot, so alert ages do not depend on a wrong client clock. */
+let serverClockOffsetMs = 0;
+
 function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
   return {
     async fetchSnapshot(hotelId) {
+      const t0 = Date.now();
       const r = await radarSnapshotAction({ hotelId });
       if (!r.ok) throw new Error(r.error.message);
+      const serverMs = Date.parse(r.data.generatedAt);
+      // Midpoint of the round trip approximates the instant the server stamped the snapshot.
+      if (Number.isFinite(serverMs)) serverClockOffsetMs = serverMs - (t0 + Date.now()) / 2;
       return r.data;
     },
     async fetchOverview(hotelId) {
@@ -22,7 +29,7 @@ function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
       return r.data;
     },
     subscribe: (handler, types) => sseClient().subscribe(handler, types),
-    now: () => Date.now(),
+    now: () => Date.now() + serverClockOffsetMs,
     schedule(cb, ms) {
       const id = setTimeout(cb, ms);
       return () => clearTimeout(id);

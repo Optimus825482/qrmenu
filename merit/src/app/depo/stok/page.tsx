@@ -16,6 +16,8 @@ interface DepoStockItem {
   currency: string;
   quantity: number;
   minLevel: number;
+  /** false: deactivated product the hotel still holds. */
+  productActive?: boolean;
   lastUpdated: string;
 }
 
@@ -62,23 +64,48 @@ export default function DepoStokPage() {
   const [selectedProduct, setSelectedProduct] = useState<DepoStockItem | null>(null);
   const [movementType, setMovementType] = useState<MovementType>("GIRIS");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [canCount, setCanCount] = useState(false);
+  const [movementsTotal, setMovementsTotal] = useState(0);
+  const [movementsPage, setMovementsPage] = useState(1);
 
-  const loadData = useCallback(async (hotelId?: string) => {
+  const loadData = useCallback(async (hotelId?: string, page = 1) => {
     try {
       setIsLoading(true);
       setErrorMsg(null);
-      const url = hotelId
-        ? `/api/minibar/depo/stock?hotelId=${encodeURIComponent(hotelId)}`
-        : "/api/minibar/depo/stock";
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Stok bilgileri alınamadı.");
-      const data = await res.json();
-      setStockItems(data.stockItems || []);
-      setMovements(data.movements || []);
-      setHotels(data.hotels || []);
-      if (!hotelId && data.selectedHotelId) {
-        setSelectedHotelId(data.selectedHotelId);
+      const urlFor = (hotel?: string) => {
+        const params = new URLSearchParams();
+        if (hotel) params.set("hotelId", hotel);
+        if (page > 1) params.set("movementsPage", String(page));
+        return `/api/minibar/depo/stock${params.size > 0 ? `?${params.toString()}` : ""}`;
+      };
+      let res = await fetch(urlFor(hotelId));
+      let deniedHotel = false;
+      if (res.status === 403 && hotelId) {
+        // The hotel in the address is not one this account may open: fall back to the session hotel.
+        deniedHotel = true;
+        const url = new URL(window.location.href);
+        url.searchParams.delete("hotelId");
+        window.history.replaceState({}, "", url.toString());
+        res = await fetch(urlFor());
       }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          res.status === 403
+            ? "Zimmet havuzunu görme yetkiniz yok."
+            : data.error || "Stok bilgileri alınamadı.",
+        );
+      }
+      if (deniedHotel) {
+        setErrorMsg("Seçilen otelin zimmet havuzunu görme yetkiniz yok; kendi otelinizin havuzu gösteriliyor.");
+      }
+      setStockItems(data.stockItems || []);
+      setMovements((prev) => (page > 1 ? [...prev, ...(data.movements || [])] : data.movements || []));
+      setMovementsTotal(data.movementsTotal ?? 0);
+      setMovementsPage(page);
+      setHotels(data.hotels || []);
+      setCanCount(data.canCount === true);
+      if (data.selectedHotelId) setSelectedHotelId(data.selectedHotelId);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Bağlantı hatası.");
     } finally {
@@ -87,14 +114,17 @@ export default function DepoStokPage() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      void loadData();
-    }, 0);
-    return () => clearTimeout(timer);
+    // The server echoes the hotel it served (`selectedHotelId`); the first load runs outside the effect body.
+    const initialHotel = new URLSearchParams(window.location.search).get("hotelId");
+    const t = setTimeout(() => void loadData(initialHotel ?? undefined), 0);
+    return () => clearTimeout(t);
   }, [loadData]);
 
   const handleHotelChange = (id: string) => {
     setSelectedHotelId(id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("hotelId", id);
+    window.history.replaceState({}, "", url.toString());
     void loadData(id);
   };
 
@@ -122,19 +152,29 @@ export default function DepoStokPage() {
           </h1>
           <p className="text-sm text-muted">Depo sorumlusu zimmet takibi, otel bazlı ortak havuz</p>
         </div>
-        {hotels.length > 1 ? (
-          <select
-            aria-label="Otel"
-            value={selectedHotelId}
-            onChange={(e) => handleHotelChange(e.target.value)}
-            className={`${FIELD} w-auto font-semibold`}
-          >
-            {hotels.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.name}
-              </option>
-            ))}
-          </select>
+        {hotels.length > 0 ? (
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
+            <span className="text-xs font-bold text-muted whitespace-nowrap flex items-center gap-1">
+              <Icon name="building" size={16} />
+              Otel:
+            </span>
+            {hotels.length > 1 ? (
+              <select
+                aria-label="Otel Seçimi"
+                value={selectedHotelId}
+                onChange={(e) => handleHotelChange(e.target.value)}
+                className="bg-transparent text-sm font-bold text-text focus:outline-none cursor-pointer"
+              >
+                {hotels.map((h) => (
+                  <option key={h.id} value={h.id} className="bg-surface text-text">
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-sm font-bold text-text">{hotels[0]?.name}</span>
+            )}
+          </div>
         ) : null}
       </div>
 
@@ -174,7 +214,7 @@ export default function DepoStokPage() {
           onChange={setActiveTab}
           options={[
             { value: "STOCK", label: `Mevcut stok (${filteredItems.length})`, icon: <Icon name="box" size={20} /> },
-            { value: "MOVEMENTS", label: `Hareket geçmişi (${movements.length})`, icon: <Icon name="list" size={20} /> },
+            { value: "MOVEMENTS", label: `Hareket geçmişi (${movementsTotal})`, icon: <Icon name="list" size={20} /> },
           ]}
         />
         {activeTab === "STOCK" ? (
@@ -212,7 +252,14 @@ export default function DepoStokPage() {
                     const isLow = item.quantity <= item.minLevel;
                     return (
                       <tr key={item.id}>
-                        <td className="px-4 py-3 font-bold">{item.productName}</td>
+                        <td className="px-4 py-3 font-bold">
+                          {item.productName}
+                          {item.productActive === false ? (
+                            <span className="ml-2 rounded border border-border bg-[var(--muted-bg)] px-2 py-0.5 text-[13px] font-semibold text-muted">
+                              Pasif ürün
+                            </span>
+                          ) : null}
+                        </td>
                         <td className="px-4 py-3">
                           <span className="rounded border border-border bg-[var(--muted-bg)] px-2 py-1 text-[13px] text-muted">{item.categoryName}</span>
                         </td>
@@ -232,9 +279,11 @@ export default function DepoStokPage() {
                             <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
                               Zimmet ekle
                             </Button>
-                            <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>
-                              Düzenle
-                            </Button>
+                            {canCount ? (
+                              <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>
+                                Sayım düzeltme
+                              </Button>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
@@ -287,6 +336,13 @@ export default function DepoStokPage() {
               </table>
             </div>
           )}
+          {movements.length < movementsTotal ? (
+            <div className="flex justify-center border-t border-border p-3">
+              <Button disabled={isLoading} onClick={() => void loadData(selectedHotelId || undefined, movementsPage + 1)}>
+                {isLoading ? "Yükleniyor..." : `Daha eski hareketler (${movements.length} / ${movementsTotal})`}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -325,8 +381,12 @@ function AdjustDialog({
   const noteId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
-  const [qty, setQty] = useState<number>(type === "GIRIS" ? 50 : 0);
+  const isCount = type === "DUZELTME";
+  // Count mode: the counted quantity starts at the system balance; the difference is shown live.
+  const [qty, setQty] = useState<number>(isCount ? product.quantity : 50);
   const [note, setNote] = useState("");
+  const diff = qty - product.quantity;
+  const reasonOk = note.trim().length >= 3;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -343,7 +403,7 @@ function AdjustDialog({
         body: JSON.stringify({
           formHotelId: hotelId,
           productId: product.productId,
-          changeQuantity: qty,
+          ...(isCount ? { countedQty: qty } : { changeQuantity: qty }),
           movementType: type,
           note,
         }),
@@ -369,7 +429,7 @@ function AdjustDialog({
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h2 id={titleId} className="text-lg font-bold">
-            {type === "GIRIS" ? "Zimmet stoğu ekle" : "Stok düzeltme / sayım farkı"}
+            {isCount ? "Sayım düzeltme" : "Zimmet stoğu ekle"}
           </h2>
           <button
             type="button"
@@ -392,37 +452,52 @@ function AdjustDialog({
 
           <div>
             <label htmlFor={qtyId} className="mb-1 block text-sm font-semibold">
-              {type === "GIRIS" ? "Eklenecek miktar (adet)" : "Değişim miktarı (pozitif veya negatif)"}
+              {isCount ? "Sayılan miktar (adet)" : "Eklenecek miktar (adet)"}
             </label>
-            <div className="flex flex-wrap gap-2">
-              {[20, 50, 100].map((step) => (
-                <Button key={step} onClick={() => setQty(step)}>
-                  +{step}
-                </Button>
-              ))}
-            </div>
+            {isCount ? null : (
+              <div className="flex flex-wrap gap-2">
+                {[20, 50, 100].map((step) => (
+                  <Button key={step} onClick={() => setQty(step)}>
+                    +{step}
+                  </Button>
+                ))}
+              </div>
+            )}
             <input
               ref={qtyRef}
               id={qtyId}
               type="number"
               value={qty}
+              min={isCount ? 0 : 1}
               onChange={(e) => setQty(parseInt(e.target.value, 10) || 0)}
               className={`${FIELD} mt-2 font-bold`}
               required
             />
+            {isCount ? (
+              <p className="mt-2 text-sm text-muted" aria-live="polite">
+                Fark:{" "}
+                <span className={`font-bold ${diff < 0 ? "text-danger" : diff > 0 ? "text-success" : "text-text"}`}>
+                  {diff > 0 ? `+${diff}` : diff} adet
+                </span>{" "}
+                (sistemde {product.quantity}, sayılan {qty})
+              </p>
+            ) : null}
           </div>
 
           <div>
             <label htmlFor={noteId} className="mb-1 block text-sm font-semibold">
-              Açıklama / fiş / irsaliye no (isteğe bağlı)
+              {isCount ? "Sebep (zorunlu, en az 3 karakter)" : "Açıklama / fiş / irsaliye no (isteğe bağlı)"}
             </label>
             <input
               id={noteId}
               type="text"
-              placeholder="Örn: İrsaliye #4829 veya haftalık depo sevkiyatı"
+              placeholder={isCount ? "Örn: Aylık sayım, kırık ürün, kayıp" : "Örn: İrsaliye #4829 veya haftalık depo sevkiyatı"}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className={FIELD}
+              required={isCount}
+              minLength={isCount ? 3 : undefined}
+              maxLength={200}
             />
           </div>
 
@@ -436,8 +511,8 @@ function AdjustDialog({
             <Button onClick={onClose} disabled={busy}>
               Vazgeç
             </Button>
-            <Button mutates variant="primary" type="submit" disabled={busy || qty === 0}>
-              {busy ? "Kaydediliyor..." : "Onayla ve stoğu güncelle"}
+            <Button mutates variant="primary" type="submit" disabled={busy || (isCount ? diff === 0 || qty < 0 || !reasonOk : qty <= 0)}>
+              {busy ? "Kaydediliyor..." : isCount ? "Sayımı kaydet" : "Onayla ve stoğu güncelle"}
             </Button>
           </div>
         </form>

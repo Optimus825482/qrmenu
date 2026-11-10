@@ -5,6 +5,7 @@ import { confirmStore } from "./confirm";
 import { saveShellPrefs } from "./prefsAction";
 import { buildPersistSnapshot, type RestoredLayout } from "./persistSnapshot";
 import { parseShellPrefs } from "./prefsSchema";
+import { buildShortcutMigrations, runShortcutMigrations } from "./shortcutMigrations";
 import { DEFAULT_APPEARANCE, type HotelRef, type ShellPrefs } from "./types";
 import { currentShellMode, type ShellMode } from "./useShellMode";
 import { effectiveViewport, gridPosition, windowStore } from "./windowStore";
@@ -107,50 +108,13 @@ export function useShellPersistence({
     };
     const chosen = local?.pending ? local.prefs : (fromServer ?? local?.prefs ?? fallback);
     store.restore(chosen);
-    let migratedShortcuts = false;
-    // Existing saved desktops predate the standalone user window. Add its shortcut once; after
-    // this version is persisted, deliberately removing the shortcut stays removed.
-    if ((chosen.shortcutVersion ?? 0) < 1) {
-      if (visible.includes("core.kullanici") && !store.icons.some((icon) => icon.appId === "core.kullanici")) {
-        const pos = gridPosition(store.icons.length, effectiveViewport(store));
-        store.addIcon("core.kullanici", pos.x, pos.y);
-      }
-      migratedShortcuts = true;
-    }
-    // Menü Tasarım Merkezi is a separate app; add its own desktop icon to existing desktops once.
-    if ((chosen.shortcutVersion ?? 0) < 2) {
-      if (visible.includes("menu.tema") && !store.icons.some((icon) => icon.appId === "menu.tema")) {
-        const pos = gridPosition(store.icons.length, effectiveViewport(store));
-        store.addIcon("menu.tema", pos.x, pos.y);
-      }
-      store.setShortcutVersion(2);
-      migratedShortcuts = true;
-    }
-    // Primary Master Desktop Categories layout: Outlet, Oda Servisi, Minibar, Sistem, Kullanıcı + Komuta Merkezi
-    if ((chosen.shortcutVersion ?? 0) < 5) {
-      // Keep only Komuta Merkezi and the 5 Master Category Folders on the clean desktop
-      const newIcons = primaryDesktopApps
-        .filter((appId) => visible.includes(appId))
-        .map((appId, idx) => ({
-          appId,
-          ...gridPosition(idx, effectiveViewport(store)),
-        }));
-      store.setIcons(newIcons);
-      store.setShortcutVersion(5);
-      migratedShortcuts = true;
-    }
-    // Operasyon Radarı folder arrived after the clean desktop layout: add it once to saved desktops
-    // that may see it (CR-RAD V). Appended, so the user's own icon order is untouched; after this
-    // version is persisted, deliberately removing the folder stays removed.
-    if ((chosen.shortcutVersion ?? 0) < 6) {
-      const now = windowStore.getState();
-      if (visible.includes("folder.radar") && !now.icons.some((icon) => icon.appId === "folder.radar")) {
-        const pos = gridPosition(now.icons.length, effectiveViewport(now));
-        now.addIcon("folder.radar", pos.x, pos.y);
-      }
-      windowStore.getState().setShortcutVersion(6);
-      migratedShortcuts = true;
-    }
+    // Shortcut migrations run in order; the version is written once, after the last one.
+    const appliedVersion = runShortcutMigrations(
+      chosen.shortcutVersion ?? 0,
+      buildShortcutMigrations({ state: () => windowStore.getState(), visible, primaryDesktopApps }),
+    );
+    if (appliedVersion !== null) windowStore.getState().setShortcutVersion(appliedVersion);
+    const migratedShortcuts = appliedVersion !== null;
 
     // Desktop layout as restored (and kept current while on the desktop). While the mobile shell is
     // showing, saves send exactly this and only the appearance (wallpaper, font, theme, brand switches) may change.

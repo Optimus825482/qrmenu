@@ -22,18 +22,14 @@ test.beforeAll(async () => {
   await sql(`update outlets set price_display = 'SHOW' where name = 'Havuz Bar'`);
 });
 
-test("kasa tutarı otelin price.currency ayarına uyar: EUR -> euro, TRY -> lira", async ({ page, browser }) => {
+test("kasa tutarı outletin para birimine uyar: EUR -> euro, TRY -> lira", async ({ page, browser }) => {
   await sendGuestOrder(page);
   const cashier = await openStaff(browser, "kasa.havuz");
   await expect(tableTile(cashier, "M1")).toContainText("€12,00");
   await expect(tableTile(cashier, "M1")).not.toContainText("₺");
 
-  await sql(
-    `insert into settings (id, hotel_id, key, value, updated_at)
-     select gen_random_uuid()::text, h.id, 'price.currency', '"TRY"'::jsonb, now()
-       from hotels h join outlets o on o.hotel_id = h.id where o.name = 'Havuz Bar'
-     on conflict (hotel_id, key) do update set value = excluded.value`,
-  );
+  // K3: the currency is the outlet's own field (chosen with its price display).
+  await sql(`update outlets set currency = 'TRY' where name = 'Havuz Bar'`);
   await cashier.reload();
   await expect(tableTile(cashier, "M1")).toContainText("₺12,00");
   await expect(tableTile(cashier, "M1")).not.toContainText("€");

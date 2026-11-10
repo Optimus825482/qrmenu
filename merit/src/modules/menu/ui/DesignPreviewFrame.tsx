@@ -9,15 +9,25 @@ const FRAME_DOCUMENT = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 /** Copies the guest menu rules out of the parent document so the iframe paints the real menu. */
 function guestCss(): string {
   const parts: string[] = ["html,body{margin:0;background:transparent}"];
+  const collectRules = (rules: CSSRuleList) => {
+    for (const rule of rules) {
+      // Local @font-face rules (public/fonts) must reach the iframe too; they carry no ".g-" selector.
+      if (rule instanceof CSSImportRule) {
+        try {
+          if (rule.styleSheet) collectRules(rule.styleSheet.cssRules);
+        } catch {
+          /* cross-origin sheet */
+        }
+      } else if (rule instanceof CSSFontFaceRule || rule.cssText.includes(".g-")) {
+        parts.push(rule.cssText);
+      }
+    }
+  };
   for (const sheet of document.styleSheets) {
-    let rules: CSSRuleList;
     try {
-      rules = sheet.cssRules;
+      collectRules(sheet.cssRules);
     } catch {
       continue;
-    }
-    for (const rule of rules) {
-      if (rule.cssText.includes(".g-")) parts.push(rule.cssText);
     }
   }
   return parts.join("\n");
@@ -295,12 +305,6 @@ export function DesignPreviewFrame({ children }: { children: ReactNode }) {
       initialContent={FRAME_DOCUMENT}
       head={
         <>
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cinzel:wght@400..900&family=Cinzel+Decorative:wght@700&family=Cormorant+Garamond:ital,wght@0,400..700;1,400..700&family=Great+Vibes&family=Marcellus&family=Montserrat:ital,wght@0,300..900;1,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@400..800&display=swap"
-          />
           <style>{`${css}
           html {
             overflow-y: auto !important;

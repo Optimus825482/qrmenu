@@ -288,8 +288,8 @@ describe("users: YONETIM kapsamı", () => {
       users.update(m, low.id, { username: "alt.kisi", fullName: "A", roleId: otm.id, hotelId: mr, hotelIds: [] }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
 
-    // self: password allowed; profile fields allowed; role / hotels not
-    await expect(users.setPassword(m, m.user.id, "YeniSifre987")).resolves.toBeUndefined();
+    // self: password only through /sifre-degistir (current password); profile fields allowed; role / hotels not
+    await expect(users.setPassword(m, m.user.id, "YeniSifre987")).rejects.toMatchObject({ code: "VALIDATION" });
     await expect(
       users.update(m, m.user.id, { username: "otm-mr", fullName: "Yeni Ad", roleId: otm.id, hotelId: mr, hotelIds: [] }),
     ).resolves.toMatchObject({ fullName: "Yeni Ad" });
@@ -409,6 +409,73 @@ describe("users: pasife alma ve şifre belirleme oturumları kapatır", () => {
     expect(bad.ok).toBe(false);
     const good = await performLogin({ username: "sifre.degis", password: NEW, ip: "10.0.0.4", userAgent: "UA" }, deps);
     expect(good.ok).toBe(true);
+  });
+});
+
+describe("users: son sistem yöneticisi (R-SYS) korunur", () => {
+  it("son aktif R-SYS pasife alınamaz, silinemez, rolü düşürülemez; başka R-SYS varken pasife alınabilir", async () => {
+    const s = await sys();
+    const rsys = await roleByCode("R-SYS");
+    const gar = await roleByCode("R-GAR");
+    const target = await makeUser({ username: "sys-hedef", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const others = await testDb.user.findMany({
+      where: { roleId: rsys.id, isActive: true, deletedAt: null, id: { not: target.id } },
+      select: { id: true },
+    });
+    await testDb.user.updateMany({ where: { id: { in: others.map((o) => o.id) } }, data: { isActive: false } });
+    try {
+      await expect(users.setActive(s, target.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(users.deleteUser(s, target.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(
+        users.update(s, target.id, { username: "sys-hedef", fullName: "X", roleId: gar.id, hotelId: await hotelId("ROYAL"), hotelIds: [] }),
+      ).rejects.toMatchObject({ code: "FORBIDDEN" });
+      expect(await testDb.user.findUniqueOrThrow({ where: { id: target.id } })).toMatchObject({
+        isActive: true,
+        deletedAt: null,
+        roleId: rsys.id,
+      });
+    } finally {
+      await testDb.user.updateMany({ where: { id: { in: others.map((o) => o.id) } }, data: { isActive: true } });
+    }
+    // another active R-SYS exists: the role-based rule allows it (no username special case)
+    await expect(users.setActive(s, target.id, false)).resolves.toMatchObject({ isActive: false });
+  });
+});
+
+describe("users: rol/otel değişince açık oturumlar kapanır", () => {
+  it("rol değişince oturum CIKTI/SISTEM ve session.closed; yalnız ad değişince oturum açık kalır", async () => {
+    const s = await sys();
+    const user = await newUser(s, "rol.degisir");
+    const mr = await hotelId("ROYAL");
+    const session = await createSession({ userId: user.id, hotelId: mr, roleId: user.roleId, ip: "10.0.0.1" });
+    publishMock.mockReset();
+
+    await users.update(s, user.id, { username: "rol.degisir", fullName: "Yeni Ad", roleId: user.roleId, hotelId: mr, hotelIds: [] });
+    expect((await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).status).toBe("ONLINE");
+
+    const kat = await roleByCode("R-KAT");
+    await users.update(s, user.id, { username: "rol.degisir", fullName: "Yeni Ad", roleId: kat.id, hotelId: mr, hotelIds: [] });
+    expect(await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).toMatchObject({
+      status: "CIKTI",
+      logoutReason: "SISTEM",
+    });
+    const closed = publishMock.mock.calls.map((c) => c[0]).filter((e) => e.type === "session.closed");
+    expect(closed).toMatchObject([{ payload: { sessionId: session.id } }]);
+  });
+
+  it("otel üyeliği değişince (ek otel eklenir) oturum kapanır", async () => {
+    const s = await sys();
+    const user = await newUser(s, "otel.degisir");
+    const mr = await hotelId("ROYAL");
+    const session = await createSession({ userId: user.id, hotelId: mr, roleId: user.roleId, ip: "10.0.0.1" });
+    await users.update(s, user.id, {
+      username: "otel.degisir",
+      fullName: "Test otel.degisir",
+      roleId: user.roleId,
+      hotelId: mr,
+      hotelIds: [await hotelId("PREMIUM")],
+    });
+    expect((await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } })).status).toBe("CIKTI");
   });
 });
 

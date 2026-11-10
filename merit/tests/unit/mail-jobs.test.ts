@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { businessDay } from "@/lib/time";
 import { testDb } from "../helpers/db";
 import { dropReferenceData, hotelId, makeUser, resetReferenceData, resetTestData } from "../helpers/fixtures";
 import { resetMinibarData } from "../helpers/minibarFixtures";
@@ -62,6 +63,11 @@ describe("eksik doluluk radar köprüsü (G21)", () => {
         createdAt: new Date("2026-07-11T06:30:00.000Z"),
       },
     });
+    // DEP-8: missing uploads are checked per kind (UploadTask), so ROYAL needs all three kinds completed.
+    const upload = await testDb.occupancyUpload.findFirstOrThrow({ where: { hotelId: royal } });
+    for (const kind of ["IN_HOUSE", "ARRIVAL", "DEPARTURE"] as const) {
+      await testDb.uploadTask.create({ data: { hotelId: royal, date: businessDay("2026-07-11"), kind, status: "TAMAMLANDI", uploadId: upload.id } });
+    }
     // 10:00 Nicosia = 07:00Z; only DIAMOND (and PREMIUM) are missing
     const res = await jobs.announceOccupancyGaps(new Date("2026-07-11T07:00:00.000Z"));
     expect(res.missingHotels).toContain("Merit Royal Diamond");

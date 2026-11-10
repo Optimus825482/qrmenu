@@ -175,6 +175,23 @@ describe("kuyruktan SMTP'ye", () => {
     expect(sales!.html).toContain("Toplam tüketim");
   });
 
+  it("elle oda girişi ile yapılan kontroller bölümü: oda, görevli, saat (yalnız o gün ve o otel)", async () => {
+    const hid = await hotelId("ROYAL");
+    const kat = await mailUser("elle-kat", "R-KAT", "ROYAL");
+    const row = (hotel: string, at: Date) =>
+      testDb.auditLog.create({
+        data: { userId: kat.id, hotelId: hotel, action: "ODA_DOGRULAMA_ELLE", entity: "Room", after: { roomNumber: "204", method: "ELLE" }, createdAt: at },
+      });
+    await row(hid, NOON);
+    await row(hid, new Date("2026-11-01T10:00:00Z")); // ertesi gün
+    await row(await hotelId("DIAMOND"), NOON); // başka otel
+    const list = await daily.manualRoomEntries(hid, DAY);
+    expect(list).toEqual([{ room: "204", staff: kat.fullName, time: "12:00" }]);
+    const mail = await daily.composeDailyTask({ hotelId: hid, date: DAY });
+    expect(mail!.html).toContain("Elle oda girişi ile yapılan kontroller (1)");
+    expect(mail!.text).toContain("Elle oda girişi ile yapılan kontroller (1): Oda 204");
+  });
+
   it("MINIBAR kapandıysa gönderim anında satır IPTAL olur", async () => {
     await openMail("ROYAL");
     await mailUser("d-mgr", "R-OTM", "ROYAL");

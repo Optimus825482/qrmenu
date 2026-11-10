@@ -148,6 +148,18 @@ describe("notify", () => {
     expect([...(received[0].userIds ?? [])].sort()).toEqual([a.id, b.id].sort());
   });
 
+  it("fallbackHotelId verilince boş alıcı listesi otel yöneticisine / sistem yöneticisine düşer", async () => {
+    const mr = await hotelId("ROYAL");
+    const otm = await makeUser({ username: "otm1", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const count = await notify({ ...input, recipients: [], fallbackHotelId: mr });
+    expect(count).toBeGreaterThanOrEqual(1);
+    const rows = await testDb.notification.findMany();
+    expect(rows.map((r) => r.userId)).toContain(otm.id);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it("alıcı yoksa 0 döner, satır yazılmaz, olay yayılmaz", async () => {
     expect(await notify({ ...input, recipients: [] })).toBe(0);
     expect(

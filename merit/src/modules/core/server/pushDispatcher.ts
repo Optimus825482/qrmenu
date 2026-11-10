@@ -24,6 +24,26 @@ registerPushType("mybar.created", (n) => ({
   tag: `mybar-${n.refId ?? "yeni"}`,
 }));
 
+// Onay/SLA uyarıları: personel uygulama kapalıyken de duymalı (zil + SSE yetmez).
+registerPushType("order.escalated", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: n.title.startsWith("Oda servisi") ? "/oda-servisi" : "/garson",
+  tag: `order-escalated-${n.refId ?? "yeni"}`,
+}));
+registerPushType("order.sla.warn", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: "/oda-servisi",
+  tag: `order-sla-${n.refId ?? "yeni"}`,
+}));
+registerPushType("order.sla.breach", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: "/oda-servisi",
+  tag: `order-sla-${n.refId ?? "yeni"}`,
+}));
+
 export type DispatchResult = { claimed: number; sent: number; gone: number; failed: number };
 
 function str(value: unknown): string {

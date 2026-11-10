@@ -102,6 +102,8 @@ export async function registerMinibarJobs(boss: MinibarBoss): Promise<void> {
           }
         } catch (error) {
           console.error(`[${job.queue}]`, error);
+          // Rethrown so pg-boss marks the job failed (and retries it); every body is idempotent.
+          throw error;
         }
       });
     } catch (error) {

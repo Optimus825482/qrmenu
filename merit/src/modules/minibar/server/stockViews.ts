@@ -47,7 +47,8 @@ const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompar
 
 async function loadRows(hotelId: string): Promise<StockRow[]> {
   const stocks = await prisma.hotelStock.findMany({
-    where: { hotelId, product: { isActive: true } },
+    // A deactivated product stays visible while the hotel still holds some of it.
+    where: { hotelId, OR: [{ product: { isActive: true } }, { remainingQty: { gt: 0 } }] },
     select: {
       productId: true,
       totalQty: true,
@@ -117,6 +118,9 @@ export async function criticalStocks(ctx: Ctx): Promise<{
 
 export type HistoryRow = { at: string; roomNumber?: string; type: string; qty: number };
 
+/** Rows returned by `productHistory` (newest first); the totals always cover the whole span. */
+export const HISTORY_MAX_ROWS = 500;
+
 /**
  * Last `days` Nicosia days of one product: the floor supervisor sees only their OWN replacements,
  * the warehouse sees the pool movements of the hotel.
@@ -135,28 +139,41 @@ export async function productHistory(
 
   let rows: HistoryRow[];
   let used: number;
+  let movements: number;
   if (!depo) {
-    const items = await prisma.minibarTransactionItem.findMany({
-      where: {
-        productId,
-        consumed: { gt: 0 },
-        transaction: { hotelId, userId: ctx.user.id, type: "SETUP_KONTROL", occurredAt: { gte: since } },
-      },
-      select: { consumed: true, transaction: { select: { occurredAt: true, room: { select: { number: true } } } } },
-      orderBy: { transaction: { occurredAt: "desc" } },
-    });
+    const where = {
+      productId,
+      consumed: { gt: 0 },
+      transaction: { hotelId, userId: ctx.user.id, type: "SETUP_KONTROL" as const, occurredAt: { gte: since } },
+    };
+    const [items, sum, count] = await Promise.all([
+      prisma.minibarTransactionItem.findMany({
+        where,
+        select: { consumed: true, transaction: { select: { occurredAt: true, room: { select: { number: true } } } } },
+        orderBy: { transaction: { occurredAt: "desc" } },
+        take: HISTORY_MAX_ROWS,
+      }),
+      prisma.minibarTransactionItem.aggregate({ where, _sum: { consumed: true } }),
+      prisma.minibarTransactionItem.count({ where }),
+    ]);
     rows = items.map((i) => ({
       at: i.transaction.occurredAt.toISOString(),
       roomNumber: i.transaction.room.number,
       type: "IKAME",
       qty: i.consumed,
     }));
-    used = items.reduce((sum, i) => sum + i.consumed, 0);
+    used = sum._sum.consumed ?? 0;
+    movements = count;
   } else {
-    const moves = await prisma.hotelStockMovement.findMany({
-      where: { hotelId, productId, createdAt: { gte: since } },
-      orderBy: { createdAt: "desc" },
-    });
+    const where = { hotelId, productId, createdAt: { gte: since } };
+    const [moves, takes, count] = await Promise.all([
+      prisma.hotelStockMovement.findMany({ where, orderBy: { createdAt: "desc" }, take: HISTORY_MAX_ROWS }),
+      prisma.hotelStockMovement.aggregate({
+        where: { ...where, type: { in: ["KULLANIM", "MYBAR"] } },
+        _sum: { qty: true },
+      }),
+      prisma.hotelStockMovement.count({ where }),
+    ]);
     const txIds = moves.filter((m) => m.refType === "MinibarTransaction" && m.refId).map((m) => m.refId!);
     const txs = txIds.length
       ? await prisma.minibarTransaction.findMany({
@@ -171,12 +188,12 @@ export async function productHistory(
       type: m.type,
       qty: m.qty,
     }));
-    used = moves
-      .filter((m) => m.type === "KULLANIM" || m.type === "MYBAR")
-      .reduce((sum, m) => sum + Math.abs(m.qty), 0);
+    // KULLANIM / MYBAR movements are signed -n.
+    used = Math.abs(takes._sum.qty ?? 0);
+    movements = count;
   }
   return {
-    totals: { used, dailyAvg: Math.round((used / span) * 10) / 10, movements: rows.length },
+    totals: { used, dailyAvg: Math.round((used / span) * 10) / 10, movements },
     rows,
   };
 }

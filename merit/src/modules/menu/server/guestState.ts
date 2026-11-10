@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { MENU_THEMES } from "../../../../prisma/seed/menuThemes";
-import { resolveCurrency, resolvePriceDisplay } from "./priceDisplay";
+import { resolvePriceDisplay } from "./priceDisplay";
 import { designFromStored, type OutletDesign } from "../design";
 import type { GuestCallOption } from "../callOptions";
 import { listActive } from "./callOptions";
@@ -93,7 +93,7 @@ export async function guestState(outletId: string, areaId?: string): Promise<Gue
       hotelId: outlet.hotelId,
       priceDisplay: area?.priceDisplay ?? outlet.priceDisplay,
     })) === "SHOW",
-    currency: await resolveCurrency(outlet.hotelId),
+    currency: outlet.currency,
     theme: pickTheme(theme),
     design,
     callOptions: await listActive(outlet.id),

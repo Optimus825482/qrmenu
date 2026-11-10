@@ -96,6 +96,16 @@ describe("online kullanıcı takibi", () => {
     expect((await testDb.userSession.findUniqueOrThrow({ where: { id: own.session.id } })).status).toBe("CIKTI");
   });
 
+  it("yetkisiz kullanıcı önce FORBIDDEN alır: var olmayan oturum kimliğinde NOT_FOUND sızmaz", async () => {
+    const gar = await makeUser({ username: "gar-yetkisiz", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(gar, { hotelCode: "ROYAL" });
+    await expect(onlineUsers.forceLogout(ctx, "olmayan-oturum")).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const otm = await makeUser({ username: "mudur-nf", roleCode: "R-OTM", hotelCode: "ROYAL" });
+    await expect(
+      onlineUsers.forceLogout(await ctxFor(otm, { hotelCode: "ROYAL" }), "olmayan-oturum"),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("endIdle yalnız eşiği aşanları kapatır", async () => {
     const admin = await makeUser({ username: "admin1", roleCode: "R-SYS", hotelCode: "ROYAL" });
     const ctx = await ctxFor(admin, { hotelCode: "ROYAL" });

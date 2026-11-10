@@ -212,11 +212,15 @@ describe("printJobs.report", () => {
       status: "KUYRUKTA",
       error: "yazıcı kapalı",
     });
+    // Backoff: the retry is not handed out until attempts * 10 s have passed.
+    expect(await printJobs.claim("ROYAL")).toHaveLength(0);
+    await testDb.printJob.update({ where: { id: job.id }, data: { updatedAt: new Date(Date.now() - 60_000) } });
 
     await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: false, error: "yazıcı kapalı" });
     expect((await testDb.printJob.findUniqueOrThrow({ where: { id: job.id } })).status).toBe("KUYRUKTA");
     expect(await testDb.notification.count({ where: { type: "print.failed" } })).toBe(0);
+    await testDb.printJob.update({ where: { id: job.id }, data: { updatedAt: new Date(Date.now() - 60_000) } });
 
     await printJobs.claim("ROYAL");
     await printJobs.report(job.id, { ok: false, error: "yazıcı kapalı" });
@@ -254,6 +258,40 @@ describe("printJobs.sweepStale", () => {
     expect(await printJobs.sweepStale(now)).toBe(1);
     expect((await testDb.printJob.findUniqueOrThrow({ where: { id: stale.id } })).status).toBe("KUYRUKTA");
     expect((await testDb.printJob.findUniqueOrThrow({ where: { id: fresh.id } })).status).toBe("BASILIYOR");
+  });
+});
+
+describe("printJobs.sweepStale (deneme sınırı)", () => {
+  it("3 denemesini bitirmiş takılı iş HATA olur ve print.failed yayınlanır; sayı iki işi de sayar", async () => {
+    const s = await orderSetup();
+    const printer = await makePrinter("Y1");
+    const now = new Date();
+    const old = new Date(now.getTime() - 61_000);
+    const spent = await makeJob(s, printer.id, { status: "BASILIYOR", startedAt: old, attempts: 3 });
+    const retry = await makeJob(s, printer.id, { status: "BASILIYOR", startedAt: old, attempts: 1 });
+    expect(await printJobs.sweepStale(now)).toBe(2);
+    expect(await testDb.printJob.findUniqueOrThrow({ where: { id: spent.id } })).toMatchObject({ status: "HATA" });
+    expect((await testDb.printJob.findUniqueOrThrow({ where: { id: retry.id } })).status).toBe("KUYRUKTA");
+    expect(publishMock).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "print.failed", payload: expect.objectContaining({ jobId: spent.id }) }),
+      expect.anything(),
+    );
+  });
+});
+
+describe("orders.transition IPTAL: baskı kuyruğu", () => {
+  it("kuyruktaki iş geri çekilir; hazırlığı başlamış siparişte mutfağa İPTAL fişi kuyruğa girer", async () => {
+    const s = await orderSetup();
+    const printer = await makePrinter("Y1");
+    const kas = await staffCtx("kas", "R-KAS", s.outlet.id);
+    const order = await seedOrder(s, { status: "ONAYLANDI", approvedAt: new Date(), prepStartedAt: new Date() });
+    const queued = await testDb.printJob.create({
+      data: { hotelId: s.hotelId, printerId: printer.id, orderId: order.id, kind: "FIS", payload: { v: 1 } },
+    });
+    await orders.transition(kas.ctx, order.id, "IPTAL", { reason: "yanlış masa" });
+    expect(await testDb.printJob.findUniqueOrThrow({ where: { id: queued.id } })).toMatchObject({ status: "HATA", error: "Sipariş iptal edildi" });
+    const cancelTicket = await testDb.printJob.findFirstOrThrow({ where: { orderId: order.id, kind: "MUTFAK", status: "KUYRUKTA" } });
+    expect(JSON.stringify(cancelTicket.payload)).toContain("İPTAL");
   });
 });
 

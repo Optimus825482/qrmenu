@@ -557,9 +557,9 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Hizalama:</span>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4 }}>
                   {[
-                    { id: "left", label: "⬅ Sola" },
-                    { id: "center", label: "⬌ Ortala" },
-                    { id: "right", label: "➡ Sağa" },
+                    { id: "left", label: "Sola" },
+                    { id: "center", label: "Ortala" },
+                    { id: "right", label: "Sağa" },
                   ].map((align) => (
                     <button
                       key={align.id}

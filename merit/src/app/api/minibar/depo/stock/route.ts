@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/rbac";
 import { z } from "zod";
 import {
   canSeePrices,
@@ -10,6 +11,7 @@ import {
 import {
   addToPool,
   adjustPool,
+  countPool,
   listMovements,
   listPoolAll,
   returnFromPool,
@@ -19,16 +21,24 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const MOVEMENTS_PAGE_SIZE = 50;
+
 export async function GET(request: Request) {
   return handle(async (ctx) => {
-    const hotelId = await selectHotel(ctx, new URL(request.url).searchParams.get("hotelId"), "MB-ZIM", "V");
-    const [rows, moves, hotels] = await Promise.all([
+    const params = new URL(request.url).searchParams;
+    const hotelId = await selectHotel(ctx, params.get("hotelId"), "MB-ZIM", "V");
+    // Movement history is paged (newest first); `movementsPage` asks for older pages.
+    const page = Math.min(Math.max(Math.trunc(Number(params.get("movementsPage") ?? 1)) || 1, 1), 10_000);
+    const [rows, moves, hotels, canCount] = await Promise.all([
       listPoolAll(ctx, hotelId, { includeEmpty: true }),
-      listMovements(ctx, hotelId, { page: 1, pageSize: 50 }),
+      listMovements(ctx, hotelId, { page, pageSize: MOVEMENTS_PAGE_SIZE }),
       prisma.hotel.findMany({
-        where: { isActive: true, id: { in: ctx.hotelIds } },
+        where: { isActive: true, ...(ctx.user.roleKind === "SISTEM" ? {} : { id: { in: ctx.hotelIds } }) },
         select: { id: true, name: true, code: true },
+        orderBy: { name: "asc" },
       }),
+      // Count corrections: MB-ZIM A held by a system or minibar role (pool.countPool).
+      ctx.user.roleKind === "SISTEM" || ctx.user.roleKind === "MINIBAR" ? can(ctx, "MB-ZIM", "A", hotelId) : false,
     ]);
     // The old field names stay (the page reads them); `status` and `criticalLevel` are new.
     const stockItems = rows
@@ -43,6 +53,7 @@ export async function GET(request: Request) {
         minLevel: r.criticalLevel,
         criticalLevel: r.criticalLevel,
         status: r.status,
+        productActive: r.productActive,
         lastUpdated: r.updatedAt ?? new Date().toISOString(),
       }))
       .sort((a, b) => a.categoryName.localeCompare(b.categoryName, "tr") || a.productName.localeCompare(b.productName, "tr"));
@@ -55,13 +66,27 @@ export async function GET(request: Request) {
       userName: m.userName,
       createdAt: m.at,
     }));
-    return maskPrices({ stockItems, movements, hotels, selectedHotelId: hotelId }, canSeePrices(ctx));
+    return maskPrices(
+      {
+        stockItems,
+        movements,
+        movementsTotal: moves.total,
+        movementsPage: page,
+        movementsPageSize: MOVEMENTS_PAGE_SIZE,
+        hotels,
+        selectedHotelId: hotelId,
+        canCount,
+      },
+      canSeePrices(ctx),
+    );
   });
 }
 
 const bodySchema = z.object({
   productId: z.string().min(1).max(64),
-  changeQuantity: z.number().int().min(-100000).max(100000),
+  changeQuantity: z.number().int().min(-100000).max(100000).optional(),
+  /** DUZELTME as a stock count: the counted quantity; the server books the difference. */
+  countedQty: z.number().int().min(0).max(100000).optional(),
   movementType: z.enum(["GIRIS", "IADE", "DUZELTME"]).default("GIRIS"),
   note: z.string().max(300).optional(),
   formHotelId: z.string().max(64).optional(),
@@ -70,7 +95,7 @@ const bodySchema = z.object({
 export async function POST(request: Request) {
   return handle(async (ctx) => {
     const body = await parseBody(request, bodySchema);
-    // Entry and return = create (O), correction = approve (A, system roles only); the hotel selector is authorised, not trusted.
+    // Entry and return = create (O), correction = approve (A, system and warehouse roles); the hotel selector is authorised, not trusted.
     const hotelId = await selectHotel(
       ctx,
       body.formHotelId,
@@ -78,12 +103,19 @@ export async function POST(request: Request) {
       body.movementType === "DUZELTME" ? "A" : "O",
     );
     const note = body.note?.trim() || undefined;
+    const qty = body.changeQuantity ?? 0;
     if (body.movementType === "GIRIS") {
-      await addToPool(ctx, hotelId, { productId: body.productId, qty: body.changeQuantity, note });
+      await addToPool(ctx, hotelId, { productId: body.productId, qty, note });
     } else if (body.movementType === "IADE") {
-      await returnFromPool(ctx, hotelId, { productId: body.productId, qty: Math.abs(body.changeQuantity), note });
+      await returnFromPool(ctx, hotelId, { productId: body.productId, qty: Math.abs(qty), note });
+    } else if (body.countedQty !== undefined) {
+      const row = await countPool(ctx, hotelId, { productId: body.productId, countedQty: body.countedQty, reason: note ?? "" });
+      return {
+        success: true,
+        message: `Sayım kaydedildi: fark ${row.delta > 0 ? "+" : ""}${row.delta} adet, yeni stok ${row.remainingQty} adet.`,
+      };
     } else {
-      await adjustPool(ctx, hotelId, { productId: body.productId, delta: body.changeQuantity, reason: note ?? "" });
+      await adjustPool(ctx, hotelId, { productId: body.productId, delta: qty, reason: note ?? "" });
     }
     return { success: true, message: "Stok başarıyla güncellendi." };
   });

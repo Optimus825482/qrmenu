@@ -30,7 +30,8 @@ describe("marka tercihleri (alt telif bandı, filigran)", () => {
       footerBand: false,
       brandWatermark: false,
     });
-    expect(parseShellPrefs({ ...legacy, footerBand: "yes" })).toBeNull();
+    // Bozuk tek alan varsayılana düşer, kalan yerleşim korunur (SHL-5).
+    expect(parseShellPrefs({ ...legacy, footerBand: "yes" })).toMatchObject({ footerBand: true });
   });
 
   describe("store", () => {
@@ -119,18 +120,19 @@ describe("marka tercihleri (alt telif bandı, filigran)", () => {
 describe("Düz renk duvar kağıdı (ozel + wallpaperColor)", () => {
   const legacy = { wallpaper: "bliss", icons: [], windows: [] };
 
-  it("şema: eksik → #3a6ea5; geçerli hex korunur; geçersiz hex → null / VALIDATION", async () => {
+  it("şema: eksik → #3a6ea5; geçerli hex korunur; geçersiz hex → varsayılan renk (alan bazlı tolerans)", async () => {
     expect(parseShellPrefs(legacy)).toMatchObject({ wallpaperColor: "#3a6ea5" });
     expect(parseShellPrefs({ ...legacy, wallpaper: "ozel", wallpaperColor: "#112233" })).toMatchObject({
       wallpaper: "ozel",
       wallpaperColor: "#112233",
     });
     for (const bad of ["112233", "#123", "#12345g", "red", "#1122334", ""]) {
-      expect(parseShellPrefs({ ...legacy, wallpaperColor: bad })).toBeNull();
+      expect(parseShellPrefs({ ...legacy, wallpaperColor: bad })).toMatchObject({ wallpaperColor: "#3a6ea5" });
     }
     const save = safeAction(shellPrefsSchema, async () => null);
     const result = await save({ ...legacy, wallpaperColor: "#zzzzzz" });
-    expect(result.ok).toBe(false);
+    // Sunucuya bozuk renk gelirse kayıt reddedilmez, alan varsayılana indirilip kaydedilir.
+    expect(result.ok).toBe(true);
   });
 
   it("store: setWallpaperColor geçerli hex'i küçük harfle alır, geçersizi yok sayar; snapshot/restore taşır", () => {

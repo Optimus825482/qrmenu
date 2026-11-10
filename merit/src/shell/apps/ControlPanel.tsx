@@ -7,6 +7,7 @@ import { XpIcon } from "../icons";
 import type { AppProps } from "../registry";
 import { AppearancePanel } from "./controlPanel/AppearancePanel";
 import { InstallPanel } from "./controlPanel/InstallPanel";
+import { ManualRoomEntryPanel } from "./controlPanel/ManualRoomEntryPanel";
 import { SystemPanel } from "./controlPanel/SystemPanel";
 
 type Category =
@@ -119,12 +120,15 @@ export function ControlPanel({ setStatus }: AppProps) {
             description="Personel oturum süreleri, hareketsizlik limitleri ve onaylama tercihlerini yönetin."
           />
         ) : current === "minibar" ? (
-          <SystemPanel
-            setStatus={setStatus}
-            filterGroups={["Minibar", "MyBar", "DND"]}
-            title="Minibar ve Kat Hizmetleri"
-            description="Oda kontrolünde QR zorunluluğu, MyBar günlük giriş sınırları, tüketim miktar modları ve Rahatsız Etmeyin (DND) kontrol kuralları."
-          />
+          <>
+            <SystemPanel
+              setStatus={setStatus}
+              filterGroups={["Minibar", "MyBar", "DND"]}
+              title="Minibar ve Kat Hizmetleri"
+              description="Oda kontrolünde QR zorunluluğu, MyBar günlük giriş sınırları, tüketim miktar modları ve Rahatsız Etmeyin (DND) kontrol kuralları."
+            />
+            <ManualRoomEntryPanel setStatus={setStatus} />
+          </>
         ) : current === "servis" ? (
           <SystemPanel
             setStatus={setStatus}

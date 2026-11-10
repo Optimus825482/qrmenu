@@ -183,6 +183,25 @@ describe("siparis-ozet / siparis-urun / siparis-sure", () => {
     expect(priced.subtotal).not.toBeNull();
   });
 
+  it("iptal/red siparişler tutara girmez; özet satır limitinden bağımsız tüm aralığı toplar", async () => {
+    const mgr = await staff("R-OTM", "ROYAL");
+    const base = { hotelCode: "ROYAL", outletName: "Bar A", pricesShown: true } as const;
+    for (const day of ["2026-10-29", "2026-10-30", "2026-10-31"]) {
+      await addOrder({ ...base, date: new Date(`${day}T00:00:00Z`), status: "ONAYLANDI", items: [{ name: "Su", qty: 1, unitPrice: 10 }], times: { approvedAt: at("08:00", day) } });
+    }
+    await addOrder({ ...base, date: D31, status: "IPTAL", items: [{ name: "Su", qty: 3, unitPrice: 10 }] });
+    await addOrder({ ...base, date: D31, status: "REDDEDILDI", items: [{ name: "Su", qty: 5, unitPrice: 10 }] });
+    const wide = { hotelIds: [await hotelId("ROYAL")], from: "2026-10-29", to: "2026-10-31" };
+    const ozet = await runReport(mgr.ctx, "siparis-ozet", wide, { limit: 2 });
+    expect(ozet.rows).toHaveLength(2);
+    expect(ozet.truncated).toBe(true);
+    expect(ozet.summary).toContainEqual({ label: "Toplam sipariş", value: 5 });
+    expect(ozet.summary).toContainEqual({ label: "Tutar", value: 30 });
+    const urun = await run(mgr.ctx, "siparis-urun", { from: "2026-10-31", to: "2026-10-31", params: { includeUnapproved: true } });
+    expect(urun.rows).toEqual([expect.objectContaining({ name: "Su", qty: 1, amount: 10 })]);
+    expect(urun.summary).toContainEqual({ label: "Toplam adet", value: 1 });
+  });
+
   it("hiç fiyatlı sipariş yoksa Tutar null (sıfır değil)", async () => {
     const mgr = await staff("R-OTM", "ROYAL");
     await addOrder({ hotelCode: "ROYAL", outletName: "Bar A", date: D31, items: [{ name: "Su", qty: 1 }] });

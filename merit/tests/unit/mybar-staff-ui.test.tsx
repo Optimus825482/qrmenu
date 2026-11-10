@@ -177,7 +177,7 @@ describe("PersistentMybarModal (zorunlu onay)", () => {
     acknowledge.mockResolvedValue(ok({ firstSeen: true, seenAt: new Date() }));
     render(<PersistentMybarModal />);
     await screen.findByRole("alertdialog");
-    expect(playCue).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(playCue).toHaveBeenCalledTimes(1));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(8100);
     });

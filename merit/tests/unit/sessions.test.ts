@@ -220,6 +220,16 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     expect(await testDb.auditLog.count({ where: { action: "LOGOUT", userId: user.id } })).toBe(1);
   });
 
+  it("touchSession bitişi mutlak ömrün (loginAt + 720 dk) ötesine uzatmaz", async () => {
+    const user = await makeUser({ username: "gar-abs", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const s = await newSession(user.id, "ROYAL", user.roleId);
+    const loginAt = new Date(Date.now() - 11 * 3600_000);
+    await testDb.userSession.update({ where: { id: s.id }, data: { loginAt } });
+    await touchSession(s.id);
+    const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
+    expect(row.expiresAt.getTime()).toBe(loginAt.getTime() + 720 * 60_000);
+  });
+
   it("touchSession lastSeenAt değerini ilerletir", async () => {
     const user = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL" });
     const s = await newSession(user.id, "ROYAL", user.roleId);
@@ -383,6 +393,23 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     }
     expect(deps.setCookie).not.toHaveBeenCalled();
     expect(await testDb.userSession.count()).toBe(0);
+  });
+
+  it("başarısız girişler LOGIN_FAILED olarak denetlenir; parola ve bilinmeyen kullanıcı adı yazılmaz", async () => {
+    const known = await makeUser({ username: "gar1", roleCode: "R-GAR", hotelCode: "ROYAL", passwordHash });
+    const deps = makeDeps();
+    const started = new Date(Date.now() - 1000);
+    await performLogin(creds("gar1", "yanlis-sifre-123"), deps);
+    await performLogin(creds("gizli-yok-kullanici", "yanlis-sifre-456"), deps);
+    const rows = await testDb.auditLog.findMany({ where: { action: "LOGIN_FAILED", ip: ctx.ip, createdAt: { gte: started } }, orderBy: { createdAt: "asc" } });
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({ userId: known.id, entityId: known.id, ip: ctx.ip });
+    expect(rows[0].after).toMatchObject({ reason: "YANLIS_SIFRE" });
+    expect(rows[1]).toMatchObject({ userId: null, entityId: null });
+    expect(rows[1].after).toMatchObject({ reason: "BILINMEYEN_KULLANICI", usernameHint: "gi***" });
+    const text = JSON.stringify(rows);
+    expect(text).not.toContain("yanlis-sifre");
+    expect(text).not.toContain("gizli-yok-kullanici");
   });
 
   it("6. deneme RATE_LIMITED; başka IP + başka kullanıcı etkilenmez", async () => {

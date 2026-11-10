@@ -344,7 +344,7 @@ export function QualityPanel({
                     >
                       {busyKey === "fix-all-translations"
                         ? "Çeviriler Tamamlanıyor..."
-                        : `⚡ Eksik Çevirileri Otomatik Düzelt (${affected.length} Ürün)`}
+                        : `Eksik Çevirileri Otomatik Düzelt (${affected.length} Ürün)`}
                     </button>
                   </div>
                 )}
@@ -368,7 +368,7 @@ export function QualityPanel({
                     >
                       {busyKey === "fix-all-details"
                         ? "Kısaltılıyor..."
-                        : `✂️ ${affected.length} Ürünü Otomatik Kısalt & Düzelt`}
+                        : `${affected.length} Ürünü Otomatik Kısalt & Düzelt`}
                     </button>
                   </div>
                 )}
@@ -389,7 +389,7 @@ export function QualityPanel({
                       }}
                       onClick={() => onEnableCuratedPhotos()}
                     >
-                      ✨ Küratörlü Fotoğraf Modunu Etkinleştir (Düzelt)
+                      Küratörlü Fotoğraf Modunu Etkinleştir (Düzelt)
                     </button>
                   </div>
                 )}
@@ -428,7 +428,7 @@ export function QualityPanel({
                         >
                           {busyKey === "fix-all-translations"
                             ? "Tüm Eksik Çeviriler Tamamlanıyor..."
-                            : `⚡ Tüm Eksik Çevirileri Otomatik Tamamla (${affected.length} Ürün)`}
+                            : `Tüm Eksik Çevirileri Otomatik Tamamla (${affected.length} Ürün)`}
                         </button>
                       </div>
                     )}
@@ -454,7 +454,7 @@ export function QualityPanel({
                           >
                             {busyKey === "fix-all-allergens"
                               ? "Uygulanıyor..."
-                              : "✨ Tespit Edilen Alerjenleri Otomatik Doldur"}
+                              : "Tespit Edilen Alerjenleri Otomatik Doldur"}
                           </button>
                           <button
                             type="button"
@@ -462,7 +462,7 @@ export function QualityPanel({
                             style={{ fontSize: 10, padding: "4px 6px", fontWeight: 600 }}
                             onClick={() => setShowAllergenGuide((v) => !v)}
                           >
-                            {showAllergenGuide ? "Rehberi Gizle" : "📚 Hazır Alerjen Rehberi"}
+                            {showAllergenGuide ? "Rehberi Gizle" : "Hazır Alerjen Rehberi"}
                           </button>
                         </div>
 
@@ -510,7 +510,7 @@ export function QualityPanel({
                       >
                         {busyKey === "fix-all-details"
                           ? "Tüm Açıklamalar Kısaltılıyor..."
-                          : `✂️ Tümünü Otomatik Kısalt & Kaydet (${affected.length} Ürün ≤135 kr.)`}
+                          : `Tümünü Otomatik Kısalt & Kaydet (${affected.length} Ürün ≤135 kr.)`}
                       </button>
                     )}
 
@@ -656,7 +656,7 @@ export function QualityPanel({
                                       background: "#f8fafc",
                                     }}
                                   >
-                                    <option value="">📋 Hazır Alerjen Şablonu Seçin...</option>
+                                    <option value="">Hazır Alerjen Şablonu Seçin...</option>
                                     {ALLERGEN_PRESETS.map((p) => (
                                       <option key={p.id} value={p.id}>
                                         [{p.category}] {p.label}
@@ -732,7 +732,7 @@ export function QualityPanel({
                                         setDetailDrafts((prev) => ({ ...prev, [item.id]: short }));
                                       }}
                                     >
-                                      ✂️ Kısalt (≤135 kr.)
+                                      Kısalt (≤135 kr.)
                                     </button>
                                     <button
                                       type="button"

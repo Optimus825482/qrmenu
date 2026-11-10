@@ -18,7 +18,7 @@ import { validateCartItems } from "./cart";
 export const orderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
 
 const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
-const UNKNOWN_ITEM = "Bilinmeyen öğe";
+const GUEST_REJECT_TEXT = "Siparişiniz işleme alınamadı. Ayrıntı için lütfen görevlimize danışın.";
 
 /** Strips HTML tags and control characters (line breaks become spaces), then trims. */
 function sanitize(text: string): string {
@@ -93,14 +93,15 @@ export function toGuestOrderView(order: ViewOrder, extra: Partial<GuestOrderView
       name: item.nameSnapshot,
       qty: item.qty,
       ...(item.note ? { note: item.note } : {}),
-      ...(item.unitPrice
+      ...(order.pricesShown && item.unitPrice
         ? { unitPrice: money(item.unitPrice), lineTotal: money(item.unitPrice.mul(item.qty)) }
         : {}),
     })),
     ...(order.subtotal ? { subtotal: money(order.subtotal) } : {}),
     currency: order.currency,
     pricesShown: order.pricesShown,
-    ...(order.rejectReason ? { rejectReason: order.rejectReason } : {}),
+    // The staff-entered reason is internal; guests only get a generic notice.
+    ...(order.rejectReason ? { rejectReason: GUEST_REJECT_TEXT } : {}),
     tableLabel: order.table?.label ?? undefined,
     kind: (order.kind as "MASA" | "ODA_SERVISI") ?? "MASA",
     roomNumber: order.room?.number ?? undefined,

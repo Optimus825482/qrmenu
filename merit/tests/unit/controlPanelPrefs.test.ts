@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { safeAction } from "@/lib/result";
 import { buildPersistSnapshot } from "@/shell/persistSnapshot";
-import { parseShellPrefs, shellPrefsSchema } from "@/shell/prefsSchema";
+import { parseShellPrefs, shellPrefsInputSchema } from "@/shell/prefsSchema";
 import { DEFAULT_APPEARANCE, type ShellPrefs } from "@/shell/types";
 import { createWindowStore } from "@/shell/windowStore";
 
@@ -34,14 +34,17 @@ describe("ShellPrefs görünüm alanları", () => {
     expect(prefs).toMatchObject({ fontScale: "XL", fontFamily: "verdana", theme: "royal" });
   });
 
-  it("geçersiz theme → parse null; sunucu eylemi VALIDATION", async () => {
-    expect(parseShellPrefs({ ...legacy, theme: "neon" })).toBeNull();
-    expect(parseShellPrefs({ ...legacy, fontScale: "XXXXL" })).toBeNull();
-    expect(parseShellPrefs({ ...legacy, fontFamily: "comic" })).toBeNull();
-    const save = safeAction(shellPrefsSchema, async () => null);
-    const result = await save({ ...legacy, theme: "neon" });
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("VALIDATION");
+  it("depodan okunan bozuk alan varsayılana düşer (SHL-5); yeni kayıt isteğinde geçersiz değer sunucu eylemi VALIDATION verir", async () => {
+    expect(parseShellPrefs({ ...legacy, theme: "neon" })).toMatchObject({ theme: "luna" });
+    expect(parseShellPrefs({ ...legacy, fontScale: "XXXXL" })).toMatchObject({ fontScale: "M" });
+    expect(parseShellPrefs({ ...legacy, fontFamily: "comic" })).toMatchObject({ fontFamily: "tahoma" });
+    const save = safeAction(shellPrefsInputSchema, async () => null);
+    for (const bad of [{ theme: "neon" }, { fontScale: "XXXXL" }, { fontFamily: "comic" }]) {
+      const result = await save({ ...legacy, ...bad });
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.error.code).toBe("VALIDATION");
+    }
+    expect((await save({ ...legacy, theme: "royal" })).ok).toBe(true);
   });
 });
 

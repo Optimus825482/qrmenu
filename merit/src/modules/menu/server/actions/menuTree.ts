@@ -45,14 +45,7 @@ export async function deleteMenuNodeAction(raw: unknown): Promise<Result<{ deact
   return safeAction(z.object({ nodeId: id }), async (i) => tree.remove(await requireUser(), i.nodeId))(raw);
 }
 
-export async function setTranslationAction(
-  raw: unknown,
-): Promise<Result<{ lang: string; name: string; detail: string | null }>> {
-  return safeAction(z.object({ nodeId: id, lang: z.string(), data }), async (i) =>
-    translations.set(await requireUser(), i.nodeId, i.lang, i.data as { name: string; detail?: string }),
-  )(raw);
-}
-
+// Translations are automatic only (K2): no manual set / verify / remove actions.
 export async function autoTranslateMenuNodeAction(
   raw: unknown,
 ): Promise<Result<{ languages: string[]; provider?: string }>> {
@@ -70,20 +63,6 @@ export async function auditAndSyncOutletTranslationsAction(
   )(raw);
 }
 
-export async function verifyTranslationAction(raw: unknown): Promise<Result<null>> {
-  return safeAction(z.object({ nodeId: id, lang: z.string() }), async (i) => {
-    await translations.verify(await requireUser(), i.nodeId, i.lang);
-    return null;
-  })(raw);
-}
-
-export async function removeTranslationAction(raw: unknown): Promise<Result<null>> {
-  return safeAction(z.object({ nodeId: id, lang: z.string() }), async (i) => {
-    await translations.remove(await requireUser(), i.nodeId, i.lang);
-    return null;
-  })(raw);
-}
-
 export async function uploadMenuImagesAction(
   formData: FormData,
 ): Promise<Result<{ imageUrl: string | null; imageUrls: string[] }>> {
@@ -93,6 +72,7 @@ export async function uploadMenuImagesAction(
       files: z.array(z.instanceof(File, { message: "Görsel seçin" })).min(1, "En az bir görsel seçin"),
     }),
     async (i) => {
+      const ctx = await requireUser();
       const uploadFiles: images.UploadFile[] = [];
       for (const file of i.files) {
         if (file.size === 0) continue;
@@ -104,7 +84,7 @@ export async function uploadMenuImagesAction(
         });
       }
       if (uploadFiles.length === 0) throw new DomainError("VALIDATION", "Görsel seçin");
-      return images.uploadMultiple(await requireUser(), i.nodeId, uploadFiles);
+      return images.uploadMultiple(ctx, i.nodeId, uploadFiles);
     },
   )({
     nodeId: formData.get("nodeId"),
@@ -147,8 +127,9 @@ export async function replaceMenuImageAction(formData: FormData): Promise<Result
       file: z.instanceof(File, { message: "Görsel seçin" }),
     }),
     async (i) => {
+      const ctx = await requireUser();
       if (i.file.size === 0) throw new DomainError("VALIDATION", "Görsel seçin");
-      const res = await images.replace(await requireUser(), i.nodeId, i.oldImageUrl, {
+      const res = await images.replace(ctx, i.nodeId, i.oldImageUrl, {
         name: i.file.name,
         type: i.file.type,
         size: i.file.size,

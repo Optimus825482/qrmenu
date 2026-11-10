@@ -3,7 +3,7 @@
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeAction, type Result } from "@/lib/result";
-import { parseShellPrefs, shellPrefsSchema } from "./prefsSchema";
+import { parseShellPrefs, shellPrefsInputSchema } from "./prefsSchema";
 import { writeShellPrefs } from "./prefsStore";
 import type { ShellPrefs } from "./types";
 
@@ -13,7 +13,7 @@ import type { ShellPrefs } from "./types";
  */
 
 export async function saveShellPrefs(p: ShellPrefs): Promise<Result<null>> {
-  return safeAction(shellPrefsSchema, async (prefs) => {
+  return safeAction(shellPrefsInputSchema, async (prefs) => {
     const ctx = await requireUser();
     await writeShellPrefs(prisma, ctx.user.id, prefs);
     return null;

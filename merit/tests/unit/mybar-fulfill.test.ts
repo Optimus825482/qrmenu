@@ -14,7 +14,7 @@ vi.mock("@/lib/realtime", async (importActual) => ({
 }));
 
 const { fulfill } = await import("@/modules/mybar/server/fulfill");
-const { complete } = await import("@/modules/mybar/server/requests");
+const { cancel, complete } = await import("@/modules/mybar/server/requests");
 
 let fx: MybarFixture;
 let kat1: Ctx;
@@ -185,5 +185,27 @@ describe("fulfill", () => {
     expect(await testDb.minibarTransaction.count({ where: { mybarRequestId: reqId } })).toBe(0);
     await fulfill(dep1, reqId, { all: true });
     expect(await delivered()).toEqual({ [fx.products.su]: 2, [fx.products.kola]: 2 });
+  });
+});
+
+describe("cancel after a partial fulfilment", () => {
+  it("returns the delivered quantities to the pool (IADE) and keeps deliveredQty", async () => {
+    await fulfill(kat1, reqId, { lines: [{ productId: fx.products.su, qty: 2 }, { productId: fx.products.kola, qty: 1 }] });
+    expect(await remaining(fx.products.su)).toBe(98);
+    expect(await remaining(fx.products.kola)).toBe(99);
+
+    await cancel(dep1, reqId, { reason: "misafir odadan ayrıldı" });
+
+    expect(await remaining(fx.products.su)).toBe(100);
+    expect(await remaining(fx.products.kola)).toBe(100);
+    const iade = await testDb.hotelStockMovement.findMany({ where: { refId: reqId, type: "IADE" } });
+    expect(iade.map((m) => m.qty).sort()).toEqual([1, 2]);
+    expect(await delivered()).toEqual({ [fx.products.su]: 2, [fx.products.kola]: 1 });
+  });
+
+  it("a request nothing was delivered for touches no stock", async () => {
+    await cancel(dep1, reqId, { reason: "misafir odadan ayrıldı" });
+    expect(await remaining(fx.products.su)).toBe(100);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: reqId } })).toBe(0);
   });
 });

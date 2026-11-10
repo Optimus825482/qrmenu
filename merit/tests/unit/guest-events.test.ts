@@ -20,6 +20,20 @@ describe("guestEventFilter", () => {
     expect(filter(ev({ type: "price.display", hotelId: "h1", outletId: "o2" }))).toBe(false);
   });
 
+  it("SEC-9: call.resolved yalnız aynı otel/outlet ve aynı masa akışına gider", () => {
+    const table = guestEventFilter({ outletId: "o1", hotelId: "h1", tableId: "t1", orderIds: [] });
+    const call = (over: Partial<MeritEvent> = {}, tableId = "t1") =>
+      ev({ type: "call.resolved", hotelId: "h1", outletId: "o1", payload: { tableId, status: "YANITLANDI" }, ...over });
+    expect(table(call())).toBe(true);
+    expect(table(call({}, "t2"))).toBe(false);
+    expect(table(call({ outletId: "o2" }))).toBe(false);
+    expect(table(call({ hotelId: "h2" }))).toBe(false);
+    expect(table(ev({ type: "call.resolved", hotelId: "h1", outletId: "o1" }))).toBe(false);
+    // Outlet-wide (no table) and room streams never get it.
+    expect(filter(call())).toBe(false);
+    expect(guestEventFilter({ outletId: "o1", hotelId: "h1", roomId: "r1", orderIds: [] })(call())).toBe(false);
+  });
+
   it("misafir olmayan tipler elenir", () => {
     expect(filter(ev({ type: "order.created", outletId: "o1", payload: { orderId: "ord1" } }))).toBe(false);
     expect(filter(ev({ type: "notification.created", outletId: "o1" }))).toBe(false);
@@ -65,6 +79,18 @@ describe("sanitizeGuestEvent", () => {
     const out = sanitizeGuestEvent(e);
     expect(out.payload).toEqual({ orderId: "x", orderNo: 5, status: "ONAYLANDI", from: "GONDERILDI", kind: "MASA", tableId: "t" });
     expect((e.payload as { byUserId?: string }).byUserId).toBe("staff1");
+  });
+  it("personelin yazdığı ret/iptal gerekçesi misafire ham gitmez, genel metne döner", () => {
+    const mk = (payload: Record<string, unknown>) =>
+      sanitizeGuestEvent({ type: "order.rejected", hotelId: "h", outletId: "o", at: "x", payload } as MeritEvent).payload as Record<string, unknown>;
+    const rejected = mk({ orderId: "x", status: "REDDEDILDI", rejectReason: "Misafir kara listede" });
+    expect(rejected.rejectReason).toBe("Siparişiniz işleme alınamadı. Ayrıntı için lütfen görevlimize danışın.");
+    expect(JSON.stringify(rejected)).not.toContain("kara liste");
+    const cancelled = mk({ orderId: "x", status: "IPTAL", cancelReason: "Garson hatası" });
+    expect(cancelled.cancelReason).toBeUndefined();
+    expect(JSON.stringify(cancelled)).not.toContain("Garson hatası");
+    expect(cancelled.rejectReason).toBeDefined();
+    expect(mk({ orderId: "x", status: "ONAYLANDI" }).rejectReason).toBeUndefined();
   });
   it("order dışı olaylara dokunmaz", () => {
     const e = { type: "menu.changed", at: "x", payload: { a: 1 } } as MeritEvent;

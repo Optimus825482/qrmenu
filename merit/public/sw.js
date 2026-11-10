@@ -1,6 +1,7 @@
 /*
  * F&B Command Center service worker v3.
- * - Build assets (/_next/static/*, content-hashed), fonts, and app icons are served cache-first.
+ * - Build assets (/_next/static/*, content-hashed) and fonts are served cache-first.
+ * - App icons and brand images (/icons, /brand; same URL, content can change) are Stale-While-Revalidate.
  * - Menu sample and uploaded dish images are served Stale-While-Revalidate with offline fallback.
  * - Offline navigation fallback (/offline.html) is precached on install.
  * - Dynamic API, SSE, and server actions go directly to network untouched (no authenticated data is cached).
@@ -75,10 +76,15 @@ self.addEventListener("message", (event) => {
 function isStaticAsset(url) {
   return (
     url.origin === self.location.origin &&
-    (url.pathname.startsWith("/_next/static/") ||
-     url.pathname.startsWith("/icons/") ||
-     url.pathname.startsWith("/fonts/") ||
-     url.pathname.startsWith("/brand/"))
+    (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/fonts/"))
+  );
+}
+
+/** Unhashed brand assets: serve the cached copy at once, refresh it in the background. */
+function isRevalidatedAsset(url) {
+  return (
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith("/icons/") || url.pathname.startsWith("/brand/"))
   );
 }
 
@@ -128,6 +134,26 @@ self.addEventListener("fetch", (event) => {
         } catch (e) {
           return hit || Response.error();
         }
+      })()
+    );
+    return;
+  }
+
+  // 2b. Icons and brand images -> Stale-While-Revalidate (same URL may change between releases)
+  if (isRevalidatedAsset(url)) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(STATIC_CACHE);
+        const cached = await cache.match(request);
+        const fetchPromise = fetch(request)
+          .then(async (networkResponse) => {
+            if (networkResponse.ok && networkResponse.type === "basic") {
+              await cache.put(request, networkResponse.clone());
+            }
+            return networkResponse;
+          })
+          .catch(() => null);
+        return cached || (await fetchPromise) || Response.error();
       })()
     );
     return;

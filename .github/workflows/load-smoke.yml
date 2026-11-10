@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:17
+        image: postgres:16
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: merit_test
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/package-lock.json
       - run: npm ci

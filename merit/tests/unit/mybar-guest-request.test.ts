@@ -245,6 +245,14 @@ describe("talep oluşturma", () => {
     expect(publishMock.mock.calls.some(([e]) => e.type === "mybar.created")).toBe(true);
   });
 
+  it("alıcı yoksa bildirim yedek alıcıya (R-SYS) düşer", async () => {
+    const w = await minibarWorld();
+    const sys = await staff("R-SYS");
+    const res = await submit(w);
+    const rows = await testDb.notification.findMany({ where: { type: "mybar.created", refId: res.requestId } });
+    expect(rows.map((n) => n.userId)).toEqual([sys.userId]);
+  });
+
   it("idempotency: aynı anahtar → aynı talep, duplicate, ek bildirim yok; farklı oda → CONFLICT", async () => {
     const w = await minibarWorld({ rooms: 2 });
     await staff("R-KAT");
@@ -293,6 +301,31 @@ describe("talep oluşturma", () => {
     const other = await minibarWorld({ hotelCode: "DIAMOND" });
     await submit(other);
     expect(await codeOf(submit(other))).toBe("DAILY_LIMIT");
+  });
+
+  it("mybar.dailyMax: günlük sınır açıkken oda en çok o kadar giriş alır", async () => {
+    const w = await minibarWorld();
+    await setSetting(await sysAdmin(), "mybar.dailyMax", 2, w.hotelId);
+    await submit(w);
+    await submit(w);
+    expect(await codeOf(submit(w))).toBe("DAILY_LIMIT");
+    expect(await testDb.mybarRequest.count()).toBe(2);
+  });
+
+  it("anahtar yalnız aynı iş gününde tekrar oynatılır; eski günün anahtarı reddedilir", async () => {
+    const w = await minibarWorld();
+    const key = randomUUID();
+    const first = await submit(w, undefined, { idempotencyKey: key });
+    const again = await submit(w, undefined, { idempotencyKey: key });
+    expect(again).toMatchObject({ requestId: first.requestId, duplicate: true });
+    await testDb.mybarRequest.update({
+      where: { id: first.requestId },
+      data: { businessDate: new Date("2020-01-01T00:00:00Z") },
+    });
+    const err = await errOf(submit(w, undefined, { idempotencyKey: key }));
+    expect(err.code).toBe("VALIDATION");
+    expect(err.fieldErrors?.idempotencyKey).toBeTruthy();
+    expect(await testDb.mybarRequest.count()).toBe(1);
   });
 
   it("not çevirisi: noteTr dolar; sağlayıcı reddederse talep yine oluşur", async () => {
@@ -415,6 +448,41 @@ describe("durum uç noktası", () => {
     const cancelled = await get();
     expect(cancelled.request?.status).toBe("IPTAL");
     expect(JSON.stringify(cancelled)).not.toContain("iç not");
+  });
+});
+
+describe("durum uç noktası: kısmi kapanış ve gün aşımı", () => {
+  const getOf = (w: World) => () =>
+    guest.guestRequestStatus({ token: w.room.qrToken!, locale: "tr", ip: "1.1.1.1", userAgent: "t" });
+
+  it("eksikle kapatılan talep misafire KISMEN görünür, tam kapanış KARSILANDI kalır", async () => {
+    const w = await minibarWorld();
+    const kat = await staff("R-KAT");
+    const r = await submit(w);
+    await testDb.mybarRequest.update({
+      where: { id: r.requestId },
+      data: { status: "TAMAMLANDI", completedById: kat.userId, completedAt: new Date(), closedWithMissing: true },
+    });
+    expect((await getOf(w)()).request?.status).toBe("KISMEN");
+    await testDb.mybarRequest.update({ where: { id: r.requestId }, data: { closedWithMissing: false } });
+    expect((await getOf(w)()).request?.status).toBe("KARSILANDI");
+  });
+
+  it("önceki günden kalan bekleyen talep gece yarısından sonra da görünür; kapanmış eski talep görünmez", async () => {
+    const w = await minibarWorld();
+    const r = await submit(w);
+    await testDb.mybarRequest.update({
+      where: { id: r.requestId },
+      data: { businessDate: new Date("2020-01-01T00:00:00Z") },
+    });
+    const pending = await getOf(w)();
+    expect(pending.request?.requestId).toBe(r.requestId);
+    expect(pending.request?.status).toBe("BEKLIYOR");
+    await testDb.mybarRequest.update({
+      where: { id: r.requestId },
+      data: { status: "TAMAMLANDI", completedAt: new Date() },
+    });
+    expect((await getOf(w)()).request).toBeNull();
   });
 });
 

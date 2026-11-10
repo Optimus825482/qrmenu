@@ -13,6 +13,9 @@ type SseOptions = {
   map?: (e: MeritEvent) => MeritEvent;
 };
 
+/** Frames a stalled consumer may leave queued before its stream is closed. */
+const MAX_QUEUED_FRAMES = 256;
+
 /**
  * An SSE body over any event filter, independent of HTTP: a `hello` frame, every event `filter`
  * accepts as a named frame, and a `: ping` comment every `pingMs`. When `signal` aborts (or the
@@ -52,6 +55,11 @@ export function createFilteredSseStream(
       };
       const write = (chunk: string) => {
         if (closed) return;
+        // A consumer that stopped reading must not make the queue grow without bound: drop it, the client reconnects.
+        if (controller.desiredSize !== null && controller.desiredSize < -MAX_QUEUED_FRAMES) {
+          cleanup();
+          return;
+        }
         try {
           controller.enqueue(encoder.encode(chunk));
         } catch {

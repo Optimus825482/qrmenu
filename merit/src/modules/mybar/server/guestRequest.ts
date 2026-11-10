@@ -36,7 +36,7 @@ export const mybarSubmitSchema = z.object({
 });
 
 export type GuestRequestView = { requestId: string; duplicate: boolean; createdAt: string };
-export type GuestRequestStatus = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "IPTAL";
+export type GuestRequestStatus = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "KISMEN" | "IPTAL";
 export type GuestRequestStatusView = {
   request: null | {
     requestId: string;
@@ -74,14 +74,25 @@ async function resolveRoom(token: string, meta: GuestMeta): Promise<RoomRef> {
   throw new DomainError("NOT_FOUND", "Geçersiz QR kod");
 }
 
+const STALE_KEY_MESSAGE = "Bu istek anahtarı önceki bir güne ait";
+
+type PriorRequest = { id: string; roomId: string; createdAt: Date; businessDate: Date };
+
+/** A key replays only within the business day it was used; an older one is refused so the client issues a fresh key. */
+function replayView(prior: PriorRequest, roomId: string): GuestRequestView {
+  if (prior.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
+  if (prior.businessDate.getTime() !== businessDay(businessDate()).getTime()) {
+    throw new DomainError("VALIDATION", STALE_KEY_MESSAGE, { fieldErrors: { idempotencyKey: [STALE_KEY_MESSAGE] } });
+  }
+  return { requestId: prior.id, duplicate: true, createdAt: prior.createdAt.toISOString() };
+}
+
 async function replayOf(idempotencyKey: string, roomId: string): Promise<GuestRequestView | null> {
   const prior = await prisma.mybarRequest.findUnique({
     where: { idempotencyKey },
-    select: { id: true, roomId: true, createdAt: true },
+    select: { id: true, roomId: true, createdAt: true, businessDate: true },
   });
-  if (!prior) return null;
-  if (prior.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
-  return { requestId: prior.id, duplicate: true, createdAt: prior.createdAt.toISOString() };
+  return prior ? replayView(prior, roomId) : null;
 }
 
 export async function createGuestRequest(
@@ -128,17 +139,14 @@ export async function createGuestRequest(
 
       const raced = await tx.mybarRequest.findUnique({
         where: { idempotencyKey: data.idempotencyKey },
-        select: { id: true, roomId: true, createdAt: true },
+        select: { id: true, roomId: true, createdAt: true, businessDate: true },
       });
-      if (raced) {
-        if (raced.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
-        return { requestId: raced.id, duplicate: true, createdAt: raced.createdAt.toISOString() };
-      }
+      if (raced) return replayView(raced, roomId);
 
       const today = businessDay(businessDate());
       if (await getSetting("mybar.dailyLimit", hotelId)) {
         const used = await tx.mybarRequest.count({ where: { roomId, businessDate: today, status: { not: "IPTAL" } } });
-        if (used > 0) throw new DomainError("DAILY_LIMIT", "Bugün bu odadan talep gönderildi");
+        if (used >= (await getSetting("mybar.dailyMax", hotelId))) throw new DomainError("DAILY_LIMIT", "Bugün bu odadan talep gönderildi");
       }
 
       const catalog = await catalogProductIds(roomId, tx);
@@ -213,18 +221,25 @@ export async function createGuestRequest(
   }
 }
 
-const GUEST_STATUS = (r: { status: string; seenAt: Date | null }): GuestRequestStatus =>
-  r.status === "TAMAMLANDI" ? "KARSILANDI" : r.status === "IPTAL" ? "IPTAL" : r.seenAt ? "GORULDU" : "BEKLIYOR";
+/** "KISMEN": staff closed the request with some products missing; the guest must not read it as fully served. */
+const GUEST_STATUS = (r: { status: string; seenAt: Date | null; closedWithMissing: boolean }): GuestRequestStatus =>
+  r.status === "TAMAMLANDI"
+    ? r.closedWithMissing ? "KISMEN" : "KARSILANDI"
+    : r.status === "IPTAL" ? "IPTAL" : r.seenAt ? "GORULDU" : "BEKLIYOR";
 
-/** Today's most recent request of the room as the guest may see it: no staff names, notes, prices or internals. */
+/**
+ * The room's most recent request of today, or a still-pending one from an earlier day (it must not vanish at
+ * midnight), as the guest may see it: no staff names, notes, prices or internals.
+ */
 export async function roomRequestStatus(roomId: string, locale: Locale): Promise<GuestRequestStatusView> {
   const row = await prisma.mybarRequest.findFirst({
-    where: { roomId, businessDate: businessDay(businessDate()) },
+    where: { roomId, OR: [{ businessDate: businessDay(businessDate()) }, { status: "BEKLEMEDE" }] },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       id: true,
       status: true,
       seenAt: true,
+      closedWithMissing: true,
       createdAt: true,
       items: { select: { requestedQty: true, product: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
     },

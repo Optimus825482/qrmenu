@@ -249,6 +249,24 @@ describe("indirme route'ları", () => {
     expect(html).toContain("Teras");
     expect(html).toContain("T1");
   });
+
+  it("SEC-1: kötü niyetli theme/template/areaId çıktıda kaçışsız görünmez, varsayılana düşer", async () => {
+    const ctx = await fbm();
+    requireUser.mockResolvedValue(ctx);
+    const outlet = await newOutlet();
+    await newTables(outlet.id, 1, () => null);
+    await tableQr.regenerateAll(ctx, outlet.id, {});
+    const evil = encodeURIComponent('"><script>alert(1)</script>');
+    const res = await printRoute.GET(
+      new Request(`http://localhost/api/qr/outlet/${outlet.id}/print?theme=${evil}&template=${evil}&areaId=${evil}`),
+      params({ outletId: outlet.id }),
+    );
+    const html = await res.text();
+    expect(html).not.toContain("<script>alert(1)");
+    expect(html).not.toContain('"><script>');
+    expect(html).toContain('data-theme="royal"');
+    expect(html).toContain('data-template="stand"');
+  });
 });
 
 describe("csvCell ve etiketler.csv", () => {

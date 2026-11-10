@@ -264,15 +264,16 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
     </label>
   );
 
+  const matrixScreens = matrix?.screens;
   const filteredScreens = useMemo(() => {
-    if (!matrix?.screens) return [];
-    return matrix.screens.filter((s) => {
+    if (!matrixScreens) return [];
+    return matrixScreens.filter((s) => {
       const matchesMod = moduleFilter === "ALL" || s.moduleKey === moduleFilter;
       const q = searchFilter.trim().toLowerCase();
       const matchesSearch = !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
       return matchesMod && matchesSearch;
     });
-  }, [matrix?.screens, moduleFilter, searchFilter]);
+  }, [matrixScreens, moduleFilter, searchFilter]);
 
   return (
     <div
@@ -281,11 +282,11 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        overflowX: "hidden",
-        height: "100%",
-        maxHeight: "100%",
+        overflowX: "auto",
+        flex: 1,
         minHeight: 0,
-        padding: "4px 8px 16px",
+        height: "100%",
+        padding: "4px 8px 24px",
       }}
     >
       <div role="tablist" aria-label="Rol görünümü" className="xp-defs-filters" style={{ flexShrink: 0 }}>
@@ -315,11 +316,11 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
           aria-label="Bu rol ne görür?"
           data-testid="role-preview"
           style={{
-            overflowY: "auto",
-            overflowX: "hidden",
-            flex: 1,
-            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            minHeight: "min-content",
             paddingRight: "6px",
+            paddingBottom: "16px",
           }}
         >
           <div className="xp-defs-filters" style={{ flexShrink: 0, marginBottom: "8px" }}>
@@ -353,14 +354,12 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
       ) : (
         <section
           style={{
-            overflowY: "auto",
-            overflowX: "hidden",
-            flex: 1,
-            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             gap: "10px",
+            minHeight: "min-content",
             paddingRight: "6px",
+            paddingBottom: "16px",
           }}
         >
           <div className="xp-defs-filters xp-role-screen-selectors" style={{ flexShrink: 0 }}>
@@ -396,7 +395,7 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
           ) : null}
           {locked ? (
             <p className="xp-defs-note" style={{ color: "var(--xp-accent, #0055ea)", fontWeight: "bold" }}>
-              👑 Sistem Yöneticisi rolünün ekran yetkileri sistem güvenliği gereği kilitlidir ve tam yetkilidir.
+              Sistem Yöneticisi rolünün ekran yetkileri sistem güvenliği gereği kilitlidir ve tam yetkilidir.
             </p>
           ) : null}
 

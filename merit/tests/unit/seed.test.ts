@@ -275,7 +275,7 @@ describe("seed (gerçek test DB)", () => {
     const get = async (key: string) =>
       (await db.setting.findFirstOrThrow({ where: { hotelId: null, key } })).value;
     expect(await get("session.maxOnlineMinutes")).toBe(480);
-    expect(await get("price.currency")).toBe("EUR");
+    expect(await get("price.display")).toBe("HIDE");
     expect(await get("session.singleDevice")).toBe(true);
   });
 

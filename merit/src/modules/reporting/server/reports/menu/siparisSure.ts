@@ -81,6 +81,15 @@ export const siparisSure = defineReport<Params>({
       GROUP BY ${Prisma.raw(dim.key)}, 1
       ORDER BY 1
       LIMIT ${fetchCap(scope)}`;
+    // Summary over the whole range (not the capped rows): same filters and joins, no GROUP BY / LIMIT.
+    const [tot] = await prisma.$queryRaw<{ orders: number; escalated: number }[]>`
+      SELECT COUNT(*)::int AS orders, COUNT(*) FILTER (WHERE o.escalated_at IS NOT NULL)::int AS escalated
+      FROM orders o
+      JOIN outlets ou ON ou.id = o.outlet_id
+      JOIN hotels h ON h.id = o.hotel_id
+      ${dim.join}
+      WHERE o.kind::text = 'MASA' AND ${hotelIn("o.hotel_id", scope)}
+        AND o.business_date >= ${scope.dayFrom} AND o.business_date <= ${scope.dayTo} ${outletEq("o.outlet_id", scope)}`;
     return {
       columns: [
         { key: "label", title: params.groupBy === "outlet" ? "Outlet" : params.groupBy === "garson" ? "Garson" : "Onaylayan", type: "text", width: 28 },
@@ -101,10 +110,10 @@ export const siparisSure = defineReport<Params>({
         escalated: r.escalated,
       })),
       summary: [
-        { label: "Sipariş", value: rows.reduce((a, r) => a + r.orders, 0) },
-        { label: "Eskalasyon", value: rows.reduce((a, r) => a + r.escalated, 0) },
+        { label: "Sipariş", value: tot?.orders ?? 0 },
+        { label: "Eskalasyon", value: tot?.escalated ?? 0 },
       ],
-      truncated: false,
+      truncated: rows.length > scope.limit,
     };
   },
 });

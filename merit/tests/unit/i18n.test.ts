@@ -28,7 +28,7 @@ describe("mesaj dosyaları", () => {
     for (const key of [
       "guest.menu.title",
       "guest.menu.orderingClosed",
-      "guest.menu.soldOut",
+      "guest.menu.nothingAvailable",
       "guest.cart.title",
       "guest.cart.add",
       "guest.cart.submit",

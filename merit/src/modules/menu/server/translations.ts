@@ -1,11 +1,9 @@
 import { createHash } from "node:crypto";
-import { z } from "zod";
 import type { Ctx } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { publish } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 import { prisma } from "@/lib/prisma";
-import { parseInput } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
@@ -41,9 +39,9 @@ const CULINARY_GLOSSARY: Record<string, Record<TranslationLang, string>> = {
 
 /**
  * Keyless automatic translation via Google Translate GTX API with glossary fallback.
- * Ensures 100% translation completion even when DeepL / Gemini API keys are not set.
+ * `null` when the service gives no translation: the Turkish text is never passed off (and cached) as one.
  */
-async function googleGtxTranslateSingle(text: string, targetLang: TranslationLang): Promise<string> {
+async function googleGtxTranslateSingle(text: string, targetLang: TranslationLang): Promise<string | null> {
   const trimmed = text.trim();
   if (!trimmed) return "";
   const upper = trimmed.toLocaleUpperCase("tr-TR");
@@ -69,9 +67,9 @@ async function googleGtxTranslateSingle(text: string, targetLang: TranslationLan
       }
     }
   } catch {
-    // Fallback to original text if offline
+    // Offline / timeout: no translation (the caller fails and the node is retried later).
   }
-  return trimmed;
+  return null;
 }
 
 export async function autoCloudTranslate(
@@ -84,13 +82,10 @@ export async function autoCloudTranslate(
         googleGtxTranslateSingle(name, lang),
         detail ? googleGtxTranslateSingle(detail, lang) : Promise.resolve(null),
       ]);
-      return [
-        lang,
-        {
-          name: translatedName || name.trim(),
-          detail: detail ? (translatedDetail || detail.trim()) : null,
-        },
-      ] as const;
+      if (!translatedName || (detail && !translatedDetail)) {
+        throw new Error(`Otomatik çeviri servisi ${lang.toUpperCase()} çevirisini döndürmedi.`);
+      }
+      return [lang, { name: translatedName, detail: detail ? translatedDetail : null }] as const;
     }),
   );
   return Object.fromEntries(entries) as Record<TranslationLang, { name: string; detail: string | null }>;
@@ -420,7 +415,7 @@ export async function translateMenuItem(
   return { translations, provider: "AutoCloud" };
 }
 
-/** Generate complete translations first, then persist all languages as a single verified operation. */
+/** Generate complete translations first, then persist all languages in one transaction (automatic only, K2). */
 export async function autoGenerate(
   ctx: Ctx,
   nodeId: string,
@@ -437,8 +432,8 @@ export async function autoGenerate(
       const value = translations[lang];
       await tx.menuNodeTranslation.upsert({
         where: { nodeId_lang: { nodeId, lang } },
-        create: { nodeId, lang, name: value.name, detail: value.detail, isVerified: true },
-        update: { name: value.name, detail: value.detail, isVerified: true },
+        create: { nodeId, lang, name: value.name, detail: value.detail },
+        update: { name: value.name, detail: value.detail },
       });
       await audit(tx, {
         userId: ctx.user.id,
@@ -484,7 +479,7 @@ export async function getOutletTranslationAudit(outletId: string): Promise<Outle
     select: {
       id: true,
       detail: true,
-      translations: { select: { lang: true, name: true, detail: true, isVerified: true } },
+      translations: { select: { lang: true, name: true, detail: true } },
     },
   });
 
@@ -500,7 +495,7 @@ export async function getOutletTranslationAudit(outletId: string): Promise<Outle
       const hasName = Boolean(tr?.name?.trim());
       const needsDetail = Boolean(node.detail?.trim());
       const hasDetail = !needsDetail || Boolean(tr?.detail?.trim());
-      if (!tr || !tr.isVerified || !hasName || !hasDetail) {
+      if (!tr || !hasName || !hasDetail) {
         nodeMissing++;
       }
     }
@@ -553,7 +548,7 @@ export async function syncOutletMissingTranslations(
       const byLang = new Map(node.translations.map((t) => [t.lang, t]));
       for (const lang of TRANSLATION_LANGS) {
         const tr = byLang.get(lang);
-        if (!tr || !tr.isVerified || !tr.name?.trim()) return true;
+        if (!tr || !tr.name?.trim()) return true;
         if (node.detail?.trim() && !tr.detail?.trim()) return true;
       }
       return false;
@@ -573,26 +568,7 @@ export async function syncOutletMissingTranslations(
         batch.map(async (node) => {
           try {
             const { translations } = await translateMenuItem(node.name, node.detail);
-            for (const lang of TRANSLATION_LANGS) {
-              const val = translations[lang];
-              if (!val?.name) continue;
-              await prisma.menuNodeTranslation.upsert({
-                where: { nodeId_lang: { nodeId: node.id, lang } },
-                create: {
-                  nodeId: node.id,
-                  lang,
-                  name: val.name,
-                  detail: val.detail,
-                  isVerified: true,
-                },
-                update: {
-                  name: val.name,
-                  detail: val.detail,
-                  isVerified: true,
-                },
-              });
-            }
-            translatedNodes++;
+            if (await saveIfSourceUnchanged(node.id, node.name, node.detail, translations)) translatedNodes++;
           } catch (err) {
             console.warn(`[i18n] Eksik çeviri tamamlanamadı (${node.id} - "${node.name}"):`, err);
           }
@@ -636,7 +612,7 @@ export async function auditAndSyncOutletTranslations(
 
 /**
  * Automatically translates a menu node (category, subcategory, group, or item)
- * into all 7 supported guest languages and saves to database with isVerified=true,
+ * into all 7 supported guest languages and saves them (call it after the node's transaction committed),
  * then triggers a background check for any other missing translations in the same outlet.
  * Safe to fire-and-forget in background.
  */
@@ -650,24 +626,7 @@ export async function autoTranslateMenuNode(
   if (process.env.VITEST === "true") return;
   try {
     const { translations, provider } = await translateMenuItem(name, detail);
-    for (const lang of TRANSLATION_LANGS) {
-      const val = translations[lang];
-      await prisma.menuNodeTranslation.upsert({
-        where: { nodeId_lang: { nodeId, lang } },
-        create: {
-          nodeId,
-          lang,
-          name: val.name,
-          detail: val.detail,
-          isVerified: true,
-        },
-        update: {
-          name: val.name,
-          detail: val.detail,
-          isVerified: true,
-        },
-      });
-    }
+    if (!(await saveIfSourceUnchanged(nodeId, name, detail, translations))) return;
     if (outletId) {
       await publish({
         type: "menu.changed",
@@ -683,109 +642,52 @@ export async function autoTranslateMenuNode(
   }
 }
 
-const textSchema = z.object({
-  name: z.string("Ad gerekli").trim().min(1, "Ad gerekli").max(120, "Ad en fazla 120 karakter olabilir"),
-  detail: z
-    .string()
-    .trim()
-    .max(1000, "Açıklama en fazla 1000 karakter olabilir")
-    .nullish()
-    .transform((v) => v || null),
-});
-
-function checkLang(lang: string): TranslationLang {
-  if (lang === "tr") {
-    throw new DomainError("VALIDATION", "Türkçe temel kayıttır; çeviri olarak kaydedilemez");
-  }
-  if (!(TRANSLATION_LANGS as readonly string[]).includes(lang)) {
-    throw new DomainError("VALIDATION", "Geçersiz dil");
-  }
-  return lang as TranslationLang;
-}
-
-export async function set(
-  ctx: Ctx,
+/**
+ * Writes the generated translations only while the node still has the Turkish text they were made from
+ * (row lock, one transaction): a slow provider answer for an older text never overwrites a newer one.
+ */
+async function saveIfSourceUnchanged(
   nodeId: string,
-  lang: string,
-  raw: { name: string; detail?: string | null },
-): Promise<{ lang: string; name: string; detail: string | null }> {
-  const code = checkLang(lang);
-  const input = parseInput(textSchema, raw);
-  const scope = await loadNodeScope(nodeId);
-  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
-  assertOutletScope(ctx, scope.outletId);
+  name: string,
+  detail: string | null,
+  translations: Record<TranslationLang, { name: string; detail: string | null }>,
+): Promise<boolean> {
   return prisma.$transaction(async (tx) => {
-    const row = await tx.menuNodeTranslation.upsert({
-      where: { nodeId_lang: { nodeId, lang: code } },
-      create: { nodeId, lang: code, name: input.name, detail: input.detail },
-      update: { name: input.name, detail: input.detail, isVerified: true },
-    });
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: scope.hotelId,
-      action: "MENU_TRANSLATION_SET",
-      entity: "MenuNode",
-      entityId: nodeId,
-      after: { lang: code, name: input.name },
-    });
-    await publish(
-      {
-        type: "menu.changed",
-        hotelId: scope.hotelId,
-        outletId: scope.outletId,
-        payload: { nodeId, op: "translation" },
-      },
-      tx,
-    );
-    return { lang: row.lang, name: row.name, detail: row.detail };
+    await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
+    const current = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { name: true, detail: true } });
+    if (!current || current.name !== name || (current.detail ?? null) !== (detail ?? null)) return false;
+    for (const lang of TRANSLATION_LANGS) {
+      const val = translations[lang];
+      await tx.menuNodeTranslation.upsert({
+        where: { nodeId_lang: { nodeId, lang } },
+        create: { nodeId, lang, name: val.name, detail: val.detail },
+        update: { name: val.name, detail: val.detail },
+      });
+    }
+    return true;
   });
 }
 
-export async function remove(ctx: Ctx, nodeId: string, lang: string): Promise<void> {
-  const code = checkLang(lang);
-  const scope = await loadNodeScope(nodeId);
-  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
-  assertOutletScope(ctx, scope.outletId);
-  await prisma.$transaction(async (tx) => {
-    const found = await tx.menuNodeTranslation.findUnique({
-      where: { nodeId_lang: { nodeId, lang: code } },
-    });
-    if (!found) throw new DomainError("NOT_FOUND", "Çeviri bulunamadı");
-    await tx.menuNodeTranslation.delete({ where: { id: found.id } });
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: scope.hotelId,
-      action: "MENU_TRANSLATION_REMOVE",
-      entity: "MenuNode",
-      entityId: nodeId,
-      before: { lang: code, name: found.name },
-    });
-    await publish(
-      {
-        type: "menu.changed",
-        hotelId: scope.hotelId,
-        outletId: scope.outletId,
-        payload: { nodeId, op: "translation" },
-      },
-      tx,
-    );
-  });
+/** Last guest-triggered sync start per outlet: a failing provider is not hammered on every menu request. */
+const lastGuestSync = new Map<string, number>();
+export const GUEST_SYNC_COOLDOWN_MS = 10 * 60_000;
+
+/**
+ * Guest-menu trigger for missing translations: at most once per outlet per cooldown window
+ * (and never while a sync of that outlet runs). Fire-and-forget.
+ */
+export function requestOutletTranslationSync(outletId: string, hotelId?: string, now = Date.now()): boolean {
+  if (activeOutletSyncs.has(outletId)) return false;
+  const last = lastGuestSync.get(outletId);
+  if (last !== undefined && now - last < GUEST_SYNC_COOLDOWN_MS) return false;
+  lastGuestSync.set(outletId, now);
+  void syncOutletMissingTranslations(outletId, hotelId).catch(() => {});
+  return true;
 }
 
-/** Publish a generated translation only after a user has reviewed it. */
-export async function verify(ctx: Ctx, nodeId: string, lang: string): Promise<void> {
-  const code = checkLang(lang);
-  const scope = await loadNodeScope(nodeId);
-  await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
-  assertOutletScope(ctx, scope.outletId);
-  await prisma.$transaction(async (tx) => {
-    const found = await tx.menuNodeTranslation.findUnique({ where: { nodeId_lang: { nodeId, lang: code } } });
-    if (!found) throw new DomainError("NOT_FOUND", "Çeviri bulunamadı");
-    if (found.isVerified) return;
-    await tx.menuNodeTranslation.update({ where: { id: found.id }, data: { isVerified: true } });
-    await audit(tx, { userId: ctx.user.id, hotelId: scope.hotelId, action: "MENU_TRANSLATION_VERIFY", entity: "MenuNode", entityId: nodeId, after: { lang: code, name: found.name } });
-    await publish({ type: "menu.changed", hotelId: scope.hotelId, outletId: scope.outletId, payload: { nodeId, op: "translation", verified: true } }, tx);
-  });
+/** Test hook: forget the guest-trigger cooldowns. */
+export function resetGuestSyncCooldownForTests(): void {
+  lastGuestSync.clear();
 }
 
 /** Test connectivity and translation accuracy with Google Gemini. */

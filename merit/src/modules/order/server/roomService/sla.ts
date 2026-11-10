@@ -129,6 +129,7 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
               body: level === "BREACH" ? `#${order.orderNo} · ${ageMin} dk` : `#${order.orderNo} · ${remaining} dk kaldı`,
               refType: "Order",
               refId: order.id,
+              fallbackHotelId: hotelId,
             },
             tx,
           );

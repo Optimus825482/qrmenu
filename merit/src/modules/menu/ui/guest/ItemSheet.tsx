@@ -15,6 +15,8 @@ export function allergenIconName(key: string): IconName {
 
 export const MAX_QUANTITY = 20;
 export const NOTE_MAX = 500;
+/** Per-dish note limit; the server (guestOrder) accepts 200 per line and 500 for the general note. */
+export const ITEM_NOTE_MAX = 200;
 
 export function AllergenIcons({ allergens }: { allergens: readonly string[] }) {
   const t = useTranslations("guest.allergen");
@@ -33,7 +35,7 @@ export function AllergenIcons({ allergens }: { allergens: readonly string[] }) {
 /**
  * Bottom sheet of one item: large picture, detail, allergen list and, only while ordering is open,
  * the quantity picker (1-20), a note and the add-to-selections button. `onAdd` is wired by the
- * ordering flow; a sold-out item can be read but not added.
+ * ordering flow; a sold-out item is never listed (the menu hides it), the button is a last guard.
  */
 export function ItemSheet({
   item,
@@ -85,7 +87,6 @@ export function ItemSheet({
     containerRef: sheetRef,
   });
 
-  const soldOut = !item.isAvailable;
   return (
     <div className="g-sheet-backdrop" onClick={onClose}>
       <div
@@ -113,6 +114,7 @@ export function ItemSheet({
                 className="g-sheet-image"
                 src={images[activeImageIdx]}
                 alt={`${item.name} (${activeImageIdx + 1}/${images.length})`}
+                decoding="async"
               />
               <button
                 type="button"
@@ -166,14 +168,13 @@ export function ItemSheet({
           </>
         ) : images.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="g-sheet-image" src={images[0]} alt={item.name} />
+          <img className="g-sheet-image" src={images[0]} alt={item.name} decoding="async" />
         ) : (
           <div className="g-sheet-image g-placeholder" aria-hidden="true" />
         )}
         <div className="g-sheet-body">
           <h2>{item.name}</h2>
           {price ? <p className="g-price">{price}</p> : null}
-          {soldOut ? <p className="g-badge">{t("menu.soldOut")}</p> : null}
           {item.detail ? <p className="g-detail">{item.detail}</p> : null}
           {item.allergens.length > 0 ? (
             <section aria-label={t("menu.allergens")}>
@@ -213,7 +214,7 @@ export function ItemSheet({
                 <span>{t("cart.note")}</span>
                 <textarea
                   value={note}
-                  maxLength={NOTE_MAX}
+                  maxLength={ITEM_NOTE_MAX}
                   rows={2}
                   onChange={(event) => setNote(event.target.value)}
                 />
@@ -221,7 +222,7 @@ export function ItemSheet({
               <button
                 type="button"
                 className="g-button"
-                disabled={soldOut}
+                disabled={!item.isAvailable}
                 onClick={() => {
                   onAdd?.(item, quantity, note.trim());
                   onClose();

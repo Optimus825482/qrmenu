@@ -6,6 +6,7 @@ import { assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope } from "./menuNodeAccess";
+import { parsePrintTemplate, parsePrintTheme } from "./printOptions";
 
 export type TableQrRow = {
   id: string;
@@ -313,8 +314,9 @@ export type PrintHtmlOptions = {
  */
 export async function printHtml(ctx: Ctx, outletId: string, opts: PrintHtmlOptions = {}): Promise<string> {
   const access = await authorizeOutlet(ctx, outletId, "V");
-  const template = opts.template ?? "stand";
-  const theme = opts.theme ?? "royal";
+  // White-listed again here: printHtml is callable without the route, and both go into the HTML.
+  const template = parsePrintTemplate(opts.template) ?? "stand";
+  const theme = parsePrintTheme(opts.theme) ?? "royal";
   const areaId = opts.areaId;
   const tableId = opts.tableId;
 
@@ -782,7 +784,7 @@ body {
         ${allAreas
           .map(
             (a) =>
-              `<option value="${a.id}" ${areaId === a.id ? "selected" : ""}>${esc(formatAreaLabel(a))}</option>`,
+              `<option value="${esc(a.id)}" ${areaId === a.id ? "selected" : ""}>${esc(formatAreaLabel(a))}</option>`,
           )
           .join("")}
       </select>

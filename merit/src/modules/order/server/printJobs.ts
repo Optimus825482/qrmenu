@@ -12,6 +12,8 @@ import { formatReceiptTime, receipt, type ReceiptPayload } from "./receipt";
 
 const MAX_ATTEMPTS = 3;
 const STALE_AFTER_MS = 60_000;
+/** A requeued job waits `attempts * RETRY_STEP_SEC` seconds (measured from updated_at) before the next claim. */
+const RETRY_STEP_SEC = 10;
 const DEFAULT_CLAIM_LIMIT = 10;
 const MAX_CLAIM_LIMIT = 50;
 const ERROR_MAX = 500;
@@ -167,6 +169,35 @@ async function enqueueKitchen(tx: Prisma.TransactionClient, order: Order): Promi
   await createKitchenJob(tx, order);
 }
 
+/**
+ * Price-free "İPTAL" ticket for a kitchen that already started the order. It is sent whenever a
+ * printer exists (no printer: silently skipped, the cancellation itself must not fail).
+ */
+async function enqueueKitchenCancel(
+  tx: Prisma.TransactionClient,
+  order: Pick<Order, "id" | "hotelId" | "outletId">,
+  at: Date,
+): Promise<PrintJob | null> {
+  const printer = await printerFor(tx, order);
+  if (!printer) return null;
+  const base = await receipt.buildKitchen(tx, order.id);
+  const payload: ReceiptPayload = {
+    ...base,
+    header: { ...base.header, outlet: `İPTAL · ${base.header.outlet}` },
+    table: `İPTAL ${base.table}`,
+    at: formatReceiptTime(at),
+    footer: ["*** SİPARİŞ İPTAL EDİLDİ ***"],
+  };
+  const job = await tx.printJob.create({
+    data: { hotelId: order.hotelId, printerId: printer.id, orderId: order.id, kind: "MUTFAK", payload: payload as Prisma.InputJsonValue },
+  });
+  await publish(
+    { type: "print.queued", hotelId: order.hotelId, outletId: order.outletId, payload: { jobId: job.id, orderId: order.id, printerId: printer.id, kind: "MUTFAK" } },
+    tx,
+  );
+  return job;
+}
+
 /** Test receipt of one printer (Task 10 window and cashier page send it). */
 async function enqueueTest(ctx: Ctx, printerId: string): Promise<PrintJob> {
   const printer = await prisma.printer.findUnique({ where: { id: printerId } });
@@ -276,6 +307,7 @@ async function claim(hotelCode: string, limit = DEFAULT_CLAIM_LIMIT): Promise<Cl
     WHERE id IN (
       SELECT pj.id FROM print_jobs pj
       WHERE pj.hotel_id = ${hotel.id} AND pj.status = 'KUYRUKTA'
+        AND pj.updated_at <= now() - (pj.attempts * ${RETRY_STEP_SEC}::int) * interval '1 second'
       ORDER BY pj.created_at
       LIMIT ${take}
       FOR UPDATE SKIP LOCKED
@@ -376,14 +408,42 @@ async function report(jobId: string, result: ReportResult): Promise<void> {
 
 /**
  * Jobs stuck in BASILIYOR (gateway crashed mid-print) go back to KUYRUKTA after 60 s so the next
- * claim retries them; the return value feeds the `print.sweep` schedule.
+ * claim retries them; a job that already used all its attempts fails for good (HATA + `print.failed`)
+ * instead of looping. The return value feeds the `print.sweep` schedule.
  */
 async function sweepStale(now: Date): Promise<number> {
+  const staleWhere = { status: "BASILIYOR", startedAt: { lt: new Date(now.getTime() - STALE_AFTER_MS) } } as const;
+  const exhausted = await prisma.printJob.findMany({
+    where: { ...staleWhere, attempts: { gte: MAX_ATTEMPTS } },
+    select: { id: true },
+  });
+  let failed = 0;
+  for (const { id } of exhausted) {
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.printJob.updateMany({
+        where: { id, ...staleWhere, attempts: { gte: MAX_ATTEMPTS } },
+        data: { status: "HATA", error: "Yazdırma zaman aşımı: deneme sınırı aşıldı" },
+      });
+      if (count === 0) return;
+      failed += 1;
+      const job = await tx.printJob.findUniqueOrThrow({ where: { id }, select: { hotelId: true, orderId: true, printerId: true } });
+      const outletId = await jobOutletId(tx, job.orderId, job.printerId);
+      await publish(
+        {
+          type: "print.failed",
+          hotelId: job.hotelId,
+          ...(outletId ? { outletId } : {}),
+          payload: { jobId: id, orderId: job.orderId, printerId: job.printerId, reason: "BASILAMADI", error: "Yazdırma zaman aşımı" },
+        },
+        tx,
+      );
+    });
+  }
   const { count } = await prisma.printJob.updateMany({
-    where: { status: "BASILIYOR", startedAt: { lt: new Date(now.getTime() - STALE_AFTER_MS) } },
+    where: { ...staleWhere, attempts: { lt: MAX_ATTEMPTS } },
     data: { status: "KUYRUKTA" },
   });
-  return count;
+  return count + failed;
 }
 
 /** One row of the queue pages (`/kasa/yazici`): the job plus its order and printer names. */
@@ -439,4 +499,4 @@ async function listQueue(
   });
 }
 
-export const printJobs = { enqueueReceipt, enqueueKitchen, enqueueTest, reprint, reprintKitchen, claim, report, sweepStale, listQueue };
+export const printJobs = { enqueueReceipt, enqueueKitchen, enqueueKitchenCancel, enqueueTest, reprint, reprintKitchen, claim, report, sweepStale, listQueue };

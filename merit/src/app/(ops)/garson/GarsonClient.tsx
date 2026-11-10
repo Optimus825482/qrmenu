@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { approveOrderAction, listQueueAction, markServedAction, rejectOrderAction } from "@/modules/order/actions/orders";
 import { clearTableAction } from "@/modules/order/actions/cashier";
@@ -25,7 +25,7 @@ type OpenOrder = { id: string; orderNo: number; tableId: string | null; status: 
 type OpenCall = { id: string; tableLabel: string; type: string; note?: string | null; overdue: boolean };
 type ScanAlert = { tableId: string; tableLabel: string; timestamp: number };
 type TableItem = { tableId: string; label: string; isOccupied?: boolean; scannedAt?: string };
-type Props = { outletId: string; queue: QueueOrder[]; tables: TableItem[]; calls: OpenCall[]; openOrders: OpenOrder[]; canCreateOrder: boolean; currency: string };
+type Props = { outletId: string; queue: QueueOrder[]; tables: TableItem[]; calls: OpenCall[]; openOrders: OpenOrder[]; canCreateOrder: boolean; currency: string; kdsEnabled?: boolean };
 
 const EVENTS = [
   "order.created",
@@ -41,10 +41,11 @@ const EVENTS = [
   "assignment.changed",
   "scan.table",
   "table.cleared",
+  "realtime.resync",
 ];
 const statusText = (status: string) => status.replaceAll("_", " ");
 
-export default function GarsonClient({ outletId, queue: initialQueue, tables, calls: initialCalls, openOrders: initialOpenOrders, canCreateOrder, currency }: Props) {
+export default function GarsonClient({ outletId, queue: initialQueue, tables, calls: initialCalls, openOrders: initialOpenOrders, canCreateOrder, currency, kdsEnabled = true }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [queue, setQueue] = useState<QueueOrder[]>(initialQueue);
@@ -77,11 +78,19 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     return q.ok ? q.data as QueueOrder[] : null;
   }, [outletId, router]);
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 60_000); return () => window.clearInterval(timer); }, []);
+  // SSE bursts collapse into one refresh; a resync refreshes at once.
+  const refreshTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
+  const scheduleRefresh = useCallback((immediate = false) => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => void refresh(), immediate ? 0 : 300);
+  }, [refresh]);
   useSse((event) => {
+    if (event.type === "realtime.resync") { scheduleRefresh(true); return; }
     if (event.outletId !== outletId) return;
     if (event.type === "order.created") {
       const createdOrderId = (event.payload as { orderId?: string }).orderId;
-      showOpsNotification("🍽️ Yeni Sipariş Geldi", { body: "Onay bekleyen yeni bir sipariş var." });
+      showOpsNotification("Yeni Sipariş Geldi", { body: "Onay bekleyen yeni bir sipariş var." });
       void refresh().then((nextQueue) => {
         if (createdOrderId && nextQueue?.some((order) => order.id === createdOrderId)) newOrder();
       });
@@ -89,11 +98,11 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     }
     if (event.type === "order.ready" && myTables.some((table) => table.tableId === (event.payload as { tableId?: string }).tableId)) {
       ready();
-      showOpsNotification("✅ Sipariş Hazır", { body: "Masanıza ait sipariş mutfaktan hazırlandı." });
+      showOpsNotification("Sipariş Hazır", { body: "Masanıza ait sipariş mutfaktan hazırlandı." });
     }
     if (event.type === "call.created") {
       call();
-      showOpsNotification("🛎️ Garson Çağrısı", { body: "Masadan yeni bir garson çağrısı geldi." });
+      showOpsNotification("Garson Çağrısı", { body: "Masadan yeni bir garson çağrısı geldi." });
     }
     if (event.type === "scan.table") {
       const payload = event.payload as { tableId?: string; tableLabel?: string } | undefined;
@@ -103,14 +112,14 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
           payload.tableLabel ??
           myTables.find((t) => t.tableId === payload.tableId)?.label ??
           "Masa";
-        showOpsNotification("📱 Menü İnceleniyor", { body: `${tableLabel} masasında misafir QR okuttu.` });
+        showOpsNotification("Menü İnceleniyor", { body: `${tableLabel} masasında misafir QR okuttu.` });
         setScanAlerts((prev) => [
           { tableId: payload.tableId!, tableLabel, timestamp: Date.now() },
           ...prev.filter((s) => s.tableId !== payload.tableId),
         ]);
       }
     }
-    void refresh();
+    scheduleRefresh();
   }, EVENTS);
   const act = (fn: () => Promise<{ ok: boolean }>, success?: string) =>
     startTransition(async () => {
@@ -250,7 +259,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
               {openOrders.filter((order) => order.tableId === table.tableId).map((order) => (
                 <div key={order.id} data-guide={order.id === openOrders[0]?.id ? "siparis-durumu" : undefined} className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-bg p-2 text-sm">
                   <span>#{order.orderNo} · {statusText(order.status)}</span>
-                  {order.status === "HAZIR" && (
+                  {(order.status === "HAZIR" || (!kdsEnabled && order.status === "ONAYLANDI")) && (
                     <Button mutates variant="primary" disabled={pending} onClick={() => act(() => markServedAction(order.id))}>Servis edildi</Button>
                   )}
                 </div>

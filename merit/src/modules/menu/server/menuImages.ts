@@ -10,6 +10,9 @@ import { assertOutletScope, loadNodeScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
 
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+/** Gallery size of one menu node (primary image included). */
+export const MAX_IMAGES_PER_NODE = 10;
+const TOO_MANY = `Bir öğeye en fazla ${MAX_IMAGES_PER_NODE} görsel eklenebilir`;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const PREFIX = "/uploads/";
 
@@ -90,6 +93,7 @@ export async function uploadMultiple(
   if (files.length === 0) {
     throw new DomainError("VALIDATION", "En az bir görsel seçin");
   }
+  if (files.length > MAX_IMAGES_PER_NODE) throw new DomainError("VALIDATION", TOO_MANY);
 
   const savedFiles: { url: string; rel: string; created: boolean }[] = [];
   try {
@@ -125,6 +129,8 @@ export async function uploadMultiple(
       for (const s of savedFiles) {
         if (!existing.includes(s.url)) existing.push(s.url);
       }
+      // Checked under the row lock; the catch below unlinks the files saved for this request.
+      if (existing.length > MAX_IMAGES_PER_NODE) throw new DomainError("VALIDATION", TOO_MANY);
 
       finalImageUrl = existing[0] ?? null;
       finalImageUrls = existing;
@@ -387,7 +393,8 @@ export async function replace(
       const idx = existing.indexOf(oldImageUrl);
       if (idx !== -1) {
         existing[idx] = newUrl;
-      } else {
+      } else if (!existing.includes(newUrl)) {
+        if (existing.length >= MAX_IMAGES_PER_NODE) throw new DomainError("VALIDATION", TOO_MANY);
         existing.push(newUrl);
       }
 

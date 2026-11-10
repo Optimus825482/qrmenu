@@ -18,7 +18,7 @@ export default async function GarsonPage() {
   if (!(await can(ctx, "QS-KUY", "V", ctx.session.hotelId))) denyScreen("QS-KUY");
   if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
-  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } });
+  const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true, kdsEnabled: true } });
   const canCreateOrder = Boolean(outlet?.hasOrdering) && await can(ctx, "QS-KUY", "O", ctx.session.hotelId);
   const [queue, tables, calls, openOrders, currency] = await Promise.all([
     approvals.visibleQueue(ctx, outletId),
@@ -26,9 +26,9 @@ export default async function GarsonPage() {
     // Barmen and butlers have no QM-CAG module: the page must still open for them.
     can(ctx, "QM-CAG", "V", ctx.session.hotelId).then((allowed) => (allowed ? waiterCalls.listOpen(ctx, outletId) : [])),
     orders.listForOutlet(ctx, outletId, { statuses: ["ONAYLANDI", "HAZIR"] }),
-    resolveCurrency(ctx.session.hotelId),
+    resolveCurrency(outletId),
   ]);
   const cards = queue.map((order) => ({ ...order, canApprove: false }));
   for (const card of cards) card.canApprove = await approvals.canApproveOrder(ctx, card);
-  return <GarsonClient outletId={outletId} queue={cards} tables={tables} calls={calls} canCreateOrder={canCreateOrder} currency={currency} openOrders={openOrders.filter((order) => tables.some((table) => table.tableId === order.tableId))} />;
+  return <GarsonClient outletId={outletId} queue={cards} tables={tables} calls={calls} canCreateOrder={canCreateOrder} currency={currency} kdsEnabled={outlet?.kdsEnabled !== false} openOrders={openOrders.filter((order) => tables.some((table) => table.tableId === order.tableId))} />;
 }

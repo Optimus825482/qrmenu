@@ -7,6 +7,7 @@ import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { type Page, pageArgs } from "@/modules/core/server/admin/listQuery";
 import { audit } from "@/modules/core/server/audit";
+import { restoreStock } from "@/modules/minibar/server/pool";
 import { isValidExplanation } from "../constants";
 import { publishMybar } from "../events";
 
@@ -514,6 +515,19 @@ export async function cancel(
       where: { type: "mybar.created", refId: id, isRead: false },
       data: { isRead: true, readAt: now },
     });
+
+    // What was already taken from the hotel pool for this request goes back (IADE), in product-id order like fulfill.
+    for (const line of [...deliveredBefore].sort((a, b) => a.productId.localeCompare(b.productId))) {
+      await restoreStock(tx, {
+        hotelId: req.hotelId,
+        productId: line.productId,
+        qty: line.deliveredQty,
+        userId: ctx.user.id,
+        refType: "MybarRequest",
+        refId: id,
+        note: "MyBar talebi iptal edildi",
+      });
+    }
 
     await audit(tx, {
       userId: ctx.user.id,

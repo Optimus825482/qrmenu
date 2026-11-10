@@ -16,6 +16,7 @@ import { lockRow } from "./minibarCommon";
 import type { CorrectionRequestItem, RoomCheckHistoryItem } from "./minibarTypes";
 import { lockStocks, restoreStock, takeManyFromPool } from "./pool";
 import { addedToday, type Checklist, capacityByProduct, loadRoomChecklist } from "./roomChecklist";
+import { assertRoomVerified, hasRoomProof } from "./roomVerification";
 import { completeOpenItemsForRoom, reopenIfUncovered } from "./tasks";
 
 /*
@@ -224,6 +225,8 @@ export type RoomCheckView = {
   } | null;
   mybar: { id: string; createdAt: string; notes: string | null; items: { productName: string; qty: number }[] } | null;
   requireQrForControl?: boolean;
+  /** The user holds a fresh room verification proof (QR scan); the writers ask for it while QR is required. */
+  qrVerified: boolean;
 };
 
 /** Everything the room check screen needs: badge, check list with copies, allowed-left and pool per product. */
@@ -316,7 +319,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
   }
 
   const taskWhere = { hotelId, date };
-  const [taskItem, hotelItems, mybar, lastTx, dnd, settings] = await Promise.all([
+  const [taskItem, hotelItems, mybar, lastTx, dnd, settings, proof] = await Promise.all([
     prisma.dailyTaskItem.findFirst({ where: { roomId, task: taskWhere }, include: { guestRecord: true } }),
     prisma.dailyTaskItem.count({ where: { task: taskWhere } }),
     prisma.mybarRequest.findFirst({
@@ -330,6 +333,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
     }),
     prisma.roomDnd.findUnique({ where: { roomId_date: { roomId, date } } }),
     getSettings(["dnd.minChecks", "dnd.recheckMinutes", "minibar.requireQrForControl"], hotelId),
+    hasRoomProof(prisma, { userId: ctx.user.id, roomId }, now),
   ]);
   const required = settings["dnd.minChecks"];
 
@@ -347,11 +351,14 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
     badge = { kind: "DND", at: dnd.lastAt.toISOString(), dndCount: dnd.count, required, incomplete: true };
   }
 
+  // Same rule as markDnd: the next DND mark of an active DND waits `dnd.recheckMinutes` after the last one (any user).
   let dndWaitMinutes = 0;
-  if (taskItem?.lastDndAt && taskItem.status === "DND_BEKLIYOR") {
-    const elapsed = Math.floor((now.getTime() - taskItem.lastDndAt.getTime()) / 60000);
-    dndWaitMinutes = Math.max(0, settings["dnd.recheckMinutes"] - elapsed);
+  const lastDndAt = dnd?.status === "AKTIF" ? dnd.lastAt : taskItem?.status === "DND_BEKLIYOR" ? taskItem.lastDndAt : null;
+  if (lastDndAt) {
+    const leftMs = lastDndAt.getTime() + settings["dnd.recheckMinutes"] * 60_000 - now.getTime();
+    dndWaitMinutes = leftMs > 0 ? Math.ceil(leftMs / 60_000) : 0;
   }
+  const dndAllowed = !lastTx && (!dnd || dnd.status === "AKTIF") && dndWaitMinutes === 0;
 
   return {
     room: {
@@ -370,6 +377,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
         ? "Bu oda bugünkü doluluk listesinde yok; boş görünüyor. Yine de kontrol edebilirsiniz."
         : null,
     requireQrForControl: Boolean(settings["minibar.requireQrForControl"]),
+    qrVerified: proof,
     checklistError,
     checklist: checklistView,
     setups,
@@ -386,7 +394,7 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
           dndCount: taskItem.dndCount,
           lastDndAt: taskItem.lastDndAt?.toISOString() ?? null,
           checkedAt: taskItem.checkedAt?.toISOString() ?? null,
-          dndAllowed: true,
+          dndAllowed,
           dndWaitMinutes,
         }
       : null,
@@ -503,6 +511,7 @@ export async function addReplacement(ctx: Ctx, input: unknown, now: Date = new D
       await lockRow(tx, "rooms", room.id);
       const replay = await findReplay(tx, ctx, room.id, clientRequestId);
       if (replay) return replay;
+      await assertRoomVerified({ userId: ctx.user.id, roomId: room.id, hotelId: room.hotelId }, now, tx);
 
       const checklist = await loadRoomChecklist(tx, room.id);
       const caps = capacityByProduct(checklist);
@@ -684,6 +693,7 @@ export async function recordNoConsumption(
       await lockRow(tx, "rooms", room.id);
       const replay = await replayOnly(tx);
       if (replay) return replay;
+      await assertRoomVerified({ userId: ctx.user.id, roomId: room.id, hotelId: room.hotelId }, now, tx);
 
       const last = await tx.minibarTransaction.findFirst({
         where: { roomId: room.id, occurredAt: dayRange(day) },
@@ -807,6 +817,12 @@ export async function deleteTransactionTx(
   now: Date = new Date(),
 ): Promise<{ restored: { productId: string; qty: number }[]; message: string }> {
   const { row, isToday } = await loadOwnTx(tx, transactionId, actor, now, "Sadece bugün yapılan işlemler silinebilir");
+  if (row.type === "MYBAR_KARSILAMA") {
+    throw new DomainError(
+      "VALIDATION",
+      "MyBar karşılama kaydı buradan silinemez; MyBar talebi üzerinden düzeltin",
+    );
+  }
 
   const byProduct = new Map<string, number>();
   for (const i of row.items) if (i.added > 0) byProduct.set(i.productId, (byProduct.get(i.productId) ?? 0) + i.added);
@@ -1268,6 +1284,22 @@ export async function createCorrectionRequest(ctx: Ctx, input: unknown) {
     if (pending) {
       throw new DomainError("CONFLICT", "Bu işlem için zaten onay bekleyen bir düzeltme talebi bulunmaktadır");
     }
+    if (actionType === "DUZELTME") {
+      // Same rules the approval will apply (updateTransactionTx): only room-check records, only setup products.
+      if (row.type !== "SETUP_KONTROL" && row.type !== "SARFIYAT_YOK") {
+        throw new DomainError("VALIDATION", "Bu işlem türü için düzeltme talebi oluşturulamaz");
+      }
+      if (!proposedData || Object.keys(proposedData).length === 0) {
+        throw new DomainError("VALIDATION", "Düzeltme talebinde önerilen miktarlar girilmelidir", {
+          fieldErrors: { proposedData: ["Önerilen miktarlar girilmelidir"] },
+        });
+      }
+      const caps = capacityByProduct(await loadRoomChecklist(tx, row.roomId));
+      const unknown = Object.keys(proposedData).filter((productId) => !caps.has(productId));
+      if (unknown.length > 0) {
+        throw new DomainError("VALIDATION", "Ürün bu setup'ta bulunamadı", { fieldErrors: { productId: unknown } });
+      }
+    }
 
     const req = await tx.minibarCorrectionRequest.create({
       data: {
@@ -1276,7 +1308,7 @@ export async function createCorrectionRequest(ctx: Ctx, input: unknown) {
         requestedById: ctx.user.id,
         actionType,
         reason,
-        proposedData: proposedData ?? undefined,
+        proposedData: actionType === "DUZELTME" ? proposedData : undefined,
         status: "BEKLIYOR",
       },
     });

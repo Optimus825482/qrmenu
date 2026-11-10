@@ -24,6 +24,7 @@ const SCREEN = "CR-TAN";
 const INVALID = "Girilen bilgiler geçersiz";
 const NAME_TAKEN = "Bu adda bir outlet zaten var";
 const ONE_ROOM_SERVICE = "Her otelde bir oda servisi outleti olabilir";
+const CURRENCY_REQUIRED = "Para birimini seçin (3 harfli kod, örn. EUR, TRY, USD)";
 const HAS_RECORDS =
   "Outlete bağlı masa, alan, sipariş, ekip, oturum veya menü kaydı var; silmek yerine pasife alın";
 
@@ -36,6 +37,7 @@ export type OutletRow = {
   hasOrdering: boolean;
   orderingEnabled: boolean;
   priceDisplay: PriceDisplay;
+  currency: string;
   kdsEnabled: boolean;
   phoneConfirmRequired: boolean;
   autoPrintReceipt: boolean;
@@ -64,6 +66,7 @@ const SELECT = {
   hasOrdering: true,
   orderingEnabled: true,
   priceDisplay: true,
+  currency: true,
   kdsEnabled: true,
   phoneConfirmRequired: true,
   autoPrintReceipt: true,
@@ -104,6 +107,12 @@ export const outletSchema = z
     hasOrdering: z.boolean().default(false),
     orderingEnabled: z.boolean().default(false),
     priceDisplay: z.enum(PriceDisplay, "Fiyat gösterimini seçin").default("INHERIT"),
+    /** The form asks it while prices may be shown (required with SHOW); left out it keeps the stored value. */
+    currency: z
+      .string()
+      .trim()
+      .transform((v) => v.toUpperCase())
+      .optional(),
     phoneConfirmRequired: z.boolean().default(false),
     kdsEnabled: z.boolean().default(false),
     autoPrintReceipt: z.boolean().default(true),
@@ -130,6 +139,10 @@ export const outletSchema = z
         path: ["hasOrdering"],
         message: "Sipariş almak için menü açık olmalıdır",
       });
+    }
+    const currencyGiven = value.currency !== undefined && value.currency !== "";
+    if (currencyGiven ? !/^[A-Z]{3}$/.test(value.currency ?? "") : value.currency === "" && value.priceDisplay === "SHOW") {
+      ctx.addIssue({ code: "custom", path: ["currency"], message: CURRENCY_REQUIRED });
     }
   });
 export type OutletInput = z.input<typeof outletSchema>;
@@ -217,6 +230,7 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
           hasOrdering: input.hasOrdering,
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
+          ...(input.currency ? { currency: input.currency } : {}),
           phoneConfirmRequired: input.phoneConfirmRequired,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
@@ -255,7 +269,7 @@ async function publishSwitchChanges(
   after: OutletRow,
 ): Promise<void> {
   const { hotelId, id: outletId } = after;
-  if (before.priceDisplay !== after.priceDisplay) {
+  if (before.priceDisplay !== after.priceDisplay || before.currency !== after.currency) {
     await publish({ type: "price.display", hotelId, outletId }, tx);
   }
   if (before.orderingEnabled !== after.orderingEnabled || before.hasOrdering !== after.hasOrdering) {
@@ -294,6 +308,7 @@ export async function update(
           hasOrdering: input.hasOrdering,
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
+          ...(input.currency ? { currency: input.currency } : {}),
           phoneConfirmRequired: input.phoneConfirmRequired,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,

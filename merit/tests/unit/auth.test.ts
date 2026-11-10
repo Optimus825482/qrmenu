@@ -16,8 +16,10 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 
 // A minimal cookie jar standing in for next/headers cookies().
 const jar = new Map<string, string>();
+const BASE_HEADERS = { "user-agent": "UA/test", "x-forwarded-for": "10.9.9.9" };
+const req = vi.hoisted(() => ({ headers: new Headers() }));
 vi.mock("next/headers", () => ({
-  headers: async () => new Headers({ "user-agent": "UA/test", "x-forwarded-for": "10.9.9.9" }),
+  headers: async () => req.headers,
   cookies: async () => ({
     get: (name: string) => (jar.has(name) ? { name, value: jar.get(name)! } : undefined),
     getAll: () => [...jar].map(([name, value]) => ({ name, value })),
@@ -25,7 +27,7 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
-const { requireUser, writeSessionCookie, SESSION_COOKIE_NAME } = await import("@/lib/auth");
+const { isSameOriginRequest, requireUser, writeSessionCookie, SESSION_COOKIE_NAME } = await import("@/lib/auth");
 const { createSession, closeSession } = await import("@/modules/core/server/sessions");
 const { selectTargetAction } = await import("@/modules/core/server/loginAction");
 const { proxy, config } = await import("@/proxy");
@@ -38,6 +40,7 @@ async function cookieFor(data: object) {
 beforeAll(resetReferenceData);
 beforeEach(async () => {
   jar.clear();
+  req.headers = new Headers(BASE_HEADERS);
   await resetTestData();
 });
 afterAll(async () => {
@@ -148,6 +151,25 @@ describe("requireUser (gerçek test DB)", () => {
     const after = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
     expect(after.status).toBe("CIKTI");
     expect(after.logoutReason).toBe("HAREKETSIZLIK");
+  });
+
+  it("mutlak ömür: 12 saatten eski girişli oturum etkin olsa bile CIKTI/SURE_ASIMI ile kapanır", async () => {
+    const { session } = await login();
+    await testDb.userSession.update({
+      where: { id: session.id },
+      data: { loginAt: new Date(Date.now() - 12 * 3600_000 - 60_000), lastSeenAt: new Date(), expiresAt: new Date(Date.now() + 3600_000) },
+    });
+    await expect(requireUser()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    const after = await testDb.userSession.findUniqueOrThrow({ where: { id: session.id } });
+    expect(after).toMatchObject({ status: "CIKTI", logoutReason: "SURE_ASIMI" });
+  });
+
+  it("başka kaynaktan (Origin uyuşmaz) gelen çerezli istek FORBIDDEN; aynı kaynak ve Origin'siz istek geçer", async () => {
+    await login();
+    req.headers = new Headers({ ...BASE_HEADERS, host: "merit.local", origin: "https://kotu.example" });
+    await expect(requireUser()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    req.headers = new Headers({ ...BASE_HEADERS, host: "merit.local", origin: "https://merit.local" });
+    await expect(requireUser()).resolves.toBeDefined();
   });
 
   it("44 dk hareketsiz oturum geçer ve lastSeenAt güncellenir", async () => {
@@ -422,5 +444,27 @@ describe("proxy", () => {
       "/oda-servisi/:path*",
       "/secim",
     ]);
+  });
+});
+
+describe("isSameOriginRequest", () => {
+  const h = (init: Record<string, string>) => new Headers(init);
+  it("Origin yoksa veya opak 'null' ise geçer", () => {
+    expect(isSameOriginRequest(h({ host: "a.example" }))).toBe(true);
+    expect(isSameOriginRequest(h({ host: "a.example", origin: "null" }))).toBe(true);
+  });
+  it("Host, x-forwarded-host (ters vekil) veya APP_BASE_URL ile eşleşen Origin geçer; varsayılan port yok sayılır", () => {
+    expect(isSameOriginRequest(h({ host: "a.example", origin: "https://a.example" }))).toBe(true);
+    expect(isSameOriginRequest(h({ host: "a.example:443", origin: "https://a.example" }))).toBe(true);
+    expect(
+      isSameOriginRequest(h({ host: "merit:3000", "x-forwarded-host": "otel.example", origin: "https://otel.example" })),
+    ).toBe(true);
+    const base = new URL(env.APP_BASE_URL);
+    expect(isSameOriginRequest(h({ host: "merit:3000", origin: base.origin }))).toBe(true);
+  });
+  it("başka host, başka port veya bozuk Origin reddedilir", () => {
+    expect(isSameOriginRequest(h({ host: "a.example", origin: "https://b.example" }))).toBe(false);
+    expect(isSameOriginRequest(h({ host: "a.example", origin: "https://a.example:8443" }))).toBe(false);
+    expect(isSameOriginRequest(h({ host: "a.example", origin: "bozuk" }))).toBe(false);
   });
 });

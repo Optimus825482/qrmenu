@@ -3,9 +3,11 @@
 import {
   Component,
   createElement,
+  type ErrorInfo,
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -85,6 +87,15 @@ export function Window({ id, hotels, userName }: Props) {
   const active = useWindowStore((s) => selectActiveId(s) === id);
   const ref = useRef<HTMLElement>(null);
   const menuAnchor = useRef<HTMLElement | null>(null);
+  // Focus returns to whatever opened the window (icon, start menu item, taskbar button) when it closes.
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => {
+      const current = document.activeElement;
+      const focusLost = !current || current === document.body;
+      if (opener && opener !== document.body && opener.isConnected && focusLost) opener.focus({ preventScroll: true });
+    };
+  }, []);
   const [status, setStatusText] = useState("Hazır");
   const [reloadKey, setReloadKey] = useState(0);
   const [menu, setMenu] = useState<{ name: MenuName; x: number; y: number } | null>(null);
@@ -205,6 +216,13 @@ export function Window({ id, hotels, userName }: Props) {
           if (yes) run();
         });
         return true;
+      },
+      escape: () => {
+        if (app?.id === "core.erisimim") {
+          void requestClose();
+          return true;
+        }
+        return false;
       },
     },
     active && !!win && !win.minimized,
@@ -337,6 +355,12 @@ export function Window({ id, hotels, userName }: Props) {
       { label: "Yeni…", mnemonic: "y", disabled: !offered.includes("new"), onSelect: () => commandButton("new")?.click() },
       { label: "Dışa aktar", mnemonic: "d", disabled: !offered.includes("export"), onSelect: () => commandButton("export")?.click() },
       { kind: "separator" },
+      ...(pickable.length > 1 && app.needsHotel
+        ? [
+            { label: "Otel Değiştir…", mnemonic: "o", onSelect: () => actions.clearHotel(id) },
+            { kind: "separator" as const },
+          ]
+        : []),
       { label: "Kapat", mnemonic: "k", onSelect: () => void requestClose() },
     ],
     Görünüm: [
@@ -433,12 +457,16 @@ F&B Command Center uygulaması (${app.id})`,
       </AppErrorBoundary>
     );
   } else if (isSameOriginPath(app.url)) {
+    const targetUrl = win.hotelId
+      ? `${app.url}${app.url.includes("?") ? "&" : "?"}hotelId=${encodeURIComponent(win.hotelId)}`
+      : app.url;
     body = (
       <iframe
-        key={reloadKey}
-        src={appFrameUrl(app.url, { fontFamily, theme })}
+        key={`${reloadKey}-${win.hotelId ?? ""}`}
+        src={appFrameUrl(targetUrl, { fontFamily, theme })}
         title={app.launchLabel ?? app.title}
-        sandbox="allow-same-origin allow-scripts allow-forms"
+        // allow-modals: iframe pages call window.print() (depo/raporlar, kat room QR); no page uses popups.
+        sandbox="allow-same-origin allow-scripts allow-forms allow-modals"
         className="xp-iframe"
       />
     );
@@ -534,7 +562,18 @@ F&B Command Center uygulaması (${app.id})`,
         <ScreenGuideHost code={guideScreen} density="xp" scopeRef={ref} hotelId={win.hotelId} autoStart={active && !win.minimized && guideScreen !== "CR-KOM"} />
       ) : null}
       <div className="xp-statusbar">
-        Otel: {hotel?.name ?? "—"} · Kullanıcı: {userName} · {status}
+        Otel: {hotel?.name ?? "—"}
+        {pickable.length > 1 && app.needsHotel ? (
+          <button
+            type="button"
+            className="xp-statusbar-switch-btn ml-1.5"
+            onClick={() => actions.clearHotel(id)}
+            title="Çalışılan oteli değiştir"
+          >
+            [Değiştir]
+          </button>
+        ) : null}
+        {" "}· Kullanıcı: {userName} · {status}
       </div>
       {resizable && !win.maximized ? (
         <>
@@ -571,11 +610,21 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: bool
     return { failed: true };
   }
 
+  // No client error endpoint exists in this app; the console (and any browser-level collector) is the record.
+  componentDidCatch(error: unknown, info: ErrorInfo) {
+    console.error("[AppErrorBoundary]", error, info.componentStack);
+  }
+
   render() {
     if (this.state.failed) {
       return (
         <div className="xp-app-error" role="alert">
-          Uygulama beklenmeyen bir hatayla durdu. Görünüm → Yenile ile yeniden başlatın.
+          Uygulama beklenmeyen bir hatayla durdu. Yeniden deneyebilir ya da Görünüm → Yenile ile yeniden başlatabilirsiniz.
+          <div>
+            <button type="button" className="xp-button" onClick={() => this.setState({ failed: false })}>
+              Yeniden dene
+            </button>
+          </div>
         </div>
       );
     }

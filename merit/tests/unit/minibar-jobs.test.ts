@@ -126,12 +126,12 @@ describe("registerMinibarJobs", () => {
     expect(err).toHaveBeenCalled();
   });
 
-  it("çalışan bir işin hatası yutulup günlüğe yazılır; sonraki kuyruklar etkilenmez", async () => {
+  it("çalışan bir işin hatası günlüğe yazılır ve pg-boss'a fırlatılır (iş başarısız sayılır); sonraki kuyruklar etkilenmez", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { boss, handlers } = fakeBoss();
     await jobs.registerMinibarJobs(boss as never);
     vi.spyOn(testDb.roomDnd, "findMany").mockRejectedValueOnce(new Error("db koptu"));
-    await expect(handlers.get("dnd.reminder")!()).resolves.toBeUndefined();
+    await expect(handlers.get("dnd.reminder")!()).rejects.toThrow("db koptu");
     expect(err).toHaveBeenCalled();
     await expect(handlers.get("occupancy.cleanup")!()).resolves.toBeUndefined();
   });
@@ -246,6 +246,22 @@ describe("kuyruk gövdeleri", () => {
     expect(
       await testDb.operationEvent.count({ where: { hotelId: w.hotelId, type: "upload.missing", refId: `${DAY}@18:00` } }),
     ).toBe(1);
+  });
+
+  it("DEP-8: tek türün (IN_HOUSE) yüklenmesi eksik ARRIVAL/DEPARTURE uyarısını susturmaz", async () => {
+    const w = await minibarWorld();
+    const depo = await staff("R-DEP", w.hotelCode);
+    const upload = await testDb.occupancyUpload.create({
+      data: { hotelId: w.hotelId, code: `DOL-T-${Date.now()}`, fileName: "in.xlsx", kind: "IN_HOUSE", status: "TAMAMLANDI", userId: depo.userId, createdAt: T0 },
+    });
+    await testDb.uploadTask.create({ data: { hotelId: w.hotelId, date, kind: "IN_HOUSE", status: "TAMAMLANDI", uploadId: upload.id } });
+    const { announceOccupancyGaps } = await import("@/modules/minibar/server/minibarJobs");
+    const res = await announceOccupancyGaps(T0);
+    expect(res.missingHotels).toContain((await testDb.hotel.findUniqueOrThrow({ where: { id: w.hotelId } })).name);
+    expect(await testDb.operationEvent.count({ where: { hotelId: w.hotelId, type: "upload.missing" } })).toBe(1);
+    const radar = JSON.stringify(vi.mocked(publish).mock.calls.map((c) => c[0]).filter((e) => e.type === "occupancy.missing" && e.hotelId === w.hotelId));
+    expect(radar).toMatch(/ARRIVAL/);
+    expect(radar).not.toMatch(/IN_HOUSE/);
   });
 
   it("occupancy.cleanup: gövde hatasız çalışır", async () => {

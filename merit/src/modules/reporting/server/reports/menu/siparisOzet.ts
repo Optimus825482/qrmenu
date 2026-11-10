@@ -38,7 +38,7 @@ export const siparisOzet = defineReport({
              COUNT(*) FILTER (WHERE o.status::text = 'IPTAL')::int AS cancelled,
              COUNT(*) FILTER (WHERE o.served_at IS NOT NULL)::int AS served,
              (AVG(EXTRACT(EPOCH FROM (o.approved_at - o.created_at))) FILTER (WHERE o.approved_at IS NOT NULL) / 60)::float8 AS "approveMin",
-             (SUM(o.subtotal) FILTER (WHERE o.prices_shown))::float8 AS amount,
+             (SUM(o.subtotal) FILTER (WHERE o.prices_shown AND o.status::text NOT IN ('IPTAL', 'REDDEDILDI')))::float8 AS amount,
              COUNT(*) FILTER (WHERE NOT o.prices_shown)::int AS unpriced
       FROM orders o
       JOIN outlets ou ON ou.id = o.outlet_id
@@ -48,7 +48,19 @@ export const siparisOzet = defineReport({
       GROUP BY o.business_date, h.name, ou.name
       ORDER BY o.business_date, h.name, ou.name
       LIMIT ${fetchCap(scope)}`;
-    const sum = (f: (r: Row) => number) => rows.reduce((a, r) => a + f(r), 0);
+    // Summary over the whole range (not the capped rows): same filters, no GROUP BY / LIMIT.
+    const [tot] = await prisma.$queryRaw<Omit<Row, "day" | "hotel" | "outlet" | "approveMin">[]>`
+      SELECT COUNT(*)::int AS orders,
+             COUNT(*) FILTER (WHERE o.approved_at IS NOT NULL)::int AS approved,
+             COUNT(*) FILTER (WHERE o.status::text = 'REDDEDILDI')::int AS rejected,
+             COUNT(*) FILTER (WHERE o.status::text = 'IPTAL')::int AS cancelled,
+             COUNT(*) FILTER (WHERE o.served_at IS NOT NULL)::int AS served,
+             (SUM(o.subtotal) FILTER (WHERE o.prices_shown AND o.status::text NOT IN ('IPTAL', 'REDDEDILDI')))::float8 AS amount,
+             COUNT(*) FILTER (WHERE NOT o.prices_shown)::int AS unpriced
+      FROM orders o
+      WHERE o.kind::text = 'MASA' AND ${hotelIn("o.hotel_id", scope)}
+        AND o.business_date >= ${scope.dayFrom} AND o.business_date <= ${scope.dayTo} ${outletEq("o.outlet_id", scope)}`;
+    const sum = (f: (r: NonNullable<typeof tot>) => number) => (tot ? f(tot) : 0);
     const out = rows.map((r) => ({
       day: r.day,
       hotel: r.hotel,
@@ -86,7 +98,7 @@ export const siparisOzet = defineReport({
         { label: "Tutar", value: money2(sum((r) => r.amount ?? 0)) ?? 0 },
         { label: "Tutarsız sipariş", value: sum((r) => r.unpriced) },
       ],
-      truncated: false,
+      truncated: rows.length > scope.limit,
     };
   },
 });

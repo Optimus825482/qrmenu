@@ -199,12 +199,51 @@ function notXlsx(): DomainError {
   return new DomainError("VALIDATION", "Dosya .xlsx biçiminde olmalı (Excel'de Farklı Kaydet → .xlsx)");
 }
 
+/** Uncompressed size and entry count an occupancy .xlsx may declare (a 5000-row sheet is a few MB). */
+export const OCCUPANCY_MAX_UNCOMPRESSED = 64 * 1024 * 1024;
+export const OCCUPANCY_MAX_ZIP_ENTRIES = 500;
+
+const tooLarge = () => new DomainError("VALIDATION", "Dosya beklenenden büyük");
+
+/**
+ * Reads the zip central directory (no decompression) and rejects archives whose declared uncompressed total or
+ * entry count is over budget, ZIP64 archives (no .xlsx export needs them) and malformed directories.
+ */
+export function assertZipBudget(data: Buffer): void {
+  if (data.length < 22) throw notXlsx();
+  // End of central directory record: within the last 22 + 65535 (comment) bytes.
+  let eocd = -1;
+  for (let i = data.length - 22; i >= Math.max(0, data.length - 22 - 0xffff); i--) {
+    if (data.readUInt32LE(i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) throw notXlsx();
+  const entries = data.readUInt16LE(eocd + 10);
+  const dirOffset = data.readUInt32LE(eocd + 16);
+  if (entries === 0xffff || dirOffset === 0xffffffff) throw tooLarge(); // ZIP64
+  if (entries > OCCUPANCY_MAX_ZIP_ENTRIES) throw tooLarge();
+  let p = dirOffset;
+  let total = 0;
+  for (let n = 0; n < entries; n++) {
+    if (p + 46 > data.length || data.readUInt32LE(p) !== 0x02014b50) throw notXlsx();
+    const size = data.readUInt32LE(p + 24);
+    if (size === 0xffffffff) throw tooLarge();
+    total += size;
+    if (total > OCCUPANCY_MAX_UNCOMPRESSED) throw tooLarge();
+    p += 46 + data.readUInt16LE(p + 28) + data.readUInt16LE(p + 30) + data.readUInt16LE(p + 32);
+  }
+}
+
 export async function parseWorkbook(
   data: Buffer,
   opts: { today: string; kindHint?: UploadKind },
 ): Promise<ParsedSheet> {
   if (data.length > OCCUPANCY_MAX_BYTES) throw new DomainError("VALIDATION", "Dosya 10 MB'ı aşamaz");
   if (data.length < 4 || data.subarray(0, 2).toString("latin1") !== "PK") throw notXlsx();
+  // Before anything is inflated: the archive's declared sizes must fit (a zip bomb is rejected here).
+  assertZipBudget(data);
 
   const workbook = new ExcelJS.Workbook();
   try {

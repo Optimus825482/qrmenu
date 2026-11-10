@@ -49,6 +49,14 @@ function readKey(token: string): string {
   return fresh;
 }
 
+function clearKey(token: string) {
+  try {
+    window.sessionStorage.removeItem(keyStore(token));
+  } catch {
+    // Nothing stored.
+  }
+}
+
 /** Maps a refused response to the message key the guest sees (the server text is never shown). */
 export function errorKeyFor(status: number, body: ApiBody | null): GuestErrorKey {
   const code = body?.error?.code;
@@ -73,23 +81,42 @@ export function useMybarSubmit(token: string, locale: Locale) {
       setSending(true);
       try {
         const trimmed = note.trim();
-        const res = await fetch(`/api/q/${encodeURIComponent(token)}/mybar`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            idempotencyKey: key.current,
-            locale,
-            items,
-            ...(trimmed ? { note: trimmed } : {}),
-          }),
-        });
-        let body: ApiBody | null = null;
-        try {
-          body = (await res.json()) as ApiBody;
-        } catch {
-          body = null;
+        const send = async () => {
+          const res = await fetch(`/api/q/${encodeURIComponent(token)}/mybar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              idempotencyKey: key.current,
+              locale,
+              items,
+              ...(trimmed ? { note: trimmed } : {}),
+            }),
+          });
+          let body: ApiBody | null = null;
+          try {
+            body = (await res.json()) as ApiBody;
+          } catch {
+            body = null;
+          }
+          return { res, body };
+        };
+        let { res, body } = await send();
+        if (!res.ok && body?.error?.fieldErrors?.idempotencyKey) {
+          // The stored key belongs to an earlier day: issue a fresh one and send once more.
+          key.current = newKey();
+          try {
+            window.sessionStorage.setItem(keyStore(token), key.current);
+          } catch {
+            // Storage blocked: the key lives as long as the page.
+          }
+          ({ res, body } = await send());
         }
-        if (res.ok && body?.ok) return { ok: true };
+        if (res.ok && body?.ok) {
+          // Done: the next request is a new one and must not replay this key.
+          key.current = null;
+          clearKey(token);
+          return { ok: true };
+        }
         return { ok: false, error: errorKeyFor(res.status, body) };
       } catch {
         return { ok: false, error: "errNetwork" };
@@ -102,11 +129,7 @@ export function useMybarSubmit(token: string, locale: Locale) {
 
   const reset = useCallback(() => {
     key.current = null;
-    try {
-      window.sessionStorage.removeItem(keyStore(token));
-    } catch {
-      // Nothing stored.
-    }
+    clearKey(token);
   }, [token]);
 
   return { submit, sending, reset };

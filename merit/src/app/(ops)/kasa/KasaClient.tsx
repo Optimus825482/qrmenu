@@ -30,6 +30,7 @@ type QueueOrder = {
   orderNo: number;
   createdAt: Date | string;
   note: string | null;
+  pricesShown?: boolean;
   table: { label: string } | null;
   items: { id: string; nameSnapshot: string; qty: number; unitPrice?: unknown }[];
 };
@@ -82,6 +83,7 @@ const LIVE_EVENTS = [
   "table.cleared",
   "table.occupancy",
   "price.display",
+  "realtime.resync",
 ] as const;
 
 const PORTRAIT = "(max-aspect-ratio: 1/1)";
@@ -219,7 +221,18 @@ export default function KasaClient({
     router.refresh();
   }, [outletId, router, selectedId, loadPanel]);
 
+  // SSE bursts (several events per order) collapse into one refresh; a resync refreshes at once.
+  const refreshRef = useRef(refresh);
+  useEffect(() => { refreshRef.current = refresh; });
+  const refreshTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
+  const scheduleRefresh = useCallback((immediate = false) => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => void refreshRef.current(), immediate ? 0 : 300);
+  }, []);
+
   useSse((event) => {
+    if (event.type === "realtime.resync") { scheduleRefresh(true); return; }
     if (event.outletId !== outletId) return;
     if (event.type === "table.occupancy") {
       const payload = event.payload as { minutes?: number | null } | undefined;
@@ -235,7 +248,7 @@ export default function KasaClient({
         setActiveScans((prev) => [{ tableId: payload.tableId!, tableLabel, timestamp: Date.now() }, ...prev.filter((s) => s.tableId !== payload.tableId)]);
       }
     }
-    void refresh();
+    scheduleRefresh();
   }, LIVE_EVENTS);
 
   const sekme = params.get("sekme");
@@ -397,7 +410,7 @@ export default function KasaClient({
           ) : (
             <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
               {queue.map((order) => {
-                const totalAmount = order.items.reduce((sum, it) => sum + Number(it.unitPrice ?? 0) * it.qty, 0);
+                const totalAmount = order.pricesShown ? order.items.reduce((sum, it) => sum + Number(it.unitPrice ?? 0) * it.qty, 0) : 0;
                 return (
                   <article key={order.id} className="flex flex-col justify-between rounded-[var(--radius-l)] border-4 bg-surface p-4" style={{ borderColor: "var(--warn)" }}>
                     <div>

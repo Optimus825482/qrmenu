@@ -30,14 +30,43 @@ interface PlanFloor {
   firstSeq: number;
 }
 
+interface HotelPlanSummary {
+  hotelId: string;
+  hotelName: string;
+  hotelCode: string;
+  requireQrForControl: boolean;
+  plan: {
+    entries: PriorityPlanEntry[];
+    floors: PlanFloor[];
+    summary: { total: number; critical: number; normal: number; clashes: number };
+    briefing: string[];
+  };
+}
+
 interface PriorityPlanResponse {
   rooms?: PriorityPlanEntry[];
   entries?: PriorityPlanEntry[];
   floors?: PlanFloor[];
   summary?: { total: number; critical: number; normal: number; clashes: number };
   briefing?: string[];
+  multiHotels?: HotelPlanSummary[];
+  hotels?: Array<{ id: string; name: string; code: string }>;
+  selectedHotelId?: string;
   requireQrForControl?: boolean;
   error?: string;
+}
+
+function groupEntriesByFloor(entries: PriorityPlanEntry[]) {
+  const map = new Map<number, { floorName: string; rooms: PriorityPlanEntry[] }>();
+  entries.forEach((r) => {
+    const fn = r.floorNumber ?? 0;
+    const current = map.get(fn) ?? { floorName: r.floorName ?? `Kat ${fn}`, rooms: [] };
+    current.rooms.push(r);
+    map.set(fn, current);
+  });
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([floorNumber, data]) => ({ floorNumber, ...data }));
 }
 
 export default function KatTavsiyeIsPlaniPage() {
@@ -45,6 +74,9 @@ export default function KatTavsiyeIsPlaniPage() {
   const [floors, setFloors] = useState<PlanFloor[]>([]);
   const [summary, setSummary] = useState<{ total: number; critical: number; normal: number; clashes: number } | null>(null);
   const [briefing, setBriefing] = useState<string[]>([]);
+  const [multiHotels, setMultiHotels] = useState<HotelPlanSummary[]>([]);
+  const [hotels, setHotels] = useState<Array<{ id: string; name: string; code: string }>>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string>("ALL");
   const [requireQrForControl, setRequireQrForControl] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,13 +84,18 @@ export default function KatTavsiyeIsPlaniPage() {
   // UI States: Selected Floor Filter & Accordion
   const [selectedFloor, setSelectedFloor] = useState<number | "ALL">("ALL");
   const [expandedFloors, setExpandedFloors] = useState<Record<number, boolean>>({});
+  const [expandedHotelFloors, setExpandedHotelFloors] = useState<Record<string, boolean>>({});
   const [showGuide, setShowGuide] = useState(true);
 
-  const loadPlan = async () => {
+  const loadPlan = async (hId?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/minibar/priority-plan");
+      const activeHotel = hId !== undefined ? hId : selectedHotelId;
+      const url = activeHotel && activeHotel !== "ALL"
+        ? `/api/minibar/priority-plan?hotelId=${encodeURIComponent(activeHotel)}`
+        : "/api/minibar/priority-plan?hotelId=ALL";
+      const res = await fetch(url);
       const json = (await res.json()) as PriorityPlanResponse;
       if (!res.ok) throw new Error(json.error ?? "Tavsiye planı alınamadı.");
 
@@ -67,15 +104,29 @@ export default function KatTavsiyeIsPlaniPage() {
       setFloors(json.floors ?? []);
       setSummary(json.summary ?? null);
       setBriefing(json.briefing ?? []);
+      const loadedMulti = json.multiHotels ?? [];
+      setMultiHotels(loadedMulti);
+      setHotels(json.hotels ?? []);
+      // The server decides the view: a user with one hotel gets that hotel even for "ALL".
+      if (json.selectedHotelId) setSelectedHotelId(json.selectedHotelId);
       setRequireQrForControl(Boolean(json.requireQrForControl));
 
-      // Varsayılan olarak tüm katları açık yap
+      // Tek otel kat accordion varsayılan açık
       const exp: Record<number, boolean> = {};
       allEntries.forEach((r) => {
         const fn = r.floorNumber ?? 0;
         exp[fn] = true;
       });
       setExpandedFloors(exp);
+
+      // Çoklu otel kat accordion varsayılan açık
+      const expH: Record<string, boolean> = {};
+      loadedMulti.forEach((h) => {
+        h.plan.entries.forEach((r) => {
+          expH[`${h.hotelId}-${r.floorNumber ?? 0}`] = true;
+        });
+      });
+      setExpandedHotelFloors(expH);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {
@@ -84,9 +135,25 @@ export default function KatTavsiyeIsPlaniPage() {
   };
 
   useEffect(() => {
-    const t = setTimeout(() => void loadPlan(), 0);
+    const params = new URLSearchParams(window.location.search);
+    const paramHotelId = params.get("hotelId");
+    const initialHId = paramHotelId ?? "ALL";
+    const t = setTimeout(() => void loadPlan(initialHId), 0);
     return () => clearTimeout(t);
   }, []);
+
+  const handleHotelSelect = (hotelId: string) => {
+    setSelectedHotelId(hotelId);
+    setSelectedFloor("ALL");
+    const url = new URL(window.location.href);
+    if (hotelId === "ALL") {
+      url.searchParams.delete("hotelId");
+    } else {
+      url.searchParams.set("hotelId", hotelId);
+    }
+    window.history.replaceState({}, "", url.toString());
+    void loadPlan(hotelId);
+  };
 
   const toggleFloor = (floorNumber: number) => {
     setExpandedFloors((prev) => ({
@@ -95,25 +162,102 @@ export default function KatTavsiyeIsPlaniPage() {
     }));
   };
 
-  // Katlara göre gruplanmış odalar
-  const groupedByFloor = useMemo(() => {
-    const map = new Map<number, { floorName: string; rooms: PriorityPlanEntry[] }>();
-    rooms.forEach((r) => {
-      const fn = r.floorNumber ?? 0;
-      const current = map.get(fn) ?? { floorName: r.floorName ?? `Kat ${fn}`, rooms: [] };
-      current.rooms.push(r);
-      map.set(fn, current);
-    });
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([floorNumber, data]) => ({ floorNumber, ...data }));
-  }, [rooms]);
+  const toggleHotelFloor = (hotelId: string, floorNumber: number) => {
+    const key = `${hotelId}-${floorNumber}`;
+    setExpandedHotelFloors((prev) => ({
+      ...prev,
+      [key]: !(prev[key] ?? true),
+    }));
+  };
+
+  // Tek otel modu için katlara göre gruplanmış odalar
+  const groupedByFloor = useMemo(() => groupEntriesByFloor(rooms), [rooms]);
 
   const uniqueFloorNumbers = useMemo(() => {
     const set = new Set<number>();
     rooms.forEach((r) => set.add(r.floorNumber ?? 0));
     return Array.from(set).sort((a, b) => a - b);
   }, [rooms]);
+
+  const renderRoomCard = (
+    rm: PriorityPlanEntry,
+    idx: number,
+    hotelId?: string,
+    isQrRequired?: boolean,
+  ) => {
+    const isClash = rm.rank === 1 || rm.isCriticalClash || Boolean(rm.clash?.critical);
+    const targetControlUrl = hotelId
+      ? `/kat/oda-kontrol/${rm.roomId}?hotelId=${encodeURIComponent(hotelId)}`
+      : `/kat/oda-kontrol/${rm.roomId}`;
+    const targetQrUrl = hotelId
+      ? `/kat/qr?hotelId=${encodeURIComponent(hotelId)}`
+      : "/kat/qr";
+
+    return (
+      <div
+        key={rm.roomId}
+        className={`flex items-center justify-between gap-4 rounded-xl border p-3.5 transition ${
+          isClash
+            ? "border-danger/60 bg-danger/10"
+            : "border-border bg-surface hover:border-accent"
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bg border border-border text-xs font-bold text-text tabular-nums">
+            #{rm.seq ?? idx + 1}
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-bold text-text">Oda {rm.roomNumber}</span>
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
+                {rm.priorityLabel ?? rm.label ?? "Kontrol"}
+              </span>
+              {isClash ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2 py-0.5 text-xs font-bold">
+                  <Icon name="warning" size={12} />
+                  Kritik Çakışma
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
+              {rm.departureTime ?? rm.clash?.departure ? (
+                <span>Çıkış: {rm.departureTime ?? rm.clash?.departure}</span>
+              ) : null}
+              {rm.arrivalTime ?? rm.clash?.arrival ? (
+                <span>Giriş: {rm.arrivalTime ?? rm.clash?.arrival}</span>
+              ) : null}
+            </div>
+
+            {rm.warningText ? (
+              <p className="mt-1 text-xs font-semibold text-danger">{rm.warningText}</p>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Buton: QR Zorunlu ise doğrudan QR Okut, değilse Kontrol Et */}
+        {isQrRequired ? (
+          <Link
+            href={targetQrUrl}
+            style={{ minHeight: "var(--tap-action)" }}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
+          >
+            <Icon name="camera" size={15} />
+            QR Okut
+          </Link>
+        ) : (
+          <Link
+            href={targetControlUrl}
+            style={{ minHeight: "var(--tap-action)" }}
+            className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition"
+          >
+            Kontrol Et
+            <Icon name="arrow-right" size={14} />
+          </Link>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-bg text-text pb-20">
@@ -151,6 +295,53 @@ export default function KatTavsiyeIsPlaniPage() {
       <main className="mx-auto max-w-4xl px-4 py-6 space-y-4">
         <RoutineCard />
 
+        {/* Otel Seçim / Çoklu Otel Görünüm Barı */}
+        {hotels.length > 1 ? (
+          <div className="rounded-2xl border border-border bg-surface p-3.5 shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-muted flex items-center gap-1.5">
+                <Icon name="building" size={16} />
+                Otel Görünümü:
+              </span>
+              <span className="text-xs font-semibold text-accent">
+                {selectedHotelId === "ALL" ? `${hotels.length} otel birlikte görüntüleniyor` : "Tek otel filtresi aktif"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <button
+                type="button"
+                onClick={() => handleHotelSelect("ALL")}
+                className={`rounded-xl px-3.5 py-2 font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                  selectedHotelId === "ALL"
+                    ? "bg-accent text-white shadow-sm ring-2 ring-accent/30"
+                    : "border border-border bg-surface text-text hover:bg-bg"
+                }`}
+              >
+                <Icon name="building" size={14} />
+                Tüm Oteller ({hotels.length})
+              </button>
+              {hotels.map((h) => {
+                const isSelected = selectedHotelId === h.id;
+                return (
+                  <button
+                    key={h.id}
+                    type="button"
+                    onClick={() => handleHotelSelect(h.id)}
+                    className={`rounded-xl px-3.5 py-2 font-bold transition whitespace-nowrap flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-accent text-white shadow-sm ring-2 ring-accent/30"
+                        : "border border-border bg-surface text-text hover:bg-bg"
+                    }`}
+                  >
+                    <Icon name="building" size={14} />
+                    {h.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         {/* Yazılı Plan Rehberi ve Çalışma Mantığı */}
         <section className="rounded-2xl border border-border bg-surface overflow-hidden shadow-sm">
           <button
@@ -160,7 +351,7 @@ export default function KatTavsiyeIsPlaniPage() {
           >
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/15 text-accent font-bold text-sm">
-                📋
+                <Icon name="clipboard" size={16} />
               </span>
               <div>
                 <h2 className="text-sm font-bold text-text">Tavsiye Edilen İş Planı Nasıl Çalışır?</h2>
@@ -168,7 +359,8 @@ export default function KatTavsiyeIsPlaniPage() {
               </div>
             </div>
             <span className="text-xs font-semibold text-accent flex items-center gap-1">
-              {showGuide ? "Gizle ▲" : "Açıkla ▼"}
+              {showGuide ? "Gizle" : "Açıkla"}
+              <Icon name="chevron-down" size={14} className={showGuide ? "rotate-180" : undefined} />
             </span>
           </button>
 
@@ -245,41 +437,6 @@ export default function KatTavsiyeIsPlaniPage() {
           ) : null}
         </section>
 
-        {/* Kat Filtre Hapları (Pills) */}
-        {uniqueFloorNumbers.length > 1 ? (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            <span className="text-muted font-bold whitespace-nowrap">Kat Filtresi:</span>
-            <button
-              type="button"
-              onClick={() => setSelectedFloor("ALL")}
-              className={`rounded-xl px-3 py-1.5 font-bold transition whitespace-nowrap ${
-                selectedFloor === "ALL"
-                  ? "bg-accent text-white shadow-sm"
-                  : "border border-border bg-surface text-text hover:bg-bg"
-              }`}
-            >
-              Tüm Katlar ({rooms.length})
-            </button>
-            {uniqueFloorNumbers.map((fn) => {
-              const count = rooms.filter((r) => (r.floorNumber ?? 0) === fn).length;
-              return (
-                <button
-                  key={fn}
-                  type="button"
-                  onClick={() => setSelectedFloor(fn)}
-                  className={`rounded-xl px-3 py-1.5 font-bold transition whitespace-nowrap ${
-                    selectedFloor === fn
-                      ? "bg-accent text-white shadow-sm"
-                      : "border border-border bg-surface text-text hover:bg-bg"
-                  }`}
-                >
-                  Kat {fn} ({count})
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
-
         {/* Loading / Error States */}
         {loading ? (
           <div className="rounded-2xl border border-border bg-surface p-10 text-center text-sm text-muted">
@@ -289,13 +446,176 @@ export default function KatTavsiyeIsPlaniPage() {
           <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-5 text-sm text-danger">
             {error}
           </div>
+        ) : selectedHotelId === "ALL" && multiHotels.length > 0 ? (
+          /* ========================================================= */
+          /* ÇOKLU OTEL GÖRÜNÜMÜ                                        */
+          /* ========================================================= */
+          <div className="space-y-6">
+            {multiHotels.map((hSummary) => {
+              const hGrouped = groupEntriesByFloor(hSummary.plan.entries);
+              const hRooms = hSummary.plan.entries;
+
+              return (
+                <section
+                  key={hSummary.hotelId}
+                  className="rounded-2xl border-2 border-border bg-surface shadow-md overflow-hidden space-y-4 p-4"
+                >
+                  {/* Otel Kartı Başlığı */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent font-bold text-lg">
+                        <Icon name="building" size={20} />
+                      </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-bold text-text">{hSummary.hotelName}</h2>
+                          <span className="text-xs rounded-full bg-accent/15 px-2 py-0.5 font-bold text-accent">
+                            {hRooms.length} Görev
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted flex flex-wrap gap-2 mt-0.5">
+                          <span>{hRooms.length} bekleyen oda</span>
+                          {hSummary.plan.summary.clashes > 0 ? (
+                            <span className="inline-flex items-center gap-1 text-danger font-bold">
+                              · <Icon name="warning" size={12} /> {hSummary.plan.summary.clashes} çakışma
+                            </span>
+                          ) : null}
+                          {hSummary.plan.summary.critical > 0 ? (
+                            <span className="inline-flex items-center gap-1 text-warn font-bold">
+                              · <Icon name="warning" size={12} /> {hSummary.plan.summary.critical} kritik
+                            </span>
+                          ) : null}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleHotelSelect(hSummary.hotelId)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-accent/40 bg-accent/10 px-3.5 py-1.5 text-xs font-bold text-accent hover:bg-accent/20 transition"
+                    >
+                      Yalnız Bu Oteli Göster
+                      <Icon name="arrow-right" size={14} />
+                    </button>
+                  </div>
+
+                  {/* Otel Özel Rota Tavsiyesi */}
+                  {hSummary.plan.briefing.length > 0 ? (
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs text-text space-y-1">
+                      <span className="font-bold text-accent">Bugünkü Rota Özeti:</span>
+                      <ul className="list-disc list-inside space-y-0.5 text-muted">
+                        {hSummary.plan.briefing.map((b, bi) => (
+                          <li key={bi}>{b}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  {/* Otelin Kat ve Oda Listesi */}
+                  {hRooms.length === 0 ? (
+                    <div className="rounded-xl border border-border bg-bg/50 p-6 text-center text-xs text-muted">
+                      Bu otelde bugün için bekleyen oda kontrol görevi bulunmuyor.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {hGrouped.map((grp) => {
+                        const floorKey = `${hSummary.hotelId}-${grp.floorNumber}`;
+                        const isExpanded = expandedHotelFloors[floorKey] ?? true;
+                        const criticalCount = grp.rooms.filter(
+                          (r) => r.rank === 1 || r.isCritical || r.isCriticalClash,
+                        ).length;
+
+                        return (
+                          <div
+                            key={floorKey}
+                            className="rounded-xl border border-border bg-bg/60 overflow-hidden shadow-xs"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleHotelFloor(hSummary.hotelId, grp.floorNumber)}
+                              className="w-full flex items-center justify-between p-3.5 bg-surface hover:bg-bg/60 transition text-left border-b border-border/70"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-white font-bold text-xs">
+                                  {grp.floorNumber}
+                                </span>
+                                <div>
+                                  <h3 className="text-xs font-bold text-text">{grp.floorName}</h3>
+                                  <p className="text-xs text-muted">
+                                    {grp.rooms.length} oda
+                                    {criticalCount > 0 ? (
+                                      <span className="text-danger font-bold ml-1">· {criticalCount} kritik</span>
+                                    ) : null}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+                                {isExpanded ? "Gizle" : "Odaları Göster"}
+                                <Icon name="chevron-down" size={14} className={isExpanded ? "rotate-180" : undefined} />
+                              </span>
+                            </button>
+
+                            {isExpanded ? (
+                              <div className="p-2.5 space-y-2">
+                                {grp.rooms.map((rm, idx) =>
+                                  renderRoomCard(rm, idx, hSummary.hotelId, hSummary.requireQrForControl),
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              );
+            })}
+          </div>
         ) : rooms.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
             Bugün için bekleyen oda kontrol görevi bulunmuyor.
           </div>
         ) : (
-          /* Katlara Göre Gruplanmış ve Tıklayınca Açılan Kat Listesi */
+          /* ========================================================= */
+          /* TEK OTEL GÖRÜNÜMÜ                                         */
+          /* ========================================================= */
           <div className="space-y-4">
+            {/* Kat Filtre Hapları (Pills) */}
+            {uniqueFloorNumbers.length > 1 ? (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <span className="text-muted font-bold whitespace-nowrap">Kat Filtresi:</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFloor("ALL")}
+                  className={`rounded-xl px-3 py-1.5 font-bold transition whitespace-nowrap ${
+                    selectedFloor === "ALL"
+                      ? "bg-accent text-white shadow-sm"
+                      : "border border-border bg-surface text-text hover:bg-bg"
+                  }`}
+                >
+                  Tüm Katlar ({rooms.length})
+                </button>
+                {uniqueFloorNumbers.map((fn) => {
+                  const count = rooms.filter((r) => (r.floorNumber ?? 0) === fn).length;
+                  return (
+                    <button
+                      key={fn}
+                      type="button"
+                      onClick={() => setSelectedFloor(fn)}
+                      className={`rounded-xl px-3 py-1.5 font-bold transition whitespace-nowrap ${
+                        selectedFloor === fn
+                          ? "bg-accent text-white shadow-sm"
+                          : "border border-border bg-surface text-text hover:bg-bg"
+                      }`}
+                    >
+                      Kat {fn} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {/* Katlara Göre Gruplanmış ve Tıklayınca Açılan Kat Listesi */}
             {groupedByFloor
               .filter((grp) => selectedFloor === "ALL" || grp.floorNumber === selectedFloor)
               .map((grp) => {
@@ -331,8 +651,9 @@ export default function KatTavsiyeIsPlaniPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-muted">
-                          {isExpanded ? "Oda Listesini Gizle ▲" : "Odaları Göster ▼"}
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+                          {isExpanded ? "Oda Listesini Gizle" : "Odaları Göster"}
+                          <Icon name="chevron-down" size={14} className={isExpanded ? "rotate-180" : undefined} />
                         </span>
                       </div>
                     </button>
@@ -340,72 +661,9 @@ export default function KatTavsiyeIsPlaniPage() {
                     {/* Katın Odaları Listesi */}
                     {isExpanded ? (
                       <div className="p-3 space-y-2.5 bg-bg/40">
-                        {grp.rooms.map((rm, idx) => {
-                          const isClash = rm.rank === 1 || rm.isCriticalClash || Boolean(rm.clash?.critical);
-                          return (
-                            <div
-                              key={rm.roomId}
-                              className={`flex items-center justify-between gap-4 rounded-xl border p-3.5 transition ${
-                                isClash
-                                  ? "border-danger/60 bg-danger/10"
-                                  : "border-border bg-surface hover:border-accent"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-bg border border-border text-xs font-bold text-text tabular-nums">
-                                  #{rm.seq ?? idx + 1}
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-bold text-text">Oda {rm.roomNumber}</span>
-                                    <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-bold text-accent">
-                                      {rm.priorityLabel ?? rm.label ?? "Kontrol"}
-                                    </span>
-                                    {isClash ? (
-                                      <span className="rounded-full bg-danger text-white px-2 py-0.5 text-[11px] font-bold animate-pulse">
-                                        🚨 Kritik Çakışma
-                                      </span>
-                                    ) : null}
-                                  </div>
-
-                                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
-                                    {rm.departureTime ?? rm.clash?.departure ? (
-                                      <span>Çıkış: {rm.departureTime ?? rm.clash?.departure}</span>
-                                    ) : null}
-                                    {rm.arrivalTime ?? rm.clash?.arrival ? (
-                                      <span>Giriş: {rm.arrivalTime ?? rm.clash?.arrival}</span>
-                                    ) : null}
-                                  </div>
-
-                                  {rm.warningText ? (
-                                    <p className="mt-1 text-xs font-semibold text-danger">{rm.warningText}</p>
-                                  ) : null}
-                                </div>
-                              </div>
-
-                              {/* Buton: QR Zorunlu ise doğrudan QR Okut, değilse Kontrol Et */}
-                              {requireQrForControl ? (
-                                <Link
-                                  href="/kat/qr"
-                                  style={{ minHeight: "var(--tap-action)" }}
-                                  className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
-                                >
-                                  <Icon name="camera" size={15} />
-                                  QR Okut
-                                </Link>
-                              ) : (
-                                <Link
-                                  href={`/kat/oda-kontrol/${rm.roomId}`}
-                                  style={{ minHeight: "var(--tap-action)" }}
-                                  className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition"
-                                >
-                                  Kontrol Et
-                                  <Icon name="arrow-right" size={14} />
-                                </Link>
-                              )}
-                            </div>
-                          );
-                        })}
+                        {grp.rooms.map((rm, idx) =>
+                          renderRoomCard(rm, idx, selectedHotelId !== "ALL" ? selectedHotelId : undefined, requireQrForControl),
+                        )}
                       </div>
                     ) : null}
                   </div>

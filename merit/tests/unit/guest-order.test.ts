@@ -52,7 +52,7 @@ describe("guestOrder.create", () => {
     const row = await testDb.order.findUniqueOrThrow({ where: { id: view.orderId }, include: { items: true, events: true } });
     expect(row).toMatchObject({ kind: "MASA", tableId: s.table.id, pricesShown: false, guestLanguage: "tr", clientIp: base.ip });
     expect(row.subtotal).toBeNull();
-    expect(row.items[0].unitPrice).toBeNull();
+    expect(row.items[0].unitPrice?.toString()).toBe("9.5"); // snapshot kept even when prices are hidden
     expect(row.items[0].nameSnapshot).toBe("Mojito");
     expect(row.events).toHaveLength(1);
     expect(row.events[0]).toMatchObject({ from: null, to: "GONDERILDI" });
@@ -104,6 +104,26 @@ describe("guestOrder.create", () => {
       message: "Şu an sipariş alınmıyor",
     });
     expect(await testDb.order.count()).toBe(0);
+  });
+
+  it("pasif üst kategorideki ürün sipariş edilemez; hata menuNodeId listesi de taşır", async () => {
+    const s = await orderSetup();
+    const cat = await s.node("Kokteyller", null, { kind: "KATEGORI", isActive: false });
+    const child = await s.node("Gizli Mojito", "9.00", { parentId: cat.id });
+    const err = await guestOrder.create(input(s.token, [{ menuNodeId: child.id, qty: 1 }])).catch((e) => e);
+    expect(err).toMatchObject({ code: "VALIDATION" });
+    expect(err.fieldErrors.items).toEqual(["Gizli Mojito"]);
+    expect(err.fieldErrors.itemIds).toEqual([child.id]);
+    expect(await testDb.order.count()).toBe(0);
+  });
+
+  it("ret gerekçesi misafire ham dönmez: genel metin", async () => {
+    const s = await orderSetup();
+    const view = await guestOrder.create(input(s.token, [{ menuNodeId: s.cola.id, qty: 1 }]));
+    await testDb.order.update({ where: { id: view.orderId }, data: { status: "REDDEDILDI", rejectReason: "stok yok, ahmet söyledi" } });
+    const seen = await guestOrder.get(s.token, view.orderId);
+    expect(seen.rejectReason).toBeDefined();
+    expect(JSON.stringify(seen)).not.toContain("ahmet");
   });
 
   it("tükenmiş / pasif / başka outlet öğesi: VALIDATION fieldErrors.items adlarla, sipariş yok", async () => {

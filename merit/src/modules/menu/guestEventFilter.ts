@@ -14,7 +14,7 @@ export type GuestStreamScope = {
 /**
  * Which realtime events a guest stream may carry: guest types only; the outlet's own events (or, when
  * an event names no outlet, its hotel's; an event with no hotel is system-wide, e.g. `price.display`
- * from the system setting, and reaches every outlet); `order.*` only for the guest's own orders;
+ * from the system setting, and reaches every outlet); `call.resolved` only for the guest's own table (after the outlet/hotel match); `order.*` only for the guest's own orders;
  * room orders also require the matching hotel, outlet and room; `mybar.*` only for the guest's own room.
  */
 export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => boolean {
@@ -23,17 +23,16 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
     if (e.type.startsWith("mybar.")) {
       return scope.roomId !== undefined && e.roomId === scope.roomId && e.hotelId === scope.hotelId;
     }
-    if (e.type === "call.resolved") {
-      const p = e.payload as { tableId?: unknown } | undefined;
-      if (scope.tableId !== undefined && p?.tableId !== undefined) {
-        return p.tableId === scope.tableId;
-      }
-      return true;
-    }
     if (e.outletId !== undefined) {
       if (scope.outletId === undefined || e.outletId !== scope.outletId) return false;
     } else if (e.hotelId !== undefined && e.hotelId !== scope.hotelId) {
       return false;
+    }
+    if (e.type === "call.resolved") {
+      // Table-scoped only: hotel/outlet were matched above; a room stream or another table never sees it.
+      if (e.hotelId !== undefined && e.hotelId !== scope.hotelId) return false;
+      const p = e.payload as { tableId?: unknown } | undefined;
+      return scope.tableId !== undefined && p?.tableId === scope.tableId;
     }
     if (e.type.startsWith("order.")) {
       const payload = e.payload as { orderId?: unknown; roomId?: unknown } | undefined;
@@ -51,9 +50,12 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
   };
 }
 
+/** Same generic text as the guest order view (guestOrder.ts): staff-typed reasons never reach the guest. */
+const GUEST_REJECT_TEXT = "Siparişiniz işleme alınamadı. Ayrıntı için lütfen görevlimize danışın.";
+
 /** Payload fields of an `order.*` event a guest may see; everything else (staff ids, notes ...) is dropped. */
 const GUEST_ORDER_FIELDS = [
-  "orderId", "orderNo", "status", "rejectReason", "cancelReason", "tableId", "roomId", "from", "kind",
+  "orderId", "orderNo", "status", "tableId", "roomId", "from", "kind",
 ] as const;
 
 /**
@@ -82,5 +84,6 @@ export function sanitizeGuestEvent(e: MeritEvent): MeritEvent {
   const src = (typeof e.payload === "object" && e.payload !== null ? e.payload : {}) as Record<string, unknown>;
   const payload: Record<string, unknown> = {};
   for (const k of GUEST_ORDER_FIELDS) if (src[k] !== undefined) payload[k] = src[k];
+  if (src.rejectReason || src.cancelReason) payload.rejectReason = GUEST_REJECT_TEXT;
   return { ...e, payload };
 }

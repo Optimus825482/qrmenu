@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 
+/** Pause after an unreadable/unknown code before the camera loop scans again (the resolver allows 30/min). */
+const RESCAN_DELAY_MS = 2_000;
+
 export default function KatQrScannerPage() {
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -19,6 +22,22 @@ export default function KatQrScannerPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [torchSupported, setTorchSupported] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
+  // "ALL"/"SOME": typed room numbers are offered (the server still decides per room); "NONE": only the QR label code.
+  const [manualEntry, setManualEntry] = useState<"ALL" | "SOME" | "NONE">("NONE");
+
+  useEffect(() => {
+    let live = true;
+    fetch("/api/minibar/qr/resolve")
+      .then((r) => (r.ok ? (r.json() as Promise<{ manualEntry?: "ALL" | "SOME" | "NONE" }>) : null))
+      .then((j) => {
+        if (live && j?.manualEntry) setManualEntry(j.manualEntry);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+  const roomNumberAllowed = manualEntry !== "NONE";
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -32,9 +51,9 @@ export default function KatQrScannerPage() {
   }, []);
 
   const resolveToken = useCallback(
-    async (raw: string) => {
+    async (raw: string): Promise<boolean> => {
       const trimmed = raw.trim();
-      if (!trimmed || resolving) return;
+      if (!trimmed || resolving) return false;
 
       setResolving(true);
       setError(null);
@@ -58,10 +77,13 @@ export default function KatQrScannerPage() {
         if (!roomId) throw new Error("Oda bilgisi çözümlenemedi.");
 
         stopCamera();
-        router.push(`/kat/oda-kontrol/${roomId}?fromQr=1`);
+        // The QR permission is the server-side scan proof, not a URL parameter.
+        router.push(`/kat/oda-kontrol/${roomId}`);
+        return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "QR çözümlenemedi.");
         inputRef.current?.focus();
+        return false;
       } finally {
         setResolving(false);
       }
@@ -73,7 +95,7 @@ export default function KatQrScannerPage() {
     setCameraError(null);
     try {
       if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-        setCameraError("Bu tarayıcıda kamera erişimi desteklenmiyor. Aşağıdan oda numarası veya QR kod yazabilirsiniz.");
+        setCameraError("Bu tarayıcıda kamera erişimi desteklenmiyor. Aşağıdan QR etiketindeki kodu yazabilirsiniz.");
         inputRef.current?.focus();
         return;
       }
@@ -109,8 +131,9 @@ export default function KatQrScannerPage() {
           try {
             const codes = await detector.detect(videoRef.current);
             if (codes.length > 0 && codes[0].rawValue) {
-              await resolveToken(codes[0].rawValue);
-              return;
+              if (await resolveToken(codes[0].rawValue)) return;
+              // Invalid code: keep scanning after a short pause instead of stopping the loop.
+              await new Promise((r) => setTimeout(r, RESCAN_DELAY_MS));
             }
           } catch {
             // Sonraki karede tekrar dene.
@@ -120,7 +143,7 @@ export default function KatQrScannerPage() {
         requestAnimationFrame(scanLoop);
       }
     } catch {
-      setCameraError("Kamera izni reddedildi veya kamera açılamadı. Oda numarasını veya QR kodu aşağıdan girebilirsiniz.");
+      setCameraError("Kamera izni reddedildi veya kamera açılamadı. QR etiketindeki kodu aşağıdan girebilirsiniz.");
       inputRef.current?.focus();
     }
   }, [resolveToken]);
@@ -230,7 +253,7 @@ export default function KatQrScannerPage() {
               <div className="text-center p-6 space-y-2">
                 <Icon name="qr" size={32} className="mx-auto text-muted" />
                 <p className="text-xs text-muted">
-                  {cameraError ?? "Kamera kapalı. QR okutmak için kamerayı açın veya aşağıdan oda numarası yazın."}
+                  {cameraError ?? "Kamera kapalı. QR okutmak için kamerayı açın veya aşağıdan QR etiketindeki kodu yazın."}
                 </p>
               </div>
             ) : (
@@ -244,10 +267,14 @@ export default function KatQrScannerPage() {
         <div data-guide="oda-bilgisi" className="rounded-2xl border border-border bg-surface p-5 space-y-3">
           <div>
             <label htmlFor="qr-code-input" className="block text-sm font-bold text-text">
-              Oda numarası yaz veya QR kodu gir
+              {roomNumberAllowed ? "Oda numarası yaz veya QR kodu gir" : "QR etiketindeki kodu gir"}
             </label>
             <p id="qr-code-hint" className="text-xs text-muted mt-0.5">
-              Kamera kullanılamıyorsa oda numarasını (örn: 101) veya 6 haneli QR kodunu yazın
+              {manualEntry === "ALL"
+                ? "Kamera kullanılamıyorsa oda numarasını (örn: 101) veya 6 haneli QR kodunu yazın"
+                : manualEntry === "SOME"
+                  ? "Oda numarası yalnız elle girişe izin verilen odalarda kabul edilir; diğerlerinde QR etiketindeki kodu yazın"
+                  : "Kamera kullanılamıyorsa QR etiketinin altındaki 6 haneli kodu yazın. Oda numarası ile giriş kapalıdır."}
             </p>
           </div>
 
@@ -271,7 +298,7 @@ export default function KatQrScannerPage() {
                 setManualToken(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="Oda numarası veya QR kod (örn: 101)"
+              placeholder={roomNumberAllowed ? "Oda numarası veya QR kod (örn: 101)" : "QR kodu (örn: 482913)"}
               className="flex-1 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-mono tracking-wider text-text placeholder:text-muted focus:border-accent focus:outline-none"
             />
             <button

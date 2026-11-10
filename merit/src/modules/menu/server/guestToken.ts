@@ -2,6 +2,7 @@ import { clientIp, createRateLimiter, scaledMax, type AsyncRateLimiter, type Rat
 import { prisma } from "@/lib/prisma";
 import { isSignedToken, verifyQrToken } from "@/lib/qr";
 import { publish } from "@/lib/realtime";
+import { audit } from "@/modules/core/server/audit";
 import { publishRadar } from "@/modules/radar/publish";
 import { type GuestState, guestState } from "./guestState";
 
@@ -47,6 +48,41 @@ async function writeScan(
   }
 }
 
+/** `${entity}:${id}` → UTC day of the last legacy-code audit row (one row per code per day per instance). */
+const legacyAudited = new Map<string, string>();
+
+/**
+ * Records that a printed code which is NOT a valid signed token (6-digit room code, migrated or
+ * hand-set table token) is still in use, so the remaining legacy codes can be counted and reissued.
+ * Best effort: never affects the guest answer.
+ */
+async function auditLegacyCode(
+  token: string,
+  target: { entity: "OutletTable" | "Room"; id: string; hotelId: string },
+  meta: GuestMeta,
+): Promise<void> {
+  const kind = target.entity === "Room" ? "ROOM" : "TABLE";
+  if (isSignedToken(token) && verifyQrToken(token, kind, target.id)) return;
+  const key = `${target.entity}:${target.id}`;
+  const day = new Date().toISOString().slice(0, 10);
+  if (legacyAudited.get(key) === day) return;
+  legacyAudited.set(key, day);
+  console.warn("[guest token] eski biçimli QR kodu kullanıldı", { entity: target.entity, id: target.id });
+  try {
+    await audit(prisma, {
+      hotelId: target.hotelId,
+      action: "QR_ESKI_KOD",
+      entity: target.entity,
+      entityId: target.id,
+      after: { tokenLength: token.length, sixDigit: /^\d{6}$/.test(token) },
+      ip: meta.ip,
+    });
+  } catch (error) {
+    legacyAudited.delete(key);
+    console.error("[guest token] eski kod denetim kaydı", error);
+  }
+}
+
 async function resolve(
   token: string,
   meta: GuestMeta,
@@ -79,6 +115,7 @@ async function resolve(
     }
     await logScan(meta, { tableId: table.id, ok: true });
     if (log) {
+      await auditLegacyCode(token, { entity: "OutletTable", id: table.id, hotelId: state.hotelId }, meta);
       try {
         await publish({
           type: "scan.table",
@@ -104,6 +141,7 @@ async function resolve(
     }
     await logScan(meta, { roomId: room.id, ok: true });
     if (log) {
+      await auditLegacyCode(token, { entity: "Room", id: room.id, hotelId: room.hotelId }, meta);
       // Outside any transaction; a radar failure must never break the guest page.
       try {
         await publishRadar(
@@ -149,20 +187,29 @@ export async function resolveGuestToken(
 export const unknownTokenLimiter = createRateLimiter({ max: () => scaledMax(60), windowMs: 60_000 });
 /** Backstop across all IPs (the IP is spoofable behind a misconfigured proxy): 600 per minute. */
 export const globalUnknownTokenLimiter: RateLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+/**
+ * Unsigned (legacy) codes have no HMAC to fall back on and a small space (6-digit room codes), so
+ * their misses get much tighter budgets: 10 per minute per IP, 30 per minute across all IPs.
+ */
+export const legacyTokenLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
+export const globalLegacyTokenLimiter: RateLimiter = createRateLimiter({ max: 30, windowMs: 60_000 });
+export type LegacyLimiters = { perIp: RateLimiter | AsyncRateLimiter; global: RateLimiter };
 const GLOBAL_KEY = "*";
 
 /** Pause before answering RATE_LIMITED for an unknown token (brute-force slowdown). Tests set it to 0. */
 export const rateLimitDelay = { ms: 250 };
 
 /**
- * `resolveGuestToken` with the unknown-token limits. While under the limits behaviour is plain: an
- * unknown token counts as a miss. When the per-IP limiter is over its limit, only a signed-shaped
- * token (30 chars) is looked up, and only proceeds (logging as usual) if it resolves to a table/room
- * whose HMAC verifies. Anything else (unsigned/legacy, unknown, forged) is counted, delayed and
- * answered `RATE_LIMITED` without a scan log; unsigned tokens cause no DB lookup at all while the IP
- * is blocked. The global backstop alone never refuses a valid token: every token (legacy included —
- * physical QRs cannot be reissued) gets the cheap unique lookup and proceeds when it resolves;
- * only an unresolved token is delayed and answered `RATE_LIMITED` without a scan log.
+ * `resolveGuestToken` with the unknown-token limits. While under every limit behaviour is plain:
+ * an unknown token counts as a miss (an unsigned one also against the legacy budgets).
+ *
+ * Once a limit is reached:
+ * - A signed-shaped token (30 chars) is looked up and proceeds only when it resolves AND its HMAC
+ *   verifies, for the per-IP and the global limit alike (a resolved token alone is not proof).
+ * - An unsigned (legacy) token proceeds only while its own legacy budgets and the per-IP limit are
+ *   free (then it is looked up; only the global general backstop is exceeded). Otherwise it is
+ *   refused without any DB lookup.
+ * Refusals are counted, delayed and answered `RATE_LIMITED` without a scan log.
  */
 export async function resolveGuestTokenLimited(
   token: string,
@@ -170,34 +217,47 @@ export async function resolveGuestTokenLimited(
   limiter: RateLimiter | AsyncRateLimiter = unknownTokenLimiter,
   globalLimiter: RateLimiter = globalUnknownTokenLimiter,
   options: ResolveOptions = {},
+  legacy: LegacyLimiters = { perIp: legacyTokenLimiter, global: globalLegacyTokenLimiter },
 ): Promise<GuestTarget> {
+  const signed = isSignedToken(token);
   const perIpBlocked = !(await limiter.peek(meta.ip)).allowed;
   const globallyBlocked = !globalLimiter.peek(GLOBAL_KEY).allowed;
+  const legacyBlocked =
+    !signed && (!(await legacy.perIp.peek(meta.ip)).allowed || !legacy.global.peek(GLOBAL_KEY).allowed);
+  const countMiss = async () => {
+    const perIp = await limiter.hit(meta.ip);
+    const global = globalLimiter.hit(GLOBAL_KEY);
+    let legacyOk = true;
+    if (!signed) {
+      const legacyIp = await legacy.perIp.hit(meta.ip);
+      const legacyGlobal = legacy.global.hit(GLOBAL_KEY);
+      legacyOk = legacyIp.allowed && legacyGlobal.allowed;
+    }
+    return perIp.allowed && global.allowed && legacyOk;
+  };
   const refuse = async (): Promise<GuestTarget> => {
-    await limiter.hit(meta.ip);
-    globalLimiter.hit(GLOBAL_KEY);
+    await countMiss();
     if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
     return none("RATE_LIMITED");
   };
-  if (perIpBlocked || globallyBlocked) {
-    if (!perIpBlocked || isSignedToken(token)) {
+  if (perIpBlocked || globallyBlocked || legacyBlocked) {
+    if (signed) {
       const probe = await resolveGuestToken(token, meta, { log: false, logUnknown: false });
-      if (probe.kind === "TABLE" || probe.kind === "ROOM") {
-        if (!perIpBlocked) return resolveGuestToken(token, meta, options);
-        // A blocked IP must not learn which signed tokens exist: the HMAC has to hold too.
-        const verified =
-          (probe.kind === "TABLE" && verifyQrToken(token, "TABLE", probe.table.id)) ||
-          (probe.kind === "ROOM" && verifyQrToken(token, "ROOM", probe.roomId));
-        if (verified) return resolveGuestToken(token, meta, options);
-      }
+      // A blocked caller must not learn which signed tokens exist: the HMAC has to hold too.
+      const verified =
+        (probe.kind === "TABLE" && verifyQrToken(token, "TABLE", probe.table.id)) ||
+        (probe.kind === "ROOM" && verifyQrToken(token, "ROOM", probe.roomId));
+      if (verified) return resolveGuestToken(token, meta, options);
+    } else if (!perIpBlocked && !legacyBlocked) {
+      // Only the general global backstop is exceeded; the legacy budgets still bound enumeration.
+      const probe = await resolveGuestToken(token, meta, { log: false, logUnknown: false });
+      if (probe.kind === "TABLE" || probe.kind === "ROOM") return resolveGuestToken(token, meta, options);
     }
     return refuse();
   }
   const result = await resolveGuestToken(token, meta, options);
   if (result.kind === "NONE" && result.reason === "BILINMEYEN") {
-    const perIp = await limiter.hit(meta.ip);
-    const global = globalLimiter.hit(GLOBAL_KEY);
-    if (!perIp.allowed || !global.allowed) {
+    if (!(await countMiss())) {
       if (rateLimitDelay.ms > 0) await new Promise((r) => setTimeout(r, rateLimitDelay.ms));
       return none("RATE_LIMITED");
     }

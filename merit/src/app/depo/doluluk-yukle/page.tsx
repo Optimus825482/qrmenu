@@ -56,6 +56,8 @@ type Preview = {
     guestCount: number;
   }[];
   hotelMatch?: { label: string; matches: boolean };
+  changes?: { create: number; update: number; remove: number };
+  blockers?: string[];
 };
 type CommitResult = {
   code: string;
@@ -64,6 +66,9 @@ type CommitResult = {
   errorRows: number;
   errors: RowError[];
   tasksGenerated: boolean;
+  createdRows?: number;
+  updatedRows?: number;
+  removedRows?: number;
 };
 
 async function readJson(res: Response): Promise<Record<string, unknown>> {
@@ -310,6 +315,9 @@ export default function DolulukYuklePage() {
             <p className="text-xs font-mono text-muted">Kod: {result.code}</p>
             <p className="text-sm text-text">
               {result.totalRows} satır: {result.okRows} kaydedildi, {result.errorRows} hatalı.
+              {result.createdRows !== undefined
+                ? ` Yeni kayıt ${result.createdRows}, güncellenen ${result.updatedRows ?? 0}, dosyada olmadığı için kaldırılan ${result.removedRows ?? 0}.`
+                : ""}
               {result.tasksGenerated
                 ? " Günlük görevler oluşturuldu."
                 : " Görevler üç dosya da yüklenince oluşturulur."}
@@ -402,6 +410,12 @@ export default function DolulukYuklePage() {
                 <p className="text-lg font-bold text-danger">{preview.errorRows}</p>
               </div>
             </div>
+            {preview.changes && (
+              <p data-testid="occupancy-changes" className="text-sm text-text">
+                Yeni kayıt: <strong>{preview.changes.create}</strong> · Güncellenecek: <strong>{preview.changes.update}</strong> ·
+                Dosyada olmadığı için kaldırılacak: <strong>{preview.changes.remove}</strong>
+              </p>
+            )}
             {preview.warnings.length > 0 && (
               <ul data-testid="occupancy-warnings" className="text-xs text-warn space-y-0.5">
                 {preview.warnings.map((w, i) => (
@@ -467,7 +481,7 @@ export default function DolulukYuklePage() {
                 data-guide="yukle"
                 data-testid="occupancy-commit"
                 onClick={() => void commit()}
-                disabled={busy || preview.okRows === 0}
+                disabled={busy || preview.okRows === 0 || (preview.blockers?.length ?? 0) > 0}
                 style={{ minHeight: "var(--tap-primary)" }}
                 className="px-6 py-2.5 bg-accent hover:opacity-95 text-white rounded-xl text-xs font-bold disabled:opacity-50"
               >

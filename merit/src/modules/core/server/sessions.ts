@@ -51,6 +51,18 @@ async function publishSessionChanged(tx: Prisma.TransactionClient, session: Name
   );
 }
 
+/**
+ * Absolute end of a session (`loginAt + session.absoluteMaxMinutes`): activity extends
+ * `expiresAt` (sliding window) but never past this point.
+ */
+export async function absoluteDeadline(loginAt: Date, hotelId: string): Promise<Date> {
+  const minutes = await getSetting("session.absoluteMaxMinutes", hotelId);
+  return new Date(loginAt.getTime() + minutes * MINUTE_MS);
+}
+
+/** The earlier of two instants. */
+const earliest = (a: Date, b: Date): Date => (a.getTime() <= b.getTime() ? a : b);
+
 export type CreateSessionInput = {
   userId: string;
   hotelId: string;
@@ -82,6 +94,7 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
   const role = await prisma.role.findUnique({ where: { id: input.roleId } });
   if (!role) throw new DomainError("NOT_FOUND", "Rol bulunamadı");
   const minutes = await maxOnlineMinutes(role, input.hotelId);
+  const absoluteMinutes = await getSetting("session.absoluteMaxMinutes", input.hotelId);
   const singleDevice = await getSetting("session.singleDevice", input.hotelId);
 
   return prisma.$transaction(async (tx) => {
@@ -111,7 +124,7 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
         status: "ONLINE",
         loginAt: now,
         lastSeenAt: now,
-        expiresAt: new Date(now.getTime() + minutes * MINUTE_MS),
+        expiresAt: new Date(now.getTime() + Math.min(minutes, absoluteMinutes) * MINUTE_MS),
         ip: input.ip ?? "unknown",
         userAgent: input.userAgent ?? "unknown",
       },
@@ -132,7 +145,10 @@ export async function createSession(input: CreateSessionInput): Promise<UserSess
   });
 }
 
-/** Records activity on an open session and extends expiration (sliding window). Callers throttle (requireUser: at most once a minute). */
+/**
+ * Records activity on an open session and extends expiration (sliding window), capped at the
+ * absolute deadline. Callers throttle (requireUser: at most once a minute).
+ */
 export async function touchSession(id: string): Promise<void> {
   const session = await prisma.userSession.findUnique({
     where: { id },
@@ -140,13 +156,17 @@ export async function touchSession(id: string): Promise<void> {
       id: true,
       hotelId: true,
       status: true,
+      loginAt: true,
       role: { select: { kind: true, maxOnlineMinutes: true } },
     },
   });
   if (!session || !ACTIVE_STATUSES.includes(session.status)) return;
   const minutes = await maxOnlineMinutes(session.role, session.hotelId);
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + minutes * MINUTE_MS);
+  const expiresAt = earliest(
+    new Date(now.getTime() + minutes * MINUTE_MS),
+    await absoluteDeadline(session.loginAt, session.hotelId),
+  );
 
   if (session.status === "UYARI") {
     await prisma.$transaction(async (tx) => {
@@ -208,15 +228,17 @@ export async function warnSession(id: string, now: Date): Promise<boolean> {
 /**
  * Closes every open session of a user inside the caller's transaction (deactivation, password
  * reset): each gets status CIKTI, `reason` and its own `session.closed` event so SSE streams end.
+ * `keepSessionId` (own password change) leaves that one session open.
  */
 export async function closeUserSessionsInTx(
   tx: Prisma.TransactionClient,
   userId: string,
   reason: LogoutReason,
   byUserId?: string,
+  keepSessionId?: string,
 ): Promise<number> {
   const open = await tx.userSession.findMany({
-    where: { userId, status: { in: ACTIVE_STATUSES } },
+    where: { userId, status: { in: ACTIVE_STATUSES }, ...(keepSessionId ? { id: { not: keepSessionId } } : {}) },
     select: { id: true },
   });
   let closed = 0;

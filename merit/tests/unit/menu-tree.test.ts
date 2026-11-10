@@ -283,24 +283,57 @@ describe("menuTree silme", () => {
   });
 });
 
-describe("çeviriler", () => {
-  it("ar çevirisi list içinde görünür; tr VALIDATION; remove siler", async () => {
+describe("çeviriler (K2: yalnız otomatik)", () => {
+  it("elle çeviri servisleri yok; list çevirileri onay bayrağı olmadan döner", async () => {
+    expect("set" in translations).toBe(false);
+    expect("remove" in translations).toBe(false);
+    expect("verify" in translations).toBe(false);
     const ctx = await fbm();
     const o = await outlet();
     const { item } = await chain(ctx, o.id);
-    await translations.set(ctx, item.id, "ar", { name: "موهيتو", detail: "منعش" });
+    // Legacy row with the flag off: the flag is ignored everywhere now.
+    await testDb.menuNodeTranslation.create({
+      data: { nodeId: item.id, lang: "ar", name: "موهيتو", detail: "منعش", isVerified: false },
+    });
     const find = async () =>
       (await tree.list(ctx, o.id))[0].children[0].children[0].children[0].translations;
-    expect(await find()).toEqual([{ lang: "ar", name: "موهيتو", detail: "منعش", isVerified: true }]);
-    await translations.set(ctx, item.id, "ar", { name: "موهيتو 2" });
-    expect((await find())[0].name).toBe("موهيتو 2");
-    await expect(translations.set(ctx, item.id, "tr", { name: "x" })).rejects.toMatchObject({
-      code: "VALIDATION",
-    });
-    await translations.remove(ctx, item.id, "ar");
-    expect(await find()).toEqual([]);
-    expect(await testDb.auditLog.count({ where: { action: "MENU_TRANSLATION_SET" } })).toBe(2);
-    expect(await testDb.auditLog.count({ where: { action: "MENU_TRANSLATION_REMOVE" } })).toBe(1);
+    expect(await find()).toEqual([{ lang: "ar", name: "موهيتو", detail: "منعش" }]);
+  });
+
+  it("Türkçe ad/açıklama değişince eski çeviriler silinir; yalnız fiyat değişince kalır", async () => {
+    const ctx = await fbm();
+    const o = await outlet();
+    const { item } = await chain(ctx, o.id);
+    await testDb.menuNodeTranslation.create({ data: { nodeId: item.id, lang: "en", name: "Mojito" } });
+    await tree.update(ctx, item.id, { price: 10 });
+    expect(await testDb.menuNodeTranslation.count({ where: { nodeId: item.id } })).toBe(1);
+    await tree.update(ctx, item.id, { name: "Mojito" }); // same text: not a source change
+    expect(await testDb.menuNodeTranslation.count({ where: { nodeId: item.id } })).toBe(1);
+    const updated = await tree.update(ctx, item.id, { name: "Çilekli Mojito" });
+    expect(updated.translations).toEqual([]);
+    expect(await testDb.menuNodeTranslation.count({ where: { nodeId: item.id } })).toBe(0);
+  });
+
+  it("misafir tetiklemesi outlet başına bekleme süresiyle sınırlı", () => {
+    translations.resetGuestSyncCooldownForTests();
+    const t0 = 1_000_000;
+    expect(translations.requestOutletTranslationSync("o-1", "h", t0)).toBe(true);
+    expect(translations.requestOutletTranslationSync("o-1", "h", t0 + 1_000)).toBe(false);
+    expect(translations.requestOutletTranslationSync("o-2", "h", t0 + 1_000)).toBe(true);
+    expect(
+      translations.requestOutletTranslationSync("o-1", "h", t0 + translations.GUEST_SYNC_COOLDOWN_MS),
+    ).toBe(true);
+  });
+});
+
+describe("para birimi (K3)", () => {
+  it("düğümün para birimi outletin para biriminden gelir", async () => {
+    const ctx = await fbm();
+    const o = await outlet();
+    await testDb.outlet.update({ where: { id: o.id }, data: { currency: "TRY" } });
+    const { item } = await chain(ctx, o.id);
+    expect(item.currency).toBe("TRY");
+    expect((await tree.list(ctx, o.id))[0].currency).toBe("TRY");
   });
 });
 

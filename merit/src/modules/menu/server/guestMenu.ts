@@ -2,7 +2,7 @@ import type { MenuNodeKind } from "@/generated/prisma/client";
 import type { Locale } from "@/lib/i18n/locales";
 import { prisma } from "@/lib/prisma";
 import { type GuestState, guestState } from "./guestState";
-import { syncOutletMissingTranslations } from "./translations";
+import { requestOutletTranslationSync } from "./translations";
 
 export type GuestItem = {
   id: string;
@@ -25,20 +25,28 @@ export type GuestMenu = { state: GuestState; categories: GuestCategory[] };
  * The guest-visible menu of an outlet: active nodes only (an inactive node hides its whole subtree),
  * translated name/detail with the Turkish base record as fallback, empty groups/subcategories/categories
  * dropped, `price` only when prices are shown. Sold-out items stay, flagged. Not cached: the page is
- * dynamic and follows SSE events.
+ * dynamic and follows SSE events. Pass `knownState` when the caller already resolved the outlet state
+ * (QR token resolution) so it is not computed twice per request.
  */
-export async function getMenu(outletId: string, locale: Locale, areaId?: string): Promise<GuestMenu> {
+export async function getMenu(
+  outletId: string,
+  locale: Locale,
+  areaId?: string,
+  knownState?: GuestState,
+): Promise<GuestMenu> {
   const [state, rows] = await Promise.all([
-    guestState(outletId, areaId),
+    knownState && knownState.outletId === outletId ? knownState : guestState(outletId, areaId),
     prisma.menuNode.findMany({
       where: { outletId, isActive: true },
-      include: { translations: { where: { lang: locale, isVerified: true } } }, // Unreviewed machine drafts never reach guests.
+      // Translations are automatic only (K2); the legacy `isVerified` flag is ignored.
+      include: { translations: { where: { lang: locale } } },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     }),
   ]);
 
   if (locale !== "tr" && rows.some((r) => r.translations.length === 0)) {
-    void syncOutletMissingTranslations(outletId, state.hotelId).catch(() => {});
+    // Throttled per outlet: a failing provider is not called again on every guest request.
+    requestOutletTranslationSync(outletId, state.hotelId);
   }
 
   type Row = (typeof rows)[number];

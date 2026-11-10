@@ -445,9 +445,8 @@ const LIST: ScreenGuide[] = [
     ],
     [
       "İptal edilen siparişler ciroya girmez.",
-      "Para birimi sistem ayarındaki birimdir.",
+      "Para birimi, outlet formunda fiyat gösterimiyle birlikte seçilen birimdir.",
     ],
-    { settings: ["price.currency"] },
   ),
   // ROOM_SERVICE
   guide(

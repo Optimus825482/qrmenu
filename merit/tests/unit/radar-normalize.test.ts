@@ -53,6 +53,7 @@ const SAMPLES: Record<string, MeritEvent> = {
   "print.failed": env("print.failed", { jobId: "j1", orderId: "o1", printerId: "p1", reason: "BASILAMADI", error: "x" }),
   "printer.status": env("printer.status", { printerId: "p1", ok: false, reason: "SESSIZ" }),
   "scan.table": env("scan.table", { tableId: "t1", tableLabel: "M12" }),
+  "table.cleared": env("table.cleared", { tableId: "t1" }),
   "scan.room": env("scan.room", { roomId: "r1", roomNumber: "204", floorId: "f1" }),
   "session.changed": env("session.changed", { sessionId: "s1", userId: "u1", fullName: "Ayşe Kaya", status: "ONLINE" }),
   "ordering.changed": env("ordering.changed", { enabled: false }),
@@ -83,9 +84,9 @@ const SAMPLES: Record<string, MeritEvent> = {
 };
 
 describe("RADAR_EVENT_TYPES", () => {
-  it("43 ad, hepsi geçerli SSE adı; roomcheck.done SSE_EVENT_TYPES dışında, mybar.created içinde", () => {
-    expect(RADAR_EVENT_TYPES).toHaveLength(43);
-    expect(new Set(RADAR_EVENT_TYPES).size).toBe(43);
+  it("44 ad, hepsi geçerli SSE adı; roomcheck.done SSE_EVENT_TYPES dışında, mybar.created içinde", () => {
+    expect(RADAR_EVENT_TYPES).toHaveLength(44);
+    expect(new Set(RADAR_EVENT_TYPES).size).toBe(44);
     for (const name of RADAR_EVENT_TYPES) expect(EVENT_TYPE_RE.test(name)).toBe(true);
     expect(SSE_EVENT_TYPES).not.toContain("roomcheck.done");
     expect(SSE_EVENT_TYPES).toContain("mybar.created");

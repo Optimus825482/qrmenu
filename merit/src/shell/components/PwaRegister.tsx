@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { notify } from "../notify";
+import { watchServiceWorkerUpdate } from "../swUpdate";
 import { listenForInstall } from "../usePwaInstall";
 
 /** Cache names of public/sw.js start with this. */
@@ -22,10 +24,17 @@ export function PwaRegister() {
     listenForInstall();
     if (!("serviceWorker" in navigator)) return;
     if (process.env.NODE_ENV === "production") {
+      const stopWatching = watchServiceWorkerUpdate(navigator.serviceWorker, () => {
+        notify.info("Yeni sürüm hazır", {
+          actionLabel: "Yenile",
+          onAction: () => window.location.reload(),
+          durationMs: null,
+        });
+      });
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
         // not fatal: the app works without it, it only cannot be installed in some browsers
       });
-      return;
+      return stopWatching;
     }
     void navigator.serviceWorker
       .getRegistrations()

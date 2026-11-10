@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useState, useSyncExternalStore } from "react";
 import { isLocale, isRtl, LANG_COOKIE, type Locale } from "@/lib/i18n/locales";
 import type { GuestTheme } from "../../server/guestState";
 import type { OutletDesign } from "../../design";
@@ -52,6 +52,8 @@ function hasExplicitLangCookie(): boolean {
   if (typeof document === "undefined" || !document.cookie) return false;
   return document.cookie.split(";").some((part) => part.trim().startsWith(`${LANG_COOKIE}=`));
 }
+
+const subscribeNever = () => () => {};
 
 function detectIsChrome(): boolean {
   if (typeof window === "undefined" || typeof navigator === "undefined") return true;
@@ -178,15 +180,15 @@ export function GuestFrame({
   footer?: ReactNode;
 }) {
   const [deviceInfo] = useState<{ os: GuestDeviceOs; isMobile: boolean }>(() => detectMobileOs());
-  const [isChrome, setIsChrome] = useState(true);
-  const [chromeDismissed, setChromeDismissed] = useState(false);
-
-  useEffect(() => {
-    setIsChrome(detectIsChrome());
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("merit_chrome_banner_closed")) {
-      setChromeDismissed(true);
+  // The server (and the hydration pass) assumes Chrome, so no banner is in the server markup.
+  const isChrome = useSyncExternalStore(subscribeNever, detectIsChrome, () => true);
+  const [chromeDismissed, setChromeDismissed] = useState(() => {
+    try {
+      return typeof sessionStorage !== "undefined" && Boolean(sessionStorage.getItem("merit_chrome_banner_closed"));
+    } catch {
+      return false;
     }
-  }, []);
+  });
 
   const style = {
     "--m-bg": theme.bg,

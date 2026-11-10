@@ -16,7 +16,11 @@ export type KdsOrder = {
   note?: string;
 };
 
-export type KdsBoard = { columns: { NEW: KdsOrder[]; PREP: KdsOrder[]; READY: KdsOrder[] } };
+export type KdsBoard = {
+  columns: { NEW: KdsOrder[]; PREP: KdsOrder[]; READY: KdsOrder[] };
+  /** Server clock (epoch ms) at read time: ages are computed against it, not the device clock. */
+  serverNow: number;
+};
 
 /**
  * Kitchen-safe order projection. Deliberately select only production data: price snapshots and
@@ -33,7 +37,8 @@ async function board(ctx: Ctx, outletId: string): Promise<KdsBoard> {
   if (!outlet.kdsEnabled) throw new DomainError("CONFLICT", "Bu outlette KDS kapalı");
 
   const rows = await prisma.order.findMany({
-    where: { outletId, kind: "MASA", OR: [{ status: "ONAYLANDI" }, { status: "HAZIR" }] }, // room service has its own board
+    // Open orders stay on the board whatever their business date; room service has its own board.
+    where: { outletId, kind: "MASA", OR: [{ status: "ONAYLANDI" }, { status: "HAZIR" }] },
     select: {
       id: true,
       orderNo: true,
@@ -68,7 +73,7 @@ async function board(ctx: Ctx, outletId: string): Promise<KdsBoard> {
     else if (row.prepStartedAt) columns.PREP.push(order);
     else columns.NEW.push(order);
   }
-  return { columns };
+  return { columns, serverNow: Date.now() };
 }
 
 export const kds = { board };

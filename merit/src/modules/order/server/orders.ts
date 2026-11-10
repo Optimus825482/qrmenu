@@ -9,7 +9,7 @@ import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { approvals, onlineAt, outletAllowed } from "./approvals";
 import { printJobs } from "./printJobs";
-import { isAllowed } from "./transitions";
+import { CLOSED_STATUSES, isAllowed } from "./transitions";
 
 /** Overrides the default receipt enqueuer inside the approval transaction (tests, future kinds). */
 export type PrintEnqueuer = (tx: Prisma.TransactionClient, order: Order) => Promise<void>;
@@ -236,6 +236,19 @@ export function orderPayload(
 export type TransitionOptions = { reason?: string; print?: PrintEnqueuer };
 
 /**
+ * Cancellation housekeeping for the print queue: tickets still waiting (KUYRUKTA) are withdrawn
+ * (PrintJobStatus has no cancelled value, so they end as HATA with an explanatory error and without
+ * a failure alert); if the kitchen already started, a price-free "İPTAL" ticket is queued.
+ */
+async function cancelPrintJobs(tx: Prisma.TransactionClient, order: OrderDetail, now: Date): Promise<void> {
+  await tx.printJob.updateMany({
+    where: { orderId: order.id, status: "KUYRUKTA" },
+    data: { status: "HATA", error: "Sipariş iptal edildi" },
+  });
+  if (order.prepStartedAt) await printJobs.enqueueKitchenCancel(tx, order, now);
+}
+
+/**
  * Moves an order along the state machine under a row lock: a second concurrent attempt finds the
  * new status and gets CONFLICT. Writes timestamps, OrderEvent, audit `ORDER_<TO>`, the realtime
  * event and notifications in one transaction.
@@ -259,7 +272,12 @@ async function transition(
   return prisma.$transaction(async (tx) => {
     const order = await lockedOrder(tx, ctx, orderId);
     if (!isAllowed(order.kind, order.status, to)) {
-      throw new DomainError("CONFLICT", ALREADY);
+      // Without a KDS nobody marks the order ready: the waiter serves it straight from ONAYLANDI.
+      const kdsOff =
+        order.kind === "MASA" && order.status === "ONAYLANDI" && to === "SERVIS_EDILDI"
+          ? (await tx.outlet.findUnique({ where: { id: order.outletId }, select: { kdsEnabled: true } }))?.kdsEnabled === false
+          : false;
+      if (!kdsOff) throw new DomainError("CONFLICT", ALREADY);
     }
     if (order.kind === "MASA" && to === "HAZIR" && !order.prepStartedAt) {
       throw new DomainError("CONFLICT", "Sipariş hazırlanmaya başlanmadan hazır yapılamaz");
@@ -307,6 +325,7 @@ async function transition(
         await printJobs.enqueueReceipt(tx, updated, { printerOptional: true });
       }
     }
+    if (to === "IPTAL" && order.kind === "MASA") await cancelPrintJobs(tx, order, now);
     await publish(
       {
         type: EVENT_OF[to] as string,
@@ -545,7 +564,10 @@ async function listForOutlet(
   return prisma.order.findMany({
     where: {
       outletId,
-      businessDate: businessDay(opts.day ?? businessDate()),
+      // Non-terminal orders stay listed whatever their business date; an explicit `day` is a strict history query.
+      ...(opts.day
+        ? { businessDate: businessDay(opts.day) }
+        : { OR: [{ businessDate: businessDay(businessDate()) }, { status: { notIn: [...CLOSED_STATUSES] } }] }),
       ...(opts.statuses?.length ? { status: { in: opts.statuses } } : {}),
     },
     include: INCLUDE,

@@ -57,6 +57,8 @@ export type StockRow = {
   criticalLevel: number;
   status: StockStatus;
   updatedAt: string | null;
+  /** false for a deactivated product the hotel still holds. */
+  productActive: boolean;
 };
 
 export type MovementRow = {
@@ -406,6 +408,14 @@ const adjustSchema = z
     reason: z.string().trim().min(3, "Sebep en az 3 karakter olmalıdır").max(200, "Sebep en fazla 200 karakter olabilir"),
   })
   .strict();
+const COUNT_MSG = "Sayılan miktar 0 ile 100000 arasında tam sayı olmalıdır";
+const countSchema = z
+  .object({
+    productId: productIdSchema,
+    countedQty: z.number(COUNT_MSG).int(COUNT_MSG).min(0, COUNT_MSG).max(100000, COUNT_MSG),
+    reason: z.string().trim().min(3, "Sebep en az 3 karakter olmalıdır").max(200, "Sebep en fazla 200 karakter olabilir"),
+  })
+  .strict();
 const levelSchema = z
   .object({
     productId: productIdSchema,
@@ -421,12 +431,12 @@ async function assertProduct(tx: Prisma.TransactionClient, productId: string): P
 async function rowOf(tx: Prisma.TransactionClient, hotelId: string, productId: string): Promise<StockRow> {
   const s = await tx.hotelStock.findUniqueOrThrow({
     where: { hotelId_productId: { hotelId, productId } },
-    include: { product: { select: { name: true, unit: true, group: { select: { name: true } } } } },
+    include: { product: { select: { name: true, isActive: true, unit: true, group: { select: { name: true } } } } },
   });
   return toRow(s, s.product);
 }
 
-type ProductInfo = { name: string; unit?: string | null; group: { name: string } };
+type ProductInfo = { name: string; isActive?: boolean; unit?: string | null; group: { name: string } };
 
 function toRow(
   s: {
@@ -452,6 +462,7 @@ function toRow(
     criticalLevel: s.criticalLevel,
     status: stockStatus(s.remainingQty, s.criticalLevel),
     updatedAt: s.updatedAt.toISOString(),
+    productActive: product.isActive ?? true,
   };
 }
 
@@ -527,7 +538,57 @@ export async function returnFromPool(
   });
 }
 
-/** Count correction (signed, with a reason). SISTEM roles only; never drives the balance negative. */
+/**
+ * Who may book a correction: MB-ZIM A (checked by `withAdminTx`) held by a system role or by a minibar role
+ * (the warehouse, R-DEP). Management roles keep their profile's A on the pool screen but do not correct counts.
+ */
+function assertCorrector(ctx: Ctx): void {
+  if (ctx.user.roleKind !== "SISTEM" && ctx.user.roleKind !== "MINIBAR") {
+    throw new DomainError("FORBIDDEN", "Stok düzeltmesini yalnızca depo sorumlusu ve sistem yöneticisi yapabilir");
+  }
+}
+
+/** Books one signed DUZELTME on a locked row (total and remaining move together), audits it and announces it. */
+async function bookCorrection(
+  tx: Prisma.TransactionClient,
+  ctx: Ctx,
+  hotelId: string,
+  s: Locked,
+  delta: number,
+  note: string,
+  auditAfter: Record<string, unknown>,
+): Promise<StockRow> {
+  await tx.hotelStock.update({
+    where: { id: s.id },
+    data: { totalQty: { increment: delta }, remainingQty: { increment: delta } },
+  });
+  await tx.hotelStockMovement.create({
+    data: { hotelId, productId: s.productId, userId: ctx.user.id, type: "DUZELTME", qty: delta, note },
+  });
+  const row = await rowOf(tx, hotelId, s.productId);
+  await audit(tx, {
+    userId: ctx.user.id,
+    hotelId,
+    action: "STOCK_ADJUST",
+    entity: "HotelStock",
+    entityId: s.id,
+    before: { totalQty: s.totalQty, remainingQty: s.remainingQty },
+    after: { productId: s.productId, delta, ...auditAfter, totalQty: row.totalQty, remainingQty: row.remainingQty },
+  });
+  await announce(tx, hotelId, { productId: s.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, delta, "DUZELTME");
+  if (delta < 0) {
+    await notifyIfCritical(
+      tx,
+      hotelId,
+      { id: s.id, productId: s.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel },
+      s.remainingQty,
+      new Date(),
+    );
+  }
+  return row;
+}
+
+/** Signed correction with a reason (MB-ZIM A, system or warehouse role); never drives the balance negative. */
 export async function adjustPool(
   ctx: Ctx,
   hotelId: string,
@@ -535,50 +596,44 @@ export async function adjustPool(
 ): Promise<StockRow> {
   const input = parse(adjustSchema, raw);
   return withAdminTx(ctx, { screen: SCREEN, action: "A", hotelId }, async (tx) => {
-    if (ctx.user.roleKind !== "SISTEM") {
-      throw new DomainError("FORBIDDEN", "Stok düzeltmesini yalnızca sistem yöneticisi yapabilir");
-    }
+    assertCorrector(ctx);
     await assertProduct(tx, input.productId);
     await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
     if (s.remainingQty + input.delta < 0) {
       throw new DomainError("CONFLICT", `Düzeltme bakiyeyi eksiye düşürür; havuzda ${s.remainingQty} adet var`);
     }
-    await tx.hotelStock.update({
-      where: { id: s.id },
-      data: { totalQty: { increment: input.delta }, remainingQty: { increment: input.delta } },
-    });
-    await tx.hotelStockMovement.create({
-      data: {
-        hotelId,
-        productId: input.productId,
-        userId: ctx.user.id,
-        type: "DUZELTME",
-        qty: input.delta,
-        note: input.reason,
-      },
-    });
-    const row = await rowOf(tx, hotelId, input.productId);
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId,
-      action: "STOCK_ADJUST",
-      entity: "HotelStock",
-      entityId: s.id,
-      before: { totalQty: s.totalQty, remainingQty: s.remainingQty },
-      after: { productId: input.productId, delta: input.delta, reason: input.reason, totalQty: row.totalQty, remainingQty: row.remainingQty },
-    });
-    await announce(tx, hotelId, { productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, input.delta, "DUZELTME");
-    if (input.delta < 0) {
-      await notifyIfCritical(
-        tx,
-        hotelId,
-        { id: s.id, productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel },
-        s.remainingQty,
-        new Date(),
-      );
+    return bookCorrection(tx, ctx, hotelId, s, input.delta, input.reason, { reason: input.reason });
+  });
+}
+
+/**
+ * Stock count (sayım): the counted quantity replaces the balance; the difference to the balance read under
+ * the row lock is booked as one DUZELTME with the mandatory reason and audited (counted, previous, delta).
+ */
+export async function countPool(
+  ctx: Ctx,
+  hotelId: string,
+  raw: { productId: string; countedQty: number; reason: string },
+): Promise<StockRow & { delta: number; previousQty: number }> {
+  const input = parse(countSchema, raw);
+  return withAdminTx(ctx, { screen: SCREEN, action: "A", hotelId }, async (tx) => {
+    assertCorrector(ctx);
+    await assertProduct(tx, input.productId);
+    await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
+    const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
+    const delta = input.countedQty - s.remainingQty;
+    if (delta === 0) {
+      const message = `Sayılan miktar havuzdaki miktarla aynı (${s.remainingQty} adet); düzeltme gerekmez`;
+      throw new DomainError("VALIDATION", message, { fieldErrors: { countedQty: [message] } });
     }
-    return row;
+    const note = `Sayım: ${input.countedQty} adet (sistem ${s.remainingQty}) · ${input.reason}`;
+    const row = await bookCorrection(tx, ctx, hotelId, s, delta, note, {
+      countedQty: input.countedQty,
+      previousQty: s.remainingQty,
+      reason: input.reason,
+    });
+    return { ...row, delta, previousQty: s.remainingQty };
   });
 }
 
@@ -623,14 +678,18 @@ async function poolRows(hotelId: string, q: Omit<PoolQuery, "page" | "pageSize" 
   const fallback = await getSetting("stock.defaultCriticalLevel", hotelId);
   const products = await prisma.product.findMany({
     where: {
-      isActive: true,
+      // A deactivated product stays listed while this hotel still holds some of it (the pool keeps it).
+      OR: [
+        { isActive: true, ...(q.includeEmpty ? {} : { stocks: { some: { hotelId } } }) },
+        { isActive: false, stocks: { some: { hotelId, remainingQty: { gt: 0 } } } },
+      ],
       ...(q.groupId ? { groupId: q.groupId } : {}),
       ...(q.q ? { name: { contains: q.q, mode: "insensitive" } } : {}),
-      ...(q.includeEmpty ? {} : { stocks: { some: { hotelId } } }),
     },
     select: {
       id: true,
       name: true,
+      isActive: true,
       unit: true,
       group: { select: { name: true } },
       stocks: { where: { hotelId } },
@@ -651,6 +710,7 @@ async function poolRows(hotelId: string, q: Omit<PoolQuery, "page" | "pageSize" 
         criticalLevel: fallback,
         status: stockStatus(0, fallback),
         updatedAt: null,
+        productActive: p.isActive,
       };
     }
     return toRow(s, p);

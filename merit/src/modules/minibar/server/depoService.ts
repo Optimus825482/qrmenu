@@ -4,8 +4,13 @@ import { assertCan } from "@/lib/rbac";
 import { TaskStatus } from "@/generated/prisma/client";
 import { getSettings } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
+import { DomainError } from "@/lib/result";
 import { UPLOAD_KINDS } from "../constants";
-import { dayRange } from "./dates";
+import { addDays, dayRange } from "./dates";
+
+/** Consumption report span without dates, and the longest span accepted (business days, both ends inclusive). */
+export const REPORT_DEFAULT_DAYS = 30;
+export const REPORT_MAX_DAYS = 366;
 
 export interface ConsumptionReportFilter {
   hotelId: string;
@@ -71,13 +76,19 @@ export async function getMinibarConsumptionReport(filter: ConsumptionReportFilte
     whereClause.room = { floorId };
   }
 
-  if (startDate || endDate) {
-    // Europe/Nicosia business days: [start of first day, start of the day after the last day).
-    const dateFilter: { gte?: Date; lt?: Date } = {};
-    if (startDate) dateFilter.gte = dayRange(startDate).gte;
-    if (endDate) dateFilter.lt = dayRange(endDate).lt;
-    whereClause.occurredAt = dateFilter;
+  // Europe/Nicosia business days: [start of first day, start of the day after the last day). The range is
+  // always bounded: no dates = the last 30 days, a missing start = 365 days before the end, at most 366 days.
+  const start = startDate
+    ? startDate
+    : endDate
+      ? addDays(endDate, -(REPORT_MAX_DAYS - 1))
+      : addDays(businessDate(), -(REPORT_DEFAULT_DAYS - 1));
+  const last = endDate ?? businessDate();
+  if (start > last) throw new DomainError("VALIDATION", "Başlangıç tarihi bitiş tarihinden sonra olamaz");
+  if (addDays(start, REPORT_MAX_DAYS - 1) < last) {
+    throw new DomainError("VALIDATION", `Rapor aralığı en fazla ${REPORT_MAX_DAYS} gün olabilir`);
   }
+  whereClause.occurredAt = { gte: dayRange(start).gte, ...(endDate ? { lt: dayRange(endDate).lt } : {}) };
 
   const transactions = await prisma.minibarTransaction.findMany({
     where: whereClause,

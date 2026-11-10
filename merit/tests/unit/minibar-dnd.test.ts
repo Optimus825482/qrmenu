@@ -123,7 +123,7 @@ describe("markDnd", () => {
   it("eşikte tamamlanır: kalemler TAMAMLANDI, kayıt notu, sonraki işaret CONFLICT ve sayaç artmaz", async () => {
     const { w, inh, arr, kat, kat2, depo } = await world();
     await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
-    const view = await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 60));
+    const view = await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 120));
     expect(view).toMatchObject({
       count: 2,
       status: "TAMAMLANDI",
@@ -142,10 +142,10 @@ describe("markDnd", () => {
     const [done] = events("dnd.completed");
     expect(RADAR_WIRE["dnd.completed"].safeParse(done.payload).success).toBe(true);
 
-    expect(await messageOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, plus(T0, 600)))).toBe(
+    expect(await messageOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, minutes(T0, 300)))).toBe(
       "Bu oda için DND kontrolü bugün tamamlandı",
     );
-    expect(await codeOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 900)))).toBe("CONFLICT");
+    expect(await codeOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 400)))).toBe("CONFLICT");
     expect((await dndOf(w.room.id)).count).toBe(2);
     expect(await testDb.roomDndCheck.count()).toBe(2);
   });
@@ -155,15 +155,15 @@ describe("markDnd", () => {
     await setSetting(w.hotelId, "dnd.minChecks", 3);
     const first = await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
     expect(first.required).toBe(3);
-    const second = await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 60));
+    const second = await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 120));
     expect(second).toMatchObject({ count: 2, status: "AKTIF", completed: false });
     expect(await itemStatus(inh.item.id)).toBe("DND_BEKLIYOR");
-    const third = await dnd.markDnd(kat.ctx, { roomId: w.room.id }, plus(T0, 120));
+    const third = await dnd.markDnd(kat.ctx, { roomId: w.room.id }, minutes(T0, 240));
     expect(third).toMatchObject({ count: 3, status: "TAMAMLANDI", completed: true });
     expect(await itemStatus(inh.item.id)).toBe("TAMAMLANDI");
   });
 
-  it("çift dokunma: aynı kullanıcıya 29 sn reddedilir, 31 sn kabul edilir; başka kullanıcıya engel yok", async () => {
+  it("çift dokunma: aynı kullanıcıya 29 sn 'az önce' mesajı; bekleme süresi başka kullanıcıya da uygulanır", async () => {
     const { w, kat, kat2 } = await world();
     await setSetting(w.hotelId, "dnd.minChecks", 5);
     await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
@@ -171,16 +171,39 @@ describe("markDnd", () => {
       "DND az önce işaretlendi, birkaç saniye bekleyin",
     );
     expect(await testDb.roomDndCheck.count()).toBe(1);
-    expect(await codeOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 5)))).toBe("OK");
-    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, plus(T0, 31)))).toBe("OK");
+    expect(await messageOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 5)))).toBe(
+      "DND yeniden kontrolü için 120 dk daha beklenmeli",
+    );
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, plus(T0, 31)))).toBe("CONFLICT");
+    expect((await dndOf(w.room.id)).count).toBe(1);
+  });
+
+  it("KAT-3: dnd.recheckMinutes sunucuda herkes için: 119 dk CONFLICT, tam 120 dk kabul; ayar otelden gelir", async () => {
+    const { w, kat, kat2 } = await world();
+    await setSetting(w.hotelId, "dnd.minChecks", 5);
+    await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
+    expect(await messageOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 119)))).toBe(
+      "DND yeniden kontrolü için 1 dk daha beklenmeli",
+    );
+    expect(await codeOf(dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 120)))).toBe("OK");
+    await setSetting(w.hotelId, "dnd.recheckMinutes", 15);
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, minutes(T0, 134)))).toBe("CONFLICT");
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, minutes(T0, 135)))).toBe("OK");
     expect((await dndOf(w.room.id)).count).toBe(3);
   });
 
-  it("tam 30 sn sonra kabul edilir (sınır < 30)", async () => {
+  it("KAT-4: aynı clientRequestId ikinci işaret saymaz, ilk sonucu döner; başka odada CONFLICT", async () => {
     const { w, kat } = await world();
-    await setSetting(w.hotelId, "dnd.minChecks", 5);
-    await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
-    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, plus(T0, 30)))).toBe("OK");
+    const key = "6f1c2b0e-9a4d-4c1e-8f2a-1b2c3d4e5f60";
+    const first = await dnd.markDnd(kat.ctx, { roomId: w.room.id, clientRequestId: key }, T0);
+    const again = await dnd.markDnd(kat.ctx, { roomId: w.room.id, clientRequestId: key }, minutes(T0, 200));
+    expect(again).toMatchObject({ dndId: first.dndId, count: 1, status: "AKTIF" });
+    expect(await testDb.roomDndCheck.count()).toBe(1);
+    const r2 = await testDb.room.create({
+      data: { hotelId: w.hotelId, floorId: w.floor.id, roomTypeId: w.roomType.id, number: "K-2" },
+    });
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: r2.id, clientRequestId: key }, T0))).toBe("CONFLICT");
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id, clientRequestId: "x" }, T0))).toBe("VALIDATION");
   });
 
   it("eşzamanlı çift dokunma tek kayıt üretir", async () => {
@@ -414,7 +437,7 @@ describe("listDnd / dndHistory", () => {
     });
     await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
     await dnd.markDnd(kat.ctx, { roomId: r2.id }, plus(T0, 600));
-    await dnd.markDnd(kat2.ctx, { roomId: r2.id }, plus(T0, 700)); // completes r2
+    await dnd.markDnd(kat2.ctx, { roomId: r2.id }, plus(T0, 600 + 7200)); // completes r2
     const other = await minibarWorld({ hotelCode: "DIAMOND" });
     await testDb.roomDnd.create({ data: { hotelId: other.hotelId, roomId: other.room.id, date, count: 1 } });
 
@@ -431,7 +454,7 @@ describe("listDnd / dndHistory", () => {
   it("geçmiş kontrol numaralarını sırayla verir; başka otel FORBIDDEN, kayıt yoksa NOT_FOUND", async () => {
     const { w, kat, kat2 } = await world();
     await dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "birinci" }, T0);
-    await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, plus(T0, 60));
+    await dnd.markDnd(kat2.ctx, { roomId: w.room.id }, minutes(T0, 120));
     const id = (await dndOf(w.room.id)).id;
     const hist = await dnd.dndHistory(kat.ctx, id);
     expect(hist.map((h) => h.no)).toEqual([1, 2]);

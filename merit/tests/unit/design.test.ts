@@ -64,6 +64,19 @@ describe("designFromStored", () => {
     });
   });
 
+  it("MEN-9: hero renkleri yalnız #rrggbb kabul eder", () => {
+    const ok = designFromStored({ template: "ROYAL", options: { heroBgColor: " #A1b2C3 ", heroTextColor: "#000000" } });
+    expect(ok.options.heroBgColor).toBe("#A1b2C3");
+    expect(ok.options.heroTextColor).toBe("#000000");
+    const bad = designFromStored({
+      template: "ROYAL",
+      options: { heroBgColor: "red;background:url(x)", heroTextColor: "#fff" },
+    });
+    expect(bad.options.heroBgColor).toBe("");
+    expect(bad.options.heroTextColor).toBe("");
+    expect(designFromStored({ template: "ROYAL", options: { heroBgColor: "" } }).options.heroBgColor).toBe("");
+  });
+
   it("kayıtlı geçerli düzeni korur, bozuk değeri şablona düşürür", () => {
     const design = designFromStored({
       template: "POOL_CLUB",

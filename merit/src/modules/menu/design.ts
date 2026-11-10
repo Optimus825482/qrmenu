@@ -371,6 +371,13 @@ function heroUrl(value: unknown): string {
   return (url.startsWith(UPLOAD_PREFIX) || url.startsWith(MERIT_MENU_PREFIX)) && url.length <= MAX_HERO_URL ? url : "";
 }
 
+/** Hero colours: only `#rrggbb` (or empty = theme colour); anything else keeps the preset value. */
+function heroColor(value: unknown, fallback: string | undefined): string | undefined {
+  if (typeof value !== "string") return fallback;
+  const color = value.trim();
+  return color === "" || /^#[0-9a-fA-F]{6}$/.test(color) ? color : fallback;
+}
+
 function normalizeLayout(value: unknown): DesignBlockId[] {
   if (!Array.isArray(value) || value.length !== DESIGN_BLOCKS.length) return [...DEFAULT_OUTLET_DESIGN.layout];
   if (new Set(value).size !== value.length) return [...DEFAULT_OUTLET_DESIGN.layout];
@@ -407,8 +414,8 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     heroAlign: raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign,
     heroFontSize: raw.heroFontSize && ["small", "medium", "large", "xlarge"].includes(raw.heroFontSize) ? raw.heroFontSize : preset.heroFontSize,
     heroFontFamily: raw.heroFontFamily && HERO_FONT_FAMILY_IDS.has(raw.heroFontFamily) ? (raw.heroFontFamily as HeroFontFamily) : preset.heroFontFamily,
-    heroBgColor: typeof raw.heroBgColor === "string" ? raw.heroBgColor.trim() : preset.heroBgColor,
-    heroTextColor: typeof raw.heroTextColor === "string" ? raw.heroTextColor.trim() : preset.heroTextColor,
+    heroBgColor: heroColor(raw.heroBgColor, preset.heroBgColor),
+    heroTextColor: heroColor(raw.heroTextColor, preset.heroTextColor),
     callWaiterText: typeof raw.callWaiterText === "string" ? raw.callWaiterText.trim().slice(0, 40) : preset.callWaiterText,
     callWaiterPosition: raw.callWaiterPosition && CALL_WAITER_POSITION_IDS.has(raw.callWaiterPosition) ? (raw.callWaiterPosition as CallWaiterPosition) : (preset.callWaiterPosition ?? NEUTRAL_NEW_OPTIONS.callWaiterPosition),
   };

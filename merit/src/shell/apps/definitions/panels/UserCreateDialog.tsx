@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { createPortal } from "react-dom";
 import { createUserOnboardingAction } from "@/modules/core/server/admin/actions/users";
 import type { CreatedUserCredentials, UserOptions, UserRow } from "@/modules/core/server/admin/users";
 import { CUSTOM_JOB_TITLE, USER_JOB_TITLE_GROUPS } from "@/modules/core/jobTitles";
@@ -198,14 +199,29 @@ export function UserCreateDialog({
     }
   };
 
-  return (
-    <div className="xp-form-backdrop">
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      close();
+    }
+  };
+
+  const portalRoot = typeof document === "undefined" ? null : document.getElementById("xp-dialog-root");
+
+  const dialogNode = (
+    <div
+      className="xp-form-backdrop"
+      // preventDefault keeps focus inside the dialog when the backdrop is clicked.
+      onMouseDown={(e) => e.target === e.currentTarget && e.preventDefault()}
+    >
       <section
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="user-create-title"
         className="xp-window xp-dialog xp-form-dialog"
+        tabIndex={-1}
+        onKeyDown={onKeyDown}
         style={{
           width: "min(760px, calc(100% - 24px))",
           maxHeight: "calc(100% - 16px)",
@@ -289,7 +305,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("SISTEM")}
                       >
-                        👑 Sistem Yöneticisi
+                        Sistem Yöneticisi
                       </button>
                       <button
                         type="button"
@@ -302,7 +318,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("YONETICI")}
                       >
-                        👔 Yönetici
+                        Yönetici
                       </button>
                       <button
                         type="button"
@@ -315,7 +331,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("KULLANICI")}
                       >
-                        👤 Kullanıcı
+                        Kullanıcı
                       </button>
                     </div>
                     <p
@@ -564,4 +580,6 @@ export function UserCreateDialog({
       </section>
     </div>
   );
+
+  return portalRoot ? createPortal(dialogNode, portalRoot) : dialogNode;
 }

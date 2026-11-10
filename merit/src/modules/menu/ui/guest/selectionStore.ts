@@ -9,6 +9,8 @@ export const MAX_LINES = 50;
 export const RECENT_ORDERS = 5;
 
 export type SelectionItem = {
+  /** Unique id of this line (a node may appear in several lines with different notes). Never sent to the server. */
+  lineId: string;
   menuNodeId: string;
   name: string;
   qty: number;
@@ -25,10 +27,18 @@ export type SelectionState = {
   orderIds: string[];
   orderNos: Record<string, number>;
   idempotencyKey: string | null;
-  add: (item: SelectionItem) => void;
-  setQty: (menuNodeId: string, qty: number, note?: string) => void;
-  setItemNote: (menuNodeId: string, note: string) => void;
-  remove: (menuNodeId: string) => void;
+  /** Names dropped by the last `reconcile` (not persisted); the drawer shows them once. */
+  removedNames: string[];
+  add: (item: Omit<SelectionItem, "lineId">) => void;
+  setQty: (lineId: string, qty: number) => void;
+  setItemNote: (lineId: string, note: string) => void;
+  remove: (lineId: string) => void;
+  /**
+   * Aligns the lines with the current menu (only available dishes in `available`): a dish that is gone
+   * or sold out is dropped (its name goes to `removedNames`); name and price come from the menu.
+   */
+  reconcile: (available: ReadonlyMap<string, { name: string; price?: string }>) => void;
+  dismissRemoved: () => void;
   setNote: (note: string) => void;
   clear: () => void;
   ensureIdempotencyKey: () => string;
@@ -48,10 +58,22 @@ export function newKey(): string {
   return `${h.slice(0, 4).join("")}-${h.slice(4, 6).join("")}-${h.slice(6, 8).join("")}-${h.slice(8, 10).join("")}-${h.slice(10).join("")}`;
 }
 
+/** Lines saved before `lineId` existed get one when they are loaded. */
+function withLineIds(items: unknown): SelectionItem[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .filter((i): i is SelectionItem => typeof i === "object" && i !== null && typeof (i as SelectionItem).menuNodeId === "string")
+    .map((i) => (typeof i.lineId === "string" && i.lineId ? i : { ...i, lineId: newKey() }));
+}
+
 const clampQty = (n: number) => Math.min(MAX_QUANTITY, Math.max(1, Math.trunc(n) || 1));
 
 type Store = UseBoundStore<StoreApi<SelectionState>> & {
-  persist: { rehydrate: () => Promise<void> | void };
+  persist: {
+    rehydrate: () => Promise<void> | void;
+    hasHydrated: () => boolean;
+    onFinishHydration: (fn: () => void) => () => void;
+  };
 };
 const stores = new Map<string, Store>();
 
@@ -64,6 +86,7 @@ function createSelectionStore(token: string): Store {
         orderIds: [],
         orderNos: {},
         idempotencyKey: null,
+        removedNames: [],
         add: (item) =>
           set((s) => {
             const same = s.items.find((i) => i.menuNodeId === item.menuNodeId && (i.note ?? "") === (item.note ?? ""));
@@ -75,21 +98,48 @@ function createSelectionStore(token: string): Store {
               };
             }
             if (s.items.length >= MAX_LINES) return s;
-            return { items: [...s.items, { ...item, qty: clampQty(item.qty) }] };
+            return { items: [...s.items, { ...item, lineId: newKey(), qty: clampQty(item.qty) }] };
           }),
-        setQty: (menuNodeId, qty) =>
-          set((s) => ({ items: s.items.map((i) => (i.menuNodeId === menuNodeId ? { ...i, qty: clampQty(qty) } : i)) })),
-        setItemNote: (menuNodeId, note) =>
+        setQty: (lineId, qty) =>
+          set((s) => ({ items: s.items.map((i) => (i.lineId === lineId ? { ...i, qty: clampQty(qty) } : i)) })),
+        setItemNote: (lineId, note) =>
           set((s) => ({
             items: s.items.map((i) => {
-              if (i.menuNodeId !== menuNodeId) return i;
-              const next: SelectionItem = { menuNodeId: i.menuNodeId, name: i.name, qty: i.qty };
+              if (i.lineId !== lineId) return i;
+              const next: SelectionItem = { lineId: i.lineId, menuNodeId: i.menuNodeId, name: i.name, qty: i.qty };
               if (i.unitPrice) next.unitPrice = i.unitPrice;
               if (note) next.note = note;
               return next;
             }),
           })),
-        remove: (menuNodeId) => set((s) => ({ items: s.items.filter((i) => i.menuNodeId !== menuNodeId) })),
+        remove: (lineId) => set((s) => ({ items: s.items.filter((i) => i.lineId !== lineId) })),
+        reconcile: (available) =>
+          set((s) => {
+            const removed: string[] = [];
+            const items: SelectionItem[] = [];
+            for (const i of s.items) {
+              const current = available.get(i.menuNodeId);
+              if (!current) {
+                removed.push(i.name);
+                continue;
+              }
+              const next: SelectionItem = { ...i, name: current.name };
+              if (current.price) next.unitPrice = current.price;
+              else delete next.unitPrice;
+              items.push(next);
+            }
+            const unchanged =
+              removed.length === 0 &&
+              items.every((n, k) => n.name === s.items[k].name && n.unitPrice === s.items[k].unitPrice);
+            if (unchanged) return s;
+            return {
+              items,
+              removedNames: removed.length > 0 ? [...new Set([...s.removedNames, ...removed])] : s.removedNames,
+              // The price/lines changed: the next send is a different order, not a retry.
+              idempotencyKey: null,
+            };
+          }),
+        dismissRemoved: () => set((s) => (s.removedNames.length > 0 ? { removedNames: [] } : s)),
         setNote: (note) => set({ note }),
         clear: () => set({ items: [], note: "", idempotencyKey: null }),
         ensureIdempotencyKey: () => {
@@ -110,6 +160,10 @@ function createSelectionStore(token: string): Store {
       {
         name: `merit_selections_${token}`,
         skipHydration: true, // hydrated in an effect: the server render never sees localStorage
+        merge: (persisted, current) => {
+          const saved = (persisted ?? {}) as Partial<SelectionState>;
+          return { ...current, ...saved, items: withLineIds(saved.items) };
+        },
         partialize: (s) => ({
           items: s.items,
           note: s.note,

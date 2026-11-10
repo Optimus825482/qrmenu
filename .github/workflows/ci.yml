@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 30
     services:
       postgres:
-        image: postgres:17
+        image: postgres:16
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: merit_test
@@ -50,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/package-lock.json
       - run: npm ci
@@ -74,7 +74,7 @@ jobs:
     timeout-minutes: 45
     services:
       postgres:
-        image: postgres:17
+        image: postgres:16
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: merit_test
@@ -104,7 +104,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/package-lock.json
       - run: npm ci
@@ -161,7 +161,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/tools/print-gateway/package-lock.json
       - run: npm ci
@@ -177,7 +177,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/tools/load/package-lock.json
       - run: npm ci
@@ -194,7 +194,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
           cache-dependency-path: merit/package-lock.json
       - run: npm ci

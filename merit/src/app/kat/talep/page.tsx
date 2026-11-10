@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 
 type Urgency = "NORMAL" | "ACIL";
 type Line = { productId: string; name: string; remaining: number; critical: number; suggestedQty: number; urgency: Urgency };
@@ -61,6 +62,9 @@ export default function KatTalepPage() {
     return () => clearTimeout(t);
   }, [load]);
 
+  // Same key until the request succeeds (crypto.randomUUID is missing on plain-HTTP origins).
+  const [sendKey, setSendKey] = useState(newRequestKey);
+
   async function send() {
     const items = lines
       .filter((x) => picked[x.productId])
@@ -70,11 +74,12 @@ export default function KatTalepPage() {
       const res = await fetch("/api/minibar/stock-requests", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ items, note: note || undefined, clientRequestId: crypto.randomUUID() }),
+        body: JSON.stringify({ items, note: note || undefined, clientRequestId: sendKey }),
       });
       const json = await res.json();
       setMessage(res.ok ? `Talep gönderildi: ${json.code}` : (json.error ?? "Talep gönderilemedi"));
       if (res.ok) {
+        setSendKey(newRequestKey());
         setNote("");
         await load();
       }

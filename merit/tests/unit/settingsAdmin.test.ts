@@ -182,13 +182,13 @@ describe("set", () => {
 
   it("sistem kapsamı SISTEM rolüyle yazılır; yayında hotelId yok", async () => {
     const ctx = await sys();
-    await settingsAdmin.set(ctx, null, "price.currency", "TRY");
-    expect(await getSetting("price.currency")).toBe("TRY");
+    await settingsAdmin.set(ctx, null, "qr.baseUrl", "https://menu.example.com");
+    expect(await getSetting("qr.baseUrl")).toBe("https://menu.example.com");
     const changed = publishMock.mock.calls
       .map((c) => c[0])
       .filter((e) => e.type === "settings.changed");
     expect(changed[0].hotelId).toBeUndefined();
-    expect(changed[0].payload).toEqual({ key: "price.currency" });
+    expect(changed[0].payload).toEqual({ key: "qr.baseUrl" });
     // The event is published through the write's transaction, so it is delivered only on commit.
     const call = publishMock.mock.calls.find((c) => c[0].type === "settings.changed");
     expect(call?.[1]).toBeDefined();
@@ -230,7 +230,8 @@ describe("set", () => {
       code: "VALIDATION",
       fieldErrors: { value: expect.any(Array) },
     });
-    await expect(settingsAdmin.set(ctx, null, "price.currency", "euro")).rejects.toMatchObject({
+    // K3: the currency moved to the outlet form; the old key is unknown here.
+    await expect(settingsAdmin.set(ctx, null, "price.currency", "EUR")).rejects.toMatchObject({
       code: "VALIDATION",
     });
     await expect(settingsAdmin.set(ctx, null, "yok.anahtar", 1)).rejects.toMatchObject({
@@ -255,16 +256,16 @@ describe("set", () => {
   });
 
   it("gizli anahtar: listede ve denetim kaydında maskelenir", async () => {
-    const meta = SETTING_META["price.currency"] as { secret?: boolean };
+    const meta = SETTING_META["qr.baseUrl"] as { secret?: boolean };
     meta.secret = true;
     try {
       const ctx = await sys();
-      const item = await settingsAdmin.set(ctx, null, "price.currency", "GBP");
-      expect(JSON.stringify(item)).not.toContain("GBP");
-      expect(JSON.stringify(await settingsAdmin.listGrouped(ctx, null))).not.toContain("GBP");
+      const item = await settingsAdmin.set(ctx, null, "qr.baseUrl", "https://gizli.example.com");
+      expect(JSON.stringify(item)).not.toContain("gizli");
+      expect(JSON.stringify(await settingsAdmin.listGrouped(ctx, null))).not.toContain("gizli");
       const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "SETTING_SET" } });
-      expect(JSON.stringify(log)).not.toContain("GBP");
-      expect(await getSetting("price.currency")).toBe("GBP");
+      expect(JSON.stringify(log)).not.toContain("gizli");
+      expect(await getSetting("qr.baseUrl")).toBe("https://gizli.example.com");
     } finally {
       delete meta.secret;
     }

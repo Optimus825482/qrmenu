@@ -62,6 +62,10 @@ export type PreviewView = {
   sample: PreviewSample[];
   /** P4001 only: whether the hotel named in the file is the target hotel. */
   hotelMatch?: { label: string; matches: boolean };
+  /** What the upload would do to the stored records (same rules as the commit). */
+  changes: { create: number; update: number; remove: number };
+  /** Reasons the commit will be refused (hotel or report date mismatch); empty when it may proceed. */
+  blockers: string[];
 };
 
 export type CommitResult = {
@@ -74,6 +78,8 @@ export type CommitResult = {
   tasksGenerated: boolean;
   createdRows: number;
   updatedRows: number;
+  /** Records of the same kind and day whose room is missing from the new file (removed; restored on delete). */
+  removedRows: number;
 };
 
 export type UploadView = {
@@ -148,6 +154,200 @@ function targetHotel(ctx: Ctx, requested?: string): string {
   return requested ?? ctx.session.hotelId;
 }
 
+type KnownRow = ParsedRow & { roomId: string };
+type RecordReader = Pick<Prisma.TransactionClient, "guestRecord">;
+
+/** A GuestRecord as it was before an upload changed or removed it (dates 'yyyy-MM-dd'); restored on delete. */
+type RecordSnapshot = {
+  id: string;
+  roomId: string;
+  uploadId: string | null;
+  batchCode: string;
+  guestCount: number;
+  arrivalDate: string;
+  departureDate: string;
+  arrivalTime: string | null;
+  departureTime: string | null;
+  createdAt: string;
+};
+type RevertData = { updated: RecordSnapshot[]; removed: RecordSnapshot[] };
+
+const snapshot = (r: GuestRecord): RecordSnapshot => ({
+  id: r.id,
+  roomId: r.roomId,
+  uploadId: r.uploadId,
+  batchCode: r.batchCode,
+  guestCount: r.guestCount,
+  arrivalDate: dayStr(r.arrivalDate),
+  departureDate: dayStr(r.departureDate),
+  arrivalTime: r.arrivalTime,
+  departureTime: r.departureTime,
+  createdAt: r.createdAt.toISOString(),
+});
+
+type RecordPlan = {
+  /** In file order; one record may be updated by several rows (the last one wins). */
+  updates: { id: string; row: KnownRow }[];
+  /** New records (a row overlapping an earlier new row of the same file is folded into it). */
+  creates: KnownRow[];
+  /** The stored state of every updated record before this upload. */
+  originals: GuestRecord[];
+  /** Records of this kind and day whose room does not appear in the file. */
+  removals: GuestRecord[];
+  createdRows: number;
+  updatedRows: number;
+};
+
+/**
+ * The upsert rule (room + kind + overlapping dates) plus the replacement rule: when the file is clean (no row
+ * errors), a stored record of the same kind that belongs to `day` (ARRIVAL: arrives that day, DEPARTURE: leaves
+ * that day, IN_HOUSE: stays over it) and whose room is not in the file goes. Reads only.
+ */
+async function planRecords(
+  db: RecordReader,
+  hotelId: string,
+  kind: UploadKind,
+  known: KnownRow[],
+  day: string,
+  allowRemoval: boolean,
+): Promise<RecordPlan> {
+  // Existing records that could overlap one of the new rows (same room + kind).
+  const existing = new Map<string, GuestRecord[]>();
+  if (known.length > 0) {
+    const minArrival = known.reduce((m, r) => (r.arrivalDate < m ? r.arrivalDate : m), known[0].arrivalDate);
+    const maxDeparture = known.reduce((m, r) => (r.departureDate > m ? r.departureDate : m), known[0].departureDate);
+    const found = await db.guestRecord.findMany({
+      where: {
+        hotelId,
+        kind,
+        roomId: { in: [...new Set(known.map((r) => r.roomId))] },
+        arrivalDate: { lte: businessDay(maxDeparture) },
+        departureDate: { gte: businessDay(minArrival) },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    for (const rec of found) existing.set(rec.roomId, [...(existing.get(rec.roomId) ?? []), rec]);
+  }
+
+  const updates: RecordPlan["updates"] = [];
+  const originals = new Map<string, GuestRecord>();
+  const creates: KnownRow[] = [];
+  // Rows created earlier in this same file also take part in the overlap rule.
+  const fresh = new Map<string, { arrival: string; departure: string; index: number }[]>();
+  let createdRows = 0;
+  let updatedRows = 0;
+
+  for (const row of known) {
+    const candidates = (existing.get(row.roomId) ?? []).filter(
+      (rec) => dayStr(rec.arrivalDate) <= row.departureDate && dayStr(rec.departureDate) >= row.arrivalDate,
+    );
+    // Prefer an exact date match, else the most recently created overlapping record.
+    const match =
+      candidates.find((rec) => dayStr(rec.arrivalDate) === row.arrivalDate && dayStr(rec.departureDate) === row.departureDate) ??
+      candidates[candidates.length - 1];
+
+    if (match) {
+      if (!originals.has(match.id)) originals.set(match.id, match);
+      updates.push({ id: match.id, row });
+      // Later rows of the file see the record as this row leaves it.
+      const updated: GuestRecord = {
+        ...match,
+        arrivalDate: businessDay(row.arrivalDate),
+        departureDate: businessDay(row.departureDate),
+        guestCount: row.guestCount,
+        arrivalTime: row.arrivalTime ?? match.arrivalTime,
+        departureTime: row.departureTime ?? match.departureTime,
+      };
+      existing.set(
+        row.roomId,
+        (existing.get(row.roomId) ?? []).map((rec) => (rec.id === match.id ? updated : rec)),
+      );
+      updatedRows++;
+      continue;
+    }
+
+    // Overlap with a row created earlier in this file: fold into that pending insert.
+    const pendingList = fresh.get(row.roomId) ?? [];
+    const pendingMatch = pendingList.find((p) => p.arrival <= row.departureDate && p.departure >= row.arrivalDate);
+    if (pendingMatch) {
+      const prev = creates[pendingMatch.index];
+      creates[pendingMatch.index] = {
+        ...row,
+        arrivalTime: row.arrivalTime ?? prev.arrivalTime,
+        departureTime: row.departureTime ?? prev.departureTime,
+      };
+      pendingMatch.arrival = row.arrivalDate;
+      pendingMatch.departure = row.departureDate;
+      updatedRows++;
+      continue;
+    }
+
+    creates.push(row);
+    pendingList.push({ arrival: row.arrivalDate, departure: row.departureDate, index: creates.length - 1 });
+    fresh.set(row.roomId, pendingList);
+    createdRows++;
+  }
+
+  let removals: GuestRecord[] = [];
+  if (allowRemoval && known.length > 0) {
+    const date = businessDay(day);
+    const window: Prisma.GuestRecordWhereInput =
+      kind === "ARRIVAL"
+        ? { arrivalDate: date }
+        : kind === "DEPARTURE"
+          ? { departureDate: date }
+          : { arrivalDate: { lte: date }, departureDate: { gte: date } };
+    removals = await db.guestRecord.findMany({
+      where: { hotelId, kind, ...window, roomId: { notIn: [...new Set(known.map((r) => r.roomId))] } },
+      orderBy: { createdAt: "asc" },
+    });
+  }
+
+  return { updates, creates, originals: [...originals.values()], removals, createdRows, updatedRows };
+}
+
+/** Refusal reasons of a commit: the P4001 hotel label names another hotel, or its report date is not `today`. */
+function commitBlockers(
+  sheet: { reportDate?: string },
+  hotelMatch: { label: string; matches: boolean } | undefined,
+  today: string,
+): string[] {
+  const out: string[] = [];
+  if (hotelMatch && !hotelMatch.matches) {
+    out.push(`Dosyadaki otel adı ('${hotelMatch.label}') seçili otelle uyuşmuyor; doğru oteli seçin`);
+  }
+  if (sheet.reportDate && sheet.reportDate !== today) {
+    out.push(`Dosyanın rapor tarihi (${sheet.reportDate}) bugünle (${today}) uyuşmuyor; bugünün raporunu yükleyin`);
+  }
+  return out;
+}
+
+const PENDING_ITEM = ["BEKLIYOR", "DEVAM"] as const;
+
+/**
+ * Drops guest records: pending task items that rest on them go (an emptied task goes with them), finished /
+ * DND / missing items stay without a record.
+ */
+async function dropRecords(
+  tx: Prisma.TransactionClient,
+  recordIds: string[],
+): Promise<{ deletedPendingItems: number; keptCompletedItems: number }> {
+  if (recordIds.length === 0) return { deletedPendingItems: 0, keptCompletedItems: 0 };
+  const pendingItems = await tx.dailyTaskItem.findMany({
+    where: { guestRecordId: { in: recordIds }, status: { in: [...PENDING_ITEM] } },
+    select: { id: true, taskId: true },
+  });
+  if (pendingItems.length > 0) {
+    await tx.dailyTaskItem.deleteMany({ where: { id: { in: pendingItems.map((i) => i.id) } } });
+    const taskIds = [...new Set(pendingItems.map((i) => i.taskId))];
+    await tx.dailyTask.deleteMany({ where: { id: { in: taskIds }, items: { none: {} } } });
+  }
+  const keptCompletedItems = await tx.dailyTaskItem.count({ where: { guestRecordId: { in: recordIds } } });
+  await tx.dailyTaskItem.updateMany({ where: { guestRecordId: { in: recordIds } }, data: { guestRecordId: null } });
+  await tx.guestRecord.deleteMany({ where: { id: { in: recordIds } } });
+  return { deletedPendingItems: pendingItems.length, keptCompletedItems };
+}
+
 /**
  * Parses the workbook against the hotel's rooms and reports what an upload would do.
  * Writes nothing (no upload row, no file, no audit).
@@ -166,16 +366,18 @@ export async function previewOccupancy(
   await assertCan(ctx, SCREEN, "O", hotelId);
   assertXlsxName(fileName);
 
-  const sheet = await parseWorkbook(input.data, { today: businessDate(now), kindHint: kind });
-  const rooms = await prisma.room.findMany({ where: { hotelId, isActive: true }, select: { number: true } });
-  const known = new Set(rooms.map((r) => r.number.trim()));
+  const today = businessDate(now);
+  const sheet = await parseWorkbook(input.data, { today, kindHint: kind });
+  const rooms = await prisma.room.findMany({ where: { hotelId, isActive: true }, select: { id: true, number: true } });
+  const roomIds = new Map(rooms.map((r) => [r.number.trim(), r.id]));
 
   const errors: RowError[] = [...sheet.errors];
   const unknown = new Set<string>();
-  const okRows: ParsedRow[] = [];
+  const okRows: KnownRow[] = [];
   for (const row of sheet.rows) {
-    if (known.has(row.roomNumber)) {
-      okRows.push(row);
+    const roomId = roomIds.get(row.roomNumber);
+    if (roomId) {
+      okRows.push({ ...row, roomId });
     } else {
       unknown.add(row.roomNumber);
       errors.push({ row: row.row, message: `Oda '${row.roomNumber}' sistemde bulunamadı` });
@@ -184,9 +386,11 @@ export async function previewOccupancy(
   errors.sort((a, b) => a.row - b.row);
 
   const hotelMatch = sheet.hotelLabel ? await hotelMatchOf(hotelId, sheet.hotelLabel) : undefined;
-  const warnings = [...sheet.warnings];
-  if (hotelMatch && !hotelMatch.matches) {
-    warnings.unshift(`Dosyadaki otel adı ('${hotelMatch.label}') seçili otelle uyuşmuyor`);
+  const blockers = commitBlockers(sheet, hotelMatch, today);
+  const warnings = [...blockers, ...sheet.warnings];
+  const plan = await planRecords(prisma, hotelId, sheet.detectedKind, okRows, today, errors.length === 0);
+  if (errors.length > 0 && okRows.length > 0) {
+    warnings.push("Hatalı satır olduğu için dosyada bulunmayan eski kayıtlar silinmeyecek");
   }
 
   return {
@@ -209,6 +413,8 @@ export async function previewOccupancy(
       guestCount,
     })),
     ...(hotelMatch ? { hotelMatch } : {}),
+    changes: { create: plan.createdRows, update: plan.originals.length, remove: plan.removals.length },
+    blockers,
   };
 }
 
@@ -264,6 +470,9 @@ export async function commitOccupancy(
   // Without a kind the file decides (detected only after the permission check above).
   const kind = requestedKind ?? (await parseWorkbook(input.data, { today })).detectedKind;
   const sheet = await parseWorkbook(input.data, { today, kindHint: kind });
+  const hotelMatch = sheet.hotelLabel ? await hotelMatchOf(hotelId, sheet.hotelLabel) : undefined;
+  const blockers = commitBlockers(sheet, hotelMatch, today);
+  if (blockers.length > 0) throw new DomainError("VALIDATION", blockers.join(". "));
   const code = uploadCode(now);
   const storedPath = `occupancy/${hotelId}/${code}.xlsx`;
   await saveUpload(storedPath, input.data);
@@ -293,7 +502,7 @@ export async function commitOccupancy(
         const roomIds = new Map(rooms.map((r) => [r.number.trim(), r.id]));
 
         const errors: RowError[] = [...sheet.errors];
-        const known: (ParsedRow & { roomId: string })[] = [];
+        const known: KnownRow[] = [];
         for (const row of sheet.rows) {
           const roomId = roomIds.get(row.roomNumber);
           if (roomId) known.push({ ...row, roomId });
@@ -301,95 +510,42 @@ export async function commitOccupancy(
         }
         errors.sort((a, b) => a.row - b.row);
 
-        // Existing records that could overlap one of the new rows (same room + kind).
-        const existing = new Map<string, GuestRecord[]>();
-        if (known.length > 0) {
-          const minArrival = known.reduce((m, r) => (r.arrivalDate < m ? r.arrivalDate : m), known[0].arrivalDate);
-          const maxDeparture = known.reduce((m, r) => (r.departureDate > m ? r.departureDate : m), known[0].departureDate);
-          const found = await tx.guestRecord.findMany({
-            where: {
-              hotelId,
-              kind,
-              roomId: { in: [...new Set(known.map((r) => r.roomId))] },
-              arrivalDate: { lte: businessDay(maxDeparture) },
-              departureDate: { gte: businessDay(minArrival) },
+        const plan = await planRecords(tx, hotelId, kind, known, today, errors.length === 0);
+        for (const { id, row } of plan.updates) {
+          await tx.guestRecord.update({
+            where: { id },
+            data: {
+              arrivalDate: businessDay(row.arrivalDate),
+              departureDate: businessDay(row.departureDate),
+              guestCount: row.guestCount,
+              ...(row.arrivalTime ? { arrivalTime: row.arrivalTime } : {}),
+              ...(row.departureTime ? { departureTime: row.departureTime } : {}),
+              uploadId: upload.id,
+              batchCode: code,
             },
-            orderBy: { createdAt: "asc" },
           });
-          for (const rec of found) existing.set(rec.roomId, [...(existing.get(rec.roomId) ?? []), rec]);
         }
-
-        let createdRows = 0;
-        let updatedRows = 0;
-        const toCreate: Prisma.GuestRecordCreateManyInput[] = [];
-        // Rows created earlier in this same file also take part in the overlap rule.
-        const fresh = new Map<string, { arrival: string; departure: number | string; index: number }[]>();
-
-        for (const row of known) {
-          const candidates = (existing.get(row.roomId) ?? []).filter(
-            (rec) => dayStr(rec.arrivalDate) <= row.departureDate && dayStr(rec.departureDate) >= row.arrivalDate,
-          );
-          // Prefer an exact date match, else the most recently created overlapping record.
-          const match =
-            candidates.find((rec) => dayStr(rec.arrivalDate) === row.arrivalDate && dayStr(rec.departureDate) === row.departureDate) ??
-            candidates[candidates.length - 1];
-
-          if (match) {
-            const updated = await tx.guestRecord.update({
-              where: { id: match.id },
-              data: {
-                arrivalDate: businessDay(row.arrivalDate),
-                departureDate: businessDay(row.departureDate),
-                guestCount: row.guestCount,
-                ...(row.arrivalTime ? { arrivalTime: row.arrivalTime } : {}),
-                ...(row.departureTime ? { departureTime: row.departureTime } : {}),
-                uploadId: upload.id,
-                batchCode: code,
-              },
-            });
-            existing.set(
-              row.roomId,
-              (existing.get(row.roomId) ?? []).map((rec) => (rec.id === updated.id ? updated : rec)),
-            );
-            updatedRows++;
-            continue;
-          }
-
-          // Overlap with a row created earlier in this file: fold into that pending insert.
-          const pendingList = fresh.get(row.roomId) ?? [];
-          const pendingMatch = pendingList.find(
-            (p) => p.arrival <= row.departureDate && String(p.departure) >= row.arrivalDate,
-          );
-          if (pendingMatch) {
-            const target = toCreate[pendingMatch.index];
-            target.arrivalDate = businessDay(row.arrivalDate);
-            target.departureDate = businessDay(row.departureDate);
-            target.guestCount = row.guestCount;
-            if (row.arrivalTime) target.arrivalTime = row.arrivalTime;
-            if (row.departureTime) target.departureTime = row.departureTime;
-            pendingMatch.arrival = row.arrivalDate;
-            pendingMatch.departure = row.departureDate;
-            updatedRows++;
-            continue;
-          }
-
-          toCreate.push({
-            hotelId,
-            roomId: row.roomId,
-            uploadId: upload.id,
-            batchCode: code,
-            guestCount: row.guestCount,
-            arrivalDate: businessDay(row.arrivalDate),
-            ...(row.arrivalTime ? { arrivalTime: row.arrivalTime } : {}),
-            departureDate: businessDay(row.departureDate),
-            ...(row.departureTime ? { departureTime: row.departureTime } : {}),
-            kind,
+        if (plan.creates.length > 0) {
+          await tx.guestRecord.createMany({
+            data: plan.creates.map((row) => ({
+              hotelId,
+              roomId: row.roomId,
+              uploadId: upload.id,
+              batchCode: code,
+              guestCount: row.guestCount,
+              arrivalDate: businessDay(row.arrivalDate),
+              ...(row.arrivalTime ? { arrivalTime: row.arrivalTime } : {}),
+              departureDate: businessDay(row.departureDate),
+              ...(row.departureTime ? { departureTime: row.departureTime } : {}),
+              kind,
+            })),
           });
-          pendingList.push({ arrival: row.arrivalDate, departure: row.departureDate, index: toCreate.length - 1 });
-          fresh.set(row.roomId, pendingList);
-          createdRows++;
         }
-        if (toCreate.length > 0) await tx.guestRecord.createMany({ data: toCreate });
+        // Records of this day the new file no longer lists (snapshotted, so deleting this upload brings them back).
+        await dropRecords(tx, plan.removals.map((r) => r.id));
+        const { createdRows, updatedRows } = plan;
+        const removedRows = plan.removals.length;
+        const revert: RevertData = { updated: plan.originals.map(snapshot), removed: plan.removals.map(snapshot) };
 
         const okRows = known.length;
         const errorRows = sheet.totalRows - okRows;
@@ -401,6 +557,7 @@ export async function commitOccupancy(
             okRows,
             errorRows,
             errors: storedErrors as unknown as Prisma.InputJsonValue,
+            revertData: revert as unknown as Prisma.InputJsonValue,
           },
         });
 
@@ -419,7 +576,7 @@ export async function commitOccupancy(
           action: "OCCUPANCY_UPLOAD",
           entity: "OccupancyUpload",
           entityId: upload.id,
-          after: { code, fileName, kind, format: sheet.format, totalRows: sheet.totalRows, okRows, errorRows, createdRows, updatedRows },
+          after: { code, fileName, kind, format: sheet.format, totalRows: sheet.totalRows, okRows, errorRows, createdRows, updatedRows, removedRows },
         });
         await publishRadar(
           "occupancy.uploaded",
@@ -428,7 +585,7 @@ export async function commitOccupancy(
           tx,
         );
 
-        return { uploadId: upload.id, code, totalRows: sheet.totalRows, okRows, errorRows, errors: storedErrors, createdRows, updatedRows };
+        return { uploadId: upload.id, code, totalRows: sheet.totalRows, okRows, errorRows, errors: storedErrors, createdRows, updatedRows, removedRows };
       },
       { timeout: 120_000, maxWait: 10_000 },
     );
@@ -442,11 +599,11 @@ export async function commitOccupancy(
   return { ...outcome, tasksGenerated };
 }
 
-const PENDING_ITEM = ["BEKLIYOR", "DEVAM"] as const;
-
 /**
- * Reverts an upload: its records go, pending task items that rest on them go (an emptied task goes
- * with them), finished/DND/missing items stay without a record, the day's UploadTask returns to BEKLIYOR.
+ * Reverts an upload: records it created go (pending task items that rest on them go, an emptied task goes with
+ * them, finished/DND/missing items stay without a record); records it only updated get their earlier state back
+ * and records it removed come back, unless a later upload owns them by now or their own upload was deleted
+ * meanwhile. The day's UploadTask returns to BEKLIYOR.
  */
 export async function deleteUpload(
   ctx: Ctx,
@@ -469,21 +626,64 @@ export async function deleteUpload(
       const current = await tx.occupancyUpload.findUnique({ where: { id: upload.id }, select: { status: true } });
       if (!current || current.status === "SILINDI") throw new DomainError("CONFLICT", "Yükleme zaten silinmiş");
 
-      const records = await tx.guestRecord.findMany({ where: { uploadId: upload.id }, select: { id: true } });
-      const recordIds = records.map((r) => r.id);
+      const revert = (await tx.occupancyUpload.findUnique({ where: { id: upload.id }, select: { revertData: true } }))
+        ?.revertData as unknown as RevertData | null;
+      const updated = revert?.updated ?? [];
+      const removed = revert?.removed ?? [];
+      // A snapshot whose own upload was deleted meanwhile would not exist without this upload: it is not restored.
+      const ownerIds = [...new Set([...updated, ...removed].map((r) => r.uploadId).filter((u): u is string => u !== null))];
+      const deletedOwners = new Set(
+        (await tx.occupancyUpload.findMany({ where: { id: { in: ownerIds }, status: "SILINDI" }, select: { id: true } })).map(
+          (u) => u.id,
+        ),
+      );
+      const alive = (r: RecordSnapshot) => r.uploadId === null || !deletedOwners.has(r.uploadId);
 
-      const pendingItems = await tx.dailyTaskItem.findMany({
-        where: { guestRecordId: { in: recordIds }, status: { in: [...PENDING_ITEM] } },
-        select: { id: true, taskId: true },
-      });
-      if (pendingItems.length > 0) {
-        await tx.dailyTaskItem.deleteMany({ where: { id: { in: pendingItems.map((i) => i.id) } } });
-        const taskIds = [...new Set(pendingItems.map((i) => i.taskId))];
-        await tx.dailyTask.deleteMany({ where: { id: { in: taskIds }, items: { none: {} } } });
+      const owned = await tx.guestRecord.findMany({ where: { uploadId: upload.id }, select: { id: true } });
+      const restorable = new Map(updated.filter(alive).map((r) => [r.id, r]));
+      const recordIds = owned.map((r) => r.id).filter((recId) => !restorable.has(recId));
+      const { deletedPendingItems, keptCompletedItems } = await dropRecords(tx, recordIds);
+
+      let restoredRecords = 0;
+      for (const prev of restorable.values()) {
+        // Only while this upload still owns the record: a later upload's own change stays.
+        const { count } = await tx.guestRecord.updateMany({
+          where: { id: prev.id, uploadId: upload.id },
+          data: {
+            uploadId: prev.uploadId,
+            batchCode: prev.batchCode,
+            guestCount: prev.guestCount,
+            arrivalDate: businessDay(prev.arrivalDate),
+            departureDate: businessDay(prev.departureDate),
+            arrivalTime: prev.arrivalTime,
+            departureTime: prev.departureTime,
+          },
+        });
+        restoredRecords += count;
       }
-      const keptCompletedItems = await tx.dailyTaskItem.count({ where: { guestRecordId: { in: recordIds } } });
-      await tx.dailyTaskItem.updateMany({ where: { guestRecordId: { in: recordIds } }, data: { guestRecordId: null } });
-      await tx.guestRecord.deleteMany({ where: { uploadId: upload.id } });
+      const back = removed.filter(alive);
+      const recreatedRecords =
+        back.length > 0
+          ? (
+              await tx.guestRecord.createMany({
+                data: back.map((r) => ({
+                  id: r.id,
+                  hotelId: upload.hotelId,
+                  roomId: r.roomId,
+                  uploadId: r.uploadId,
+                  batchCode: r.batchCode,
+                  guestCount: r.guestCount,
+                  arrivalDate: businessDay(r.arrivalDate),
+                  departureDate: businessDay(r.departureDate),
+                  arrivalTime: r.arrivalTime,
+                  departureTime: r.departureTime,
+                  kind: upload.kind as UploadKind,
+                  createdAt: new Date(r.createdAt),
+                })),
+                skipDuplicates: true,
+              })
+            ).count
+          : 0;
 
       await tx.uploadTask.updateMany({
         where: { uploadId: upload.id },
@@ -498,7 +698,7 @@ export async function deleteUpload(
         entity: "OccupancyUpload",
         entityId: upload.id,
         before: { code: upload.code, status: upload.status, okRows: upload.okRows },
-        after: { deletedRecords: recordIds.length, deletedPendingItems: pendingItems.length, keptCompletedItems },
+        after: { deletedRecords: recordIds.length, deletedPendingItems, keptCompletedItems, restoredRecords, recreatedRecords },
       });
       await publish(
         { type: OCCUPANCY_UPLOADED, hotelId: upload.hotelId, payload: { uploadId: upload.id, code: upload.code, deleted: true } },

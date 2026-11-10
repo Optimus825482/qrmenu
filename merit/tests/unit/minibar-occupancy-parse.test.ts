@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { OCCUPANCY_MAX_BYTES, OCCUPANCY_MAX_COLUMNS, OCCUPANCY_MAX_ROWS, parseDateCell, parseTimeCell, parseWorkbook } from "@/modules/minibar/server/occupancyParse";
+import {
+  assertZipBudget,
+  OCCUPANCY_MAX_BYTES,
+  OCCUPANCY_MAX_COLUMNS,
+  OCCUPANCY_MAX_ROWS,
+  OCCUPANCY_MAX_UNCOMPRESSED,
+  parseDateCell,
+  parseTimeCell,
+  parseWorkbook,
+} from "@/modules/minibar/server/occupancyParse";
 import { buildP4001Xlsx, buildStandardXlsx } from "../helpers/xlsx";
 
 const TODAY = "2026-11-03";
@@ -232,6 +241,19 @@ describe("parseWorkbook: boyut sınırı", () => {
     const headers = ["Room no", "Arrival", "Departure", ...Array.from({ length: OCCUPANCY_MAX_COLUMNS }, (_, i) => `X${i}`)];
     const data = await buildStandardXlsx([["101", d("2026-11-01"), d("2026-11-05")]], headers);
     expect(await messageOf(parseWorkbook(data, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+  });
+
+  it("SEC-18: zip dizininde bildirilen açılmış boyut sınırı aşarsa açmadan reddedilir", async () => {
+    const data = await buildStandardXlsx([["101", d("2026-11-01"), d("2026-11-05"), 2]], ["Room no", "Arrival", "Departure", "Adult"]);
+    expect(() => assertZipBudget(data)).not.toThrow();
+    const bomb = Buffer.from(data);
+    const dir = bomb.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02])); // first central directory entry
+    expect(dir).toBeGreaterThan(0);
+    bomb.writeUInt32LE(OCCUPANCY_MAX_UNCOMPRESSED + 1, dir + 24);
+    expect(await messageOf(parseWorkbook(bomb, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+    const zip64 = Buffer.from(data);
+    zip64.writeUInt32LE(0xffffffff, dir + 24);
+    expect(await messageOf(parseWorkbook(zip64, { today: TODAY }))).toBe("Dosya beklenenden büyük");
   });
 
   it("sınır içindeki sayfa kabul edilir", async () => {
