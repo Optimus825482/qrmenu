@@ -249,6 +249,7 @@ const designSchema = z.object({
     logoUrl: z.string().max(300).optional().default(""),
     introSplash: z.boolean().optional().default(false),
     curatedPhotos: z.boolean(),
+    priceLists: z.boolean().optional().default(true),
     showSearch: z.boolean(),
     showFilters: z.boolean(),
     showFeatured: z.boolean().optional().default(false),

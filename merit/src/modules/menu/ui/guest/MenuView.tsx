@@ -7,7 +7,7 @@ import { effectiveCategoryTabStyle, ITEM_TAG_IDS, type ItemTagId, resolveHeroFon
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { CallWaiterButton } from "./CallWaiterButton";
-import { categoryItems, curatedPhotoIds } from "./menuPresentation";
+import { categoryItems, curatedPhotoIds, isPriceList } from "./menuPresentation";
 import { priceFormatter } from "./priceFormat";
 import { resetMobileZoomAndOpen } from "./zoomReset";
 import { useSelectionStore } from "./selectionStore";
@@ -61,6 +61,7 @@ function ItemCards({
   photoCountLabel,
   showPrice,
   photoIds,
+  priceLists,
 }: {
   items: GuestItem[];
   onOpen(id: string): void;
@@ -69,7 +70,33 @@ function ItemCards({
   showPrice: boolean;
   /** Curated-photo mode: only these dishes show a photo (large); null shows photos as usual. */
   photoIds: Set<string> | null;
+  /** Design option: lists without descriptions or without photos are drawn as a text price list. */
+  priceLists: boolean;
 }) {
+  if (priceLists && isPriceList(items)) {
+    return (
+      <ul className="g-plist">
+        {items.map((item) => (
+          <li key={item.id}>
+            <button
+              type="button"
+              className="g-prow"
+              data-available={item.isAvailable ? "true" : "false"}
+              onClick={() => onOpen(item.id)}
+            >
+              <span className="g-prow-text">
+                <TagList tags={item.tags} />
+                <span className="g-name">{item.name}</span>
+                {item.detail ? <span className="g-detail g-clamp">{item.detail}</span> : null}
+                <AllergenIcons allergens={item.allergens} />
+              </span>
+              {showPrice && item.price ? <span className="g-price">{format(item.price)}</span> : null}
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul className="g-cards">
       {items.map((item) => (
@@ -352,6 +379,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
               showPrice={showPrice}
               photoIds={photoIds}
+              priceLists={options.priceLists}
             />
           </section>
         ) : null}
@@ -366,6 +394,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
                 showPrice={showPrice}
                 photoIds={photoIds}
+                priceLists={options.priceLists}
               />
             ) : null}
             {sub.groups.map((group) => (
@@ -379,6 +408,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
                   showPrice={showPrice}
                   photoIds={photoIds}
+                  priceLists={options.priceLists}
                 />
               </div>
             ))}

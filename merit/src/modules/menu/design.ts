@@ -188,6 +188,11 @@ export type DesignOptions = {
   introSplash: boolean;
   /** Large photos only on up to three chef's picks; every other dish is a text row. */
   curatedPhotos: boolean;
+  /**
+   * Lists whose names say it all (spirits, juices: no descriptions, or no photos at all) are drawn as a dense
+   * text price list instead of photo cards. The photo stays in the dish sheet.
+   */
+  priceLists: boolean;
   showSearch: boolean;
   showFilters: boolean;
   /** "Öne çıkanlar" strip (chef's pick / popular) above the dish list. Off unless the operator turns it on. */
@@ -213,6 +218,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   logoUrl: "",
   introSplash: false,
   curatedPhotos: false,
+  priceLists: true,
   showSearch: true,
   showFilters: false,
   showFeatured: false,
@@ -233,6 +239,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "logoUrl"
   | "introSplash"
   | "curatedPhotos"
+  | "priceLists"
   | "showSearch"
   | "showFilters"
   | "showFeatured"
@@ -460,6 +467,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     logoUrl: logoUrl(raw.logoUrl),
     introSplash: typeof raw.introSplash === "boolean" ? raw.introSplash : NEUTRAL_NEW_OPTIONS.introSplash,
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
+    priceLists: typeof raw.priceLists === "boolean" ? raw.priceLists : NEUTRAL_NEW_OPTIONS.priceLists,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
     showFeatured: typeof raw.showFeatured === "boolean" ? raw.showFeatured : NEUTRAL_NEW_OPTIONS.showFeatured,

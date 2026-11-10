@@ -3459,3 +3459,37 @@ html:has(.g-show-host) body,
   overflow-x: clip;
   overflow-y: visible;
 }
+
+/* ===== FİYAT LİSTESİ: açıklamasız / fotoğrafsız uzun listeler için sık metin satırları ===== */
+.g-plist {
+  width: 100%;
+  background: var(--m-soft);
+  border: 1px solid var(--m-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.g-plist > li + li { border-top: 1px solid var(--m-line); }
+.g-prow {
+  width: 100%;
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 14px;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.g-prow:active { background: color-mix(in srgb, var(--m-line) 55%, transparent); }
+.g-prow:focus-visible { outline: 2px solid var(--m-accent, currentColor); outline-offset: -2px; }
+.g-prow[data-available="false"] { opacity: 0.5; }
+.g-prow[data-available="false"] .g-name { text-decoration: line-through; }
+.g-prow-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.g-prow .g-name { font-weight: 600; overflow-wrap: anywhere; }
+.g-prow .g-price { font-variant-numeric: tabular-nums; white-space: nowrap; }

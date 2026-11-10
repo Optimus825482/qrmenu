@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { curatedPhotoIds } from "@/modules/menu/ui/guest/menuPresentation";
+import { curatedPhotoIds, isPriceList, PRICE_LIST_FROM_ITEMS } from "@/modules/menu/ui/guest/menuPresentation";
 import type { GuestCategory, GuestItem } from "@/modules/menu/server/guestMenu";
 
 const item = (id: string, over: Partial<GuestItem> = {}): GuestItem => ({
@@ -41,5 +41,27 @@ describe("curatedPhotoIds", () => {
     expect(curatedPhotoIds([]).size).toBe(0);
     const menu = [category("a", [item("a1"), item("a2"), item("a3")])];
     expect(curatedPhotoIds(menu, 2).size).toBe(2);
+  });
+});
+
+describe("isPriceList", () => {
+  const many = (n: number, over: Partial<GuestItem> = {}) => Array.from({ length: n }, (_, i) => item(`i${i}`, over));
+
+  it("açıklamasız uzun liste (şişeler) fiyat listesidir, fotoğrafı olsa da", () => {
+    expect(isPriceList(many(12))).toBe(true);
+  });
+
+  it("hiç fotoğrafı olmayan uzun liste fiyat listesidir, açıklaması olsa da", () => {
+    expect(isPriceList(many(6, { imageUrl: null, detail: "taze" }))).toBe(true);
+  });
+
+  it("fotoğraflı ve açıklamalı yemekler kart olarak kalır", () => {
+    expect(isPriceList(many(8, { detail: "ızgara" }))).toBe(false);
+    expect(isPriceList([...many(7), item("x", { detail: "tek açıklama" })])).toBe(false);
+  });
+
+  it("kısa liste kart olarak kalır", () => {
+    expect(isPriceList(many(PRICE_LIST_FROM_ITEMS - 1))).toBe(false);
+    expect(isPriceList(many(PRICE_LIST_FROM_ITEMS))).toBe(true);
   });
 });

@@ -25,3 +25,16 @@ export function curatedPhotoIds(categories: GuestCategory[], max: number = MAX_C
   }
   return new Set(ids);
 }
+
+/** A list shorter than this stays as cards: a handful of rows gains nothing from the dense form. */
+export const PRICE_LIST_FROM_ITEMS = 5;
+
+/**
+ * Whether a list of dishes reads better as a text price list than as photo cards: it is long enough and either
+ * none of its dishes has a photo (cards would be rows of empty squares) or none has a description (bottles and
+ * soft drinks, where the name is the whole choice and look-alike thumbnails only lengthen the page).
+ */
+export function isPriceList(items: readonly GuestItem[]): boolean {
+  if (items.length < PRICE_LIST_FROM_ITEMS) return false;
+  return items.every((item) => !item.imageUrl) || items.every((item) => !item.detail);
+}
