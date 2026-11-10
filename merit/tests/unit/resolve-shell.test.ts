@@ -98,6 +98,16 @@ describe("resolveShell karar sırası: query > device > prefs > screen > viewpor
     expect(run({ ...sys, viewportWidth: 760 }).layout).toBe("desktop");
   });
 
+  it("yatay telefon: geniş ama kısa ekran android kalır (499 -> android, 500 -> desktop)", () => {
+    const sys = { roleKind: "SISTEM" as const, screen: { code: "ADMIN", context: "xp" as const } };
+    expect(run({ ...sys, viewportWidth: 812, viewportHeight: 375 }).layout).toBe("android");
+    expect(run({ ...sys, viewportWidth: 932, viewportHeight: 499 }).layout).toBe("android");
+    expect(run({ ...sys, viewportWidth: 932, viewportHeight: 500 }).layout).toBe("desktop");
+    // Dizüstü (1366x650) ve yükseklik bilinmediğinde masaüstü değişmez.
+    expect(run({ ...sys, viewportWidth: 1366, viewportHeight: 650 }).layout).toBe("desktop");
+    expect(run({ ...sys, viewportWidth: 1366, viewportHeight: null }).layout).toBe("desktop");
+  });
+
   it("ekranın doğal bağlamı: QS-KDS pos; MB-DOL/MB-TAN/MB-RAP xp", () => {
     expect(run({ roleKind: "MUTFAK", screen: { code: "QS-KDS", context: "pos" } }).shell).toBe("pos");
     for (const code of ["MB-DOL", "MB-TAN", "MB-RAP"]) {

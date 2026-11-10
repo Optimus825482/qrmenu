@@ -18,6 +18,8 @@ export type ShellInput = {
   canUsePos: boolean;
   /** `null` = sunucu (genişlik bilinmez); genişlik kuralı atlanır. */
   viewportWidth: number | null;
+  /** Bilinmiyorsa (`null`/verilmemiş) yükseklik kuralı atlanır. */
+  viewportHeight?: number | null;
 };
 
 export type ShellDecision = {
@@ -29,6 +31,11 @@ export type ShellDecision = {
 
 /** Bu genişliğin altında XP kabuğu Android yönetici kabuğuna (`MobileShell`) geçer. */
 export const XP_ANDROID_MAX_WIDTH = 760;
+/**
+ * Bu yüksekliğin altında da Android kabuğu kalır: yatay çevrilmiş telefon geniştir (812x375) ama XP
+ * masaüstü oraya sığmaz. Dizüstü tarayıcı pencereleri (>= 600) bu sınırın üstündedir.
+ */
+export const XP_ANDROID_MAX_HEIGHT = 500;
 /** Bu genişliğin altında POS kabuğu personel kabuğuna geçer (kasayı telefondan açan şef garson). */
 export const POS_MIN_WIDTH = 600;
 
@@ -91,7 +98,12 @@ export function resolveShell(input: ShellInput): ShellDecision {
       shell = "personel";
       source = "viewport";
     }
-    if (shell === "xp") layout = width < XP_ANDROID_MAX_WIDTH ? "android" : "desktop";
+    if (shell === "xp") {
+      const height = input.viewportHeight ?? null;
+      const narrow = width < XP_ANDROID_MAX_WIDTH;
+      const short = height !== null && height < XP_ANDROID_MAX_HEIGHT;
+      layout = narrow || short ? "android" : "desktop";
+    }
   }
   return { shell, layout, source, allowed };
 }

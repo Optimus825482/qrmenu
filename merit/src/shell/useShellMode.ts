@@ -31,7 +31,9 @@ export function currentShellMode(): ShellMode {
   const query = parseShellQuery(new URLSearchParams(window.location.search));
   // `?mobil=1` (= personel) keeps forcing the Android shell on a wide screen. The device record is a
   // kiosk preference for /kasa and /kds and does not apply to the desktop.
-  return modeOf(resolveShell({ ...ADMIN_INPUT, query, viewportWidth: window.innerWidth }));
+  return modeOf(
+    resolveShell({ ...ADMIN_INPUT, query, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight }),
+  );
 }
 
 function subscribe(onChange: () => void): () => void {
@@ -44,7 +46,8 @@ function subscribe(onChange: () => void): () => void {
 }
 
 /**
- * Which shell to show: the Android shell when the window is narrower than 760 px or the URL has
+ * Which shell to show: the Android shell when the window is narrower than 760 px, shorter than
+ * 500 px (a phone turned to landscape) or the URL has
  * `?mobil=1` (to try it on a wide screen), the XP desktop otherwise. A thin client wrapper around the
  * pure `resolveShell`. The server (and the hydration pass) always render 'desktop'; the real value
  * follows right after hydration and on resize.
