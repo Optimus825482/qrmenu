@@ -10,17 +10,17 @@ export interface VersionInfo {
   timestamp: number;
 }
 
-export const APP_VERSION = process.env.MERIT_VERSION ?? (pkg as { version?: string }).version ?? "2.7.0";
+export const APP_VERSION = process.env.MERIT_VERSION ?? (pkg as { version?: string }).version ?? "2.8.0";
 export const BUILD_DATE = process.env.MERIT_BUILD_DATE ?? new Date().toISOString().slice(0, 10);
 export const BUILD_ID = process.env.MERIT_BUILD_ID ?? `${APP_VERSION}.${BUILD_DATE.replace(/-/g, "")}`;
 export const APP_NAME = "Merit Royal F&B Command Center";
 export const RELEASE_CODENAME = "Merit Royal Enterprise Suite";
 
 export const RELEASE_HIGHLIGHTS = [
-  "Sistem Hata Denetimi & Self-Diagnostic Merkezi: Otomatik kök neden teşhisi, sağlık probu ve geliştirici e-posta alarmları",
-  "Ekip Yönetimi: Minibar & Kat ekibinde tüm rollerin (Depo, Kat, Minibar) tek ekranda listelenmesi ve rol filtrelemesi",
-  "F&B Görev Seçimine Minibar Takip Operasyonu, Süpervizör, Depo Sorumlusu ve Kat Sorumlusu unvanları eklendi",
-  "Kullanıcı Yönetimi: 123456 varsayılan geçici şifre ve çoklu rol / multi-duty desteği",
+  "QR kodları: tek tıkla tüm masa / oda QR'larını yenileme ve QR kartlarının PDF çıktısı",
+  "Menü: açık renkli tasarımlar, yana kaymayan kategori çubuğu ve 6 yeni kategori şablonu (akordiyon, fotoğraflı karolar vb.)",
+  "Menü: outlet logosu yükleme, otel logolu animasyonlu açılış ve kayan başa dön düğmesi",
+  "Menü görselleri gözden geçirildi; yanlış görseller kaldırıldı",
 ];
 
 export function getVersionInfo(): VersionInfo {
