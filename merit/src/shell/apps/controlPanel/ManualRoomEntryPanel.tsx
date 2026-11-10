@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { settingsScopesAction } from "@/modules/core/server/admin/actions/settingsAdmin";
-import { loadManualEntryAction, saveManualEntryAction } from "@/modules/minibar/server/actions/manualRoomEntry";
+import {
+  loadManualEntryAction,
+  manualEntryHotelsAction,
+  saveManualEntryAction,
+} from "@/modules/minibar/server/actions/manualRoomEntry";
 import type { ManualEntryConfig } from "@/modules/minibar/server/manualRoomEntryAdmin";
 import { confirm } from "../../confirm";
 import { notify } from "../../notify";
@@ -14,7 +17,8 @@ const toggle = (list: string[], id: string, on: boolean): string[] =>
 
 /**
  * Denetim Masası → Minibar ve Kat → "Elle oda girişi": while QR is required, where a typed room number may
- * open the room check (whole hotel, chosen floors, chosen rooms). Hidden for roles that may not change it.
+ * open the room check (whole hotel, chosen floors, chosen rooms). Hidden for roles that may not change it. Also
+ * the body of the "Elle Oda Girişi" desktop app of the Minibar Takip Yöneticisi (ManualRoomEntryWindow).
  */
 export function ManualRoomEntryPanel({ setStatus }: { setStatus(text: string): void }) {
   const id = useId();
@@ -29,11 +33,11 @@ export function ManualRoomEntryPanel({ setStatus }: { setStatus(text: string): v
 
   useEffect(() => {
     let live = true;
-    settingsScopesAction()
+    manualEntryHotelsAction()
       .then((r) => {
         if (!live || !r.ok) return;
-        setHotels(r.data.hotels);
-        setHotelId(r.data.hotels[0]?.id ?? "");
+        setHotels(r.data);
+        setHotelId(r.data[0]?.id ?? "");
       })
       .catch(() => undefined);
     return () => {

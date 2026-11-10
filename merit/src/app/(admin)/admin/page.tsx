@@ -47,7 +47,7 @@ export default async function AdminPage() {
 
   return (
     <ShellClient
-      user={{ id: ctx.user.id, fullName: ctx.user.fullName, roleId: ctx.user.roleId }}
+      user={{ id: ctx.user.id, fullName: ctx.user.fullName, roleId: ctx.user.roleId, roleCode: ctx.user.roleCode }}
       hotels={hotels}
       screensByHotel={screensByHotel}
       prefs={prefs}

@@ -131,6 +131,12 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     for (const statement of p7Block.split(/;\s*\n/).map((x) => x.replace(/^\s*--.*$/gm, "").trim()).filter((x) => x.length > 0)) {
       await db.$executeRawUnsafe(statement);
     }
+    // YR (20261110160000) sets the four delegate roles' whole global matrix, QR screens included.
+    const yr = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261110160000_yonetici_rolleri/migration.sql"), "utf8");
+    const yrBlock = yr.slice(yr.indexOf("-- @limits:begin"), yr.indexOf("-- @limits:end"));
+    for (const statement of yrBlock.split(/;\s*\n/).map((x) => x.replace(/^\s*--.*$/gm, "").trim()).filter((x) => x.length > 0)) {
+      await db.$executeRawUnsafe(statement);
+    }
 
     const actual = toMap(await db.roleScreenPermission.findMany({ where, include: { role: true, screen: true } }));
     expect(actual).toEqual(expected);

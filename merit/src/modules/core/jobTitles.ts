@@ -5,12 +5,13 @@
 export const USER_JOB_TITLE_GROUPS = [
   {
     label: "F&B yönetimi",
-    options: ["F&B Müdürü", "F&B Manager Assistant", "Servis Müdürü", "Restoran Müdürü", "Outlet Müdürü", "Outlet Şefi", "Bar Müdürü"],
+    options: ["F&B Müdürü", "F&B Manager Assistant", "Servis Müdürü", "Restoran Müdürü", "Outlet Müdürü", "Outlet Yöneticisi", "Outlet Şefi", "Bar Müdürü", "QR Menü Yöneticisi"],
   },
   {
     label: "Minibar Takip Operasyonu",
     options: [
       "Minibar Takip Operasyonu",
+      "Minibar Takip Yöneticisi",
       "Minibar Takip Süpervizör",
       "Minibar Takip Depo Sorumlusu",
       "Minibar Takip Kat Sorumlusu",
@@ -26,7 +27,7 @@ export const USER_JOB_TITLE_GROUPS = [
   },
   {
     label: "Mutfak",
-    options: ["Mutfak Şefi", "Sous Chef", "Aşçı", "Demi Chef de Partie", "Commis / Aşçı Yardımcısı", "Pastacı", "Mutfak Personeli", "Steward / Bulaşıkhane Görevlisi"],
+    options: ["Mutfak Şefi", "Mutfak Yöneticisi", "Sous Chef", "Aşçı", "Demi Chef de Partie", "Commis / Aşçı Yardımcısı", "Pastacı", "Mutfak Personeli", "Steward / Bulaşıkhane Görevlisi"],
   },
   {
     label: "Diğer F&B görevleri",

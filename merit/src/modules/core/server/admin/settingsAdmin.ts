@@ -149,33 +149,65 @@ export async function set(
     await assertCan(ctx, SCREEN, "D", hotelId ?? undefined);
     return resolveItem(k, await loadRows(prisma, [k], hotelId), hotelId);
   }
+  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: hotelId ?? undefined }, (tx) =>
+    writeSetting(tx, ctx, hotelId, k, value),
+  );
+}
+
+/** Keys that only the "Elle oda girişi" panel writes (it authorizes its own editors, see manualRoomEntryAdmin). */
+const MANUAL_ROOM_ENTRY_KEY = /^minibar\.manualRoomEntry/;
+
+/**
+ * Hotel-scope write of a manual room entry key for a caller that `manualRoomEntryAdmin` has already authorized
+ * (its editor role list and hotel checks). Validation, audit row and `settings.changed` are those of `set`; no
+ * CR-SYS check, so a delegate role edits these three keys without the rest of the system settings.
+ */
+export async function setManualRoomEntrySetting(
+  ctx: Ctx,
+  hotelId: string,
+  key: string,
+  value: unknown,
+): Promise<SettingItem> {
+  if (!MANUAL_ROOM_ENTRY_KEY.test(key)) {
+    throw new DomainError("FORBIDDEN", "Bu ayar elle oda girişi panelinden değiştirilemez");
+  }
+  const k = parseWrite(key, value, hotelId);
+  return prisma.$transaction((tx) => writeSetting(tx, ctx, hotelId, k, value));
+}
+
+async function writeSetting(
+  tx: Prisma.TransactionClient,
+  ctx: Ctx,
+  hotelId: string | null,
+  k: SettingKey,
+  value: unknown,
+): Promise<SettingItem> {
+  const meta = SETTING_META[k];
   const next = storedValue(k, SETTING_SCHEMAS[k].parse(value)) as Prisma.InputJsonValue;
   const scope = hotelId === null ? "SYSTEM" : "HOTEL";
-  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: hotelId ?? undefined }, async (tx) => {
-    // Prisma's upsert cannot target the (null, key) pair; the advisory lock serializes first writes.
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`setting:${hotelId ?? ""}:${k}`}))`;
-    const existing = await tx.setting.findFirst({ where: { hotelId, key: k } });
-    if (existing) await tx.setting.update({ where: { id: existing.id }, data: { value: next } });
-    else await tx.setting.create({ data: { hotelId, key: k, value: next } });
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: hotelId ?? undefined,
-      action: "SETTING_SET",
-      entity: "Setting",
-      entityId: k,
-      before: { scope, value: mask(meta, existing?.value ?? null) },
-      after: { scope, value: mask(meta, next) },
-    });
-    await publish(
-      { type: "settings.changed", hotelId: hotelId ?? undefined, payload: { key: k } },
-      tx,
-    );
-    if (k === "price.display") {
-      await publish({ type: "price.display", hotelId: hotelId ?? undefined }, tx);
-      await publish({ type: "menu.changed", hotelId: hotelId ?? undefined }, tx);
-    }
-    return resolveItem(k, await loadRows(tx, [k], hotelId), hotelId);
+  // Prisma's upsert cannot target the (null, key) pair; the advisory lock serializes first writes.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`setting:${hotelId ?? ""}:${k}`}))`;
+  const existing = await tx.setting.findFirst({ where: { hotelId, key: k } });
+  if (existing) await tx.setting.update({ where: { id: existing.id }, data: { value: next } });
+  else await tx.setting.create({ data: { hotelId, key: k, value: next } });
+  await audit(tx, {
+    userId: ctx.user.id,
+    hotelId: hotelId ?? undefined,
+    action: "SETTING_SET",
+    entity: "Setting",
+    entityId: k,
+    before: { scope, value: mask(meta, existing?.value ?? null) },
+    after: { scope, value: mask(meta, next) },
   });
+  await publish(
+    { type: "settings.changed", hotelId: hotelId ?? undefined, payload: { key: k } },
+    tx,
+  );
+  if (k === "price.display") {
+    await publish({ type: "price.display", hotelId: hotelId ?? undefined }, tx);
+    await publish({ type: "menu.changed", hotelId: hotelId ?? undefined }, tx);
+  }
+  return resolveItem(k, await loadRows(tx, [k], hotelId), hotelId);
 }
 
 /** Removes a hotel's own value of a key so the system value (or the default) applies again. */

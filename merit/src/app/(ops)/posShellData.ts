@@ -19,11 +19,12 @@ export async function loadPosShellData(
   outlet: { id: string; hotelId: string; printerId: string | null; hasMenu: boolean },
 ): Promise<PosShellData> {
   const hotelId = outlet.hotelId;
-  const [kas, kds, fis, ipt] = await Promise.all([
+  const [kas, kds, fis, ipt, rap] = await Promise.all([
     can(ctx, "QS-KAS", "V", hotelId),
     can(ctx, "QS-KDS", "V", hotelId),
     can(ctx, "QS-FIS", "V", hotelId),
     can(ctx, "QS-IPT", "V", hotelId),
+    can(ctx, "QS-RAP", "R", hotelId),
   ]);
   let kasa: PosShellData["kasa"] = null;
   if (kas) {
@@ -34,6 +35,8 @@ export async function loadPosShellData(
       ...(outlet.hasMenu ? [{ id: "menu", label: "Menü", icon: "list", href: "/kasa?sekme=menu" } satisfies PosRailItem] : []),
       ...(fis ? [{ id: "printer", label: "Yazıcı", icon: "printer", href: "/kasa/yazici" } satisfies PosRailItem] : []),
       ...(ipt ? [{ id: "cancel", label: "İptal", icon: "ban", href: "/kasa/iptal" } satisfies PosRailItem] : []),
+      // Order reports of this outlet (reporting pins outlet sessions to the session outlet).
+      ...(rap ? [{ id: "reports", label: "Raporlar", icon: "chart", href: "/kasa/raporlar" } satisfies PosRailItem] : []),
     ];
     const printer = await prisma.printer.findFirst({
       where: { hotelId, isActive: true, OR: [{ id: outlet.printerId ?? "" }, { outletId: null }] },

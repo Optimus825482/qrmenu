@@ -14,6 +14,8 @@ const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [
   ["/kat/oda-kontrol", "MB-TUK"],
   ["/kat/mybar", "MB-PERS"],
   ["/depo/mybar", "MB-PERS"],
+  // Outlet-session entry to the order reports (QS-RAP's catalogue path is a desktop window).
+  ["/kasa/raporlar", "QS-RAP"],
 ];
 
 /**

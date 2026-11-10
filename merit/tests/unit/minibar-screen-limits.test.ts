@@ -13,7 +13,7 @@ const set = (...a: Action[]) => [...a].sort().join("");
 
 describe("SCREEN_LIMITS tek liste", () => {
   it("her girdi plan etiketi taşır ve P5/P2/P3 girdileri vardır", () => {
-    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7"].includes(l.plan))).toBe(true);
+    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR"].includes(l.plan))).toBe(true);
     for (const plan of ["P5", "P2", "P3"]) expect(SCREEN_LIMITS.some((l) => l.plan === plan)).toBe(true);
   });
 
@@ -120,8 +120,14 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
     }
     expect(await read()).not.toEqual(expected);
 
-    // The @limits blocks of the migrations in order: P2/P3, the P7 report grants, then D2 (R-DEP MB-ZIM A, R-KAT MB-TAL D).
-    for (const migration of ["20261103093000_minibar_tamamlama_temel", "20261107090000_p7_rapor", "20261110140100_minibar_depo_rol_yetkileri"]) {
+    // The @limits blocks of the migrations in order: P2/P3, the P7 report grants, D2 (R-DEP MB-ZIM A, R-KAT MB-TAL D),
+    // then YR (the four delegate roles' whole global matrix).
+    for (const migration of [
+      "20261103093000_minibar_tamamlama_temel",
+      "20261107090000_p7_rapor",
+      "20261110140100_minibar_depo_rol_yetkileri",
+      "20261110160000_yonetici_rolleri",
+    ]) {
       const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
       const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));
       expect(block.length).toBeGreaterThan(0);

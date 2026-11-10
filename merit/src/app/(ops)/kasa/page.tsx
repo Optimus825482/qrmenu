@@ -14,7 +14,7 @@ export default async function CashierPage() {
   if (!(await can(ctx, "QS-KAS", "V", ctx.session.hotelId))) denyScreen("QS-KAS");
   if (!ctx.session.outletId) redirect("/secim");
   const outletId = ctx.session.outletId;
-  const [board, queue, calls, canEdit, members, outlet, currency, canApprove, canReprint, canOrder] = await Promise.all([
+  const [board, queue, calls, canEdit, members, outlet, currency, canApprove, canReprint, canOrder, canCallEdit, canQueueEdit] = await Promise.all([
     cashier.tableBoard(ctx, outletId),
     approvals.visibleQueue(ctx, outletId),
     waiterCalls.listOpen(ctx, outletId),
@@ -32,7 +32,13 @@ export default async function CashierPage() {
     can(ctx, "QS-KUY", "A", ctx.session.hotelId).then(async (all) => all || can(ctx, "QS-KUY", "D", ctx.session.hotelId)),
     can(ctx, "QS-FIS", "O", ctx.session.hotelId),
     can(ctx, "QS-KUY", "O", ctx.session.hotelId),
+    can(ctx, "QM-CAG", "D", ctx.session.hotelId),
+    can(ctx, "QS-KUY", "D", ctx.session.hotelId),
   ]);
+  // Same gates as the services: waiterCalls.authorize (resolve) and cashier.clearTable. A viewer (QS-KAS V only,
+  // e.g. Outlet Yöneticisi) gets every flag false and sees the screen without its write buttons.
+  const canResolveCall = canCallEdit || canEdit;
+  const canClearTable = canEdit || canQueueEdit || canCallEdit;
   const priceDisplay = await resolvePriceDisplay({ hotelId: ctx.session.hotelId, priceDisplay: outlet?.priceDisplay ?? "INHERIT" });
   return (
     <KasaClient
@@ -49,7 +55,13 @@ export default async function CashierPage() {
       currency={currency}
       meId={ctx.user.id}
       pricesShown={priceDisplay === "SHOW"}
-      capabilities={{ approve: canApprove, reprint: canReprint, createOrder: outlet?.hasOrdering === true && canOrder }}
+      capabilities={{
+        approve: canApprove,
+        reprint: canReprint,
+        createOrder: outlet?.hasOrdering === true && canOrder,
+        resolveCall: canResolveCall,
+        clearTable: canClearTable,
+      }}
     />
   );
 }

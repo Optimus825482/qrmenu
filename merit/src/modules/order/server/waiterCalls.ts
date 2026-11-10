@@ -142,6 +142,15 @@ async function authorize(ctx: Ctx, hotelId: string, outletId: string): Promise<v
   await assertCan(ctx, "QS-KAS", "D", hotelId);
 }
 
+/** Reading the open calls: the writers above, or a cashier-screen viewer (QS-KAS V, e.g. Outlet Yöneticisi). */
+async function authorizeRead(ctx: Ctx, hotelId: string, outletId: string): Promise<void> {
+  if (!ctx.hotelIds.includes(hotelId)) throw new DomainError("NOT_FOUND", "Çağrı bulunamadı");
+  if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  if (await can(ctx, "QM-CAG", "D", hotelId)) return;
+  if (await can(ctx, "QS-KAS", "D", hotelId)) return;
+  await assertCan(ctx, "QS-KAS", "V", hotelId);
+}
+
 async function resolve(ctx: Ctx, callId: string, status: "YANITLANDI" | "KAPANDI"): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM waiter_calls WHERE id = ${callId} FOR UPDATE`;
@@ -174,7 +183,7 @@ async function resolve(ctx: Ctx, callId: string, status: "YANITLANDI" | "KAPANDI
 async function listOpen(ctx: Ctx, outletId: string): Promise<OpenCall[]> {
   const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hotelId: true } });
   if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
-  await authorize(ctx, outlet.hotelId, outletId);
+  await authorizeRead(ctx, outlet.hotelId, outletId);
   const alertSeconds = await getSetting("order.callAlertSeconds", outlet.hotelId);
   const rows = await prisma.waiterCall.findMany({
     where: { outletId, status: "ACIK" },

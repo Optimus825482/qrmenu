@@ -51,6 +51,8 @@ export type AppDefinition = {
   icon: string; // XP icon set key (shell/icons.tsx)
   moduleKey: ModuleKey | "CORE";
   screenCode: string; // AppScreen.code: visibility follows this permission
+  /** Also limited to these session role codes (a tool whose server side authorizes by role, not by screen). */
+  roleCodes?: readonly string[];
   category: AppCategory;
   needsHotel: boolean; // asks for a hotel context inside the window
   window: { w: number; h: number; minW?: number; minH?: number; resizable?: boolean };

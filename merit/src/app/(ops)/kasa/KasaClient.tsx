@@ -59,7 +59,7 @@ type Props = {
   currency: string;
   /** Oturumdaki kullanıcı: "Yeni adisyon" yalnız kendi masasına açılabilir (staffOrders kuralı). */
   meId?: string;
-  capabilities?: { approve: boolean; reprint: boolean; createOrder: boolean };
+  capabilities?: { approve: boolean; reprint: boolean; createOrder: boolean; resolveCall?: boolean; clearTable?: boolean };
   /** Çözülmüş fiyat gösterimi (outlet ayarı + otel varsayılanı). */
   pricesShown?: boolean;
 };
@@ -374,6 +374,7 @@ export default function KasaClient({
                 assign: canEdit,
                 reprint: capabilities.reprint,
                 createOrder: capabilities.createOrder && Boolean(meId) && selected.waiter?.id === meId,
+                resolveCall: capabilities.resolveCall !== false,
               }}
               currency={currency}
               pricesShown={pricesShown}
@@ -387,12 +388,15 @@ export default function KasaClient({
               onResolveCall={(call) => act(() => resolveCallAction(call.id, "YANITLANDI"))}
               onAssign={(userId) => act(() => (userId ? assignTableAction(selected.id, userId) : unassignTableAction(selected.id)), userId ? "Garson atandı" : "Atama kaldırıldı")}
               onCreateOrder={() => setComposer({ tableId: selected.id, label: selected.label })}
-              onClearTable={(tableId) =>
-                act(async () => {
-                  const res = await clearTableAction(tableId);
-                  if (res.ok) closePanel();
-                  return res;
-                }, `${selected.label} boş duruma alındı`)
+              onClearTable={
+                capabilities.clearTable === false
+                  ? undefined
+                  : (tableId) =>
+                      act(async () => {
+                        const res = await clearTableAction(tableId);
+                        if (res.ok) closePanel();
+                        return res;
+                      }, `${selected.label} boş duruma alındı`)
               }
             />
           ) : null}
@@ -440,14 +444,16 @@ export default function KasaClient({
                         </p>
                       ) : null}
                     </div>
-                    <div className="mt-4 flex gap-3 border-t border-border pt-3">
-                      <button type="button" className="pos-btn flex-1" data-primary disabled={pending} onClick={() => act(() => approveOrderAction(order.id), `#${order.orderNo} onaylandı`)}>
-                        <Icon name="check" size={24} /> Onayla &amp; Yazdır
-                      </button>
-                      <button type="button" className="pos-btn" data-danger disabled={pending} onClick={() => rejectOrder({ id: order.id, orderNo: order.orderNo, tableLabel: order.table?.label })}>
-                        <Icon name="close" size={20} /> Reddet
-                      </button>
-                    </div>
+                    {capabilities.approve ? (
+                      <div className="mt-4 flex gap-3 border-t border-border pt-3">
+                        <button type="button" className="pos-btn flex-1" data-primary disabled={pending} onClick={() => act(() => approveOrderAction(order.id), `#${order.orderNo} onaylandı`)}>
+                          <Icon name="check" size={24} /> Onayla &amp; Yazdır
+                        </button>
+                        <button type="button" className="pos-btn" data-danger disabled={pending} onClick={() => rejectOrder({ id: order.id, orderNo: order.orderNo, tableLabel: order.table?.label })}>
+                          <Icon name="close" size={20} /> Reddet
+                        </button>
+                      </div>
+                    ) : null}
                   </article>
                 );
               })}
@@ -478,11 +484,13 @@ export default function KasaClient({
                     </p>
                     {call.note ? <p className="mt-1 rounded-[var(--radius-m)] bg-bg p-2 text-sm text-muted">Not: {call.note}</p> : null}
                   </div>
-                  <div className="mt-4 border-t border-border pt-3">
-                    <button type="button" className="pos-btn w-full" data-primary disabled={pending} onClick={() => act(() => resolveCallAction(call.id, "YANITLANDI"))}>
-                      <Icon name="check" size={24} /> Yanıtlandı olarak kapat
-                    </button>
-                  </div>
+                  {capabilities.resolveCall !== false ? (
+                    <div className="mt-4 border-t border-border pt-3">
+                      <button type="button" className="pos-btn w-full" data-primary disabled={pending} onClick={() => act(() => resolveCallAction(call.id, "YANITLANDI"))}>
+                        <Icon name="check" size={24} /> Yanıtlandı olarak kapat
+                      </button>
+                    </div>
+                  ) : null}
                 </article>
               ))}
             </div>

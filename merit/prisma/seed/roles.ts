@@ -35,6 +35,12 @@ export const ROLES: RoleDef[] = [
   { code: "R-KAT", name: "Kat Sorumlusu", kind: "MINIBAR", profile: "SAHA", modules: ["MINIBAR"], maxOnlineMinutes: 600, defaultScreen: "MB-KAT" },
   { code: "R-DEP", name: "Depo Sorumlusu", kind: "MINIBAR", profile: "ISLET", modules: ["MINIBAR"], defaultScreen: "MB-ZIM" },
   { code: "R-HKS", name: "Housekeeping Süpervizörü", kind: "MINIBAR", profile: "IZLE", modules: ["MINIBAR"], defaultScreen: "MB-RAP" },
+  // Yönetici yardımcıları (10 Kas 2026): R-SYS'in devrettiği dar yetkiler. R-MTY / R-QMY yönetim masaüstünü kullanır
+  // (YONETIM: yalnız SISTEM atar), çekirdek ekranlarda yalnız CR-KOM ve CR-RAP alır (DELEGATE_MANAGERS).
+  { code: "R-MTY", name: "Minibar Takip Yöneticisi", kind: "YONETIM", profile: "IZLE", modules: ["CORE", "MINIBAR"], defaultScreen: "CR-KOM" },
+  { code: "R-QMY", name: "QR Menü Yöneticisi", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "QR_MENU"], defaultScreen: "CR-KOM" },
+  { code: "R-OUY", name: "Outlet Yöneticisi", kind: "OUTLET", profile: "IZLE", modules: ["QR_ORDER"], defaultScreen: "QS-KAS" },
+  { code: "R-MUY", name: "Mutfak Yöneticisi", kind: "MUTFAK", profile: "IZLE", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
 ];
 
 export const PROFILE_ACTIONS: Record<Profile, readonly Action[]> = {
@@ -61,6 +67,13 @@ const DEFINITIONS_VIEW_ONLY: readonly Action[] = ["V"];
 const DEFINITIONS_MANAGE: readonly Action[] = ["V", "O", "D"];
 /** Remaining CORE screens (user/role admin, settings) belong to these roles only. */
 const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
+/**
+ * YONETIM-kind delegate roles: the desktop needs CR-KOM view, every role has CR-RAP; none of the other
+ * management CORE rights (definitions, users, online users, audit log, radar) — they manage nothing outside
+ * their own module screens.
+ */
+const DELEGATE_MANAGERS = new Set(["R-MTY", "R-QMY"]);
+const DELEGATE_CORE = new Set(["CR-KOM", "CR-RAP"]);
 
 /**
  * One list of screen limits applied to module screens (never CORE, never `modules: "ALL"` roles). Each entry
@@ -69,10 +82,11 @@ const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
  *
  * Migrations repeat the new entries for databases seeded earlier: 0005 (P5), 20261102214000 (R-KAT),
  * 20261103093000 (P2/P3, the `@limits` block), 20261107090000 (P7 `grant`, its `@limits` block) and 20261110140100
- * (D2: R-DEP MB-ZIM A, R-KAT MB-TAL D, its `@limits` block). `match.exceptCodes` selects every role except those listed.
+ * (D2: R-DEP MB-ZIM A, R-KAT MB-TAL D, its `@limits` block); 20261110160000 creates the four YR roles with
+ * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -162,6 +176,47 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   { plan: "P7", match: { codes: ["R-FBM"] }, grant: { "QM-RAP": ["R"], "QS-RAP": ["R"], "RO-SLA": ["R"] } },
   { plan: "P7", match: { codes: ["R-DEP"] }, grant: { "MB-RAP": ["R"] } },
   { plan: "P7", match: { codes: ["R-SGF"] }, grant: { "QM-RAP": ["R"], "QS-RAP": ["R"] } },
+  // YR (10 Kas 2026) — yönetici yardımcıları. Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız
+  // görüntüleme, raporlarda V,R; doluluk dosyası yükler (MB-DOL O = previewOccupancy / commitOccupancy, R-DEP ile
+  // aynı eylem). Yükleme silme / görev yeniden üretme MB-DOL D ister ve verilmez. Elle oda girişi ayarı ekran
+  // matrisinde değil, manualRoomEntryAdmin.MANUAL_ENTRY_EDITOR_ROLES ile açılır.
+  {
+    plan: "YR",
+    match: { codes: ["R-MTY"] },
+    keep: {
+      "MB-KAT": ["V"],
+      "MB-KF": ["V"],
+      "MB-TUK": ["V"],
+      "MB-ZIM": ["V"],
+      "MB-TAL": ["V"],
+      "MB-DOL": ["V"],
+      "MB-PERS": ["V"],
+      "MB-DND": ["V"],
+      "MB-RAP": ["V", "R"],
+      "MB-TAN": ["V"],
+    },
+    grant: { "MB-DOL": ["O"] },
+  },
+  // QR Menü Yöneticisi (varsayım: ürün sahibi ayrıntı vermedi): menü ağacı / çeviri / masa QR'ları (QM-MEN) ve
+  // outlet tasarımı (QM-TEM) V,O,D; menü raporları V,R; garson çağrıları (QM-CAG) ve QR_ORDER yok.
+  {
+    plan: "YR",
+    match: { codes: ["R-QMY"] },
+    keep: { "QM-MIS": ["V"], "QM-CAG": [], "QM-MEN": ["V", "O", "D"], "QM-TEM": ["V", "O", "D"], "QM-RAP": ["V"] },
+    grant: { "QM-RAP": ["R"] },
+  },
+  // Outlet Yöneticisi: atandığı outlet'lerde (OutletMember) kasa ekranı ve sipariş raporları V,R; yazma yok.
+  {
+    plan: "YR",
+    match: { codes: ["R-OUY"] },
+    keep: { "QS-KUY": [], "QS-KAS": ["V", "R"], "QS-KDS": [], "QS-FIS": [], "QS-IPT": [], "QS-RAP": ["V", "R"] },
+  },
+  // Mutfak Yöneticisi: yalnız KDS görüntüleme.
+  {
+    plan: "YR",
+    match: { codes: ["R-MUY"] },
+    keep: { "QS-KUY": [], "QS-KAS": [], "QS-KDS": ["V"], "QS-FIS": [], "QS-IPT": [], "QS-RAP": [] },
+  },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];
@@ -203,6 +258,7 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
 
   if (screen.moduleKey === "CORE") {
     if (CORE_ALL_ROLES.has(screen.code)) return VIEW_REPORT;
+    if (DELEGATE_MANAGERS.has(role.code)) return DELEGATE_CORE.has(screen.code) ? VIEW_REPORT : [];
     if (CORE_DEFINITIONS.has(screen.code)) {
       if (role.code === "R-ITT") return DEFINITIONS_VIEW_ONLY;
       return role.kind === "YONETIM" ? DEFINITIONS_MANAGE : [];

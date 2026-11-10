@@ -1,7 +1,7 @@
 import type { Order, OrderKind, Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { can } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
@@ -93,9 +93,12 @@ async function visibleQueue(ctx: Ctx, outletId: string): Promise<QueueOrder[]> {
   const outlet = await prisma.outlet.findUnique({ where: { id: outletId }, select: { hotelId: true } });
   if (!outlet || !ctx.hotelIds.includes(outlet.hotelId)) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
   if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
-  const all = await can(ctx, "QS-KUY", "A", outlet.hotelId);
+  // Approvers see the whole queue, editors their own and unassigned orders; a cashier-screen viewer without
+  // either (QS-KAS V, e.g. Outlet Yöneticisi) sees the whole queue read-only (writes stay on canApproveOrder).
+  let all = await can(ctx, "QS-KUY", "A", outlet.hotelId);
   if (!all && !(await can(ctx, "QS-KUY", "D", outlet.hotelId))) {
-    throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
+    await assertCan(ctx, "QS-KAS", "V", outlet.hotelId);
+    all = true;
   }
   return prisma.order.findMany({
     where: {

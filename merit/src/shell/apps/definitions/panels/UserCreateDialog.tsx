@@ -31,7 +31,7 @@ export function roleMatchesCategory(role: { code: string; kind: string }, cat: U
   if (cat === "YONETICI") {
     return (
       role.kind === "YONETIM" ||
-      ["R-OTM", "R-FBM", "R-DEP", "R-HKS", "R-SGF", "R-MUS", "R-KAS"].includes(role.code)
+      ["R-OTM", "R-FBM", "R-DEP", "R-HKS", "R-SGF", "R-MUS", "R-KAS", "R-OUY", "R-MUY"].includes(role.code)
     );
   }
   if (cat === "KULLANICI") {

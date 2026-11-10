@@ -39,8 +39,8 @@ async function ctxOf(roleCode: string) {
 }
 
 describe("resolveLanding (gerçek test DB)", () => {
-  it("17 rolün hepsi katalogda gerçek bir page.tsx'e iner, QM-MIS asla dönmez", async () => {
-    expect(ROLES).toHaveLength(17);
+  it("21 rolün hepsi katalogda gerçek bir page.tsx'e iner, QM-MIS asla dönmez", async () => {
+    expect(ROLES).toHaveLength(21);
     for (const role of ROLES) {
       const landing = await resolveLanding(await ctxOf(role.code));
       expect(landing.fallback, role.code).toBe(false);

@@ -36,7 +36,7 @@ registerMinibarApps();
 registerMybarApps();
 
 export type ShellClientProps = {
-  user: { id: string; fullName: string; roleId: string };
+  user: { id: string; fullName: string; roleId: string; roleCode: string };
   hotels: HotelInfo[];
   /** visibleScreens(ctx, hotelId) for every hotel in scope: screen codes the user may view there. */
   screensByHotel: Record<string, string[]>;
@@ -71,8 +71,10 @@ export function ShellClient({
   // limited per hotel by the store (screensByHotel).
   const apps = useMemo(() => {
     const visible = new Set(Object.values(screensByHotel).flat());
-    return getApps().filter((a) => visible.has(a.screenCode));
-  }, [screensByHotel]);
+    return getApps().filter(
+      (a) => visible.has(a.screenCode) && (!a.roleCodes || a.roleCodes.includes(user.roleCode)),
+    );
+  }, [screensByHotel, user.roleCode]);
   const appIds = useMemo(() => apps.map((a) => a.id), [apps]);
   useShellShortcuts();
   useShellPersistence({

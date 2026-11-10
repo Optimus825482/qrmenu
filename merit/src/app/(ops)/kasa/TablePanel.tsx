@@ -15,7 +15,7 @@ export type TablePanelProps = {
   orders: PanelOrder[];
   calls: PanelCall[];
   waiters: { id: string; fullName: string }[];
-  capabilities: { approve: boolean; assign: boolean; reprint: boolean; createOrder: boolean };
+  capabilities: { approve: boolean; assign: boolean; reprint: boolean; createOrder: boolean; resolveCall?: boolean };
   currency: string;
   pricesShown: boolean;
   layout: "side" | "sheet";
@@ -170,9 +170,11 @@ export default function TablePanel({ table, orders, calls, waiters, capabilities
               <Icon name="bell" size={20} />
               <span className="font-semibold">{call.type}</span>
               {call.note ? <span className="text-sm">{call.note}</span> : null}
-              <button type="button" className="pos-btn ml-auto" disabled={busy} onClick={() => onResolveCall(call)}>
-                Yanıtla
-              </button>
+              {capabilities.resolveCall !== false ? (
+                <button type="button" className="pos-btn ml-auto" disabled={busy} onClick={() => onResolveCall(call)}>
+                  Yanıtla
+                </button>
+              ) : null}
             </div>
           ))}
         </section>

@@ -112,4 +112,23 @@ export function registerMinibarApps(): void {
       })),
     mobile: "none",
   });
+
+  // Minibar Takip Yöneticisi: the manual room entry switch without Denetim Masası (no CR-SYS). R-SYS keeps it
+  // in Denetim Masası → Minibar ve Kat. The server re-checks the role and the hotel (manualRoomEntryAdmin).
+  registerCatalogApp({
+    id: "minibar.elle-giris",
+    title: "Elle Oda Girişi",
+    launchLabel: "Elle Oda Girişi",
+    icon: "ayarlar",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-TUK",
+    roleCodes: ["R-MTY"],
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 720, h: 560, minW: 520, minH: 400 },
+    kind: "component",
+    component: () =>
+      import("@/shell/apps/ManualRoomEntryWindow").then((m) => ({ default: m.ManualRoomEntryWindow })),
+    mobile: "none",
+  });
 }
