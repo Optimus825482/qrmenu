@@ -61,8 +61,14 @@ async function run(now: Date): Promise<number> {
   });
 
   let count = 0;
+  // One lookup per hotel per run instead of one per candidate order.
+  const minutesByHotel = new Map<string, number>();
   for (const order of candidates) {
-    const minutes = await getSetting("order.approvalEscalationMinutes", order.hotelId);
+    let minutes = minutesByHotel.get(order.hotelId);
+    if (minutes === undefined) {
+      minutes = await getSetting("order.approvalEscalationMinutes", order.hotelId);
+      minutesByHotel.set(order.hotelId, minutes);
+    }
     const cutoff = new Date(now.getTime() - minutes * 60_000);
     if (order.createdAt >= cutoff) continue;
 
@@ -89,6 +95,7 @@ async function run(now: Date): Promise<number> {
           body,
           refType: "Order",
           refId: order.id,
+          fallbackHotelId: order.hotelId,
         },
         tx,
       );

@@ -135,8 +135,13 @@ export const notify = {
     });
   },
 
-  info(message: string): string {
-    const id = push({ kind: "info", message, durationMs: SUCCESS_MS });
+  info(message: string, opts?: { actionLabel?: string; onAction?: () => void | Promise<void>; durationMs?: number | null }): string {
+    const id = push({
+      kind: "info",
+      message,
+      durationMs: opts?.durationMs === undefined ? SUCCESS_MS : opts.durationMs,
+      ...(opts?.actionLabel && opts.onAction ? { actionLabel: opts.actionLabel, onAction: opts.onAction } : {}),
+    });
     if (notifyStore.getState().surface === "xp") setStatus(message);
     return id;
   },

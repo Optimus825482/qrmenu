@@ -169,6 +169,55 @@ describe("computePriorityPlan", () => {
     ]);
   });
 
+  it("KAT-7: varış hedefi DND tekrar hedefinden erkense varış kuralı (rank 2) öncelik alır", () => {
+    const dndLastAt = new Date("2026-07-15T07:30:00Z"); // tekrar 12:30 (120 dk)
+    const early = run([
+      item({ type: "ARRIVAL_KONTROL", roomId: "a", roomNumber: "101", arrivalTime: "12:00", status: "DND_BEKLIYOR", dndCount: 1, dndLastAt }),
+    ]).entries[0];
+    expect(early).toMatchObject({ rank: 2, remainingMin: 45 });
+    // DND tekrar hedefi (08:00Z = 11:00) varış hedefinden (14:45) önce: DND kuralı kalır.
+    const late = run(
+      [item({ type: "ARRIVAL_KONTROL", roomId: "b", roomNumber: "102", arrivalTime: "15:00", status: "DND_BEKLIYOR", dndCount: 1, dndLastAt })],
+      30,
+    ).entries[0];
+    expect(late.rank).toBe(5);
+  });
+
+  it("KAT-7: çıkış hedefi DND hedefinden erkense çıkış kuralı (rank 3) uygulanır", () => {
+    const e = run([
+      item({
+        type: "DEPARTURE_KONTROL",
+        roomNumber: "103",
+        departureTime: "11:00",
+        status: "DND_BEKLIYOR",
+        dndCount: 1,
+        dndLastAt: new Date("2026-07-15T08:00:00Z"),
+      }),
+    ]).entries[0];
+    expect(e).toMatchObject({ rank: 3, remainingMin: 60 });
+  });
+
+  it("KAT-8: gecikmiş odalar en çok gecikene göre sıralanır; gösterimde kalan 0", () => {
+    const out = run([
+      item({ type: "ARRIVAL_KONTROL", roomNumber: "101", arrivalTime: "10:30" }),
+      item({ type: "ARRIVAL_KONTROL", roomNumber: "102", arrivalTime: "09:00" }),
+      item({ type: "ARRIVAL_KONTROL", roomNumber: "103", arrivalTime: "10:00" }),
+    ]);
+    expect(out.entries.map((e) => e.roomNumber)).toEqual(["102", "103", "101"]);
+    expect(out.entries.every((e) => e.remainingMin === 0 && e.overdue)).toBe(true);
+    expect(out.entries[0]).not.toHaveProperty("sortMin");
+  });
+
+  it("KAT-8: çakışmalar da gecikmeye göre sıralanır", () => {
+    const out = run([
+      item({ type: "DEPARTURE_KONTROL", roomId: "x", roomNumber: "301", departureTime: "10:00" }),
+      item({ type: "ARRIVAL_KONTROL", roomId: "x", roomNumber: "301", arrivalTime: "14:00" }),
+      item({ type: "DEPARTURE_KONTROL", roomId: "y", roomNumber: "302", departureTime: "08:00" }),
+      item({ type: "ARRIVAL_KONTROL", roomId: "y", roomNumber: "302", arrivalTime: "14:00" }),
+    ]);
+    expect(out.entries.map((e) => e.roomNumber)).toEqual(["302", "301"]);
+  });
+
   it("boş giriş: entries [] ve bekleyen görev yok metni", () => {
     const out = run([]);
     expect(out.entries).toEqual([]);
@@ -208,5 +257,43 @@ describe("loadPriorityPlan", () => {
     await expect(plan.loadPriorityPlan(kat.ctx, { day: "x" } as never, NOW)).rejects.toMatchObject({ code: "VALIDATION" });
     const garson = await staff("R-GAR");
     await expect(plan.loadPriorityPlan(garson.ctx, { day: DAY }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    // Kapsam dışı ya da bilinmeyen otel sessizce oturum oteline düşmez.
+    await expect(plan.loadPriorityPlan(kat.ctx, { day: DAY, hotelId: other.hotelId }, NOW)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    await expect(plan.loadPriorityPlan(kat.ctx, { day: DAY, hotelId: "yok" }, NOW)).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    // Tek otelli kullanıcı "ALL" isterse doğrudan kendi otelini alır.
+    const single = await plan.loadPriorityPlan(kat.ctx, { day: DAY, hotelId: "ALL" }, NOW);
+    expect(single.selectedHotelId).toBe(w.hotelId);
+    expect(single.multiHotels).toBeUndefined();
+    expect(single.entries).toHaveLength(2);
+  });
+
+  it("ALL: yalnız yetkili oteller, otel başına QR bayrağı, birleşik entries yok", async () => {
+    const w = await minibarWorld({ rooms: 1 });
+    const other = await minibarWorld({ hotelCode: "DIAMOND", rooms: 1 });
+    const date = businessDay(DAY);
+    for (const [hotelId, roomId] of [
+      [w.hotelId, w.rooms[0].id],
+      [other.hotelId, other.rooms[0].id],
+    ]) {
+      const task = await testDb.dailyTask.create({ data: { hotelId, date, type: "INHOUSE_KONTROL" } });
+      await testDb.dailyTaskItem.create({ data: { taskId: task.id, roomId } });
+    }
+    await testDb.setting.create({ data: { hotelId: other.hotelId, key: "minibar.requireQrForControl", value: true } });
+
+    const kat = await staff("R-KAT", "ROYAL", ["DIAMOND"]);
+    const out = await plan.loadPriorityPlan(kat.ctx, { day: DAY, hotelId: "ALL" }, NOW);
+    expect(out.selectedHotelId).toBe("ALL");
+    expect(out.entries).toEqual([]);
+    expect(out).not.toHaveProperty("requireQrForControl");
+    const byHotel = new Map(out.multiHotels!.map((h) => [h.hotelId, h]));
+    expect(byHotel.get(w.hotelId)?.requireQrForControl).toBe(false);
+    expect(byHotel.get(other.hotelId)?.requireQrForControl).toBe(true);
+    expect(byHotel.get(other.hotelId)?.plan.entries.map((e) => e.seq)).toEqual([1]);
+    expect(out.summary.total).toBe(2);
   });
 });

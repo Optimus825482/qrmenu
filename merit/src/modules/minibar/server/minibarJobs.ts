@@ -2,7 +2,6 @@ import { formatInTimeZone } from "date-fns-tz";
 import { prisma } from "@/lib/prisma";
 import { businessDate, TZ } from "@/lib/time";
 import { announceMissingUpload } from "@/modules/radar/server/uploadAlerts";
-import { dayRange } from "./dates";
 import { missingUploadKinds } from "./depoService";
 
 /*
@@ -38,21 +37,12 @@ export async function announceOccupancyGaps(now = new Date()): Promise<{
   const missing: string[] = [];
 
   for (const hotel of hotels) {
-    const upload = await prisma.occupancyUpload.findFirst({
-      where: { hotelId: hotel.id, status: { not: "SILINDI" }, createdAt: dayRange(day) },
-      select: { id: true },
-    });
-    if (upload) continue;
+    // Per kind: one uploaded file (e.g. only IN_HOUSE) does not cover a missing ARRIVAL or DEPARTURE file.
+    const missingKinds = await missingUploadKinds(hotel.id, day);
+    if (missingKinds.length === 0) continue;
     missing.push(hotel.name);
     // G21: the radar signal does not depend on the mail switches; once per hotel, day and slot.
-    const missingKinds = await missingUploadKinds(hotel.id, day);
-    await announceMissingUpload({
-      hotelId: hotel.id,
-      date: day,
-      slot,
-      ...(missingKinds.length > 0 ? { missingKinds } : {}),
-      now,
-    });
+    await announceMissingUpload({ hotelId: hotel.id, date: day, slot, missingKinds, now });
   }
 
   return { checkedHotels: hotels.length, missingHotels: missing };

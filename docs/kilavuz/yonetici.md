@@ -28,7 +28,7 @@ Eğitim hesabı: egitim.admin. Parolayı eğitim sorumlusu paylaşır; bu belgey
 
 ![Online Kullanıcılar — eğitim örneği](img/yonetici-online.png)
 
-5. **Rapor Merkezi**: Raporu, oteli ve tarih aralığını seçin. Listeyi inceleyin; Excel veya PDF indirin. Yetkinize göre yalnız kendi otelinizi ya da atanmış outletinizi görebilirsiniz. Komuta Merkezi ve Canlı Radar canlı operasyonu izlemek içindir.
+5. **Raporlar**: Raporu, oteli ve tarih aralığını seçin. Listeyi inceleyin; Excel veya PDF indirin. Yetkinize göre yalnız kendi otelinizi ya da atanmış outletinizi görebilirsiniz. Komuta Merkezi ve Canlı Radar canlı operasyonu izlemek içindir.
 
 ![Rapor Merkezi — eğitim örneği](img/yonetici-rapor.png)
 

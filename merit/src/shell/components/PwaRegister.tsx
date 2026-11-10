@@ -23,6 +23,7 @@ export function PwaRegister() {
     listenForInstall();
     if (!("serviceWorker" in navigator)) return;
     if (process.env.NODE_ENV === "production") {
+      // New-version notice comes from AppUpdateNotifier (useAppUpdate: /api/version + waiting worker).
       navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
         // not fatal: the app works without it, it only cannot be installed in some browsers
       });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { OrderStatus } from "@/generated/prisma/client";
+import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
@@ -76,7 +76,7 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
   const now = new Date();
   const occMinutes = outlet.tableOccupancyMinutes;
   const scanCutoff = occMinutes !== null && occMinutes > 0 ? new Date(now.getTime() - occMinutes * 60_000) : null;
-  const [tables, todayOrders, calls, scans, printer, areaDefs] = await Promise.all([
+  const [tables, allOrders, calls, scans, printer, areaDefs] = await Promise.all([
     prisma.outletTable.findMany({
       where: { outletId },
       select: {
@@ -96,9 +96,12 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       orderBy: [{ label: "asc" }, { id: "asc" }],
     }),
     prisma.order.findMany({
-      where: { outletId, businessDate: today },
+      // Open (non-terminal) orders stay on the board whatever their business date; KPIs below count today only.
+      where: { outletId, OR: [{ businessDate: today }, { status: { in: [...OPEN_STATUSES] } }] },
       select: {
         id: true,
+        businessDate: true,
+        pricesShown: true,
         tableId: true,
         orderNo: true,
         status: true,
@@ -134,6 +137,7 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
     }),
   ]);
 
+  const dayOrders = allOrders.filter((order) => order.businessDate.getTime() === today.getTime());
   const callsByTable = new Map<string, number>();
   const callDetailByTable = new Map<string, { type: string; ageSec: number; note: string | null }>();
   for (const call of calls) {
@@ -150,10 +154,14 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
   const scanByTable = new Map<string, Date>();
   for (const scan of scans) if (scan.tableId && !scanByTable.has(scan.tableId)) scanByTable.set(scan.tableId, scan.createdAt);
   const ordersByTable = new Map<string, TableBoard["tables"][number]["openOrders"]>();
-  for (const order of todayOrders) {
+  for (const order of allOrders) {
     if (!order.tableId || !OPEN_STATUSES.some((status) => status === order.status)) continue;
     const rows = ordersByTable.get(order.tableId) ?? [];
-    const totalPrice = order.items.reduce((sum, item) => sum + (Number(item.unitPrice ?? 0) * item.qty), 0);
+    // Amounts only where the order was taken with prices shown (snapshots exist regardless).
+    const totalPrice = order.items
+      .reduce((sum, item) => (order.pricesShown && item.unitPrice ? sum.plus(item.unitPrice.mul(item.qty)) : sum), new Prisma.Decimal(0))
+      .toDecimalPlaces(2)
+      .toNumber();
     const itemsCount = order.items.reduce((sum, item) => sum + item.qty, 0);
     rows.push({
       id: order.id,
@@ -165,8 +173,8 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
     });
     ordersByTable.set(order.tableId, rows);
   }
-  const approvalTimes = todayOrders.flatMap((order) => order.approvedAt ? [seconds(order.createdAt, order.approvedAt)] : []);
-  const prepTimes = todayOrders.flatMap((order) => {
+  const approvalTimes = dayOrders.flatMap((order) => order.approvedAt ? [seconds(order.createdAt, order.approvedAt)] : []);
+  const prepTimes = dayOrders.flatMap((order) => {
     const from = order.prepStartedAt ?? order.approvedAt;
     return from && order.readyAt ? [seconds(from, order.readyAt)] : [];
   });
@@ -209,8 +217,8 @@ async function tableBoard(ctx: Ctx, outletId: string): Promise<TableBoard> {
       };
     }),
     kpis: {
-      todayOrders: todayOrders.length,
-      pending: todayOrders.filter((order) => order.status === "GONDERILDI").length,
+      todayOrders: dayOrders.length,
+      pending: dayOrders.filter((order) => order.status === "GONDERILDI").length,
       ...(average(approvalTimes) === undefined ? {} : { avgApprovalSec: average(approvalTimes) }),
       ...(average(prepTimes) === undefined ? {} : { avgPrepSec: average(prepTimes) }),
       openCalls: calls.length,
@@ -225,13 +233,15 @@ async function clearTable(ctx: Ctx, tableId: string): Promise<void> {
     where: { id: tableId },
     include: { outlet: { select: { hotelId: true } } },
   });
-  if (!table) throw new DomainError("NOT_FOUND", "Masa bulunamadı");
+  if (!table || !ctx.hotelIds.includes(table.outlet.hotelId)) throw new DomainError("NOT_FOUND", "Masa bulunamadı");
+  if (!outletAllowed(ctx, table.outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
   const hotelId = table.outlet.hotelId;
-  const isAllowed =
-    can(ctx, "QS-KAS", "D", hotelId) ||
-    can(ctx, "QS-KUY", "D", hotelId) ||
-    can(ctx, "QM-CAG", "D", hotelId);
-  if (!isAllowed) throw new DomainError("FORBIDDEN", "Bu masayı boşaltma yetkiniz yok");
+  const grants = await Promise.all([
+    can(ctx, "QS-KAS", "D", hotelId),
+    can(ctx, "QS-KUY", "D", hotelId),
+    can(ctx, "QM-CAG", "D", hotelId),
+  ]);
+  if (!grants.some(Boolean)) throw new DomainError("FORBIDDEN", "Bu masayı boşaltma yetkiniz yok");
 
   await prisma.$transaction(async (tx) => {
     const now = new Date();

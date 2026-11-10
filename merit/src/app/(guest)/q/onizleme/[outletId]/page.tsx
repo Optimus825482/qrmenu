@@ -1,7 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { isLocale, type Locale } from "@/lib/i18n/locales";
 import { prisma } from "@/lib/prisma";
+import { can } from "@/lib/rbac";
+import { currentUser } from "@/app/(admin)/admin/guard";
+import { assertOutletScope } from "@/modules/menu/server/menuNodeAccess";
 import { getMenu } from "@/modules/menu/server/guestMenu";
 import { guestState } from "@/modules/menu/server/guestState";
 import { GuestFrame } from "@/modules/menu/ui/guest/GuestFrame";
@@ -39,21 +42,36 @@ export default async function OutletMenuPreviewPage({
   const { outletId } = await params;
   const { theme: themeId, lang } = await searchParams;
 
+  // Staff-only preview: session + QM-MEN view right within the outlet's hotel and outlet scope.
+  const ctx = await currentUser();
+  if (!ctx) redirect(`/giris?next=${encodeURIComponent(`/q/onizleme/${outletId}`)}`);
+
   const outlet = await prisma.outlet.findUnique({
     where: { id: outletId },
-    select: { id: true, name: true, isActive: true },
+    select: { id: true, name: true, isActive: true, hotelId: true },
   });
 
   if (!outlet) {
     notFound();
   }
 
+  let permitted = ctx.hotelIds.includes(outlet.hotelId) && (await can(ctx, "QM-MEN", "V", outlet.hotelId));
+  if (permitted) {
+    try {
+      assertOutletScope(ctx, outlet.id);
+    } catch {
+      permitted = false;
+    }
+  }
+  if (!permitted) redirect("/yetkisiz?ekran=QM-MEN");
+
   const locale: Locale = typeof lang === "string" && isLocale(lang) ? lang : "tr";
   const state = await guestState(outlet.id);
   const menu = await getMenu(outlet.id, locale);
 
   let activeTheme = state.theme;
-  if (themeId) {
+  // Themes are a global catalogue (MenuTheme has no hotel link): only an existing theme id is accepted.
+  if (typeof themeId === "string" && themeId.length > 0 && themeId.length <= 64) {
     const overrideTheme = await prisma.menuTheme.findUnique({
       where: { id: themeId },
       select: { bg: true, accent: true, soft: true, textOnAccent: true },
@@ -63,49 +81,8 @@ export default async function OutletMenuPreviewPage({
     }
   }
 
-  const firstTable = await prisma.outletTable.findFirst({
-    where: { outletId: outlet.id, isActive: true },
-    select: { qrToken: true, label: true },
-  });
-
   return (
     <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
-      {firstTable ? (
-        <aside
-          style={{
-            position: "fixed",
-            bottom: 12,
-            right: 12,
-            zIndex: 9999,
-            background: "#0f172a",
-            color: "#f8fafc",
-            padding: "8px 14px",
-            borderRadius: "10px",
-            fontSize: "12px",
-            boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <span>Canlı Masa QR: <strong>{firstTable.label}</strong></span>
-          <a
-            href={`/q/${firstTable.qrToken}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              background: "#2563eb",
-              color: "#ffffff",
-              padding: "4px 8px",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
-          >
-            Masa Bağlantısını Aç ↗
-          </a>
-        </aside>
-      ) : null}
       <GuestFrame
         token="onizleme"
         locale={locale}

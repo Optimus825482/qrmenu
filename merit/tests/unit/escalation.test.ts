@@ -56,6 +56,20 @@ describe("escalation.run", () => {
     expect(await testDb.notification.count({ where: { type: "order.escalated" } })).toBe(1);
   });
 
+  it("outlet alıcısı yoksa otel yöneticisine düşer; bildirim sessizce yutulmaz", async () => {
+    const s = await orderSetup();
+    const otm = await staffCtx("otm", "R-OTM");
+    const now = new Date("2026-11-01T10:00:00.000Z");
+    await seedOrder(s, { createdAt: new Date(now.getTime() - 3 * 60_000) });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    expect(await escalation.run(now)).toBe(1);
+    const notes = await testDb.notification.findMany({ where: { type: "order.escalated" } });
+    expect(notes.map((n) => n.userId)).toContain(otm.user.id);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it("1 dk bekleyen siparişe dokunmaz", async () => {
     const s = await orderSetup();
     const now = new Date("2026-11-01T10:00:00.000Z");

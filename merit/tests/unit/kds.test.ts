@@ -48,6 +48,7 @@ describe("kds.board", () => {
     expect(ids(board)).toEqual({ NEW: [older.id, newer.id], PREP: [], READY: [] });
     expect(board.columns.NEW.map((row) => row.id)).not.toContain(sent.id);
     expect(board.columns.NEW[0]).toMatchObject({ tableLabel: "M1", items: [{ name: "Mojito", qty: 2 }] });
+    expect(Math.abs(board.serverNow - Date.now())).toBeLessThan(5_000); // age clock comes from the server
   });
 
   it("oda servisi siparişini göstermez (yalnız MASA)", async () => {

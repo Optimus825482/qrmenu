@@ -238,6 +238,30 @@ describe("orders.transition", () => {
     expect(row.cancelledAt).not.toBeNull();
   });
 
+  it("kdsEnabled=false: ONAYLANDI -> SERVIS_EDILDI serbest; KDS açıkken CONFLICT", async () => {
+    const off = await orderSetup({ outlet: { kdsEnabled: false } });
+    const gar = await staffCtx("gar-off", "R-GAR", off.outlet.id);
+    await testDb.tableAssignment.create({ data: { outletId: off.outlet.id, tableId: off.table.id, userId: gar.user.id } });
+    const order = await seedOrder(off, { status: "ONAYLANDI", approvedAt: new Date() });
+    await orders.transition(gar.ctx, order.id, "SERVIS_EDILDI", {});
+    expect(await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).toMatchObject({ status: "SERVIS_EDILDI", servedById: gar.user.id });
+
+    const on = await orderSetup({ outlet: { kdsEnabled: true, name: "Mutfaklı Bar" } });
+    const gar2 = await staffCtx("gar-on", "R-GAR", on.outlet.id);
+    const order2 = await seedOrder(on, { status: "ONAYLANDI", approvedAt: new Date() });
+    await expect(orders.transition(gar2.ctx, order2.id, "SERVIS_EDILDI", {})).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+
+  it("listForOutlet: önceki günden kalan açık sipariş görünür, kapalı olan görünmez", async () => {
+    const s = await orderSetup();
+    const { kas } = await actors(s);
+    const day = new Date(Date.UTC(2020, 0, 5));
+    const open = await seedOrder(s, { status: "ONAYLANDI", approvedAt: day, businessDate: day });
+    await seedOrder(s, { status: "SERVIS_EDILDI", businessDate: day });
+    const rows = await orders.listForOutlet(kas.ctx, s.outlet.id, {});
+    expect(rows.map((r) => r.id)).toEqual([open.id]);
+  });
+
   it("REDDEDILDI: rejectedAt ve sebep; order.rejected olayı sebebi taşır", async () => {
     const s = await orderSetup();
     const { kas } = await actors(s);

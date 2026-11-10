@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
+import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 import { notify } from "@/shell/notify";
 
 interface DndCheckHistoryItem {
@@ -124,6 +125,8 @@ export default function KatDolulukDetailPage() {
   const [loadingDnd, setLoadingDnd] = useState(false);
   const [dndNote, setDndNote] = useState("");
   const [submittingDnd, setSubmittingDnd] = useState(false);
+  // Idempotency key of the DND mark: the same until it succeeds (a retried tap is not a second mark).
+  const [dndKey, setDndKey] = useState(newRequestKey);
 
 
 
@@ -174,14 +177,18 @@ export default function KatDolulukDetailPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedRoom && selectedRoom.status !== "empty") {
+  // Opening a room card resets the dialog and loads its DND details (event handler, not an effect).
+  // Empty rooms have no DND action, so their history is not loaded.
+  const openRoom = (room: RoomCardData | null) => {
+    setSelectedRoom(room);
+    setDndKey(newRequestKey());
+    if (room && room.status !== "empty") {
       setDndNote("");
-      void loadRoomDnd(selectedRoom.id);
+      void loadRoomDnd(room.id);
     } else {
       setRoomDndData(null);
     }
-  }, [selectedRoom, loadRoomDnd]);
+  };
 
   const handleMarkDndFromDialog = async () => {
     if (!selectedRoom) return;
@@ -190,12 +197,14 @@ export default function KatDolulukDetailPage() {
       const res = await fetch(`/api/minibar/room/${selectedRoom.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: dndNote.trim() || undefined }),
+        body: JSON.stringify({ note: dndNote.trim() || undefined, clientRequestId: dndKey }),
+        signal: AbortSignal.timeout(15_000),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
       notify.success(json.message ?? `Oda ${selectedRoom.number} DND olarak işaretlendi.`);
       setDndNote("");
+      setDndKey(newRequestKey());
       await loadRoomDnd(selectedRoom.id);
       await loadFloor();
     } catch (e) {
@@ -355,9 +364,9 @@ export default function KatDolulukDetailPage() {
                   } else if (room.status === "arrival") {
                     cardTone = "border-accent/60 bg-accent/10";
                   } else if (room.status === "departure") {
-                    cardTone = "border-amber-500/50 bg-amber-500/10";
+                    cardTone = "border-warn/50 bg-warn/5";
                   } else if (room.status === "in_house") {
-                    cardTone = "border-sky-500/40 bg-sky-500/5";
+                    cardTone = "border-accent/30 bg-accent/5";
                   } else {
                     cardTone = "border-border/80 bg-surface/80";
                   }
@@ -376,13 +385,13 @@ export default function KatDolulukDetailPage() {
                   return (
                     <div
                       key={room.id}
-                      onClick={() => setSelectedRoom(room)}
+                      onClick={() => openRoom(room)}
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          setSelectedRoom(room);
+                          openRoom(room);
                         }
                       }}
                       className={`group flex flex-col justify-between rounded-2xl border p-4 transition hover:border-accent hover:shadow-md cursor-pointer text-left ${cardTone}`}
@@ -398,19 +407,19 @@ export default function KatDolulukDetailPage() {
                           <div className="flex flex-col items-end gap-1">
                             {/* Öncelikli kontrol yanıp sönen rozet */}
                             {isPriorityArrival ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold shadow-sm">
                                 <Icon name="warning" size={12} />
-                                🚨 Öncelikli Giriş
+                                Öncelikli Giriş
                               </span>
                             ) : isPriorityDnd ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold shadow-sm">
                                 <Icon name="warning" size={12} />
-                                ⚠️ DND Kontrolü!
+                                DND Kontrolü!
                               </span>
                             ) : isPriorityMybar ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold animate-pulse shadow-sm">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold shadow-sm">
                                 <Icon name="bell" size={12} />
-                                🛎️ MyBar Talebi
+                                MyBar Talebi
                               </span>
                             ) : null}
 
@@ -444,11 +453,11 @@ export default function KatDolulukDetailPage() {
                           <div
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedRoom(room);
+                              openRoom(room);
                             }}
                             className={`mt-2.5 inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold border transition ${
                               arrivalInspection.isOverdue
-                                ? "border-danger/50 bg-danger/15 text-danger font-bold animate-pulse"
+                                ? "border-danger/50 bg-danger/15 text-danger font-bold"
                                 : arrivalInspection.isUrgent
                                   ? "border-warn/50 bg-warn/15 text-warn font-bold"
                                   : "border-accent/40 bg-accent/10 text-accent"
@@ -469,7 +478,7 @@ export default function KatDolulukDetailPage() {
                           <div
                             className={`mt-2 inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-semibold border ${
                               dndStatus.isDue
-                                ? "border-danger/50 bg-danger/15 text-danger font-bold animate-pulse"
+                                ? "border-danger/50 bg-danger/15 text-danger font-bold"
                                 : "border-warn/40 bg-warn/10 text-warn"
                             }`}
                           >
@@ -501,7 +510,7 @@ export default function KatDolulukDetailPage() {
                         </div>
 
                         {room.hasMybarRequest ? (
-                          <span className="rounded-md bg-danger px-2 py-0.5 text-xs font-bold text-white animate-pulse">
+                          <span className="rounded-md bg-danger px-2 py-0.5 text-xs font-bold text-white">
                             MyBar!
                           </span>
                         ) : data?.settings?.requireQrForControl ? (
@@ -546,7 +555,7 @@ export default function KatDolulukDetailPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedRoom(null)}
+                onClick={() => openRoom(null)}
                 style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
                 className="rounded-xl border border-border bg-bg p-2 text-muted hover:text-text hover:bg-surface"
               >
@@ -652,11 +661,11 @@ export default function KatDolulukDetailPage() {
                             <span>Toplam {h.count} kontrol · Durum: {h.status}</span>
                           </div>
                           {h.checks.map((c, cIdx) => (
-                            <div key={cIdx} className="flex items-center justify-between text-muted text-[11px] pl-2 border-l-2 border-warn/40">
+                            <div key={cIdx} className="flex items-center justify-between text-muted text-xs pl-2 border-l-2 border-warn/40">
                               <span>
                                 {c.no}. Kontrol: {c.userName} ({new Date(c.at).toLocaleTimeString("tr-TR")})
                               </span>
-                              {c.note ? <span className="italic text-text">"{c.note}"</span> : null}
+                              {c.note ? <span className="italic text-text">&ldquo;{c.note}&rdquo;</span> : null}
                             </div>
                           ))}
                         </div>

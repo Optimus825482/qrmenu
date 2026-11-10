@@ -37,11 +37,15 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
   }, [checkPermission, enablePush]);
 
   useEffect(() => {
-    checkPermission();
-
+    // The initial state is already read from Notification.permission; no synchronous set here.
     // Sayfa açıldığında henüz sorulmamışsa doğrudan izin penceresini tetikle
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      void requestPermission();
+      Notification.requestPermission()
+        .then((res) => {
+          setPermission(res);
+          if (res === "granted") void enablePush().catch(() => {});
+        })
+        .catch(checkPermission);
     }
 
     // Kullanıcı tarayıcı ayarlarından (adres çubuğundaki kilit simgesi vb.) izni açarsa anında algıla
@@ -52,7 +56,7 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
       window.clearInterval(interval);
       window.removeEventListener("focus", checkPermission);
     };
-  }, [checkPermission, requestPermission]);
+  }, [checkPermission, enablePush]);
 
   // Bildirim izni verilmişse veya tarayıcı desteklemiyorsa hiçbir engel gösterme
   if (permission === "granted" || permission === "unsupported") {
@@ -94,7 +98,7 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
             </div>
             <p className="mt-1 text-xs leading-relaxed sm:text-sm">
               {isDenied
-                ? "Tarayıcınızda bildirimler engellenmiş! Yeni sipariş ve masa çağrılarını kaçırmamak için lütfen adres çubuğundaki kilit (🔒 / site ayarları) simgesine tıklayıp Bildirimler'e 'İzin Ver' seçeneğini işaretleyin."
+                ? "Tarayıcınızda bildirimler engellenmiş! Yeni sipariş ve masa çağrılarını kaçırmamak için lütfen adres çubuğundaki kilit (site ayarları) simgesine tıklayıp Bildirimler'e 'İzin Ver' seçeneğini işaretleyin."
                 : "Yeni siparişler, masa çağrıları ve durum güncellemelerini anında alabilmek için bildirim izni vermeniz zorunludur."}
             </p>
           </div>
@@ -114,7 +118,7 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
             <button
               type="button"
               onClick={() => void requestPermission()}
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-amber-700 active:scale-95 transition-all animate-pulse"
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-amber-700 active:scale-95 transition-all"
             >
               <Icon name="bell" size={16} />
               Bildirimlere İzin Ver

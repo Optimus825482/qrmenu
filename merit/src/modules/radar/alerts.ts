@@ -1,4 +1,5 @@
 // Client-safe alert derivation (spec 3.4). Pure: the same layers and clock always give the same alerts.
+import { SLA_WARN_RATIO } from "@/modules/order/server/roomService/slaConstants";
 import type { RadarAlert, RadarSnapshot } from "./types";
 
 export type AlertThresholds = {
@@ -27,7 +28,6 @@ export const KIND_LABEL: Record<RadarAlert["kind"], string> = {
 export const UPLOAD_DEADLINE_HOUR = 10;
 
 const MINUTE_MS = 60_000;
-const RS_WARN_RATIO = 0.8;
 
 const nicosiaClock = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Europe/Nicosia",
@@ -114,8 +114,8 @@ export function deriveAlerts(
   if (rs && rs.slaMinutes > 0) {
     const slaMs = rs.slaMinutes * MINUTE_MS;
     for (const o of rs.orders) {
-      const age = t - ms(o.createdAt);
-      const byAge: "OK" | "WARN" | "BREACH" = age >= slaMs ? "BREACH" : age >= slaMs * RS_WARN_RATIO ? "WARN" : "OK";
+      const age = t - ms(o.slaStartAt ?? o.createdAt);
+      const byAge: "OK" | "WARN" | "BREACH" = o.status === "TEYIT_BEKLIYOR" ? "OK" : age >= slaMs ? "BREACH" : age >= slaMs * SLA_WARN_RATIO ? "WARN" : "OK";
       const level = o.level === "BREACH" || byAge === "BREACH" ? "BREACH" : o.level === "WARN" || byAge === "WARN" ? "WARN" : "OK";
       if (level === "OK") continue;
       add({
@@ -124,7 +124,7 @@ export function deriveAlerts(
         kind: "RS_SLA",
         ref: { orderId: o.orderId },
         text: `Oda ${o.roomNumber}: #${o.orderNo} ${level === "BREACH" ? "SLA aşıldı" : "SLA'ya yaklaşıyor"}`,
-        since: o.createdAt,
+        since: o.slaStartAt ?? o.createdAt,
       });
     }
   }

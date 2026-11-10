@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { createUserOnboardingAction } from "@/modules/core/server/admin/actions/users";
 import type { CreatedUserCredentials, UserOptions, UserRow } from "@/modules/core/server/admin/users";
@@ -81,7 +81,17 @@ export function UserCreateDialog({
   const [pending, setPending] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
+  // Opening the dialog (or new initial values / role options while open) re-applies the initial hotel and role:
+  // state adjusted while rendering, no effect.
+  const [seenInit, setSeenInit] = useState<{ open: boolean; initialHotelId?: string; initialRoleId?: string; options: typeof options } | null>(null);
+  if (
+    !seenInit ||
+    seenInit.open !== open ||
+    seenInit.initialHotelId !== initialHotelId ||
+    seenInit.initialRoleId !== initialRoleId ||
+    seenInit.options !== options
+  ) {
+    setSeenInit({ open, initialHotelId, initialRoleId, options });
     if (open) {
       if (initialHotelId) setHotelId(initialHotelId);
       if (initialRoleId) {
@@ -92,7 +102,7 @@ export function UserCreateDialog({
         if (matching) setRoleId(matching.id);
       }
     }
-  }, [open, initialHotelId, initialRoleId, options]);
+  }
 
   if (!open) return null;
 
@@ -226,6 +236,7 @@ export function UserCreateDialog({
   const dialogNode = (
     <div
       className="xp-form-backdrop"
+      // preventDefault keeps focus inside the dialog when the backdrop is clicked.
       onMouseDown={(e) => e.target === e.currentTarget && e.preventDefault()}
     >
       <section
@@ -322,7 +333,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("SISTEM")}
                       >
-                        👑 Sistem Yöneticisi
+                        Sistem Yöneticisi
                       </button>
                       <button
                         type="button"
@@ -335,7 +346,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("YONETICI")}
                       >
-                        👔 Yönetici
+                        Yönetici
                       </button>
                       <button
                         type="button"
@@ -348,7 +359,7 @@ export function UserCreateDialog({
                         }}
                         onClick={() => handleCategoryChange("KULLANICI")}
                       >
-                        👤 Kullanıcı
+                        Kullanıcı
                       </button>
                     </div>
                     <p

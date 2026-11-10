@@ -422,6 +422,7 @@
   color: var(--mb-navy);
 }
 .mb-status-chip[data-status="KARSILANDI"] { border-color: var(--mb-ok); background: var(--mb-ok-bg); color: var(--mb-ok); }
+.mb-status-chip[data-status="KISMEN"] { border-color: var(--mb-gold); background: var(--mb-selected); color: var(--mb-ink); }
 .mb-status-chip[data-status="IPTAL"] { border-color: var(--mb-danger); background: var(--mb-danger-bg); color: var(--mb-danger); }
 .mb-status-name {
   margin: 0;

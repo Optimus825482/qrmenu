@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { isMailConfigured, sendMail } from "@/lib/mailer";
@@ -363,10 +364,10 @@ export async function sendDeveloperAlertMail(incident: DiagnosticIncidentData): 
       incident.severity === "CRITICAL" ? "#dc2626" : incident.severity === "HIGH" ? "#ea580c" : "#2563eb";
     const severityBadge =
       incident.severity === "CRITICAL"
-        ? "🚨 KRİTİK SİSTEM HATASI"
+        ? "KRİTİK SİSTEM HATASI"
         : incident.severity === "HIGH"
-          ? "⚠️ YÜKSEK ÖNCELİKLİ HATA"
-          : "ℹ️ SİSTEM UYARISI";
+          ? "YÜKSEK ÖNCELİKLİ HATA"
+          : "SİSTEM UYARISI";
 
     const html = `
 <!DOCTYPE html>
@@ -428,7 +429,7 @@ export async function sendDeveloperAlertMail(incident: DiagnosticIncidentData): 
       </div>
 
       <div class="rec-box">
-        <strong>💡 Önerilen Çözüm / Müdahale:</strong><br/>
+        <strong>Önerilen Çözüm / Müdahale:</strong><br/>
         ${incident.recommendation}
       </div>
 
@@ -527,7 +528,7 @@ export async function captureException(
         action: DIAGNOSTIC_ACTION,
         entity: DIAGNOSTIC_ENTITY,
         entityId: errorId,
-        after: incidentData as unknown as any,
+        after: incidentData as unknown as Prisma.InputJsonValue,
       },
     });
   } catch (dbErr) {
@@ -556,7 +557,7 @@ export async function captureException(
         // Update DB record with mail status
         await prisma.auditLog.updateMany({
           where: { action: DIAGNOSTIC_ACTION, entityId: errorId },
-          data: { after: incidentData as unknown as any },
+          data: { after: incidentData as unknown as Prisma.InputJsonValue },
         });
       }
     }
@@ -630,7 +631,7 @@ export async function resolveDiagnosticIncident(id: string, note?: string, resol
 
   await prisma.auditLog.update({
     where: { id },
-    data: { after: data as unknown as any },
+    data: { after: data as unknown as Prisma.InputJsonValue },
   });
 
   return true;

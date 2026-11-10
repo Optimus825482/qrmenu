@@ -6,6 +6,9 @@ import { slaStart } from "@/modules/order/server/roomService/slaConstants";
 import { defineReport, type ReportRow } from "@/modules/reporting/server/types";
 import { min1 } from "./util";
 
+/** Orders read per run; beyond it the report is flagged truncated instead of loading the whole range. */
+const ORDER_CAP = 50_000;
+
 type Bucket = { day: string; hotelId: string; orders: number; cancelled: number; secs: number[]; late: number };
 
 /**
@@ -26,7 +29,7 @@ export const rsSla = defineReport({
   paramFields: [],
   paramsSchema: z.object({}),
   async run(scope) {
-    const orders = await prisma.order.findMany({
+    const fetched = await prisma.order.findMany({
       where: {
         hotelId: { in: scope.hotelIds },
         kind: "ODA_SERVISI",
@@ -41,7 +44,11 @@ export const rsSla = defineReport({
         phoneConfirmedAt: true,
         deliveredAt: true,
       },
+      orderBy: [{ businessDate: "asc" }, { id: "asc" }],
+      take: ORDER_CAP + 1,
     });
+    const capped = fetched.length > ORDER_CAP;
+    const orders = capped ? fetched.slice(0, ORDER_CAP) : fetched;
     const hotels = await prisma.hotel.findMany({
       where: { id: { in: scope.hotelIds } },
       select: { id: true, name: true },
@@ -106,7 +113,7 @@ export const rsSla = defineReport({
             ]
           : []),
       ],
-      truncated: false,
+      truncated: capped,
     };
   },
 });

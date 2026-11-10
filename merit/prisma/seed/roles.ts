@@ -68,7 +68,8 @@ const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
  * survive (intersection with the profile actions, `[]` = no row at all). Entries apply in order.
  *
  * Migrations repeat the new entries for databases seeded earlier: 0005 (P5), 20261102214000 (R-KAT),
- * 20261103093000 (P2/P3, the `@limits` block) and 20261107090000 (P7 `grant`, its `@limits` block). `match.exceptCodes` selects every role except those listed.
+ * 20261103093000 (P2/P3, the `@limits` block), 20261107090000 (P7 `grant`, its `@limits` block) and 20261110140100
+ * (D2: R-DEP MB-ZIM A, R-KAT MB-TAL D, its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
   plan: "P5" | "P2" | "P3" | "P7";
@@ -121,7 +122,8 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   },
   // P2: definitions and pool (Zimmet Havuzu).
   { plan: "P2", match: { codes: ["R-OTM"] }, keep: { "MB-TAN": ["V", "O", "D"], "MB-ZIM": ["V"] } },
-  { plan: "P2", match: { codes: ["R-DEP"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "O", "D"] } },
+  // D2 (10 Kas 2026): the warehouse corrects counts on the pool (MB-ZIM A); see pool.countPool.
+  { plan: "P2", match: { codes: ["R-DEP"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "O", "D", "A"] } },
   { plan: "P2", match: { codes: ["R-HKS"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "R"] } },
   { plan: "P2", match: { codes: ["R-KAT"] }, keep: { "MB-TAN": [], "MB-ZIM": ["V", "D"] } },
   // P3: floor operation, requests, occupancy upload, DND.
@@ -133,7 +135,9 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
       "MB-KF": ["V"],
       "MB-TUK": ["V", "O", "D"],
       "MB-ZIM": ["V", "D"],
-      "MB-TAL": ["V", "O"],
+      // D (D2, 10 Kas 2026): correction requests of past-dated records (roomCheckService.createCorrectionRequest).
+      // The warehouse steps also need A, so this does not make the floor role a warehouse operator.
+      "MB-TAL": ["V", "O", "D"],
       "MB-DND": ["V"],
       "MB-DOL": [],
     },
@@ -145,7 +149,7 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
       "MB-KAT": ["V"],
       "MB-KF": [],
       "MB-TUK": ["V"],
-      "MB-ZIM": ["V", "O", "D"],
+      "MB-ZIM": ["V", "O", "D", "A"],
       "MB-TAL": ["V", "D", "A"],
       "MB-DOL": ["V", "O", "D"],
       "MB-DND": ["V"],

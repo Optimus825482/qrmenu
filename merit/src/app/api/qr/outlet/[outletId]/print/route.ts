@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 import { DomainError } from "@/lib/result";
+import { parsePrintTemplate, parsePrintTheme } from "@/modules/menu/server/printOptions";
 import * as tableQr from "@/modules/menu/server/tableQr";
 
 export const runtime = "nodejs";
@@ -16,8 +17,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ outl
     const url = new URL(request.url);
     const areaId = url.searchParams.get("areaId") || undefined;
     const tableId = url.searchParams.get("tableId") || undefined;
-    const template = (url.searchParams.get("template") as "stand" | "compact" | "badge" | null) || undefined;
-    const theme = (url.searchParams.get("theme") as "royal" | "classic" | "dark" | null) || undefined;
+    const template = parsePrintTemplate(url.searchParams.get("template"));
+    const theme = parsePrintTheme(url.searchParams.get("theme"));
     const html = await tableQr.printHtml(ctx, outletId, { areaId, tableId, template, theme });
     return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", ...NO_STORE } });
   } catch (error) {

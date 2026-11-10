@@ -12,12 +12,16 @@ import { notify } from "@/modules/core/server/notifications";
 import { type Notifier, sweepSessions } from "@/modules/core/server/sessionSweeper";
 import { registerMinibarJobs } from "@/modules/minibar/server/jobs";
 import { registerReportingJobs } from "@/modules/reporting/server/jobs";
+import { mybarStaleSweep } from "@/modules/mybar/server/staleSweep";
+import { mybarCheckoutSweep } from "@/modules/mybar/server/checkout";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
 export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
+export const MYBAR_STALE_QUEUE = "mybar.stale-sweep";
+export const MYBAR_CHECKOUT_QUEUE = "mybar.checkout-sweep";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -99,6 +103,21 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(ORDER_ESCALATION_QUEUE, async () => {
       const escalated = await escalation.run(new Date());
       if (escalated > 0) console.log(`[order.escalation] ${escalated} sipariş yükseltildi`);
+    });
+
+    // MyBar: a request nobody has seen for radar.mybarStaleMinutes is escalated once to depot / management.
+    await boss.createQueue(MYBAR_STALE_QUEUE); // idempotent
+    await boss.schedule(MYBAR_STALE_QUEUE, "* * * * *", null, { tz: TZ });
+    await boss.work(MYBAR_STALE_QUEUE, async () => {
+      const escalated = await mybarStaleSweep(new Date());
+      if (escalated > 0) console.log(`[mybar.stale-sweep] ${escalated} talep yükseltildi`);
+    });
+    // MyBar: open requests of rooms whose guest checked out (occupancy uploads) are cancelled by the system.
+    await boss.createQueue(MYBAR_CHECKOUT_QUEUE); // idempotent
+    await boss.schedule(MYBAR_CHECKOUT_QUEUE, "* * * * *", null, { tz: TZ });
+    await boss.work(MYBAR_CHECKOUT_QUEUE, async () => {
+      const cancelled = await mybarCheckoutSweep(new Date());
+      if (cancelled > 0) console.log(`[mybar.checkout-sweep] ${cancelled} talep çıkış nedeniyle iptal edildi`);
     });
 
     // The six queue/DND/upload jobs: 00:01 daily tasks + DND catch-up, 10:00/18:00 upload warnings,

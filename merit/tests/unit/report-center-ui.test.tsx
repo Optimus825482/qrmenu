@@ -95,8 +95,8 @@ describe("ReportCenter — katalog", () => {
   it("raporlar modüle göre gruplanır; boş katalogda mesaj", async () => {
     render(<ReportCenter />);
     const nav = await screen.findByRole("navigation", { name: "Raporlar" });
-    const minibar = within(nav).getByRole("region", { name: "Minibar" });
-    expect(within(nav).getByRole("region", { name: "QR Menü" })).toBeTruthy();
+    const minibar = within(nav).getByRole("region", { name: "Minibar Operasyonları" });
+    expect(within(nav).getByRole("region", { name: "QR Menü & Misafir İlgi Analizi" })).toBeTruthy();
     expect(within(minibar).getAllByRole("button").map((b) => b.textContent)).toEqual(["Tüketim", "Zimmet Durumu"]);
     cleanup();
     listMock.mockResolvedValue({ ok: true, data: [] });

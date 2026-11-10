@@ -69,7 +69,8 @@ export async function depoDashboard(ctx: Ctx, day: string = businessDate(), now:
     prisma.stockRequest.count({ where: { hotelId, status: "BEKLEMEDE" } }),
     prisma.minibarCorrectionRequest.count({ where: { hotelId, status: "BEKLIYOR" } }),
     prisma.hotelStock.findMany({
-      where: { hotelId, product: { isActive: true } },
+      // A deactivated product still counts while the hotel holds some of it.
+      where: { hotelId, OR: [{ product: { isActive: true } }, { remainingQty: { gt: 0 } }] },
       select: { productId: true, remainingQty: true, criticalLevel: true, product: { select: { name: true } } },
     }),
     prisma.roomDnd.count({ where: { hotelId, date, status: "AKTIF" } }),

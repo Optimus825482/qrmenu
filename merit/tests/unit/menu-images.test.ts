@@ -226,4 +226,33 @@ describe("menuImages", () => {
     expect(node.imageUrl).toBe(replaced.imageUrl);
     expect(node.imageUrls).toEqual([replaced.imageUrl, urlA]);
   });
+
+  it("MEN-8: öğe silinince galerinin tüm dosyaları silinir (yalnız ana görsel değil)", async () => {
+    const { ctx, cat } = await setup();
+    await images.upload(ctx, cat.id, file(await png("#aa0000")));
+    const { imageUrls } = await images.upload(ctx, cat.id, file(await png("#00aa00")));
+    expect(imageUrls).toHaveLength(2);
+    await tree.remove(ctx, cat.id);
+    for (const url of imageUrls) {
+      expect(fs.existsSync(path.join(dir, url.slice("/uploads/".length)))).toBe(false);
+    }
+  });
+
+  it("MEN-8: öğe başına görsel sayısı sınırlı; aşan yüklemenin dosyaları diskte kalmaz", async () => {
+    const { ctx, cat } = await setup();
+    // Well-separated colours: near-identical flat images re-encode to the same hash-named file and would collapse into one.
+    const hex = (n: number) => (n % 256).toString(16).padStart(2, "0");
+    const colors = Array.from({ length: images.MAX_IMAGES_PER_NODE }, (_, i) => `#${hex(i * 53)}${hex(i * 97 + 40)}${hex(i * 29 + 200)}`);
+    const all = await Promise.all(colors.map((c) => png(c)));
+    await images.uploadMultiple(ctx, cat.id, all.map((b) => file(b)));
+    const extra = await png("#ffeedd");
+    await expect(images.upload(ctx, cat.id, file(extra))).rejects.toMatchObject({ code: "VALIDATION" });
+    const node = await testDb.menuNode.findUniqueOrThrow({ where: { id: cat.id } });
+    expect(node.imageUrls).toHaveLength(images.MAX_IMAGES_PER_NODE);
+    const onDisk = fs.readdirSync(path.join(dir, "menu", cat.outletId));
+    expect(onDisk).toHaveLength(images.MAX_IMAGES_PER_NODE);
+    await expect(
+      images.uploadMultiple(ctx, cat.id, Array.from({ length: images.MAX_IMAGES_PER_NODE + 1 }, () => file(extra))),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+  });
 });

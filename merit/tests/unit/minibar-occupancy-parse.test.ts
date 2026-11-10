@@ -1,6 +1,44 @@
+import { deflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
-import { OCCUPANCY_MAX_BYTES, OCCUPANCY_MAX_COLUMNS, OCCUPANCY_MAX_ROWS, parseDateCell, parseTimeCell, parseWorkbook } from "@/modules/minibar/server/occupancyParse";
+import {
+  assertZipBudget,
+  OCCUPANCY_MAX_BYTES,
+  OCCUPANCY_MAX_COLUMNS,
+  OCCUPANCY_MAX_ROWS,
+  OCCUPANCY_MAX_UNCOMPRESSED,
+  parseDateCell,
+  parseTimeCell,
+  parseWorkbook,
+} from "@/modules/minibar/server/occupancyParse";
 import { buildP4001Xlsx, buildStandardXlsx } from "../helpers/xlsx";
+
+/** Minimal one-entry zip; `declared` is written into both the local and the central header. */
+function zipOf(method: 0 | 8, body: Buffer, declared: number): Buffer {
+  const name = Buffer.from("a.bin");
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt16LE(method, 8);
+  local.writeUInt32LE(body.length, 18);
+  local.writeUInt32LE(declared, 22);
+  local.writeUInt16LE(name.length, 26);
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt16LE(method, 10);
+  central.writeUInt32LE(body.length, 20);
+  central.writeUInt32LE(declared, 24);
+  central.writeUInt16LE(name.length, 28);
+  const dirOffset = local.length + name.length + body.length;
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(1, 8);
+  eocd.writeUInt16LE(1, 10);
+  eocd.writeUInt32LE(central.length + name.length, 12);
+  eocd.writeUInt32LE(dirOffset, 16);
+  return Buffer.concat([local, name, body, central, name, eocd]);
+}
 
 const TODAY = "2026-11-03";
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
@@ -232,6 +270,34 @@ describe("parseWorkbook: boyut sınırı", () => {
     const headers = ["Room no", "Arrival", "Departure", ...Array.from({ length: OCCUPANCY_MAX_COLUMNS }, (_, i) => `X${i}`)];
     const data = await buildStandardXlsx([["101", d("2026-11-01"), d("2026-11-05")]], headers);
     expect(await messageOf(parseWorkbook(data, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+  });
+
+  it("SEC-18: zip dizininde bildirilen açılmış boyut sınırı aşarsa açmadan reddedilir", async () => {
+    const data = await buildStandardXlsx([["101", d("2026-11-01"), d("2026-11-05"), 2]], ["Room no", "Arrival", "Departure", "Adult"]);
+    expect(() => assertZipBudget(data)).not.toThrow();
+    const bomb = Buffer.from(data);
+    const dir = bomb.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02])); // first central directory entry
+    expect(dir).toBeGreaterThan(0);
+    bomb.writeUInt32LE(OCCUPANCY_MAX_UNCOMPRESSED + 1, dir + 24);
+    expect(await messageOf(parseWorkbook(bomb, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+    const zip64 = Buffer.from(data);
+    zip64.writeUInt32LE(0xffffffff, dir + 24);
+    expect(await messageOf(parseWorkbook(zip64, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+  });
+
+  it("SEC-18b: başlıkta küçük beyan edilen ama gerçekte sınırı aşan girdi açma sırasında reddedilir", async () => {
+    const big = deflateRawSync(Buffer.alloc(OCCUPANCY_MAX_UNCOMPRESSED + 1024 * 1024)); // ~64 KB on disk
+    const bomb = zipOf(8, big, 100); // declares 100 bytes
+    expect(bomb.length).toBeLessThan(OCCUPANCY_MAX_BYTES);
+    expect(() => assertZipBudget(bomb)).toThrow("Dosya beklenenden büyük");
+    expect(await messageOf(parseWorkbook(bomb, { today: TODAY }))).toBe("Dosya beklenenden büyük");
+    // small real content with a lying (smaller) declaration is refused too
+    expect(() => assertZipBudget(zipOf(8, deflateRawSync(Buffer.alloc(5000)), 10))).toThrow("Dosya beklenenden büyük");
+    // stored entry whose declared size differs from its real bytes
+    expect(() => assertZipBudget(zipOf(0, Buffer.alloc(5000), 10))).toThrow("Dosya beklenenden büyük");
+    // honest declarations pass (deflated and stored)
+    expect(() => assertZipBudget(zipOf(8, deflateRawSync(Buffer.alloc(5000)), 5000))).not.toThrow();
+    expect(() => assertZipBudget(zipOf(0, Buffer.alloc(5000), 5000))).not.toThrow();
   });
 
   it("sınır içindeki sayfa kabul edilir", async () => {

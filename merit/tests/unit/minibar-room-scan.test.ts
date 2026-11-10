@@ -7,6 +7,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const rs = await import("@/modules/minibar/server/roomScan");
+const rv = await import("@/modules/minibar/server/roomVerification");
 const { publish } = await import("@/lib/realtime");
 
 beforeAll(resetReferenceData);
@@ -59,7 +60,7 @@ describe("resolveRoomByQr", () => {
     const w = await minibarWorld();
     const kat = await makeKat();
     const r = await rs.resolveRoomByQr(kat.ctx, `https://host/q/${w.room.qrToken}`, meta);
-    expect(r).toEqual({ roomId: w.room.id, floorId: w.floor.id, number: w.room.number });
+    expect(r).toEqual({ roomId: w.room.id, floorId: w.floor.id, number: w.room.number, method: "QR" });
     const logs = await testDb.qrScanLog.findMany();
     expect(logs).toHaveLength(1);
     expect(logs[0]).toMatchObject({ roomId: w.room.id, userId: kat.userId, kind: "PERSONEL", ok: true, ip: meta.ip, userAgent: meta.userAgent });
@@ -110,5 +111,80 @@ describe("resolveRoomByQr", () => {
     const otm = await staff("R-OTM");
     expect((await errOf(rs.resolveRoomByQr(otm.ctx, w.room.qrToken!, meta))).code).toBe("FORBIDDEN");
     expect(await testDb.qrScanLog.count()).toBe(0);
+  });
+});
+
+async function setSetting(hid: string, key: string, value: unknown) {
+  await testDb.setting.deleteMany({ where: { key, hotelId: hid } });
+  await testDb.setting.create({ data: { key, hotelId: hid, value: value as never } });
+}
+
+describe("QR zorunluluğu ve elle oda girişi (KAT-1, KAT-2)", () => {
+  it("QR zorunlu değilken oda numarası çalışır (ELLE) ve denetime yazılır", async () => {
+    const w = await minibarWorld();
+    const kat = await makeKat();
+    const r = await rs.resolveRoomByQr(kat.ctx, w.room.number, meta);
+    expect(r).toMatchObject({ roomId: w.room.id, method: "ELLE" });
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "ODA_DOGRULAMA_ELLE", userId: kat.userId } });
+    expect(log).toMatchObject({ entity: "Room", entityId: w.room.id, hotelId: w.hotelId });
+    expect(log.after).toMatchObject({ roomNumber: w.room.number, method: "ELLE" });
+  });
+
+  it("QR zorunluyken oda numarası varsayılan KAPALI: FORBIDDEN, kanıt yazılmaz", async () => {
+    const w = await minibarWorld();
+    const kat = await makeKat();
+    await setSetting(w.hotelId, "minibar.requireQrForControl", true);
+    const e = await errOf(rs.resolveRoomByQr(kat.ctx, w.room.number, meta));
+    expect(e.code).toBe("FORBIDDEN");
+    expect(await rv.hasRoomProof(testDb, { userId: kat.userId, roomId: w.room.id })).toBe(false);
+    expect(await testDb.auditLog.count({ where: { action: "ODA_DOGRULAMA_ELLE" } })).toBe(0);
+    expect(await rs.manualEntryInfo(kat.ctx)).toEqual({ manualEntry: "NONE" });
+    // QR (token) her zaman çalışır ve kanıt üretir.
+    expect((await rs.resolveRoomByQr(kat.ctx, w.room.qrToken!, meta)).method).toBe("QR");
+    expect(await rv.hasRoomProof(testDb, { userId: kat.userId, roomId: w.room.id })).toBe(true);
+  });
+
+  it("elle giriş otel, kat ya da oda bazında açılabilir", async () => {
+    const w = await minibarWorld({ rooms: 2 });
+    const kat = await makeKat();
+    await setSetting(w.hotelId, "minibar.requireQrForControl", true);
+    const [a, b] = w.rooms;
+
+    await setSetting(w.hotelId, "minibar.manualRoomEntryRoomIds", [a.id]);
+    expect(await rs.manualEntryInfo(kat.ctx)).toEqual({ manualEntry: "SOME" });
+    expect((await rs.resolveRoomByQr(kat.ctx, a.number, meta)).roomId).toBe(a.id);
+    expect((await errOf(rs.resolveRoomByQr(kat.ctx, b.number, meta))).code).toBe("FORBIDDEN");
+
+    await setSetting(w.hotelId, "minibar.manualRoomEntryFloorIds", [b.floorId]);
+    expect((await rs.resolveRoomByQr(kat.ctx, b.number, meta)).roomId).toBe(b.id);
+
+    await setSetting(w.hotelId, "minibar.manualRoomEntryRoomIds", []);
+    await setSetting(w.hotelId, "minibar.manualRoomEntryFloorIds", []);
+    await setSetting(w.hotelId, "minibar.manualRoomEntry", true);
+    expect(await rs.manualEntryInfo(kat.ctx)).toEqual({ manualEntry: "ALL" });
+    expect((await rs.resolveRoomByQr(kat.ctx, b.number, meta)).method).toBe("ELLE");
+    expect(await testDb.auditLog.count({ where: { action: "ODA_DOGRULAMA_ELLE", userId: kat.userId } })).toBe(3);
+  });
+
+  it("kanıt kullanıcı+oda için 10 dk geçerlidir", async () => {
+    const w = await minibarWorld();
+    const kat = await makeKat();
+    const other = await makeKat();
+    await setSetting(w.hotelId, "minibar.requireQrForControl", true);
+    const t0 = new Date("2026-07-10T07:00:00.000Z");
+    await rs.resolveRoomByQr(kat.ctx, w.room.qrToken!, meta, t0);
+    const at = (min: number) => new Date(t0.getTime() + min * 60_000);
+    const p = { userId: kat.userId, roomId: w.room.id, hotelId: w.hotelId };
+    await expect(rv.assertRoomVerified(p, at(10))).resolves.toBeUndefined();
+    await expect(rv.assertRoomVerified(p, at(11))).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(rv.assertRoomVerified({ ...p, userId: other.userId }, at(1))).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("manualEntryAllows: otel anahtarı, kat listesi, oda listesi", () => {
+    const room = { id: "r1", floorId: "f1" };
+    expect(rv.manualEntryAllows({ enabled: false, floorIds: [], roomIds: [] }, room)).toBe(false);
+    expect(rv.manualEntryAllows({ enabled: true, floorIds: [], roomIds: [] }, room)).toBe(true);
+    expect(rv.manualEntryAllows({ enabled: false, floorIds: ["f1"], roomIds: [] }, room)).toBe(true);
+    expect(rv.manualEntryAllows({ enabled: false, floorIds: [], roomIds: ["r1"] }, room)).toBe(true);
   });
 });

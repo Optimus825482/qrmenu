@@ -52,7 +52,7 @@ export type Wire = {
     waitSec: number;
     byUserId: string;
   };
-  "mybar.cancelled": { requestId: string; roomId: string; byUserId: string };
+  "mybar.cancelled": { requestId: string; roomId: string; byUserId?: string };
   "task.updated": {
     items?: { taskItemId: string; roomId: string; from: TaskStatusName | null; to: TaskStatusName }[];
     byUserId?: string;
@@ -129,7 +129,7 @@ export const RADAR_WIRE: { [K in keyof Wire]: z.ZodType<Wire[K]> } = {
     waitSec: count,
     byUserId: id,
   }),
-  "mybar.cancelled": z.strictObject({ requestId: id, roomId: id, byUserId: id }),
+  "mybar.cancelled": z.strictObject({ requestId: id, roomId: id, byUserId: id.optional() }),
   "task.updated": z.strictObject({
     items: z
       .array(

@@ -19,7 +19,7 @@ describe("SCREEN_LIMITS tek liste", () => {
 
   it("R-DEP", () => {
     expect(acts("R-DEP", "MB-TAN")).toBe(set("V"));
-    expect(acts("R-DEP", "MB-ZIM")).toBe(set("V", "O", "D"));
+    expect(acts("R-DEP", "MB-ZIM")).toBe(set("V", "O", "D", "A")); // D2: sayım düzeltmesi
     expect(acts("R-DEP", "MB-TAL")).toBe(set("V", "D", "A"));
     expect(acts("R-DEP", "MB-DOL")).toBe(set("V", "O", "D"));
     expect(acts("R-DEP", "MB-TUK")).toBe(set("V"));
@@ -32,7 +32,7 @@ describe("SCREEN_LIMITS tek liste", () => {
     expect(acts("R-KAT", "MB-TAN")).toBe("");
     expect(acts("R-KAT", "MB-DOL")).toBe("");
     expect(acts("R-KAT", "MB-ZIM")).toBe(set("V", "D"));
-    expect(acts("R-KAT", "MB-TAL")).toBe(set("V", "O"));
+    expect(acts("R-KAT", "MB-TAL")).toBe(set("V", "O", "D")); // D2: düzeltme talebi (KAT-6)
     expect(acts("R-KAT", "MB-TUK")).toBe(set("V", "O", "D"));
     expect(acts("R-KAT", "MB-DND")).toBe(set("V"));
     expect(acts("R-KAT", "MB-KF")).toBe(set("V"));
@@ -120,8 +120,8 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
     }
     expect(await read()).not.toEqual(expected);
 
-    // The @limits blocks of the migrations in order: P2/P3, then the P7 report grants.
-    for (const migration of ["20261103093000_minibar_tamamlama_temel", "20261107090000_p7_rapor"]) {
+    // The @limits blocks of the migrations in order: P2/P3, the P7 report grants, then D2 (R-DEP MB-ZIM A, R-KAT MB-TAL D).
+    for (const migration of ["20261103093000_minibar_tamamlama_temel", "20261107090000_p7_rapor", "20261110140100_minibar_depo_rol_yetkileri"]) {
       const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
       const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));
       expect(block.length).toBeGreaterThan(0);

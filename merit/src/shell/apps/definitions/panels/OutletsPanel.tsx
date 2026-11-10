@@ -22,6 +22,9 @@ import { OUTLET_AREA_LABELS, OUTLET_TYPE_LABELS, PRICE_DISPLAY_LABELS } from "./
 
 type Props = { hotelId: string; setStatus(text: string): void };
 
+/** Currencies offered in the outlet form (ISO 4217); a stored code outside the list stays selectable. */
+const CURRENCIES: readonly string[] = ["EUR", "TRY", "USD", "GBP", "RUB"];
+
 type Dialog = { mode: "new" } | { mode: "edit"; row: OutletRow } | null;
 type OutletGridRow =
   | { id: string; kind: "OUTLET"; outlet: OutletRow }
@@ -93,6 +96,8 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       hasOrdering: flag("hasOrdering"),
       orderingEnabled: flag("orderingEnabled"),
       priceDisplay: values.priceDisplay ?? "INHERIT",
+      // Only sent while the field is shown (prices may show); otherwise the stored currency stays.
+      ...(values.currency !== undefined ? { currency: values.currency } : {}),
       kdsEnabled: flag("kdsEnabled"),
       phoneConfirmRequired: flag("phoneConfirmRequired"),
       autoPrintReceipt: flag("autoPrintReceipt"),
@@ -254,6 +259,10 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
   const [orderingEnabled, setOrderingEnabled] = useState(editing?.orderingEnabled ?? false);
   const [kdsEnabled, setKdsEnabled] = useState(editing?.kdsEnabled ?? false);
   const [waiterAssignmentEnabled, setWaiterAssignmentEnabled] = useState(editing?.waiterAssignmentEnabled ?? false);
+  const [priceDisplay, setPriceDisplay] = useState<PriceDisplay>(editing?.priceDisplay ?? "INHERIT");
+  const currencies = editing?.currency && !CURRENCIES.includes(editing.currency)
+    ? [editing.currency, ...CURRENCIES]
+    : CURRENCIES;
 
   const onTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = e.target.value as OutletType;
@@ -303,7 +312,7 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
         />
       </Field>
       <Field name="priceDisplay" label="Fiyat gösterimi">
-        <select defaultValue={editing?.priceDisplay ?? "INHERIT"}>
+        <select value={priceDisplay} onChange={(e) => setPriceDisplay(e.target.value as PriceDisplay)}>
           {Object.values(PriceDisplay).map((price) => (
             <option key={price} value={price}>
               {PRICE_DISPLAY_LABELS[price]}
@@ -311,6 +320,17 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
           ))}
         </select>
       </Field>
+      {priceDisplay !== "HIDE" ? (
+        <Field name="currency" label="Para birimi">
+          <select defaultValue={editing?.currency ?? "EUR"} required={priceDisplay === "SHOW"}>
+            {currencies.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : null}
       <Field name="kdsEnabled" label="Mutfak ekranı (KDS)">
         <input
           type="checkbox"

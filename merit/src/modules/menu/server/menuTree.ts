@@ -12,7 +12,6 @@ import { ALLERGENS } from "../allergens";
 import { ITEM_TAG_IDS } from "../design";
 import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
-import { resolveCurrency } from "./priceDisplay";
 import { autoTranslateMenuNode } from "./translations";
 
 const SCREEN = "QM-MEN";
@@ -34,7 +33,7 @@ export type MenuTreeNode = {
   hasImage: boolean;
   imageUrl: string | null;
   imageUrls: string[];
-  translations: { lang: string; name: string; detail?: string; isVerified: boolean }[];
+  translations: { lang: string; name: string; detail?: string }[];
   children: MenuTreeNode[];
 };
 
@@ -140,9 +139,11 @@ async function emitChanged(
   await publish({ type: "menu.changed", hotelId, outletId, payload: { nodeId, op } }, tx);
 }
 
-type NodeRow = Prisma.MenuNodeGetPayload<{ include: { translations: true } }>;
+/** Node rows carry their outlet's currency: prices are always shown in the outlet's currency. */
+const NODE_INCLUDE = { translations: true, outlet: { select: { currency: true } } } as const;
+type NodeRow = Prisma.MenuNodeGetPayload<{ include: typeof NODE_INCLUDE }>;
 
-function toNode(row: NodeRow, currency?: string): MenuTreeNode {
+function toNode(row: NodeRow): MenuTreeNode {
   const urls: string[] = [];
   if (row.imageUrl) urls.push(row.imageUrl);
   for (const u of row.imageUrls ?? []) {
@@ -157,7 +158,7 @@ function toNode(row: NodeRow, currency?: string): MenuTreeNode {
     name: row.name,
     detail: row.detail,
     price: row.price === null ? null : row.price.toFixed(2),
-    currency: currency ?? row.currency,
+    currency: row.outlet.currency,
     allergens: row.allergens,
     tags: row.tags,
     isAvailable: row.isAvailable,
@@ -167,7 +168,7 @@ function toNode(row: NodeRow, currency?: string): MenuTreeNode {
     imageUrl: urls[0] ?? row.imageUrl,
     imageUrls: urls,
     translations: row.translations
-      .map((t) => ({ lang: t.lang, name: t.name, isVerified: t.isVerified, ...(t.detail ? { detail: t.detail } : {}) }))
+      .map((t) => ({ lang: t.lang, name: t.name, ...(t.detail ? { detail: t.detail } : {}) }))
       .sort((a, b) => a.lang.localeCompare(b.lang)),
     children: [],
   };
@@ -180,13 +181,12 @@ export async function list(ctx: Ctx, outletId: string): Promise<MenuTreeNode[]> 
     await assertMenuAccess(ctx, outlet, "V");
   }
   assertOutletScope(ctx, outletId);
-  const currency = await resolveCurrency(outlet.hotelId);
   const rows = await prisma.menuNode.findMany({
     where: { outletId },
-    include: { translations: true },
+    include: NODE_INCLUDE,
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
   });
-  const byId = new Map(rows.map((r) => [r.id, toNode(r, currency)]));
+  const byId = new Map(rows.map((r) => [r.id, toNode(r)]));
   const roots: MenuTreeNode[] = [];
   for (const row of rows) {
     const node = byId.get(row.id) as MenuTreeNode;
@@ -201,8 +201,7 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
   const outlet = await outletScope(outletId);
   await assertMenuAccess(ctx, outlet, "D");
   assertOutletScope(ctx, outletId);
-  const currency = await resolveCurrency(outlet.hotelId);
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const parent = input.parentId
       ? await tx.menuNode.findFirst({
           where: { id: input.parentId, outletId },
@@ -228,13 +227,12 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
         name: input.name,
         detail: input.detail,
         price: input.price,
-        currency,
         allergens: input.allergens ?? [],
         tags: input.kind === "OGE" ? (input.tags ?? []) : [],
         isAvailable: input.isAvailable ?? true,
         sortOrder: (max._max.sortOrder ?? -1) + 1,
       },
-      include: { translations: true },
+      include: NODE_INCLUDE,
     });
     await audit(tx, {
       userId: ctx.user.id,
@@ -245,9 +243,11 @@ export async function create(ctx: Ctx, outletId: string, raw: MenuNodeCreateInpu
       after: { outletId, parentId: row.parentId, kind: row.kind, name: row.name },
     });
     await emitChanged(tx, outlet.hotelId, outletId, row.id, "create");
-    void autoTranslateMenuNode(row.id, row.name, row.detail, outlet.hotelId, outletId);
-    return toNode(row, currency);
+    return toNode(row);
   });
+  // Only after commit: the background translation must see the committed row (and never a rolled-back one).
+  void autoTranslateMenuNode(created.id, created.name, created.detail, outlet.hotelId, outletId);
+  return created;
 }
 
 export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput): Promise<MenuTreeNode> {
@@ -255,8 +255,8 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
   const scope = await loadNodeScope(nodeId);
   await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
   assertOutletScope(ctx, scope.outletId);
-  const currency = await resolveCurrency(scope.hotelId);
-  return prisma.$transaction(async (tx) => {
+  let sourceChanged = false;
+  const updated = await prisma.$transaction(async (tx) => {
     const before = await tx.menuNode.findUnique({ where: { id: nodeId } });
     if (!before) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
     if (input.price !== undefined && input.price !== null && before.kind !== "OGE") {
@@ -272,7 +272,13 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
     if (input.allergens !== undefined) data.allergens = input.allergens;
     if (input.tags !== undefined) data.tags = input.tags;
     if (input.isActive !== undefined) data.isActive = input.isActive;
-    const row = await tx.menuNode.update({ where: { id: nodeId }, data, include: { translations: true } });
+    sourceChanged =
+      (input.name !== undefined && input.name !== before.name) ||
+      (input.detail !== undefined && input.detail !== before.detail);
+    // Translations follow the Turkish source only (K2): stale ones go with the old text, so guests see the
+    // Turkish fallback until the new automatic translation lands, never an outdated one.
+    if (sourceChanged) await tx.menuNodeTranslation.deleteMany({ where: { nodeId } });
+    const row = await tx.menuNode.update({ where: { id: nodeId }, data, include: NODE_INCLUDE });
     const snap = (n: { name: string; detail: string | null; price: Prisma.Decimal | null; allergens: string[]; tags: string[]; isActive: boolean }) => ({
       name: n.name,
       detail: n.detail,
@@ -291,11 +297,12 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
       after: snap(row),
     });
     await emitChanged(tx, scope.hotelId, scope.outletId, nodeId, "update");
-    if (input.name !== undefined || input.detail !== undefined) {
-      void autoTranslateMenuNode(nodeId, row.name, row.detail, scope.hotelId, scope.outletId);
-    }
-    return toNode(row, currency);
+    return toNode(row);
   });
+  if (sourceChanged) {
+    void autoTranslateMenuNode(nodeId, updated.name, updated.detail, scope.hotelId, scope.outletId);
+  }
+  return updated;
 }
 
 export async function move(ctx: Ctx, nodeId: string, raw: MenuNodeMoveInput): Promise<void> {
@@ -401,12 +408,12 @@ export async function remove(ctx: Ctx, nodeId: string): Promise<{ deactivated?: 
   const scope = await loadNodeScope(nodeId);
   await assertMenuAccess(ctx, { id: scope.outletId, hotelId: scope.hotelId, type: scope.outletType }, "D");
   assertOutletScope(ctx, scope.outletId);
-  let imageToRemove: string | null = null;
+  const imagesToRemove: string[] = [];
   const result = await prisma.$transaction(
     async (tx): Promise<{ deactivated?: true }> => {
       const node = await tx.menuNode.findUnique({
         where: { id: nodeId },
-        select: { name: true, imageUrl: true, isActive: true },
+        select: { name: true, imageUrl: true, imageUrls: true, isActive: true },
       });
       if (!node) throw new DomainError("NOT_FOUND", "Menü öğesi bulunamadı");
       if ((await tx.menuNode.count({ where: { parentId: nodeId } })) > 0) {
@@ -436,12 +443,15 @@ export async function remove(ctx: Ctx, nodeId: string): Promise<{ deactivated?: 
         before: { name: node.name, parentId: scope.parentId, kind: scope.kind },
       });
       await emitChanged(tx, scope.hotelId, scope.outletId, nodeId, "delete");
-      imageToRemove = node.imageUrl;
+      // Every gallery file goes with the node, not only the primary one (MEN-8).
+      for (const url of [node.imageUrl, ...node.imageUrls]) {
+        if (url && !imagesToRemove.includes(url)) imagesToRemove.push(url);
+      }
       return {};
     },
   );
-  const image = imageToRemove as string | null;
-  if (image?.startsWith("/uploads/")) {
+  for (const image of imagesToRemove) {
+    if (!image.startsWith("/uploads/")) continue;
     try {
       await removeUpload(image.slice("/uploads/".length));
     } catch (error) {

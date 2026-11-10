@@ -10,10 +10,11 @@ const ICONS: Record<MybarStatusKey, IconName> = {
   BEKLIYOR: "clock",
   GORULDU: "eye",
   KARSILANDI: "check-circle",
+  KISMEN: "clock",
   IPTAL: "ban",
 };
 
-/** Request status screen: BEKLIYOR, GORULDU, KARSILANDI or IPTAL, live; plus the once-per-day message. */
+/** Request status screen: BEKLIYOR, GORULDU, KARSILANDI, KISMEN or IPTAL, live; plus the once-per-day message. */
 export function MybarStatus({
   request,
   dailyLimit,

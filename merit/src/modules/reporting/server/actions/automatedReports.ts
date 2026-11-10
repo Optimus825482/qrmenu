@@ -742,7 +742,7 @@ export async function runWizardReportAction(query: {
         orderBy: { createdAt: input.sortOrder === "asc" ? "asc" : "desc" },
       });
 
-      let totalOrders = orders.length;
+      const totalOrders = orders.length;
       let totalItems = 0;
       let totalAmount = 0;
 

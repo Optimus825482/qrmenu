@@ -26,7 +26,7 @@ export const SHOTS: Shot[] = [
     ["rehber", "Kurulum Rehberi", "Merit Royal"],
     ["tanimlar", "Tanımlamalar", "Merit Royal"],
     ["online", "Online Kullanıcılar", "Merit Royal"],
-    ["rapor", "Rapor Merkezi"],
+    ["rapor", "Raporlar"],
     ["menu", "Menü Yönetimi", "Merit Royal"],
   ].map(([id, app, hotel]) => shot("yonetici", id, app, "egitim.admin", "/admin", {
     app, hotel, target: "Yönetim",
@@ -34,7 +34,7 @@ export const SHOTS: Shot[] = [
       await page.getByRole("region", { name: "Menü Yönetimi · Merit Royal", exact: true }).getByRole("combobox", { name: "Outlet:" }).selectOption({ label: "Havuz Bar" });
     } } : {}),
     ...(id === "rapor" ? { prepare: async (page: Page) => {
-      const win = page.getByRole("region", { name: "Rapor Merkezi", exact: true });
+      const win = page.getByRole("region", { name: "Raporlar", exact: true });
       await win.getByRole("navigation", { name: "Raporlar" }).getByRole("button", { name: "Minibar Tüketim Raporu", exact: true }).click();
       await win.getByRole("button", { name: "Raporu Göster" }).click();
       await win.getByTestId("rc-totals").waitFor({ state: "visible" });

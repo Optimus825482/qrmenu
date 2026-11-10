@@ -136,7 +136,7 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
             disabled={isChecking || isUpdating}
             onClick={() => void handleManualCheck()}
           >
-            {isChecking ? "Denetleniyor..." : "🔍 Güncellemeleri Denetle"}
+            {isChecking ? "Denetleniyor..." : "Güncellemeleri Denetle"}
           </button>
 
           {hasUpdate ? (
@@ -151,7 +151,7 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
               disabled={isUpdating}
               onClick={() => void applyUpdate()}
             >
-              {isUpdating ? "Güncelleniyor..." : `🚀 Şimdi Güncelle (v${serverInfo?.version ?? "yeni"})`}
+              {isUpdating ? "Güncelleniyor..." : `Şimdi Güncelle (v${serverInfo?.version ?? "yeni"})`}
             </button>
           ) : null}
         </div>

@@ -8,6 +8,7 @@ import { APP_FOLDERS } from "../appFolders";
 import { SCREEN_GUIDES } from "@/modules/core/screenGuide";
 import { useWindowStore } from "../windowStore";
 import type { HotelInfo } from "./HotelPicker";
+import { Icon } from "@/components/icons/Icon";
 
 export const FOLDER_METADATA: Record<string, { title: string; subtitle: string; icon: string }> = {
   outlet: {
@@ -144,7 +145,7 @@ export function WindowBanner({
             htmlFor={`xp-hotel-select-${windowId}`}
             className="text-[11px] font-bold text-yellow-300 drop-shadow-xs flex items-center gap-1 whitespace-nowrap cursor-pointer select-none"
           >
-            <span className="text-xs" aria-hidden="true">🏨</span>
+            <Icon name="building" size={12} />
             <span>Otel:</span>
           </label>
           <select
@@ -154,7 +155,7 @@ export function WindowBanner({
             aria-label="Otel Seçimi"
             className="bg-white text-[#003399] font-bold text-xs px-2.5 py-0.5 rounded shadow-inner border border-[#003c9a] cursor-pointer hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 max-w-[210px] truncate"
           >
-            <option value="">🏢 Tüm Oteller (Konsolide)</option>
+            <option value="">Tüm Oteller (Konsolide)</option>
             {hotelList.map((h) => (
               <option key={h.id} value={h.id}>
                 {h.name}

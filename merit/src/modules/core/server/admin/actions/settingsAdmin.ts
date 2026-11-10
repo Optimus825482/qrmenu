@@ -22,19 +22,35 @@ export async function listSettingsAction(
   )(raw);
 }
 
+/**
+ * Keys only their own panel may write (it checks its own role list first): the manual room entry switch and
+ * lists are written by `saveManualEntryAction` (Denetim Masası → Minibar ve Kat → Elle oda girişi), never here.
+ */
+const PANEL_ONLY_KEY = /^minibar\.manualRoomEntry/;
+
+function assertGeneralWrite(k: string): void {
+  if (PANEL_ONLY_KEY.test(k)) {
+    throw new DomainError("FORBIDDEN", "Bu ayar yalnızca Elle oda girişi panelinden değiştirilebilir", {
+      fieldErrors: { key: ["Bu ayar yalnızca Elle oda girişi panelinden değiştirilebilir"] },
+    });
+  }
+}
+
 export async function setSettingAction(raw: unknown): Promise<Result<settingsAdmin.SettingItem>> {
   // The value is validated against the key's own schema by the service (field error on "value").
-  return safeAction(z.object({ hotelId, key, value: z.unknown() }), async (input) =>
-    settingsAdmin.set(await requireUser(), input.hotelId, input.key, input.value),
-  )(raw);
+  return safeAction(z.object({ hotelId, key, value: z.unknown() }), async (input) => {
+    assertGeneralWrite(input.key);
+    return settingsAdmin.set(await requireUser(), input.hotelId, input.key, input.value);
+  })(raw);
 }
 
 export async function clearSettingOverrideAction(
   raw: unknown,
 ): Promise<Result<settingsAdmin.SettingItem>> {
-  return safeAction(z.object({ hotelId: z.string().min(1), key }), async (input) =>
-    settingsAdmin.clearHotelOverride(await requireUser(), input.hotelId, input.key),
-  )(raw);
+  return safeAction(z.object({ hotelId: z.string().min(1), key }), async (input) => {
+    assertGeneralWrite(input.key);
+    return settingsAdmin.clearHotelOverride(await requireUser(), input.hotelId, input.key);
+  })(raw);
 }
 
 /** Translation key tests spend the system's API quota: system settings (CR-SYS) "edit", system scope. */

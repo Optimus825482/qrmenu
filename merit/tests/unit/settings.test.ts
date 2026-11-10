@@ -158,7 +158,8 @@ describe("setSetting", () => {
     await expect(setSetting(ctx, "price.display", "MAYBE" as never)).rejects.toMatchObject({
       code: "VALIDATION",
     });
-    await expect(setSetting(ctx, "price.currency", "eur" as never)).rejects.toMatchObject({
+    // K3: the currency is an outlet field now; the old setting key is unknown.
+    await expect(setSetting(ctx, "price.currency" as never, "EUR" as never)).rejects.toMatchObject({
       code: "VALIDATION",
     });
     await expect(setSetting(ctx, "mybar.maxQtyPerItem", 0 as never)).rejects.toMatchObject({
@@ -174,9 +175,8 @@ describe("setSetting", () => {
     const ctx = await admin();
     await setSetting(ctx, "mybar.maxQtyPerItem", 5);
     await setSetting(ctx, "mybar.maxQtyPerItem", "setup");
-    await setSetting(ctx, "price.currency", "USD");
     await setSetting(ctx, "qr.baseUrl", "https://menu.example.com");
-    expect(await getSetting("price.currency")).toBe("USD");
+    expect(await getSetting("qr.baseUrl")).toBe("https://menu.example.com");
   });
 
   it("sistem değeri: oluşturur, sonra aynı satırı günceller (tek satır), audit before/after yazar", async () => {

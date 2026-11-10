@@ -23,22 +23,26 @@ export const SETTING_SCHEMAS = {
   "session.minibarMaxOnlineMinutes": minutes,
   "session.warnBeforeMinutes": minutes,
   "session.idleMinutes": minutes,
+  "session.absoluteMaxMinutes": minutes,
   "session.singleDevice": flag,
   "session.singleTargetAuto": flag,
   "shell.confirmSimpleActions": flag,
   "shell.mobileDefinitions": flag,
   "guest.ipRateMultiplier": z.number().int().min(1).max(20),
   "mybar.dailyLimit": flag,
+  "mybar.dailyMax": z.number().int().min(1).max(5),
   "mybar.quantityMode": z.enum(["QTY", "TICK"]),
   "mybar.maxQtyPerItem": z.union([z.literal("setup"), z.number().int().min(1).max(20)]),
   "mybar.translateNotes": flag,
   "dnd.minChecks": z.number().int().min(1).max(10),
   "dnd.recheckMinutes": minutes,
   "minibar.requireQrForControl": flag,
+  "minibar.manualRoomEntry": flag,
+  "minibar.manualRoomEntryFloorIds": z.array(z.string().min(1).max(64)).max(500),
+  "minibar.manualRoomEntryRoomIds": z.array(z.string().min(1).max(64)).max(5000),
   "stock.defaultCriticalLevel": z.number().min(0),
   "stock.requestSafetyFactor": z.number().min(1).max(5),
   "price.display": z.enum(["SHOW", "HIDE"]),
-  "price.currency": z.string().regex(/^[A-Z]{3}$/, "3 büyük harfli para birimi kodu olmalı"),
   "order.approvalEscalationMinutes": minutes,
   "order.callAlertSeconds": z.number().int().min(1).max(3600),
   "rs.slaMinutes": minutes,
@@ -87,22 +91,26 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "session.minibarMaxOnlineMinutes": 600,
   "session.warnBeforeMinutes": 5,
   "session.idleMinutes": 45,
+  "session.absoluteMaxMinutes": 720,
   "session.singleDevice": true,
   "session.singleTargetAuto": true,
   "shell.confirmSimpleActions": false,
   "shell.mobileDefinitions": false,
   "guest.ipRateMultiplier": 1,
   "mybar.dailyLimit": true,
+  "mybar.dailyMax": 1,
   "mybar.quantityMode": "QTY",
   "mybar.maxQtyPerItem": "setup",
   "mybar.translateNotes": true,
   "dnd.minChecks": 2,
   "dnd.recheckMinutes": 120,
   "minibar.requireQrForControl": false,
+  "minibar.manualRoomEntry": false,
+  "minibar.manualRoomEntryFloorIds": [],
+  "minibar.manualRoomEntryRoomIds": [],
   "stock.defaultCriticalLevel": 50,
   "stock.requestSafetyFactor": 1.5,
   "price.display": "HIDE",
-  "price.currency": "EUR",
   "order.approvalEscalationMinutes": 2,
   "order.callAlertSeconds": 60,
   "rs.slaMinutes": 30,
@@ -157,11 +165,13 @@ export const SETTING_GROUPS = [
   "QR",
   "Çeviri",
   "Radar",
+  "Elle Oda Girişi",
   "Sistem",
 ] as const;
 export type SettingGroup = (typeof SETTING_GROUPS)[number];
 
-export type SettingInputType = "boolean" | "number" | "enum" | "text";
+/** `list`: an id array edited only in its own panel (e.g. Elle Oda Girişi), never as a plain field. */
+export type SettingInputType = "boolean" | "number" | "enum" | "text" | "list";
 
 /** Editor description of one key for the Denetim Masası → Sistem window (Turkish labels). */
 export type SettingMeta = {
@@ -221,6 +231,13 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     type: "number",
     unit: "dk",
   },
+  "session.absoluteMaxMinutes": {
+    label: "Mutlak oturum ömrü",
+    description: "Girişten bu kadar süre sonra oturum, işlem yapılsa bile kapanır ve yeniden giriş gerekir.",
+    group: "Oturum",
+    type: "number",
+    unit: "dk",
+  },
   "session.singleDevice": {
     label: "Tek cihazda oturum",
     description: "Açıksa kullanıcı yeni girişte önceki oturumu kapatır.",
@@ -250,6 +267,12 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     description: "Açıksa bir oda için günde yalnız bir MyBar girişi alınır.",
     group: "MyBar",
     type: "boolean",
+  },
+  "mybar.dailyMax": {
+    label: "Günlük MyBar giriş sayısı",
+    description: "Günlük sınır açıkken bir oda günde en çok bu kadar MyBar girişi gönderebilir (varsayılan 1).",
+    group: "MyBar",
+    type: "number",
   },
   "mybar.quantityMode": {
     label: "MyBar miktar biçimi",
@@ -290,6 +313,25 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     group: "Minibar",
     type: "boolean",
   },
+  // Edited in Denetim Masası → Minibar ve Kat → "Elle oda girişi" (hotel, floor and room choice), not as plain rows.
+  "minibar.manualRoomEntry": {
+    label: "Tüm otelde elle oda girişi",
+    description: "QR zorunluyken oda numarası yazılarak oda kontrolü açılabilir. Her elle giriş denetim kaydına yazılır.",
+    group: "Elle Oda Girişi",
+    type: "boolean",
+  },
+  "minibar.manualRoomEntryFloorIds": {
+    label: "Elle girişe izinli katlar",
+    description: "QR zorunluyken bu katlardaki odalar oda numarası yazılarak açılabilir.",
+    group: "Elle Oda Girişi",
+    type: "list",
+  },
+  "minibar.manualRoomEntryRoomIds": {
+    label: "Elle girişe izinli odalar",
+    description: "QR zorunluyken bu odalar (örn. QR etiketi hasarlı) oda numarası yazılarak açılabilir.",
+    group: "Elle Oda Girişi",
+    type: "list",
+  },
   "dnd.minChecks": {
     label: "DND asgari kontrol sayısı",
     description: "Rahatsız Etmeyin odasında gün içinde yapılması gereken en az kontrol sayısı.",
@@ -327,12 +369,6 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
       { value: "SHOW", label: "Göster" },
       { value: "HIDE", label: "Gizle" },
     ],
-  },
-  "price.currency": {
-    label: "Para birimi",
-    description: "3 büyük harfli para birimi kodu (örn. EUR, TRY, USD).",
-    group: "Fiyat",
-    type: "text",
   },
   "order.approvalEscalationMinutes": {
     label: "Onay yükseltme süresi",

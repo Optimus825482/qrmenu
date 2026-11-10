@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import { ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
@@ -48,7 +48,6 @@ function ItemCards({
   items,
   onOpen,
   format,
-  soldOutLabel,
   photoCountLabel,
   showPrice,
   photoIds,
@@ -56,7 +55,6 @@ function ItemCards({
   items: GuestItem[];
   onOpen(id: string): void;
   format(price: string): string;
-  soldOutLabel: string;
   photoCountLabel: (count: number) => string;
   showPrice: boolean;
   /** Curated-photo mode: only these dishes show a photo (large); null shows photos as usual. */
@@ -102,7 +100,6 @@ function ItemCards({
             </span>
             <span className="g-card-side">
               {showPrice && item.price ? <span className="g-price">{format(item.price)}</span> : null}
-              {!item.isAvailable ? <span className="g-badge">{soldOutLabel}</span> : null}
             </span>
           </button>
         </li>
@@ -148,6 +145,21 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const store = useSelectionStore(token ?? "studio-onizleme");
   const addSelection = store((s) => s.add);
 
+  // Saved selections follow the current menu: a dish that is gone or sold out is dropped (with a notice
+  // in the drawer), name and price come from the menu. Only for a real table/room token, after hydration.
+  useEffect(() => {
+    if (!token) return;
+    const available = new Map<string, { name: string; price?: string }>();
+    for (const category of categories) {
+      for (const item of categoryItems(category)) {
+        if (item.isAvailable) available.set(item.id, { name: item.name, ...(item.price ? { price: item.price } : {}) });
+      }
+    }
+    const run = () => store.getState().reconcile(available);
+    if (store.persist.hasHydrated()) run();
+    return store.persist.onFinishHydration(run);
+  }, [store, token, categories]);
+
   const needle = query.trim().toLocaleLowerCase(locale);
   const visible = useMemo(() => {
     const matches = (item: GuestItem) => {
@@ -175,7 +187,9 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
 
   const activeId = visible.some((category) => category.id === picked) ? picked : (visible[0]?.id ?? null);
   const active = visible.find((category) => category.id === activeId);
-  const presentTags = new Set(categories.flatMap((category) => categoryItems(category).flatMap((item) => item.tags)));
+  const presentTags = new Set(
+    categories.flatMap((category) => categoryItems(category).filter((item) => item.isAvailable).flatMap((item) => item.tags)),
+  );
   const featured = (active ? categoryItems(active) : []).filter((item) =>
     item.tags.some((tag) => FEATURED_TAGS.has(tag as ItemTagId)),
   );
@@ -290,7 +304,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       <div key="categories">
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
-        ) : (
+        ) : visible.length === 0 ? null : (
           <div
             data-guide="kategori-gezin"
             className="g-tabs"
@@ -418,7 +432,10 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
     ),
     items: (
       <div id="g-panel" role="tabpanel" aria-labelledby={activeId ? `g-tab-${activeId}` : undefined} key="items">
-        {visible.length === 0 && categories.length > 0 ? <p className="g-empty">{t("menu.noResults")}</p> : null}
+        {visible.length === 0 && categories.length > 0 ? (
+          // Search/filters active: "no match"; nothing orderable at all (every dish sold out): neutral notice.
+          <p className="g-empty">{t(needle || tagFilters.length > 0 ? "menu.noResults" : "menu.nothingAvailable")}</p>
+        ) : null}
         {featured.length > 0 ? (
           <section className="g-sub" aria-label={featuredTitle}>
             <h2>{featuredTitle}</h2>
@@ -443,7 +460,6 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               items={directItems}
               onOpen={handleOpenItem}
               format={format}
-              soldOutLabel={t("menu.soldOut")}
               photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
               showPrice={showPrice}
               photoIds={photoIds}
@@ -458,7 +474,6 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 items={sub.items}
                 onOpen={handleOpenItem}
                 format={format}
-                soldOutLabel={t("menu.soldOut")}
                 photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
                 showPrice={showPrice}
                 photoIds={photoIds}
@@ -472,7 +487,6 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   items={group.items}
                   onOpen={handleOpenItem}
                   format={format}
-                  soldOutLabel={t("menu.soldOut")}
                   photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
                   showPrice={showPrice}
                   photoIds={photoIds}

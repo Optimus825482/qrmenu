@@ -38,6 +38,8 @@ async function newOutlet(over: Record<string, unknown> = {}) {
       type: "BAR",
       hasMenu: true,
       hasOrdering: true,
+      // The column default is now false (new outlets start with ordering off); these tests start from an enabled outlet.
+      orderingEnabled: true,
       ...over,
     },
   });

@@ -33,17 +33,17 @@ export function ReportCenterWindow({ initialPanel, setStatus, hotelId }: AppProp
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f1f5f9] overflow-hidden select-none">
+    <div className="flex flex-col h-full bg-[var(--muted-bg)] overflow-hidden select-none">
       {/* Top Navigation Tabs Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white px-5 py-2.5 flex items-center justify-between border-b border-slate-700/80 shadow-md flex-shrink-0">
+      <div className="bg-gradient-to-r from-brand via-brand to-[var(--accent-royal)] text-white px-5 py-2.5 flex items-center justify-between border-b border-white/20 shadow-md flex-shrink-0">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("catalogue")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
               activeTab === "catalogue"
-                ? "bg-blue-600 text-white shadow-md ring-1 ring-blue-400/50"
-                : "text-slate-300 hover:text-white hover:bg-white/10"
+                ? "bg-accent text-white shadow-md ring-1 ring-accent/50"
+                : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
             <Icon name="folder" size={16} />
@@ -55,8 +55,8 @@ export function ReportCenterWindow({ initialPanel, setStatus, hotelId }: AppProp
             onClick={() => setActiveTab("wizard")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
               activeTab === "wizard"
-                ? "bg-blue-600 text-white shadow-md ring-1 ring-blue-400/50"
-                : "text-slate-300 hover:text-white hover:bg-white/10"
+                ? "bg-accent text-white shadow-md ring-1 ring-accent/50"
+                : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
             <Icon name="search" size={16} />
@@ -68,8 +68,8 @@ export function ReportCenterWindow({ initialPanel, setStatus, hotelId }: AppProp
             onClick={() => setActiveTab("automated")}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
               activeTab === "automated"
-                ? "bg-blue-600 text-white shadow-md ring-1 ring-blue-400/50"
-                : "text-slate-300 hover:text-white hover:bg-white/10"
+                ? "bg-accent text-white shadow-md ring-1 ring-accent/50"
+                : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
             <Icon name="clock" size={16} />
@@ -77,8 +77,8 @@ export function ReportCenterWindow({ initialPanel, setStatus, hotelId }: AppProp
           </button>
         </div>
 
-        <div className="text-[11px] text-slate-300 font-medium hidden sm:flex items-center gap-1.5 opacity-80">
-          <Icon name="check" size={13} className="text-emerald-400" />
+        <div className="text-xs text-white/80 font-medium hidden sm:flex items-center gap-1.5 opacity-80">
+          <Icon name="check" size={13} className="text-[var(--dot-open)]" />
           <span>Google Drive & E-posta Entegrasyonu Aktif</span>
         </div>
       </div>

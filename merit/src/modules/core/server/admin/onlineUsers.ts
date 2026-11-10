@@ -151,10 +151,11 @@ export async function forceLogout(ctx: Ctx, sessionId: string): Promise<void> {
       user: { select: { role: { select: { kind: true } } } },
     },
   });
+  // Authorisation first: an unpermitted caller must not learn whether a session id exists or is open.
+  await assertCan(ctx, SCREEN, "A", session?.hotelId);
   if (!session || !ACTIVE.includes(session.status)) {
     throw new DomainError("NOT_FOUND", "Açık oturum bulunamadı");
   }
-  await assertCan(ctx, SCREEN, "A", session.hotelId);
   if (!isSystem(ctx)) {
     const kinds = [session.role.kind, session.user.role.kind];
     if (kinds.includes("SISTEM")) {

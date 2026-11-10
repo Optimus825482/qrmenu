@@ -155,7 +155,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
   const [selectedHotelId, setSelectedHotelId] = useState(hotelId ?? availableHotels[0]?.hotelId ?? "");
   const selectedHotel = availableHotels.find((target) => target.hotelId === selectedHotelId) ?? availableHotels[0];
   const availableTargets = useMemo(
-    () => selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName, currency: selectedHotel.currency })) ?? [],
+    () => selectedHotel?.outlets.map((outlet) => ({ ...outlet, hotelId: selectedHotel.hotelId, hotelName: selectedHotel.hotelName })) ?? [],
     [selectedHotel],
   );
   const [outletId, setOutletId] = useState(initialOutletId ?? "");
@@ -558,9 +558,9 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 <span style={{ fontSize: 10, color: "#64748b", display: "block", marginBottom: 3 }}>Hizalama:</span>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4 }}>
                   {[
-                    { id: "left", label: "⬅ Sola" },
-                    { id: "center", label: "⬌ Ortala" },
-                    { id: "right", label: "➡ Sağa" },
+                    { id: "left", label: "Sola" },
+                    { id: "center", label: "Ortala" },
+                    { id: "right", label: "Sağa" },
                   ].map((align) => (
                     <button
                       key={align.id}

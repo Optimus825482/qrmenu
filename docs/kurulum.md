@@ -429,6 +429,12 @@ PRINT_GATEWAY_KEY=<openssl rand -base64 32>
 
 - **İlk kurulum:** `RUN_SEED=true` ve `SEED_ADMIN_PASSWORD` (>= 10 karakter) ile bir kez dağıtın;
   admin oluştuktan sonra `RUN_SEED=false` yapın. Demo veri istemiyorsanız `SEED_DEMO` açmayın.
+- **Merit outlet ve menüleri:** `SYNC_MERIT_MENUS` varsayılanı `false`tur. İlk kurulumda (RUN_SEED ile birlikte)
+  **bir kez `true`** verip dağıtın, menüler kurulunca `false`a döndürün. Senkron, menüsü olan hiçbir outlet'te
+  silme yapmaz (yalnız eksik görselleri yeniler) ve sipariş verisine hiç dokunmaz. Bilinçli tam yeniden kurulum
+  için ayrıca `MERIT_MENUS_FORCE_RESET=true` gerekir; siparişi olan outlet'te yine reddedilir.
+- Uygulama konteyneri `/api/health` ile sağlık denetimi yapar (`docker ps` durumunda `healthy`); Docker günlükleri
+  konteyner başına 10 MB x 5 dosya ile sınırlıdır.
 - Giriş betiği (`docker-entrypoint.sh`) `prisma migrate deploy` çalıştırır; yalnız veritabanı
   bağlantı hatasında en çok 30 kez yeniden dener, migrasyon hatasında **hata koduyla çıkar**
   (konteyner ayağa kalkmaz). `RUN_SEED=true` iken seed hatası da başlatmayı durdurur.
@@ -542,25 +548,44 @@ ilk birkaç saniye `listener`/`boss` henüz `down` olabilir.
 
 ## 8. Yedekleme
 
-Günlük `pg_dump` önerilir (örnek cron, her gece 03:15):
+Günlük yedek için `deploy/scripts/backup.sh` önerilir (systemd zamanlayıcısı `deploy/README.md`'de): `pg_dump -Fc`
+dökümünü **ve** `uploads` dizinini (`merit-uploads-YYYY-MM-DD.tgz`) `BACKUP_DIR` altına yazar, `RETENTION_DAYS`
+(14) günden eskileri siler. Menü görselleri yalnız `uploads` içinde durur; yalnız veritabanını yedeklemek
+yetmez. Elle yedek alacaksanız:
 
 ```bash
-15 3 * * * pg_dump -Fc "postgresql://merit@localhost:5432/merit" \
-  -f /var/backups/merit/merit-$(date +\%F).dump && find /var/backups/merit -name 'merit-*.dump' -mtime +14 -delete
+pg_dump -Fc "postgresql://merit@localhost:5432/merit" -f /var/backups/merit/merit-$(date +%F).dump
+tar -czf /var/backups/merit/merit-uploads-$(date +%F).tgz -C /var/lib/merit uploads
 ```
 
-Parolayı komut satırına yazmak yerine `~/.pgpass` kullanın. Yedekleri başka bir
-makineye de kopyalayın ve geri yüklemeyi düzenli sınayın:
-`pg_restore -d merit_restore_test merit-YYYY-MM-DD.dump`.
+Parolayı komut satırına yazmak yerine `~/.pgpass` kullanın. Yedekleri başka bir makineye de kopyalayın.
+Docker kurulumunda `uploads` `app-uploads` biriminde durur:
+`docker run --rm -v <proje>_app-uploads:/u -v $PWD:/b alpine tar -czf /b/uploads.tgz -C /u .`
+
+### Geri yükleme (adım adım)
+
+1. Uygulamayı durdurun: `sudo systemctl stop merit` (Docker: `docker compose stop app`).
+2. Önce yedeğin okunabildiğini sınayın: `pg_restore --list merit-YYYY-MM-DD.dump`.
+3. Veritabanını yükleyin: `deploy/scripts/restore.sh merit-YYYY-MM-DD.dump merit --force`
+   (güvenli deneme için önce `merit_restore_test` adlı bir hedefe yükleyip sınayın).
+4. `uploads` dizinini geri koyun (mevcut dizin yedeklenmeden silinmez):
+   `sudo mv /var/lib/merit/uploads /var/lib/merit/uploads.eski && sudo tar -xzf merit-uploads-YYYY-MM-DD.tgz -C /var/lib/merit && sudo chown -R merit:merit /var/lib/merit/uploads`
+5. Uygulamayı başlatın ve `/api/health` ile birkaç menü görselini kontrol edin; sorun yoksa `uploads.eski` silinebilir.
+
+Geri yüklemeyi düzenli sınayın.
 
 ## 9. Günlükler
 
 Uygulama standart çıktıya yazar: systemd altında `journalctl -u merit`, pm2 altında
-`pm2 logs merit`. Günlük satırları `[realtime]`, `[pg-boss]`, `[instrumentation]` önekleriyle
-başlar. Açılışta "gerçek zaman dinleyicisi başlatılamadı" veya "işler başlatılamadı"
-görürseniz veritabanı erişimini ve `/api/health` çıktısını kontrol edin. Dinleyici
-bağlantısı kopsa 1-2-4-8 sn aralıkla kendisi yeniden bağlanır. Günlük döndürme için
-journald'ın varsayılanı yeterlidir.
+`pm2 logs merit`, Docker altında `docker compose logs app`. Günlük satırları `[realtime]`, `[pg-boss]`,
+`[instrumentation]` önekleriyle başlar. Açılışta "gerçek zaman dinleyicisi başlatılamadı" veya "işler
+başlatılamadı" görürseniz veritabanı erişimini ve `/api/health` çıktısını kontrol edin. Dinleyici
+bağlantısı kopsa 1-2-4-8 sn aralıkla kendisi yeniden bağlanır.
+
+**Günlük döndürme:** journald varsayılanı yeterlidir; sınırlamak için `/etc/systemd/journald.conf` içinde
+`SystemMaxUse=500M` verin. pm2'de `pm2 install pm2-logrotate` kullanın. Docker'da `docker-compose.yaml`
+her konteyner için `json-file` sürücüsüyle `max-size: 10m`, `max-file: 5` uygular (en çok 50 MB); Docker'ı
+compose dışı çalıştırıyorsanız aynı değerleri `/etc/docker/daemon.json` `log-opts` içine yazın.
 
 ## 10. Güvenlik notları
 

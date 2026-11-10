@@ -14,7 +14,16 @@ export type NotifyInput = {
   body: string;
   refType?: string;
   refId?: string;
+  /**
+   * Hotel to fall back to when the recipient list resolves empty: the notification then goes to the
+   * hotel's managers (`FALLBACK_ROLE_CODES`) instead of being dropped silently. Opt-in: without it an
+   * empty list still writes nothing (but is logged).
+   */
+  fallbackHotelId?: string;
 };
+
+/** Hotel manager and system administrator: who hears about an alert nobody else was assigned to. */
+export const FALLBACK_ROLE_CODES = ["R-OTM", "R-SYS"];
 
 async function resolveRecipients(
   recipients: NotifyInput["recipients"],
@@ -35,8 +44,18 @@ async function resolveRecipients(
 export async function notify(input: NotifyInput, tx?: Prisma.TransactionClient): Promise<number> {
   if (!tx) return prisma.$transaction((inner) => notify(input, inner));
 
-  const userIds = await resolveRecipients(input.recipients, tx);
-  if (userIds.length === 0) return 0;
+  let userIds = await resolveRecipients(input.recipients, tx);
+  const fallbackHotel = input.fallbackHotelId;
+  if (userIds.length === 0 && fallbackHotel) {
+    userIds = await usersEntitledTo(fallbackHotel, FALLBACK_ROLE_CODES, tx);
+    console.warn(
+      `[notify] ${input.type}: alıcı bulunamadı, yedek alıcıya (${FALLBACK_ROLE_CODES.join(", ")}) düşüldü: ${userIds.length} kişi`,
+    );
+  }
+  if (userIds.length === 0) {
+    console.error(`[notify] ${input.type}: alıcı ve yedek alıcı yok, bildirim yazılmadı (${input.refType ?? "-"} ${input.refId ?? "-"})`);
+    return 0;
+  }
 
   const hotelId = Array.isArray(input.recipients) ? undefined : input.recipients.hotelId;
   const { count } = await tx.notification.createMany({

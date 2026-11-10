@@ -257,6 +257,9 @@ describe("minibar content", () => {
     await testDb.mybarRequest.create({
       data: { hotelId: w.royal.hotelId, roomId: r[2]!.id, businessDate: D, language: "tr", idempotencyKey: randomUUID(), clientIp: "10.1.1.1" },
     });
+    await testDb.mybarRequest.create({
+      data: { hotelId: w.royal.hotelId, roomId: r[3]!.id, businessDate: D, language: "tr", idempotencyKey: randomUUID(), clientIp: "10.1.1.2", status: "TAMAMLANDI", completedAt: new Date("2026-11-10T20:00:00.000Z") },
+    });
     const at = async (iso: string) => {
       const rooms = (await radarSnapshot(w.otmRoyal, w.royal.hotelId, { now: new Date(iso) })).layers.minibar!.floors.flatMap((f) => f.rooms);
       return new Map(rooms.map((x) => [x.roomId, x]));
@@ -266,11 +269,14 @@ describe("minibar content", () => {
     expect(before.get(r[0]!.id)).toMatchObject({ task: { status: "BEKLIYOR" }, checkedToday: { type: "URUN_EKLENDI" } });
     expect(before.get(r[1]!.id)!.dnd).not.toBeNull();
     expect(before.get(r[2]!.id)!.mybar).not.toBeNull();
+    expect(before.get(r[3]!.id)!.mybar).toBeNull();
     // 00:30 Nicosia on D+1 (22:30Z): nothing of D counts.
     const after = await at("2026-11-10T22:30:00.000Z");
     expect(after.get(r[0]!.id)).toMatchObject({ task: null, checkedToday: null });
     expect(after.get(r[1]!.id)!.dnd).toBeNull();
-    expect(after.get(r[2]!.id)!.mybar).toBeNull();
+    // RAD-4 (intentional): a MyBar request still waiting from an earlier business day stays on the live radar.
+    expect(after.get(r[2]!.id)!.mybar).toMatchObject({ seen: false });
+    expect(after.get(r[3]!.id)!.mybar).toBeNull();
     const snap = await radarSnapshot(w.otmRoyal, w.royal.hotelId, { now: new Date("2026-11-10T22:30:00.000Z") });
     expect(snap.businessDate).toBe("2026-11-11");
   });
@@ -295,7 +301,8 @@ describe("order content", () => {
         data: { tableId, kind: "MISAFIR", ok: true, ip: "10.9.9.9", userAgent: "ua", createdAt: new Date(Date.now() - minAgo * 60_000) },
       });
     await scan(t0!.id, 10);
-    await scan(t1!.id, 20);
+    // Outlet.tableOccupancyMinutes defaults to 40: a scan older than that no longer marks the table occupied.
+    await scan(t1!.id, 50);
     const ok = await testDb.printer.create({
       data: { hotelId: hw.hotelId, outletId, name: "Mutfak", ip: "10.3.3.3", lastSeenAt: new Date(), lastStatus: "OK" },
     });
@@ -548,7 +555,8 @@ describe("overview counters", () => {
     await testDb.order.create({
       data: orderData(hw, { tableId: hw.outlets[0]!.tables[0]!.id, createdAt: new Date(Date.now() - 10 * 60_000) }),
     });
-    await testDb.emailLog.create({ data: { to: "x@example.com", subject: "s", kind: "k", status: "HATA", trackingId: randomUUID() } });
+    // The overview counts failed mail per hotel (EmailLog.hotelId); hotel-less failures only feed the system layer.
+    await testDb.emailLog.create({ data: { hotelId: hw.hotelId, to: "x@example.com", subject: "s", kind: "k", status: "HATA", trackingId: randomUUID() } });
 
     const sysCard = (await radarOverview(w.sys)).hotels.find((h) => h.code === "ROYAL")!;
     const val = (k: string) => sysCard.metrics.find((m) => m.key === k);

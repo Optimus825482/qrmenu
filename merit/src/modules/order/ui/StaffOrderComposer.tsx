@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { createStaffOrderAction, staffOrderMenuAction } from "@/modules/order/actions/staffOrders";
 import type { StaffOrderMenu } from "@/modules/order/server/staffOrders";
 import { formatPrice } from "@/lib/formatPrice";
+import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 
 /**
  * Personel "Yeni adisyon" diyaloğu (garson ve kasa paneli ortak). `onDone(orderNo)` kayıt sonrası,
@@ -15,6 +16,8 @@ export function StaffOrderComposer({ outletId, table, onDone }: { outletId: stri
   const [orderNote, setOrderNote] = useState("");
   const [notice, setNotice] = useState("");
   const [pending, startTransition] = useTransition();
+  // One key per dialog: a retry after a lost response returns the same order instead of booking a second one.
+  const [idempotencyKey] = useState(() => newRequestKey());
 
   useEffect(() => {
     let alive = true;
@@ -32,7 +35,7 @@ export function StaffOrderComposer({ outletId, table, onDone }: { outletId: stri
     const items = Object.entries(quantities).filter(([, qty]) => qty > 0).map(([menuNodeId, qty]) => ({ menuNodeId, qty }));
     if (items.length === 0) { setNotice("Adisyona en az bir ürün ekleyin."); return; }
     startTransition(async () => {
-      const result = await createStaffOrderAction({ outletId, tableId: table.tableId, items, note: orderNote });
+      const result = await createStaffOrderAction({ idempotencyKey, outletId, tableId: table.tableId, items, note: orderNote });
       if (!result.ok) { setNotice(result.error.message); return; }
       onDone(result.data.orderNo);
     });

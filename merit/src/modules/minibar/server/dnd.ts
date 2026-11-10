@@ -15,6 +15,7 @@ import { publishRadar } from "@/modules/radar/publish";
 import { DND_MIN_GAP_SECONDS } from "../constants";
 import { DND_REMINDER } from "../events";
 import { lockRow } from "./minibarCommon";
+import { assertRoomVerified } from "./roomVerification";
 import { completeOpenItemsForRoom, failDndItems, markItemsDnd } from "./tasks";
 
 /*
@@ -60,6 +61,8 @@ const markSchema = z
   .object({
     roomId: z.string().min(1).max(64),
     note: z.string().trim().max(200).optional(),
+    /** Idempotency key of the client's tap (kept until success): a repeat returns the first mark. */
+    clientRequestId: z.uuid().optional(),
   })
   .strict();
 
@@ -89,7 +92,7 @@ function wire(
 export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()): Promise<DndView> {
   const parsed = markSchema.safeParse(input);
   if (!parsed.success) throw fromZod(parsed.error);
-  const { roomId, note } = parsed.data;
+  const { roomId, note, clientRequestId } = parsed.data;
 
   const known = await prisma.room.findUnique({ where: { id: roomId }, select: { hotelId: true } });
   if (!known) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
@@ -109,6 +112,42 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
       select: { id: true, number: true, floorId: true },
     });
     if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
+
+    if (clientRequestId) {
+      // No schema column for the key: the DND_MARK audit row of the first request carries it (room lock held).
+      const seen = await tx.auditLog.findFirst({
+        where: {
+          action: "DND_MARK",
+          entity: "RoomDnd",
+          userId: ctx.user.id,
+          createdAt: { gte: new Date(now.getTime() - 86_400_000) },
+          after: { path: ["clientRequestId"], equals: clientRequestId },
+        },
+        select: { entityId: true },
+      });
+      if (seen?.entityId) {
+        const first = await tx.roomDnd.findUnique({ where: { id: seen.entityId } });
+        if (!first || first.roomId !== roomId) {
+          throw new DomainError("CONFLICT", "Bu istek kimliği başka bir işlemde kullanılmış");
+        }
+        const done = first.status === "TAMAMLANDI";
+        return {
+          dndId: first.id,
+          roomId,
+          roomNumber: room.number,
+          count: first.count,
+          required,
+          status: first.status,
+          lastAt: first.lastAt.toISOString(),
+          nextCheckAt: addMinutes(first.lastAt, recheck).toISOString(),
+          completed: done,
+          message: done
+            ? `Oda ${room.number} — ${first.count}. DND kontrolü tamamlandı`
+            : `Oda ${room.number} DND olarak işaretlendi (${first.count}/${required})`,
+        };
+      }
+    }
+    await assertRoomVerified({ userId: ctx.user.id, roomId, hotelId }, now, tx);
 
     const covered = await tx.roomCheck.count({
       where: { roomId, checkDate: date, type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] } },
@@ -131,6 +170,14 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
       });
       if (mine && now.getTime() - mine.at.getTime() < DND_MIN_GAP_SECONDS * 1000) {
         throw new DomainError("CONFLICT", "DND az önce işaretlendi, birkaç saniye bekleyin");
+      }
+      // `dnd.recheckMinutes` holds for every user: the next mark waits that long after the last one.
+      const leftMs = existing.lastAt.getTime() + recheck * 60_000 - now.getTime();
+      if (leftMs > 0) {
+        throw new DomainError(
+          "CONFLICT",
+          `DND yeniden kontrolü için ${Math.ceil(leftMs / 60_000)} dk daha beklenmeli`,
+        );
       }
     }
 
@@ -195,7 +242,7 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
       entity: "RoomDnd",
       entityId: dnd.id,
       before: existing ? { count: existing.count, status: existing.status } : null,
-      after: { roomId, count, status },
+      after: { roomId, count, status, ...(clientRequestId ? { clientRequestId } : {}) },
     });
 
     await notify(

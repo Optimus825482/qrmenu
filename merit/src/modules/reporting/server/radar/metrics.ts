@@ -8,6 +8,7 @@ import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
 import { SLA_OPEN_STATUSES, SLA_SWEEP_STATUSES } from "@/modules/order/server/roomService/sla";
 import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
+import { UPLOAD_DEADLINE_HOUR } from "@/modules/radar/alerts";
 import type { RadarMetric, RadarMetricKey } from "@/modules/radar/types";
 
 export type { RadarMetric, RadarMetricKey };
@@ -35,7 +36,6 @@ export type CollectOpts = { outletId?: string };
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 3_600_000;
-const UPLOAD_DEADLINE_HOUR = 10;
 
 function toMap(rows: { hotelId: string; n: number }[]): Map<string, number> {
   return new Map(rows.map((r) => [r.hotelId, r.n]));
@@ -414,11 +414,14 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     unit: "adet",
     critAt: 1,
     collect: async (hotelIds, now) => {
-      // The mail log has no hotel column: the complex-wide count applies to every hotel.
-      const n = await prisma.emailLog.count({
-        where: { status: "HATA", createdAt: { gte: new Date(now.getTime() - DAY_MS), lte: now } },
+      // Per hotel (EmailLog.hotelId) so the complex total is not multiplied by the hotel count; failures
+      // without a hotel are only counted by the radar system layer (complex-wide).
+      const rows = await prisma.emailLog.groupBy({
+        by: ["hotelId"],
+        where: { status: "HATA", hotelId: { in: hotelIds }, createdAt: { gte: new Date(now.getTime() - DAY_MS), lte: now } },
+        _count: { _all: true },
       });
-      return new Map(hotelIds.map((id) => [id, n]));
+      return new Map(rows.flatMap((r) => (r.hotelId ? [[r.hotelId, r._count._all] as [string, number]] : [])));
     },
   },
 ];

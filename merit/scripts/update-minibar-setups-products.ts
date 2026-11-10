@@ -1,6 +1,25 @@
 import { prisma } from "../src/lib/prisma";
 
+/**
+ * One-off demo catalogue script: it rewrites setup contents (par levels) and opens pool rows. It never runs by
+ * accident: production is refused, and every other environment needs the explicit `--yes-overwrite-catalog` flag.
+ * Existing pool balances (HotelStock) are never touched; only missing rows are opened.
+ */
+function assertAllowed(): void {
+  if (process.env.NODE_ENV === "production" || process.env.APP_ENV === "production") {
+    console.error("Bu betik üretim ortamında çalıştırılamaz (setup içerikleri ve havuz satırları değişir).");
+    process.exit(2);
+  }
+  if (!process.argv.includes("--yes-overwrite-catalog")) {
+    console.error(
+      "Bu betik setup içeriklerini (par seviyeleri) siler ve yeniden yazar. Bilerek çalıştırmak için --yes-overwrite-catalog ekleyin.",
+    );
+    process.exit(2);
+  }
+}
+
 async function main() {
+  assertAllowed();
   console.log("🚀 Minibar ürünleri ve setupları güncelleniyor...");
 
   // 1. Deactivate / Clean Mr Brown products
@@ -309,11 +328,8 @@ async function main() {
         where: {
           hotelId_productId: { hotelId: h.id, productId: p.id },
         },
-        update: {
-          totalQty: 200,
-          remainingQty: 180,
-          usedQty: 20,
-        },
+        // An existing balance is the ledger's (HotelStockMovement): never overwritten here.
+        update: {},
         create: {
           hotelId: h.id,
           productId: p.id,

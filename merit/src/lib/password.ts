@@ -60,6 +60,8 @@ export async function verifyPassword(plain: string, stored: string): Promise<Pas
 
 export const PASSWORD_MIN_LENGTH = 6;
 export const PASSWORD_MAX_LENGTH = 128;
+/** bcrypt only uses the first 72 bytes (UTF-8): a longer password would be silently truncated. */
+export const PASSWORD_MAX_BYTES = 72;
 
 /**
  * The staff password policy: at least 6 characters with an upper-case letter, a lower-case
@@ -69,6 +71,9 @@ export const PASSWORD_MAX_LENGTH = 128;
 export function passwordPolicyError(plain: string): string | null {
   if (plain.length < PASSWORD_MIN_LENGTH) return `Şifre en az ${PASSWORD_MIN_LENGTH} karakter olmalı`;
   if (plain.length > PASSWORD_MAX_LENGTH) return `Şifre en fazla ${PASSWORD_MAX_LENGTH} karakter olabilir`;
+  if (Buffer.byteLength(plain, "utf8") > PASSWORD_MAX_BYTES) {
+    return `Şifre çok uzun: en fazla ${PASSWORD_MAX_BYTES} bayt olabilir (Türkçe harfler 2 bayt sayılır)`;
+  }
   if (!/\p{Lu}/u.test(plain)) return "Şifre en az bir büyük harf içermeli";
   if (!/\p{Ll}/u.test(plain)) return "Şifre en az bir küçük harf içermeli";
   if (!/\d/.test(plain)) return "Şifre en az bir rakam içermeli";

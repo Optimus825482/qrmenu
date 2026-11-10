@@ -78,6 +78,26 @@ describe("outlets: CRUD", () => {
     expect(types).not.toContain("ordering.changed");
   });
 
+  it("K3: para birimi outlet formunda; SHOW iken boş bırakılamaz, verilmezse saklı değer kalır", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("ROYAL");
+    const bar = await outlets.create(ctx, mr, { ...BAR, priceDisplay: "SHOW", currency: "try" });
+    expect(bar.currency).toBe("TRY");
+    await expect(
+      outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW", currency: "" }),
+    ).rejects.toMatchObject({ code: "VALIDATION", fieldErrors: { currency: expect.any(Array) } });
+    await expect(
+      outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "SHOW", currency: "lira" }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    // Price display HIDE: the form does not send the field, the stored currency stays.
+    expect((await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "HIDE" })).currency).toBe("TRY");
+    publishMock.mockReset();
+    const usd = await outlets.update(ctx, mr, bar.id, { ...BAR, priceDisplay: "HIDE", currency: "USD" });
+    expect(usd.currency).toBe("USD");
+    expect(publishMock.mock.calls.map((c) => c[0].type)).toContain("price.display");
+    expect((await outlets.create(ctx, mr, { ...BAR, name: "Varsayılan Bar" })).currency).toBe("EUR");
+  });
+
   it("oluşturur, günceller, aktifliği ve sipariş anahtarını değiştirir, siler; her yazma audit + definition.changed bırakır", async () => {
     const ctx = await sys();
     const mr = await hotelId("ROYAL");

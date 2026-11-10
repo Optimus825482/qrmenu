@@ -4,12 +4,13 @@ import { createRateLimiter, scaledMax } from "@/lib/rate-limit";
 import { DomainError, fromZod } from "@/lib/result";
 import { LOCALES, type Locale } from "@/lib/i18n/locales";
 import { getSetting } from "@/lib/settings";
-import { businessDate, businessDay } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
 import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 import { MYBAR_NOTE_MAX, MYBAR_QTY_CAP, MYBAR_SUBMIT_LIMIT } from "../constants";
 import { publishMybar } from "../events";
 import { catalogProductIds, catalogQuantityMode } from "./catalog";
+import { checkoutBoundaries } from "./checkout";
 import { notifyNewRequest } from "./fanout";
 import { getRoomGuestState, ROOM_CLOSED_MESSAGES } from "./roomGuest";
 import { sanitizeNote } from "./sanitize";
@@ -36,7 +37,7 @@ export const mybarSubmitSchema = z.object({
 });
 
 export type GuestRequestView = { requestId: string; duplicate: boolean; createdAt: string };
-export type GuestRequestStatus = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "IPTAL";
+export type GuestRequestStatus = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "KISMEN" | "IPTAL";
 export type GuestRequestStatusView = {
   request: null | {
     requestId: string;
@@ -74,14 +75,25 @@ async function resolveRoom(token: string, meta: GuestMeta): Promise<RoomRef> {
   throw new DomainError("NOT_FOUND", "Geçersiz QR kod");
 }
 
+const STALE_KEY_MESSAGE = "Bu istek anahtarı önceki bir güne ait";
+
+type PriorRequest = { id: string; roomId: string; createdAt: Date; businessDate: Date };
+
+/** A key replays only within the business day it was used; an older one is refused so the client issues a fresh key. */
+function replayView(prior: PriorRequest, roomId: string): GuestRequestView {
+  if (prior.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
+  if (prior.businessDate.getTime() !== businessDay(businessDate()).getTime()) {
+    throw new DomainError("VALIDATION", STALE_KEY_MESSAGE, { fieldErrors: { idempotencyKey: [STALE_KEY_MESSAGE] } });
+  }
+  return { requestId: prior.id, duplicate: true, createdAt: prior.createdAt.toISOString() };
+}
+
 async function replayOf(idempotencyKey: string, roomId: string): Promise<GuestRequestView | null> {
   const prior = await prisma.mybarRequest.findUnique({
     where: { idempotencyKey },
-    select: { id: true, roomId: true, createdAt: true },
+    select: { id: true, roomId: true, createdAt: true, businessDate: true },
   });
-  if (!prior) return null;
-  if (prior.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
-  return { requestId: prior.id, duplicate: true, createdAt: prior.createdAt.toISOString() };
+  return prior ? replayView(prior, roomId) : null;
 }
 
 export async function createGuestRequest(
@@ -128,17 +140,14 @@ export async function createGuestRequest(
 
       const raced = await tx.mybarRequest.findUnique({
         where: { idempotencyKey: data.idempotencyKey },
-        select: { id: true, roomId: true, createdAt: true },
+        select: { id: true, roomId: true, createdAt: true, businessDate: true },
       });
-      if (raced) {
-        if (raced.roomId !== roomId) throw new DomainError("CONFLICT", "Bu istek anahtarı başka bir odaya ait");
-        return { requestId: raced.id, duplicate: true, createdAt: raced.createdAt.toISOString() };
-      }
+      if (raced) return replayView(raced, roomId);
 
       const today = businessDay(businessDate());
       if (await getSetting("mybar.dailyLimit", hotelId)) {
         const used = await tx.mybarRequest.count({ where: { roomId, businessDate: today, status: { not: "IPTAL" } } });
-        if (used > 0) throw new DomainError("DAILY_LIMIT", "Bugün bu odadan talep gönderildi");
+        if (used >= (await getSetting("mybar.dailyMax", hotelId))) throw new DomainError("DAILY_LIMIT", "Bugün bu odadan talep gönderildi");
       }
 
       const catalog = await catalogProductIds(roomId, tx);
@@ -213,18 +222,61 @@ export async function createGuestRequest(
   }
 }
 
-const GUEST_STATUS = (r: { status: string; seenAt: Date | null }): GuestRequestStatus =>
-  r.status === "TAMAMLANDI" ? "KARSILANDI" : r.status === "IPTAL" ? "IPTAL" : r.seenAt ? "GORULDU" : "BEKLIYOR";
+/** "KISMEN": staff closed the request with some products missing; the guest must not read it as fully served. */
+const GUEST_STATUS = (r: { status: string; seenAt: Date | null; closedWithMissing: boolean }): GuestRequestStatus =>
+  r.status === "TAMAMLANDI"
+    ? r.closedWithMissing ? "KISMEN" : "KARSILANDI"
+    : r.status === "IPTAL" ? "IPTAL" : r.seenAt ? "GORULDU" : "BEKLIYOR";
 
-/** Today's most recent request of the room as the guest may see it: no staff names, notes, prices or internals. */
+/**
+ * Earliest instant a guest may see requests from: the start of the arrival day of the room's current in-house
+ * stay (a room handed to a new guest must not show the previous guest's pending request). Without a reliable
+ * stay record (no occupancy upload covers today) the look-back is one business day (yesterday). A known checkout
+ * (`checkoutBoundaries`, e.g. today's departure time has passed) moves it later, so a same-day new guest does not
+ * see the previous guest's (cancelled) request either.
+ */
+async function lookbackStart(roomId: string, today: string, now: Date): Promise<Date> {
+  const stayStart = await stayLookbackStart(roomId, today);
+  const checkout = (await checkoutBoundaries(prisma, [roomId], now)).get(roomId);
+  return checkout && checkout.at.getTime() > stayStart.getTime() ? checkout.at : stayStart;
+}
+
+async function stayLookbackStart(roomId: string, today: string): Promise<Date> {
+  const stay = await prisma.guestRecord.findFirst({
+    where: {
+      roomId,
+      kind: "IN_HOUSE",
+      arrivalDate: { lte: businessDay(today) },
+      departureDate: { gte: businessDay(today) },
+    },
+    orderBy: { arrivalDate: "desc" },
+    select: { arrivalDate: true },
+  });
+  if (stay) return businessDateStart(stay.arrivalDate.toISOString().slice(0, 10));
+  const yesterday = new Date(businessDay(today).getTime() - 86_400_000).toISOString().slice(0, 10);
+  return businessDateStart(yesterday);
+}
+
+/**
+ * The room's most recent request of today, or a still-pending one from an earlier day (it must not vanish at
+ * midnight) within the current stay (see `lookbackStart`), as the guest may see it: no staff names, notes,
+ * prices or internals.
+ */
 export async function roomRequestStatus(roomId: string, locale: Locale): Promise<GuestRequestStatusView> {
+  const now = new Date();
+  const today = businessDate(now);
   const row = await prisma.mybarRequest.findFirst({
-    where: { roomId, businessDate: businessDay(businessDate()) },
+    where: {
+      roomId,
+      createdAt: { gte: await lookbackStart(roomId, today, now) },
+      OR: [{ businessDate: businessDay(today) }, { status: "BEKLEMEDE" }],
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     select: {
       id: true,
       status: true,
       seenAt: true,
+      closedWithMissing: true,
       createdAt: true,
       items: { select: { requestedQty: true, product: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
     },

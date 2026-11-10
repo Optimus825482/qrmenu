@@ -1,12 +1,12 @@
 import { getIronSession, type IronSession, type SessionOptions } from "iron-session";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 import type { RoleKind, SessionStatus } from "@/generated/prisma/client";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
-import { closeSession, touchSession } from "@/modules/core/server/sessions";
+import { absoluteDeadline, closeSession, touchSession } from "@/modules/core/server/sessions";
 import { hotelScope, outletRoleId } from "@/modules/core/server/entitlements";
 
 export const SESSION_COOKIE_NAME = "merit_session";
@@ -87,6 +87,53 @@ export async function writeSessionCookie(
   await session.save();
 }
 
+/** `host[:port]` lower-cased, without the scheme's default port. */
+function normalizeHost(value: string, protocol?: string): string {
+  const host = value.trim().toLowerCase();
+  if ((protocol === "https:" || !protocol) && host.endsWith(":443")) return host.slice(0, -4);
+  if ((protocol === "http:" || !protocol) && host.endsWith(":80")) return host.slice(0, -3);
+  return host;
+}
+
+/**
+ * Cross-origin guard for cookie-authenticated requests (CSRF defence in depth on top of
+ * SameSite=lax): when the browser sends an `Origin`, its host must be this site's — `Host`, any
+ * `x-forwarded-host` value (reverse proxy) or the `APP_BASE_URL` host. Requests without an
+ * `Origin` (same-origin GET, navigations, non-browser clients) and the opaque `null` origin pass
+ * unchanged; guest token (/api/q/**) and print gateway routes never reach requireUser.
+ */
+export function isSameOriginRequest(h: Headers): boolean {
+  const origin = h.get("origin");
+  if (!origin || origin === "null") return true;
+  let parsed: URL;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    return false;
+  }
+  const originHost = normalizeHost(parsed.host, parsed.protocol);
+  const allowed = new Set<string>();
+  const host = h.get("host");
+  if (host) allowed.add(normalizeHost(host));
+  for (const fwd of (h.get("x-forwarded-host") ?? "").split(",")) if (fwd.trim()) allowed.add(normalizeHost(fwd));
+  try {
+    const base = new URL(env.APP_BASE_URL);
+    allowed.add(normalizeHost(base.host, base.protocol));
+  } catch {
+    // APP_BASE_URL is validated at startup; nothing to add otherwise
+  }
+  return allowed.has(originHost);
+}
+
+/** Request headers, or null outside a request scope (scripts, some tests). */
+async function requestHeaders(): Promise<Headers | null> {
+  try {
+    return await headers();
+  } catch {
+    return null;
+  }
+}
+
 function unauthorized(): DomainError {
   return new DomainError("UNAUTHORIZED", "Oturum bulunamadı veya süresi doldu");
 }
@@ -100,6 +147,10 @@ function unauthorized(): DomainError {
 async function loadCtx(): Promise<Ctx> {
   const cookie = await getSession();
   if (!cookie.userId || !cookie.sessionId) throw unauthorized();
+  const h = await requestHeaders();
+  if (h && !isSameOriginRequest(h)) {
+    throw new DomainError("FORBIDDEN", "İstek kaynağı doğrulanamadı; sayfayı yenileyip tekrar deneyin");
+  }
 
   const session = await prisma.userSession.findUnique({
     where: { id: cookie.sessionId },
@@ -118,6 +169,11 @@ async function loadCtx(): Promise<Ctx> {
   const idleMinutes = await getSetting("session.idleMinutes", session.hotelId);
   if (now.getTime() - session.lastSeenAt.getTime() >= idleMinutes * 60_000) {
     await closeSession(session.id, "HAREKETSIZLIK");
+    throw unauthorized();
+  }
+  // Absolute lifetime: activity never keeps a session open past loginAt + session.absoluteMaxMinutes.
+  if (now >= (await absoluteDeadline(session.loginAt, session.hotelId))) {
+    await closeSession(session.id, "SURE_ASIMI");
     throw unauthorized();
   }
   // A deactivated user or hotel ends the session for good: reactivating must not revive the cookie.

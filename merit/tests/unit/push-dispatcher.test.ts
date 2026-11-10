@@ -186,6 +186,13 @@ describe("dispatchNotificationEvent", () => {
     await expect(dispatchNotificationEvent(event)).resolves.toMatchObject({ failed: 2 });
   });
 
+  it("onay yükseltme ve SLA uyarıları push türü olarak kayıtlı", () => {
+    for (const type of ["order.escalated", "order.sla.warn", "order.sla.breach"]) {
+      expect(PUSH_TYPES.has(type)).toBe(true);
+    }
+    expect(PUSH_TYPES.get("order.sla.breach")!({ refId: "o1", title: "T", body: "B" })).toMatchObject({ title: "T", url: "/oda-servisi" });
+  });
+
   it("kayıtsız tür: claimed 0, gönderim yok", async () => {
     const { a } = await setup();
     await notify({ recipients: [a.id], type: "session.warn", title: "t", body: "b", refId: "s1" });

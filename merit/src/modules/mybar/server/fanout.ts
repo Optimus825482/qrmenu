@@ -24,6 +24,7 @@ export async function notifyNewRequest(
     {
       recipients: { hotelId: req.hotelId, roleCodes: [...MYBAR_NOTIFY_ROLES] },
       type: "mybar.created",
+      fallbackHotelId: req.hotelId,
       refType: "MybarRequest",
       refId: req.id,
       title: `Oda ${req.roomNumber} - Yeni MyBar talebi`,

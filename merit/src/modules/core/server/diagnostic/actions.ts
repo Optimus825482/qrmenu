@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { assertCan } from "@/lib/rbac";
-import { ok, safeAction } from "@/lib/result";
+import { ok, safeAction, type ResultError } from "@/lib/result";
 import {
   clearResolvedIncidents,
   listDiagnosticIncidents,
@@ -42,7 +42,7 @@ const testAlertSchema = z.object({
 /**
  * Runs live system self-diagnostics and returns a comprehensive health report.
  */
-export async function getSystemHealthAction(): Promise<{ ok: true; data: SystemHealthReport } | { ok: false; error: any }> {
+export async function getSystemHealthAction(): Promise<{ ok: true; data: SystemHealthReport } | { ok: false; error: ResultError }> {
   return safeAction(z.undefined(), async () => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "V");
@@ -55,7 +55,7 @@ export async function getSystemHealthAction(): Promise<{ ok: true; data: SystemH
  */
 export async function listDiagnosticIncidentsAction(
   raw: unknown,
-): Promise<{ ok: true; data: DiagnosticIncidentRow[] } | { ok: false; error: any }> {
+): Promise<{ ok: true; data: DiagnosticIncidentRow[] } | { ok: false; error: ResultError }> {
   return safeAction(querySchema, async (query) => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "V");
@@ -73,7 +73,7 @@ export async function listDiagnosticIncidentsAction(
  */
 export async function resolveDiagnosticIncidentAction(
   raw: unknown,
-): Promise<{ ok: true; data: boolean } | { ok: false; error: any }> {
+): Promise<{ ok: true; data: boolean } | { ok: false; error: ResultError }> {
   return safeAction(resolveSchema, async (input) => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "D");
@@ -84,7 +84,7 @@ export async function resolveDiagnosticIncidentAction(
 /**
  * Clears old resolved diagnostic logs from database.
  */
-export async function clearResolvedIncidentsAction(): Promise<{ ok: true; data: number } | { ok: false; error: any }> {
+export async function clearResolvedIncidentsAction(): Promise<{ ok: true; data: number } | { ok: false; error: ResultError }> {
   return safeAction(z.undefined(), async () => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "D");
@@ -95,7 +95,7 @@ export async function clearResolvedIncidentsAction(): Promise<{ ok: true; data: 
 /**
  * Manually runs comprehensive diagnostic probe suite on demand.
  */
-export async function triggerManualDiagnosticAction(): Promise<{ ok: true; data: SystemHealthReport } | { ok: false; error: any }> {
+export async function triggerManualDiagnosticAction(): Promise<{ ok: true; data: SystemHealthReport } | { ok: false; error: ResultError }> {
   return safeAction(z.undefined(), async () => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "V");
@@ -108,7 +108,7 @@ export async function triggerManualDiagnosticAction(): Promise<{ ok: true; data:
  */
 export async function sendTestDiagnosticAlertAction(
   raw: unknown,
-): Promise<{ ok: true; data: { sent: boolean; recipient?: string; error?: string } } | { ok: false; error: any }> {
+): Promise<{ ok: true; data: { sent: boolean; recipient?: string; error?: string } } | { ok: false; error: ResultError }> {
   return safeAction(testAlertSchema, async (input) => {
     const ctx = await requireUser();
     await assertCan(ctx, SCREEN, "O");

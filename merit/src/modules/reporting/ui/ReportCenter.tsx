@@ -436,7 +436,7 @@ export function ReportCenter({ variant = "window", initialKey, setStatus, onSche
             className={mobile ? "rc-btn" : "xp-button rc-btn"}
             style={{ marginLeft: "auto" }}
           >
-            ⏱️ Bu Raporu Otomatikleştir
+            Bu Raporu Otomatikleştir
           </button>
         ) : null}
       </div>

@@ -3,7 +3,6 @@ import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
-import { resolveCurrency } from "./priceDisplay";
 
 export type MenuOutletInfo = {
   id: string;
@@ -12,13 +11,14 @@ export type MenuOutletInfo = {
   hasOrdering: boolean;
   orderingEnabled: boolean;
   priceDisplay: "INHERIT" | "SHOW" | "HIDE";
+  /** The outlet's own currency (K3: set on the outlet, no global setting). */
+  currency: string;
   tableCount?: number;
   areaCount?: number;
 };
 
 export type MenuContext = {
   hotelName: string;
-  currency: string;
   /** May edit the tree (QM-MEN D or RO-TAL D). */
   canEdit: boolean;
   /** May flip the ordering / price switches (QM-MEN D, CR-TAN D or RO-TAL A). */
@@ -63,6 +63,7 @@ export async function menuContext(ctx: Ctx, hotelId: string): Promise<MenuContex
         hasOrdering: true,
         orderingEnabled: true,
         priceDisplay: true,
+        currency: true,
         _count: {
           select: {
             tables: true,
@@ -72,10 +73,8 @@ export async function menuContext(ctx: Ctx, hotelId: string): Promise<MenuContex
       },
     }),
   ]);
-  const currency = await resolveCurrency(hotelId);
   return {
     hotelName: hotel?.name ?? "Otel",
-    currency,
     canEdit,
     canSwitch,
     fixedOutlet: Boolean(ctx.session.outletId),
@@ -86,6 +85,7 @@ export async function menuContext(ctx: Ctx, hotelId: string): Promise<MenuContex
       hasOrdering: o.hasOrdering,
       orderingEnabled: o.orderingEnabled,
       priceDisplay: o.priceDisplay,
+      currency: o.currency,
       tableCount: o._count?.tables ?? 0,
       areaCount: o._count?.areas ?? 0,
     })),

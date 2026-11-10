@@ -377,21 +377,28 @@ export async function deliverRequest(
     if (locked.status !== "ONAYLANDI") throw new DomainError("CONFLICT", "Onaylı olmayan talep teslim edilemez");
     const rows = await tx.stockRequestItem.findMany({ where: { requestId: id } });
     const byId = new Map(rows.map((r) => [r.id, r]));
+    // Partial deliveries add up: each line may bring at most what is still open (approved - delivered so far).
+    const open = (r: (typeof rows)[number]) => Math.max(0, (r.approvedQty ?? 0) - (r.deliveredQty ?? 0));
     const given = new Map<string, number>();
     for (const l of lines) {
       const row = byId.get(l.itemId);
       if (!row) throw new DomainError("VALIDATION", "Talep kalemi bulunamadı");
       if (given.has(l.itemId)) throw new DomainError("VALIDATION", "Aynı kalem birden fazla kez girilmiş");
-      if (l.deliveredQty > (row.approvedQty ?? 0)) {
-        throw new DomainError("VALIDATION", "Teslim edilen miktar onaylanan miktarı aşamaz");
+      if (l.deliveredQty > open(row)) {
+        throw new DomainError("VALIDATION", "Teslim edilen miktar kalan onaylı miktarı aşamaz");
       }
       given.set(l.itemId, l.deliveredQty);
     }
     if (![...given.values()].some((q) => q > 0)) {
       throw new DomainError("VALIDATION", "En az bir kalem için teslim miktarı girilmeli");
     }
+    const total = new Map(rows.map((r) => [r.id, (r.deliveredQty ?? 0) + (given.get(r.id) ?? 0)]));
     for (const row of rows) {
-      await tx.stockRequestItem.update({ where: { id: row.id }, data: { deliveredQty: given.get(row.id) ?? 0 } });
+      if ((given.get(row.id) ?? 0) > 0) {
+        await tx.stockRequestItem.update({ where: { id: row.id }, data: { deliveredQty: total.get(row.id) } });
+      } else if (row.deliveredQty === null) {
+        await tx.stockRequestItem.update({ where: { id: row.id }, data: { deliveredQty: 0 } });
+      }
     }
     const delivered = rows
       .filter((r) => (given.get(r.id) ?? 0) > 0)
@@ -408,9 +415,12 @@ export async function deliverRequest(
         note: `Ek talep teslimi ${locked.code}`,
       });
     }
+    // Fully delivered once every line reached its approved quantity; otherwise the rest stays open (ONAYLANDI).
+    const complete = rows.every((r) => (total.get(r.id) ?? 0) >= (r.approvedQty ?? 0));
+    const status: StockRequestStatus = complete ? "TESLIM_EDILDI" : "ONAYLANDI";
     await tx.stockRequest.update({
       where: { id },
-      data: { status: "TESLIM_EDILDI", handledById: ctx.user.id, deliveredAt: new Date() },
+      data: { status, handledById: ctx.user.id, ...(complete ? { deliveredAt: new Date() } : {}) },
     });
     await audit(tx, {
       userId: ctx.user.id,
@@ -420,23 +430,27 @@ export async function deliverRequest(
       entityId: id,
       before: { status: locked.status },
       after: {
-        status: "TESLIM_EDILDI",
+        status,
+        partial: !complete,
         items: rows.map((r) => ({
           productId: r.productId,
           approvedQty: r.approvedQty,
-          deliveredQty: given.get(r.id) ?? 0,
+          deliveredNow: given.get(r.id) ?? 0,
+          deliveredQty: total.get(r.id) ?? 0,
         })),
       },
     });
     await announce(
       tx,
       { id, code: locked.code, hotelId: locked.hotelId, ownerId: locked.requestedById },
-      "TESLIM_EDILDI",
+      status,
       "delivered",
-      "Ek talebiniz teslim edildi",
-      `${locked.code} numaralı talebiniz teslim edildi, ürünler havuza eklendi`,
+      complete ? "Ek talebiniz teslim edildi" : "Ek talebiniz kısmen teslim edildi",
+      complete
+        ? `${locked.code} numaralı talebiniz teslim edildi, ürünler havuza eklendi`
+        : `${locked.code} numaralı talebinizin bir kısmı teslim edildi ve havuza eklendi; kalan miktar bekliyor`,
     );
-    return { id, status: "TESLIM_EDILDI" as const };
+    return { id, status };
   });
 }
 
@@ -470,12 +484,17 @@ export async function cancelRequest(
           : `Sadece bekleyen veya onaylı talepler iptal edilebilir. Mevcut durum: ${locked.status}`,
       );
     }
+    // A partly delivered request is closed, not cancelled: what reached the pool stays delivered.
+    const partlyDelivered =
+      !owner && (await tx.stockRequestItem.count({ where: { requestId: id, deliveredQty: { gt: 0 } } })) > 0;
+    const status: StockRequestStatus = partlyDelivered ? "TESLIM_EDILDI" : "IPTAL";
     await tx.stockRequest.update({
       where: { id },
       data: {
-        status: "IPTAL",
+        status,
         ...(why ? { rejectReason: why } : {}),
         ...(owner ? {} : { handledById: ctx.user.id }),
+        ...(partlyDelivered ? { deliveredAt: new Date() } : {}),
       },
     });
     await audit(tx, {
@@ -485,16 +504,18 @@ export async function cancelRequest(
       entity: "StockRequest",
       entityId: id,
       before: { status: locked.status },
-      after: { status: "IPTAL", reason: why || undefined, by: owner ? "owner" : "depo" },
+      after: { status, reason: why || undefined, by: owner ? "owner" : "depo", ...(partlyDelivered ? { remainderClosed: true } : {}) },
     });
     if (!owner) {
       await announce(
         tx,
         { id, code: locked.code, hotelId: locked.hotelId, ownerId: locked.requestedById },
-        "IPTAL",
+        status,
         "cancelled",
-        "Ek talebiniz iptal edildi",
-        `${locked.code} numaralı talebiniz iptal edildi: ${why}`,
+        partlyDelivered ? "Ek talebinizin kalanı kapatıldı" : "Ek talebiniz iptal edildi",
+        partlyDelivered
+          ? `${locked.code} numaralı talebinizin teslim edilmeyen kalanı kapatıldı: ${why}`
+          : `${locked.code} numaralı talebiniz iptal edildi: ${why}`,
       );
     } else {
       await publish(
@@ -507,7 +528,7 @@ export async function cancelRequest(
         tx,
       );
     }
-    return { id, status: "IPTAL" as const };
+    return { id, status };
   });
 }
 

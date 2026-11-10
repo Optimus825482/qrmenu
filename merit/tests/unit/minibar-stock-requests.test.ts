@@ -233,16 +233,18 @@ describe("rejectRequest", () => {
 });
 
 describe("deliverRequest", () => {
-  it("kısmi teslim (30/10) havuza GIRIS yazar, durum TESLIM_EDILDI olur", async () => {
+  it("kısmi teslim (30/40 + 10/10) havuza GIRIS yazar, kalan açık kalır (ONAYLANDI); ikinci teslim tamamlar", async () => {
     const w = await minibarWorld();
     await setStock(w, w.cola.id, 15);
     const kat = await makeKat();
     const depo = await makeDepo();
     const r = await approved(kat, depo, w);
-    await svc.deliverRequest(depo.ctx, r.id, [
-      { itemId: r.colaItem, deliveredQty: 30 },
-      { itemId: r.waterItem, deliveredQty: 10 },
-    ]);
+    expect(
+      await svc.deliverRequest(depo.ctx, r.id, [
+        { itemId: r.colaItem, deliveredQty: 30 },
+        { itemId: r.waterItem, deliveredQty: 10 },
+      ]),
+    ).toEqual({ id: r.id, status: "ONAYLANDI" });
     const cola = await testDb.hotelStock.findUniqueOrThrow({
       where: { hotelId_productId: { hotelId: w.hotelId, productId: w.cola.id } },
     });
@@ -250,14 +252,31 @@ describe("deliverRequest", () => {
     const moves = await testDb.hotelStockMovement.findMany({ where: { refType: "StockRequest", refId: r.id } });
     expect(moves).toHaveLength(2);
     expect(moves.find((m) => m.productId === w.cola.id)).toMatchObject({ type: "GIRIS", qty: 30, userId: depo.userId });
-    const row = await testDb.stockRequest.findUniqueOrThrow({ where: { id: r.id }, include: { items: true } });
-    expect(row.status).toBe("TESLIM_EDILDI");
-    expect(row.deliveredAt).not.toBeNull();
+    let row = await testDb.stockRequest.findUniqueOrThrow({ where: { id: r.id }, include: { items: true } });
+    expect(row.status).toBe("ONAYLANDI");
+    expect(row.deliveredAt).toBeNull();
     expect(row.items.find((i) => i.id === r.colaItem)!.deliveredQty).toBe(30);
-    expect(await testDb.auditLog.count({ where: { action: "STOCK_REQUEST_DELIVER", entityId: r.id } })).toBe(1);
     const notes = await testDb.notification.findMany({ where: { type: "stockrequest.delivered" } });
     expect(notes.map((n) => n.userId)).toEqual([kat.userId]);
     expect(vi.mocked(publish).mock.calls.map((c) => c[0].type)).toContain("stock.changed");
+
+    // The rest: more than the open 10 is rejected, exactly 10 completes the request.
+    expect(await msgOf(svc.deliverRequest(depo.ctx, r.id, [{ itemId: r.colaItem, deliveredQty: 11 }]))).toBe(
+      "Teslim edilen miktar kalan onaylı miktarı aşamaz",
+    );
+    expect(await svc.deliverRequest(depo.ctx, r.id, [{ itemId: r.colaItem, deliveredQty: 10 }])).toEqual({
+      id: r.id,
+      status: "TESLIM_EDILDI",
+    });
+    row = await testDb.stockRequest.findUniqueOrThrow({ where: { id: r.id }, include: { items: true } });
+    expect(row.status).toBe("TESLIM_EDILDI");
+    expect(row.deliveredAt).not.toBeNull();
+    expect(row.items.find((i) => i.id === r.colaItem)!.deliveredQty).toBe(40);
+    expect(row.items.find((i) => i.id === r.waterItem)!.deliveredQty).toBe(10);
+    expect((await testDb.hotelStock.findUniqueOrThrow({
+      where: { hotelId_productId: { hotelId: w.hotelId, productId: w.cola.id } },
+    })).remainingQty).toBe(55);
+    expect(await testDb.auditLog.count({ where: { action: "STOCK_REQUEST_DELIVER", entityId: r.id } })).toBe(2);
   });
 
   it("havuz satırı olmayan ürün için satır açılır", async () => {
@@ -279,7 +298,11 @@ describe("deliverRequest", () => {
     const kat = await makeKat();
     const depo = await makeDepo();
     const r = await approved(kat, depo, w);
-    const call = () => svc.deliverRequest(depo.ctx, r.id, [{ itemId: r.colaItem, deliveredQty: 40 }]);
+    const call = () =>
+      svc.deliverRequest(depo.ctx, r.id, [
+        { itemId: r.colaItem, deliveredQty: 40 },
+        { itemId: r.waterItem, deliveredQty: 10 },
+      ]);
     const res = await Promise.all([codeOf(call()), codeOf(call())]);
     expect(res.sort()).toEqual(["CONFLICT", "OK"]);
     const cola = await testDb.hotelStock.findUniqueOrThrow({
@@ -324,8 +347,26 @@ describe("cancelRequest", () => {
 
     const d = await approved(kat, depo, w);
     expect(await codeOf(svc.cancelRequest(kat.ctx, d.id))).toBe("CONFLICT"); // sahibi yalnız bekleyeni iptal eder
-    await svc.deliverRequest(depo.ctx, d.id, [{ itemId: d.colaItem, deliveredQty: 1 }]);
+    await svc.deliverRequest(depo.ctx, d.id, [
+      { itemId: d.colaItem, deliveredQty: 40 },
+      { itemId: d.waterItem, deliveredQty: 10 },
+    ]);
     expect(await codeOf(svc.cancelRequest(depo.ctx, d.id, "yanlış"))).toBe("CONFLICT");
+  });
+
+  it("kısmen teslim edilmiş talebi depo iptal ederse kalan kapanır: durum TESLIM_EDILDI, teslim edilen havuzda kalır", async () => {
+    const w = await minibarWorld();
+    await setStock(w, w.cola.id, 0);
+    const kat = await makeKat();
+    const depo = await makeDepo();
+    const r = await approved(kat, depo, w);
+    await svc.deliverRequest(depo.ctx, r.id, [{ itemId: r.colaItem, deliveredQty: 5 }]);
+    expect(await svc.cancelRequest(depo.ctx, r.id, "tedarik bitti")).toEqual({ id: r.id, status: "TESLIM_EDILDI" });
+    const row = await testDb.stockRequest.findUniqueOrThrow({ where: { id: r.id } });
+    expect(row).toMatchObject({ status: "TESLIM_EDILDI", rejectReason: "tedarik bitti" });
+    expect((await testDb.hotelStock.findUniqueOrThrow({
+      where: { hotelId_productId: { hotelId: w.hotelId, productId: w.cola.id } },
+    })).remainingQty).toBe(5);
   });
 
   it("depo onaylı talebi sebeple iptal eder, sahibine bildirim gider; sebep zorunlu", async () => {

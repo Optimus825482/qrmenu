@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useAppUpdate } from "../useAppUpdate";
+import { Icon } from "@/components/icons/Icon";
+
+const subscribeNever = () => () => {};
 
 export function AppUpdateNotifier() {
   const {
@@ -14,17 +17,14 @@ export function AppUpdateNotifier() {
     dismissUpdate,
   } = useAppUpdate();
 
-  const [mounted, setMounted] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
+  // "server" during SSR / hydration, then the client view; guest QR pages (/q/...) never show the notice.
+  const view = useSyncExternalStore(
+    subscribeNever,
+    () => (window.location.pathname.startsWith("/q/") ? "guest" : "app"),
+    () => "server",
+  );
 
-  useEffect(() => {
-    setMounted(true);
-    if (typeof window !== "undefined" && window.location.pathname.startsWith("/q/")) {
-      setIsGuest(true);
-    }
-  }, []);
-
-  if (!mounted || isGuest || !hasUpdate) return null;
+  if (view !== "app" || !hasUpdate) return null;
 
   const targetVersion = serverInfo?.version ?? currentVersion;
   const highlights = serverInfo?.highlights ?? [
@@ -79,7 +79,7 @@ export function AppUpdateNotifier() {
                 boxShadow: "0 2px 8px rgba(212, 175, 55, 0.4)",
               }}
             >
-              🚀
+              <Icon name="rocket" size={18} />
             </span>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -122,7 +122,7 @@ export function AppUpdateNotifier() {
               borderRadius: "6px",
             }}
           >
-            ✕
+            <Icon name="close" size={16} title="Kapat" />
           </button>
         </div>
 
@@ -197,7 +197,7 @@ export function AppUpdateNotifier() {
               </>
             ) : (
               <>
-                <span>🔄</span> Şimdi Güncelle
+                <Icon name="refresh" size={14} /> Şimdi Güncelle
               </>
             )}
           </button>

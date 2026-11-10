@@ -247,7 +247,7 @@ describe("RoomService staff board - confirmation, labels, order", () => {
 
   it("shows prices only when the card carries a subtotal", () => {
     render(ui(boardOf({ NEW: [card({ subtotal: "12.50", currency: "EUR" }), card()] }), ALL));
-    expect(screen.getAllByText("12.50 EUR")).toHaveLength(1);
+    expect(screen.getAllByText("€12,50")).toHaveLength(1);
   });
 });
 

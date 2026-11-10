@@ -33,6 +33,15 @@ afterAll(async () => {
 const call = (token: string, type: "GARSON" | "HESAP" | "DIGER", note?: string) =>
   waiterCalls.createFromGuest({ token, type, note, ip: "10.9.9.9" });
 
+describe("waiterCalls.createFromGuest (yarış)", () => {
+  it("aynı masadan eşzamanlı aynı çağrı: tek ACIK kayıt", async () => {
+    const s = await orderSetup();
+    const results = await Promise.all([1, 2, 3].map(() => call(s.token, "GARSON")));
+    expect(new Set(results.map((r) => r.callId)).size).toBe(1);
+    expect(await testDb.waiterCall.count({ where: { tableId: s.table.id, status: "ACIK" } })).toBe(1);
+  });
+});
+
 describe("waiterCalls.createFromGuest", () => {
   it("çağrı oluşur, olay yayınlanır, çevrimiçi garson ve kasa bilgilendirilir", async () => {
     const s = await orderSetup();

@@ -357,6 +357,8 @@ model Outlet {
   hasOrdering             Boolean      @default(false) @map("has_ordering")
   orderingEnabled         Boolean      @default(false) @map("ordering_enabled")
   priceDisplay            PriceDisplay @default(INHERIT) @map("price_display")
+  /// ISO 4217 code shown with prices on this outlet's guest menu and staff screens (chosen with the price display).
+  currency                String       @default("EUR") @db.VarChar(3)
   themeId                 String?      @map("theme_id")
   printerId               String?      @map("printer_id")
   kdsEnabled              Boolean      @default(false) @map("kds_enabled")
@@ -1099,6 +1101,8 @@ model OccupancyUpload {
   okRows     Int          @default(0) @map("ok_rows")
   errorRows  Int          @default(0) @map("error_rows")
   errors     Json         @default("[]")
+  /// Records this upload updated or removed, as they were before it ({ updated, removed }); deleteUpload restores them.
+  revertData Json?        @map("revert_data")
   storedPath String?      @map("stored_path")
   userId     String       @map("user_id")
   createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)

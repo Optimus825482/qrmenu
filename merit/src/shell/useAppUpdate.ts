@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { runningStandalone } from "./usePwaInstall";
 import { APP_VERSION, BUILD_ID } from "@/lib/version";
 
@@ -19,6 +19,8 @@ const CLIENT_BUILD_ID = BUILD_ID;
 const SNOOZE_KEY = "merit_update_snoozed_until";
 const CHECK_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
+const subscribeNever = () => () => {};
+
 export function useAppUpdate() {
   const [hasUpdate, setHasUpdate] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -26,13 +28,10 @@ export function useAppUpdate() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [serverInfo, setServerInfo] = useState<VersionMetadata | null>(null);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
+  // Standalone (installed PWA) mode is read on the client only; the server render says false.
+  const isStandalone = useSyncExternalStore(subscribeNever, runningStandalone, () => false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
-  // Check standalone mode on client
-  useEffect(() => {
-    setIsStandalone(runningStandalone());
-  }, []);
 
   const checkForUpdate = useCallback(async (manual = false): Promise<{ hasUpdate: boolean; info?: VersionMetadata }> => {
     if (typeof window === "undefined") return { hasUpdate: false };

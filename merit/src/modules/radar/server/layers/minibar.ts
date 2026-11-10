@@ -53,8 +53,9 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
     }),
     prisma.mybarRequest.findMany({
       where: env.historical
-        ? { hotelId, businessDate: todayDay, createdAt: { lte: now } }
-        : { hotelId, status: "BEKLEMEDE", businessDate: todayDay },
+        ? // An unanswered request of an earlier business day is still open at that instant.
+          { hotelId, businessDate: { lte: todayDay }, createdAt: { gte: new Date(now.getTime() - 14 * 86_400_000), lte: now } }
+        : { hotelId, status: "BEKLEMEDE", businessDate: { lte: todayDay } },
       select: {
         id: true,
         roomId: true,

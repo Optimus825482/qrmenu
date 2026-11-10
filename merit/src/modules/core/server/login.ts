@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
+import { audit } from "./audit";
 import { closeSession, createSession } from "./sessions";
 import { listTargets, type Target } from "./targets";
 
@@ -89,6 +90,36 @@ function timingDummyHash(): Promise<string> {
 
 type RequestContext = { ip: string; userAgent: string };
 
+/**
+ * One LOGIN_FAILED audit row per refused credential check (never the password). An unknown
+ * username is recorded only as a masked hint (it may be a password typed into the wrong field);
+ * the caller still answers the same message for every case. Best effort: never blocks the answer.
+ */
+async function auditFailedLogin(
+  input: { username: string; ip: string; userAgent: string },
+  user: { id: string; hotelId: string | null; isActive: boolean } | null,
+): Promise<void> {
+  try {
+    await audit(prisma, {
+      userId: user?.id,
+      hotelId: user?.hotelId ?? undefined,
+      action: "LOGIN_FAILED",
+      entity: "User",
+      entityId: user?.id,
+      after: user
+        ? { reason: user.isActive ? "YANLIS_SIFRE" : "PASIF_KULLANICI", userAgent: input.userAgent.slice(0, 255) }
+        : {
+            reason: "BILINMEYEN_KULLANICI",
+            usernameHint: `${input.username.slice(0, 2)}***`,
+            userAgent: input.userAgent.slice(0, 255),
+          },
+      ip: input.ip,
+    });
+  } catch (error) {
+    console.error("login: başarısız giriş denetim kaydı yazılamadı", { error });
+  }
+}
+
 /** Opens the session for a chosen target, writes the cookie and resolves the landing path. */
 async function startSession(
   userId: string,
@@ -157,6 +188,7 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
   const candidate = user?.isActive ? user.passwordHash : await timingDummyHash();
   const check = await verifyPassword(input.password, candidate);
   if (!user || !user.isActive || !check.ok) {
+    await auditFailedLogin(input, user);
     throw new DomainError("UNAUTHORIZED", INVALID_CREDENTIALS);
   }
   // A correct password ends the guessing window for this username: repeated successful logins

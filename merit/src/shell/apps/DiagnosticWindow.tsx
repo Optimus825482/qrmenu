@@ -24,7 +24,7 @@ import { setSettingAction } from "@/modules/core/server/admin/actions/settingsAd
 
 type Tab = "probes" | "incidents" | "settings";
 
-export function DiagnosticWindow({ setStatus }: AppProps) {
+export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
   const [tab, setTab] = useState<Tab>("probes");
   const [health, setHealth] = useState<SystemHealthReport | null>(null);
   const [incidents, setIncidents] = useState<DiagnosticIncidentRow[]>([]);
@@ -61,9 +61,13 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
   };
 
   useEffect(() => {
-    void loadData();
+    // The first load runs outside the effect body (it sets the loading state).
+    const first = setTimeout(() => void loadData(), 0);
     const interval = setInterval(() => void loadData(true), 30000);
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(first);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleRunDiagnostics = () => {
@@ -142,15 +146,15 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
   });
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return "#16a34a";
-    if (score >= 70) return "#ea580c";
-    return "#dc2626";
+    if (score >= 90) return "var(--success)";
+    if (score >= 70) return "var(--warn)";
+    return "var(--danger)";
   };
 
   return (
-    <div className="xp-defs flex flex-col h-full bg-[#ece9d8] select-none text-xs font-sans overflow-hidden">
+    <div className="xp-defs flex flex-col h-full bg-[var(--xp-body)] select-none text-xs font-sans overflow-hidden">
       {/* Top Header Card */}
-      <div className="bg-white border-b border-[#cbd5e1] p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+      <div className="bg-white border-b border-border p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
           <div
             className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg text-white shadow-md transition-all"
@@ -159,10 +163,10 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
             %{health?.healthScore ?? "—"}
           </div>
           <div>
-            <h2 className="font-bold text-sm text-[#0f172a] flex items-center gap-2">
+            <h2 className="font-bold text-sm text-text flex items-center gap-2">
               Sistem Hata Denetimi &amp; Kendi Kendini Teşhis Merkezi
               <span
-                className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-white"
+                className="text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-white"
                 style={{ backgroundColor: getScoreColor(health?.healthScore ?? 100) }}
               >
                 {health?.overallStatus === "HEALTHY"
@@ -172,7 +176,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                     : "Kritik Durum"}
               </span>
             </h2>
-            <p className="text-[11px] text-[#64748b]">
+            <p className="text-xs text-muted">
               Çalışma Süresi: <strong>{health?.uptimeFormatted ?? "—"}</strong> · Veritabanı Gecikmesi:{" "}
               <strong>{health?.dbLatencyMs ?? 0} ms</strong> · Canlı Oturumlar:{" "}
               <strong>{health?.activeOnlineSessions ?? 0}</strong>
@@ -183,11 +187,11 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="xp-button font-bold text-blue-900"
+            className="xp-button font-bold text-accent"
             disabled={isPending || loading}
             onClick={handleRunDiagnostics}
           >
-            {isPending ? "🩺 Denetleniyor..." : "🩺 Şimdi Tanı Çalıştır"}
+            {isPending ? "Denetleniyor..." : "Şimdi Tanı Çalıştır"}
           </button>
           <button
             type="button"
@@ -201,91 +205,91 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
       </div>
 
       {/* Metric Cards Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-[#f8fafc] border-b border-[#e2e8f0]">
-        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
-          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Bellek (Heap Kullanımı)</span>
-          <span className="text-base font-bold text-[#0f172a]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 bg-bg border-b border-border">
+        <div className="bg-white p-2.5 rounded-lg border border-border shadow-xs">
+          <span className="text-xs font-semibold text-muted uppercase block">Bellek (Heap Kullanımı)</span>
+          <span className="text-base font-bold text-text">
             {health?.memory.heapUsedMb ?? 0} MB
-            <span className="text-xs font-normal text-[#64748b]"> / {health?.memory.heapTotalMb ?? 0} MB</span>
+            <span className="text-xs font-normal text-muted"> / {health?.memory.heapTotalMb ?? 0} MB</span>
           </span>
-          <div className="w-full bg-[#f1f5f9] h-1.5 rounded-full mt-1.5 overflow-hidden">
+          <div className="w-full bg-[var(--muted-bg)] h-1.5 rounded-full mt-1.5 overflow-hidden">
             <div
               className="h-full rounded-full transition-all"
               style={{
                 width: `${health?.memory.heapUsagePct ?? 0}%`,
-                backgroundColor: (health?.memory.heapUsagePct ?? 0) > 80 ? "#dc2626" : "#2563eb",
+                backgroundColor: (health?.memory.heapUsagePct ?? 0) > 80 ? "var(--danger)" : "var(--accent)",
               }}
             />
           </div>
         </div>
 
-        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
-          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Veritabanı Yanıt Süresi</span>
-          <span className="text-base font-bold text-[#0f172a]">
-            {health?.dbLatencyMs ?? 0} <span className="text-xs font-normal text-[#64748b]">ms</span>
+        <div className="bg-white p-2.5 rounded-lg border border-border shadow-xs">
+          <span className="text-xs font-semibold text-muted uppercase block">Veritabanı Yanıt Süresi</span>
+          <span className="text-base font-bold text-text">
+            {health?.dbLatencyMs ?? 0} <span className="text-xs font-normal text-muted">ms</span>
           </span>
-          <span className="text-[10px] block text-[#16a34a] font-medium mt-1">
-            {(health?.dbLatencyMs ?? 0) < 50 ? "✓ Mükemmel Tepki Süresi" : "Normal Bağlantı"}
+          <span className="text-xs block text-success font-medium mt-1">
+            {(health?.dbLatencyMs ?? 0) < 50 ? "Mükemmel Tepki Süresi" : "Normal Bağlantı"}
           </span>
         </div>
 
-        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
-          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Kayıtlı Hata / Teşhis Olayları</span>
-          <span className="text-base font-bold text-[#0f172a]">{incidents.length}</span>
-          <span className="text-[10px] block text-[#64748b] font-medium mt-1">
+        <div className="bg-white p-2.5 rounded-lg border border-border shadow-xs">
+          <span className="text-xs font-semibold text-muted uppercase block">Kayıtlı Hata / Teşhis Olayları</span>
+          <span className="text-base font-bold text-text">{incidents.length}</span>
+          <span className="text-xs block text-muted font-medium mt-1">
             {incidents.filter((i) => !i.data.resolved).length} çözülmemiş olay
           </span>
         </div>
 
-        <div className="bg-white p-2.5 rounded-lg border border-[#e2e8f0] shadow-xs">
-          <span className="text-[10px] font-semibold text-[#64748b] uppercase block">Geliştirici Bildirim Kanalı</span>
-          <span className="text-xs font-bold text-blue-700 block truncate mt-0.5">
+        <div className="bg-white p-2.5 rounded-lg border border-border shadow-xs">
+          <span className="text-xs font-semibold text-muted uppercase block">Geliştirici Bildirim Kanalı</span>
+          <span className="text-xs font-bold text-accent block truncate mt-0.5">
             {autoNotify ? "Aktif (Otomatik E-posta)" : "Devre Dışı"}
           </span>
           <button
             type="button"
-            className="text-[10px] text-blue-600 hover:underline font-semibold mt-1 inline-block"
+            className="text-xs text-accent hover:underline font-semibold mt-1 inline-block"
             onClick={() => void handleSendTestAlert()}
           >
-            🧪 Test Maili Gönder
+            Test Maili Gönder
           </button>
         </div>
       </div>
 
       {/* Tabs Bar */}
-      <div className="flex border-b border-[#cbd5e1] bg-[#e2e8f0] px-3 pt-2 gap-1">
+      <div className="flex border-b border-border bg-[var(--muted-bg)] px-3 pt-2 gap-1">
         <button
           type="button"
           className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
             tab === "probes"
-              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
-              : "text-[#475569] hover:bg-[#cbd5e1]"
+              ? "bg-white text-accent border-t-2 border-t-accent border-x border-border"
+              : "text-muted hover:bg-border"
           }`}
           onClick={() => setTab("probes")}
         >
-          🩺 Sistem Sağlık Probları ({health?.probes.length ?? 0})
+          Sistem Sağlık Probları ({health?.probes.length ?? 0})
         </button>
         <button
           type="button"
           className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
             tab === "incidents"
-              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
-              : "text-[#475569] hover:bg-[#cbd5e1]"
+              ? "bg-white text-accent border-t-2 border-t-accent border-x border-border"
+              : "text-muted hover:bg-border"
           }`}
           onClick={() => setTab("incidents")}
         >
-          🚨 Hata Günlüğü &amp; Teşhis Raporları ({incidents.length})
+          Hata Günlüğü &amp; Teşhis Raporları ({incidents.length})
         </button>
         <button
           type="button"
           className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
             tab === "settings"
-              ? "bg-white text-blue-900 border-t-2 border-t-blue-600 border-x border-[#cbd5e1]"
-              : "text-[#475569] hover:bg-[#cbd5e1]"
+              ? "bg-white text-accent border-t-2 border-t-accent border-x border-border"
+              : "text-muted hover:bg-border"
           }`}
           onClick={() => setTab("settings")}
         >
-          ⚙️ Geliştirici Bildirim Ayarları
+          Geliştirici Bildirim Ayarları
         </button>
       </div>
 
@@ -294,7 +298,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
         {/* TAB 1: HEALTH PROBES */}
         {tab === "probes" && (
           <div className="flex flex-col gap-2.5">
-            <p className="text-[11px] text-[#64748b]">
+            <p className="text-xs text-muted">
               Kendi kendini denetleme motoru arka planda veritabanı, bellek, e-posta ve bulut servislerini sürekli test eder.
             </p>
 
@@ -302,32 +306,32 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
               {(health?.probes ?? []).map((probe, i) => (
                 <div
                   key={i}
-                  className="flex items-start justify-between p-3 rounded-lg border border-[#e2e8f0] bg-[#f8fafc] hover:bg-[#f1f5f9] transition-all"
+                  className="flex items-start justify-between p-3 rounded-lg border border-border bg-bg hover:bg-[var(--muted-bg)] transition-all"
                 >
                   <div className="flex items-start gap-2.5">
                     <span
                       className={`text-xs px-2 py-0.5 rounded font-bold uppercase mt-0.5 ${
                         probe.status === "PASS"
-                          ? "bg-green-100 text-green-800"
+                          ? "bg-[var(--success-bg)] text-success"
                           : probe.status === "WARN"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-[var(--warn-bg)] text-warn"
+                            : "bg-[var(--danger-bg)] text-danger"
                       }`}
                     >
                       {probe.status === "PASS" ? "BAŞARILI" : probe.status === "WARN" ? "UYARI" : "HATA"}
                     </span>
                     <div>
-                      <h4 className="font-bold text-xs text-[#0f172a]">{probe.name}</h4>
-                      <p className="text-[11px] text-[#475569] mt-0.5">{probe.message}</p>
+                      <h4 className="font-bold text-xs text-text">{probe.name}</h4>
+                      <p className="text-xs text-muted mt-0.5">{probe.message}</p>
                       {probe.recommendation ? (
-                        <p className="text-[11px] text-blue-700 font-medium mt-1 bg-blue-50/70 p-1.5 rounded border border-blue-200/60">
-                          💡 <strong>Öneri:</strong> {probe.recommendation}
+                        <p className="text-xs text-accent font-medium mt-1 bg-accent/10 p-1.5 rounded border border-accent/40">
+                          <strong>Öneri:</strong> {probe.recommendation}
                         </p>
                       ) : null}
                     </div>
                   </div>
                   {probe.latencyMs !== undefined ? (
-                    <span className="text-[11px] font-mono text-[#64748b] bg-white px-2 py-1 rounded border border-[#e2e8f0]">
+                    <span className="text-xs font-mono text-muted bg-white px-2 py-1 rounded border border-border">
                       {probe.latencyMs} ms
                     </span>
                   ) : null}
@@ -347,17 +351,17 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                   placeholder="Hata veya modül ara..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-2.5 py-1 border border-[#cbd5e1] rounded text-xs w-56"
+                  className="px-2.5 py-1 border border-border rounded text-xs w-56"
                 />
                 <select
                   value={filterSeverity}
                   onChange={(e) => setFilterSeverity(e.target.value)}
-                  className="px-2 py-1 border border-[#cbd5e1] rounded text-xs bg-white"
+                  className="px-2 py-1 border border-border rounded text-xs bg-white"
                 >
                   <option value="">Tüm Şiddet Seviyeleri</option>
-                  <option value="CRITICAL">🚨 Kritik</option>
-                  <option value="HIGH">⚠️ Yüksek</option>
-                  <option value="MEDIUM">ℹ️ Orta</option>
+                  <option value="CRITICAL">Kritik</option>
+                  <option value="HIGH">Yüksek</option>
+                  <option value="MEDIUM">Orta</option>
                   <option value="LOW">Düşük</option>
                 </select>
               </div>
@@ -365,7 +369,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="xp-button text-[11px]"
+                  className="xp-button text-xs"
                   onClick={() => void handleClearResolved()}
                 >
                   Çözülenleri Temizle
@@ -374,14 +378,14 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
             </div>
 
             {filteredIncidents.length === 0 ? (
-              <div className="text-center p-8 bg-[#f8fafc] rounded-lg border border-dashed border-[#cbd5e1]">
-                <p className="text-sm font-semibold text-[#64748b]">Kayıtlı sistem hatası bulunamadı.</p>
-                <p className="text-[11px] text-[#94a3b8] mt-1">Sistem modülleri hatasız ve kararlı çalışmaktadır.</p>
+              <div className="text-center p-8 bg-bg rounded-lg border border-dashed border-border">
+                <p className="text-sm font-semibold text-muted">Kayıtlı sistem hatası bulunamadı.</p>
+                <p className="text-xs text-muted mt-1">Sistem modülleri hatasız ve kararlı çalışmaktadır.</p>
               </div>
             ) : (
-              <div className="flex-1 overflow-auto border border-[#cbd5e1] rounded-lg">
+              <div className="flex-1 overflow-auto border border-border rounded-lg">
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-[#f1f5f9] text-[#475569] font-bold border-b border-[#cbd5e1] sticky top-0">
+                  <thead className="bg-[var(--muted-bg)] text-muted font-bold border-b border-border sticky top-0">
                     <tr>
                       <th className="p-2 w-28">Zaman</th>
                       <th className="p-2 w-24">Modül</th>
@@ -392,52 +396,52 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                       <th className="p-2 w-20 text-center">İncele</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#e2e8f0]">
+                  <tbody className="divide-y divide-border">
                     {filteredIncidents.map((row) => (
-                      <tr key={row.id} className="hover:bg-[#f8fafc] transition-colors">
-                        <td className="p-2 font-mono text-[11px] text-[#64748b]">
+                      <tr key={row.id} className="hover:bg-bg transition-colors">
+                        <td className="p-2 font-mono text-xs text-muted">
                           {new Date(row.createdAt).toLocaleTimeString("tr-TR")}
                           <br />
                           <small>{new Date(row.createdAt).toLocaleDateString("tr-TR")}</small>
                         </td>
-                        <td className="p-2 font-semibold text-[#0f172a]">{row.data.module}</td>
+                        <td className="p-2 font-semibold text-text">{row.data.module}</td>
                         <td className="p-2">
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            className={`px-1.5 py-0.5 rounded text-xs font-bold ${
                               row.data.severity === "CRITICAL"
-                                ? "bg-red-100 text-red-800"
+                                ? "bg-[var(--danger-bg)] text-danger"
                                 : row.data.severity === "HIGH"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-blue-100 text-blue-800"
+                                  ? "bg-[var(--warn-bg)] text-warn"
+                                  : "bg-accent/15 text-accent"
                             }`}
                           >
                             {row.data.severity}
                           </span>
                         </td>
                         <td className="p-2 max-w-md">
-                          <strong className="block text-[#0f172a] truncate">{row.data.errorMessage}</strong>
-                          <span className="text-[11px] text-[#64748b] truncate block mt-0.5">
-                            🔍 {row.data.rootCause}
+                          <strong className="block text-text truncate">{row.data.errorMessage}</strong>
+                          <span className="text-xs text-muted truncate block mt-0.5">
+                            {row.data.rootCause}
                           </span>
                         </td>
-                        <td className="p-2 text-[11px]">
+                        <td className="p-2 text-xs">
                           {row.data.mailSent ? (
-                            <span className="text-green-700 font-semibold">✓ Gönderildi</span>
+                            <span className="text-success font-semibold">Gönderildi</span>
                           ) : (
-                            <span className="text-[#94a3b8]">—</span>
+                            <span className="text-muted">—</span>
                           )}
                         </td>
                         <td className="p-2">
                           {row.data.resolved ? (
-                            <span className="text-green-700 font-bold text-[11px]">✓ Çözüldü</span>
+                            <span className="text-success font-bold text-xs">Çözüldü</span>
                           ) : (
-                            <span className="text-red-700 font-bold text-[11px]">● Açık</span>
+                            <span className="text-danger font-bold text-xs">● Açık</span>
                           )}
                         </td>
                         <td className="p-2 text-center">
                           <button
                             type="button"
-                            className="xp-button text-[11px] font-bold"
+                            className="xp-button text-xs font-bold"
                             onClick={() => setInspecting(row)}
                           >
                             Rapor
@@ -455,7 +459,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
         {/* TAB 3: SETTINGS */}
         {tab === "settings" && (
           <div className="max-w-xl flex flex-col gap-3.5">
-            <p className="text-[11px] text-[#64748b]">
+            <p className="text-xs text-muted">
               Sistemde beklenmeyen bir çalışma zamanı hatası veya modül arızası meydana geldiğinde, diagnostik motoru
               otomatik olarak hatayı analiz eder ve bu adrese bildirim gönderir.
             </p>
@@ -466,11 +470,11 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                 placeholder="gelistirici@merithotels.com"
                 value={developerEmail}
                 onChange={(e) => setDeveloperEmail(e.target.value)}
-                className="w-full px-2.5 py-1.5 border border-[#cbd5e1] rounded text-xs"
+                className="w-full px-2.5 py-1.5 border border-border rounded text-xs"
               />
             </Field>
 
-            <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-[#0f172a]">
+            <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-text">
               <input
                 type="checkbox"
                 checked={autoNotify}
@@ -483,11 +487,11 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
               <select
                 value={minSeverity}
                 onChange={(e) => setMinSeverity(e.target.value as DiagnosticSeverity)}
-                className="w-full px-2.5 py-1.5 border border-[#cbd5e1] rounded text-xs bg-white"
+                className="w-full px-2.5 py-1.5 border border-border rounded text-xs bg-white"
               >
-                <option value="CRITICAL">🚨 Yalnızca Kritik Hatalar</option>
-                <option value="HIGH">⚠️ Yüksek ve Kritik (Önerilen)</option>
-                <option value="MEDIUM">ℹ️ Orta, Yüksek ve Kritik</option>
+                <option value="CRITICAL">Yalnızca Kritik Hatalar</option>
+                <option value="HIGH">Yüksek ve Kritik (Önerilen)</option>
+                <option value="MEDIUM">Orta, Yüksek ve Kritik</option>
                 <option value="LOW">Tüm Seviyeler (Hata ve Uyarılar)</option>
               </select>
             </Field>
@@ -495,7 +499,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
             <div className="flex items-center gap-2 mt-2">
               <button
                 type="button"
-                className="xp-button font-bold text-blue-900"
+                className="xp-button font-bold text-accent"
                 disabled={savingSettings}
                 onClick={() => void handleSaveSettings()}
               >
@@ -506,7 +510,7 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                 className="xp-button"
                 onClick={() => void handleSendTestAlert()}
               >
-                🧪 Test Bildirimi Gönder
+                Test Bildirimi Gönder
               </button>
             </div>
           </div>
@@ -537,24 +541,24 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
             </header>
 
             <div className="xp-form-fields flex flex-col gap-2.5 overflow-auto max-h-[70vh] p-4">
-              <div className="flex items-center justify-between p-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+              <div className="flex items-center justify-between p-2.5 bg-bg border border-border rounded">
                 <div>
-                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Hata Zamanı</span>
+                  <span className="text-xs text-muted block font-semibold uppercase">Hata Zamanı</span>
                   <strong className="text-xs">{new Date(inspecting.createdAt).toLocaleString("tr-TR")}</strong>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Modül</span>
-                  <strong className="text-xs text-blue-700">{inspecting.data.module}</strong>
+                  <span className="text-xs text-muted block font-semibold uppercase">Modül</span>
+                  <strong className="text-xs text-accent">{inspecting.data.module}</strong>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#64748b] block font-semibold uppercase">Şiddet</span>
+                  <span className="text-xs text-muted block font-semibold uppercase">Şiddet</span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-xs font-bold ${
                       inspecting.data.severity === "CRITICAL"
-                        ? "bg-red-100 text-red-800"
+                        ? "bg-[var(--danger-bg)] text-danger"
                         : inspecting.data.severity === "HIGH"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-blue-100 text-blue-800"
+                          ? "bg-[var(--warn-bg)] text-warn"
+                          : "bg-accent/15 text-accent"
                     }`}
                   >
                     {inspecting.data.severity}
@@ -563,32 +567,32 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
               </div>
 
               <div>
-                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">Hata Mesajı</span>
-                <div className="p-2.5 bg-red-50 text-red-900 border border-red-200 rounded font-mono text-xs">
+                <span className="text-xs font-bold text-muted uppercase block mb-1">Hata Mesajı</span>
+                <div className="p-2.5 bg-[var(--danger-bg)] text-danger border border-danger/40 rounded font-mono text-xs">
                   {inspecting.data.errorMessage}
                 </div>
               </div>
 
               <div>
-                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">🔍 Kök Neden Teşhisi</span>
-                <div className="p-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded text-xs">
+                <span className="text-xs font-bold text-muted uppercase block mb-1">Kök Neden Teşhisi</span>
+                <div className="p-2.5 bg-[var(--warn-bg)] text-warn border border-warn/40 rounded text-xs">
                   {inspecting.data.rootCause}
                 </div>
               </div>
 
               <div>
-                <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">💡 Önerilen Çözüm</span>
-                <div className="p-2.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-xs">
+                <span className="text-xs font-bold text-muted uppercase block mb-1">Önerilen Çözüm</span>
+                <div className="p-2.5 bg-accent/10 text-accent border border-accent/40 rounded text-xs">
                   {inspecting.data.recommendation}
                 </div>
               </div>
 
               {inspecting.data.stackTrace ? (
                 <div>
-                  <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">
+                  <span className="text-xs font-bold text-muted uppercase block mb-1">
                     Teknik Hata Yığını (Stack Trace)
                   </span>
-                  <pre className="p-2.5 bg-[#0f172a] text-[#f8fafc] rounded font-mono text-[10px] overflow-auto max-h-40 leading-relaxed">
+                  <pre className="p-2.5 bg-brand text-[var(--bg)] rounded font-mono text-xs overflow-auto max-h-40 leading-relaxed">
                     {inspecting.data.stackTrace}
                   </pre>
                 </div>
@@ -596,8 +600,8 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
 
               {inspecting.data.context ? (
                 <div>
-                  <span className="text-[11px] font-bold text-[#475569] uppercase block mb-1">Olay Bağlamı</span>
-                  <pre className="p-2 bg-[#f8fafc] border border-[#e2e8f0] rounded font-mono text-[10px] overflow-auto max-h-24">
+                  <span className="text-xs font-bold text-muted uppercase block mb-1">Olay Bağlamı</span>
+                  <pre className="p-2 bg-bg border border-border rounded font-mono text-xs overflow-auto max-h-24">
                     {JSON.stringify(inspecting.data.context, null, 2)}
                   </pre>
                 </div>
@@ -609,13 +613,13 @@ export function DiagnosticWindow({ setStatus }: AppProps) {
                 {!inspecting.data.resolved ? (
                   <button
                     type="button"
-                    className="xp-button font-bold text-green-800"
+                    className="xp-button font-bold text-success"
                     onClick={() => void handleResolveIncident(inspecting)}
                   >
-                    ✓ Çözüldü Olarak İşaretle
+                    Çözüldü Olarak İşaretle
                   </button>
                 ) : (
-                  <span className="text-green-700 text-xs font-bold">✓ Bu olay çözüldü</span>
+                  <span className="text-success text-xs font-bold">Bu olay çözüldü</span>
                 )}
               </div>
               <button type="button" className="xp-button" onClick={() => setInspecting(null)}>

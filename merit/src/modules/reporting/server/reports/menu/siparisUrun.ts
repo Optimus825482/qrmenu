@@ -20,7 +20,9 @@ export const siparisUrun = defineReport<Params>({
   paramFields: [{ name: "includeUnapproved", label: "Onaylanmamış siparişler dahil", type: "boolean", default: false }],
   paramsSchema: z.object({ includeUnapproved: z.boolean().default(false) }),
   async run(scope, params) {
+    // Cancelled / rejected orders were never sold: their items are not counted.
     const approvedOnly = params.includeUnapproved ? Prisma.empty : Prisma.sql`AND o.approved_at IS NOT NULL`;
+    const notVoided = Prisma.sql`AND o.status::text NOT IN ('IPTAL', 'REDDEDILDI')`;
     const rows = await prisma.$queryRaw<Row[]>`
       SELECT h.name AS hotel, ou.name AS outlet,
              (ARRAY_AGG(i.name_snapshot ORDER BY i.created_at DESC, i.id DESC))[1] AS name,
@@ -31,10 +33,21 @@ export const siparisUrun = defineReport<Params>({
       JOIN outlets ou ON ou.id = o.outlet_id
       JOIN hotels h ON h.id = o.hotel_id
       WHERE o.kind::text = 'MASA' AND ${hotelIn("o.hotel_id", scope)}
-        AND o.business_date >= ${scope.dayFrom} AND o.business_date <= ${scope.dayTo} ${outletEq("o.outlet_id", scope)} ${approvedOnly}
+        AND o.business_date >= ${scope.dayFrom} AND o.business_date <= ${scope.dayTo} ${outletEq("o.outlet_id", scope)} ${approvedOnly} ${notVoided}
       GROUP BY h.name, ou.name, ou.id, i.menu_node_id
       ORDER BY h.name, ou.name, SUM(i.qty) DESC, 3
       LIMIT ${fetchCap(scope)}`;
+    // Summary over the whole range (not the capped rows): same filters, no LIMIT.
+    const [tot] = await prisma.$queryRaw<{ products: number; qty: number; amount: number | null }[]>`
+      SELECT COUNT(*)::int AS products, COALESCE(SUM(g.qty), 0)::int AS qty, SUM(g.amount)::float8 AS amount
+      FROM (
+        SELECT SUM(i.qty) AS qty, SUM(i.qty * i.unit_price) FILTER (WHERE i.unit_price IS NOT NULL) AS amount
+        FROM order_items i
+        JOIN orders o ON o.id = i.order_id
+        WHERE o.kind::text = 'MASA' AND ${hotelIn("o.hotel_id", scope)}
+          AND o.business_date >= ${scope.dayFrom} AND o.business_date <= ${scope.dayTo} ${outletEq("o.outlet_id", scope)} ${approvedOnly} ${notVoided}
+        GROUP BY o.outlet_id, i.menu_node_id
+      ) g`;
     return {
       columns: [
         { key: "hotel", title: "Otel", type: "text", width: 22 },
@@ -46,11 +59,11 @@ export const siparisUrun = defineReport<Params>({
       ],
       rows: rows.map((r) => ({ ...r, amount: money2(r.amount) })),
       summary: [
-        { label: "Ürün", value: rows.length },
-        { label: "Toplam adet", value: rows.reduce((a, r) => a + r.qty, 0) },
-        { label: "Tutar", value: money2(rows.reduce((a, r) => a + (r.amount ?? 0), 0)) ?? 0 },
+        { label: "Ürün", value: tot?.products ?? 0 },
+        { label: "Toplam adet", value: tot?.qty ?? 0 },
+        { label: "Tutar", value: money2(tot?.amount ?? 0) ?? 0 },
       ],
-      truncated: false,
+      truncated: rows.length > scope.limit,
     };
   },
 });

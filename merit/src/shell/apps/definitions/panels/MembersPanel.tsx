@@ -111,9 +111,10 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
   useEffect(() => {
     if (!quickAdding || !outletId) return;
     let live = true;
-    setCandidateLoading(true);
-    setCandidateError(null);
+    // Debounced search: the loading state starts with the request, not in the effect body.
     const timer = setTimeout(() => {
+      setCandidateLoading(true);
+      setCandidateError(null);
       void memberCandidatesAction({
         outletId,
         q: searchQuery.trim() || undefined,
@@ -290,7 +291,7 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
                 setQuickAdding(true);
               }}
             >
-              🔍 Personel Ara &amp; Ekle
+              Personel Ara &amp; Ekle
             </button>
             <button
               type="button"

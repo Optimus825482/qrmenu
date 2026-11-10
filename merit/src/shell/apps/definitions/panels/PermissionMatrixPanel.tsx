@@ -264,15 +264,16 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
     </label>
   );
 
+  const matrixScreens = matrix?.screens;
   const filteredScreens = useMemo(() => {
-    if (!matrix?.screens) return [];
-    return matrix.screens.filter((s) => {
+    if (!matrixScreens) return [];
+    return matrixScreens.filter((s) => {
       const matchesMod = moduleFilter === "ALL" || s.moduleKey === moduleFilter;
       const q = searchFilter.trim().toLowerCase();
       const matchesSearch = !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
       return matchesMod && matchesSearch;
     });
-  }, [matrix?.screens, moduleFilter, searchFilter]);
+  }, [matrixScreens, moduleFilter, searchFilter]);
 
   return (
     <div
@@ -394,7 +395,7 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
           ) : null}
           {locked ? (
             <p className="xp-defs-note" style={{ color: "var(--xp-accent, #0055ea)", fontWeight: "bold" }}>
-              👑 Sistem Yöneticisi rolünün ekran yetkileri sistem güvenliği gereği kilitlidir ve tam yetkilidir.
+              Sistem Yöneticisi rolünün ekran yetkileri sistem güvenliği gereği kilitlidir ve tam yetkilidir.
             </p>
           ) : null}
 

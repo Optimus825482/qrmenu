@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { resolveGuestToken, guestMeta } from "@/modules/menu/server/guestToken";
+import { guestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,8 @@ export async function GET(
 ) {
   const { token } = await params;
   const h = await headers();
-  const target = await resolveGuestToken(token, guestMeta(h), { log: false });
+  // Same unknown-token limits as /q/[token]: the manifest must not be a free token oracle.
+  const target = await resolveGuestTokenLimited(token, guestMeta(h), undefined, undefined, { log: false });
 
   const outletName = target.kind === "TABLE" ? target.state.outletName : "Menü";
   const hotelName = target.kind === "TABLE" ? target.state.hotelName : "Merit";

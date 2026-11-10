@@ -986,11 +986,11 @@ export function ImageStudioModal({
     // Draw Gourmet Corner Badge Overlay if selected
     if (badgePreset !== "none") {
       const labels: Record<Exclude<BadgePreset, "none">, { text: string; bg: string; fg: string; border: string }> = {
-        chef: { text: "★ ŞEFİN SEÇİMİ", bg: "rgba(18, 20, 28, 0.88)", fg: "#f3d27a", border: "#d4af37" },
-        signature: { text: "✦ İMZA LEZZET", bg: "rgba(110, 22, 32, 0.90)", fg: "#fff7e6", border: "#e6b85c" },
+        chef: { text: "ŞEFİN SEÇİMİ", bg: "rgba(18, 20, 28, 0.88)", fg: "#f3d27a", border: "#d4af37" },
+        signature: { text: "İMZA LEZZET", bg: "rgba(110, 22, 32, 0.90)", fg: "#fff7e6", border: "#e6b85c" },
         new: { text: "● YENİ LEZZET", bg: "rgba(15, 98, 72, 0.90)", fg: "#ffffff", border: "#6ee7b7" },
-        royal: { text: "♛ MERİT ROYAL ÖZEL", bg: "rgba(22, 30, 52, 0.92)", fg: "#f5d77f", border: "#d4af37" },
-        fresh: { text: "🌿 GÜNLÜK & TAZE", bg: "rgba(32, 82, 48, 0.90)", fg: "#f0fdf4", border: "#86efac" },
+        royal: { text: "MERİT ROYAL ÖZEL", bg: "rgba(22, 30, 52, 0.92)", fg: "#f5d77f", border: "#d4af37" },
+        fresh: { text: "GÜNLÜK & TAZE", bg: "rgba(32, 82, 48, 0.90)", fg: "#f0fdf4", border: "#86efac" },
       };
       const badge = labels[badgePreset];
       const fontSize = Math.max(13, Math.round(Math.min(w, h) * 0.032));
@@ -2003,10 +2003,10 @@ export function ImageStudioModal({
                     {(
                       [
                         { id: "none", label: "Rozet Yok" },
-                        { id: "chef", label: "★ Şefin Seçimi" },
-                        { id: "signature", label: "✦ İmza Lezzet" },
+                        { id: "chef", label: "Şefin Seçimi" },
+                        { id: "signature", label: "İmza Lezzet" },
                         { id: "new", label: "● Yeni Lezzet" },
-                        { id: "royal", label: "♛ Merit Royal Özel" },
+                        { id: "royal", label: "Merit Royal Özel" },
                         { id: "fresh", label: "Günlük & Taze" },
                       ] as { id: BadgePreset; label: string }[]
                     ).map((b) => (

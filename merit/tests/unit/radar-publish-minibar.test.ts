@@ -170,7 +170,7 @@ describe("DND işaretleme ve gün sonu yayınları (G4, G5, G6)", () => {
 
     // 2/2 -> dnd.completed
     publishMock.mockClear();
-    await dnd.markDnd(kat2.ctx, { roomId: w.rooms[0].id }, new Date(T0.getTime() + 60_000));
+    await dnd.markDnd(kat2.ctx, { roomId: w.rooms[0].id }, new Date(T0.getTime() + 120 * 60_000));
     const m2 = sent("dnd.completed");
     expect(m2).toHaveLength(1);
     expect(assertWire("dnd.completed", m2[0])).toEqual({

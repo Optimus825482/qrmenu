@@ -6,6 +6,7 @@ import { generateQrToken } from "../../src/lib/qr";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 import { HOTELS, HOTEL_MODULES } from "./hotels";
 import { seedOutletMenuDesigns } from "./menuDesigns";
+import { decideMenuSync } from "./menuSyncPolicy";
 import { MENU_THEMES } from "./menuThemes";
 import { SEED_OUTLETS } from "./outlets";
 
@@ -48,8 +49,9 @@ export function loadMeritMenusDataset(): MeritMenusDataset {
  * Idempotent synchronization of the 20 Merit outlets and 4,005 real menu items.
  * - Cleans up removed Spa/Sport/Park outlets.
  * - Creates missing outlets, areas, tables, QR tokens, call options, and menu designs.
- * - Populates or upgrades each outlet's menu tree if it is empty or still uses legacy/demo images.
- * - Leaves already-populated outlets intact so operator modifications are preserved across restarts.
+ * - Populates the menu tree only when the outlet has no menu nodes.
+ * - Leaves already-populated outlets intact (nothing is deleted; orders are never touched). A full rebuild
+ *   needs MERIT_MENUS_FORCE_RESET=true and is refused for outlets that have orders.
  */
 export async function syncMeritMenus(db: PrismaClient): Promise<void> {
   // Ensure the 3 core hotels exist
@@ -77,11 +79,12 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
     if (!hotelId) continue;
     const outlet = await db.outlet.findFirst({ where: { hotelId, name: rem.name }, select: { id: true } });
     if (!outlet) continue;
+    // Sipariş verisi asla silinmez: siparişi olan outlet yerinde bırakılır.
+    if ((await db.order.count({ where: { outletId: outlet.id } })) > 0) {
+      console.log(`atlandı: kaldırılacak outlet'te sipariş var, korunuyor: [${rem.hotelCode}] ${rem.name}`);
+      continue;
+    }
     await db.$transaction(async (tx) => {
-      await tx.orderItem.deleteMany({ where: { order: { outletId: outlet.id } } });
-      await tx.orderEvent.deleteMany({ where: { order: { outletId: outlet.id } } });
-      await tx.printJob.deleteMany({ where: { order: { outletId: outlet.id } } });
-      await tx.order.deleteMany({ where: { outletId: outlet.id } });
       await tx.waiterCall.deleteMany({ where: { outletId: outlet.id } });
       await tx.tableAssignment.deleteMany({ where: { outletId: outlet.id } });
       await tx.qrScanLog.deleteMany({ where: { table: { outletId: outlet.id } } });
@@ -209,7 +212,9 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       : await db.outlet.findFirst({ where: { hotelId, name: spec.outletName ?? "" }, select: { id: true, name: true } });
     if (!outlet) continue;
 
-    const [totalItems, meritImgItems, legacyUploadItems, existingCats, directUnderCatCount] = await Promise.all([
+    const [totalNodes, orderCount, totalItems, meritImgItems, legacyUploadItems, existingCats, directUnderCatCount] = await Promise.all([
+      db.menuNode.count({ where: { outletId: outlet.id } }),
+      db.order.count({ where: { outletId: outlet.id } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE" } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/merit-menus/" } } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/uploads/merit-menus/" } } }),
@@ -226,8 +231,25 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       existingCats.length === expectedCats.length &&
       existingCats.every((c, idx) => c.name === expectedCats[idx]);
 
-    // If the outlet already has its v2 Merit menu loaded with clean 2-level categories and /merit-menus/ URLs, preserve it!
-    if (hasV2Categories && directUnderCatCount === 0 && totalItems >= spec.items.length && meritImgItems > 0 && legacyUploadItems === 0) {
+    const isCurrentV2Menu =
+      hasV2Categories && directUnderCatCount === 0 && totalItems >= spec.items.length && meritImgItems > 0 && legacyUploadItems === 0;
+    const decision = decideMenuSync({
+      menuNodeCount: totalNodes,
+      orderCount,
+      forceReset: process.env.MERIT_MENUS_FORCE_RESET === "true",
+      isCurrentV2Menu,
+    });
+    if (decision === "refuse-has-orders") {
+      console.error(`reddedildi: [${spec.hotelCode}] ${outlet.name} outlet'inde ${orderCount} sipariş var; MERIT_MENUS_FORCE_RESET uygulanmadı.`);
+      continue;
+    }
+    if (decision === "skip-keep") {
+      console.log(`atlandı: mevcut menü korunuyor: [${spec.hotelCode}] ${outlet.name}`);
+      continue;
+    }
+
+    // Uyumlu v2 menü korunur; yalnız eksik/örnek görseller yükseltilir (silme yok).
+    if (decision === "refresh-images") {
       const nodesToUpgrade = await db.menuNode.findMany({
         where: {
           outletId: outlet.id,
@@ -273,11 +295,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
 
     await db.$transaction(
       async (tx) => {
-        await tx.orderItem.deleteMany({ where: { order: { outletId: outlet.id } } });
-        await tx.orderEvent.deleteMany({ where: { order: { outletId: outlet.id } } });
-        await tx.printJob.deleteMany({ where: { order: { outletId: outlet.id } } });
-        await tx.order.deleteMany({ where: { outletId: outlet.id } });
-
+        // Buraya yalnız boş menü ya da açık MERIT_MENUS_FORCE_RESET (siparişsiz outlet) ile gelinir.
         for (const kind of ["OGE", "GRUP", "ALT_KATEGORI", "KATEGORI"] as const) {
           await tx.menuNode.deleteMany({ where: { outletId: outlet.id, kind } });
         }

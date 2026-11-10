@@ -18,7 +18,10 @@ export const envSchema = z.object({
   /** Anahtar kutusu (SMTP parolası) için ayrı anahtar; boşsa SESSION_SECRET kullanılır. Değişirse mühürlü değerler açılamaz. */
   SETTINGS_SECRET_KEY: z.string().min(32, "SETTINGS_SECRET_KEY en az 32 karakter olmalı").optional(),
   APP_BASE_URL: z.url("APP_BASE_URL geçerli bir URL olmalı"),
-  PRINT_GATEWAY_KEY: z.string().min(1, "PRINT_GATEWAY_KEY tanımlı olmalı"),
+  PRINT_GATEWAY_KEY: z.string().min(32, "PRINT_GATEWAY_KEY en az 32 karakter olmalı"),
+  /** Docker entrypoint: "true" runs prisma/seed.ts at startup (requires SEED_ADMIN_PASSWORD). */
+  RUN_SEED: z.string().optional(),
+  SEED_ADMIN_PASSWORD: z.string().optional(),
   /** Where uploaded files (menu images) live; defaults to <cwd>/uploads. */
   UPLOADS_DIR: z.string().min(1).optional(),
   /** Trusted reverse proxies in front of the app; the client IP is the Nth `x-forwarded-for` entry from the right. */
@@ -28,6 +31,10 @@ export const envSchema = z.object({
 }).refine(
   (value) => Boolean(value.VAPID_PUBLIC_KEY) === Boolean(value.VAPID_PRIVATE_KEY),
   { message: "VAPID_PUBLIC_KEY ve VAPID_PRIVATE_KEY birlikte tanımlanmalı", path: ["VAPID_PUBLIC_KEY"] },
+).refine(
+  // Same minimum as prisma/seed.ts: an entrypoint seed without the password must stop at startup.
+  (value) => value.RUN_SEED !== "true" || (value.SEED_ADMIN_PASSWORD ?? "").length >= 10,
+  { message: "RUN_SEED=true iken SEED_ADMIN_PASSWORD en az 10 karakter olarak tanımlanmalı", path: ["SEED_ADMIN_PASSWORD"] },
 );
 
 export type Env = z.infer<typeof envSchema>;

@@ -6,6 +6,7 @@ import { getSession, requireUser, writeSessionCookie } from "@/lib/auth";
 import { DomainError, fail, safeAction, type Result } from "@/lib/result";
 import { hashPassword, passwordPolicyError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
+import { clientIp } from "@/lib/rate-limit";
 import { audit } from "@/modules/core/server/audit";
 import {
   performLogin,
@@ -13,6 +14,7 @@ import {
   type LoginData,
   type SelectTargetData,
 } from "./login";
+import { changeOwnPassword, ownPasswordSchema } from "./ownPassword";
 import { closeSession } from "./sessions";
 
 /**
@@ -22,9 +24,9 @@ import { closeSession } from "./sessions";
 
 async function requestContext(): Promise<{ ip: string; userAgent: string }> {
   const h = await headers();
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
   return {
-    ip: forwarded || h.get("x-real-ip") || "unknown",
+    // The trusted-proxy entry of x-forwarded-for, never the client-supplied left-most one.
+    ip: clientIp(h),
     userAgent: h.get("user-agent") ?? "unknown",
   };
 }
@@ -82,6 +84,15 @@ export async function changeRequiredPasswordAction(raw: unknown): Promise<Result
     );
     if (!result.ok) throw new DomainError(result.error.code, result.error.message, { fieldErrors: result.error.fieldErrors });
     return result.data;
+  })(raw);
+}
+
+/** A signed-in user's own password change (current password required); the session stays open. */
+export async function changeOwnPasswordAction(raw: unknown): Promise<Result<null>> {
+  return safeAction(ownPasswordSchema, async (input) => {
+    const ctx = await requireUser();
+    await changeOwnPassword(ctx, input, (await requestContext()).ip);
+    return null;
   })(raw);
 }
 

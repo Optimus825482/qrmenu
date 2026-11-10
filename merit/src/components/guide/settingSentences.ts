@@ -19,7 +19,6 @@ export const SETTING_SENTENCES: Partial<Record<SettingKey, (value: unknown) => s
     num(v) ? `Onay bekleyen sipariş ${v} dakikada yöneticiye yükselir` : null,
   "price.display": (v) =>
     v === "SHOW" ? "Fiyatlar ekranda gösterilir" : v === "HIDE" ? "Fiyatlar ekranda gösterilmez" : null,
-  "price.currency": (v) => (typeof v === "string" && v ? `Para birimi ${v}` : null),
   "rs.slaMinutes": (v) => (num(v) ? `Oda servisi hedef süresi ${v} dakika` : null),
 };
 

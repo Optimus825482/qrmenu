@@ -65,4 +65,12 @@ describe('passwordPolicyError', () => {
     expect(passwordPolicyError('HarfHarf')).toMatch(/rakam/);
     expect(passwordPolicyError('A'.repeat(200) + 'a1')).toMatch(/128/);
   });
+
+  it('bcrypt 72 bayt sınırı bayt cinsinden uygulanır (Türkçe harfler 2 bayt)', async () => {
+    const { passwordPolicyError } = await import('@/lib/password');
+    expect(passwordPolicyError('Aa1' + 'x'.repeat(69))).toBeNull(); // 72 bayt
+    expect(passwordPolicyError('Aa1' + 'x'.repeat(70))).toMatch(/72 bayt/); // 73 bayt, 73 karakter
+    // 40 karakter ama 'ş' 2 bayt: 3 + 37*2 = 77 bayt
+    expect(passwordPolicyError('Aa1' + 'ş'.repeat(37))).toMatch(/72 bayt/);
+  });
 });

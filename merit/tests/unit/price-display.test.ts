@@ -48,11 +48,19 @@ describe("resolvePriceDisplay", () => {
   });
 });
 
-describe("resolveCurrency", () => {
-  it("varsayılan EUR; otel ayarı varsa o", async () => {
+describe("resolveCurrency (K3: outletin kendi para birimi)", () => {
+  it("outlet varsayılanı EUR; outlet alanı neyse o; eski otel ayarı etkisiz", async () => {
     const mr = await hotelId("ROYAL");
-    expect(await resolveCurrency(mr)).toBe("EUR");
-    await testDb.setting.create({ data: { hotelId: mr, key: "price.currency", value: "USD" } });
-    expect(await resolveCurrency(mr)).toBe("USD");
+    const o = await testDb.outlet.create({ data: { hotelId: mr, name: "Kur Bar", type: "BAR" } });
+    try {
+      expect(await resolveCurrency(o.id)).toBe("EUR");
+      await testDb.setting.create({ data: { hotelId: mr, key: "price.currency", value: "USD" } });
+      expect(await resolveCurrency(o.id)).toBe("EUR");
+      await testDb.outlet.update({ where: { id: o.id }, data: { currency: "TRY" } });
+      expect(await resolveCurrency(o.id)).toBe("TRY");
+      expect(await resolveCurrency("yok")).toBe("EUR");
+    } finally {
+      await testDb.outlet.delete({ where: { id: o.id } });
+    }
   });
 });

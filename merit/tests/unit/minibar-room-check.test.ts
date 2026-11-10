@@ -591,16 +591,16 @@ describe("listMyTransactions", () => {
 });
 
 describe("düzeltme talebi akışı", () => {
-  it("R-DEP talep eder (R-KAT edemez), R-OTM karara bağlayamaz, R-SYS onaylayınca silme uygulanır", async () => {
+  it("R-KAT (KAT-6, İşlemlerim) ve R-DEP talep eder, ikisi de karara bağlayamaz, R-OTM bağlayamaz, R-SYS onaylayınca silme uygulanır", async () => {
     const { w, kat, depo, mudur, sys } = await world();
     const old = await rep(kat.ctx, w, 3, { now: YESTERDAY });
     const input = { transactionId: old.transactionId, actionType: "SILME", reason: "Yanlış girildi" };
 
-    expect(await codeOf(rc.createCorrectionRequest(kat.ctx, input))).toBe("FORBIDDEN");
     expect(await codeOf(rc.createCorrectionRequest(depo.ctx, { ...input, reason: "yok" }))).toBe("VALIDATION");
-    const req = await rc.createCorrectionRequest(depo.ctx, input);
+    const req = await rc.createCorrectionRequest(kat.ctx, input);
     expect(await codeOf(rc.createCorrectionRequest(depo.ctx, input))).toBe("CONFLICT");
 
+    expect(await codeOf(rc.resolveCorrectionRequest(kat.ctx, { requestId: req.requestId, approved: true }, T0))).toBe("FORBIDDEN");
     expect(await codeOf(rc.resolveCorrectionRequest(mudur.ctx, { requestId: req.requestId, approved: true }, T0))).toBe("FORBIDDEN");
     expect(await codeOf(rc.resolveCorrectionRequest(depo.ctx, { requestId: req.requestId, approved: true }, T0))).toBe("FORBIDDEN");
     expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(97);
@@ -637,6 +637,91 @@ describe("düzeltme talebi akışı", () => {
     await rc.resolveCorrectionRequest(sys.ctx, { requestId: req2.requestId, approved: false, rejectReason: "Gerekçe yetersiz" }, T0);
     expect(await testDb.minibarCorrectionRequest.findUniqueOrThrow({ where: { id: req2.requestId } })).toMatchObject({ status: "REDDEDILDI", rejectReason: "Gerekçe yetersiz" });
     expect(await testDb.minibarTransaction.count({ where: { id: old2.transactionId } })).toBe(1);
+  });
+});
+
+describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => {
+  async function requireQr(hotelId: string) {
+    await testDb.setting.create({ data: { hotelId, key: "minibar.requireQrForControl", value: true } });
+  }
+  const scan = (userId: string, roomId: string, at: Date) =>
+    testDb.qrScanLog.create({ data: { userId, roomId, kind: "PERSONEL", ok: true, ip: "t", userAgent: "t", createdAt: at } });
+
+  it("QR zorunluyken kanıtsız ikame / sarfiyat yok / DND / kontrol API'si FORBIDDEN; kanıtla serbest", async () => {
+    const { w, kat, kat2 } = await world();
+    await requireQr(w.hotelId);
+    expect(await messageOf(rep(kat.ctx, w, 1))).toBe("Bu oda için QR doğrulaması gerekli. Lütfen odadaki QR kodu okutun.");
+    expect(await codeOf(noUse(kat.ctx, w.room.id))).toBe("FORBIDDEN");
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0))).toBe("FORBIDDEN");
+    requireUser.mockResolvedValue(kat.ctx);
+    const res = await checkRoute.POST(
+      new Request("http://localhost/x", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ items: [{ productId: w.cola.id, setupId: w.setup.id, qty: 1 }], clientRequestId: randomUUID() }),
+      }),
+      { params: Promise.resolve({ roomId: w.room.id }) },
+    );
+    expect(res.status).toBe(403);
+    expect(await testDb.minibarTransaction.count()).toBe(0);
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, T0)).qrVerified).toBe(false);
+
+    // A failed scan is no proof; a successful one of another user neither.
+    await testDb.qrScanLog.create({ data: { userId: kat.userId, roomId: w.room.id, kind: "PERSONEL", ok: false, ip: "t", userAgent: "t", createdAt: T0 } });
+    await scan(kat2.userId, w.room.id, T0);
+    expect(await codeOf(rep(kat.ctx, w, 1))).toBe("FORBIDDEN");
+
+    await scan(kat.userId, w.room.id, minutes(T0, -5));
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, T0)).qrVerified).toBe(true);
+    expect(await codeOf(rep(kat.ctx, w, 1))).toBe("OK");
+    // 10 dakikadan eski kanıt geçmez
+    expect(await codeOf(rep(kat.ctx, w, 1, { now: minutes(T0, 6) }))).toBe("FORBIDDEN");
+  });
+
+  it("dndAllowed gerçek değer: bekleme süresi boyunca false, sonra true; kontrol edilen odada false", async () => {
+    const { w, kat } = await world();
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, T0)).taskItem).toMatchObject({ dndAllowed: true, dndWaitMinutes: 0 });
+    await dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0);
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, minutes(T0, 10))).taskItem).toMatchObject({
+      dndAllowed: false,
+      dndWaitMinutes: 110,
+    });
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, minutes(T0, 120))).taskItem).toMatchObject({
+      dndAllowed: true,
+      dndWaitMinutes: 0,
+    });
+    await rep(kat.ctx, w, 1, { now: minutes(T0, 121) });
+    expect((await rc.getRoomCheckView(kat.ctx, w.room.id, minutes(T0, 122))).taskItem?.dndAllowed).toBe(false);
+  });
+});
+
+describe("KAT-11 / KAT-12", () => {
+  it("MyBar karşılama kaydı oda kontrolünden silinemez", async () => {
+    const { w, kat, sys } = await world();
+    const tx = await testDb.minibarTransaction.create({
+      data: { hotelId: w.hotelId, roomId: w.room.id, userId: kat.userId, type: "MYBAR_KARSILAMA", occurredAt: T0 },
+    });
+    expect(await messageOf(rc.deleteMyTransaction(kat.ctx, tx.id, T0))).toBe(
+      "MyBar karşılama kaydı buradan silinemez; MyBar talebi üzerinden düzeltin",
+    );
+    expect(await codeOf(rc.deleteMyTransaction(sys.ctx, tx.id, T0))).toBe("VALIDATION");
+    expect(await testDb.minibarTransaction.count({ where: { id: tx.id } })).toBe(1);
+  });
+
+  it("düzeltme talebi: önerilen ürün setup'ta olmalı, DUZELTME miktarsız olamaz, SILME önerisi saklanmaz", async () => {
+    const { w, kat, depo } = await world();
+    const old = await rep(kat.ctx, w, 2, { now: YESTERDAY });
+    const other = await minibarWorld({ hotelCode: w.hotelCode });
+    const base = { transactionId: old.transactionId, reason: "Yanlış girildi" };
+    expect(await messageOf(rc.createCorrectionRequest(depo.ctx, { ...base, actionType: "DUZELTME", proposedData: { [other.cola.id]: 1 } }))).toBe(
+      "Ürün bu setup'ta bulunamadı",
+    );
+    expect(await codeOf(rc.createCorrectionRequest(depo.ctx, { ...base, actionType: "DUZELTME" }))).toBe("VALIDATION");
+    expect(await codeOf(rc.createCorrectionRequest(depo.ctx, { ...base, actionType: "DUZELTME", proposedData: {} }))).toBe("VALIDATION");
+    expect(await testDb.minibarCorrectionRequest.count()).toBe(0);
+
+    const ok = await rc.createCorrectionRequest(depo.ctx, { ...base, actionType: "SILME", proposedData: { [w.cola.id]: 1 } });
+    expect((await testDb.minibarCorrectionRequest.findUniqueOrThrow({ where: { id: ok.requestId } })).proposedData).toBeNull();
   });
 });
 

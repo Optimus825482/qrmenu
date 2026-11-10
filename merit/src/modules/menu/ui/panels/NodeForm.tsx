@@ -121,9 +121,9 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
       const translations = await autoTranslateMenuNodeAction({ nodeId: node.id });
       setDirty(false);
       setMessage(translations.ok
-        ? { ok: true, text: `Bilgiler kaydedildi; ${translations.data.languages.length} dilde otomatik çeviri oluşturuldu. Çevirileri yayından önce gözden geçirin.` }
+        ? { ok: true, text: `Bilgiler kaydedildi; ${translations.data.languages.length} dilde otomatik çeviri oluşturuldu.` }
         : { ok: false, text: `Bilgiler kaydedildi ancak çeviriler oluşturulamadı: ${translations.error.message}` });
-      if (translations.ok) notify.success(`“${node.name}” bilgileri kaydedildi. ${translations.data.languages.length} dil için DeepL çevirisi oluşturuldu ve yanıtların eksiksiz olduğu doğrulandı. Menü terimlerini kullanmadan önce kontrol edin.`);
+      if (translations.ok) notify.success(`“${node.name}” bilgileri kaydedildi. ${translations.data.languages.length} dil için otomatik çeviri oluşturuldu.`);
       onChanged();
     } else {
       setMessage({ ok: false, text: result.error.message });
@@ -227,7 +227,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
                       style={{ fontSize: 10, padding: "1px 6px" }}
                       onClick={handleShortenDetailInForm}
                     >
-                      ✂️ 140 Karakter Altına Kısalt
+                      140 Karakter Altına Kısalt
                     </button>
                   ) : null}
                 </div>
@@ -266,7 +266,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
                       }}
                       style={{ fontSize: 11, padding: "2px 6px", maxWidth: 250 }}
                     >
-                      <option value="">📋 Hazır Alerjen Şablonu Seçin...</option>
+                      <option value="">Hazır Alerjen Şablonu Seçin...</option>
                       {ALLERGEN_PRESETS.map((p) => (
                         <option key={p.id} value={p.id}>
                           [{p.category}] {p.label} ({p.allergens.map((a) => ALLERGEN_INFO[a].shortLabel).join(", ")})
@@ -280,7 +280,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
                       onClick={handleSmartDetectAllergens}
                       title="Ürünün adına ve açıklamasına göre içerdiği alerjenleri otomatik işaretler"
                     >
-                      ✨ Ürüne Göre Akıllı Seç
+                      Ürüne Göre Akıllı Seç
                     </button>
                     <button
                       type="button"
@@ -296,7 +296,7 @@ export function NodeForm({ node, canEdit, setDirty, onChanged }: Props) {
                       style={{ fontSize: 10, padding: "2px 7px" }}
                       onClick={() => setShowAllergenGuide((v) => !v)}
                     >
-                      {showAllergenGuide ? "Rehberi Gizle" : "ℹ️ Alerjen Rehberi"}
+                      {showAllergenGuide ? "Rehberi Gizle" : "Alerjen Rehberi"}
                     </button>
                   </div>
                 ) : null}

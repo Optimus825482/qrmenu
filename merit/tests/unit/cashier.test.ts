@@ -109,3 +109,34 @@ describe("cashier.recentOrders", () => {
     expect(orders.map((order) => order.id)).not.toContain(sent.id);
   });
 });
+
+describe("cashier.clearTable (yetki)", () => {
+  it("yetkisiz rol FORBIDDEN; kasa boşaltır; erişilemeyen otelin masası NOT_FOUND", async () => {
+    const s = await orderSetup();
+    const kds = await staffCtx("kds-bos", "R-KDS", s.outlet.id);
+    const kas = await staffCtx("kasa-bos", "R-KAS", s.outlet.id);
+    await expect(cashier.clearTable(kds.ctx, s.table.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await cashier.clearTable(kas.ctx, s.table.id);
+    expect((await testDb.outletTable.findUniqueOrThrow({ where: { id: s.table.id } })).emptiedAt).not.toBeNull();
+    kas.ctx.hotelIds = [];
+    await expect(cashier.clearTable(kas.ctx, s.table.id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("cashier.tableBoard (açık sipariş + tutar)", () => {
+  it("önceki günün açık siparişi panoda kalır ama bugünün KPI'ına girmez; tutar Decimal ile toplanır", async () => {
+    const s = await orderSetup();
+    const kas = await staffCtx("kasa-acik", "R-KAS", s.outlet.id);
+    await seedOrder(s, {
+      status: "ONAYLANDI",
+      businessDate: new Date(Date.UTC(2020, 0, 5)),
+      pricesShown: true,
+      items: { create: [{ menuNodeId: s.mojito.id, nameSnapshot: "Mojito", qty: 3, unitPrice: "0.10" }] },
+    });
+    const board = await cashier.tableBoard(kas.ctx, s.outlet.id);
+    const table = board.tables.find((t) => t.id === s.table.id);
+    expect(table?.openOrders).toHaveLength(1);
+    expect(table?.openOrders[0].totalPrice).toBe(0.3);
+    expect(board.kpis.todayOrders).toBe(0);
+  });
+});

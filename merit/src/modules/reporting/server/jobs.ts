@@ -57,6 +57,7 @@ async function register<T>(
         await handler(jobs as Job<T>[]);
       } catch (error) {
         console.error(`[${queue}]`, error);
+        throw error; // let pg-boss record the failure (and retry) instead of marking the job completed
       }
     });
   } catch (error) {

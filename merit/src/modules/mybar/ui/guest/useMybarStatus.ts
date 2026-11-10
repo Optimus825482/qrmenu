@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import { backoffMs } from "@/modules/menu/ui/guest/useGuestEvents";
 
-export type MybarStatusKey = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "IPTAL";
+export type MybarStatusKey = "BEKLIYOR" | "GORULDU" | "KARSILANDI" | "KISMEN" | "IPTAL";
 export type MybarRequestView = {
   requestId: string;
   status: MybarStatusKey;
@@ -16,7 +16,7 @@ const LIVE_EVENTS = ["mybar.seen", "mybar.fulfilled", "mybar.completed", "mybar.
 const POLL_MS = 45_000;
 
 export const isTerminal = (status: MybarStatusKey | undefined): boolean =>
-  status === "KARSILANDI" || status === "IPTAL";
+  status === "KARSILANDI" || status === "KISMEN" || status === "IPTAL";
 
 /**
  * The room's request of today, kept live: the guest SSE stream (`mybar.*` events of this room only, reduced

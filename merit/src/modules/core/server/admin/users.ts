@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import type { Prisma, RoleKind } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
-import { hashPassword, passwordPolicyError } from "@/lib/password";
+import { hashPassword, PASSWORD_MAX_BYTES, PASSWORD_MAX_LENGTH, passwordPolicyError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { assertCan, can } from "@/lib/rbac";
@@ -31,6 +31,9 @@ const MANAGER_ROLE_FORBIDDEN = "Yönetici rolleri yalnızca sistem yöneticisi t
 const MANAGER_TARGET_FORBIDDEN = "Yönetici kullanıcıları yalnızca sistem yöneticisi yönetebilir";
 const SELF_SCOPE_FORBIDDEN = "Kendi rolünüzü veya otel yetkinizi değiştiremezsiniz";
 const OUT_OF_SCOPE = "Bu kullanıcı yetki alanınızın dışındaki otellere bağlı";
+const SYSTEM_ADMIN_ROLE = "R-SYS";
+const LAST_SYSTEM_ADMIN = "En az bir aktif sistem yöneticisi (R-SYS) kalmalı; önce başka bir sistem yöneticisi atayın";
+const OWN_PASSWORD_ELSEWHERE = "Kendi şifrenizi Şifre Değiştir ekranından mevcut şifrenizle değiştirin";
 
 export type UserRow = {
   id: string;
@@ -196,6 +199,22 @@ const ORDER = {
 };
 
 // --- authorisation ----------------------------------------------------------------------------
+
+/**
+ * Serialises every change that may remove an active R-SYS user (row lock on the R-SYS role), so
+ * two concurrent changes cannot each leave the other as "the last one". Call before the write.
+ */
+async function lockSystemAdmins(tx: Prisma.TransactionClient): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM roles WHERE code = ${SYSTEM_ADMIN_ROLE} FOR UPDATE`;
+}
+
+/** After the write, inside the same transaction: at least one active, undeleted R-SYS user remains. */
+async function assertSystemAdminRemains(tx: Prisma.TransactionClient): Promise<void> {
+  const remaining = await tx.user.count({
+    where: { isActive: true, deletedAt: null, role: { code: SYSTEM_ADMIN_ROLE } },
+  });
+  if (remaining === 0) throw new DomainError("FORBIDDEN", LAST_SYSTEM_ADMIN);
+}
 
 const isSystem = (ctx: Ctx) => ctx.user.roleKind === "SISTEM";
 
@@ -554,6 +573,8 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         await assertCanAssign(ctx, tx, input.roleId, hotels, "D");
       }
       await assertSupervisor(tx, input.supervisorId, id);
+      const leavesSystemAdmin = before.role.code === SYSTEM_ADMIN_ROLE && input.roleId !== before.roleId;
+      if (leavesSystemAdmin) await lockSystemAdmins(tx);
       if (
         input.username !== before.username &&
         (await tx.user.findUnique({ where: { username: input.username }, select: { id: true } }))
@@ -580,7 +601,18 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         },
         select: SELECT,
       });
+      if (leavesSystemAdmin) await assertSystemAdminRemains(tx);
       const row = toRow(updated);
+      // Role or hotel membership changed: open sessions carry the old privileges and end now
+      // (session.closed ends their SSE streams on commit).
+      const beforeHotels = hotelsOf(before);
+      const afterHotels = hotelsOf(updated);
+      const scopeChanged =
+        updated.roleId !== before.roleId ||
+        updated.hotelId !== before.hotelId ||
+        beforeHotels.length !== afterHotels.length ||
+        beforeHotels.some((h) => !afterHotels.includes(h));
+      const sessionsClosed = scopeChanged ? await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id) : 0;
       await audit(tx, {
         userId: ctx.user.id,
         hotelId: input.hotelId ?? hotels[0] ?? before.hotelId ?? undefined,
@@ -588,7 +620,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         entity: "User",
         entityId: id,
         before: toRow(before),
-        after: row,
+        after: scopeChanged ? { ...row, sessionsClosed } : row,
       });
       await publishUser(tx, id, [...hotelsOf(before), ...hotels], "update");
       return row;
@@ -603,7 +635,10 @@ const tempPasswordSchema = z.object({
     .string("Geçici şifre gerekli")
     .trim()
     .min(6, "Geçici şifre en az 6 karakter olmalı")
-    .max(128, "En fazla 128 karakter olabilir"),
+    .max(PASSWORD_MAX_LENGTH, `En fazla ${PASSWORD_MAX_LENGTH} karakter olabilir`)
+    .refine((value) => Buffer.byteLength(value, "utf8") <= PASSWORD_MAX_BYTES, {
+      message: `Şifre çok uzun: en fazla ${PASSWORD_MAX_BYTES} bayt olabilir (Türkçe harfler 2 bayt sayılır)`,
+    }),
 });
 
 /**
@@ -611,6 +646,8 @@ const tempPasswordSchema = z.object({
  * published) so nobody keeps working on the old credentials. Must change password on first login is enforced.
  */
 export async function setPassword(ctx: Ctx, id: string, newPassword: string): Promise<void> {
+  // Changing one's own password needs the current one: that is the /sifre-degistir flow.
+  if (id === ctx.user.id) throw new DomainError("VALIDATION", OWN_PASSWORD_ELSEWHERE);
   const { password } = parseInput(tempPasswordSchema, { password: newPassword });
   const anchor = await anchorHotel(id);
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
@@ -642,11 +679,11 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
     const before = await loadTarget(tx, id);
     assertNotDeleted(before);
     await assertCanManage(ctx, before, "D", "setActive");
-    if (!isActive && (before.role.kind === "SISTEM" || before.username.toLocaleLowerCase("tr-TR") === "admin")) {
-      throw new DomainError("FORBIDDEN", "Admin kullanıcıları pasife alınamaz");
-    }
     if (before.isActive === isActive) return toRow(before);
+    const leavesSystemAdmin = !isActive && before.role.code === SYSTEM_ADMIN_ROLE;
+    if (leavesSystemAdmin) await lockSystemAdmins(tx);
     const updated = await tx.user.update({ where: { id }, data: { isActive }, select: SELECT });
+    if (leavesSystemAdmin) await assertSystemAdminRemains(tx);
     const sessionsClosed = isActive ? 0 : await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
     const row = toRow(updated);
     await audit(tx, {
@@ -672,13 +709,13 @@ export async function deleteUser(ctx: Ctx, id: string): Promise<void> {
   await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor }, async (tx) => {
     const before = await loadTarget(tx, id);
     await assertCanManage(ctx, before, "D", "delete");
-    if (before.role.kind === "SISTEM" || before.username.toLocaleLowerCase("tr-TR") === "admin") {
-      throw new DomainError("FORBIDDEN", "Admin kullanıcıları sistemden silinemez");
-    }
     if (before.deletedAt) return;
+    const leavesSystemAdmin = before.role.code === SYSTEM_ADMIN_ROLE;
+    if (leavesSystemAdmin) await lockSystemAdmins(tx);
     const deletedAt = new Date();
     const sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
     await tx.user.update({ where: { id }, data: { isActive: false, deletedAt } });
+    if (leavesSystemAdmin) await assertSystemAdminRemains(tx);
     await audit(tx, {
       userId: ctx.user.id,
       hotelId: anchor,

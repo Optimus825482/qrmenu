@@ -42,7 +42,13 @@ export function publishMybar(
         tx,
       );
     case "mybar.cancelled":
-      return publishRadar("mybar.cancelled", base, { requestId: req.id, roomId: req.roomId, byUserId: req.byUserId ?? "" }, tx);
+      // No user: the system cancelled it (guest checkout).
+      return publishRadar(
+        "mybar.cancelled",
+        base,
+        { requestId: req.id, roomId: req.roomId, ...(req.byUserId ? { byUserId: req.byUserId } : {}) },
+        tx,
+      );
     default:
       return publish(
         {

@@ -6,7 +6,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { DomainError, safeAction } from "@/lib/result";
 import { prisma } from "@/lib/prisma";
 import type { OrderStatus } from "@/generated/prisma/client";
-import { resolveCurrency } from "@/modules/menu/server/priceDisplay";
+import { getRoomServiceOutlet } from "@/modules/order/server/roomService/outlet";
 
 const querySchema = z.object({
   hotelId: z.string().optional(),
@@ -173,7 +173,8 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
     }));
 
     const targetHotelId = input.hotelId ?? hotelIds[0] ?? ctx.session.hotelId ?? "";
-    const currency = await resolveCurrency(targetHotelId);
+    // K3: the currency belongs to the outlet (the hotel's room service outlet), not to a global setting.
+    const currency = (targetHotelId ? (await getRoomServiceOutlet(targetHotelId))?.currency : undefined) ?? "EUR";
     return { orders: items, stats, currency };
   })(raw);
 }

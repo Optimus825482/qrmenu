@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRef, useState, useSyncExternalStore } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import type { Result } from "@/lib/result";
-import { MAX_QUANTITY, NOTE_MAX } from "./ItemSheet";
+import { ITEM_NOTE_MAX, MAX_QUANTITY, NOTE_MAX } from "./ItemSheet";
 import type { GuestMenuMode } from "./MenuView";
 import { priceFormatter } from "./priceFormat";
 import { useSelectionStore } from "./selectionStore";
@@ -23,7 +23,7 @@ const onlineNow = () => navigator.onLine;
 const onlineOnServer = () => true;
 
 type Sent = { orderId: string; orderNo: number };
-type Problem = { kind: "closed" } | { kind: "failed" } | { kind: "unavailable"; names: string[] };
+type Problem = { kind: "closed" } | { kind: "failed" } | { kind: "unavailable"; names: string[]; ids: string[] };
 
 /**
  * The guest's selections: quantity, per-item note, remove, optional total (only while prices are
@@ -53,16 +53,24 @@ export function SelectionsDrawer({
   const store = useSelectionStore(token);
   const items = store((s) => s.items);
   const note = store((s) => s.note);
-  const { setQty, setItemNote, remove, setNote, clear, ensureIdempotencyKey, rememberOrder } = store.getState();
+  const removedNames = store((s) => s.removedNames);
+  const { setQty, setItemNote, remove, setNote, clear, ensureIdempotencyKey, rememberOrder, dismissRemoved } =
+    store.getState();
   const online = useSyncExternalStore(subscribeOnline, onlineNow, onlineOnServer);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
 
+  // The "removed from your selections" notice is shown once: closing the drawer clears it.
+  const close = () => {
+    dismissRemoved();
+    onClose();
+  };
+
   useModalFocusTrap({
     active: true,
-    onClose,
+    onClose: close,
     initialFocusRef: closeRef,
     containerRef: drawerRef,
   });
@@ -70,6 +78,7 @@ export function SelectionsDrawer({
   const format = priceFormatter(locale, currency);
   const total = items.reduce((sum, i) => sum + (i.unitPrice ? Number(i.unitPrice) * i.qty : 0), 0);
   const unavailable = problem?.kind === "unavailable" ? problem.names : [];
+  const unavailableIds = problem?.kind === "unavailable" ? problem.ids : [];
   const closed = problem?.kind === "closed" || !orderingOpen;
   const submitDisabled = items.length === 0 || !online || sending || (mode === "room" && !orderingOpen);
 
@@ -92,12 +101,16 @@ export function SelectionsDrawer({
       if (result.ok) {
         clear();
         rememberOrder(result.data.orderId, result.data.orderNo);
+        dismissRemoved();
         onClose();
         router.push(`/q/${encodeURIComponent(token)}/siparis/${encodeURIComponent(result.data.orderId)}`);
         return;
       }
       const { code, fieldErrors } = result.error;
-      if (code === "VALIDATION" && fieldErrors?.items?.length) setProblem({ kind: "unavailable", names: fieldErrors.items });
+      if (code === "VALIDATION" && fieldErrors?.items?.length) {
+        // `itemIds` (menu node ids of the unavailable dishes) matches lines exactly; names are the fallback.
+        setProblem({ kind: "unavailable", names: fieldErrors.items, ids: fieldErrors.itemIds ?? [] });
+      }
       else if (code === "CONFLICT") setProblem({ kind: "closed" });
       else setProblem({ kind: "failed" });
     } catch {
@@ -108,7 +121,7 @@ export function SelectionsDrawer({
   }
 
   return (
-    <div className="g-sheet-backdrop" onClick={onClose}>
+    <div className="g-sheet-backdrop" onClick={close}>
       <div
         ref={drawerRef}
         className="g-sheet g-selections"
@@ -117,7 +130,7 @@ export function SelectionsDrawer({
         aria-label={t("cart.title")}
         onClick={(event) => event.stopPropagation()}
       >
-        <button ref={closeRef} type="button" className="g-sheet-close" onClick={onClose} aria-label={t("common.close")}>
+        <button ref={closeRef} type="button" className="g-sheet-close" onClick={close} aria-label={t("common.close")}>
           <span aria-hidden="true">×</span>
         </button>
         <div className="g-sheet-body">
@@ -142,6 +155,11 @@ export function SelectionsDrawer({
               </ul>
             </div>
           ) : null}
+          {removedNames.length > 0 ? (
+            <p className="g-banner g-banner-warn" role="status">
+              {t("selections.removed", { names: removedNames.join(", ") })}
+            </p>
+          ) : null}
           {!online ? (
             <p className="g-banner g-banner-warn" role="status">
               {t("common.offline")}
@@ -154,9 +172,13 @@ export function SelectionsDrawer({
             <ul className="g-lines">
               {items.map((item) => (
                 <li
-                  key={`${item.menuNodeId}:${item.note ?? ""}`}
+                  key={item.lineId}
                   className="g-line"
-                  data-unavailable={unavailable.includes(item.name) ? "true" : "false"}
+                  data-unavailable={
+                    (unavailableIds.length > 0 ? unavailableIds.includes(item.menuNodeId) : unavailable.includes(item.name))
+                      ? "true"
+                      : "false"
+                  }
                 >
                   <div className="g-line-head">
                     <span className="g-name">{item.name}</span>
@@ -168,7 +190,7 @@ export function SelectionsDrawer({
                     <div className="g-qty" role="group" aria-label={`${t("cart.quantity")}: ${item.name}`}>
                       <button
                         type="button"
-                        onClick={() => setQty(item.menuNodeId, item.qty - 1)}
+                        onClick={() => setQty(item.lineId, item.qty - 1)}
                         disabled={item.qty <= 1}
                         aria-label="−"
                       >
@@ -177,14 +199,14 @@ export function SelectionsDrawer({
                       <output>{item.qty}</output>
                       <button
                         type="button"
-                        onClick={() => setQty(item.menuNodeId, item.qty + 1)}
+                        onClick={() => setQty(item.lineId, item.qty + 1)}
                         disabled={item.qty >= MAX_QUANTITY}
                         aria-label="+"
                       >
                         +
                       </button>
                     </div>
-                    <button type="button" className="g-link" onClick={() => remove(item.menuNodeId)}>
+                    <button type="button" className="g-link" onClick={() => remove(item.lineId)}>
                       {t("selections.remove")}
                     </button>
                   </div>
@@ -193,8 +215,8 @@ export function SelectionsDrawer({
                     <input
                       type="text"
                       value={item.note ?? ""}
-                      maxLength={200}
-                      onChange={(event) => setItemNote(item.menuNodeId, event.target.value)}
+                      maxLength={ITEM_NOTE_MAX}
+                      onChange={(event) => setItemNote(item.lineId, event.target.value)}
                     />
                   </label>
                 </li>

@@ -23,6 +23,10 @@ type Req = {
 };
 type Data = { items: Req[]; kpis: { pending: number; approved: number; deliveredToday: number } };
 
+/** Approved but not yet delivered (partial deliveries add up). */
+const openQty = (i: Item) => Math.max(0, (i.approvedQty ?? 0) - (i.deliveredQty ?? 0));
+const partlyDelivered = (r: Req) => r.status === "ONAYLANDI" && r.items.some((i) => (i.deliveredQty ?? 0) > 0);
+
 const TABS = [
   { key: "BEKLEMEDE", label: "Bekleyen", status: "BEKLEMEDE" },
   { key: "ONAYLANDI", label: "Onaylanan", status: "ONAYLANDI" },
@@ -48,7 +52,7 @@ export default function DepoTaleplerPage() {
     const next: Record<string, string> = {};
     for (const r of json.items as Req[]) {
       for (const i of r.items) {
-        next[i.id] = String(r.status === "ONAYLANDI" ? (i.approvedQty ?? 0) : i.requestedQty);
+        next[i.id] = String(r.status === "ONAYLANDI" ? openQty(i) : i.requestedQty);
       }
     }
     setQty(next);
@@ -105,6 +109,7 @@ export default function DepoTaleplerPage() {
         <section key={r.id} data-testid={`talep-${r.code}`} data-status={r.status} style={{ marginTop: 16 }}>
           <h2>
             {r.code} - {r.requestedByName}
+            {partlyDelivered(r) ? " (kısmi teslim, kalan bekliyor)" : ""}
           </h2>
           {r.note && <p>Not: {r.note}</p>}
           {r.rejectReason && <p>Sebep: {r.rejectReason}</p>}
@@ -115,7 +120,8 @@ export default function DepoTaleplerPage() {
                 <th>İstenen</th>
                 <th>Havuzda</th>
                 <th>Aciliyet</th>
-                <th>{r.status === "ONAYLANDI" ? "Teslim" : r.status === "BEKLEMEDE" ? "Onay" : "Onaylanan / Teslim"}</th>
+                {r.status === "ONAYLANDI" && <th>Onaylanan / teslim edilen</th>}
+                <th>{r.status === "ONAYLANDI" ? "Şimdi teslim" : r.status === "BEKLEMEDE" ? "Onay" : "Onaylanan / Teslim"}</th>
               </tr>
             </thead>
             <tbody>
@@ -125,12 +131,15 @@ export default function DepoTaleplerPage() {
                   <td align="center">{i.requestedQty}</td>
                   <td align="center">{i.poolRemaining}</td>
                   <td align="center">{i.urgency === "ACIL" ? "Acil" : "Normal"}</td>
+                  {r.status === "ONAYLANDI" && (
+                    <td align="center">{`${i.approvedQty ?? 0} / ${i.deliveredQty ?? 0}`}</td>
+                  )}
                   <td align="center">
                     {r.status === "BEKLEMEDE" || r.status === "ONAYLANDI" ? (
                       <input
                         type="number"
                         min={0}
-                        max={r.status === "BEKLEMEDE" ? i.requestedQty : (i.approvedQty ?? 0)}
+                        max={r.status === "BEKLEMEDE" ? i.requestedQty : openQty(i)}
                         aria-label={`${i.productName} adet`}
                         data-testid={`adet-${i.id}`}
                         value={qty[i.id] ?? ""}
@@ -170,7 +179,7 @@ export default function DepoTaleplerPage() {
                 </button>
               )}{" "}
               <button type="button" data-testid={`iptal-${r.code}`} onClick={() => void act(r, "cancel")}>
-                İptal et
+                {partlyDelivered(r) ? "Kalanı kapat" : "İptal et"}
               </button>
             </p>
           )}

@@ -247,6 +247,8 @@ export type RadarSnapshot = {
         roomNumber: string;
         status: OrderStatus;
         createdAt: string;
+        /** SLA clock start (phone confirmation, else creation). */
+        slaStartAt?: string;
         level: "OK" | "WARN" | "BREACH";
       }[];
     };

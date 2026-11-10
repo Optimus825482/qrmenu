@@ -2,6 +2,8 @@ import type { RoleKind } from "@/generated/prisma/client";
 
 export const MYBAR_NOTIFY_ROLES = ["R-KAT", "R-DEP", "R-OTM"] as const;
 export const MYBAR_ACK_ROLE_CODES = ["R-KAT"] as const;
+/** Who is told when no floor attendant has seen a request for `radar.mybarStaleMinutes`. */
+export const MYBAR_ESCALATE_ROLES = ["R-DEP", "R-OTM"] as const;
 export const MYBAR_EVENT_ROLE_KINDS: RoleKind[] = ["MINIBAR", "YONETIM", "SISTEM"];
 export const MYBAR_NOTE_MAX = 500;
 export const MYBAR_QTY_CAP = 20;

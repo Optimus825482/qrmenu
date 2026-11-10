@@ -137,6 +137,35 @@ describe("deriveAlerts", () => {
     expect(at(1, "BREACH")[0]?.severity).toBe("crit");
   });
 
+  it("times room-service orders from slaStartAt (phone confirmation), not createdAt; pending confirmation is not timed", () => {
+    const run = (status: "HAZIR" | "TEYIT_BEKLIYOR", createdSec: number, startSec: number) =>
+      deriveAlerts(
+        {
+          roomService: {
+            slaMinutes: 10,
+            orders: [
+              {
+                orderId: "rs1",
+                orderNo: 7,
+                roomNumber: "101",
+                status,
+                createdAt: ago(createdSec * 1000),
+                slaStartAt: ago(startSec * 1000),
+                level: "OK",
+              },
+            ],
+          },
+        },
+        NOW,
+        TH,
+        OPTS,
+      ).filter((a) => a.kind === "RS_SLA");
+    // Created 20 min ago but confirmed 1 min ago: the clock has barely started.
+    expect(run("HAZIR", 1200, 60)).toHaveLength(0);
+    expect(run("HAZIR", 1200, 600)[0]?.severity).toBe("crit");
+    expect(run("TEYIT_BEKLIYOR", 1200, 1200)).toHaveLength(0);
+  });
+
   it("flags stock at the critical level but not one above", () => {
     const stock = (remaining: number) =>
       deriveAlerts(minibarLayer({ stock: [{ productId: "p1", name: "Kola", remaining, critical: 5 }] }), NOW, TH, OPTS).filter(

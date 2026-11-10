@@ -34,6 +34,8 @@ async function* callOpened(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
 }
 
 async function* callClosed(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
+  // Same rule as the live snapshot (`LayerEnv.named`): only SISTEM / YONETIM sessions see staff names.
+  const named = q.ctx.user.roleKind === "SISTEM" || q.ctx.user.roleKind === "YONETIM";
   yield* pagedEvents(
     q,
     async (range, take) => {
@@ -57,7 +59,7 @@ async function* callClosed(q: ReplaySourceArgs): AsyncGenerator<RadarEvent> {
         callId: c.id,
         tableId: c.tableId,
         waiterId: c.resolvedById ?? undefined,
-        waiterName: c.resolvedBy?.fullName ?? undefined,
+        waiterName: named ? (c.resolvedBy?.fullName ?? undefined) : undefined,
       },
     ],
   );

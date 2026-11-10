@@ -160,21 +160,9 @@ export async function setSetting<K extends SettingKey>(
     });
     await publish({ type: "settings.changed", hotelId: scope, payload: { key } }, tx);
     // Guest menus follow price changes live.
-    if (key === "price.display" || key === "price.currency") {
+    if (key === "price.display") {
       await publish({ type: "price.display", hotelId: scope }, tx);
       await publish({ type: "menu.changed", hotelId: scope }, tx);
-      if (key === "price.currency" && typeof value === "string") {
-        if (scope) {
-          await tx.menuNode.updateMany({
-            where: { outlet: { hotelId: scope } },
-            data: { currency: value },
-          });
-        } else {
-          await tx.menuNode.updateMany({
-            data: { currency: value },
-          });
-        }
-      }
     }
   });
 }

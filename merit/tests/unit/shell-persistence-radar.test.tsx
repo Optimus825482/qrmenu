@@ -49,14 +49,14 @@ describe("Operasyon Radarı klasörü kayıtlı masaüstlerine eklenir", () => {
     const before = ["core.komuta", "folder.outlet", "folder.kullanici", "folder.sistem"];
     mount(prefs(before, 5));
     expect(iconIds()).toEqual([...before, "folder.radar"]);
-    expect(windowStore.getState().shortcutVersion).toBe(6);
+    expect(windowStore.getState().shortcutVersion).toBe(7);
     await act(async () => {
       vi.advanceTimersByTime(1100);
     });
     expect(save).toHaveBeenCalled();
     const saved = (save.mock.calls.at(-1) as unknown as [ShellPrefs])[0];
     expect(saved.icons.map((i) => i.appId)).toEqual([...before, "folder.radar"]);
-    expect(saved.shortcutVersion).toBe(6);
+    expect(saved.shortcutVersion).toBe(7);
     vi.useRealTimers();
   });
 

@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "07.11.2026 18:30",
+  updatedAt: "10.11.2026 05:55",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -293,6 +293,7 @@ window.ILERLEME = {
     { at: "02.11 09:18", text: "Legacy Minibar Veri Göçü (migrate:minibarlatest) scripti tamamlandı: Canlı Flask veritabanından ürün grupları, ürünler, setup tanımları ve otel bazlı eşlemeler doğrulandı." },
     { at: "02.11 09:20", text: "Oda Servisi Operasyon & SLA Portalı (/oda-servisi) devreye alındı: Mutfak hazırlık, telefon teyit notu/aksiyonu, SLA süresi göstergesi (<20dk normal, 20-35dk uyarı, >35dk gecikmiş), teslimat onayları ve anlık bildirim zili bağlandı." },
     { at: "02.11 09:22", text: "Merkezi Raporlama Penceresi (CR-RAP) ve Komuta Merkezi Canlı Radarı tamamlandı: Minibar tüketim, oda servisi, garson çağrı, kasa KPI özetleri, UTF-8 BOM CSV dışa aktarımı ve Komuta Merkezinde canlı doluluk, MyBar talepleri ve geciken sipariş uyarıları eklendi." },
-    { at: "02.11 09:25", text: "Tüm arka plan pg-boss zamanlayıcıları (00:01 görev üretimi, 09:00 günlük rapor e-postası, 10:00 ve 18:00 doluluk ikazları, 23:59 DND devri) tamamlandı. ESLint ve TypeScript kontrolleri sıfır hatayla geçti." }
+    { at: "02.11 09:25", text: "Tüm arka plan pg-boss zamanlayıcıları (00:01 görev üretimi, 09:00 günlük rapor e-postası, 10:00 ve 18:00 doluluk ikazları, 23:59 DND devri) tamamlandı. ESLint ve TypeScript kontrolleri sıfır hatayla geçti." },
+    { at: "10.11 05:55", text: "Tüm modüller denetimi (yaklaşık 110 bulgu) ve düzeltmeleri tamamlandı: güvenlik (yetkisiz masa kapatma, önizleme yetkisi, QR baskı XSS, oturum mutlak süresi, son R-SYS koruması), menü senkronunun sipariş silmemesi, QR zorunluluğunun sunucuda doğrulanması ve elle oda girişi ayarı, depo sayım düzeltme ve kısmi teslim, MyBar çıkışta otomatik iptal, yalnız otomatik çeviri, para biriminin satış noktasına taşınması, fontların yerelleştirilmesi. Tüm dallar main'de birleştirildi. tsc 0 hata, eslint 0 hata; birleştirme öncesi Vitest 2742/2742, birleştirme sonrası 2747/2752 + düşen 5 test onarılıp yeniden geçti. E2E ve tarayıcıda görsel doğrulama yapılmadı. Rapor: docs/analiz/2026-11-10-tum-moduller-denetim.md." }
   ]
 };

@@ -82,6 +82,8 @@ async function createFromGuest(input: GuestCallInput): Promise<GuestCallView> {
       callNote = data.note || null;
     }
 
+    // Serialize concurrent identical calls of one table so the check + insert below cannot both pass.
+    await tx.$queryRaw`SELECT 1 WHERE pg_advisory_xact_lock(hashtext(${"call:" + table.id}), hashtext(${callType + ":" + (callNote ?? "")})) IS NULL`;
     const open = await tx.waiterCall.findFirst({
       where: { tableId: table.id, type: callType, note: callNote, status: "ACIK" },
       orderBy: { createdAt: "asc" },

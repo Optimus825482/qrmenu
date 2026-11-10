@@ -330,12 +330,14 @@ describe("adjustPool", () => {
     await expectConsistent(w.hotelId, w.cola.id, 5);
   });
 
-  it("R-DEP FORBIDDEN; sebep 'ab' VALIDATION; delta 0 VALIDATION; bakiye aşımı CONFLICT", async () => {
+  it("R-OTM ve R-KAT FORBIDDEN; sebep 'ab' VALIDATION; delta 0 VALIDATION; bakiye aşımı CONFLICT", async () => {
     const w = await minibarWorld({ stock: 60 });
-    const dep = await makeDepo();
+    const otm = await staff("R-OTM");
+    const kat = await makeKat();
     const sys = await staff("R-SYS");
     const input = { productId: w.cola.id, reason: "geçerli sebep" };
-    expect(await codeOf(pool.adjustPool(dep.ctx, w.hotelId, { ...input, delta: 1 }))).toBe("FORBIDDEN");
+    expect(await codeOf(pool.adjustPool(otm.ctx, w.hotelId, { ...input, delta: 1 }))).toBe("FORBIDDEN");
+    expect(await codeOf(pool.adjustPool(kat.ctx, w.hotelId, { ...input, delta: 1 }))).toBe("FORBIDDEN");
     expect(await codeOf(pool.adjustPool(sys.ctx, w.hotelId, { ...input, delta: 1, reason: "ab" }))).toBe("VALIDATION");
     expect(await codeOf(pool.adjustPool(sys.ctx, w.hotelId, { ...input, delta: 0 }))).toBe("VALIDATION");
     expect(await codeOf(pool.adjustPool(sys.ctx, w.hotelId, { ...input, delta: -70 }))).toBe("CONFLICT");
@@ -343,6 +345,57 @@ describe("adjustPool", () => {
       "Düzeltme bakiyeyi eksiye düşürür; havuzda 60 adet var",
     );
     expect(await stockOf(w.hotelId, w.cola.id)).toMatchObject({ totalQty: 60, remainingQty: 60 });
+  });
+});
+
+describe("countPool (sayım düzeltmesi, D2)", () => {
+  it("R-DEP sayılan miktarı girer: fark DUZELTME olarak yazılır, sebep notta, audit sayılan/önceki/fark taşır", async () => {
+    const w = await minibarWorld({ stock: 60 });
+    const dep = await makeDepo();
+    const row = await pool.countPool(dep.ctx, w.hotelId, { productId: w.cola.id, countedQty: 52, reason: "aylık sayım" });
+    expect(row).toMatchObject({ remainingQty: 52, delta: -8, previousQty: 60 });
+    expect(await stockOf(w.hotelId, w.cola.id)).toMatchObject({ totalQty: 52, remainingQty: 52 });
+    const move = await testDb.hotelStockMovement.findFirstOrThrow({ where: { type: "DUZELTME", productId: w.cola.id } });
+    expect(move).toMatchObject({ qty: -8, userId: dep.userId });
+    expect(move.note).toContain("aylık sayım");
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "STOCK_ADJUST", userId: dep.userId } });
+    expect(log.after).toMatchObject({ countedQty: 52, previousQty: 60, delta: -8, reason: "aylık sayım" });
+    await expectConsistent(w.hotelId, w.cola.id, 60);
+
+    // Count above the balance: positive difference.
+    expect((await pool.countPool(dep.ctx, w.hotelId, { productId: w.cola.id, countedQty: 55, reason: "bulunan koli" })).delta).toBe(3);
+    await expectConsistent(w.hotelId, w.cola.id, 60);
+  });
+
+  it("sebep zorunlu, aynı miktar VALIDATION, negatif VALIDATION; yetkisiz roller FORBIDDEN", async () => {
+    const w = await minibarWorld({ stock: 10 });
+    const dep = await makeDepo();
+    const kat = await makeKat();
+    const otm = await staff("R-OTM");
+    const base = { productId: w.cola.id, reason: "sayım" };
+    expect(await codeOf(pool.countPool(dep.ctx, w.hotelId, { ...base, countedQty: 5, reason: "" }))).toBe("VALIDATION");
+    expect(await codeOf(pool.countPool(dep.ctx, w.hotelId, { ...base, countedQty: 10 }))).toBe("VALIDATION");
+    expect(await codeOf(pool.countPool(dep.ctx, w.hotelId, { ...base, countedQty: -1 }))).toBe("VALIDATION");
+    expect(await codeOf(pool.countPool(kat.ctx, w.hotelId, { ...base, countedQty: 5 }))).toBe("FORBIDDEN");
+    expect(await codeOf(pool.countPool(otm.ctx, w.hotelId, { ...base, countedQty: 5 }))).toBe("FORBIDDEN");
+    expect(await stockOf(w.hotelId, w.cola.id)).toMatchObject({ remainingQty: 10 });
+    expect(await testDb.hotelStockMovement.count({ where: { type: "DUZELTME" } })).toBe(0);
+  });
+});
+
+describe("pasif ürün stoğu (DEP-7)", () => {
+  it("pasif ürün, otelde stoğu varken havuz listesinde kalır; stoğu yoksa görünmez", async () => {
+    const w = await minibarWorld({ stock: 7 });
+    await testDb.product.update({ where: { id: w.cola.id }, data: { isActive: false } });
+    const sys = await staff("R-SYS");
+    const rows = await pool.listPoolAll(sys.ctx, w.hotelId, { includeEmpty: true });
+    expect(rows.find((r) => r.productId === w.cola.id)).toMatchObject({ remainingQty: 7, productActive: false });
+    await testDb.hotelStock.update({
+      where: { hotelId_productId: { hotelId: w.hotelId, productId: w.cola.id } },
+      data: { remainingQty: 0, usedQty: 7 },
+    });
+    const after = await pool.listPoolAll(sys.ctx, w.hotelId, { includeEmpty: true });
+    expect(after.find((r) => r.productId === w.cola.id)).toBeUndefined();
   });
 });
 

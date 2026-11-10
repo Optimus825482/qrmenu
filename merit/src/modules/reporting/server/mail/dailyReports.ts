@@ -3,6 +3,7 @@ import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { businessDate, businessDay, formatDayTr } from "@/lib/time";
 import { addDays } from "@/modules/minibar/server/dates";
+import { MANUAL_VERIFY_ACTION } from "@/modules/minibar/server/roomVerification";
 import { PDF_ROW_LIMIT, XLSX_ROW_LIMIT } from "../../constants";
 import { dayRange } from "../range";
 import { getReport } from "../registry";
@@ -178,6 +179,28 @@ async function minibarOn(hotelId: string): Promise<boolean> {
   return row?.enabled === true;
 }
 
+/** Room verifications by typed room number (audit `ODA_DOGRULAMA_ELLE`) of the business day, oldest first. */
+export async function manualRoomEntries(
+  hotelId: string,
+  day: string,
+): Promise<{ room: string; staff: string; time: string }[]> {
+  const { start, end } = dayRange(day, day);
+  const rows = await prisma.auditLog.findMany({
+    where: { hotelId, action: MANUAL_VERIFY_ACTION, createdAt: { gte: start, lt: end } },
+    select: { createdAt: true, after: true, user: { select: { fullName: true } } },
+    orderBy: { createdAt: "asc" },
+    take: 500,
+  });
+  return rows.map((r) => {
+    const after = (r.after ?? {}) as { roomNumber?: unknown };
+    return {
+      room: typeof after.roomNumber === "string" ? after.roomNumber : "-",
+      staff: r.user?.fullName ?? "-",
+      time: r.createdAt.toLocaleTimeString("tr-TR", { timeZone: "Europe/Nicosia", hour: "2-digit", minute: "2-digit" }),
+    };
+  });
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // GOREV
 
@@ -193,6 +216,16 @@ export async function composeDailyTask(p: { hotelId: string; date: string }): Pr
     select: { room: { select: { number: true } } },
   });
   const missingRooms = [...new Set(missing.map((m) => m.room.number))].sort((a, b) => a.localeCompare(b, "tr", { numeric: true }));
+  const manual = await manualRoomEntries(p.hotelId, p.date);
+  const manualHtml = `${h3(`Elle oda girişi ile yapılan kontroller (${manual.length})`)}
+      ${
+        manual.length === 0
+          ? small("Elle oda girişi yapılmadı.")
+          : table([{ t: "Oda" }, { t: "Görevli" }, { t: "Saat" }], manual.map((m) => [m.room, m.staff, m.time]))
+      }`;
+  const manualText = `Elle oda girişi ile yapılan kontroller (${manual.length}): ${
+    manual.map((m) => `Oda ${m.room} ${m.staff} ${m.time}`).join(", ") || "yok"
+  }`;
 
   const rows = byType.rows;
   const total = sumOf(rows, "total");
@@ -205,8 +238,8 @@ export async function composeDailyTask(p: { hotelId: string; date: string }): Pr
   let text: string;
   if (total === 0) {
     const msg = "Bu gün için görev üretilmedi (doluluk dosyaları yüklenmemiş olabilir)";
-    body = `<p>${esc(msg)}</p>`;
-    text = msg;
+    body = `<p>${esc(msg)}</p>${manualHtml}`;
+    text = [msg, manualText].join("\n");
   } else {
     const typeRows = rows.map((r) => [r.type, num(r.total), num(r.done), num(r.dnd), num(r.missing)]);
     const staffRows = byStaff.rows.map((r) => [r.staff, num(r.items)]);
@@ -222,13 +255,15 @@ export async function composeDailyTask(p: { hotelId: string; date: string }): Pr
       ${h3("Personel bazında tamamlanan")}
       ${staffRows.length ? table([{ t: "Personel" }, { t: "Kalem", right: true }], staffRows) : small("Tamamlama kaydı yok.")}
       ${h3(`Eksik odalar (${missingRooms.length})`)}
-      ${small(missingRooms.length === 0 ? "Eksik oda yok." : `${shown.join(", ")}${more}`)}`;
+      ${small(missingRooms.length === 0 ? "Eksik oda yok." : `${shown.join(", ")}${more}`)}
+      ${manualHtml}`;
     text = [
       `${hotel.name} – ${dateLabel}`,
       `Genel tamamlanma: ${pct(done / total)} (${done}/${total})`,
       ...typeRows.map((r) => `${r[0]}: toplam ${r[1]}, tamamlanan ${r[2]}, DND ${r[3]}, eksik ${r[4]}`),
       `Personel: ${byStaff.rows.map((r) => `${r.staff} ${num(r.items)}`).join(", ") || "-"}`,
       `Eksik odalar: ${shown.join(", ") || "yok"}${more}`,
+      manualText,
     ].join("\n");
   }
 

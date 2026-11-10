@@ -107,9 +107,8 @@ export default function KatTavsiyeIsPlaniPage() {
       const loadedMulti = json.multiHotels ?? [];
       setMultiHotels(loadedMulti);
       setHotels(json.hotels ?? []);
-      if (json.selectedHotelId && hId === undefined) {
-        setSelectedHotelId(json.selectedHotelId);
-      }
+      // The server decides the view: a user with one hotel gets that hotel even for "ALL".
+      if (json.selectedHotelId) setSelectedHotelId(json.selectedHotelId);
       setRequireQrForControl(Boolean(json.requireQrForControl));
 
       // Tek otel kat accordion varsayılan açık
@@ -139,7 +138,6 @@ export default function KatTavsiyeIsPlaniPage() {
     const params = new URLSearchParams(window.location.search);
     const paramHotelId = params.get("hotelId");
     const initialHId = paramHotelId ?? "ALL";
-    setSelectedHotelId(initialHId);
     const t = setTimeout(() => void loadPlan(initialHId), 0);
     return () => clearTimeout(t);
   }, []);
@@ -215,8 +213,9 @@ export default function KatTavsiyeIsPlaniPage() {
                 {rm.priorityLabel ?? rm.label ?? "Kontrol"}
               </span>
               {isClash ? (
-                <span className="rounded-full bg-danger text-white px-2 py-0.5 text-[11px] font-bold animate-pulse">
-                  🚨 Kritik Çakışma
+                <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2 py-0.5 text-xs font-bold">
+                  <Icon name="warning" size={12} />
+                  Kritik Çakışma
                 </span>
               ) : null}
             </div>
@@ -304,8 +303,8 @@ export default function KatTavsiyeIsPlaniPage() {
                 <Icon name="building" size={16} />
                 Otel Görünümü:
               </span>
-              <span className="text-[11px] font-semibold text-accent">
-                {selectedHotelId === "ALL" ? "3 Otel Birden Görüntüleniyor" : "Tek Otel Filtresi Aktif"}
+              <span className="text-xs font-semibold text-accent">
+                {selectedHotelId === "ALL" ? `${hotels.length} otel birlikte görüntüleniyor` : "Tek otel filtresi aktif"}
               </span>
             </div>
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
@@ -318,11 +317,10 @@ export default function KatTavsiyeIsPlaniPage() {
                     : "border border-border bg-surface text-text hover:bg-bg"
                 }`}
               >
-                <span>🏢</span>
-                Tüm Oteller ({hotels.length} Otel Birden)
+                <Icon name="building" size={14} />
+                Tüm Oteller ({hotels.length})
               </button>
               {hotels.map((h) => {
-                const iconEmoji = h.code.includes("DIAMOND") ? "💎" : h.code.includes("ROYAL") ? "👑" : "⭐";
                 const isSelected = selectedHotelId === h.id;
                 return (
                   <button
@@ -335,7 +333,7 @@ export default function KatTavsiyeIsPlaniPage() {
                         : "border border-border bg-surface text-text hover:bg-bg"
                     }`}
                   >
-                    <span>{iconEmoji}</span>
+                    <Icon name="building" size={14} />
                     {h.name}
                   </button>
                 );
@@ -353,7 +351,7 @@ export default function KatTavsiyeIsPlaniPage() {
           >
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/15 text-accent font-bold text-sm">
-                📋
+                <Icon name="clipboard" size={16} />
               </span>
               <div>
                 <h2 className="text-sm font-bold text-text">Tavsiye Edilen İş Planı Nasıl Çalışır?</h2>
@@ -361,7 +359,8 @@ export default function KatTavsiyeIsPlaniPage() {
               </div>
             </div>
             <span className="text-xs font-semibold text-accent flex items-center gap-1">
-              {showGuide ? "Gizle ▲" : "Açıkla ▼"}
+              {showGuide ? "Gizle" : "Açıkla"}
+              <Icon name="chevron-down" size={14} className={showGuide ? "rotate-180" : undefined} />
             </span>
           </button>
 
@@ -449,17 +448,12 @@ export default function KatTavsiyeIsPlaniPage() {
           </div>
         ) : selectedHotelId === "ALL" && multiHotels.length > 0 ? (
           /* ========================================================= */
-          /* 3 OTEL BİRDEN GÖRÜNÜMÜ                                     */
+          /* ÇOKLU OTEL GÖRÜNÜMÜ                                        */
           /* ========================================================= */
           <div className="space-y-6">
             {multiHotels.map((hSummary) => {
               const hGrouped = groupEntriesByFloor(hSummary.plan.entries);
               const hRooms = hSummary.plan.entries;
-              const hotelEmoji = hSummary.hotelCode.includes("DIAMOND")
-                ? "💎"
-                : hSummary.hotelCode.includes("ROYAL")
-                ? "👑"
-                : "⭐";
 
               return (
                 <section
@@ -470,7 +464,7 @@ export default function KatTavsiyeIsPlaniPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-3">
                     <div className="flex items-center gap-3">
                       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent font-bold text-lg">
-                        {hotelEmoji}
+                        <Icon name="building" size={20} />
                       </span>
                       <div>
                         <div className="flex items-center gap-2">
@@ -482,10 +476,14 @@ export default function KatTavsiyeIsPlaniPage() {
                         <p className="text-xs text-muted flex flex-wrap gap-2 mt-0.5">
                           <span>{hRooms.length} bekleyen oda</span>
                           {hSummary.plan.summary.clashes > 0 ? (
-                            <span className="text-danger font-bold">· 🚨 {hSummary.plan.summary.clashes} çakışma</span>
+                            <span className="inline-flex items-center gap-1 text-danger font-bold">
+                              · <Icon name="warning" size={12} /> {hSummary.plan.summary.clashes} çakışma
+                            </span>
                           ) : null}
                           {hSummary.plan.summary.critical > 0 ? (
-                            <span className="text-warn font-bold">· ⚠️ {hSummary.plan.summary.critical} kritik</span>
+                            <span className="inline-flex items-center gap-1 text-warn font-bold">
+                              · <Icon name="warning" size={12} /> {hSummary.plan.summary.critical} kritik
+                            </span>
                           ) : null}
                         </p>
                       </div>
@@ -543,7 +541,7 @@ export default function KatTavsiyeIsPlaniPage() {
                                 </span>
                                 <div>
                                   <h3 className="text-xs font-bold text-text">{grp.floorName}</h3>
-                                  <p className="text-[11px] text-muted">
+                                  <p className="text-xs text-muted">
                                     {grp.rooms.length} oda
                                     {criticalCount > 0 ? (
                                       <span className="text-danger font-bold ml-1">· {criticalCount} kritik</span>
@@ -551,8 +549,9 @@ export default function KatTavsiyeIsPlaniPage() {
                                   </p>
                                 </div>
                               </div>
-                              <span className="text-[11px] font-semibold text-muted">
-                                {isExpanded ? "Gizle ▲" : "Odaları Göster ▼"}
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+                                {isExpanded ? "Gizle" : "Odaları Göster"}
+                                <Icon name="chevron-down" size={14} className={isExpanded ? "rotate-180" : undefined} />
                               </span>
                             </button>
 
@@ -652,8 +651,9 @@ export default function KatTavsiyeIsPlaniPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-muted">
-                          {isExpanded ? "Oda Listesini Gizle ▲" : "Odaları Göster ▼"}
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted">
+                          {isExpanded ? "Oda Listesini Gizle" : "Odaları Göster"}
+                          <Icon name="chevron-down" size={14} className={isExpanded ? "rotate-180" : undefined} />
                         </span>
                       </div>
                     </button>

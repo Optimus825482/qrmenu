@@ -54,6 +54,18 @@ describe("registerReportingJobs", () => {
     err.mockRestore();
   });
 
+  it("işçi hatası yutulmaz: günlüğe yazılır ve pg-boss'a yeniden fırlatılır", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const { boss, handlers } = fakeBoss();
+    await reporting.registerReportingJobs(boss as never);
+    // The first upload-alert job runs enqueueUploadAlerts; make it fail through a broken boss-free path.
+    const queue = await import("@/modules/reporting/server/mail/queue");
+    const spy = vi.spyOn(queue, "purgeOldLogs").mockRejectedValueOnce(new Error("silme hatası"));
+    await expect(handlers.get("mail.purge")!([{}])).rejects.toThrow("silme hatası");
+    spy.mockRestore();
+    err.mockRestore();
+  });
+
   it("işçiler hatasız çalışır; geçersiz slot yok sayılır", async () => {
     const { boss, handlers } = fakeBoss();
     await reporting.registerReportingJobs(boss as never);

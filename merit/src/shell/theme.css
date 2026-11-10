@@ -659,6 +659,19 @@
   color: var(--xp-muted);
 }
 
+.xp-statusbar-switch-btn {
+  color: var(--xp-select);
+  text-decoration: underline;
+  font-weight: normal;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.xp-statusbar-switch-btn:hover {
+  color: var(--xp-title-dark);
+}
+
 .xp-resize-handle {
   position: absolute;
   z-index: 20;

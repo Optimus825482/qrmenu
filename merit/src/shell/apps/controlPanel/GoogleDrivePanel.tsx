@@ -137,14 +137,14 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
   const isConnected = config.lastTestStatus === "SUCCESS";
 
   return (
-    <div className="p-6 max-w-3xl space-y-6 text-xs text-slate-800">
+    <div className="p-6 max-w-3xl space-y-6 text-xs text-text">
       {/* Header */}
-      <div className="border-b border-slate-200 pb-4">
-        <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-          <Icon name="folder" size={20} className="text-blue-600" />
+      <div className="border-b border-border pb-4">
+        <h2 className="text-base font-bold text-text flex items-center gap-2">
+          <Icon name="folder" size={20} className="text-accent" />
           Google Drive Entegrasyonu & Bulut Depolama
         </h2>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-muted mt-1">
           Otomatik üretilen operasyonel raporların, günlük gün sonu ve tüketim tablolarının belirlenen Google Drive klasörünüze otomatik aktarılmasını sağlar.
         </p>
       </div>
@@ -153,24 +153,24 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
       <div
         className={`rounded-xl p-4 border flex items-start gap-3.5 transition shadow-sm ${
           isConnected
-            ? "bg-emerald-50/90 border-emerald-300 text-emerald-950"
-            : "bg-amber-50/80 border-amber-300 text-amber-950"
+            ? "bg-[var(--success-bg)] border-success/40 text-success"
+            : "bg-[var(--warn-bg)] border-warn/40 text-warn"
         }`}
       >
         <div className="mt-0.5">
           {isConnected ? (
-            <Icon name="check" size={20} className="text-emerald-600" />
+            <Icon name="check" size={20} className="text-success" />
           ) : (
-            <Icon name="warning" size={20} className="text-amber-600" />
+            <Icon name="warning" size={20} className="text-warn" />
           )}
         </div>
         <div className="flex-1 space-y-1">
           <div className="flex items-center justify-between">
             <span className="font-bold text-xs uppercase tracking-wide">
-              {isConnected ? "✓ Bağlantı Aktif & Doğrulandı" : "⚠️ Yapılandırma Bekleniyor — Bağlantı Henüz Kurulmadı"}
+              {isConnected ? "Bağlantı Aktif & Doğrulandı" : "Yapılandırma Bekleniyor — Bağlantı Henüz Kurulmadı"}
             </span>
             {config.lastTestedAt ? (
-              <span className="text-[11px] opacity-75">
+              <span className="text-xs opacity-75">
                 Son test: {new Date(config.lastTestedAt).toLocaleString("tr-TR")}
               </span>
             ) : null}
@@ -187,18 +187,18 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
         <div
           className={`p-3.5 rounded-xl text-xs font-semibold border ${
             testNotice.kind === "ok"
-              ? "bg-emerald-100/80 border-emerald-300 text-emerald-900"
-              : "bg-red-100/80 border-red-300 text-red-900"
+              ? "bg-[var(--success-bg)] border-success/40 text-success"
+              : "bg-[var(--danger-bg)] border-danger/40 text-danger"
           }`}
         >
           {testNotice.text}
         </div>
       ) : null}
 
-      <form onSubmit={handleSave} className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <form onSubmit={handleSave} className="space-y-6 bg-white p-6 rounded-xl border border-border shadow-sm">
         {/* Method Picker */}
         <div className="space-y-2">
-          <label className="block font-bold text-slate-800 text-xs">
+          <label className="block font-bold text-text text-xs">
             Bağlantı ve Kimlik Doğrulama Yöntemi
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -230,18 +230,18 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
                   onClick={() => setConfig({ ...config, authMethod: m.id })}
                   className={`p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
                     active
-                      ? "border-blue-600 bg-blue-50/70 text-blue-950 ring-1 ring-blue-500/30 font-semibold"
-                      : "border-slate-200 bg-slate-50/60 text-slate-700 hover:bg-slate-100"
+                      ? "border-accent bg-accent/10 text-accent ring-1 ring-accent/30 font-semibold"
+                      : "border-border bg-bg/60 text-text hover:bg-[var(--muted-bg)]"
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-1">
                       <span className="font-bold text-xs">{m.title}</span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-accent/15 text-accent">
                         {m.badge}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 font-normal leading-relaxed">{m.desc}</p>
+                    <p className="text-xs text-muted font-normal leading-relaxed">{m.desc}</p>
                   </div>
                 </button>
               );
@@ -251,15 +251,15 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
 
         {/* METHOD 1: WEBHOOK */}
         {config.authMethod === "WEBHOOK" && (
-          <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-200 space-y-3">
+          <div className="p-4 rounded-xl bg-accent/10 border border-accent/40 space-y-3">
             <div className="flex items-center justify-between">
-              <label htmlFor={`${uid}-webhook`} className="block font-bold text-blue-900 text-xs">
+              <label htmlFor={`${uid}-webhook`} className="block font-bold text-accent text-xs">
                 Google Apps Script Web Uygulaması URL (Webhook)
               </label>
               <button
                 type="button"
                 onClick={() => setShowScriptModal(true)}
-                className="text-xs text-blue-700 font-bold hover:underline inline-flex items-center gap-1"
+                className="text-xs text-accent font-bold hover:underline inline-flex items-center gap-1"
               >
                 Nasıl Kurulur? (Kodu Gör)
               </button>
@@ -270,18 +270,18 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               value={config.webhookUrl || ""}
               onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
               placeholder="https://script.google.com/macros/s/AKfycbx.../exec"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-border bg-white px-3 py-2 text-xs text-text focus:border-accent focus:outline-none"
             />
-            <p className="text-[11px] text-slate-600">
-              Google Drive klasörünüzde <strong>Uzantılar &gt; Apps Script</strong> açıp verilen hazır kodu yapıştırarak 1 dakikada Web App URL'si alabilirsiniz.
+            <p className="text-xs text-muted">
+              Google Drive klasörünüzde <strong>Uzantılar &gt; Apps Script</strong> açıp verilen hazır kodu yapıştırarak 1 dakikada Web App URL&apos;si alabilirsiniz.
             </p>
           </div>
         )}
 
         {/* METHOD 2: SERVICE ACCOUNT */}
         {config.authMethod === "SERVICE_ACCOUNT" && (
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <label htmlFor={`${uid}-creds`} className="block font-bold text-slate-800 text-xs">
+          <div className="p-4 rounded-xl bg-bg border border-border space-y-3">
+            <label htmlFor={`${uid}-creds`} className="block font-bold text-text text-xs">
               Google Cloud Service Account JSON Anahtar İçeriği
             </label>
             <textarea
@@ -290,9 +290,9 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               value={config.credentialsJson || ""}
               onChange={(e) => setConfig({ ...config, credentialsJson: e.target.value })}
               placeholder='{ "type": "service_account", "project_id": "...", "private_key": "-----BEGIN RSA PRIVATE KEY...", "client_email": "..." }'
-              className="w-full rounded-lg border border-slate-300 bg-white p-2.5 font-mono text-[11px] text-slate-800 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-border bg-white p-2.5 font-mono text-xs text-text focus:border-accent focus:outline-none"
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-muted">
               Google Cloud Console &gt; IAM & Admin &gt; Service Accounts &gt; Keys bölümünden indirdiğiniz JSON anahtarını buraya yapıştırın.
             </p>
           </div>
@@ -301,7 +301,7 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
         {/* Target Folder ID & Link */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor={`${uid}-folderId`} className="block font-bold text-slate-700 text-xs">
+            <label htmlFor={`${uid}-folderId`} className="block font-bold text-text text-xs">
               Google Drive Klasör ID veya Klasör Adı
             </label>
             <input
@@ -310,12 +310,12 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               value={config.folderId}
               onChange={(e) => setConfig({ ...config, folderId: e.target.value })}
               placeholder="Örn: 1A2b3C4d5E... veya Merit_Raporlar"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:bg-white focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-border bg-bg/50 px-3 py-2 text-xs text-text focus:bg-white focus:border-accent focus:outline-none"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor={`${uid}-folderUrl`} className="block font-bold text-slate-700 text-xs">
+            <label htmlFor={`${uid}-folderUrl`} className="block font-bold text-text text-xs">
               Google Drive Klasör Linki (Paylaşım Bağlantısı)
             </label>
             <input
@@ -324,23 +324,23 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               value={config.folderUrl || ""}
               onChange={(e) => setConfig({ ...config, folderUrl: e.target.value })}
               placeholder="https://drive.google.com/drive/folders/..."
-              className="w-full rounded-lg border border-slate-300 bg-slate-50/50 px-3 py-2 text-xs text-slate-800 focus:bg-white focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-border bg-bg/50 px-3 py-2 text-xs text-text focus:bg-white focus:border-accent focus:outline-none"
             />
           </div>
         </div>
 
         {/* Options Toggles */}
-        <div className="space-y-3 pt-3 border-t border-slate-100">
-          <h3 className="font-bold text-slate-800 text-xs">Otomasyon Tercihleri</h3>
+        <div className="space-y-3 pt-3 border-t border-border">
+          <h3 className="font-bold text-text text-xs">Otomasyon Tercihleri</h3>
 
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input
               type="checkbox"
               checked={config.autoSync}
               onChange={(e) => setConfig({ ...config, autoSync: e.target.checked })}
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-border text-accent focus:ring-accent"
             />
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-text">
               Otomatik raporlar her üretildiğinde Google Drive klasörüne anında yükle
             </span>
           </label>
@@ -350,9 +350,9 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               type="checkbox"
               checked={config.subfolderByHotel}
               onChange={(e) => setConfig({ ...config, subfolderByHotel: e.target.checked })}
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-border text-accent focus:ring-accent"
             />
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-text">
               Raporları otel adına göre alt klasörlere ayır (Örn: /Merit_Royal, /Merit_Diamond)
             </span>
           </label>
@@ -362,30 +362,30 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               type="checkbox"
               checked={config.subfolderByMonth}
               onChange={(e) => setConfig({ ...config, subfolderByMonth: e.target.checked })}
-              className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              className="rounded border-border text-accent focus:ring-accent"
             />
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-text">
               Aylık arşiv klasörleri oluştur (Örn: /2026-11, /2026-12)
             </span>
           </label>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between pt-4 border-t border-border">
           <button
             type="button"
             onClick={handleTest}
             disabled={testing || saving}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-blue-600 bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 disabled:opacity-50 transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-accent bg-accent/10 text-accent font-bold hover:bg-accent/15 disabled:opacity-50 transition shadow-sm"
           >
             <Icon name="refresh" size={14} className={testing ? "animate-spin" : ""} />
-            {testing ? "Bağlantı Doğrulanıyor..." : "⚡ Bağlantıyı Doğrula & Test Et"}
+            {testing ? "Bağlantı Doğrulanıyor..." : "Bağlantıyı Doğrula & Test Et"}
           </button>
 
           <button
             type="submit"
             disabled={saving || testing}
-            className="inline-flex items-center gap-1.5 px-6 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-6 py-2 rounded-lg bg-accent text-white font-bold hover:bg-accent/90 disabled:opacity-50 transition shadow-sm"
           >
             {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
           </button>
@@ -394,37 +394,37 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
 
       {/* APPS SCRIPT HELP MODAL */}
       {showScriptModal ? (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <Icon name="folder" size={18} className="text-blue-600" />
+        <div className="fixed inset-0 bg-brand/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-border w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-bg">
+              <h3 className="font-bold text-sm text-text flex items-center gap-2">
+                <Icon name="folder" size={18} className="text-accent" />
                 Google Apps Script ile 1 Dakikada Drive Entegrasyonu
               </h3>
               <button
                 type="button"
                 onClick={() => setShowScriptModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold p-1"
+                className="text-muted hover:text-muted font-bold p-1"
               >
-                ✕
+                <Icon name="close" size={16} title="Kapat" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto text-xs leading-relaxed text-slate-700">
+            <div className="p-6 space-y-4 overflow-y-auto text-xs leading-relaxed text-text">
               <ol className="list-decimal list-inside space-y-2 font-medium">
-                <li>Google Drive'ınızda raporların toplanmasını istediğiniz bir klasör açın.</li>
+                <li>Google Drive&apos;ınızda raporların toplanmasını istediğiniz bir klasör açın.</li>
                 <li>Üst menüden <strong>Uzantılar &gt; Apps Script</strong> seçeneğine tıklayın.</li>
                 <li>Açılan editördeki kodu silip aşağıdaki kodu yapıştırın:</li>
               </ol>
 
               <div className="relative">
-                <pre className="p-3 bg-slate-900 text-slate-100 rounded-lg text-[11px] font-mono overflow-x-auto max-h-48">
+                <pre className="p-3 bg-brand text-[var(--bg)] rounded-lg text-xs font-mono overflow-x-auto max-h-48">
                   {APPS_SCRIPT_TEMPLATE}
                 </pre>
                 <button
                   type="button"
                   onClick={copyScript}
-                  className="absolute top-2 right-2 px-3 py-1 bg-blue-600 text-white text-[10px] font-bold rounded shadow hover:bg-blue-700"
+                  className="absolute top-2 right-2 px-3 py-1 bg-accent text-white text-xs font-bold rounded shadow hover:bg-accent/90"
                 >
                   Kodu Kopyala
                 </button>
@@ -433,16 +433,16 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               <ol start={4} className="list-decimal list-inside space-y-2 font-medium">
                 <li>Sağ üstteki <strong>Dağıt (Deploy) &gt; Yeni Dağıtım</strong> butonuna basın.</li>
                 <li>Tür olarak <strong>Web Uygulaması (Web App)</strong> seçin.</li>
-                <li>Erişim yetkisini <strong>"Herkes" (Anyone)</strong> yapıp <strong>Dağıt</strong>'a tıklayın.</li>
-                <li>Verilen <strong>Web Uygulaması URL'sini</strong> kopyalayıp buradaki alana yapıştırın.</li>
+                <li>Erişim yetkisini <strong>&ldquo;Herkes&rdquo; (Anyone)</strong> yapıp <strong>Dağıt</strong>&apos;a tıklayın.</li>
+                <li>Verilen <strong>Web Uygulaması URL&apos;sini</strong> kopyalayıp buradaki alana yapıştırın.</li>
               </ol>
             </div>
 
-            <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <div className="px-6 py-3 border-t border-border bg-bg flex justify-end">
               <button
                 type="button"
                 onClick={() => setShowScriptModal(false)}
-                className="px-4 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700"
+                className="px-4 py-1.5 rounded-lg bg-accent text-white font-bold hover:bg-accent/90"
               >
                 Anladım
               </button>

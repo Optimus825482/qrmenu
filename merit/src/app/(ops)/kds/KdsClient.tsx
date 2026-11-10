@@ -15,7 +15,7 @@ import { NotificationPermissionGate } from "@/components/ops/NotificationPermiss
 import KdsColumn from "./KdsColumn";
 import "./kds.css";
 
-const EVENTS = ["order.approved", "order.prep", "order.ready", "order.served", "order.cancelled"] as const;
+const EVENTS = ["order.approved", "order.prep", "order.ready", "order.served", "order.cancelled", "realtime.resync"] as const;
 
 function payloadOrderId(payload: unknown): string | undefined {
   if (payload && typeof payload === "object" && "orderId" in payload) {
@@ -28,33 +28,43 @@ function payloadOrderId(payload: unknown): string | undefined {
 export default function KdsClient({ outletId, board: initialBoard, canEdit, canPrint }: { outletId: string; board: KdsBoard; canEdit: boolean; canPrint: boolean }) {
   const router = useRouter();
   const [board, setBoard] = useState(initialBoard);
-  const [now, setNow] = useState(() => Date.now());
+  // Ages follow the server clock: offset = server time at read - device time at receipt.
+  const [clockOffset, setClockOffset] = useState(() => initialBoard.serverNow - Date.now());
+  const [now, setNow] = useState(initialBoard.serverNow);
   const [error, setError] = useState("");
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
   const localReady = useRef(new Set<string>());
   useSound("new-order"); // ilk dokunuşta ses kapısını açar
   const refresh = useCallback(async () => {
     const result = await kdsBoardAction(outletId);
-    if (result.ok) setBoard(result.data);
+    if (result.ok) { setBoard(result.data); setClockOffset(result.data.serverNow - Date.now()); }
     else setError(result.error.message);
     router.refresh();
   }, [outletId, router]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
+    const timer = window.setInterval(() => setNow(Date.now() + clockOffset), 1_000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [clockOffset]);
+  // SSE bursts collapse into one refresh; a resync refreshes at once.
+  const refreshTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
+  const scheduleRefresh = useCallback((immediate = false) => {
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => void refresh(), immediate ? 0 : 300);
+  }, [refresh]);
   const { status } = useSse((event) => {
+    if (event.type === "realtime.resync") { scheduleRefresh(true); return; }
     if (event.outletId !== outletId) return;
     if (event.type === "order.approved") {
       playCue("new-order");
-      showOpsNotification("👨‍🍳 Mutfak: Yeni Sipariş", { body: "Hazırlanacak yeni sipariş KDS ekranına düştü." });
+      showOpsNotification("Mutfak: Yeni Sipariş", { body: "Hazırlanacak yeni sipariş KDS ekranına düştü." });
     } else if (event.type === "order.ready") {
       const id = payloadOrderId(event.payload);
       // Bu cihazda basılan "Hazır" için ses çalınmaz; başka cihazdakiler için çalınır.
       if (!(id && localReady.current.delete(id))) playCue("ready");
     }
-    void refresh();
+    scheduleRefresh();
   }, EVENTS);
 
   // The "ready" echo of this device can only be matched while the stream is up: after a loss the pending marks

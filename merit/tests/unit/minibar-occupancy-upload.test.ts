@@ -385,6 +385,127 @@ describe("doluluk yükleme: silme", () => {
   });
 });
 
+describe("doluluk yükleme: geri alma, değiştirme ve uyuşmazlık (DEP-1/5/6)", () => {
+  it("DEP-1: yalnız güncellenen eski kayıt silinmez, önceki haline döner; yeni kayıt silinir", async () => {
+    const { royal, dep } = await world();
+    const first = await svc.commitOccupancy(
+      dep.ctx,
+      {
+        fileName: "a.xlsx",
+        kind: "IN_HOUSE",
+        data: await stdFile([
+          ["101", d("2026-11-01"), d("2026-11-06"), 2, "14:00", null],
+          ["102", d("2026-11-02"), d("2026-11-07"), 1, null, null],
+        ]),
+      },
+      NOW,
+    );
+    const later = new Date(NOW.getTime() + 60_000);
+    const second = await svc.commitOccupancy(
+      dep.ctx,
+      {
+        fileName: "b.xlsx",
+        kind: "IN_HOUSE",
+        data: await stdFile([
+          ["101", d("2026-11-01"), d("2026-11-08"), 3, null, null],
+          ["102", d("2026-11-02"), d("2026-11-07"), 1, null, null],
+          ["103", d("2026-11-02"), d("2026-11-05"), 2, null, null],
+        ]),
+      },
+      later,
+    );
+    expect(second).toMatchObject({ createdRows: 1, updatedRows: 2, removedRows: 0 });
+
+    await svc.deleteUpload(dep.ctx, second.uploadId, later);
+    const recs = await testDb.guestRecord.findMany({ where: { hotelId: royal.hid }, orderBy: { roomId: "asc" } });
+    expect(recs).toHaveLength(2);
+    const r101 = recs.find((r) => r.roomId === royal.ids["101"])!;
+    expect(r101).toMatchObject({ uploadId: first.uploadId, batchCode: first.code, guestCount: 2, arrivalTime: "14:00" });
+    expect(r101.departureDate.toISOString().slice(0, 10)).toBe("2026-11-06");
+    expect(recs.every((r) => r.uploadId === first.uploadId)).toBe(true);
+    expect(await testDb.guestRecord.count({ where: { roomId: royal.ids["103"] } })).toBe(0);
+  });
+
+  it("DEP-6: temiz dosyada olmayan aynı gün kaydı kaldırılır, önizleme sayıları doğru; silinince geri gelir", async () => {
+    const { royal, dep } = await world();
+    const first = await svc.commitOccupancy(
+      dep.ctx,
+      {
+        fileName: "a.xlsx",
+        kind: "ARRIVAL",
+        data: await stdFile([
+          ["101", d(TODAY), d("2026-11-06"), 2, "14:00", null],
+          ["102", d(TODAY), d("2026-11-07"), 1, null, null],
+        ]),
+      },
+      NOW,
+    );
+    const next = await stdFile([
+      ["101", d(TODAY), d("2026-11-06"), 2, "15:00", null],
+      ["104", d(TODAY), d("2026-11-05"), 2, null, null],
+    ]);
+    const view = await svc.previewOccupancy(dep.ctx, { fileName: "b.xlsx", data: next, kind: "ARRIVAL" }, NOW);
+    expect(view.changes).toEqual({ create: 1, update: 1, remove: 1 });
+    expect(view.blockers).toEqual([]);
+
+    const second = await svc.commitOccupancy(dep.ctx, { fileName: "b.xlsx", data: next, kind: "ARRIVAL" }, NOW);
+    expect(second).toMatchObject({ createdRows: 1, updatedRows: 1, removedRows: 1 });
+    expect(await testDb.guestRecord.count({ where: { roomId: royal.ids["102"] } })).toBe(0);
+
+    await svc.deleteUpload(dep.ctx, second.uploadId, NOW);
+    const back = await testDb.guestRecord.findMany({ where: { hotelId: royal.hid } });
+    expect(back.map((r) => r.roomId).sort()).toEqual([royal.ids["101"], royal.ids["102"]].sort());
+    expect(back.every((r) => r.uploadId === first.uploadId)).toBe(true);
+    expect(back.find((r) => r.roomId === royal.ids["101"])!.arrivalTime).toBe("14:00");
+  });
+
+  it("DEP-6: hatalı satırı olan dosya eski kayıtları kaldırmaz (uyarı verir)", async () => {
+    const { royal, dep } = await world();
+    await svc.commitOccupancy(
+      dep.ctx,
+      { fileName: "a.xlsx", kind: "ARRIVAL", data: await stdFile([["102", d(TODAY), d("2026-11-07"), 1, null, null]]) },
+      NOW,
+    );
+    const data = await stdFile([
+      ["101", d(TODAY), d("2026-11-06"), 2, null, null],
+      ["999", d(TODAY), d("2026-11-06"), 2, null, null],
+    ]);
+    const view = await svc.previewOccupancy(dep.ctx, { fileName: "b.xlsx", data, kind: "ARRIVAL" }, NOW);
+    expect(view.changes.remove).toBe(0);
+    expect(view.warnings.join(" ")).toContain("silinmeyecek");
+    const res = await svc.commitOccupancy(dep.ctx, { fileName: "b.xlsx", data, kind: "ARRIVAL" }, NOW);
+    expect(res.removedRows).toBe(0);
+    expect(await testDb.guestRecord.count({ where: { roomId: royal.ids["102"] } })).toBe(1);
+  });
+
+  it("DEP-5: P4001 otel adı ya da rapor tarihi uyuşmazsa yükleme reddedilir, hiçbir şey yazılmaz", async () => {
+    const { dep } = await world();
+    const wrongHotel = await buildP4001Xlsx({
+      reportLine: "Date: 3.11.2026",
+      hotelName: "MERIT ROYAL DIAMOND",
+      rows: [["A", "101", "STD", "1.11.", "6.11.", 2]],
+    });
+    const view = await svc.previewOccupancy(dep.ctx, { fileName: "p.xlsx", data: wrongHotel }, NOW);
+    expect(view.blockers[0]).toContain("otel adı");
+    expect(await codeOf(svc.commitOccupancy(dep.ctx, { fileName: "p.xlsx", data: wrongHotel }, NOW))).toBe("VALIDATION");
+
+    const wrongDay = await buildP4001Xlsx({
+      reportLine: "Date: 2.11.2026",
+      hotelName: "MERIT ROYAL",
+      rows: [["A", "101", "STD", "1.11.", "6.11.", 2]],
+    });
+    expect((await svc.previewOccupancy(dep.ctx, { fileName: "p.xlsx", data: wrongDay }, NOW)).blockers[0]).toContain("rapor tarihi");
+    expect(await codeOf(svc.commitOccupancy(dep.ctx, { fileName: "p.xlsx", data: wrongDay }, NOW))).toBe("VALIDATION");
+
+    expect(await testDb.occupancyUpload.count()).toBe(0);
+    expect(await testDb.guestRecord.count()).toBe(0);
+    expect(fs.existsSync(path.join(uploadsDir, "occupancy"))).toBe(false);
+
+    const ok = await buildP4001Xlsx({ reportLine: "Date: 3.11.2026", hotelName: "MERIT ROYAL", rows: [["A", "101", "STD", "1.11.", "6.11.", 2]] });
+    expect((await svc.commitOccupancy(dep.ctx, { fileName: "p.xlsx", data: ok }, NOW)).okRows).toBe(1);
+  });
+});
+
 describe("doluluk yükleme: yetki ve kapsam", () => {
   it("kind verilmemişse de yetki parse'dan önce denetlenir (bozuk dosya + yetkisiz = FORBIDDEN)", async () => {
     await world();
@@ -466,11 +587,14 @@ describe("saklama", () => {
     const oldFile = path.join(uploadsDir, oldRow.storedPath as string);
     expect(fs.existsSync(oldFile)).toBe(true);
 
+    // DEP-6: the newer IN_HOUSE file replaces records missing from it, so the count is taken before the cleanup.
+    const recordsBefore = await testDb.guestRecord.count({ where: { hotelId: royal.hid } });
+    expect(recordsBefore).toBeGreaterThan(0);
     expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 1, failed: 0 });
     expect(fs.existsSync(oldFile)).toBe(false);
     expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: old.uploadId } })).storedPath).toBeNull();
     expect((await testDb.occupancyUpload.findUniqueOrThrow({ where: { id: recent.uploadId } })).storedPath).not.toBeNull();
-    expect(await testDb.guestRecord.count({ where: { hotelId: royal.hid } })).toBe(2);
+    expect(await testDb.guestRecord.count({ where: { hotelId: royal.hid } })).toBe(recordsBefore);
     expect(await svc.cleanupOldFiles(NOW)).toEqual({ removed: 0, failed: 0 });
   });
 

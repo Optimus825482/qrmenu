@@ -20,35 +20,35 @@ const MODULE_OPTIONS = [
     title: "Minibar Operasyonları",
     desc: "Oda tüketimleri, iadeler, ürün bazlı sarfiyat ve minibar gelirleri",
     icon: "minibar",
-    color: "from-blue-500 to-indigo-600",
+    color: "from-accent to-[var(--accent-royal)]",
   },
   {
     id: "OUTLET" as const,
     title: "Outlet & Restoran Satışları",
     desc: "Masa siparişleri, F&B ürün satışları, adisyonlar ve ciro analizi",
     icon: "menu",
-    color: "from-amber-500 to-orange-600",
+    color: "from-warn to-gold",
   },
   {
     id: "ROOM_SERVICE" as const,
     title: "Oda Servisi Operasyonları",
     desc: "Oda siparişleri, menü talepleri ve oda servisi teslimatları",
     icon: "servis",
-    color: "from-emerald-500 to-teal-600",
+    color: "from-success to-info",
   },
   {
     id: "DEPO" as const,
     title: "Depo & Stok Hareketleri",
     desc: "Giriş/çıkış, konsinye zimmet ve kritik stok hareketleri",
     icon: "otel",
-    color: "from-purple-500 to-violet-600",
+    color: "from-info to-brand",
   },
   {
     id: "CHECK" as const,
     title: "Kat Görevleri & Oda Kontrol",
     desc: "Personel oda kontrolleri, tamamlanma süreleri ve oda durumları",
     icon: "kullanicilar",
-    color: "from-rose-500 to-pink-600",
+    color: "from-danger to-warn",
   },
 ];
 
@@ -184,22 +184,22 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] text-slate-800 text-xs overflow-hidden select-none">
+    <div className="flex flex-col h-full bg-bg text-text text-xs overflow-hidden select-none">
       {/* Wizard Step Bar */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm">
+      <div className="bg-white border-b border-border px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+          <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center font-bold text-sm shadow-sm">
             {step}
           </div>
           <div>
-            <h2 className="font-bold text-sm text-slate-900">
+            <h2 className="font-bold text-sm text-text">
               {step === 1 && "Adım 1: Operasyon ve Modül Seçimi"}
               {step === 2 && "Adım 2: Otel & Tarih Kapsamı"}
               {step === 3 && "Adım 3: Sütun & Metrik Tercihleri"}
               {step === 4 && "Adım 4: Gruplama ve Sıralama"}
               {step === 5 && "Adım 5: Canlı Önizleme & Dışa Aktarma"}
             </h2>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-muted">
               {step === 1 && "Raporunu hazırlamak istediğiniz operasyonel veri alanını seçin."}
               {step === 2 && "Raporun kapsayacağı otelleri ve analiz tarih aralığını belirleyin."}
               {step === 3 && "Çıktıda görünmesini istediğiniz kolonları özelleştirin."}
@@ -221,10 +221,10 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
               }}
               className={`w-7 h-7 rounded-full text-xs font-bold transition flex items-center justify-center ${
                 step === s
-                  ? "bg-blue-600 text-white shadow"
+                  ? "bg-accent text-white shadow"
                   : step > s
-                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  : "bg-slate-100 text-slate-400"
+                  ? "bg-accent/15 text-accent hover:bg-accent/30"
+                  : "bg-[var(--muted-bg)] text-muted"
               }`}
             >
               {s}
@@ -238,7 +238,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
         {/* STEP 1: MODULE SELECTION */}
         {step === 1 && (
           <div className="max-w-4xl mx-auto space-y-4">
-            <h3 className="font-bold text-slate-800 text-sm">Hangi operasyonel modülün raporunu hazırlamak istiyorsunuz?</h3>
+            <h3 className="font-bold text-text text-sm">Hangi operasyonel modülün raporunu hazırlamak istiyorsunuz?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {MODULE_OPTIONS.map((opt) => {
                 const active = module === opt.id;
@@ -249,8 +249,8 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                     onClick={() => setModule(opt.id)}
                     className={`flex items-start gap-4 p-5 rounded-xl border text-left transition cursor-pointer ${
                       active
-                        ? "border-blue-500 bg-blue-50/60 shadow-md ring-2 ring-blue-500/20"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 shadow-sm"
+                        ? "border-accent bg-accent/10 shadow-md ring-2 ring-accent/20"
+                        : "border-border bg-white hover:border-border hover:bg-bg shadow-sm"
                     }`}
                   >
                     <div
@@ -259,11 +259,11 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       <Icon name="folder" size={24} />
                     </div>
                     <div className="space-y-1">
-                      <div className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                      <div className="font-bold text-sm text-text flex items-center gap-2">
                         {opt.title}
-                        {active ? <Icon name="check" size={16} className="text-blue-600" /> : null}
+                        {active ? <Icon name="check" size={16} className="text-accent" /> : null}
                       </div>
-                      <p className="text-xs text-slate-600 leading-relaxed">{opt.desc}</p>
+                      <p className="text-xs text-muted leading-relaxed">{opt.desc}</p>
                     </div>
                   </button>
                 );
@@ -274,17 +274,17 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
 
         {/* STEP 2: SCOPE & DATE */}
         {step === 2 && (
-          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-border shadow-sm">
             {/* Hotel Scope */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="font-bold text-slate-800">Kapsamdaki Oteller</label>
+                <label className="font-bold text-text">Kapsamdaki Oteller</label>
                 <button
                   type="button"
                   onClick={() =>
                     setSelectedHotels(selectedHotels.length === hotels.length ? [] : hotels.map((h) => h.id))
                   }
-                  className="text-xs text-blue-600 hover:underline font-semibold"
+                  className="text-xs text-accent hover:underline font-semibold"
                 >
                   {selectedHotels.length === hotels.length ? "Seçimi Temizle" : "Tüm Otelleri Seç"}
                 </button>
@@ -299,8 +299,8 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       onClick={() => toggleHotel(h.id)}
                       className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
                         sel
-                          ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                          : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                          ? "border-accent bg-accent text-white shadow-sm"
+                          : "border-border bg-bg text-text hover:bg-[var(--muted-bg)]"
                       }`}
                     >
                       {h.name}
@@ -308,17 +308,17 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   );
                 })}
                 {hotels.length === 0 ? (
-                  <span className="text-slate-400 italic">Kayıtlı otel bulunamadı</span>
+                  <span className="text-muted italic">Kayıtlı otel bulunamadı</span>
                 ) : null}
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-xs text-muted">
                 Hiçbir otel seçilmezse yetkili olunan tüm oteller otomatik rapora dahil edilir.
               </p>
             </div>
 
             {/* Date Presets */}
-            <div className="space-y-3 pt-4 border-t border-slate-100">
-              <label className="font-bold text-slate-800">Tarih Aralığı</label>
+            <div className="space-y-3 pt-4 border-t border-border">
+              <label className="font-bold text-text">Tarih Aralığı</label>
               <div className="flex flex-wrap gap-2">
                 {PRESET_LABELS.map((p) => (
                   <button
@@ -327,8 +327,8 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                     onClick={() => applyPreset(p.id)}
                     className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
                       datePreset === p.id
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border bg-bg text-text hover:bg-[var(--muted-bg)]"
                     }`}
                   >
                     {p.label}
@@ -339,8 +339,8 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   onClick={() => setDatePreset("ozel")}
                   className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
                     datePreset === "ozel"
-                      ? "border-blue-600 bg-blue-50 text-blue-700"
-                      : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border bg-bg text-text hover:bg-[var(--muted-bg)]"
                   }`}
                 >
                   Özel Aralık
@@ -350,7 +350,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
               {/* Custom Date Inputs */}
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Başlangıç Tarihi</label>
+                  <label className="block text-xs font-semibold text-muted mb-1">Başlangıç Tarihi</label>
                   <input
                     type="date"
                     value={dateFrom}
@@ -358,11 +358,11 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       setDatePreset("ozel");
                       setDateFrom(e.target.value);
                     }}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Bitiş Tarihi</label>
+                  <label className="block text-xs font-semibold text-muted mb-1">Bitiş Tarihi</label>
                   <input
                     type="date"
                     value={dateTo}
@@ -370,7 +370,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       setDatePreset("ozel");
                       setDateTo(e.target.value);
                     }}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
@@ -380,9 +380,9 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
 
         {/* STEP 3: COLUMN SELECTION */}
         {step === 3 && (
-          <div className="max-w-3xl mx-auto space-y-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-bold text-slate-800 text-sm">Raporda Yer Alacak Sütunlar ve Veri Alanları</h3>
-            <p className="text-xs text-slate-500">
+          <div className="max-w-3xl mx-auto space-y-4 bg-white p-6 rounded-xl border border-border shadow-sm">
+            <h3 className="font-bold text-text text-sm">Raporda Yer Alacak Sütunlar ve Veri Alanları</h3>
+            <p className="text-xs text-muted">
               İhtiyaç duyduğunuz alanları işaretleyerek rapor çıktısını sadeleştirebilir veya detaylandırabilirsiniz.
             </p>
 
@@ -407,8 +407,8 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                     key={col.id}
                     className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition ${
                       checked
-                        ? "border-blue-300 bg-blue-50/50 text-blue-900 font-semibold"
-                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100"
+                        ? "border-accent/40 bg-accent/10 text-accent font-semibold"
+                        : "border-border bg-bg/50 text-text hover:bg-[var(--muted-bg)]"
                     }`}
                   >
                     <input
@@ -418,7 +418,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                         if (e.target.checked) setSelectedColumns([...selectedColumns, col.id]);
                         else setSelectedColumns(selectedColumns.filter((id) => id !== col.id));
                       }}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-border text-accent focus:ring-accent"
                     />
                     <span>{col.label}</span>
                   </label>
@@ -430,9 +430,9 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
 
         {/* STEP 4: GROUPING & SORTING */}
         {step === 4 && (
-          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+          <div className="max-w-3xl mx-auto space-y-6 bg-white p-6 rounded-xl border border-border shadow-sm">
             <div className="space-y-3">
-              <label className="font-bold text-slate-800 text-sm">Veri Gruplama Tercihi</label>
+              <label className="font-bold text-text text-sm">Veri Gruplama Tercihi</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { id: "none", label: "Düz Liste (Gruplama Yok)", desc: "Tüm satırlar kronolojik ayrıntılı liste olarak listelenir." },
@@ -446,26 +446,26 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                     onClick={() => setGroupBy(g.id)}
                     className={`p-4 rounded-xl border text-left transition ${
                       groupBy === g.id
-                        ? "border-blue-600 bg-blue-50/70 font-semibold text-blue-900"
-                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100"
+                        ? "border-accent bg-accent/10 font-semibold text-accent"
+                        : "border-border bg-bg/50 text-text hover:bg-[var(--muted-bg)]"
                     }`}
                   >
                     <div className="text-xs font-bold">{g.label}</div>
-                    <p className="text-[11px] text-slate-500 mt-1">{g.desc}</p>
+                    <p className="text-xs text-muted mt-1">{g.desc}</p>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-3 pt-4 border-t border-slate-100">
-              <label className="font-bold text-slate-800 text-sm">Sıralama Düzeni</label>
+            <div className="space-y-3 pt-4 border-t border-border">
+              <label className="font-bold text-text text-sm">Sıralama Düzeni</label>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Sıralama Alanı</label>
+                  <label className="block text-xs font-semibold text-muted mb-1">Sıralama Alanı</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
                   >
                     <option value="date">Tarih</option>
                     <option value="amount">Toplam Tutar</option>
@@ -474,11 +474,11 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Yön</label>
+                  <label className="block text-xs font-semibold text-muted mb-1">Yön</label>
                   <select
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
                   >
                     <option value="desc">Yeniden Eskiye / En Yüksekten En Düşüğe</option>
                     <option value="asc">Eskiden Yeniye / En Düşükten En Yükseğe</option>
@@ -493,20 +493,20 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
         {step === 5 && (
           <div className="space-y-4 max-w-6xl mx-auto">
             {/* Header / Action Bar */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white p-4 rounded-xl border border-border shadow-sm flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={handleRunReport}
                   disabled={loading}
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition shadow-sm inline-flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-lg bg-accent text-white font-bold hover:bg-accent/90 disabled:opacity-50 transition shadow-sm inline-flex items-center gap-1.5"
                 >
                   <Icon name="refresh" size={14} className={loading ? "animate-spin" : ""} />
                   {loading ? "Sorgulanıyor..." : "Raporu Yeniden Çalıştır"}
                 </button>
 
                 {result ? (
-                  <span className="text-xs text-slate-600 font-semibold">
+                  <span className="text-xs text-muted font-semibold">
                     Toplam {result.totalCount} satır bulundu ({dateFrom} — {dateTo})
                   </span>
                 ) : null}
@@ -518,7 +518,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   type="button"
                   onClick={downloadCsv}
                   disabled={!result || result.rows.length === 0}
-                  className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-40 transition"
+                  className="px-3 py-1.5 rounded-lg border border-border bg-white text-text font-bold hover:bg-bg disabled:opacity-40 transition"
                 >
                   CSV İndir
                 </button>
@@ -526,7 +526,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   type="button"
                   onClick={downloadCsv}
                   disabled={!result || result.rows.length === 0}
-                  className="px-3 py-1.5 rounded-lg border border-emerald-600 bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 disabled:opacity-40 transition"
+                  className="px-3 py-1.5 rounded-lg border border-success bg-[var(--success-bg)] text-success font-bold hover:bg-[var(--success-bg)] disabled:opacity-40 transition"
                 >
                   Excel (XLSX)
                 </button>
@@ -536,7 +536,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                     window.print();
                   }}
                   disabled={!result || result.rows.length === 0}
-                  className="px-3 py-1.5 rounded-lg border border-rose-600 bg-rose-50 text-rose-700 font-bold hover:bg-rose-100 disabled:opacity-40 transition"
+                  className="px-3 py-1.5 rounded-lg border border-danger bg-[var(--danger-bg)] text-danger font-bold hover:bg-[var(--danger-bg)] disabled:opacity-40 transition"
                 >
                   PDF Yazdır
                 </button>
@@ -549,7 +549,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       format: "xlsx",
                     })
                   }
-                  className="px-3.5 py-1.5 rounded-lg bg-purple-600 text-white font-bold hover:bg-purple-700 transition shadow-sm inline-flex items-center gap-1"
+                  className="px-3.5 py-1.5 rounded-lg bg-info text-white font-bold hover:bg-info/90 transition shadow-sm inline-flex items-center gap-1"
                 >
                   <Icon name="clock" size={14} />
                   Otomatik Rapor Yap
@@ -558,25 +558,25 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
             </div>
 
             {/* Save as Template Bar */}
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+            <div className="bg-bg p-3 rounded-xl border border-border flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-1 max-w-md">
                 <input
                   type="text"
                   placeholder="Bu rapor tanımını şablon olarak kaydet (Örn: Haftalık Minibar Özeti)..."
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-lg border border-border bg-white px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleSaveTemplate}
                   disabled={savingTemplate || !templateName.trim()}
-                  className="px-4 py-1.5 rounded-lg bg-slate-800 text-white font-bold hover:bg-slate-900 disabled:opacity-40 transition flex-shrink-0"
+                  className="px-4 py-1.5 rounded-lg bg-brand text-white font-bold hover:bg-brand/90 disabled:opacity-40 transition flex-shrink-0"
                 >
                   {savingTemplate ? "Kaydediliyor..." : "Şablonu Kaydet"}
                 </button>
               </div>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-xs text-muted">
                 Kaydettiğiniz şablonlar daha sonra tek tıkla yeniden çalıştırılabilir.
               </span>
             </div>
@@ -585,11 +585,11 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
             {result?.summary?.length ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {result.summary.map((s, idx) => (
-                  <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
+                  <div key={idx} className="bg-white p-3 rounded-xl border border-border shadow-sm">
+                    <span className="text-xs font-semibold text-muted uppercase tracking-wide">
                       {s.label}
                     </span>
-                    <div className="text-base font-bold text-slate-900 mt-0.5">{s.value}</div>
+                    <div className="text-base font-bold text-text mt-0.5">{s.value}</div>
                   </div>
                 ))}
               </div>
@@ -597,26 +597,26 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
 
             {/* Error view */}
             {error ? (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+              <div className="p-4 rounded-xl bg-[var(--danger-bg)] border border-danger/40 text-danger text-xs font-semibold">
                 {error}
               </div>
             ) : null}
 
             {/* Table Grid */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[300px]">
+            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden min-h-[300px]">
               {loading ? (
-                <div className="p-16 text-center text-slate-400">
-                  <Icon name="refresh" size={24} className="animate-spin mx-auto mb-2 text-blue-500" />
+                <div className="p-16 text-center text-muted">
+                  <Icon name="refresh" size={24} className="animate-spin mx-auto mb-2 text-accent" />
                   Rapor verileri hazırlanıyor...
                 </div>
               ) : !result || result.rows.length === 0 ? (
-                <div className="p-16 text-center text-slate-400">
+                <div className="p-16 text-center text-muted">
                   Bu kriterlere uygun kayıt bulunamadı. Filtreleri değiştirip tekrar deneyin.
                 </div>
               ) : (
                 <div className="overflow-x-auto max-h-[420px]">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-slate-100/80 sticky top-0 border-b border-slate-200 text-slate-700 font-bold">
+                    <thead className="bg-[var(--muted-bg)] sticky top-0 border-b border-border text-text font-bold">
                       <tr>
                         {result.columns.map((c) => (
                           <th key={c.key} className="p-3">
@@ -625,13 +625,13 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                       {result.rows.map((row, i) => (
-                        <tr key={i} className="hover:bg-blue-50/40 transition">
+                        <tr key={i} className="hover:bg-accent/10 transition">
                           {result.columns.map((c) => (
-                            <td key={c.key} className="p-3 text-slate-800">
+                            <td key={c.key} className="p-3 text-text">
                               {c.type === "badge" ? (
-                                <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
+                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-accent/15 text-accent">
                                   {String(row[c.key] ?? "")}
                                 </span>
                               ) : (
@@ -651,12 +651,12 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
       </div>
 
       {/* Wizard Footer Navigation */}
-      <div className="bg-white border-t border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-sm">
+      <div className="bg-white border-t border-border px-6 py-3.5 flex items-center justify-between shadow-sm">
         <button
           type="button"
           onClick={() => setStep((s) => Math.max(1, s - 1) as Step)}
           disabled={step === 1}
-          className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 disabled:opacity-40 transition"
+          className="px-4 py-2 rounded-lg border border-border text-text font-bold hover:bg-bg disabled:opacity-40 transition"
         >
           ← Önceki Adım
         </button>
@@ -670,7 +670,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                 setStep(next);
                 if (next === 5) void handleRunReport();
               }}
-              className="px-6 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow-sm"
+              className="px-6 py-2 rounded-lg bg-accent text-white font-bold hover:bg-accent/90 transition shadow-sm"
             >
               Sonraki Adım →
             </button>
@@ -678,7 +678,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-5 py-2 rounded-lg border border-slate-300 bg-slate-50 text-slate-700 font-bold hover:bg-slate-100 transition"
+              className="px-5 py-2 rounded-lg border border-border bg-bg text-text font-bold hover:bg-[var(--muted-bg)] transition"
             >
               Başa Dön / Yeni Rapor
             </button>

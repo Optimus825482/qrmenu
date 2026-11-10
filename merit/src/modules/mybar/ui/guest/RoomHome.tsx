@@ -12,17 +12,19 @@ import RoomServiceSlot from "./RoomServiceSlot";
 
 /** MyBar form for the room: catalogue, today's request and the hotel's daily-limit setting, read on the server. */
 export async function RoomMybar({ token, locale, state }: { token: string; locale: Locale; state: RoomGuestState }) {
-  const [catalog, status, dailyLimit] = await Promise.all([
+  const [catalog, status, dailyLimit, dailyMax] = await Promise.all([
     roomCatalog(state.roomId, locale),
     roomRequestStatus(state.roomId, locale),
     getSetting("mybar.dailyLimit", state.hotelId),
+    getSetting("mybar.dailyMax", state.hotelId),
   ]);
   return (
     <MybarForm
       token={token}
       locale={locale}
       catalog={catalog}
-      dailyLimit={dailyLimit !== false}
+      // The "once a day" screen only fits a limit of one; with more, the server enforces the count.
+      dailyLimit={dailyLimit !== false && dailyMax <= 1}
       initialRequest={status.request}
     />
   );

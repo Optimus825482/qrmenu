@@ -8,7 +8,14 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const publishMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/realtime", () => ({ publish: publishMock }));
 
-const { rateLimitDelay, resolveGuestToken, resolveGuestTokenLimited } = await import("@/modules/menu/server/guestToken");
+const { globalLegacyTokenLimiter, legacyTokenLimiter, rateLimitDelay, resolveGuestToken, resolveGuestTokenLimited } =
+  await import("@/modules/menu/server/guestToken");
+
+/** Generous legacy budgets for tests that are about the general limits only. */
+const looseLegacy = () => ({
+  perIp: createRateLimiter({ max: 10_000, windowMs: 60_000 }),
+  global: createRateLimiter({ max: 10_000, windowMs: 60_000 }),
+});
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
@@ -19,6 +26,8 @@ beforeEach(async () => {
   await testDb.hotelModule.updateMany({ data: { enabled: true } });
   publishMock.mockReset();
   rateLimitDelay.ms = 0;
+  legacyTokenLimiter.clear();
+  globalLegacyTokenLimiter.clear();
 });
 afterAll(async () => {
   await dropReferenceData();
@@ -143,18 +152,20 @@ describe("resolveGuestToken iç hata", () => {
 describe("resolveGuestTokenLimited", () => {
   it("bilinmeyen 61. deneme aynı IP: RATE_LIMITED; başka IP (geçerli token dahil) etkilenmez", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const global = createRateLimiter({ max: 600, windowMs: 60_000 });
+    const legacy = looseLegacy();
     for (let i = 0; i < 60; i++) {
-      expect(await resolveGuestTokenLimited(`yok-${i}`, meta, limiter)).toEqual({
+      expect(await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, global, {}, legacy)).toEqual({
         kind: "NONE",
         reason: "BILINMEYEN",
       });
     }
-    expect(await resolveGuestTokenLimited("yok-61", meta, limiter)).toEqual({
+    expect(await resolveGuestTokenLimited("yok-61", meta, limiter, global, {}, legacy)).toEqual({
       kind: "NONE",
       reason: "RATE_LIMITED",
     });
     expect(await testDb.qrScanLog.count()).toBe(60); // refused attempts do not flood the log
-    expect(await resolveGuestTokenLimited("yok-x", { ...meta, ip: "10.9.9.9" }, limiter)).toMatchObject({
+    expect(await resolveGuestTokenLimited("yok-x", { ...meta, ip: "10.9.9.9" }, limiter, global, {}, legacy)).toMatchObject({
       reason: "BILINMEYEN",
     });
     const { token } = await tableFixture();
@@ -242,11 +253,12 @@ describe("resolveGuestTokenLimited", () => {
   it("biçimsiz token da sayılır (60. deneme BILINMEYEN, 61. RATE_LIMITED)", async () => {
     const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
     const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
-    for (let i = 0; i < 59; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter);
-    expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter)).toMatchObject({
+    const legacy = looseLegacy();
+    for (let i = 0; i < 59; i++) await resolveGuestTokenLimited(`yok-${i}`, meta, limiter, globalLimiter, {}, legacy);
+    expect(await resolveGuestTokenLimited("../x", meta, limiter, globalLimiter, {}, legacy)).toMatchObject({
       reason: "BILINMEYEN",
     });
-    expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter)).toMatchObject({
+    expect(await resolveGuestTokenLimited("yok-61", meta, limiter, globalLimiter, {}, legacy)).toMatchObject({
       reason: "RATE_LIMITED",
     });
   });
@@ -303,5 +315,109 @@ describe("resolveGuestTokenLimited", () => {
     expect(
       (await resolveGuestTokenLimited("eski-masa-9", { ...meta, ip: "10.4.1.3" }, limiter, globalLimiter)).kind,
     ).toBe("TABLE");
+  });
+
+  it("global yedek aşılınca DB'de bulunan ama HMAC'i tutmayan imzalı biçimli token RATE_LIMITED (koşulsuz geçmez)", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 2, windowMs: 60_000 });
+    for (let i = 0; i < 2; i++) {
+      await resolveGuestTokenLimited(`yok-${i}`, { ...meta, ip: `10.5.0.${i}` }, limiter, globalLimiter);
+    }
+    const { table, token } = await tableFixture();
+    const bad = token.slice(0, 20) + (token.slice(20) === "A".repeat(10) ? "B" : "A").repeat(10);
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: bad } });
+    await testDb.qrScanLog.deleteMany({});
+    expect(await resolveGuestTokenLimited(bad, { ...meta, ip: "10.5.1.1" }, limiter, globalLimiter)).toEqual({
+      kind: "NONE",
+      reason: "RATE_LIMITED",
+    });
+    expect(await testDb.qrScanLog.count()).toBe(0);
+  });
+
+  it("eski biçimli kodların kendi sıkı IP sınırı var: 11. kaçırma sonrası eski kod aramasız RATE_LIMITED; imzalı token etkilenmez", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+    const legacy = {
+      perIp: createRateLimiter({ max: 10, windowMs: 60_000 }),
+      global: createRateLimiter({ max: 30, windowMs: 60_000 }),
+    };
+    for (let i = 0; i < 10; i++) {
+      expect(await resolveGuestTokenLimited(`10000${i}`, meta, limiter, globalLimiter, {}, legacy)).toMatchObject({
+        reason: "BILINMEYEN",
+      });
+    }
+    const { table } = await tableFixture();
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: "123456" } });
+    const tableFind = vi.spyOn(testDb.outletTable, "findUnique");
+    try {
+      expect(await resolveGuestTokenLimited("123456", meta, limiter, globalLimiter, {}, legacy)).toEqual({
+        kind: "NONE",
+        reason: "RATE_LIMITED",
+      });
+      expect(tableFind).not.toHaveBeenCalled();
+    } finally {
+      tableFind.mockRestore();
+    }
+    // the general per-IP limit (60) is not reached: signed tokens still resolve
+    const other = await tableFixture({ outlet: { name: "Teras Bar" } });
+    expect((await resolveGuestTokenLimited(other.token, meta, limiter, globalLimiter, {}, legacy)).kind).toBe("TABLE");
+    // another IP has its own legacy budget
+    expect(
+      (await resolveGuestTokenLimited("123456", { ...meta, ip: "10.6.0.1" }, limiter, globalLimiter, {}, legacy)).kind,
+    ).toBe("TABLE");
+  });
+
+  it("eski biçimli kodların tüm IP'ler genel sınırı dolunca: geçerli eski kod yine çözülür, bilinmeyen RATE_LIMITED ve IP başına sınıra sayılır", async () => {
+    const limiter = createRateLimiter({ max: 60, windowMs: 60_000 });
+    const globalLimiter = createRateLimiter({ max: 600, windowMs: 60_000 });
+    const legacy = {
+      perIp: createRateLimiter({ max: 10, windowMs: 60_000 }),
+      global: createRateLimiter({ max: 3, windowMs: 60_000 }),
+    };
+    for (let i = 0; i < 3; i++) {
+      await resolveGuestTokenLimited(`20000${i}`, { ...meta, ip: `10.7.0.${i}` }, limiter, globalLimiter, {}, legacy);
+    }
+    const { table } = await tableFixture();
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: "654321" } });
+    // the all-IP legacy budget is full, the caller's own budgets are free: a valid printed code still works
+    expect(
+      (await resolveGuestTokenLimited("654321", { ...meta, ip: "10.7.1.1" }, limiter, globalLimiter, {}, legacy)).kind,
+    ).toBe("TABLE");
+    // an unknown legacy code is still refused, and each refusal spends that IP's own legacy budget
+    const attacker = { ...meta, ip: "10.7.2.2" };
+    for (let i = 0; i < 10; i++) {
+      expect(await resolveGuestTokenLimited(`30000${i}`, attacker, limiter, globalLimiter, {}, legacy)).toEqual({
+        kind: "NONE",
+        reason: "RATE_LIMITED",
+      });
+    }
+    // per-IP legacy budget now spent: no lookup at all, even for the valid code
+    const tableFind = vi.spyOn(testDb.outletTable, "findUnique");
+    try {
+      expect(await resolveGuestTokenLimited("654321", attacker, limiter, globalLimiter, {}, legacy)).toEqual({
+        kind: "NONE",
+        reason: "RATE_LIMITED",
+      });
+      expect(tableFind).not.toHaveBeenCalled();
+    } finally {
+      tableFind.mockRestore();
+    }
+  });
+
+  it("eski biçimli kod kullanımı QR_ESKI_KOD olarak günde bir kez denetlenir; imzalı kod denetlenmez", async () => {
+    const { table, token } = await tableFixture();
+    const started = new Date(Date.now() - 1000);
+    expect((await resolveGuestTokenLimited(token, meta)).kind).toBe("TABLE");
+    expect(await testDb.auditLog.count({ where: { action: "QR_ESKI_KOD", entityId: table.id } })).toBe(0);
+    await testDb.outletTable.update({ where: { id: table.id }, data: { qrToken: "777001" } });
+    expect((await resolveGuestTokenLimited("777001", meta)).kind).toBe("TABLE");
+    expect((await resolveGuestTokenLimited("777001", meta)).kind).toBe("TABLE");
+    const rows = await testDb.auditLog.findMany({
+      where: { action: "QR_ESKI_KOD", entityId: table.id, createdAt: { gte: started } },
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ entity: "OutletTable", ip: meta.ip });
+    expect(rows[0].after).toMatchObject({ tokenLength: 6, sixDigit: true });
+    expect(JSON.stringify(rows[0])).not.toContain("777001");
   });
 });

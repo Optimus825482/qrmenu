@@ -7,6 +7,7 @@ import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { type Page, pageArgs } from "@/modules/core/server/admin/listQuery";
 import { audit } from "@/modules/core/server/audit";
+import { restoreStock } from "@/modules/minibar/server/pool";
 import { isValidExplanation } from "../constants";
 import { publishMybar } from "../events";
 
@@ -492,48 +493,99 @@ export async function cancel(
     if (req.status !== "BEKLEMEDE") {
       throw new DomainError("CONFLICT", "Bu talep zaten işlenmiş");
     }
-
-    const now = new Date();
-    const seenData = req.seenAt ? {} : { seenById: ctx.user.id, seenAt: now };
-    const deliveredBefore = req.items
-      .filter((it) => it.deliveredQty > 0)
-      .map((it) => ({ productId: it.productId, deliveredQty: it.deliveredQty }));
-
-    await tx.mybarRequest.update({
-      where: { id },
-      data: {
-        status: "IPTAL",
-        cancelledById: ctx.user.id,
-        cancelledAt: now,
-        cancelNote: reason,
-        ...seenData,
-      },
-    });
-
-    await tx.notification.updateMany({
-      where: { type: "mybar.created", refId: id, isRead: false },
-      data: { isRead: true, readAt: now },
-    });
-
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: req.hotelId,
-      action: "MYBAR_CANCEL",
-      entity: "MybarRequest",
-      entityId: id,
-      after: {
-        cancelNote: reason,
-        deliveredBefore,
-      },
-    });
-
-    await publishMybar(tx, "mybar.cancelled", {
-      id,
-      hotelId: req.hotelId,
-      roomId: req.roomId,
-      roomNumber: req.room.number,
-      status: "IPTAL",
-      byUserId: ctx.user.id,
-    });
+    await applyCancel(tx, req, { actorId: ctx.user.id, reason, now: new Date() });
   });
+}
+
+type LockedRequest = Awaited<ReturnType<typeof loadRequestForUpdate>>;
+
+/**
+ * The one cancellation rule (staff `cancel` and the system checkout cancel): the request turns IPTAL, its open
+ * notifications are marked read, what was already delivered from the hotel pool goes back (IADE), an audit row
+ * and the `mybar.cancelled` event follow. `req` must be BEKLEMEDE and row-locked by the caller.
+ *
+ * `actorId: null` is the system: no seen/cancelled-by user, the IADE movement is booked on the user who delivered
+ * the line (a stock movement needs a user), and the audit row has no user.
+ */
+export async function applyCancel(
+  tx: Prisma.TransactionClient,
+  req: LockedRequest,
+  opts: {
+    actorId: string | null;
+    reason: string;
+    now: Date;
+    auditAction?: string;
+    auditAfter?: Record<string, unknown>;
+    notificationTypes?: string[];
+  },
+): Promise<void> {
+  const { actorId, reason, now } = opts;
+  const id = req.id;
+  const seenData = req.seenAt || !actorId ? {} : { seenById: actorId, seenAt: now };
+  const deliveredBefore = req.items
+    .filter((it) => it.deliveredQty > 0)
+    .map((it) => ({ productId: it.productId, deliveredQty: it.deliveredQty }));
+
+  await tx.mybarRequest.update({
+    where: { id },
+    data: {
+      status: "IPTAL",
+      cancelledById: actorId,
+      cancelledAt: now,
+      cancelNote: reason,
+      ...seenData,
+    },
+  });
+
+  await tx.notification.updateMany({
+    where: { type: { in: opts.notificationTypes ?? ["mybar.created"] }, refId: id, isRead: false },
+    data: { isRead: true, readAt: now },
+  });
+
+  // What was already taken from the hotel pool for this request goes back (IADE), in product-id order like fulfill.
+  for (const line of [...deliveredBefore].sort((a, b) => a.productId.localeCompare(b.productId))) {
+    const userId = actorId ?? (await delivererOf(tx, id, line.productId));
+    await restoreStock(tx, {
+      hotelId: req.hotelId,
+      productId: line.productId,
+      qty: line.deliveredQty,
+      userId,
+      refType: "MybarRequest",
+      refId: id,
+      note: "MyBar talebi iptal edildi",
+    });
+  }
+
+  await audit(tx, {
+    ...(actorId ? { userId: actorId } : {}),
+    hotelId: req.hotelId,
+    action: opts.auditAction ?? "MYBAR_CANCEL",
+    entity: "MybarRequest",
+    entityId: id,
+    after: {
+      cancelNote: reason,
+      deliveredBefore,
+      ...opts.auditAfter,
+    },
+  });
+
+  await publishMybar(tx, "mybar.cancelled", {
+    id,
+    hotelId: req.hotelId,
+    roomId: req.roomId,
+    roomNumber: req.room.number,
+    status: "IPTAL",
+    ...(actorId ? { byUserId: actorId } : {}),
+  });
+}
+
+/** The user whose pool take delivered `productId` for the request (latest first). */
+async function delivererOf(tx: Prisma.TransactionClient, requestId: string, productId: string): Promise<string> {
+  const move = await tx.hotelStockMovement.findFirst({
+    where: { refType: "MybarRequest", refId: requestId, qty: { lt: 0 }, productId },
+    orderBy: { createdAt: "desc" },
+    select: { userId: true },
+  });
+  if (!move) throw new DomainError("INTERNAL", "Teslim edilen ürünün stok hareketi bulunamadı");
+  return move.userId;
 }

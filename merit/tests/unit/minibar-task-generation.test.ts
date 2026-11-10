@@ -282,7 +282,7 @@ describe("geç görev oda/gün uzlaştırması", () => {
     const w = await minibarWorld();
     const kat = await staff("R-KAT", w.hotelCode);
     const { markDnd } = await import("@/modules/minibar/server/dnd");
-    for (let i = 0; i < count; i++) await markDnd(kat.ctx, { roomId: w.room.id }, new Date(now.valueOf() + i * 3_600_000));
+    for (let i = 0; i < count; i++) await markDnd(kat.ctx, { roomId: w.room.id }, new Date(now.valueOf() + i * 7_200_000));
     await rec(w, w.room.id, "ARRIVAL", DAY, "2026-07-12");
     await gen.reconcileDailyTasks(w.hotelId, DAY);
     const task = (await typeTask(w.hotelId, "ARRIVAL_KONTROL"))!;

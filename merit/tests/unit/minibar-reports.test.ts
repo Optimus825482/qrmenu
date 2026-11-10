@@ -135,6 +135,23 @@ describe("birebir rapor sözleşmesi (kabul 4)", () => {
     expect(upTo.totalQuantity).toBe(9);
   });
 
+  it("DEP-9: tarihsiz rapor yalnız son 30 günü çeker; 366 günü aşan ya da ters aralık VALIDATION", async () => {
+    const { w } = await scenario();
+    const hid = w.hotelId;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-08-20T09:00:00Z")); // the 2026-07-09..11 records are > 30 days old
+    try {
+      expect((await depoSvc.getMinibarConsumptionReport({ hotelId: hid })).transactionsCount).toBe(0);
+      vi.setSystemTime(new Date("2026-07-20T09:00:00Z"));
+      expect((await depoSvc.getMinibarConsumptionReport({ hotelId: hid })).totalQuantity).toBe(11);
+    } finally {
+      vi.useRealTimers();
+    }
+    const codeOf = async (p: Promise<unknown>) => p.then(() => "OK", (e: { code?: string }) => e.code);
+    expect(await codeOf(depoSvc.getMinibarConsumptionReport({ hotelId: hid, startDate: "2025-01-01", endDate: "2026-07-10" }))).toBe("VALIDATION");
+    expect(await codeOf(depoSvc.getMinibarConsumptionReport({ hotelId: hid, startDate: "2026-07-11", endDate: "2026-07-10" }))).toBe("VALIDATION");
+  });
+
   it("sütun kümesi, sırası ve biçimi eski uygulamayla birebir sabittir", async () => {
     const { w } = await scenario();
     const report = await depoSvc.getMinibarConsumptionReport({ hotelId: w.hotelId, startDate: "2026-07-10", endDate: "2026-07-10" });
