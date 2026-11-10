@@ -197,3 +197,18 @@ değişkenleri konteynere verir; yeni bir değişken eklenecekse `docker-compose
   `SEED_ADMIN_PASSWORD` değeri.
 * Masa QR kodları: yönetim arayüzünde **Masa QR Kodları** penceresi; Denetim Masası → Sistem →
   `qr.baseUrl` alanına genel HTTPS adresini yazın.
+
+## Basılı oda QR kartları (değişmez kodlar)
+
+3 otelin 558 odasının QR kartı 10.11.2026'da `https://qrmenu.merithotels.com/q/<oda kodu>` adresiyle
+basıldı. Kodlar `merit/assets/qr-templates/basili-oda-kodlari.json` dosyasında kayıtlıdır ve uygulama bu
+kodları taşıyan odalarda "QR yenile" işlemini reddeder.
+
+Canlı kurulumdan ve her veri aktarımından sonra `app` konteynerinde çalıştırın:
+
+```bash
+npx tsx scripts/oda-qr-dogrula.ts          # yalnız rapor
+npx tsx scripts/oda-qr-dogrula.ts --yaz    # farklı/eksik kodları basılı koda geri yazar
+```
+
+"Aynı: 558" görmeden kartları odalara dağıtmayın. Alan adı değişirse basılı kartların hepsi geçersiz olur.

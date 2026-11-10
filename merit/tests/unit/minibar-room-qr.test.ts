@@ -1,5 +1,10 @@
 import { unzipSync } from "fflate";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  isPrintedRoomCode,
+  loadPrintedRoomCodes,
+  PRINTED_CODE_LOCKED,
+} from "@/modules/minibar/server/printedRoomCodes";
 import { generateQrToken, verifyQrToken } from "@/lib/qr";
 import { DomainError } from "@/lib/result";
 import { testDb } from "../helpers/db";
@@ -225,6 +230,48 @@ describe("generateRoomQrBulk", () => {
     expect(await codeOf(svc.generateRoomQrBulk(otm.ctx, w.hid, all))).toBe("RATE_LIMITED");
     vi.setSystemTime(Date.now() + 61_000);
     expect(await codeOf(svc.generateRoomQrBulk(otm.ctx, w.hid, all))).toBe("OK");
+  });
+});
+
+describe("basili oda kartlari (kalici kodlar)", () => {
+  it("veri dosyasi: 3 otel 558 oda, 6 haneli ve benzersiz kodlar, canli alan adi", () => {
+    const printed = loadPrintedRoomCodes();
+    expect(printed.baseUrl).toBe("https://qrmenu.merithotels.com");
+    const count = (code: string) => Object.keys(printed.hotels[code]).length;
+    expect([count("DIAMOND"), count("PREMIUM"), count("ROYAL")]).toEqual([303, 130, 125]);
+    const all = Object.values(printed.hotels).flatMap((codes) => Object.values(codes));
+    expect(all.every((code) => /^\d{6}$/.test(code))).toBe(true);
+    expect(new Set(all).size).toBe(558);
+    expect(isPrintedRoomCode("royal", "102", printed.hotels.ROYAL["102"])).toBe(true);
+    expect(isPrintedRoomCode("ROYAL", "102", "000000")).toBe(false);
+    expect(isPrintedRoomCode("ROYAL", "102", null)).toBe(false);
+  });
+
+  it("basili kodu tasiyan oda tekil ve toplu yenilemede degismez; diger odalar yenilenir", async () => {
+    const w = await world();
+    const otm = await staff("R-OTM");
+    // Any printed ROYAL room that world() does not create already.
+    const number = Object.keys(loadPrintedRoomCodes().hotels.ROYAL).find((n) => !["101", "102", "103"].includes(n))!;
+    const code = loadPrintedRoomCodes().hotels.ROYAL[number];
+    const printedRoom = await testDb.room.create({
+      data: { hotelId: w.hid, floorId: w.floor.id, number, qrToken: code },
+    });
+
+    expect(await messageOf(svc.generateRoomQr(otm.ctx, w.hid, printedRoom.id, { regenerate: true }))).toBe(
+      PRINTED_CODE_LOCKED,
+    );
+    // 103 (basili olmayan eski kod) yenilenir, basili oda oldugu gibi kalir.
+    expect(await svc.generateRoomQrBulk(otm.ctx, w.hid, { mode: "LEGACY", confirmInvalidate: true })).toEqual({ count: 1 });
+    expect(await svc.generateRoomQrBulk(otm.ctx, w.hid, { mode: "ALL", confirmInvalidate: true })).toEqual({ count: 2 });
+    expect(await tokenOf(printedRoom.id)).toBe(code);
+
+    // Yalniz basili oda kalinca toplu yenileme reddedilir.
+    const other = await testDb.floor.create({ data: { hotelId: w.hid, number: 9, name: "Kat 9" } });
+    await testDb.room.update({ where: { id: printedRoom.id }, data: { floorId: other.id } });
+    expect(
+      await codeOf(svc.generateRoomQrBulk(otm.ctx, w.hid, { mode: "ALL", floorId: other.id, confirmInvalidate: true })),
+    ).toBe("CONFLICT");
+    expect(await tokenOf(printedRoom.id)).toBe(code);
   });
 });
 

@@ -7,6 +7,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateQrToken, isSignedToken, qrUrl, renderQrPng, renderQrSvg, verifyQrToken } from "@/lib/qr";
+import { isPrintedRoomCode, PRINTED_CODE_LOCKED } from "./printedRoomCodes";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
@@ -128,6 +129,11 @@ const byFloorThenNumber = (a: RoomRecord, b: RoomRecord) =>
 /** MB-TAN hakki; `assertCan` kapsam disi oteli de (denetleyerek) FORBIDDEN ile reddeder. */
 const authorize = (ctx: Ctx, hotelId: string, action: "V" | "D") => assertCan(ctx, "MB-TAN", action, hotelId);
 
+async function hotelCodeOf(hotelId: string): Promise<string> {
+  const hotel = await prisma.hotel.findUnique({ where: { id: hotelId }, select: { code: true } });
+  return hotel?.code ?? "";
+}
+
 async function loadRoomInHotel(hotelId: string, roomId: string): Promise<RoomRecord> {
   const room = await prisma.room.findFirst({ where: { id: roomId, hotelId }, select: roomSelect });
   if (!room) throw new DomainError("NOT_FOUND", "Oda bulunamadı");
@@ -187,6 +193,10 @@ export async function generateRoomQr(
   if (room.qrToken && !opts.regenerate) {
     throw new DomainError("CONFLICT", "Bu odanın QR kodu zaten var; yenilemek için onaylayın");
   }
+  // The card in the room carries this code: it stays for good.
+  if (isPrintedRoomCode(await hotelCodeOf(hotelId), room.number, room.qrToken)) {
+    throw new DomainError("CONFLICT", PRINTED_CODE_LOCKED);
+  }
   const token = generateQrToken("ROOM", room.id);
   const now = new Date();
   await prisma.$transaction(async (tx) => {
@@ -234,17 +244,27 @@ export async function generateRoomQrBulk(
   }
   limit(bulkLimiter, ctx.user.id);
   const now = new Date();
+  const hotelCode = await hotelCodeOf(hotelId);
   return prisma.$transaction(async (tx) => {
     const rooms = await tx.room.findMany({
       where: { hotelId, isActive: true, ...(input.floorId ? { floorId: input.floorId } : {}) },
-      select: { id: true, qrToken: true },
+      select: { id: true, number: true, qrToken: true },
     });
-    const targets = rooms.filter((r) => {
+    const wanted = rooms.filter((r) => {
       if (input.mode === "ALL") return true;
       if (input.mode === "MISSING") return r.qrToken === null;
       return r.qrToken !== null && formatOf(r.qrToken, r.id) === "ESKI";
     });
-    if (targets.length === 0) throw new DomainError("NOT_FOUND", "İşlem yapılacak oda bulunamadı");
+    // Rooms whose code is on a printed card are never touched, whatever the mode.
+    const targets = wanted.filter((r) => !isPrintedRoomCode(hotelCode, r.number, r.qrToken));
+    if (targets.length === 0) {
+      throw new DomainError(
+        wanted.length > 0 ? "CONFLICT" : "NOT_FOUND",
+        wanted.length > 0
+          ? "Bu odaların QR kodları basılı oda kartlarında kullanılıyor; değiştirilemez"
+          : "İşlem yapılacak oda bulunamadı",
+      );
+    }
     for (const r of targets) {
       await tx.room.update({
         where: { id: r.id },
@@ -258,7 +278,13 @@ export async function generateRoomQrBulk(
       action: ROOM_QR_AUDIT.bulk,
       entity: "Hotel",
       entityId: hotelId,
-      after: { mode: input.mode, floorId: input.floorId ?? null, count: targets.length, replaced },
+      after: {
+        mode: input.mode,
+        floorId: input.floorId ?? null,
+        count: targets.length,
+        replaced,
+        printedKept: wanted.length - targets.length,
+      },
     });
     await publishDefinition(tx, { entity: "Room", id: hotelId, op: "update", hotelId });
     return { count: targets.length };
