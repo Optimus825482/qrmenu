@@ -144,6 +144,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const [tagFilters, setTagFilters] = useState<ItemTagId[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [navOpen, setNavOpen] = useState(false);
   const handleOpenItem = (id: string) => {
     resetMobileZoomAndOpen(() => setOpenId(id));
   };
@@ -193,6 +194,9 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const tabStyle = state.design.options.categoryTabStyle ?? "CHIPS_ROW";
   // Accordion: every category starts folded and only the tapped one is open; the other styles always show one.
   const isAccordion = tabStyle === "ACCORDION";
+  // Single page: every category is printed one under the other; the navigation only jumps to a section.
+  const isSinglePage = tabStyle === "SINGLE_PAGE";
+  const isDropdown = tabStyle === "DROPDOWN";
   const pickedVisible = visible.some((category) => category.id === picked) ? picked : null;
   const activeId = isAccordion ? pickedVisible : (pickedVisible ?? visible[0]?.id ?? null);
   const active = visible.find((category) => category.id === activeId);
@@ -274,12 +278,12 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               ))}
             </div>
           ) : null;
-  const categoryBody = (
+  const renderBody = (category: (typeof visible)[number]) => (
     <>
-        {directItems.length > 0 ? (
-          <section id="g-direct-items" className="g-sub">
+        {category.items.length > 0 ? (
+          <section id={category.id === activeId ? "g-direct-items" : undefined} className="g-sub">
             <ItemCards
-              items={directItems}
+              items={category.items}
               onOpen={handleOpenItem}
               format={format}
               photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
@@ -288,7 +292,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             />
           </section>
         ) : null}
-        {active?.subcategories.map((sub) => (
+        {category.subcategories.map((sub) => (
           <section key={sub.id} id={`g-sub-${sub.id}`} className="g-sub">
             <h2>{sub.name}</h2>
             {sub.items.length > 0 ? (
@@ -389,9 +393,23 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
         ) : visible.length === 0 || isAccordion ? null : (
-          <div className="g-tabs-shell">
+          <div className="g-tabs-shell" data-nav-open={isDropdown && navOpen ? "true" : undefined}>
+          {isDropdown ? (
+            <button
+              type="button"
+              className="g-drop-head"
+              aria-expanded={navOpen}
+              aria-controls="g-tabs-list"
+              onClick={() => setNavOpen((current) => !current)}
+            >
+              <span className="g-drop-name">{active?.name}</span>
+              <span className="g-acc-chevron" data-up={navOpen ? "true" : undefined} aria-hidden="true" />
+            </button>
+          ) : null}
           <div
             data-guide="kategori-gezin"
+            id="g-tabs-list"
+            hidden={isDropdown && !navOpen}
             className="g-tabs"
             role="tablist"
             aria-label={t(mode === "room" ? "rs.menu.title" : "menu.title")}
@@ -408,8 +426,11 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 aria-controls="g-panel"
                 onClick={() => {
                   setPicked(category.id);
-                  // Tall, non-sticky navigations: bring the dishes of the tapped category into view.
-                  if (tabStyle === "PHOTO_TILES" || tabStyle === "NUMBERED_INDEX") {
+                  setNavOpen(false);
+                  if (isSinglePage) {
+                    document.getElementById(`g-cat-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  } else if (tabStyle === "PHOTO_TILES" || tabStyle === "NUMBERED_INDEX" || tabStyle === "SIDE_RAIL" || isDropdown) {
+                    // The dishes replace the previous category's: bring their start into view.
                     requestAnimationFrame(() => document.getElementById("g-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
                   }
                 }}
@@ -494,7 +515,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               </button>
             </div>
           ) : null}
-          {isAccordion ? null : subNav}
+          {isAccordion || isSinglePage ? null : subNav}
         </div>
         ) : null}
         {isAccordion && visible.length > 0 ? (
@@ -525,7 +546,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   {open ? (
                     <div className="g-acc-panel" id={`g-acc-panel-${category.id}`} role="region" aria-labelledby={`g-tab-${category.id}`}>
                       {subNav ? <div className="g-acc-subnav">{subNav}</div> : null}
-                      {categoryBody}
+                      {renderBody(category)}
                       <div className="g-acc-foot">
                         <button
                           type="button"
@@ -579,7 +600,16 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             </ul>
           </section>
         ) : null}
-        {isAccordion ? null : categoryBody}
+        {isSinglePage
+          ? visible.map((category) => (
+              <section key={category.id} id={`g-cat-${category.id}`} className="g-page-section" aria-labelledby={`g-cat-title-${category.id}`}>
+                <h2 className="g-page-title" id={`g-cat-title-${category.id}`}>{category.name}</h2>
+                {renderBody(category)}
+              </section>
+            ))
+          : !isAccordion && active
+            ? renderBody(active)
+            : null}
         {!isAccordion && active && (directItems.length > 4 || active.subcategories.length > 1) ? (
           <div className="g-back-top-wrap">
             <button

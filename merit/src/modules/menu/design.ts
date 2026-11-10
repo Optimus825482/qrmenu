@@ -83,6 +83,9 @@ export const CATEGORY_TAB_STYLES = [
   { id: "ACCORDION", label: "Akordiyon", desc: "Kategoriler alt alta; dokununca altında açılır, Kapat ile katlanır" },
   { id: "PHOTO_TILES", label: "Fotoğraflı Karolar", desc: "Her kategori kendi ürün fotoğrafıyla 2 sütunlu karo" },
   { id: "NUMBERED_INDEX", label: "Numaralı Fihrist", desc: "Alt alta numaralı içindekiler listesi (basılı menü havası)" },
+  { id: "SINGLE_PAGE", label: "Tek Sayfa", desc: "Tüm kategoriler tek sayfada alt alta akar; üstteki fihrist ilgili bölüme götürür" },
+  { id: "SIDE_RAIL", label: "Yan Şerit", desc: "Kategoriler solda dikey şeritte, ürünler sağda (sipariş uygulaması düzeni)" },
+  { id: "DROPDOWN", label: "Açılır Seçim", desc: "Tek satırlık sabit seçici; dokununca kategori listesi aşağı açılır" },
 ] as const;
 
 export type CategoryTabStyle = (typeof CATEGORY_TAB_STYLES)[number]["id"];
