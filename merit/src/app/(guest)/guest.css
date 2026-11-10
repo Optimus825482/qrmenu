@@ -2120,13 +2120,12 @@ body {
   text-decoration: underline;
 }
 
+/* Alt kategori çipleri yana kaymaz; sığmayan çip alt satıra geçer. */
 .g-sub-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
   padding: 4px 0 2px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
 .g-sub-nav::-webkit-scrollbar {
   display: none;
@@ -2143,7 +2142,9 @@ body {
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
+  max-width: 100%;
+  text-align: left;
+  white-space: normal;
   transition: all 0.15s ease;
 }
 .g-sub-chip:hover,
@@ -2506,8 +2507,8 @@ body {
 
 /* ==========================================================================
    KATEGORİ ÇUBUĞU (Kasım 2026): yapışkanlık kabukta, yatay kayan iki stil tek zarif görünümde.
-   Kutusuz, gölgesiz metin sekmeleri; seçili olan ince vurgu çizgisiyle belirir, kenarlarda taşan
-   sekmeler zemine doğru solar. Şablonların kendi sekme kurallarını ezmek için seçici bilerek
+   Kutusuz, gölgesiz metin sekmeleri; seçili olan ince vurgu çizgisiyle belirir. Yana kaydırma yoktur:
+   sığmayan sekmeler ortalanarak alt satıra geçer. Şablonların kendi sekme kurallarını ezmek için seçici bilerek
    katlanmıştır (.g-frame.g-frame.g-frame); bu blok dosyanın sonunda kalmalıdır.
    ========================================================================== */
 .g-tabs-shell {
@@ -2519,57 +2520,37 @@ body {
 .g-frame.g-frame .g-tabs-shell .g-tabs {
   position: static;
 }
+/* Satıra saran metin sekmeleri birkaç satır tutabilir; ekranı kapatmaması için bu görünümde çubuk yapışmaz. */
+.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell {
+  position: static;
+}
 .g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell {
   border-block: 1px solid var(--m-line);
 }
-.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell::before,
-.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 22px;
-  z-index: 1;
-  pointer-events: none;
-}
-.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell::before {
-  left: 0;
-  background: linear-gradient(to right, var(--m-bg), transparent);
-}
-.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs-shell::after {
-  right: 0;
-  background: linear-gradient(to left, var(--m-bg), transparent);
-}
 .g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: stretch;
-  gap: 0;
-  overflow-x: auto;
-  padding: 0 calc(22px + env(safe-area-inset-right, 0px)) 0 calc(22px + env(safe-area-inset-left, 0px));
+  gap: 0 4px;
+  overflow: visible;
+  padding: 4px calc(12px + env(safe-area-inset-right, 0px)) 4px calc(12px + env(safe-area-inset-left, 0px));
   border: 0;
   background: transparent;
   box-shadow: none;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  scroll-padding-inline: 22px;
-}
-/* Sekmeler sığıyorsa ortalanır; sığmıyorsa soldan başlar (auto kenar boşluğu taşmada sıfırlanır). */
-.g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs button:first-child {
-  margin-left: auto;
-}
-.g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs button:last-child {
-  margin-right: auto;
+  scroll-snap-type: none;
 }
 .g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs button {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: auto;
-  min-height: 48px;
-  padding: 0 14px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2578,18 +2559,20 @@ body {
   font-size: 0.86rem;
   font-weight: 550;
   letter-spacing: 0.04em;
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
   word-break: normal;
-  scroll-snap-align: center;
+  overflow-wrap: anywhere;
   transform: none;
   transition: color 0.18s ease;
 }
 .g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs button::after {
   content: "";
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
   height: 2px;
   border-radius: 2px 2px 0 0;
   background: var(--m-accent);
@@ -2607,7 +2590,9 @@ body {
   transform: scaleX(1);
 }
 .g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs .g-tab-label {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding-block: 10px;
 }
 .g-frame.g-frame.g-frame:is([data-category-style="CHIPS_ROW"], [data-category-style="UNDERLINE_TABS"], :not([data-category-style])) .g-tabs .g-tab-count {
   display: none;
