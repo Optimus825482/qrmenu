@@ -63,6 +63,18 @@ describe("Android kabuğu gezinmesi (mobileNav)", () => {
     expect(mobileNavReducer(two, { type: "clear" })).toEqual(MOBILE_NAV_INITIAL);
   });
 
+  it("uygulama çekmecesi bir katmandır: geri kapatır, uygulama açınca kendiliğinden kapanır", () => {
+    const drawer = run([{ type: "drawer" }]);
+    expect(drawer.overlay).toBe("drawer");
+    expect(mobileNavDepth(drawer)).toBe(1);
+    expect(mobileNavReducer(drawer, { type: "back" })).toEqual(MOBILE_NAV_INITIAL);
+    expect(mobileNavReducer(drawer, { type: "launch", app: "core.radar" })).toEqual({
+      recents: ["core.radar"],
+      open: "core.radar",
+      overlay: null,
+    });
+  });
+
   it("kaldırılan uygulama (Tanımlar anahtarı) ekrandan ve son uygulamalardan düşer", () => {
     const state = run([{ type: "launch", app: "izleme" }, { type: "launch", app: "tanimlar" }]);
     expect(installedOnly(state, ["izleme", "ayarlar"])).toEqual({ recents: ["izleme"], open: null, overlay: null });

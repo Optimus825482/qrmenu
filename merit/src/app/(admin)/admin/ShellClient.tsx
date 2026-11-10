@@ -134,7 +134,7 @@ export function ShellClient({
   // Same persistence for both shells (appearance, layout). Both share the tab's one SSE connection
   // (sseStore), which survives a switch between them.
   if (mode === "mobile") {
-    return ready ? <MobileShell user={user} mobileDefinitions={mobileDefinitions} /> : null;
+    return ready ? <MobileShell user={user} mobileDefinitions={mobileDefinitions} apps={apps} /> : null;
   }
 
   return (

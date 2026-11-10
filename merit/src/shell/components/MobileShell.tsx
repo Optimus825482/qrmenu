@@ -1,18 +1,22 @@
 "use client";
 
 import { formatInTimeZone } from "date-fns-tz";
-import { useCallback, useEffect, useReducer, useRef, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type PointerEvent } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
 import { TZ } from "@/lib/time";
 import { SnackbarHost } from "@/components/ui/Snackbar";
 import { fontVariables } from "../appearance";
+import { APP_FOLDERS } from "../appFolders";
+import { XpIcon } from "../icons";
+import type { AppDefinition } from "../registry";
 import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
 import { useMobileDefs } from "../useMobileDefs";
 import { useSse, type SseStatus } from "../useSse";
 import { useWindowStore } from "../windowStore";
-import { DefinitionsTab } from "./mobile/DefinitionsTab";
+import { ConfirmDialog } from "./ConfirmDialog";
 import type { SubscribeEvents } from "./mobile/events";
 import { type MobileTabId, NavGlyph, TabIcon } from "./mobile/icons";
+import { MobileAppHost, type MobileLaunch } from "./mobile/MobileAppHost";
 import {
   installedOnly,
   MOBILE_NAV_INITIAL,
@@ -29,15 +33,25 @@ type Props = {
   user: { id: string; fullName: string };
   /** Default of the "Tanımlamaları mobilde aç" switch (setting `shell.mobileDefinitions`). */
   mobileDefinitions: boolean;
+  /** Desktop apps the user may open (same permission filter as the XP desktop). */
+  apps: AppDefinition[];
 };
 
-const APPS: { id: MobileTabId; label: string }[] = [
+type Entry = { id: string; label: string; app?: AppDefinition };
+
+/** Built for the phone: these replace Komuta Merkezi and Raporlar of the desktop. */
+const NATIVE: Entry[] = [
   { id: "izleme", label: "İzleme" },
   { id: "raporlar", label: "Raporlar" },
   { id: "bildirimler", label: "Bildirimler" },
-  { id: "tanimlar", label: "Tanımlar" },
   { id: "ayarlar", label: "Ayarlar" },
 ];
+/** Desktop apps a built-in mobile app already covers. */
+const REPLACED = new Set(["core.komuta", "core.rapor"]);
+/** Definition screens: on the phone only while "Tanımlamaları mobilde aç" is on. */
+const DEFINITION_APPS = new Set(["core.tanimlar", "core.outlet-tanim", "minibar.tanim"]);
+/** Desktop apps pinned to the home screen next to the folders. */
+const HOME_APPS = ["core.radar", "core.tanimlar"];
 
 const SSE_LABEL: Record<SseStatus, string> = {
   open: "bağlı",
@@ -66,10 +80,10 @@ function useClock(): Date {
 }
 
 /** The launcher icon of an app: a coloured adaptive tile with the app's pictogram. */
-function AppIcon({ id, badge = 0 }: { id: MobileTabId; badge?: number }) {
+function AppIcon({ entry, badge = 0 }: { entry: Entry; badge?: number }) {
   return (
-    <span className="mb-app-icon" data-app={id}>
-      <TabIcon id={id} />
+    <span className="mb-app-icon" data-app={entry.app ? "xp" : entry.id}>
+      {entry.app ? <XpIcon name={entry.app.icon} size={36} /> : <TabIcon id={entry.id as MobileTabId} />}
       {badge > 0 ? (
         <span className="mb-badge" aria-label={`${badge} okunmamış`}>
           {badge > 9 ? "9+" : badge}
@@ -86,7 +100,7 @@ function AppIcon({ id, badge = 0 }: { id: MobileTabId; badge?: number }) {
  * fans events out to the apps. Apps stay mounted while they are in recents, so a half-filled
  * report filter survives a trip to the home screen.
  */
-export function MobileShell({ user, mobileDefinitions }: Props) {
+export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Props) {
   const [definitionsOn, setDefinitionsOn] = useMobileDefs(mobileDefinitions);
   const wallpaper = useWindowStore((s) => s.wallpaper);
   const wallpaperColor = useWindowStore((s) => s.wallpaperColor);
@@ -114,15 +128,55 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
     [subscribe, scheduleRefresh],
   );
 
-  const apps = APPS.filter((a) => a.id !== "tanimlar" || definitionsOn);
+  // Installed apps: the built-in ones plus every desktop app the user may open.
+  const { entries, home, drawer } = useMemo(() => {
+    const visible = desktopApps.filter(
+      (a) => !REPLACED.has(a.id) && (definitionsOn || !DEFINITION_APPS.has(a.id)),
+    );
+    const toEntry = (app: AppDefinition): Entry => ({
+      id: app.id,
+      label: app.id === "core.tanimlar" ? "Tanımlar" : (app.launchLabel ?? app.title),
+      app,
+    });
+    const all = new Map<string, Entry>([...NATIVE, ...visible.map(toEntry)].map((e) => [e.id, e]));
+    const pinned = HOME_APPS.map((id) => all.get(id)).filter((e): e is Entry => e !== undefined);
+    const folders = visible.filter((a) => a.id.startsWith("folder.")).map(toEntry);
+    const groups = APP_FOLDERS.map((folder) => ({
+      label: folder.label,
+      items: visible
+        .filter((a) => !a.id.startsWith("folder.") && folder.categories.includes(a.category))
+        .map(toEntry),
+    })).filter((g) => g.items.length > 0);
+    return { entries: all, home: [...NATIVE, ...pinned, ...folders], drawer: groups };
+  }, [desktopApps, definitionsOn]);
+
   const [rawNav, dispatch] = useReducer(mobileNavReducer, MOBILE_NAV_INITIAL);
-  // Switching the Tanımlar app off while it runs drops it from the screen and from recents.
-  const nav = installedOnly(
-    rawNav,
-    apps.map((a) => a.id),
-  );
+  // An app that is no longer installed (the Tanımlar switch, a permission change) leaves the screen.
+  const nav = installedOnly(rawNav, [...entries.keys()]);
   const { open, overlay, recents } = nav;
-  const label = (id: MobileTabId) => APPS.find((a) => a.id === id)?.label ?? "";
+  const label = (id: string) => entries.get(id)?.label ?? "";
+
+  const [launches, setLaunches] = useState<Record<string, MobileLaunch>>({});
+  const launch = useCallback(
+    (id: string, opts?: MobileLaunch) => {
+      const entry = entries.get(id);
+      if (!entry) return;
+      const external = entry.app?.external;
+      if (external) {
+        // Same as the desktop: an external screen (Duvar Ekranı) opens in its own tab.
+        const href = new URL(external.href, window.location.origin);
+        if (href.origin !== window.location.origin) return;
+        href.searchParams.set("mod", "personel");
+        window.open(`${href.pathname}${href.search}${href.hash}`, "_blank", "noopener");
+        return;
+      }
+      if (opts) setLaunches((prev) => ({ ...prev, [id]: opts }));
+      dispatch({ type: "launch", app: id });
+    },
+    [entries],
+  );
+  const goBack = useCallback(() => dispatch({ type: "back" }), []);
+  const [query, setQuery] = useState("");
 
   // The phone's own back button/gesture: every layer (open app, shade, overview) is one history
   // entry, so "back" peels a layer instead of leaving /admin.
@@ -179,7 +233,20 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
   const clock = formatInTimeZone(now, TZ, "HH:mm");
   const day = DAY_FORMAT.format(now);
 
-  const renderApp = (id: MobileTabId) => {
+  const renderApp = (id: string) => {
+    const entry = entries.get(id);
+    if (entry?.app) {
+      const request = launches[id] ?? {};
+      return (
+        <MobileAppHost
+          key={`${request.hotelId ?? ""}:${request.panel ?? ""}:${request.outletId ?? ""}`}
+          app={entry.app}
+          launch={request}
+          onOpenApp={launch}
+          onClose={goBack}
+        />
+      );
+    }
     switch (id) {
       case "izleme":
         return <MonitorTab subscribe={subscribe} kpis={kpis} error={kpiError} />;
@@ -195,12 +262,12 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
             onReadAll={() => void notifications.markAll()}
           />
         );
-      case "tanimlar":
-        return <DefinitionsTab />;
       case "ayarlar":
         return (
           <SettingsTab userName={user.fullName} definitionsOn={definitionsOn} onDefinitions={setDefinitionsOn} />
         );
+      default:
+        return null;
     }
   };
 
@@ -252,7 +319,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
             type="button"
             className="mb-widget"
             aria-label="Komuta Merkezi: İzleme uygulamasını aç"
-            onClick={() => dispatch({ type: "launch", app: "izleme" })}
+            onClick={() => launch("izleme")}
           >
             <span className="mb-widget-title">Komuta Merkezi</span>
             <span className="mb-widget-values">
@@ -268,17 +335,38 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
             </span>
           </button>
           <nav className="mb-launcher" aria-label="Uygulamalar">
-            {apps.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                className="mb-launch"
-                onClick={() => dispatch({ type: "launch", app: a.id })}
-              >
-                <AppIcon id={a.id} badge={a.id === "bildirimler" ? notifications.unread : 0} />
+            {home.map((a) => (
+              <button key={a.id} type="button" className="mb-launch" onClick={() => launch(a.id)}>
+                <AppIcon entry={a} badge={a.id === "bildirimler" ? notifications.unread : 0} />
                 <span className="mb-launch-label">{a.label}</span>
               </button>
             ))}
+            {drawer.length > 0 ? (
+              <button
+                type="button"
+                className="mb-launch"
+                aria-expanded={overlay === "drawer"}
+                onClick={() => {
+                  setQuery("");
+                  dispatch({ type: "drawer" });
+                }}
+              >
+                <span className="mb-app-icon" data-app="drawer">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="6" cy="6" r="1.8" />
+                    <circle cx="12" cy="6" r="1.8" />
+                    <circle cx="18" cy="6" r="1.8" />
+                    <circle cx="6" cy="12" r="1.8" />
+                    <circle cx="12" cy="12" r="1.8" />
+                    <circle cx="18" cy="12" r="1.8" />
+                    <circle cx="6" cy="18" r="1.8" />
+                    <circle cx="12" cy="18" r="1.8" />
+                    <circle cx="18" cy="18" r="1.8" />
+                  </svg>
+                </span>
+                <span className="mb-launch-label">Tüm uygulamalar</span>
+              </button>
+            ) : null}
           </nav>
         </main>
 
@@ -305,9 +393,13 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
               </button>
               <h1 className="mb-appbar-title">{label(id)}</h1>
             </header>
-            <div className="mb-content">
-              <div className="mb-panel">{renderApp(id)}</div>
-            </div>
+            {entries.get(id)?.app ? (
+              <div className="mb-content mb-content-xp">{renderApp(id)}</div>
+            ) : (
+              <div className="mb-content">
+                <div className="mb-panel">{renderApp(id)}</div>
+              </div>
+            )}
           </section>
         ))}
 
@@ -328,7 +420,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
                   {[...recents].reverse().map((id) => (
                     <li key={id} className="mb-overview-card">
                       <div className="mb-overview-head">
-                        <AppIcon id={id} />
+                        <AppIcon entry={entries.get(id)!} />
                         <span className="mb-overview-name">{label(id)}</span>
                         <button
                           type="button"
@@ -345,7 +437,7 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
                         aria-label={`${label(id)} uygulamasına dön`}
                         onClick={() => dispatch({ type: "launch", app: id })}
                       >
-                        <AppIcon id={id} />
+                        <AppIcon entry={entries.get(id)!} />
                       </button>
                     </li>
                   ))}
@@ -355,6 +447,46 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
                 </button>
               </>
             )}
+          </div>
+        ) : null}
+
+        {overlay === "drawer" ? (
+          <div
+            className="mb-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tüm uygulamalar"
+            data-overlay="drawer"
+            tabIndex={-1}
+          >
+            <input
+              type="search"
+              className="mb-drawer-search"
+              placeholder="Uygulama ara"
+              aria-label="Uygulama ara"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <div className="mb-drawer-groups">
+              {drawer.map((group) => {
+                const needle = query.trim().toLocaleLowerCase("tr");
+                const items = group.items.filter((a) => a.label.toLocaleLowerCase("tr").includes(needle));
+                if (items.length === 0) return null;
+                return (
+                  <section key={group.label} aria-label={group.label}>
+                    <h2 className="mb-drawer-title">{group.label}</h2>
+                    <div className="mb-drawer-grid">
+                      {items.map((a) => (
+                        <button key={a.id} type="button" className="mb-launch" onClick={() => launch(a.id)}>
+                          <AppIcon entry={a} />
+                          <span className="mb-launch-label">{a.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
           </div>
         ) : null}
 
@@ -396,19 +528,11 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
                     <small>{definitionsOn ? "açık" : "kapalı"}</small>
                   </span>
                 </button>
-                <button
-                  type="button"
-                  className="mb-tile"
-                  onClick={() => dispatch({ type: "launch", app: "ayarlar" })}
-                >
+                <button type="button" className="mb-tile" onClick={() => launch("ayarlar")}>
                   <TabIcon id="ayarlar" />
                   <span>Ayarlar</span>
                 </button>
-                <button
-                  type="button"
-                  className="mb-tile"
-                  onClick={() => dispatch({ type: "launch", app: "raporlar" })}
-                >
+                <button type="button" className="mb-tile" onClick={() => launch("raporlar")}>
                   <TabIcon id="raporlar" />
                   <span>Raporlar</span>
                 </button>
@@ -463,6 +587,8 @@ export function MobileShell({ user, mobileDefinitions }: Props) {
           <NavGlyph id="recents" />
         </button>
       </nav>
+      <div id="xp-dialog-root" className="xp-dialog-root" />
+      <ConfirmDialog />
       <SnackbarHost bottomOffset="56px" />
     </div>
   );

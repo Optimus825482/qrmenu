@@ -116,6 +116,18 @@ test("390px: masaüstü yok, Android ana ekranı var, Tanımlar uygulaması yok 
   await overview.getByRole("button", { name: "Tümünü temizle" }).click();
   await expect(overview).toHaveCount(0);
 
+  // Desktop apps run on the phone too: Canlı Radar from the home screen, the rest from the drawer.
+  await appIcon(page, "Canlı Radar").click();
+  await expect(appScreen(page, "Canlı Radar")).toContainText("Tüm kompleks");
+  await sysNav(page).getByRole("button", { name: "Ana ekran" }).click();
+  await appIcon(page, "Tüm uygulamalar").click();
+  const drawer = page.getByRole("dialog", { name: "Tüm uygulamalar" });
+  await drawer.getByRole("searchbox", { name: "Uygulama ara" }).fill("denetim g");
+  await expect(drawer.getByRole("button")).toHaveCount(1);
+  await drawer.getByRole("button", { name: "Denetim Günlüğü" }).click();
+  await expect(appScreen(page, "Denetim Günlüğü")).toBeVisible();
+  await sysNav(page).getByRole("button", { name: "Ana ekran" }).click();
+
   // The browser's back button closes an open app instead of leaving /admin.
   await appIcon(page, "Ayarlar").click();
   await expect(appScreen(page, "Ayarlar")).toBeVisible();
@@ -136,7 +148,7 @@ test("Raporlar: Rapor Merkezi kataloğu tek sütunda listelenir; rapor seçilinc
   await expect(panel.getByRole("button", { name: "Raporu Göster" })).toBeVisible();
 });
 
-test("Ayarlar: anahtar → Tanımlar uygulaması gelir ve yer tutucuyu gösterir; oturum boyunca kalır", async ({
+test("Ayarlar: anahtar → Tanımlar uygulaması gelir ve Tanımlamalar ekranını açar; oturum boyunca kalır", async ({
   page,
 }) => {
   const errors = trackErrors(page);
@@ -149,7 +161,8 @@ test("Ayarlar: anahtar → Tanımlar uygulaması gelir ve yer tutucuyu gösterir
   expect(await page.evaluate(() => window.sessionStorage.getItem("merit.mobileDefs"))).toBe("1");
 
   await openApp(page, "Tanımlar");
-  await expect(appScreen(page, "Tanımlar")).toContainText("Tanımlar P1'de");
+  // The real Tanımlamalar screen of the desktop; it asks for the hotel first.
+  await expect(appScreen(page, "Tanımlar")).toContainText("Otel seçin");
 
   // Same browser tab: sessionStorage survives a reload.
   await page.reload();

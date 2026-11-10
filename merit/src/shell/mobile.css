@@ -20,9 +20,9 @@
   --mb-status: 28px;
   --mb-nav: 48px;
   /* System chrome (status + navigation bar): light on the wallpaper, app-coloured inside an app. */
-  --mb-chrome-text: #fff;
+  --mb-chrome-text: var(--on-accent);
   --mb-chrome-bg: transparent;
-  --mb-chrome-alert: #ffb4a8;
+  --mb-chrome-alert: var(--android-alert);
 
   position: fixed;
   inset: 0;
@@ -174,7 +174,7 @@
   gap: 20px;
   padding: 20px 20px 12px;
   overflow-y: auto;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .mb-glance {
@@ -218,7 +218,7 @@
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: #4a5266;
+  color: var(--muted);
 }
 
 .mb-widget-values {
@@ -231,14 +231,14 @@
   display: flex;
   flex-direction: column;
   font-size: 12px;
-  color: #4a5266;
+  color: var(--muted);
 }
 
 .mb-widget-value b {
   font-size: 30px;
   font-weight: 500;
   line-height: 1.1;
-  color: #1b1f2a;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -288,8 +288,8 @@
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: #5f6b85;
-  color: #fff;
+  background: var(--android-icon);
+  color: var(--on-accent);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transition: transform 0.12s ease-out;
 }
@@ -300,23 +300,23 @@
 }
 
 .mb-app-icon[data-app="izleme"] {
-  background: #0f8f7c;
+  background: var(--android-icon-izleme);
 }
 
 .mb-app-icon[data-app="raporlar"] {
-  background: #3f5fd1;
+  background: var(--android-icon-raporlar);
 }
 
 .mb-app-icon[data-app="bildirimler"] {
-  background: #c2571a;
+  background: var(--android-icon-bildirimler);
 }
 
 .mb-app-icon[data-app="tanimlar"] {
-  background: #7b4bc4;
+  background: var(--android-icon-tanimlar);
 }
 
 .mb-app-icon[data-app="ayarlar"] {
-  background: #55607a;
+  background: var(--android-icon-ayarlar);
 }
 
 .mb-badge {
@@ -809,6 +809,156 @@
   background: var(--danger-bg);
 }
 
+/* ---- desktop apps on the phone ------------------------------------------------------------ */
+
+/* Variables the XP theme defines on .xp-shell; the hosted desktop screens read them here. */
+.mb-shell {
+  --xp-ui-scale: 1;
+  --xp-font-weight: 400;
+  --xp-row: 32px;
+  --xp-footer-offset: 0px;
+  --xp-taskbar-height: 0px;
+}
+
+.mb-app-icon[data-app="xp"] {
+  background: var(--mb-surface);
+}
+
+.mb-app-icon[data-app="xp"] svg,
+.mb-app-icon[data-app="xp"] img {
+  width: 36px;
+  height: 36px;
+}
+
+.mb-app-icon[data-app="drawer"] {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.mb-content-xp {
+  display: flex;
+  overflow: hidden;
+}
+
+.mb-xp-host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--xp-body-light);
+  color: var(--xp-text);
+  font-size: var(--xp-font-size);
+}
+
+.mb-xp-hotel {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 16px;
+  border-bottom: 1px solid var(--mb-line);
+  background: var(--mb-surface);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mb-xp-body {
+  position: relative; /* anchors modal form panels (.xp-form-backdrop) */
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.mb-xp-body:has(> .xp-iframe) {
+  overflow: hidden;
+}
+
+/* The hotel cards sit side by side on the desktop; one per row on the phone. */
+.mb-xp-body .xp-hotel-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* ---- app drawer (all apps) ----------------------------------------------------------------- */
+
+.mb-drawer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px 0;
+  background: rgba(12, 16, 28, 0.82);
+  backdrop-filter: blur(16px);
+  color: var(--on-accent);
+  animation: mb-drawer-in 0.2s ease-out;
+}
+
+.mb-drawer:focus {
+  outline: none;
+}
+
+.mb-drawer-search {
+  flex: none;
+  height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+
+.mb-drawer-search::placeholder {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.mb-drawer-groups {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 16px;
+}
+
+.mb-drawer-title {
+  margin: 14px 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+
+.mb-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 4px;
+}
+
+/* Two lines for the long desktop names. */
+.mb-drawer .mb-launch-label,
+.mb-launcher .mb-launch-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+@keyframes mb-drawer-in {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+}
+
 /* ---- notification shade ------------------------------------------------------------------ */
 
 .mb-scrim {
@@ -942,7 +1092,7 @@ button.mb-tile {
   padding: 16px 0;
   background: rgba(12, 16, 28, 0.78);
   backdrop-filter: blur(12px);
-  color: #fff;
+  color: var(--on-accent);
   animation: mb-fade-in 0.15s ease-out;
 }
 
@@ -1115,6 +1265,11 @@ button.mb-tile {
   .mb-overview-cards {
     padding: 0 34%;
   }
+
+  .mb-launcher,
+  .mb-drawer-grid {
+    grid-template-columns: repeat(8, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1126,6 +1281,7 @@ button.mb-tile {
 
   .mb-app,
   .mb-shade,
+  .mb-drawer,
   .mb-overview {
     animation: none;
   }

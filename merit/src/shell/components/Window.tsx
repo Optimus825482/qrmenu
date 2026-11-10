@@ -615,7 +615,7 @@ F&B Command Center uygulaması (${app.id})`,
 }
 
 /** Keeps a crashing app inside its window instead of taking the whole desktop down. */
-class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+export class AppErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
 
   static getDerivedStateFromError() {

@@ -27,6 +27,14 @@
   --dot-closed: #ff6b5e;
   --toggle-off: #aab2c0;
   --on-accent: #ffffff;
+  /* Android shell: launcher icon tiles and the alert tint of the status bar on a wallpaper. */
+  --android-icon: #5f6b85;
+  --android-icon-izleme: #0f8f7c;
+  --android-icon-raporlar: #3f5fd1;
+  --android-icon-bildirimler: #c2571a;
+  --android-icon-tanimlar: #7b4bc4;
+  --android-icon-ayarlar: #55607a;
+  --android-alert: #ffb4a8;
 
   /* Android shell palette (mobile.css maps --mb-* onto these). */
   --app-bg: #f3f5f9;

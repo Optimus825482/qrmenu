@@ -1,25 +1,27 @@
-import type { MobileTabId } from "./icons";
+/** A built-in mobile app ("izleme") or a registered desktop app ("core.radar"). */
+export type MobileAppId = string;
 
 /** A layer drawn over the home screen or the open app. */
-export type MobileOverlay = "shade" | "recents" | null;
+export type MobileOverlay = "shade" | "recents" | "drawer" | null;
 
 /**
  * Navigation state of the Android shell. `recents` holds every running app, oldest first; `open` is
  * the one on screen (null = home screen). An overlay sits on top of either.
  */
 export type MobileNavState = {
-  recents: MobileTabId[];
-  open: MobileTabId | null;
+  recents: MobileAppId[];
+  open: MobileAppId | null;
   overlay: MobileOverlay;
 };
 
 export type MobileNavAction =
-  | { type: "launch"; app: MobileTabId }
+  | { type: "launch"; app: MobileAppId }
   | { type: "home" }
   | { type: "back" }
   | { type: "shade"; open: boolean }
   | { type: "recents" }
-  | { type: "dismiss"; app: MobileTabId }
+  | { type: "drawer" }
+  | { type: "dismiss"; app: MobileAppId }
   | { type: "clear" };
 
 export const MOBILE_NAV_INITIAL: MobileNavState = { recents: [], open: null, overlay: null };
@@ -45,6 +47,8 @@ export function mobileNavReducer(state: MobileNavState, action: MobileNavAction)
       return { ...state, overlay: action.open ? "shade" : state.overlay === "shade" ? null : state.overlay };
     case "recents":
       return { ...state, overlay: state.overlay === "recents" ? null : "recents" };
+    case "drawer":
+      return { ...state, overlay: "drawer" };
     case "dismiss": {
       const recents = state.recents.filter((a) => a !== action.app);
       return {
@@ -65,7 +69,7 @@ export function mobileNavDepth(state: Pick<MobileNavState, "open" | "overlay">):
 }
 
 /** The state limited to the apps that are installed right now (the Tanımlar switch removes one). */
-export function installedOnly(state: MobileNavState, installed: readonly MobileTabId[]): MobileNavState {
+export function installedOnly(state: MobileNavState, installed: readonly MobileAppId[]): MobileNavState {
   const recents = state.recents.filter((a) => installed.includes(a));
   if (recents.length === state.recents.length) return state;
   return { ...state, recents, open: state.open && recents.includes(state.open) ? state.open : null };
