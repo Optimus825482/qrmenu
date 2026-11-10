@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { dropReferenceData, resetReferenceData } from "../helpers/fixtures";
 import { testDb } from "../helpers/db";
 import {
@@ -9,6 +9,9 @@ import {
   renderQrSvg,
   verifyQrToken,
 } from "@/lib/qr";
+
+// qrUrl reads the setting through the app client; without this it would read the dev database.
+vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 
 describe("QR token (imzalı, 30 karakter)", () => {
   it("generateQrToken 30 karakterlik base64url üretir ve her seferinde farklıdır", () => {
