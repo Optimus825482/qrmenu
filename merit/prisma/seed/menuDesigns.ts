@@ -12,8 +12,14 @@ export interface OutletDesignPreset {
   options?: Partial<DesignOptions>;
 }
 
+/**
+ * Outlets whose design follows their printed menu cover (ürün sahibi kararı, 11 Kas 2026): the cover is the hero
+ * and the page takes the cover's own colours, so these two are dark on purpose.
+ */
+export const BRAND_COVER_DARK_OUTLETS: ReadonlySet<string> = new Set(["Whiskey Lounge", "The Roof Garden"]);
+
 /*
- * Every Merit outlet opens on a light page (Kasım 2026 kararı). One family: ivory/cream paper, dark readable text,
+ * Every other Merit outlet opens on a light page (Kasım 2026 kararı). One family: ivory/cream paper, dark readable text,
  * a single deep accent per concept. Concepts that used to be dark (whisky, wine, shisha, steak, Far East) keep their
  * mood in the accent and typography, not in the background.
  */
@@ -74,16 +80,17 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     ambience: "LOUNGE",
     concept: "CLASSIC",
     template: "COGNAC_LIBRARY",
-    theme: "Konyak & Kehribar",
+    theme: "Whiskey Lounge Lacivert & Altın",
     showPrices: true,
+    options: { hero: "COVER", heroImageUrl: "/merit-menus/kapak-whiskey-lounge.jpg" },
   },
   "The Roof Garden": {
-    ambience: "ROOFTOP",
-    concept: "BOHEMIAN",
-    template: "SUNSET_SKY_TERRACE",
-    theme: "Kum & Terrakota",
+    ambience: "LOUNGE",
+    concept: "CONTEMPORARY",
+    template: "SPEAKEASY_BAR",
+    theme: "Roof Garden Kömür & Bakır",
     showPrices: true,
-    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "marcellus" },
+    options: { hero: "COVER", heroImageUrl: "/merit-menus/kapak-roof-garden.jpg" },
   },
   "The Steakhouse": {
     ambience: "GOURMET",
@@ -115,9 +122,9 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     ambience: "SUNDECK",
     concept: "RIVIERA",
     template: "WHITE_RIVIERA",
-    theme: "Sahil Kumu & Mercan",
+    theme: "Blue Sea Beyaz & Lacivert",
     showPrices: false,
-    options: { heroFontFamily: "montserrat" },
+    options: { heroFontFamily: "montserrat", hero: "COVER", heroImageUrl: "/merit-menus/kapak-blue-sea.jpg" },
   },
   "Dionysos Wine House": {
     ambience: "GOURMET",

@@ -1,10 +1,11 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { DARK_TEMPLATE_STYLES, DESIGN_TEMPLATES, HERO_FONT_FAMILIES } from "@/modules/menu/design";
+import { COVER_IMAGE_PATTERN, DARK_TEMPLATE_STYLES, DESIGN_TEMPLATES, HERO_FONT_FAMILIES } from "@/modules/menu/design";
 import { contrastRatio, readableText } from "@/modules/menu/contrast";
 import { MENU_THEMES, type MenuThemeDef } from "../../prisma/seed/menuThemes";
 import {
+  BRAND_COVER_DARK_OUTLETS,
   OUTLET_DESIGN_PRESETS,
   ROOM_SERVICE_DESIGN_PRESETS,
   presetDesignRow,
@@ -13,6 +14,11 @@ import {
 import { RENAMED_OUTLETS } from "../../prisma/seed/outlets";
 
 const ROOT = path.resolve(__dirname, "../..");
+const COVER_THEMES = new Set(["Whiskey Lounge Lacivert & Altın", "Roof Garden Kömür & Bakır", "Blue Sea Beyaz & Lacivert"]);
+const COVER_MIGRATION = readFileSync(
+  path.join(ROOT, "prisma/migrations/20261111010000_kapak_gorselli_menuler/migration.sql"),
+  "utf8",
+);
 const MIGRATION = readFileSync(
   path.join(ROOT, "prisma/migrations/20261110170000_acik_menu_tasarimlari/migration.sql"),
   "utf8",
@@ -70,8 +76,14 @@ describe("açık renkli outlet menüleri", () => {
     expect(PRESETS).toHaveLength(20);
   });
 
-  it.each(PRESETS)("%s: zemin açık (göreli parlaklık ≥ 0.8), kart yüzeyi de açık", (_name, preset) => {
+  it.each(PRESETS)("%s: zemin açık (göreli parlaklık ≥ 0.8), kart yüzeyi de açık", (name, preset) => {
     const t = theme(preset.theme);
+    if (BRAND_COVER_DARK_OUTLETS.has(name)) {
+      // Kapak görselinin renklerini taşıyan iki nokta bilerek koyu; zemin ile kart aynı ailede kalır.
+      expect(luminance(t.bg)).toBeLessThan(0.1);
+      expect(luminance(t.soft)).toBeLessThan(0.1);
+      return;
+    }
     expect(luminance(t.bg)).toBeGreaterThanOrEqual(0.8);
     expect(luminance(t.soft)).toBeGreaterThanOrEqual(0.7);
   });
@@ -88,9 +100,10 @@ describe("açık renkli outlet menüleri", () => {
     expect(pairs["ikincil/kart"]).toBeGreaterThanOrEqual(3);
   });
 
-  it.each(PRESETS)("%s: şablon katalogda ve koyu zemine dayanan bir stil değil", (_name, preset) => {
+  it.each(PRESETS)("%s: şablon katalogda ve koyu zemine dayanan bir stil değil", (name, preset) => {
     const template = DESIGN_TEMPLATES.find((t) => t.id === preset.template);
     expect(template).toBeDefined();
+    if (BRAND_COVER_DARK_OUTLETS.has(name)) return;
     expect(DARK_TEMPLATE_STYLES.has(template!.style)).toBe(false);
   });
 
@@ -103,6 +116,16 @@ describe("açık renkli outlet menüleri", () => {
     if (font!.id !== "serif" && font!.id !== "sans") {
       const family = font!.font.split(",")[0].replace(/'/g, "").trim();
       expect(FONTS_CSS).toContain(`font-family: "${family}"`);
+    }
+  });
+
+  it("kapak görselli noktalar: görsel dosyası yerinde, tema zemini kapağın kenar rengiyle aynı aile", () => {
+    const covers = PRESETS.filter(([, p]) => p.options?.hero === "COVER");
+    expect(covers.map(([n]) => n).sort()).toEqual(["Blue Sea Beach Bar", "The Roof Garden", "Whiskey Lounge"]);
+    for (const [, p] of covers) {
+      const url = p.options!.heroImageUrl!;
+      expect(COVER_IMAGE_PATTERN.test(url)).toBe(true);
+      expect(existsSync(path.join(ROOT, "public", url))).toBe(true);
     }
   });
 
@@ -135,10 +158,17 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
   it.each(PRESETS)("%s: tasarım satırı ve tema migration'da preset ile aynı", (_name, preset) => {
     const row = presetDesignRow(preset);
     const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
+    if (row.options.hero === "COVER") {
+      // Kapak görselli üç nokta 20261111010000 ile yeniden yazıldı; satır o migration'da birebir durur.
+      expect(COVER_MIGRATION).toContain(sqlText(JSON.stringify(row.options)));
+      expect(COVER_MIGRATION).toContain(`${sqlText(row.template)}, ${sqlText(JSON.stringify(row.layout))}`);
+      expect(COVER_MIGRATION).toContain(sqlText(preset.theme));
+      return;
+    }
     // 170000 yazıldığında süzgeçler açıktı ve showFeatured seçeneği yoktu; ikisini 20261110200000 kapatır.
     const { showFeatured, logoUrl, introSplash, priceLists, ...rest } = row.options;
     expect(priceLists).toBe(true); // fiyat listesi seçeneği sonradan eklendi, migration metninde yok
-    expect(introSplash).toBe(false);
+    expect(introSplash).toBe(true); // animasyonlu açılış 20261111020000 ile her menüde açıldı
     expect(logoUrl).toBe(""); // logo seçeneği sonradan eklendi, migration metninde yok
     expect(showFeatured).toBe(false);
     expect(row.options.showFilters).toBe(false);
@@ -167,7 +197,7 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
     const used = new Set(PRESETS.map(([, p]) => p.theme));
     for (const name of used) {
       const t = theme(name);
-      expect(MIGRATION).toContain(`('${name}', '${t.bg}', '${t.accent}', '${t.soft}', '${t.textOnAccent}')`);
+      expect(COVER_THEMES.has(name) ? COVER_MIGRATION : MIGRATION).toContain(`('${name}', '${t.bg}', '${t.accent}', '${t.soft}', '${t.textOnAccent}')`);
     }
     expect(MIGRATION).toContain(`ON CONFLICT ("name") DO NOTHING`);
     expect(MIGRATION).toContain(`SET "is_default" = ("name" = 'Fildişi & Altın Zarafet')`);

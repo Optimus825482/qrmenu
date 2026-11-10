@@ -3493,3 +3493,159 @@ html:has(.g-show-host) body,
 .g-prow-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .g-prow .g-name { font-weight: 600; overflow-wrap: anywhere; }
 .g-prow .g-price { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* --------------------------------------------------------------------------
+   SPEAKEASY GECE BARI (data-template="speakeasy")
+   Koyu bar şablonu: ışıklı tabela başlığı, tek satır kayan kapsül şerit, vurgu
+   renginde fiyat. Bütün yüzeyler tema renklerinden türetilir; koyu temayla
+   (ör. "Gece Barı & Kehribar") tasarlandı, açık temada da okunur kalır.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="speakeasy"] {
+  --g-sp-glow: color-mix(in srgb, var(--m-accent) 55%, transparent);
+  --g-sp-edge: color-mix(in srgb, var(--m-accent) 22%, var(--m-line));
+}
+.g-frame[data-template="speakeasy"] .g-design-hero:not([data-photo]) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2.2rem 1rem 1.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--g-sp-edge);
+  border-radius: 0 0 22px 22px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--m-accent) 20%, transparent), transparent 62%),
+    var(--m-soft);
+  box-shadow: none;
+  overflow: hidden;
+}
+.g-frame[data-template="speakeasy"] .g-design-hero > span {
+  order: 2;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--m-muted);
+  opacity: 1;
+}
+.g-frame[data-template="speakeasy"] .g-design-hero h2 {
+  order: 1;
+  line-height: 1.05;
+  color: var(--m-accent);
+  text-shadow:
+    0 0 6px color-mix(in srgb, var(--m-accent) 70%, transparent),
+    0 0 22px var(--g-sp-glow),
+    0 0 46px color-mix(in srgb, var(--m-accent) 28%, transparent);
+}
+.g-frame[data-template="speakeasy"] .g-design-hero[data-photo] h2 { text-shadow: 0 1px 6px rgb(0 0 0 / .6), 0 0 22px var(--g-sp-glow); }
+
+/* Kategori şeridi: çerçeveli kapsüller; seçili olan ışıklı kontur. */
+.g-frame.g-frame.g-frame[data-template="speakeasy"]:is([data-category-style="CHIPS_ROW"], :not([data-category-style])) .g-tabs button {
+  border: 1px solid var(--g-sp-edge);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-soft) 70%, transparent);
+  color: var(--m-muted);
+  font-weight: 600;
+}
+.g-frame.g-frame.g-frame[data-template="speakeasy"]:is([data-category-style="CHIPS_ROW"], :not([data-category-style])) .g-tabs button::after { display: none; }
+.g-frame.g-frame.g-frame[data-template="speakeasy"]:is([data-category-style="CHIPS_ROW"], :not([data-category-style])) .g-tabs button[aria-selected="true"] {
+  border-color: var(--m-accent);
+  background: color-mix(in srgb, var(--m-accent) 14%, var(--m-soft));
+  color: var(--m-text);
+  box-shadow: 0 0 0 1px var(--m-accent), 0 0 14px var(--g-sp-glow);
+}
+
+/* Bölüm başlığı: vurgu renginde, altında kısa ışıklı çizgi. */
+.g-frame[data-template="speakeasy"] .g-sub > h2,
+.g-frame[data-template="speakeasy"] .g-show-title {
+  position: relative;
+  padding-bottom: 10px;
+  color: var(--m-accent);
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+.g-frame[data-template="speakeasy"] .g-sub > h2::after,
+.g-frame[data-template="speakeasy"] .g-show-title::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: 44px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--m-accent);
+  box-shadow: 0 0 10px var(--g-sp-glow);
+}
+
+/* Ürün kartı ve fiyat listesi: koyu cam yüzey, ince vurgu konturu. */
+.g-frame[data-template="speakeasy"] .g-card,
+.g-frame[data-template="speakeasy"] .g-plist {
+  background: color-mix(in srgb, var(--m-soft) 88%, transparent);
+  border: 1px solid var(--g-sp-edge);
+  border-radius: 16px;
+}
+.g-frame[data-template="speakeasy"] .g-card { align-items: start; padding: 12px; }
+.g-frame[data-template="speakeasy"] .g-card:active,
+.g-frame[data-template="speakeasy"] .g-prow:active {
+  background: color-mix(in srgb, var(--m-accent) 10%, var(--m-soft));
+}
+.g-frame[data-template="speakeasy"] .g-plist > li + li { border-top-color: var(--g-sp-edge); }
+.g-frame[data-template="speakeasy"] .g-thumb { border-radius: 12px; }
+.g-frame[data-template="speakeasy"] .g-name { font-weight: 700; letter-spacing: 0.01em; }
+.g-frame[data-template="speakeasy"] .g-price {
+  color: var(--m-accent);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 1.02rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--m-accent) 30%, transparent);
+}
+.g-frame[data-template="speakeasy"] .g-show-card { border: 1px solid var(--g-sp-edge); }
+@media (prefers-reduced-motion: no-preference) {
+  .g-frame[data-template="speakeasy"] .g-design-hero:not([data-photo]) h2 { animation: g-sp-sign 3.2s ease-out 1 both; }
+}
+@keyframes g-sp-sign {
+  0% { opacity: 0.25; text-shadow: none; }
+  12% { opacity: 1; }
+  18% { opacity: 0.45; }
+  26%, 100% { opacity: 1; }
+}
+
+/* ===== KAPAK GÖRSELİ: noktanın basılı menü kapağı karşılama alanı olarak; üzerine yazı ya da gölge binmez ===== */
+.g-frame.g-frame .g-design-hero[data-cover] {
+  display: block;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  box-shadow: none;
+  overflow: hidden;
+  line-height: 0;
+}
+.g-frame.g-frame .g-design-hero[data-cover]::before,
+.g-frame.g-frame .g-design-hero[data-cover]::after { content: none; }
+.g-hero-cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 42%;
+}
+
+/* Vitrin kartı: ürün sayısı fotoğrafın köşesine taşındı; kategori adı bütün satırı kullanır, uzun ad kelime ortasından bölünmez. */
+.g-show-card .g-show-count {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  margin: 0;
+  background: color-mix(in srgb, var(--m-bg) 86%, transparent);
+  box-shadow: 0 0 0 1px var(--m-line);
+}
+.g-show-card .g-show-name {
+  grid-column: 1 / -1;
+  padding-inline: 12px 28px;
+}

@@ -27,6 +27,7 @@ export const MENU_THEMES: MenuThemeDef[] = [
   { name: "Capri Limoncello", bg: "#fffdfa", accent: "#a06000", soft: "#fbf3dd", textOnAccent: "#ffffff" },
   { name: "St. Moritz Chalet", bg: "#0f1713", accent: "#cba36b", soft: "#1c2b22", textOnAccent: "#0f1713" },
   { name: "Caviar & Deniz İncisi", bg: "#0a121e", accent: "#7ec8e3", soft: "#142236", textOnAccent: "#0a121e" },
+  { name: "Gece Barı & Kehribar", bg: "#0e0d10", accent: "#f2a65a", soft: "#19181d", textOnAccent: "#0e0d10" },
   { name: "Monaco Grand Prix", bg: "#120c10", accent: "#f05454", soft: "#26141e", textOnAccent: "#120c10" },
   // Açık, Ferah & Gün Işığı Temaları (Light & Airy)
   { name: "Akdeniz Beyazı & Turkuaz", bg: "#f8fcff", accent: "#006994", soft: "#e6f4fa", textOnAccent: "#ffffff" },
@@ -47,5 +48,9 @@ export const MENU_THEMES: MenuThemeDef[] = [
   { name: "Kum & Terrakota", bg: "#fbf5ee", accent: "#9a3f1f", soft: "#f3e4d5", textOnAccent: "#ffffff" },
   { name: "Keten & Kömür", bg: "#f7f4ee", accent: "#2e2b28", soft: "#ebe5da", textOnAccent: "#f7f4ee" },
   { name: "Porselen & Lake Kırmızı", bg: "#fbfbf8", accent: "#8c1c22", soft: "#e7efe9", textOnAccent: "#ffffff" },
+  // Basılı menü kapaklarının renkleri (Kasım 2026): kapak görseli zeminle birleşsin diye zemin kapakla aynı.
+  { name: "Whiskey Lounge Lacivert & Altın", bg: "#0e4f77", accent: "#ecd08a", soft: "#0a4165", textOnAccent: "#0a3350" },
+  { name: "Roof Garden Kömür & Bakır", bg: "#231f20", accent: "#cf9a6c", soft: "#2f2a2b", textOnAccent: "#231f20" },
+  { name: "Blue Sea Beyaz & Lacivert", bg: "#f8f9fa", accent: "#1c2a70", soft: "#e4ebf1", textOnAccent: "#ffffff" },
   { name: "Toskana Krem & Zeytin", bg: "#faf7ee", accent: "#556328", soft: "#eeecdc", textOnAccent: "#ffffff" },
 ];

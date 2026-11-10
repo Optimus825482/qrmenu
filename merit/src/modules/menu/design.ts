@@ -69,7 +69,12 @@ export const HERO_STYLES = [
   { id: "NONE", label: "Yok" },
   { id: "TITLE", label: "Başlık" },
   { id: "PHOTO", label: "Fotoğraf" },
+  // The outlet's own printed-menu cover artwork (logo included), shown as it is: no title or shade over it.
+  { id: "COVER", label: "Kapak görseli" },
 ] as const;
+
+/** Cover artwork shipped with the app (`public/merit-menus/kapak-*.jpg`); the only images a COVER hero accepts. */
+export const COVER_IMAGE_PATTERN = /^\/merit-menus\/kapak-[a-z0-9-]+\.(?:jpg|webp)$/;
 
 export type TypographyId = (typeof TYPOGRAPHIES)[number]["id"];
 export type DensityId = (typeof DENSITIES)[number]["id"];
@@ -184,7 +189,7 @@ export type DesignOptions = {
   heroImageUrl: string;
   /** Outlet logo uploaded in the studio (`/uploads/menu-logo/<outletId>/…`); printed at the top of the menu. */
   logoUrl: string;
-  /** Opening animation: the hotel logo zooms and fades in for about two seconds before the menu shows. */
+  /** Opening animation: the hotel logo zooms and fades in for about two seconds before the menu shows. On by default. */
   introSplash: boolean;
   /** Large photos only on up to three chef's picks; every other dish is a text row. */
   curatedPhotos: boolean;
@@ -216,7 +221,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   hero: "TITLE",
   heroImageUrl: "",
   logoUrl: "",
-  introSplash: false,
+  introSplash: true,
   curatedPhotos: false,
   priceLists: true,
   showSearch: true,
@@ -282,6 +287,8 @@ export const DESIGN_TEMPLATES = [
   { id: "NOIR_LOUNGE", name: "Noir Lounge", ambience: "LOUNGE", concept: "CLASSIC", style: "noir", options: options({ cardStyle: "LIST", uppercaseCategories: true, typography: "EDITORIAL", density: "COMPACT" }) },
   { id: "VELVET", name: "Velvet Room", ambience: "LOUNGE", concept: "LUXURY", style: "velvet", options: options({ cardStyle: "CARD", typography: "CLASSIC", density: "COMPACT" }) },
   { id: "ATRIUM_SOCIAL", name: "Atrium Social", ambience: "LOUNGE", concept: "CONTEMPORARY", style: "atrium", options: options({ cardStyle: "CARD", typography: "MODERN", density: "BALANCED" }) },
+  // Koyu bar: el yazısı ışıklı tabela başlığı, tek satır kayan kapsül şerit, vurgu renginde fiyat.
+  { id: "SPEAKEASY_BAR", name: "Speakeasy Gece Barı", ambience: "LOUNGE", concept: "CONTEMPORARY", style: "speakeasy", options: options({ cardStyle: "LIST", categoryTabStyle: "CHIPS_ROW", heroAlign: "center", heroFontFamily: "greatvibes", heroFontSize: "xlarge", typography: "MODERN", density: "COMPACT" }) },
   { id: "CRYSTAL_BAR", name: "Crystal Champagne Bar", ambience: "LOUNGE", concept: "ART_DECO", style: "crystal", options: options({ cardStyle: "CARD", uppercaseCategories: true, typography: "EDITORIAL", density: "AIRY" }) },
 
   // 5. GOURMET (Fine Dining)
@@ -363,7 +370,7 @@ export const DESIGN_TEMPLATES = [
  * Template styles designed around a dark room (neon glow, smoked glass). Their surfaces follow the theme colours,
  * and they stay in the catalog for operators who pick a dark theme, but no built-in outlet preset uses them.
  */
-export const DARK_TEMPLATE_STYLES: ReadonlySet<string> = new Set(["noir", "midnight", "velvet", "electric", "pulse", "jazz", "starlight"]);
+export const DARK_TEMPLATE_STYLES: ReadonlySet<string> = new Set(["noir", "midnight", "velvet", "electric", "pulse", "jazz", "starlight", "speakeasy"]);
 
 export const DESIGN_BLOCKS = [
   { id: "hero", label: "Karşılama alanı", description: "Otel ve outlet girişi" },

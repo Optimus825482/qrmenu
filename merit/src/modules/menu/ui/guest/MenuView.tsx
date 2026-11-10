@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
-import { effectiveCategoryTabStyle, ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
+import { COVER_IMAGE_PATTERN, effectiveCategoryTabStyle, ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { CallWaiterButton } from "./CallWaiterButton";
@@ -297,6 +297,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   const photoIds = useMemo(() => (options.curatedPhotos ? curatedPhotoIds(categories) : null), [categories, options.curatedPhotos]);
   // A photo hero without a picked image reads as the plain title block.
   const heroPhoto = options.hero === "PHOTO" && options.heroImageUrl !== "" ? options.heroImageUrl : null;
+  const heroCover = options.hero === "COVER" && COVER_IMAGE_PATTERN.test(options.heroImageUrl) ? options.heroImageUrl : null;
   const showTools = options.showSearch || options.showFilters;
 
   // Showcase: keep the open category's chip in view inside the sliding strip.
@@ -435,7 +436,20 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
     hero:
       options.hero === "NONE" && !heroCallButton && !options.logoUrl ? null : (
         <div key="hero-wrap" className="g-hero-block-wrap">
-          {options.hero !== "NONE" ? (
+          {heroCover ? (
+            <section className="g-design-hero" key="hero" data-cover="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="g-hero-cover"
+                src={heroCover}
+                alt={`${state.outletName} · ${state.hotelName}`}
+                loading="eager"
+                fetchPriority="high"
+                width={600}
+                height={600}
+              />
+            </section>
+          ) : options.hero !== "NONE" ? (
             <section
               className="g-design-hero"
               key="hero"

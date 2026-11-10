@@ -18,6 +18,7 @@ import {
   CALL_WAITER_POSITIONS,
   CARD_STYLES,
   CATEGORY_TAB_STYLES,
+  COVER_IMAGE_PATTERN,
   DENSITIES,
   DESIGN_BLOCKS,
   DESIGN_TEMPLATES,
@@ -734,6 +735,13 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 </button>
               ))}
             </div>
+            {design.options.hero === "COVER" ? (
+              <p>
+                {COVER_IMAGE_PATTERN.test(design.options.heroImageUrl)
+                  ? "Bu noktanın basılı menü kapağı gösterilir; üzerine başlık yazılmaz."
+                  : "Bu nokta için yüklü bir kapak görseli yok; kapak eklenene kadar başlık gösterilir."}
+              </p>
+            ) : null}
             {design.options.hero === "PHOTO" ? (
               photos.length > 0 ? (
                 <label className="xp-design-field">

@@ -13,6 +13,7 @@ import {
 } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import {
+  COVER_IMAGE_PATTERN,
   AMBIENCES,
   CONCEPTS,
   DENSITIES,
@@ -247,7 +248,7 @@ const designSchema = z.object({
     hero: z.enum(HERO_STYLES.map((item) => item.id)),
     heroImageUrl: z.string().max(300),
     logoUrl: z.string().max(300).optional().default(""),
-    introSplash: z.boolean().optional().default(false),
+    introSplash: z.boolean().optional().default(true),
     curatedPhotos: z.boolean(),
     priceLists: z.boolean().optional().default(true),
     showSearch: z.boolean(),
@@ -283,6 +284,7 @@ export async function saveOutletDesign(
     if (blocked) throw new DomainError("VALIDATION", blocked.message);
     if (
       design.options.heroImageUrl !== "" &&
+      !COVER_IMAGE_PATTERN.test(design.options.heroImageUrl) &&
       (!design.options.heroImageUrl.startsWith("/uploads/") ||
         !(await tx.menuNode.findFirst({
           where: { outletId, imageUrl: design.options.heroImageUrl, isActive: true },
