@@ -17,7 +17,7 @@ Otelin sunucusunda yalnız Ubuntu kuruluyken izlenecek sıra. Betikler `deploy/c
 
 | Konu | Neden önemli |
 | --- | --- |
-| **Alan adı** (ör. `menu.meritotel.com`) | `APP_BASE_URL` olur ve basılan her QR koduna gömülür. Sonradan değişirse QR'lar yeniden basılır. |
+| **Alan adı** (`qrmenu.merithotels.com`) | `APP_BASE_URL` olur ve basılan her QR koduna gömülür. Sonradan değişirse QR'lar yeniden basılır. |
 | **Dışarıdan erişim** | Misafir telefonu (otel Wi-Fi'si veya mobil veri) bu adrese HTTPS ile ulaşabilmelidir. Sunucu iç ağdaysa otel güvenlik duvarında 80 ve 443 sunucuya yönlendirilir; alan adının A kaydı otelin dış IP'sini gösterir. |
 | **Sertifika** | Coolify, Let's Encrypt sertifikasını 80 portu dışarıdan erişilebiliyorsa kendisi alır. Sunucu yalnız iç ağda kalacaksa otomatik sertifika alınamaz; otelin kendi sertifikası veya DNS doğrulaması gerekir. HTTPS olmadan PWA kurulumu ve anlık bildirim çalışmaz. |
 | **Sunucu gücü** | Coolify en az 2 çekirdek / 2 GB ister. İmaj sunucuda derlendiği için (aşağıya bakın) **4 çekirdek, 8 GB bellek, 60 GB disk** önerilir; 4 GB'ta betik takas alanı açar, derleme yavaşlar. |
@@ -64,7 +64,7 @@ Coolify → proje → **+ New Resource** → özel depo (GitHub App veya Deploy 
 Sırları kendi bilgisayarınızda üretin ve çıktıyı Coolify → *Environment Variables* alanına yapıştırın:
 
 ```bash
-bash deploy/coolify/env-uret.sh https://menu.meritotel.com
+bash deploy/coolify/env-uret.sh https://qrmenu.merithotels.com
 ```
 
 Çıktıyı dosyaya kaydetmeyin; değerleri parola kasanıza alın. `SESSION_SECRET` ve `QR_HMAC_SECRET` kaybolursa
@@ -73,11 +73,11 @@ oturumlar ve basılmış QR'lar geçersiz olur; `SETTINGS_SECRET_KEY` değişirs
 
 ### 5. Alan adı ve ilk dağıtım
 
-1. *Domains* altında `app` servisine `https://menu.meritotel.com:3000` yazın (port, konteynerin iç portudur;
+1. *Domains* altında `app` servisine `https://qrmenu.merithotels.com:3000` yazın (port, konteynerin iç portudur;
    Coolify 443'ten 3000'e yönlendirir ve sertifikayı alır).
 2. **Deploy**. İlk derleme 7-10 dakika sürer. Açılışta migrasyonlar, seed (`RUN_SEED=true`) ve Merit outlet /
    menü kurulumu (`SYNC_MERIT_MENUS=true`) çalışır.
-3. `https://menu.meritotel.com/api/health` → `ok:true` görün, `admin` ve `SEED_ADMIN_PASSWORD` ile girin,
+3. `https://qrmenu.merithotels.com/api/health` → `ok:true` görün, `admin` ve `SEED_ADMIN_PASSWORD` ile girin,
    yönetici parolasını değiştirin.
 4. Coolify'da `RUN_SEED=false`, `SYNC_MERIT_MENUS=false` yapın, `SEED_ADMIN_PASSWORD`'u silin ve yeniden dağıtın.
 5. Denetim Masası → Sistem → `qr.baseUrl` alanına aynı adresi yazın; QR'ları bundan sonra basın.
@@ -150,7 +150,7 @@ Zorunlu:
 POSTGRES_USER=merit
 POSTGRES_PASSWORD=<güçlü parola; URL'ye gömülür, özel karakter kullanmayın>
 POSTGRES_DB=merit
-APP_BASE_URL=https://menu.siteniz.com
+APP_BASE_URL=https://qrmenu.merithotels.com
 SESSION_SECRET=<openssl rand -base64 48>
 QR_HMAC_SECRET=<openssl rand -base64 48>
 PRINT_GATEWAY_KEY=<openssl rand -base64 32>
@@ -183,7 +183,7 @@ değişkenleri konteynere verir; yeni bir değişken eklenecekse `docker-compose
 `RUN_SEED=false` yapıp yeniden dağıtın ve `SEED_ADMIN_PASSWORD` değerini kaldırın.
 
 ### 4. Alan adı
-`app` servisine alan adınızı bağlayın (`https://menu.siteniz.com`); Coolify Traefik ve Let's Encrypt ile
+`app` servisine alan adınızı bağlayın (`https://qrmenu.merithotels.com`); Coolify Traefik ve Let's Encrypt ile
 3000 portuna yönlendirir. `APP_BASE_URL` bu adresle aynı olmalıdır.
 
 ### 5. Dağıtım sırası
@@ -193,7 +193,7 @@ değişkenleri konteynere verir; yeni bir değişken eklenecekse `docker-compose
 3. `RUN_SEED=true` ise seed çalışır, ardından Next.js 3000 portunda başlar.
 
 ### 6. Giriş
-* Yönetici: `https://menu.siteniz.com/giris`, kullanıcı adı `admin`, parola ilk seed'de verdiğiniz
+* Yönetici: `https://qrmenu.merithotels.com/giris`, kullanıcı adı `admin`, parola ilk seed'de verdiğiniz
   `SEED_ADMIN_PASSWORD` değeri.
 * Masa QR kodları: yönetim arayüzünde **Masa QR Kodları** penceresi; Denetim Masası → Sistem →
   `qr.baseUrl` alanına genel HTTPS adresini yazın.

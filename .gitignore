@@ -18,3 +18,5 @@ prisma/dev.db*
 merit/prisma/dev.db*
 *.db
 *.db-journal
+# Uretilen baski dosyalari (oda QR kodlarini icerir)
+cikti/
