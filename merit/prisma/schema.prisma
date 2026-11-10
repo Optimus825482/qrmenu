@@ -778,6 +778,8 @@ model Product {
   barcode       String?  @unique
   unit          String   @default("Adet")
   criticalLevel Int      @default(10) @map("critical_level")
+  /// Position in the room-check list (the order attendants entered products in the old system); 1000 = unranked.
+  sortOrder     Int      @default(1000) @map("sort_order")
   purchasePrice Decimal? @map("purchase_price") @db.Decimal(10, 2)
   salePrice     Decimal? @map("sale_price") @db.Decimal(10, 2)
   isActive      Boolean  @default(true) @map("is_active")

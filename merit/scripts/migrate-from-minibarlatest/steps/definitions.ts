@@ -527,7 +527,7 @@ async function stepProducts(ctx: StepContext): Promise<void> {
           criticalLevel: critical !== null && critical >= 0 ? Math.floor(critical) : 10,
           purchasePrice: purchase.value,
           salePrice: sale.value,
-          isActive: toBool(row.aktif, true),
+          isActive: ctx.cfg.frozenCatalog ? false : toBool(row.aktif, true),
         });
         index.set(key, id);
         rep.created();
@@ -578,7 +578,7 @@ async function stepSetups(ctx: StepContext): Promise<void> {
             name,
             description: orNull(row.aciklama),
             isInsideCabinet: toBool(row.dolap_ici, true),
-            isActive: toBool(row.aktif, true),
+            isActive: ctx.cfg.frozenCatalog ? false : toBool(row.aktif, true),
           });
           index.set(fold(name), id);
           rep.created();
@@ -595,6 +595,10 @@ async function stepSetupItems(ctx: StepContext): Promise<void> {
   const rep = ctx.report.entity("setupItem");
   const rows = await readAll(ctx, "setup_icerik", { key: ["id"], cols: [req("setup_id"), req("urun_id"), opt("adet")] });
   rep.read(rows.length);
+  if (ctx.cfg.frozenCatalog) {
+    rep.dropped(rows.length, "KATALOG_SABIT");
+    return;
+  }
   const state = await ctx.tx(async (db) => ({
     mapped: await ctx.ids(db).load("setupItem"),
     setups: await ctx.ids(db).load("setup"),
@@ -668,6 +672,10 @@ async function stepRoomTypeSetups(ctx: StepContext, shared: Shared): Promise<voi
   const rep = ctx.report.entity("roomTypeSetup");
   const rows = await readAll(ctx, "oda_tipi_setup", ASSIGN_SPEC);
   rep.read(rows.length);
+  if (ctx.cfg.frozenCatalog) {
+    rep.dropped(rows.length, "KATALOG_SABIT");
+    return;
+  }
   const state = await ctx.tx(async (db) => ({
     mapped: await ctx.ids(db).load("roomTypeSetup"),
     types: await ctx.ids(db).load("roomType"),

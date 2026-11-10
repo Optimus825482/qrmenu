@@ -79,6 +79,15 @@ interface RoomCheckData {
   qrVerified?: boolean;
 }
 
+/** MMD (misafir müsait değil): why the room could not be checked now. Recorded as a DND check with this note. */
+const MMD_REASONS = [
+  "Misafir uyuyor",
+  "Misafir banyoda",
+  "Misafir istemedi",
+  "Misafir daha sonra gelmemizi istedi",
+  "Misafir telefonda",
+] as const;
+
 export default function OdaKontrolPage() {
   const params = useParams<{ roomId: string }>();
   const router = useRouter();
@@ -95,6 +104,7 @@ export default function OdaKontrolPage() {
   // Idempotency keys: each stays the same until its request succeeds, so a retry is not a second record.
   const [saveKey, setSaveKey] = useState(newRequestKey);
   const [dndKey, setDndKey] = useState(newRequestKey);
+  const [mmdOpen, setMmdOpen] = useState(false);
   const quickKeys = useRef<Record<string, string>>({});
 
   const loadRoom = useCallback(async (showSpinner = false) => {
@@ -270,20 +280,29 @@ export default function OdaKontrolPage() {
     }
   };
 
-  const handleMarkDnd = async () => {
+  const handleMarkDnd = async (mmdReason?: string) => {
     if (!data) return;
+    setMmdOpen(false);
     setSubmitting(true);
     try {
       const res = await fetch(`/api/minibar/room/${data.room.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: note.trim() || undefined, clientRequestId: dndKey }),
+        body: JSON.stringify({
+          // MMD (misafir müsait değil) is a DND check whose note carries the reason.
+          note: mmdReason ? `MMD: ${mmdReason}` : note.trim() || undefined,
+          clientRequestId: dndKey,
+        }),
         signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
       setDndKey(newRequestKey());
-      notify.success(json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`);
+      notify.success(
+        mmdReason
+          ? `MMD kaydedildi: ${mmdReason} (${json.count ?? 1}. kontrol).`
+          : (json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`),
+      );
       await loadRoom(false);
     } catch (e) {
       notify.error(errorText(e, "DND hatası"));
@@ -603,8 +622,38 @@ export default function OdaKontrolPage() {
 
       {data && (!data.requireQrForControl || data.qrVerified) ? (
         <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
+          {mmdOpen ? (
+            <div data-testid="mmd-options" className="mx-auto mb-2 flex max-w-4xl flex-wrap gap-2" role="group" aria-label="MMD nedeni">
+              {MMD_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  data-mutates=""
+                  onClick={() => void handleMarkDnd(reason)}
+                  disabled={submitting}
+                  style={{ minHeight: "var(--tap-primary)" }}
+                  className="rounded-xl border border-yellow-500/60 bg-yellow-400/20 px-3.5 py-2.5 text-xs font-semibold text-text hover:bg-yellow-400/35 disabled:opacity-50"
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
+              {!data.emptyRoomWarning && data.guestStatus.kind !== "EMPTY" ? (
+                <button
+                  type="button"
+                  data-testid="mmd-button"
+                  aria-expanded={mmdOpen}
+                  onClick={() => setMmdOpen((v) => !v)}
+                  disabled={submitting || (data.taskItem ? !data.taskItem.dndAllowed : false)}
+                  style={{ minHeight: "var(--tap-primary)" }}
+                  className="inline-flex items-center justify-center rounded-xl border border-yellow-500 bg-yellow-400 px-4 py-3 text-xs font-bold text-black hover:bg-yellow-300 disabled:opacity-40"
+                >
+                  MMD
+                </button>
+              ) : null}
               <button
                 type="button"
                 data-mutates=""

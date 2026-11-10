@@ -18,6 +18,17 @@ describe("hashPassword / verifyPassword", () => {
     expect(await verifyPassword("Yanlis1!", hash)).toEqual({ ok: false, needsRehash: false });
   });
 
+  it("Werkzeug scrypt biçimi (eski minibar sistemi) doğrulanır ve needsRehash true döner", async () => {
+    // Python: hashlib.scrypt(b"Deneme123", salt=b"AbCdEfGh12345678", n=32768, r=8, p=1, dklen=64)
+    const hash =
+      "scrypt:32768:8:1$AbCdEfGh12345678$c36adb2759805417256d89ea500ce8e5f320cc5f27b7064078fb6226b52aa74aa54115d6e46d28dafa6cf02082c3c1ea7025f68275ba7469e59994eb464a6e39";
+    expect(await verifyPassword("Deneme123", hash)).toEqual({ ok: true, needsRehash: true });
+    expect(await verifyPassword("deneme123", hash)).toEqual({ ok: false, needsRehash: false });
+    for (const bad of ["scrypt:32768:8:1$salt$00", "scrypt:1000:8:1$salt$" + "0".repeat(128), "scrypt:4294967296:8:1$salt$" + "0".repeat(128), "scrypt:32768:8$salt$" + "0".repeat(128)]) {
+      expect(await verifyPassword("Deneme123", bad)).toEqual({ ok: false, needsRehash: false });
+    }
+  });
+
   it("bozuk pbkdf2 biçimleri istisna fırlatmadan reddedilir", async () => {
     for (const bad of [
       "pbkdf2:sha256:600000$abc",

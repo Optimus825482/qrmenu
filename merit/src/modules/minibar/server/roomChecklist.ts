@@ -66,7 +66,7 @@ export async function loadRoomChecklist(db: Db, roomId: string): Promise<Checkli
             where: { product: { isActive: true } },
             select: {
               qty: true,
-              product: { select: { id: true, name: true, unit: true, group: { select: { name: true } } } },
+              product: { select: { id: true, name: true, unit: true, sortOrder: true, group: { select: { name: true } } } },
             },
           },
         },
@@ -101,14 +101,15 @@ export async function loadRoomChecklist(db: Db, roomId: string): Promise<Checkli
         copies: e.copies,
         label: inside ? `${e.setupName} – Dolap ${e.copy}/${e.copies}` : e.setupName,
         items: setup.items
+          // The order attendants are used to from the old system (products.sort_order), then by name.
+          .sort((a, b) => a.product.sortOrder - b.product.sortOrder || a.product.name.localeCompare(b.product.name, "tr"))
           .map((i) => ({
             productId: i.product.id,
             name: i.product.name,
             groupName: i.product.group?.name ?? "Genel",
             unit: i.product.unit,
             setupQty: i.qty,
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name, "tr")),
+          })),
       };
     }),
   };

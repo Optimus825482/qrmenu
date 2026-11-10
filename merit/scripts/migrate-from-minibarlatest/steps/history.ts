@@ -165,6 +165,14 @@ async function stepMybar(ctx: StepContext): Promise<void> {
         if (!status.known) ctx.report.warn("MYBAR_DURUM_BILINMIYOR", "Bilinmeyen MyBar durumu BEKLEMEDE yapıldı", `talep ${legacyId}: "${clean(row.durum)}"`);
         if (status.mapped) ctx.report.warn("DURUM_DONUSTURULDU", "Legacy onaylandi/reddedildi durumu TAMAMLANDI/IPTAL'e dönüştürüldü", `talep ${legacyId}`);
         const closeNote = orNull(row.kapatma_aciklamasi);
+        // The old system closed a cancelled request through the "complete" fields and left iptal_* empty; the target
+        // requires cancelled_at on IPTAL and completed_at on TAMAMLANDI (mybar_status_ts_chk).
+        const doneAt = asDate(row.tamamlanma_tarihi);
+        const doneById = optUser(userIdOf, row.tamamlayan_id);
+        const cancelled = status.status === "IPTAL";
+        const cancelledAt = asDate(row.iptal_tarihi) ?? (cancelled ? (doneAt ?? at) : null);
+        const cancelledById = optUser(userIdOf, row.iptal_eden_id) ?? (cancelled ? doneById : null);
+        const completedAt = cancelled ? null : (doneAt ?? (status.status === "TAMAMLANDI" ? at : null));
         const id = IdMap.newId();
         creates.push({
           id,
@@ -176,12 +184,12 @@ async function stepMybar(ctx: StepContext): Promise<void> {
           note: orNull(row.notlar),
           seenById: optUser(userIdOf, row.goren_id),
           seenAt: asDate(row.gorulme_tarihi),
-          completedById: optUser(userIdOf, row.tamamlayan_id),
-          completedAt: asDate(row.tamamlanma_tarihi),
+          completedById: cancelled ? null : doneById,
+          completedAt,
           closeNote,
           closedWithMissing: closeNote !== null,
-          cancelledById: optUser(userIdOf, row.iptal_eden_id),
-          cancelledAt: asDate(row.iptal_tarihi),
+          cancelledById,
+          cancelledAt,
           cancelNote: orNull(row.iptal_aciklamasi),
           idempotencyKey: `legacy-${legacyId}`,
           clientIp: "legacy",

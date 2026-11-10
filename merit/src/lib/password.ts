@@ -1,14 +1,22 @@
-import { pbkdf2, timingSafeEqual } from "node:crypto";
+import { pbkdf2, scrypt, timingSafeEqual, type ScryptOptions } from "node:crypto";
 import { promisify } from "node:util";
 import bcrypt from "bcryptjs";
 
 const pbkdf2Async = promisify(pbkdf2);
+const scryptAsync = promisify<string, string, number, ScryptOptions, Buffer>(scrypt);
 
 const BCRYPT_ROUNDS = 12;
 const PBKDF2_PREFIX = "pbkdf2:sha256:";
 const PBKDF2_KEY_BYTES = 32;
 /** Upper bound for the iteration count read from a stored hash (guards against a hostile row). */
 const PBKDF2_MAX_ITERATIONS = 10_000_000;
+
+const SCRYPT_PREFIX = "scrypt:";
+const SCRYPT_KEY_BYTES = 64;
+/** Cost bounds read from a stored hash (guards against a hostile row); Werkzeug's default is 32768:8:1. */
+const SCRYPT_MAX_N = 1 << 17;
+const SCRYPT_MAX_R = 16;
+const SCRYPT_MAX_P = 4;
 
 export type PasswordCheck = { ok: boolean; needsRehash: boolean };
 
@@ -37,9 +45,27 @@ async function verifyWerkzeug(plain: string, stored: string): Promise<boolean> {
   return timingSafeEqual(actual, expected);
 }
 
+/** Werkzeug format: `scrypt:<N>:<r>:<p>$<salt>$<hex digest>` (64-byte key, salt used as its UTF-8 text). */
+async function verifyWerkzeugScrypt(plain: string, stored: string): Promise<boolean> {
+  const parts = stored.split("$");
+  if (parts.length !== 3) return false;
+  const [method, salt, hex] = parts;
+  const [N, r, p] = method.slice(SCRYPT_PREFIX.length).split(":").map(Number);
+  const isCost = (n: number, max: number) => Number.isInteger(n) && n >= 1 && n <= max;
+  if (!isCost(N, SCRYPT_MAX_N) || N < 2 || (N & (N - 1)) !== 0 || !isCost(r, SCRYPT_MAX_R) || !isCost(p, SCRYPT_MAX_P)) {
+    return false;
+  }
+  if (!salt || hex.length !== SCRYPT_KEY_BYTES * 2 || !/^[0-9a-f]+$/i.test(hex)) return false;
+
+  const expected = Buffer.from(hex, "hex");
+  // Node's default maxmem (32 MiB) is exactly what 32768:8 needs and is rejected; allow twice the requirement.
+  const actual = await scryptAsync(plain, salt, SCRYPT_KEY_BYTES, { N, r, p, maxmem: 256 * N * r });
+  return timingSafeEqual(actual, expected);
+}
+
 /**
  * Checks a password against a stored hash. bcrypt hashes verify as-is; legacy Werkzeug pbkdf2
- * hashes verify too and report `needsRehash` so the caller can upgrade them. Any other (or
+ * and scrypt hashes verify too and report `needsRehash` so the caller can upgrade them. Any other (or
  * malformed) format is a plain mismatch, never an exception.
  */
 export async function verifyPassword(plain: string, stored: string): Promise<PasswordCheck> {
@@ -50,6 +76,10 @@ export async function verifyPassword(plain: string, stored: string): Promise<Pas
     }
     if (stored.startsWith(PBKDF2_PREFIX)) {
       const ok = await verifyWerkzeug(plain, stored);
+      return { ok, needsRehash: ok };
+    }
+    if (stored.startsWith(SCRYPT_PREFIX)) {
+      const ok = await verifyWerkzeugScrypt(plain, stored);
       return { ok, needsRehash: ok };
     }
   } catch {

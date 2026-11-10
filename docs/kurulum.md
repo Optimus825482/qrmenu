@@ -311,7 +311,10 @@ npm run migrate:legacy -- --actor <sistem-yoneticisi>   # 3) gerçek çalıştı
 
 Başlıca bayraklar: `--only definitions,users,history,tasks` / `--skip …` (adım seçimi), `--skip-logs` (QR okutma, denetim
 ve sistem günlüklerini atlar; en büyük tablolar bunlardır), `--report <yol>`, `--batch <n>`, `--notifications-days <n>`
-(varsayılan 30), `--hotel-map 1=DIAMOND,…`. Kuru çalıştırma 250 bin+ satırlık canlı yedekte yaklaşık on dakika sürer.
+(varsayılan 30), `--hotel-map 1=DIAMOND,…`, `--user-roles depo_sorumlusu` (yalnız sayılan eski rollerdeki kullanıcılar
+taşınır; diğerlerinin geçmiş kayıtları aktöre yazılır), `--frozen-catalog` (hedefteki güncel katalog korunur: eski setup
+içerikleri ve oda tipi bağlantıları yazılmaz, yalnız eski sistemde olan ürün ve setuplar pasif gelir). Betik `.env`
+okumaz; `DATABASE_URL` de kabukta verilir. Kuru çalıştırma 250 bin+ satırlık canlı yedekte yaklaşık on dakika sürer.
 
 **Çıkış kodları:** `0` temiz; `1` en az bir adım hatası veya **doğrulama FAIL** (rapordaki `KALDI` satırları);
 `2` yapılandırma hatası (eksik/yanlış ortam değişkeni veya bayrak, hiçbir şey yazılmadı).

@@ -22,6 +22,10 @@ export interface MigrationConfig {
   skipLogs: boolean;
   hotelMap: Record<string, HotelCode>;
   actor: string | null;
+  /** Legacy `kullanicilar.rol` values that become users (lower case); null = every known role. */
+  userRoles: string[] | null;
+  /** The target catalogue is already the current one: legacy setup contents / room-type links are not written, legacy-only products and setups arrive inactive. */
+  frozenCatalog: boolean;
   reportPath: string;
   batch: number;
   notificationsDays: number;
@@ -35,6 +39,7 @@ const VALUE_FLAGS = new Set([
   "--skip",
   "--hotel-map",
   "--actor",
+  "--user-roles",
   "--report",
   "--batch",
   "--notifications-days",
@@ -42,7 +47,7 @@ const VALUE_FLAGS = new Set([
   "--legacy-schema",
   "--logo-dir",
 ]);
-const BOOL_FLAGS = new Set(["--dry-run", "--skip-logs"]);
+const BOOL_FLAGS = new Set(["--dry-run", "--skip-logs", "--frozen-catalog"]);
 
 function parseSteps(flag: string, raw: string): StepName[] {
   const names = raw
@@ -55,6 +60,17 @@ function parseSteps(flag: string, raw: string): StepName[] {
     }
   }
   return STEP_NAMES.filter((s) => names.includes(s));
+}
+
+function parseUserRoles(raw: string): string[] {
+  const roles = raw
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (roles.length === 0 || roles.some((r) => !/^[a-z_]+$/.test(r))) {
+    throw new ConfigError("--user-roles: eski rol adları bekleniyor (örnek: depo_sorumlusu)");
+  }
+  return roles;
 }
 
 function parseInt0(flag: string, raw: string, min: number, max: number): number {
@@ -117,8 +133,10 @@ export function parseConfig(argv: string[], env: Record<string, string | undefin
     only: values.has("--only") ? parseSteps("--only", values.get("--only")!) : null,
     skip: values.has("--skip") ? parseSteps("--skip", values.get("--skip")!) : [],
     skipLogs: flags.has("--skip-logs"),
+    frozenCatalog: flags.has("--frozen-catalog"),
     hotelMap,
     actor: values.get("--actor") ?? null,
+    userRoles: values.has("--user-roles") ? parseUserRoles(values.get("--user-roles")!) : null,
     reportPath: values.get("--report") ?? "./migration-report.md",
     batch: values.has("--batch") ? parseInt0("--batch", values.get("--batch")!, 1, 5000) : 500,
     notificationsDays: values.has("--notifications-days")

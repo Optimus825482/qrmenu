@@ -70,14 +70,17 @@ async function stepUsers(ctx: StepContext): Promise<void> {
 
   // Hash families (counts only) and the users who must reset their password (names only).
   const kinds = { pbkdf2: 0, bcrypt: 0, scrypt: 0, diger: 0 };
+  const inScope = (row: Row): boolean => !ctx.cfg.userRoles || ctx.cfg.userRoles.includes(clean(row.rol).toLowerCase());
   for (const row of rows) {
-    if (roleCodeFor(clean(row.rol)) === null) continue;
+    if (roleCodeFor(clean(row.rol)) === null || !inScope(row)) continue;
     const kind = passwordKindFor(clean(row.sifre_hash));
     kinds[kind] += 1;
-    if (kind === "scrypt" || kind === "diger") {
+    // A well-formed Werkzeug scrypt hash verifies at login (src/lib/password.ts); only a malformed one needs a reset.
+    const hash = clean(row.sifre_hash);
+    if (kind === "diger" || (kind === "scrypt" && !/^scrypt:\d+:\d+:\d+\$[^$]+\$[0-9a-f]{128}$/i.test(hash))) {
       ctx.report.warn(
         "SIFRE_SIFIRLANMALI",
-        "Şifre biçimi bu uygulamada doğrulanamıyor (yalnız pbkdf2:sha256 ve bcrypt çalışır); kullanıcının şifresi sıfırlanmalı",
+        "Şifre biçimi bu uygulamada doğrulanamıyor (yalnız pbkdf2:sha256, Werkzeug scrypt ve bcrypt çalışır); kullanıcının şifresi sıfırlanmalı",
         clean(row.kullanici_adi),
       );
     }
@@ -105,6 +108,11 @@ async function stepUsers(ctx: StepContext): Promise<void> {
       for (const row of part) {
         const legacyId = idOf(row.id);
         const rawRole = clean(row.rol);
+        if (!inScope(row)) {
+          // --user-roles: this role is set up by hand in the new system; the user's history rows go to the actor.
+          rep.dropped(1, "ROL_KAPSAM_DISI");
+          continue;
+        }
         const roleCode = roleCodeFor(rawRole);
         const roleId = roleCode ? roles.get(roleCode) : undefined;
         if (!roleCode || !roleId) {
