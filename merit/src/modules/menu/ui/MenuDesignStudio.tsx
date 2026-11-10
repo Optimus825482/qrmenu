@@ -39,7 +39,7 @@ import {
 import { blockingFindings, evaluateQuality, type QualityItem } from "../quality";
 import type { GuestCallOption } from "../callOptions";
 import { listMenuTreeAction } from "../server/actions/menuTree";
-import { saveOutletMenuDesignAction } from "../server/actions/themes";
+import { saveOutletMenuDesignAction, uploadOutletLogoAction } from "../server/actions/themes";
 import type { MenuTreeNode } from "../server/menuTree";
 import type { AssignTarget, ThemeRow } from "../server/themes";
 import { CallOptionsPanel } from "./CallOptionsPanel";
@@ -276,6 +276,22 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
   const findings = evaluateQuality({ design, theme: selectedTheme, items: qualityItems(nodes) });
   const blocked = blockingFindings(design, selectedTheme);
   const photos = photoChoices(nodes);
+
+  const uploadLogo = async (file: File | undefined) => {
+    if (!file || !activeOutletId) return;
+    const form = new FormData();
+    form.set("outletId", activeOutletId);
+    form.set("file", file);
+    setBusy(true);
+    const result = await uploadOutletLogoAction(form);
+    setBusy(false);
+    if (!result.ok) {
+      setNotice(result.error.message);
+      return;
+    }
+    patchOptions({ logoUrl: result.data.logoUrl });
+    setNotice("Logo yüklendi. Canlı menüde görünmesi için tasarımı kaydedin.");
+  };
 
   const publish = async () => {
     if (!outlet || !themeId || blocked.length > 0) return;
@@ -731,6 +747,30 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 <p>Önce bir ürüne fotoğraf ekleyin.</p>
               )
             ) : null}
+            <div className="xp-design-field" data-testid="design-logo">
+              <label htmlFor="design-logo-file">Outlet logosu (menünün başında görünür)</label>
+              {design.options.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={design.options.logoUrl} alt="Outlet logosu" style={{ maxHeight: 64, maxWidth: 160, objectFit: "contain" }} />
+              ) : null}
+              <input
+                id="design-logo-file"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={busy}
+                onChange={(event) => {
+                  void uploadLogo(event.target.files?.[0]);
+                  event.target.value = "";
+                }}
+              />
+              {design.options.logoUrl ? (
+                <button type="button" className="xp-button" onClick={() => patchOptions({ logoUrl: "" })}>
+                  Logoyu kaldır
+                </button>
+              ) : (
+                <small>PNG, JPEG veya WebP; en fazla 2 MB. Şeffaf zeminli PNG en iyi sonucu verir.</small>
+              )}
+            </div>
             <label className="xp-design-field">
               Öne çıkan başlığı
               <input

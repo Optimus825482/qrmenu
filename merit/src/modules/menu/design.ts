@@ -170,6 +170,8 @@ export type DesignOptions = {
   hero: HeroStyle;
   /** Image of one of the outlet's own dishes; only used when hero is PHOTO. */
   heroImageUrl: string;
+  /** Outlet logo uploaded in the studio (`/uploads/menu-logo/<outletId>/…`); printed at the top of the menu. */
+  logoUrl: string;
   /** Large photos only on up to three chef's picks; every other dish is a text row. */
   curatedPhotos: boolean;
   showSearch: boolean;
@@ -194,6 +196,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   density: "BALANCED",
   hero: "TITLE",
   heroImageUrl: "",
+  logoUrl: "",
   curatedPhotos: false,
   showSearch: true,
   showFilters: false,
@@ -212,6 +215,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "density"
   | "hero"
   | "heroImageUrl"
+  | "logoUrl"
   | "curatedPhotos"
   | "showSearch"
   | "showFilters"
@@ -389,6 +393,17 @@ function heroUrl(value: unknown): string {
   return (url.startsWith(UPLOAD_PREFIX) || url.startsWith(MERIT_MENU_PREFIX)) && url.length <= MAX_HERO_URL ? url : "";
 }
 
+/** Folder of an outlet's uploaded menu logos; a saved logo URL must live under it. */
+export function outletLogoPrefix(outletId: string): string {
+  return `${UPLOAD_PREFIX}menu-logo/${outletId}/`;
+}
+
+function logoUrl(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const url = value.trim();
+  return /^\/uploads\/menu-logo\/[A-Za-z0-9_-]+\/[a-f0-9]+\.webp$/.test(url) ? url : "";
+}
+
 /** Hero colours: only `#rrggbb` (or empty = theme colour); anything else keeps the preset value. */
 function heroColor(value: unknown, fallback: string | undefined): string | undefined {
   if (typeof value !== "string") return fallback;
@@ -426,6 +441,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     density: raw.density && DENSITY_IDS.has(raw.density) ? raw.density : NEUTRAL_NEW_OPTIONS.density,
     hero: raw.hero && HERO_IDS.has(raw.hero) ? raw.hero : NEUTRAL_NEW_OPTIONS.hero,
     heroImageUrl: heroUrl(raw.heroImageUrl),
+    logoUrl: logoUrl(raw.logoUrl),
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,

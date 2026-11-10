@@ -3166,3 +3166,33 @@ body {
     transform: none;
   }
 }
+
+/* Outlet logosu: karşılama bloğunun başında, hizaya uyar; karşılama kapalıysa tek başına ortalanır. */
+.g-hero-logo {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  max-width: min(60%, 220px);
+  max-height: 96px;
+  margin: 0 0 0.6rem;
+  object-fit: contain;
+}
+.g-design-hero[style*="center"] .g-hero-logo {
+  margin-inline: auto;
+}
+.g-design-hero[style*="right"] .g-hero-logo {
+  margin-inline-start: auto;
+}
+.g-logo-only {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1rem 0.25rem;
+}
+.g-logo-only .g-hero-logo {
+  margin: 0;
+}
+.g-design-hero[data-photo] .g-hero-logo {
+  z-index: 2;
+}

@@ -383,7 +383,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
 
   const blocks: Record<string, ReactNode> = {
     hero:
-      options.hero === "NONE" && !heroCallButton ? null : (
+      options.hero === "NONE" && !heroCallButton && !options.logoUrl ? null : (
         <div key="hero-wrap" className="g-hero-block-wrap">
           {options.hero !== "NONE" ? (
             <section
@@ -409,6 +409,10 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   fetchPriority="high"
                 />
               ) : null}
+              {options.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="g-hero-logo" src={options.logoUrl} alt="" loading="eager" decoding="async" />
+              ) : null}
               <span style={{ ...(options.heroTextColor ? { color: options.heroTextColor } : {}) }}>
                 {state.hotelName}
               </span>
@@ -427,6 +431,11 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 {state.outletName}
               </h2>
             </section>
+          ) : options.logoUrl ? (
+            <div className="g-logo-only" key="logo">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="g-hero-logo" src={options.logoUrl} alt={state.outletName} loading="eager" decoding="async" />
+            </div>
           ) : null}
           {heroCallButton}
         </div>

@@ -3,7 +3,8 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
-import { type Result, safeAction } from "@/lib/result";
+import { DomainError, type Result, safeAction } from "@/lib/result";
+import { uploadOutletLogo } from "../outletLogo";
 import * as themes from "../themes";
 
 const id = z.string().min(1);
@@ -70,4 +71,20 @@ export async function saveOutletMenuDesignAction(raw: unknown): Promise<Result<n
 
 export async function themeAssignTargetsAction(): Promise<Result<themes.AssignTarget[]>> {
   return safeAction(z.undefined(), async () => themes.assignTargets(await requireUser()))(undefined);
+}
+
+/** Uploads an outlet logo for the menu; the returned URL goes into the design draft and is saved with it. */
+export async function uploadOutletLogoAction(formData: FormData): Promise<Result<{ logoUrl: string }>> {
+  return safeAction(
+    z.object({ outletId: id, file: z.instanceof(File, { message: "Logo seçin" }) }),
+    async (i) => {
+      if (i.file.size === 0) throw new DomainError("VALIDATION", "Logo seçin");
+      return uploadOutletLogo(await requireUser(), i.outletId, {
+        name: i.file.name,
+        type: i.file.type,
+        size: i.file.size,
+        bytes: Buffer.from(await i.file.arrayBuffer()),
+      });
+    },
+  )({ outletId: formData.get("outletId"), file: formData.get("file") });
 }

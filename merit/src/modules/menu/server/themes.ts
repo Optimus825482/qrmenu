@@ -20,6 +20,7 @@ import {
   DESIGN_TEMPLATES,
   designFromStored,
   HERO_STYLES,
+  outletLogoPrefix,
   TYPOGRAPHIES,
   type OutletDesign,
 } from "../design";
@@ -245,6 +246,7 @@ const designSchema = z.object({
     density: z.enum(DENSITIES.map((item) => item.id)),
     hero: z.enum(HERO_STYLES.map((item) => item.id)),
     heroImageUrl: z.string().max(300),
+    logoUrl: z.string().max(300).optional().default(""),
     curatedPhotos: z.boolean(),
     showSearch: z.boolean(),
     showFilters: z.boolean(),
@@ -286,6 +288,16 @@ export async function saveOutletDesign(
         })))
     ) {
       throw new DomainError("VALIDATION", "Karşılama fotoğrafı bu outletin ürünlerinden biri olmalı");
+    }
+    if (
+      design.options.logoUrl !== "" &&
+      !/^[a-f0-9]+\.webp$/.test(
+        design.options.logoUrl.startsWith(outletLogoPrefix(outletId))
+          ? design.options.logoUrl.slice(outletLogoPrefix(outletId).length)
+          : "",
+      )
+    ) {
+      throw new DomainError("VALIDATION", "Logo bu outlet için yüklenmiş bir görsel olmalı");
     }
     const before = await tx.outlet.findUnique({
       where: { id: outletId },
