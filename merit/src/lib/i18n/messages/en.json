@@ -211,6 +211,8 @@
       "ODA_BOS": "This room does not appear to be occupied, so MyBar requests cannot be taken."
     },
     "chooser": {
+      "heading": "ROOM SERVICES",
+      "subtitle": "Welcome to {hotel} room services. Please choose the service you would like to use.",
       "title": "What would you like to do?",
       "mybar": "MyBar request",
       "mybarDesc": "Choose items for your minibar"

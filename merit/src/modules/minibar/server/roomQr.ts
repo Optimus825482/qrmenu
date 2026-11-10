@@ -1,5 +1,6 @@
 import { qrPrintCard, qrPrintPage, type QrPrintTemplate, type QrPrintTheme } from "@/lib/qrPrintPage";
 import { renderQrCardsPdf } from "@/lib/qrPdf";
+import { hasRoomTemplate, renderRoomTemplatePdf, type RoomTemplateLang } from "@/lib/qrTemplatePdf";
 import { zipSync } from "fflate";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
@@ -411,6 +412,43 @@ export async function roomQrPdf(
   return {
     filename: `Oda_QR_Kodlari_${fileSafe(hotel.code)}_${stamp}.pdf`,
     body: await renderQrCardsPdf(`${hotel.name} - Oda QR Kartları`, cards),
+  };
+}
+
+/**
+ * Otelin kendi "Oda Servisi" baski sablonu (11 x 13 cm) uzerinde oda QR kartlari: oda basina bir sayfa,
+ * QR metnin altinda, oda numarasi alt cerceve boslugunda. Token uretmez/yenilemez; en cok 500 oda.
+ */
+export async function roomQrTemplatePdf(
+  ctx: Ctx,
+  hotelId: string,
+  opts: { floorId?: string; roomIds?: string[]; lang?: RoomTemplateLang } = {},
+  now: Date = new Date(),
+): Promise<{ filename: string; body: Buffer }> {
+  await authorize(ctx, hotelId, "V");
+  if (opts.roomIds && opts.roomIds.length > ROOM_QR_PRINT_MAX) {
+    throw new DomainError("VALIDATION", "En fazla 500 kart yazdırılabilir");
+  }
+  const lang = opts.lang ?? "tr";
+  const hotel = await prisma.hotel.findUnique({ where: { id: hotelId }, select: { code: true, name: true } });
+  if (!hotel) throw new DomainError("NOT_FOUND", "Otel bulunamadı");
+  if (!hasRoomTemplate(hotel.code)) throw new DomainError("NOT_FOUND", "Bu otel için baskı şablonu tanımlı değil");
+  const rooms = await qrRooms(hotelId, { floorId: opts.floorId, roomIds: opts.roomIds });
+  if (rooms.length === 0) throw new DomainError("NOT_FOUND", "QR kodu olan oda bulunamadı");
+  if (rooms.length > ROOM_QR_PRINT_MAX) {
+    throw new DomainError("VALIDATION", "En fazla 500 kart yazdırılabilir; kata göre süzün");
+  }
+  const cards = [];
+  for (const r of rooms) cards.push({ label: r.number, url: await qrUrl(r.qrToken as string) });
+  const stamp = businessDate(now).replace(/-/g, "");
+  return {
+    filename: `Oda_QR_Sablon_${fileSafe(hotel.code)}_${lang.toUpperCase()}_${stamp}.pdf`,
+    body: await renderRoomTemplatePdf({
+      hotelCode: hotel.code,
+      lang,
+      title: `${hotel.name} - Oda QR Kartları (${lang.toUpperCase()})`,
+      cards,
+    }),
   };
 }
 

@@ -393,6 +393,28 @@ describe("roomQrPrintHtml", () => {
   });
 });
 
+describe("roomQrTemplatePdf", () => {
+  it("otelin baski sablonunda oda basina bir sayfa; secim ve dil; token uretmez; yetkisiz reddedilir", async () => {
+    const w = await world();
+    const otm = await staff("R-OTM");
+    await svc.generateRoomQr(otm.ctx, w.hid, w.r101.id, {});
+    const before = await tokenOf(w.r101.id);
+    // pdf-lib sayfa nesnelerini sikistirilmis akislara yazar; sayfa sayisi ancak ayristirilarak okunur.
+    const { PDFDocument } = await import("pdf-lib");
+    const pages = async (pdf: Buffer) => (await PDFDocument.load(pdf)).getPageCount();
+    const all = await svc.roomQrTemplatePdf(otm.ctx, w.hid, {});
+    expect(all.filename).toMatch(/^Oda_QR_Sablon_ROYAL_TR_\d{8}\.pdf$/);
+    expect(all.body.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    expect(await pages(all.body)).toBe(2);
+    const only = await svc.roomQrTemplatePdf(otm.ctx, w.hid, { roomIds: [w.r103.id], lang: "en" });
+    expect(only.filename).toContain("_EN_");
+    expect(await pages(only.body)).toBe(1);
+    expect(await tokenOf(w.r101.id)).toBe(before);
+    const kat = await staff("R-KAT");
+    await expect(svc.roomQrTemplatePdf(kat.ctx, w.hid, {})).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
 describe("route'lar ve uygulama kaydi", () => {
   it("indirme route'u oturumsuz 401; QR'siz 404 ve token uretmez; gecerli dosya", async () => {
     const w = await world();

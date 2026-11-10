@@ -189,6 +189,13 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
   const cardPrintQuery = cardPrintParams.toString();
   const cardPrintUrl = `/api/qr/hotel/${hotelId}/room-print${cardPrintQuery ? `?${cardPrintQuery}` : ""}`;
 
+  // Same scope as the card sheet, on the hotel's own print artwork.
+  const templatePdfUrl = (lang: "tr" | "en") => {
+    const params = new URLSearchParams(cardPrintParams);
+    params.set("lang", lang);
+    return `/api/qr/hotel/${hotelId}/room-template-pdf?${params.toString()}`;
+  };
+
   const print = () =>
     run(async () => {
       if (!hotelId) return;
@@ -329,6 +336,19 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
             >
               PDF indir
             </a>
+            {(["tr", "en"] as const).map((lang) => (
+              <a
+                key={lang}
+                className="xp-button px-3 py-1 text-xs font-bold"
+                href={templatePdfUrl(lang)}
+                download
+                title={`Otelin 11 x 13 cm oda kartı şablonunda (${lang === "tr" ? "Türkçe" : "İngilizce"}) baskıya hazır PDF: oda başına bir sayfa, QR'ın altında oda numarası. Seçim varsa yalnız seçili odalar, yoksa süzülen kat.`}
+                data-testid={`room-qr-template-${lang}`}
+              >
+                Şablon PDF {lang.toUpperCase()}
+                {selected.size > 0 ? ` (${selected.size})` : ""}
+              </a>
+            ))}
             </>
           ) : null}
         </div>

@@ -211,6 +211,8 @@
       "ODA_BOS": "Dieses Zimmer scheint nicht belegt zu sein, MyBar-Anfragen sind nicht möglich."
     },
     "chooser": {
+      "heading": "ZIMMERSERVICE",
+      "subtitle": "Willkommen beim Zimmerservice im {hotel}. Bitte wählen Sie den gewünschten Service.",
       "title": "Was möchten Sie tun?",
       "mybar": "MyBar-Anfrage",
       "mybarDesc": "Artikel für Ihre Minibar wählen"

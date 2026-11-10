@@ -106,6 +106,7 @@ export default async function GuestLayout({
           logoUrl={room.hotel.logoUrl}
           roomNumber={room.roomNumber}
           info={info}
+          chooser={room.mybarOpen && room.roomServiceOpen}
         >
           {children}
         </RoomFrame>

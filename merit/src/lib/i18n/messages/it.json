@@ -211,6 +211,8 @@
       "ODA_BOS": "Questa camera non risulta occupata; le richieste MyBar non sono possibili."
     },
     "chooser": {
+      "heading": "SERVIZI IN CAMERA",
+      "subtitle": "Benvenuto nei servizi in camera di {hotel}. Scelga il servizio desiderato.",
       "title": "Cosa desidera fare?",
       "mybar": "Richiesta MyBar",
       "mybarDesc": "Scelga i prodotti per il minibar"

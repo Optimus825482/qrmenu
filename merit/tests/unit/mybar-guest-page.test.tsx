@@ -10,7 +10,11 @@ import type { RoomCatalog } from "@/modules/mybar/server/catalog";
 import { MybarForm } from "@/modules/mybar/ui/guest/MybarForm";
 import { RoomFrame } from "@/modules/mybar/ui/guest/RoomFrame";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }));
+const layoutSegment = vi.hoisted(() => ({ current: null as string | null }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: () => {} }),
+  useSelectedLayoutSegment: () => layoutSegment.current,
+}));
 
 class FakeEventSource {
   static instances: FakeEventSource[] = [];
@@ -243,15 +247,38 @@ describe("MybarForm", () => {
 });
 
 describe("RoomFrame", () => {
-  const frame = (locale: Locale, info = "") =>
+  const frame = (locale: Locale, info = "", chooser = false) =>
     render(
       wrap(
-        <RoomFrame token="tok" locale={locale} hotelName="Merit Royal" logoUrl={null} roomNumber="101" info={info}>
+        <RoomFrame token="tok" locale={locale} hotelName="Merit Royal" logoUrl={null} roomNumber="101" info={info} chooser={chooser}>
           <p>body</p>
         </RoomFrame>,
         locale,
       ),
     );
+
+  it("seçim ekranında başlık tarafsızdır; hizmet sayfasında ve tek hizmette MyBar başlığı kalır", () => {
+    layoutSegment.current = null;
+    const home = frame("en", "", true);
+    expect(home.container.querySelector(".mb-title")?.textContent).toBe("ROOM SERVICES");
+    expect(home.container.querySelector(".mb-info")?.textContent).toContain("Welcome to Merit Royal room services");
+    home.unmount();
+    const single = frame("en", "", false);
+    expect(single.container.querySelector(".mb-title")?.textContent).toBe("MYBAR");
+    single.unmount();
+    layoutSegment.current = "mybar";
+    const service = frame("en", "", true);
+    expect(service.container.querySelector(".mb-title")?.textContent).toBe("MYBAR");
+    service.unmount();
+    layoutSegment.current = "oda-servisi";
+    const roomService = frame("en", "", true);
+    expect(roomService.container.querySelector(".mb-title")?.textContent).toBe("ROOM SERVICE MENU");
+    expect(roomService.container.querySelector(".mb-info")).toBeNull();
+    roomService.unmount();
+    layoutSegment.current = null;
+    // Odanın kendi mesajı her ekranda varsayılan cümlenin yerini alır.
+    expect(frame("en", "Hoş geldiniz Bay Demir", true).container.querySelector(".mb-info")?.textContent).toBe("Hoş geldiniz Bay Demir");
+  });
 
   it("ar: dir=rtl, lang=ar, Arapça başlık/oda rozeti", () => {
     const { container } = frame("ar");

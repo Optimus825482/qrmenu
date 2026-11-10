@@ -211,6 +211,8 @@
       "ODA_BOS": "Bu oda şu an dolu görünmüyor, MyBar talebi alınamıyor."
     },
     "chooser": {
+      "heading": "ODA HİZMETLERİ",
+      "subtitle": "{hotel} oda hizmetlerine hoş geldiniz. Lütfen yararlanmak istediğiniz hizmeti seçiniz.",
       "title": "Ne yapmak istersiniz?",
       "mybar": "MyBar talebi",
       "mybarDesc": "Minibarınız için ürün seçin"
