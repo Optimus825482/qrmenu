@@ -27,6 +27,28 @@ services:
       # Yalnız ilk kurulumda bir kez true yapın (20 outlet + menü); sonra false. Mevcut menüler hiçbir zaman silinmez.
       SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-false}
       MERIT_MENUS_FORCE_RESET: ${MERIT_MENUS_FORCE_RESET:-false}
+      # --- İsteğe bağlı: boş bırakılan değer uygulamada "tanımsız" sayılır. Coolify yalnız burada anılan
+      # değişkenleri konteynere verir; bu yüzden hepsi açıkça listelenir.
+      # SMTP parolası gibi veritabanında mühürlü saklanan sırların anahtarı (>= 32). Boşsa SESSION_SECRET kullanılır;
+      # sonradan değiştirilirse mühürlü değerler açılamaz, bu yüzden ilk kurulumda karar verin.
+      SETTINGS_SECRET_KEY: ${SETTINGS_SECRET_KEY:-}
+      # Web Push (MyBar / personel bildirimleri): iki anahtar birlikte. Üretim: npx web-push generate-vapid-keys
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+      PUSH_ENDPOINT_ALLOWLIST: ${PUSH_ENDPOINT_ALLOWLIST:-}
+      # Çeviri: MyBar metni (none | gtx) ve menü çevirisi sağlayıcıları.
+      TRANSLATE_PROVIDER: ${TRANSLATE_PROVIDER:-}
+      DEEPL_AUTH_KEY: ${DEEPL_AUTH_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      # SMTP yedek kaynağı; asıl ayar Denetim Masası → Sistem ekranındadır.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      DB_POOL_MAX: ${DB_POOL_MAX:-}
+      ENV_LABEL: ${ENV_LABEL:-}
     depends_on:
       postgres:
         condition: service_healthy

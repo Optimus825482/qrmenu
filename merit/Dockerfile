@@ -67,6 +67,8 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 COPY --from=builder /app/public ./public
+# Runtime-read files: PDF fonts and the room QR print artwork (read via process.cwd()/assets).
+COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/.next ./.next

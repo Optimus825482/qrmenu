@@ -27,4 +27,28 @@ describe("envSchema", () => {
     expect(envSchema.safeParse({ ...base, RUN_SEED: "false" }).success).toBe(true);
     expect(envSchema.safeParse(base).success).toBe(true);
   });
+
+  it("boş bırakılan isteğe bağlı değişken tanımsız sayılır (compose `${VAR:-}` boş dize geçirir)", () => {
+    const blanks = {
+      VAPID_PUBLIC_KEY: "",
+      VAPID_PRIVATE_KEY: "",
+      VAPID_SUBJECT: "",
+      PUSH_ENDPOINT_ALLOWLIST: "",
+      SETTINGS_SECRET_KEY: "  ",
+      ENV_LABEL: "",
+      DB_POOL_MAX: "",
+      TRANSLATE_PROVIDER: "",
+      TRUSTED_PROXY_HOPS: "",
+    };
+    const result = envSchema.safeParse({ ...base, ...blanks });
+    expect(result.error?.issues).toBeUndefined();
+    expect(result.data).toMatchObject({ DB_POOL_MAX: 20, TRANSLATE_PROVIDER: "none", TRUSTED_PROXY_HOPS: 1 });
+    expect(result.data?.VAPID_PUBLIC_KEY).toBeUndefined();
+    expect(result.data?.SETTINGS_SECRET_KEY).toBeUndefined();
+  });
+
+  it("boş zorunlu değişken yine reddedilir", () => {
+    expect(envSchema.safeParse({ ...base, SESSION_SECRET: "" }).success).toBe(false);
+    expect(envSchema.safeParse({ ...base, DATABASE_URL: "" }).success).toBe(false);
+  });
 });

@@ -4,7 +4,18 @@ import { z } from "zod";
  * Secrets have NO defaults: a missing value must stop the process at startup.
  * `APP_BASE_URL` falls back to localhost only outside production (dev/test).
  */
-export const envSchema = z.object({
+/**
+ * A blank value means "not set". docker-compose passes optional variables as `${VAR:-}`, i.e. an empty
+ * string, which would otherwise fail `.min(1)` / `.regex()` on optional keys and skip `.default()`.
+ */
+function dropBlank(input: unknown): unknown {
+  if (typeof input !== "object" || input === null) return input;
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => typeof value !== "string" || value.trim() !== ""),
+  );
+}
+
+export const envSchema = z.preprocess(dropBlank, z.object({
   VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   VAPID_PRIVATE_KEY: z.string().min(1).optional(),
   VAPID_SUBJECT: z.string().regex(/^(mailto:|https:\/\/)/).optional(),
@@ -35,7 +46,7 @@ export const envSchema = z.object({
   // Same minimum as prisma/seed.ts: an entrypoint seed without the password must stop at startup.
   (value) => value.RUN_SEED !== "true" || (value.SEED_ADMIN_PASSWORD ?? "").length >= 10,
   { message: "RUN_SEED=true iken SEED_ADMIN_PASSWORD en az 10 karakter olarak tanımlanmalı", path: ["SEED_ADMIN_PASSWORD"] },
-);
+));
 
 export type Env = z.infer<typeof envSchema>;
 
