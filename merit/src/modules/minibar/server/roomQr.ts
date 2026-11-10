@@ -1,3 +1,4 @@
+import { qrPrintCard, qrPrintPage, type QrPrintTemplate, type QrPrintTheme } from "@/lib/qrPrintPage";
 import { renderQrCardsPdf } from "@/lib/qrPdf";
 import { zipSync } from "fflate";
 import { z } from "zod";
@@ -443,4 +444,65 @@ export async function roomQrPrintSheet(
     });
   }
   return { hotel: { name: hotel.name, logoUrl: hotel.logoUrl }, cards };
+}
+
+/** Yazdirilabilir oda QR kart sayfasi (masa QR baskisiyla ayni sablon ve temalar). Token uretmez; en cok 500 kart. */
+export async function roomQrPrintHtml(
+  ctx: Ctx,
+  hotelId: string,
+  opts: { floorId?: string; roomIds?: string[]; template?: QrPrintTemplate; theme?: QrPrintTheme } = {},
+): Promise<string> {
+  await authorize(ctx, hotelId, "V");
+  if (opts.roomIds && opts.roomIds.length > ROOM_QR_PRINT_MAX) {
+    throw new DomainError("VALIDATION", "En fazla 500 kart yazdırılabilir");
+  }
+  const template = opts.template ?? "stand";
+  const theme = opts.theme ?? "royal";
+  const [hotel, floors] = await Promise.all([
+    prisma.hotel.findUnique({ where: { id: hotelId }, select: { name: true } }),
+    prisma.floor.findMany({ where: { hotelId }, select: { id: true, name: true, number: true }, orderBy: { number: "asc" } }),
+  ]);
+  if (!hotel) throw new DomainError("NOT_FOUND", "Otel bulunamadı");
+  const rooms = await qrRooms(hotelId, { floorId: opts.floorId, roomIds: opts.roomIds });
+  if (rooms.length > ROOM_QR_PRINT_MAX) {
+    throw new DomainError("VALIDATION", "En fazla 500 kart yazdırılabilir; kata göre süzün");
+  }
+  const cards: string[] = [];
+  for (const r of rooms) {
+    cards.push(
+      qrPrintCard(template, theme, {
+        hotel: hotel.name,
+        title: "MyBar & Oda Servisi",
+        pill: r.floor.name,
+        caption: "ODA &bull; ROOM",
+        label: r.number,
+        svg: await renderQrSvg(await qrUrl(r.qrToken as string)),
+        ctaTr: "MyBar ve oda servisi için kameranızla okutunuz",
+        ctaEn: "Scan with your camera for MyBar &amp; room service",
+        ctaShortTr: "Kameranızla okutunuz",
+        ctaShortEn: "Scan with your camera",
+        ctaBadge: "Okutunuz",
+      }),
+    );
+  }
+  return qrPrintPage({
+    title: `${hotel.name} - Oda QR Kartları`,
+    barTitle: "Oda QR Kartları",
+    barName: hotel.name,
+    count: `${rooms.length} oda`,
+    template,
+    theme,
+    cards,
+    // Secili odalar yazdirilirken kat suzgeci anlamsizdir.
+    filter: opts.roomIds
+      ? undefined
+      : {
+          label: "Kat",
+          param: "floorId",
+          all: "Tüm Katlar",
+          value: opts.floorId,
+          options: floors.map((f) => ({ id: f.id, label: f.name })),
+        },
+    empty: "QR kodu üretilmiş aktif oda bulunamadı.",
+  });
 }

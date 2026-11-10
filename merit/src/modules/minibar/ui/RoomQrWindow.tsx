@@ -182,6 +182,13 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
       }
     });
 
+  // Card sheet in a new tab (same templates as the table QR print); the selection wins over the floor filter.
+  const cardPrintParams = new URLSearchParams();
+  if (selected.size > 0) cardPrintParams.set("ids", [...selected].join(","));
+  else if (floorId) cardPrintParams.set("floorId", floorId);
+  const cardPrintQuery = cardPrintParams.toString();
+  const cardPrintUrl = `/api/qr/hotel/${hotelId}/room-print${cardPrintQuery ? `?${cardPrintQuery}` : ""}`;
+
   const print = () =>
     run(async () => {
       if (!hotelId) return;
@@ -301,6 +308,16 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
           </button>
           {hotelId ? (
             <>
+            <a
+              className="xp-button px-3 py-1 text-xs font-bold"
+              href={cardPrintUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Masa QR baskısındaki stand / kart / etiket şablonlarıyla önizle ve yazdır"
+              data-testid="room-qr-card-print"
+            >
+              Kart Yazdır{selected.size > 0 ? ` (${selected.size})` : ""}
+            </a>
             <a className="xp-button px-3 py-1 text-xs font-bold" href={zipUrl} download>
               ZIP indir
             </a>

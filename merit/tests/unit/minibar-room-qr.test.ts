@@ -374,6 +374,25 @@ describe("roomQrPrintSheet", () => {
   });
 });
 
+describe("roomQrPrintHtml", () => {
+  it("masa baskisiyla ayni kart sayfasi: QR'li odalar, sablon/tema ve kat suzgeci; secimde suzgec yok", async () => {
+    const w = await world();
+    const otm = await staff("R-OTM");
+    await svc.generateRoomQr(otm.ctx, w.hid, w.r101.id, {});
+    const html = await svc.roomQrPrintHtml(otm.ctx, w.hid, { template: "compact", theme: "dark" });
+    expect(html).toContain("Oda QR Kartları");
+    expect(html.match(/class="card" data-template="compact" data-theme="dark"/g)).toHaveLength(2);
+    expect(html).toContain('<span class="label">101</span>');
+    expect(html).toContain("updateParam('floorId'");
+    expect(html).not.toContain("Masa QR");
+    const only = await svc.roomQrPrintHtml(otm.ctx, w.hid, { roomIds: [w.r103.id] });
+    expect(only.match(/class="card" data-template="stand" data-theme="royal"/g)).toHaveLength(1);
+    expect(only).not.toContain("updateParam('floorId'");
+    const kat = await staff("R-KAT");
+    await expect(svc.roomQrPrintHtml(kat.ctx, w.hid, {})).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
 describe("route'lar ve uygulama kaydi", () => {
   it("indirme route'u oturumsuz 401; QR'siz 404 ve token uretmez; gecerli dosya", async () => {
     const w = await world();
