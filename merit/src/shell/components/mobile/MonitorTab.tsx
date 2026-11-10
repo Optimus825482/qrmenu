@@ -1,24 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
-import { affectsKpis, useCommandCenterKpis } from "../../useCommandCenterKpis";
+import type { CommandCenterKpis } from "@/modules/core/server/commandCenter";
 import { KpiChips } from "@/modules/reporting/ui/KpiChips";
 import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
 import type { SubscribeEvents } from "./events";
 
+type Props = {
+  subscribe: SubscribeEvents;
+  /** Komuta Merkezi numbers, loaded once by the shell (the home-screen widget shows them too). */
+  kpis: CommandCenterKpis | null;
+  error: string | null;
+};
+
 /** İzleme: the Komuta Merkezi numbers as cards (same data action as the desktop window). */
-export function MonitorTab({ subscribe }: { subscribe: SubscribeEvents }) {
-  const { kpis, error, scheduleRefresh } = useCommandCenterKpis();
-
+export function MonitorTab({ subscribe, kpis, error }: Props) {
   const radarKpi = useRadarKpi({ scope: "total" }, subscribe);
-
-  useEffect(
-    () =>
-      subscribe((e) => {
-        if (affectsKpis(e.type)) scheduleRefresh();
-      }),
-    [subscribe, scheduleRefresh],
-  );
 
   return (
     <div className="mb-stack">

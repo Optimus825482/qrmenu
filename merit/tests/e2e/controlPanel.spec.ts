@@ -238,10 +238,10 @@ test("mobil Ayarlar: Marka anahtarları var, alt telif bandı mobilde çizilmez"
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
   await page
-    .getByRole("tablist", { name: "Ana sekmeler" })
-    .getByRole("tab", { name: "Ayarlar" })
+    .getByRole("navigation", { name: "Uygulamalar" })
+    .getByRole("button", { name: "Ayarlar" })
     .click();
-  const panel = page.getByRole("tabpanel", { name: "Ayarlar" });
+  const panel = page.getByRole("region", { name: "Ayarlar", exact: true });
   await expect(panel.getByRole("switch", { name: "Alt telif bandı" })).toBeVisible();
   await expect(panel.getByRole("switch", { name: "Duvar kağıdı filigranı" })).toBeVisible();
   await expect(page.locator(".xp-footer-band")).toHaveCount(0);
@@ -343,9 +343,11 @@ test("mobil Ayarlar: aynı yazı boyutu / yazı tipi / tema seçenekleri", async
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
-  const tabs = page.getByRole("tablist", { name: "Ana sekmeler" });
-  await tabs.getByRole("tab", { name: "Ayarlar" }).click();
-  const panel = page.getByRole("tabpanel", { name: "Ayarlar" });
+  await page
+    .getByRole("navigation", { name: "Uygulamalar" })
+    .getByRole("button", { name: "Ayarlar" })
+    .click();
+  const panel = page.getByRole("region", { name: "Ayarlar", exact: true });
 
   for (const name of ["Yazı boyutu", "Yazı tipi", "Tema", "Duvar kağıdı"]) {
     await expect(panel.getByRole("radiogroup", { name, exact: true })).toBeVisible();

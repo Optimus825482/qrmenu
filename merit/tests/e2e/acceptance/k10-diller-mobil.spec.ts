@@ -53,14 +53,17 @@ test.describe("@kabul-10 diller ve mobil", () => {
     });
   }
 
-  test("@kabul-10 390×844: /admin alt sekmeler İzleme/Raporlar/Bildirimler/Ayarlar, XP görev çubuğu yok", async ({ page }) => {
+  test("@kabul-10 390×844: /admin Android ana ekranı İzleme/Raporlar/Bildirimler/Ayarlar, XP görev çubuğu yok", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, "admin");
     await expect(page).toHaveURL(/\/admin$/);
-    const tabs = page.getByRole("tablist", { name: "Ana sekmeler" });
-    await expect(tabs).toBeVisible();
+    const launcher = page.getByRole("navigation", { name: "Uygulamalar" });
+    await expect(launcher).toBeVisible();
     for (const name of ["İzleme", "Raporlar", "Bildirimler", "Ayarlar"]) {
-      await expect(tabs.getByRole("tab", { name })).toBeVisible();
+      await expect(launcher.getByRole("button", { name })).toBeVisible();
+    }
+    for (const name of ["Geri", "Ana ekran", "Son uygulamalar"]) {
+      await expect(page.getByRole("navigation", { name: "Sistem gezinmesi" }).getByRole("button", { name })).toBeVisible();
     }
     await expect(page.locator(".xp-taskbar")).toHaveCount(0);
     await expect(page.locator(".xp-desktop")).toHaveCount(0);
@@ -71,22 +74,26 @@ test.describe("@kabul-10 diller ve mobil", () => {
     await login(page, "admin");
     await expect(page.getByRole("region", { name: "Masaüstü" })).toBeVisible();
     await page.goto("/admin?mobil=1");
-    await expect(page.getByRole("tablist", { name: "Ana sekmeler" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Uygulamalar" })).toBeVisible();
     await expect(page.locator(".xp-taskbar")).toHaveCount(0);
   });
 
   test("@kabul-10 tanımlama ekranları Ayarlar anahtarı kapalıyken gizli, açıkken görünür", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await login(page, "admin");
-    const tabs = page.getByRole("tablist", { name: "Ana sekmeler" });
-    await expect(tabs).toBeVisible();
-    await expect(tabs.getByRole("tab", { name: "Tanımlar" })).toHaveCount(0);
-    await tabs.getByRole("tab", { name: "Ayarlar" }).click();
+    const launcher = page.getByRole("navigation", { name: "Uygulamalar" });
+    const home = page.getByRole("navigation", { name: "Sistem gezinmesi" }).getByRole("button", { name: "Ana ekran" });
+    await expect(launcher).toBeVisible();
+    await expect(launcher.getByRole("button", { name: "Tanımlar" })).toHaveCount(0);
+    await launcher.getByRole("button", { name: "Ayarlar" }).click();
     const toggle = page.getByRole("switch", { name: "Tanımlamaları mobilde aç" });
     await toggle.click();
     await expect(toggle).toBeChecked();
-    await expect(tabs.getByRole("tab", { name: "Tanımlar" })).toBeVisible();
+    await home.click();
+    await expect(launcher.getByRole("button", { name: "Tanımlar" })).toBeVisible();
+    await launcher.getByRole("button", { name: "Ayarlar" }).click();
     await toggle.click();
-    await expect(tabs.getByRole("tab", { name: "Tanımlar" })).toHaveCount(0);
+    await home.click();
+    await expect(launcher.getByRole("button", { name: "Tanımlar" })).toHaveCount(0);
   });
 });

@@ -1,7 +1,8 @@
 /*
- * Merit OS — Android shell (narrow screens). A cleaner, Material-style look than the XP desktop;
- * the wallpaper tokens (--xp-wallpaper, set by [data-wallpaper] in theme.css) tint the app bar.
- * Everything is scoped to .mb-shell.
+ * Merit OS — Android shell (phones). Looks like the phone it runs on: status bar, a home screen
+ * on the wallpaper (--xp-wallpaper, set by [data-wallpaper] in theme.css) with app icons and a
+ * widget, full-screen apps, a pull-down notification shade, the recent-apps overview and the
+ * three-button navigation bar. Everything is scoped to .mb-shell.
  */
 
 .mb-shell {
@@ -16,13 +17,22 @@
   --mb-warn: var(--warn);
   --mb-ok: var(--success);
   --mb-bar: 56px;
-  --mb-tab: 64px;
+  --mb-status: 28px;
+  --mb-nav: 48px;
+  /* System chrome (status + navigation bar): light on the wallpaper, app-coloured inside an app. */
+  --mb-chrome-text: #fff;
+  --mb-chrome-bg: transparent;
+  --mb-chrome-alert: #ffb4a8;
 
   position: fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--mb-bg);
+  display: grid;
+  grid-template: "status" auto "screen" 1fr "nav" auto / 100%;
+  background:
+    linear-gradient(rgba(8, 14, 30, 0.38), rgba(8, 14, 30, 0.2) 30%, rgba(8, 14, 30, 0.5)),
+    var(--xp-wallpaper, var(--wallpaper-fallback));
+  background-size: cover;
+  background-position: center;
   color: var(--mb-text);
   /* Same appearance settings as the desktop (inline --xp-font-* on the root); one step bigger. */
   --mb-font-size: calc(var(--xp-font-size, 12px) + 3px);
@@ -48,7 +58,14 @@
   --mb-primary-soft: var(--accent-royal-soft);
 }
 
-.mb-shell button {
+.mb-shell[data-screen="app"] {
+  --mb-chrome-text: var(--mb-text);
+  --mb-chrome-bg: var(--mb-surface);
+  --mb-chrome-alert: var(--mb-danger);
+}
+
+/* Zero-specificity reset, so a button's own class decides its size and colour. */
+:where(.mb-shell) button {
   font: inherit;
   color: inherit;
 }
@@ -58,61 +75,320 @@
   outline-offset: 2px;
 }
 
-/* ---- app bar ---------------------------------------------------------------------------- */
+/* ---- system chrome: status bar ------------------------------------------------------------ */
 
-.mb-appbar {
-  flex: none;
+.mb-shell [hidden] {
+  display: none !important;
+}
+
+.mb-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.mb-status {
+  grid-area: status;
+  position: relative;
+  z-index: 6;
+  padding-top: env(safe-area-inset-top);
+  color: var(--mb-chrome-text);
+  background: var(--mb-chrome-bg);
+}
+
+.mb-status-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  min-height: var(--mb-bar);
-  padding: 8px 16px;
-  padding-top: calc(8px + env(safe-area-inset-top));
-  color: var(--on-accent);
-  background:
-    linear-gradient(rgba(8, 14, 30, 0.45), rgba(8, 14, 30, 0.6)),
-    var(--xp-wallpaper, var(--wallpaper-fallback));
-  background-size: cover;
-  background-position: center;
-}
-
-.mb-appbar-title {
-  margin: 0;
-  font-size: calc(var(--mb-font-size) * 18 / 15);
+  width: 100%;
+  height: var(--mb-status);
+  padding: 0 18px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  touch-action: none;
 }
 
-.mb-appbar-sub {
-  margin: 0;
-  font-size: calc(var(--mb-font-size) * 12 / 15);
-  opacity: 0.85;
+.mb-status-bar:focus-visible {
+  outline-offset: -3px;
+}
+
+.mb-clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.mb-status-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mb-status-unread {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.mb-status-unread svg {
+  width: 16px;
+  height: 16px;
 }
 
 .mb-sse {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
+}
+
+.mb-sse[data-status="connecting"] {
+  opacity: 0.55;
+}
+
+.mb-sse[data-status="closed"] {
+  color: var(--mb-chrome-alert);
+}
+
+/* ---- screen ---------------------------------------------------------------------------- */
+
+.mb-screen {
+  grid-area: screen;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---- home screen ------------------------------------------------------------------------ */
+
+.mb-home {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 20px 12px;
+  overflow-y: auto;
+  color: #fff;
+}
+
+.mb-glance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 8px 4px 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.mb-glance-day {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.mb-glance-day::first-letter {
+  text-transform: uppercase;
+}
+
+.mb-glance-user {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.mb-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: left;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.mb-widget-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #4a5266;
+}
+
+.mb-widget-values {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mb-widget-value {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #4a5266;
+}
+
+.mb-widget-value b {
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: #1b1f2a;
+  font-variant-numeric: tabular-nums;
+}
+
+.mb-launcher {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px 4px;
+  margin-top: auto;
+  padding: 16px 8px;
+  border-radius: 32px;
   background: rgba(255, 255, 255, 0.16);
-  font-size: calc(var(--mb-font-size) * 12 / 15);
+  backdrop-filter: blur(14px);
 }
 
-.mb-sse-dot {
-  width: 8px;
-  height: 8px;
+.mb-launch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mb-launch:active .mb-app-icon,
+.mb-overview-open:active .mb-app-icon {
+  transform: scale(0.92);
+}
+
+.mb-launch-label {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.mb-app-icon {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #5f6b85;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease-out;
+}
+
+.mb-app-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.mb-app-icon[data-app="izleme"] {
+  background: #0f8f7c;
+}
+
+.mb-app-icon[data-app="raporlar"] {
+  background: #3f5fd1;
+}
+
+.mb-app-icon[data-app="bildirimler"] {
+  background: #c2571a;
+}
+
+.mb-app-icon[data-app="tanimlar"] {
+  background: #7b4bc4;
+}
+
+.mb-app-icon[data-app="ayarlar"] {
+  background: #55607a;
+}
+
+.mb-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--mb-danger);
+  color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* ---- a running app (full screen) -------------------------------------------------------- */
+
+.mb-app {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--mb-bg);
+  animation: mb-app-in 0.18s ease-out;
+}
+
+.mb-app:focus {
+  outline: none;
+}
+
+.mb-appbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--mb-bar);
+  padding: 4px 8px;
+  background: var(--mb-surface);
+  border-bottom: 1px solid var(--mb-line);
+}
+
+.mb-appbar-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.mb-icon-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
   border-radius: 50%;
-  background: var(--dot-wait);
+  background: transparent;
+  cursor: pointer;
 }
 
-.mb-sse[data-status="open"] .mb-sse-dot {
-  background: var(--dot-open);
+.mb-icon-button:active {
+  background: var(--mb-primary-soft);
 }
 
-.mb-sse[data-status="closed"] .mb-sse-dot {
-  background: var(--dot-closed);
+@keyframes mb-app-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
 }
 
 /* ---- content ---------------------------------------------------------------------------- */
@@ -208,7 +484,9 @@
   border-radius: 999px;
   background: transparent;
   color: var(--mb-primary);
+  font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -531,75 +809,325 @@
   background: var(--danger-bg);
 }
 
-/* ---- bottom tabs ------------------------------------------------------------------------ */
+/* ---- notification shade ------------------------------------------------------------------ */
 
-.mb-nav {
-  flex: none;
-  border-top: 1px solid var(--mb-line);
-  background: var(--mb-surface);
-  padding-bottom: env(safe-area-inset-bottom);
+.mb-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border: 0;
+  background: rgba(0, 0, 0, 0.5);
 }
 
-.mb-tabs {
+.mb-shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 4;
   display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 100%;
+  padding: 12px 16px 0;
+  border-radius: 0 0 28px 28px;
+  background: var(--mb-bg);
+  color: var(--mb-text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  animation: mb-shade-in 0.2s ease-out;
 }
 
-.mb-tab {
-  flex: 1 1 0;
-  min-width: 44px;
-  min-height: var(--mb-tab);
+.mb-shade:focus {
+  outline: none;
+}
+
+.mb-shade-date {
+  margin: 0 4px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.mb-shade-date::first-letter {
+  text-transform: uppercase;
+}
+
+.mb-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.mb-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 24px;
+  background: var(--mb-surface);
+  box-shadow: inset 0 0 0 1px var(--mb-line);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+}
+
+button.mb-tile {
+  cursor: pointer;
+}
+
+.mb-tile svg {
+  flex: none;
+}
+
+.mb-tile small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.mb-tile[data-on="true"] {
+  background: var(--mb-primary);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+.mb-shade-notes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.mb-shade-handle {
+  flex: none;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.mb-shade-handle::before {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: var(--mb-muted);
+  opacity: 0.6;
+}
+
+@keyframes mb-shade-in {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+
+/* ---- recent apps (overview) -------------------------------------------------------------- */
+
+.mb-overview {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 6px 2px;
+  gap: 16px;
+  padding: 16px 0;
+  background: rgba(12, 16, 28, 0.78);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  animation: mb-fade-in 0.15s ease-out;
+}
+
+.mb-overview:focus {
+  outline: none;
+}
+
+.mb-overview-empty {
+  margin: 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.mb-overview-cards {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 19%;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.mb-overview-card {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-height: 0;
+  scroll-snap-align: center;
+}
+
+.mb-overview-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+}
+
+.mb-overview-head .mb-app-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.mb-overview-head .mb-app-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mb-overview-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.mb-overview-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
   border: 0;
-  background: transparent;
-  color: var(--mb-muted);
-  font-size: calc(var(--mb-font-size) * 12 / 15);
+  border-radius: 24px;
+  background: var(--mb-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 
-.mb-tab[aria-selected="true"] {
-  color: var(--mb-primary);
-  font-weight: 600;
+.mb-pill-button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-.mb-tab-icon {
+@keyframes mb-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- three-button navigation bar --------------------------------------------------------- */
+
+.mb-sysnav {
+  grid-area: nav;
   position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: calc(var(--mb-nav) + env(safe-area-inset-bottom));
+  padding: 0 12% env(safe-area-inset-bottom);
+  color: var(--mb-chrome-text);
+  background: var(--mb-chrome-bg);
+}
+
+.mb-sysnav-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 30px;
+  width: 64px;
+  height: 44px;
+  border: 0;
   border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
 }
 
-.mb-tab[aria-selected="true"] .mb-tab-icon {
-  background: var(--mb-primary-soft);
+.mb-sysnav-button:active {
+  background: rgba(127, 127, 127, 0.28);
 }
 
-.mb-badge {
-  position: absolute;
-  top: -2px;
-  right: 8px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--mb-danger);
-  color: var(--on-accent);
-  font-size: calc(var(--mb-font-size) * 11 / 15);
-  font-weight: 600;
-  line-height: 18px;
-  text-align: center;
+.mb-sysnav-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* A phone on its side: the navigation bar moves to the right edge, as Android does. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mb-shell {
+    grid-template: "status nav" auto "screen nav" 1fr / 1fr calc(var(--mb-nav) + env(safe-area-inset-right));
+  }
+
+  .mb-sysnav {
+    flex-direction: column-reverse;
+    height: auto;
+    padding: 8% env(safe-area-inset-right) 8% 0;
+  }
+
+  .mb-sysnav-button {
+    width: 44px;
+    height: 56px;
+  }
+
+  .mb-home {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px 20px;
+    padding-top: 8px;
+  }
+
+  .mb-glance {
+    flex: 1 1 40%;
+  }
+
+  .mb-widget {
+    flex: 1 1 40%;
+    width: auto;
+  }
+
+  .mb-launcher {
+    flex: 1 1 100%;
+    grid-template-columns: repeat(6, 1fr);
+    padding: 10px 8px;
+  }
+
+  .mb-overview-cards {
+    padding: 0 34%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mb-switch::before,
-  .mb-switch-thumb {
+  .mb-switch-thumb,
+  .mb-app-icon {
     transition: none;
+  }
+
+  .mb-app,
+  .mb-shade,
+  .mb-overview {
+    animation: none;
   }
 }
 
@@ -681,6 +1209,10 @@
 
 .rc[data-variant="mobile"] input,
 .rc[data-variant="mobile"] select {
+  /* A long option must not widen the form past the screen. */
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 44px;
   padding: 0 10px;
   border: 1px solid var(--mb-line);

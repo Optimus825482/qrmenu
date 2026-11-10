@@ -23,8 +23,18 @@ function trackErrors(page: Page): string[] {
   return errors;
 }
 
-const tabs = (page: Page) => page.getByRole("tablist", { name: "Ana sekmeler" });
-const tab = (page: Page, name: string) => tabs(page).getByRole("tab", { name });
+// Android shell: the home screen's app icons, the three-button bar and a running app's screen.
+const launcher = (page: Page) => page.getByRole("navigation", { name: "Uygulamalar" });
+const appIcon = (page: Page, name: string) => launcher(page).getByRole("button", { name });
+const sysNav = (page: Page) => page.getByRole("navigation", { name: "Sistem gezinmesi" });
+const appScreen = (page: Page, name: string) => page.getByRole("region", { name, exact: true });
+
+/** Home button, then the app's launcher icon. */
+async function openApp(page: Page, name: string) {
+  await sysNav(page).getByRole("button", { name: "Ana ekran" }).click();
+  await appIcon(page, name).click();
+  await expect(appScreen(page, name)).toBeVisible();
+}
 const desktop = (page: Page) => page.getByRole("region", { name: "Masaüstü" });
 
 async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T> {
@@ -64,39 +74,61 @@ async function openMobile(page: Page) {
   await page.setViewportSize(PHONE);
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(tabs(page)).toBeVisible();
+  await expect(launcher(page)).toBeVisible();
 }
 
-test("390px: masaüstü yok, alt sekmeler var, Tanımlar sekmesi yok @kabul-10", async ({ page }) => {
+test("390px: masaüstü yok, Android ana ekranı var, Tanımlar uygulaması yok @kabul-10", async ({ page }) => {
   const errors = trackErrors(page);
   await openMobile(page);
   await expect(page.locator(".xp-desktop")).toHaveCount(0);
   await expect(page.locator(".xp-taskbar")).toHaveCount(0);
+  await expect(page.locator(".mb-shell")).toHaveAttribute("data-screen", "home");
   for (const name of ["İzleme", "Raporlar", "Bildirimler", "Ayarlar"]) {
-    await expect(tab(page, name)).toBeVisible();
+    await expect(appIcon(page, name)).toBeVisible();
   }
-  await expect(tab(page, "Tanımlar")).toHaveCount(0);
+  await expect(appIcon(page, "Tanımlar")).toHaveCount(0);
 
-  // 44 px touch targets.
-  for (const name of ["İzleme", "Raporlar", "Bildirimler", "Ayarlar"]) {
-    const box = (await tab(page, name).boundingBox())!;
+  // 44 px touch targets: launcher icons and the three system buttons.
+  const targets = [
+    ...["İzleme", "Raporlar", "Bildirimler", "Ayarlar"].map((name) => appIcon(page, name)),
+    ...["Geri", "Ana ekran", "Son uygulamalar"].map((name) => sysNav(page).getByRole("button", { name })),
+  ];
+  for (const target of targets) {
+    const box = (await target.boundingBox())!;
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.width).toBeGreaterThanOrEqual(44);
   }
 
-  // İzleme is the first tab and shows the Komuta Merkezi KPIs.
-  await expect(tab(page, "İzleme")).toHaveAttribute("aria-selected", "true");
-  const panel = page.getByRole("tabpanel", { name: "İzleme" });
+  // The home-screen widget shows the Komuta Merkezi numbers and opens İzleme.
+  await expect(page.getByTestId("home-kpi-hotels")).toContainText("3");
+  await page.getByRole("button", { name: /Komuta Merkezi/ }).click();
+  const panel = appScreen(page, "İzleme");
+  await expect(page.locator(".mb-shell")).toHaveAttribute("data-screen", "app");
   await expect(panel.getByTestId("kpi-hotels")).toContainText("3");
   await expect(panel.getByTestId("kpi-online")).toContainText("1");
+
+  // Back returns to the home screen; the app stays in recents and can be closed from there.
+  await sysNav(page).getByRole("button", { name: "Geri" }).click();
+  await expect(launcher(page)).toBeVisible();
+  await sysNav(page).getByRole("button", { name: "Son uygulamalar" }).click();
+  const overview = page.getByRole("dialog", { name: "Son uygulamalar" });
+  await expect(overview.getByRole("button", { name: "İzleme uygulamasına dön" })).toBeVisible();
+  await overview.getByRole("button", { name: "Tümünü temizle" }).click();
+  await expect(overview).toHaveCount(0);
+
+  // The browser's back button closes an open app instead of leaving /admin.
+  await appIcon(page, "Ayarlar").click();
+  await expect(appScreen(page, "Ayarlar")).toBeVisible();
+  await page.goBack();
+  await expect(launcher(page)).toBeVisible();
+  await expect(page).toHaveURL(/\/admin$/);
   expect(errors).toEqual([]);
 });
 
 test("Raporlar: Rapor Merkezi kataloğu tek sütunda listelenir; rapor seçilince filtreler açılır", async ({ page }) => {
   await openMobile(page);
-  await tab(page, "Raporlar").click();
-  await expect(tab(page, "Raporlar")).toHaveAttribute("aria-selected", "true");
-  const panel = page.getByRole("tabpanel", { name: "Raporlar" });
+  await openApp(page, "Raporlar");
+  const panel = appScreen(page, "Raporlar");
   const catalogue = panel.getByRole("navigation", { name: "Raporlar" });
   await expect(catalogue.getByRole("button", { name: /Minibar Tüketim Raporu/ })).toBeVisible();
   await catalogue.getByRole("button", { name: /Minibar Tüketim Raporu/ }).click();
@@ -104,37 +136,41 @@ test("Raporlar: Rapor Merkezi kataloğu tek sütunda listelenir; rapor seçilinc
   await expect(panel.getByRole("button", { name: "Raporu Göster" })).toBeVisible();
 });
 
-test("Ayarlar: anahtar → Tanımlar sekmesi gelir ve yer tutucuyu gösterir; oturum boyunca kalır", async ({
+test("Ayarlar: anahtar → Tanımlar uygulaması gelir ve yer tutucuyu gösterir; oturum boyunca kalır", async ({
   page,
 }) => {
   const errors = trackErrors(page);
   await openMobile(page);
-  await tab(page, "Ayarlar").click();
+  await openApp(page, "Ayarlar");
   const toggle = page.getByRole("switch", { name: "Tanımlamaları mobilde aç" });
   await expect(toggle).not.toBeChecked();
   await toggle.click();
   await expect(toggle).toBeChecked();
-  await expect(tab(page, "Tanımlar")).toBeVisible();
   expect(await page.evaluate(() => window.sessionStorage.getItem("merit.mobileDefs"))).toBe("1");
 
-  await tab(page, "Tanımlar").click();
-  await expect(page.getByRole("tabpanel", { name: "Tanımlar" })).toContainText("Tanımlar P1'de");
+  await openApp(page, "Tanımlar");
+  await expect(appScreen(page, "Tanımlar")).toContainText("Tanımlar P1'de");
 
   // Same browser tab: sessionStorage survives a reload.
   await page.reload();
-  await expect(tab(page, "Tanımlar")).toBeVisible();
+  await expect(appIcon(page, "Tanımlar")).toBeVisible();
 
-  await tab(page, "Ayarlar").click();
-  await page.getByRole("switch", { name: "Tanımlamaları mobilde aç" }).click();
-  await expect(tab(page, "Tanımlar")).toHaveCount(0);
+  // The quick tile of the notification shade is the same switch.
+  await page.getByRole("button", { name: "Bildirim paneli" }).click();
+  const shade = page.getByRole("dialog", { name: "Bildirim paneli" });
+  await expect(shade.getByRole("button", { name: /Tanımlar/ })).toHaveAttribute("aria-pressed", "true");
+  await shade.getByRole("button", { name: /Tanımlar/ }).click();
+  await sysNav(page).getByRole("button", { name: "Geri" }).click();
+  await expect(shade).toHaveCount(0);
+  await expect(appIcon(page, "Tanımlar")).toHaveCount(0);
   expect(await page.evaluate(() => window.sessionStorage.getItem("merit.mobileDefs"))).toBe("0");
   expect(errors).toEqual([]);
 });
 
 test("Ayarlar: duvar kağıdı seçilir; oturum kapatma düğmesi var", async ({ page }) => {
   await openMobile(page);
-  await tab(page, "Ayarlar").click();
-  const panel = page.getByRole("tabpanel", { name: "Ayarlar" });
+  await openApp(page, "Ayarlar");
+  const panel = appScreen(page, "Ayarlar");
   await expect(panel.getByRole("button", { name: "Oturumu Kapat" })).toBeVisible();
   // Scoped to the group: the Tema group has a "Royal Gold" option too.
   const wallpapers = panel.getByRole("radiogroup", { name: "Duvar kağıdı" });
@@ -151,30 +187,30 @@ test("?mobil=1 ile 1280px'te de mobil; parametresiz 1280px masaüstü; yeniden b
   await login(page, "admin");
   await expect(page).toHaveURL(/\/admin$/);
   await expect(desktop(page)).toBeVisible();
-  await expect(tabs(page)).toHaveCount(0);
+  await expect(launcher(page)).toHaveCount(0);
 
   await page.goto("/admin?mobil=1");
-  await expect(tabs(page)).toBeVisible();
+  await expect(launcher(page)).toBeVisible();
   await expect(page.locator(".xp-desktop")).toHaveCount(0);
 
   // `?mod=personel` and `?kabuk=personel` resolve the same way as the legacy `?mobil=1`.
   for (const query of ["mod=personel", "kabuk=personel"]) {
     await page.goto(`/admin?${query}`);
-    await expect(tabs(page)).toBeVisible();
+    await expect(launcher(page)).toBeVisible();
     await expect(page.locator(".xp-desktop")).toHaveCount(0);
   }
 
   await page.goto("/admin");
   await expect(desktop(page)).toBeVisible();
-  await expect(tabs(page)).toHaveCount(0);
+  await expect(launcher(page)).toHaveCount(0);
 
   // Resize below 760 px swaps the shell without a reload, and back.
   await page.setViewportSize(PHONE);
-  await expect(tabs(page)).toBeVisible();
+  await expect(launcher(page)).toBeVisible();
   await expect(page.locator(".xp-desktop")).toHaveCount(0);
   await page.setViewportSize(WIDE);
   await expect(desktop(page)).toBeVisible();
-  await expect(tabs(page)).toHaveCount(0);
+  await expect(launcher(page)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -185,7 +221,10 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
   const id = await adminId();
   const first = await insertNotification(id, "Oda 101 DND", "Rahatsız etmeyin açıldı");
   await openMobile(page);
-  await tab(page, "Bildirimler").click();
+  // Unread count: on the launcher icon and in the status bar.
+  await expect(appIcon(page, "Bildirimler")).toContainText("1");
+  await expect(page.getByTestId("status-unread")).toContainText("1");
+  await openApp(page, "Bildirimler");
 
   const list = page.getByRole("list", { name: "Bildirimler" });
   const row = list.getByRole("button", { name: /Oda 101 DND/ });
@@ -193,7 +232,6 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
   await expect(row).toContainText("Rahatsız etmeyin açıldı");
   await expect(row).toContainText(/\d{2}:\d{2}/);
   await expect(row.getByTestId("unread-dot")).toBeVisible();
-  await expect(tab(page, "Bildirimler")).toContainText("1"); // unread badge
 
   // Live prepend: a notification created while the tab is open shows up on top. Wait for the SSE
   // connection first, or the pg_notify below can be sent before anyone listens.
@@ -269,8 +307,8 @@ test("mobil kabuk masaüstü düzenini bozmaz: simge konumu korunur, yalnız duv
   // 2. Phone: change the wallpaper, wait for the save.
   await page.setViewportSize(PHONE);
   await page.reload();
-  await expect(tabs(page)).toBeVisible();
-  await tab(page, "Ayarlar").click();
+  await expect(launcher(page)).toBeVisible();
+  await openApp(page, "Ayarlar");
   await page
     .getByRole("radiogroup", { name: "Duvar kağıdı" })
     .getByRole("radio", { name: "Gümüş" })

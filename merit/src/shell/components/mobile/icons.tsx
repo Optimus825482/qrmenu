@@ -45,3 +45,45 @@ export function TabIcon({ id }: { id: MobileTabId }) {
     </svg>
   );
 }
+
+export type NavGlyphId = "back" | "home" | "recents" | "close" | "signal" | "signal-off";
+
+const NAV_PATHS: Record<NavGlyphId, ReactNode> = {
+  back: <path d="M15 5 7 12l8 7z" />,
+  home: <circle cx="12" cy="12" r="6.5" />,
+  recents: <rect x="6" y="6" width="12" height="12" rx="2" />,
+  close: <path d="M6 6l12 12M18 6 6 18" />,
+  // Wi-Fi arcs: the live (SSE) connection.
+  signal: (
+    <>
+      <path d="M3 9.5a13 13 0 0 1 18 0M6.5 13a8 8 0 0 1 11 0M10 16.5a3 3 0 0 1 4 0" />
+      <path d="M12 19.5h.01" />
+    </>
+  ),
+  "signal-off": (
+    <>
+      <path d="M6.5 13a8 8 0 0 1 3-1.9M14.5 11.1a8 8 0 0 1 3 1.9M10 16.5a3 3 0 0 1 4 0M4 4l16 16" />
+      <path d="M12 19.5h.01" />
+    </>
+  ),
+};
+
+/** Outline glyph of the system chrome (navigation buttons, status bar). */
+export function NavGlyph({ id, size = 22 }: { id: NavGlyphId; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {NAV_PATHS[id]}
+    </svg>
+  );
+}
