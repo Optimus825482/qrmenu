@@ -18,6 +18,7 @@
       "subcategories": "Subcategories",
       "all": "All",
       "backToTop": "Back to top",
+      "collapse": "Close",
       "photoCount": "{count} photos"
     },
     "allergen": {

@@ -216,7 +216,7 @@ const designSchema = z.object({
   layout: z.array(z.enum(DESIGN_BLOCKS.map((item) => item.id))).length(DESIGN_BLOCKS.length),
   options: z.object({
     cardStyle: z.enum(["LIST", "CARD", "PHOTO"]),
-    categoryTabStyle: z.enum(["CHIPS_ROW", "UNDERLINE_TABS", "SEGMENT_CARDS", "GRID_PILLS"]).optional().default("CHIPS_ROW"),
+    categoryTabStyle: z.enum(["CHIPS_ROW", "UNDERLINE_TABS", "SEGMENT_CARDS", "GRID_PILLS", "ACCORDION", "PHOTO_TILES", "NUMBERED_INDEX"]).optional().default("CHIPS_ROW"),
     heroAlign: z.enum(["left", "center", "right"]).optional().default("left"),
     heroFontSize: z.enum(["small", "medium", "large", "xlarge"]).optional().default("medium"),
     heroFontFamily: z.enum([

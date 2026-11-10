@@ -17,6 +17,11 @@ const FEATURED_TAGS = new Set<ItemTagId>(["SEFIN_SECIMI", "POPULER"]);
 
 export type GuestMenuMode = "table" | "room";
 
+/** First dish photo of a category; the cover of its tile in the photo-tile navigation. */
+function categoryPhoto(category: GuestCategory): string | undefined {
+  return categoryItems(category).find((item) => item.isAvailable && item.imageUrl)?.imageUrl ?? undefined;
+}
+
 function categoryItemCount(category: GuestCategory): number {
   let count = category.items.length;
   for (const sub of category.subcategories) {
@@ -185,7 +190,11 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       .filter((category) => category.items.length > 0 || category.subcategories.length > 0);
   }, [categories, needle, tagFilters, locale]);
 
-  const activeId = visible.some((category) => category.id === picked) ? picked : (visible[0]?.id ?? null);
+  const tabStyle = state.design.options.categoryTabStyle ?? "CHIPS_ROW";
+  // Accordion: every category starts folded and only the tapped one is open; the other styles always show one.
+  const isAccordion = tabStyle === "ACCORDION";
+  const pickedVisible = visible.some((category) => category.id === picked) ? picked : null;
+  const activeId = isAccordion ? pickedVisible : (pickedVisible ?? visible[0]?.id ?? null);
   const active = visible.find((category) => category.id === activeId);
   const presentTags = new Set(
     categories.flatMap((category) => categoryItems(category).filter((item) => item.isAvailable).flatMap((item) => item.tags)),
@@ -235,6 +244,81 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       tabEl?.focus();
     }
   };
+
+  const subNav = active && active.subcategories.length > 1 ? (
+            <div className="g-sub-nav" role="navigation" aria-label={t("menu.subcategories")}>
+              {directItems.length > 0 ? (
+                <button
+                  type="button"
+                  className="g-sub-chip"
+                  onClick={() => {
+                    const el = document.getElementById("g-direct-items");
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  {t("menu.all")} ({directItems.length})
+                </button>
+              ) : null}
+              {active.subcategories.map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  className="g-sub-chip"
+                  onClick={() => {
+                    const el = document.getElementById(`g-sub-${sub.id}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                >
+                  {sub.name} ({sub.items.length + sub.groups.reduce((a, g) => a + g.items.length, 0)})
+                </button>
+              ))}
+            </div>
+          ) : null;
+  const categoryBody = (
+    <>
+        {directItems.length > 0 ? (
+          <section id="g-direct-items" className="g-sub">
+            <ItemCards
+              items={directItems}
+              onOpen={handleOpenItem}
+              format={format}
+              photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+              showPrice={showPrice}
+              photoIds={photoIds}
+            />
+          </section>
+        ) : null}
+        {active?.subcategories.map((sub) => (
+          <section key={sub.id} id={`g-sub-${sub.id}`} className="g-sub">
+            <h2>{sub.name}</h2>
+            {sub.items.length > 0 ? (
+              <ItemCards
+                items={sub.items}
+                onOpen={handleOpenItem}
+                format={format}
+                photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+                showPrice={showPrice}
+                photoIds={photoIds}
+              />
+            ) : null}
+            {sub.groups.map((group) => (
+              <div key={group.id} className="g-group">
+                <h3>{group.name}</h3>
+                {group.detail ? <p className="g-detail">{group.detail}</p> : null}
+                <ItemCards
+                  items={group.items}
+                  onOpen={handleOpenItem}
+                  format={format}
+                  photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
+                  showPrice={showPrice}
+                  photoIds={photoIds}
+                />
+              </div>
+            ))}
+          </section>
+        ))}
+    </>
+  );
 
   const isTable = mode === "table";
   const heroCallButton =
@@ -304,7 +388,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       <div key="categories">
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
-        ) : visible.length === 0 ? null : (
+        ) : visible.length === 0 || isAccordion ? null : (
           <div className="g-tabs-shell">
           <div
             data-guide="kategori-gezin"
@@ -322,11 +406,22 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 aria-selected={category.id === activeId}
                 tabIndex={category.id === activeId ? 0 : -1}
                 aria-controls="g-panel"
-                onClick={(e) => {
+                onClick={() => {
                   setPicked(category.id);
-                  e.currentTarget.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+                  // Tall, non-sticky navigations: bring the dishes of the tapped category into view.
+                  if (tabStyle === "PHOTO_TILES" || tabStyle === "NUMBERED_INDEX") {
+                    requestAnimationFrame(() => document.getElementById("g-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                  }
                 }}
               >
+                {tabStyle === "PHOTO_TILES" ? (
+                  categoryPhoto(category) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="g-tab-photo" src={categoryPhoto(category)} alt="" loading="lazy" decoding="async" width={320} height={320} />
+                  ) : (
+                    <span className="g-tab-photo g-placeholder" aria-hidden="true" />
+                  )
+                ) : null}
                 <span className="g-tab-label">{category.name}</span>
                 <span className="g-tab-count" aria-label={t("menu.itemsFound", { count: categoryItemCount(category) })}>
                   {categoryItemCount(category)}
@@ -399,41 +494,69 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               </button>
             </div>
           ) : null}
-          {active && active.subcategories.length > 1 ? (
-            <div className="g-sub-nav" role="navigation" aria-label={t("menu.subcategories")}>
-              {directItems.length > 0 ? (
-                <button
-                  type="button"
-                  className="g-sub-chip"
-                  onClick={() => {
-                    const el = document.getElementById("g-direct-items");
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  {t("menu.all")} ({directItems.length})
-                </button>
-              ) : null}
-              {active.subcategories.map((sub) => (
-                <button
-                  key={sub.id}
-                  type="button"
-                  className="g-sub-chip"
-                  onClick={() => {
-                    const el = document.getElementById(`g-sub-${sub.id}`);
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
-                >
-                  {sub.name} ({sub.items.length + sub.groups.reduce((a, g) => a + g.items.length, 0)})
-                </button>
-              ))}
-            </div>
-          ) : null}
+          {isAccordion ? null : subNav}
         </div>
+        ) : null}
+        {isAccordion && visible.length > 0 ? (
+          <div className="g-acc" data-guide="kategori-gezin">
+            {visible.map((category) => {
+              const open = category.id === activeId;
+              return (
+                <section key={category.id} className="g-acc-item" data-open={open ? "true" : undefined}>
+                  <h2 className="g-acc-title">
+                    <button
+                      type="button"
+                      className="g-acc-head"
+                      id={`g-tab-${category.id}`}
+                      aria-expanded={open}
+                      aria-controls={`g-acc-panel-${category.id}`}
+                      onClick={(e) => {
+                        const head = e.currentTarget;
+                        setPicked(open ? null : category.id);
+                        // The panel above may fold away; keep the tapped heading on screen.
+                        requestAnimationFrame(() => head.scrollIntoView({ behavior: "smooth", block: open ? "nearest" : "start" }));
+                      }}
+                    >
+                      <span className="g-acc-name">{category.name}</span>
+                      <span className="g-acc-count">{categoryItemCount(category)}</span>
+                      <span className="g-acc-chevron" aria-hidden="true" />
+                    </button>
+                  </h2>
+                  {open ? (
+                    <div className="g-acc-panel" id={`g-acc-panel-${category.id}`} role="region" aria-labelledby={`g-tab-${category.id}`}>
+                      {subNav ? <div className="g-acc-subnav">{subNav}</div> : null}
+                      {categoryBody}
+                      <div className="g-acc-foot">
+                        <button
+                          type="button"
+                          className="g-acc-close"
+                          onClick={() => {
+                            setPicked(null);
+                            requestAnimationFrame(() =>
+                              document.getElementById(`g-tab-${category.id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+                            );
+                          }}
+                        >
+                          {t("menu.collapse")}
+                          <span className="g-acc-chevron" data-up="true" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })}
+          </div>
         ) : null}
       </div>
     ),
     items: (
-      <div id="g-panel" role="tabpanel" aria-labelledby={activeId ? `g-tab-${activeId}` : undefined} key="items">
+      <div
+        id="g-panel"
+        role={isAccordion ? undefined : "tabpanel"}
+        aria-labelledby={!isAccordion && activeId ? `g-tab-${activeId}` : undefined}
+        key="items"
+      >
         {visible.length === 0 && categories.length > 0 ? (
           // Search/filters active: "no match"; nothing orderable at all (every dish sold out): neutral notice.
           <p className="g-empty">{t(needle || tagFilters.length > 0 ? "menu.noResults" : "menu.nothingAvailable")}</p>
@@ -456,48 +579,8 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             </ul>
           </section>
         ) : null}
-        {directItems.length > 0 ? (
-          <section id="g-direct-items" className="g-sub">
-            <ItemCards
-              items={directItems}
-              onOpen={handleOpenItem}
-              format={format}
-              photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
-              showPrice={showPrice}
-              photoIds={photoIds}
-            />
-          </section>
-        ) : null}
-        {active?.subcategories.map((sub) => (
-          <section key={sub.id} id={`g-sub-${sub.id}`} className="g-sub">
-            <h2>{sub.name}</h2>
-            {sub.items.length > 0 ? (
-              <ItemCards
-                items={sub.items}
-                onOpen={handleOpenItem}
-                format={format}
-                photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
-                showPrice={showPrice}
-                photoIds={photoIds}
-              />
-            ) : null}
-            {sub.groups.map((group) => (
-              <div key={group.id} className="g-group">
-                <h3>{group.name}</h3>
-                {group.detail ? <p className="g-detail">{group.detail}</p> : null}
-                <ItemCards
-                  items={group.items}
-                  onOpen={handleOpenItem}
-                  format={format}
-                  photoCountLabel={(cnt) => t("menu.photoCount", { count: cnt })}
-                  showPrice={showPrice}
-                  photoIds={photoIds}
-                />
-              </div>
-            ))}
-          </section>
-        ))}
-        {active && (directItems.length > 4 || active.subcategories.length > 1) ? (
+        {isAccordion ? null : categoryBody}
+        {!isAccordion && active && (directItems.length > 4 || active.subcategories.length > 1) ? (
           <div className="g-back-top-wrap">
             <button
               type="button"

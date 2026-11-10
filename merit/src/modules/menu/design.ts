@@ -80,6 +80,9 @@ export const CATEGORY_TAB_STYLES = [
   { id: "UNDERLINE_TABS", label: "Minimalist Çizgi", desc: "Çerçevesiz, altı çizgili zarif sekmeler (Michelin & Fine Dining)" },
   { id: "SEGMENT_CARDS", label: "Kompakt Kartlar", desc: "12px modern köşeli 2 sütunlu kartlar" },
   { id: "GRID_PILLS", label: "Klasik Kapsül", desc: "2 sütunlu oval kapsül ızgara" },
+  { id: "ACCORDION", label: "Akordiyon", desc: "Kategoriler alt alta; dokununca altında açılır, Kapat ile katlanır" },
+  { id: "PHOTO_TILES", label: "Fotoğraflı Karolar", desc: "Her kategori kendi ürün fotoğrafıyla 2 sütunlu karo" },
+  { id: "NUMBERED_INDEX", label: "Numaralı Fihrist", desc: "Alt alta numaralı içindekiler listesi (basılı menü havası)" },
 ] as const;
 
 export type CategoryTabStyle = (typeof CATEGORY_TAB_STYLES)[number]["id"];
