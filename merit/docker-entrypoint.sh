@@ -41,6 +41,10 @@ rm -f "$LOG"
 if [ "${RUN_SEED:-false}" = "true" ]; then
   echo "Seed çalıştırılıyor (prisma/seed.ts, SEED_DEMO=${SEED_DEMO:-false})..."
   npm run db:seed
+  # Seed odaları QR kodsuz oluşturur; basılı oda kartlarındaki kodlar (assets/qr-templates) burada yazılır.
+  # Yalnız kodu boş ya da farklı odaları düzeltir; başarısızlık başlatmayı durdurmaz, günlükte görünür.
+  echo "Basılı oda QR kodları yazılıyor (scripts/oda-qr-dogrula.ts --yaz)..."
+  npx tsx scripts/oda-qr-dogrula.ts --yaz || echo "UYARI: oda QR kodları basılı kartlarla tam eşleşmedi; yukarıdaki raporu inceleyin." >&2
 fi
 
 # SYNC_MERIT_MENUS (varsayılan false): 20 Merit outletini ve menülerini kurar. İlk kurulumda BİR KEZ true verin.

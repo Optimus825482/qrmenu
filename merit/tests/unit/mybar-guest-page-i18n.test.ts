@@ -39,7 +39,7 @@ describe("MyBar misafir sayfası mesajları", () => {
     }
   });
 
-  it("kapalı oda nedenlerinin tamamı (ODA_BOS dahil) her dilde mevcut", () => {
+  it("kapalı oda nedenlerinin tamamı her dilde mevcut", () => {
     for (const reason of Object.keys(ROOM_CLOSED_MESSAGES)) {
       for (const locale of LOCALES) expect(mybar(locale).has(`unavailable.${reason}`), `${locale}:${reason}`).toBe(true);
     }

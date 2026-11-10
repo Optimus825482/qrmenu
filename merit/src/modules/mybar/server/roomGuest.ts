@@ -1,15 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { businessDate, businessDay } from "@/lib/time";
 import type { GuestTarget } from "@/modules/menu/server/guestToken";
-import { occupancyHint } from "@/modules/order/server/roomService/occupancy";
 import { MYBAR_EVENT_ROLE_KINDS } from "../constants";
 import { ROOM_SERVICE_READY } from "../ui/guest/RoomServiceSlot";
 
 // Flipped by P6 (in the slot file) when the room-service guest flow ships; until then no card appears.
 export { ROOM_SERVICE_READY };
 
-export type RoomGuestReason = "ODA_PASIF" | "OTEL_PASIF" | "MYBAR_KAPALI" | "ODA_BOS";
+export type RoomGuestReason = "ODA_PASIF" | "OTEL_PASIF" | "MYBAR_KAPALI";
 
 export type RoomGuestState = {
   roomId: string;
@@ -28,7 +26,6 @@ export const ROOM_CLOSED_MESSAGES: Record<RoomGuestReason, string> = {
   ODA_PASIF: "Bu oda şu an kullanılamıyor",
   OTEL_PASIF: "Bu otel için hizmet şu an kullanılamıyor",
   MYBAR_KAPALI: "Bu oda için MyBar şu an kullanılamıyor",
-  ODA_BOS: "Bu oda şu an dolu görünmüyor, MyBar talebi alınamıyor",
 };
 
 export async function getRoomGuestState(roomId: string): Promise<RoomGuestState> {
@@ -63,14 +60,9 @@ export async function getRoomGuestState(roomId: string): Promise<RoomGuestState>
   });
   const on = (key: string) => modules.some((m) => m.moduleKey === key && m.enabled);
   const moduleOpen = on("MINIBAR");
-  // Unknown occupancy (no in-house upload for today) never blocks a guest; a known-empty room does.
-  const occupancy =
-    moduleOpen && room.isActive && room.hotel.isActive
-      ? (await occupancyHint(room.hotelId, [room.id], businessDay(businessDate()))).get(room.id)
-      : undefined;
-  const empty = occupancy === "BOS";
-
-  const mybarOpen = room.isActive && room.hotel.isActive && moduleOpen && !empty;
+  // Occupancy is deliberately NOT consulted (as in the legacy app): the in-house list can be late,
+  // partial or wrong, and a guest holding the room's printed card must always reach MyBar.
+  const mybarOpen = room.isActive && room.hotel.isActive && moduleOpen;
   let roomServiceOpen = false;
   if (ROOM_SERVICE_READY && room.isActive && room.hotel.isActive && on("ROOM_SERVICE")) {
     roomServiceOpen =
@@ -83,9 +75,7 @@ export async function getRoomGuestState(roomId: string): Promise<RoomGuestState>
       ? "ODA_PASIF"
       : !room.hotel.isActive
         ? "OTEL_PASIF"
-        : !moduleOpen
-          ? "MYBAR_KAPALI"
-          : "ODA_BOS";
+        : "MYBAR_KAPALI";
   }
   return {
     roomId: room.id,

@@ -181,7 +181,7 @@ describe("oda durumu", () => {
     expect(await getRoomGuestState(w.room.id)).toMatchObject({ mybarOpen: false, reason: "OTEL_PASIF" });
   });
 
-  it("doluluk yüklendiyse ve oda boşsa ODA_BOS; doluysa açık; veri yoksa açık", async () => {
+  it("doluluk listesi MyBar'ı kapatmaz: listede olmayan (boş görünen) oda da açık", async () => {
     const w = await minibarWorld({ rooms: 2 });
     const [a, b] = w.rooms;
     await closeRoomService(w.hotelId);
@@ -202,7 +202,9 @@ describe("oda durumu", () => {
     expect((await getRoomGuestState(a.id)).mybarOpen).toBe(true);
     await rec(a.id);
     expect((await getRoomGuestState(a.id)).mybarOpen).toBe(true);
-    expect(await getRoomGuestState(b.id)).toMatchObject({ mybarOpen: false, reason: "ODA_BOS" });
+    const empty = await getRoomGuestState(b.id);
+    expect(empty.mybarOpen).toBe(true);
+    expect(empty.reason).toBeUndefined();
   });
 
   it("openRoom scan.room yayınlar", async () => {
