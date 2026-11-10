@@ -248,6 +248,7 @@ const designSchema = z.object({
     curatedPhotos: z.boolean(),
     showSearch: z.boolean(),
     showFilters: z.boolean(),
+    showFeatured: z.boolean().optional().default(false),
     callWaiterText: z.string().trim().max(40, "Garson çağır butonu metni en fazla 40 karakter olabilir").optional().default(""),
     callWaiterPosition: z.enum(["STICKY_FOOTER", "STICKY_HEADER", "HERO_BOTTOM"]).optional().default("STICKY_FOOTER"),
   }),

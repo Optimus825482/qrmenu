@@ -134,7 +134,11 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
   it.each(PRESETS)("%s: tasarım satırı ve tema migration'da preset ile aynı", (_name, preset) => {
     const row = presetDesignRow(preset);
     const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
-    expect(MIGRATION).toContain(sqlText(JSON.stringify(row.options)));
+    // 170000 yazıldığında süzgeçler açıktı ve showFeatured seçeneği yoktu; ikisini 20261110200000 kapatır.
+    const { showFeatured, ...rest } = row.options;
+    expect(showFeatured).toBe(false);
+    expect(row.options.showFilters).toBe(false);
+    expect(MIGRATION).toContain(sqlText(JSON.stringify({ ...rest, showFilters: true })));
     expect(MIGRATION).toContain(`${sqlText(row.template)}, ${sqlText(JSON.stringify(row.layout))}`);
     expect(MIGRATION).toContain(sqlText(preset.theme));
   });

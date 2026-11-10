@@ -168,6 +168,8 @@ export type DesignOptions = {
   curatedPhotos: boolean;
   showSearch: boolean;
   showFilters: boolean;
+  /** "Öne çıkanlar" strip (chef's pick / popular) above the dish list. Off unless the operator turns it on. */
+  showFeatured: boolean;
   /** Customizable label for the Call Waiter button; empty falls back to the localized default. */
   callWaiterText: string;
   /** Placement of the Call Waiter button in the guest menu. */
@@ -188,7 +190,8 @@ export const NEUTRAL_NEW_OPTIONS = {
   heroImageUrl: "",
   curatedPhotos: false,
   showSearch: true,
-  showFilters: true,
+  showFilters: false,
+  showFeatured: false,
   callWaiterText: "",
   callWaiterPosition: "STICKY_FOOTER",
 } as const satisfies Pick<
@@ -206,6 +209,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "curatedPhotos"
   | "showSearch"
   | "showFilters"
+  | "showFeatured"
   | "callWaiterText"
   | "callWaiterPosition"
 >;
@@ -419,6 +423,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
+    showFeatured: typeof raw.showFeatured === "boolean" ? raw.showFeatured : NEUTRAL_NEW_OPTIONS.showFeatured,
     heroAlign: raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign,
     heroFontSize: raw.heroFontSize && ["small", "medium", "large", "xlarge"].includes(raw.heroFontSize) ? raw.heroFontSize : preset.heroFontSize,
     heroFontFamily: raw.heroFontFamily && HERO_FONT_FAMILY_IDS.has(raw.heroFontFamily) ? (raw.heroFontFamily as HeroFontFamily) : preset.heroFontFamily,

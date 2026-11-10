@@ -305,6 +305,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
         ) : visible.length === 0 ? null : (
+          <div className="g-tabs-shell">
           <div
             data-guide="kategori-gezin"
             className="g-tabs"
@@ -332,6 +333,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 </span>
               </button>
             ))}
+          </div>
           </div>
         )}
         {showTools ? (
@@ -436,7 +438,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
           // Search/filters active: "no match"; nothing orderable at all (every dish sold out): neutral notice.
           <p className="g-empty">{t(needle || tagFilters.length > 0 ? "menu.noResults" : "menu.nothingAvailable")}</p>
         ) : null}
-        {featured.length > 0 ? (
+        {options.showFeatured && featured.length > 0 ? (
           <section className="g-sub" aria-label={featuredTitle}>
             <h2>{featuredTitle}</h2>
             <ul className="g-featured">

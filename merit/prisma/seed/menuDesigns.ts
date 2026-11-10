@@ -208,7 +208,8 @@ export function presetDesignRow(preset: OutletDesignPreset): {
       showTags: true,
       showPrices: preset.showPrices ?? false,
       showSearch: true,
-      showFilters: true,
+      showFilters: false,
+      showFeatured: false,
       ...preset.options,
     },
   };
