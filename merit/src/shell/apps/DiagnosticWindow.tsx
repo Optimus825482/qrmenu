@@ -210,7 +210,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
           <span className="text-xs font-semibold text-muted uppercase block">Bellek (Heap Kullanımı)</span>
           <span className="text-base font-bold text-text">
             {health?.memory.heapUsedMb ?? 0} MB
-            <span className="text-xs font-normal text-muted"> / {health?.memory.heapTotalMb ?? 0} MB</span>
+            <span className="text-xs font-normal text-muted"> / {health?.memory.heapLimitMb ?? 0} MB</span>
           </span>
           <div className="w-full bg-[var(--muted-bg)] h-1.5 rounded-full mt-1.5 overflow-hidden">
             <div

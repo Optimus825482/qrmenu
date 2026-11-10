@@ -26,6 +26,8 @@ export interface SystemMemoryStats {
   rssMb: number;
   heapUsedMb: number;
   heapTotalMb: number;
+  /** V8 heap ceiling (--max-old-space-size); heapUsagePct is measured against this. */
+  heapLimitMb: number;
   externalMb: number;
   heapUsagePct: number;
 }

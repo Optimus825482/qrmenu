@@ -1,3 +1,4 @@
+import { getHeapStatistics } from "node:v8";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
@@ -34,8 +35,12 @@ export function getMemoryStats(): SystemMemoryStats {
   const heapUsedMb = Math.round((mem.heapUsed / 1024 / 1024) * 10) / 10;
   const heapTotalMb = Math.round((mem.heapTotal / 1024 / 1024) * 10) / 10;
   const externalMb = Math.round((mem.external / 1024 / 1024) * 10) / 10;
-  const heapUsagePct = Math.round((mem.heapUsed / mem.heapTotal) * 100);
-  return { rssMb, heapUsedMb, heapTotalMb, externalMb, heapUsagePct };
+  // heapTotal is what V8 has reserved so far and grows on demand, so used/total sits near 100% on a
+  // healthy process. Pressure is measured against the real ceiling (--max-old-space-size).
+  const limit = getHeapStatistics().heap_size_limit;
+  const heapLimitMb = Math.round((limit / 1024 / 1024) * 10) / 10;
+  const heapUsagePct = Math.round((mem.heapUsed / limit) * 100);
+  return { rssMb, heapUsedMb, heapTotalMb, heapLimitMb, externalMb, heapUsagePct };
 }
 
 /**
@@ -199,7 +204,7 @@ export async function runSelfDiagnostics(): Promise<SystemHealthReport> {
       name: "Bellek Tüketimi (Heap)",
       category: "MEMORY",
       status: "FAIL",
-      message: `Kritik bellek kullanımı: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapTotalMb} MB)`,
+      message: `Kritik bellek kullanımı: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapLimitMb} MB)`,
       recommendation: "Sistem belleği tükenmek üzere. Node.js servisini yeniden başlatın veya bellek sınırını yükseltin.",
     });
   } else if (memory.heapUsagePct > 75) {
@@ -208,7 +213,7 @@ export async function runSelfDiagnostics(): Promise<SystemHealthReport> {
       name: "Bellek Tüketimi (Heap)",
       category: "MEMORY",
       status: "WARN",
-      message: `Yüksek bellek kullanımı: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapTotalMb} MB)`,
+      message: `Yüksek bellek kullanımı: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapLimitMb} MB)`,
       recommendation: "Bellek kullanımını izleyin; yoğun raporlama işlemleri belleği artırmış olabilir.",
     });
   } else {
@@ -216,7 +221,7 @@ export async function runSelfDiagnostics(): Promise<SystemHealthReport> {
       name: "Bellek Tüketimi (Heap)",
       category: "MEMORY",
       status: "PASS",
-      message: `Normal seviyede: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapTotalMb} MB)`,
+      message: `Normal seviyede: %${memory.heapUsagePct} (${memory.heapUsedMb} MB / ${memory.heapLimitMb} MB)`,
     });
   }
 

@@ -882,6 +882,19 @@
   gap: 12px;
 }
 
+/* Desktop toolbars assume a wide window: on the phone they wrap instead of pushing the page sideways.
+   Wide tables keep scrolling inside their own .xp-grid-body. */
+.mb-xp-body .xp-grid-bar,
+.mb-xp-body .xp-grid-toolbar,
+.mb-xp-body .rd-tabs {
+  flex-wrap: wrap;
+}
+
+.mb-xp-body .xp-grid-search {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
 /* ---- app drawer (all apps) ----------------------------------------------------------------- */
 
 .mb-drawer {
