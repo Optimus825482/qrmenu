@@ -17,6 +17,7 @@
       "itemsFound": "Найдено позиций: {count}",
       "subcategories": "Подкатегории",
       "all": "Все",
+      "allCategories": "Все категории",
       "backToTop": "Вверх",
       "collapse": "Закрыть",
       "photoCount": "{count} фото"

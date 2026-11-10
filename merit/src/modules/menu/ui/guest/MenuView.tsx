@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
-import { ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
+import { effectiveCategoryTabStyle, ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
 import { AllergenIcons, ItemSheet } from "./ItemSheet";
 import { CallWaiterButton } from "./CallWaiterButton";
@@ -18,6 +18,11 @@ const FEATURED_TAGS = new Set<ItemTagId>(["SEFIN_SECIMI", "POPULER"]);
 export type GuestMenuMode = "table" | "room";
 
 /** First dish photo of a category; the cover of its tile in the photo-tile navigation. */
+/** Lower-cases for search and drops the dotted/dotless i difference (also the combining dot of "i\u0307"). */
+function foldSearch(text: string, locale: string): string {
+  return text.toLocaleLowerCase(locale).replaceAll("\u0131", "i").replaceAll("i\u0307", "i");
+}
+
 function categoryPhoto(category: GuestCategory): string | undefined {
   return categoryItems(category).find((item) => item.isAvailable && item.imageUrl)?.imageUrl ?? undefined;
 }
@@ -209,13 +214,15 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
     return store.persist.onFinishHydration(run);
   }, [store, token, categories]);
 
-  const needle = query.trim().toLocaleLowerCase(locale);
+  // Search ignores the dotted/dotless i difference: in Turkish "MOJITO" lower-cases to "mojıto", which a guest
+  // typing "mojito" would never match (and most drink names are printed in capitals).
+  const needle = foldSearch(query.trim(), locale);
   const visible = useMemo(() => {
     const matches = (item: GuestItem) => {
       if (!item.isAvailable) return false;
       if (tagFilters.length > 0 && !item.tags.some((tag) => tagFilters.includes(tag as ItemTagId))) return false;
       if (!needle) return true;
-      return `${item.name} ${item.detail ?? ""}`.toLocaleLowerCase(locale).includes(needle);
+      return foldSearch(`${item.name} ${item.detail ?? ""}`, locale).includes(needle);
     };
     return categories
       .map((category) => ({
@@ -234,14 +241,17 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       .filter((category) => category.items.length > 0 || category.subcategories.length > 0);
   }, [categories, needle, tagFilters, locale]);
 
-  const tabStyle = state.design.options.categoryTabStyle ?? "CHIPS_ROW";
+  const tabStyle = effectiveCategoryTabStyle(state.design.options.categoryTabStyle, categories.length);
+  // Showcase: the guest first sees every category as a photo card; a tap opens that category on its own page.
+  const isShowcase = tabStyle === "SHOWCASE";
+  const filtering = needle !== "" || tagFilters.length > 0;
   // Accordion: every category starts folded and only the tapped one is open; the other styles always show one.
   const isAccordion = tabStyle === "ACCORDION";
   // Single page: every category is printed one under the other; the navigation only jumps to a section.
   const isSinglePage = tabStyle === "SINGLE_PAGE";
   const isDropdown = tabStyle === "DROPDOWN";
   const pickedVisible = visible.some((category) => category.id === picked) ? picked : null;
-  const activeId = isAccordion ? pickedVisible : (pickedVisible ?? visible[0]?.id ?? null);
+  const activeId = isAccordion || isShowcase ? pickedVisible : (pickedVisible ?? visible[0]?.id ?? null);
   const active = visible.find((category) => category.id === activeId);
   const presentTags = new Set(
     categories.flatMap((category) => categoryItems(category).filter((item) => item.isAvailable).flatMap((item) => item.tags)),
@@ -261,6 +271,16 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   // A photo hero without a picked image reads as the plain title block.
   const heroPhoto = options.hero === "PHOTO" && options.heroImageUrl !== "" ? options.heroImageUrl : null;
   const showTools = options.showSearch || options.showFilters;
+
+  // Showcase: keep the open category's chip in view inside the sliding strip.
+  useEffect(() => {
+    if (!isShowcase || !activeId) return;
+    document.getElementById(`g-tab-${activeId}`)?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [isShowcase, activeId]);
+  const openShowcaseCategory = (id: string | null) => {
+    setPicked(id);
+    requestAnimationFrame(() => document.getElementById("g-show-top")?.scrollIntoView({ block: "start" }));
+  };
 
   const handleTabKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (visible.length === 0) return;
@@ -441,10 +461,38 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
         </div>
       ),
     categories: (
-      <div key="categories">
+      <div key="categories" className={isShowcase ? "g-show-host" : undefined}>
         {categories.length === 0 ? (
           <p className="g-empty">{t("menu.empty")}</p>
-        ) : visible.length === 0 || isAccordion ? null : (
+        ) : visible.length === 0 || isAccordion ? null : isShowcase ? (
+          <>
+            <span id="g-show-top" className="g-show-anchor" aria-hidden="true" />
+            {active ? (
+              <nav className="g-show-bar" data-guide="kategori-gezin" aria-label={t("menu.allCategories")}>
+                <button type="button" className="g-show-back" onClick={() => openShowcaseCategory(null)}>
+                  <span className="g-show-back-arrow" aria-hidden="true" />
+                  <span>{t("menu.allCategories")}</span>
+                </button>
+                <div className="g-show-strip" role="tablist" onKeyDown={handleTabKeyDown}>
+                  {visible.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      role="tab"
+                      id={`g-tab-${category.id}`}
+                      aria-selected={category.id === activeId}
+                      tabIndex={category.id === activeId ? 0 : -1}
+                      aria-controls="g-panel"
+                      onClick={() => openShowcaseCategory(category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </nav>
+            ) : null}
+          </>
+        ) : (
           <div className="g-tabs-shell" data-nav-open={isDropdown && navOpen ? "true" : undefined}>
           {isDropdown ? (
             <button
@@ -570,6 +618,27 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
           {isAccordion || isSinglePage ? null : subNav}
         </div>
         ) : null}
+        {isShowcase && !active && !filtering && visible.length > 0 ? (
+          <ul className="g-show-grid" data-guide="kategori-gezin" aria-label={t("menu.allCategories")}>
+            {visible.map((category) => (
+              <li key={category.id}>
+                <button type="button" className="g-show-card" onClick={() => openShowcaseCategory(category.id)}>
+                  {categoryPhoto(category) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="g-show-photo" src={categoryPhoto(category)} alt="" loading="lazy" decoding="async" width={320} height={320} />
+                  ) : (
+                    <span className="g-show-photo g-show-initial" aria-hidden="true">{category.name.trim().charAt(0)}</span>
+                  )}
+                  <span className="g-show-name">{category.name}</span>
+                  <span className="g-show-count" aria-label={t("menu.itemsFound", { count: categoryItemCount(category) })}>
+                    {categoryItemCount(category)}
+                  </span>
+                  <span className="g-show-go" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         {isAccordion && visible.length > 0 ? (
           <div className="g-acc" data-guide="kategori-gezin">
             {visible.map((category) => {
@@ -626,7 +695,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
     items: (
       <div
         id="g-panel"
-        role={isAccordion ? undefined : "tabpanel"}
+        role={isAccordion || (isShowcase && !active) ? undefined : "tabpanel"}
         aria-labelledby={!isAccordion && activeId ? `g-tab-${activeId}` : undefined}
         key="items"
       >
@@ -652,7 +721,8 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
             </ul>
           </section>
         ) : null}
-        {isSinglePage
+        {isShowcase && active ? <h2 className="g-show-title">{active.name}</h2> : null}
+        {isSinglePage || (isShowcase && !active && filtering)
           ? visible.map((category) => (
               <section key={category.id} id={`g-cat-${category.id}`} className="g-page-section" aria-labelledby={`g-cat-title-${category.id}`}>
                 <h2 className="g-page-title" id={`g-cat-title-${category.id}`}>{category.name}</h2>

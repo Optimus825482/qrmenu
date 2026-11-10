@@ -86,7 +86,19 @@ export const CATEGORY_TAB_STYLES = [
   { id: "SINGLE_PAGE", label: "Tek Sayfa", desc: "Tüm kategoriler tek sayfada alt alta akar; üstteki fihrist ilgili bölüme götürür" },
   { id: "SIDE_RAIL", label: "Yan Şerit", desc: "Kategoriler solda dikey şeritte, ürünler sağda (sipariş uygulaması düzeni)" },
   { id: "DROPDOWN", label: "Açılır Seçim", desc: "Tek satırlık sabit seçici; dokununca kategori listesi aşağı açılır" },
+  { id: "SHOWCASE", label: "Vitrin", desc: "Önce fotoğraflı kategori vitrini; dokununca kategori kendi sayfasında açılır, üstte geri düğmesi ve kayan kategori şeridi kalır (çok kategorili menüler)" },
 ] as const;
+
+/** Wrapping tab styles: fine for a handful of categories, but a long list pushes the dishes off the first screen. */
+const WRAPPING_TAB_STYLES = new Set<string>(["CHIPS_ROW", "UNDERLINE_TABS", "SEGMENT_CARDS", "GRID_PILLS"]);
+/** From this many categories on, a wrapping style is shown as the showcase instead. */
+export const SHOWCASE_FROM_CATEGORIES = 9;
+
+/** The navigation actually shown to the guest: long menus never get a wall of tabs above the dishes. */
+export function effectiveCategoryTabStyle(style: CategoryTabStyle | undefined, categoryCount: number): CategoryTabStyle {
+  const chosen = style ?? "CHIPS_ROW";
+  return categoryCount >= SHOWCASE_FROM_CATEGORIES && WRAPPING_TAB_STYLES.has(chosen) ? "SHOWCASE" : chosen;
+}
 
 export type CategoryTabStyle = (typeof CATEGORY_TAB_STYLES)[number]["id"];
 const CATEGORY_TAB_STYLE_IDS = new Set<string>(CATEGORY_TAB_STYLES.map((item) => item.id));

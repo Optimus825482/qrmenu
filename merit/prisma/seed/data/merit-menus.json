@@ -111,7 +111,7 @@
       "BREAKFAST SIDE ORDERS"
      ],
      "name": "El Yapımı Kızarmış Sosis",
-     "nameEn": "House - Made Fried Sausage",
+     "nameEn": "House-made Fried Sausage",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -703,7 +703,7 @@
       "SANDWICH & BURGER"
      ],
      "name": "Füme Burger",
-     "nameEn": "Smoke Burger",
+     "nameEn": "Smoked Burger",
      "detail": "El yapımı hamburger köftesi, brioche ekmeği, iki kat cheddar peyniri, füme dana kaburga, karamelize soğan, trüflü aioli ve barbekü sos",
      "detailEn": "House-made burger patty, brioche bun, double cheddar cheese, smoked beef ribs, caramelized onions, truffle aioli and barbecue sauce.",
      "price": null,
@@ -718,8 +718,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Penne All’arrabiata",
-     "nameEn": "Penne All’arrabiata",
+     "name": "Penne all’Arrabbiata",
+     "nameEn": "Penne all’Arrabbiata",
      "detail": "Acı domates sosu, zeytin, fesleğen ve parmesan peyniri",
      "detailEn": "Hot tomato sauce, olive, basil, and parmesan cheese",
      "price": null,
@@ -750,7 +750,7 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Spagetti Bolenez",
+     "name": "Spagetti Bolonez",
      "nameEn": "Spaghetti Bolognese",
      "detail": "Bolonez sos, fesleğen, çeri domates ve parmesan peyniri",
      "detailEn": "Bolognese sauce, basil, cherry tomatoes, and parmesan cheese",
@@ -766,8 +766,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Fettucine Alfredo",
-     "nameEn": "Fettucine Alfredo",
+     "name": "Fettuccine Alfredo",
+     "nameEn": "Fettuccine Alfredo",
      "detail": "Alfredo sos, ızgara tavuk göğsü, trüf yağı ve parmesan peyniri",
      "detailEn": "Alfredo sauce, grilled chicken breast, truffle oil, and parmesan cheese",
      "price": null,
@@ -1488,11 +1488,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ENGLISH BREAKFAST",
@@ -1506,11 +1504,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "EARL GREY",
@@ -1524,17 +1520,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "MORGENTAU",
      "nameEn": "MORGENTAU",
-     "detail": "mango,limon,gül yaprakları",
-     "detailEn": "mango,limon,gül yaprakları",
+     "detail": "mango, limon, gül yaprakları",
+     "detailEn": "mango, limon, gül yaprakları",
      "price": null,
      "imageUrl": "/merit-menus/b59f2c9d450bf58fd8e78e97.webp",
      "allergens": [],
@@ -1542,11 +1536,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "REFRESHING MINT",
@@ -1560,11 +1552,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "FRUITY CAMOMILE",
@@ -1578,17 +1568,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "AYURVEDA HERBS & GINGER",
      "nameEn": "AYURVEDA HERBS & GINGER",
-     "detail": "zencefil,limon otu,limon kabuğu",
-     "detailEn": "zencefil,limon otu,limon kabuğu",
+     "detail": "zencefil, limon otu, limon kabuğu",
+     "detailEn": "zencefil, limon otu, limon kabuğu",
      "price": null,
      "imageUrl": "/merit-menus/489ca1bee3daa816ebfd6064.webp",
      "allergens": [],
@@ -1596,17 +1584,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROOIBOS CREAM ORANGE",
      "nameEn": "ROOIBOS CREAM ORANGE",
-     "detail": "portakal,vanilya",
-     "detailEn": "portakal,vanilya",
+     "detail": "portakal, vanilya",
+     "detailEn": "portakal, vanilya",
      "price": null,
      "imageUrl": "/merit-menus/41727dd9782f0da796b00cc5.webp",
      "allergens": [],
@@ -1614,17 +1600,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "SWEET BERRIES",
      "nameEn": "SWEET BERRIES",
-     "detail": "çilek,ahududu ve kırmızı meyveler",
-     "detailEn": "çilek,ahududu ve kırmızı meyveler",
+     "detail": "çilek, ahududu ve kırmızı meyveler",
+     "detailEn": "çilek, ahududu ve kırmızı meyveler",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -1632,11 +1616,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROYAL WHITE TEA",
@@ -3977,8 +3959,8 @@
      ],
      "name": "PORT",
      "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
      "price": null,
      "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
      "allergens": [],
@@ -3993,8 +3975,8 @@
      ],
      "name": "THE PASSION",
      "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
      "price": null,
      "imageUrl": "/merit-menus/9921c424d8eae5cfdc842812.webp",
      "allergens": [],
@@ -4009,7 +3991,7 @@
      ],
      "name": "ILLUSION",
      "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
      "detailEn": "VANILLA ROOIBOS-INFUSED RUM, FRANGELICO, SOUR SAUCE, PEACH PUREE",
      "price": 35,
      "imageUrl": "/merit-menus/6729c60d3b4aae8cc6949533.webp",
@@ -4025,8 +4007,8 @@
      ],
      "name": "HARMONY",
      "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
      "price": null,
      "imageUrl": "/merit-menus/1466906d481679b6edcff114.webp",
      "allergens": [],
@@ -4969,11 +4951,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "ANANAS",
@@ -4987,11 +4967,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "DOMATES",
@@ -5005,11 +4983,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "ELMA",
@@ -5023,11 +4999,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "GREYFURT",
@@ -5041,11 +5015,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "KAYISI",
@@ -5059,11 +5031,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "KIZILCIK",
@@ -5077,11 +5047,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "NAR",
@@ -5095,11 +5063,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "PORTAKAL",
@@ -5113,11 +5079,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "ŞEFTALİ",
@@ -5131,11 +5095,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRUIT JUICE"
      ],
      "name": "VİŞNE",
@@ -5149,11 +5111,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "FRESH MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRESH FRUIT JUICE"
      ],
      "name": "PORTAKAL",
@@ -5167,11 +5127,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "FRESH MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRESH FRUIT JUICE"
      ],
      "name": "GREYFURT",
@@ -5185,11 +5143,9 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "FRESH MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRESH FRUIT JUICE"
      ],
      "name": "HAVUÇ",
@@ -5203,15 +5159,77 @@
     },
     {
      "catPath": [
-      "MEŞRUBATLAR",
       "FRESH MEYVE SUYU"
      ],
      "catPathEn": [
-      "SOFT DRINKS",
       "FRESH FRUIT JUICE"
      ],
      "name": "ELMA",
      "nameEn": "APPLE",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": null,
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "FRESH MEYVE SUYU"
+     ],
+     "catPathEn": [
+      "FRESH FRUIT JUICE"
+     ],
+     "name": "KARPUZ",
+     "nameEn": "WATERMELON",
+     "detail": null,
+     "detailEn": null,
+     "price": null,
+     "imageUrl": null,
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "FRESH MEYVE SUYU"
+     ],
+     "catPathEn": [
+      "FRESH FRUIT JUICE"
+     ],
+     "name": "KAVUN",
+     "nameEn": "MELON",
+     "detail": null,
+     "detailEn": null,
+     "price": null,
+     "imageUrl": null,
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "FRESH MEYVE SUYU"
+     ],
+     "catPathEn": [
+      "FRESH FRUIT JUICE"
+     ],
+     "name": "KİVİ",
+     "nameEn": "KIWI",
+     "detail": null,
+     "detailEn": null,
+     "price": null,
+     "imageUrl": null,
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "FRESH MEYVE SUYU"
+     ],
+     "catPathEn": [
+      "FRESH FRUIT JUICE"
+     ],
+     "name": "KARIŞIK",
+     "nameEn": "MIXED",
      "detail": null,
      "detailEn": null,
      "price": 10,
@@ -5424,118 +5442,6 @@
      "detailEn": null,
      "price": 15,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "GREYFURT",
-     "nameEn": "GRAPEFRUIT",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "ELMA",
-     "nameEn": "APPLE",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "KARPUZ",
-     "nameEn": "WATERMELON",
-     "detail": null,
-     "detailEn": null,
-     "price": null,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "KAVUN",
-     "nameEn": "MELON",
-     "detail": null,
-     "detailEn": null,
-     "price": null,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "KİVİ",
-     "nameEn": "KIWI",
-     "detail": null,
-     "detailEn": null,
-     "price": null,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "PORTAKAL",
-     "nameEn": "ORANGE",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": null,
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "FRESH MEYVE SUYU"
-     ],
-     "catPathEn": [
-      "FRESH FRUIT JUICE"
-     ],
-     "name": "KARIŞIK",
-     "nameEn": "MIXED",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": null,
      "allergens": [],
      "tags": []
     },
@@ -6021,6 +5927,86 @@
     },
     {
      "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "PORT",
+     "nameEn": "PORT",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "price": null,
+     "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "THE PASSION",
+     "nameEn": "THE PASSION",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "price": null,
+     "imageUrl": "/merit-menus/9921c424d8eae5cfdc842812.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "ILLUSION",
+     "nameEn": "ILLUSION",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "detailEn": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "price": 35,
+     "imageUrl": "/merit-menus/6729c60d3b4aae8cc6949533.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "HARMONY",
+     "nameEn": "HARMONY",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "price": null,
+     "imageUrl": "/merit-menus/1466906d481679b6edcff114.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "AURA",
+     "nameEn": "AURA",
+     "detail": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
+     "detailEn": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
+     "price": 35,
+     "imageUrl": "/merit-menus/50583accebe577bf4bf7325d.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
@@ -6060,8 +6046,8 @@
      ],
      "name": "BLOODY MARY",
      "nameEn": "BLOODY MARY",
-     "detail": "VODKA,LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
-     "detailEn": "VODKA,LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
+     "detail": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
+     "detailEn": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
      "price": null,
      "imageUrl": "/merit-menus/adfa7ba4c78f827b5f459328.webp",
      "allergens": [],
@@ -6236,8 +6222,8 @@
      ],
      "name": "ESPRESSO MARTINI",
      "nameEn": "ESPRESSO MARTINI",
-     "detail": "VOTKA,KAHLUA,ESPRESSO",
-     "detailEn": "VOTKA,KAHLUA,ESPRESSO",
+     "detail": "VOTKA, KAHLUA, ESPRESSO",
+     "detailEn": "VOTKA, KAHLUA, ESPRESSO",
      "price": null,
      "imageUrl": "/merit-menus/f5360d18ad9082a53faa71a2.webp",
      "allergens": [],
@@ -6272,86 +6258,6 @@
      "detailEn": "VODKA, COFFEE LIQUEUR, MILK",
      "price": 35,
      "imageUrl": "/merit-menus/69d9f3d099a5ba2f144b0796.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "PORT",
-     "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "price": null,
-     "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "THE PASSION",
-     "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "price": null,
-     "imageUrl": "/merit-menus/9921c424d8eae5cfdc842812.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "ILLUSION",
-     "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "detailEn": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "price": 35,
-     "imageUrl": "/merit-menus/6729c60d3b4aae8cc6949533.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "HARMONY",
-     "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "price": null,
-     "imageUrl": "/merit-menus/1466906d481679b6edcff114.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "AURA",
-     "nameEn": "AURA",
-     "detail": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
-     "detailEn": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
-     "price": 35,
-     "imageUrl": "/merit-menus/50583accebe577bf4bf7325d.webp",
      "allergens": [],
      "tags": []
     },
@@ -6560,118 +6466,6 @@
      "detailEn": null,
      "price": 10,
      "imageUrl": "/merit-menus/3287bc19620ea2ca34c240fa.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "CAPTAIN MORGAN WHITE",
-     "nameEn": "CAPTAIN MORGAN WHITE",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/a0df0c83fd1ce8aeeee44f43.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "CAPTAIN MORGAN DARK",
-     "nameEn": "CAPTAIN MORGAN DARK",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/18e2eff2cf8dbc9d67865a18.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "HAVANA CLUB 3 ANOS",
-     "nameEn": "HAVANA CLUB 3 ANOS",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/4e688cad5513639dde3e8491.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA BLANCA",
-     "nameEn": "BACARDI CARTA BLANCA",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/3b1ee82ce48d556bee725ddc.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA NEGRA (BLACK)",
-     "nameEn": "BACARDI CARTA NEGRA (BLACK)",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/83ba321f147f0741dfdeda02.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA ORO (GOLD)",
-     "nameEn": "BACARDI CARTA ORO (GOLD)",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/c31ea2029cc4dd7167ad2984.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "MALIBU CARIBBEAN RUM",
-     "nameEn": "MALIBU CARIBBEAN RUM",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/3c60f573afda72326dde4055.webp",
      "allergens": [],
      "tags": []
     },
@@ -7056,6 +6850,118 @@
      "detailEn": null,
      "price": 20,
      "imageUrl": "/merit-menus/f3ed85b108ddae3205596f23.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "CAPTAIN MORGAN WHITE",
+     "nameEn": "CAPTAIN MORGAN WHITE",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/a0df0c83fd1ce8aeeee44f43.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "CAPTAIN MORGAN DARK",
+     "nameEn": "CAPTAIN MORGAN DARK",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/18e2eff2cf8dbc9d67865a18.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "HAVANA CLUB 3 ANOS",
+     "nameEn": "HAVANA CLUB 3 ANOS",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/4e688cad5513639dde3e8491.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA BLANCA",
+     "nameEn": "BACARDI CARTA BLANCA",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/3b1ee82ce48d556bee725ddc.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA NEGRA (BLACK)",
+     "nameEn": "BACARDI CARTA NEGRA (BLACK)",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/83ba321f147f0741dfdeda02.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA ORO (GOLD)",
+     "nameEn": "BACARDI CARTA ORO (GOLD)",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/c31ea2029cc4dd7167ad2984.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "MALIBU CARIBBEAN RUM",
+     "nameEn": "MALIBU CARIBBEAN RUM",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/3c60f573afda72326dde4055.webp",
      "allergens": [],
      "tags": []
     },
@@ -8159,7 +8065,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "DEMLEME ÇAY",
      "nameEn": "BREWED TEA",
@@ -8175,7 +8081,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "MATCHA ÇAYI",
      "nameEn": "MATCHA TEA",
@@ -8191,7 +8097,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE",
@@ -8207,7 +8113,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "DAMLA SAKIZLI TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE WITH MASTIC GUM",
@@ -8223,7 +8129,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "FİLTRE KAHVE",
      "nameEn": "FILTER COFFEE",
@@ -8239,7 +8145,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "KAFEİNSİZ KAHVE",
      "nameEn": "DECAFFEINATED COFFEE",
@@ -8255,7 +8161,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO",
      "nameEn": "ESPRESSO",
@@ -8271,7 +8177,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO LUNGO",
      "nameEn": "ESPRESSO LUNGO",
@@ -8287,7 +8193,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO MACCHIATO",
      "nameEn": "ESPRESSO MACCHIATO",
@@ -8303,7 +8209,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "COFFEE CORTADO",
      "nameEn": "COFFEE CORTADO",
@@ -8319,7 +8225,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "FLAT WHITE",
      "nameEn": "FLAT WHITE",
@@ -8335,7 +8241,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "AMERICANO",
      "nameEn": "AMERICANO",
@@ -8351,7 +8257,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "CAPPUCCINO",
      "nameEn": "CAPPUCCINO",
@@ -8367,7 +8273,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "CAFE LATTE",
      "nameEn": "CAFE LATTE",
@@ -8383,7 +8289,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "HİNDİSTAN CEVİZİ SÜTLÜ MATCHA LATTE",
      "nameEn": "COCONUT MATCHA LATTE",
@@ -8399,7 +8305,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SICAK ÇİKOLATA",
      "nameEn": "HOT CHOCOLATE",
@@ -8415,7 +8321,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SICAK BEYAZ ÇİKOLATA",
      "nameEn": "HOT WHITE CHOCOLATE",
@@ -8431,7 +8337,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SALEP",
      "nameEn": "SALEP",
@@ -8447,7 +8353,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ZERDEÇALLI SALEP",
      "nameEn": "TURMERIC SALEP",
@@ -8455,6 +8361,38 @@
      "detailEn": null,
      "price": 20,
      "imageUrl": "/merit-menus/4fd6fe66f30ba7557bedfba3.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER"
+     ],
+     "catPathEn": [
+      "HOT DRINKS"
+     ],
+     "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
+     "nameEn": "FRESHLY BREWED HERBAL TEAS",
+     "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, BAMYA ÇİÇEĞİ, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
+     "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, OKRA FLOWER, CAMOMILE, JASMINE, ECHINECEA, BALM",
+     "price": null,
+     "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER"
+     ],
+     "catPathEn": [
+      "HOT DRINKS"
+     ],
+     "name": "3. NESİL KAHVELER",
+     "nameEn": "THIRD GENERATION COFFEES",
+     "detail": "CHEMEX, V60, SYPHON",
+     "detailEn": "CHEMEX, V60, SYPHON",
+     "price": null,
+     "imageUrl": null,
      "allergens": [],
      "tags": []
     },
@@ -8695,38 +8633,6 @@
      "detailEn": "ORANGE, GRAPEFRUIT, CARROT, APPLE",
      "price": 10,
      "imageUrl": "/merit-menus/9d5c1754ebd140f9834ac87c.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
-     "nameEn": "FRESHLY BREWED HERBAL TEAS",
-     "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, BAMYA ÇİÇEĞİ, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
-     "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, OKRA FLOWER, CAMOMILE, JASMINE, ECHINECEA, BALM",
-     "price": null,
-     "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "3. NESİL KAHVELER",
-     "nameEn": "THIRD GENERATION COFFEES",
-     "detail": "CHEMEX , V60 , SYPHON",
-     "detailEn": "CHEMEX , V60 , SYPHON",
-     "price": null,
-     "imageUrl": null,
      "allergens": [],
      "tags": []
     },
@@ -9047,7 +8953,7 @@
      ],
      "name": "IRISH WHISKEY CREAM",
      "nameEn": "IRISH WHISKEY CREAM",
-     "detail": "SİYAH ÇAY,KAKAO KABUKLARI, MALT VİSKİ AROMASI",
+     "detail": "SİYAH ÇAY, KAKAO KABUKLARI, MALT VİSKİ AROMASI",
      "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
      "price": null,
      "imageUrl": "/merit-menus/d4f0be70f3f551cca927abed.webp",
@@ -9138,7 +9044,7 @@
      "name": "ROOIBOS CHOCOLATE HEAVEN",
      "nameEn": "ROOIBOS CHOCOLATE HEAVEN",
      "detail": "ROOIBOS, KAKAO KABUĞU, VANILYA",
-     "detailEn": "ROOIBOS, COCOA SELL , VANILLA",
+     "detailEn": "ROOIBOS, COCOA SELL, VANILLA",
      "price": null,
      "imageUrl": "/merit-menus/251d4bc099fb1381e4c5b448.webp",
      "allergens": [],
@@ -9260,54 +9166,6 @@
     },
     {
      "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "FRUIT FROZENS",
-     "nameEn": "FRUIT FROZENS",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/3cc9b62e03621aad91d3adde.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "MILKSHAKES",
-     "nameEn": "MILKSHAKES",
-     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA, DONDURMA KÜLAHI VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
-     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM, ICE CREAM CONE VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
-     "price": 20,
-     "imageUrl": "/merit-menus/1d9f88e38556eb3310323500.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "SMOOTHIES",
-     "nameEn": "SMOOTHIES",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/27a4dd47e6b2214c161f886d.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
       "EV YAPIMI SOĞUK ÇAYLAR"
      ],
      "catPathEn": [
@@ -9388,15 +9246,63 @@
     },
     {
      "catPath": [
-      "ROYAL DONDURMA"
+      "SOĞUK LEZZETLER"
      ],
      "catPathEn": [
-      "ROYAL ICE CREAM"
+      "FROZEN TREATS"
+     ],
+     "name": "FRUIT FROZENS",
+     "nameEn": "FRUIT FROZENS",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/3cc9b62e03621aad91d3adde.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "MILKSHAKES",
+     "nameEn": "MILKSHAKES",
+     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA, DONDURMA KÜLAHI VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
+     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM, ICE CREAM CONE VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
+     "price": 20,
+     "imageUrl": "/merit-menus/1d9f88e38556eb3310323500.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "SMOOTHIES",
+     "nameEn": "SMOOTHIES",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/27a4dd47e6b2214c161f886d.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
      ],
      "name": "ROYAL DONDURMA",
      "nameEn": "ROYAL ICE CREAM",
      "detail": "KAYMAK, KARAMEL, VANİLYA, BLUE SKY, DAMLA SAKIZI, NANE, MUZ, OREO COOKIES, ANTEP FISTIĞI, CHEERY MANIA, CEVİZ, LİMON, ÇİLEK, FRAMBUAZ, KAVUN, MANDALİNA, COOKIES, BÖĞÜRTLEN, MANGO, ÇİKOLATA, COCO AL BONBON, DİYET CEVİZ, KINDER BUENO, SNICKERS",
-     "detailEn": "CREAM, CARAMEL, VANILLA, BLUE SKY, MASTIC GUM, MINT, BANANA, OREO COOKIES, PISTACHIOS, CHEERY MANIA, WALNUT, LEMON, STRAWBERRY, RASPBERRY, MELON,MANDARIN, COOKIES, BLACKBERRY, MANGO, CHOCOLATE, COCO AL BONBON, DIET WALNUT,KINDER BUENO, SNICKERS",
+     "detailEn": "CREAM, CARAMEL, VANILLA, BLUE SKY, MASTIC GUM, MINT, BANANA, OREO COOKIES, PISTACHIOS, CHEERY MANIA, WALNUT, LEMON, STRAWBERRY, RASPBERRY, MELON, MANDARIN, COOKIES, BLACKBERRY, MANGO, CHOCOLATE, COCO AL BONBON, DIET WALNUT, KINDER BUENO, SNICKERS",
      "price": null,
      "imageUrl": "/merit-menus/581c5b57f20bdbf089fddeb7.webp",
      "allergens": [],
@@ -12883,6 +12789,86 @@
     },
     {
      "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "PORT",
+     "nameEn": "PORT",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "price": null,
+     "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "THE PASSION",
+     "nameEn": "THE PASSION",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "price": null,
+     "imageUrl": "/merit-menus/9921c424d8eae5cfdc842812.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "ILLUSION",
+     "nameEn": "ILLUSION",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "detailEn": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "price": 35,
+     "imageUrl": "/merit-menus/6caa001a8d3b750a38ede49e.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "HARMONY",
+     "nameEn": "HARMONY",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "price": null,
+     "imageUrl": "/merit-menus/1466906d481679b6edcff114.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "SIGNATURE COCKTAILS"
+     ],
+     "name": "AURA",
+     "nameEn": "AURA",
+     "detail": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
+     "detailEn": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
+     "price": 35,
+     "imageUrl": "/merit-menus/f94cf1c22c2e31cf1a707e8b.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
@@ -12971,7 +12957,7 @@
      "name": "OLD FASHIONED",
      "nameEn": "OLD FASHIONED",
      "detail": "BOURBON VİSKİ, ŞEKER, ANGUSTRA BITTERS",
-     "detailEn": "BOURBON WHISKEY, SUGAR , ANGUSTRA BITTERS",
+     "detailEn": "BOURBON WHISKEY, SUGAR, ANGUSTRA BITTERS",
      "price": 35,
      "imageUrl": "/merit-menus/5f1c2713c01af1ffe5aa5c54.webp",
      "allergens": [],
@@ -12990,86 +12976,6 @@
      "detailEn": "CAMPARI, MARTINI ROSSO, GORDON'S GIN",
      "price": 35,
      "imageUrl": "/merit-menus/c09eb9e250174bb0f59308f7.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "PORT",
-     "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "price": null,
-     "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "THE PASSION",
-     "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "price": null,
-     "imageUrl": "/merit-menus/9921c424d8eae5cfdc842812.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "ILLUSION",
-     "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "detailEn": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "price": 35,
-     "imageUrl": "/merit-menus/6caa001a8d3b750a38ede49e.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "HARMONY",
-     "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "price": null,
-     "imageUrl": "/merit-menus/1466906d481679b6edcff114.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "SIGNATURE COCKTAILS"
-     ],
-     "name": "AURA",
-     "nameEn": "AURA",
-     "detail": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
-     "detailEn": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
-     "price": 35,
-     "imageUrl": "/merit-menus/f94cf1c22c2e31cf1a707e8b.webp",
      "allergens": [],
      "tags": []
     }
@@ -13184,7 +13090,7 @@
       "BREAKFAST SIDE ORDERS"
      ],
      "name": "El Yapımı Kızarmış Sosis",
-     "nameEn": "House - Made Fried Sausage",
+     "nameEn": "House-made Fried Sausage",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -13776,7 +13682,7 @@
       "SANDWICH & BURGER"
      ],
      "name": "Füme Burger",
-     "nameEn": "Smoke Burger",
+     "nameEn": "Smoked Burger",
      "detail": "El yapımı hamburger köftesi, brioche ekmeği, iki kat cheddar peyniri, füme dana kaburga, karamelize soğan, trüflü aioli ve barbekü sos",
      "detailEn": "House-made burger patty, brioche bun, double cheddar cheese, smoked beef ribs, caramelized onions, truffle aioli and barbecue sauce.",
      "price": null,
@@ -13791,8 +13697,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Penne All’arrabiata",
-     "nameEn": "Penne All’arrabiata",
+     "name": "Penne all’Arrabbiata",
+     "nameEn": "Penne all’Arrabbiata",
      "detail": "Acı domates sosu, zeytin, fesleğen ve parmesan peyniri",
      "detailEn": "Hot tomato sauce, olive, basil, and parmesan cheese",
      "price": null,
@@ -13823,7 +13729,7 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Spagetti Bolenez",
+     "name": "Spagetti Bolonez",
      "nameEn": "Spaghetti Bolognese",
      "detail": "Bolonez sos, fesleğen, çeri domates ve parmesan peyniri",
      "detailEn": "Bolognese sauce, basil, cherry tomatoes, and parmesan cheese",
@@ -13839,8 +13745,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Fettucine Alfredo",
-     "nameEn": "Fettucine Alfredo",
+     "name": "Fettuccine Alfredo",
+     "nameEn": "Fettuccine Alfredo",
      "detail": "Alfredo sos, ızgara tavuk göğsü, trüf yağı ve parmesan peyniri",
      "detailEn": "Alfredo sauce, grilled chicken breast, truffle oil, and parmesan cheese",
      "price": null,
@@ -14561,11 +14467,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ENGLISH BREAKFAST",
@@ -14579,11 +14483,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "EARL GREY",
@@ -14597,17 +14499,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "MORGENTAU",
      "nameEn": "MORGENTAU",
-     "detail": "mango,limon,gül yaprakları",
-     "detailEn": "mango,limon,gül yaprakları",
+     "detail": "mango, limon, gül yaprakları",
+     "detailEn": "mango, limon, gül yaprakları",
      "price": null,
      "imageUrl": "/merit-menus/b59f2c9d450bf58fd8e78e97.webp",
      "allergens": [],
@@ -14615,11 +14515,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "REFRESHING MINT",
@@ -14633,11 +14531,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "FRUITY CAMOMILE",
@@ -14651,17 +14547,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "AYURVEDA HERBS & GINGER",
      "nameEn": "AYURVEDA HERBS & GINGER",
-     "detail": "zencefil,limon otu,limon kabuğu",
-     "detailEn": "zencefil,limon otu,limon kabuğu",
+     "detail": "zencefil, limon otu, limon kabuğu",
+     "detailEn": "zencefil, limon otu, limon kabuğu",
      "price": null,
      "imageUrl": "/merit-menus/489ca1bee3daa816ebfd6064.webp",
      "allergens": [],
@@ -14669,17 +14563,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROOIBOS CREAM ORANGE",
      "nameEn": "ROOIBOS CREAM ORANGE",
-     "detail": "portakal,vanilya",
-     "detailEn": "portakal,vanilya",
+     "detail": "portakal, vanilya",
+     "detailEn": "portakal, vanilya",
      "price": null,
      "imageUrl": "/merit-menus/41727dd9782f0da796b00cc5.webp",
      "allergens": [],
@@ -14687,17 +14579,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "SWEET BERRIES",
      "nameEn": "SWEET BERRIES",
-     "detail": "çilek,ahududu ve kırmızı meyveler",
-     "detailEn": "çilek,ahududu ve kırmızı meyveler",
+     "detail": "çilek, ahududu ve kırmızı meyveler",
+     "detailEn": "çilek, ahududu ve kırmızı meyveler",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -14705,11 +14595,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROYAL WHITE TEA",
@@ -17050,8 +16938,8 @@
      ],
      "name": "PORT",
      "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
      "price": null,
      "imageUrl": "/merit-menus/7b815a0a9c00de1fd18de6d2.webp",
      "allergens": [],
@@ -17066,8 +16954,8 @@
      ],
      "name": "THE PASSION",
      "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
      "price": null,
      "imageUrl": "/merit-menus/44e6c35f4081261d73579935.webp",
      "allergens": [],
@@ -17082,7 +16970,7 @@
      ],
      "name": "ILLUSION",
      "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
      "detailEn": "VANILLA ROOIBOS-INFUSED RUM, FRANGELICO, SOUR SAUCE, PEACH PUREE",
      "price": 35,
      "imageUrl": "/merit-menus/eaad3ba47f4240fea40c0166.webp",
@@ -17098,8 +16986,8 @@
      ],
      "name": "HARMONY",
      "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
      "price": null,
      "imageUrl": "/merit-menus/dca1c9087a32ca25b7eea8d4.webp",
      "allergens": [],
@@ -17242,10 +17130,10 @@
    "items": [
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Hellim Çıtırları",
      "nameEn": "Crispy Halloumi",
@@ -17258,10 +17146,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Tempura Tabağı",
      "nameEn": "Tempura Plate",
@@ -17274,10 +17162,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Kıtır Pane Basketi",
      "nameEn": "Crunchy Basket",
@@ -17290,10 +17178,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Kalamar Tava",
      "nameEn": "Fried Calamari",
@@ -17306,10 +17194,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Şnitzel",
      "nameEn": "Schnitzel",
@@ -17322,10 +17210,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Acılı Tavuk Kanatları",
      "nameEn": "Chicken Buffalo Wings",
@@ -17338,10 +17226,10 @@
     },
     {
      "catPath": [
-      "ATISTIRMALIKLAR"
+      "ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "STARTERS"
+      "SNACKS"
      ],
      "name": "Kentucky",
      "nameEn": "Kentucky Chicken",
@@ -17728,7 +17616,7 @@
       "DESSERTS"
      ],
      "name": "Fırın Sütlaç",
-     "nameEn": "Baked Rice Pudding",
+     "nameEn": "Oven-Baked Rice Pudding",
      "detail": "Kırık fındık, orman meyveleri",
      "detailEn": "Crushed hazelnuts, mixed berries",
      "price": null,
@@ -18801,8 +18689,8 @@
      ],
      "name": "PORT",
      "nameEn": "PORT",
-     "detail": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER,GREEN APPLE PUREE",
-     "detailEn": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER,GREEN APPLE PUREE",
+     "detail": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER, GREEN APPLE PUREE",
+     "detailEn": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER, GREEN APPLE PUREE",
      "price": null,
      "imageUrl": "/merit-menus/7b815a0a9c00de1fd18de6d2.webp",
      "allergens": [],
@@ -18865,8 +18753,8 @@
      ],
      "name": "ILLUSION",
      "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "detailEn": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "detailEn": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
      "price": 35,
      "imageUrl": "/merit-menus/eaad3ba47f4240fea40c0166.webp",
      "allergens": [],
@@ -18881,8 +18769,8 @@
      ],
      "name": "HARMONY",
      "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
      "price": null,
      "imageUrl": "/merit-menus/dca1c9087a32ca25b7eea8d4.webp",
      "allergens": [],
@@ -18929,8 +18817,8 @@
      ],
      "name": "BLOODY MARY",
      "nameEn": "BLOODY MARY",
-     "detail": "VODKA,LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
-     "detailEn": "VODKA,LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
+     "detail": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
+     "detailEn": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
      "price": null,
      "imageUrl": "/merit-menus/51531834b5512c7e8b936373.webp",
      "allergens": [],
@@ -19105,8 +18993,8 @@
      ],
      "name": "ESPRESSO MARTINI",
      "nameEn": "ESPRESSO MARTINI",
-     "detail": "VOTKA,KAHLUA,ESPRESSO",
-     "detailEn": "VOTKA,KAHLUA,ESPRESSO",
+     "detail": "VOTKA, KAHLUA, ESPRESSO",
+     "detailEn": "VOTKA, KAHLUA, ESPRESSO",
      "price": null,
      "imageUrl": "/merit-menus/442d3a5ba98157d133fb1a78.webp",
      "allergens": [],
@@ -19349,118 +19237,6 @@
      "detailEn": null,
      "price": 10,
      "imageUrl": "/merit-menus/3287bc19620ea2ca34c240fa.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "CAPTAIN MORGAN WHITE",
-     "nameEn": "CAPTAIN MORGAN WHITE",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/a0df0c83fd1ce8aeeee44f43.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "CAPTAIN MORGAN DARK",
-     "nameEn": "CAPTAIN MORGAN DARK",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/18e2eff2cf8dbc9d67865a18.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "HAVANA CLUB 3 ANOS",
-     "nameEn": "HAVANA CLUB 3 ANOS",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/4e688cad5513639dde3e8491.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA BLANCA",
-     "nameEn": "BACARDI CARTA BLANCA",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/3b1ee82ce48d556bee725ddc.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA NEGRA (BLACK)",
-     "nameEn": "BACARDI CARTA NEGRA (BLACK)",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/83ba321f147f0741dfdeda02.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "BACARDI CARTA ORO (GOLD)",
-     "nameEn": "BACARDI CARTA ORO (GOLD)",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/c31ea2029cc4dd7167ad2984.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "ROMLAR"
-     ],
-     "catPathEn": [
-      "RUMS"
-     ],
-     "name": "MALIBU CARIBBEAN RUM",
-     "nameEn": "MALIBU CARIBBEAN RUM",
-     "detail": null,
-     "detailEn": null,
-     "price": 10,
-     "imageUrl": "/merit-menus/3c60f573afda72326dde4055.webp",
      "allergens": [],
      "tags": []
     },
@@ -19845,6 +19621,118 @@
      "detailEn": null,
      "price": 20,
      "imageUrl": "/merit-menus/f3ed85b108ddae3205596f23.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "CAPTAIN MORGAN WHITE",
+     "nameEn": "CAPTAIN MORGAN WHITE",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/a0df0c83fd1ce8aeeee44f43.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "CAPTAIN MORGAN DARK",
+     "nameEn": "CAPTAIN MORGAN DARK",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/18e2eff2cf8dbc9d67865a18.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "HAVANA CLUB 3 ANOS",
+     "nameEn": "HAVANA CLUB 3 ANOS",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/4e688cad5513639dde3e8491.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA BLANCA",
+     "nameEn": "BACARDI CARTA BLANCA",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/3b1ee82ce48d556bee725ddc.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA NEGRA (BLACK)",
+     "nameEn": "BACARDI CARTA NEGRA (BLACK)",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/83ba321f147f0741dfdeda02.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "BACARDI CARTA ORO (GOLD)",
+     "nameEn": "BACARDI CARTA ORO (GOLD)",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/c31ea2029cc4dd7167ad2984.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "ROMLAR"
+     ],
+     "catPathEn": [
+      "RUMS"
+     ],
+     "name": "MALIBU CARIBBEAN RUM",
+     "nameEn": "MALIBU CARIBBEAN RUM",
+     "detail": null,
+     "detailEn": null,
+     "price": 10,
+     "imageUrl": "/merit-menus/3c60f573afda72326dde4055.webp",
      "allergens": [],
      "tags": []
     },
@@ -21329,11 +21217,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "MORGENTAU",
@@ -21347,11 +21233,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "MASALA CHAI",
@@ -21365,11 +21249,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "VANILLA ROOIBOS",
@@ -21383,11 +21265,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "CHILL OUT WITH HERBS",
@@ -21401,11 +21281,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "FRUITY CAMOMILE",
@@ -21419,11 +21297,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "REFRESHING MINT",
@@ -21437,11 +21313,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "ROOIBOS CREAM ORANGE",
@@ -21455,11 +21329,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "HUCKLEBERRY FRIEND",
@@ -21473,11 +21345,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "JASMINE PEARLS",
@@ -21491,11 +21361,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "EARL GREY",
@@ -21509,11 +21377,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "GREEN LEAF",
@@ -21527,16 +21393,14 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "IRISH WHISKEY CREAM",
      "nameEn": "IRISH WHISKEY CREAM",
-     "detail": "SİYAH ÇAY,KAKAO KABUKLARI, MALT VİSKİ AROMASI",
+     "detail": "SİYAH ÇAY, KAKAO KABUKLARI, MALT VİSKİ AROMASI",
      "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
      "price": null,
      "imageUrl": "/merit-menus/d4f0be70f3f551cca927abed.webp",
@@ -21545,11 +21409,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "CHINESE SPRING",
@@ -21563,11 +21425,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "GET THE POWER",
@@ -21581,11 +21441,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "GINGER TWIST",
@@ -21599,11 +21457,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "WHITE YIN LONG",
@@ -21617,11 +21473,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "ROOIBOS CHOCOLATE HEAVEN",
@@ -21635,11 +21489,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT TAZE DEMLEME ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT FRESHLY BREWED HERBAL TEAS"
      ],
      "name": "AYURVEDA HERBS & GINGER",
@@ -21749,54 +21601,6 @@
     },
     {
      "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "FRUIT FROZENS",
-     "nameEn": "FRUIT FROZENS",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/3cc9b62e03621aad91d3adde.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "MILKSHAKES",
-     "nameEn": "MILKSHAKES",
-     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
-     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
-     "price": 20,
-     "imageUrl": "/merit-menus/1d9f88e38556eb3310323500.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "SMOOTHIES",
-     "nameEn": "SMOOTHIES",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/27a4dd47e6b2214c161f886d.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
       "EV YAPIMI SOĞUK ÇAYLAR"
      ],
      "catPathEn": [
@@ -21872,6 +21676,54 @@
      "detailEn": "HIBISCUS TEA, BLACKBERRY, SUGAR",
      "price": 20,
      "imageUrl": "/merit-menus/387dde6376c140d673e8a6dd.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "FRUIT FROZENS",
+     "nameEn": "FRUIT FROZENS",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/3cc9b62e03621aad91d3adde.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "MILKSHAKES",
+     "nameEn": "MILKSHAKES",
+     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
+     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
+     "price": 20,
+     "imageUrl": "/merit-menus/1d9f88e38556eb3310323500.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "SMOOTHIES",
+     "nameEn": "SMOOTHIES",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/27a4dd47e6b2214c161f886d.webp",
      "allergens": [],
      "tags": []
     },
@@ -23893,6 +23745,262 @@
     },
     {
      "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "GARDEN",
+     "nameEn": "GARDEN",
+     "detail": "LAVANTA İLE DEMLENMİŞ GİN, MÜRVER ÇİÇEĞİ LİKÖRÜ, SALATALIK SUYU, AGAVE ŞURUBU, FESLEĞEN, ZENCEFİL SUYU, LİMON SUYU",
+     "detailEn": "LAVANTA İLE DEMLENMİŞ GİN, MÜRVER ÇİÇEĞİ LİKÖRÜ, SALATALIK SUYU, AGAVE ŞURUBU, FESLEĞEN, ZENCEFİL SUYU, LİMON SUYU",
+     "price": null,
+     "imageUrl": "/merit-menus/0d49ca1963e1f379f764807b.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "THE PASSION",
+     "nameEn": "THE PASSION",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "price": null,
+     "imageUrl": "/merit-menus/f73f7e6aa8d02c1c5eea9783.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "ILLUSION",
+     "nameEn": "ILLUSION",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "detailEn": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "price": 35,
+     "imageUrl": "/merit-menus/f78438f3b00b45d429cb2ebd.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "TWO OF US",
+     "nameEn": "TWO OF US",
+     "detail": "ADAÇAYI VE HİBÜSKÜS İLE DEMLENMİŞ GİN, SKINOS, ARMUT SUYU, LİMON SUYU, PORTAKAL ŞURUBU, PANCAR TOZU",
+     "detailEn": "ADAÇAYI VE HİBÜSKÜS İLE DEMLENMİŞ GİN, SKINOS, ARMUT SUYU, LİMON SUYU, PORTAKAL ŞURUBU, PANCAR TOZU",
+     "price": 35,
+     "imageUrl": "/merit-menus/fe0e83ee3d92ab8379ccc2bf.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "JASMINE",
+     "nameEn": "JASMINE",
+     "detail": "YASEMİNLE DEMLENMİŞ GİN, MÜRVER ÇİÇEĞİ LİKÖRÜ, PORTAKAL SUYU, LİMON SUYU, AGAVE ŞURUBU",
+     "detailEn": "YASEMİNLE DEMLENMİŞ GİN, MÜRVER ÇİÇEĞİ LİKÖRÜ, PORTAKAL SUYU, LİMON SUYU, AGAVE ŞURUBU",
+     "price": 35,
+     "imageUrl": "/merit-menus/eb37979c3624007a2a23cc6a.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "MAGNOLYA",
+     "nameEn": "MAGNOLYA",
+     "detail": "GÜLLE DEMLENMİŞ VODKA, SARI MUZ LİKÖRÜ, PORTAKAL SUYU, LİMON SUYU, VANİLYA ŞURUBU, KARANFİL TENTÜR",
+     "detailEn": "GÜLLE DEMLENMİŞ VODKA, SARI MUZ LİKÖRÜ, PORTAKAL SUYU, LİMON SUYU, VANİLYA ŞURUBU, KARANFİL TENTÜR",
+     "price": null,
+     "imageUrl": "/merit-menus/305110ad1cd06d3606bf9171.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "YOU AND ME",
+     "nameEn": "YOU AND ME",
+     "detail": "PINK GİN, SKINOS, ELMA SUYU, ASİT SOLÜSYONU, ŞAMPANYA, REZENE ŞURUBU",
+     "detailEn": "PINK GİN, SKINOS, ELMA SUYU, ASİT SOLÜSYONU, ŞAMPANYA, REZENE ŞURUBU",
+     "price": null,
+     "imageUrl": "/merit-menus/080af2435e46c25d3acacad9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "ÇAKISTES",
+     "nameEn": "ÇAKISTES",
+     "detail": "ZEYTİNYAĞI İLE DEMLENMİŞ GİN, İTALUS BARGAMOT LİKÖRÜ, AGAVE ŞURUBU, ASİT SOLÜSYONU, DEFNE TENTÜR, ŞAMPANYA",
+     "detailEn": "ZEYTİNYAĞI İLE DEMLENMİŞ GİN, İTALUS BARGAMOT LİKÖRÜ, AGAVE ŞURUBU, ASİT SOLÜSYONU, DEFNE TENTÜR, ŞAMPANYA",
+     "price": null,
+     "imageUrl": "/merit-menus/057be5e514bfada6ea02731a.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "CONCIERTO",
+     "nameEn": "CONCIERTO",
+     "detail": "BLACK LABEL, ŞARAP KORDİYELİ, VANİLYA ŞURUBU, ÇİKOLATA BİTTER",
+     "detailEn": "BLACK LABEL, ŞARAP KORDİYELİ, VANİLYA ŞURUBU, ÇİKOLATA BİTTER",
+     "price": null,
+     "imageUrl": "/merit-menus/4bb2274065719b5cd5006a24.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "FOR",
+     "nameEn": "FOR",
+     "detail": "BLACK LABEL, TİREMUSU LİKÖRÜ, CHAMBORD, MARTINI EXTRA DRY",
+     "detailEn": "BLACK LABEL, TİREMUSU LİKÖRÜ, CHAMBORD, MARTINI EXTRA DRY",
+     "price": null,
+     "imageUrl": "/merit-menus/b64dabfe123ec1ea00d065cf.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "FOR AS FIRE",
+     "nameEn": "FOR AS FIRE",
+     "detail": "MESCAL, MÜRVER ÇİÇEĞİ LİKÖRÜ, GREYFURT SUYU, LİMON SUYU, AGAVE, BİBERİYE TENTÜR, NANE",
+     "detailEn": "MESCAL, MÜRVER ÇİÇEĞİ LİKÖRÜ, GREYFURT SUYU, LİMON SUYU, AGAVE, BİBERİYE TENTÜR, NANE",
+     "price": null,
+     "imageUrl": "/merit-menus/632dc7c0c2251d00762fe149.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "PANDOMİM",
+     "nameEn": "PANDOMİM",
+     "detail": "SPACE RUM, DİSSARONO, PORTAKAL SUYU SUYU, SİTRİK ASİT, AKÇAAĞAÇ ŞURUBU, ÇİKOLATA BİTTER, BADEM SÜTÜ, SARAFİ SHIRAZ",
+     "detailEn": "SPACE RUM, DİSSARONO, PORTAKAL SUYU SUYU, SİTRİK ASİT, AKÇAAĞAÇ ŞURUBU, ÇİKOLATA BİTTER, BADEM SÜTÜ, SARAFİ SHIRAZ",
+     "price": null,
+     "imageUrl": "/merit-menus/b76434f14a698b6f8662b28a.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "DİLEK TAŞI",
+     "nameEn": "DİLEK TAŞI",
+     "detail": "TEKİRDAĞ GOLD RAKI, FRANGELİCO, AYVA SUYU, SİTRİK ASİT, AGAVE ŞURUBU, TAHİN, KAHVE BİTTER, SÜT",
+     "detailEn": "TEKİRDAĞ GOLD RAKI, FRANGELİCO, AYVA SUYU, SİTRİK ASİT, AGAVE ŞURUBU, TAHİN, KAHVE BİTTER, SÜT",
+     "price": null,
+     "imageUrl": "/merit-menus/c733dc20361758607e25a834.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "GRASS",
+     "nameEn": "GRASS",
+     "detail": "YASEMİNLE DEMLENMİŞ TEKİLA, MİDOLİ, KİVİ PÜRESİ, AGAVE ŞURUBU, LİMON SUYU, NANE",
+     "detailEn": "YASEMİNLE DEMLENMİŞ TEKİLA, MİDOLİ, KİVİ PÜRESİ, AGAVE ŞURUBU, LİMON SUYU, NANE",
+     "price": null,
+     "imageUrl": "/merit-menus/500db93841f5393bba3659e4.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "APERITIVO",
+     "nameEn": "APERITIVO",
+     "detail": "MARTİNİ FİERRO, COLD BREW, CIDER",
+     "detailEn": "MARTİNİ FİERRO, COLD BREW, CIDER",
+     "price": null,
+     "imageUrl": "/merit-menus/424d0bdc0f8f602365eedf4e.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "THE ROOF GARDEN İMZA KOKTEYLLER"
+     ],
+     "catPathEn": [
+      "THE ROOF GARDEN SIGNATURE COCKTAILS"
+     ],
+     "name": "BAZAAR",
+     "nameEn": "BAZAAR",
+     "detail": "DEREOTU İLE DEMLENMİŞ VODKA, CLEAR DOMATES SUYU, ÇİLEK ŞURUBU, ASİT SOLÜSYON, TUZ SOLÜSYON, REYHAN TENTÜR, ACI BİBER TENTÜR",
+     "detailEn": "DEREOTU İLE DEMLENMİŞ VODKA, CLEAR DOMATES SUYU, ÇİLEK ŞURUBU, ASİT SOLÜSYON, TUZ SOLÜSYON, REYHAN TENTÜR, ACI BİBER TENTÜR",
+     "price": null,
+     "imageUrl": "/merit-menus/decbd85fd20e9db4c8e52645.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
       "ULUSLARARASI KOKTEYLLER"
      ],
      "catPathEn": [
@@ -24000,262 +24108,6 @@
      "detailEn": "J.W. BLACK LABEL 12 Y.O., WALNUT MARMELADE, ANGUSTRA BITTER",
      "price": 35,
      "imageUrl": "/merit-menus/4adfbb2864ec59333b4cd704.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "GARDEN",
-     "nameEn": "GARDEN",
-     "detail": "LAVANTA İLE DEMLENMİŞ GİN,MÜRVER ÇİÇEĞİ LİKÖRÜ,SALATALIK SUYU,AGAVE ŞURUBU,FESLEĞEN,ZENCEFİL SUYU,LİMON SUYU",
-     "detailEn": "LAVANTA İLE DEMLENMİŞ GİN,MÜRVER ÇİÇEĞİ LİKÖRÜ,SALATALIK SUYU,AGAVE ŞURUBU,FESLEĞEN,ZENCEFİL SUYU,LİMON SUYU",
-     "price": null,
-     "imageUrl": "/merit-menus/0d49ca1963e1f379f764807b.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "THE PASSION",
-     "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "price": null,
-     "imageUrl": "/merit-menus/f73f7e6aa8d02c1c5eea9783.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "ILLUSION",
-     "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "detailEn": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "price": 35,
-     "imageUrl": "/merit-menus/f78438f3b00b45d429cb2ebd.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "TWO OF US",
-     "nameEn": "TWO OF US",
-     "detail": "ADAÇAYI VE HİBÜSKÜS İLE DEMLENMİŞ GİN,SKINOS,ARMUT SUYU,LİMON SUYU,PORTAKAL ŞURUBU,PANCAR TOZU",
-     "detailEn": "ADAÇAYI VE HİBÜSKÜS İLE DEMLENMİŞ GİN,SKINOS,ARMUT SUYU,LİMON SUYU,PORTAKAL ŞURUBU,PANCAR TOZU",
-     "price": 35,
-     "imageUrl": "/merit-menus/fe0e83ee3d92ab8379ccc2bf.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "JASMINE",
-     "nameEn": "JASMINE",
-     "detail": "YASEMİNLE DEMLENMİŞ GİN,MÜRVER ÇİÇEĞİ LİKÖRÜ,PORTAKAL SUYU,LİMON SUYU,AGAVE ŞURUBU",
-     "detailEn": "YASEMİNLE DEMLENMİŞ GİN,MÜRVER ÇİÇEĞİ LİKÖRÜ,PORTAKAL SUYU,LİMON SUYU,AGAVE ŞURUBU",
-     "price": 35,
-     "imageUrl": "/merit-menus/eb37979c3624007a2a23cc6a.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "MAGNOLYA",
-     "nameEn": "MAGNOLYA",
-     "detail": "GÜLLE DEMLENMİŞ VODKA,SARI MUZ LİKÖRÜ,PORTAKAL SUYU,LİMON SUYU,VANİLYA ŞURUBU,KARANFİL TENTÜR",
-     "detailEn": "GÜLLE DEMLENMİŞ VODKA,SARI MUZ LİKÖRÜ,PORTAKAL SUYU,LİMON SUYU,VANİLYA ŞURUBU,KARANFİL TENTÜR",
-     "price": null,
-     "imageUrl": "/merit-menus/305110ad1cd06d3606bf9171.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "YOU AND ME",
-     "nameEn": "YOU AND ME",
-     "detail": "PINK GİN,SKINOS,ELMA SUYU,ASİT SOLÜSYONU,ŞAMPANYA,REZENE ŞURUBU",
-     "detailEn": "PINK GİN,SKINOS,ELMA SUYU,ASİT SOLÜSYONU,ŞAMPANYA,REZENE ŞURUBU",
-     "price": null,
-     "imageUrl": "/merit-menus/080af2435e46c25d3acacad9.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "ÇAKISTES",
-     "nameEn": "ÇAKISTES",
-     "detail": "ZEYTİNYAĞI İLE DEMLENMİŞ GİN,İTALUS BARGAMOT LİKÖRÜ,AGAVE ŞURUBU,ASİT SOLÜSYONU,DEFNE TENTÜR,ŞAMPANYA",
-     "detailEn": "ZEYTİNYAĞI İLE DEMLENMİŞ GİN,İTALUS BARGAMOT LİKÖRÜ,AGAVE ŞURUBU,ASİT SOLÜSYONU,DEFNE TENTÜR,ŞAMPANYA",
-     "price": null,
-     "imageUrl": "/merit-menus/057be5e514bfada6ea02731a.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "CONCIERTO",
-     "nameEn": "CONCIERTO",
-     "detail": "BLACK LABEL,ŞARAP KORDİYELİ,VANİLYA ŞURUBU,ÇİKOLATA BİTTER",
-     "detailEn": "BLACK LABEL,ŞARAP KORDİYELİ,VANİLYA ŞURUBU,ÇİKOLATA BİTTER",
-     "price": null,
-     "imageUrl": "/merit-menus/4bb2274065719b5cd5006a24.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "FOR",
-     "nameEn": "FOR",
-     "detail": "BLACK LABEL,TİREMUSU LİKÖRÜ,CHAMBORD,MARTINI EXTRA DRY",
-     "detailEn": "BLACK LABEL,TİREMUSU LİKÖRÜ,CHAMBORD,MARTINI EXTRA DRY",
-     "price": null,
-     "imageUrl": "/merit-menus/b64dabfe123ec1ea00d065cf.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "FOR AS FIRE",
-     "nameEn": "FOR AS FIRE",
-     "detail": "MESCAL,MÜRVER ÇİÇEĞİ LİKÖRÜ,GREYFURT SUYU,LİMON SUYU,AGAVE,BİBERİYE TENTÜR,NANE",
-     "detailEn": "MESCAL,MÜRVER ÇİÇEĞİ LİKÖRÜ,GREYFURT SUYU,LİMON SUYU,AGAVE,BİBERİYE TENTÜR,NANE",
-     "price": null,
-     "imageUrl": "/merit-menus/632dc7c0c2251d00762fe149.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "PANDOMİM",
-     "nameEn": "PANDOMİM",
-     "detail": "SPACE RUM,DİSSARONO,PORTAKAL SUYU SUYU,SİTRİK ASİT,AKÇAAĞAÇ ŞURUBU,ÇİKOLATA BİTTER,BADEM SÜTÜ,SARAFİ SHIRAZ",
-     "detailEn": "SPACE RUM,DİSSARONO,PORTAKAL SUYU SUYU,SİTRİK ASİT,AKÇAAĞAÇ ŞURUBU,ÇİKOLATA BİTTER,BADEM SÜTÜ,SARAFİ SHIRAZ",
-     "price": null,
-     "imageUrl": "/merit-menus/b76434f14a698b6f8662b28a.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "DİLEK TAŞI",
-     "nameEn": "DİLEK TAŞI",
-     "detail": "TEKİRDAĞ GOLD RAKI,FRANGELİCO,AYVA SUYU,SİTRİK ASİT,AGAVE ŞURUBU,TAHİN,KAHVE BİTTER,SÜT",
-     "detailEn": "TEKİRDAĞ GOLD RAKI,FRANGELİCO,AYVA SUYU,SİTRİK ASİT,AGAVE ŞURUBU,TAHİN,KAHVE BİTTER,SÜT",
-     "price": null,
-     "imageUrl": "/merit-menus/c733dc20361758607e25a834.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "GRASS",
-     "nameEn": "GRASS",
-     "detail": "YASEMİNLE DEMLENMİŞ TEKİLA,MİDOLİ,KİVİ PÜRESİ,AGAVE ŞURUBU,LİMON SUYU,NANE",
-     "detailEn": "YASEMİNLE DEMLENMİŞ TEKİLA,MİDOLİ,KİVİ PÜRESİ,AGAVE ŞURUBU,LİMON SUYU,NANE",
-     "price": null,
-     "imageUrl": "/merit-menus/500db93841f5393bba3659e4.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "APERITIVO",
-     "nameEn": "APERITIVO",
-     "detail": "MARTİNİ FİERRO,COLD BREW,CIDER",
-     "detailEn": "MARTİNİ FİERRO,COLD BREW,CIDER",
-     "price": null,
-     "imageUrl": "/merit-menus/424d0bdc0f8f602365eedf4e.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "THE ROOF GARDEN İMZA KOKTEYLLER"
-     ],
-     "catPathEn": [
-      "THE ROOF GARDEN SIGNATURE COCKTAILS"
-     ],
-     "name": "BAZAAR",
-     "nameEn": "BAZAAR",
-     "detail": "DEREOTU İLE DEMLENMİŞ VODKA,CLEAR DOMATES SUYU,ÇİLEK ŞURUBU,ASİT SOLÜSYON,TUZ SOLÜSYON,REYHAN TENTÜR,ACI BİBER TENTÜR",
-     "detailEn": "DEREOTU İLE DEMLENMİŞ VODKA,CLEAR DOMATES SUYU,ÇİLEK ŞURUBU,ASİT SOLÜSYON,TUZ SOLÜSYON,REYHAN TENTÜR,ACI BİBER TENTÜR",
-     "price": null,
-     "imageUrl": "/merit-menus/decbd85fd20e9db4c8e52645.webp",
      "allergens": [],
      "tags": []
     }
@@ -24370,7 +24222,7 @@
       "BREAKFAST SIDE ORDERS"
      ],
      "name": "El Yapımı Kızarmış Sosis",
-     "nameEn": "House - Made Fried Sausage",
+     "nameEn": "House-made Fried Sausage",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -24962,7 +24814,7 @@
       "SANDWICH & BURGER"
      ],
      "name": "Füme Burger",
-     "nameEn": "Smoke Burger",
+     "nameEn": "Smoked Burger",
      "detail": "El yapımı hamburger köftesi, brioche ekmeği, iki kat cheddar peyniri, füme dana kaburga, karamelize soğan, trüflü aioli ve barbekü sos",
      "detailEn": "House-made burger patty, brioche bun, double cheddar cheese, smoked beef ribs, caramelized onions, truffle aioli and barbecue sauce.",
      "price": null,
@@ -24977,8 +24829,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Penne All’arrabiata",
-     "nameEn": "Penne All’arrabiata",
+     "name": "Penne all’Arrabbiata",
+     "nameEn": "Penne all’Arrabbiata",
      "detail": "Acı domates sosu, zeytin, fesleğen ve parmesan peyniri",
      "detailEn": "Hot tomato sauce, olive, basil, and parmesan cheese",
      "price": null,
@@ -25009,7 +24861,7 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Spagetti Bolenez",
+     "name": "Spagetti Bolonez",
      "nameEn": "Spaghetti Bolognese",
      "detail": "Bolonez sos, fesleğen, çeri domates ve parmesan peyniri",
      "detailEn": "Bolognese sauce, basil, cherry tomatoes, and parmesan cheese",
@@ -25025,8 +24877,8 @@
      "catPathEn": [
       "PASTA & RISOTTO"
      ],
-     "name": "Fettucine Alfredo",
-     "nameEn": "Fettucine Alfredo",
+     "name": "Fettuccine Alfredo",
+     "nameEn": "Fettuccine Alfredo",
      "detail": "Alfredo sos, ızgara tavuk göğsü, trüf yağı ve parmesan peyniri",
      "detailEn": "Alfredo sauce, grilled chicken breast, truffle oil, and parmesan cheese",
      "price": null,
@@ -25747,11 +25599,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ENGLISH BREAKFAST",
@@ -25765,11 +25615,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "EARL GREY",
@@ -25783,17 +25631,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "MORGENTAU",
      "nameEn": "MORGENTAU",
-     "detail": "mango,limon,gül yaprakları",
-     "detailEn": "mango,limon,gül yaprakları",
+     "detail": "mango, limon, gül yaprakları",
+     "detailEn": "mango, limon, gül yaprakları",
      "price": null,
      "imageUrl": "/merit-menus/b59f2c9d450bf58fd8e78e97.webp",
      "allergens": [],
@@ -25801,11 +25647,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "REFRESHING MINT",
@@ -25819,11 +25663,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "FRUITY CAMOMILE",
@@ -25837,17 +25679,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "AYURVEDA HERBS & GINGER",
      "nameEn": "AYURVEDA HERBS & GINGER",
-     "detail": "zencefil,limon otu,limon kabuğu",
-     "detailEn": "zencefil,limon otu,limon kabuğu",
+     "detail": "zencefil, limon otu, limon kabuğu",
+     "detailEn": "zencefil, limon otu, limon kabuğu",
      "price": null,
      "imageUrl": "/merit-menus/489ca1bee3daa816ebfd6064.webp",
      "allergens": [],
@@ -25855,17 +25695,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROOIBOS CREAM ORANGE",
      "nameEn": "ROOIBOS CREAM ORANGE",
-     "detail": "portakal,vanilya",
-     "detailEn": "portakal,vanilya",
+     "detail": "portakal, vanilya",
+     "detailEn": "portakal, vanilya",
      "price": null,
      "imageUrl": "/merit-menus/41727dd9782f0da796b00cc5.webp",
      "allergens": [],
@@ -25873,17 +25711,15 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "SWEET BERRIES",
      "nameEn": "SWEET BERRIES",
-     "detail": "çilek,ahududu ve kırmızı meyveler",
-     "detailEn": "çilek,ahududu ve kırmızı meyveler",
+     "detail": "çilek, ahududu ve kırmızı meyveler",
+     "detailEn": "çilek, ahududu ve kırmızı meyveler",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -25891,11 +25727,9 @@
     },
     {
      "catPath": [
-      "SICAK İÇECEKLER",
       "RONNEFELDT POŞET ÇAYLAR"
      ],
      "catPathEn": [
-      "HOT DRINKS",
       "RONNEFELDT TEA BAGS"
      ],
      "name": "ROYAL WHITE TEA",
@@ -28236,8 +28070,8 @@
      ],
      "name": "PORT",
      "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
      "price": null,
      "imageUrl": "/merit-menus/7b815a0a9c00de1fd18de6d2.webp",
      "allergens": [],
@@ -28252,8 +28086,8 @@
      ],
      "name": "THE PASSION",
      "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
      "price": null,
      "imageUrl": "/merit-menus/44e6c35f4081261d73579935.webp",
      "allergens": [],
@@ -28268,7 +28102,7 @@
      ],
      "name": "ILLUSION",
      "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
      "detailEn": "VANILLA ROOIBOS-INFUSED RUM, FRANGELICO, SOUR SAUCE, PEACH PUREE",
      "price": 35,
      "imageUrl": "/merit-menus/eaad3ba47f4240fea40c0166.webp",
@@ -28284,8 +28118,8 @@
      ],
      "name": "HARMONY",
      "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
      "price": null,
      "imageUrl": "/merit-menus/dca1c9087a32ca25b7eea8d4.webp",
      "allergens": [],
@@ -28428,10 +28262,10 @@
    "items": [
     {
      "catPath": [
-      "Çorbalar"
+      "ÇORBALAR"
      ],
      "catPathEn": [
-      "Soups"
+      "SOUPS"
      ],
      "name": "Mercimek Çorbası",
      "nameEn": "Lentil Soup",
@@ -28444,13 +28278,13 @@
     },
     {
      "catPath": [
-      "Tost"
+      "TOSTLAR"
      ],
      "catPathEn": [
-      "Toasted Sandwich"
+      "TOASTS"
      ],
-     "name": "Royal tost",
-     "nameEn": "Royal tost",
+     "name": "Royal Tost",
+     "nameEn": "Royal Toast",
      "detail": "Ciabatta ekmeği, kavurma, kaşar peyniri, tatlı biber salçası",
      "detailEn": "ciabatta bread, roasting, meat, sweet chili, paste",
      "price": null,
@@ -28460,15 +28294,15 @@
     },
     {
      "catPath": [
-      "Tost"
+      "TOSTLAR"
      ],
      "catPathEn": [
-      "Toasted Sandwich"
+      "TOASTS"
      ],
-     "name": "Cyprus tost",
-     "nameEn": "Cyprus tost",
-     "detail": "Kıbrıs çöreği, hellim, bolief, tavuk göğsü, kornişon turşu, domates,sucuk,bikla sos",
-     "detailEn": "Cyprus bread, hellim chesee, bolief, chicken breast, pickles, tomato, bilka souce",
+     "name": "Kıbrıs Tostu",
+     "nameEn": "Cyprus Toast",
+     "detail": "Kıbrıs çöreği, hellim, bolief, tavuk göğsü, kornişon turşu, domates, sucuk, bikla sos",
+     "detailEn": "Cyprus bread, halloumi cheese, bolief, chicken breast, pickles, tomato, bilka sauce",
      "price": null,
      "imageUrl": "/merit-menus/77483ac62b3b6e49d1aacde2.webp",
      "allergens": [],
@@ -28476,15 +28310,15 @@
     },
     {
      "catPath": [
-      "Tost"
+      "TOSTLAR"
      ],
      "catPathEn": [
-      "Toasted Sandwich"
+      "TOASTS"
      ],
-     "name": "Panini tost",
-     "nameEn": "Panini tost",
-     "detail": "Panini ekmeği, mozeralla peyniri, cherry domates, fesleğen",
-     "detailEn": "Panini bread, mozzarella chesee, cherry tomato, basil",
+     "name": "Panini Tost",
+     "nameEn": "Panini Toast",
+     "detail": "Panini ekmeği, mozzarella peyniri, cherry domates, fesleğen",
+     "detailEn": "Panini bread, mozzarella cheese, cherry tomato, basil",
      "price": null,
      "imageUrl": "/merit-menus/4ae6ace6376ccf2471771137.webp",
      "allergens": [],
@@ -28492,15 +28326,15 @@
     },
     {
      "catPath": [
-      "Tost"
+      "TOSTLAR"
      ],
      "catPathEn": [
-      "Toasted Sandwich"
+      "TOASTS"
      ],
-     "name": "Avşar tost",
-     "nameEn": "Avşar tost",
+     "name": "Avşar Tost",
+     "nameEn": "Avşar Toast",
      "detail": "Panini ekmeği, Hellim peyniri, sucuk, domates, maydanoz, kornişon turşu, kokteyl sos",
-     "detailEn": "Panini bread, Hellim cheese, homemade salami, tomato,gherkin pickles and cocktail sauce",
+     "detailEn": "Panini bread, Halloumi cheese, homemade salami, tomato, gherkin pickles and cocktail sauce",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -28508,15 +28342,15 @@
     },
     {
      "catPath": [
-      "Tost"
+      "TOSTLAR"
      ],
      "catPathEn": [
-      "Toasted Sandwich"
+      "TOASTS"
      ],
-     "name": "Ayvalık tost",
-     "nameEn": "Ayvalık tost",
+     "name": "Ayvalık Tostu",
+     "nameEn": "Ayvalık Toast",
      "detail": "Kaşar, sucuk, salam, amerikan salatası, domates kızarmış patates ve Akdeniz salatası eşliğinde",
-     "detailEn": "Cheese,sausage,salami,american salad,tomato served with french fries and Mediterranean salad",
+     "detailEn": "Cheese, sausage, salami, american salad, tomato served with french fries and Mediterranean salad",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -28524,15 +28358,15 @@
     },
     {
      "catPath": [
-      "Sandviç"
+      "SANDVİÇLER"
      ],
      "catPathEn": [
-      "Sandwich"
+      "SANDWICHES"
      ],
      "name": "Steak Sandwich",
      "nameEn": "Steak Sandwich",
-     "detail": "Ciabatta ekmeği, Izgara bonfile,karamelize soğan ,mantar.közlenmiş biber çedar peyniri, , patates kızartması",
-     "detailEn": "Grilled tenderloin, caramelized onions, mushrooms grilled pepper cheddar chesee, served in ciabatta bread, , french fries",
+     "detail": "Ciabatta ekmeği, Izgara bonfile, karamelize soğan, mantar.közlenmiş biber çedar peyniri, , patates kızartması",
+     "detailEn": "Grilled tenderloin, caramelized onions, mushrooms grilled pepper cheddar cheese, served in ciabatta bread, , french fries",
      "price": null,
      "imageUrl": "/merit-menus/d18b59f154e9cf52e180544d.webp",
      "allergens": [],
@@ -28540,15 +28374,15 @@
     },
     {
      "catPath": [
-      "Sandviç"
+      "SANDVİÇLER"
      ],
      "catPathEn": [
-      "Sandwich"
+      "SANDWICHES"
      ],
-     "name": "Mozarella caprice sandwich",
-     "nameEn": "Mozarella caprice sandwich",
-     "detail": "Tam buğday ekmeği, mozarella peyniri,domates,fesleğen sos",
-     "detailEn": "Brown bread, mozarella cheese ,tomatoes, basil sauce",
+     "name": "Mozzarella Caprese Sandviç",
+     "nameEn": "Mozzarella Caprese Sandwich",
+     "detail": "Tam buğday ekmeği, mozzarella peyniri, domates, fesleğen sos",
+     "detailEn": "Brown bread, mozzarella cheese, tomatoes, basil sauce",
      "price": null,
      "imageUrl": "/merit-menus/62c8d83fac449fc185a94034.webp",
      "allergens": [],
@@ -28556,13 +28390,13 @@
     },
     {
      "catPath": [
-      "Sandviç"
+      "SANDVİÇLER"
      ],
      "catPathEn": [
-      "Sandwich"
+      "SANDWICHES"
      ],
-     "name": "Italian Tuna",
-     "nameEn": "Italian Tuna",
+     "name": "İtalyan Ton Balıklı Sandviç",
+     "nameEn": "Italian Tuna Sandwich",
      "detail": "Kereviz, ton balığı, mayonez, kapari turşusu, marul, zeytin ezme, tuz, değirmen karabiber, zeytinyağı, limon suyu",
      "detailEn": "Celery, tuna, mayonnaise, pickled capers, lettuce, olive pate, salt, pepper corns, olive oil, lemon juice",
      "price": null,
@@ -28572,15 +28406,15 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
-     "name": "Antioksidanlı yeşil salata",
-     "nameEn": "Antioxidant green salad",
+     "name": "Antioksidanlı Yeşil Salata",
+     "nameEn": "Antioxidant Green Salad",
      "detail": "akdeniz yeşillikler, yeşil elma dilimleri, kırmızı erik, karabuğday, cherry domates ve zeytinyağ limon sos eşliğinde",
-     "detailEn": "mediterranean greens, green apple, red plum, blackwheat, cherry tomato, olive oil and lemon juice",
+     "detailEn": "mediterranean greens, green apple, red plum, buckwheat, cherry tomato, olive oil and lemon juice",
      "price": null,
      "imageUrl": "/merit-menus/dedde84c7bcf91e3a0fe90f5.webp",
      "allergens": [],
@@ -28588,15 +28422,15 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
-     "name": "Ton balıklı salata",
+     "name": "Ton Balıklı Salata",
      "nameEn": "Tuna Salad",
      "detail": "Taze mevsim yeşillikleri üzerinde ton balığı, kızarmış kapari taneleri, kiraz domates, limonlu zeytinyağı sosu ile",
-     "detailEn": "Fresh seasonal greens with tuna fish, fried capari beans, cherry tomatoes,with lemon&olive oil sauce",
+     "detailEn": "Fresh seasonal greens with tuna fish, fried capers, cherry tomatoes, with lemon&olive oil sauce",
      "price": null,
      "imageUrl": "/merit-menus/bd38621bbc870e9ccc6d51ee.webp",
      "allergens": [],
@@ -28604,13 +28438,13 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
-     "name": "Çoban salatası",
-     "nameEn": "Shepperd Salad",
+     "name": "Çoban Salatası",
+     "nameEn": "Shepherd’s Salad",
      "detail": "Domates, salatalık, maydanoz, yeşil tatlı biber, zeytinyağı limon sos eşliğinde. — Lütfen soğan tercihinizi belirtiniz",
      "detailEn": "Tomatoes, cucumber, parsley, green sweet pepper, olive oil accompanied by lemon sauce. — Please specify your onion preference",
      "price": null,
@@ -28620,14 +28454,14 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
-     "name": "Kınoa Tabulleh",
-     "nameEn": "Kinoa Tabule",
-     "detail": "Kinoa,taze marul yaprakları, taze nane, taze soğan, domates, maydanoz, nar taneleri ve nar ekşili sos",
+     "name": "Kinoalı Tabule",
+     "nameEn": "Quinoa Tabbouleh",
+     "detail": "Kinoa, taze marul yaprakları, taze nane, taze soğan, domates, maydanoz, nar taneleri ve nar ekşili sos",
      "detailEn": "Quinoa, fresh lettuce leaves, fresh mint, fresh onions, tomatoes, parsley, pomegranate seeds and pomegranate sauce",
      "price": null,
      "imageUrl": "/merit-menus/a2c113ae3af100aab918c2d7.webp",
@@ -28636,15 +28470,15 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
      "name": "Tavuklu Sezar Salata",
      "nameEn": "Chicken Caesar Salad",
      "detail": "Taze marul yaprakları, kroton, parmesan peyniri ve sezar sos",
-     "detailEn": "Fresh lettuce leaves, croton, parmesan cheese and caesar sauce",
+     "detailEn": "Fresh lettuce leaves, croutons, parmesan cheese and caesar sauce",
      "price": null,
      "imageUrl": "/merit-menus/79b927681b19d158f783fbe0.webp",
      "allergens": [],
@@ -28652,15 +28486,15 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
      "name": "Izgara Levrek Salatası",
-     "nameEn": "Grilled Seabass Salad",
-     "detail": "Akdeniz yeşillikleri, taze roka yaprakları, Izgara levrek kiraz domates,Pancar zeytinyağı ve limon sos eşliğinde",
-     "detailEn": "Mediterranean greens, fresh aragula leaves, grilled seabass cherry tomatoes,beetroot olive oil and lemon dressing",
+     "nameEn": "Grilled Sea Bass Salad",
+     "detail": "Akdeniz yeşillikleri, taze roka yaprakları, Izgara levrek kiraz domates, Pancar zeytinyağı ve limon sos eşliğinde",
+     "detailEn": "Mediterranean greens, fresh arugula leaves, grilled seabass cherry tomatoes, beetroot olive oil and lemon dressing",
      "price": null,
      "imageUrl": "/merit-menus/b0d7888e0cfe3e6420212790.webp",
      "allergens": [],
@@ -28668,15 +28502,15 @@
     },
     {
      "catPath": [
-      "Salatalar"
+      "SALATALAR"
      ],
      "catPathEn": [
-      "Salads"
+      "SALADS"
      ],
      "name": "Enginar Kalpli Kıbrıs Salatası",
-     "nameEn": "Cyprus Salad With Artichoke",
-     "detail": "Akdeniz yeşillikleri, enginar kalbi , taze roka yaprakları, ızgara hellim, kiraz domates,zeytinyağı ve limon sos eşliğinde",
-     "detailEn": "Mediterranean greens, artichoke fresh rocket leaves, grilled hellim,cherry tomatoes, served with olive oil and lemon sauce",
+     "nameEn": "Cyprus Salad with Artichoke Hearts",
+     "detail": "Akdeniz yeşillikleri, enginar kalbi, taze roka yaprakları, ızgara hellim, kiraz domates, zeytinyağı ve limon sos eşliğinde",
+     "detailEn": "Mediterranean greens, artichoke fresh rocket leaves, grilled halloumi, cherry tomatoes, served with olive oil and lemon sauce",
      "price": null,
      "imageUrl": "/merit-menus/87bd6f563a8911a98997b9ff.webp",
      "allergens": [],
@@ -28684,10 +28518,10 @@
     },
     {
      "catPath": [
-      "Kızartmalar"
+      "KIZARTMALAR"
      ],
      "catPathEn": [
-      "Fries"
+      "FRIED SNACKS"
      ],
      "name": "Panelenmiş Balık & Patates Kızartması",
      "nameEn": "Fish and Chips",
@@ -28700,13 +28534,13 @@
     },
     {
      "catPath": [
-      "Kızartmalar"
+      "KIZARTMALAR"
      ],
      "catPathEn": [
-      "Fries"
+      "FRIED SNACKS"
      ],
-     "name": "Peynirli Sigara böreği",
-     "nameEn": "Cheesy fried pastry",
+     "name": "Peynirli Sigara Böreği",
+     "nameEn": "Cheese Pastry Rolls",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -28716,13 +28550,13 @@
     },
     {
      "catPath": [
-      "Kızartmalar"
+      "KIZARTMALAR"
      ],
      "catPathEn": [
-      "Fries"
+      "FRIED SNACKS"
      ],
-     "name": "Patates kızartması",
-     "nameEn": "French fries",
+     "name": "Patates Kızartması",
+     "nameEn": "French Fries",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -28732,13 +28566,13 @@
     },
     {
      "catPath": [
-      "Kızartmalar"
+      "KIZARTMALAR"
      ],
      "catPathEn": [
-      "Fries"
+      "FRIED SNACKS"
      ],
      "name": "Piliç Finger",
-     "nameEn": "Chicken Finger",
+     "nameEn": "Chicken Fingers",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -28748,13 +28582,13 @@
     },
     {
      "catPath": [
-      "Kızartmalar"
+      "KIZARTMALAR"
      ],
      "catPathEn": [
-      "Fries"
+      "FRIED SNACKS"
      ],
      "name": "Kalamar Tava",
-     "nameEn": "Fried calamari",
+     "nameEn": "Fried Calamari",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -28764,15 +28598,15 @@
     },
     {
      "catPath": [
-      "Burger ve sıcak atıştırmalıklar"
+      "BURGER & SICAK ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "Burger and hot snacks"
+      "BURGERS & HOT SNACKS"
      ],
      "name": "Royal Burger",
      "nameEn": "Royal Burger",
-     "detail": "Ev yapımı %100 dana etli hamburger köftesi, Chedar peyniri , Kaburga füme , mantar , karamelize soğan , domates, kornişon, patates kızartması",
-     "detailEn": "Homemade burger %100 beef chedar cheese, smoked rib , mushroom , caramelized onion , tomato, gherkin, french fries",
+     "detail": "Ev yapımı %100 dana etli hamburger köftesi, Cheddar peyniri, Kaburga füme, mantar, karamelize soğan, domates, kornişon, patates kızartması",
+     "detailEn": "Homemade burger %100 beef cheddar cheese, smoked rib, mushroom, caramelized onion, tomato, gherkin, french fries",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -28780,15 +28614,15 @@
     },
     {
      "catPath": [
-      "Burger ve sıcak atıştırmalıklar"
+      "BURGER & SICAK ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "Burger and hot snacks"
+      "BURGERS & HOT SNACKS"
      ],
-     "name": "Chicken buffalo wings",
-     "nameEn": "Chicken buffalo wings",
-     "detail": "Tavuk kanat,ballı acı bufalo sos",
-     "detailEn": "Chicken wings,spicy buffalo sauce with honey",
+     "name": "Buffalo Soslu Tavuk Kanat",
+     "nameEn": "Buffalo Chicken Wings",
+     "detail": "Tavuk kanat, ballı acı bufalo sos",
+     "detailEn": "Chicken wings, spicy buffalo sauce with honey",
      "price": null,
      "imageUrl": "/merit-menus/979e3066eeeb1aacf812fe8e.webp",
      "allergens": [],
@@ -28796,15 +28630,15 @@
     },
     {
      "catPath": [
-      "Burger ve sıcak atıştırmalıklar"
+      "BURGER & SICAK ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "Burger and hot snacks"
+      "BURGERS & HOT SNACKS"
      ],
      "name": "Tavuklu Quesadilla",
-     "nameEn": "chicken Quesadilla",
-     "detail": "Tortilla ekmeği, Tavuk göğsü, Kaliforniya biberleri, mısır, meksika fasulyesi, cheedar peyniri, patates kızartması",
-     "detailEn": "Tortilla bread, Chicken breast, California peppers, corn,mexian beans, cheddar chesee, french fries",
+     "nameEn": "Chicken Quesadilla",
+     "detail": "Tortilla ekmeği, Tavuk göğsü, Kaliforniya biberleri, mısır, meksika fasulyesi, cheddar peyniri, patates kızartması",
+     "detailEn": "Tortilla bread, Chicken breast, California peppers, corn, Mexican beans, cheddar cheese, french fries",
      "price": null,
      "imageUrl": "/merit-menus/0d82ae43aca3eb050a4952f5.webp",
      "allergens": [],
@@ -28812,13 +28646,13 @@
     },
     {
      "catPath": [
-      "Burger ve sıcak atıştırmalıklar"
+      "BURGER & SICAK ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "Burger and hot snacks"
+      "BURGERS & HOT SNACKS"
      ],
-     "name": "Dana Etli Buritto",
-     "nameEn": "Buritto With Beef",
+     "name": "Dana Etli Burrito",
+     "nameEn": "Beef Burrito",
      "detail": "Karışık Meksika baharatları ile pişirilmiş Dana Bonfile parçacıkları, kırmızı soğan, Renkli biberler, kaşar peyniri, Guacamela sos",
      "detailEn": "Beef Tenderloin type cooked with mixed Mexican spices, red onion, Colored peppers, cheddar cheese, Guacamela sauce",
      "price": null,
@@ -28828,15 +28662,15 @@
     },
     {
      "catPath": [
-      "Burger ve sıcak atıştırmalıklar"
+      "BURGER & SICAK ATIŞTIRMALIKLAR"
      ],
      "catPathEn": [
-      "Burger and hot snacks"
+      "BURGERS & HOT SNACKS"
      ],
-     "name": "Kıtır Commo Tabağı",
-     "nameEn": "Kıtır Commo Tabağı",
+     "name": "Çıtır Kombo Tabağı",
+     "nameEn": "Crispy Combo Platter",
      "detail": "tavuk, hellim stick, soğan halkası, patates kızartması",
-     "detailEn": "Chicken, Haloumi stick,,Orion rings, cips",
+     "detailEn": "Chicken, Halloumi stick, , onion rings, fries",
      "price": null,
      "imageUrl": "/merit-menus/b356f7330d376e644363be8d.webp",
      "allergens": [],
@@ -28844,15 +28678,15 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
      "name": "Spagetti Bolonez",
-     "nameEn": "Spagetti Bolonez",
+     "nameEn": "Spaghetti Bolognese",
      "detail": "İtalyan usulü hazırlanmış bolonez soslu Spagetti",
-     "detailEn": "Spaghetti with bolognaise sauce made in Italian style",
+     "detailEn": "Spaghetti with bolognese sauce made in Italian style",
      "price": null,
      "imageUrl": "/merit-menus/3e178b5b571e8ee57c76d9fe.webp",
      "allergens": [],
@@ -28860,13 +28694,13 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
      "name": "Spagetti Napoliten",
-     "nameEn": "Spagetti Napoliten",
+     "nameEn": "Spaghetti Napoletana",
      "detail": "Sebzeli Napolitan sos ile hazırlanmış Spagetti",
      "detailEn": "Spaghetti with vegetable napolitan sauce",
      "price": null,
@@ -28876,15 +28710,15 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
-     "name": "Fusulli A La Pesto",
-     "nameEn": "Fusulli A La Pesto",
-     "detail": "Fusulli makarna ,sarımsak, fesleğen sos , permasan peyniri",
-     "detailEn": "Fusulli pasta,garlic,pesto sauce,parmesan cheese",
+     "name": "Fusilli al Pesto",
+     "nameEn": "Fusilli al Pesto",
+     "detail": "Fusulli makarna, sarımsak, fesleğen sos, parmesan peyniri",
+     "detailEn": "Fusulli pasta, garlic, pesto sauce, parmesan cheese",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -28892,13 +28726,13 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
-     "name": "Penne Arabiatta",
-     "nameEn": "Penne Arabiatta",
+     "name": "Penne Arrabbiata",
+     "nameEn": "Penne Arrabbiata",
      "detail": "Acı domates soslu Penne",
      "detailEn": "Penne Pasta with spicy tomato sauce",
      "price": null,
@@ -28908,15 +28742,15 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
-     "name": "Mantar soslu Tavuklu Tagliatelli",
-     "nameEn": "Şarap soslu kremalı,mantarlı tavuklu Tagliatelli",
-     "detail": "Tagliatelli with wine sauce ,cream chicken and mushrooms",
-     "detailEn": "Tagliatelli with wine sauce ,cream chicken and mushrooms",
+     "name": "Mantar Soslu Tavuklu Tagliatelle",
+     "nameEn": "Chicken Tagliatelle with Mushroom Sauce",
+     "detail": "Şarap soslu, kremalı, mantarlı ve tavuklu tagliatelle",
+     "detailEn": "Tagliatelle with wine sauce, cream, chicken and mushrooms",
      "price": null,
      "imageUrl": "/merit-menus/82752647043706e53527546b.webp",
      "allergens": [],
@@ -28924,15 +28758,15 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
-     "name": "Türkmen mantısı",
-     "nameEn": "turkish ravioli",
+     "name": "Türkmen Mantısı",
+     "nameEn": "Turkmen Dumplings",
      "detail": "Dana eti, yoğurt, salçalı sos, kuru nane",
-     "detailEn": "Beef, yogurt, tomato paste souce, dry mint",
+     "detailEn": "Beef, yogurt, tomato paste sauce, dry mint",
      "price": null,
      "imageUrl": "/merit-menus/3758458afb94a61ed12a69a0.webp",
      "allergens": [],
@@ -28940,15 +28774,15 @@
     },
     {
      "catPath": [
-      "Makarnalar"
+      "MAKARNALAR"
      ],
      "catPathEn": [
-      "Pastas"
+      "PASTAS"
      ],
-     "name": "Mac and cheese",
-     "nameEn": "Mac and cheese",
-     "detail": "Pipete makarna, dana füme. Krema, cheedar peyniri",
-     "detailEn": "Pipette pasta, smoced beef, crema, cheedar cheese",
+     "name": "Mac and Cheese",
+     "nameEn": "Mac and Cheese",
+     "detail": "Pipete makarna, dana füme. Krema, cheddar peyniri",
+     "detailEn": "Pipette pasta, smoked beef, cream, cheddar cheese",
      "price": null,
      "imageUrl": "/merit-menus/3c06652d03a68101d1bc6686.webp",
      "allergens": [],
@@ -28956,15 +28790,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "PIZZA ROYAL",
-     "nameEn": "PIZZA ROYAL",
-     "detail": "Füme dana kaburga, sucuk, taze mantar,hellim peyniri, soğan",
-     "detailEn": "Smoked rib , sausage , mushrooms , halloumi cheese , onion",
+     "name": "Pizza Royal",
+     "nameEn": "Pizza Royal",
+     "detail": "Füme dana kaburga, sucuk, taze mantar, hellim peyniri, soğan",
+     "detailEn": "Smoked rib, sausage, mushrooms, halloumi cheese, onion",
      "price": null,
      "imageUrl": "/merit-menus/9afc9d3a3933dae4bbe52fc0.webp",
      "allergens": [],
@@ -28972,15 +28806,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
      "name": "Pizza Quattro Stagioni",
      "nameEn": "Pizza Quattro Stagioni",
-     "detail": "Mozzarella peyniri, domates , hindi jambon, mantar, enginar ve Zeytinler",
-     "detailEn": "Mozzarella cheese,Tomatoes,turkey ham,mushroom,artichoke,olives",
+     "detail": "Mozzarella peyniri, domates, hindi jambon, mantar, enginar ve Zeytinler",
+     "detailEn": "Mozzarella cheese, Tomatoes, turkey ham, mushroom, artichoke, olives",
      "price": null,
      "imageUrl": "/merit-menus/4988965feca55688fc5353a1.webp",
      "allergens": [],
@@ -28988,15 +28822,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "PIZZA PEPERONİ",
-     "nameEn": "PIZZA PEPERONİ",
-     "detail": "Sucuk , mozarella peyniri ,domates sos",
-     "detailEn": "Sausage , mozarella cheese , tomatoes sauce",
+     "name": "Pizza Pepperoni",
+     "nameEn": "Pizza Pepperoni",
+     "detail": "Sucuk, mozzarella peyniri, domates sos",
+     "detailEn": "Sausage, mozzarella cheese, tomatoes sauce",
      "price": null,
      "imageUrl": "/merit-menus/44a0e0b2fd0d3470802e3625.webp",
      "allergens": [],
@@ -29004,15 +28838,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "PIZZA FORMAGGİ",
-     "nameEn": "PIZZA FORMAGGİ",
-     "detail": "Mozerella peyniri, keçi peyniri, gorgonzola peyniri, parmesan peyniri",
-     "detailEn": "Mozzarella cheese, goat cheese, gorgonzola cheese, psrmesan cheese",
+     "name": "Pizza Quattro Formaggi",
+     "nameEn": "Pizza Quattro Formaggi",
+     "detail": "Mozzarella peyniri, keçi peyniri, gorgonzola peyniri, parmesan peyniri",
+     "detailEn": "Mozzarella cheese, goat cheese, gorgonzola cheese, parmesan cheese",
      "price": null,
      "imageUrl": "/merit-menus/c52e528843b6bc18af84223d.webp",
      "allergens": [],
@@ -29020,15 +28854,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "PIZZA MARGARİTA",
-     "nameEn": "PIZZA MARGARİTA",
+     "name": "Pizza Margherita",
+     "nameEn": "Pizza Margherita",
      "detail": "Domates, fesleğen",
-     "detailEn": "Tomatoes,basil",
+     "detailEn": "Tomatoes, basil",
      "price": null,
      "imageUrl": "/merit-menus/a5e78df38126c3e5d14adb89.webp",
      "allergens": [],
@@ -29036,13 +28870,13 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "PIZZA CHICKEN CALZONE",
-     "nameEn": "PIZZA CHICKEN CALZONE",
+     "name": "Tavuklu Calzone",
+     "nameEn": "Chicken Calzone",
      "detail": "Haşlanmış tavuk, taze mantar, mısır, krema, fesleğen, kırmızı biber",
      "detailEn": "Boiled chicken, fresh mushrooms, corn, cream, basil, red pepper",
      "price": null,
@@ -29052,15 +28886,15 @@
     },
     {
      "catPath": [
-      "Pizza"
+      "PİZZALAR"
      ],
      "catPathEn": [
-      "Pizza"
+      "PIZZAS"
      ],
-     "name": "SARIMSAKLI TEREYAĞLI EKMEK",
-     "nameEn": "SARIMSAKLI TEREYAĞLI EKMEK",
-     "detail": "Mozarella sarımsak, tereyağı, maydanoz",
-     "detailEn": "Mozarella, garlic, butter, parsley",
+     "name": "Sarımsaklı Tereyağlı Ekmek",
+     "nameEn": "Garlic Butter Bread",
+     "detail": "Mozzarella sarımsak, tereyağı, maydanoz",
+     "detailEn": "Mozzarella, garlic, butter, parsley",
      "price": null,
      "imageUrl": "/merit-menus/2ede00371664aca85c500d28.webp",
      "allergens": [],
@@ -29068,13 +28902,13 @@
     },
     {
      "catPath": [
-      "Pide Çeşitleri"
+      "PİDELER"
      ],
      "catPathEn": [
-      "Kind of Pittas"
+      "PIDE & FLATBREADS"
      ],
      "name": "Konya Etli Ekmek",
-     "nameEn": "Traditional Minced Pitta",
+     "nameEn": "Konya-Style Meat Flatbread",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29084,13 +28918,13 @@
     },
     {
      "catPath": [
-      "Pide Çeşitleri"
+      "PİDELER"
      ],
      "catPathEn": [
-      "Kind of Pittas"
+      "PIDE & FLATBREADS"
      ],
      "name": "Kıymalı Kır Pidesi",
-     "nameEn": "Minced Meat Pitta",
+     "nameEn": "Minced Meat Pide",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29100,13 +28934,13 @@
     },
     {
      "catPath": [
-      "Pide Çeşitleri"
+      "PİDELER"
      ],
      "catPathEn": [
-      "Kind of Pittas"
+      "PIDE & FLATBREADS"
      ],
      "name": "Peynirli Pide",
-     "nameEn": "Cheese Pitta",
+     "nameEn": "Cheese Pide",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29116,13 +28950,13 @@
     },
     {
      "catPath": [
-      "Pide Çeşitleri"
+      "PİDELER"
      ],
      "catPathEn": [
-      "Kind of Pittas"
+      "PIDE & FLATBREADS"
      ],
      "name": "Kuşbaşılı Kaşarlı Pide",
-     "nameEn": "Beef and Cheese Pitta",
+     "nameEn": "Diced Beef and Cheese Pide",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29132,10 +28966,10 @@
     },
     {
      "catPath": [
-      "Pide Çeşitleri"
+      "PİDELER"
      ],
      "catPathEn": [
-      "Kind of Pittas"
+      "PIDE & FLATBREADS"
      ],
      "name": "Lahmacun",
      "nameEn": "Lahmacun",
@@ -29151,12 +28985,12 @@
       "BOWLLAR"
      ],
      "catPathEn": [
-      "Bowls"
+      "BOWLS"
      ],
-     "name": "Tekirdağ bowl",
-     "nameEn": "Tekirdağ bowl",
-     "detail": "Izgara Tekirdağ köfte,kara buğday,patlıcan beğendi,yeşillik salatası",
-     "detailEn": "Grilled special Turkish meatballs,buck wheat,eggplant with cheese,greenery salad",
+     "name": "Tekirdağ Bowl",
+     "nameEn": "Tekirdağ Meatball Bowl",
+     "detail": "Izgara Tekirdağ köfte, kara buğday, patlıcan beğendi, yeşillik salatası",
+     "detailEn": "Grilled special Turkish meatballs, buckwheat, eggplant with cheese, greenery salad",
      "price": null,
      "imageUrl": null,
      "allergens": [],
@@ -29167,12 +29001,12 @@
       "BOWLLAR"
      ],
      "catPathEn": [
-      "Bowls"
+      "BOWLS"
      ],
-     "name": "Sea bass bowl",
-     "nameEn": "Sea bass bowl",
-     "detail": "Levrek fileto, patates salatası ,çeri domates,edamamme,kuşkonmaz",
-     "detailEn": "Sea bass, potato salad,cherry tomato,edamamme,asparagus",
+     "name": "Levrek Bowl",
+     "nameEn": "Sea Bass Bowl",
+     "detail": "Levrek fileto, patates salatası, çeri domates, edamame, kuşkonmaz",
+     "detailEn": "Sea bass, potato salad, cherry tomato, edamame, asparagus",
      "price": null,
      "imageUrl": "/merit-menus/37a7ac12f8edcbfffabbc62f.webp",
      "allergens": [],
@@ -29183,12 +29017,12 @@
       "BOWLLAR"
      ],
      "catPathEn": [
-      "Bowls"
+      "BOWLS"
      ],
-     "name": "Peri peri bowl",
-     "nameEn": "Peri peri bowl",
-     "detail": "Jack daniels Peri peri soslu tavuk but,patates salatası, kuşkonmaz,çeri domates,edemame",
-     "detailEn": "Marinated chicken withSpecial peri peri sauce ,jack daniels,patato salad, asparagus,cherry tomatoes,edemame",
+     "name": "Peri Peri Bowl",
+     "nameEn": "Peri Peri Chicken Bowl",
+     "detail": "Jack Daniel’s Peri peri soslu tavuk but, patates salatası, kuşkonmaz, çeri domates, edemame",
+     "detailEn": "Marinated chicken with special peri peri sauce, Jack Daniel’s, potato salad, asparagus, cherry tomatoes, edemame",
      "price": null,
      "imageUrl": "/merit-menus/058230d786c101b4a6473d5c.webp",
      "allergens": [],
@@ -29196,10 +29030,10 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
      "name": "Kasap Köfte",
      "nameEn": "Grilled Meatballs",
@@ -29212,12 +29046,12 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
-     "name": "Kuzu şiş",
+     "name": "Kuzu Şiş",
      "nameEn": "Lamb Skewer",
      "detail": null,
      "detailEn": null,
@@ -29228,13 +29062,13 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
      "name": "Piliç Külbastı",
-     "nameEn": "Chicken cutlet",
+     "nameEn": "Chicken Cutlet",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29244,15 +29078,15 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
-     "name": "Piliç Şinitsel",
+     "name": "Piliç Şnitzel",
      "nameEn": "Chicken Schnitzel",
-     "detail": "Hardallı patates salatası , Sauteed vegetables, butter and chili sauce",
-     "detailEn": "Hardallı patates salatası , Sauteed vegetables, butter and chili sauce",
+     "detail": "Hardallı patates salatası, sote sebzeler, tereyağlı acı sos",
+     "detailEn": "Mustard potato salad, sautéed vegetables, butter and chili sauce",
      "price": null,
      "imageUrl": "/merit-menus/62f91c1855636bafda455a07.webp",
      "allergens": [],
@@ -29260,15 +29094,15 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
-     "name": "Somon teriyaki",
-     "nameEn": "Salmon teriyaki",
+     "name": "Somon Teriyaki",
+     "nameEn": "Salmon Teriyaki",
      "detail": "Ispanaklı sebzeli spagetti, teriyaki sos",
-     "detailEn": "Spinach and vegetables spagetti , teriyaki sauce",
+     "detailEn": "Spinach and vegetables spaghetti, teriyaki sauce",
      "price": null,
      "imageUrl": "/merit-menus/b5334cae04ccf34ba2a49e88.webp",
      "allergens": [],
@@ -29276,15 +29110,15 @@
     },
     {
      "catPath": [
-      "Ana Yemekler"
+      "ANA YEMEKLER"
      ],
      "catPathEn": [
-      "Main Course"
+      "MAIN COURSES"
      ],
      "name": "Izgara Levrek",
      "nameEn": "Grilled Sea Bass",
      "detail": "Ispanaklı sebzeli spagetti, Limonlu fesleğenli sos",
-     "detailEn": "Spinach and vegetables spagetti , Lemon basil sauce",
+     "detailEn": "Spinach and vegetables spaghetti, Lemon basil sauce",
      "price": null,
      "imageUrl": "/merit-menus/544fcabbb140415598011023.webp",
      "allergens": [],
@@ -29292,13 +29126,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
      "name": "Fırın Sütlaç",
-     "nameEn": "Bakery Rice Puding",
+     "nameEn": "Oven-Baked Rice Pudding",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29308,13 +29142,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
-     "name": "Meyveli turta",
-     "nameEn": "Fruit Pie",
+     "name": "Meyveli Turta",
+     "nameEn": "Fruit Tart",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29324,13 +29158,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
-     "name": "San sebastian cheesecake",
-     "nameEn": "San sebastian cheesecake",
+     "name": "San Sebastian Cheesecake",
+     "nameEn": "San Sebastian Cheesecake",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29340,12 +29174,12 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
-     "name": "Dondurmalı & muz",
+     "name": "Muzlu Dondurma",
      "nameEn": "Banana Split",
      "detail": null,
      "detailEn": null,
@@ -29356,13 +29190,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
      "name": "Brownie (Ilık Servis Edilir)",
-     "nameEn": "Brownie warm serve for you",
+     "nameEn": "Brownie (Served Warm)",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29372,13 +29206,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
      "name": "Mevsim Meyveleri",
-     "nameEn": "Seasonal fruits",
+     "nameEn": "Seasonal Fruits",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29388,10 +29222,10 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
      "name": "Waffle",
      "nameEn": "Waffle",
@@ -29404,13 +29238,13 @@
     },
     {
      "catPath": [
-      "Tatlı"
+      "TATLILAR"
      ],
      "catPathEn": [
-      "Desert"
+      "DESSERTS"
      ],
      "name": "Dondurma",
-     "nameEn": "İce Cream",
+     "nameEn": "Ice Cream",
      "detail": null,
      "detailEn": null,
      "price": null,
@@ -29430,7 +29264,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "DEMLEME ÇAY",
      "nameEn": "BREWED TEA",
@@ -29446,7 +29280,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "MATCHA ÇAYI",
      "nameEn": "MATCHA TEA",
@@ -29462,7 +29296,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE",
@@ -29478,7 +29312,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "DAMLA SAKIZLI TÜRK KAHVESİ",
      "nameEn": "TURKISH COFFEE WITH MASTIC GUM",
@@ -29494,7 +29328,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "FİLTRE KAHVE",
      "nameEn": "FILTER COFFEE",
@@ -29510,7 +29344,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "KAFEİNSİZ KAHVE",
      "nameEn": "DECAFFEINATED COFFEE",
@@ -29526,7 +29360,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO",
      "nameEn": "ESPRESSO",
@@ -29542,7 +29376,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO LUNGO",
      "nameEn": "ESPRESSO LUNGO",
@@ -29558,7 +29392,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ESPRESSO MACCHIATO",
      "nameEn": "ESPRESSO MACCHIATO",
@@ -29574,7 +29408,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "COFFEE CORTADO",
      "nameEn": "COFFEE CORTADO",
@@ -29590,7 +29424,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "FLAT WHITE",
      "nameEn": "FLAT WHITE",
@@ -29606,7 +29440,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "AMERICANO",
      "nameEn": "AMERICANO",
@@ -29622,7 +29456,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "CAPPUCCINO",
      "nameEn": "CAPPUCCINO",
@@ -29638,7 +29472,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "CAFE LATTE",
      "nameEn": "CAFE LATTE",
@@ -29654,7 +29488,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "HİNDİSTAN CEVİZİ SÜTLÜ MATCHA LATTE",
      "nameEn": "COCONUT MATCHA LATTE",
@@ -29670,7 +29504,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SICAK ÇİKOLATA",
      "nameEn": "HOT CHOCOLATE",
@@ -29686,7 +29520,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SICAK BEYAZ ÇİKOLATA",
      "nameEn": "HOT WHITE CHOCOLATE",
@@ -29702,7 +29536,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "SALEP",
      "nameEn": "SALEP",
@@ -29718,7 +29552,7 @@
       "SICAK İÇECEKLER"
      ],
      "catPathEn": [
-      "HOT BEVERAGES"
+      "HOT DRINKS"
      ],
      "name": "ZERDEÇALLI SALEP",
      "nameEn": "TURMERIC SALEP",
@@ -29726,6 +29560,38 @@
      "detailEn": null,
      "price": 20,
      "imageUrl": "/merit-menus/4fd6fe66f30ba7557bedfba3.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER"
+     ],
+     "catPathEn": [
+      "HOT DRINKS"
+     ],
+     "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
+     "nameEn": "FRESHLY BREWED HERBAL TEAS",
+     "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HIBISKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
+     "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, HIBISCUS, CAMOMILE, JASMINE, ECHINECEA, BALM",
+     "price": null,
+     "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SICAK İÇECEKLER"
+     ],
+     "catPathEn": [
+      "HOT DRINKS"
+     ],
+     "name": "3. NESİL KAHVELER",
+     "nameEn": "THIRD GENERATION COFFEES",
+     "detail": "CHEMEX, V60, SYPHON",
+     "detailEn": "CHEMEX, V60, SYPHON",
+     "price": null,
+     "imageUrl": null,
      "allergens": [],
      "tags": []
     },
@@ -29950,38 +29816,6 @@
      "detailEn": null,
      "price": 5,
      "imageUrl": "/merit-menus/c358bd168503dc9f503fab48.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
-     "nameEn": "FRESHLY BREWED HERBAL TEAS",
-     "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HIBISKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
-     "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, HIBISCUS, CAMOMILE, JASMINE, ECHINECEA, BALM",
-     "price": null,
-     "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "MEŞRUBATLAR"
-     ],
-     "catPathEn": [
-      "SOFT DRINKS"
-     ],
-     "name": "3. NESİL KAHVELER",
-     "nameEn": "THIRD GENERATION COFFEES",
-     "detail": "CHEMEX , V60 , SYPHON",
-     "detailEn": "CHEMEX , V60 , SYPHON",
-     "price": null,
-     "imageUrl": null,
      "allergens": [],
      "tags": []
     },
@@ -30302,7 +30136,7 @@
      ],
      "name": "IRISH WHISKEY CREAM",
      "nameEn": "IRISH WHISKEY CREAM",
-     "detail": "SİYAH ÇAY,KAKAO KABUKLARI, MALT VİSKİ AROMASI",
+     "detail": "SİYAH ÇAY, KAKAO KABUKLARI, MALT VİSKİ AROMASI",
      "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
      "price": null,
      "imageUrl": "/merit-menus/d4f0be70f3f551cca927abed.webp",
@@ -30515,54 +30349,6 @@
     },
     {
      "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "FRUIT FROZENS",
-     "nameEn": "FRUIT FROZENS",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/7b35422e5f448e4e51a5f7af.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "MILKSHAKES",
-     "nameEn": "MILKSHAKES",
-     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
-     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
-     "price": 20,
-     "imageUrl": "/merit-menus/bc7f4edabbbf5380cde74dc4.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
-      "SOĞUK KAHVELER"
-     ],
-     "catPathEn": [
-      "ICED COFFEE"
-     ],
-     "name": "SMOOTHIES",
-     "nameEn": "SMOOTHIES",
-     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
-     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
-     "price": 20,
-     "imageUrl": "/merit-menus/26eba99a083bdb6f891764fb.webp",
-     "allergens": [],
-     "tags": []
-    },
-    {
-     "catPath": [
       "EV YAPIMI SOĞUK ÇAYLAR"
      ],
      "catPathEn": [
@@ -30643,15 +30429,63 @@
     },
     {
      "catPath": [
-      "ROYAL DONDURMA"
+      "SOĞUK LEZZETLER"
      ],
      "catPathEn": [
-      "ROYAL ICE CREAM"
+      "FROZEN TREATS"
+     ],
+     "name": "FRUIT FROZENS",
+     "nameEn": "FRUIT FROZENS",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/7b35422e5f448e4e51a5f7af.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "MILKSHAKES",
+     "nameEn": "MILKSHAKES",
+     "detail": "DONDURMA, SÜT, AROMALI SOS, KREMA VANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
+     "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM VANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
+     "price": 20,
+     "imageUrl": "/merit-menus/bc7f4edabbbf5380cde74dc4.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
+     ],
+     "name": "SMOOTHIES",
+     "nameEn": "SMOOTHIES",
+     "detail": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+     "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+     "price": 20,
+     "imageUrl": "/merit-menus/26eba99a083bdb6f891764fb.webp",
+     "allergens": [],
+     "tags": []
+    },
+    {
+     "catPath": [
+      "SOĞUK LEZZETLER"
+     ],
+     "catPathEn": [
+      "FROZEN TREATS"
      ],
      "name": "ROYAL DONDURMA",
      "nameEn": "ROYAL ICE CREAM",
      "detail": "KAYMAK, KARAMEL, VANİLYA, BLUE SKY, DAMLA SAKIZI, NANE, MUZ, OREO COOKIES, ANTEP FISTIĞI, CHEERY MANIA, CEVİZ, LİMON, ÇİLEK, FRAMBUAZ, KAVUN, MANDALİNA, COOKIES, BÖĞÜRTLEN, MANGO, ÇİKOLATA, COCO AL BONBON, DİYET CEVİZ, KINDER BUENO, SNICKERS",
-     "detailEn": "CREAM, CARAMEL, VANILLA, BLUE SKY, MASTIC GUM, MINT, BANANA, OREO COOKIES, PISTACHIOS, CHEERY MANIA, WALNUT, LEMON, STRAWBERRY, RASPBERRY, MELON,MANDARIN, COOKIES, BLACKBERRY, MANGO, CHOCOLATE, COCO AL BONBON, DIET WALNUT,KINDER BUENO, SNICKERS",
+     "detailEn": "CREAM, CARAMEL, VANILLA, BLUE SKY, MASTIC GUM, MINT, BANANA, OREO COOKIES, PISTACHIOS, CHEERY MANIA, WALNUT, LEMON, STRAWBERRY, RASPBERRY, MELON, MANDARIN, COOKIES, BLACKBERRY, MANGO, CHOCOLATE, COCO AL BONBON, DIET WALNUT, KINDER BUENO, SNICKERS",
      "price": null,
      "imageUrl": "/merit-menus/56577547cab8edb946514534.webp",
      "allergens": [],
@@ -31914,8 +31748,8 @@
      ],
      "name": "PORT",
      "nameEn": "PORT",
-     "detail": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
-     "detailEn": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
+     "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
+     "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
      "price": null,
      "imageUrl": "/merit-menus/7b815a0a9c00de1fd18de6d2.webp",
      "allergens": [],
@@ -31930,8 +31764,8 @@
      ],
      "name": "THE PASSION",
      "nameEn": "THE PASSION",
-     "detail": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
-     "detailEn": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
+     "detail": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
+     "detailEn": "ACI TEKİLA, PORTAKAL LİKÖRÜ, PORTAKAL SUYU, PASSION PÜRE, LİMON SUYU",
      "price": null,
      "imageUrl": "/merit-menus/44e6c35f4081261d73579935.webp",
      "allergens": [],
@@ -31946,8 +31780,8 @@
      ],
      "name": "ILLUSION",
      "nameEn": "ILLUSION",
-     "detail": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
-     "detailEn": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+     "detail": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
+     "detailEn": "VANİLA ROOIBOS ROM, FRANGELİCO, LİMON SUYU, PORTAKAL SUYU, ŞEFTALİ PÜRESİ, ÇİKOLATA BİTTER",
      "price": 35,
      "imageUrl": "/merit-menus/eaad3ba47f4240fea40c0166.webp",
      "allergens": [],
@@ -31962,8 +31796,8 @@
      ],
      "name": "HARMONY",
      "nameEn": "HARMONY",
-     "detail": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
-     "detailEn": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+     "detail": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
+     "detailEn": "LAVANTA VODKA, HİBÜSKÜS EKŞİSİ, CHAMBORD, AGAVE ŞURUBU, NENE YAPRAKLARI",
      "price": null,
      "imageUrl": "/merit-menus/dca1c9087a32ca25b7eea8d4.webp",
      "allergens": [],

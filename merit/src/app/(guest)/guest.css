@@ -3240,3 +3240,222 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* ==========================================================================
+   VİTRİN (SHOWCASE): çok kategorili menüler. Misafir önce bütün kategorileri fotoğraflı kartlar olarak görür;
+   bir karta dokununca o kategori kendi sayfasında açılır. Üstte yapışkan bir şerit kalır: "Tüm kategoriler"
+   geri düğmesi ve yana kayan kategori çipleri. Şablonun sekme stilinden bağımsızdır (kendi sınıfları).
+   ========================================================================== */
+/* The block wrapper must not box the sticky strip in: its sticking range is the whole menu. */
+.g-show-host {
+  display: contents;
+}
+.g-show-anchor {
+  display: block;
+  height: 0;
+  scroll-margin-top: calc(52px + var(--g-safe-top));
+}
+.g-frame.g-frame .g-menu .g-show-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 4px calc(16px + env(safe-area-inset-right, 0px)) 20px calc(16px + env(safe-area-inset-left, 0px));
+  list-style: none;
+}
+.g-show-grid li {
+  display: flex;
+  min-width: 0;
+}
+.g-show-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  align-items: center;
+  width: 100%;
+  padding: 0 0 10px;
+  overflow: hidden;
+  border: 1px solid var(--m-line);
+  border-radius: 16px;
+  background: var(--m-soft);
+  color: var(--m-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.18s ease, transform 0.12s ease;
+}
+.g-show-card:active {
+  transform: scale(0.98);
+  border-color: var(--m-accent);
+}
+.g-show-card:focus-visible,
+.g-show-back:focus-visible,
+.g-show-strip button:focus-visible {
+  outline: 2px solid var(--m-accent);
+  outline-offset: 2px;
+}
+.g-show-photo {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 10px;
+  object-fit: cover;
+  background: var(--m-bg);
+}
+.g-show-initial {
+  display: grid;
+  place-items: center;
+  color: var(--m-accent);
+  font-size: 2.2rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--m-accent) 10%, var(--m-bg));
+}
+.g-show-name {
+  grid-column: 1;
+  padding-inline: 12px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.g-show-count {
+  grid-column: 2;
+  margin-inline-end: 26px;
+  min-width: 26px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-accent) 14%, transparent);
+  color: var(--m-accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+/* Sağ alttaki ok: karta dokunulabileceğini söyler. */
+.g-show-go {
+  position: absolute;
+  inset-inline-end: 12px;
+  bottom: 15px;
+  width: 8px;
+  height: 8px;
+  border-block-start: 2px solid var(--m-accent);
+  border-inline-end: 2px solid var(--m-accent);
+  transform: rotate(45deg);
+}
+[dir="rtl"] .g-show-go {
+  transform: rotate(-45deg);
+}
+
+.g-show-bar {
+  position: sticky;
+  top: calc(52px + var(--g-safe-top));
+  z-index: 25;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 0 8px calc(12px + env(safe-area-inset-left, 0px));
+  border-block-end: 1px solid var(--m-line);
+  background: var(--m-bg);
+}
+[dir="rtl"] .g-show-bar {
+  padding: 8px calc(12px + env(safe-area-inset-right, 0px)) 8px 0;
+}
+.g-show-back {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--m-accent);
+  border-radius: 999px;
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.g-show-back-arrow {
+  width: 8px;
+  height: 8px;
+  border-block-end: 2px solid currentColor;
+  border-inline-start: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+[dir="rtl"] .g-show-back-arrow {
+  transform: rotate(-45deg);
+}
+.g-show-strip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-inline-end: 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* Sağ kenarda solma: şeridin yana kaydığını gösterir. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+[dir="rtl"] .g-show-strip {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+.g-show-strip::-webkit-scrollbar {
+  display: none;
+}
+.g-show-strip button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--m-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--m-text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.g-show-strip button[aria-selected="true"] {
+  border-color: var(--m-accent);
+  background: color-mix(in srgb, var(--m-accent) 12%, transparent);
+  color: var(--m-accent);
+}
+.g-frame.g-frame .g-menu .g-show-title {
+  margin: 18px 16px 6px;
+  color: var(--m-accent);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+@media (min-width: 720px) {
+  .g-show-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-show-card {
+    transition: none;
+  }
+}
+/* Sticky needs a scrolling ancestor that really scrolls. `overflow-x: hidden` on the page shells makes each of them
+   a (non-scrolling) scroll container and silently cancels sticking; `clip` cuts the same overflow without that.
+   Scoped to pages that show the showcase strip. */
+html:has(.g-show-host) body,
+.g-root:has(.g-show-host) {
+  overflow-x: clip;
+  overflow-y: visible;
+}

@@ -2,6 +2,8 @@
 import collections, hashlib, io, json, os, re, sys
 from menu_lib import HERE, flat_menu, load, load_micros, price_for
 from spelling import fix, fix_pair
+from item_fixes import fix_item
+from structure import restructure
 
 MERIT = r"D:\PROJECTS\qrmenu\merit"
 OUT = os.path.join(MERIT, "prisma", "seed", "data", "merit-menus.json")
@@ -71,10 +73,12 @@ for hotel, name, variant, menu, flt in OUTLETS:
             "name": tr, "nameEn": en, "detail": fix(dtr), "detailEn": fix(den),
             "price": price, "imageUrl": image_url(rel) if rel else None, "allergens": [], "tags": [],
         }
-        out.append(row)
+        out.append(fix_item(row))
         c["items"] += 1
         c["priced"] += price is not None
         c["image"] += rel is not None
+    out = restructure(out)
+    c["items"], c["priced"], c["image"] = len(out), sum(r["price"] is not None for r in out), sum(r["imageUrl"] is not None for r in out)
     outlets.append({"hotelCode": hotel, "outletName": name, "isRoomService": name is None, "items": out})
     stats.append("%-8s %-32s %4d ürün  %4d fiyatlı  %4d görselli  %2d kategori" % (
         hotel, name or "Oda Servisi", c["items"], c["priced"], c["image"], len({r["catPath"][0] for r in out})))
