@@ -76,10 +76,10 @@ oturumlar ve basılmış QR'lar geçersiz olur; `SETTINGS_SECRET_KEY` değişirs
 1. *Domains* altında `app` servisine `https://qrmenu.merithotels.com:3000` yazın (port, konteynerin iç portudur;
    Coolify 443'ten 3000'e yönlendirir ve sertifikayı alır).
 2. **Deploy**. İlk derleme 7-10 dakika sürer. Açılışta migrasyonlar, seed (`RUN_SEED=true`) ve Merit outlet /
-   menü kurulumu (`SYNC_MERIT_MENUS=true`) çalışır.
+   menü kurulumu (her açılışta kendiliğinden, ayar gerekmez) çalışır.
 3. `https://qrmenu.merithotels.com/api/health` → `ok:true` görün, `admin` ve `SEED_ADMIN_PASSWORD` ile girin,
    yönetici parolasını değiştirin.
-4. Coolify'da `RUN_SEED=false`, `SYNC_MERIT_MENUS=false` yapın, `SEED_ADMIN_PASSWORD`'u silin ve yeniden dağıtın.
+4. Coolify'da `RUN_SEED=false` yapın, `SEED_ADMIN_PASSWORD`'u silin ve yeniden dağıtın.
 5. Denetim Masası → Sistem → `qr.baseUrl` alanına aynı adresi yazın; QR'ları bundan sonra basın.
 6. Coolify paneline de bir alan adı verdiyseniz 8000, 6001 ve 6002 portlarını dışarıya kapatın.
 
@@ -165,7 +165,7 @@ PRINT_GATEWAY_KEY=<openssl rand -base64 32>
 | `SEED_ADMIN_PASSWORD` | boş | `RUN_SEED=true` ve admin henüz yokken zorunlu, en az 10 karakter. Var olan admin'e seed dokunmaz. |
 | `COOKIE_SECURE` | `true` | Yalnız HTTP ile erişilen test ortamında (IP, sslip.io) `false` yapın; gerçek kurulumda HTTPS kullanın. |
 | `TRUSTED_PROXY_HOPS` | `1` | Uygulamanın önündeki güvenilir vekil sayısı (Coolify/Traefik tek vekil: `1`). Otelin önünde ayrı bir vekil/yük dengeleyici daha varsa `2`. |
-| `SYNC_MERIT_MENUS` | `false` | İlk kurulumda bir kez `true`: 20 Merit outletini ve menülerini kurar. Var olan menüye dokunmaz. |
+| `SYNC_MERIT_MENUS` | `true` | Ayar gerekmez. Her açılışta Merit outlet ve menülerini denetler: bir outlet'in menüsü yalnız boşsa ya da `merit-menus.json` içindeki menüsü değiştiyse yeniden kurulur; dosya aynıysa dokunulmaz (panelden yapılan düzenlemeler kalır). Siparişlere dokunulmaz; eski siparişlerde geçen ürünler pasif bir arşiv kategorisine alınır. Senkronu tümüyle kapatmak için `false`. |
 | `SETTINGS_SECRET_KEY` | boş | Veritabanında mühürlü saklanan sırların (SMTP parolası) anahtarı, en az 32 karakter. Boşsa `SESSION_SECRET` kullanılır. İlk kurulumda verin; sonradan değiştirmeyin. |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | boş | Anlık bildirim (Web Push). İki anahtar birlikte verilir: `npx web-push generate-vapid-keys`. `VAPID_SUBJECT` örn. `mailto:it@otel.example`. |
 | `PUSH_ENDPOINT_ALLOWLIST` | boş | İzinli push sunucuları (virgülle); boşsa bilinen servisler. |

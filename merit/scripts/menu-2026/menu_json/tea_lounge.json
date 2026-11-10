@@ -1,0 +1,603 @@
+{
+  "outlet": "Tea Lounge",
+  "sources": [
+    "4_TEA_LOUNGE_ECEK_xlsx.txt"
+  ],
+  "categories": [
+    {
+      "tr": "SICAK İÇECEKLER",
+      "en": "HOT BEVERAGES",
+      "items": [
+        {
+          "tr": "DEMLEME ÇAY",
+          "en": "BREWED TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MATCHA ÇAYI",
+          "en": "MATCHA TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TÜRK KAHVESİ",
+          "en": "TURKISH COFFEE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DAMLA SAKIZLI TÜRK KAHVESİ",
+          "en": "TURKISH COFFEE WITH MASTIC GUM",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FİLTRE KAHVE",
+          "en": "FILTER COFFEE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAFEİNSİZ KAHVE",
+          "en": "DECAFFEINATED COFFEE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ESPRESSO",
+          "en": "ESPRESSO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ESPRESSO LUNGO",
+          "en": "ESPRESSO LUNGO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ESPRESSO MACCHIATO",
+          "en": "ESPRESSO MACCHIATO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COFFEE CORTADO",
+          "en": "COFFEE CORTADO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FLAT WHITE",
+          "en": "FLAT WHITE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AMERICANO",
+          "en": "AMERICANO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAPPUCCINO",
+          "en": "CAPPUCCINO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAFE LATTE",
+          "en": "CAFE LATTE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HİNDİSTAN CEVİZİ SÜTLÜ MATCHA LATTE",
+          "en": "COCONUT MATCHA LATTE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SICAK ÇİKOLATA",
+          "en": "HOT CHOCOLATE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SICAK BEYAZ ÇİKOLATA",
+          "en": "HOT WHITE CHOCOLATE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SALEP",
+          "en": "SALEP",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ZERDEÇALLI SALEP",
+          "en": "TURMERIC SALEP",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "MEŞRUBATLAR",
+      "en": "SOFT DRINKS",
+      "items": [
+        {
+          "tr": "MEYVE SUYU",
+          "en": "FRUIT JUICE",
+          "detailTr": "ANANAS, DOMATES, ELMA, GREYFURT, KAYISI, KIZILCIK, NAR, PORTAKAL, ŞEFTALİ, VİŞNE",
+          "detailEn": "PINEAPPLE, TOMATO, APPLE, GRAPEFRUIT, APRICOT, CRANBERRY, POMEGRANATE, ORANGE, PEACH, CHERRY",
+          "priceUsd": null
+        },
+        {
+          "tr": "SODA",
+          "en": "MINERAL WATER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SAN PELLEGRINO",
+          "en": "SAN PELLEGRINO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AYRAN",
+          "en": "AYRAN",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BRITVIC",
+          "en": "BRITVIC",
+          "detailTr": null,
+          "detailEn": "TOMATO, BITTER LEMON, GINGER ALE, TONIC",
+          "priceUsd": null
+        },
+        {
+          "tr": "SU",
+          "en": "WATER 330 ml.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SU",
+          "en": "WATER 750 ml.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COCA COLA",
+          "en": "COCA COLA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SPRITE",
+          "en": "SPRITE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FANTA",
+          "en": "FANTA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ICE TEA",
+          "en": "ICE TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "LİMONATA",
+          "en": "LEMONADE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ENERJİ İÇECEĞİ",
+          "en": "ENERGY DRINK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ŞALGAM SUYU",
+          "en": "TURNIP JUICE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FRESH MEYVE SUYU",
+          "en": "FRESH FRUIT JUICE",
+          "detailTr": "PORTAKAL, GREYFURT, HAVUÇ, ELMA",
+          "detailEn": "ORANGE, GRAPEFRUIT, CARROT, APPLE",
+          "priceUsd": null
+        },
+        {
+          "tr": "TAZE DEMLEME BİTKİ ÇAYLARI",
+          "en": "FRESHLY BREWED HERBAL TEAS",
+          "detailTr": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, BAMYA ÇİÇEĞİ, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
+          "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, OKRA FLOWER, CAMOMILE, JASMINE, ECHINECEA, BALM",
+          "priceUsd": null
+        },
+        {
+          "tr": "3. NESİL KAHVELER",
+          "en": "THIRD GENERATION COFFEES",
+          "detailTr": "CHEMEX , V60 , SYPHON",
+          "detailEn": "CHEMEX , V60 , SYPHON",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "RONNEFELDT BİTKİ ÇAYLARI",
+      "en": "RONNEFELDT HERBAL TEAS",
+      "items": [],
+      "sub": [
+        {
+          "tr": "RONNEFELDT POŞET ÇAYLAR",
+          "en": "RONNEFELDT TEA BAGS",
+          "items": [
+            {
+              "tr": "GREEN ANGLE",
+              "en": "GREEN ANGLE",
+              "detailTr": "ŞEFTALİ, ARMUT",
+              "detailEn": "PEACH, PEAR",
+              "priceUsd": null
+            },
+            {
+              "tr": "WINTERDREAM",
+              "en": "WINTERDREAM",
+              "detailTr": "ROOIBOS, KIŞ BAHARATLARI, KARAMEL, PORTAKAL",
+              "detailEn": "ROOIBOS, WINTER SPICES, CARAMEL, ORANGE",
+              "priceUsd": null
+            },
+            {
+              "tr": "NANE & PEPPERMINT",
+              "en": "NANE & PEPPERMINT",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "PAPATYA",
+              "en": "CAMOMILE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "ENGLISH BREAKFAST",
+              "en": "ENGLISH BREAKFAST",
+              "detailTr": "SİYAH ÇAY",
+              "detailEn": "BLACK TEA",
+              "priceUsd": null
+            },
+            {
+              "tr": "ROOIBOS VANİLYA",
+              "en": "ROOIBOS VANILLA",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            }
+          ]
+        },
+        {
+          "tr": "RONNEFELDT TAZE DEMLEME ÇAYLAR",
+          "en": "RONNEFELDT FRESHLY BREWED HERBAL TEAS",
+          "items": [
+            {
+              "tr": "MORGENTAU",
+              "en": "MORGENTAU",
+              "detailTr": "YEŞİL ÇAY(SENCHA), AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
+              "detailEn": "GREEN TEA(SENCHA), SUNFLOWER, ROSE LEAVES, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "MASALA CHAI",
+              "en": "MASALA CHAI",
+              "detailTr": "SİYAH ÇAY(ASSAM), TARÇIN PARÇALARI, REZENE, ZENCEFİL, KARANFİL, KARABİBER, ANASON",
+              "detailEn": "BLACK TEA(ASSAM), CINNAMON, FENNEL, GINGER, CLOVES, BLACK PEPPERCORNS, ANISE",
+              "priceUsd": null
+            },
+            {
+              "tr": "VANILLA ROOIBOS",
+              "en": "VANILLA ROOIBOS",
+              "detailTr": "ROOIBOS (KIRMIZI ÇALI), VANİLYA",
+              "detailEn": "ROOIBOS (RED BLUSH), VANILLA",
+              "priceUsd": null
+            },
+            {
+              "tr": "CHILL OUT WITH HERBS",
+              "en": "CHILL OUT WITH HERBS",
+              "detailTr": "ROOIBOS, BÖĞÜRTLEN YAPRAKLARI, MELİSA, PORTAKAL, AYÇİÇEĞİ YAPRAKLARI, PEYGAMBER ÇİÇEĞİ",
+              "detailEn": "ROOIBOS, BLACKBERRY LEAVES, BALM, ORANGE, SUNFLOWER PETALS, CORNFLOWER BLOSSOM",
+              "priceUsd": null
+            },
+            {
+              "tr": "FRUITY CAMOMILE",
+              "en": "FRUITY CAMOMILE",
+              "detailTr": "PAPATYA, PORTAKAL ÇİÇEKLERİ",
+              "detailEn": "CAMOMILE, ORANGE BLOSSOM",
+              "priceUsd": null
+            },
+            {
+              "tr": "REFRESHING MINT",
+              "en": "REFRESHING MINT",
+              "detailTr": "NANE, LİMON OTU",
+              "detailEn": "MINT, LEMON GRASS",
+              "priceUsd": null
+            },
+            {
+              "tr": "ROOIBOS CREAM ORANGE",
+              "en": "ROOIBOS CREAM ORANGE",
+              "detailTr": "ROOIBOS, PORTAKAL KABUĞU, DOĞAL AROMA",
+              "detailEn": "ROOIBOS, ORANGE PEEL, NATURAL AROMA",
+              "priceUsd": null
+            },
+            {
+              "tr": "HUCCKLEBERRY FRIEND",
+              "en": "HUCCKLEBERRY FRIEND",
+              "detailTr": "YEŞİL ÇAY, LİMON OTU, ELMA, YABAN MERSİNİ",
+              "detailEn": "GREEN TEA, LEMON GRASS, APPLE, BLUEBERRY",
+              "priceUsd": null
+            },
+            {
+              "tr": "JASMINE PEARLS",
+              "en": "JASMINE PEARLS",
+              "detailTr": "YEŞİL ÇAY, AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
+              "detailEn": "GREEN TEA, SUNFLOWER, ROSE PETALS, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "EARL GREY",
+              "en": "EARL GREY",
+              "detailTr": "SİYAH ÇAY(DARJEELING-TGPOF*), DOĞAL BERGAMOT AROMASI",
+              "detailEn": "BLACK TEA(DARJEELING-TGPOF*), NATURAL BERGAMOT FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "GREEN LEAF",
+              "en": "GREEN LEAF",
+              "detailTr": "YEŞİL ÇAY(SENCHA)",
+              "detailEn": "GREEN TEA(SENCHA)",
+              "priceUsd": null
+            },
+            {
+              "tr": "IRISH WHISKEY CREAM",
+              "en": "IRISH WHISKEY CREAM",
+              "detailTr": "SİYAH ÇAY,KAKAO KABUKLARI, MALT VİSKİ AROMASI",
+              "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "CHINESE SPRING",
+              "en": "CHINESE SPRING",
+              "detailTr": "BEYAZ ÇAY, EBEGÜMECİ, AYNISEFA ÇİÇEĞİ, DOĞAL ÇARKIFELEK MEYVESİ AROMASI",
+              "detailEn": "WHITE TEA, HIBISCUS, MARIGOLD FLOWER, NATURAL PASSION FRUIT FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "GET THE POWER",
+              "en": "GET THE POWER",
+              "detailTr": "AMBER ÇİÇEĞİ, BÖĞÜRTLEN YAPRAKLARI, KOLA BİTKİSİ, MÜRVER ÇİÇEĞİ, PORTAKAL KABUĞU, FRENK ÜZÜMÜ",
+              "detailEn": "MUSK MALLOW, BLACKBERRY LEAVES, COLA PLANT, ELDERFLOWER, ORANGE PEEL, BLACKCURRANT",
+              "priceUsd": null
+            },
+            {
+              "tr": "GINGER TWIST",
+              "en": "GINGER TWIST",
+              "detailTr": "YEŞİL ÇAY, AYVA, ZENCEFİL, AYNISEFA ÇİÇEĞİ, SAFRAN ÇİÇEĞİ YAPRAKLARI, DOĞAL AYVA AROMASI",
+              "detailEn": "GREEN TEA, QUINCE, GINGER, MARIGOLD FLOWERİ NATURAL QUINCE FLAVOR",
+              "priceUsd": null
+            },
+            {
+              "tr": "WHITE YIN LONG",
+              "en": "WHITE YIN LONG",
+              "detailTr": "BEYAZ ÇAY",
+              "detailEn": "WHITE TEA",
+              "priceUsd": null
+            },
+            {
+              "tr": "ROOIBOS CHOCOLATE HEAVEN",
+              "en": "ROOIBOS CHOCOLATE HEAVEN",
+              "detailTr": "ROOIBOS, KAKAO KABUĞU, VANILYA",
+              "detailEn": "ROOIBOS, COCOA SELL , VANILLA",
+              "priceUsd": null
+            },
+            {
+              "tr": "AYURVEDA HERBS & GINGER",
+              "en": "AYURVEDA HERBS & GINGER",
+              "detailTr": "ZENCEFİL, ANASON, REZENE, MEYAN KÖKÜ, LİMON OTU, TARÇIN, KARABİBER, PAPATYA, BÖĞÜRTLEN YAPRAKLARI, MELİSA, GÜL",
+              "detailEn": "GINGER, ANISE SEED, FENNEL SEED, LICORICE ROOT, LEMON GRASS, CINNAMON PIECES, BLACK PEPPER, CAMOMILE FLOWERS, SWEET BLACKBERRY LEAVES, LEMON BALM, ROSE PETALS",
+              "priceUsd": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "SOĞUK KAHVELER",
+      "en": "ICED COFFEE",
+      "items": [
+        {
+          "tr": "COLD BREW",
+          "en": "COLD BREW",
+          "detailTr": "SOĞUK DEMLEME ESPRESSO",
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FRAPPE",
+          "en": "FRAPPE",
+          "detailTr": "GRANÜL KAHVE, SÜT, ŞEKER",
+          "detailEn": "COFFEE GRANULES, MILK, SUGAR",
+          "priceUsd": null
+        },
+        {
+          "tr": "FRAPPUCCINO",
+          "en": "FRAPPUCCINO",
+          "detailTr": "ESPRESSO, SÜT, ÇİKOLATA, ŞEKER",
+          "detailEn": "ESPRESSO, MILK, CHOCOLATE, SUGAR",
+          "priceUsd": null
+        },
+        {
+          "tr": "ICED COFFEE CREAM",
+          "en": "ICED COFFEE CREAM",
+          "detailTr": "ESPRESSO, SÜT, DONDURMA",
+          "detailEn": "ESPRESSO, MILK, ICE CREAM",
+          "priceUsd": null
+        },
+        {
+          "tr": "WHITE CHOCOLATE MOCHA",
+          "en": "WHITE CHOCOLATE MOCHA",
+          "detailTr": "ESPRESSO, SÜT, BEYAZ ÇİKOLATA",
+          "detailEn": "ESPRESSO, MILK, WHITE CHOCOLATE",
+          "priceUsd": null
+        },
+        {
+          "tr": "AFFAGATO",
+          "en": "AFFAGATO",
+          "detailTr": "ESPRESSO, DONDURMA",
+          "detailEn": "ESPRESSO, ICE CREAM",
+          "priceUsd": null
+        },
+        {
+          "tr": "FRUIT FROZENS",
+          "en": "FRUIT FROZENS",
+          "detailTr": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+          "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+          "priceUsd": null
+        },
+        {
+          "tr": "MILKSHAKES",
+          "en": "MILKSHAKES",
+          "detailTr": "DONDURMA, SÜT, AROMALI SOS, KREMA, DONDURMA KÜLAHI\nVANİLYA, ÇİLEK, ÇİKOLATA, OREO, KARAMEL",
+          "detailEn": "ICE CREAM, MILK, FLAVORED SYRUP, CREAM, ICE CREAM CONE\nVANILLA, STRAWBERRY, CHOCOLATE, OREO, CARAMEL",
+          "priceUsd": null
+        },
+        {
+          "tr": "SMOOTHIES",
+          "en": "SMOOTHIES",
+          "detailTr": "MEVSİM MEYVELERİ, MEYVE PÜRESİ",
+          "detailEn": "SEASONAL FRUİTS, FRUIT PUREE",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "EV YAPIMI SOĞUK ÇAYLAR",
+      "en": "HOMEMADE ICED TEAS",
+      "items": [
+        {
+          "tr": "SOĞUK MATCHA ÇAYI",
+          "en": "MATCHA ICED TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ŞEFTALİLİ SOĞUK ÇAY",
+          "en": "PEACH ICED TEA",
+          "detailTr": "SOĞUK ÇAY, ŞEFTALİ, ŞEKER",
+          "detailEn": "ICED TEA, PEACH, SUGAR",
+          "priceUsd": null
+        },
+        {
+          "tr": "ELMALI YEŞİL ÇAY",
+          "en": "GREEN TEA WITH APPLE",
+          "detailTr": "YEŞİL ÇAY, YEŞİL ELMA, ŞEKER",
+          "detailEn": "GREEN TEA, GREEN APPLE, SUGAR",
+          "priceUsd": null
+        },
+        {
+          "tr": "LİMONLU SOĞUK ÇAY",
+          "en": "LEMON ICED TEA",
+          "detailTr": "SOĞUK ÇAY, LİMON SUYU, LİMON KABUĞU, ŞEKER",
+          "detailEn": "ICED TEA, LEMON JUICE, LEMON PEE, SUGAR",
+          "priceUsd": null
+        },
+        {
+          "tr": "BÖĞÜRTLENLİ HİBİSKUS ÇAYI",
+          "en": "BLACKBERRY HIBISCUS TEA",
+          "detailTr": "HİBİSKÜS ÇAYI, BÖĞÜRTLEN, ŞEKER",
+          "detailEn": "HIBISCUS TEA, BLACKBERRY, SUGAR",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "ROYAL DONDURMA",
+      "en": "ROYAL ICE CREAM",
+      "items": [
+        {
+          "tr": "ROYAL DONDURMA",
+          "en": "ROYAL ICE CREAM",
+          "detailTr": "KAYMAK, KARAMEL, VANİLYA, BLUE SKY, DAMLA SAKIZI, NANE, MUZ, OREO COOKIES, ANTEP FISTIĞI, CHEERY MANIA, CEVİZ, LİMON, ÇİLEK, FRAMBUAZ, KAVUN, MANDALİNA, COOKIES, BÖĞÜRTLEN, MANGO, ÇİKOLATA, COCO AL BONBON, DİYET CEVİZ, KINDER BUENO, SNICKERS",
+          "detailEn": "CREAM, CARAMEL, VANILLA, BLUE SKY, MASTIC GUM, MINT, BANANA, OREO COOKIES, PISTACHIOS, CHEERY MANIA, WALNUT, LEMON, STRAWBERRY, RASPBERRY, MELON,MANDARIN, COOKIES, BLACKBERRY, MANGO, CHOCOLATE, COCO AL BONBON, DIET WALNUT,KINDER BUENO, SNICKERS",
+          "priceUsd": null
+        }
+      ]
+    }
+  ],
+  "footnotes": [],
+  "issues": [
+    "No prices appear anywhere in the sheet; every priceUsd is null. The only numbers are volumes (SU 330 ml. / 750 ml.), V60, 3. NESIL and liquor labels (NO:7, NO:10, 12 Y.O.).",
+    "Menu title row (TEA LOUNGE MENU) is not part of the JSON shape and was dropped.",
+    "Herbal tea list (TAZE DEMLEME BITKI CAYLARI) includes BAMYA CICEGI / OKRA FLOWER here, whereas the Cafe Verde sheet has HIBISKUS / HIBISCUS in that position. This sheet also has a FRESH MEYVE SUYU item that Cafe Verde lacks.",
+    "MESRUBATLAR / SOFT DRINKS is followed, without a heading, by TAZE DEMLEME BITKI CAYLARI, 3. NESIL KAHVELER and the Ronnefeldt rows; the hot items are kept in document order inside MESRUBATLAR (they have detail lines so they were read as items, not headings).",
+    "RONNEFELDT BITKI CAYLARI / RONNEFELDT HERBAL TEAS is immediately followed by RONNEFELDT POSET CAYLAR with no products between: read as a parent heading with two sub-categories (POSET CAYLAR, TAZE DEMLEME CAYLAR). The heading hierarchy is a guess.",
+    "3. NESIL KAHVELER / THIRD GENERATION COFFEES has one line 'CHEMEX , V60 , SYPHON' (not bilingual): put in both detailTr and detailEn; could instead be a heading with three items.",
+    "'SU / WATER 330 ml.' and '750 ml.': split literally into tr 'SU' / en 'WATER 330 ml.' (the volume only ends up in the English half).",
+    "BRITVIC detail 'TOMATO, BITTER LEMON, GINGER ALE, TONIC' is printed once (English only): placed in detailEn, detailTr null.",
+    "Ronnefeldt tea bags: after ENGLISH BREAKFAST the line 'SIYAH CAY / BLACK TEA' was read as its detail, while 'NANE & PEPPERMINT', 'PAPATYA / CAMOMILE' and 'ROOIBOS VANILYA / ROOIBOS VANILLA' were read as separate items with no detail. The pairing in this block is ambiguous (e.g. 'PAPATYA / CAMOMILE' could be the detail of NANE & PEPPERMINT).",
+    "AYURVEDA HERBS & GINGER: English ingredients run over two spreadsheet rows; joined with a space into one detailEn.",
+    "MILKSHAKES has two Turkish/English row pairs (description, then flavour list); each pair is joined with a newline inside detailTr / detailEn.",
+    "COLD BREW has only one detail line, 'SOGUK DEMLEME ESPRESSO' (Turkish only): detailTr set, detailEn null.",
+    "ROYAL DONDURMA / ROYAL ICE CREAM is followed only by flavour lists: kept as its own category with one item of the same name carrying the flavour lists as details. Could instead be an item in the iced tea category.",
+    "JASMINE PEARLS has a detail identical to MORGENTAU (mango/bergamot green tea with sunflower, rose, cornflower): likely copy-paste in the source; kept as printed.",
+    "English detail of GET THE POWER (musk mallow, cola plant, blackcurrant...) does not match the Turkish one word for word (AMBER CICEGI...); kept as printed.",
+    "'TGPOF*' on EARL GREY has an asterisk but no footnote is printed on the sheet.",
+    "Source typos kept verbatim, e.g. HUCCKLEBERRY FRIEND, COCOA SELL, LEMON PEE, CHEERY MANIA, MELON,MANDARIN.",
+    "Tea Lounge sheet has no alcohol section; it ends with ROYAL DONDURMA."
+  ]
+}

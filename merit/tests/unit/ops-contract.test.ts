@@ -6,10 +6,11 @@ const ROOT = path.resolve(__dirname, "../../..");
 const read = (f: string) => readFileSync(path.join(ROOT, f), "utf8");
 
 describe("operasyon sözleşmesi (OPS-1..3)", () => {
-  it("Merit menü senkronu varsayılan kapalı ve yıkıcı sipariş silme yok", () => {
+  it("Merit menü senkronu ayarsız çalışır, başlatmayı durdurmaz ve yıkıcı sipariş silme yok", () => {
     const entry = read("merit/docker-entrypoint.sh");
-    expect(entry).toContain('"${SYNC_MERIT_MENUS:-false}"');
-    expect(read("docker-compose.yaml")).toContain("SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-false}");
+    expect(entry).toContain('"${SYNC_MERIT_MENUS:-true}"');
+    expect(entry).toMatch(/tsx prisma\/seed\/meritMenus\.ts \|\| echo/);
+    expect(read("docker-compose.yaml")).toContain("SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-true}");
     const seed = read("merit/prisma/seed/meritMenus.ts");
     expect(seed).not.toMatch(/\.(order|orderItem|orderEvent|printJob)\.deleteMany/);
   });

@@ -1,0 +1,1748 @@
+{
+ "outlet": "The Steakhouse",
+ "sources": [
+  "Steakhouse_SarapliMenu1080x1920_pdf.txt",
+  "9_STEAK_HOUSE_ALACARTE_docx.txt (comparison only)"
+ ],
+ "categories": [
+  {
+   "tr": "BAŞLANGIÇLAR",
+   "en": "APPETIZERS",
+   "items": [
+    {
+     "tr": "DANA CARPACCIO",
+     "en": "BEEF CARPACCIO",
+     "detailTr": "DANA BONFİLE, ROKA, BALSAMİK GLAZE VE HARDAL SOS",
+     "detailEn": "BEEF TENDERLOIN, ARUGULA, BALSAMIC GLAZE, AND MUSTARD SAUCE",
+     "priceUsd": 37
+    },
+    {
+     "tr": "DANA SUŞİ",
+     "en": "BEEF SUSHI",
+     "detailTr": "KONTRFİLE, AVOKADO, ANANAS VE KİBRİT PATATES İLE",
+     "detailEn": "SIRLOIN STEAK, AVOCADO, PINEAPPLE, AND MATCHSTICK POTATOES",
+     "priceUsd": 22
+    },
+    {
+     "tr": "İTHAL PEYNİR TABAĞI",
+     "en": "IMPORTED CHEESE PLATTER",
+     "detailTr": "EMMENTAL PEYNİRİ, CHEDDAR PEYNİRİ, CAMEMBERT PEYNİRİ, EDAM PEYNİRİ, İSLİ PEYNİR VE KURUTULMUŞ MEYVELER",
+     "detailEn": "EMMENTAL CHEESE, CHEDDAR CHEESE, CAMEMBERT CHEESE, EDAM CHEESE, SMOKED CHEESE, AND DRIED FRUITS",
+     "priceUsd": 17
+    },
+    {
+     "tr": "STEAK TARTAR",
+     "en": "STEAK TARTARE",
+     "detailTr": "BONFİLE, FRENK SOĞANI, KIRMIZI SOĞAN, KAPARİ, HARDAL, WORCESTERSHIRE SOS, BEBEK YEŞİLLİKLER VE KITIR EKMEK DİLİMLERİ",
+     "detailEn": "TENDERLOIN, CHIVES, RED ONION, CAPERS, MUSTARD, WORCESTERSHIRE SAUCE, BABY GREENS, AND CRUSTY BREAD SLICES",
+     "priceUsd": 43
+    }
+   ]
+  },
+  {
+   "tr": "ÇORBA",
+   "en": "SOUP",
+   "items": [
+    {
+     "tr": "KOLAJENLİ DANA İLİK ÇORBASI",
+     "en": "BEEF BONE MARROW SOUP WITH COLLAGEN",
+     "detailTr": "SARIMSAK VE SİRKE SOSU",
+     "detailEn": "GARLIC AND VINEGAR SAUCE",
+     "priceUsd": 15
+    }
+   ]
+  },
+  {
+   "tr": "SALATALAR",
+   "en": "SALADS",
+   "items": [
+    {
+     "tr": "PARMESAN PEYNİRLİ ROKA SALATASI",
+     "en": "ARUGULA SALAD WITH PARMESAN CHEESE",
+     "detailTr": "ROKA, KIRMIZI SOĞAN, YEŞİL ELMA, PARMESAN PEYNİRİ VE ZENCEFİLLİ EKŞİ ELMA SOSU",
+     "detailEn": "ARUGULA, RED ONION, GREEN APPLE, PARMESAN CHEESE, AND GINGER SOUR APPLE SAUCE",
+     "priceUsd": 12
+    },
+    {
+     "tr": "AVOKADO SALATASI",
+     "en": "AVOCADO SALAD",
+     "detailTr": "MEVSİM YEŞİLLİKLERİ, AVOKADO, ZEYTİNYAĞI VE NARENCİYE SOSU",
+     "detailEn": "SEASONAL GREENS, AVOCADO, OLIVE OIL, AND CITRUS DRESSING",
+     "priceUsd": 22
+    },
+    {
+     "tr": "TULUM PEYNİRLİ SALATA",
+     "en": "SALAD WITH TULUM CHEESE",
+     "detailTr": "MASKOLİN YEŞİLLİKLERİ, CEVİZ, KURU ÜZÜM, ÇERİ DOMATES, TULUM PEYNİRİ, ZEYTİNYAĞI, NAR EKŞİSİ VE BALSAMİK SOS",
+     "detailEn": "MESCLUN GREENS, WALNUTS, RAISINS, CHERRY TOMATOES, TULUM CHEESE, OLIVE OIL, POMEGRANATE MOLASSES, AND BALSAMIC SAUCE",
+     "priceUsd": 22
+    },
+    {
+     "tr": "GAVURDAĞI SALATASI",
+     "en": "GAVURDAĞI SALAD",
+     "detailTr": "DOMATES, SOĞAN, CEVİZ, KAPYA BİBER, ZEYTİNYAĞI, LİMON SUYU VE NAR EKŞİSİ",
+     "detailEn": "TOMATOES, ONION, WALNUTS, RED BELL PEPPER, OLIVE OIL, LEMON JUICE, AND POMEGRANATE MOLASSES",
+     "priceUsd": 12
+    }
+   ]
+  },
+  {
+   "tr": "ARA SICAKLAR",
+   "en": "HOT APPETIZERS",
+   "items": [
+    {
+     "tr": "BİFTEKLİ SPAGETTİ 200-220 G",
+     "en": "SPAGHETTI WITH BEEF STEAK 200-220 G",
+     "detailTr": "İNCE DİLİMLENMİŞ DANA ETİ",
+     "detailEn": "THINLY SLICED BEEF",
+     "priceUsd": 46
+    },
+    {
+     "tr": "CHEDDAR SOSLU FÜME KABURGA",
+     "en": "SMOKED RIBS WITH CHEDDAR SAUCE",
+     "detailTr": "FÜME KABURGA, CHEDDAR SOS VE EKŞİ MAYALI EKMEK İLE",
+     "detailEn": "SMOKED RIB WITH CHEDDAR SAUCE AND SOURDOUGH BREAD",
+     "priceUsd": 41
+    },
+    {
+     "tr": "IZGARA DANA İLİĞİ",
+     "en": "GRILLED BEEF MARROW",
+     "detailTr": "EKŞİ MAYALI EKMEK VE CHIMICHURRI SOS",
+     "detailEn": "SOURDOUGH BREAD AND CHIMICHURRI SAUCE",
+     "priceUsd": 21
+    },
+    {
+     "tr": "IZGARA GÖDEN SUCUĞU",
+     "en": "GRILLED GÖDEN SAUSAGE",
+     "detailTr": "FERMENTE IZGARA GÖDEN SUCUĞU",
+     "detailEn": "FERMENTED GRILLED GÖDEN SAUSAGE",
+     "priceUsd": 38
+    },
+    {
+     "tr": "EL YAPIMI DANA SOSİS",
+     "en": "HOUSE-MADE BEEF SAUSAGE",
+     "detailTr": "HARDAL SOS VE SICAK EKŞİ MAYALI EKMEK",
+     "detailEn": "MUSTARD SAUCE AND WARM SOURDOUGH BREAD",
+     "priceUsd": 35
+    },
+    {
+     "tr": "DANA ETLİ KOKOREÇ",
+     "en": "BEEF KOKOREC",
+     "detailTr": "ÖZEL BAHARATLARLA DANA ETLİ KOKOREÇ",
+     "detailEn": "BEEF KOKOREC WITH SPECIAL SPICES",
+     "priceUsd": 39
+    }
+   ]
+  },
+  {
+   "tr": "KÖFTE & BURGER ÇEŞİTLERİ",
+   "en": "MEATBALLS & BURGER SELECTION",
+   "items": [
+    {
+     "tr": "DIAMOND BURGER",
+     "en": "DIAMOND BURGER",
+     "detailTr": "220 G BURGER KÖFTESİ, BONFİLE DİLİMİ, TRÜFLÜ MAYONEZ, CHEDDAR PEYNİRİ VE CHIPOTLE SOS",
+     "detailEn": "220 G BEEF BURGER PATTY, SLICED TENDERLOIN, TRUFFLE MAYONNAISE, CHEDDAR CHEESE, AND CHIPOTLE SAUCE",
+     "priceUsd": 45
+    },
+    {
+     "tr": "CHEESEBURGER",
+     "en": "CHEESEBURGER",
+     "detailTr": "200 G BURGER KÖFTESİ, CHEDDAR PEYNİRİ, KARAMELİZE SOĞAN VE CHIPOTLE SOS",
+     "detailEn": "200 G BEEF BURGER PATTY, CHEDDAR CHEESE, CARAMELIZED ONIONS AND CHIPOTLE SAUCE",
+     "priceUsd": 39
+    },
+    {
+     "tr": "LOKUM BURGER",
+     "en": "BEEF BURGER",
+     "detailTr": "180 G SÜT DANA BONFİLE PARÇALARI, SOĞAN TURŞUSU VE TANE HARDALLI SARIMSAKLI MAYONEZ",
+     "detailEn": "180 G MILK-FED VEAL TENDERLOIN PIECES, PICKLED ONIONS, AND GARLIC MAYONNAISE WITH WHOLE-GRAIN MUSTARD",
+     "priceUsd": 42
+    },
+    {
+     "tr": "TRIO BURGER",
+     "en": "TRIO BURGER",
+     "detailTr": null,
+     "detailEn": "MINI DIAMOND BURGER, MINI CHEESEBURGER, MINI BEEF BURGER",
+     "priceUsd": 46
+    },
+    {
+     "tr": "KASAP KÖFTE 225 G",
+     "en": "BUTCHER-STYLE MEATBALLS 225 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 42
+    },
+    {
+     "tr": "CHEDDAR PEYNİRLİ KÖFTE 255 G",
+     "en": "MEATBALLS WITH CHEDDAR CHEESE 255 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 44
+    }
+   ]
+  },
+  {
+   "tr": "KUZU ETLERİ",
+   "en": "LAMB DISHES",
+   "items": [
+    {
+     "tr": "KUZU PİRZOLA 250 G",
+     "en": "LAMB CHOPS 250 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 52
+    },
+    {
+     "tr": "KUZU KÜŞLEME 220 G",
+     "en": "LAMB TENDERLOIN 220 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 43
+    },
+    {
+     "tr": "TEREYAĞLI KUZU SIRTI 220 G",
+     "en": "BUTTERED LAMB BACKSTRAP 220 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 45
+    },
+    {
+     "tr": "KUZU KABURGA KAFES 1.500 G",
+     "en": "LAMB RACK 1.500 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 132
+    },
+    {
+     "tr": "*KUZU KOL 1.500 G",
+     "en": "*LAMB SHOULDER 1.500 G",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 108
+    }
+   ]
+  },
+  {
+   "tr": "DANA ETLERİ",
+   "en": "BEEF DISHES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "JAPANESE WAGYU",
+     "en": "JAPANESE WAGYU",
+     "items": [
+      {
+       "tr": "DANA ANTRİKOT 100-120 G",
+       "en": "RIBEYE STEAK 100-120 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 70
+      },
+      {
+       "tr": "DANA KONTRFİLE 100-120 G",
+       "en": "NEW YORK STRIPLOIN 100-120 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 76
+      }
+     ]
+    },
+    {
+     "tr": "US CUT IMPERIAL GOLD",
+     "en": "US CUT IMPERIAL GOLD",
+     "items": [
+      {
+       "tr": "DANA BONFİLE MADALYON 200-220 G",
+       "en": "BEEF TENDERLOIN MEDALLIONS 200-220 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 101
+      },
+      {
+       "tr": "DANA ANTRİKOT 300-350 G",
+       "en": "RIBEYE STEAK 300-350 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 145
+      },
+      {
+       "tr": "DANA KONTRFİLE 300-330 G",
+       "en": "NEW YORK STRIPLOIN 300-330 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 145
+      }
+     ]
+    },
+    {
+     "tr": "US CUT PRIME CHOICE",
+     "en": "US CUT PRIME CHOICE",
+     "items": [
+      {
+       "tr": "DANA BONFİLE MADALYON 200-220 G",
+       "en": "BEEF TENDERLOIN MEDALLIONS 200-220 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 86
+      },
+      {
+       "tr": "DANA ANTRİKOT 300-350 G",
+       "en": "RIBEYE STEAK 300-350 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 104
+      },
+      {
+       "tr": "DANA KONTRFİLE 300-330 G",
+       "en": "NEW YORK STRIPLOIN 300-330 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 121
+      },
+      {
+       "tr": "DALLAS BİFTEK 450-500 G",
+       "en": "DALLAS STEAK 450-500 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 111
+      },
+      {
+       "tr": "DANA PİRZOLA 330-380 G",
+       "en": "VEAL CHOP 330-380 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 83
+      },
+      {
+       "tr": "T- BONE BİFTEK 500-550 G",
+       "en": "T-BONE STEAK 500-550 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 142
+      },
+      {
+       "tr": "KEMİKLİ KANSAS CITY KONTRFİLE 350-400 G",
+       "en": "BONE-IN KANSAS CITY STRIPLOIN 350-400 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 102
+      },
+      {
+       "tr": "TOMAHAWK BİFTEK 1.200-1.300 G",
+       "en": "TOMAHAWK STEAK 1.200-1.300 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 256
+      },
+      {
+       "tr": "*DANA KABURGA (ASADO) 250 G",
+       "en": "*BEEF SHORT RIBS (ASADO STYLE) 250 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 52
+      }
+     ]
+    },
+    {
+     "tr": "ARGENTINA CUT HOUSE SELECTION",
+     "en": "ARGENTINA CUT HOUSE SELECTION",
+     "items": [
+      {
+       "tr": "LOKUM (DANA BONFİLE) 200-220 G",
+       "en": "DELIGHT (BEEF TENDERLOIN “LOKUM”) 200-220 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 54
+      },
+      {
+       "tr": "DANA BONFİLE MADALYON 200-220 G",
+       "en": "BEEF TENDERLOIN MEDALLIONS 200-220 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 54
+      },
+      {
+       "tr": "DANA ANTRİKOT 300-350 G",
+       "en": "RIBEYE STEAK 300-350 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 79
+      },
+      {
+       "tr": "DANA KONTRFİLE 300-330 G",
+       "en": "NEW YORK STRIPLOIN 300-330 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 63
+      },
+      {
+       "tr": "CHATEAUBRIAND 450 G (2 KİŞİLİK)",
+       "en": "CHATEAUBRIAND 450 G (FOR 2 GUESTS)",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 113
+      },
+      {
+       "tr": "CHATEAUBRIAND 850 G (4 KİŞİLİK)",
+       "en": "CHATEAUBRIAND 850 G (FOR 4 GUESTS)",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 197
+      },
+      {
+       "tr": "YAPRAK ANTRİKOT 280-300 G",
+       "en": "THIN-SLICED RIBEYE 280-300 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 60
+      },
+      {
+       "tr": "CAFÉ DE PARİS SOSLU DANA BONFİLE 180-200 G",
+       "en": "BEEF TENDERLOIN WITH CAFÉ DE PARIS SAUCE 180-200 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 66
+      },
+      {
+       "tr": "DANA ŞAŞLIK 200-220 G",
+       "en": "BEEF SHASHLIK 200-220 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 62
+      },
+      {
+       "tr": "KOBE ETİ 180-200 G",
+       "en": "KOBE BEEF 180-200 G",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 60
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "SOSLAR VE GARNİTÜRLER",
+   "en": "SAUCES & SIDE DISHES",
+   "items": [
+    {
+     "tr": "CAFÉ DE PARİS SOSU",
+     "en": "CAFÉ DE PARIS SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 10
+    },
+    {
+     "tr": "KREMALI MANTAR SOSU",
+     "en": "CREAMY MUSHROOM SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 7
+    },
+    {
+     "tr": "ROKFOR SOSU",
+     "en": "BLUE CHEESE SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 8
+    },
+    {
+     "tr": "PORTO SOSU",
+     "en": "PORT WINE SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 13
+    },
+    {
+     "tr": "HOLLANDEZ SOS",
+     "en": "HOLLANDAISE SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 9
+    },
+    {
+     "tr": "PATATES PÜRESİ",
+     "en": "MASHED POTATOES",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 5
+    },
+    {
+     "tr": "IZGARA MİNİ SEBZELER",
+     "en": "GRILLED BABY VEGETABLES",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 8
+    },
+    {
+     "tr": "ÇITIR SOĞAN HALKALARI",
+     "en": "CRISPY ONION RINGS",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 4
+    },
+    {
+     "tr": "KREMALI MANTARLI ISPANAK",
+     "en": "CREAMED SPINACH WITH MUSHROOMS",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 5
+    },
+    {
+     "tr": "EZİLMİŞ MİNİ PATATES",
+     "en": "CRUSHED BABY POTATOES",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 4
+    },
+    {
+     "tr": "CHEDDAR SOSLU İSTİRİDYE MANTARI",
+     "en": "OYSTER MUSHROOMS WITH CHEDDAR SAUCE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 5
+    },
+    {
+     "tr": "TATLI PATATES PÜRESİ",
+     "en": "SWEET POTATO PURÉE",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 6
+    }
+   ]
+  },
+  {
+   "tr": "TATLILAR",
+   "en": "DESSERTS",
+   "items": [
+    {
+     "tr": "PİŞMANİYELİ CHEESECAKE",
+     "en": "CHEESECAKE WITH PISMANIYE",
+     "detailTr": "TEL PİŞMANİYELİ CHEESECAKE",
+     "detailEn": "CLASSIC CHEESECAKE TOPPED WITH PISMANIYE (TURKISH COTTON CANDY)",
+     "priceUsd": 22
+    },
+    {
+     "tr": "ÇİKOLATALI SUFLE",
+     "en": "CHOCOLATE SOUFFLÉ",
+     "detailTr": "VANİLYALI DONDURMA EŞLİĞİNDE",
+     "detailEn": "SERVED WITH VANILLA ICE CREAM",
+     "priceUsd": 24
+    },
+    {
+     "tr": "HAVUÇ DİLİM BAKLAVA",
+     "en": "CARROT SLICE BAKLAVA",
+     "detailTr": "ANTEP FISTIKLI",
+     "detailEn": "WITH PISTACHIOS",
+     "priceUsd": 29
+    },
+    {
+     "tr": "MEYVE TABAĞI",
+     "en": "FRUIT PLATE",
+     "detailTr": "MEVSİM MEYVELERİ",
+     "detailEn": "SEASONAL FRUITS",
+     "priceUsd": 18
+    }
+   ]
+  },
+  {
+   "tr": "KAV ŞARAPLARI",
+   "en": "RARE VINTAGE WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+       "en": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+       "detailTr": "MERLOT / SAINT - ÉMILION / FRANCE",
+       "detailEn": "MERLOT / SAINT - ÉMILION / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CANTEMERLE GRAND CRU",
+       "en": "CHATEAU CANTEMERLE GRAND CRU",
+       "detailTr": "MERLOT, CABERNET FRANC, PETIT VERDOT, CABERNET SAUVIGNON / HAUT-MEDOC / FRANCE",
+       "detailEn": "MERLOT, CABERNET FRANC, PETIT VERDOT, CABERNET SAUVIGNON / HAUT-MEDOC / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+       "en": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+       "detailTr": "MERLOT / SAINT - ÉMILION / FRANCE",
+       "detailEn": "MERLOT / SAINT - ÉMILION / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+       "en": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT / BORDEAUX ST. JULEN / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT / BORDEAUX ST. JULEN / FRANCE",
+       "priceUsd": 140
+      },
+      {
+       "tr": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+       "en": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / SAINT - ÉMILION / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / SAINT - ÉMILION / FRANCE",
+       "priceUsd": 190
+      },
+      {
+       "tr": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+       "en": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON / MARGAUX / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON / MARGAUX / FRANCE",
+       "priceUsd": 290
+      },
+      {
+       "tr": "CHATEAU CANTENAC BROWN GRAND CRU",
+       "en": "CHATEAU CANTENAC BROWN GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON / MARGAUX / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON / MARGAUX / FRANCE",
+       "priceUsd": 230
+      },
+      {
+       "tr": "CHATEAU PAPE CLÉMENT GRAND CRU",
+       "en": "CHATEAU PAPE CLÉMENT GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON / PESSAC-LÉOGNAN / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON / PESSAC-LÉOGNAN / FRANCE",
+       "priceUsd": 370
+      },
+      {
+       "tr": "CHATEAU GAZIN POMEROL",
+       "en": "CHATEAU GAZIN POMEROL",
+       "detailTr": "MERLOT / POMEROL / FRANCE",
+       "detailEn": "MERLOT / POMEROL / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU DUHART- MILON GRAND CRU",
+       "en": "CHATEAU DUHART- MILON GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON / PAUILLAC / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON / PAUILLAC / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU CLERC MILON GRAND CRU",
+       "en": "CHATEAU CLERC MILON GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / PAUILLAC / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / PAUILLAC / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU BEYCHEVELLE GRAND VIN",
+       "en": "CHATEAU BEYCHEVELLE GRAND VIN",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT, PETIT VERDOT / SAINT JULIEN, BORDEAUX / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT, PETIT VERDOT / SAINT JULIEN, BORDEAUX / FRANCE",
+       "priceUsd": 500
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "BOROLI BAROLO BRUNELLA",
+       "en": "BOROLI BAROLO BRUNELLA",
+       "detailTr": "NEBBIOLO / BAROLO / ITALY",
+       "detailEn": "NEBBIOLO / BAROLO / ITALY",
+       "priceUsd": 230
+      },
+      {
+       "tr": "SASSICAIA",
+       "en": "SASSICAIA",
+       "detailTr": "CABERNET SAUVIGNON / BOLGHERI / ITALY",
+       "detailEn": "CABERNET SAUVIGNON / BOLGHERI / ITALY",
+       "priceUsd": 990
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "KIRMIZI ŞARAPLAR",
+   "en": "RED WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
+       "detailEn": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
+       "detailEn": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "MERLOT / THRACE / TÜRKİYE",
+       "detailEn": "MERLOT / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "MERLOT / THRACE / TÜRKİYE",
+       "detailEn": "MERLOT / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "SHIRAZ / THRACE / TÜRKİYE",
+       "detailEn": "SHIRAZ / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "SHIRAZ / THRACE / TÜRKİYE",
+       "detailEn": "SHIRAZ / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (20 $)",
+       "en": "KAVAKLIDERE SELECTION (20 $)",
+       "detailTr": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
+       "detailEn": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (100 $)",
+       "en": "KAVAKLIDERE SELECTION (100 $)",
+       "detailTr": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
+       "detailEn": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "DOLUCA SIGNIUM",
+       "en": "DOLUCA SIGNIUM",
+       "detailTr": "CABERNET SAUVIGNON, CABERNET FRANC, SHIRAZ / THRACE / TÜRKİYE",
+       "detailEn": "CABERNET SAUVIGNON, CABERNET FRANC, SHIRAZ / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SEVİLEN CENTUM",
+       "en": "SEVİLEN CENTUM",
+       "detailTr": "SYRAH / AEGEAN / TÜRKİYE",
+       "detailEn": "SYRAH / AEGEAN / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SUVLA",
+       "en": "SUVLA",
+       "detailTr": "MERLOT / THRACE / TÜRKİYE",
+       "detailEn": "MERLOT / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "CIABOT DEL CONTE BAROLO",
+       "en": "CIABOT DEL CONTE BAROLO",
+       "detailTr": "NEBBIOLO / BAROLO / ITALY",
+       "detailEn": "NEBBIOLO / BAROLO / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "EPICURO Z-ELEBRATE OLD ZINFANDEL",
+       "en": "EPICURO Z-ELEBRATE OLD ZINFANDEL",
+       "detailTr": "ZINFANDEL / PUGLIA / ITALY",
+       "detailEn": "ZINFANDEL / PUGLIA / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "DUCA DI SARAGNANO CHIANTI RISERVA",
+       "en": "DUCA DI SARAGNANO CHIANTI RISERVA",
+       "detailTr": "SANGIOVESE / TOSCANA / ITALY",
+       "detailEn": "SANGIOVESE / TOSCANA / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "ZÎRONDA AMARONE",
+       "en": "ZÎRONDA AMARONE",
+       "detailTr": "CORVINA, RONDINELLA, CORVINONE, NEGRAR / VENETO / ITALY",
+       "detailEn": "CORVINA, RONDINELLA, CORVINONE, NEGRAR / VENETO / ITALY",
+       "priceUsd": 130
+      },
+      {
+       "tr": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+       "en": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+       "detailTr": "CORVINA, RONDINELLA, MOLINARA / VENETO / ITALY",
+       "detailEn": "CORVINA, RONDINELLA, MOLINARA / VENETO / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "RICOSSA BARBARESCO",
+       "en": "RICOSSA BARBARESCO",
+       "detailTr": "NEBBIOLO / PIEMONTE / ITALY",
+       "detailEn": "NEBBIOLO / PIEMONTE / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "PALAZZO BRUNELLO DI MONTALCINO",
+       "en": "PALAZZO BRUNELLO DI MONTALCINO",
+       "detailTr": "SANGIOVESE / TOSCANA / ITALY",
+       "detailEn": "SANGIOVESE / TOSCANA / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+       "en": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+       "detailTr": "PRIMITIVO DI MANDURIA / ITALY",
+       "detailEn": "PRIMITIVO DI MANDURIA / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "LOMBARDO NERO D'ALTURA",
+       "en": "LOMBARDO NERO D'ALTURA",
+       "detailTr": "NERO D'AVOLA / SICILIA / ITALY",
+       "detailEn": "NERO D'AVOLA / SICILIA / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TEATRO LATINO IL COVO",
+       "en": "TEATRO LATINO IL COVO",
+       "detailTr": "SYRAH, MERLOT, CABERNET SAUVIGNON, NERO D'AVOLA / SICILIA / ITALY",
+       "detailEn": "SYRAH, MERLOT, CABERNET SAUVIGNON, NERO D'AVOLA / SICILIA / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TEATRO LATINO MESCA",
+       "en": "TEATRO LATINO MESCA",
+       "detailTr": "CABERNET SAUVIGNON, NEGROAMARO, PRIMITIVO / PUGLIA / ITALY",
+       "detailEn": "CABERNET SAUVIGNON, NEGROAMARO, PRIMITIVO / PUGLIA / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "ANNO DOMINI BATISTA",
+       "en": "ANNO DOMINI BATISTA",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT / VENETO / ITALY",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT / VENETO / ITALY",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "FINCA AYLÉS UNEXPECTED GARNACHA",
+       "en": "FINCA AYLÉS UNEXPECTED GARNACHA",
+       "detailTr": "GARNACHA / CARIÑENA / SPAIN",
+       "detailEn": "GARNACHA / CARIÑENA / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "GRAN CORONAS RESERVA TORRES",
+       "en": "GRAN CORONAS RESERVA TORRES",
+       "detailTr": "CABERNET SAUVIGNON / PENEDÈS / SPAIN",
+       "detailEn": "CABERNET SAUVIGNON / PENEDÈS / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "CELESTE CRIANZA",
+       "en": "CELESTE CRIANZA",
+       "detailTr": "TEMPRANILLO / RIBERA DEL DUERO / SPAIN",
+       "detailEn": "TEMPRANILLO / RIBERA DEL DUERO / SPAIN",
+       "priceUsd": 220
+      },
+      {
+       "tr": "FAUSTINO 1 GRAN RESERVA",
+       "en": "FAUSTINO 1 GRAN RESERVA",
+       "detailTr": "TEMPRANILLO, GRACIANO, MAZUELO / RIOJA / SPAIN",
+       "detailEn": "TEMPRANILLO, GRACIANO, MAZUELO / RIOJA / SPAIN",
+       "priceUsd": 120
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MONTE DO CARRAPATELO LUIS DUARTE",
+       "en": "MONTE DO CARRAPATELO LUIS DUARTE",
+       "detailTr": "ARAGONEZ, TOURIGA, ALICANTE BOUSCHET / ALENTEJANO / PORTUGAL",
+       "detailEn": "ARAGONEZ, TOURIGA, ALICANTE BOUSCHET / ALENTEJANO / PORTUGAL",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "ARGENTINA",
+     "en": "ARGENTINA",
+     "items": [
+      {
+       "tr": "MAGNETA MALBEC",
+       "en": "MAGNETA MALBEC",
+       "detailTr": "MALBEC / MENDOZA / ARGENTINA",
+       "detailEn": "MALBEC / MENDOZA / ARGENTINA",
+       "priceUsd": 50
+      },
+      {
+       "tr": "MONTE CEPAS MALBEC",
+       "en": "MONTE CEPAS MALBEC",
+       "detailTr": "MALBEC / MENDOZA / ARGENTINA",
+       "detailEn": "MALBEC / MENDOZA / ARGENTINA",
+       "priceUsd": 50
+      },
+      {
+       "tr": "CLAROSCURO BODEGA DE ARTE",
+       "en": "CLAROSCURO BODEGA DE ARTE",
+       "detailTr": "CABERNET FRANC / UCO VALLEY / ARGENTINA",
+       "detailEn": "CABERNET FRANC / UCO VALLEY / ARGENTINA",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "CHILE",
+     "en": "CHILE",
+     "items": [
+      {
+       "tr": "PUERTO VIEJO RESERVE",
+       "en": "PUERTO VIEJO RESERVE",
+       "detailTr": "CARMÉNÈRE / CURICÓ VALLEY / CHILE",
+       "detailEn": "CARMÉNÈRE / CURICÓ VALLEY / CHILE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "TARAPACA GRAN RESERVA",
+       "en": "TARAPACA GRAN RESERVA",
+       "detailTr": "CABERNET SAUVIGNON / MAIPO VALLEY / CHILE",
+       "detailEn": "CABERNET SAUVIGNON / MAIPO VALLEY / CHILE",
+       "priceUsd": 130
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (15 $)",
+       "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (15 $)",
+       "detailTr": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
+       "detailEn": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (70 $)",
+       "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (70 $)",
+       "detailTr": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
+       "detailEn": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "GRAND C RESERVE",
+       "en": "GRAND C RESERVE",
+       "detailTr": "PINOT NOIR / ALSACE / FRANCE",
+       "detailEn": "PINOT NOIR / ALSACE / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+       "en": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+       "detailTr": "SYRAH, GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
+       "detailEn": "SYRAH, GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+       "en": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+       "detailTr": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / BORDEAUX / FRANCE",
+       "detailEn": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / BORDEAUX / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+       "en": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+       "detailTr": "SYRAH GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
+       "detailEn": "SYRAH GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
+       "priceUsd": 140
+      },
+      {
+       "tr": "LOUIS JADOT BOURGOGNE",
+       "en": "LOUIS JADOT BOURGOGNE",
+       "detailTr": "PINOT NOIR / BOURGOGNE / FRANCE",
+       "detailEn": "PINOT NOIR / BOURGOGNE / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT BROUILLY",
+       "en": "LOUIS JADOT BROUILLY",
+       "detailTr": "GAMAY / BEAUJOLAIS / FRANCE",
+       "detailEn": "GAMAY / BEAUJOLAIS / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT BEAUNE PREMIER CRU",
+       "en": "LOUIS JADOT BEAUNE PREMIER CRU",
+       "detailTr": "PINOT NOIR / CÔTE DE BEAUNE, BOURGOGNE / FRANCE",
+       "detailEn": "PINOT NOIR / CÔTE DE BEAUNE, BOURGOGNE / FRANCE",
+       "priceUsd": 230
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "BEYAZ ŞARAPLAR",
+   "en": "WHITE WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
+       "detailEn": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
+       "detailEn": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "CHARDONNAY / THRACE / TÜRKİYE",
+       "detailEn": "CHARDONNAY / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "CHARDONNAY / THRACE / TÜRKİYE",
+       "detailEn": "CHARDONNAY / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "CHARDONNAY / THRACE / TÜRKİYE",
+       "detailEn": "CHARDONNAY / THRACE / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "CHARDONNAY / THRACE / TÜRKİYE",
+       "detailEn": "CHARDONNAY / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (20 $)",
+       "en": "KAVAKLIDERE SELECTION (20 $)",
+       "detailTr": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
+       "detailEn": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (100 $)",
+       "en": "KAVAKLIDERE SELECTION (100 $)",
+       "detailTr": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
+       "detailEn": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "DOLUCA SIGNIUM",
+       "en": "DOLUCA SIGNIUM",
+       "detailTr": "VIOGNIER, CHARDONNAY, NARİNCE / THRACE / TÜRKİYE",
+       "detailEn": "VIOGNIER, CHARDONNAY, NARİNCE / THRACE / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE COTES D'AVANOS",
+       "en": "KAVAKLIDERE COTES D'AVANOS",
+       "detailTr": "SAUVIGNON BLANC / CENTRAL ANATOLIA / TÜRKİYE",
+       "detailEn": "SAUVIGNON BLANC / CENTRAL ANATOLIA / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE COTES D'AVANOS",
+       "en": "KAVAKLIDERE COTES D'AVANOS",
+       "detailTr": "CHARDONNAY / CENTRAL ANATOLIA / TÜRKİYE",
+       "detailEn": "CHARDONNAY / CENTRAL ANATOLIA / TÜRKİYE",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "RICOSSA GAVI",
+       "en": "RICOSSA GAVI",
+       "detailTr": "CORTESE / GAVI / TALY",
+       "detailEn": "CORTESE / GAVI / TALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LA SCOLCA GAVI DEI GAVI",
+       "en": "LA SCOLCA GAVI DEI GAVI",
+       "detailTr": "CORTESE / GAVI / ITALY",
+       "detailEn": "CORTESE / GAVI / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "EPICURO PINOT GRIGIO",
+       "en": "EPICURO PINOT GRIGIO",
+       "detailTr": "PINOT GRIGIO / SICILIA / ITALY",
+       "detailEn": "PINOT GRIGIO / SICILIA / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+       "en": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+       "detailTr": "SAUVIGNON BLANC / TREVENEZIE / ITALY",
+       "detailEn": "SAUVIGNON BLANC / TREVENEZIE / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TESSARI BINE LONGHE SOAVE CLASSICO",
+       "en": "TESSARI BINE LONGHE SOAVE CLASSICO",
+       "detailTr": "TREBBIANO, GARGANEGA / VENETO / ITALY",
+       "detailEn": "TREBBIANO, GARGANEGA / VENETO / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOMBARDO BIANCO D'ALTURA",
+       "en": "LOMBARDO BIANCO D'ALTURA",
+       "detailTr": "CATARRATTO BIANCO / SICILIA / ITALY",
+       "detailEn": "CATARRATTO BIANCO / SICILIA / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "EPICURO VERMENTINO",
+       "en": "EPICURO VERMENTINO",
+       "detailTr": "VERMENTINO / LAZIO / ITALY",
+       "detailEn": "VERMENTINO / LAZIO / ITALY",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "VIÑA ESMERALDA",
+       "en": "VIÑA ESMERALDA",
+       "detailTr": "GEWÜRZTRAMINER / PENEDES / SPAIN",
+       "detailEn": "GEWÜRZTRAMINER / PENEDES / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "GRAN VIÑA SOL TORRES",
+       "en": "GRAN VIÑA SOL TORRES",
+       "detailTr": "CHARDONNAY / PENEDES / SPAIN",
+       "detailEn": "CHARDONNAY / PENEDES / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+       "en": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+       "detailTr": "CHARDONNAY / ARAGON / SPAIN",
+       "detailEn": "CHARDONNAY / ARAGON / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "FAUSTINO RESERVA V",
+       "en": "FAUSTINO RESERVA V",
+       "detailTr": "SAUVIGNON BLANC / RIOJA / SPAIN",
+       "detailEn": "SAUVIGNON BLANC / RIOJA / SPAIN",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MONTE DO CARRAPATELO",
+       "en": "MONTE DO CARRAPATELO",
+       "detailTr": "ARINTO, ROUPEIRO / ALENTEJO / PORTUGAL",
+       "detailEn": "ARINTO, ROUPEIRO / ALENTEJO / PORTUGAL",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "ARGENTINA",
+     "en": "ARGENTINA",
+     "items": [
+      {
+       "tr": "MONTE CEPAS",
+       "en": "MONTE CEPAS",
+       "detailTr": "CHARDONNAY / MENDOZA / ARGENTINA",
+       "detailEn": "CHARDONNAY / MENDOZA / ARGENTINA",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "CHILE",
+     "en": "CHILE",
+     "items": [
+      {
+       "tr": "TORO DE PIEDRA RESERVA",
+       "en": "TORO DE PIEDRA RESERVA",
+       "detailTr": "CHARDONNAY / MAULE VALLEY / CHILE",
+       "detailEn": "CHARDONNAY / MAULE VALLEY / CHILE",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "NEW ZEALAND",
+     "en": "NEW ZEALAND",
+     "items": [
+      {
+       "tr": "CLOUDY BAY",
+       "en": "CLOUDY BAY",
+       "detailTr": "SAUVIGNON BLANC / MARLBOROUGH / NEW ZEALAND",
+       "detailEn": "SAUVIGNON BLANC / MARLBOROUGH / NEW ZEALAND",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CLOUDY BAY",
+       "en": "CLOUDY BAY",
+       "detailTr": "CHARDONNAY / MARLBOROUGH / NEW ZEALAND",
+       "detailEn": "CHARDONNAY / MARLBOROUGH / NEW ZEALAND",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "GERMANY",
+     "en": "GERMANY",
+     "items": [
+      {
+       "tr": "DR. LOOSEN ERDENER TREPPCHEN",
+       "en": "DR. LOOSEN ERDENER TREPPCHEN",
+       "detailTr": "RIESLING / MOSEL / GERMANY",
+       "detailEn": "RIESLING / MOSEL / GERMANY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "VILLA WOLF PINOT GRIS",
+       "en": "VILLA WOLF PINOT GRIS",
+       "detailTr": "PINOT GRIS / PFALZ / GERMANY",
+       "detailEn": "PINOT GRIS / PFALZ / GERMANY",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX (15 $)",
+       "en": "CHEVAL NOIR BORDEAUX (15 $)",
+       "detailTr": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
+       "detailEn": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX (70 $)",
+       "en": "CHEVAL NOIR BORDEAUX (70 $)",
+       "detailTr": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
+       "detailEn": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "LE BIJOU",
+       "en": "LE BIJOU",
+       "detailTr": "SAUVIGNON BLANC / COTEAUX DE BÉZIERS / FRANCE",
+       "detailEn": "SAUVIGNON BLANC / COTEAUX DE BÉZIERS / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "EDEL GRAND C",
+       "en": "EDEL GRAND C",
+       "detailTr": "PINOT GRIS, RIESLING, MUSCAT BLANC / ALSACE / FRANCE",
+       "detailEn": "PINOT GRIS, RIESLING, MUSCAT BLANC / ALSACE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "GRAND C RESERVE",
+       "en": "GRAND C RESERVE",
+       "detailTr": "PINOT BLANC / ALSACE / FRANCE",
+       "detailEn": "PINOT BLANC / ALSACE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "THOMAS LABILLE CHABLIS",
+       "en": "THOMAS LABILLE CHABLIS",
+       "detailTr": "CHARDONNAY / BURGUNDY / FRANCE",
+       "detailEn": "CHARDONNAY / BURGUNDY / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "THOMAS LABILLE CHABLIS PREMIER CRU",
+       "en": "THOMAS LABILLE CHABLIS PREMIER CRU",
+       "detailTr": "CHARDONNAY / BURGUNDY / FRANCE",
+       "detailEn": "CHARDONNAY / BURGUNDY / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "DOMAINE SEGUIN POUILLY FUME",
+       "en": "DOMAINE SEGUIN POUILLY FUME",
+       "detailTr": "SAUVIGNON BLANC / LOIRE / FRANCE",
+       "detailEn": "SAUVIGNON BLANC / LOIRE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "PAUL THOMAS SANCERRE",
+       "en": "PAUL THOMAS SANCERRE",
+       "detailTr": "SAUVIGNON BLANC / LOIRE / FRANCE",
+       "detailEn": "SAUVIGNON BLANC / LOIRE / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT CHABLIS",
+       "en": "LOUIS JADOT CHABLIS",
+       "detailTr": "CHARDONNAY / BOURGOGNE / FRANCE",
+       "detailEn": "CHARDONNAY / BOURGOGNE / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT MACON VILLAGES",
+       "en": "LOUIS JADOT MACON VILLAGES",
+       "detailTr": "CHARDONNAY / BURGUNDY / FRANCE",
+       "detailEn": "CHARDONNAY / BURGUNDY / FRANCE",
+       "priceUsd": 100
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "ROSÉ ŞARAPLAR",
+   "en": "ROSÉ WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (20 $)",
+       "en": "SARAFİN (20 $)",
+       "detailTr": "MERLOT, CABERNET FRANC / TÜRKİYE",
+       "detailEn": "MERLOT, CABERNET FRANC / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (100 $)",
+       "en": "SARAFİN (100 $)",
+       "detailTr": "MERLOT, CABERNET FRANC / TÜRKİYE",
+       "detailEn": "MERLOT, CABERNET FRANC / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "VERANO BLUSH",
+       "en": "VERANO BLUSH",
+       "detailTr": "GRENACHE / THRACE / TÜRKİYE",
+       "detailEn": "GRENACHE / THRACE / TÜRKİYE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "SEVİLEN R ROSÉ",
+       "en": "SEVİLEN R ROSÉ",
+       "detailTr": "CABERNET SAUVIGNON, SHIRAZ / THRACE / TÜRKİYE",
+       "detailEn": "CABERNET SAUVIGNON, SHIRAZ / THRACE / TÜRKİYE",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "11 MINUTES PASQUA",
+       "en": "11 MINUTES PASQUA",
+       "detailTr": "CORVINA / VENETO / ITALY",
+       "detailEn": "CORVINA / VENETO / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CASA DEFRA PINOT GRIGIO ROSÉ",
+       "en": "CASA DEFRA PINOT GRIGIO ROSÉ",
+       "detailTr": "PINOT GRIGIO / VENETO / ITALY",
+       "detailEn": "PINOT GRIGIO / VENETO / ITALY",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "SANGRE DE TORO ROSÉ",
+       "en": "SANGRE DE TORO ROSÉ",
+       "detailTr": "TEMPRANILLO / CATALUNYA / SPAIN",
+       "detailEn": "TEMPRANILLO / CATALUNYA / SPAIN",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROSÉ (15 $)",
+       "en": "CHEVAL NOIR BORDEAUX ROSÉ (15 $)",
+       "detailTr": "MERLOT / BORDEAUX / FRANCE",
+       "detailEn": "MERLOT / BORDEAUX / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROSÉ (70 $)",
+       "en": "CHEVAL NOIR BORDEAUX ROSÉ (70 $)",
+       "detailTr": "MERLOT / BORDEAUX / FRANCE",
+       "detailEn": "MERLOT / BORDEAUX / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "OPALE ROSÉ",
+       "en": "OPALE ROSÉ",
+       "detailTr": "SYRAH, GRENACHE, CINSAULT / COTEAUX D'AIX EN PROVENCE / FRANCE",
+       "detailEn": "SYRAH, GRENACHE, CINSAULT / COTEAUX D'AIX EN PROVENCE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "LE BIJOU",
+       "en": "LE BIJOU",
+       "detailTr": "SYRAH / GRENACHE / COTEAUX DE BEZIERS / FRANCE",
+       "detailEn": "SYRAH / GRENACHE / COTEAUX DE BEZIERS / FRANCE",
+       "priceUsd": 50
+      },
+      {
+       "tr": "PAUL THOMAS SANCERRE ROSÉ",
+       "en": "PAUL THOMAS SANCERRE ROSÉ",
+       "detailTr": "PINOT NOIR / LOIRE / FRANCE",
+       "detailEn": "PINOT NOIR / LOIRE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+       "en": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+       "detailTr": "GRENACHE, CÔTES DE PROVENCE / FRANCE",
+       "detailEn": "GRENACHE, CÔTES DE PROVENCE / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+       "en": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+       "detailTr": "GRENACHE / COTES DE PROVENCE / FRANCE",
+       "detailEn": "GRENACHE / COTES DE PROVENCE / FRANCE",
+       "priceUsd": 200
+      },
+      {
+       "tr": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+       "en": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+       "detailTr": "GRENACHE / COTES DE PROVENCE / FRANCE",
+       "detailEn": "GRENACHE / COTES DE PROVENCE / FRANCE",
+       "priceUsd": 200
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "PORTO & YARI TATLI ŞARAPLAR",
+   "en": "PORTO & SEMI SWEET WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "KAVAKLIDERE SULTANİYE (20 $)",
+       "en": "KAVAKLIDERE SULTANİYE (20 $)",
+       "detailTr": "SULTANİYE / AEGEAN / TÜRKİYE",
+       "detailEn": "SULTANİYE / AEGEAN / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SULTANİYE (70 $)",
+       "en": "KAVAKLIDERE SULTANİYE (70 $)",
+       "detailTr": "SULTANİYE / AEGEAN / TÜRKİYE",
+       "detailEn": "SULTANİYE / AEGEAN / TÜRKİYE",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "PEDRO XIMENEZ SHERRY",
+       "en": "PEDRO XIMENEZ SHERRY",
+       "detailTr": "PEDRO XIMÉNEZ / ANDALUCÍA / SPAIN",
+       "detailEn": "PEDRO XIMÉNEZ / ANDALUCÍA / SPAIN",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MARTHA'S RUBY PORT WINE",
+       "en": "MARTHA'S RUBY PORT WINE",
+       "detailTr": "TOURIGA, TEMPRANILLO, TINTA RORIZ, TINTA CÃO / PORTO / PORTUGAL",
+       "detailEn": "TOURIGA, TEMPRANILLO, TINTA RORIZ, TINTA CÃO / PORTO / PORTUGAL",
+       "priceUsd": 70
+      },
+      {
+       "tr": "MARTHA'S TAWNY PORT WINE",
+       "en": "MARTHA'S TAWNY PORT WINE",
+       "detailTr": "TOURIGA, TINTA BARROCA, TINTA CÃO / PORTO / PORTUGAL",
+       "detailEn": "TOURIGA, TINTA BARROCA, TINTA CÃO / PORTO / PORTUGAL",
+       "priceUsd": 70
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "KÖPÜKLÜ ŞARAPLAR & ŞAMPANYALAR",
+   "en": "SPARKLING WINES & CHAMPAGNES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "KAVAKLIDERE İNCİ DAMLASI (20 $)",
+       "en": "KAVAKLIDERE İNCİ DAMLASI (20 $)",
+       "detailTr": "SULTANİYE, EMİR, NARİNCE / ANATOLIA / TÜRKİYE",
+       "detailEn": "SULTANİYE, EMİR, NARİNCE / ANATOLIA / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE İNCİ DAMLASI (80 $)",
+       "en": "KAVAKLIDERE İNCİ DAMLASI (80 $)",
+       "detailTr": "SULTANİYE, EMİR, NARİNCE / ANATOLIA / TÜRKİYE",
+       "detailEn": "SULTANİYE, EMİR, NARİNCE / ANATOLIA / TÜRKİYE",
+       "priceUsd": 80
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "NOBILIS PROSECCO EXTRA DRY",
+       "en": "NOBILIS PROSECCO EXTRA DRY",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "BRILLA PROSECCO BRUT",
+       "en": "BRILLA PROSECCO BRUT",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 200
+      },
+      {
+       "tr": "BRILLA PROSECCO ROSÉ",
+       "en": "BRILLA PROSECCO ROSÉ",
+       "detailTr": "CABERNET SAUVIGNON, CHARDONNAY / VENETO / ITALY",
+       "detailEn": "CABERNET SAUVIGNON, CHARDONNAY / VENETO / ITALY",
+       "priceUsd": 200
+      },
+      {
+       "tr": "BOTTEGA GOLD PROSECCO BRUT",
+       "en": "BOTTEGA GOLD PROSECCO BRUT",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "BOTTEGA ROSÉ GOLD PROSECCO",
+       "en": "BOTTEGA ROSÉ GOLD PROSECCO",
+       "detailTr": "GLERA, PINOT NOIR / VENETO / ITALY",
+       "detailEn": "GLERA, PINOT NOIR / VENETO / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+       "en": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 60
+      },
+      {
+       "tr": "BAGLIETTI ROSÉ GOLD EDITION",
+       "en": "BAGLIETTI ROSÉ GOLD EDITION",
+       "detailTr": "GLERA, MERLOT / VENETO / ITALY",
+       "detailEn": "GLERA, MERLOT / VENETO / ITALY",
+       "priceUsd": 60
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (15 $)",
+       "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (15 $)",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 15
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (50 $)",
+       "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (50 $)",
+       "detailTr": "GLERA / VENETO / ITALY",
+       "detailEn": "GLERA / VENETO / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (15 $)",
+       "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (15 $)",
+       "detailTr": "GLERA / PINOT NOIR / VENETO / ITALY",
+       "detailEn": "GLERA / PINOT NOIR / VENETO / ITALY",
+       "priceUsd": 15
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (50 $)",
+       "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (50 $)",
+       "detailTr": "GLERA / PINOT NOIR / VENETO / ITALY",
+       "detailEn": "GLERA / PINOT NOIR / VENETO / ITALY",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "POMMERY MAXI POP CHAMPAGNE",
+       "en": "POMMERY MAXI POP CHAMPAGNE",
+       "detailTr": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 350
+      },
+      {
+       "tr": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+       "en": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+       "detailTr": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "priceUsd": 450
+      },
+      {
+       "tr": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+       "en": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+       "detailTr": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+       "en": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+       "detailTr": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+       "en": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+       "detailTr": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+       "en": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+       "detailTr": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT MEUNIER, PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 500
+      },
+      {
+       "tr": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+       "en": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+       "detailTr": "CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 1000
+      },
+      {
+       "tr": "DOM PERIGNON BRUT CHAMPAGNE",
+       "en": "DOM PERIGNON BRUT CHAMPAGNE",
+       "detailTr": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT NOIR / CHAMPAGNE / FRANCE",
+       "priceUsd": 1650
+      },
+      {
+       "tr": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+       "en": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+       "detailTr": "PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "detailEn": "PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
+       "priceUsd": 2550
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "footnotes": [
+  "IF YOU HAVE ANY SPECIAL DIETARY REQUIREMENTS OR ALLERGIES, PLEASE INFORM YOUR SERVER.",
+  "OUR OFFERINGS MAY VARY DEPENDING ON THE SEASON. CONSUMPTION OF RAW OR UNDERCOOKED FOODS MAY INCREASE THE RISK OF FOODBORNE ILLNESS.",
+  "HERHANGİ BİR ÖZEL BESLENME GEREKSİNİMİNİZ VEYA ALERJİNİZ VAR İSE LÜTFEN SERVİS PERSONELİNE BİLDİRİNİZ.",
+  "ÜRÜNLERİMİZ SEZONA GÖRE DEĞİŞKENLİK GÖSTEREBİLİR. ÇİĞ VEYA AZ PİŞMİŞ YİYECEKLERİN TÜKETİMİ GIDA KAYNAKLI HASTALIK RİSKİNİ ARTIRABİLİR.",
+  "*MİNİMUM 24 SAAT ÖNCEDEN SİPARİŞ VERİLMELİDİR.",
+  "*MUST BE ORDERED AT LEAST 24 HOURS IN ADVANCE."
+ ],
+ "issues": [
+  "The four allergy/seasonal footnotes are printed on pages 2-8 (repeated per page); listed once. The '*' 24-hour note is printed on pages 6 and 7; the '*' items are LAMB SHOULDER and BEEF SHORT RIBS (ASADO STYLE).",
+  "Wine section headings (RARE VINTAGE WINES, RED WINES, WHITE WINES, ROSÉ WINES, PORTO & SEMI SWEET WINES, SPARKLING WINES & CHAMPAGNES) appear at the END of each page's text dump (pp.10-17), so assignment is inferred by page: p10 France+Italy = Rare Vintage; p11-12 = Red; p13-14 = White; p15 = Rosé; p16 = Porto & Semi Sweet; p17 = Sparkling. Verify visually.",
+  "Wine items with two prices (e.g. '20 $' then '100 $') are unlabeled in the text (likely glass/bottle but NOT printed); split into two items each, with the price in the name in parentheses, e.g. 'SARAFİN (20 $)'. Same for CHEVAL NOIR (15/70, three wines), SAN GIOVANNI PERINI (15/50, two wines), KAVAKLIDERE İNCİ DAMLASI (20/80), KAVAKLIDERE SULTANİYE (20/70), Sarafin and Kavaklidere Selection (20/100). Wine prices are printed '120 $'; food prices '$ 37'.",
+  "Wine names and grape/region lines are one language only: copied to both tr/en and detailTr/detailEn. Country sub-headings likewise.",
+  "PDF text has stray lowercase 'i' inside capital words (SAiNT, PiNOT, ViOGNiER, RiOJA, 'AıX'); normalised to capital I. Other typos kept as printed: 'TALY' (Ricossa Gavi, white), 'CHATEUA D'ESCLANS', 'GRAND C RESERVE' (probably truncated), 'SEVİLEN R ROSÉ', 'ST. JULEN', 'SAINT - ÉMILION' spacing, 'T- BONE'. Page 15 Opale Rosé etc. kept.",
+  "Duplicates kept as printed: SARAFİN Chardonnay twice in white wines (identical lines); KAVAKLIDERE COTES D'AVANOS twice (different grapes); LE BIJOU in white (70) and rosé (50); GRAND C RESERVE in red (100) and white (70); CLOUDY BAY twice (different grapes).",
+  "SOUP: the EN name and TR name are on separate lines; 'GARLIC AND VINEGAR SAUCE / SARIMSAK VE SİRKE SOSU' placed as the description. TRIO BURGER description (MINI DIAMOND BURGER, MINI CHEESEBURGER, MINI BEEF BURGER) is printed in English only (detailTr null). Weights in names (e.g. 'KASAP KÖFTE 225 G') kept in the name. Butcher-style meatballs and meatballs with cheddar have no separate description.",
+  "Names split around the price in the text dump were rejoined: BEEF TENDERLOIN WITH CAFÉ DE PARIS SAUCE (TR line 'CAFÉ DE PARİS SOSLU DANA BONFİLE 180-200 G') and OYSTER MUSHROOMS WITH CHEDDAR SAUCE.",
+  "BEEF DISHES has sub-headings JAPANESE WAGYU, US CUT IMPERIAL GOLD, US CUT PRIME CHOICE, ARGENTINA CUT HOUSE SELECTION (no direct items). BEEF SHORT RIBS (ASADO STYLE) sits at the end of US CUT PRIME CHOICE in the dump, just before the ARGENTINA CUT heading; verify visually. Chateaubriand 450 G (for 2) and 850 G (for 4) are separate printed items with own prices.",
+  "DOCX vs PDF structure: DOCX has NO prices and NO wine list. DOCX 'MEATS / ETLER' is one flat list without the Japanese Wagyu / Imperial Gold / Prime Choice / Argentina grouping; DOCX lacks Wagyu items and the 100-120 G cuts; origins in DOCX (DALLAS STEAK FROM MESOAMERICA, T-BONE FROM MESOAMERICA, TOMAHAWK FROM IRELAND) are not in the PDF. DOCX 'FROM LAMB / KUZUDAN' vs PDF 'LAMB DISHES / KUZU ETLERİ'; 'LAMB RIB / KUZU KAFES' vs 'LAMB RACK / KUZU KABURGA KAFES'.",
+  "DOCX vs PDF wording: SOUP 'KOLEJENLİ' vs 'KOLAJENLİ'; 'ARUGULA PARMESAN SALAD / ROKA PARMESAN SALATASI' vs 'ARUGULA SALAD WITH PARMESAN CHEESE / PARMESAN PEYNİRLİ ROKA SALATASI'; 'TULUM CHEESE SALAD' vs 'SALAD WITH TULUM CHEESE'; BEEF SUSHI desc 'TENDERLOIN/KONTRAFİLE' vs 'SIRLOIN STEAK/KONTRFİLE'; 'STEAK SPAGHETTI / ET SPAGETTİ' vs 'SPAGHETTI WITH BEEF STEAK / BİFTEKLİ SPAGETTİ'; 'SMOKED RIB WITH CHEDDAR SAUCE / CHEDDARLI FÜME' vs 'SMOKED RIBS WITH CHEDDAR SAUCE / CHEDDAR SOSLU FÜME KABURGA'; 'GRILLED GODEN SUJUK' vs 'GRILLED GÖDEN SAUSAGE'; 'STEAK KOKOREÇ' vs 'BEEF KOKOREC / DANA ETLİ KOKOREÇ'; 'CLASSIC CHEESEBURGER / KLASIK CHEESEBURGER' vs 'CHEESEBURGER'; DOCX Diamond Burger TR omits chipotle; DOCX 'MİNİ ÇİZ BURGER'; 'MEATBALL WITH CHEESE / KASARLI KÖFTE' vs 'MEATBALLS WITH CHEDDAR CHEESE / CHEDDAR PEYNİRLİ KÖFTE'; 'BEEF TENDERLOIN PIECES' vs 'MILK-FED VEAL TENDERLOIN PIECES'; 'TENDERLOIN WEDGES / BONFİLE TAKOZ' vs 'BEEF TENDERLOIN MEDALLIONS / DANA BONFİLE MADALYON'; 'NEW YORK STEAK / KONTRFİLE' vs 'NEW YORK STRIPLOIN / DANA KONTRFİLE'; 'LEAF RIB / YAPRAK ANTRİKOT' vs 'THIN-SLICED RIBEYE / YAPRAK ANTRİKOT'; 'SAUCES & GARNISHES' vs 'SAUCES & SIDE DISHES'; 'PORTO SAUCE' vs 'PORT WINE SAUCE'; 'KREMALI MANTARLI SOS' vs 'KREMALI MANTAR SOSU'; 'CREAMY MUSHROOM SPINACH' vs 'CREAMED SPINACH WITH MUSHROOMS'; 'ÇEDAR' vs 'CHEDDAR'; 'OILY PISTACHIOS / YAĞLI ANTEP FISTIĞI' vs 'WITH PISTACHIOS / ANTEP FISTIKLI'; DOCX footnote wording differs ('RESTAURANT PERSONELİNE', 'İHTİYACINIZ'). Otherwise both list the same food items.",
+  "The PDF has no beverage section other than wines (no cocktails, soft drinks, spirits). Page 1 is only the title 'MENU'."
+ ]
+}

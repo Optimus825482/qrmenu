@@ -1,0 +1,1612 @@
+{
+  "outlet": "Bella Merit",
+  "sources": [
+    "BellaMerit_Menu1080x1920_pdf.txt",
+    "8_BELLA_MERT_ALACARTE_MEN_2026_docx.txt"
+  ],
+  "categories": [
+    {
+      "tr": "LE ZUPPE",
+      "en": "LE ZUPPE",
+      "items": [
+        {
+          "tr": "MINESTRONE SOUP",
+          "en": "MINESTRONE SOUP",
+          "detailTr": "Mevsim sebzeleriyle hazırlanan geleneksel İtalyan çorbası",
+          "detailEn": "Traditional Italian soup made with seasonal vegetables",
+          "priceUsd": 10
+        },
+        {
+          "tr": "SPICY SEAFOOD SOUP",
+          "en": "SPICY SEAFOOD SOUP",
+          "detailTr": "Taze deniz mahsulleri, kök sebzeler, acı biber",
+          "detailEn": "Fresh seafood, root vegetables, chili pepper",
+          "priceUsd": 23
+        }
+      ]
+    },
+    {
+      "tr": "ANTIPASTI",
+      "en": "ANTIPASTI",
+      "items": [
+        {
+          "tr": "CARCIOFI E FINOCCHI AL SALMORIGLIO",
+          "en": "CARCIOFI E FINOCCHI AL SALMORIGLIO",
+          "detailTr": "Salmoriglio soslu enginar ve rezene, konfit domates",
+          "detailEn": "Artichoke and fennel with salmoriglio sauce and confit tomatoes",
+          "priceUsd": 24
+        },
+        {
+          "tr": "CARPACCIO DI MANZO",
+          "en": "CARPACCIO DI MANZO",
+          "detailTr": "İnce dilimlenmiş çiğ dana eti, roka, parmesan",
+          "detailEn": "Thinly sliced raw beef with arugula and parmesan",
+          "priceUsd": 44
+        },
+        {
+          "tr": "FANTASIA DI BURRATA",
+          "en": "FANTASIA DI BURRATA",
+          "detailTr": "Burrata peyniri, zeytinyağı, çeri domates",
+          "detailEn": "Burrata cheese with olive oil and cherry tomatoes",
+          "priceUsd": 35
+        },
+        {
+          "tr": "VITELLO TONNATO",
+          "en": "VITELLO TONNATO",
+          "detailTr": "Ton balığı soslu süt danası, kapari",
+          "detailEn": "Veal with tuna sauce and capers",
+          "priceUsd": 44
+        },
+        {
+          "tr": "BRESAOLA CON CAPRINO FRESCO E RUCOLA",
+          "en": "BRESAOLA CON CAPRINO FRESCO E RUCOLA",
+          "detailTr": "Bresaola, taze keçi peyniri, roka",
+          "detailEn": "Bresaola with fresh goat cheese and arugula",
+          "priceUsd": 38
+        },
+        {
+          "tr": "CARNE CRUDA ALL’ALBESE",
+          "en": "CARNE CRUDA ALL’ALBESE",
+          "detailTr": "Çiğ dana eti, yumurta sarısı, trüf yağı",
+          "detailEn": "Raw beef with egg yolk and truffle oil",
+          "priceUsd": 39
+        }
+      ]
+    },
+    {
+      "tr": "LE INSALATE",
+      "en": "LE INSALATE",
+      "items": [
+        {
+          "tr": "CARCIOFI AVOCADO",
+          "en": "CARCIOFI AVOCADO",
+          "detailTr": "Enginar, avokado, Akdeniz yeşillikleri",
+          "detailEn": "Artichoke, avocado and Mediterranean greens",
+          "priceUsd": 29
+        },
+        {
+          "tr": "INSALATA MEDITERRANEA",
+          "en": "INSALATA MEDITERRANEA",
+          "detailTr": "Keçi peyniri, zeytin ve cevizli Akdeniz salatası",
+          "detailEn": "Mediterranean salad with goat cheese, olives and walnuts",
+          "priceUsd": 29
+        },
+        {
+          "tr": "INSALATE DI MARE",
+          "en": "INSALATE DI MARE",
+          "detailTr": "Deniz mahsulleri, patates, limon sos",
+          "detailEn": "Seafood salad with potatoes and lemon dressing",
+          "priceUsd": 28
+        }
+      ]
+    },
+    {
+      "tr": "ANTIPASTI CALDI",
+      "en": "ANTIPASTI CALDI",
+      "items": [
+        {
+          "tr": "CALAMARI CON SALSA AL CACIO E PEPE",
+          "en": "CALAMARI CON SALSA AL CACIO E PEPE",
+          "detailTr": "Cacio e pepe soslu kalamar",
+          "detailEn": "Calamari with cacio e pepe sauce",
+          "priceUsd": 14
+        },
+        {
+          "tr": "MELANZANE ALLA PARMIGIANA",
+          "en": "MELANZANE ALLA PARMIGIANA",
+          "detailTr": "Domates soslu ve peynirli fırın patlıcan",
+          "detailEn": "Baked eggplant with tomato sauce and cheese",
+          "priceUsd": 29
+        },
+        {
+          "tr": "ARANCINI",
+          "en": "ARANCINI",
+          "detailTr": "Mozzarella dolgulu kızarmış pirinç topları",
+          "detailEn": "Fried rice balls filled with mozzarella",
+          "priceUsd": 23
+        },
+        {
+          "tr": "POLPO",
+          "en": "POLPO",
+          "detailTr": "Taze baharatlarla pişirilmiş ahtapot",
+          "detailEn": "Octopus cooked with fresh herbs",
+          "priceUsd": 22
+        },
+        {
+          "tr": "CODE DI GAMBERO",
+          "en": "CODE DI GAMBERO",
+          "detailTr": "Brodetto soslu fırın karides",
+          "detailEn": "Oven-baked prawns with brodetto sauce",
+          "priceUsd": 28
+        }
+      ]
+    },
+    {
+      "tr": "PRIMI PIATTI",
+      "en": "PRIMI PIATTI",
+      "items": [
+        {
+          "tr": "LAZANYA",
+          "en": "LAZANYA",
+          "detailTr": "Domates soslu ve peynirli kat kat makarna",
+          "detailEn": "Baked layered pasta with tomato sauce and cheese",
+          "priceUsd": 28
+        },
+        {
+          "tr": "PAPPARDELLE AL RAGÙ",
+          "en": "PAPPARDELLE AL RAGÙ",
+          "detailTr": "Dana etli ragu soslu makarna",
+          "detailEn": "Pappardelle with beef ragù",
+          "priceUsd": 32
+        },
+        {
+          "tr": "TAGLIOLINI AL TARTUFO",
+          "en": "TAGLIOLINI AL TARTUFO",
+          "detailTr": "Siyah trüflü taze makarna",
+          "detailEn": "Fresh pasta with black truffle",
+          "priceUsd": 43
+        },
+        {
+          "tr": "GNOCCHI AL FORMAGGIO",
+          "en": "GNOCCHI AL FORMAGGIO",
+          "detailTr": "Dört peynirli patates gnocchi",
+          "detailEn": "Potato gnocchi with four-cheese sauce",
+          "priceUsd": 12
+        },
+        {
+          "tr": "RAVIOLI AI FUNGHI",
+          "en": "RAVIOLI AI FUNGHI",
+          "detailTr": "Mantar dolgulu ravioli, domates sos",
+          "detailEn": "Mushroom-filled ravioli with tomato sauce",
+          "priceUsd": 23
+        },
+        {
+          "tr": "SPAGHETTI DI MARE",
+          "en": "SPAGHETTI DI MARE",
+          "detailTr": "Karışık deniz mahsullü spagetti",
+          "detailEn": "Spaghetti with mixed seafood",
+          "priceUsd": 19
+        },
+        {
+          "tr": "SPAGHETTI ALLA BOLOGNESE",
+          "en": "SPAGHETTI ALLA BOLOGNESE",
+          "detailTr": "Dana etli bolonez sos",
+          "detailEn": "Spaghetti with bolognese sauce",
+          "priceUsd": 17
+        },
+        {
+          "tr": "SPAGHETTI AL POMODORO",
+          "en": "SPAGHETTI AL POMODORO",
+          "detailTr": "Domates soslu spagetti",
+          "detailEn": "Spaghetti with tomato sauce",
+          "priceUsd": 12
+        },
+        {
+          "tr": "PASTA CARBONARA",
+          "en": "PASTA CARBONARA",
+          "detailTr": "Kremalı ve etli carbonara makarna",
+          "detailEn": "Creamy carbonara pasta with meat",
+          "priceUsd": 21
+        },
+        {
+          "tr": "AGNOLOTTI RIPIENI DI SPINACI E FORMAGGIO",
+          "en": "AGNOLOTTI RIPIENI DI SPINACI E FORMAGGIO",
+          "detailTr": "Ispanak ve peynir dolgulu agnolotti",
+          "detailEn": "Agnolotti filled with spinach and cheese",
+          "priceUsd": 22
+        },
+        {
+          "tr": "PASTA A FORMA DI FAZZOLETTO CON SALSA AL PESTO",
+          "en": "PASTA A FORMA DI FAZZOLETTO CON SALSA AL PESTO",
+          "detailTr": "Pesto soslu taze makarna",
+          "detailEn": "Fresh pasta with pesto sauce",
+          "priceUsd": 22
+        },
+        {
+          "tr": "RISOTTO AI FUNGHI SELVATICI",
+          "en": "RISOTTO AI FUNGHI SELVATICI",
+          "detailTr": "Yaban mantarlı risotto",
+          "detailEn": "Risotto with wild mushrooms",
+          "priceUsd": 18
+        },
+        {
+          "tr": "RISOTTO AI FRUTTI DI MARE",
+          "en": "RISOTTO AI FRUTTI DI MARE",
+          "detailTr": "Taze deniz mahsullü risotto",
+          "detailEn": "Risotto with fresh seafood",
+          "priceUsd": 27
+        }
+      ]
+    },
+    {
+      "tr": "PIZZA",
+      "en": "PIZZA",
+      "items": [
+        {
+          "tr": "PIZZA BISTECCA",
+          "en": "PIZZA BISTECCA",
+          "detailTr": "Bonfile, roka, mozzarella",
+          "detailEn": "Beef fillet, arugula and mozzarella",
+          "priceUsd": 30
+        },
+        {
+          "tr": "PIZZA FORMAGGI",
+          "en": "PIZZA FORMAGGI",
+          "detailTr": "Karışık peynirli pizza",
+          "detailEn": "Mixed cheese pizza",
+          "priceUsd": 23
+        },
+        {
+          "tr": "PIZZA COSTOLA",
+          "en": "PIZZA COSTOLA",
+          "detailTr": "Dana kaburga, karamelize soğan",
+          "detailEn": "Beef short ribs with caramelized onion",
+          "priceUsd": 24
+        },
+        {
+          "tr": "PIZZA FRUTTI DI MARE",
+          "en": "PIZZA FRUTTI DI MARE",
+          "detailTr": "Deniz mahsullü pizza",
+          "detailEn": "Seafood pizza",
+          "priceUsd": 22
+        },
+        {
+          "tr": "PIZZA QUATTRO STAGIONI",
+          "en": "PIZZA QUATTRO STAGIONI",
+          "detailTr": "Sebzeli, füme etli pizza",
+          "detailEn": "Vegetables and smoked beef pizza",
+          "priceUsd": 24
+        },
+        {
+          "tr": "PIZZA MARGHERITA",
+          "en": "PIZZA MARGHERITA",
+          "detailTr": "Mozzarella, taze fesleğen",
+          "detailEn": "Mozzarella and fresh basil",
+          "priceUsd": 19
+        },
+        {
+          "tr": "PIZZA BURRATA",
+          "en": "PIZZA BURRATA",
+          "detailTr": "Burrata peyniri, trüf",
+          "detailEn": "Burrata cheese and truffle",
+          "priceUsd": 29
+        }
+      ]
+    },
+    {
+      "tr": "SECONDI PIATTI",
+      "en": "SECONDI PIATTI",
+      "items": [
+        {
+          "tr": "CERNIA",
+          "en": "CERNIA",
+          "detailTr": "Lagos balığı, limonlu patates püresi",
+          "detailEn": "Grouper with lemon-infused mashed potatoes",
+          "priceUsd": 33
+        },
+        {
+          "tr": "SOGLIOLA INTERA ALLA MUGNAIA",
+          "en": "SOGLIOLA INTERA ALLA MUGNAIA",
+          "detailTr": "Tereyağında pişirilmiş dil balığı",
+          "detailEn": "Sole cooked in butter",
+          "priceUsd": 46
+        },
+        {
+          "tr": "OMBRINA",
+          "en": "OMBRINA",
+          "detailTr": "Izgara levrek fileto",
+          "detailEn": "Grilled sea bass fillet",
+          "priceUsd": 28
+        },
+        {
+          "tr": "COSTOLETTE DI AGNELLO",
+          "en": "COSTOLETTE DI AGNELLO",
+          "detailTr": "Kuzu pirzola",
+          "detailEn": "Lamb chops",
+          "priceUsd": 78
+        },
+        {
+          "tr": "RIB-EYE",
+          "en": "RIB-EYE",
+          "detailTr": "Izgara dana antrikot",
+          "detailEn": "Grilled rib-eye steak",
+          "priceUsd": 68
+        },
+        {
+          "tr": "FILETTO DI MANZO",
+          "en": "FILETTO DI MANZO",
+          "detailTr": "Dana bonfile",
+          "detailEn": "Beef fillet",
+          "priceUsd": 56
+        },
+        {
+          "tr": "OSSO BUCO",
+          "en": "OSSO BUCO",
+          "detailTr": "Milano usulü dana incik",
+          "detailEn": "Milan-style veal shank",
+          "priceUsd": 42
+        },
+        {
+          "tr": "GUANCIA DI VITELLO",
+          "en": "GUANCIA DI VITELLO",
+          "detailTr": "Dana yanağı, kök sebzeler",
+          "detailEn": "Veal cheek with root vegetables",
+          "priceUsd": 38
+        }
+      ]
+    },
+    {
+      "tr": "DOLCE",
+      "en": "DOLCE",
+      "items": [
+        {
+          "tr": "TIRAMISU",
+          "en": "TIRAMISU",
+          "detailTr": "Mascarpone peynirli klasik İtalyan tatlısı",
+          "detailEn": "Classic Italian dessert made with mascarpone",
+          "priceUsd": 19
+        },
+        {
+          "tr": "SORBE",
+          "en": "SORBE",
+          "detailTr": "Taze meyve sorbesi",
+          "detailEn": "Fresh fruit sorbet",
+          "priceUsd": 22
+        },
+        {
+          "tr": "PANNA COTTA",
+          "en": "PANNA COTTA",
+          "detailTr": "Vanilyalı sütlü tatlı",
+          "detailEn": "Vanilla panna cotta",
+          "priceUsd": 23
+        },
+        {
+          "tr": "CANNELLONI",
+          "en": "CANNELLONI",
+          "detailTr": "Çikolatalı tatlı",
+          "detailEn": "Chocolate cannelloni dessert",
+          "priceUsd": 17
+        },
+        {
+          "tr": "ZABAIONE",
+          "en": "ZABAIONE",
+          "detailTr": "Marsala şaraplı krema",
+          "detailEn": "Zabaione with Marsala wine",
+          "priceUsd": 18
+        },
+        {
+          "tr": "STRUDEL DI MELE",
+          "en": "STRUDEL DI MELE",
+          "detailTr": "Elmalı strudel",
+          "detailEn": "Apple strudel",
+          "priceUsd": 16
+        },
+        {
+          "tr": "IL DELIZIOSO GELATO ROYAL'S",
+          "en": "IL DELIZIOSO GELATO ROYAL'S",
+          "detailTr": "Çeşitli aromalarda İtalyan dondurması",
+          "detailEn": "Italian gelato with assorted flavors",
+          "priceUsd": 18
+        }
+      ]
+    },
+    {
+      "tr": "RARE VINTAGE WINES",
+      "en": "RARE VINTAGE WINES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "FRANCE",
+          "en": "FRANCE",
+          "items": [
+            {
+              "tr": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+              "en": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+              "detailTr": "Merlot / Saint - Émilion / FRANCE",
+              "detailEn": "Merlot / Saint - Émilion / FRANCE",
+              "priceUsd": 120
+            },
+            {
+              "tr": "CHATEAU CANTEMERLE GRAND CRU",
+              "en": "CHATEAU CANTEMERLE GRAND CRU",
+              "detailTr": "Merlot, Cabernet Franc, Petit Verdot, Cabernet Sauvignon / Haut-Medoc / FRANCE",
+              "detailEn": "Merlot, Cabernet Franc, Petit Verdot, Cabernet Sauvignon / Haut-Medoc / FRANCE",
+              "priceUsd": 120
+            },
+            {
+              "tr": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+              "en": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+              "detailTr": "Merlot / Saint - Émilion / FRANCE",
+              "detailEn": "Merlot / Saint - Émilion / FRANCE",
+              "priceUsd": 120
+            },
+            {
+              "tr": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+              "en": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+              "detailTr": "Cabernet Sauvignon, Merlot / Bordeaux St. Julen / FRANCE",
+              "detailEn": "Cabernet Sauvignon, Merlot / Bordeaux St. Julen / FRANCE",
+              "priceUsd": 140
+            },
+            {
+              "tr": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+              "en": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+              "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Saint - Émilion / FRANCE",
+              "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Saint - Émilion / FRANCE",
+              "priceUsd": 190
+            },
+            {
+              "tr": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+              "en": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+              "detailTr": "Cabernet Sauvignon / Margaux / FRANCE",
+              "detailEn": "Cabernet Sauvignon / Margaux / FRANCE",
+              "priceUsd": 290
+            },
+            {
+              "tr": "CHATEAU CANTENAC BROWN GRAND CRU",
+              "en": "CHATEAU CANTENAC BROWN GRAND CRU",
+              "detailTr": "Cabernet Sauvignon / Margaux / FRANCE",
+              "detailEn": "Cabernet Sauvignon / Margaux / FRANCE",
+              "priceUsd": 230
+            },
+            {
+              "tr": "CHATEAU PAPE CLÉMENT GRAND CRU",
+              "en": "CHATEAU PAPE CLÉMENT GRAND CRU",
+              "detailTr": "Cabernet Sauvignon / Pessac-Léognan / FRANCE",
+              "detailEn": "Cabernet Sauvignon / Pessac-Léognan / FRANCE",
+              "priceUsd": 370
+            },
+            {
+              "tr": "CHATEAU GAZIN POMEROL",
+              "en": "CHATEAU GAZIN POMEROL",
+              "detailTr": "Merlot / Pomerol / FRANCE",
+              "detailEn": "Merlot / Pomerol / FRANCE",
+              "priceUsd": 400
+            },
+            {
+              "tr": "CHATEAU DUHART- MILON GRAND CRU",
+              "en": "CHATEAU DUHART- MILON GRAND CRU",
+              "detailTr": "Cabernet Sauvignon / Pauillac / FRANCE",
+              "detailEn": "Cabernet Sauvignon / Pauillac / FRANCE",
+              "priceUsd": 400
+            },
+            {
+              "tr": "CHATEAU CLERC MILON GRAND CRU",
+              "en": "CHATEAU CLERC MILON GRAND CRU",
+              "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Pauillac / FRANCE",
+              "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Pauillac / FRANCE",
+              "priceUsd": 400
+            },
+            {
+              "tr": "CHATEAU BEYCHEVELLE GRAND VIN",
+              "en": "CHATEAU BEYCHEVELLE GRAND VIN",
+              "detailTr": "Cabernet Sauvignon, Merlot, Petit Verdot Saint Julien, Bordeaux / FRANCE",
+              "detailEn": "Cabernet Sauvignon, Merlot, Petit Verdot Saint Julien, Bordeaux / FRANCE",
+              "priceUsd": 500
+            }
+          ]
+        },
+        {
+          "tr": "ITALY",
+          "en": "ITALY",
+          "items": [
+            {
+              "tr": "BOROLI BAROLO BRUNELLA",
+              "en": "BOROLI BAROLO BRUNELLA",
+              "detailTr": "Nebbiolo / Barolo / ITALY",
+              "detailEn": "Nebbiolo / Barolo / ITALY",
+              "priceUsd": 230
+            },
+            {
+              "tr": "SASSICAIA",
+              "en": "SASSICAIA",
+              "detailTr": "Cabernet Sauvignon / Bolgheri / ITALY",
+              "detailEn": "Cabernet Sauvignon / Bolgheri / ITALY",
+              "priceUsd": 990
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "RED WINES",
+      "en": "RED WINES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "TÜRKİYE",
+          "en": "TÜRKİYE",
+          "items": [
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+              "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+              "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Merlot / Thrace / TÜRKİYE",
+              "detailEn": "Merlot / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Merlot / Thrace / TÜRKİYE",
+              "detailEn": "Merlot / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Shiraz / Thrace / TÜRKİYE",
+              "detailEn": "Shiraz / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Shiraz / Thrace / TÜRKİYE",
+              "detailEn": "Shiraz / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "KAVAKLIDERE SELECTION (glass)",
+              "en": "KAVAKLIDERE SELECTION (glass)",
+              "detailTr": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+              "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "KAVAKLIDERE SELECTION (bottle)",
+              "en": "KAVAKLIDERE SELECTION (bottle)",
+              "detailTr": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+              "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "DOLUCA SIGNIUM",
+              "en": "DOLUCA SIGNIUM",
+              "detailTr": "Cabernet Sauvignon, Cabernet Franc, Shiraz / Thrace / TÜRKİYE",
+              "detailEn": "Cabernet Sauvignon, Cabernet Franc, Shiraz / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SEVİLEN CENTUM",
+              "en": "SEVİLEN CENTUM",
+              "detailTr": "Syrah / Aegean / TÜRKİYE",
+              "detailEn": "Syrah / Aegean / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SUVLA",
+              "en": "SUVLA",
+              "detailTr": "Merlot / Thrace / TÜRKİYE",
+              "detailEn": "Merlot / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            }
+          ]
+        },
+        {
+          "tr": "ITALY",
+          "en": "ITALY",
+          "items": [
+            {
+              "tr": "CIABOT DEL CONTE BAROLO",
+              "en": "CIABOT DEL CONTE BAROLO",
+              "detailTr": "Nebbiolo / Barolo / ITALY",
+              "detailEn": "Nebbiolo / Barolo / ITALY",
+              "priceUsd": 120
+            },
+            {
+              "tr": "EPICURO Z-ELEBRATE ZINFANDEL",
+              "en": "EPICURO Z-ELEBRATE ZINFANDEL",
+              "detailTr": "Zinfandel / Puglia / ITALY",
+              "detailEn": "Zinfandel / Puglia / ITALY",
+              "priceUsd": 70
+            },
+            {
+              "tr": "DUCA DI SARAGNANO CHIANTI RISERVA",
+              "en": "DUCA DI SARAGNANO CHIANTI RISERVA",
+              "detailTr": "Sangiovese / Toscana / ITALY",
+              "detailEn": "Sangiovese / Toscana / ITALY",
+              "priceUsd": 70
+            },
+            {
+              "tr": "ZÎRONDA AMARONE",
+              "en": "ZÎRONDA AMARONE",
+              "detailTr": "Corvina, Rondinella, Corvinone, Negrar / Veneto / ITALY",
+              "detailEn": "Corvina, Rondinella, Corvinone, Negrar / Veneto / ITALY",
+              "priceUsd": 130
+            },
+            {
+              "tr": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+              "en": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+              "detailTr": "Corvina, Rondinella, Molinara / Veneto / ITALY",
+              "detailEn": "Corvina, Rondinella, Molinara / Veneto / ITALY",
+              "priceUsd": 120
+            },
+            {
+              "tr": "RICOSSA BARBARESCO",
+              "en": "RICOSSA BARBARESCO",
+              "detailTr": "Nebbiolo / Piemonte / ITALY",
+              "detailEn": "Nebbiolo / Piemonte / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "PALAZZO BRUNELLO DI MONTALCINO",
+              "en": "PALAZZO BRUNELLO DI MONTALCINO",
+              "detailTr": "Sangiovese / Toscana / ITALY",
+              "detailEn": "Sangiovese / Toscana / ITALY",
+              "priceUsd": 150
+            },
+            {
+              "tr": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+              "en": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+              "detailTr": "Primitivo di Manduria / ITALY",
+              "detailEn": "Primitivo di Manduria / ITALY",
+              "priceUsd": 120
+            },
+            {
+              "tr": "LOMBARDO NERO D'ALTURA",
+              "en": "LOMBARDO NERO D'ALTURA",
+              "detailTr": "Nero d'Avola / Sicilia / ITALY",
+              "detailEn": "Nero d'Avola / Sicilia / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "TEATRO LATINO IL COVO",
+              "en": "TEATRO LATINO IL COVO",
+              "detailTr": "Syrah, Merlot, Cabernet Sauvignon, Nero d'Avola / Sicilia / ITALY",
+              "detailEn": "Syrah, Merlot, Cabernet Sauvignon, Nero d'Avola / Sicilia / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "TEATRO LATINO MESCA",
+              "en": "TEATRO LATINO MESCA",
+              "detailTr": "Cabernet Sauvignon, Negroamaro, Primitivo / Puglia / Italy",
+              "detailEn": "Cabernet Sauvignon, Negroamaro, Primitivo / Puglia / Italy",
+              "priceUsd": 100
+            },
+            {
+              "tr": "ANNO DOMINI BATISTA",
+              "en": "ANNO DOMINI BATISTA",
+              "detailTr": "Cabernet Sauvignon, Merlot / Veneto / ITALY",
+              "detailEn": "Cabernet Sauvignon, Merlot / Veneto / ITALY",
+              "priceUsd": 100
+            }
+          ]
+        },
+        {
+          "tr": "SPAIN",
+          "en": "SPAIN",
+          "items": [
+            {
+              "tr": "FINCA AYLÉS UNEXPECTED GARNACHA",
+              "en": "FINCA AYLÉS UNEXPECTED GARNACHA",
+              "detailTr": "Garnacha / Cariñena / SPAIN",
+              "detailEn": "Garnacha / Cariñena / SPAIN",
+              "priceUsd": 50
+            },
+            {
+              "tr": "GRAN CORONAS RESERVA TORRES",
+              "en": "GRAN CORONAS RESERVA TORRES",
+              "detailTr": "Cabernet Sauvignon / Penedès / SPAIN",
+              "detailEn": "Cabernet Sauvignon / Penedès / SPAIN",
+              "priceUsd": 50
+            },
+            {
+              "tr": "CELESTE CRIANZA",
+              "en": "CELESTE CRIANZA",
+              "detailTr": "Tempranillo / Ribera Del Duero / SPAIN",
+              "detailEn": "Tempranillo / Ribera Del Duero / SPAIN",
+              "priceUsd": 220
+            },
+            {
+              "tr": "FAUSTINO 1 GRAN RESERVA",
+              "en": "FAUSTINO 1 GRAN RESERVA",
+              "detailTr": "Tempranillo, Graciano, Mazuelo / Rioja / SPAIN",
+              "detailEn": "Tempranillo, Graciano, Mazuelo / Rioja / SPAIN",
+              "priceUsd": 120
+            }
+          ]
+        },
+        {
+          "tr": "PORTUGAL",
+          "en": "PORTUGAL",
+          "items": [
+            {
+              "tr": "MONTE DO CARRAPATELO LUIS DUARTE",
+              "en": "MONTE DO CARRAPATELO LUIS DUARTE",
+              "detailTr": "Aragonez, Touriga, Alicante Bouschet / Alentejano / PORTUGAL",
+              "detailEn": "Aragonez, Touriga, Alicante Bouschet / Alentejano / PORTUGAL",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "ARGENTINA",
+          "en": "ARGENTINA",
+          "items": [
+            {
+              "tr": "MAGNETA MALBEC",
+              "en": "MAGNETA MALBEC",
+              "detailTr": "Malbec / Mendoza / ARGENTINA",
+              "detailEn": "Malbec / Mendoza / ARGENTINA",
+              "priceUsd": 50
+            },
+            {
+              "tr": "MONTE CEPAS MALBEC",
+              "en": "MONTE CEPAS MALBEC",
+              "detailTr": "Malbec / Mendoza / ARGENTINA",
+              "detailEn": "Malbec / Mendoza / ARGENTINA",
+              "priceUsd": 50
+            },
+            {
+              "tr": "CLAROSCURO BODEGA DE ARTE",
+              "en": "CLAROSCURO BODEGA DE ARTE",
+              "detailTr": "Cabernet Franc / Uco Valley / ARGENTINA",
+              "detailEn": "Cabernet Franc / Uco Valley / ARGENTINA",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "CHILE",
+          "en": "CHILE",
+          "items": [
+            {
+              "tr": "PUERTO VIEJO RESERVE",
+              "en": "PUERTO VIEJO RESERVE",
+              "detailTr": "Carménère / Curicó Valley / CHILE",
+              "detailEn": "Carménère / Curicó Valley / CHILE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "TARAPACA GRAN RESERVA",
+              "en": "TARAPACA GRAN RESERVA",
+              "detailTr": "Cabernet Sauvignon / Maipo Valley / CHILE",
+              "detailEn": "Cabernet Sauvignon / Maipo Valley / CHILE",
+              "priceUsd": 130
+            }
+          ]
+        },
+        {
+          "tr": "FRANCE",
+          "en": "FRANCE",
+          "items": [
+            {
+              "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (glass)",
+              "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (glass)",
+              "detailTr": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+              "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+              "priceUsd": 15
+            },
+            {
+              "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (bottle)",
+              "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (bottle)",
+              "detailTr": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+              "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "GRAND C RESERVE",
+              "en": "GRAND C RESERVE",
+              "detailTr": "Pinot Noir / Alsace / FRANCE",
+              "detailEn": "Pinot Noir / Alsace / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+              "en": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+              "detailTr": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
+              "detailEn": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+              "en": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+              "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
+              "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+              "en": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+              "detailTr": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
+              "detailEn": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
+              "priceUsd": 140
+            },
+            {
+              "tr": "LOUIS JADOT BOURGOGNE",
+              "en": "LOUIS JADOT BOURGOGNE",
+              "detailTr": "Pinot Noir / Bourgogne / FRANCE",
+              "detailEn": "Pinot Noir / Bourgogne / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LOUIS JADOT BROUILLY",
+              "en": "LOUIS JADOT BROUILLY",
+              "detailTr": "Gamay / Beaujolais / FRANCE",
+              "detailEn": "Gamay / Beaujolais / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LOUIS JADOT BEAUNE PREMIER CRU",
+              "en": "LOUIS JADOT BEAUNE PREMIER CRU",
+              "detailTr": "Pinot Noir / Côte de Beaune, Bourgogne / FRANCE",
+              "detailEn": "Pinot Noir / Côte de Beaune, Bourgogne / FRANCE",
+              "priceUsd": 230
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "WHITE WINES",
+      "en": "WHITE WINES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "TÜRKİYE",
+          "en": "TÜRKİYE",
+          "items": [
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Sauvignon Blanc / Thrace / TÜRKİYE",
+              "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Sauvignon Blanc / Thrace / TÜRKİYE",
+              "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Chardonnay / Thrace / TÜRKİYE",
+              "detailEn": "Chardonnay / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Chardonnay / Thrace / TÜRKİYE",
+              "detailEn": "Chardonnay / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Fume Blanc / Thrace / TÜRKİYE",
+              "detailEn": "Fume Blanc / Thrace / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Fume Blanc / Thrace / TÜRKİYE",
+              "detailEn": "Fume Blanc / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "KAVAKLIDERE SELECTION (glass)",
+              "en": "KAVAKLIDERE SELECTION (glass)",
+              "detailTr": "Narince, Emir / Central Anatolia / TÜRKİYE",
+              "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "KAVAKLIDERE SELECTION (bottle)",
+              "en": "KAVAKLIDERE SELECTION (bottle)",
+              "detailTr": "Narince, Emir / Central Anatolia / TÜRKİYE",
+              "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "DOLUCA SIGNIUM",
+              "en": "DOLUCA SIGNIUM",
+              "detailTr": "Viognier, Chardonnay, Narince / Thrace / TÜRKİYE",
+              "detailEn": "Viognier, Chardonnay, Narince / Thrace / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "KAVAKLIDERE COTES D'AVANOS",
+              "en": "KAVAKLIDERE COTES D'AVANOS",
+              "detailTr": "Sauvignon Blanc / Central Anatolia / TÜRKİYE",
+              "detailEn": "Sauvignon Blanc / Central Anatolia / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "KAVAKLIDERE COTES D'AVANOS",
+              "en": "KAVAKLIDERE COTES D'AVANOS",
+              "detailTr": "Chardonnay / Central Anatolia / TÜRKİYE",
+              "detailEn": "Chardonnay / Central Anatolia / TÜRKİYE",
+              "priceUsd": 100
+            }
+          ]
+        },
+        {
+          "tr": "ITALY",
+          "en": "ITALY",
+          "items": [
+            {
+              "tr": "RICOSSA GAVI",
+              "en": "RICOSSA GAVI",
+              "detailTr": "Cortese / Gavi / ITALY",
+              "detailEn": "Cortese / Gavi / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LA SCOLCA GAVI DEI GAVI",
+              "en": "LA SCOLCA GAVI DEI GAVI",
+              "detailTr": "Cortese / Gavi / ITALY",
+              "detailEn": "Cortese / Gavi / ITALY",
+              "priceUsd": 150
+            },
+            {
+              "tr": "EPICURO PINOT GRIGIO",
+              "en": "EPICURO PINOT GRIGIO",
+              "detailTr": "Pinot Grigio / Sicilia / ITALY",
+              "detailEn": "Pinot Grigio / Sicilia / ITALY",
+              "priceUsd": 50
+            },
+            {
+              "tr": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+              "en": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+              "detailTr": "Sauvignon Blanc / Trevenezie / ITALY",
+              "detailEn": "Sauvignon Blanc / Trevenezie / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "TESSARI BINE LONGHE SOAVE CLASSICO",
+              "en": "TESSARI BINE LONGHE SOAVE CLASSICO",
+              "detailTr": "Trebbiano, Garganega / Veneto / ITALY",
+              "detailEn": "Trebbiano, Garganega / Veneto / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LOMBARDO BIANCO D'ALTURA",
+              "en": "LOMBARDO BIANCO D'ALTURA",
+              "detailTr": "Catarratto Bianco / Sicilia / ITALY",
+              "detailEn": "Catarratto Bianco / Sicilia / ITALY",
+              "priceUsd": 100
+            },
+            {
+              "tr": "EPICURO VERMENTINO",
+              "en": "EPICURO VERMENTINO",
+              "detailTr": "Vermentino / Lazio / ITALY",
+              "detailEn": "Vermentino / Lazio / ITALY",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "SPAIN",
+          "en": "SPAIN",
+          "items": [
+            {
+              "tr": "VIÑA ESMERALDA",
+              "en": "VIÑA ESMERALDA",
+              "detailTr": "Gewürztraminer / Penedes / SPAIN",
+              "detailEn": "Gewürztraminer / Penedes / SPAIN",
+              "priceUsd": 50
+            },
+            {
+              "tr": "GRAN VIÑA SOL TORRES",
+              "en": "GRAN VIÑA SOL TORRES",
+              "detailTr": "Chardonnay / Penedes / SPAIN",
+              "detailEn": "Chardonnay / Penedes / SPAIN",
+              "priceUsd": 50
+            },
+            {
+              "tr": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+              "en": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+              "detailTr": "Chardonnay / Aragon / SPAIN",
+              "detailEn": "Chardonnay / Aragon / SPAIN",
+              "priceUsd": 50
+            },
+            {
+              "tr": "FAUSTINO RESERVA V",
+              "en": "FAUSTINO RESERVA V",
+              "detailTr": "Sauvignon Blanc / Rioja / SPAIN",
+              "detailEn": "Sauvignon Blanc / Rioja / SPAIN",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "PORTUGAL",
+          "en": "PORTUGAL",
+          "items": [
+            {
+              "tr": "MONTE DO CARRAPATELO",
+              "en": "MONTE DO CARRAPATELO",
+              "detailTr": "Arinto, Roupeiro / Alentejano / PORTUGAL",
+              "detailEn": "Arinto, Roupeiro / Alentejano / PORTUGAL",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "ARGENTINA",
+          "en": "ARGENTINA",
+          "items": [
+            {
+              "tr": "MONTE CEPAS",
+              "en": "MONTE CEPAS",
+              "detailTr": "Chardonnay / Mendoza / ARGENTINA",
+              "detailEn": "Chardonnay / Mendoza / ARGENTINA",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "CHILE",
+          "en": "CHILE",
+          "items": [
+            {
+              "tr": "TORO DE PIEDRA RESERVA",
+              "en": "TORO DE PIEDRA RESERVA",
+              "detailTr": "Chardonnay / Maule Valley / CHILE",
+              "detailEn": "Chardonnay / Maule Valley / CHILE",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "NEW ZEALAND",
+          "en": "NEW ZEALAND",
+          "items": [
+            {
+              "tr": "CLOUDY BAY",
+              "en": "CLOUDY BAY",
+              "detailTr": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
+              "detailEn": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
+              "priceUsd": 120
+            },
+            {
+              "tr": "CLOUDY BAY",
+              "en": "CLOUDY BAY",
+              "detailTr": "Chardonnay / Marlborough / NEW ZEALAND",
+              "detailEn": "Chardonnay / Marlborough / NEW ZEALAND",
+              "priceUsd": 100
+            }
+          ]
+        },
+        {
+          "tr": "GERMANY",
+          "en": "GERMANY",
+          "items": [
+            {
+              "tr": "DR. LOOSEN ERDENER TREPPCHEN",
+              "en": "DR. LOOSEN ERDENER TREPPCHEN",
+              "detailTr": "Riesling / Mosel / Germany",
+              "detailEn": "Riesling / Mosel / Germany",
+              "priceUsd": 50
+            },
+            {
+              "tr": "VILLA WOLF PINOT GRIS",
+              "en": "VILLA WOLF PINOT GRIS",
+              "detailTr": "Pinot Gris / Pfalz / Germany",
+              "detailEn": "Pinot Gris / Pfalz / Germany",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "FRANCE",
+          "en": "FRANCE",
+          "items": [
+            {
+              "tr": "CHEVAL NOIR BORDEAUX (glass)",
+              "en": "CHEVAL NOIR BORDEAUX (glass)",
+              "detailTr": "Sauvignon Blanc / Bordeaux / FRANCE",
+              "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
+              "priceUsd": 15
+            },
+            {
+              "tr": "CHEVAL NOIR BORDEAUX (bottle)",
+              "en": "CHEVAL NOIR BORDEAUX (bottle)",
+              "detailTr": "Sauvignon Blanc / Bordeaux / FRANCE",
+              "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "LE BIJOU",
+              "en": "LE BIJOU",
+              "detailTr": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
+              "detailEn": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "EDEL GRAND C",
+              "en": "EDEL GRAND C",
+              "detailTr": "Pinot Gris, Riesling, Muscat Blanc / Alsace / FRANCE",
+              "detailEn": "Pinot Gris, Riesling, Muscat Blanc / Alsace / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "GRAND C RESERVE",
+              "en": "GRAND C RESERVE",
+              "detailTr": "Pinot Blanc / Alsace / FRANCE",
+              "detailEn": "Pinot Blanc / Alsace / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "THOMAS LABILLE CHABLIS",
+              "en": "THOMAS LABILLE CHABLIS",
+              "detailTr": "Chardonnay / Burgundy / FRANCE",
+              "detailEn": "Chardonnay / Burgundy / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "THOMAS LABILLE CHABLIS PREMIER CRU",
+              "en": "THOMAS LABILLE CHABLIS PREMIER CRU",
+              "detailTr": "Chardonnay / Burgundy / FRANCE",
+              "detailEn": "Chardonnay / Burgundy / FRANCE",
+              "priceUsd": 120
+            },
+            {
+              "tr": "DOMAINE SEGUIN POUILLY FUME",
+              "en": "DOMAINE SEGUIN POUILLY FUME",
+              "detailTr": "Sauvignon Blanc / Loire / FRANCE",
+              "detailEn": "Sauvignon Blanc / Loire / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "PAUL THOMAS SANCERRE",
+              "en": "PAUL THOMAS SANCERRE",
+              "detailTr": "Sauvignon Blanc / Loire / FRANCE",
+              "detailEn": "Sauvignon Blanc / Loire / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LOUIS JADOT CHABLIS",
+              "en": "LOUIS JADOT CHABLIS",
+              "detailTr": "Chardonnay / Bourgogne / FRANCE",
+              "detailEn": "Chardonnay / Bourgogne / FRANCE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "LOUIS JADOT MACON VILLAGES",
+              "en": "LOUIS JADOT MACON VILLAGES",
+              "detailTr": "Chardonnay / Burgundy / FRANCE",
+              "detailEn": "Chardonnay / Burgundy / FRANCE",
+              "priceUsd": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "ROSÉ WINES",
+      "en": "ROSÉ WINES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "TÜRKİYE",
+          "en": "TÜRKİYE",
+          "items": [
+            {
+              "tr": "SARAFİN (glass)",
+              "en": "SARAFİN (glass)",
+              "detailTr": "Merlot, Cabernet Franc / TÜRKİYE",
+              "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "SARAFİN (bottle)",
+              "en": "SARAFİN (bottle)",
+              "detailTr": "Merlot, Cabernet Franc / TÜRKİYE",
+              "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
+              "priceUsd": 100
+            },
+            {
+              "tr": "VERANO BLUSH",
+              "en": "VERANO BLUSH",
+              "detailTr": "Grenache / Thrace / TÜRKİYE",
+              "detailEn": "Grenache / Thrace / TÜRKİYE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "SEVİLEN R ROSÉ",
+              "en": "SEVİLEN R ROSÉ",
+              "detailTr": "Cabernet Sauvignon, Shiraz / Thrace / TÜRKİYE",
+              "detailEn": "Cabernet Sauvignon, Shiraz / Thrace / TÜRKİYE",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "ITALY",
+          "en": "ITALY",
+          "items": [
+            {
+              "tr": "11 MINUTES PASQUA",
+              "en": "11 MINUTES PASQUA",
+              "detailTr": "Corvina / Veneto / ITALY",
+              "detailEn": "Corvina / Veneto / ITALY",
+              "priceUsd": 70
+            },
+            {
+              "tr": "CASA DEFRA PINOT GRIGIO ROSE",
+              "en": "CASA DEFRA PINOT GRIGIO ROSE",
+              "detailTr": "Pinot Grigio / Veneto / ITALY",
+              "detailEn": "Pinot Grigio / Veneto / ITALY",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "SPAIN",
+          "en": "SPAIN",
+          "items": [
+            {
+              "tr": "SANGRE DE TORO ROSÉ",
+              "en": "SANGRE DE TORO ROSÉ",
+              "detailTr": "Tempranillo / Catalunya / SPAIN",
+              "detailEn": "Tempranillo / Catalunya / SPAIN",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "FRANCE",
+          "en": "FRANCE",
+          "items": [
+            {
+              "tr": "CHEVAL NOIR BORDEAUX ROSÉ (glass)",
+              "en": "CHEVAL NOIR BORDEAUX ROSÉ (glass)",
+              "detailTr": "Merlot / Bordeaux / FRANCE",
+              "detailEn": "Merlot / Bordeaux / FRANCE",
+              "priceUsd": 15
+            },
+            {
+              "tr": "CHEVAL NOIR BORDEAUX ROSÉ (bottle)",
+              "en": "CHEVAL NOIR BORDEAUX ROSÉ (bottle)",
+              "detailTr": "Merlot / Bordeaux / FRANCE",
+              "detailEn": "Merlot / Bordeaux / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "OPALE ROSÉ",
+              "en": "OPALE ROSÉ",
+              "detailTr": "Syrah, Grenache, Cinsault / Coteaux D'aıx En Provence / FRANCE",
+              "detailEn": "Syrah, Grenache, Cinsault / Coteaux D'aıx En Provence / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "LE BIJOU",
+              "en": "LE BIJOU",
+              "detailTr": "Syrah / Grenache / Coteaux De Beziers / FRANCE",
+              "detailEn": "Syrah / Grenache / Coteaux De Beziers / FRANCE",
+              "priceUsd": 50
+            },
+            {
+              "tr": "PAUL THOMAS SANCERRE ROSÉ",
+              "en": "PAUL THOMAS SANCERRE ROSÉ",
+              "detailTr": "Pinot Noir / Loire / FRANCE",
+              "detailEn": "Pinot Noir / Loire / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+              "en": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+              "detailTr": "Grenache, Côtes de Provence / FRANCE",
+              "detailEn": "Grenache, Côtes de Provence / FRANCE",
+              "priceUsd": 70
+            },
+            {
+              "tr": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+              "en": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+              "detailTr": "Grenache / Cotes de Provence / FRANCE",
+              "detailEn": "Grenache / Cotes de Provence / FRANCE",
+              "priceUsd": 200
+            },
+            {
+              "tr": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+              "en": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+              "detailTr": "Grenache/Cotes de Provence/FRANCE",
+              "detailEn": "Grenache/Cotes de Provence/FRANCE",
+              "priceUsd": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "PORTO & SEMI SWEET WINES",
+      "en": "PORTO & SEMI SWEET WINES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "TÜRKİYE",
+          "en": "TÜRKİYE",
+          "items": [
+            {
+              "tr": "KAVAKLIDERE SULTANİYE (glass)",
+              "en": "KAVAKLIDERE SULTANİYE (glass)",
+              "detailTr": "Sultaniye / Aegean / TÜRKİYE",
+              "detailEn": "Sultaniye / Aegean / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "KAVAKLIDERE SULTANİYE (bottle)",
+              "en": "KAVAKLIDERE SULTANİYE (bottle)",
+              "detailTr": "Sultaniye / Aegean / TÜRKİYE",
+              "detailEn": "Sultaniye / Aegean / TÜRKİYE",
+              "priceUsd": 70
+            }
+          ]
+        },
+        {
+          "tr": "SPAIN",
+          "en": "SPAIN",
+          "items": [
+            {
+              "tr": "PEDRO XIMENEZ SHERRY",
+              "en": "PEDRO XIMENEZ SHERRY",
+              "detailTr": "Pedro Ximénez / Andalucía / SPAIN",
+              "detailEn": "Pedro Ximénez / Andalucía / SPAIN",
+              "priceUsd": 100
+            }
+          ]
+        },
+        {
+          "tr": "PORTUGAL",
+          "en": "PORTUGAL",
+          "items": [
+            {
+              "tr": "MARTHA'S RUBY PORT WINE",
+              "en": "MARTHA'S RUBY PORT WINE",
+              "detailTr": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
+              "detailEn": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
+              "priceUsd": 70
+            },
+            {
+              "tr": "MARTHA'S TAWNY PORT WINE",
+              "en": "MARTHA'S TAWNY PORT WINE",
+              "detailTr": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
+              "detailEn": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
+              "priceUsd": 70
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "SPARKLING WINES & CHAMPAGNES",
+      "en": "SPARKLING WINES & CHAMPAGNES",
+      "items": [],
+      "sub": [
+        {
+          "tr": "TÜRKİYE",
+          "en": "TÜRKİYE",
+          "items": [
+            {
+              "tr": "KAVAKLIDERE İNCİ DAMLASI (glass)",
+              "en": "KAVAKLIDERE İNCİ DAMLASI (glass)",
+              "detailTr": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+              "detailEn": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+              "priceUsd": 20
+            },
+            {
+              "tr": "KAVAKLIDERE İNCİ DAMLASI (bottle)",
+              "en": "KAVAKLIDERE İNCİ DAMLASI (bottle)",
+              "detailTr": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+              "detailEn": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+              "priceUsd": 80
+            }
+          ]
+        },
+        {
+          "tr": "ITALY",
+          "en": "ITALY",
+          "items": [
+            {
+              "tr": "NOBILIS PROSECCO EXTRA DRY",
+              "en": "NOBILIS PROSECCO EXTRA DRY",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 50
+            },
+            {
+              "tr": "BRILLA PROSECCO BRUT",
+              "en": "BRILLA PROSECCO BRUT",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 200
+            },
+            {
+              "tr": "BRILLA PROSECCO ROSÉ",
+              "en": "BRILLA PROSECCO ROSÉ",
+              "detailTr": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
+              "detailEn": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
+              "priceUsd": 200
+            },
+            {
+              "tr": "BOTTEGA GOLD PROSECCO BRUT",
+              "en": "BOTTEGA GOLD PROSECCO BRUT",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 150
+            },
+            {
+              "tr": "BOTTEGA ROSÉ GOLD PROSECCO",
+              "en": "BOTTEGA ROSÉ GOLD PROSECCO",
+              "detailTr": "Glera, Pinot Noir / Veneto / ITALY",
+              "detailEn": "Glera, Pinot Noir / Veneto / ITALY",
+              "priceUsd": 150
+            },
+            {
+              "tr": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+              "en": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 60
+            },
+            {
+              "tr": "BAGLIETTI ROSÉ GOLD EDITION",
+              "en": "BAGLIETTI ROSÉ GOLD EDITION",
+              "detailTr": "Glera, Merlot / Veneto / ITALY",
+              "detailEn": "Glera, Merlot / Veneto / ITALY",
+              "priceUsd": 60
+            },
+            {
+              "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (glass)",
+              "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (glass)",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 15
+            },
+            {
+              "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (bottle)",
+              "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (bottle)",
+              "detailTr": "Glera / Veneto / ITALY",
+              "detailEn": "Glera / Veneto / ITALY",
+              "priceUsd": 50
+            },
+            {
+              "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (glass)",
+              "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (glass)",
+              "detailTr": "Glera / Pinot Noir / Veneto / ITALY",
+              "detailEn": "Glera / Pinot Noir / Veneto / ITALY",
+              "priceUsd": 15
+            },
+            {
+              "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (bottle)",
+              "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (bottle)",
+              "detailTr": "Glera / Pinot Noir / Veneto / ITALY",
+              "detailEn": "Glera / Pinot Noir / Veneto / ITALY",
+              "priceUsd": 50
+            }
+          ]
+        },
+        {
+          "tr": "FRANCE",
+          "en": "FRANCE",
+          "items": [
+            {
+              "tr": "POMMERY MAXI POP CHAMPAGNE",
+              "en": "POMMERY MAXI POP CHAMPAGNE",
+              "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "priceUsd": 350
+            },
+            {
+              "tr": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+              "en": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+              "detailTr": "Pinot Noir / Champagne / FRANCE",
+              "detailEn": "Pinot Noir / Champagne / FRANCE",
+              "priceUsd": 450
+            },
+            {
+              "tr": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+              "en": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+              "detailTr": "Pinot Noir / Champagne / FRANCE",
+              "detailEn": "Pinot Noir / Champagne / FRANCE",
+              "priceUsd": 600
+            },
+            {
+              "tr": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+              "en": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+              "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "priceUsd": 600
+            },
+            {
+              "tr": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+              "en": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+              "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "priceUsd": 600
+            },
+            {
+              "tr": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+              "en": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+              "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "priceUsd": 500
+            },
+            {
+              "tr": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+              "en": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+              "detailTr": "Chardonnay / Champagne / FRANCE",
+              "detailEn": "Chardonnay / Champagne / FRANCE",
+              "priceUsd": 1000
+            },
+            {
+              "tr": "DOM PERIGNON BRUT CHAMPAGNE",
+              "en": "DOM PERIGNON BRUT CHAMPAGNE",
+              "detailTr": "Pinot Noir / Champagne / FRANCE",
+              "detailEn": "Pinot Noir / Champagne / FRANCE",
+              "priceUsd": 1650
+            },
+            {
+              "tr": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+              "en": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+              "detailTr": "Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "detailEn": "Pinot Noir, Chardonnay / Champagne / FRANCE",
+              "priceUsd": 2550
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "footnotes": [],
+  "issues": [
+    "PDF page 1 contains only the cover heading 'M E N U'; not a category, omitted.",
+    "No allergy/service/VAT footnotes are printed anywhere in the PDF or docx; footnotes is empty.",
+    "Letter-spaced headings were collapsed using word breaks from the docx where the PDF gives none (LE INSALATE, ANTIPASTI CALDI, PRIMI PIATTI, SECONDI PIATTI); wine headings collapsed with the same logic (RARE VINTAGE WINES, RED WINES, WHITE WINES, ROSÉ WINES, PORTO & SEMI SWEET WINES, SPARKLING WINES & CHAMPAGNES).",
+    "Section order differs: PDF has ANTIPASTI, LE INSALATE, ANTIPASTI CALDI; docx has ANTIPASTI, ANTIPASTI CALDI, LE INSALATE. PDF order used.",
+    "PDF 'R E D W I N E S' (pages 8-9) and 'W H I T E W I N E S' (pages 10-11) are each printed twice as page headers; merged into one category each, with country sub-categories in printed order.",
+    "Wine/drinks sections (RARE VINTAGE WINES to SPARKLING WINES & CHAMPAGNES) exist only in the PDF; the docx has no drinks at all. They are named in Italian/English/Turkish only once, so tr = en for all items and categories.",
+    "Wine lines (grape / region / country) are printed once and are language-neutral; the same text is stored in both detailTr and detailEn. Country sub-headings (FRANCE, ITALY, TÜRKİYE, ...) are kept as printed and modelled as 'sub' categories.",
+    "Wines with two printed prices (e.g. '$ 20' then '$ 100') were split into two items '(glass)' and '(bottle)'. The PDF text does not label them; glass/bottle is inferred from the price pattern (low price first) and should be verified against the printed PDF. Affected: SARAFİN (red, white, rosé), KAVAKLIDERE SELECTION (red, white), CHEVAL NOIR BORDEAUX ROUGE RED WINE, CHEVAL NOIR BORDEAUX (white), CHEVAL NOIR BORDEAUX ROSÉ, KAVAKLIDERE SULTANİYE ($20/$70), KAVAKLIDERE İNCİ DAMLASI ($20/$80), SAN GIOVANNI PERINI PROSECCO EXTRA DRY and BRUT ROSÉ ($15/$50).",
+    "Prices '$ 1.000', '$ 1.650', '$ 2.550' use a dot as thousands separator; stored as 1000, 1650, 2550.",
+    "Printed typos kept as-is (PDF is authoritative): 'Bordeaux St. Julen', 'CHATEUA D'ESCLANS', 'Coteaux D'aıx En Provence' (dotless i), 'SEMASKA', 'Trevenezie', 'Negrar'; inconsistent casing of 'Italy'/'Germany' vs 'ITALY'/'FRANCE' in grape lines; 'Grenache/Cotes de Provence/FRANCE' without spaces for ROCK ANGEL.",
+    "Two-line wine name 'CHÂTEAU CAVALIER' + 'CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ' joined into one name. Multi-line grape lines (CANTEMERLE, BEYCHEVELLE) joined with a space.",
+    "Doubled spaces removed in 'CHATEAU CORBIN SAINT - ÉMILION  GRAND CRU', 'EPICURO  Z-ELEBRATE ZINFANDEL', 'MONTE  CEPAS MALBEC'. 'SAINT - ÉMILION' and 'SAINT- ÉMILION' hyphen spacing kept as printed.",
+    "Duplicate names with different content: SARAFİN (3 reds, 3 whites, 1 rosé), KAVAKLIDERE COTES D'AVANOS (2 whites), CLOUDY BAY (2 whites), GRAND C RESERVE (red $100 Pinot Noir; white $70 Pinot Blanc), LE BIJOU (white $70, rosé $50), PAUL THOMAS SANCERRE (white and rosé), MONTE CEPAS (red MALBEC $50 and white $70). Not errors, but names alone are not unique.",
+    "Pizza and some Secondi Piatti (SOGLIOLA, OMBRINA, COSTOLETTE, RIB-EYE, FILETTO, OSSO BUCO, GUANCIA) print TR and EN description on one line separated by ' / '; split into detailTr and detailEn. CERNIA, other food items print them on two lines.",
+    "Docx has Russian text next to every PIZZA heading, name and description (e.g. 'PIZZA/ ПИЦЦА', 'PIZZA BISTECCA/ ПИЦЦА БИСТЕККА'); dropped. The PDF has no Russian.",
+    "Docx name spelling differs from PDF (PDF used): CARNE CRUDO vs CRUDA ALL'ALBESE; CALAMARI ... CACIO PEPE vs CACIO E PEPE; CODE DI GAMBERI vs GAMBERO; CARCIOFI AVOKADO vs AVOCADO; PARPADELLA AL RAGU vs PAPPARDELLE AL RAGÙ; TAGLIOLINI TARTUFO vs AL TARTUFO; SPAGETTHI/SPAHGETTI vs SPAGHETTI (DI MARE, ALLA BOLOGNESE, AL POMODORO); PASTA CARBONARO vs CARBONARA; PIZZA FOURSTEGION vs PIZZA QUATTRO STAGIONI; COTOLETTE AGNELLO vs COSTOLETTE DI AGNELLO; FILLET DE MANZO vs FILETTO DI MANZO; OSSO BUCCO vs OSSO BUCO.",
+    "Docx description differences (PDF used): CERNIA 'lahos balığı ... grouper fish, patato mash with lemon' vs PDF 'Lagos balığı ... Grouper with lemon-infused mashed potatoes' ('Lagos'/'lahos' is probably a misspelling of 'Lahos' in the PDF; verify); docx uses 've' conjunctions where PDF uses commas (SPICY SEAFOOD SOUP, CARPACCIO, FANTASIA DI BURRATA, BRESAOLA, CARNE CRUDA, CARCIOFI, MELANZANE etc.); 'rocket' (docx) vs 'arugula' (PDF); 'Thin sliced' vs 'Thinly sliced'; 'Baked layered pasta' vs 'Layered pasta'; 'Pappardelle with beef ragù' vs 'Pappardelle pasta with beef ragu'; 'Vanilla panna cotta' vs 'Vanilla milk dessert'; 'Chocolate cannelloni dessert' vs 'Chocolate dessert'; 'Zabaione with Marsala wine' vs 'Cream dessert with Marsala wine'; 'Vegetables and smoked beef pizza' vs 'Vegetable and smoked meat pizza'.",
+    "No food item exists in only one of the two files; the docx just lacks prices and all wines.",
+    "PDF text uses ligature characters (ﬁ, ﬂ, ﬄ), fixed to plain letters (confit, truffle, fillet, filled, flavors, trüflü)."
+  ]
+}

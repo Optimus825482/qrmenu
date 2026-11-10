@@ -1,0 +1,1951 @@
+{
+  "outlet": "Diamond Pool Bar",
+  "sources": [
+    "REVZE_POOL_BAR_MEN_docx.txt",
+    "7_DIAMOND_POOL_BAR_xlsx.txt",
+    "diamond_2025_snack_menu_1_docx.txt (comparison only)"
+  ],
+  "categories": [
+    {
+      "tr": "ÇORBALAR",
+      "en": "SOUPS",
+      "note": {
+        "tr": "Tüm çorbalarımız kruton, limon ve kızarmış ekmek ile servis edilir.",
+        "en": "All our soups are served with croutons, a slice of lemon, and toasted bread."
+      },
+      "items": [
+        {
+          "tr": "Mercimek Çorbası",
+          "en": "Lentil Soup",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Domates Çorbası",
+          "en": "Tomato Soup",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "TOSTLAR",
+      "en": "TOASTS",
+      "note": {
+        "tr": "Tüm tost çeşitleri patates kızartması ve acuka ile servis edilir.",
+        "en": "All toasted sandwiches are served with French fries and acuka spread."
+      },
+      "items": [
+        {
+          "tr": "Kaşarlı Tost",
+          "en": "Cheese Toasted Sandwich",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Sucuklu Kaşarlı Tost",
+          "en": "Turkish Sausage and Cheese Toasted Sandwich",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Royal Tost",
+          "en": "Royal Toast",
+          "detailTr": "Hellim peyniri, kavurma, domates, yeşil biber, kokteyl sos",
+          "detailEn": "Halloumi cheese, braised meat, tomato, green pepper, cocktail sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Sanayi Tostu",
+          "en": "Turkish-Style Toasted Sandwich",
+          "detailTr": "Kaşar peyniri, sucuk, biber salçası, pul biber",
+          "detailEn": "Kashar cheese, Turkish sausage, pepper paste, crushed red pepper",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "SALATALAR",
+      "en": "SALADS",
+      "items": [
+        {
+          "tr": "Yeşil Bahçe Salatası",
+          "en": "Green Garden Salad",
+          "detailTr": "Iceberg marul, roka, lolorosso, polorosso, nane, maydanoz, vinegret sos",
+          "detailEn": "Iceberg lettuce, arugula, lolorosso, polorosso, mint, parsley, vinaigrette sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "İstanbul Salatası",
+          "en": "Istanbul Salad",
+          "detailTr": "Bahçe domatesi, kırmızı soğan, yeşil biber, zeytinyağı ve nar ekşisi",
+          "detailEn": "Garden tomatoes, red onion, green pepper, olive oil, pomegranate molasses",
+          "priceUsd": null
+        },
+        {
+          "tr": "Sezar Salatası",
+          "en": "Caesar Salad",
+          "detailTr": "Iceberg marul, kızarmış ekmek, parmesan peyniri, Sezar sos — Tercihinize göre ızgara tavuklu veya ızgara karidesli",
+          "detailEn": "Iceberg lettuce, toasted bread, parmesan cheese, Caesar sauce — Served with grilled chicken or grilled prawns, depending on your preference",
+          "priceUsd": null
+        },
+        {
+          "tr": "Kinoalı Tabule Salatası",
+          "en": "Quinoa Tabbouleh Salad",
+          "detailTr": "İnce doğranmış Akdeniz yeşillikleri, kinoa, bulgur, nar taneleri, çeri domates, zeytinyağı ve nar ekşisi",
+          "detailEn": "Finely chopped Mediterranean greens, quinoa, bulgur, pomegranate seeds, cherry tomatoes, olive oil, pomegranate molasses",
+          "priceUsd": null
+        },
+        {
+          "tr": "Çoban Salatası",
+          "en": "Shepherd’s Salad",
+          "detailTr": "Domates, salatalık, biber, maydanoz, zeytinyağı, limon sos",
+          "detailEn": "Tomatoes, cucumber, pepper, parsley, olive oil, lemon sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Yunan Salatası",
+          "en": "Greek Salad",
+          "detailTr": "Çeri domates, salatalık, siyah zeytin, beyaz peynir, taze kekik, soğuk sıkım zeytinyağı",
+          "detailEn": "Cherry tomatoes, cucumber, black olives, white cheese, fresh thyme, cold pressed olive oil",
+          "priceUsd": null
+        },
+        {
+          "tr": "Narenciyeli Avokado Salatası",
+          "en": "Citrus Avocado Salad",
+          "detailTr": "Maskolin yeşillikleri, enginar kalbi, avokado, portakal dilimleri, narenciye vinegreti",
+          "detailEn": "Mesclun greens, artichoke hearts, avocado, orange slices, citrus vinaigrette",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "BAŞLANGIÇLAR",
+      "en": "STARTERS",
+      "items": [
+        {
+          "tr": "Dana Carpaccio",
+          "en": "Beef Carpaccio",
+          "detailTr": "Taze baharatlarla marine edilmiş dana bonfile dilimleri, roka, Dijon hardalı, parmesan peyniri",
+          "detailEn": "Beef tenderloin slices marinated with fresh spices, arugula, Dijon mustard, parmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "Tereyağlı Karides Tava",
+          "en": "Pan-Fried Prawns with Butter",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Kalamar Tava",
+          "en": "Fried Calamari",
+          "detailTr": "Tartar sos eşliğinde",
+          "detailEn": "Served with tartar sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Viyana Şnitzeli",
+          "en": "Wiener Schnitzel",
+          "detailTr": "Hardallı patates salatası eşliğinde",
+          "detailEn": "Served with mustard potato salad",
+          "priceUsd": null
+        },
+        {
+          "tr": "Tavuk Fingers",
+          "en": "Chicken Fingers",
+          "detailTr": "Patates kızartması ve acılı mayonez eşliğinde",
+          "detailEn": "Served with French fries and spicy mayonnaise",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "SANDVİÇLER & BURGERLER",
+      "en": "SANDWICHES & BURGERS",
+      "items": [
+        {
+          "tr": "Kulüp Sandviç",
+          "en": "Club Sandwich",
+          "detailTr": "Üç katlı kızarmış ekmek, yumurta, ızgara tavuk, dana jambon, cheddar peyniri, kaşar peyniri, marul, domates, kornişon turşu, mayonez",
+          "detailEn": "Three layers of toasted bread, egg, grilled chicken, beef ham, cheddar cheese, kashar cheese, lettuce, tomato, gherkin pickles, mayonnaise",
+          "priceUsd": null
+        },
+        {
+          "tr": "Katsu Sando",
+          "en": "Katsu Sando",
+          "detailTr": "Panelenmiş çıtır bonfile, siyah tobiko, brioche ekmeği, katsu sos",
+          "detailEn": "Crispy breaded beef tenderloin, black tobiko, brioche bread, katsu sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Soğuk Sandviç",
+          "en": "Cold Sandwich",
+          "detailTr": "Özel mini baget ekmeği, cheddar peyniri, Macar salamı, domates, polorosso, bahçe salatası eşliğinde",
+          "detailEn": "Special mini baguette, cheddar cheese, Hungarian salami, tomato, polorosso, served with garden salad",
+          "priceUsd": null
+        },
+        {
+          "tr": "Hamburger",
+          "en": "Hamburger",
+          "detailTr": "Dana etinden hazırlanan el yapımı hamburger köftesi, brioche ekmeği, karamelize soğan, kornişon turşu, iceberg marul, domates, özel burger sosu",
+          "detailEn": "House-made beef burger patty, brioche bun, caramelized onions, gherkin pickles, iceberg lettuce, tomato, special burger sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Cheeseburger",
+          "en": "Cheeseburger",
+          "detailTr": "Dana etinden hazırlanan el yapımı hamburger köftesi, brioche ekmeği, karamelize soğan, cheddar peyniri, özel burger sosu",
+          "detailEn": "House-made beef burger patty, brioche bun, caramelized onions, cheddar cheese, special burger sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Royal Burger",
+          "en": "Royal Burger",
+          "detailTr": "Dana etinden hazırlanan el yapımı hamburger köftesi, çift cheddar peyniri, füme dana kaburga, karamelize soğan, trüflü aioli, barbekü sos",
+          "detailEn": "House-made beef burger patty, double cheddar cheese, smoked beef ribs, caramelized onions, truffle aioli, barbecue sauce",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "MAKARNALAR & RİSOTTOLAR",
+      "en": "PASTAS & RISOTTOS",
+      "items": [
+        {
+          "tr": "Penne all’Arrabbiata",
+          "en": "Penne all’Arrabbiata",
+          "detailTr": "Acılı domates sosu, zeytin, fesleğen, parmesan peyniri",
+          "detailEn": "Spicy tomato sauce, olives, basil, parmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "Spagetti Pomodoro",
+          "en": "Spaghetti Pomodoro",
+          "detailTr": "Napoliten sos, fesleğen, çeri domates, parmesan peyniri",
+          "detailEn": "Neapolitan sauce, basil, cherry tomatoes, parmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "Spagetti Bolonez",
+          "en": "Spaghetti Bolognese",
+          "detailTr": "Bolonez sos, fesleğen, çeri domates, parmesan peyniri",
+          "detailEn": "Bolognese sauce, basil, cherry tomatoes, parmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "Fettuccine Alfredo",
+          "en": "Fettuccine Alfredo",
+          "detailTr": "Izgara tavuk göğsü, trüf yağı, parmesan peyniri, alfredo sosu",
+          "detailEn": "Grilled chicken breast, truffle oil, parmesan cheese, alfredo sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "El Yapımı Mantı",
+          "en": "House-made Turkish Dumplings",
+          "detailTr": "Dana etli el yapımı Türk mantısı; tereyağlı özel sos ve tercihinize göre sarımsaklı veya sarımsaksız süzme yoğurt eşliğinde",
+          "detailEn": "House-made Turkish dumplings filled with beef, served with a special butter sauce and strained yogurt with or without garlic",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "TATLILAR",
+      "en": "DESSERTS",
+      "items": [
+        {
+          "tr": "Tiramisu",
+          "en": "Tiramisu",
+          "detailTr": "Kakao ve tropikal meyveler eşliğinde",
+          "detailEn": "Served with cocoa and tropical fruits",
+          "priceUsd": null
+        },
+        {
+          "tr": "Profiterol",
+          "en": "Profiteroles",
+          "detailTr": "Bitter çikolatalı sos eşliğinde",
+          "detailEn": "Served with dark chocolate sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Cheesecake",
+          "en": "Cheesecake",
+          "detailTr": "Orman meyveleri ve frambuaz sosu eşliğinde",
+          "detailEn": "Served with mixed berries and raspberry sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Fırın Sütlaç",
+          "en": "Oven-Baked Rice Pudding",
+          "detailTr": "Kırık fındık ve toz tarçın eşliğinde",
+          "detailEn": "Served with chopped hazelnuts and ground cinnamon",
+          "priceUsd": null
+        },
+        {
+          "tr": "Merit Royal Baklava",
+          "en": "Merit Royal Baklava",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "El Yapımı Çikolata Seçkisi",
+          "en": "Selection of House-Made Chocolates",
+          "detailTr": "Çikolatalarımız, siz değerli misafirlerimiz için şeflerimiz tarafından özenle hazırlanmaktadır.",
+          "detailEn": "Our chocolates are carefully handcrafted in-house by our chefs for our valued guests.",
+          "priceUsd": null
+        },
+        {
+          "tr": "Taze Mevsim Meyveleri",
+          "en": "Fresh Seasonal Fruits",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Krep / Pankek / Waffle",
+          "en": "Crepes / Pancakes / Waffle",
+          "detailTr": "Tercihinize göre Nutella, reçel veya mevsim meyveleri eşliğinde",
+          "detailEn": "Served with Nutella, jam or seasonal fruits, depending on your preference",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "MEŞRUBATLAR",
+      "en": "SOFT DRINKS",
+      "items": [
+        {
+          "tr": "SODA / MINERAL WATER",
+          "en": "SODA / MINERAL WATER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SAN PELLEGRINO",
+          "en": "SAN PELLEGRINO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AYRAN",
+          "en": "AYRAN",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BRITVIC",
+          "en": "BRITVIC",
+          "detailTr": null,
+          "detailEn": "TOMATO, BITTER LEMON, GINGER ALE, TONIC",
+          "priceUsd": null
+        },
+        {
+          "tr": "SU 330 ml.",
+          "en": "WATER 330 ml.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SU 750 ml.",
+          "en": "WATER 750 ml.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COCA COLA",
+          "en": "COCA COLA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SPRITE",
+          "en": "SPRITE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FANTA",
+          "en": "FANTA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ICE TEA (PEACH, LEMON)",
+          "en": "ICE TEA (PEACH, LEMON)",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "LİMONATA",
+          "en": "LEMONADE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ENERJİ İÇECEĞİ",
+          "en": "ENERGY DRINK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ŞALGAM SUYU",
+          "en": "TURNIP JUICE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ],
+      "sub": [
+        {
+          "tr": "MEYVE SUYU",
+          "en": "FRUIT JUICE",
+          "items": [
+            {
+              "tr": "ANANAS",
+              "en": "PINEAPPLE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "DOMATES",
+              "en": "TOMATO",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "ELMA",
+              "en": "APPLE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "GREYFURT",
+              "en": "GRAPEFRUIT",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "KAYISI",
+              "en": "APRICOT",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "KIZILCIK",
+              "en": "CRANBERRY",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "NAR",
+              "en": "POMEGRANATE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "PORTAKAL",
+              "en": "ORANGE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "ŞEFTALİ",
+              "en": "PEACH",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "VİŞNE",
+              "en": "CHERRY",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            }
+          ]
+        },
+        {
+          "tr": "FRESH MEYVE SUYU",
+          "en": "FRESH FRUIT JUICE",
+          "items": [
+            {
+              "tr": "PORTAKAL",
+              "en": "ORANGE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "GREYFURT",
+              "en": "GRAPEFRUIT",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "HAVUÇ",
+              "en": "CARROT",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            },
+            {
+              "tr": "ELMA",
+              "en": "APPLE",
+              "detailTr": null,
+              "detailEn": null,
+              "priceUsd": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tr": "SICAK İÇECEKLER",
+      "en": "HOT DRINKS",
+      "items": [
+        {
+          "tr": "AMERICANO",
+          "en": "AMERICANO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAPPUCCINO",
+          "en": "CAPPUCCINO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHOCOLATE MOCHA",
+          "en": "CHOCOLATE MOCHA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAFE LATTE",
+          "en": "CAFE LATTE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TÜRK KAHVESİ",
+          "en": "TURKISH COFFEE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KLASİK TÜRK ÇAYI",
+          "en": "TURKISH TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ENGLISH BREAKFAST TEA",
+          "en": "ENGLISH BREAKFAST TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ESPRESSO",
+          "en": "ESPRESSO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FILTER COFFEE",
+          "en": "FILTER COFFEE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MACCHIATO",
+          "en": "MACCHIATO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "NESCAFE",
+          "en": "NESCAFE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BİTKİ ÇAYLARI",
+          "en": "HERBAL TEA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SICAK ÇİKOLATA",
+          "en": "HOT CHOCOLATE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "FRESH MEYVE SUYU",
+      "en": "FRESH FRUIT JUICE",
+      "items": [
+        {
+          "tr": "GREYFURT",
+          "en": "GRAPEFRUIT",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ELMA",
+          "en": "APPLE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KARPUZ",
+          "en": "WATERMELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAVUN",
+          "en": "MELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KİVİ",
+          "en": "KIWI",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "PORTAKAL",
+          "en": "ORANGE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KARIŞIK",
+          "en": "MIX FRESH",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "SERİNLETİCİ SMOOTHIE",
+      "en": "REFRESHMENT SMOOTHIES",
+      "items": [
+        {
+          "tr": "ÇİLEK",
+          "en": "STRAWBERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ELMA",
+          "en": "APPLE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KARPUZ",
+          "en": "WATERMELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAVUN",
+          "en": "MELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KİVİ",
+          "en": "KIWI",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MUZ-SÜT-BAL",
+          "en": "BANANA-HONEY-MILK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MUZ",
+          "en": "BANANA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "NANE-LİMON",
+          "en": "MINT-LEMON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "PORTAKAL",
+          "en": "ORANGE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SALATALIK",
+          "en": "CUCUMBER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "DONDURMALAR",
+      "en": "ICE CREAMS",
+      "items": [
+        {
+          "tr": "VANİLYA",
+          "en": "VANILLA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DAMLA SAKIZ",
+          "en": "GUM MASTIC",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAKAO",
+          "en": "CACAO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ÇİKOLATA",
+          "en": "CHOCOLATE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KARAMEL",
+          "en": "CARAMEL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ÇİLEK",
+          "en": "STRAWBERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "VİŞNE",
+          "en": "CHERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "LİMON",
+          "en": "LEMON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAVUN",
+          "en": "MELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MUZ",
+          "en": "BANANA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AHUDUDU",
+          "en": "RASPBERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "MILKSHAKES",
+      "en": "MILKSHAKES",
+      "items": [
+        {
+          "tr": "VANİLYA",
+          "en": "VANILLA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DAMLA SAKIZ",
+          "en": "GUM MASTIC",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAKAO",
+          "en": "CACAO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ÇİKOLATA",
+          "en": "CHOCOLATE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KARAMEL",
+          "en": "CARAMEL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ÇİLEK",
+          "en": "STRAWBERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "VİŞNE",
+          "en": "CHERRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "LİMON",
+          "en": "LEMON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAVUN",
+          "en": "MELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "ULUSLARASI KOKTEYLLER",
+      "en": "INTERNATIONAL COCKTAILS",
+      "items": [
+        {
+          "tr": "APEROL SPRITZ",
+          "en": "APEROL SPRITZ",
+          "detailTr": null,
+          "detailEn": "APREROL, PROSECCO WINE, MINERAL WATER",
+          "priceUsd": null
+        },
+        {
+          "tr": "BELLINI",
+          "en": "BELLINI",
+          "detailTr": null,
+          "detailEn": "CHAMPAGNE, PEACH PUREE",
+          "priceUsd": null
+        },
+        {
+          "tr": "BLOODY MARRY",
+          "en": "BLOODY MARRY",
+          "detailTr": null,
+          "detailEn": "VODKA,LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
+          "priceUsd": null
+        },
+        {
+          "tr": "CAIRPIRINHA",
+          "en": "CAIRPIRINHA",
+          "detailTr": null,
+          "detailEn": "BRAZILIAN RUM, BROWN SUGAR, LIME JUICE",
+          "priceUsd": null
+        },
+        {
+          "tr": "COSMOPOLITAN",
+          "en": "COSMOPOLITAN",
+          "detailTr": null,
+          "detailEn": "VODKA, TRIPLE SEC, CRANBERRY JUICE, LEMON JUICE",
+          "priceUsd": null
+        },
+        {
+          "tr": "DAIQUIRI",
+          "en": "DAIQUIRI",
+          "detailTr": null,
+          "detailEn": "RUM, LEMON JUICE, SUGAR SYRUP",
+          "priceUsd": null
+        },
+        {
+          "tr": "LONG ISLAND ICE TEA",
+          "en": "LONG ISLAND ICE TEA",
+          "detailTr": null,
+          "detailEn": "VODKA, RUM, GI, TEQUILA, TRIPLE SEC, LEMON JUICE, COKE",
+          "priceUsd": null
+        },
+        {
+          "tr": "LYNCBURG LEMONADE",
+          "en": "LYNCBURG LEMONADE",
+          "detailTr": null,
+          "detailEn": "JACK DANIEL'S, TRIPLE SEC, SWEET & SOUR (SUGAR SYRUP & LEMON JUICE), SPRITE",
+          "priceUsd": null
+        },
+        {
+          "tr": "MARGARITA",
+          "en": "MARGARITA",
+          "detailTr": null,
+          "detailEn": "TRIPLE SEC, TEQUILA, LEMON JUICE",
+          "priceUsd": null
+        },
+        {
+          "tr": "WHISKEY SOUR",
+          "en": "WHISKEY SOUR",
+          "detailTr": null,
+          "detailEn": "AMERICAN WHISKEY, FRESH LEMON JUICE, SIMPLE SYRUP",
+          "priceUsd": null
+        },
+        {
+          "tr": "MOJITO",
+          "en": "MOJITO",
+          "detailTr": null,
+          "detailEn": "FRESH LIME, FRESH MINT LEAVES, BROWN SUGAR, RUM, MINERAL WATER",
+          "priceUsd": null
+        },
+        {
+          "tr": "NEGRONI",
+          "en": "NEGRONI",
+          "detailTr": null,
+          "detailEn": "GIN, RED VERMOUTH, CAMPARI",
+          "priceUsd": null
+        },
+        {
+          "tr": "OLD FASHIONED",
+          "en": "OLD FASHIONED",
+          "detailTr": null,
+          "detailEn": "BOURBON WHISKEY, LEMON JUICE, SUGAR SYRUP, ANGUSTURO BITTER",
+          "priceUsd": null
+        },
+        {
+          "tr": "ESPRESSO MARTINI",
+          "en": "ESPRESSO MARTINI",
+          "detailTr": null,
+          "detailEn": "VOTKA,KAHLUA,ESPRESSO",
+          "priceUsd": null
+        },
+        {
+          "tr": "FRENCH 75",
+          "en": "FRENCH 75",
+          "detailTr": null,
+          "detailEn": "GIN, LEMON JUICE, SUGAR SYRUP, MINERAL WATER",
+          "priceUsd": null
+        },
+        {
+          "tr": "WHITE & BLACK RUSSIAN",
+          "en": "WHITE & BLACK RUSSIAN",
+          "detailTr": null,
+          "detailEn": "VODKA, COFFEE LIQUEUR, MILK",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "İMZA KOKTEYLLER",
+      "en": "SIGNATURE COCKTAILS",
+      "items": [
+        {
+          "tr": "PORT",
+          "en": "PORT",
+          "detailTr": "GİN,SALATALIK SUYU,MÜRVER ÇİÇEĞİ LİKÖRÜ,LİMON SUYU,ZENCEFİL SUYU,YEŞİL ELMA PÜRESİ",
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "THE PASSION",
+          "en": "THE PASSION",
+          "detailTr": "ACI TEKİLA,PORTAKAL LİKÖRÜ,PORTAKAL SUYU,PASSION PÜRE,LİMON SUYU",
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ILLUSION",
+          "en": "ILLUSION",
+          "detailTr": "VANİLA ROOIBOS ROM,FRANGELİCO,LİMON SUYU,PORTAKAL SUYU,ŞEFTALİ PÜRESİ,ÇİKOLATA BİTTER",
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HARMONY",
+          "en": "HARMONY",
+          "detailTr": "LAVANTA VODKA,HİBÜSKÜS EKŞİSİ,CHAMBORD,AGAVE ŞURUBU,NENE YAPRAKLARI",
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AURA",
+          "en": "AURA",
+          "detailTr": "İRLANDA VİSKİSİ, KAYISI BRENDİ, TAZE LİMON SUYU, MÜRVER ÇİÇEĞİ ŞURUBU",
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "BİRALAR",
+      "en": "BEERS",
+      "items": [
+        {
+          "tr": "EFES PILSEN",
+          "en": "EFES PILSEN",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BECK'S",
+          "en": "BECK'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MILLER",
+          "en": "MILLER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HEINEKEN",
+          "en": "HEINEKEN",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TUBORG",
+          "en": "TUBORG",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BUD",
+          "en": "BUD",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CARLSBERG",
+          "en": "CARLSBERG",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CORONA",
+          "en": "CORONA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "APERATİFLER",
+      "en": "APERATIVES",
+      "items": [
+        {
+          "tr": "MARTINI BIANCO",
+          "en": "MARTINI BIANCO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MARTINI ROSSO",
+          "en": "MARTINI ROSSO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MARTINI EXTRA DRY",
+          "en": "MARTINI EXTRA DRY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAMPARI",
+          "en": "CAMPARI",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "APEROL",
+          "en": "APEROL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "ROMLAR",
+      "en": "RUMS",
+      "items": [
+        {
+          "tr": "CAPTAIN MORGAN WHITE",
+          "en": "CAPTAIN MORGAN WHITE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CAPTAIN MORGAN DARK",
+          "en": "CAPTAIN MORGAN DARK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HAVANA CLUB 3 ANOS",
+          "en": "HAVANA CLUB 3 ANOS",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BACARDI CARTA BLANCA",
+          "en": "BACARDI CARTA BLANCA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BACARDI CARTA NEGRA (BLACK)",
+          "en": "BACARDI CARTA NEGRA (BLACK)",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BACARDI CARTA ORO (GOLD)",
+          "en": "BACARDI CARTA ORO (GOLD)",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MALIBU CARIBBEAN RUM",
+          "en": "MALIBU CARIBBEAN RUM",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "VOTKALAR",
+      "en": "VODKAS",
+      "items": [
+        {
+          "tr": "SMIRNOFF RED",
+          "en": "SMIRNOFF RED",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SMIRNOFF NORTH",
+          "en": "SMIRNOFF NORTH",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ABSOLUT BLUE",
+          "en": "ABSOLUT BLUE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ABSOLUT VANILLA",
+          "en": "ABSOLUT VANILLA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ABSOLUT CITRON",
+          "en": "ABSOLUT CITRON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KETEL ONE",
+          "en": "KETEL ONE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BELVEDERE",
+          "en": "BELVEDERE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BELUGA NOBLE",
+          "en": "BELUGA NOBLE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BELUGA GOLD",
+          "en": "BELUGA GOLD",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HAKU",
+          "en": "HAKU",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "GREY GOOSE SUPER PREMIUM",
+          "en": "GREY GOOSE SUPER PREMIUM",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CIROC",
+          "en": "CIROC",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "CİNLER",
+      "en": "GINS",
+      "items": [
+        {
+          "tr": "BOMBAY SAPPHIRE",
+          "en": "BOMBAY SAPPHIRE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BEEFEATER",
+          "en": "BEEFEATER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BEEFEATER PINK",
+          "en": "BEEFEATER PINK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "GORDON'S",
+          "en": "GORDON'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HENDRICK'S",
+          "en": "HENDRICK'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TANQUERAY NO:10",
+          "en": "TANQUERAY NO:10",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TANQUERAY CLASSIC",
+          "en": "TANQUERAY CLASSIC",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "THE BOTANIST",
+          "en": "THE BOTANIST",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ROKU",
+          "en": "ROKU",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MONKEY 47",
+          "en": "MONKEY 47",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MALFY",
+          "en": "MALFY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MALFY GRAPEFRUIT",
+          "en": "MALFY GRAPEFRUIT",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "TEKİLALAR",
+      "en": "TEQUILAS",
+      "items": [
+        {
+          "tr": "PATRON ANEJO",
+          "en": "PATRON ANEJO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "PATRON SILVER",
+          "en": "PATRON SILVER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DON JULIO BLANCO",
+          "en": "DON JULIO BLANCO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DON JULIO 1942",
+          "en": "DON JULIO 1942",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "OLMECA GOLD",
+          "en": "OLMECA GOLD",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "OLMECA SILVER",
+          "en": "OLMECA SILVER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MILAGRO SILVER",
+          "en": "MILAGRO SILVER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MILAGRO REPOSADO",
+          "en": "MILAGRO REPOSADO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "KONYAKLAR",
+      "en": "COGNACS",
+      "items": [
+        {
+          "tr": "NAPOLEON V.S.O.P.",
+          "en": "NAPOLEON V.S.O.P.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HENNESSY V.S.",
+          "en": "HENNESSY V.S.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HENNESSY V.S.O.P.",
+          "en": "HENNESSY V.S.O.P.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "HENNESSY X.O.",
+          "en": "HENNESSY X.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COURVOISIER V.S.",
+          "en": "COURVOISIER V.S.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COURVOISIER V.S.O.P.",
+          "en": "COURVOISIER V.S.O.P.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COURVOISIER X.O.",
+          "en": "COURVOISIER X.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "REMY MARTIN V.S.",
+          "en": "REMY MARTIN V.S.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "REMY MARTIN V.S.O.P.",
+          "en": "REMY MARTIN V.S.O.P.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "REMY MARTIN X.O.",
+          "en": "REMY MARTIN X.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "LİKÖRLER",
+      "en": "LIQUEURS",
+      "items": [
+        {
+          "tr": "CHAMBORD",
+          "en": "CHAMBORD",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "WENNEKER CREME DE CASSIS",
+          "en": "WENNEKER CREME DE CASSIS",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SOUTHERN COMFORT",
+          "en": "SOUTHERN COMFORT",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CARDINAL MELON",
+          "en": "CARDINAL MELON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "KAHLUA",
+          "en": "KAHLUA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BAILEYS IRISH CREAM",
+          "en": "BAILEYS IRISH CREAM",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "AMARETTO DISARONNO ORIGINALE",
+          "en": "AMARETTO DISARONNO ORIGINALE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SAMBUCA",
+          "en": "SAMBUCA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TIA MARIA",
+          "en": "TIA MARIA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JAGERMEISTER",
+          "en": "JAGERMEISTER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SAFARI",
+          "en": "SAFARI",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "ARCHER'S",
+          "en": "ARCHER'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BATI DE COCO",
+          "en": "BATI DE COCO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "PASSOA",
+          "en": "PASSOA",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "COINTREAU",
+          "en": "COINTREAU",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "PISANG AMBON",
+          "en": "PISANG AMBON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DRAMBUIE",
+          "en": "DRAMBUIE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "SHERIDAN'S",
+          "en": "SHERIDAN'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "GRANDE ABSENTH",
+          "en": "GRANDE ABSENTH",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "FRANGELICO",
+          "en": "FRANGELICO",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "BOURBON & TENNESSEE VİSKİLER",
+      "en": "BOURBON & TENNESSEE WHISKIES",
+      "items": [
+        {
+          "tr": "JIM BEAM BLACK",
+          "en": "JIM BEAM BLACK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JIM BEAM WHITE",
+          "en": "JIM BEAM WHITE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JACK DANIEL'S NO:7",
+          "en": "JACK DANIEL'S NO:7",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JACK DANIEL'S HONEY",
+          "en": "JACK DANIEL'S HONEY",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JACK DANIEL'S SINGLE BARREL",
+          "en": "JACK DANIEL'S SINGLE BARREL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "GENTLEMAN JACK",
+          "en": "GENTLEMAN JACK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "WOODFORD RESERVE",
+          "en": "WOODFORD RESERVE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BULLEIT BOURBON",
+          "en": "BULLEIT BOURBON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BULLEIT RYE",
+          "en": "BULLEIT RYE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MAKER'S MARK",
+          "en": "MAKER'S MARK",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "MALT VİSKİLER",
+      "en": "MALT WHISKIES",
+      "items": [
+        {
+          "tr": "GLENFIDDICH 12 Y.O.",
+          "en": "GLENFIDDICH 12 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "LAGAVULIN DE 1995 16 Y.O.",
+          "en": "LAGAVULIN DE 1995 16 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "TALISKER 10 Y.O.",
+          "en": "TALISKER 10 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MACALLAN 12 Y.O.",
+          "en": "MACALLAN 12 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "İSKOÇ VİSKİLER",
+      "en": "SCOTCH WHISKIES",
+      "items": [
+        {
+          "tr": "FAMOUS GROUSE",
+          "en": "FAMOUS GROUSE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "BALLANTINE'S",
+          "en": "BALLANTINE'S",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "MONKEY SHOULDER",
+          "en": "MONKEY SHOULDER",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "DIMPLE 15 Y.O.",
+          "en": "DIMPLE 15 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JUSTERINI & BROOKS BARE",
+          "en": "JUSTERINI & BROOKS BARE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHIVAS REGAL 12 Y.O.",
+          "en": "CHIVAS REGAL 12 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHIVAS REGAL 15 Y.O.",
+          "en": "CHIVAS REGAL 15 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHIVAS REGAL 18 Y.O.",
+          "en": "CHIVAS REGAL 18 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHIVAS REGAL 21 Y.O.",
+          "en": "CHIVAS REGAL 21 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "CHIVAS REGAL 25 Y.O.",
+          "en": "CHIVAS REGAL 25 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JOHNNIE WALKER RED LABEL",
+          "en": "JOHNNIE WALKER RED LABEL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
+          "en": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JOHNNIE WALKER GOLD RESERVE",
+          "en": "JOHNNIE WALKER GOLD RESERVE",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JOHNNIE WALKER 18 Y.O.",
+          "en": "JOHNNIE WALKER 18 Y.O.",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "JOHNNIE WALKER BLUE LABEL",
+          "en": "JOHNNIE WALKER BLUE LABEL",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "İRLANDA VİSKİLERİ",
+      "en": "IRISH WHISKIES",
+      "items": [
+        {
+          "tr": "JAMESON",
+          "en": "JAMESON",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    }
+  ],
+  "footnotes": [
+    "*Tüm çorbalarımız kruton, limon ve kızarmış ekmek ile servis edilir.",
+    "* All our soups are served with croutons, a slice of lemon, and toasted bread.",
+    "*Tüm tost çeşitleri patates kızartması ve acuka ile servis edilir.",
+    "*All toasted sandwiches are served with French fries and acuka spread.",
+    "HERHANGİ BİR ÖZEL BESLENME GEREKSİNİMİNİZ VEYA GIDA ALERJİNİZ VARSA LÜTFEN SERVİS PERSONELİNE BİLDİRİNİZ.",
+    "IF YOU HAVE ANY SPECIAL DIETARY REQUIREMENTS OR ALLERGIES, PLEASE INFORM YOUR SERVER."
+  ],
+  "issues": [
+    "No prices are printed anywhere in the three sources (food docx and drinks xlsx): every priceUsd is null.",
+    "Food source lines 17-18 (allergy warning) repeat after each of 7 sections; stored once in footnotes. Serving notes are in both footnotes and the category note.",
+    "Source has ligature characters (bonﬁle, Proﬁterol, Proﬁteroles); normalized to plain 'fi'.",
+    "Option lines ('* Tercihinize göre...') appended to Sezar Salatası (after ' — ') and to Krep / Pankek / Waffle (no description, so the option text is the whole detail); the Krep line could also be read as a dessert-category note.",
+    "Item names that use ' / ' instead of ' | ': only 'Kulüp Sandviç / Club Sandwich' (split on ' / '). Single-name items printed once (Katsu Sando, Hamburger, Cheeseburger, Royal Burger, Tiramisu, Cheesecake, Penne all’Arrabbiata, Fettuccine Alfredo) have tr=en.",
+    "Items Tereyağlı Karides Tava, Merit Royal Baklava, Taze Mevsim Meyveleri have no description line.",
+    "Starters Kalamar Tava, Viyana Şnitzeli, Tavuk Fingers: the 'served with' phrase is on one bilingual line ('TR | EN'), stored as detailTr/detailEn.",
+    "Drinks xlsx has no food-style TR/EN descriptions: cocktail ingredient lines are English for International Cocktails (detailEn) and Turkish for Signature Cocktails (detailTr); signature names are English-only so tr=en.",
+    "Drinks structure is ambiguous: 'SODA / MINERAL WATER' might be a heading for SAN PELLEGRINO, treated as its own item; 'MEYVE SUYU / FRUIT JUICE' and 'FRESH MEYVE SUYU / FRESH FRUIT JUICE' (juice lists) are nested as sub-categories of MEŞRUBATLAR, flavour lines zipped TR to EN one-to-one.",
+    "Duplicate heading 'FRESH MEYVE SUYU / FRESH FRUIT JUICE' appears twice with different flavour lists: under soft drinks (Portakal, Greyfurt, Havuç, Elma) and as its own block after HOT DRINKS (Greyfurt, Elma, Karpuz, Kavun, Kivi, Portakal, Karışık). Kept both. The second block is probably a smoothie/fresh-juice list that sits under HOT DRINKS in the spreadsheet by layout only.",
+    "BRITVIC flavours (TOMATO, BITTER LEMON, GINGER ALE, TONIC) are one line; stored as detailEn, not split into items. 'ICE TEA (PEACH, LEMON)' kept as a single item. 'SU / WATER 330 ml.' stored as 'SU 330 ml.' / 'WATER 330 ml.'; likewise 750 ml.",
+    "Source typos kept verbatim: BLOODY MARRY, CAIRPIRINHA, LYNCBURG, TOBASCO, WORCHESTER, APREROL, ANGUSTURO, VOTKA (cocktail ingredients), 'GI' (likely GIN, Long Island), NENE YAPRAKLARI (likely NANE), HİBÜSKÜS EKŞİSİ, GRANDE ABSENTH, APERATİFLER / APERATIVES, 'ICE TEA'. Menu section 'Pool & Beach Beverage Menu' title line is not a category.",
+    "MALT category includes LAGAVULIN DE 1995 16 Y.O. as printed; no sizes/volumes (cl) or 'ml' columns exist except water.",
+    "MANTI: new menu calls it 'El Yapımı Mantı'; 2025 menu had 'Türkmen mantısı' (likely the same item renamed).",
+    "OLD vs NEW food (2025 snack menu vs Nov 2026 revision) - ONLY IN NEW: Domates Çorbası; Kaşarlı Tost; Sucuklu Kaşarlı Tost; Sanayi Tostu; Yeşil Bahçe Salatası; İstanbul Salatası; Yunan Salatası; Narenciyeli Avokado Salatası; Dana Carpaccio; Tereyağlı Karides Tava; Viyana Şnitzeli; Kulüp Sandviç; Katsu Sando; Soğuk Sandviç; Hamburger; Cheeseburger; Spagetti Pomodoro; Fettuccine Alfredo; Tiramisu; Profiterol; Merit Royal Baklava; El Yapımı Çikolata Seçkisi; Krep/Pankek/Waffle combined item.",
+    "OLD vs NEW - CARRIED OVER (same or renamed): Mercimek Çorbası; Royal Tost (ingredients changed: now hellim, kavurma, domates, yeşil biber, kokteyl sos); Çoban Salatası; Kınoa Tabule (now Kinoalı Tabule Salatası); Tavuklu Sezar Salata (now Sezar Salatası with chicken or prawn option); Kalamar Tava; Piliç Finger (now Tavuk Fingers); Royal Burger (recipe changed, fries no longer listed); Spagetti Bolonez; Penne Arabiatta (now Penne all’Arrabbiata); Spagetti Napolitan (likely Spagetti Pomodoro); Türkmen mantısı (now El Yapımı Mantı); Fırın Sütlaç; San Sebastian cheesecake (new is plain Cheesecake with berries); Mevsim Meyveleri; Waffle.",
+    "OLD vs NEW - MISSING from new revision: Toasts: Cyprus tost, Panini tost, Avşar tost, Ayvalık tost. Sandwiches: Steak Sandwich, Mozarella caprice sandwich, Italian Tuna. Salads: Antioksidanlı yeşil salata, Ton balıklı salata, Izgara Levrek Salatası, Enginar Kalpli Kıbrıs Salatası. Fries: Panelenmiş Balık & Patates Kızartması (Fish and Chips), Peynirli Sigara Böreği, Patates Kızartması. Hot snacks: Chicken buffalo wings, Tavuklu Quesadilla, Dana Etli Burrito, Kıtır Combo Tabağı. Pastas: Fusilli a la Pesto, Mantar soslu Tavuklu Tagliatelli, Mac and Cheese. All 6 Pizzas (Royal, Quattro Stagioni, Peperoni, Formaggi, Margarita, Chicken Calzone) and Sarımsaklı Tereyağlı Ekmek. Bowls: Tekirdağ, Sea Bass, Peri Peri. Main courses: Kasap Köfte, Kuzu Şiş, Piliç Külbastı, Piliç Şinitsel, Somon Teriyaki, Izgara Levrek. Desserts: Meyveli Turta, Dondurmalı & Muz (Banana Split), Browni, Dondurma (food section; ice cream flavours exist in the drinks sheet).",
+    "Old 2025 menu is not used as a source for any item; it also has many typos and no prices."
+  ]
+}

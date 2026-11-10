@@ -6,14 +6,18 @@ import { generateQrToken } from "../../src/lib/qr";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 import { HOTELS, HOTEL_MODULES } from "./hotels";
 import { seedOutletMenuDesigns } from "./menuDesigns";
-import { decideMenuSync } from "./menuSyncPolicy";
+import { decideMenuSync, MENU_ARCHIVE_CATEGORY, menuStamp, menuStampKey } from "./menuSyncPolicy";
 import { MENU_THEMES } from "./menuThemes";
-import { SEED_OUTLETS } from "./outlets";
+import { RENAMED_OUTLETS, SEED_OUTLETS } from "./outlets";
 
 export interface MeritMenuItemSeed {
   catPath: string[];
+  /** English names of the same path (version 3); written as verified `en` translations. */
+  catPathEn?: string[];
   name: string;
+  nameEn?: string;
   detail: string | null;
+  detailEn?: string | null;
   price: number | null;
   imageUrl: string | null;
   allergens: string[];
@@ -29,6 +33,8 @@ export interface MeritOutletMenuSeed {
 
 export interface MeritMenusDataset {
   version: number;
+  /** Currency of every price in the file; written to the outlet when its menu is (re)built. */
+  currency?: string;
   outlets: MeritOutletMenuSeed[];
 }
 
@@ -38,6 +44,16 @@ const REMOVED_OUTLETS: Array<{ hotelCode: "DIAMOND" | "ROYAL" | "PREMIUM"; name:
   { hotelCode: "ROYAL", name: "Havuz Bar" },
   { hotelCode: "PREMIUM", name: "Meritta Club Park & Aile Bahçesi" },
   { hotelCode: "PREMIUM", name: "Tenis Kortları & Açık Hava Fitness" },
+  // Kasım 2026: QR menüde yalnız bar, lounge, kafe ve havuz/sahil barları var. Alakart restoranlar ile menü
+  // belgesi olmayan noktalar kaldırıldı; The Roof Garden Royal otelindedir (eski kayıt Diamond altındaydı).
+  { hotelCode: "DIAMOND", name: "The Steakhouse" },
+  { hotelCode: "DIAMOND", name: "Shisha & Sunset Terrace" },
+  { hotelCode: "ROYAL", name: "Dionysos Wine House" },
+  { hotelCode: "ROYAL", name: "Vienna Cafe" },
+  { hotelCode: "ROYAL", name: "Royal Sea View Pool Bar" },
+  { hotelCode: "ROYAL", name: "Blue Sea Alakart" },
+  { hotelCode: "ROYAL", name: "Royal Mandarin" },
+  { hotelCode: "ROYAL", name: "Bella Merit" },
 ];
 
 export function loadMeritMenusDataset(): MeritMenusDataset {
@@ -46,12 +62,15 @@ export function loadMeritMenusDataset(): MeritMenusDataset {
 }
 
 /**
- * Idempotent synchronization of the 20 Merit outlets and 4,005 real menu items.
- * - Cleans up removed Spa/Sport/Park outlets.
+ * Idempotent synchronization of the 13 Merit outlets (10 bars/lounges/cafes + 3 room service) and their menus (version 3: the hotel's 2026 menu
+ * documents, Turkish + English, prices in USD from the printed menus and the Micros price list).
+ * - Renames outlets in place (id, tables and table QR tokens survive), then cleans up removed outlets.
  * - Creates missing outlets, areas, tables, QR tokens, call options, and menu designs.
- * - Populates the menu tree only when the outlet has no menu nodes.
- * - Leaves already-populated outlets intact (nothing is deleted; orders are never touched). A full rebuild
- *   needs MERIT_MENUS_FORCE_RESET=true and is refused for outlets that have orders.
+ * - (Re)builds an outlet's menu when it is empty or when its menu in merit-menus.json differs from the one last
+ *   built (a fingerprint per outlet is kept in `settings`). Runs on every container start, no flag needed.
+ * - While the data file is unchanged, populated outlets are left intact, so edits made in the panel survive.
+ * - Orders are never touched. Items of the old menu that past orders point to are not deleted but moved to an
+ *   inactive archive category, so an outlet with orders gets its new menu like any other.
  */
 export async function syncMeritMenus(db: PrismaClient): Promise<void> {
   // Ensure the 3 core hotels exist
@@ -73,7 +92,37 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
   const hotels = await db.hotel.findMany({ select: { id: true, code: true, name: true } });
   const hotelIdByCode = new Map(hotels.map((h) => [h.code, h.id]));
 
-  // 1. Remove unwanted Spa/Sport/Park outlets
+  // 0. Rename in place. Skipped when the new name already exists (second run, or a hand-made outlet).
+  for (const ren of RENAMED_OUTLETS) {
+    const hotelId = hotelIdByCode.get(ren.hotelCode);
+    if (!hotelId) continue;
+    const outlet = await db.outlet.findFirst({ where: { hotelId, name: ren.from }, select: { id: true } });
+    if (!outlet) continue;
+    if (await db.outlet.findFirst({ where: { hotelId, name: ren.to }, select: { id: true } })) continue;
+    await db.$transaction(async (tx) => {
+      await tx.outlet.update({ where: { id: outlet.id }, data: { name: ren.to } });
+      if (ren.area) {
+        await tx.outletAreaDefinition.updateMany({
+          where: { outletId: outlet.id, name: ren.area[0] },
+          data: { name: ren.area[1] },
+        });
+      }
+      // Seed-made table labels carry the outlet name ("<outlet> <no>"); labels edited by hand are left alone.
+      const tables = await tx.outletTable.findMany({
+        where: { outletId: outlet.id, label: { startsWith: `${ren.from} ` } },
+        select: { id: true, label: true },
+      });
+      for (const table of tables) {
+        await tx.outletTable.update({
+          where: { id: table.id },
+          data: { label: ren.to + table.label.slice(ren.from.length) },
+        });
+      }
+    });
+    console.log(`yeniden adlandırıldı: [${ren.hotelCode}] ${ren.from} -> ${ren.to}`);
+  }
+
+  // 1. Remove outlets that are no longer part of the QR menu
   for (const rem of REMOVED_OUTLETS) {
     const hotelId = hotelIdByCode.get(rem.hotelCode);
     if (!hotelId) continue;
@@ -81,7 +130,9 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
     if (!outlet) continue;
     // Sipariş verisi asla silinmez: siparişi olan outlet yerinde bırakılır.
     if ((await db.order.count({ where: { outletId: outlet.id } })) > 0) {
-      console.log(`atlandı: kaldırılacak outlet'te sipariş var, korunuyor: [${rem.hotelCode}] ${rem.name}`);
+      // Kayıt ve siparişleri durur, ama misafire ve personele artık görünmez.
+      await db.outlet.update({ where: { id: outlet.id }, data: { isActive: false } });
+      console.log(`pasife alındı: kaldırılacak outlet'te sipariş var, kayıt korunuyor: [${rem.hotelCode}] ${rem.name}`);
       continue;
     }
     await db.$transaction(async (tx) => {
@@ -96,11 +147,12 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       await tx.outletMember.deleteMany({ where: { outletId: outlet.id } });
       await tx.outletCallOption.deleteMany({ where: { outletId: outlet.id } });
       await tx.outletMenuDesign.deleteMany({ where: { outletId: outlet.id } });
+      await tx.setting.deleteMany({ where: { key: menuStampKey(outlet.id) } });
       await tx.outlet.delete({ where: { id: outlet.id } });
     });
   }
 
-  // 2. Ensure all 17 F&B SEED_OUTLETS + 3 ODA_SERVISI outlets exist
+  // 2. Ensure all SEED_OUTLETS + 3 ODA_SERVISI outlets exist
   for (const def of SEED_OUTLETS) {
     const hotelId = hotelIdByCode.get(def.hotelCode);
     if (!hotelId) continue;
@@ -202,7 +254,9 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
 
   // 3. Populate or upgrade each outlet's menu from merit-menus.json
   const dataset = loadMeritMenusDataset();
-  let rebuiltAny = false;
+  const forceReset = process.env.MERIT_MENUS_FORCE_RESET === "true";
+  /** Designs go back to the presets only on a first install or an explicit reset, not on a routine menu update. */
+  let resetDesigns = false;
   for (const spec of dataset.outlets) {
     const hotelId = hotelIdByCode.get(spec.hotelCode);
     if (!hotelId) continue;
@@ -212,14 +266,13 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       : await db.outlet.findFirst({ where: { hotelId, name: spec.outletName ?? "" }, select: { id: true, name: true } });
     if (!outlet) continue;
 
-    const [totalNodes, orderCount, totalItems, meritImgItems, legacyUploadItems, existingCats, directUnderCatCount] = await Promise.all([
+    const [totalNodes, totalItems, meritImgItems, legacyUploadItems, existingCats, directUnderCatCount] = await Promise.all([
       db.menuNode.count({ where: { outletId: outlet.id } }),
-      db.order.count({ where: { outletId: outlet.id } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE" } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/merit-menus/" } } }),
       db.menuNode.count({ where: { outletId: outlet.id, kind: "OGE", imageUrl: { startsWith: "/uploads/merit-menus/" } } }),
       db.menuNode.findMany({
-        where: { outletId: outlet.id, kind: "KATEGORI", parentId: null },
+        where: { outletId: outlet.id, kind: "KATEGORI", parentId: null, name: { not: MENU_ARCHIVE_CATEGORY } },
         orderBy: { sortOrder: "asc" },
         select: { name: true },
       }),
@@ -231,18 +284,23 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
       existingCats.length === expectedCats.length &&
       existingCats.every((c, idx) => c.name === expectedCats[idx]);
 
+    // Version 3 puts items straight under their category when the document has no sub-heading.
+    const directItemsExpected = spec.items.some((i) => i.catPath.length === 1);
     const isCurrentV2Menu =
-      hasV2Categories && directUnderCatCount === 0 && totalItems >= spec.items.length && meritImgItems > 0 && legacyUploadItems === 0;
+      hasV2Categories &&
+      (directItemsExpected || directUnderCatCount === 0) &&
+      totalItems >= spec.items.length &&
+      meritImgItems > 0 &&
+      legacyUploadItems === 0;
+    const stamp = menuStamp(dataset.version, dataset.currency ?? "EUR", spec);
+    const stampKey = menuStampKey(outlet.id);
+    const applied = await db.setting.findFirst({ where: { hotelId, key: stampKey }, select: { value: true } });
     const decision = decideMenuSync({
       menuNodeCount: totalNodes,
-      orderCount,
-      forceReset: process.env.MERIT_MENUS_FORCE_RESET === "true",
+      forceReset,
       isCurrentV2Menu,
+      datasetChanged: applied?.value !== stamp,
     });
-    if (decision === "refuse-has-orders") {
-      console.error(`reddedildi: [${spec.hotelCode}] ${outlet.name} outlet'inde ${orderCount} sipariş var; MERIT_MENUS_FORCE_RESET uygulanmadı.`);
-      continue;
-    }
     if (decision === "skip-keep") {
       console.log(`atlandı: mevcut menü korunuyor: [${spec.hotelCode}] ${outlet.name}`);
       continue;
@@ -295,10 +353,56 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
 
     await db.$transaction(
       async (tx) => {
-        // Buraya yalnız boş menü ya da açık MERIT_MENUS_FORCE_RESET (siparişsiz outlet) ile gelinir.
-        for (const kind of ["OGE", "GRUP", "ALT_KATEGORI", "KATEGORI"] as const) {
-          await tx.menuNode.deleteMany({ where: { outletId: outlet.id, kind } });
+        // Eski menü kaldırılır. Geçmiş siparişlerin gösterdiği ürünler silinemez (order_items -> menu_nodes);
+        // onlar pasifleştirilip tek bir pasif arşiv kategorisine taşınır, geri kalan her şey silinir.
+        const ordered = await tx.menuNode.findMany({
+          where: { outletId: outlet.id, kind: "OGE", orderItems: { some: {} } },
+          select: { id: true },
+        });
+        if (ordered.length > 0) {
+          const archive =
+            (await tx.menuNode.findFirst({
+              where: { outletId: outlet.id, kind: "KATEGORI", parentId: null, name: MENU_ARCHIVE_CATEGORY },
+              select: { id: true },
+            })) ??
+            (await tx.menuNode.create({
+              data: {
+                outletId: outlet.id,
+                parentId: null,
+                kind: "KATEGORI",
+                name: MENU_ARCHIVE_CATEGORY,
+                isActive: false,
+                sortOrder: 9999,
+              },
+              select: { id: true },
+            }));
+          await tx.menuNode.updateMany({
+            where: { id: { in: ordered.map((n) => n.id) } },
+            data: { parentId: archive.id, isActive: false, isAvailable: false },
+          });
+          console.log(`arşivlendi: [${spec.hotelCode}] ${outlet.name} eski siparişlerde geçen ${ordered.length} ürün`);
         }
+        await tx.menuNode.deleteMany({ where: { outletId: outlet.id, kind: "OGE", orderItems: { none: {} } } });
+        for (const kind of ["GRUP", "ALT_KATEGORI", "KATEGORI"] as const) {
+          // The archive category stays only while it still holds something.
+          await tx.menuNode.deleteMany({
+            where: { outletId: outlet.id, kind, OR: [{ name: { not: MENU_ARCHIVE_CATEGORY } }, { children: { none: {} } }] },
+          });
+        }
+
+        const currency = dataset.currency ?? "EUR";
+        await tx.outlet.update({ where: { id: outlet.id }, data: { currency } });
+        /**
+         * English text printed in the menu document, stored as a verified translation. Written for every node,
+         * also when the name is the same in both languages (brands, Italian dish names): a node without an
+         * `en` row would be handed to machine translation, which must not rename a brand.
+         */
+        const translate = async (nodeId: string, tr: string, en: string | undefined, detailEn?: string | null) => {
+          if (dataset.version < 3) return;
+          await tx.menuNodeTranslation.create({
+            data: { nodeId, lang: "en", name: en || tr, detail: detailEn ?? null, isVerified: true },
+          });
+        };
 
         const catIdMap = new Map<string, string>();
         const subIdMap = new Map<string, string>();
@@ -311,7 +415,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
           return cur;
         };
 
-        const ensureCategory = async (name: string): Promise<string> => {
+        const ensureCategory = async (name: string, nameEn?: string): Promise<string> => {
           const existing = catIdMap.get(name);
           if (existing) return existing;
           const row = await tx.menuNode.create({
@@ -325,14 +429,15 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
             select: { id: true },
           });
           catIdMap.set(name, row.id);
+          await translate(row.id, name, nameEn);
           return row.id;
         };
 
-        const ensureSubcategory = async (catName: string, subName: string): Promise<string> => {
+        const ensureSubcategory = async (catName: string, subName: string, en?: string[]): Promise<string> => {
           const key = `${catName}>${subName}`;
           const existing = subIdMap.get(key);
           if (existing) return existing;
-          const catId = await ensureCategory(catName);
+          const catId = await ensureCategory(catName, en?.[0]);
           const row = await tx.menuNode.create({
             data: {
               outletId: outlet.id,
@@ -344,6 +449,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
             select: { id: true },
           });
           subIdMap.set(key, row.id);
+          await translate(row.id, subName, en?.[1]);
           return row.id;
         };
 
@@ -369,14 +475,18 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
         for (const item of spec.items) {
           let parentId: string;
           if (item.catPath.length === 1) {
-            parentId = await ensureSubcategory(item.catPath[0], "Genel Seçki");
+            // Version 3 keeps the document's own structure; older data sets grouped such items under a filler heading.
+            parentId =
+              dataset.version >= 3
+                ? await ensureCategory(item.catPath[0], item.catPathEn?.[0])
+                : await ensureSubcategory(item.catPath[0], "Genel Seçki");
           } else if (item.catPath.length === 2) {
-            parentId = await ensureSubcategory(item.catPath[0], item.catPath[1]);
+            parentId = await ensureSubcategory(item.catPath[0], item.catPath[1], item.catPathEn);
           } else {
             parentId = await ensureGroup(item.catPath[0], item.catPath[1], item.catPath[2]);
           }
 
-          await tx.menuNode.create({
+          const node = await tx.menuNode.create({
             data: {
               outletId: outlet.id,
               parentId,
@@ -384,7 +494,7 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
               name: item.name,
               detail: item.detail,
               price: item.price,
-              currency: "EUR",
+              currency,
               imageUrl: item.imageUrl,
               imageUrls: item.imageUrl ? [item.imageUrl] : [],
               allergens: item.allergens,
@@ -393,16 +503,23 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
               isActive: true,
               sortOrder: nextSort(`ITEMS:${parentId}`),
             },
+            select: { id: true },
           });
+          await translate(node.id, item.name, item.nameEn, item.detailEn !== item.detail ? item.detailEn : null);
         }
       },
       { timeout: 120_000 },
     );
-    rebuiltAny = true;
+    await db.setting.upsert({
+      where: { hotelId_key: { hotelId, key: stampKey } },
+      create: { hotelId, key: stampKey, value: stamp },
+      update: { value: stamp },
+    });
+    if (totalNodes === 0 || forceReset) resetDesigns = true;
     console.log(`Merit Menü Senkronize Edildi: [${spec.hotelCode}] ${outlet.name} (${spec.items.length} ürün)`);
   }
 
-  if (rebuiltAny) {
+  if (resetDesigns) {
     await seedOutletMenuDesigns(db, true);
   }
 }

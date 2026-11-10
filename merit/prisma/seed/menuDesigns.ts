@@ -46,7 +46,7 @@ export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
 
 export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   // DIAMOND Outlets
-  "Diamond 24/7 Lobby Lounge": {
+  "Diamond Lobby Bar": {
     ambience: "LOUNGE",
     concept: "ART_DECO",
     template: "CRYSTAL_BAR",
@@ -54,7 +54,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "cormorant", heroFontSize: "large" },
   },
-  "Diamond Lagoon Pool Bar & Deck": {
+  "Diamond Pool Bar": {
     ambience: "POOL",
     concept: "DAYLIGHT",
     template: "SUNLIGHT_POOL",
@@ -62,7 +62,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "montserrat" },
   },
-  "Diamond Royal Tea & Patisserie": {
+  "Tea Lounge": {
     ambience: "CAFE",
     concept: "PASTEL",
     template: "ROSE_PATISSERIE",
@@ -70,14 +70,14 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "GRID_PILLS", heroAlign: "center", heroFontFamily: "greatvibes" },
   },
-  "Diamond Exclusive Whiskey House": {
+  "Whiskey Lounge": {
     ambience: "LOUNGE",
     concept: "CLASSIC",
     template: "COGNAC_LIBRARY",
     theme: "Konyak & Kehribar",
     showPrices: true,
   },
-  "Shisha & Sunset Terrace": {
+  "The Roof Garden": {
     ambience: "ROOFTOP",
     concept: "BOHEMIAN",
     template: "SUNSET_SKY_TERRACE",
@@ -95,7 +95,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   },
 
   // ROYAL Outlets
-  "Captain’s Lounge Bar": {
+  "Royal Lobby Bar": {
     ambience: "LOUNGE",
     concept: "DAYLIGHT",
     template: "DAYLIGHT_LOUNGE",
@@ -111,7 +111,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "jakarta" },
   },
-  "Beach Bar": {
+  "Blue Sea Beach Bar": {
     ambience: "SUNDECK",
     concept: "RIVIERA",
     template: "WHITE_RIVIERA",
@@ -161,7 +161,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   },
 
   // PREMIUM Outlets
-  "Premium Lobby & Atrium Bar": {
+  "Premium Lobby Bar": {
     ambience: "LOUNGE",
     concept: "DAYLIGHT",
     template: "DAYLIGHT_LOUNGE",
@@ -169,7 +169,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "CHIPS_ROW", heroAlign: "center", heroFontFamily: "cormorant" },
   },
-  "Premium Lagoon & Kids Pool Bar": {
+  "Premium Pool Bar": {
     ambience: "POOL",
     concept: "DAYLIGHT",
     template: "SUNLIGHT_POOL",
@@ -177,7 +177,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     showPrices: false,
     options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "jakarta" },
   },
-  "Merit Premium Cafe Verde": {
+  "Cafe Verde": {
     ambience: "PATIO",
     concept: "DAYLIGHT",
     template: "SUNLIT_VERANDA",

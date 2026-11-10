@@ -1,0 +1,2175 @@
+{
+ "outlet": "Royal Mandarin",
+ "sources": [
+  "MandarinMenu1080x1920_pdf.txt",
+  "10_MANDARN_ALACARTE_MEN_docx.txt"
+ ],
+ "categories": [
+  {
+   "tr": "SASHIMI (3pcs)",
+   "en": "SASHIMI (3pcs)",
+   "items": [
+    {
+     "tr": "Sake Sashimi",
+     "en": "Sake Sashimi",
+     "detailTr": "Somon Balığı",
+     "detailEn": "Salmon",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Suzuki Sashimi",
+     "en": "Suzuki Sashimi",
+     "detailTr": "Levrek Balığı",
+     "detailEn": "Sea Bass",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Tai Sashimi",
+     "en": "Tai Sashimi",
+     "detailTr": "Çipura Balığı",
+     "detailEn": "Sea Bream",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Hiramasa Sashimi",
+     "en": "Hiramasa Sashimi",
+     "detailTr": "Kral Balığı",
+     "detailEn": "King Fish",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Hamachi Sashimi",
+     "en": "Hamachi Sashimi",
+     "detailTr": "Sarı Kuyruk",
+     "detailEn": "Yellowtail",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Unagi Sashimi",
+     "en": "Unagi Sashimi",
+     "detailTr": "Yılan Balığı",
+     "detailEn": "Eel",
+     "priceUsd": 50
+    },
+    {
+     "tr": "Akami Sashimi",
+     "en": "Akami Sashimi",
+     "detailTr": "Tuna Balığı",
+     "detailEn": "Tuna Fish",
+     "priceUsd": 35
+    }
+   ]
+  },
+  {
+   "tr": "ROYAL NIGIRI (3pcs)",
+   "en": "ROYAL NIGIRI (3pcs)",
+   "items": [
+    {
+     "tr": "Sake Nigiri",
+     "en": "Sake Nigiri",
+     "detailTr": "Somon Balığı",
+     "detailEn": "Salmon",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Suzuki Nigiri",
+     "en": "Suzuki Nigiri",
+     "detailTr": "Levrek Balığı",
+     "detailEn": "Sea Bass",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Ebi Nigiri",
+     "en": "Ebi Nigiri",
+     "detailTr": "Karides",
+     "detailEn": "Prawns",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Hamachi Nigiri",
+     "en": "Hamachi Nigiri",
+     "detailTr": "Sarı Kuyruk",
+     "detailEn": "Yellowtail",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Hiramasa Nigiri",
+     "en": "Hiramasa Nigiri",
+     "detailTr": "Kral Balığı",
+     "detailEn": "King Fish",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Unagi Nigiri",
+     "en": "Unagi Nigiri",
+     "detailTr": "Yılan Balığı",
+     "detailEn": "Eel",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Akami Nigiri",
+     "en": "Akami Nigiri",
+     "detailTr": "Tuna Balığı",
+     "detailEn": "Tuna Fish",
+     "priceUsd": 40
+    },
+    {
+     "tr": "İkura Gunkan",
+     "en": "İkura Gunkan",
+     "detailTr": "Somon Havyarı",
+     "detailEn": "Salmon Caviar",
+     "priceUsd": 50
+    }
+   ]
+  },
+  {
+   "tr": "SUSHI",
+   "en": "SUSHI",
+   "items": [
+    {
+     "tr": "Mandarin Vegetarian Roll",
+     "en": "Mandarin Vegetarian Roll",
+     "detailTr": "Salatalık, avokado, zencefil, marul, ıspanak",
+     "detailEn": "Cucumber, avocado, ginger, lettuce, spinach",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Philadelphia Roll",
+     "en": "Philadelphia Roll",
+     "detailTr": "Somon, avokado, Philadelphia peyniri, shichimi",
+     "detailEn": "Salmon, avocado, Philadelphia cream cheese, shichimi",
+     "priceUsd": 35
+    },
+    {
+     "tr": "California Roll",
+     "en": "California Roll",
+     "detailTr": "Karides, avokado, salatalık, tobiko",
+     "detailEn": "Prawns, avocado, cucumber, fish roe",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Caterpillar Roll",
+     "en": "Caterpillar Roll",
+     "detailTr": "Karides, yılan balığı, avokado, salatalık",
+     "detailEn": "Prawns, eel, avocado, cucumber",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Rainbow Roll",
+     "en": "Rainbow Roll",
+     "detailTr": "Somon, ton balığı, levrek, avokado, karides, salatalık",
+     "detailEn": "Salmon, tuna, sea bass, avocado, prawns, cucumber",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Unagi Roll",
+     "en": "Unagi Roll",
+     "detailTr": "Yılan balığı, tobiko, avokado, salatalık",
+     "detailEn": "Eel, tobiko, avocado, cucumber",
+     "priceUsd": 45
+    },
+    {
+     "tr": "Spicy Tuna Roll",
+     "en": "Spicy Tuna Roll",
+     "detailTr": "Acılı ton balığı, avokado, salatalık",
+     "detailEn": "Spicy tuna, avocado, cucumber",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Suzuki Roll",
+     "en": "Suzuki Roll",
+     "detailTr": "Levrek, avokado, salatalık, taze soğan",
+     "detailEn": "Sea bass, avocado, cucumber, green onion",
+     "priceUsd": 40
+    }
+   ]
+  },
+  {
+   "tr": "SUSHI",
+   "en": "SUSHI",
+   "items": [
+    {
+     "tr": "Prawn Tempura Roll",
+     "en": "Prawn Tempura Roll",
+     "detailTr": "Karides, avokado, acılı mayonez ve tenkasu",
+     "detailEn": "Prawns, avocado, tenkasu and spicy mayonnaise",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Crispy Rainbow Roll",
+     "en": "Crispy Rainbow Roll",
+     "detailTr": "Somon, ton balığı, levrek, avokado ve karides tempura",
+     "detailEn": "Salmon, tuna, sea bass, avocado and tempura prawns",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Crispy Unagi Roll",
+     "en": "Crispy Unagi Roll",
+     "detailTr": "Karides tempura, yılan balığı, avokado, Brie peyniri, patates ve kabayaki sos",
+     "detailEn": "Tempura prawns, eel, avocado, Brie cheese, potatoes and kabayaki sauce",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Crispy Spicy Sake Roll",
+     "en": "Crispy Spicy Sake Roll",
+     "detailTr": "Somon tempura, avokado, acılı mayonez, mısır tempura, acılı Kore sosu",
+     "detailEn": "Tempura salmon, avocado, fried sweet corn, spicy mayonnaise and spicy Korean sauce",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Crispy Caterpillar Roll",
+     "en": "Crispy Caterpillar Roll",
+     "detailTr": "Karides tempura, yılan balığı, avokado, tenkasu, unagi sos, acılı mayonez",
+     "detailEn": "Tempura prawns, eel, avocado, tenkasu, unagi sauce and spicy mayonnaise",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Crispy Spider Roll",
+     "en": "Crispy Spider Roll",
+     "detailTr": "Yumuşak kabuklu yengeç, salatalık, avokado, susam, shichimi ve mayonez",
+     "detailEn": "Soft shell crab, cucumber, avocado, sesame, shichimi and mayonnaise",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Ebi Snow Roll",
+     "en": "Ebi Snow Roll",
+     "detailTr": "Karides, avokado, salatalık, beyaz sos",
+     "detailEn": "Prawns, avocado, cucumber, with white sauce",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Eel Roll",
+     "en": "Eel Roll",
+     "detailTr": "Yılan balığı, avokado, salatalık",
+     "detailEn": "Eel, avocado, cucumber",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Ocean Crunch Roll",
+     "en": "Ocean Crunch Roll",
+     "detailTr": "Karides tempura çıtırları, avokado, salatalık",
+     "detailEn": "Crunchy prawns tempura, avocado, cucumber",
+     "priceUsd": 35
+    }
+   ]
+  },
+  {
+   "tr": "KURASHIKARU MAKI ROLL (6pcs)",
+   "en": "KURASHIKARU MAKI ROLL (6pcs)",
+   "items": [
+    {
+     "tr": "Kappa Maki",
+     "en": "Kappa Maki",
+     "detailTr": "Salatalık",
+     "detailEn": "Cucumber",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Sake Maki",
+     "en": "Sake Maki",
+     "detailTr": "Somon Balığı",
+     "detailEn": "Salmon",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Suzuki Maki",
+     "en": "Suzuki Maki",
+     "detailTr": "Levrek Balığı",
+     "detailEn": "Sea bass",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Ebikyu Maki",
+     "en": "Ebikyu Maki",
+     "detailTr": "Karides ve salatalık",
+     "detailEn": "Prawns and cucumber",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Mandarin Ebitem Maki",
+     "en": "Mandarin Ebitem Maki",
+     "detailTr": "Kızarmış karidesli",
+     "detailEn": "With fried prawns",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Salmon Avokado Maki",
+     "en": "Salmon Avokado Maki",
+     "detailTr": "Somon ve avokado",
+     "detailEn": "Salmon and avocado",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Avokado Maki",
+     "en": "Avokado Maki",
+     "detailTr": "Avokado",
+     "detailEn": "Avocado",
+     "priceUsd": 30
+    }
+   ]
+  },
+  {
+   "tr": "ÇORBA ÇEŞİTLERİ",
+   "en": "SOUPS",
+   "items": [
+    {
+     "tr": "Mısırlı Tavuk Çorbası",
+     "en": "Chicken Corn Soup",
+     "detailTr": "Tavuk eti, tatlı mısır ve yumurta ile",
+     "detailEn": "With chicken meat, egg and sweet corn",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Acılı Ekşili Yengeç Çorbası",
+     "en": "Hot-and-Sour Crab Meat Soup",
+     "detailTr": "Yengeç eti, yumurta, havuç, mantar ve bambu ile",
+     "detailEn": "With crab meat, egg, carrots, mushrooms and bamboo",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Wonton Çorbası",
+     "en": "Wonton Soup",
+     "detailTr": "Karidesli Wonton mantısı, havuç, mantar ve bambu ile",
+     "detailEn": "Wonton with prawns, carrots, mushrooms and bamboo",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Mısırlı Yengeç Çorbası",
+     "en": "Crab Meat with Corn Soup",
+     "detailTr": "Yengeç eti, tatlı mısır ve yumurta ile",
+     "detailEn": "Crab meat with egg and sweet corn",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Mantarlı Tavuk Çorbası",
+     "en": "Chicken with Mushroom Soup",
+     "detailTr": "Tavuk eti, havuç ve mantar ile",
+     "detailEn": "With chicken meat, carrots and mushroom",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Sebze Çorbası",
+     "en": "Vegetable Soup",
+     "detailTr": "Bambu, mantar ve havuç ile",
+     "detailEn": "With bamboo, mushroom and carrot",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Tofu Çorbası",
+     "en": "West Lake Beef Soup",
+     "detailTr": "Soya peyniri, havuç, mantar ve dana eti ile",
+     "detailEn": "With bean curd, carrots, mushroom and beef meat",
+     "priceUsd": 25
+    }
+   ]
+  },
+  {
+   "tr": "SOĞUK BAŞLANGIÇLAR",
+   "en": "COLD STARTERS",
+   "items": [
+    {
+     "tr": "Maguro Tartar",
+     "en": "Maguro Tartar",
+     "detailTr": "Ton balığı, avokado, salatalık, ponzu sos ve çıtır kraker ile",
+     "detailEn": "Tuna, avocado, cucumber with ponzu sauce and crispy chips",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Royal Yosun Salatası",
+     "en": "Royal Wakame Salad",
+     "detailTr": "Mevsim yeşillikleri, susamlı wakame ve avokado ponzu sos ile",
+     "detailEn": "Seasonal greens with sesame wakame and avocado with ponzu sauce",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Royal Taze Sebze Turşusu",
+     "en": "Royal Tsukemasu",
+     "detailTr": "Mevsimine göre Çin usulü taze sebze turşusu",
+     "detailEn": "Chinese style seasonal fresh vegetables pickle",
+     "priceUsd": 15
+    },
+    {
+     "tr": "Sake Tartar",
+     "en": "Sake Tartar",
+     "detailTr": "Somon balığı, wasabi sos, avokado ve çıtır kraker ile",
+     "detailEn": "Salmon with wasabi sauce, avocado and crispy chips",
+     "priceUsd": 40
+    },
+    {
+     "tr": "Shiromizakana No Usuzukuri Tartar",
+     "en": "Shiromizakana No Usuzukuri Tartar",
+     "detailTr": "İnce dilimlenmiş, beyaz etli mevsim balığı, ponzu sos ve çıtır kraker ile",
+     "detailEn": "Thinly sliced seasonal white fish, with ponzu sauce and crispy chips",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Szechuan Soslu Soğuk Tavuk (Acılı)",
+     "en": "Szechuan Cool Chicken (Spicy)",
+     "detailTr": "Acı sos ile pişirilmiş tavuk göğüs eti, havuç, bambu, kırmızı ve yeşil biber ile",
+     "detailEn": "Chicken breast meat cooked with hot sauce, with carrots, bamboo, red and green peppers",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Szechuan Soslu Salatalık (Acılı)",
+     "en": "Szechuan Cool Cucumber (Spicy)",
+     "detailTr": "Çin usulu marine edilmiş salatalık",
+     "detailEn": "Cucumber marinated in Chinese style",
+     "priceUsd": 25
+    }
+   ]
+  },
+  {
+   "tr": "SICAK BAŞLANGIÇLAR",
+   "en": "HOT STARTERS",
+   "items": [
+    {
+     "tr": "Sebzeli Çin Böreği (2 Adet)",
+     "en": "Vegetarian Spring Rolls (2Pcs)",
+     "detailTr": "Taze sebzeler ve pirinç eriştesi ile hazırlanmış Çin usulü börek, tatlı ekşi sos ile",
+     "detailEn": "Chinese style spring rolls with vegetables and rice vermicelli",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Ika Tempura",
+     "en": "Ika Tempura",
+     "detailTr": "Tempura tekniğiyle kızartılmış kalamar, tempura sos ile",
+     "detailEn": "Tempura-fried squid with tempura sauce",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Tempura Moriawase",
+     "en": "Tempura Moriawase",
+     "detailTr": "Özel tempura tekniğiyle kızartılmış karides ve sebzeler, tempura sos ile",
+     "detailEn": "Tempura-fried prawns and vegetables with tempura sauce",
+     "priceUsd": 35
+    },
+    {
+     "tr": "Yasai Tempura",
+     "en": "Yasai Tempura",
+     "detailTr": "Mevsim sebzeleri tempura, tempura sos ile",
+     "detailEn": "Tempura-fried seasonal vegetables with tempura sauce",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Ebi Tempura",
+     "en": "Ebi Tempura",
+     "detailTr": "Tempura tekniğiyle kızartılmış jumbo karides, tempura sos ile",
+     "detailEn": "Tempura-fried jumbo prawns with tempura sauce",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Karides Tost (2 Adet)",
+     "en": "Prawn Toast (2 Pcs)",
+     "detailTr": "Tost ekmeği üzerine karides ve susam, tatlı-ekşi sos ile",
+     "detailEn": "Prawns and sesame seeds on toast bread with sweet-and-sour sauce",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Kızarmış Wonton (4 Adet)",
+     "en": "Deep Fried Wonton (4 Pcs)",
+     "detailTr": "Kızarmış karidesli Çin bohçaları",
+     "detailEn": "Chinese bundles with fried prawns",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Çıtır Dana Eti",
+     "en": "Crispy Beef",
+     "detailTr": "İnce kesilip çıtır çıtır kızartılmış dana eti, tatlı-ekşi sos ve susam ile",
+     "detailEn": "Crispy fried beef with sweet-and-sour sauce and sesame",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Çin Mantısı",
+     "en": "Dumpling",
+     "detailTr": "Asya soslarıyla marine edilmiş dana eti, premium soya sosu eşliğinde",
+     "detailEn": "Asian-marinated beef with premium soy sauce",
+     "priceUsd": 40
+    }
+   ]
+  },
+  {
+   "tr": "ANA YEMEKLER",
+   "en": "MAIN COURSES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TAVUK ETİ ÇEŞİTLERİ",
+     "en": "CHICKEN DISHES",
+     "items": [
+      {
+       "tr": "Bademli Tavuk",
+       "en": "Chicken with Almond",
+       "detailTr": "Çin usulü pişirilmiş tavuk but, sebzeler ve badem ile",
+       "detailEn": "Chinese-style chicken drumsticks with vegetables and almonds",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Limon Soslu Tavuk",
+       "en": "Chicken with Lemon Sauce",
+       "detailTr": "Panelenip kızartılmış tavuk but, özel limon sos ile",
+       "detailEn": "Pan-fried chicken drumsticks with special lemon sauce",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Tatlı-ekşi Soslu Tavuk",
+       "en": "Sweet-and-sour Chicken",
+       "detailTr": "Tatlı-ekşi sosla pişirilmiş tavuk topları, biber, ananas, soğan ve havuç ile",
+       "detailEn": "Chicken balls cooked in sweet-and-sour sauce with peppers, pineapple, onion and carrot",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Kung Pao Tavuk (Acılı)",
+       "en": "Kung Pao Chicken (Spicy)",
+       "detailTr": "Çin usulü pişirilmiş acılı tavuk but, havuç, kabak, bebek mısır ve badem ile",
+       "detailEn": "Spicy Chinese-style chicken drumsticks with carrots, zucchini, baby corn and almond",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Mantarlı Tavuk",
+       "en": "Chicken with Mushrooms",
+       "detailTr": "Çin usulü pişirilmiş mantarlı tavuk göğüs eti",
+       "detailEn": "Chinese-style chicken breast with mushrooms",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Szechuan Tavuk (Acılı)",
+       "en": "Szechuan Style Chicken (Spicy)",
+       "detailTr": "Acı sos ile pişirilmiş tavuk eti, havuç, bambu, kırmızı ve yeşil biber ile",
+       "detailEn": "Chicken cooked with hot sauce, with carrots, bamboo, red and green peppers",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Szechuan Biberli Kızarmış Tavuk (Ekstra Acılı)",
+       "en": "Fried Chicken with Szechuan Pepper (Strong Spicy)",
+       "detailTr": "Kızarmış tavuk but parçaları, Arnavut biberi, Szechuan biberi ve Szechuan biber yağı ile",
+       "detailEn": "Fried chicken drumstick pieces with Cayenne pepper, Szechuan pepper and Szechuan oil",
+       "priceUsd": 30
+      }
+     ]
+    },
+    {
+     "tr": "DANA ETİ ÇEŞİTLERİ",
+     "en": "BEEF DISHES",
+     "items": [
+      {
+       "tr": "Szechuan Usulü Dana Eti (Acılı)",
+       "en": "Szechuan Style Beef (Spicy)",
+       "detailTr": "Acı sos ile pişirilmiş dana eti, havuç, bambu, kırmızı ve yeşil biber ile",
+       "detailEn": "Beef cooked with hot sauce, with carrots, bamboo, red and green peppers",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Siyah Fasulye Soslu Dana Eti",
+       "en": "Beef with Black Bean Sauce",
+       "detailTr": "Siyah fasulye sosuyla pişirilmiş dana eti, havuç, yeşil biber ve soğan ile",
+       "detailEn": "Beef cooked with black bean sauce, with carrots, green peppers and onions",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Sizzling Dana Eti",
+       "en": "Sizzling Beef",
+       "detailTr": "Özel sıcak döküm tava ile servis edilen karabiber ve soğanlı dana eti",
+       "detailEn": "Beef with black pepper and onion served on a special hot cast-iron pan",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Yeşil Biberli Dana Eti",
+       "en": "Beef with Green Pepper",
+       "detailTr": "İstiridye sos ile pişirilmiş dana eti, yeşil biber ve havuç ile",
+       "detailEn": "Beef cooked with oyster sauce, with green pepper and carrot",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Dana Kıymalı Kızarmış Soya Peyniri (Tofu) Szechuan Sos Eşliğinde (Acılı)",
+       "en": "Braised Bean Curd with Minced Meat Szechuan Sauce (Spicy)",
+       "detailTr": "Dana kıymasıyla Szechuan sosunda pişirilmiş yumuşak tofu, acılı Szechuan yağı ile",
+       "detailEn": "Soft bean curd cooked with minced beef in Szechuan sauce, topped with spicy Szechuan oil",
+       "priceUsd": 50
+      },
+      {
+       "tr": "Zencefilli ve Taze Soğanlı Dana Eti",
+       "en": "Beef with Ginger and Spring Onion",
+       "detailTr": "Soya sos, zencefil ve taze soğanla pişirilmiş dana eti",
+       "detailEn": "Beef cooked with soy sauce, ginger and spring onions",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Acı Fasulye Soslu Haşlanmış Dana Eti",
+       "en": "Boiled Beef with Hot Bean Sauce",
+       "detailTr": "Lahana üzerine özel Szechuan sosunda haşlanmış dana eti ve kızgın yağ ile yakılmış Arnavut biberi",
+       "detailEn": "Cabbage with boiled beef in special Szechuan sauce and Cayenne pepper seared with hot oil",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Karabiberli Dana Eti (Acılı)",
+       "en": "Beef with Black Pepper (Spicy)",
+       "detailTr": "İstiridye sos ve karabiberle pişirilmiş dana eti ve soğan",
+       "detailEn": "Beef and onions cooked with oyster sauce and black pepper",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Kuzu Eti ile Kızarmış Pırasa",
+       "en": "Fried Leek with Lamb",
+       "detailTr": "İstiridye sosuyla pişirilmiş kuzu but, pırasa ile",
+       "detailEn": "Lamb leg cooked with oyster sauce with leek",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Mantarlı Dana Eti",
+       "en": "Beef with Mushroom",
+       "detailTr": "İstiridye sos ile pişirilmiş mantar ve dana eti",
+       "detailEn": "Mushroom and beef cooked with oyster sauce",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Hong Kong Stili Dana Brisket",
+       "en": "Hong Kong-Style Braised Beef Brisket",
+       "detailTr": "Özel Çin soslarıyla harmanlanarak pişirilmiş dana eti",
+       "detailEn": "Beef cooked with special Chinese sauces",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "KALAMAR ÇEŞİTLERİ",
+     "en": "SQUID DISHES",
+     "items": [
+      {
+       "tr": "Siyah Fasulye Soslu Kalamar",
+       "en": "Squid with Black Bean Sauce",
+       "detailTr": "Siyah fasulye sosuyla pişirilmiş kalamar, yeşil biber, soğan ve havuç ile",
+       "detailEn": "Squid cooked with black bean sauce with green pepper, onion and carrot",
+       "priceUsd": 35
+      },
+      {
+       "tr": "Kung Pao Kalamar (Acılı)",
+       "en": "Kung Pao Squid (Spicy)",
+       "detailTr": "Çin usulü acılı kalamar, havuç, kabak, bebek mısır ve badem ile",
+       "detailEn": "Chinese-style spicy squid with carrots, zucchini, baby corn and almonds",
+       "priceUsd": 35
+      },
+      {
+       "tr": "Acı Soslu Kalamar",
+       "en": "Szechuan Style Squid (Spicy)",
+       "detailTr": "Acı sos ile pişirilmiş kalamar, havuç, bambu, kırmızı ve yeşil biber ile",
+       "detailEn": "Squid cooked with hot sauce, with carrots, bamboo, red and green peppers",
+       "priceUsd": 30
+      },
+      {
+       "tr": "Beş Baharatlı Kalamar",
+       "en": "Five-spiced Squid",
+       "detailTr": "Biber ve soğan ile sotelenmiş beş baharatlı kızarmış kalamar",
+       "detailEn": "Five-spice fried squid sautéed with peppers and onions",
+       "priceUsd": 30
+      }
+     ]
+    },
+    {
+     "tr": "BALIK ÇEŞİTLERİ",
+     "en": "FISH DISHES",
+     "items": [
+      {
+       "tr": "Tatlı-ekşi Soslu Balık",
+       "en": "Sweet-and-sour Fish",
+       "detailTr": "Tatlı-ekşi sosla pişirilmiş balık, biber, ananas, soğan ve havuç ile",
+       "detailEn": "Fish cooked with sweet-and-sour sauce, with peppers, pineapple, onions and carrot",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Acı Soslu Balık",
+       "en": "Fish with Hot Sauce",
+       "detailTr": "Acı sos ile pişirilmiş balık, havuç, bambu, kırmızı ve yeşil biber ile",
+       "detailEn": "Fish cooked with hot sauce, with carrots, bamboo, red and green peppers",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Siyah Fasulye Soslu Balık",
+       "en": "Fish with Black Bean Sauce",
+       "detailTr": "Siyah fasulye sosuyla pişirilmiş balık, yeşil biber, soğan ve havuç ile",
+       "detailEn": "Fish cooked with black bean sauce, with green peppers, onion and carrot",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Buharda Pişmiş Balık",
+       "en": "Steamed Fish",
+       "detailTr": "Buharda pişmiş günün balığı, özel soya sosu, zencefil, taze soğan, kırmızı ve yeşil biber ile",
+       "detailEn": "Steamed fish of the day, with special soy sauce, ginger, spring onions, red and green peppers",
+       "priceUsd": 40
+      }
+     ]
+    },
+    {
+     "tr": "KARİDES ÇEŞİTLERİ",
+     "en": "PRAWN DISHES",
+     "items": [
+      {
+       "tr": "Sarımsaklı Karides",
+       "en": "Prawn with Garlic",
+       "detailTr": "Sarımsak ve taze soğan ile pişirilmiş karides",
+       "detailEn": "Prawns cooked with garlic and spring onions",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Szechuan Karides (Acılı)",
+       "en": "Szechuan Style Prawn (Spicy)",
+       "detailTr": "Acı sos ile pişirilmiş karides, havuç, bambu, kırmızı ve yeşil biber ile",
+       "detailEn": "Prawns cooked with hot sauce with carrots, bamboo, red and green peppers",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Tatlı-ekşi Soslu Karides",
+       "en": "Sweet-and-Sour Prawn",
+       "detailTr": "Tatlı-ekşi sosla pişirilmiş karides, biber, ananas, soğan ve havuç ile",
+       "detailEn": "Prawns cooked with sweet-and-sour sauce, pepper, pineapples, onion and carrot",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Siyah Fasulye Soslu Karides",
+       "en": "Prawn with Black Bean Sauce",
+       "detailTr": "Siyah fasulye sosuyla pişirilmiş karides, yeşil biber, soğan ve havuç ile",
+       "detailEn": "Prawns cooked with black bean sauce, green peppers, onions and carrots",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Zencefil ve Taze Soğanlı Karides",
+       "en": "Prawn with Ginger and Spring Onion",
+       "detailTr": "Soya sos, zencefil ve taze soğanla pişirilmiş karides",
+       "detailEn": "Prawns cooked with soy sauce, ginger and spring onions",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Sizzling Karides",
+       "en": "Sizzling Prawn",
+       "detailTr": "Özel sıcak döküm tava ile servis edilen karabiber, soğan ve yeşil biberli karides",
+       "detailEn": "Prawns with black pepper, onion and green pepper, served on a special hot cast-iron pan",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Yumurtalı Kızarmış Karides",
+       "en": "Fried Prawn with Egg",
+       "detailTr": "Yumurta ile pişirilmiş kızarmış karides",
+       "detailEn": "Fried prawns cooked with eggs",
+       "priceUsd": 40
+      },
+      {
+       "tr": "Buharda Sarımsaklı Karides, Pirinç Eriştesi ile",
+       "en": "Steamed Garlic Prawn with Rice Vermicelli",
+       "detailTr": "Sarımsak ve pirinç eriştesiyle buharda özel soya sos ile pişirilmiş karides, kırmızı ve yeşil biber ile",
+       "detailEn": "Prawns steamed with special soy sauce, garlic and rice vermicelli, with red and green peppers",
+       "priceUsd": 40
+      }
+     ]
+    },
+    {
+     "tr": "ÖRDEK ÇEŞİTLERİ",
+     "en": "DUCK DISHES",
+     "items": [
+      {
+       "tr": "Krep ile Aromatik Ördek (Yarım 1200 g.)",
+       "en": "Aromatic Duck with Pancake (Half 1200 gr.)",
+       "detailTr": "Özel sosla pişilmiş aromatik ördek",
+       "detailEn": "Aromatic duck cooked in special sauce",
+       "priceUsd": 120
+      },
+      {
+       "tr": "Krep ile Aromatik Ördek (Tam 2400 g.)",
+       "en": "Aromatic Duck with Pancake (Whole 2400 gr.)",
+       "detailTr": "Özel sosla pişilmiş aromatik ördek",
+       "detailEn": "Aromatic duck cooked in special sauce",
+       "priceUsd": 180
+      },
+      {
+       "tr": "*Pekin Ördeği (2400 g.)",
+       "en": "*Peking Duck (2400 g.)",
+       "detailTr": "Japon pişirme teknikleri ile hazırlanmış Pekin ördeği",
+       "detailEn": "Peking duck prepared with Japanese cooking techniques",
+       "priceUsd": 180
+      }
+     ]
+    },
+    {
+     "tr": "VEJETARYEN",
+     "en": "VEGETARIAN",
+     "items": [
+      {
+       "tr": "Tavada hafifçe sote edilmiş sebzeler",
+       "en": "Stir-fried garden vegetables",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      },
+      {
+       "tr": "Sarımsakla sote edilmiş kuşkonmaz",
+       "en": "Asparagus sautéed with garlic",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 25
+      },
+      {
+       "tr": "Yaprak bademli brokoli",
+       "en": "Broccoli with almond flakes",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      },
+      {
+       "tr": "Kızartılmış kıyılmış mevsim lahana (acılı)",
+       "en": "Fried shredded seasoned cabbage (spicy)",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      },
+      {
+       "tr": "Hafif kavrulmuş patates (acılı)",
+       "en": "Stir-fried potato (spicy)",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      },
+      {
+       "tr": "Acı fasulye soslu kızarmış patlıcan",
+       "en": "Braised eggplant with hot bean sauce",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      },
+      {
+       "tr": "Yumurtalı kızarmış domates",
+       "en": "Fried tomato with egg",
+       "detailTr": null,
+       "detailEn": null,
+       "priceUsd": 15
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "PİLAV ÇEŞİTLERİ",
+   "en": "RICE DISHES",
+   "items": [
+    {
+     "tr": "Sade Pilav",
+     "en": "Steamed Rice",
+     "detailTr": null,
+     "detailEn": null,
+     "priceUsd": 15
+    },
+    {
+     "tr": "Kanton Usulü Pilav",
+     "en": "Egg Fried Rice",
+     "detailTr": "Yumurta, havuç ve soğanla sotelenmiş pilav",
+     "detailEn": "Rice sautéed with egg, carrot and onion",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Dana Etli Pilav",
+     "en": "Rice with Beef",
+     "detailTr": "Yumurta, havuç, soğan ve dana eti ile sotelenmiş pilav",
+     "detailEn": "Rice sautéed with egg, carrot, onion and beef",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Tavuklu Pilav",
+     "en": "Rice with Chicken",
+     "detailTr": "Yumurta, havuç, soğan ve tavuk göğsü ile sotelenmiş pilav",
+     "detailEn": "Rice sautéed with egg, carrot, onion and chicken breast",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Karidesli Pilav",
+     "en": "Rice with Prawn",
+     "detailTr": "Yumurta, havuç, soğan ve karides ile sotelenmiş pilav",
+     "detailEn": "Rice sautéed with egg, carrot, onion and prawns",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Yılan Balıklı Pilav",
+     "en": "Rice with Eel",
+     "detailTr": "Yılan balığı, havuç, soğan, yumurta ve özel sos ile sotelenmiş pilav",
+     "detailEn": "Rice sautéed with eel, carrot, onion, egg and special sauce",
+     "priceUsd": 30
+    },
+    {
+     "tr": "Deniz Mahsullü Pilav",
+     "en": "Rice with Seafood",
+     "detailTr": "Kalamar, karides, yumurta ve soğan ile sotelenmiş pilav",
+     "detailEn": "Rice sautéed with squid, prawns, egg and onion",
+     "priceUsd": 30
+    }
+   ]
+  },
+  {
+   "tr": "NOODLE",
+   "en": "NOODLE",
+   "items": [
+    {
+     "tr": "Sebzeli Noodle",
+     "en": "Noodle with Vegetables",
+     "detailTr": "Havuç ve lahana ile sotelenmiş yumurtalı noodle",
+     "detailEn": "Noodles with egg, sautéed with carrot and cabbage",
+     "priceUsd": 15
+    },
+    {
+     "tr": "Dana Etli Noodle",
+     "en": "Noodle with Beef",
+     "detailTr": "Dana eti, havuç ve lahana ile sotelenmiş noodle",
+     "detailEn": "Noodles sautéed with beef, carrot and cabbage",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Tavuklu Noodle",
+     "en": "Noodle with Chicken",
+     "detailTr": "Tavuk göğsü, havuç ve lahana ile sotelenmiş noodle",
+     "detailEn": "Noodles sautéed with chicken breast, carrot and cabbage",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Karidesli Noodle",
+     "en": "Noodle with Prawn",
+     "detailTr": "Karides, havuç ve lahana ile sotelenmiş noodle",
+     "detailEn": "Noodles sautéed with prawns, carrot and cabbage",
+     "priceUsd": 25
+    },
+    {
+     "tr": "Deniz Mahsullü Noodle",
+     "en": "Noodle with Seafood",
+     "detailTr": "Karides, kalamar, havuç ve lahana ile sotelenmiş noodle",
+     "detailEn": "Noodles sautéed with prawns, squid, carrot and cabbage",
+     "priceUsd": 25
+    }
+   ]
+  },
+  {
+   "tr": "TATLILAR",
+   "en": "DESSERTS",
+   "items": [
+    {
+     "tr": "Kızarmış Dondurma",
+     "en": "Fried Ice Cream",
+     "detailTr": "Özel kaplaması ile kızartılmış, bal ve fıstıklı Maraş dondurması",
+     "detailEn": "Maras ice cream with honey and pistachio, fried with special coating",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Kızarmış Ceviz",
+     "en": "Fried Walnuts",
+     "detailTr": "Karamel ile kaplanarak kızartılmış ceviz",
+     "detailEn": "Caramel-coated fried walnuts",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Ballı Kızarmış Muz",
+     "en": "Fried Banana with Honey",
+     "detailTr": "Kaplanarak kızartılmış muz, bal ve antep fıstığı ile",
+     "detailEn": "Coated and fried banana with honey and pistachio",
+     "priceUsd": 20
+    },
+    {
+     "tr": "Ballı Kızarmış Ananas",
+     "en": "Fried Pineapple with Honey",
+     "detailTr": "Kaplanarak kızartılmış ananas, bal ve antep fıstığı ile",
+     "detailEn": "Coated and fried pineapple with honey and pistachio",
+     "priceUsd": 20
+    }
+   ]
+  },
+  {
+   "tr": "RARE VINTAGE WINES",
+   "en": "RARE VINTAGE WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+       "en": "CHATEAU CHEVAL NOIR SAINT - ÉMILION GRAND CRU",
+       "detailTr": "Merlot / Saint - Émilion / FRANCE",
+       "detailEn": "Merlot / Saint - Émilion / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CANTEMERLE GRAND CRU",
+       "en": "CHATEAU CANTEMERLE GRAND CRU",
+       "detailTr": "Merlot, Cabernet Franc, Petit Verdot, Cabernet Sauvignon / Haut-Medoc / FRANCE",
+       "detailEn": "Merlot, Cabernet Franc, Petit Verdot, Cabernet Sauvignon / Haut-Medoc / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+       "en": "CHATEAU CORBIN SAINT - ÉMILION GRAND CRU",
+       "detailTr": "Merlot / Saint - Émilion / FRANCE",
+       "detailEn": "Merlot / Saint - Émilion / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+       "en": "CHATEAU CONNÉTABLE TALBOT SAINT - JULIEN",
+       "detailTr": "Cabernet Sauvignon, Merlot / Bordeaux St. Julen / FRANCE",
+       "detailEn": "Cabernet Sauvignon, Merlot / Bordeaux St. Julen / FRANCE",
+       "priceUsd": 140
+      },
+      {
+       "tr": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+       "en": "CHATEAU DASSAULT SAINT- ÉMILION GRAND CRU",
+       "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Saint - Émilion / FRANCE",
+       "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Saint - Émilion / FRANCE",
+       "priceUsd": 190
+      },
+      {
+       "tr": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+       "en": "CHATEAU GISCOURS MARGAUX GRAND CRU",
+       "detailTr": "Cabernet Sauvignon / Margaux / FRANCE",
+       "detailEn": "Cabernet Sauvignon / Margaux / FRANCE",
+       "priceUsd": 290
+      },
+      {
+       "tr": "CHATEAU CANTENAC BROWN GRAND CRU",
+       "en": "CHATEAU CANTENAC BROWN GRAND CRU",
+       "detailTr": "Cabernet Sauvignon / Margaux / FRANCE",
+       "detailEn": "Cabernet Sauvignon / Margaux / FRANCE",
+       "priceUsd": 230
+      },
+      {
+       "tr": "CHATEAU PAPE CLÉMENT GRAND CRU",
+       "en": "CHATEAU PAPE CLÉMENT GRAND CRU",
+       "detailTr": "Cabernet Sauvignon / Pessac-Léognan / FRANCE",
+       "detailEn": "Cabernet Sauvignon / Pessac-Léognan / FRANCE",
+       "priceUsd": 370
+      },
+      {
+       "tr": "CHATEAU GAZIN POMEROL",
+       "en": "CHATEAU GAZIN POMEROL",
+       "detailTr": "Merlot / Pomerol / FRANCE",
+       "detailEn": "Merlot / Pomerol / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU DUHART- MILON GRAND CRU",
+       "en": "CHATEAU DUHART- MILON GRAND CRU",
+       "detailTr": "Cabernet Sauvignon / Pauillac / FRANCE",
+       "detailEn": "Cabernet Sauvignon / Pauillac / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU CLERC MILON GRAND CRU",
+       "en": "CHATEAU CLERC MILON GRAND CRU",
+       "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Pauillac / FRANCE",
+       "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Pauillac / FRANCE",
+       "priceUsd": 400
+      },
+      {
+       "tr": "CHATEAU BEYCHEVELLE GRAND VIN",
+       "en": "CHATEAU BEYCHEVELLE GRAND VIN",
+       "detailTr": "Cabernet Sauvignon, Merlot, Petit Verdot Saint Julien, Bordeaux / FRANCE",
+       "detailEn": "Cabernet Sauvignon, Merlot, Petit Verdot Saint Julien, Bordeaux / FRANCE",
+       "priceUsd": 500
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "BOROLI BAROLO BRUNELLA",
+       "en": "BOROLI BAROLO BRUNELLA",
+       "detailTr": "Nebbiolo / Barolo / ITALY",
+       "detailEn": "Nebbiolo / Barolo / ITALY",
+       "priceUsd": 230
+      },
+      {
+       "tr": "SASSICAIA",
+       "en": "SASSICAIA",
+       "detailTr": "Cabernet Sauvignon / Bolgheri / ITALY",
+       "detailEn": "Cabernet Sauvignon / Bolgheri / ITALY",
+       "priceUsd": 990
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "RED WINES",
+   "en": "RED WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+       "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+       "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Merlot / Thrace / TÜRKİYE",
+       "detailEn": "Merlot / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Merlot / Thrace / TÜRKİYE",
+       "detailEn": "Merlot / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Shiraz / Thrace / TÜRKİYE",
+       "detailEn": "Shiraz / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Shiraz / Thrace / TÜRKİYE",
+       "detailEn": "Shiraz / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (glass)",
+       "en": "KAVAKLIDERE SELECTION (glass)",
+       "detailTr": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+       "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (bottle)",
+       "en": "KAVAKLIDERE SELECTION (bottle)",
+       "detailTr": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+       "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "DOLUCA SIGNIUM",
+       "en": "DOLUCA SIGNIUM",
+       "detailTr": "Cabernet Sauvignon, Cabernet Franc, Shiraz / Thrace / TÜRKİYE",
+       "detailEn": "Cabernet Sauvignon, Cabernet Franc, Shiraz / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SEVİLEN CENTUM",
+       "en": "SEVİLEN CENTUM",
+       "detailTr": "Syrah / Aegean / TÜRKİYE",
+       "detailEn": "Syrah / Aegean / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SUVLA",
+       "en": "SUVLA",
+       "detailTr": "Merlot / Thrace / TÜRKİYE",
+       "detailEn": "Merlot / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "CIABOT DEL CONTE BAROLO",
+       "en": "CIABOT DEL CONTE BAROLO",
+       "detailTr": "Nebbiolo / Barolo / ITALY",
+       "detailEn": "Nebbiolo / Barolo / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "EPICURO Z-ELEBRATE ZINFANDEL",
+       "en": "EPICURO Z-ELEBRATE ZINFANDEL",
+       "detailTr": "Zinfandel / Puglia / ITALY",
+       "detailEn": "Zinfandel / Puglia / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "DUCA DI SARAGNANO CHIANTI RISERVA",
+       "en": "DUCA DI SARAGNANO CHIANTI RISERVA",
+       "detailTr": "Sangiovese / Toscana / ITALY",
+       "detailEn": "Sangiovese / Toscana / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "ZÎRONDA AMARONE",
+       "en": "ZÎRONDA AMARONE",
+       "detailTr": "Corvina, Rondinella, Corvinone, Negrar / Veneto / ITALY",
+       "detailEn": "Corvina, Rondinella, Corvinone, Negrar / Veneto / ITALY",
+       "priceUsd": 130
+      },
+      {
+       "tr": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+       "en": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
+       "detailTr": "Corvina, Rondinella, Molinara / Veneto / ITALY",
+       "detailEn": "Corvina, Rondinella, Molinara / Veneto / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "RICOSSA BARBARESCO",
+       "en": "RICOSSA BARBARESCO",
+       "detailTr": "Nebbiolo / Piemonte / ITALY",
+       "detailEn": "Nebbiolo / Piemonte / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "PALAZZO BRUNELLO DI MONTALCINO",
+       "en": "PALAZZO BRUNELLO DI MONTALCINO",
+       "detailTr": "Sangiovese / Toscana / ITALY",
+       "detailEn": "Sangiovese / Toscana / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+       "en": "MASCA DEL TACCO PIANO CHIUSO RISERVA",
+       "detailTr": "Primitivo di Manduria / ITALY",
+       "detailEn": "Primitivo di Manduria / ITALY",
+       "priceUsd": 120
+      },
+      {
+       "tr": "LOMBARDO NERO D'ALTURA",
+       "en": "LOMBARDO NERO D'ALTURA",
+       "detailTr": "Nero d'Avola / Sicilia / ITALY",
+       "detailEn": "Nero d'Avola / Sicilia / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TEATRO LATINO IL COVO",
+       "en": "TEATRO LATINO IL COVO",
+       "detailTr": "Syrah, Merlot, Cabernet Sauvignon, Nero d'Avola / Sicilia / ITALY",
+       "detailEn": "Syrah, Merlot, Cabernet Sauvignon, Nero d'Avola / Sicilia / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TEATRO LATINO MESCA",
+       "en": "TEATRO LATINO MESCA",
+       "detailTr": "Cabernet Sauvignon, Negroamaro, Primitivo / Puglia / Italy",
+       "detailEn": "Cabernet Sauvignon, Negroamaro, Primitivo / Puglia / Italy",
+       "priceUsd": 100
+      },
+      {
+       "tr": "ANNO DOMINI BATISTA",
+       "en": "ANNO DOMINI BATISTA",
+       "detailTr": "Cabernet Sauvignon, Merlot / Veneto / ITALY",
+       "detailEn": "Cabernet Sauvignon, Merlot / Veneto / ITALY",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "FINCA AYLÉS UNEXPECTED GARNACHA",
+       "en": "FINCA AYLÉS UNEXPECTED GARNACHA",
+       "detailTr": "Garnacha / Cariñena / SPAIN",
+       "detailEn": "Garnacha / Cariñena / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "GRAN CORONAS RESERVA TORRES",
+       "en": "GRAN CORONAS RESERVA TORRES",
+       "detailTr": "Cabernet Sauvignon / Penedès / SPAIN",
+       "detailEn": "Cabernet Sauvignon / Penedès / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "CELESTE CRIANZA",
+       "en": "CELESTE CRIANZA",
+       "detailTr": "Tempranillo / Ribera Del Duero / SPAIN",
+       "detailEn": "Tempranillo / Ribera Del Duero / SPAIN",
+       "priceUsd": 220
+      },
+      {
+       "tr": "FAUSTINO 1 GRAN RESERVA",
+       "en": "FAUSTINO 1 GRAN RESERVA",
+       "detailTr": "Tempranillo, Graciano, Mazuelo / Rioja / SPAIN",
+       "detailEn": "Tempranillo, Graciano, Mazuelo / Rioja / SPAIN",
+       "priceUsd": 120
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MONTE DO CARRAPATELO LUIS DUARTE",
+       "en": "MONTE DO CARRAPATELO LUIS DUARTE",
+       "detailTr": "Aragonez, Touriga, Alicante Bouschet / Alentejano / PORTUGAL",
+       "detailEn": "Aragonez, Touriga, Alicante Bouschet / Alentejano / PORTUGAL",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "ARGENTINA",
+     "en": "ARGENTINA",
+     "items": [
+      {
+       "tr": "MAGNETA MALBEC",
+       "en": "MAGNETA MALBEC",
+       "detailTr": "Malbec / Mendoza / ARGENTINA",
+       "detailEn": "Malbec / Mendoza / ARGENTINA",
+       "priceUsd": 50
+      },
+      {
+       "tr": "MONTE CEPAS MALBEC",
+       "en": "MONTE CEPAS MALBEC",
+       "detailTr": "Malbec / Mendoza / ARGENTINA",
+       "detailEn": "Malbec / Mendoza / ARGENTINA",
+       "priceUsd": 50
+      },
+      {
+       "tr": "CLAROSCURO BODEGA DE ARTE",
+       "en": "CLAROSCURO BODEGA DE ARTE",
+       "detailTr": "Cabernet Franc / Uco Valley / ARGENTINA",
+       "detailEn": "Cabernet Franc / Uco Valley / ARGENTINA",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "CHILE",
+     "en": "CHILE",
+     "items": [
+      {
+       "tr": "PUERTO VIEJO RESERVE",
+       "en": "PUERTO VIEJO RESERVE",
+       "detailTr": "Carménère / Curicó Valley / CHILE",
+       "detailEn": "Carménère / Curicó Valley / CHILE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "TARAPACA GRAN RESERVA",
+       "en": "TARAPACA GRAN RESERVA",
+       "detailTr": "Cabernet Sauvignon / Maipo Valley / CHILE",
+       "detailEn": "Cabernet Sauvignon / Maipo Valley / CHILE",
+       "priceUsd": 130
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (glass)",
+       "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (glass)",
+       "detailTr": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+       "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (bottle)",
+       "en": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (bottle)",
+       "detailTr": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+       "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "GRAND C RESERVE",
+       "en": "GRAND C RESERVE",
+       "detailTr": "Pinot Noir / Alsace / FRANCE",
+       "detailEn": "Pinot Noir / Alsace / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+       "en": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
+       "detailTr": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
+       "detailEn": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+       "en": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
+       "detailTr": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
+       "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+       "en": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
+       "detailTr": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
+       "detailEn": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
+       "priceUsd": 140
+      },
+      {
+       "tr": "LOUIS JADOT BOURGOGNE",
+       "en": "LOUIS JADOT BOURGOGNE",
+       "detailTr": "Pinot Noir / Bourgogne / FRANCE",
+       "detailEn": "Pinot Noir / Bourgogne / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT BROUILLY",
+       "en": "LOUIS JADOT BROUILLY",
+       "detailTr": "Gamay / Beaujolais / FRANCE",
+       "detailEn": "Gamay / Beaujolais / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT BEAUNE PREMIER CRU",
+       "en": "LOUIS JADOT BEAUNE PREMIER CRU",
+       "detailTr": "Pinot Noir / Côte de Beaune, Bourgogne / FRANCE",
+       "detailEn": "Pinot Noir / Côte de Beaune, Bourgogne / FRANCE",
+       "priceUsd": 230
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "WHITE WINES",
+   "en": "WHITE WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Sauvignon Blanc / Thrace / TÜRKİYE",
+       "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Sauvignon Blanc / Thrace / TÜRKİYE",
+       "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Chardonnay / Thrace / TÜRKİYE",
+       "detailEn": "Chardonnay / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Chardonnay / Thrace / TÜRKİYE",
+       "detailEn": "Chardonnay / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Fume Blanc / Thrace / TÜRKİYE",
+       "detailEn": "Fume Blanc / Thrace / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Fume Blanc / Thrace / TÜRKİYE",
+       "detailEn": "Fume Blanc / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (glass)",
+       "en": "KAVAKLIDERE SELECTION (glass)",
+       "detailTr": "Narince, Emir / Central Anatolia / TÜRKİYE",
+       "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SELECTION (bottle)",
+       "en": "KAVAKLIDERE SELECTION (bottle)",
+       "detailTr": "Narince, Emir / Central Anatolia / TÜRKİYE",
+       "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "DOLUCA SIGNIUM",
+       "en": "DOLUCA SIGNIUM",
+       "detailTr": "Viognier, Chardonnay, Narince / Thrace / TÜRKİYE",
+       "detailEn": "Viognier, Chardonnay, Narince / Thrace / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE COTES D'AVANOS",
+       "en": "KAVAKLIDERE COTES D'AVANOS",
+       "detailTr": "Sauvignon Blanc / Central Anatolia / TÜRKİYE",
+       "detailEn": "Sauvignon Blanc / Central Anatolia / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "KAVAKLIDERE COTES D'AVANOS",
+       "en": "KAVAKLIDERE COTES D'AVANOS",
+       "detailTr": "Chardonnay / Central Anatolia / TÜRKİYE",
+       "detailEn": "Chardonnay / Central Anatolia / TÜRKİYE",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "RICOSSA GAVI",
+       "en": "RICOSSA GAVI",
+       "detailTr": "Cortese / Gavi / ITALY",
+       "detailEn": "Cortese / Gavi / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LA SCOLCA GAVI DEI GAVI",
+       "en": "LA SCOLCA GAVI DEI GAVI",
+       "detailTr": "Cortese / Gavi / ITALY",
+       "detailEn": "Cortese / Gavi / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "EPICURO PINOT GRIGIO",
+       "en": "EPICURO PINOT GRIGIO",
+       "detailTr": "Pinot Grigio / Sicilia / ITALY",
+       "detailEn": "Pinot Grigio / Sicilia / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+       "en": "ANNO DOMINI SOTTOVOCE SAUVIGNON",
+       "detailTr": "Sauvignon Blanc / Trevenezie / ITALY",
+       "detailEn": "Sauvignon Blanc / Trevenezie / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "TESSARI BINE LONGHE SOAVE CLASSICO",
+       "en": "TESSARI BINE LONGHE SOAVE CLASSICO",
+       "detailTr": "Trebbiano, Garganega / Veneto / ITALY",
+       "detailEn": "Trebbiano, Garganega / Veneto / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOMBARDO BIANCO D'ALTURA",
+       "en": "LOMBARDO BIANCO D'ALTURA",
+       "detailTr": "Catarratto Bianco / Sicilia / ITALY",
+       "detailEn": "Catarratto Bianco / Sicilia / ITALY",
+       "priceUsd": 100
+      },
+      {
+       "tr": "EPICURO VERMENTINO",
+       "en": "EPICURO VERMENTINO",
+       "detailTr": "Vermentino / Lazio / ITALY",
+       "detailEn": "Vermentino / Lazio / ITALY",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "VIÑA ESMERALDA",
+       "en": "VIÑA ESMERALDA",
+       "detailTr": "Gewürztraminer / Penedes / SPAIN",
+       "detailEn": "Gewürztraminer / Penedes / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "GRAN VIÑA SOL TORRES",
+       "en": "GRAN VIÑA SOL TORRES",
+       "detailTr": "Chardonnay / Penedes / SPAIN",
+       "detailEn": "Chardonnay / Penedes / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+       "en": "FINCA AYLÉS UNEXPECTED CHARDONNAY",
+       "detailTr": "Chardonnay / Aragon / SPAIN",
+       "detailEn": "Chardonnay / Aragon / SPAIN",
+       "priceUsd": 50
+      },
+      {
+       "tr": "FAUSTINO RESERVA V",
+       "en": "FAUSTINO RESERVA V",
+       "detailTr": "Sauvignon Blanc / Rioja / SPAIN",
+       "detailEn": "Sauvignon Blanc / Rioja / SPAIN",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MONTE DO CARRAPATELO",
+       "en": "MONTE DO CARRAPATELO",
+       "detailTr": "Arinto, Roupeiro / Alentejano / PORTUGAL",
+       "detailEn": "Arinto, Roupeiro / Alentejano / PORTUGAL",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "ARGENTINA",
+     "en": "ARGENTINA",
+     "items": [
+      {
+       "tr": "MONTE CEPAS",
+       "en": "MONTE CEPAS",
+       "detailTr": "Chardonnay / Mendoza / ARGENTINA",
+       "detailEn": "Chardonnay / Mendoza / ARGENTINA",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "CHILE",
+     "en": "CHILE",
+     "items": [
+      {
+       "tr": "TORO DE PIEDRA RESERVA",
+       "en": "TORO DE PIEDRA RESERVA",
+       "detailTr": "Chardonnay / Maule Valley / CHILE",
+       "detailEn": "Chardonnay / Maule Valley / CHILE",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "NEW ZEALAND",
+     "en": "NEW ZEALAND",
+     "items": [
+      {
+       "tr": "CLOUDY BAY",
+       "en": "CLOUDY BAY",
+       "detailTr": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
+       "detailEn": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
+       "priceUsd": 120
+      },
+      {
+       "tr": "CLOUDY BAY",
+       "en": "CLOUDY BAY",
+       "detailTr": "Chardonnay / Marlborough / NEW ZEALAND",
+       "detailEn": "Chardonnay / Marlborough / NEW ZEALAND",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "GERMANY",
+     "en": "GERMANY",
+     "items": [
+      {
+       "tr": "DR. LOOSEN ERDENER TREPPCHEN",
+       "en": "DR. LOOSEN ERDENER TREPPCHEN",
+       "detailTr": "Riesling / Mosel / Germany",
+       "detailEn": "Riesling / Mosel / Germany",
+       "priceUsd": 50
+      },
+      {
+       "tr": "VILLA WOLF PINOT GRIS",
+       "en": "VILLA WOLF PINOT GRIS",
+       "detailTr": "Pinot Gris / Pfalz / Germany",
+       "detailEn": "Pinot Gris / Pfalz / Germany",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX (glass)",
+       "en": "CHEVAL NOIR BORDEAUX (glass)",
+       "detailTr": "Sauvignon Blanc / Bordeaux / FRANCE",
+       "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX (bottle)",
+       "en": "CHEVAL NOIR BORDEAUX (bottle)",
+       "detailTr": "Sauvignon Blanc / Bordeaux / FRANCE",
+       "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "LE BIJOU",
+       "en": "LE BIJOU",
+       "detailTr": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
+       "detailEn": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "EDEL GRAND C",
+       "en": "EDEL GRAND C",
+       "detailTr": "Pinot Gris, Riesling, Muscat Blanc / Alsace / FRANCE",
+       "detailEn": "Pinot Gris, Riesling, Muscat Blanc / Alsace / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "GRAND C RESERVE",
+       "en": "GRAND C RESERVE",
+       "detailTr": "Pinot Blanc / Alsace / FRANCE",
+       "detailEn": "Pinot Blanc / Alsace / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "THOMAS LABILLE CHABLIS",
+       "en": "THOMAS LABILLE CHABLIS",
+       "detailTr": "Chardonnay / Burgundy / FRANCE",
+       "detailEn": "Chardonnay / Burgundy / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "THOMAS LABILLE CHABLIS PREMIER CRU",
+       "en": "THOMAS LABILLE CHABLIS PREMIER CRU",
+       "detailTr": "Chardonnay / Burgundy / FRANCE",
+       "detailEn": "Chardonnay / Burgundy / FRANCE",
+       "priceUsd": 120
+      },
+      {
+       "tr": "DOMAINE SEGUIN POUILLY FUME",
+       "en": "DOMAINE SEGUIN POUILLY FUME",
+       "detailTr": "Sauvignon Blanc / Loire / FRANCE",
+       "detailEn": "Sauvignon Blanc / Loire / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "PAUL THOMAS SANCERRE",
+       "en": "PAUL THOMAS SANCERRE",
+       "detailTr": "Sauvignon Blanc / Loire / FRANCE",
+       "detailEn": "Sauvignon Blanc / Loire / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT CHABLIS",
+       "en": "LOUIS JADOT CHABLIS",
+       "detailTr": "Chardonnay / Bourgogne / FRANCE",
+       "detailEn": "Chardonnay / Bourgogne / FRANCE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "LOUIS JADOT MACON VILLAGES",
+       "en": "LOUIS JADOT MACON VILLAGES",
+       "detailTr": "Chardonnay / Burgundy / FRANCE",
+       "detailEn": "Chardonnay / Burgundy / FRANCE",
+       "priceUsd": 100
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "ROSÉ WINES",
+   "en": "ROSÉ WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "SARAFİN (glass)",
+       "en": "SARAFİN (glass)",
+       "detailTr": "Merlot, Cabernet Franc / TÜRKİYE",
+       "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "SARAFİN (bottle)",
+       "en": "SARAFİN (bottle)",
+       "detailTr": "Merlot, Cabernet Franc / TÜRKİYE",
+       "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
+       "priceUsd": 100
+      },
+      {
+       "tr": "VERANO BLUSH",
+       "en": "VERANO BLUSH",
+       "detailTr": "Grenache / Thrace / TÜRKİYE",
+       "detailEn": "Grenache / Thrace / TÜRKİYE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "SEVİLEN R ROSÉ",
+       "en": "SEVİLEN R ROSÉ",
+       "detailTr": "Cabernet Sauvignon, Shiraz / Thrace / TÜRKİYE",
+       "detailEn": "Cabernet Sauvignon, Shiraz / Thrace / TÜRKİYE",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "11 MINUTES PASQUA",
+       "en": "11 MINUTES PASQUA",
+       "detailTr": "Corvina / Veneto / ITALY",
+       "detailEn": "Corvina / Veneto / ITALY",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CASA DEFRA PINOT GRIGIO ROSE",
+       "en": "CASA DEFRA PINOT GRIGIO ROSE",
+       "detailTr": "Pinot Grigio / Veneto / ITALY",
+       "detailEn": "Pinot Grigio / Veneto / ITALY",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "SANGRE DE TORO ROSÉ",
+       "en": "SANGRE DE TORO ROSÉ",
+       "detailTr": "Tempranillo / Catalunya / SPAIN",
+       "detailEn": "Tempranillo / Catalunya / SPAIN",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROSÉ (glass)",
+       "en": "CHEVAL NOIR BORDEAUX ROSÉ (glass)",
+       "detailTr": "Merlot / Bordeaux / FRANCE",
+       "detailEn": "Merlot / Bordeaux / FRANCE",
+       "priceUsd": 15
+      },
+      {
+       "tr": "CHEVAL NOIR BORDEAUX ROSÉ (bottle)",
+       "en": "CHEVAL NOIR BORDEAUX ROSÉ (bottle)",
+       "detailTr": "Merlot / Bordeaux / FRANCE",
+       "detailEn": "Merlot / Bordeaux / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "OPALE ROSÉ",
+       "en": "OPALE ROSÉ",
+       "detailTr": "Syrah, Grenache, Cinsault / Coteaux D'aıx En Provence / FRANCE",
+       "detailEn": "Syrah, Grenache, Cinsault / Coteaux D'aıx En Provence / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "LE BIJOU",
+       "en": "LE BIJOU",
+       "detailTr": "Syrah / Grenache / Coteaux De Beziers / FRANCE",
+       "detailEn": "Syrah / Grenache / Coteaux De Beziers / FRANCE",
+       "priceUsd": 50
+      },
+      {
+       "tr": "PAUL THOMAS SANCERRE ROSÉ",
+       "en": "PAUL THOMAS SANCERRE ROSÉ",
+       "detailTr": "Pinot Noir / Loire / FRANCE",
+       "detailEn": "Pinot Noir / Loire / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+       "en": "CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ",
+       "detailTr": "Grenache, Côtes de Provence / FRANCE",
+       "detailEn": "Grenache, Côtes de Provence / FRANCE",
+       "priceUsd": 70
+      },
+      {
+       "tr": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+       "en": "CHATEUA D'ESCLANS WHISPERING ANGEL ROSÉ",
+       "detailTr": "Grenache / Cotes de Provence / FRANCE",
+       "detailEn": "Grenache / Cotes de Provence / FRANCE",
+       "priceUsd": 200
+      },
+      {
+       "tr": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+       "en": "CHATEAU D’ESCLANS ROCK ANGEL ROSÉ",
+       "detailTr": "Grenache/Cotes de Provence/FRANCE",
+       "detailEn": "Grenache/Cotes de Provence/FRANCE",
+       "priceUsd": 200
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "PORTO & SEMI SWEET WINES",
+   "en": "PORTO & SEMI SWEET WINES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "KAVAKLIDERE SULTANİYE (glass)",
+       "en": "KAVAKLIDERE SULTANİYE (glass)",
+       "detailTr": "Sultaniye / Aegean / TÜRKİYE",
+       "detailEn": "Sultaniye / Aegean / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE SULTANİYE (bottle)",
+       "en": "KAVAKLIDERE SULTANİYE (bottle)",
+       "detailTr": "Sultaniye / Aegean / TÜRKİYE",
+       "detailEn": "Sultaniye / Aegean / TÜRKİYE",
+       "priceUsd": 70
+      }
+     ]
+    },
+    {
+     "tr": "SPAIN",
+     "en": "SPAIN",
+     "items": [
+      {
+       "tr": "PEDRO XIMENEZ SHERRY",
+       "en": "PEDRO XIMENEZ SHERRY",
+       "detailTr": "Pedro Ximénez / Andalucía / SPAIN",
+       "detailEn": "Pedro Ximénez / Andalucía / SPAIN",
+       "priceUsd": 100
+      }
+     ]
+    },
+    {
+     "tr": "PORTUGAL",
+     "en": "PORTUGAL",
+     "items": [
+      {
+       "tr": "MARTHA'S RUBY PORT WINE",
+       "en": "MARTHA'S RUBY PORT WINE",
+       "detailTr": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
+       "detailEn": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
+       "priceUsd": 70
+      },
+      {
+       "tr": "MARTHA'S TAWNY PORT WINE",
+       "en": "MARTHA'S TAWNY PORT WINE",
+       "detailTr": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
+       "detailEn": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
+       "priceUsd": 70
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tr": "SPARKLING WINES & CHAMPAGNES",
+   "en": "SPARKLING WINES & CHAMPAGNES",
+   "items": [],
+   "sub": [
+    {
+     "tr": "TÜRKİYE",
+     "en": "TÜRKİYE",
+     "items": [
+      {
+       "tr": "KAVAKLIDERE İNCİ DAMLASI (glass)",
+       "en": "KAVAKLIDERE İNCİ DAMLASI (glass)",
+       "detailTr": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+       "detailEn": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+       "priceUsd": 20
+      },
+      {
+       "tr": "KAVAKLIDERE İNCİ DAMLASI (bottle)",
+       "en": "KAVAKLIDERE İNCİ DAMLASI (bottle)",
+       "detailTr": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+       "detailEn": "Sultaniye, Emir, Narince / Anatolia / TÜRKİYE",
+       "priceUsd": 80
+      }
+     ]
+    },
+    {
+     "tr": "ITALY",
+     "en": "ITALY",
+     "items": [
+      {
+       "tr": "NOBILIS PROSECCO EXTRA DRY",
+       "en": "NOBILIS PROSECCO EXTRA DRY",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "BRILLA PROSECCO BRUT",
+       "en": "BRILLA PROSECCO BRUT",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 200
+      },
+      {
+       "tr": "BRILLA PROSECCO ROSÉ",
+       "en": "BRILLA PROSECCO ROSÉ",
+       "detailTr": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
+       "detailEn": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
+       "priceUsd": 200
+      },
+      {
+       "tr": "BOTTEGA GOLD PROSECCO BRUT",
+       "en": "BOTTEGA GOLD PROSECCO BRUT",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "BOTTEGA ROSÉ GOLD PROSECCO",
+       "en": "BOTTEGA ROSÉ GOLD PROSECCO",
+       "detailTr": "Glera, Pinot Noir / Veneto / ITALY",
+       "detailEn": "Glera, Pinot Noir / Veneto / ITALY",
+       "priceUsd": 150
+      },
+      {
+       "tr": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+       "en": "BAGLIETTI GOLD EDITION BLANC DE BLANCS",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 60
+      },
+      {
+       "tr": "BAGLIETTI ROSÉ GOLD EDITION",
+       "en": "BAGLIETTI ROSÉ GOLD EDITION",
+       "detailTr": "Glera, Merlot / Veneto / ITALY",
+       "detailEn": "Glera, Merlot / Veneto / ITALY",
+       "priceUsd": 60
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (glass)",
+       "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (glass)",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 15
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (bottle)",
+       "en": "SAN GIOVANNI PERINI PROSECCO EXTRA DRY (bottle)",
+       "detailTr": "Glera / Veneto / ITALY",
+       "detailEn": "Glera / Veneto / ITALY",
+       "priceUsd": 50
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (glass)",
+       "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (glass)",
+       "detailTr": "Glera / Pinot Noir / Veneto / ITALY",
+       "detailEn": "Glera / Pinot Noir / Veneto / ITALY",
+       "priceUsd": 15
+      },
+      {
+       "tr": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (bottle)",
+       "en": "SAN GIOVANNI PERINI PROSECCO BRUT ROSÉ (bottle)",
+       "detailTr": "Glera / Pinot Noir / Veneto / ITALY",
+       "detailEn": "Glera / Pinot Noir / Veneto / ITALY",
+       "priceUsd": 50
+      }
+     ]
+    },
+    {
+     "tr": "FRANCE",
+     "en": "FRANCE",
+     "items": [
+      {
+       "tr": "POMMERY MAXI POP CHAMPAGNE",
+       "en": "POMMERY MAXI POP CHAMPAGNE",
+       "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "priceUsd": 350
+      },
+      {
+       "tr": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+       "en": "MOET & CHANDON IMPERIAL BRUT CHAMPAGNE",
+       "detailTr": "Pinot Noir / Champagne / FRANCE",
+       "detailEn": "Pinot Noir / Champagne / FRANCE",
+       "priceUsd": 450
+      },
+      {
+       "tr": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+       "en": "MOET & CHANDON IMPERIAL ROSÉ BRUT CHAMPAGNE",
+       "detailTr": "Pinot Noir / Champagne / FRANCE",
+       "detailEn": "Pinot Noir / Champagne / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+       "en": "MOET & CHANDON ICE IMPERIAL DEMI SEC CHAMPAGNE",
+       "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+       "en": "VEUVE CLICQUOT BRUT CHAMPAGNE",
+       "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "priceUsd": 600
+      },
+      {
+       "tr": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+       "en": "G.H. MUMM CORDON ROUGE BRUT CHAMPAGNE",
+       "detailTr": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "detailEn": "Pinot Meunier, Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "priceUsd": 500
+      },
+      {
+       "tr": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+       "en": "RUINART BLANC DE BLANCS BRUT CHAMPAGNE",
+       "detailTr": "Chardonnay / Champagne / FRANCE",
+       "detailEn": "Chardonnay / Champagne / FRANCE",
+       "priceUsd": 1000
+      },
+      {
+       "tr": "DOM PERIGNON BRUT CHAMPAGNE",
+       "en": "DOM PERIGNON BRUT CHAMPAGNE",
+       "detailTr": "Pinot Noir / Champagne / FRANCE",
+       "detailEn": "Pinot Noir / Champagne / FRANCE",
+       "priceUsd": 1650
+      },
+      {
+       "tr": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+       "en": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
+       "detailTr": "Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "detailEn": "Pinot Noir, Chardonnay / Champagne / FRANCE",
+       "priceUsd": 2550
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "footnotes": [
+  "*Minimum 4 saat önceden sipariş verilmelidir. / *Orders must be placed at least 4 hours in advance.",
+  "Yosunu Dışarıda Klasik Sushi Çeşitleri / Classic Nori-Out Maki Rolls (subtitle under KURASHIKARU MAKI ROLL (6pcs))"
+ ],
+ "issues": [
+  "PDF has no allergy/service/cover-charge notes; only the 4-hour duck note and the maki subtitle are printed (both in footnotes).",
+  "Letter-spaced headings 'SUSHI' + 'SASHIMI (3pcs)' (p1) and 'SUSHI' + 'ROYAL NIGIRI (3pcs)' (p2) became categories SASHIMI (3pcs) and ROYAL NIGIRI (3pcs). Heading 'SUSHI' alone on PDF pages 3 and 4 (rolls; tempura/crispy rolls): kept as two separate categories both named SUSHI.",
+  "Sashimi/nigiri/maki items: the second printed line (e.g. 'Somon Balığı / Salmon') is stored as detailTr/detailEn, item name is the Japanese name (same in tr and en).",
+  "Page 7: headings 'SOĞUK BAŞLANGIÇLAR / COLD STARTERS' and 'SALATALAR - SALADS' both printed; unclear which items belong under SALADS (docx puts SALATALAR before Maguro Tartar). All 7 items placed in COLD STARTERS, no sub-category.",
+  "Page 8: heading 'TEMPURA' printed without clear extent (docx puts it before Sebzeli Çin Böreği); all 9 items kept flat in HOT STARTERS.",
+  "Chicken/Beef/Squid/Fish/Prawn/Duck/Vegetarian groups are stored as sub-categories of ANA YEMEKLER / MAIN COURSES (PDF heading 'ANA YEMEKLER - MAIN COURSES'). PİLAV, NOODLE, TATLILAR are top-level categories (not clearly under main courses).",
+  "Aromatic duck has two prices (Half 1200 g $120, Whole 2400 g $180): split into two items. Peking Duck keeps the printed leading asterisk (footnote marker).",
+  "Wines: names are language-neutral so tr=en; grape/region/country line stored in both detailTr and detailEn. Wines with two printed prices ($20/$100, $15/$70, $15/$50, $20/$80, $20/$70) have NO printed labels; I labeled them '(glass)' and '(bottle)' by inference (smaller then larger) - please verify. Same wine name repeated per grape (SARAFİN, CLOUDY BAY, KAVAKLIDERE COTES D'AVANOS, LE BIJOU, GRAND C RESERVE) kept as separate items.",
+  "Wine prices '$ 1.000', '$ 1.650', '$ 2.550' read as 1000, 1650, 2550 (dot = thousands separator).",
+  "PDF typos kept as printed: 'St. Julen', 'CHATEUA D'ESCLANS', 'Coteaux D'aıx', 'Çin usulu', 'pişilmiş', 'Italy'/'Germany' mixed case, 'Negrar'. Double spaces collapsed. RED WINES heading repeats p20-21 and WHITE WINES p22-23: merged. RARE VINTAGE WINES lists France then Italy (country headings used as sub-categories).",
+  "Multi-line names in PDF were joined (e.g. Dana Kıymalı Kızarmış Soya Peyniri (Tofu) Szechuan Sos Eşliğinde (Acılı) / Braised Bean Curd with Minced Meat Szechuan Sauce (Spicy); CHÂTEAU CAVALIER CUVÉE MARAFIENCE COTEAUX PROVENCE ROSÉ).",
+  "Docx vs PDF: docx has no prices, no wines, no Çin Mantısı description (PDF has one, $40). PDF used throughout.",
+  "Docx vs PDF name differences: 'Yengeçli Acılı Ekşili Çorba' vs 'Acılı Ekşili Yengeç Çorbası'; 'Kızartılmış Won-Ton' vs 'Kızarmış Wonton'; 'Tatlı ve Ekşi' vs 'Tatlı-ekşi'; 'Tavuk Etli Pilav/Noodle' vs 'Tavuklu'; 'Szechuan Dana Eti (Acı)' vs 'Szechuan Usulü Dana Eti (Acılı)'; 'Siyah Soya Fasulyeli' vs 'Siyah Fasulye Soslu'; 'Dana Eti Sizling'/'Karides Sizling' vs 'Sizzling ...'; 'Kara Biberli' vs 'Karabiberli'; 'Krepli' vs 'Krep ile'; 'VEJETERYAN' vs 'VEJETARYEN'; 'Tatlı / Dessert' vs 'TATLILAR - DESSERTS'; docx section ÇİN MANTISI/DumplING sits among hot starters without detail.",
+  "Docx errors not copied: Suzuki Nigiri en 'Levrek Balığı Levrek Balığı'; 'Solmon Caviar'; Mısırlı Tavuk Çorbası English line copied from crab soup; 'Acı Soslu Balık' and 'Siyah Soya Fasulyeli Balık' descriptions swapped; Sweet-and-Sour/Kung Pao chicken English lines shifted; Ballı Kızarmış Ananas lacks 'Kaplanarak'; 'Albanian peppers' (PDF: Cayenne pepper); 'meltemlenerek' (PDF: harmanlanarak). Docx marks several rolls with leading '*' and uses 'Prawn/Shrimp' where PDF says 'Prawns'.",
+  "No third-language (Russian/Chinese) text found in either file."
+ ]
+}

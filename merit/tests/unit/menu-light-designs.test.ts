@@ -10,6 +10,7 @@ import {
   presetDesignRow,
   type OutletDesignPreset,
 } from "../../prisma/seed/menuDesigns";
+import { RENAMED_OUTLETS } from "../../prisma/seed/outlets";
 
 const ROOT = path.resolve(__dirname, "../..");
 const MIGRATION = readFileSync(
@@ -146,7 +147,13 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
   });
 
   it("her outlet adı otel koduyla eşleşir; oda servisi tür ile", () => {
-    for (const name of Object.keys(OUTLET_DESIGN_PRESETS)) {
+    // Migration yazıldıktan sonra outlet'ler otelin kendi adlarını aldı; migration metni o günkü adı taşır.
+    const nameThen = new Map<string, string>([
+      ...RENAMED_OUTLETS.map((r) => [r.to, r.from] as [string, string]),
+      ["The Roof Garden", "Shisha & Sunset Terrace"],
+    ]);
+    for (const current of Object.keys(OUTLET_DESIGN_PRESETS)) {
+      const name = nameThen.get(current) ?? current;
       expect(MIGRATION).toMatch(new RegExp(`\\('(DIAMOND|ROYAL|PREMIUM)', '${name.replace(/[&()]/g, "\\$&")}'`));
     }
     for (const code of Object.keys(ROOM_SERVICE_DESIGN_PRESETS)) {

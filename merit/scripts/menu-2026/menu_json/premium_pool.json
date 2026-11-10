@@ -1,0 +1,544 @@
+{
+  "outlet": "Premium Pool",
+  "sources": [
+    "Premium_pool_2025_snack_menu_docx.txt"
+  ],
+  "categories": [
+    {
+      "tr": "Çorbalar",
+      "en": "Soups",
+      "note": {
+        "tr": "Bütün çorbalarımız kroton ekmek, limon ve kızarmış ekmek ile servis edilir.",
+        "en": "All our soups are served with croutons, lemon and a toasted bread"
+      },
+      "items": [
+        {
+          "tr": "Mercimek Çorbası",
+          "en": "Lentil Soup",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Tost",
+      "en": "Toasted Sandwich",
+      "items": [
+        {
+          "tr": "Royal tost",
+          "en": "Royal tost",
+          "detailTr": "Ciabatta ekmeği, kavurma, kaşar peyniri, tatlı biber salçası",
+          "detailEn": "ciabatta bread, roasting, meat, sweet chili, paste",
+          "priceUsd": null
+        },
+        {
+          "tr": "Cyprus tost",
+          "en": "Cyprus tost",
+          "detailTr": "Kıbrıs çöreği, hellim, bolief, tavuk göğsü, kornişon turşu, domates,sucuk,bikla sos",
+          "detailEn": "Cyprus bread, hellim chesee, bolief, chicken breast, pickles, tomato, bilka souce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Panini tost",
+          "en": "Panini tost",
+          "detailTr": "Panini ekmeği, mozeralla peyniri, cherry domates, fesleğen",
+          "detailEn": "Panini bread, mozzarella chesee, cherry tomato, basil",
+          "priceUsd": null
+        },
+        {
+          "tr": "Avşar tost",
+          "en": "Avşar tost",
+          "detailTr": "Panini ekmeği, Hellim peyniri, sucuk, domates, maydanoz, kornişon turşu, kokteyl sos",
+          "detailEn": "Panini bread, Hellim cheese, homemade salami, tomato,gherkin pickles and cocktail sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Ayvalık tost",
+          "en": "Ayvalık tost",
+          "detailTr": "Kaşar, sucuk, salam, amerikan salatası, domates kızarmış patates ve Akdeniz salatası eşliğinde",
+          "detailEn": "Cheese,sausage,salami,american salad,tomato served with french fries and Mediterranean salad",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Sandviç",
+      "en": "Sandwich",
+      "items": [
+        {
+          "tr": "Steak Sandwich",
+          "en": "Steak Sandwich",
+          "detailTr": "Ciabatta ekmeği, Izgara bonfile,karamelize soğan ,mantar.közlenmiş biber çedar peyniri, , patates kızartması",
+          "detailEn": "Grilled tenderloin, caramelized onions, mushrooms grilled pepper cheddar chesee, served in ciabatta bread, , french fries",
+          "priceUsd": null
+        },
+        {
+          "tr": "Mozarella caprice sandwich",
+          "en": "Mozarella caprice sandwich",
+          "detailTr": "Tam buğday ekmeği, mozarella peyniri,domates,fesleğen sos",
+          "detailEn": "Brown bread, mozarella cheese ,tomatoes, basil sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Italian Tuna",
+          "en": "Italian Tuna",
+          "detailTr": "Kereviz, ton balığı, mayonez, kapari turşusu, marul, zeytin ezme, tuz, değirmen karabiber, zeytinyağı, limon suyu",
+          "detailEn": "Celery, tuna, mayonnaise, pickled capers, lettuce, olive pate, salt, pepper corns, olive oil, lemon juice",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Salatalar",
+      "en": "Salads",
+      "items": [
+        {
+          "tr": "Antioksidanlı yeşil salata",
+          "en": "Antioxidant green salad",
+          "detailTr": "akdeniz yeşillikler, yeşil elma dilimleri, kırmızı erik, karabuğday, cherry domates ve zeytinyağ limon sos eşliğinde",
+          "detailEn": "mediterranean greens, green apple, red plum, blackwheat, cherry tomato, olive oil and lemon juice",
+          "priceUsd": null
+        },
+        {
+          "tr": "Ton balıklı salata",
+          "en": "Tuna Salad",
+          "detailTr": "Taze mevsim yeşillikleri üzerinde ton balığı, kızarmış kapari taneleri, kiraz domates, limonlu zeytinyağı sosu ile",
+          "detailEn": "Fresh seasonal greens with tuna fish, fried capari beans, cherry tomatoes,with lemon&olive oil sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Çoban salatası",
+          "en": "Shepperd Salad",
+          "detailTr": "Domates, salatalık, maydanoz, yeşil tatlı biber, zeytinyağı limon sos eşliğinde. — Lütfen soğan tercihinizi belirtiniz",
+          "detailEn": "Tomatoes, cucumber, parsley, green sweet pepper, olive oil accompanied by lemon sauce. — Please specify your onion preference",
+          "priceUsd": null
+        },
+        {
+          "tr": "Kınoa Tabulleh",
+          "en": "Kinoa Tabule",
+          "detailTr": "Kinoa,taze marul yaprakları, taze nane, taze soğan, domates, maydanoz, nar taneleri ve nar ekşili sos",
+          "detailEn": "Quinoa, fresh lettuce leaves, fresh mint, fresh onions, tomatoes, parsley, pomegranate seeds and pomegranate sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Tavuklu Sezar Salata",
+          "en": "Chicken Caesar Salad",
+          "detailTr": "Taze marul yaprakları, kroton, parmesan peyniri ve sezar sos",
+          "detailEn": "Fresh lettuce leaves, croton, parmesan cheese and caesar sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Izgara Levrek Salatası",
+          "en": "Grilled Seabass Salad",
+          "detailTr": "Akdeniz yeşillikleri, taze roka yaprakları, Izgara levrek kiraz domates,Pancar zeytinyağı ve limon sos eşliğinde",
+          "detailEn": "Mediterranean greens, fresh aragula leaves, grilled seabass cherry tomatoes,beetroot olive oil and lemon dressing",
+          "priceUsd": null
+        },
+        {
+          "tr": "Enginar Kalpli Kıbrıs Salatası",
+          "en": "Cyprus Salad With Artichoke",
+          "detailTr": "Akdeniz yeşillikleri, enginar kalbi , taze roka yaprakları, ızgara hellim, kiraz domates,zeytinyağı ve limon sos eşliğinde",
+          "detailEn": "Mediterranean greens, artichoke fresh rocket leaves, grilled hellim,cherry tomatoes, served with olive oil and lemon sauce",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Kızartmalar",
+      "en": "Fries",
+      "items": [
+        {
+          "tr": "Panelenmiş Balık & Patates Kızartması",
+          "en": "Fish and Chips",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Peynirli Sigara böreği",
+          "en": "Cheesy fried pastry",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Patates kızartması",
+          "en": "French fries",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Piliç Finger",
+          "en": "Chicken Finger",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Kalamar Tava",
+          "en": "Fried calamari",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Burger ve sıcak atıştırmalıklar",
+      "en": "Burger and hot snacks",
+      "items": [
+        {
+          "tr": "Royal Burger",
+          "en": "Royal Burger",
+          "detailTr": "Ev yapımı %100 dana etli hamburger köftesi, Chedar peyniri , Kaburga füme , mantar , karamelize soğan , domates, kornişon, patates kızartması",
+          "detailEn": "Homemade burger %100 beef chedar cheese, smoked rib , mushroom , caramelized onion , tomato, gherkin, french fries",
+          "priceUsd": null
+        },
+        {
+          "tr": "Chicken buffalo wings",
+          "en": "Chicken buffalo wings",
+          "detailTr": "Tavuk kanat,ballı acı bufalo sos",
+          "detailEn": "Chicken wings,spicy buffalo sauce with honey",
+          "priceUsd": null
+        },
+        {
+          "tr": "Tavuklu Quesadilla",
+          "en": "chicken Quesadilla",
+          "detailTr": "Tortilla ekmeği, Tavuk göğsü, Kaliforniya biberleri, mısır, meksika fasulyesi, cheedar peyniri, patates kızartması",
+          "detailEn": "Tortilla bread, Chicken breast, California peppers, corn,mexian beans, cheddar chesee, french fries",
+          "priceUsd": null
+        },
+        {
+          "tr": "Dana Etli Buritto",
+          "en": "Buritto With Beef",
+          "detailTr": "Karışık Meksika baharatları ile pişirilmiş Dana Bonfile parçacıkları, kırmızı soğan, Renkli biberler, kaşar peyniri, Guacamela sos",
+          "detailEn": "Beef Tenderloin type cooked with mixed Mexican spices, red onion, Colored peppers, cheddar cheese, Guacamela sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Kıtır Commo Tabağı",
+          "en": "Kıtır Commo Tabağı",
+          "detailTr": "tavuk, hellim stick, soğan halkası, patates kızartması",
+          "detailEn": "Chicken, Haloumi stick,,Orion rings, cips",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Makarnalar",
+      "en": "Pastas",
+      "note": {
+        "tr": "Tercihinize göre sarımsaklı ve sarımsaksız servis edilir.",
+        "en": "Create your own with garlic or with out garlic"
+      },
+      "items": [
+        {
+          "tr": "Spagetti Bolonez",
+          "en": "Spagetti Bolonez",
+          "detailTr": "İtalyan usulü hazırlanmış bolonez soslu Spagetti",
+          "detailEn": "Spaghetti with bolognaise sauce made in Italian style",
+          "priceUsd": null
+        },
+        {
+          "tr": "Spagetti Napolitan",
+          "en": "Spagetti Napolitan",
+          "detailTr": "Sebzeli Napolitan sos ile hazırlanmış Spagetti",
+          "detailEn": "Spaghetti with vegetable napolitan sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Fusulli A La Pesto",
+          "en": "Fusulli A La Pesto",
+          "detailTr": "Fusulli makarna ,sarımsak, fesleğen sos , permasan peyniri",
+          "detailEn": "Fusulli pasta,garlic,pesto sauce,parmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "Penne Arabiatta",
+          "en": "Penne Arabiatta",
+          "detailTr": "Acı domates soslu Penne",
+          "detailEn": "Penne Pasta with spicy tomato sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Mantar soslu Tavuklu Tagliatelli",
+          "en": "Şarap soslu kremalı,mantarlı tavuklu Tagliatelli",
+          "detailTr": null,
+          "detailEn": "Tagliatelli with wine sauce ,cream chicken and mushrooms",
+          "priceUsd": null
+        },
+        {
+          "tr": "Türkmen mantısı",
+          "en": "turkish ravioli",
+          "detailTr": "Dana eti, yoğurt, salçalı sos, kuru nane",
+          "detailEn": "Beef, yogurt, tomato paste souce, dry mint",
+          "priceUsd": null
+        },
+        {
+          "tr": "Mac and cheese",
+          "en": "Mac and cheese",
+          "detailTr": "Pipete makarna, dana füme. Krema, cheedar peyniri",
+          "detailEn": "Pipette pasta, smoced beef, crema, cheedar cheese",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Pizza",
+      "en": "Pizza",
+      "items": [
+        {
+          "tr": "PIZZA ROYAL",
+          "en": "PIZZA ROYAL",
+          "detailTr": "Füme dana kaburga, sucuk, taze mantar,hellim peyniri, soğan",
+          "detailEn": "Smoked rib , sausage , mushrooms , halloumi cheese , onion",
+          "priceUsd": null
+        },
+        {
+          "tr": "Pizza Quattro Stagioni",
+          "en": "Pizza Quattro Stagioni",
+          "detailTr": "Mozzarella peyniri, domates , hindi jambon, mantar, enginar ve Zeytinler",
+          "detailEn": "Mozzarella cheese,Tomatoes,turkey ham,mushroom,artichoke,olives",
+          "priceUsd": null
+        },
+        {
+          "tr": "PIZZA PEPERONİ",
+          "en": "PIZZA PEPERONİ",
+          "detailTr": "Sucuk , mozarella peyniri ,domates sos",
+          "detailEn": "Sausage , mozarella cheese , tomatoes sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "PIZZA FORMAGGİ",
+          "en": "PIZZA FORMAGGİ",
+          "detailTr": "Mozerella peyniri, keçi peyniri, gorgonzola peyniri, parmesan peyniri",
+          "detailEn": "Mozzarella cheese, goat cheese, gorgonzola cheese, psrmesan cheese",
+          "priceUsd": null
+        },
+        {
+          "tr": "PIZZA MARGARİTA",
+          "en": "PIZZA MARGARİTA",
+          "detailTr": "Domates, fesleğen",
+          "detailEn": "Tomatoes,basil",
+          "priceUsd": null
+        },
+        {
+          "tr": "PIZZA CHICKEN CALZONE",
+          "en": "PIZZA CHICKEN CALZONE",
+          "detailTr": "Haşlanmış tavuk, taze mantar, mısır, krema, fesleğen, kırmızı biber",
+          "detailEn": "Boiled chicken, fresh mushrooms, corn, cream, basil, red pepper",
+          "priceUsd": null
+        },
+        {
+          "tr": "SARIMSAKLI TEREYAĞLI EKMEK",
+          "en": "SARIMSAKLI TEREYAĞLI EKMEK",
+          "detailTr": "Mozarella sarımsak, tereyağı, maydanoz",
+          "detailEn": "Mozarella, garlic, butter, parsley",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Pide Çeşitleri",
+      "en": "Kind of Pittas",
+      "items": [
+        {
+          "tr": "Konya Etli Ekmek",
+          "en": "Traditional Minced Pitta",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Kıymalı Kır Pidesi",
+          "en": "Minced Meat Pitta",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Peynirli Pide",
+          "en": "Cheese Pitta",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Kuşbaşılı Kaşarlı Pide",
+          "en": "Beef and Cheese Pitta",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Lahmacun",
+          "en": "Lahmacun",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "BOWLLAR",
+      "en": "Bowls",
+      "items": [
+        {
+          "tr": "Tekirdağ bowl",
+          "en": "Tekirdağ bowl",
+          "detailTr": "Izgara Tekirdağ köfte,kara buğday,patlıcan beğendi,yeşillik salatası",
+          "detailEn": "Grilled special Turkish meatballs,buck wheat,eggplant with cheese,greenery salad",
+          "priceUsd": null
+        },
+        {
+          "tr": "Sea bass bowl",
+          "en": "Sea bass bowl",
+          "detailTr": "Levrek fileto, patates salatası ,çeri domates,edamamme,kuşkonmaz",
+          "detailEn": "Sea bass, potato salad,cherry tomato,edamamme,asparagus",
+          "priceUsd": null
+        },
+        {
+          "tr": "Peri peri bowl",
+          "en": "Peri peri bowl",
+          "detailTr": "Jack daniels Peri peri soslu tavuk but,patates salatası, kuşkonmaz,çeri domates,edemame",
+          "detailEn": "Marinated chicken withSpecial peri peri sauce ,jack daniels,patato salad, asparagus,cherry tomatoes,edemame",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Ana Yemekler",
+      "en": "Main Course",
+      "items": [
+        {
+          "tr": "Kasap Köfte",
+          "en": "Grilled Meatballs",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Kuzu şiş",
+          "en": "Lamb Skewer",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Piliç Külbastı",
+          "en": "Chicken cutlet",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Piliç Şinitsel",
+          "en": "Chicken Schnitzel",
+          "detailTr": "Hardallı patates salatası , Sauteed vegetables, butter and chili sauce",
+          "detailEn": "Hardallı patates salatası , Sauteed vegetables, butter and chili sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Somon teriyaki",
+          "en": "Salmon teriyaki",
+          "detailTr": "Ispanaklı sebzeli spagetti, teriyaki sos",
+          "detailEn": "Spinach and vegetables spagetti , teriyaki sauce",
+          "priceUsd": null
+        },
+        {
+          "tr": "Izgara Levrek",
+          "en": "Grilled Sea Bass",
+          "detailTr": "Ispanaklı sebzeli spagetti, Limonlu fesleğenli sos",
+          "detailEn": "Spinach and vegetables spagetti , Lemon basil sauce",
+          "priceUsd": null
+        }
+      ]
+    },
+    {
+      "tr": "Tatlı",
+      "en": "Desert",
+      "items": [
+        {
+          "tr": "Fırın Sütlaç",
+          "en": "Bakery Rice Puding",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Meyveli turta",
+          "en": "Fruit Pie",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "San sebastian cheesecake",
+          "en": "San sebastian cheesecake",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Dondurmalı & muz",
+          "en": "Banana Split",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Browni (Ilık Servis Edilir)",
+          "en": "Brownie warm serve for you",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Mevsim Meyveleri",
+          "en": "Seasonal fruits",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Waffle",
+          "en": "Waffle",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        },
+        {
+          "tr": "Dondurma",
+          "en": "İce Cream",
+          "detailTr": null,
+          "detailEn": null,
+          "priceUsd": null
+        }
+      ]
+    }
+  ],
+  "footnotes": [
+    "Bütün çorbalarımız kroton ekmek, limon ve kızarmış ekmek ile servis edilir.",
+    "All our soups are served with croutons, lemon and a toasted bread",
+    "Tercihinize göre sarımsaklı ve sarımsaksız servis edilir.",
+    "Create your own with garlic or with out garlic",
+    "Lütfen soğan tercihinizi belirtiniz / Please specify your onion preference"
+  ],
+  "issues": [
+    "Document title in the source is 'DİAMOND  Snack Menü' (not Premium Pool); the file is named Premium_pool_2025_snack_menu. The content may be a copy of the Diamond Pool menu (a separate file diamond_2025_snack_menu_1_docx.txt exists, not compared). Confirm with the hotel that this is really the Premium Pool menu.",
+    "No prices anywhere in the document: priceUsd is null for all items.",
+    "Most item names are printed in one language only (e.g. 'Royal tost', 'Steak Sandwich', 'PIZZA ROYAL', 'Tekirdağ bowl', 'Spagetti Bolonez', 'Mac and cheese', 'Royal Burger'); copied into tr and en. Same-text pairs ('Lahmacun / Lahmacun', 'Waffle / Waffle', 'San sebastian cheesecake / San sebastian cheesecake') kept as printed.",
+    "'Mantar soslu Tavuklu Tagliatelli / Şarap soslu kremalı,mantarlı tavuklu Tagliatelli': both halves are Turkish (alternative names, not TR/EN); stored as tr and en as printed. Only an English description is printed, so detailTr is null.",
+    "Piliç Şinitsel: the line 'Hardallı patates salatası , Sauteed vegetables, butter and chili sauce' mixes Turkish and English and sits after Piliç Şinitsel; stored in both detailTr and detailEn. Unclear whether it describes Piliç Külbastı, Piliç Şinitsel or both. Kasap Köfte, Kuzu şiş, Piliç Külbastı have no description.",
+    "'Mercimek Çorbası - Lentil Soup' was split at ' - '. The '*' soup note (TR and EN) is stored as the note of Çorbalar and in footnotes.",
+    "'*Tercihinize göre sarımsaklı ve sarımsaksız servis edilir. / Create your own with garlic or with out garlic' sits right after Türkmen mantısı inside Makarnalar; treated as a serving note of the whole Makarnalar category (also in footnotes) but it may only belong to Türkmen mantısı.",
+    "Çoban salatası: the unmarked line 'Lütfen soğan tercihinizi belirtiniz / Please specify your onion preference' was appended to the item's detail after ' — ' (also listed in footnotes).",
+    "SARIMSAKLI TEREYAĞLI EKMEK has no heading of its own and follows the pizzas; kept inside Pizza.",
+    "Pizza Quattro Stagioni: TR description wraps onto two lines ('...enginar ve' / 'Zeytinler'), joined with a space. Izgara Levrek Salatası: TR and EN descriptions each wrap onto two lines, joined with a space.",
+    "Browni: name contains '(Ilık Servis Edilir)'; stored tr 'Browni (Ilık Servis Edilir)', en 'Brownie warm serve for you'. Heading 'Tatlı / Desert' keeps the source spelling 'Desert'.",
+    "Typos kept as printed (examples): Shepperd, chesee, souce, bilka, bolief, Buritto, Guacamela, Commo, Fusulli, permasan, psrmesan, edamamme/edemame, Arabiatta, mexian, smoced, Orion rings, Puding, withSpecial; odd punctuation 'mantar.közlenmiş biber çedar peyniri, , patates', 'Haloumi stick,,Orion rings' kept.",
+    "Category headings split at '/': 'Tost/Toasted Sandwich', 'Burger ve sıcak atıştırmalıklar  / Burger and hot snacks' (doubled space collapsed), 'BOWLLAR / Bowls', 'Pide Çeşitleri / Kind of Pittas'. 'Pizza' is single-language. Items in Kızartmalar and Pide Çeşitleri have no descriptions."
+  ]
+}

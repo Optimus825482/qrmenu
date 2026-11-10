@@ -47,11 +47,13 @@ if [ "${RUN_SEED:-false}" = "true" ]; then
   npx tsx scripts/oda-qr-dogrula.ts --yaz || echo "UYARI: oda QR kodları basılı kartlarla tam eşleşmedi; yukarıdaki raporu inceleyin." >&2
 fi
 
-# SYNC_MERIT_MENUS (varsayılan false): 20 Merit outletini ve menülerini kurar. İlk kurulumda BİR KEZ true verin.
-# Menüsü olan outlet'e dokunulmaz (yalnız eksik görseller güncellenir); tam yeniden kurulum yalnız MERIT_MENUS_FORCE_RESET=true ile ve siparişi olmayan outlet'te yapılır.
-if [ "${SYNC_MERIT_MENUS:-false}" = "true" ]; then
+# Merit outlet ve menü senkronu her açılışta çalışır (kapatmak için SYNC_MERIT_MENUS=false). Ayar gerekmez:
+# bir outlet'in menüsü yalnız boşsa ya da prisma/seed/data/merit-menus.json içindeki menüsü değiştiyse yeniden
+# kurulur; dosya aynıysa hiçbir şeye dokunulmaz (panelden yapılan düzenlemeler kalır). Siparişlere dokunulmaz:
+# eski siparişlerde geçen ürünler pasif bir arşiv kategorisine alınır. Senkron hatası başlatmayı durdurmaz.
+if [ "${SYNC_MERIT_MENUS:-true}" = "true" ]; then
   echo "Merit outlet ve menüleri senkronize ediliyor..."
-  npx tsx prisma/seed/meritMenus.ts
+  npx tsx prisma/seed/meritMenus.ts || echo "UYARI: Merit menü senkronu tamamlanamadı; site mevcut menülerle açılıyor. Yukarıdaki hatayı inceleyin." >&2
 fi
 
 echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
