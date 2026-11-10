@@ -145,6 +145,26 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
       }
     });
 
+  const regenerateAllRooms = () =>
+    run(async () => {
+      if (!hotelId) return;
+      const ok = await confirm({
+        title: "Tüm QR'ları yenile",
+        message:
+          "Bu otelin BÜTÜN aktif odalarının QR kodları yenilenecek. Basılı tüm eski QR kodları ve etiketler geçersiz olur ve yeniden basılması gerekir.",
+        danger: true,
+        confirmLabel: "Tümünü yenile",
+      });
+      if (!ok) return;
+      const res = await generateRoomQrBulkAction({ hotelId, mode: "ALL", confirmInvalidate: true });
+      if (res.ok) {
+        setStatus?.(`${res.data.count} odanın QR kodu yenilendi`);
+        await loadRows();
+      } else {
+        setError(res.error.message);
+      }
+    });
+
   const saveMessage = () =>
     run(async () => {
       if (!hotelId || selected.size === 0) return;
@@ -187,6 +207,7 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const zipUrl = hotelId ? `/api/qr/hotel/${hotelId}/room-zip${floorId ? `?floorId=${floorId}` : ""}` : "#";
+  const pdfUrl = hotelId ? `/api/qr/hotel/${hotelId}/room-pdf${floorId ? `?floorId=${floorId}` : ""}` : "#";
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-hidden bg-[#ece9d8] p-2 font-sans text-xs" data-testid="room-qr-window">
@@ -265,13 +286,33 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
           >
             Toplu üret
           </button>
+          <button
+            type="button"
+            className="xp-button px-2.5 py-1 text-xs font-bold"
+            disabled={busy}
+            onClick={() => void regenerateAllRooms()}
+            title="Bu otelin bütün aktif odalarının QR kodlarını yeniler"
+            data-testid="room-qr-regenerate-all"
+          >
+            Tüm QR&apos;ları Yenile
+          </button>
           <button type="button" className="xp-button px-2.5 py-1 text-xs font-bold" disabled={busy} onClick={() => void print()}>
             Yazdır{selected.size > 0 ? ` (${selected.size})` : ""}
           </button>
           {hotelId ? (
+            <>
             <a className="xp-button px-3 py-1 text-xs font-bold" href={zipUrl} download>
               ZIP indir
             </a>
+            <a
+              className="xp-button px-3 py-1 text-xs font-bold"
+              href={pdfUrl}
+              download
+              title="QR kartları (A4, sayfada 6 kart); kat seçiliyse yalnız o kat"
+            >
+              PDF indir
+            </a>
+            </>
           ) : null}
         </div>
       </div>

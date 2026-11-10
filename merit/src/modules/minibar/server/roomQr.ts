@@ -1,3 +1,4 @@
+import { renderQrCardsPdf } from "@/lib/qrPdf";
 import { zipSync } from "fflate";
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
@@ -380,6 +381,35 @@ export async function roomQrZip(
   return {
     filename: `QR_Kodlari_${fileSafe(hotel.code)}_${stamp}.zip`,
     body: Buffer.from(zipSync(files)),
+  };
+}
+
+/** Print-ready PDF (A4, six cards a page) of the active rooms' QR codes. Token uretmez/yenilemez. */
+export async function roomQrPdf(
+  ctx: Ctx,
+  hotelId: string,
+  opts: { floorId?: string } = {},
+  now: Date = new Date(),
+): Promise<{ filename: string; body: Buffer }> {
+  await authorize(ctx, hotelId, "V");
+  const hotel = await prisma.hotel.findUnique({ where: { id: hotelId }, select: { code: true, name: true } });
+  if (!hotel) throw new DomainError("NOT_FOUND", "Otel bulunamadı");
+  const rooms = await qrRooms(hotelId, { floorId: opts.floorId });
+  if (rooms.length === 0) throw new DomainError("NOT_FOUND", "QR kodu olan oda bulunamadı");
+  const cards = [];
+  for (const r of rooms) {
+    cards.push({
+      heading: hotel.name,
+      sub: r.floor.name,
+      caption: "ODA • ROOM",
+      label: r.number,
+      url: await qrUrl(r.qrToken as string),
+    });
+  }
+  const stamp = businessDate(now).replace(/-/g, "");
+  return {
+    filename: `Oda_QR_Kodlari_${fileSafe(hotel.code)}_${stamp}.pdf`,
+    body: await renderQrCardsPdf(`${hotel.name} - Oda QR Kartları`, cards),
   };
 }
 

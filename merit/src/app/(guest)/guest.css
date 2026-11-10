@@ -789,10 +789,6 @@ body {
   --g-safe-top: 0px;
   --g-safe-bottom: 0px;
 }
-.g-root[data-preview="true"]:not([data-device]) {
-  --g-safe-top: 54px;
-  --g-safe-bottom: 24px;
-}
 
 .g-header {
   position: sticky;
@@ -3123,4 +3119,50 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* Kayan "başa dön" düğmesi: bir ekran kadar inince sağ altta belirir, başa dönünce kaybolur. */
+.g-top-fab {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  z-index: 28;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--m-accent) 35%, var(--m-line));
+  border-radius: 999px;
+  background: var(--m-bg);
+  color: var(--m-accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--m-text) 16%, transparent);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.g-top-fab[data-shown="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.g-top-fab:active {
+  background: var(--m-accent);
+  color: var(--m-text-on-accent);
+}
+.g-top-fab .g-acc-chevron {
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-top-fab,
+  .g-top-fab[data-shown="true"] {
+    transition: none;
+    transform: none;
+  }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n/locales";
 import { ITEM_TAG_IDS, type ItemTagId, resolveHeroFont } from "../../design";
 import type { GuestCategory, GuestItem, GuestMenu } from "../../server/guestMenu";
@@ -110,6 +110,49 @@ function ItemCards({
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Floating "back to top": appears at the bottom right once the guest has scrolled a screen or so down, scrolls
+ * the menu back to its start when tapped and hides again there. Works whether the page or a frame scrolls.
+ */
+function BackToTop({ label }: { label: string }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const scroller = useRef<HTMLElement | Window | null>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    let target: HTMLElement | Window = window;
+    for (let el = ref.current?.parentElement ?? null; el && el !== document.body; el = el.parentElement) {
+      const overflow = getComputedStyle(el).overflowY;
+      // Only a box that really clips its content scrolls; `overflow: auto` on a full-height frame does not.
+      if ((overflow === "auto" || overflow === "scroll") && el.scrollHeight > el.clientHeight + 1) {
+        target = el;
+        break;
+      }
+    }
+    scroller.current = target;
+    const read = () => setShown((target instanceof Window ? target.scrollY : target.scrollTop) > 480);
+    target.addEventListener("scroll", read, { passive: true });
+    read();
+    return () => target.removeEventListener("scroll", read);
+  }, []);
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className="g-top-fab"
+      data-shown={shown ? "true" : undefined}
+      aria-label={label}
+      title={label}
+      tabIndex={shown ? 0 : -1}
+      aria-hidden={shown ? undefined : true}
+      onClick={() => scroller.current?.scrollTo({ top: 0, behavior: "smooth" })}
+    >
+      <span className="g-acc-chevron" data-up="true" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -610,20 +653,6 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
           : !isAccordion && active
             ? renderBody(active)
             : null}
-        {!isAccordion && active && (directItems.length > 4 || active.subcategories.length > 1) ? (
-          <div className="g-back-top-wrap">
-            <button
-              type="button"
-              className="g-back-top"
-              onClick={() => {
-                const tabsEl = document.querySelector(".g-tabs");
-                tabsEl?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-            >
-              ↑ {t("menu.backToTop")}
-            </button>
-          </div>
-        ) : null}
         <p className="g-legal">{t("menu.allergenNote")}</p>
       </div>
     ),
@@ -633,6 +662,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   return (
     <Container className="g-menu">
       {state.design.layout.map((block) => blocks[block])}
+      {token ? <BackToTop label={t("menu.backToTop")} /> : null}
       {visibleOpenItem ? (
         <ItemSheet
           item={visibleOpenItem}

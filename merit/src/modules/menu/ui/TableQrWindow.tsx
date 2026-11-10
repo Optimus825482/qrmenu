@@ -9,7 +9,12 @@ import { useSse } from "@/shell/useSse";
 import { listOutletAreasAction } from "@/modules/core/server/admin/actions/outletAreas";
 import type { OutletAreaRow } from "@/modules/core/server/admin/outletAreas";
 import { menuContextAction } from "../server/actions/menuAdmin";
-import { listTableQrAction, regenerateAllTableQrAction, regenerateTableQrAction } from "../server/actions/tableQr";
+import {
+  listTableQrAction,
+  regenerateAllTableQrAction,
+  regenerateHotelTableQrAction,
+  regenerateTableQrAction,
+} from "../server/actions/tableQr";
 import type { MenuContext } from "../server/menuContext";
 import type { TableQrRow } from "../server/tableQr";
 import { Icon } from "@/components/icons/Icon";
@@ -139,6 +144,27 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
     await loadRows();
   };
 
+  const regenerateHotel = async () => {
+    if (!hotelId) return;
+    const yes = await confirm({
+      title: "Tüm QR'ları yenile",
+      message:
+        "Bu otelin BÜTÜN outletlerindeki bütün masaların QR kodları yenilensin mi? Basılı tüm eski QR kodları geçersiz olur ve yeniden basılması gerekir.",
+      danger: true,
+      confirmLabel: "Tümünü yenile",
+    });
+    if (!yes) return;
+    setBusy(true);
+    const result = await regenerateHotelTableQrAction({ hotelId });
+    setBusy(false);
+    if (!result.ok) notify.error(result.error.message, { title: "Yenilenemedi" });
+    else {
+      setStatus(`${result.data.outlets} outlette ${result.data.count} masanın QR kodu yenilendi`);
+      notify.success(`${result.data.outlets} outlette ${result.data.count} masanın QR kodu yenilendi.`);
+    }
+    await loadRows();
+  };
+
   if (!hotelId) return <p className="xp-defs-note">Bir otel seçilmedi.</p>;
   if (error && !context) {
     return (
@@ -157,6 +183,8 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
   if (areaId) printParams.set("areaId", areaId);
   const printUrl = `/api/qr/outlet/${outletId}/print${printParams.toString() ? `?${printParams.toString()}` : ""}`;
   const zipUrl = `/api/qr/outlet/${outletId}/zip${areaId ? `?areaId=${areaId}` : ""}`;
+  const pdfUrl = `/api/qr/outlet/${outletId}/pdf${areaId ? `?areaId=${areaId}` : ""}`;
+  const hotelPdfUrl = `/api/qr/hotel/${hotelId}/table-pdf`;
 
   return (
     <div className="xp-mm xp-tq">
@@ -232,12 +260,27 @@ export function TableQrWindow({ hotelId, setStatus }: AppProps) {
             >
               Toplu üret/yenile
             </button>
+            <button
+              type="button"
+              className="xp-button"
+              disabled={busy}
+              onClick={() => void regenerateHotel()}
+              title="Bu otelin bütün outletlerindeki bütün masa QR kodlarını yeniler"
+            >
+              <Icon name="refresh" size={16} /> Tüm QR&apos;ları Yenile
+            </button>
           </>
         ) : null}
         {outletId ? (
           <>
             <a className="xp-button" href={zipUrl} download>
               ZIP indir
+            </a>
+            <a className="xp-button" href={pdfUrl} download title="Bu outletin QR kartları (A4, sayfada 6 kart)">
+              PDF indir
+            </a>
+            <a className="xp-button" href={hotelPdfUrl} download title="Bütün outletlerin QR kartları tek PDF">
+              Tüm outletler PDF
             </a>
             <a
               className="xp-button"

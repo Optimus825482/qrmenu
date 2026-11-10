@@ -29,3 +29,9 @@ export async function regenerateAllTableQrAction(raw: unknown): Promise<Result<{
       }),
   )(raw);
 }
+
+export async function regenerateHotelTableQrAction(raw: unknown): Promise<Result<{ count: number; outlets: number }>> {
+  return safeAction(z.object({ hotelId: id }), async ({ hotelId }) =>
+    tableQr.regenerateHotel(await requireUser(), hotelId),
+  )(raw);
+}

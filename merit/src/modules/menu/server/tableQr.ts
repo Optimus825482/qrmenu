@@ -7,6 +7,7 @@ import { DomainError } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope } from "./menuNodeAccess";
 import { parsePrintTemplate, parsePrintTheme } from "./printOptions";
+import { type QrPdfCard, renderQrCardsPdf } from "@/lib/qrPdf";
 
 export type TableQrRow = {
   id: string;
@@ -296,6 +297,83 @@ export async function outletZip(ctx: Ctx, outletId: string, opts?: { areaId?: st
     contentType: "application/zip",
     body: zipSync(files),
   };
+}
+
+const TABLE_PDF_FOOTER: [string, string] = [
+  "Menüyü incelemek ve sipariş için kameranızla okutunuz",
+  "Scan with your camera to view menu & order",
+];
+
+async function tablePdfCards(access: Access, areaId?: string): Promise<QrPdfCard[]> {
+  const tables = await activeQrTables(access.outletId, areaId);
+  const cards: QrPdfCard[] = [];
+  for (const t of tables) {
+    cards.push({
+      heading: access.hotelName || "Merit Royal",
+      sub: `${access.outletName} · ${formatAreaLabel(t.area)}`,
+      caption: "MASA • TABLE",
+      label: t.label,
+      url: await qrUrl(t.qrToken as string),
+      footer: TABLE_PDF_FOOTER,
+    });
+  }
+  return cards;
+}
+
+/** Print-ready PDF (A4, six cards a page) of one outlet's active table QR codes (`QM-MEN V`). */
+export async function outletPdf(ctx: Ctx, outletId: string, opts?: { areaId?: string }): Promise<QrFile> {
+  const access = await authorizeOutlet(ctx, outletId, "V");
+  const cards = await tablePdfCards(access, opts?.areaId);
+  if (cards.length === 0) throw new DomainError("CONFLICT", "QR kodu üretilmiş aktif masa yok");
+  const prefix = hotelPrefix(access.hotelCode);
+  return {
+    filename: `${[prefix, access.outletName].map(asciiSlug).join("_")}_QR.pdf`,
+    contentType: "application/pdf",
+    body: new Uint8Array(await renderQrCardsPdf(`${access.outletName} - Masa QR Kartları`, cards)),
+  };
+}
+
+/** Outlets of the hotel that have tables and that the caller may act on (`QM-MEN action`), by name. */
+async function hotelTableOutlets(ctx: Ctx, hotelId: string, action: "V" | "D"): Promise<Access[]> {
+  await assertCan(ctx, "QM-MEN", action, hotelId);
+  const outlets = await prisma.outlet.findMany({
+    where: { hotelId, tables: { some: {} } },
+    select: { id: true },
+    orderBy: { name: "asc" },
+  });
+  const allowed: Access[] = [];
+  for (const outlet of outlets) {
+    try {
+      allowed.push(await authorizeOutlet(ctx, outlet.id, action));
+    } catch (error) {
+      // An outlet-scoped user simply does not get the other outlets.
+      if (!(error instanceof DomainError)) throw error;
+    }
+  }
+  return allowed;
+}
+
+/** One PDF with the active table QR codes of every outlet of the hotel the caller can see. */
+export async function hotelPdf(ctx: Ctx, hotelId: string): Promise<QrFile> {
+  const outlets = await hotelTableOutlets(ctx, hotelId, "V");
+  const cards: QrPdfCard[] = [];
+  for (const access of outlets) cards.push(...(await tablePdfCards(access)));
+  if (cards.length === 0) throw new DomainError("CONFLICT", "QR kodu üretilmiş aktif masa yok");
+  const first = outlets[0];
+  return {
+    filename: `${asciiSlug(hotelPrefix(first?.hotelCode ?? "MERIT"))}_Tum_Masa_QR.pdf`,
+    contentType: "application/pdf",
+    body: new Uint8Array(await renderQrCardsPdf(`${first?.hotelName ?? "Merit"} - Masa QR Kartları`, cards)),
+  };
+}
+
+/** New signed tokens for every table of every outlet of the hotel the caller may edit; old prints stop working. */
+export async function regenerateHotel(ctx: Ctx, hotelId: string): Promise<{ count: number; outlets: number }> {
+  const outlets = await hotelTableOutlets(ctx, hotelId, "D");
+  if (outlets.length === 0) throw new DomainError("NOT_FOUND", "Masası olan bir outlet bulunamadı");
+  let count = 0;
+  for (const access of outlets) count += (await regenerateAll(ctx, access.outletId)).count;
+  return { count, outlets: outlets.length };
 }
 
 const esc = (s: string) =>
