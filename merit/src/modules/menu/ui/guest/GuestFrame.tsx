@@ -230,7 +230,9 @@ export function GuestFrame({
             <div data-guide="dil-secimi" className="g-header-left">
               <LanguageSwitch token={token} locale={locale} onSelect={onLocaleChange} />
             </div>
-            <h1 className="g-title">
+            {/* The design's hero already prints the outlet name large; the bar title would repeat it, so it stays for
+                screen readers only. Without a hero the bar title is the only name on the page. */}
+            <h1 className="g-title" data-visually-hidden={design.options.hero !== "NONE" ? "true" : undefined}>
               <span>{outletName}</span>
               <span aria-hidden="true"> · </span>
               <span>{placeLabel ?? tableLabel}</span>
