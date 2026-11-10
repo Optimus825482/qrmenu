@@ -306,7 +306,8 @@ Respond ONLY with a JSON object with this exact structure (no markdown fences, j
   return out as Record<TranslationLang, { name: string; detail: string | null }>;
 }
 
-async function loadTranslationConfig(): Promise<{
+/** Keys, preferred provider and Gemini model: Denetim Masası → Sistem → Çeviri, environment as fallback. */
+export async function loadTranslationConfig(): Promise<{
   deeplKey?: string;
   geminiKey?: string;
   provider: "AUTO" | "DEEPL" | "GEMINI";

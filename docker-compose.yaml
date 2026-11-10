@@ -37,7 +37,8 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
       PUSH_ENDPOINT_ALLOWLIST: ${PUSH_ENDPOINT_ALLOWLIST:-}
-      # Çeviri: MyBar metni (none | gtx) ve menü çevirisi sağlayıcıları.
+      # Çeviri: MyBar ve menü, Denetim Masası → Sistem → Çeviri ekranındaki DeepL / Gemini anahtarlarını kullanır
+      # (aşağıdaki iki anahtar yalnız yedektir). gtx: MyBar için anahtarsız Google çevirisini son yedek olarak ekler.
       TRANSLATE_PROVIDER: ${TRANSLATE_PROVIDER:-}
       DEEPL_AUTH_KEY: ${DEEPL_AUTH_KEY:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}

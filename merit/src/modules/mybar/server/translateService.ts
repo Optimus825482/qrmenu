@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import type { Locale } from "@/lib/i18n/locales";
 import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
-import { getTranslationProvider } from "./translate";
+import { resolveTranslationProviders } from "./translate";
+import type { TranslateResult, TranslationProvider } from "./translate/provider";
 
 export const TRANSLATE_TIMEOUT_MS = 3500;
 const MAX_TEXT = 600;
@@ -45,8 +46,7 @@ function warn(provider: string, error: unknown, kind: "çeviri" | "önbellek yaz
   console.warn(`[translate] ${provider} ${kind} başarısız: ${error instanceof Error ? error.name : "hata"}`);
 }
 
-async function callProvider(text: string, to: string, from: string | undefined, timeoutMs: number) {
-  const provider = getTranslationProvider();
+async function callOne(provider: TranslationProvider, text: string, to: string, from: string | undefined, timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -60,6 +60,29 @@ async function callProvider(text: string, to: string, from: string | undefined, 
   }
 }
 
+/**
+ * Tries the providers in order and returns the first answer with the name of the provider that gave it.
+ * A failed provider is logged and the next one is tried; the last failure is thrown.
+ */
+async function callProviders(
+  providers: TranslationProvider[],
+  text: string,
+  to: string,
+  from: string | undefined,
+  timeoutFor: (provider: TranslationProvider) => number,
+): Promise<TranslateResult & { provider: string }> {
+  let last: unknown = new Error("çeviri sağlayıcısı yok");
+  for (const [index, provider] of providers.entries()) {
+    try {
+      return { ...(await callOne(provider, text, to, from, timeoutFor(provider))), provider: provider.name };
+    } catch (error) {
+      last = error;
+      if (index < providers.length - 1) warn(provider.name, error);
+    }
+  }
+  throw last;
+}
+
 /** Guest note -> Turkish for staff. Never throws; any failure yields nulls (the request must still go through). */
 export async function translateNoteForStaff(
   hotelId: string,
@@ -69,15 +92,19 @@ export async function translateNoteForStaff(
   const none = { noteTr: null, srcLang: null };
   const text = cleanNote(note);
   if (!text || text.length > NOTE_MAX) return none;
-  const provider = getTranslationProvider();
+  let providers: TranslationProvider[] = [];
   try {
-    if (provider.name === "none") return none;
+    providers = await resolveTranslationProviders();
+    if (providers.length === 0) return none;
     if (!(await getSetting("mybar.translateNotes", hotelId))) return none;
-    const result = await callProvider(text, "tr", undefined, opts.timeoutMs ?? TRANSLATE_TIMEOUT_MS);
+    // The guest is waiting for the request to go through: the whole chain shares roughly one budget.
+    const budget = opts.timeoutMs ?? TRANSLATE_TIMEOUT_MS;
+    const each = providers.length > 1 ? Math.max(1500, Math.floor(budget / providers.length)) : budget;
+    const result = await callProviders(providers, text, "tr", undefined, () => each);
     if (!result.translated) return { noteTr: null, srcLang: result.sourceLang };
     return { noteTr: result.text, srcLang: result.sourceLang };
   } catch (error) {
-    warn(provider.name, error);
+    warn(providers.at(-1)?.name ?? "translate", error);
     return none;
   }
 }
@@ -85,7 +112,7 @@ export async function translateNoteForStaff(
 /** Turkish names/messages -> guest language. Misses fall back to the Turkish original and warm the cache in the background. */
 export async function localizeTexts(texts: string[], lang: Locale): Promise<Map<string, string>> {
   const out = new Map<string, string>(texts.map((t) => [t, t]));
-  if (lang === "tr" || getTranslationProvider().name === "none") return out;
+  if (lang === "tr" || (await resolveTranslationProviders()).length === 0) return out;
   const unique = [...new Set(texts.filter((t) => t.length > 0 && t.length <= MAX_TEXT))];
   if (unique.length === 0) return out;
   try {
@@ -109,8 +136,9 @@ export async function localizeTexts(texts: string[], lang: Locale): Promise<Map<
 
 /** Translates and stores the given Turkish texts; returns how many rows were written. */
 export async function warmTranslations(texts: string[], lang: Locale): Promise<number> {
-  const provider = getTranslationProvider();
-  if (lang === "tr" || provider.name === "none") return 0;
+  const providers = lang === "tr" ? [] : await resolveTranslationProviders();
+  if (providers.length === 0) return 0;
+  const lastName = providers[providers.length - 1].name;
   const queue = [...new Set(texts)]
     .filter((t) => t.length > 0 && t.length <= MAX_TEXT && !isMiss(keyOf(t, lang)) && !inflight.has(keyOf(t, lang)))
     .slice(0, WARM_BATCH_MAX);
@@ -122,9 +150,9 @@ export async function warmTranslations(texts: string[], lang: Locale): Promise<n
       try {
         let result;
         try {
-          result = await callProvider(text, lang, "tr", TRANSLATE_TIMEOUT_MS);
+          result = await callProviders(providers, text, lang, "tr", (p) => p.backgroundTimeoutMs ?? TRANSLATE_TIMEOUT_MS);
         } catch (error) {
-          warn(provider.name, error);
+          warn(lastName, error);
           continue;
         }
         if (!result.translated || !result.text || result.text.length > 1200) {
@@ -135,12 +163,12 @@ export async function warmTranslations(texts: string[], lang: Locale): Promise<n
         try {
           await prisma.textTranslation.upsert({
             where: { sourceHash_targetLang: key },
-            create: { ...key, sourceText: text, translated: result.text, provider: provider.name },
-            update: { translated: result.text, provider: provider.name },
+            create: { ...key, sourceText: text, translated: result.text, provider: result.provider },
+            update: { translated: result.text, provider: result.provider },
           });
           written += 1;
         } catch (error) {
-          warn(provider.name, error, "önbellek yazımı");
+          warn(result.provider, error, "önbellek yazımı");
         }
       } finally {
         inflight.delete(memKey);
