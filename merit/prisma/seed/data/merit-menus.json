@@ -6788,20 +6788,6 @@
             "Havuz & Sahil Başlangıçları",
             "Sıcak Çıtırlar & Atıştırmalıklar"
           ],
-          "name": "Patates Kızartması",
-          "detail": "Merit mutfak ve bar ekibinin seçkin malzemelerle hazırladığı özel sunum.",
-          "price": null,
-          "imageUrl": null,
-          "allergens": [],
-          "tags": [
-            "POPULER"
-          ]
-        },
-        {
-          "catPath": [
-            "Havuz & Sahil Başlangıçları",
-            "Sıcak Çıtırlar & Atıştırmalıklar"
-          ],
           "name": "Peynirli Sigara Böreği",
           "detail": "Merit mutfak ve bar ekibinin seçkin malzemelerle hazırladığı özel sunum.",
           "price": null,
@@ -15949,21 +15935,6 @@
           "imageUrl": "/merit-menus/4a94c348fcb97eacb9aed3fc.webp",
           "allergens": [
             "gluten",
-            "soya"
-          ],
-          "tags": []
-        },
-        {
-          "catPath": [
-            "Sunset Teras Mutfağı & Sushi",
-            "Teras İmza Ana Yemekler"
-          ],
-          "name": "Tavuk Kkochi",
-          "detail": "Kese Yoğurtlu Köz Patlıcan, El Yapımı İnce Patates Cipsi",
-          "price": 35,
-          "imageUrl": null,
-          "allergens": [
-            "sut",
             "soya"
           ],
           "tags": []
@@ -39351,21 +39322,6 @@
         {
           "catPath": [
             "Soğuk Deniz Mezeleri & Zeytinyağlılar",
-            "Denizden Marin, Lakerda & Ceviche"
-          ],
-          "name": "Deniz Mahsüllü Pazı Sarma",
-          "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
-          "price": 0,
-          "imageUrl": null,
-          "allergens": [
-            "yumusakca",
-            "balik"
-          ],
-          "tags": []
-        },
-        {
-          "catPath": [
-            "Soğuk Deniz Mezeleri & Zeytinyağlılar",
             "Ege Otları & Zeytinyağlılar"
           ],
           "name": "Zeytinyağlı Bakla",
@@ -39629,20 +39585,6 @@
             "Soğuk Deniz Mezeleri & Zeytinyağlılar",
             "Geleneksel Soğuk Mezeler"
           ],
-          "name": "Şakşuka",
-          "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
-          "price": 0,
-          "imageUrl": null,
-          "allergens": [],
-          "tags": [
-            "VEGAN"
-          ]
-        },
-        {
-          "catPath": [
-            "Soğuk Deniz Mezeleri & Zeytinyağlılar",
-            "Geleneksel Soğuk Mezeler"
-          ],
           "name": "Muhammara",
           "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
           "price": 0,
@@ -39752,22 +39694,6 @@
             "Soğuk Deniz Mezeleri & Zeytinyağlılar",
             "Geleneksel Soğuk Mezeler"
           ],
-          "name": "Deniz Balığı Ceviche",
-          "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
-          "price": 0,
-          "imageUrl": null,
-          "allergens": [
-            "balik"
-          ],
-          "tags": [
-            "VEGAN"
-          ]
-        },
-        {
-          "catPath": [
-            "Soğuk Deniz Mezeleri & Zeytinyağlılar",
-            "Geleneksel Soğuk Mezeler"
-          ],
           "name": "Yoğurtlu Semizotu",
           "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
           "price": null,
@@ -39791,39 +39717,6 @@
             "sut"
           ],
           "tags": [
-            "VEGAN"
-          ]
-        },
-        {
-          "catPath": [
-            "Soğuk Deniz Mezeleri & Zeytinyağlılar",
-            "Geleneksel Soğuk Mezeler"
-          ],
-          "name": "Babagannuş",
-          "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
-          "price": 0,
-          "imageUrl": null,
-          "allergens": [
-            "susam"
-          ],
-          "tags": [
-            "VEGAN"
-          ]
-        },
-        {
-          "catPath": [
-            "Soğuk Deniz Mezeleri & Zeytinyağlılar",
-            "Geleneksel Soğuk Mezeler"
-          ],
-          "name": "Antep Biberli Atom",
-          "detail": "Soğuk sıkım sızma zeytinyağı ve taze Ege otlarıyla günlük hazırlanan imza soğuk meze.",
-          "price": 0,
-          "imageUrl": null,
-          "allergens": [
-            "sut"
-          ],
-          "tags": [
-            "ACILI",
             "VEGAN"
           ]
         },
