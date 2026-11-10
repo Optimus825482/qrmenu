@@ -639,6 +639,8 @@ model UserSession {
   events SessionEvent[]
 
   @@index([status, expiresAt])
+  @@index([hotelId, loginAt])
+  @@index([userId, status])
   @@map("user_sessions")
 }
 
@@ -689,6 +691,8 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@index([type, refId, createdAt])
+  @@index([userId, createdAt])
+  @@index([hotelId, createdAt])
   @@map("notifications")
 }
 
@@ -727,6 +731,7 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([entity, entityId])
+  @@index([action, userId, createdAt])
   @@map("audit_logs")
 }
 
@@ -969,6 +974,7 @@ model RoomCheck {
   @@index([roomId, checkDate])
   @@index([userId, checkDate])
   @@index([checkDate])
+  @@index([startedAt])
   @@map("room_checks")
 }
 
@@ -993,6 +999,8 @@ model RoomDnd {
 
   @@unique([roomId, date])
   @@index([status, date])
+  @@index([hotelId, date])
+  @@index([taskItemId])
   @@map("room_dnds")
 }
 
@@ -1047,6 +1055,8 @@ model MybarRequest {
   @@index([hotelId, status])
   @@index([hotelId, businessDate])
   @@index([roomId, businessDate])
+  @@index([status, createdAt])
+  @@index([hotelId, createdAt])
   @@map("mybar_requests")
 }
 
@@ -1087,6 +1097,7 @@ model GuestRecord {
 
   @@index([hotelId, kind, arrivalDate, departureDate])
   @@index([roomId, kind])
+  @@index([hotelId, departureDate])
   @@map("guest_records")
 }
 
@@ -1191,6 +1202,7 @@ model TaskStatusLog {
   user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+  @@index([taskItemId, createdAt])
   @@map("task_status_logs")
 }
 
@@ -1417,6 +1429,9 @@ model Order {
   @@unique([hotelId, businessDate, orderNo])
   @@index([outletId, status, createdAt])
   @@index([roomId, status])
+  @@index([hotelId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([outletId, businessDate])
   @@map("orders")
 }
 
@@ -1537,6 +1552,7 @@ model PrintJob {
 
   @@index([printerId, status])
   @@index([hotelId, status, createdAt])
+  @@index([status, startedAt])
   @@map("print_jobs")
 }
 
