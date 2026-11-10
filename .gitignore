@@ -18,5 +18,6 @@ prisma/dev.db*
 merit/prisma/dev.db*
 *.db
 *.db-journal
-# Uretilen baski dosyalari (oda QR kodlarini icerir)
-cikti/
+# Uretilen baski dosyalari; matbaaya giden oda QR seti (10.11.2026) depoda tutulur
+cikti/*
+!cikti/oda-qr-sablon/

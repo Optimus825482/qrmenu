@@ -4,8 +4,8 @@
  *
  *   npx tsx scripts/oda-qr-sablon.ts https://qrmenu.merithotels.com [çıktı klasörü]
  *
- * Yalnız okur: oda kodlarını (qr_token) değiştirmez. Üretilen PDF'ler oda kodlarını içerir;
- * depoya eklenmez (cikti/ .gitignore'da).
+ * Yalnız okur: oda kodlarını (qr_token) değiştirmez. Matbaaya giden set (10.11.2026)
+ * cikti/oda-qr-sablon altında depoda tutulur.
  */
 import "dotenv/config";
 import { mkdir, writeFile } from "node:fs/promises";
