@@ -272,9 +272,12 @@ export async function update(ctx: Ctx, nodeId: string, raw: MenuNodeUpdateInput)
     if (input.allergens !== undefined) data.allergens = input.allergens;
     if (input.tags !== undefined) data.tags = input.tags;
     if (input.isActive !== undefined) data.isActive = input.isActive;
+    // Empty string, null and surrounding whitespace are the same text: saving an unchanged item (price, tag or
+    // availability edit) must not throw its translations away.
+    const text = (value: string | null | undefined) => (value ?? "").trim();
     sourceChanged =
-      (input.name !== undefined && input.name !== before.name) ||
-      (input.detail !== undefined && input.detail !== before.detail);
+      (input.name !== undefined && text(input.name) !== text(before.name)) ||
+      (input.detail !== undefined && text(input.detail) !== text(before.detail));
     // Translations follow the Turkish source only (K2): stale ones go with the old text, so guests see the
     // Turkish fallback until the new automatic translation lands, never an outdated one.
     if (sourceChanged) await tx.menuNodeTranslation.deleteMany({ where: { nodeId } });
