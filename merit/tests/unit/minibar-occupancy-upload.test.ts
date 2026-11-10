@@ -134,6 +134,43 @@ describe("doluluk yükleme: kayıt ve hatalar", () => {
     expect(fs.existsSync(path.join(uploadsDir, "occupancy"))).toBe(false);
   });
 
+  it("önizleme: odalar başka otele aitse o oteli önerir (yalnızca yetkili olunan oteller)", async () => {
+    const { dep } = await world();
+    await rooms("DIAMOND", ["302", "303"]);
+    const data = await stdFile([
+      ["301", d("2026-11-01"), d("2026-11-06"), 2, null, null],
+      ["302", d("2026-11-01"), d("2026-11-06"), 2, null, null],
+      ["303", d("2026-11-01"), d("2026-11-06"), 2, null, null],
+    ]);
+    // Yalnızca Royal'e bağlı kullanıcıya başka otel söylenmez.
+    expect((await svc.previewOccupancy(dep.ctx, { fileName: "ih.xlsx", data }, NOW)).suggestedHotel).toBeUndefined();
+
+    const both = await staff("R-DEP", "ROYAL", ["DIAMOND"]);
+    const view = await svc.previewOccupancy(both.ctx, { fileName: "ih.xlsx", data }, NOW);
+    expect(view.okRows).toBe(0);
+    expect(view.suggestedHotel).toMatchObject({ id: await hotelId("DIAMOND"), matchedRows: 3, totalRows: 3 });
+
+    // Önerilen otelde dosya temizdir ve yüklenir.
+    const target = view.suggestedHotel!.id;
+    const there = await svc.previewOccupancy(both.ctx, { fileName: "ih.xlsx", data, hotelId: target }, NOW);
+    expect(there).toMatchObject({ okRows: 3, errorRows: 0 });
+    expect(there.suggestedHotel).toBeUndefined();
+    const res = await svc.commitOccupancy(both.ctx, { fileName: "ih.xlsx", data, kind: "IN_HOUSE", hotelId: target }, NOW);
+    expect(res).toMatchObject({ okRows: 3, errorRows: 0 });
+    expect(await testDb.guestRecord.count({ where: { hotelId: target } })).toBe(3);
+  });
+
+  it("önizleme: dosya seçili otele uyuyorsa ya da iki otel eşit uyuyorsa öneri yok", async () => {
+    await world();
+    const both = await staff("R-DEP", "ROYAL", ["DIAMOND", "PREMIUM"]);
+    const fits = await stdFile([["101", d("2026-11-01"), d("2026-11-06"), 2, null, null]]);
+    expect((await svc.previewOccupancy(both.ctx, { fileName: "ih.xlsx", data: fits }, NOW)).suggestedHotel).toBeUndefined();
+
+    await rooms("PREMIUM", ["301"]);
+    const tie = await stdFile([["301", d("2026-11-01"), d("2026-11-06"), 2, null, null]]);
+    expect((await svc.previewOccupancy(both.ctx, { fileName: "ih.xlsx", data: tie }, NOW)).suggestedHotel).toBeUndefined();
+  });
+
   it("P4001 önizleme: otel adı uyuşmazlığı uyarı", async () => {
     const { dep } = await world();
     const data = await buildP4001Xlsx({

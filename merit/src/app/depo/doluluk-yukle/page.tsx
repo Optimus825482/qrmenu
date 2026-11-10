@@ -58,6 +58,7 @@ type Preview = {
   hotelMatch?: { label: string; matches: boolean };
   changes?: { create: number; update: number; remove: number };
   blockers?: string[];
+  suggestedHotel?: { id: string; name: string; matchedRows: number; totalRows: number };
 };
 type CommitResult = {
   code: string;
@@ -115,10 +116,10 @@ export default function DolulukYuklePage() {
     return () => clearTimeout(timer);
   }, [load]);
 
-  const form = (): FormData => {
+  const form = (forHotel: string = hotelId): FormData => {
     const fd = new FormData();
     if (file) fd.append("file", file);
-    if (hotelId) fd.append("hotelId", hotelId);
+    if (forHotel) fd.append("hotelId", forHotel);
     if (kind) fd.append("kind", kind);
     return fd;
   };
@@ -157,22 +158,58 @@ export default function DolulukYuklePage() {
     }
   };
 
+  /** Uploads the chosen file for `forHotel`; throws with the server's message. */
+  const upload = async (forHotel: string, detected: Kind) => {
+    const fd = form(forHotel);
+    fd.delete("kind");
+    fd.append("kind", kind || detected);
+    const res = await fetch("/api/minibar/occupancy/upload", { method: "POST", body: fd });
+    const data = await readJson(res);
+    if (!res.ok) throw new Error(String(data.error ?? "Yükleme başarısız oldu."));
+    setResult(data as unknown as CommitResult);
+    setPreview(null);
+    setFile(null);
+    if (fileRef.current) fileRef.current.value = "";
+    void load(forHotel);
+  };
+
   const commit = async () => {
     if (!file || !preview) return;
     setBusy(true);
     setError(null);
     try {
-      const fd = form();
-      fd.delete("kind");
-      fd.append("kind", kind || preview.detectedKind);
-      const res = await fetch("/api/minibar/occupancy/upload", { method: "POST", body: fd });
+      await upload(hotelId, preview.detectedKind);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Yükleme sırasında hata oluştu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /**
+   * "Yes" to the wrong-hotel question: switches to the suggested hotel and checks the file against it. A clean
+   * file is uploaded right away; one with faulty rows or a blocker stays on the preview for the user to decide.
+   */
+  const uploadForSuggested = async () => {
+    const target = preview?.suggestedHotel;
+    if (!file || !target) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/minibar/occupancy/preview", { method: "POST", body: form(target.id) });
       const data = await readJson(res);
-      if (!res.ok) throw new Error(String(data.error ?? "Yükleme başarısız oldu."));
-      setResult(data as unknown as CommitResult);
-      setPreview(null);
-      setFile(null);
-      if (fileRef.current) fileRef.current.value = "";
-      void load(hotelId);
+      if (!res.ok) throw new Error(String(data.error ?? "Önizleme başarısız oldu."));
+      const next = data as unknown as Preview;
+      setHotelId(target.id);
+      if (next.okRows > 0 && next.errorRows === 0 && (next.blockers?.length ?? 0) === 0) {
+        await upload(target.id, next.detectedKind);
+        setMessage(`Dosya ${target.name} için yüklendi.`);
+      } else {
+        setPreview(next);
+        void load(target.id);
+        setMessage(`Otel ${target.name} olarak değiştirildi. Dosyada kontrol edilmesi gereken satırlar var; önizlemeyi inceleyip yükleyin.`);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Yükleme sırasında hata oluştu.");
     } finally {
@@ -410,6 +447,45 @@ export default function DolulukYuklePage() {
                 <p className="text-lg font-bold text-danger">{preview.errorRows}</p>
               </div>
             </div>
+            {preview.suggestedHotel && (
+              <div
+                role="alert"
+                data-testid="occupancy-suggested-hotel"
+                className="p-4 bg-warn/15 border border-warn/40 rounded-xl space-y-3"
+              >
+                <p className="text-sm font-bold text-text">Bu dosya başka bir otele ait görünüyor</p>
+                <p className="text-sm text-text">
+                  Yüklediğiniz dosyadaki oda numaraları seçili otele (
+                  {hotels.find((h) => h.id === hotelId)?.name ?? "seçili otel"}) ait değil. Yapılan kontrole göre{" "}
+                  {preview.suggestedHotel.totalRows} satırın {preview.suggestedHotel.matchedRows} tanesi{" "}
+                  <strong>{preview.suggestedHotel.name}</strong> odalarıyla eşleşiyor. Yüklemeyi{" "}
+                  <strong>{preview.suggestedHotel.name}</strong> için yapmak ister misiniz?
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    data-mutates=""
+                    data-testid="occupancy-suggested-yes"
+                    onClick={() => void uploadForSuggested()}
+                    disabled={busy}
+                    style={{ minHeight: "var(--tap-primary)" }}
+                    className="px-5 py-2.5 bg-accent hover:opacity-95 text-white rounded-xl text-xs font-bold disabled:opacity-50"
+                  >
+                    {busy ? "Yükleniyor..." : `Evet, ${preview.suggestedHotel.name} için yükle`}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="occupancy-suggested-no"
+                    onClick={() => setPreview({ ...preview, suggestedHotel: undefined })}
+                    disabled={busy}
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="px-4 py-2 bg-bg border border-border hover:bg-surface text-text rounded-xl text-xs font-semibold"
+                  >
+                    Hayır, bu otelde kal
+                  </button>
+                </div>
+              </div>
+            )}
             {preview.changes && (
               <p data-testid="occupancy-changes" className="text-sm text-text">
                 Yeni kayıt: <strong>{preview.changes.create}</strong> · Güncellenecek: <strong>{preview.changes.update}</strong> ·

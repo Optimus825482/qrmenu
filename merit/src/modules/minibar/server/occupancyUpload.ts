@@ -5,7 +5,7 @@ import type { GuestRecord, Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
@@ -67,6 +67,11 @@ export type PreviewView = {
   changes: { create: number; update: number; remove: number };
   /** Reasons the commit will be refused (hotel or report date mismatch); empty when it may proceed. */
   blockers: string[];
+  /**
+   * Another hotel the caller may upload for that fits the file better than the target one: the file names it
+   * (P4001), or more of its rows carry a room number of that hotel. Absent when no single hotel stands out.
+   */
+  suggestedHotel?: { id: string; name: string; matchedRows: number; totalRows: number };
 };
 
 export type CommitResult = {
@@ -139,7 +144,8 @@ export function checkUploadScheduleWindow(now: Date = new Date()): {
 
 const normLabel = (s: string): string => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-async function hotelMatchOf(hotelId: string, label: string): Promise<{ label: string; matches: boolean }> {
+/** The active hotel a P4001 label names, or null when it names none. */
+async function namedHotelId(label: string): Promise<string | null> {
   const hotels = await prisma.hotel.findMany({ where: { isActive: true }, select: { id: true, name: true } });
   const target = normLabel(label);
   // The longest hotel name contained in the label wins ("Merit Royal" is a prefix of "Merit Royal Diamond").
@@ -148,7 +154,62 @@ async function hotelMatchOf(hotelId: string, label: string): Promise<{ label: st
     const n = normLabel(h.name);
     if (n && target.includes(n) && (!best || n.length > best.len)) best = { id: h.id, len: n.length };
   }
-  return { label, matches: best === null ? true : best.id === hotelId };
+  return best?.id ?? null;
+}
+
+async function hotelMatchOf(hotelId: string, label: string): Promise<{ label: string; matches: boolean }> {
+  const named = await namedHotelId(label);
+  return { label, matches: named === null ? true : named === hotelId };
+}
+
+/**
+ * The hotel a file most likely belongs to when it does not fit `hotelId`: only hotels the caller may upload
+ * for are considered. The hotel named in the file wins; otherwise the single hotel whose rooms cover more rows
+ * than the target hotel does (a tie between hotels suggests nothing).
+ */
+async function suggestHotel(
+  ctx: Ctx,
+  hotelId: string,
+  rows: ParsedRow[],
+  okRows: number,
+  hotelLabel: string | undefined,
+): Promise<PreviewView["suggestedHotel"]> {
+  if (rows.length === 0) return undefined;
+  const others = await prisma.hotel.findMany({
+    where: { isActive: true, id: { in: ctx.hotelIds.filter((id) => id !== hotelId) } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  const allowed: typeof others = [];
+  for (const h of others) if (await can(ctx, SCREEN, "O", h.id)) allowed.push(h);
+  if (allowed.length === 0) return undefined;
+
+  const found = await prisma.room.findMany({
+    where: { isActive: true, hotelId: { in: allowed.map((h) => h.id) }, number: { in: [...new Set(rows.map((r) => r.roomNumber))] } },
+    select: { hotelId: true, number: true },
+  });
+  const numbersOf = new Map<string, Set<string>>();
+  for (const r of found) {
+    const set = numbersOf.get(r.hotelId) ?? new Set<string>();
+    set.add(r.number.trim());
+    numbersOf.set(r.hotelId, set);
+  }
+  const scored = allowed.map((h) => ({
+    ...h,
+    matchedRows: rows.filter((r) => numbersOf.get(h.id)?.has(r.roomNumber)).length,
+  }));
+
+  const named = hotelLabel ? await namedHotelId(hotelLabel) : null;
+  if (named && named !== hotelId) {
+    const hit = scored.find((h) => h.id === named);
+    return hit ? { id: hit.id, name: hit.name, matchedRows: hit.matchedRows, totalRows: rows.length } : undefined;
+  }
+  if (okRows === rows.length) return undefined;
+  const top = Math.max(...scored.map((h) => h.matchedRows));
+  if (top <= okRows) return undefined;
+  const best = scored.filter((h) => h.matchedRows === top);
+  if (best.length !== 1) return undefined;
+  return { id: best[0].id, name: best[0].name, matchedRows: top, totalRows: rows.length };
 }
 
 function targetHotel(ctx: Ctx, requested?: string): string {
@@ -389,6 +450,7 @@ export async function previewOccupancy(
   const hotelMatch = sheet.hotelLabel ? await hotelMatchOf(hotelId, sheet.hotelLabel) : undefined;
   const blockers = commitBlockers(sheet, hotelMatch, today);
   const warnings = [...blockers, ...sheet.warnings];
+  const suggestedHotel = await suggestHotel(ctx, hotelId, sheet.rows, okRows.length, sheet.hotelLabel);
   const plan = await planRecords(prisma, hotelId, sheet.detectedKind, okRows, today, errors.length === 0);
   if (errors.length > 0 && okRows.length > 0) {
     warnings.push("Hatalı satır olduğu için dosyada bulunmayan eski kayıtlar silinmeyecek");
@@ -416,6 +478,7 @@ export async function previewOccupancy(
     ...(hotelMatch ? { hotelMatch } : {}),
     changes: { create: plan.createdRows, update: plan.originals.length, remove: plan.removals.length },
     blockers,
+    ...(suggestedHotel ? { suggestedHotel } : {}),
   };
 }
 
