@@ -55,13 +55,13 @@ describe("seed matrisi (saf)", () => {
     for (const code of NEW_ROLES) expect(role(code), code).toBeDefined();
   });
 
-  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL V,O; çekirdekte yalnız CR-KOM, CR-RAP", () => {
+  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL V,O,D; çekirdekte yalnız CR-KOM, CR-RAP", () => {
     const minibar = SCREENS.filter((s) => s.moduleKey === "MINIBAR").map((s) => s.code);
     const depKat = minibar.filter((s) => acts("R-DEP", s) !== "" || acts("R-KAT", s) !== "");
     for (const s of depKat) expect(acts("R-MTY", s), s).toContain("V");
     for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
     expect(acts("R-MTY", "MB-RAP")).toBe("VR");
-    expect(acts("R-MTY", "MB-DOL")).toBe("VO"); // R-DEP'in yükleme eylemi O; silme (D) yok
+    expect(acts("R-MTY", "MB-DOL")).toBe("VOD"); // yükleme O; silme / geri alma D
     for (const s of SCREENS.filter((x) => x.moduleKey === "CORE")) {
       expect(acts("R-MTY", s.code), s.code).toBe(["CR-KOM", "CR-RAP"].includes(s.code) ? "VR" : "");
     }
@@ -88,7 +88,7 @@ describe("rbac (gerçek test DB)", () => {
   it("her rol verilen ekranları görür, yazma eylemleri yok", async () => {
     const mty = (await ctxOf("R-MTY")).ctx;
     expect(await letters(mty, "MB-TUK")).toBe("V");
-    expect(await letters(mty, "MB-DOL")).toBe("VO");
+    expect(await letters(mty, "MB-DOL")).toBe("VOD");
     expect(await letters(mty, "MB-RAP")).toBe("VR");
     expect(await letters(mty, "CR-SYS")).toBe("");
     const qmy = (await ctxOf("R-QMY")).ctx;
@@ -267,6 +267,9 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
       .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
       .filter((x) => x.length > 0);
     for (const statement of statements) await testDb.$executeRawUnsafe(statement);
+    // 20261110161000 adds MB-DOL D for R-MTY on top of the block.
+    const followUp = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261110161000_mty_doluluk_silme/migration.sql"), "utf8").replace(/^\s*--.*$/gm, "").trim();
+    await testDb.$executeRawUnsafe(followUp);
     expect(await read()).toEqual(expected);
 
     // The whole file runs twice without error (idempotent) and leaves the same matrix.
@@ -274,7 +277,10 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
       .split(/;\s*\n/)
       .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
       .filter((x) => x.length > 0);
-    for (let i = 0; i < 2; i++) for (const statement of all) await testDb.$executeRawUnsafe(statement);
+    for (let i = 0; i < 2; i++) {
+      for (const statement of all) await testDb.$executeRawUnsafe(statement);
+      await testDb.$executeRawUnsafe(followUp);
+    }
     expect(await read()).toEqual(expected);
     const access = await testDb.roleModuleAccess.findMany({ where: { hotelId: null, role: { code: { in: [...NEW_ROLES] } } }, include: { role: true } });
     expect(access.map((a) => `${a.role.code}|${a.moduleKey}`).sort()).toEqual(

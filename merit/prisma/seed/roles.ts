@@ -178,7 +178,7 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   { plan: "P7", match: { codes: ["R-SGF"] }, grant: { "QM-RAP": ["R"], "QS-RAP": ["R"] } },
   // YR (10 Kas 2026) — yönetici yardımcıları. Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız
   // görüntüleme, raporlarda V,R; doluluk dosyası yükler (MB-DOL O = previewOccupancy / commitOccupancy, R-DEP ile
-  // aynı eylem). Yükleme silme / görev yeniden üretme MB-DOL D ister ve verilmez. Elle oda girişi ayarı ekran
+  // aynı eylem) ve yüklemeyi siler / geri alır, görevleri yeniden üretir (MB-DOL D). Elle oda girişi ayarı ekran
   // matrisinde değil, manualRoomEntryAdmin.MANUAL_ENTRY_EDITOR_ROLES ile açılır.
   {
     plan: "YR",
@@ -195,7 +195,7 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
       "MB-RAP": ["V", "R"],
       "MB-TAN": ["V"],
     },
-    grant: { "MB-DOL": ["O"] },
+    grant: { "MB-DOL": ["O", "D"] },
   },
   // QR Menü Yöneticisi (varsayım: ürün sahibi ayrıntı vermedi): menü ağacı / çeviri / masa QR'ları (QM-MEN) ve
   // outlet tasarımı (QM-TEM) V,O,D; menü raporları V,R; garson çağrıları (QM-CAG) ve QR_ORDER yok.
