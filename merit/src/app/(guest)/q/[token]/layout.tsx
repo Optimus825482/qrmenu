@@ -124,6 +124,8 @@ export default async function GuestLayout({
         theme={state.theme}
         design={state.design}
         outletName={state.outletName}
+        hotelName={state.hotelName}
+        hotelLogoUrl={state.hotelLogoUrl}
         tableLabel={table.label}
         headerCallWaiter={
           callWaiterPosition === "STICKY_HEADER" ? (

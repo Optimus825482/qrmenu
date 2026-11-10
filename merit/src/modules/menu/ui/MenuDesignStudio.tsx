@@ -686,6 +686,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.curatedPhotos} onChange={(event) => patchOptions({ curatedPhotos: event.target.checked })} />Küratörlü fotoğraf (yalnız şefin seçimi, en çok 3)</label>
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.showSearch} onChange={(event) => patchOptions({ showSearch: event.target.checked })} />Arama kutusu</label>
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.showFilters} onChange={(event) => patchOptions({ showFilters: event.target.checked })} />Etiket süzgeçleri</label>
+            <label className="xp-module-switch xp-design-toggle" title="QR okutulunca otel logosu büyüyerek belirir, yaklaşık 2 saniye sonra menü açılır. “Tarayıcıda Önizle” ile izlenir."><input type="checkbox" checked={design.options.introSplash} onChange={(event) => patchOptions({ introSplash: event.target.checked })} />Animasyonlu açılış (otel logosu)</label>
             <label className="xp-module-switch xp-design-toggle"><input type="checkbox" checked={design.options.showFeatured} onChange={(event) => patchOptions({ showFeatured: event.target.checked })} />Öne çıkanlar bölümü</label>
             <div className="xp-design-typography" role="group" aria-label="Tipografi çifti">
               <b>Tipografi</b>

@@ -247,6 +247,7 @@ const designSchema = z.object({
     hero: z.enum(HERO_STYLES.map((item) => item.id)),
     heroImageUrl: z.string().max(300),
     logoUrl: z.string().max(300).optional().default(""),
+    introSplash: z.boolean().optional().default(false),
     curatedPhotos: z.boolean(),
     showSearch: z.boolean(),
     showFilters: z.boolean(),

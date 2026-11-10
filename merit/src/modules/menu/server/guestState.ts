@@ -13,6 +13,8 @@ export type GuestState = {
   hotelId: string;
   outletName: string;
   hotelName: string;
+  /** Hotel logo for the opening animation: the uploaded one, else the bundled brand mark of the hotel. */
+  hotelLogoUrl?: string;
   menuOpen: boolean;
   orderingOpen: boolean;
   pricesShown: boolean;
@@ -33,6 +35,12 @@ const FALLBACK_THEME: GuestTheme = {
   textOnAccent: "#ffffff",
 };
 
+const BRAND_LOGOS: Record<string, string> = {
+  ROYAL: "/brand/hotels/royal-transparent.webp",
+  DIAMOND: "/brand/hotels/diamond-transparent.webp",
+  PREMIUM: "/brand/hotels/premium-transparent.webp",
+};
+
 const pickTheme = (theme: GuestTheme): GuestTheme => {
   const base = MENU_THEMES.find((t) => t.isDefault) ?? FALLBACK_THEME;
   const color = (value: string, fallback: string) => (HEX_COLOR.test(value) ? value : fallback);
@@ -48,7 +56,7 @@ const pickTheme = (theme: GuestTheme): GuestTheme => {
 export async function guestState(outletId: string, areaId?: string): Promise<GuestState> {
   const outlet = await prisma.outlet.findUnique({
     where: { id: outletId },
-    include: { hotel: { select: { name: true, isActive: true } }, theme: true, menuDesign: true },
+    include: { hotel: { select: { name: true, code: true, logoUrl: true, isActive: true } }, theme: true, menuDesign: true },
   });
   if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
   const area = areaId
@@ -89,6 +97,7 @@ export async function guestState(outletId: string, areaId?: string): Promise<Gue
     hotelId: outlet.hotelId,
     outletName: outlet.name,
     hotelName: outlet.hotel.name,
+    hotelLogoUrl: outlet.hotel.logoUrl || BRAND_LOGOS[outlet.hotel.code.toUpperCase()] || undefined,
     menuOpen,
     orderingOpen,
     pricesShown: (await resolvePriceDisplay({

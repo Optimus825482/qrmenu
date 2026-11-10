@@ -143,12 +143,60 @@ export function HtmlLangSync({
   return null;
 }
 
+const INTRO_KEY = "merit_menu_intro:";
+
+function introSeen(token: string): boolean {
+  try {
+    return Boolean(sessionStorage.getItem(INTRO_KEY + token));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Opening animation of a scanned menu: the hotel logo zooms and fades in over the page, then the layer fades away
+ * (about 2.5 s in total, pure CSS so it also plays before hydration). Once per browser session and QR; the full-page
+ * preview replays it on every load so the operator can judge it.
+ */
+function IntroSplash({ token, replay, hotelName, logoUrl }: { token: string; replay: boolean; hotelName: string; logoUrl?: string }) {
+  // The server (and hydration) always renders the layer; a guest who already saw it drops it right after hydration.
+  const seen = useSyncExternalStore(subscribeNever, () => !replay && introSeen(token), () => false);
+  const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // A timer, not `animationend`: the CSS animation starts with the server markup and may finish before hydration.
+  useEffect(() => {
+    if (seen) return;
+    const timer = window.setTimeout(() => {
+      try {
+        sessionStorage.setItem(INTRO_KEY + token, "1");
+      } catch {
+        // Private mode: the animation simply plays again on the next load.
+      }
+      setDone(true);
+    }, 2600);
+    return () => window.clearTimeout(timer);
+  }, [seen, token]);
+  if (seen || done) return null;
+  return (
+    <div className="g-intro" aria-hidden="true">
+      {logoUrl && !failed ? (
+        // eslint-disable-next-line @next/next/no-img-element -- hotel logos are admin-uploaded files of arbitrary origin
+        <img className="g-intro-mark" src={logoUrl} alt="" fetchPriority="high" onError={() => setFailed(true)} />
+      ) : (
+        <span className="g-intro-mark g-intro-name">{hotelName}</span>
+      )}
+    </div>
+  );
+}
+
 export function GuestFrame({
   token,
   locale,
   theme,
   design,
   outletName,
+  hotelName,
+  hotelLogoUrl,
   placeLabel,
   tableLabel,
   embedded = false,
@@ -164,6 +212,9 @@ export function GuestFrame({
   theme: GuestTheme;
   design: OutletDesign;
   outletName: string;
+  /** Hotel name and logo of the opening animation (`design.options.introSplash`). */
+  hotelName?: string;
+  hotelLogoUrl?: string;
   /** Label of the room or table. Older callers can supply tableLabel. */
   placeLabel?: string;
   tableLabel?: string;
@@ -223,6 +274,10 @@ export function GuestFrame({
       lang={locale}
       style={style}
     >
+      {/* Not inside the studio's device frame: a fixed layer there would cover the studio itself. */}
+      {!embedded && design.options.introSplash && !(preview && device) ? (
+        <IntroSplash token={token} replay={preview} hotelName={hotelName ?? outletName} logoUrl={hotelLogoUrl} />
+      ) : null}
       {!embedded ? (
         <>
           <HtmlLangSync locale={locale} token={token} preview={preview} onLocaleChange={onLocaleChange} />

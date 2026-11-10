@@ -135,7 +135,8 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
     const row = presetDesignRow(preset);
     const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
     // 170000 yazıldığında süzgeçler açıktı ve showFeatured seçeneği yoktu; ikisini 20261110200000 kapatır.
-    const { showFeatured, logoUrl, ...rest } = row.options;
+    const { showFeatured, logoUrl, introSplash, ...rest } = row.options;
+    expect(introSplash).toBe(false);
     expect(logoUrl).toBe(""); // logo seçeneği sonradan eklendi, migration metninde yok
     expect(showFeatured).toBe(false);
     expect(row.options.showFilters).toBe(false);

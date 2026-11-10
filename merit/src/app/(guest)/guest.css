@@ -3196,3 +3196,47 @@ body {
 .g-design-hero[data-photo] .g-hero-logo {
   z-index: 2;
 }
+
+/* Animasyonlu açılış: otel logosu büyüyerek belirir, katman yaklaşık 2 sn sonra solarak menüyü açar. Tek seferliktir. */
+.g-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--m-bg);
+  animation: g-intro-out 0.5s ease 2s both;
+}
+.g-intro-mark {
+  max-width: min(62vw, 300px);
+  max-height: 40vh;
+  object-fit: contain;
+  animation: g-intro-in 1s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+.g-intro-name {
+  color: var(--m-accent);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+@keyframes g-intro-in {
+  from { opacity: 0; transform: scale(0.72); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes g-intro-out {
+  from { opacity: 1; visibility: visible; }
+  to { opacity: 0; visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g-intro-mark {
+    animation-name: g-intro-fade;
+  }
+}
+@keyframes g-intro-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

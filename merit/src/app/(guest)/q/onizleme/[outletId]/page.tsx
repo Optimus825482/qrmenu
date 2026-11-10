@@ -89,6 +89,8 @@ export default async function OutletMenuPreviewPage({
         theme={activeTheme}
         design={state.design}
         outletName={outlet.name}
+        hotelName={state.hotelName}
+        hotelLogoUrl={state.hotelLogoUrl}
         placeLabel="Önizleme Modu"
         preview
       >

@@ -172,6 +172,8 @@ export type DesignOptions = {
   heroImageUrl: string;
   /** Outlet logo uploaded in the studio (`/uploads/menu-logo/<outletId>/…`); printed at the top of the menu. */
   logoUrl: string;
+  /** Opening animation: the hotel logo zooms and fades in for about two seconds before the menu shows. */
+  introSplash: boolean;
   /** Large photos only on up to three chef's picks; every other dish is a text row. */
   curatedPhotos: boolean;
   showSearch: boolean;
@@ -197,6 +199,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   hero: "TITLE",
   heroImageUrl: "",
   logoUrl: "",
+  introSplash: false,
   curatedPhotos: false,
   showSearch: true,
   showFilters: false,
@@ -216,6 +219,7 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "hero"
   | "heroImageUrl"
   | "logoUrl"
+  | "introSplash"
   | "curatedPhotos"
   | "showSearch"
   | "showFilters"
@@ -442,6 +446,7 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     hero: raw.hero && HERO_IDS.has(raw.hero) ? raw.hero : NEUTRAL_NEW_OPTIONS.hero,
     heroImageUrl: heroUrl(raw.heroImageUrl),
     logoUrl: logoUrl(raw.logoUrl),
+    introSplash: typeof raw.introSplash === "boolean" ? raw.introSplash : NEUTRAL_NEW_OPTIONS.introSplash,
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
