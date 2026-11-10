@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 import { DEMO_HOTEL_CODES } from "./hotels";
-import { templatePreset, type TemplateId } from "@/modules/menu/design";
+import { templatePreset, type DesignBlockId, type DesignOptions, type TemplateId } from "@/modules/menu/design";
 
 export interface OutletDesignPreset {
   ambience: string;
@@ -8,8 +8,15 @@ export interface OutletDesignPreset {
   template: TemplateId;
   theme: string;
   showPrices?: boolean;
+  /** Per-outlet touches on top of the template (tab style, hero alignment, hero font from fonts.css). */
+  options?: Partial<DesignOptions>;
 }
 
+/*
+ * Every Merit outlet opens on a light page (Kasım 2026 kararı). One family: ivory/cream paper, dark readable text,
+ * a single deep accent per concept. Concepts that used to be dark (whisky, wine, shisha, steak, Far East) keep their
+ * mood in the accent and typography, not in the background.
+ */
 export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   DIAMOND: {
     ambience: "RESORT",
@@ -17,6 +24,7 @@ export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "IVORY_PALACE",
     theme: "Four Seasons Fildişi",
     showPrices: true,
+    options: { categoryTabStyle: "SEGMENT_CARDS", heroAlign: "center", heroFontFamily: "cinzel" },
   },
   ROYAL: {
     ambience: "RESORT",
@@ -24,6 +32,7 @@ export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "IVORY_PALACE",
     theme: "Fildişi & Altın Zarafet",
     showPrices: true,
+    options: { categoryTabStyle: "SEGMENT_CARDS", heroAlign: "center", heroFontFamily: "cinzel" },
   },
   PREMIUM: {
     ambience: "RESORT",
@@ -31,6 +40,7 @@ export const ROOM_SERVICE_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "IVORY_PALACE",
     theme: "Şampanya & Kaşmir",
     showPrices: true,
+    options: { categoryTabStyle: "SEGMENT_CARDS", heroAlign: "center", heroFontFamily: "cinzel" },
   },
 };
 
@@ -38,17 +48,19 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
   // DIAMOND Outlets
   "Diamond 24/7 Lobby Lounge": {
     ambience: "LOUNGE",
-    concept: "DAYLIGHT",
-    template: "DAYLIGHT_LOUNGE",
+    concept: "ART_DECO",
+    template: "CRYSTAL_BAR",
     theme: "Four Seasons Fildişi",
     showPrices: false,
+    options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "cormorant", heroFontSize: "large" },
   },
   "Diamond Lagoon Pool Bar & Deck": {
     ambience: "POOL",
     concept: "DAYLIGHT",
     template: "SUNLIGHT_POOL",
-    theme: "Santorini Mavi & Beyaz",
+    theme: "Ege İncisi & Mercan",
     showPrices: false,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "montserrat" },
   },
   "Diamond Royal Tea & Patisserie": {
     ambience: "CAFE",
@@ -56,27 +68,30 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "ROSE_PATISSERIE",
     theme: "Pudra & Gül Bahçesi",
     showPrices: false,
+    options: { categoryTabStyle: "GRID_PILLS", heroAlign: "center", heroFontFamily: "greatvibes" },
   },
   "Diamond Exclusive Whiskey House": {
     ambience: "LOUNGE",
     concept: "CLASSIC",
-    template: "NOIR_LOUNGE",
-    theme: "Bordo & Venedik",
+    template: "COGNAC_LIBRARY",
+    theme: "Konyak & Kehribar",
     showPrices: true,
   },
   "Shisha & Sunset Terrace": {
     ambience: "ROOFTOP",
     concept: "BOHEMIAN",
     template: "SUNSET_SKY_TERRACE",
-    theme: "Safir Gece",
+    theme: "Kum & Terrakota",
     showPrices: true,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "marcellus" },
   },
   "The Steakhouse": {
-    ambience: "RESORT",
+    ambience: "GOURMET",
     concept: "RUSTIC",
-    template: "ARTISAN_GRILL",
-    theme: "Bordo & Venedik",
+    template: "CHEF_TABLE",
+    theme: "Keten & Kömür",
     showPrices: true,
+    options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "playfair" },
   },
 
   // ROYAL Outlets
@@ -86,6 +101,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "DAYLIGHT_LOUNGE",
     theme: "Porselen & Safir",
     showPrices: false,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "playfair" },
   },
   "Royal Sea View Pool Bar": {
     ambience: "SUNDECK",
@@ -93,6 +109,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "SANTORINI_TERRACE",
     theme: "Akdeniz Beyazı & Turkuaz",
     showPrices: false,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "jakarta" },
   },
   "Beach Bar": {
     ambience: "SUNDECK",
@@ -100,20 +117,23 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "WHITE_RIVIERA",
     theme: "Sahil Kumu & Mercan",
     showPrices: false,
+    options: { heroFontFamily: "montserrat" },
   },
   "Dionysos Wine House": {
     ambience: "GOURMET",
     concept: "CLASSIC",
     template: "SOMMELIER_CELLAR",
-    theme: "Bordo & Venedik",
+    theme: "Mahzen Krem & Bordo",
     showPrices: true,
+    options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "cormorant", heroFontSize: "large" },
   },
   "Vienna Cafe": {
-    ambience: "BRUNCH",
-    concept: "PASTEL",
-    template: "PASTEL_BOULANGERIE",
-    theme: "Şampanya & Kaşmir",
+    ambience: "CAFE",
+    concept: "CLASSIC",
+    template: "VIENNA_HERITAGE",
+    theme: "Krem",
     showPrices: false,
+    options: { categoryTabStyle: "GRID_PILLS", heroAlign: "center", heroFontFamily: "playfair" },
   },
   "Blue Sea Alakart": {
     ambience: "SEAFOOD",
@@ -121,20 +141,23 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "AEGEAN_MARINA",
     theme: "Santorini Mavi & Beyaz",
     showPrices: true,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "marcellus" },
   },
   "Royal Mandarin": {
     ambience: "GOURMET",
     concept: "MINIMALIST",
     template: "ZEN_ASIAN",
-    theme: "Aman Zen Slate",
+    theme: "Porselen & Lake Kırmızı",
     showPrices: true,
+    options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "cinzel" },
   },
   "Bella Merit": {
     ambience: "GOURMET",
-    concept: "DAYLIGHT",
+    concept: "MEDITERRANEAN",
     template: "LUMIERE_DINING",
-    theme: "Fildişi & Altın Zarafet",
+    theme: "Toskana Krem & Zeytin",
     showPrices: true,
+    options: { categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "bodoni" },
   },
 
   // PREMIUM Outlets
@@ -144,6 +167,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "DAYLIGHT_LOUNGE",
     theme: "Şampanya & Kaşmir",
     showPrices: false,
+    options: { categoryTabStyle: "CHIPS_ROW", heroAlign: "center", heroFontFamily: "cormorant" },
   },
   "Premium Lagoon & Kids Pool Bar": {
     ambience: "POOL",
@@ -151,6 +175,7 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "SUNLIGHT_POOL",
     theme: "Narenciye & Güneş",
     showPrices: false,
+    options: { categoryTabStyle: "CHIPS_ROW", heroFontFamily: "jakarta" },
   },
   "Merit Premium Cafe Verde": {
     ambience: "PATIO",
@@ -158,8 +183,36 @@ export const OUTLET_DESIGN_PRESETS: Record<string, OutletDesignPreset> = {
     template: "SUNLIT_VERANDA",
     theme: "Adaçayı & Botanik",
     showPrices: false,
+    options: { categoryTabStyle: "GRID_PILLS", heroFontFamily: "playfair" },
   },
 };
+
+/** The stored design row a preset produces (template options + the outlet's own touches). */
+export function presetDesignRow(preset: OutletDesignPreset): {
+  ambience: string;
+  concept: string;
+  template: TemplateId;
+  layout: DesignBlockId[];
+  options: DesignOptions;
+} {
+  const base = templatePreset(preset.template);
+  return {
+    ambience: preset.ambience,
+    concept: preset.concept,
+    template: preset.template,
+    layout: base.layout,
+    options: {
+      ...base.options,
+      showImages: true,
+      showAllergens: true,
+      showTags: true,
+      showPrices: preset.showPrices ?? false,
+      showSearch: true,
+      showFilters: true,
+      ...preset.options,
+    },
+  };
+}
 
 const LEGACY_PRESET_TEMPLATES = new Set<string>([
   "ROYAL",
@@ -183,35 +236,25 @@ async function applyOutletPreset(
   themes: Map<string, string>,
   forceDefault: boolean,
 ): Promise<void> {
-  const isLegacyPreset = Boolean(outlet.menuDesign && LEGACY_PRESET_TEMPLATES.has(outlet.menuDesign.template));
+  // A design that already is this outlet's preset template is the operator's own (possibly edited) copy.
+  const isLegacyPreset = Boolean(
+    outlet.menuDesign &&
+      outlet.menuDesign.template !== preset.template &&
+      LEGACY_PRESET_TEMPLATES.has(outlet.menuDesign.template),
+  );
   if (!outlet.menuDesign || isLegacyPreset || forceDefault) {
-    const base = templatePreset(preset.template);
-    const optionsPayload = {
-      ...base.options,
-      showImages: true,
-      showAllergens: true,
-      showTags: true,
-      showPrices: preset.showPrices ?? false,
-      showSearch: true,
-      showFilters: true,
+    const row = presetDesignRow(preset);
+    const data = {
+      ambience: row.ambience,
+      concept: row.concept,
+      template: row.template,
+      layout: row.layout as never,
+      options: row.options as never,
     };
     await db.outletMenuDesign.upsert({
       where: { outletId: outlet.id },
-      create: {
-        outletId: outlet.id,
-        ambience: preset.ambience,
-        concept: preset.concept,
-        template: preset.template,
-        layout: base.layout as never,
-        options: optionsPayload as never,
-      },
-      update: {
-        ambience: preset.ambience,
-        concept: preset.concept,
-        template: preset.template,
-        layout: base.layout as never,
-        options: optionsPayload as never,
-      },
+      create: { outletId: outlet.id, ...data },
+      update: data,
     });
   }
   if ((!outlet.themeId || isLegacyPreset || forceDefault) && themes.has(preset.theme)) {
@@ -221,6 +264,7 @@ async function applyOutletPreset(
 
 /**
  * Seeds and persists the concept-matched default Ambiance, Concept, Template, and Theme for all 20 Merit outlets.
+ * Existing installs move to these designs through migration 20261110170000_acik_menu_tasarimlari.
  */
 export async function seedOutletMenuDesigns(db: PrismaClient, forceDefault = false): Promise<void> {
   const themes = new Map(

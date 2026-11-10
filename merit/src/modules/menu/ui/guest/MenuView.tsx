@@ -445,7 +445,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   <button type="button" className="g-featured-card" onClick={() => handleOpenItem(item.id)}>
                     {options.showImages && item.imageUrl && (photoIds === null || photoIds.has(item.id)) ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt="" loading="lazy" decoding="async" width={320} height={180} />
+                      <img src={item.imageUrl} alt="" loading="lazy" decoding="async" width={320} height={320} />
                     ) : null}
                     <span>{item.name}</span>
                   </button>

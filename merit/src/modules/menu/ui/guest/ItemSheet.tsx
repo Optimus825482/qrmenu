@@ -168,7 +168,7 @@ export function ItemSheet({
           </>
         ) : images.length === 1 ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="g-sheet-image" src={images[0]} alt={item.name} decoding="async" />
+          <img className="g-sheet-image" src={images[0]} alt={item.name} decoding="async" width={600} height={600} />
         ) : (
           <div className="g-sheet-image g-placeholder" aria-hidden="true" />
         )}

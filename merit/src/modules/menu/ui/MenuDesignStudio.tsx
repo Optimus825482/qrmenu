@@ -87,11 +87,11 @@ const PREVIEW_MESSAGES: Record<Locale, Record<string, unknown>> = {
 
 const FALLBACK_THEME: ThemeRow = {
   id: "",
-  name: "Royal Gold",
-  bg: "#0f0d0a",
-  accent: "#c9a24a",
-  soft: "#1d1a14",
-  textOnAccent: "#0f0d0a",
+  name: "Fildişi & Altın Zarafet",
+  bg: "#fdfbf7",
+  accent: "#8c6218",
+  soft: "#f4eee1",
+  textOnAccent: "#ffffff",
   isDefault: true,
   outletCount: 0,
 };

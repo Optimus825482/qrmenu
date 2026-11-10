@@ -318,7 +318,15 @@ export const DESIGN_TEMPLATES = [
   { id: "DAYLIGHT_LOUNGE", name: "Daylight Lobby Conservatory", ambience: "LOUNGE", concept: "DAYLIGHT", style: "linen", options: options({ cardStyle: "CARD", typography: "SERENITY", density: "AIRY" }) },
   { id: "LUMIERE_DINING", name: "Lumière Fine Dining", ambience: "GOURMET", concept: "DAYLIGHT", style: "pearl", options: options({ cardStyle: "CARD", typography: "EDITORIAL", density: "AIRY", uppercaseCategories: true }) },
   { id: "ROSE_PATISSERIE", name: "Rose & Champagne Salon", ambience: "CAFE", concept: "PASTEL", style: "pastel", options: options({ cardStyle: "PHOTO", typography: "CLASSIC", density: "AIRY" }) },
+  // Açık zeminli klasik bar: krem kağıt, çift çizgili başlık, serif fiyat listesi (viski & konyak evi).
+  { id: "COGNAC_LIBRARY", name: "Cognac Library Salon", ambience: "LOUNGE", concept: "CLASSIC", style: "library", options: options({ cardStyle: "LIST", categoryTabStyle: "UNDERLINE_TABS", heroAlign: "center", heroFontFamily: "cormorant", heroFontSize: "large", typography: "SYSTEM", density: "AIRY", uppercaseCategories: true }) },
 ] as const;
+
+/**
+ * Template styles designed around a dark room (neon glow, smoked glass). Their surfaces follow the theme colours,
+ * and they stay in the catalog for operators who pick a dark theme, but no built-in outlet preset uses them.
+ */
+export const DARK_TEMPLATE_STYLES: ReadonlySet<string> = new Set(["noir", "midnight", "velvet", "electric", "pulse", "jazz", "starlight"]);
 
 export const DESIGN_BLOCKS = [
   { id: "hero", label: "Karşılama alanı", description: "Otel ve outlet girişi" },

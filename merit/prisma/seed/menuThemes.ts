@@ -7,9 +7,10 @@ export interface MenuThemeDef {
   isDefault?: boolean;
 }
 
-/** Built-in guest menu themes. Created when missing (by name); an operator's edits are never overwritten. */
+/** Built-in guest menu themes. Created when missing (by name); an operator's edits are never overwritten.
+ *  The default (isDefault) is a light theme: outlets without a theme open on an ivory page. */
 export const MENU_THEMES: MenuThemeDef[] = [
-  { name: "Royal Gold", bg: "#0f0d0a", accent: "#c9a24a", soft: "#1d1a14", textOnAccent: "#0f0d0a", isDefault: true },
+  { name: "Royal Gold", bg: "#0f0d0a", accent: "#c9a24a", soft: "#1d1a14", textOnAccent: "#0f0d0a" },
   { name: "Deniz", bg: "#f6fbff", accent: "#0a6ea8", soft: "#e3f1fa", textOnAccent: "#ffffff" },
   { name: "Zeytin", bg: "#fbfaf5", accent: "#5a6b2f", soft: "#eef0e3", textOnAccent: "#ffffff" },
   { name: "Krem", bg: "#faf6ee", accent: "#8a5a2b", soft: "#f1e9da", textOnAccent: "#ffffff" },
@@ -31,7 +32,7 @@ export const MENU_THEMES: MenuThemeDef[] = [
   { name: "Akdeniz Beyazı & Turkuaz", bg: "#f8fcff", accent: "#006994", soft: "#e6f4fa", textOnAccent: "#ffffff" },
   { name: "Sahil Kumu & Mercan", bg: "#fffaf4", accent: "#b84326", soft: "#f7ede1", textOnAccent: "#ffffff" },
   { name: "Pudra & Gül Bahçesi", bg: "#fff8f9", accent: "#9e3a58", soft: "#f8eaee", textOnAccent: "#ffffff" },
-  { name: "Fildişi & Altın Zarafet", bg: "#fdfbf7", accent: "#8c6218", soft: "#f4eee1", textOnAccent: "#ffffff" },
+  { name: "Fildişi & Altın Zarafet", bg: "#fdfbf7", accent: "#8c6218", soft: "#f4eee1", textOnAccent: "#ffffff", isDefault: true },
   { name: "Adaçayı & Botanik", bg: "#f7fbf8", accent: "#2d6a4f", soft: "#e6f2ea", textOnAccent: "#ffffff" },
   { name: "Santorini Mavi & Beyaz", bg: "#ffffff", accent: "#124e96", soft: "#edf4fc", textOnAccent: "#ffffff" },
   { name: "Şampanya & Kaşmir", bg: "#fcf9f2", accent: "#7c5832", soft: "#f2eadb", textOnAccent: "#ffffff" },
@@ -40,4 +41,11 @@ export const MENU_THEMES: MenuThemeDef[] = [
   { name: "İskandinav Keten & Taş", bg: "#f9f9f7", accent: "#3d4f58", soft: "#ecece7", textOnAccent: "#ffffff" },
   { name: "Ege İncisi & Mercan", bg: "#f5fbfc", accent: "#0d6973", soft: "#e1f1f4", textOnAccent: "#ffffff" },
   { name: "Porselen & Safir", bg: "#f9fbff", accent: "#1e3f7a", soft: "#eaeff8", textOnAccent: "#ffffff" },
+  // Açık zeminli outlet temaları (Kasım 2026): koyu konseptler de açık zemin + koyu vurgu ile.
+  { name: "Konyak & Kehribar", bg: "#faf4ea", accent: "#7b3f12", soft: "#f0e3cf", textOnAccent: "#fffaf2" },
+  { name: "Mahzen Krem & Bordo", bg: "#fbf7f2", accent: "#6e1e32", soft: "#f3e7e3", textOnAccent: "#ffffff" },
+  { name: "Kum & Terrakota", bg: "#fbf5ee", accent: "#9a3f1f", soft: "#f3e4d5", textOnAccent: "#ffffff" },
+  { name: "Keten & Kömür", bg: "#f7f4ee", accent: "#2e2b28", soft: "#ebe5da", textOnAccent: "#f7f4ee" },
+  { name: "Porselen & Lake Kırmızı", bg: "#fbfbf8", accent: "#8c1c22", soft: "#e7efe9", textOnAccent: "#ffffff" },
+  { name: "Toskana Krem & Zeytin", bg: "#faf7ee", accent: "#556328", soft: "#eeecdc", textOnAccent: "#ffffff" },
 ];

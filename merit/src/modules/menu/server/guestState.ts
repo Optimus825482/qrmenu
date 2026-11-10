@@ -25,11 +25,12 @@ export type GuestState = {
 
 /** Theme colors end up in inline CSS custom properties: only plain #rrggbb is trusted. */
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+/** Last resort when no theme row exists: the light ivory default (same values as the seeded default theme). */
 const FALLBACK_THEME: GuestTheme = {
-  bg: "#0f0d0a",
-  accent: "#c9a24a",
-  soft: "#1d1a14",
-  textOnAccent: "#0f0d0a",
+  bg: "#fdfbf7",
+  accent: "#8c6218",
+  soft: "#f4eee1",
+  textOnAccent: "#ffffff",
 };
 
 const pickTheme = (theme: GuestTheme): GuestTheme => {
@@ -79,7 +80,8 @@ export async function guestState(outletId: string, areaId?: string): Promise<Gue
   const theme =
     outlet.theme ??
     (await prisma.menuTheme.findFirst({ where: { isDefault: true }, orderBy: { createdAt: "asc" } })) ??
-    MENU_THEMES[0];
+    MENU_THEMES.find((t) => t.isDefault) ??
+    FALLBACK_THEME;
   const design: OutletDesign = designFromStored(outlet.menuDesign);
 
   return {

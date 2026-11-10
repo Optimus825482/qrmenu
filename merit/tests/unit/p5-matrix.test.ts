@@ -70,7 +70,7 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     await runSeed(db, { legacyDefinitions: false });
     const themes = await db.menuTheme.findMany();
     expect(themes.map((t) => t.name).sort()).toEqual(MENU_THEMES.map((t) => t.name).sort());
-    expect(themes.filter((t) => t.isDefault).map((t) => t.name)).toEqual(["Royal Gold"]);
+    expect(themes.filter((t) => t.isDefault).map((t) => t.name)).toEqual(["Fildişi & Altın Zarafet"]);
     await db.menuTheme.update({ where: { name: "Deniz" }, data: { accent: "#000000" } });
     await runSeed(db, { legacyDefinitions: false });
     expect(await db.menuTheme.count()).toBe(MENU_THEMES.length);

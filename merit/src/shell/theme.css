@@ -3999,6 +3999,7 @@
 .xp-design-template-art.is-nordic { background: linear-gradient(115deg, #f8fafc, #e2e8f0, #64748b); border: 1px solid #cbd5e1; }
 .xp-design-template-art.is-marina { background: linear-gradient(115deg, #f0f9ff, #7dd3fc, #0369a1); border: 1px solid #bae6fd; }
 .xp-design-template-art.is-pearl { background: linear-gradient(115deg, #fefce8, #fef08a, #ca8a04); border: 1px solid #fde047; }
+.xp-design-template-art.is-library { background: linear-gradient(115deg, #faf4ea, #f0e3cf, #7b3f12); border: 1px solid #e3d2b8; }
 .xp-design-canvas[data-template="coastal"] .xp-design-preview-hero { border-radius: 18px; }
 .xp-design-canvas[data-template="spa"] .xp-design-preview-hero { border: 1px solid color-mix(in srgb, var(--d-accent) 35%, white); border-radius: 18px; }
 .xp-design-canvas[data-template="hamam"] .xp-design-preview-hero { border-block: 1px solid color-mix(in srgb, var(--d-accent) 50%, white); border-radius: 0; }

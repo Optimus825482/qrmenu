@@ -340,6 +340,8 @@ body {
    Şablonlar: noir, midnight, velvet, electric, pulse, jazz, starlight
    Konsept: Düşük ışıklı kokteyl speakeasy, obsidyen koyu cam kartlar,
             parlayan neon amber/cyan konturlar, gece kulübü VIP enerjisi.
+   Not: Yüzeyler tema renklerinden türetilir (koyu temada koyu, açık temada açık);
+        sabit koyu zemin yoktur, açık tema seçilse de metin okunur kalır.
    -------------------------------------------------------------------------- */
 .g-frame[data-template="noir"] .g-design-hero,
 .g-frame[data-template="midnight"] .g-design-hero,
@@ -349,7 +351,7 @@ body {
 .g-frame[data-template="jazz"] .g-design-hero,
 .g-frame[data-template="starlight"] .g-design-hero {
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(22, 28, 44, 0.95), rgba(12, 16, 26, 0.98));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--m-soft) 88%, var(--m-accent)), var(--m-soft));
   border: 1px solid color-mix(in srgb, var(--m-accent) 40%, transparent);
   box-shadow: 0 0 24px color-mix(in srgb, var(--m-accent) 22%, transparent);
 }
@@ -360,10 +362,10 @@ body {
 .g-frame[data-template="electric"] .g-tabs button,
 .g-frame[data-template="pulse"] .g-tabs button {
   border-radius: 999px;
-  background: rgba(16, 22, 36, 0.75);
+  background: color-mix(in srgb, var(--m-soft) 75%, transparent);
   backdrop-filter: blur(8px);
-  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, rgba(255, 255, 255, 0.1));
-  color: #e2e8f0;
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
+  color: var(--m-text);
 }
 .g-frame[data-template="noir"] .g-tabs button[aria-selected="true"],
 .g-frame[data-template="midnight"] .g-tabs button[aria-selected="true"],
@@ -380,12 +382,12 @@ body {
 .g-frame[data-template="electric"] .g-card,
 .g-frame[data-template="pulse"] .g-card,
 .g-frame[data-template="starlight"] .g-card {
-  background: rgba(18, 24, 40, 0.8);
+  background: color-mix(in srgb, var(--m-soft) 85%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, rgba(255, 255, 255, 0.08));
+  border: 1px solid color-mix(in srgb, var(--m-accent) 25%, var(--m-line));
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
 }
 .g-frame[data-template="noir"] .g-card:hover,
 .g-frame[data-template="midnight"] .g-card:hover {
@@ -399,7 +401,7 @@ body {
   color: var(--m-accent);
   font-family: "SF Mono", monospace;
   font-weight: 750;
-  text-shadow: 0 0 10px color-mix(in srgb, var(--m-accent) 55%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--m-accent) 30%, transparent);
 }
 
 
@@ -670,6 +672,80 @@ body {
 .g-frame[data-template="marina"] .g-thumb {
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+
+/* --------------------------------------------------------------------------
+   ARKETİP 9: COGNAC LIBRARY SALON (AÇIK ZEMİNLİ KLASİK BAR)
+   Şablon: library
+   Konsept: Krem kağıt üzerinde viski & konyak kartı; çift çizgili başlık bandı,
+            Cormorant serif isim ve fiyatlar, çerçevesiz ince çizgili satırlar.
+            Tüm renkler tema değişkenlerinden türetilir; koyu yüzey yoktur.
+   -------------------------------------------------------------------------- */
+.g-frame[data-template="library"] {
+  --g-library-serif: "Cormorant Garamond", Garamond, Georgia, serif;
+  --g-library-rule: color-mix(in srgb, var(--m-accent) 45%, var(--m-bg));
+}
+.g-frame[data-template="library"] .g-design-hero {
+  background: var(--m-bg);
+  color: var(--m-accent);
+  border: 0;
+  border-block: 3px double var(--g-library-rule);
+  border-radius: 0;
+  text-align: center;
+  padding: 1.6rem 1rem 1.4rem;
+}
+.g-frame[data-template="library"] .g-design-hero > span {
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--m-muted);
+  opacity: 1;
+}
+.g-frame[data-template="library"] .g-design-hero h2 {
+  font-weight: 600;
+}
+.g-frame[data-template="library"][data-category-style] .g-tabs button {
+  font-family: var(--g-library-serif);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.g-frame[data-template="library"] .g-sub > h2 {
+  font-family: var(--g-library-serif);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--g-library-rule);
+}
+.g-frame[data-template="library"] .g-group > h3 {
+  text-align: center;
+  letter-spacing: 0.16em;
+}
+.g-frame[data-template="library"] .g-card {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--m-accent) 16%, var(--m-line));
+  border-radius: 0;
+  box-shadow: none;
+  padding: 14px 2px;
+}
+.g-frame[data-template="library"] .g-name {
+  font-family: var(--g-library-serif);
+  font-size: 1.14rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.g-frame[data-template="library"] .g-price {
+  font-family: var(--g-library-serif);
+  font-size: 1.12rem;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.g-frame[data-template="library"] .g-thumb {
+  border-radius: 2px;
+  border: 1px solid var(--g-library-rule);
 }
 
 .g-root *,
@@ -1234,6 +1310,11 @@ body {
   display: block;
   background-color: var(--m-soft);
 }
+/* List rows: a slightly larger square so bottles and plated dishes read at a glance. */
+.g-frame[data-card="list"] .g-card { grid-template-columns: 84px minmax(0, 1fr) auto; }
+.g-frame[data-card="list"] .g-thumb { width: 84px; height: 84px; }
+.g-frame[data-card="list"][data-density="airy"] .g-card { grid-template-columns: 92px minmax(0, 1fr) auto; }
+.g-frame[data-card="list"][data-density="airy"] .g-thumb { width: 92px; height: 92px; }
 .g-placeholder {
   background: linear-gradient(135deg, var(--m-line), transparent);
 }
@@ -1374,24 +1455,38 @@ body {
 .g-sheet-close:active {
   transform: scale(0.94);
 }
+/* Menu photos are square (600x600). The detail image keeps the whole dish, bottle or glass in view:
+   a square stage capped in height, the photo contained on a soft theme-coloured mat. */
 .g-sheet-image {
   width: 100%;
-  height: 240px;
-  object-fit: cover;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  max-height: min(52dvh, 420px);
+  object-fit: contain;
   display: block;
   border-radius: 23px 23px 0 0;
+  background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--m-soft) 55%, var(--m-bg)), var(--m-soft));
+  box-shadow: inset 0 -1px 0 var(--m-line);
+}
+.g-sheet-image.g-placeholder {
+  aspect-ratio: auto;
+  height: 160px;
 }
 .g-sheet-gallery {
   position: relative;
   width: 100%;
-  height: 240px;
+  aspect-ratio: 1 / 1;
+  max-height: min(52dvh, 420px);
   overflow: hidden;
   border-radius: 23px 23px 0 0;
-  background: #000;
+  background: var(--m-soft);
 }
 .g-sheet-gallery .g-sheet-image {
   border-radius: 0;
+  width: 100%;
   height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
 }
 .g-gallery-nav {
   position: absolute;
@@ -2160,16 +2255,31 @@ body {
 .g-featured-card:active {
   transform: scale(0.98);
 }
+/* Featured picks: square photo (the source is square, nothing is cut). A lone last pick lies flat:
+   square photo on the start side, name beside it. */
 .g-featured-card img {
   width: 100%;
-  height: 110px;
-  aspect-ratio: 16 / 9;
+  height: auto;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 15px 15px 0 0;
+  display: block;
+  border-radius: 0;
   background-color: var(--m-soft);
 }
+.g-featured li:last-child:nth-child(odd) .g-featured-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
 .g-featured li:last-child:nth-child(odd) .g-featured-card img {
-  height: 140px;
+  flex: none;
+  width: 120px;
+  height: 120px;
+}
+.g-featured li:last-child:nth-child(odd) .g-featured-card span {
+  padding: 12px;
+  padding-inline-start: 0;
+  font-size: 0.95rem;
 }
 .g-featured-card span {
   padding: 0 12px 12px;
@@ -2214,17 +2324,22 @@ body {
   grid-template-columns: 1fr;
   align-items: stretch;
 }
+/* Card and photo layouts: the square photo is shown whole on a soft mat (contain), capped in height. */
 .g-frame[data-card="card"] .g-thumb,
 .g-frame[data-card="photo"] .g-thumb {
   width: 100%;
-  height: 168px;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: color-mix(in srgb, var(--m-soft) 70%, var(--m-bg));
 }
 .g-frame[data-card="photo"] .g-card {
   padding: 0;
   overflow: hidden;
 }
 .g-frame[data-card="photo"] .g-thumb {
-  height: 190px;
+  aspect-ratio: 1 / 1;
+  max-height: 340px;
   border-radius: 0;
 }
 .g-frame[data-card="photo"] .g-card-text,
@@ -2283,7 +2398,7 @@ body {
 .g-frame[data-card="card"][data-images="on"][data-curated="on"] .g-card[data-photo="big"],
 .g-frame[data-card="photo"][data-images="on"][data-curated="on"] .g-card[data-photo="big"] { grid-template-columns: minmax(0, 1fr); }
 .g-frame[data-card="card"][data-images="on"][data-curated="on"] .g-card[data-photo="big"] .g-thumb,
-.g-frame[data-card="photo"][data-images="on"][data-curated="on"] .g-card[data-photo="big"] .g-thumb { width: 100%; height: 168px; }
+.g-frame[data-card="photo"][data-images="on"][data-curated="on"] .g-card[data-photo="big"] .g-thumb { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; }
 
 .g-tabs button,
 .g-filters button,
