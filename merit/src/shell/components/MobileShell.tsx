@@ -11,6 +11,7 @@ import { XpIcon } from "../icons";
 import type { AppDefinition } from "../registry";
 import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
 import { useMobileDefs } from "../useMobileDefs";
+import { useAndroidForm } from "../useShellMode";
 import { useSse, type SseStatus } from "../useSse";
 import { useWindowStore } from "../windowStore";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -104,6 +105,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
   const [definitionsOn, setDefinitionsOn] = useMobileDefs(mobileDefinitions);
   const wallpaper = useWindowStore((s) => s.wallpaper);
   const wallpaperColor = useWindowStore((s) => s.wallpaperColor);
+  const form = useAndroidForm();
   const theme = useWindowStore((s) => s.theme);
   const fontScale = useWindowStore((s) => s.fontScale);
   const fontFamily = useWindowStore((s) => s.fontFamily);
@@ -275,6 +277,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
     <div
       ref={shellRef}
       className="mb-shell"
+      data-form={form}
       data-wallpaper={wallpaper}
       data-theme={theme}
       data-screen={open ? "app" : "home"}

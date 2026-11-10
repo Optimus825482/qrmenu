@@ -7,6 +7,7 @@ import { can, visibleScreens } from "@/lib/rbac";
 import { getSetting } from "@/lib/settings";
 import { listTargets } from "@/modules/core/server/targets";
 import { CLOSED_STATUSES } from "@/modules/order/server/transitions";
+import { formFromUserAgent } from "@/shell/deviceForm";
 import { buildNav, type NavModel } from "./navModel";
 import type { StaffShellProps } from "./StaffShell";
 
@@ -72,6 +73,7 @@ export async function loadStaffShellProps(
     sessionEndsAt: effectiveEndsAt?.toISOString() ?? null,
     warnMinutes: SESSION_WARN_MINUTES,
     layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
+    formHint: formFromUserAgent((await headers()).get("user-agent")),
   };
 }
 

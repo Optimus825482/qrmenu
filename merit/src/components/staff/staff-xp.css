@@ -1,0 +1,287 @@
+/*
+ * Personel kabuğunun PC görünümü: aynı kabuk, ekranı kaplayan bir Windows XP penceresi olarak çizilir
+ * (başlık çubuğu, solda görev bölmesi, altta durum çubuğu). Yalnız `.staff-xp[data-form="desktop"]`
+ * altında geçerlidir; telefon ve tablette staff.css aynen kalır. Renkler XP Luna paletidir
+ * (src/shell/theme.css ile aynı değerler; o dosya 120 KB olduğu için buraya alınmaz).
+ */
+.staff-shell.staff-xp[data-form="desktop"] {
+  --sx-title-1: #0058e6;
+  --sx-title-2: #3a81f3;
+  --sx-title-dark: #0040c0;
+  --sx-title-text: #ffffff;
+  --sx-body: #ece9d8;
+  --sx-body-edge: #aca899;
+  --sx-body-light: #ffffff;
+  --sx-pane-1: #7ba2e7;
+  --sx-pane-2: #6375d6;
+  --sx-group: #d6dff7;
+  --sx-group-head: #c6d3f7;
+  --sx-link: #215dc6;
+  --sx-select: #316ac5;
+  --sx-title-h: 34px;
+  --sx-status-h: 26px;
+  --sx-pane-w: 208px;
+  --sx-frame: 3px;
+
+  /* Sayfaların kullandığı genel belirteçler pencere gövdesine uyar. */
+  --bg: var(--sx-body);
+  --radius-s: 2px;
+  --radius-m: 3px;
+  --radius-l: 4px;
+
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-columns: var(--sx-pane-w) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) var(--sx-status-h);
+  grid-template-areas:
+    "top top"
+    "nav main"
+    "status status";
+  border: var(--sx-frame) solid var(--sx-title-1);
+  border-top: 0;
+  background: var(--sx-body);
+  font-family: Tahoma, "Segoe UI", Verdana, sans-serif;
+}
+
+/* ---- Başlık çubuğu ---- */
+.staff-shell.staff-xp[data-form="desktop"] .staff-head {
+  position: relative;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-top {
+  background: linear-gradient(
+    180deg,
+    var(--sx-title-2) 0%,
+    var(--sx-title-1) 18%,
+    var(--sx-title-1) 82%,
+    var(--sx-title-dark) 100%
+  );
+  border-bottom: 1px solid var(--sx-title-dark);
+  color: var(--sx-title-text);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar {
+  height: var(--sx-title-h);
+  padding: 0 6px 0 10px;
+  gap: 6px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-heading {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-title {
+  flex: 0 1 auto;
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 var(--sx-title-dark);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-sub {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--sx-title-text);
+  opacity: 0.85;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar > .staff-conn {
+  min-height: 22px;
+  border-radius: 3px;
+  border-color: var(--sx-body-light);
+  font-size: 12px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar .staff-icon-button {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--sx-body-light);
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--sx-title-2), var(--sx-title-dark));
+  color: var(--sx-title-text);
+  font-size: 12px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar .staff-icon-button:hover {
+  filter: brightness(1.15);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar .staff-icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-bar .staff-badge {
+  top: -5px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-menu {
+  right: 4px;
+  max-height: calc(100dvh - var(--sx-title-h) - var(--sx-status-h) - 16px);
+  border: 1px solid var(--sx-title-1);
+  box-shadow: 2px 2px 6px color-mix(in srgb, var(--text) 35%, transparent);
+  color: var(--text);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-menu-item {
+  min-height: 32px;
+  font-size: 14px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-menu-item:hover {
+  background: var(--sx-select);
+  color: var(--sx-title-text);
+}
+
+/* ---- Görev bölmesi (gezinme) ---- */
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav {
+  position: static;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: auto;
+  height: auto;
+  padding: 12px;
+  border: 0;
+  border-right: 1px solid var(--sx-body-edge);
+  background: linear-gradient(180deg, var(--sx-pane-1), var(--sx-pane-2));
+  overflow-y: auto;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav::before {
+  content: "Ekranlar";
+  padding: 6px 10px;
+  border-radius: 4px 4px 0 0;
+  background: linear-gradient(90deg, var(--sx-body-light), var(--sx-group-head));
+  color: var(--sx-link);
+  font-size: 13px;
+  font-weight: 700;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item {
+  flex: 0 0 auto;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border-inline: 1px solid var(--sx-body-light);
+  background: var(--sx-group);
+  color: var(--sx-link);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item:last-of-type {
+  border-bottom: 1px solid var(--sx-body-light);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item:hover .staff-nav-label {
+  text-decoration: underline;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item .staff-nav-icon,
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item[data-emphasis="qr"] .staff-nav-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item[data-emphasis="qr"] .staff-nav-label {
+  margin-top: 0;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item[aria-current="page"],
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item[data-active="true"] {
+  background: var(--sx-select);
+  color: var(--sx-title-text);
+  font-weight: 700;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-badge {
+  position: static;
+  margin-left: auto;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-item:focus-visible {
+  outline: 1px dotted var(--text);
+  outline-offset: -3px;
+}
+
+/* ---- Pencere gövdesi ---- */
+.staff-shell.staff-xp[data-form="desktop"] .staff-main {
+  overflow: auto;
+  padding: 16px;
+  background: var(--sx-body);
+}
+
+/* ---- Durum çubuğu ---- */
+.staff-shell.staff-xp[data-form="desktop"] .staff-status {
+  grid-area: status;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px 2px 0;
+  border-top: 1px solid var(--sx-body-light);
+  box-shadow: 0 -1px 0 var(--sx-body-edge);
+  background: var(--sx-body);
+  color: var(--text);
+  font-size: 12px;
+}
+.staff-status-cell {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid var(--sx-body-edge);
+  border-right-color: var(--sx-body-light);
+  border-bottom-color: var(--sx-body-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.staff-status-grow {
+  flex: 1;
+}
+.staff-status-clock {
+  min-width: 52px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.staff-status-cell[data-state="online"] {
+  color: var(--success);
+}
+.staff-status-cell[data-state="connecting"] {
+  color: var(--warn);
+}
+.staff-status-cell[data-state="offline"] {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ---- Yüzen parçalar pencerenin içinde kalır ---- */
+.staff-shell.staff-xp[data-form="desktop"] .staff-fab {
+  right: calc(var(--sx-frame) + 20px);
+  bottom: calc(var(--sx-status-h) + var(--sx-frame) + 16px);
+  border-radius: 4px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-action-bar {
+  left: calc(var(--sx-pane-w) + var(--sx-frame));
+  right: var(--sx-frame);
+  bottom: calc(var(--sx-status-h) + var(--sx-frame));
+}
+/* "Daha" sayfası PC'de ortalanmış bir iletişim kutusudur. */
+.staff-shell.staff-xp[data-form="desktop"] ~ .staff-sheet-backdrop,
+.staff-shell.staff-xp[data-form="desktop"] .staff-sheet-backdrop {
+  align-items: center;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-sheet {
+  max-width: 26rem;
+  border: var(--sx-frame) solid var(--sx-title-1);
+  border-radius: 6px;
+  background: var(--sx-body);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-sheet .staff-menu-item {
+  min-height: 36px;
+  font-size: 14px;
+}

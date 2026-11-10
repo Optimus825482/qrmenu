@@ -1465,3 +1465,91 @@ button.mb-tile {
 .rc[data-variant="mobile"] .rc-num {
   display: inline;
 }
+
+/* ---- Android tablet ------------------------------------------------------------------------
+   Same shell, laid out for a wide touch screen (data-form="tablet", see deviceForm.ts): a two-column
+   home, a centred dock, a side quick-settings panel and roomier grids. The phone rules above stay
+   the base; only what a tablet does differently is overridden here. */
+
+.mb-shell[data-form="tablet"] {
+  --mb-bar: 64px;
+  --mb-status: 32px;
+  --mb-nav: 56px;
+}
+
+.mb-shell[data-form="tablet"] .mb-home {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 24px 32px;
+  padding: 32px 40px 20px;
+}
+
+.mb-shell[data-form="tablet"] .mb-glance {
+  grid-column: 1;
+  margin: 0 4px;
+}
+
+.mb-shell[data-form="tablet"] .mb-glance-day {
+  font-size: 30px;
+}
+
+.mb-shell[data-form="tablet"] .mb-glance-user {
+  font-size: 16px;
+}
+
+.mb-shell[data-form="tablet"] .mb-widget {
+  grid-column: 1;
+  align-self: start;
+}
+
+/* The dock: centred along the bottom edge, as wide as its icons need. */
+.mb-shell[data-form="tablet"] .mb-launcher {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: center;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  width: min(100%, 880px);
+  margin-top: 0;
+  padding: 16px 20px;
+}
+
+.mb-shell[data-form="tablet"] .mb-app-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+}
+
+.mb-shell[data-form="tablet"] .mb-app-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.mb-shell[data-form="tablet"] .mb-launch-label {
+  font-size: 13px;
+}
+
+.mb-shell[data-form="tablet"] .mb-drawer {
+  padding-inline: max(24px, calc((100% - 1040px) / 2));
+}
+
+.mb-shell[data-form="tablet"] .mb-drawer-grid {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 22px 8px;
+}
+
+/* Quick settings open as a panel on the right, not as a full-width sheet. */
+.mb-shell[data-form="tablet"] .mb-shade {
+  left: auto;
+  width: min(440px, 100%);
+  border-radius: 0 0 0 28px;
+}
+
+.mb-shell[data-form="tablet"] .mb-overview-cards {
+  padding: 0 32%;
+}
+
+/* The three system buttons stay together in the middle instead of spreading over a wide bar. */
+.mb-shell[data-form="tablet"] .mb-sysnav {
+  padding-inline: 34%;
+}

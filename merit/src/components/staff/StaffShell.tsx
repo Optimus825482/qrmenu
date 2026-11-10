@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { DensityRoot } from "@/components/ui/Density";
@@ -16,8 +16,11 @@ import { SessionBanner } from "./SessionBanner";
 import { StaffBell } from "./StaffBell";
 import { StaffNav } from "./StaffNav";
 import { StaffTopBar } from "./StaffTopBar";
-import { useLastOnlineAt, useOfflineGuard, useOnline } from "./useOnline";
+import type { DeviceForm } from "@/shell/deviceForm";
+import { useDeviceForm } from "@/shell/useShellMode";
+import { useLastOnlineAt, useOfflineGuard, useOnline, type OnlineState } from "./useOnline";
 import "./staff.css";
+import "./staff-xp.css";
 
 export type StaffShellProps = {
   children: ReactNode;
@@ -33,7 +36,27 @@ export type StaffShellProps = {
   currentTargetIndex?: number;
   /** Extra profile menu entries (Erişimim, Yardım: Task 11/12). */
   profileExtras?: ProfileExtra[];
+  /** Server's User-Agent guess of the device, for the first paint (see useDeviceForm). */
+  formHint?: DeviceForm;
 };
+
+const CONNECTION_TEXT: Record<OnlineState, string> = {
+  online: "Bağlı",
+  connecting: "Bağlanıyor…",
+  offline: "Bağlantı yok",
+};
+
+/** Clock of the desktop status bar; empty until mounted so server and client markup agree. */
+function StatusClock() {
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    tick();
+    const timer = setInterval(tick, 20_000);
+    return () => clearInterval(timer);
+  }, []);
+  return <span className="staff-status-cell staff-status-clock">{now ? formatTime(now) : ""}</span>;
+}
 
 const FALLBACK_TITLES: ReadonlyArray<readonly [string, string]> = [
   ["/kat/mybar", "MyBar talepleri"],
@@ -72,7 +95,11 @@ export function StaffShell({
   layout,
   currentTargetIndex,
   profileExtras,
+  formHint = "phone",
 }: StaffShellProps) {
+  // A PC (mouse, wide window) draws the same shell as an XP window: title bar, task pane, status bar.
+  const form = useDeviceForm(formHint);
+  const desktop = form === "desktop";
   const pathname = usePathname();
   const search = useSearchParams();
   const sekme = search.get("sekme");
@@ -86,7 +113,7 @@ export function StaffShell({
 
   return (
     <DensityRoot density="personel">
-      <div className="staff-shell" data-layout={layout}>
+      <div className={desktop ? "staff-shell staff-xp" : "staff-shell"} data-layout={layout} data-form={form}>
         <div className="staff-head">
           <StaffTopBar
             title={title}
@@ -127,7 +154,19 @@ export function StaffShell({
             {nav.fab.label}
           </Link>
         ) : null}
-        <SnackbarHost bottomOffset={layout === "bottom" ? "76px" : "24px"} />
+        {desktop ? (
+          <footer className="staff-status">
+            <span className="staff-status-cell staff-status-grow">{subtitle}</span>
+            <span className="staff-status-cell">
+              {user.fullName} · {user.roleName}
+            </span>
+            <span className="staff-status-cell" data-state={state}>
+              {CONNECTION_TEXT[state]}
+            </span>
+            <StatusClock />
+          </footer>
+        ) : null}
+        <SnackbarHost bottomOffset={desktop ? "40px" : layout === "bottom" ? "76px" : "24px"} />
       </div>
     </DensityRoot>
   );

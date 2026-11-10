@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { parseFormQuery, resolveDeviceForm, type DeviceForm } from "./deviceForm";
 import { DEVICE_EVENT, parseDevice, readDeviceRaw, type DeviceRecord } from "./deviceRecord";
 import {
   XP_ANDROID_MAX_WIDTH,
@@ -26,22 +27,46 @@ function modeOf(decision: ShellDecision): ShellMode {
   return decision.shell === "personel" || decision.layout === "android" ? "mobile" : "desktop";
 }
 
+const COARSE_POINTER = "(pointer: coarse)";
+
+/** Non-hook read of the device form (phone / tablet / desktop); only call in the browser. */
+export function currentDeviceForm(): DeviceForm {
+  return resolveDeviceForm({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    coarsePointer: window.matchMedia?.(COARSE_POINTER).matches === true,
+    query: new URLSearchParams(window.location.search).get("cihaz"),
+  });
+}
+
 /** Non-hook read of the mode (for effects and event handlers); only call in the browser. */
 export function currentShellMode(): ShellMode {
-  const query = parseShellQuery(new URLSearchParams(window.location.search));
+  const params = new URLSearchParams(window.location.search);
+  const query = parseShellQuery(params);
   // `?mobil=1` (= personel) keeps forcing the Android shell on a wide screen. The device record is a
   // kiosk preference for /kasa and /kds and does not apply to the desktop.
-  return modeOf(
+  const mode = modeOf(
     resolveShell({ ...ADMIN_INPUT, query, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight }),
   );
+  // A tablet (wide window, finger as primary pointer) gets the Android shell too, in its tablet layout.
+  // An explicit `?mod=xp` or `?cihaz=masaustu` keeps the desktop.
+  if (mode === "desktop" && query !== "xp") {
+    const form = parseFormQuery(params) ?? currentDeviceForm();
+    if (form !== "desktop") return "mobile";
+  }
+  return mode;
 }
 
 function subscribe(onChange: () => void): () => void {
   window.addEventListener("resize", onChange);
   window.addEventListener("popstate", onChange);
+  // Docking a mouse or keyboard changes the primary pointer without a resize.
+  const pointer = window.matchMedia?.(COARSE_POINTER);
+  pointer?.addEventListener?.("change", onChange);
   return () => {
     window.removeEventListener("resize", onChange);
     window.removeEventListener("popstate", onChange);
+    pointer?.removeEventListener?.("change", onChange);
   };
 }
 
@@ -54,6 +79,23 @@ function subscribe(onChange: () => void): () => void {
  */
 export function useShellMode(): ShellMode {
   return useSyncExternalStore(subscribe, currentShellMode, () => "desktop");
+}
+
+/**
+ * Layout of the Android shell: "phone" or "tablet". Inside the Android shell a "desktop" reading (the
+ * shell was forced with `?mod=personel` on a PC) is drawn as a tablet when the window is wide enough.
+ */
+export function useAndroidForm(): "phone" | "tablet" {
+  const form = useSyncExternalStore(subscribe, currentDeviceForm, () => "phone" as DeviceForm);
+  return form === "phone" ? "phone" : "tablet";
+}
+
+/**
+ * Device form for shells outside the admin desktop (staff pages). `hint` is the server's User-Agent guess
+ * and is what the first paint uses, so a PC does not flash the Android layout before hydration.
+ */
+export function useDeviceForm(hint: DeviceForm): DeviceForm {
+  return useSyncExternalStore(subscribe, currentDeviceForm, () => hint);
 }
 
 function subscribeAll(onChange: () => void): () => void {
