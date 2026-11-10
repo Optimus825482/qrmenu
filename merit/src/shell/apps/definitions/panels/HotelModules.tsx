@@ -92,6 +92,11 @@ export function HotelModules({ hotelId }: { hotelId: string }) {
           {MODULE_LABELS[item.moduleKey]}
         </label>
       ))}
+      <p className="xp-hotel-modules-note" style={{ margin: "8px 0 0", fontSize: "0.85rem", lineHeight: 1.45, opacity: 0.8 }}>
+        Oda QR kodu tektir: Minibar ve Oda Servisi birlikte açıksa misafir QR&apos;ı okuttuğunda önce MyBar, altında Oda
+        Servisi seçeneğini görür ve seçtiğine yönlenir. Yalnız biri açıksa doğrudan o ekran açılır; ikisi de kapalıysa
+        oda QR&apos;ı hizmet vermez. Değişiklik bu otelin tüm odalarında hemen geçerli olur.
+      </p>
     </fieldset>
   );
 }
