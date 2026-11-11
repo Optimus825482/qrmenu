@@ -12,7 +12,6 @@ import {
 import { appFrameUrl } from "../../appearance";
 import type { AppDefinition, AppProps } from "../../registry";
 import { hotelsForApp, useWindowStore, windowStore } from "../../windowStore";
-import { HotelPicker } from "../HotelPicker";
 import { AppErrorBoundary } from "../Window";
 
 /** What the opener asked for (a folder icon passes the hotel, a shortcut a sub-panel). */
@@ -72,12 +71,12 @@ export function MobileAppHost({ app, launch, onOpenApp, onClose }: Props) {
   );
   const fontFamily = useWindowStore((s) => s.fontFamily);
   const theme = useWindowStore((s) => s.theme);
-  // undefined = no choice yet (take the opener's hotel); "" = the user asked for the picker again.
+  // undefined = no choice yet: the opener's hotel, else the first one in scope.
   const [picked, setPicked] = useState<string | undefined>(undefined);
 
   const asked = launch.hotelId && pickable.some((h) => h.id === launch.hotelId) ? launch.hotelId : undefined;
-  const only = app.needsHotel && pickable.length === 1 ? pickable[0].id : undefined;
-  const hotelId = picked === "" ? only : (picked ?? asked ?? only);
+  const first = app.needsHotel ? pickable[0]?.id : undefined;
+  const hotelId = (picked && pickable.some((h) => h.id === picked) ? picked : undefined) ?? asked ?? first;
 
   const shared = useMemo<Omit<AppProps, "hotelId" | "initialPanel" | "initialOutletId">>(
     () => ({
@@ -93,7 +92,11 @@ export function MobileAppHost({ app, launch, onOpenApp, onClose }: Props) {
 
   let body;
   if (app.needsHotel && !hotelId) {
-    body = <HotelPicker hotels={pickable} onPick={setPicked} />;
+    body = (
+      <div className="xp-hotel-picker">
+        <p>Kapsamınızda etkin otel yok.</p>
+      </div>
+    );
   } else if (app.kind === "component") {
     body = (
       <AppErrorBoundary key={hotelId ?? "all"}>
@@ -126,10 +129,14 @@ export function MobileAppHost({ app, launch, onOpenApp, onClose }: Props) {
     <div className="mb-xp-host">
       {app.needsHotel && hotelId && pickable.length > 1 ? (
         <div className="mb-xp-hotel">
-          <span>{pickable.find((h) => h.id === hotelId)?.name}</span>
-          <button type="button" className="mb-text-button" onClick={() => setPicked("")}>
-            Otel değiştir
-          </button>
+          <label htmlFor={`mb-hotel-${app.id}`}>Otel</label>
+          <select id={`mb-hotel-${app.id}`} value={hotelId} onChange={(e) => setPicked(e.target.value)}>
+            {pickable.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.name}
+              </option>
+            ))}
+          </select>
         </div>
       ) : null}
       <div className="mb-xp-body">{body}</div>

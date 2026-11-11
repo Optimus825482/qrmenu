@@ -67,6 +67,8 @@ export type WindowBannerProps = {
   hotelId?: string;
   hotels: HotelInfo[];
   pickableHotels?: HotelInfo[];
+  /** The app cannot run across hotels: the selector offers hotels only. */
+  requireHotel?: boolean;
   onHotelChange: (hotelId: string) => void;
 };
 
@@ -81,6 +83,7 @@ export function WindowBanner({
   hotelId,
   hotels,
   pickableHotels,
+  requireHotel,
   onHotelChange,
 }: WindowBannerProps) {
   const isFolder = app.id.startsWith("folder.");
@@ -155,7 +158,7 @@ export function WindowBanner({
             aria-label="Otel Seçimi"
             className="bg-white text-[#003399] font-bold text-xs px-2.5 py-0.5 rounded shadow-inner border border-[#003c9a] cursor-pointer hover:border-blue-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 max-w-[210px] truncate"
           >
-            <option value="">Tüm Oteller (Konsolide)</option>
+            {requireHotel && hotelId ? null : <option value="">Tüm Oteller (Konsolide)</option>}
             {hotelList.map((h) => (
               <option key={h.id} value={h.id}>
                 {h.name}

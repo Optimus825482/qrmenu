@@ -856,11 +856,25 @@
   flex: none;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px 0 16px;
+  gap: 12px;
+  padding: 6px 12px 6px 16px;
   border-bottom: 1px solid var(--mb-line);
   background: var(--mb-surface);
   font-size: 14px;
   font-weight: 500;
+}
+
+.mb-xp-hotel select {
+  flex: 1;
+  min-width: 0;
+  max-width: 320px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--mb-line);
+  border-radius: 8px;
+  background: var(--mb-surface);
+  color: inherit;
+  font: inherit;
 }
 
 .mb-xp-body {

@@ -34,7 +34,7 @@ import {
   windowStore,
 } from "../windowStore";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
-import { HotelPicker, type HotelInfo } from "./HotelPicker";
+import type { HotelInfo } from "./HotelPicker";
 import { WindowBanner } from "./WindowBanner";
 import { Icon } from "@/components/icons/Icon";
 import { notify } from "../notify";
@@ -356,12 +356,6 @@ export function Window({ id, hotels, userName }: Props) {
       { label: "Yeni…", mnemonic: "y", disabled: !offered.includes("new"), onSelect: () => commandButton("new")?.click() },
       { label: "Dışa aktar", mnemonic: "d", disabled: !offered.includes("export"), onSelect: () => commandButton("export")?.click() },
       { kind: "separator" },
-      ...(pickable.length > 1 && app.needsHotel
-        ? [
-            { label: "Otel Değiştir…", mnemonic: "o", onSelect: () => actions.clearHotel(id) },
-            { kind: "separator" as const },
-          ]
-        : []),
       { label: "Kapat", mnemonic: "k", onSelect: () => void requestClose() },
     ],
     Görünüm: [
@@ -448,7 +442,12 @@ F&B Command Center uygulaması (${app.id})`,
 
   let body: ReactNode;
   if (app.needsHotel && !win.hotelId) {
-    body = <HotelPicker hotels={pickable} onPick={(hotelId) => actions.setHotel(id, hotelId)} />;
+    // Only when no hotel is in scope: otherwise the store binds a default and the banner changes it.
+    body = (
+      <div className="xp-hotel-picker">
+        <p>Kapsamınızda etkin otel yok.</p>
+      </div>
+    );
   } else if (app.kind === "component") {
     body = (
       <AppErrorBoundary key={`${win.hotelId ?? "all"}-${reloadKey}`}>
@@ -564,6 +563,7 @@ F&B Command Center uygulaması (${app.id})`,
         hotelId={win.hotelId}
         hotels={hotels}
         pickableHotels={pickable}
+        requireHotel={app.needsHotel}
         onHotelChange={(newHotelId) => {
           if (newHotelId) actions.setHotel(id, newHotelId);
           else actions.clearHotel(id);
@@ -575,16 +575,6 @@ F&B Command Center uygulaması (${app.id})`,
       ) : null}
       <div className="xp-statusbar">
         Otel: {hotel?.name ?? "—"}
-        {pickable.length > 1 && app.needsHotel ? (
-          <button
-            type="button"
-            className="xp-statusbar-switch-btn ml-1.5"
-            onClick={() => actions.clearHotel(id)}
-            title="Çalışılan oteli değiştir"
-          >
-            [Değiştir]
-          </button>
-        ) : null}
         {" "}· Kullanıcı: {userName} · {status}
       </div>
       {resizable && !win.maximized ? (

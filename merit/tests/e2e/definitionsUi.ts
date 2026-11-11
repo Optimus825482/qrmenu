@@ -79,13 +79,12 @@ export async function deleteSelected(page: Page, win: Locator, askTitle: string)
   await acknowledge(page, /silindi|kaldırıldı/);
 }
 
-/** The hotel card of `hotelName` inside the picker region of a window that has no hotel yet. */
+/** Binds the window of `appName` to `hotelName` with the hotel selector in its banner. */
 export async function pickHotel(page: Page, appName: string, hotelName: string): Promise<void> {
-  const escaped = hotelName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   await page
     .getByRole("region", { name: appName, exact: true })
-    .getByRole("button", { name: new RegExp(`^${escaped} logosu\\s+${escaped}$`) })
-    .click();
+    .getByLabel("Otel Seçimi")
+    .selectOption({ label: hotelName });
 }
 
 /**

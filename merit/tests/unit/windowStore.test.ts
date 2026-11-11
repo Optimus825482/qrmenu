@@ -137,11 +137,11 @@ describe("windowStore", () => {
     expect(s().order).toEqual([b]);
   });
 
-  it("otel bağlamı: çok otelde hotelId boş kalır, setHotel başlığa otel adını ekler; tek otel otomatik", () => {
+  it("otel bağlamı: çok otelde ilk otelle açılır, setHotel başlığa otel adını ekler; tek otel otomatik", () => {
     s().configure({ hotels: TWO_HOTELS });
     const w = open("t.otel");
-    expect(s().windows[w].hotelId).toBeUndefined();
-    expect(s().windows[w].title).toBe("Otel Uyg");
+    expect(s().windows[w].hotelId).toBe("h1");
+    expect(s().windows[w].title).toBe("Otel Uyg · Merit Royal");
     s().setHotel(w, "h2");
     expect(s().windows[w]).toMatchObject({ hotelId: "h2", title: "Otel Uyg · Merit Royal Premium" });
     s().setHotel(w, "kapsam-disi");
@@ -216,7 +216,8 @@ describe("windowStore", () => {
     expect(s().wallpaper).toBe("gumus");
     expect(s().icons.map((i) => i.appId)).toEqual(["t.a"]);
     expect(s().order).toEqual(["w1", "w3"]);
-    expect(s().windows.w3).toMatchObject({ hotelId: undefined, title: "Otel Uyg" });
+    // The out-of-scope hotel is dropped; a hotel-bound app falls back to the first hotel in scope.
+    expect(s().windows.w3).toMatchObject({ hotelId: "h1", title: "Otel Uyg · Merit Royal" });
   });
 
   describe("otel bazlı görünürlük (screensByHotel)", () => {
@@ -242,15 +243,15 @@ describe("windowStore", () => {
         title: "Minibar · Merit Royal Premium",
       });
       const k = open("t.otel");
-      expect(s().windows[k].hotelId).toBeUndefined(); // three choices → picker
+      expect(s().windows[k].hotelId).toBe("h1"); // several choices → the first; the banner changes it
     });
 
     it("setHotel ekranın görünmediği oteli reddeder", () => {
       s().configure({ screensByHotel: { h1: ["CR-KOM"], h2: ["MB-KAT"], h3: ["MB-KAT"] } });
       const w = open("t.minibar");
-      expect(s().windows[w].hotelId).toBeUndefined();
+      expect(s().windows[w].hotelId).toBe("h2");
       s().setHotel(w, "h1");
-      expect(s().windows[w].hotelId).toBeUndefined();
+      expect(s().windows[w].hotelId).toBe("h2");
       s().setHotel(w, "h3");
       expect(s().windows[w].hotelId).toBe("h3");
     });

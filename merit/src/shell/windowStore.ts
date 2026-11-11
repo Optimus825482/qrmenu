@@ -243,7 +243,7 @@ export function appVisibleInHotel(
   return s.screensByHotel === null || (s.screensByHotel[hotelId] ?? []).includes(app.screenCode);
 }
 
-/** The hotels a window of `appId` may be bound to (the hotel picker's cards). */
+/** The hotels a window of `appId` may be bound to (the banner's hotel selector). */
 export function hotelsForApp(
   s: Pick<ShellState, "hotels" | "screensByHotel">,
   appId: string,
@@ -276,9 +276,10 @@ export function createWindowStore() {
     };
 
     /**
-     * Hotel context for a window: a choice where the app is visible, the only such hotel, or none
-     * (picker). Defaults to Merit Royal Diamond for OUTLET, ROOM_SERVICE and MINIBAR operations,
-     * or all hotels (undefined) for cross-hotel/system modules.
+     * Hotel context for a window: a choice where the app is visible, else a default. Merit Royal
+     * Diamond for OUTLET, ROOM_SERVICE and MINIBAR operations; the first hotel in scope for any other
+     * app that needs a hotel (the banner's selector changes it); all hotels (undefined) for
+     * cross-hotel/system modules.
      */
     const resolveHotel = (app: AppDefinition, wanted?: string): string | undefined => {
       if (wanted && appVisibleInHotel(get(), app, wanted)) return wanted;
@@ -297,7 +298,7 @@ export function createWindowStore() {
         if (pool.length > 0) return pool[0].id;
       }
 
-      if (choices.length === 1) return choices[0].id;
+      if (choices.length === 1 || app.needsHotel) return choices[0]?.id;
       return undefined;
     };
 
@@ -504,7 +505,9 @@ export function createWindowStore() {
         update(id, (w) => {
           const app = getApp(w.appId);
           if (!app) return w;
-          return { ...w, hotelId: undefined, title: titleFor(app) };
+          // An app that cannot run without a hotel falls back to its default one.
+          const hotelId = app.needsHotel ? resolveHotel(app) : undefined;
+          return { ...w, hotelId, title: titleFor(app, hotelId) };
         });
       },
 
