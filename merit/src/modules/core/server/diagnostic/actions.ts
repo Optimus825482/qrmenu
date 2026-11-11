@@ -11,6 +11,7 @@ import {
   runSelfDiagnostics,
   sendDeveloperAlertMail,
 } from "./diagnosticService";
+import { readServerResources, type ServerResources } from "./serverResources";
 import type {
   DiagnosticIncidentData,
   DiagnosticIncidentRow,
@@ -142,4 +143,13 @@ export async function sendTestDiagnosticAlertAction(
       error: res.error,
     };
   })(raw);
+}
+
+/** Live CPU, memory, disk and database figures (cheap constant-time reads, cached for a few seconds). */
+export async function getServerResourcesAction(): Promise<{ ok: true; data: ServerResources } | { ok: false; error: ResultError }> {
+  return safeAction(z.undefined(), async () => {
+    const ctx = await requireUser();
+    await assertCan(ctx, SCREEN, "V");
+    return readServerResources();
+  })(undefined);
 }

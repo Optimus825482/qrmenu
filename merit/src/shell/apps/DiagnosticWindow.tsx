@@ -20,12 +20,13 @@ import type {
   DiagnosticSeverity,
   SystemHealthReport,
 } from "@/modules/core/server/diagnostic/types";
-import { setSettingAction } from "@/modules/core/server/admin/actions/settingsAdmin";
+import { ServerResourcesPanel } from "./ServerResourcesPanel";
+import { listSettingsAction, setSettingAction } from "@/modules/core/server/admin/actions/settingsAdmin";
 
-type Tab = "probes" | "incidents" | "settings";
+type Tab = "resources" | "probes" | "incidents" | "settings";
 
 export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
-  const [tab, setTab] = useState<Tab>("probes");
+  const [tab, setTab] = useState<Tab>("resources");
   const [health, setHealth] = useState<SystemHealthReport | null>(null);
   const [incidents, setIncidents] = useState<DiagnosticIncidentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,25 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
       setLoading(false);
     }
   };
+
+  // The stored notification settings fill the form once; without this a reopened window showed the
+  // built-in defaults and looked as if nothing had been saved.
+  useEffect(() => {
+    let live = true;
+    void listSettingsAction({ hotelId: null }).then((res) => {
+      if (!live || !res.ok) return;
+      const stored = new Map(res.data.flatMap((group) => group.items).map((item) => [item.key as string, item.value]));
+      const email = stored.get("diagnostic.developerEmail");
+      const auto = stored.get("diagnostic.autoNotify");
+      const severity = stored.get("diagnostic.minSeverity");
+      if (typeof email === "string") setDeveloperEmail(email);
+      if (typeof auto === "boolean") setAutoNotify(auto);
+      if (typeof severity === "string") setMinSeverity(severity as DiagnosticSeverity);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   useEffect(() => {
     // The first load runs outside the effect body (it sets the loading state).
@@ -119,10 +139,19 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
-      const p1 = setSettingAction({ hotelId: null, key: "diagnostic.developerEmail", value: developerEmail });
-      const p2 = setSettingAction({ hotelId: null, key: "diagnostic.autoNotify", value: autoNotify });
-      const p3 = setSettingAction({ hotelId: null, key: "diagnostic.minSeverity", value: minSeverity });
-      await Promise.all([p1, p2, p3]);
+      const email = developerEmail.trim();
+      // Server actions report a refusal in their result, they do not throw: every result is checked.
+      const results = await Promise.all([
+        setSettingAction({ hotelId: null, key: "diagnostic.developerEmail", value: email }),
+        setSettingAction({ hotelId: null, key: "diagnostic.autoNotify", value: autoNotify }),
+        setSettingAction({ hotelId: null, key: "diagnostic.minSeverity", value: minSeverity }),
+      ]);
+      const failed = results.find((res) => !res.ok);
+      if (failed && !failed.ok) {
+        notify.error(failed.error.message, { title: "Ayarlar kaydedilemedi" });
+        return;
+      }
+      setDeveloperEmail(email);
       notify.success("Geliştirici tanı bildirim ayarları kaydedildi.");
     } catch {
       notify.error("Ayarlar kaydedilemedi.");
@@ -261,6 +290,17 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
         <button
           type="button"
           className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
+            tab === "resources"
+              ? "bg-white text-accent border-t-2 border-t-accent border-x border-border"
+              : "text-muted hover:bg-border"
+          }`}
+          onClick={() => setTab("resources")}
+        >
+          Sunucu Kaynakları
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
             tab === "probes"
               ? "bg-white text-accent border-t-2 border-t-accent border-x border-border"
               : "text-muted hover:bg-border"
@@ -295,6 +335,8 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
 
       {/* Tab Contents */}
       <div className="flex-1 bg-white p-3.5 overflow-auto">
+        {tab === "resources" && <ServerResourcesPanel />}
+
         {/* TAB 1: HEALTH PROBES */}
         {tab === "probes" && (
           <div className="flex flex-col gap-2.5">

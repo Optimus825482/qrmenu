@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "11.11.2026 23:58",
+  updatedAt: "12.11.2026 00:25",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -322,5 +322,6 @@ window.ILERLEME = {
     { at: "11.11 23:40", text: "Kat personeli için Minibar Garson tanımı ve kullanıcı temizliği hazırlandı (canlıda henüz çalıştırılmadı). Kat Sorumlusu rolünün adı Minibar Garson oldu. Eski sistemdeki 11 kat personeli yeni sistemin kurallarıyla aktarılabilir: kullanıcı adı ad.soyad, standart geçici şifre, ilk girişte şifre değiştirme zorunlu. admin ve admin2 dışındaki örnek kullanıcıları ve onlara ait işlemleri silen araç eklendi; önce listeler, onayla siler." },
     { at: "11.11 23:50", text: "Liste ekranlarında otel adları kısa rozetlerle gösteriliyor (Royal / Diamond / Premium): Kullanıcı Yönetimi, Denetim Günlüğü, e-posta alıcıları, depo raporları ve tanımları, oda servisi kayıtları. Henüz yayına alınmadı." },
     { at: "11.11 23:58", text: "Kullanıcı Yönetimi'ne Ekranlar bölümü eklendi (yerelde denendi, henüz yayına alınmadı). Sistem yöneticisi her rol için açılış ekranını seçer ve Kat Planı, Depo Panosu, Komuta Merkezi ekranlarının öğelerini düzenler: öğeyi gizleme, sırasını değiştirme, gösterim stili (kutu/şerit, kart/liste) ve parça seçimi. Solda araçlar, sağda tablet/telefon önizlemesi var. Garson, kasa, mutfak gibi operasyon ekranları sabit kalır." },
+    { at: "12.11 00:25", text: "Hata Denetimi ekranına Sunucu Kaynakları sekmesi eklendi (yerelde denendi, henüz yayına alınmadı): işlemci, sunucu belleği, uygulama belleği, yanıt gecikmesi ve veritabanı bağlantıları kadranlı göstergelerle; disk doluluğu eşik renkli bölmeli çubukla; veritabanlarının diskte kapladığı alan ayrıca gösterilir. Ölçümler 10 saniyede bir, yalnız sekme açıkken okunur ve sunucuya kayda değer yük bindirmez. Aynı ekrandaki geliştirici bildirim ayarları artık kaydedilen değerlerle açılıyor." },
   ]
 };
