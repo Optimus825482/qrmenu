@@ -10,7 +10,8 @@ describe("operasyon sözleşmesi (OPS-1..3)", () => {
     const entry = read("merit/docker-entrypoint.sh");
     expect(entry).toContain('"${SYNC_MERIT_MENUS:-true}"');
     expect(entry).toMatch(/tsx prisma\/seed\/meritMenus\.ts \|\| echo/);
-    expect(read("docker-compose.yaml")).toContain("SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-true}");
+    // Compose'da anahtar yok: Coolify değişkeni kaba vermez, senkron her zaman varsayılanla (açık) çalışır.
+    expect(read("docker-compose.yaml")).not.toContain("SYNC_MERIT_MENUS:");
     const seed = read("merit/prisma/seed/meritMenus.ts");
     expect(seed).not.toMatch(/\.(order|orderItem|orderEvent|printJob)\.deleteMany/);
   });
@@ -37,7 +38,8 @@ describe("operasyon sözleşmesi (OPS-1..3)", () => {
     for (const name of ["SMTP_HOST", "SMTP_PASS", "DEEPL_AUTH_KEY", "GEMINI_API_KEY", "ENV_LABEL", "MERIT_MENUS_FORCE_RESET"]) {
       expect(compose, name).not.toContain(`${name}:`);
     }
-    expect(compose).toContain("LEGACY_DATABASE_URL: ${LEGACY_DATABASE_URL:-}");
+    // Eski veri aktarımı 11 Kas 2026'da canlıda tamamlandı; değişken artık kaba geçirilmez.
+    expect(compose).not.toContain("LEGACY_DATABASE_URL:");
   });
   it("deploy/coolify betikleri: shebang, LF, strict mode; hazır değer içermez", () => {
     for (const name of ["sunucu-hazirlik.sh", "env-uret.sh", "yedek.sh"]) {

@@ -24,8 +24,8 @@ services:
       # Yalnız HTTP ile erişilen test ortamı için false; gerçek kurulumda boş bırakın.
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
-      # Yalnız ilk kurulumda bir kez true yapın (20 outlet + menü); sonra false. Mevcut menüler hiçbir zaman silinmez.
-      SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-true}
+      # Merit outlet ve menü senkronu her açılışta kendiliğinden çalışır (ayar yok): bir outlet'in menüsü yalnız
+      # boşsa ya da depodaki menü dosyası değiştiyse yeniden kurulur.
       # --- İsteğe bağlı: boş bırakılan değer uygulamada "tanımsız" sayılır. Coolify yalnız burada anılan
       # değişkenleri konteynere verir; bu yüzden hepsi açıkça listelenir.
       # SMTP parolası gibi veritabanında mühürlü saklanan sırların anahtarı (>= 32). Boşsa SESSION_SECRET kullanılır;
@@ -39,8 +39,6 @@ services:
       # olarak verilmez. gtx: MyBar için anahtarsız Google çevirisini son yedek olarak ekler.
       TRANSLATE_PROVIDER: ${TRANSLATE_PROVIDER:-}
       DB_POOL_MAX: ${DB_POOL_MAX:-}
-      # Eski minibar verisinin tek seferlik aktarımı; temiz bitince kaldırılır (docs/kurulum.md).
-      LEGACY_DATABASE_URL: ${LEGACY_DATABASE_URL:-}
     depends_on:
       postgres:
         condition: service_healthy

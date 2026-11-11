@@ -321,8 +321,10 @@ yüklenir ve Coolify'da `LEGACY_DATABASE_URL` tanımlanır. Kap açılırken sit
 `--user-roles depo_sorumlusu --frozen-catalog` ile yürür (`scripts/migrate-from-minibarlatest/once.ts`); özeti kap
 günlüğüne yazılır. Temiz bitince `settings` tablosuna `migration.legacy.completedAt` işareti konur ve sonraki
 açılışlarda atlanır; hata olursa işaret konmaz, sonraki açılışta kaldığı yerden yeniden denenir. Bu yol kuru çalıştırma
-yapmaz: önce canlı veritabanının yedeği alınır. Bittikten sonra değişken kaldırılır. Yeniden çalıştırmak gerekirse
-işaret satırı silinir.
+yapmaz: önce canlı veritabanının yedeği alınır. Yeniden çalıştırmak gerekirse işaret satırı silinir.
+**Durum:** aktarım 11 Kasım 2026'da canlıda temiz tamamlandı; `LEGACY_DATABASE_URL` bu yüzden `docker-compose.yaml`
+dosyasından kaldırıldı. Yeniden gerekirse önce compose'a geri eklenmelidir (Coolify yalnız orada anılan değişkenleri
+kaba verir).
 
 **Çıkış kodları:** `0` temiz; `1` en az bir adım hatası veya **doğrulama FAIL** (rapordaki `KALDI` satırları);
 `2` yapılandırma hatası (eksik/yanlış ortam değişkeni veya bayrak, hiçbir şey yazılmadı).
@@ -440,10 +442,10 @@ PRINT_GATEWAY_KEY=<openssl rand -base64 32>
 
 - **İlk kurulum:** `RUN_SEED=true` ve `SEED_ADMIN_PASSWORD` (>= 10 karakter) ile bir kez dağıtın;
   admin oluştuktan sonra `RUN_SEED=false` yapın. Demo veri istemiyorsanız `SEED_DEMO` açmayın.
-- **Merit outlet ve menüleri:** `SYNC_MERIT_MENUS` varsayılanı `false`tur. İlk kurulumda (RUN_SEED ile birlikte)
-  **bir kez `true`** verip dağıtın, menüler kurulunca `false`a döndürün. Senkron, menüsü olan hiçbir outlet'te
-  silme yapmaz (yalnız eksik görselleri yeniler) ve sipariş verisine hiç dokunmaz. Bilinçli tam yeniden kurulum
-  için ayrıca `MERIT_MENUS_FORCE_RESET=true` gerekir; siparişi olan outlet'te yine reddedilir.
+- **Merit outlet ve menüleri:** Senkron her açılışta kendiliğinden çalışır; Coolify'da ayarı yoktur
+  (`SYNC_MERIT_MENUS` compose'dan kaldırıldı, kap içinde varsayılan `true`). Bir outlet'in menüsü yalnız boşsa ya da
+  `prisma/seed/data/merit-menus.json` içindeki menüsü değiştiyse yeniden kurulur; dosya aynıysa panelden yapılan
+  düzenlemeler kalır. Sipariş verisine dokunulmaz: eski siparişlerde geçen ürünler pasif bir arşiv kategorisine alınır.
 - Uygulama konteyneri `/api/health` ile sağlık denetimi yapar (`docker ps` durumunda `healthy`); Docker günlükleri
   konteyner başına 10 MB x 5 dosya ile sınırlıdır.
 - Giriş betiği (`docker-entrypoint.sh`) `prisma migrate deploy` çalıştırır; yalnız veritabanı
