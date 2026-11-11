@@ -7,6 +7,7 @@ import { SCREENS } from "@/modules/core/screens";
 import { DEMO_HOTEL_CODES, HOTEL_MODULES, HOTELS } from "./seed/hotels";
 import { MENU_THEMES } from "./seed/menuThemes";
 import { ROLES, actionsFor, roleModules } from "./seed/roles";
+import { JOB_TITLE_CATALOG } from "../src/modules/core/jobTitles";
 import { DEFAULT_SETTINGS } from "../src/lib/settings-defs";
 import { SEED_OUTLETS } from "./seed/outlets";
 import { sampleMenuForOutlet, type SampleMenuItem } from "./seed/sampleMenus";
@@ -45,6 +46,42 @@ async function seedScreens(db: PrismaClient) {
       update: screen,
     });
   }
+}
+
+/**
+ * Görev catalogue. The migration inserts the same rows, but on a new database it runs before any role
+ * exists, so the suggested roles are filled in here. Rows an administrator changed are left alone:
+ * only a missing görev is created and only an empty suggested role is set.
+ */
+async function seedJobTitles(db: PrismaClient) {
+  const roles = new Map((await db.role.findMany({ select: { id: true, code: true } })).map((role) => [role.code, role.id]));
+  const ids = new Map<string, string>();
+  for (const [index, def] of JOB_TITLE_CATALOG.entries()) {
+    const existing = await db.jobTitle.findFirst({ where: { OR: [{ code: def.code }, { name: def.name }] }, select: { id: true, defaultRoleId: true } });
+    if (existing) {
+      ids.set(def.code, existing.id);
+      if (!existing.defaultRoleId) await db.jobTitle.update({ where: { id: existing.id }, data: { defaultRoleId: roles.get(def.role) ?? null } });
+      continue;
+    }
+    const created = await db.jobTitle.create({
+      data: {
+        id: `jt-${def.code.toLowerCase()}`,
+        code: def.code,
+        name: def.name,
+        department: def.department,
+        parentId: def.parent ? ids.get(def.parent) ?? null : null,
+        defaultRoleId: roles.get(def.role) ?? null,
+        sortOrder: (index + 1) * 10,
+      },
+      select: { id: true },
+    });
+    ids.set(def.code, created.id);
+  }
+}
+
+/** Users whose görev text matches a catalogue row are tied to it (sample staff are created after the catalogue). */
+async function linkUsersToJobTitles(db: PrismaClient) {
+  await db.$executeRaw`UPDATE "users" u SET "job_title_id" = j."id" FROM "job_titles" j WHERE u."job_title_id" IS NULL AND btrim(u."job_title") = j."name"`;
 }
 
 async function seedRoles(db: PrismaClient) {
@@ -374,7 +411,7 @@ async function cleanLegacyDemoNames(db: PrismaClient) {
   const legacyNames = [
     { from: "ayar.mr", username: "serkan.aksoy", fullName: "Serkan Aksoy", jobTitle: "F&B Müdürü" },
     { from: "fbm.mr", username: "seda.yilmaz", fullName: "Seda Yılmaz", jobTitle: "F&B Müdürü" },
-    { from: "kat.mr", username: "aylin.kaya", fullName: "Aylin Kaya", jobTitle: "Kat Sorumlusu" },
+    { from: "kat.mr", username: "aylin.kaya", fullName: "Aylin Kaya", jobTitle: "Minibar Takip Kat Sorumlusu" },
     { from: "mudur.mr", username: "faruk.yildiz", fullName: "Faruk Yıldız", jobTitle: "Otel Müdürü" },
   ];
   for (const person of legacyNames) {
@@ -412,6 +449,7 @@ export async function runSeed(db: PrismaClient, options: RunSeedOptions = {}): P
   await seedHotels(db);
   await seedScreens(db);
   await seedRoles(db);
+  await seedJobTitles(db);
   await seedRoomServiceOutlets(db);
   await seedMenuThemes(db);
   await seedPermissions(db);
@@ -426,6 +464,7 @@ export async function runSeed(db: PrismaClient, options: RunSeedOptions = {}): P
     await seedSampleStaff(db);
     await cleanLegacyDemoNames(db);
   }
+  await linkUsersToJobTitles(db);
 }
 
 async function main() {

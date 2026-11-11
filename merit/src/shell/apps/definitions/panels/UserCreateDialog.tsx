@@ -4,7 +4,7 @@ import { useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEv
 import { createPortal } from "react-dom";
 import { createUserOnboardingAction } from "@/modules/core/server/admin/actions/users";
 import type { CreatedUserCredentials, UserOptions, UserRow } from "@/modules/core/server/admin/users";
-import { CUSTOM_JOB_TITLE, USER_JOB_TITLE_GROUPS } from "@/modules/core/jobTitles";
+import { groupJobTitleChoices, jobTitleOptionLabel } from "@/modules/core/jobTitles";
 import { suggestedUsername } from "@/modules/core/usernames";
 import { Field } from "@/shell/ui/Field";
 
@@ -57,7 +57,6 @@ export function UserCreateDialog({
 }: Props) {
   const [step, setStep] = useState<"profile" | "assignment" | "credentials">("profile");
   const [profile, setProfile] = useState<Profile>(emptyProfile);
-  const [customJobTitle, setCustomJobTitle] = useState(false);
 
   // Dialog dragging state
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -145,6 +144,19 @@ export function UserCreateDialog({
     }
   };
 
+  const jobTitleTree = options?.jobTitleTree ?? [];
+  const suggestedRole = allRoles.find((role) => role.id === jobTitleTree.find((title) => title.name === profile.jobTitle)?.defaultRoleId);
+
+  /** Picking a görev fills in the role it suggests (and the matching user type); the role stays editable. */
+  const handleJobTitleChange = (name: string) => {
+    setProfile({ ...profile, jobTitle: name });
+    if (lockRole) return;
+    const role = allRoles.find((item) => item.id === jobTitleTree.find((title) => title.name === name)?.defaultRoleId);
+    if (!role) return;
+    setRoleId(role.id);
+    setCategory(detectCategory(role.id));
+  };
+
   const selectedRole = allRoles.find((role) => role.id === roleId);
   const requireHotel = selectedRole?.kind !== "SISTEM";
 
@@ -152,7 +164,6 @@ export function UserCreateDialog({
     if (pending) return;
     setStep("profile");
     setProfile(emptyProfile());
-    setCustomJobTitle(false);
     setCategory(detectCategory(initialRoleId));
     setRoleId(initialRoleId);
     setHotelId(initialHotelId);
@@ -285,7 +296,7 @@ export function UserCreateDialog({
               <input
                 readOnly
                 value={credentials.temporaryPassword}
-                style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "2px", color: "var(--xp-accent, #0055ea)" }}
+                style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "2px", color: "var(--xp-heading, #0040c0)" }}
               />
             </Field>
             <p className="xp-defs-note">
@@ -331,7 +342,7 @@ export function UserCreateDialog({
                         style={{
                           padding: "8px 6px",
                           fontWeight: category === "SISTEM" ? "bold" : "normal",
-                          background: category === "SISTEM" ? "var(--xp-accent, #0055ea)" : undefined,
+                          background: category === "SISTEM" ? "var(--xp-select, #316ac5)" : undefined,
                           color: category === "SISTEM" ? "#fff" : undefined,
                         }}
                         onClick={() => handleCategoryChange("SISTEM")}
@@ -344,7 +355,7 @@ export function UserCreateDialog({
                         style={{
                           padding: "8px 6px",
                           fontWeight: category === "YONETICI" ? "bold" : "normal",
-                          background: category === "YONETICI" ? "var(--xp-accent, #0055ea)" : undefined,
+                          background: category === "YONETICI" ? "var(--xp-select, #316ac5)" : undefined,
                           color: category === "YONETICI" ? "#fff" : undefined,
                         }}
                         onClick={() => handleCategoryChange("YONETICI")}
@@ -357,7 +368,7 @@ export function UserCreateDialog({
                         style={{
                           padding: "8px 6px",
                           fontWeight: category === "KULLANICI" ? "bold" : "normal",
-                          background: category === "KULLANICI" ? "var(--xp-accent, #0055ea)" : undefined,
+                          background: category === "KULLANICI" ? "var(--xp-select, #316ac5)" : undefined,
                           color: category === "KULLANICI" ? "#fff" : undefined,
                         }}
                         onClick={() => handleCategoryChange("KULLANICI")}
@@ -393,89 +404,26 @@ export function UserCreateDialog({
                     />
                   </Field>
 
-                  <Field name="jobTitle" label="Görev (F&B / Operasyon)">
-                    <select
-                      required
-                      value={customJobTitle ? CUSTOM_JOB_TITLE : profile.jobTitle}
-                      onChange={(e) => {
-                        const custom = e.target.value === CUSTOM_JOB_TITLE;
-                        setCustomJobTitle(custom);
-                        setProfile({ ...profile, jobTitle: custom ? "" : e.target.value });
-                      }}
-                    >
+                  <Field name="jobTitle" label="Görev (resmi unvan)">
+                    <select required value={profile.jobTitle} onChange={(e) => handleJobTitleChange(e.target.value)}>
                       <option value="">Görev seçin</option>
-                      {category === "SISTEM" ? (
-                        <optgroup label="Sistem & IT Görevleri">
-                          <option value="Sistem Yöneticisi">Sistem Yöneticisi</option>
-                          <option value="IT Yöneticisi">IT Yöneticisi</option>
-                          <option value="Sistem Destek Sorumlusu">Sistem Destek Sorumlusu</option>
-                        </optgroup>
-                      ) : null}
-                      {category === "YONETICI" ? (
-                        <optgroup label="Yönetim & Süpervizör Görevleri">
-                          <option value="Otel Müdürü">Otel Müdürü</option>
-                          <option value="F&B Müdürü">F&B Müdürü</option>
-                          <option value="Minibar Takip Süpervizör">Minibar Takip Süpervizör</option>
-                          <option value="Minibar Takip Depo Sorumlusu">Minibar Takip Depo Sorumlusu</option>
-                          <option value="Minibar Takip Sorumlusu">Minibar Takip Sorumlusu</option>
-                          <option value="Depo Sorumlusu">Depo Sorumlusu</option>
-                          <option value="Housekeeping Süpervizörü">Housekeeping Süpervizörü</option>
-                          <option value="Outlet Müdürü">Outlet Müdürü</option>
-                          <option value="Outlet Şefi">Outlet Şefi</option>
-                          <option value="Restoran Müdürü">Restoran Müdürü</option>
-                          <option value="Şef Garson">Şef Garson / Süpervizör</option>
-                          <option value="Mutfak Şefi">Mutfak Şefi</option>
-                          <option value="Kasa Yöneticisi">Kasa Yöneticisi</option>
-                        </optgroup>
-                      ) : null}
-                      {category === "KULLANICI" ? (
-                        <optgroup label="Operasyonel Personel Görevleri">
-                          <option value="Minibar Takip Operasyonu">Minibar Takip Operasyonu</option>
-                          <option value="Minibar Garson">Minibar Garson</option>
-                          <option value="Minibar Takip Kat Sorumlusu">Minibar Takip Kat Sorumlusu</option>
-                          <option value="Kat Sorumlusu">Kat Sorumlusu (Minibar Takip)</option>
-                          <option value="Kat Görevlisi">Kat Görevlisi</option>
-                          <option value="Garson">Garson</option>
-                          <option value="Komi">Komi</option>
-                          <option value="Runner">Runner</option>
-                          <option value="Barmen / Barmaid">Barmen / Barmaid</option>
-                          <option value="Barista">Barista</option>
-                          <option value="Mutfak Personeli">Mutfak Personeli</option>
-                          <option value="Aşçı">Aşçı</option>
-                          <option value="Kasiyer">Kasiyer</option>
-                          <option value="Oda Servisi Görevlisi">Oda Servisi Görevlisi</option>
-                          <option value="Butler (VIP)">Butler (VIP)</option>
-                          <option value="KDS Operatörü">KDS Operatörü</option>
-                        </optgroup>
-                      ) : null}
-                      {USER_JOB_TITLE_GROUPS.map((group) => (
+                      {groupJobTitleChoices(jobTitleTree).map((group) => (
                         <optgroup key={group.label} label={group.label}>
                           {group.options.map((title) => (
-                            <option key={title} value={title}>
-                              {title}
+                            <option key={title.id} value={title.name}>
+                              {jobTitleOptionLabel(title)}
                             </option>
                           ))}
                         </optgroup>
                       ))}
-                      <option value={CUSTOM_JOB_TITLE}>Diğer (elle yaz)</option>
                     </select>
                   </Field>
 
-                  {customJobTitle ? (
-                    <Field name="customJobTitle" label="Görev unvanı">
-                      <input
-                        required
-                        maxLength={100}
-                        value={profile.jobTitle}
-                        onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })}
-                      />
-                    </Field>
-                  ) : null}
-
-                  <Field name="roleId" label="Rol ve yetkiler">
+                  <Field name="roleId" label="Rol (yetki ve ekranlar)">
                     <select
                       required
                       value={roleId}
+                      disabled={lockRole}
                       onChange={(e) => setRoleId(e.target.value)}
                     >
                       <option value="">Rol seçin</option>
@@ -509,9 +457,16 @@ export function UserCreateDialog({
                         fontSize: "11px",
                       }}
                     >
+                      <p style={{ marginBottom: "2px" }}>
+                        {suggestedRole && suggestedRole.id === selectedRole.id
+                          ? "Bu rol, seçilen görev için önerilen roldür; gerekirse değiştirebilirsiniz."
+                          : suggestedRole
+                            ? `Seçilen görev için önerilen rol: ${suggestedRole.name}.`
+                            : "Görev resmi unvandır; yetkileri ve ekranları rol belirler."}
+                      </p>
                       <p>
                         Giriş sonrası açılış ekranı:{" "}
-                        <strong style={{ color: "var(--xp-accent, #0055ea)" }}>
+                        <strong style={{ color: "var(--xp-heading, #0040c0)" }}>
                           {selectedRole.defaultScreenName ?? "Rol için varsayılan ekran tanımlanmamış"}
                         </strong>
                       </p>

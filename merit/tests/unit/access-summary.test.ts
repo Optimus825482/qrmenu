@@ -68,7 +68,7 @@ describe("accessSummary (gerçek test DB)", () => {
     expect(zim.actions).toEqual(["V", "D"]);
     expect(zim.sentences).toContain("Ürünün kritik seviyesini güncellersin.");
     expect(summary.landing).toEqual({ screenCode: "MB-KAT", path: "/kat" });
-    expect(summary.user).toMatchObject({ roleCode: "R-KAT", roleName: "Minibar Garson" });
+    expect(summary.user).toMatchObject({ roleCode: "R-KAT", roleName: "Minibar Kat Personeli" });
     expect(summary.hotel.name.length).toBeGreaterThan(0);
   });
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { UserOptions, UserRow } from "@/modules/core/server/admin/users";
-import { CUSTOM_JOB_TITLE, USER_JOB_TITLE_GROUPS } from "@/modules/core/jobTitles";
+import { groupJobTitleChoices, jobTitleOptionLabel } from "@/modules/core/jobTitles";
 import { Field } from "@/shell/ui/Field";
 import type { FormValues } from "@/shell/ui/FormDialog";
 
@@ -21,11 +21,15 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
   const hotels = options?.hotels ?? [];
   const primary = editing ? (editing.hotelId ?? "") : defaultHotelId;
   const initialJobTitle = editing?.jobTitle ?? "";
-  const allStandardTitles: readonly string[] = USER_JOB_TITLE_GROUPS.flatMap((g) => g.options);
-  const isCustomInitially = initialJobTitle !== "" && !allStandardTitles.includes(initialJobTitle);
-
-  const [customJob, setCustomJob] = useState(isCustomInitially);
+  const tree = options?.jobTitleTree ?? [];
+  const roles = options?.roles ?? [];
   const [jobTitleVal, setJobTitleVal] = useState(initialJobTitle);
+  // undefined = untouched: the saved role (the options arrive after the dialog opens).
+  const [pickedRole, setPickedRole] = useState<string | undefined>(undefined);
+  const roleId = pickedRole ?? editing?.roleId ?? "";
+  // A title from before the catalogue (free text) stays selectable until it is changed.
+  const legacyTitle = initialJobTitle !== "" && !tree.some((title) => title.name === initialJobTitle) ? initialJobTitle : null;
+  const suggested = roles.find((role) => role.id === tree.find((title) => title.name === jobTitleVal)?.defaultRoleId);
 
   return (
     <>
@@ -35,40 +39,29 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
       <Field name="fullName" label="Ad soyad">
         <input type="text" defaultValue={editing?.fullName ?? ""} maxLength={100} />
       </Field>
-      <Field name="jobTitleSelect" label="Görev (F&B / Operasyon)">
+      <Field name="jobTitle" label="Görev (resmi unvan)">
         <select
-          value={customJob ? CUSTOM_JOB_TITLE : jobTitleVal}
+          value={jobTitleVal}
           onChange={(e) => {
-            const isCust = e.target.value === CUSTOM_JOB_TITLE;
-            setCustomJob(isCust);
-            if (!isCust) setJobTitleVal(e.target.value);
+            const next = e.target.value;
+            setJobTitleVal(next);
+            // A new user takes the role the görev suggests; an existing user's role changes only on request.
+            const role = tree.find((title) => title.name === next)?.defaultRoleId;
+            if (!editing && role && roles.some((item) => item.id === role)) setPickedRole(role);
           }}
         >
           <option value="">Görev seçin</option>
-          {USER_JOB_TITLE_GROUPS.map((group) => (
+          {legacyTitle ? <option value={legacyTitle}>{legacyTitle} (katalogda yok)</option> : null}
+          {groupJobTitleChoices(tree).map((group) => (
             <optgroup key={group.label} label={group.label}>
               {group.options.map((title) => (
-                <option key={title} value={title}>
-                  {title}
+                <option key={title.id} value={title.name}>
+                  {jobTitleOptionLabel(title)}
                 </option>
               ))}
             </optgroup>
           ))}
-          <option value={CUSTOM_JOB_TITLE}>Diğer (elle yaz)</option>
         </select>
-      </Field>
-
-      {/* Hidden input to pass jobTitle to form values if select is standard, or text input if custom */}
-      <Field name="jobTitle" label={customJob ? "Özel görev unvanı" : "Seçili görev"}>
-        <input
-          type="text"
-          value={jobTitleVal}
-          readOnly={!customJob}
-          maxLength={100}
-          onChange={(e) => setJobTitleVal(e.target.value)}
-          placeholder={customJob ? "Görev unvanını yazın..." : ""}
-          style={!customJob ? { background: "var(--xp-body, #f8fafc)", color: "#475569" } : {}}
-        />
       </Field>
 
       <Field name="email" label="E-posta (isteğe bağlı)">
@@ -80,17 +73,27 @@ export function UserForm({ options, editing, defaultHotelId }: Props) {
       <Field name="phone" label="Telefon">
         <input type="text" defaultValue={editing?.phone ?? ""} maxLength={30} />
       </Field>
-      <Field name="roleId" label="Rol">
-        {/* keyed by the option count: options arrive after the dialog opens, and an uncontrolled select ignores a later defaultValue */}
-        <select key={options?.roles.length ?? 0} defaultValue={editing?.roleId ?? ""}>
+      <Field name="roleId" label="Rol (yetki ve ekranlar)">
+        <select value={roleId} onChange={(e) => setPickedRole(e.target.value)}>
           <option value="">Rol seçin</option>
-          {(options?.roles ?? []).map((r) => (
+          {roles.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name} ({r.code})
             </option>
           ))}
         </select>
       </Field>
+      <p className="xp-defs-note">
+        Görev kişinin resmi unvanıdır; neleri görüp yapabileceğini rol belirler.
+        {suggested && suggested.id !== roleId ? (
+          <>
+            {" "}Bu görev için önerilen rol: <strong>{suggested.name}</strong>.{" "}
+            <button type="button" className="xp-button" onClick={() => setPickedRole(suggested.id)}>
+              Önerileni uygula
+            </button>
+          </>
+        ) : null}
+      </p>
       <Field name="hotelId" label="Ana otel">
         <select key={hotels.length} defaultValue={primary}>
           <option value="">Otelsiz (sistem)</option>

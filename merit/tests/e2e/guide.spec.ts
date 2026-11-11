@@ -78,7 +78,7 @@ test("kat.mr ilk girişte zorunlu Erişimim; Anladım /kat'a götürür; ikinci 
   await expect(page).toHaveURL(/\/erisimim\?hos-geldin=1$/);
 
   await expect(page.getByTestId("access-greeting")).toContainText("Merhaba Test");
-  await expect(page.getByTestId("access-greeting")).toContainText("Minibar Garson");
+  await expect(page.getByTestId("access-greeting")).toContainText("Minibar Kat Personeli");
   // Single screen, single button: no navigation, no profile menu, no links to leave through.
   await expect(page.getByRole("navigation")).toHaveCount(0);
   await expect(page.getByRole("link")).toHaveCount(0);
@@ -293,9 +293,9 @@ test.describe("rutin kartları ve Kullanıcıya göster", () => {
     await node(users, "Yetki Matrisi").click();
     await users.getByRole("tab", { name: "Bu rol ne görür?" }).click();
     const panel = users.getByTestId("role-preview");
-    await users.getByLabel("Rol", { exact: true }).selectOption({ label: "R-KAT — Minibar Garson" });
+    await users.getByLabel("Rol", { exact: true }).selectOption({ label: "R-KAT — Minibar Kat Personeli" });
     await panel.getByLabel("Otel").selectOption({ label: "Merit Royal" });
-    await expect(panel.getByTestId("access-greeting")).toContainText("Minibar Garson");
+    await expect(panel.getByTestId("access-greeting")).toContainText("Minibar Kat Personeli");
     await expect(panel.locator('[data-code="MB-ZIM"]')).toBeVisible();
     await expect(panel.locator('[data-code="MB-DOL"]')).toHaveCount(0);
     await admin.context().close();

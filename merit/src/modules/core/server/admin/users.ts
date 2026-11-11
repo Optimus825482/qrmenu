@@ -8,7 +8,7 @@ import { DomainError } from "@/lib/result";
 import { assertCan, can } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
-import { USER_JOB_TITLES } from "@/modules/core/jobTitles";
+import { type JobTitleChoice, orderJobTitles } from "@/modules/core/jobTitles";
 import { DEFAULT_TEMPORARY_PASSWORD, suggestedUsername } from "@/modules/core/usernames";
 import {
   uniqueConflictFromPrisma,
@@ -312,6 +312,13 @@ async function assertSupervisor(tx: Prisma.TransactionClient, supervisorId: stri
   }
 }
 
+/** The catalogue row of a görev name; a title that is not in the catalogue stays as plain text. */
+async function jobTitleIdFor(tx: Prisma.TransactionClient, name: string | undefined): Promise<string | null> {
+  const title = name?.trim();
+  if (!title) return null;
+  return (await tx.jobTitle.findUnique({ where: { name: title }, select: { id: true } }))?.id ?? null;
+}
+
 async function publishUser(
   tx: Prisma.TransactionClient,
   id: string,
@@ -371,14 +378,17 @@ export async function list(ctx: Ctx, rawQuery: UserListQuery): Promise<Page<User
 export type UserOptions = {
   roles: { id: string; code: string; name: string; kind: RoleKind; defaultScreen: string | null; defaultScreenName: string | null }[];
   hotels: { id: string; code: string; name: string }[];
+  /** Görev names for the list filters: the catalogue plus titles still in use on users. */
   jobTitles: string[];
+  /** Active görevs in hierarchy order, each with the role it suggests. */
+  jobTitleTree: JobTitleChoice[];
 };
 
 /** The roles the actor may assign and the hotels the actor may grant: the form's select lists. */
 export async function options(ctx: Ctx): Promise<UserOptions> {
   await assertCan(ctx, SCREEN, "V");
   const scope = await scopeHotels(ctx, "O");
-  const [roles, hotels, savedJobTitles] = await Promise.all([
+  const [roles, hotels, savedJobTitles, catalogue] = await Promise.all([
     prisma.role.findMany({
       // Only SISTEM may assign SISTEM and YONETIM roles (assertCanAssign): do not offer what is refused.
       where: isSystem(ctx) ? {} : { kind: { notIn: ["SISTEM", "YONETIM"] } },
@@ -401,7 +411,13 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
       distinct: ["jobTitle"],
       orderBy: { jobTitle: "asc" },
     }),
+    prisma.jobTitle.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, department: true, parentId: true, defaultRoleId: true },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    }),
   ]);
+  const jobTitleTree = orderJobTitles(catalogue).map(({ id, name, department, depth, defaultRoleId }) => ({ id, name, department, depth, defaultRoleId }));
   const screens = await prisma.appScreen.findMany({
     where: { code: { in: roles.flatMap((role) => role.defaultScreen ? [role.defaultScreen] : []) } },
     select: { code: true, name: true },
@@ -410,7 +426,8 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
   return {
     roles: roles.map((role) => ({ ...role, defaultScreenName: role.defaultScreen ? screenNames.get(role.defaultScreen) ?? role.defaultScreen : null })),
     hotels,
-    jobTitles: [...new Set([...USER_JOB_TITLES, ...savedJobTitles.map(({ jobTitle }) => jobTitle).filter((title): title is string => !!title)])].sort((a, b) => a.localeCompare(b, "tr")),
+    jobTitleTree,
+    jobTitles: [...new Set([...jobTitleTree.map((title) => title.name), ...savedJobTitles.map(({ jobTitle }) => jobTitle).filter((title): title is string => !!title)])].sort((a, b) => a.localeCompare(b, "tr")),
   };
 }
 
@@ -481,6 +498,7 @@ async function createRecord(
             passwordHash,
             fullName: input.fullName,
             jobTitle: input.jobTitle,
+            jobTitleId: await jobTitleIdFor(tx, input.jobTitle),
             email: input.email,
             emailOptIn: input.emailOptIn ?? false,
             phone: input.phone,
@@ -591,6 +609,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
           username: input.username,
           fullName: input.fullName,
           jobTitle: input.jobTitle ?? "",
+          jobTitleId: await jobTitleIdFor(tx, input.jobTitle),
           email: input.email ?? null,
           emailOptIn: input.emailOptIn,
           phone: input.phone ?? null,

@@ -163,8 +163,8 @@ test("kullanıcı (garson, R-GAR, MR) → ekip ataması", async () => {
   await users.getByRole("button", { name: "Yeni kayıt" }).click();
   const wizard = userWizard(admin);
   await wizard.getByLabel("Ad soyad").fill("Kabul Garson");
-  await wizard.getByLabel("Görev (F&B)").selectOption({ label: "Garson" });
-  await wizard.getByLabel("Rol ve yetkiler").selectOption({ label: "Garson" });
+  await wizard.getByLabel("Görev (resmi unvan)").selectOption("Garson");
+  await wizard.getByLabel("Rol (yetki ve ekranlar)").selectOption({ label: "Servis Personeli (R-GAR)" });
   await wizard.getByLabel("E-posta adresi").fill("kabul.garson@example.com");
   await wizard.getByLabel("Sisteme giriş kullanıcı adı").fill(GARSON);
   await wizard.getByRole("button", { name: "İleri" }).click();

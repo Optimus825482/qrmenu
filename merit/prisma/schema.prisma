@@ -439,7 +439,9 @@ model User {
   username           String    @unique
   passwordHash       String    @map("password_hash")
   fullName           String    @map("full_name")
+  /** Görev adı (resmi unvan); job_titles kaydının adıyla aynı tutulur. */
   jobTitle           String?   @map("job_title")
+  jobTitleId         String?   @map("job_title_id")
   email              String?
   /** Rapor/uyarı e-postası almayı kabul etti; varsayılan kapalı, yalnız kullanıcı formundan açılır. */
   emailOptIn         Boolean   @default(false) @map("email_opt_in")
@@ -456,6 +458,7 @@ model User {
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   role                       Role                       @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  jobTitleRef                JobTitle?                  @relation(fields: [jobTitleId], references: [id], onDelete: SetNull)
   hotel                      Hotel?                     @relation(fields: [hotelId], references: [id], onDelete: Restrict)
   supervisor                 User?                      @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
   supervisees                User[]                     @relation("UserSupervisor")
@@ -551,12 +554,40 @@ model Role {
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   users             User[]
+  jobTitles         JobTitle[]
   outletMembers     OutletMember[]
   screenPermissions RoleScreenPermission[]
   moduleAccesses    RoleModuleAccess[]
   sessions          UserSession[]
 
   @@map("roles")
+}
+
+/**
+ * Görev: otelin resmi F&B unvanı ve hiyerarşideki yeri. Rol (yetki ve arayüz) ayrıdır; görev yalnızca
+ * bir varsayılan rol önerir.
+ */
+model JobTitle {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String   @unique
+  /** YONETIM | SERVIS | BAR | MUTFAK | MINIBAR | SISTEM | DIGER (src/modules/core/jobTitles.ts). */
+  department    String
+  /** Bağlı olduğu üst görev. */
+  parentId      String?  @map("parent_id")
+  defaultRoleId String?  @map("default_role_id")
+  sortOrder     Int      @default(0) @map("sort_order")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parent      JobTitle?  @relation("JobTitleParent", fields: [parentId], references: [id], onDelete: SetNull)
+  children    JobTitle[] @relation("JobTitleParent")
+  defaultRole Role?      @relation(fields: [defaultRoleId], references: [id], onDelete: SetNull)
+  users       User[]
+
+  @@index([parentId])
+  @@map("job_titles")
 }
 
 model AppScreen {

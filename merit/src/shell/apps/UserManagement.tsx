@@ -4,11 +4,13 @@ import type { AppProps } from "@/shell/registry";
 import { useState } from "react";
 import { UsersPanel } from "./definitions/panels/UsersPanel";
 import { RolesPanel } from "./definitions/panels/RolesPanel";
+import { JobTitlesPanel } from "./definitions/panels/JobTitlesPanel";
 import { PermissionMatrixPanel } from "./definitions/panels/PermissionMatrixPanel";
 import { ScreensPanel } from "./definitions/panels/ScreensPanel";
 
 const PANELS = [
   { id: "users", label: "Kullanıcılar" },
+  { id: "jobTitles", label: "Görevler" },
   { id: "roles", label: "Roller" },
   { id: "permissions", label: "Yetki Matrisi" },
   { id: "screens", label: "Ekranlar" },
@@ -42,6 +44,7 @@ export function UserManagement({ hotelId, initialPanel, setStatus, setDirty }: A
         </nav>
         <div className="xp-defs-main" data-guide="kullanici-listesi" role="region" aria-label={`${selected.label} paneli`}>
           {selected.id === "users" ? <UsersPanel hotelId={hotelId} setStatus={setStatus} /> : null}
+          {selected.id === "jobTitles" ? <JobTitlesPanel setStatus={setStatus} /> : null}
           {selected.id === "roles" ? <RolesPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}
           {selected.id === "permissions" ? <PermissionMatrixPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}
           {selected.id === "screens" ? <ScreensPanel setStatus={setStatus} setDirty={setDirty} /> : null}
