@@ -5,7 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { ConfigError, parseConfig, STEP_NAMES, type MigrationConfig, type StepName } from "./config";
 import { IdMap } from "./idmap";
 import { LegacyReader } from "./legacy";
-import { Report, redact } from "./report";
+import { Report, describeError, redact } from "./report";
 import { runDefinitions } from "./steps/definitions";
 import { runHistory } from "./steps/history";
 import { runTasks } from "./steps/tasks";
@@ -57,7 +57,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
   try {
     cfg = parseConfig(argv, env);
   } catch (error) {
-    log(redact(error instanceof Error ? error.message : String(error)));
+    log(redact(describeError(error)));
     return error instanceof ConfigError ? 2 : 1;
   }
 
@@ -95,7 +95,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
           configError = error;
           report.fail(step.name, error.message);
         } else {
-          report.fail(step.name, error instanceof Error ? error.message : String(error));
+          report.fail(step.name, describeError(error));
         }
         return; // later steps depend on earlier ones: stop at the first failure
       }
@@ -105,7 +105,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
       const ran = planned.map((p) => p.name);
       await recordValidation(ctx, ran, await runValidation(ctx, ran));
     } catch (error) {
-      report.fail("dogrulama", error instanceof Error ? error.message : String(error));
+      report.fail("dogrulama", describeError(error));
     }
   };
 
@@ -151,7 +151,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     }
   } catch (error) {
     if (error instanceof ConfigError) configError = error;
-    else report.fail("main", error instanceof Error ? error.message : String(error));
+    else report.fail("main", describeError(error));
     if (error instanceof ConfigError) report.fail("yapilandirma", error.message);
   } finally {
     await legacy.close().catch(() => undefined);
@@ -166,7 +166,7 @@ export async function main(argv: string[], env: Record<string, string | undefine
     await fs.writeFile(target, markdown, "utf8");
     log(`Rapor yazıldı: ${target}`);
   } catch (error) {
-    log(redact(`Rapor yazılamadı: ${error instanceof Error ? error.message : String(error)}`));
+    log(redact(`Rapor yazılamadı: ${describeError(error)}`));
   }
 
   if (configError) {
@@ -181,7 +181,7 @@ if (/^index\.[cm]?[jt]s$/.test(path.basename(process.argv[1] ?? ""))) {
   main(process.argv.slice(2), process.env).then(
     (code) => process.exit(code),
     (error) => {
-      console.error(redact(error instanceof Error ? error.message : String(error)));
+      console.error(redact(describeError(error)));
       process.exit(1);
     },
   );

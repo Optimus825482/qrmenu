@@ -32,6 +32,22 @@ export function redact(text: string): string {
   return text.replace(/postgres(?:ql)?:\/\/[^\s'")]+/gi, "postgres://***");
 }
 
+/**
+ * Human-readable text of any thrown value. Node's dual-stack connection failure is an AggregateError whose own
+ * message is EMPTY (the real ECONNREFUSED / ENOTFOUND sits in `errors` / `code`), so the plain `.message` would leave
+ * the report without a reason.
+ */
+export function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const parts: string[] = [];
+  const code = (error as { code?: unknown }).code;
+  if (error.message) parts.push(error.message);
+  const inner = (error as { errors?: unknown }).errors;
+  if (Array.isArray(inner)) for (const e of inner) parts.push(e instanceof Error ? e.message : String(e));
+  if (typeof code === "string" && !parts.some((x) => x.includes(code))) parts.unshift(code);
+  return parts.length ? [...new Set(parts)].join("; ") : error.name;
+}
+
 export class Report {
   private readonly entities = new Map<string, EntityData>();
   private readonly warnings = new Map<string, { count: number; message: string; examples: string[] }>();

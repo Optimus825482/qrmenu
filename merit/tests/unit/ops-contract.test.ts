@@ -28,15 +28,16 @@ describe("operasyon sözleşmesi (OPS-1..3)", () => {
       "VAPID_PUBLIC_KEY",
       "VAPID_PRIVATE_KEY",
       "VAPID_SUBJECT",
-      "PUSH_ENDPOINT_ALLOWLIST",
       "TRANSLATE_PROVIDER",
-      "DEEPL_AUTH_KEY",
-      "GEMINI_API_KEY",
       "DB_POOL_MAX",
-      "ENV_LABEL",
     ]) {
       expect(compose, name).toContain(`${name}: \${${name}:-}`);
     }
+    // Panelden girilen ya da canlıda kullanılmayan değişkenler compose'da yer almaz (Coolify ekranı sade kalır).
+    for (const name of ["SMTP_HOST", "SMTP_PASS", "DEEPL_AUTH_KEY", "GEMINI_API_KEY", "ENV_LABEL", "MERIT_MENUS_FORCE_RESET"]) {
+      expect(compose, name).not.toContain(`${name}:`);
+    }
+    expect(compose).toContain("LEGACY_DATABASE_URL: ${LEGACY_DATABASE_URL:-}");
   });
   it("deploy/coolify betikleri: shebang, LF, strict mode; hazır değer içermez", () => {
     for (const name of ["sunucu-hazirlik.sh", "env-uret.sh", "yedek.sh"]) {

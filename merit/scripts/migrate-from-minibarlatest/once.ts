@@ -13,7 +13,7 @@ import os from "node:os";
 import path from "node:path";
 import { Client } from "pg";
 import { main as migrate } from "./index";
-import { redact } from "./report";
+import { describeError, redact } from "./report";
 
 export const MARKER_KEY = "migration.legacy.completedAt";
 export const ONCE_ARGS = ["--user-roles", "depo_sorumlusu", "--frozen-catalog"] as const;
@@ -27,9 +27,19 @@ export interface OnceDb {
 
 export interface OnceDeps {
   connect: (url: string) => Promise<OnceDb>;
+  /** Eski veritabanına bir bağlantı açıp kapatır; ulaşılamıyorsa hata fırlatır. */
+  probeLegacy: (url: string) => Promise<void>;
   migrate: (argv: string[], env: Record<string, string | undefined>) => Promise<number>;
   log: (line: string) => void;
   reportPath: string;
+}
+
+function legacyHost(url: string): string {
+  try {
+    return new URL(url).hostname || "?";
+  } catch {
+    return "? (adres çözümlenemedi)";
+  }
 }
 
 export type OnceResult = "kapali" | "zaten-yapildi" | "kilitli" | "tamam" | "basarisiz";
@@ -52,6 +62,21 @@ export async function runOnce(env: Record<string, string | undefined>, deps: Onc
     if (done.rows.length > 0) {
       log(`Eski veri aktarımı daha önce tamamlanmış (${JSON.stringify(done.rows[0].value)}); atlandı. LEGACY_DATABASE_URL kaldırılabilir.`);
       return "zaten-yapildi";
+    }
+
+    // Ön denetim: eski veritabanına kabın içinden ulaşılabiliyor mu? (En sık hata: adreste "localhost" — kap kendine bakar.)
+    const host = legacyHost(env.LEGACY_DATABASE_URL);
+    try {
+      await deps.probeLegacy(env.LEGACY_DATABASE_URL);
+    } catch (error) {
+      log(`UYARI: Eski veritabanına bağlanılamadı (sunucu: ${host}): ${describeError(error)}`);
+      if (/^(localhost|127\.0\.0\.1|::1|\[::1\])$/i.test(host)) {
+        log(
+          'LEGACY_DATABASE_URL adresinde "localhost" var: kabın içinde bu, kabın kendisidir. Eski yedeği bu sunucudaki ' +
+            'PostgreSQL\'e ayrı bir veritabanı olarak yükleyip adreste sunucu adını (compose içinde "postgres") kullanın.',
+        );
+      }
+      return "basarisiz";
     }
 
     log("Eski veri aktarımı başladı (arka planda, yaklaşık 10 dakika; site bu sırada açık).");
@@ -85,6 +110,15 @@ if (/^once\.[cm]?[jt]s$/.test(path.basename(process.argv[1] ?? ""))) {
       const client = new Client({ connectionString: url });
       await client.connect();
       return client as unknown as OnceDb;
+    },
+    probeLegacy: async (url) => {
+      const client = new Client({ connectionString: url, connectionTimeoutMillis: 10_000 });
+      try {
+        await client.connect();
+        await client.query("SELECT 1");
+      } finally {
+        await client.end().catch(() => undefined);
+      }
     },
     migrate: (argv, env) => migrate(argv, env, { log }),
     log,

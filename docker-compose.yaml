@@ -26,7 +26,6 @@ services:
       TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
       # Yalnız ilk kurulumda bir kez true yapın (20 outlet + menü); sonra false. Mevcut menüler hiçbir zaman silinmez.
       SYNC_MERIT_MENUS: ${SYNC_MERIT_MENUS:-true}
-      MERIT_MENUS_FORCE_RESET: ${MERIT_MENUS_FORCE_RESET:-false}
       # --- İsteğe bağlı: boş bırakılan değer uygulamada "tanımsız" sayılır. Coolify yalnız burada anılan
       # değişkenleri konteynere verir; bu yüzden hepsi açıkça listelenir.
       # SMTP parolası gibi veritabanında mühürlü saklanan sırların anahtarı (>= 32). Boşsa SESSION_SECRET kullanılır;
@@ -36,20 +35,11 @@ services:
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
-      PUSH_ENDPOINT_ALLOWLIST: ${PUSH_ENDPOINT_ALLOWLIST:-}
-      # Çeviri: MyBar ve menü, Denetim Masası → Sistem → Çeviri ekranındaki DeepL / Gemini anahtarlarını kullanır
-      # (aşağıdaki iki anahtar yalnız yedektir). gtx: MyBar için anahtarsız Google çevirisini son yedek olarak ekler.
+      # Çeviri anahtarları (DeepL / Gemini) ve SMTP ayarı Denetim Masası → Sistem ekranından girilir; ortam değişkeni
+      # olarak verilmez. gtx: MyBar için anahtarsız Google çevirisini son yedek olarak ekler.
       TRANSLATE_PROVIDER: ${TRANSLATE_PROVIDER:-}
-      DEEPL_AUTH_KEY: ${DEEPL_AUTH_KEY:-}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      # SMTP yedek kaynağı; asıl ayar Denetim Masası → Sistem ekranındadır.
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_FROM: ${SMTP_FROM:-}
       DB_POOL_MAX: ${DB_POOL_MAX:-}
-      ENV_LABEL: ${ENV_LABEL:-}
+      # Eski minibar verisinin tek seferlik aktarımı; temiz bitince kaldırılır (docs/kurulum.md).
       LEGACY_DATABASE_URL: ${LEGACY_DATABASE_URL:-}
     depends_on:
       postgres:
