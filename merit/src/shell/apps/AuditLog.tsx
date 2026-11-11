@@ -12,6 +12,7 @@ import type { PageSize, SortSpec } from "@/modules/core/server/admin/listQuery";
 import type { AppProps } from "../registry";
 import { useSse } from "../useSse";
 import { type Column, DataGrid } from "../ui/DataGrid";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 const AUDIT_EVENTS = ["audit.created"] as const;
 const RELOAD_DEBOUNCE_MS = 150;
@@ -175,7 +176,7 @@ export function AuditLog({ setStatus }: AppProps) {
         sortable: true,
         render: (row) => (row.entityId ? `${row.entity} · ${row.entityId}` : row.entity),
       },
-      { key: "hotelCode", title: "Otel", width: 70, render: (row) => row.hotelCode ?? "—" },
+      { key: "hotelCode", title: "Otel", width: 84, render: (row) => <HotelBadges names={[row.hotelCode]} /> },
     ],
     [],
   );

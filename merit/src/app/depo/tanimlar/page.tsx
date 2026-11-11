@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { confirm } from "@/shell/confirm";
 import { Icon } from "@/components/icons/Icon";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 interface ProductGroupItem {
   id: string;
@@ -1258,7 +1259,7 @@ export default function MinibarTanimlarPage() {
                   <tbody className="divide-y divide-border text-text">
                     {assignments.map((a, idx) => (
                       <tr key={idx} className="hover:bg-border transition">
-                        <td className="py-3.5 px-4 font-medium text-text">{a.hotelName}</td>
+                        <td className="py-3.5 px-4 font-medium text-text"><HotelBadges names={[a.hotelName]} /></td>
                         <td className="py-3.5 px-4 font-bold text-text text-sm">{a.roomTypeName}</td>
                         <td className="py-3.5 px-4 font-bold text-warn">{a.setupName}</td>
                         <td className="py-3.5 px-4 text-center">

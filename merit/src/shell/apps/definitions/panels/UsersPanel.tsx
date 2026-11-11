@@ -20,6 +20,7 @@ import { Toolbar } from "@/shell/ui/Toolbar";
 import { useLiveList } from "@/shell/ui/useLiveList";
 import { UserForm, userInputFromValues } from "./UserForm";
 import { UserCreateDialog } from "./UserCreateDialog";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 type Props = { hotelId?: string; setStatus(text: string): void };
 
@@ -34,7 +35,7 @@ const COLUMNS: Column<UserRow>[] = [
   { key: "username", title: "Kullanıcı adı", width: 150, sortable: true },
   { key: "jobTitle", title: "Görev", width: 170, sortable: true, render: (row) => row.jobTitle ?? "—" },
   { key: "role", title: "Rol / yetki", width: 170, sortable: true, render: (row) => row.roleName },
-  { key: "hotels", title: "Atandığı otel(ler)", width: 190, sortable: true, render: (row) => row.hotelNames.join(", ") || "—" },
+  { key: "hotels", title: "Atandığı otel(ler)", width: 210, sortable: true, render: (row) => <HotelBadges names={row.hotelNames} /> },
   {
     key: "isActive",
     title: "Durum",

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 interface HotelItem {
   id: string;
@@ -655,7 +656,7 @@ export default function RaporlarPage() {
                               {a.floorName}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-text">{a.hotelName}</td>
+                          <td className="py-3.5 px-4 text-text"><HotelBadges names={[a.hotelName]} /></td>
                           <td className="py-3.5 px-4 text-center">
                             <span className="px-2 py-0.5 rounded bg-bg text-warn font-bold text-xs">
                               {a.replenishmentCount} Kez

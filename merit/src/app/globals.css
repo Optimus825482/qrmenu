@@ -166,3 +166,42 @@ body {
   justify-content: center;
   min-width: var(--tap-min);
 }
+
+/* Otel rozetleri (liste tablolarında Royal / Diamond / Premium). Açık ve koyu zeminde okunur sabit tonlar. */
+.hotel-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  vertical-align: middle;
+}
+
+.hotel-badge {
+  display: inline-block;
+  padding: 0 7px;
+  border: 1px solid #c9ccd3;
+  border-radius: 999px;
+  background: #f1f2f4;
+  color: #3d424d;
+  font-size: 0.86em;
+  font-weight: 600;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.hotel-badge[data-hotel="royal"] {
+  border-color: #dfc37a;
+  background: #fbf2d8;
+  color: #6f4b00;
+}
+
+.hotel-badge[data-hotel="diamond"] {
+  border-color: #9cc4f2;
+  background: #e4f0ff;
+  color: #0b4686;
+}
+
+.hotel-badge[data-hotel="premium"] {
+  border-color: #c2b3ee;
+  background: #eee8fc;
+  color: #47309a;
+}

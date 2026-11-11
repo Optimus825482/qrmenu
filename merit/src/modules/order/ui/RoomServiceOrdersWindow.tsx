@@ -9,6 +9,7 @@ import {
 } from "../server/actions/roomServiceRecords";
 import { Icon } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   TEYIT_BEKLIYOR: { label: "Telefon Teyidi Bekliyor", color: "#b45309", bg: "#fef3c7" },
@@ -188,7 +189,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
                           minute: "2-digit",
                         })}
                       </td>
-                      <td className="p-1.5 truncate max-w-[120px]">{o.hotelName}</td>
+                      <td className="p-1.5"><HotelBadges names={[o.hotelName]} /></td>
                     </tr>
                   );
                 })

@@ -7,6 +7,7 @@ import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 import { DataGrid, type Column } from "@/shell/ui/DataGrid";
 import { useSse } from "@/shell/useSse";
+import { HotelBadges } from "@/components/ui/HotelBadge";
 
 const SSE_TYPES = ["mail.failed"] as const;
 const SYSTEM = "";
@@ -137,7 +138,7 @@ export function MailPanel({ setStatus, onOpenSettings }: { setStatus?(text: stri
       { key: "createdAt", title: "Zaman", width: 140, sortable: true, render: (r) => fmt(r.createdAt) },
       { key: "to", title: "Alıcı", width: 170, sortable: true },
       { key: "template", title: "Tür", width: 110, render: (r) => TEMPLATE_LABEL[r.template ?? ""] ?? r.kind },
-      { key: "hotelName", title: "Otel", width: 120, render: (r) => r.hotelName ?? "Sistem" },
+      { key: "hotelName", title: "Otel", width: 120, render: (r) => <HotelBadges names={[r.hotelName]} empty="Sistem" /> },
       { key: "subject", title: "Konu" },
       {
         key: "status",
