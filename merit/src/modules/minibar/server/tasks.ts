@@ -160,7 +160,7 @@ export async function markItemsDnd(
 /** Day end: DND_BEKLIYOR items (of the given rooms, or all) become EKSIK; the log has no user. */
 export async function failDndItems(
   tx: Tx,
-  p: { hotelId: string; day: string; roomIds?: string[] },
+  p: { hotelId: string; day: string; roomIds?: string[]; /** Backlog day: no live board event. */ silent?: boolean },
 ): Promise<{ itemIds: string[] }> {
   if (p.roomIds && p.roomIds.length === 0) return { itemIds: [] };
   const rows = await lockedItems(tx, {
@@ -184,7 +184,7 @@ export async function failDndItems(
     changes.push({ taskItemId: row.id, roomId: row.roomId, from: row.status, to: "EKSIK" });
   }
   for (const taskId of [...new Set(rows.map((r) => r.taskId))].sort()) await recomputeTaskStatus(tx, taskId);
-  await announce(tx, p.hotelId, changes);
+  if (!p.silent) await announce(tx, p.hotelId, changes);
   return { itemIds: rows.map((r) => r.id) };
 }
 

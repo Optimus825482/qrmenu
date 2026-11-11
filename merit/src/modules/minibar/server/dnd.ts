@@ -447,57 +447,55 @@ export async function runDndReminders(now: Date = new Date()): Promise<number> {
  */
 export async function closeDndDay(upToDay: string, now: Date = new Date()): Promise<number> {
   const upTo = businessDay(upToDay);
+  // One transaction per (hotel, day): a backlog of many open days (for example the records carried over from the
+  // old system, which never closed a DND) must not run into the interactive transaction timeout and block the
+  // nightly close of the current day.
   const open = await prisma.roomDnd.findMany({
     where: { date: { lte: upTo }, status: "AKTIF" },
-    select: { hotelId: true },
-    distinct: ["hotelId"],
-    orderBy: { hotelId: "asc" },
+    select: { hotelId: true, date: true },
+    distinct: ["hotelId", "date"],
+    orderBy: [{ hotelId: "asc" }, { date: "asc" }],
   });
   let closed = 0;
-  for (const { hotelId } of open) {
-    closed += await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM room_dnds WHERE hotel_id = ${hotelId} AND status = 'AKTIF' AND date <= ${upTo}::date ORDER BY id FOR UPDATE`;
-      const rows = await tx.roomDnd.findMany({
-        where: { hotelId, date: { lte: upTo }, status: "AKTIF" },
-        select: { id: true, roomId: true, date: true },
-        orderBy: { id: "asc" },
-      });
-      if (rows.length === 0) return 0;
-      await tx.roomDnd.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { status: "EKSIK" } });
-
-      const byDay = new Map<string, string[]>();
-      for (const r of rows) {
-        const d = r.date.toISOString().slice(0, 10);
-        byDay.set(d, [...(byDay.get(d) ?? []), r.roomId]);
-      }
-      for (const [d, roomIds] of byDay) {
-        await failDndItems(tx, { hotelId, day: d, roomIds });
-        await publishRadar(
-          "dnd.missed",
-          { hotelId },
-          { date: d, roomIds: roomIds.length > 300 ? [] : roomIds },
-          tx,
-        );
-      }
-
-      const hotel = await tx.hotel.findUniqueOrThrow({ where: { id: hotelId }, select: { name: true } });
-      await notify(
-        {
-          recipients: { hotelId, roleCodes: DEPOT_ROLES },
-          type: "dnd.dayend",
-          title: `DND gün sonu — ${hotel.name}`,
-          body: `${rows.length} oda için DND kontrolü tamamlanamadı`,
-        },
-        tx,
-      );
-      await audit(tx, {
-        hotelId,
-        action: "DND_DAY_END",
-        entity: "RoomDnd",
-        after: { upToDay, count: rows.length, closedAt: now.toISOString() },
-      });
-      return rows.length;
-    });
+  for (const { hotelId, date } of open) {
+    const d = date.toISOString().slice(0, 10);
+    // Older than the day being closed: closed quietly (no live board event, no notification).
+    const backlog = date.getTime() < upTo.getTime();
+    closed += await prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRaw`SELECT id FROM room_dnds WHERE hotel_id = ${hotelId} AND status = 'AKTIF' AND date = ${date}::date ORDER BY id FOR UPDATE`;
+        const rows = await tx.roomDnd.findMany({
+          where: { hotelId, date, status: "AKTIF" },
+          select: { id: true, roomId: true },
+          orderBy: { id: "asc" },
+        });
+        if (rows.length === 0) return 0;
+        await tx.roomDnd.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { status: "EKSIK" } });
+        const roomIds = rows.map((r) => r.roomId);
+        await failDndItems(tx, { hotelId, day: d, roomIds, silent: backlog });
+        if (!backlog) {
+          await publishRadar("dnd.missed", { hotelId }, { date: d, roomIds: roomIds.length > 300 ? [] : roomIds }, tx);
+          const hotel = await tx.hotel.findUniqueOrThrow({ where: { id: hotelId }, select: { name: true } });
+          await notify(
+            {
+              recipients: { hotelId, roleCodes: DEPOT_ROLES },
+              type: "dnd.dayend",
+              title: `DND gün sonu — ${hotel.name}`,
+              body: `${rows.length} oda için DND kontrolü tamamlanamadı`,
+            },
+            tx,
+          );
+        }
+        await audit(tx, {
+          hotelId,
+          action: "DND_DAY_END",
+          entity: "RoomDnd",
+          after: { upToDay, day: d, count: rows.length, backlog, closedAt: now.toISOString() },
+        });
+        return rows.length;
+      },
+      { timeout: 60_000, maxWait: 15_000 },
+    );
   }
   return closed;
 }
