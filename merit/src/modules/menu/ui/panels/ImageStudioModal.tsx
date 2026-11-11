@@ -1046,7 +1046,7 @@ export function ImageStudioModal({
   ]);
 
   // Handle Canvas Click for Eyedropper & Manual Brush Mask
-  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasMouseDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     const mask = maskCanvasRef.current;
     if (!canvas || !mask) return;
@@ -1081,7 +1081,7 @@ export function ImageStudioModal({
     }
   };
 
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasMouseMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isBrushing || (bgTool !== "eraser" && bgTool !== "restore")) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1117,7 +1117,7 @@ export function ImageStudioModal({
   };
 
   // ─── Crop Box Dragging & Resizing Handlers (Fixed for CSS-scaled canvas!) ───
-  const handleCropMouseDown = (e: React.MouseEvent, type: NonNullable<typeof cropDrag>["type"]) => {
+  const handleCropMouseDown = (e: React.PointerEvent, type: NonNullable<typeof cropDrag>["type"]) => {
     e.stopPropagation();
     e.preventDefault();
     const canvas = canvasRef.current;
@@ -1210,11 +1210,14 @@ export function ImageStudioModal({
 
     const onMouseUp = () => setCropDrag(null);
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    // Pointer events: the same drag works with a mouse, a finger and a pen.
+    window.addEventListener("pointermove", onMouseMove);
+    window.addEventListener("pointerup", onMouseUp);
+    window.addEventListener("pointercancel", onMouseUp);
     return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("pointermove", onMouseMove);
+      window.removeEventListener("pointerup", onMouseUp);
+      window.removeEventListener("pointercancel", onMouseUp);
     };
   }, [cropDrag, cropAspect]);
 
@@ -1491,7 +1494,7 @@ export function ImageStudioModal({
                       value={straightenAngle}
                       className="xp-studio-slider"
                       onChange={(e) => setStraightenAngle(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                     {straightenAngle !== 0 && (
                       <button
@@ -1658,7 +1661,7 @@ export function ImageStudioModal({
                       value={bgTolerance}
                       className="xp-studio-slider"
                       onChange={(e) => setBgTolerance(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1676,7 +1679,7 @@ export function ImageStudioModal({
                       value={bgFeather}
                       className="xp-studio-slider"
                       onChange={(e) => setBgFeather(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1794,7 +1797,7 @@ export function ImageStudioModal({
                       value={brightness}
                       className="xp-studio-slider"
                       onChange={(e) => setBrightness(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1811,7 +1814,7 @@ export function ImageStudioModal({
                       value={contrast}
                       className="xp-studio-slider"
                       onChange={(e) => setContrast(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1828,7 +1831,7 @@ export function ImageStudioModal({
                       value={saturation}
                       className="xp-studio-slider"
                       onChange={(e) => setSaturation(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1845,7 +1848,7 @@ export function ImageStudioModal({
                       value={temperature}
                       className="xp-studio-slider"
                       onChange={(e) => setTemperature(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1862,7 +1865,7 @@ export function ImageStudioModal({
                       value={shadows}
                       className="xp-studio-slider"
                       onChange={(e) => setShadows(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1879,7 +1882,7 @@ export function ImageStudioModal({
                       value={highlights}
                       className="xp-studio-slider"
                       onChange={(e) => setHighlights(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -1896,7 +1899,7 @@ export function ImageStudioModal({
                       value={vignette}
                       className="xp-studio-slider"
                       onChange={(e) => setVignette(Number(e.target.value))}
-                      onMouseUp={() => pushSnapshot()}
+                      onPointerUp={() => pushSnapshot()}
                     />
                   </div>
 
@@ -2104,9 +2107,10 @@ export function ImageStudioModal({
                   type="button"
                   className="xp-button"
                   style={{ fontSize: 10, padding: "2px 8px" }}
-                  onMouseDown={() => setShowOriginal(true)}
-                  onMouseUp={() => setShowOriginal(false)}
-                  onMouseLeave={() => setShowOriginal(false)}
+                  onPointerDown={() => setShowOriginal(true)}
+                  onPointerUp={() => setShowOriginal(false)}
+                  onPointerLeave={() => setShowOriginal(false)}
+                  onPointerCancel={() => setShowOriginal(false)}
                   onTouchStart={() => setShowOriginal(true)}
                   onTouchEnd={() => setShowOriginal(false)}
                   title="Basılı tutarak orijinal halini görün"
@@ -2142,10 +2146,13 @@ export function ImageStudioModal({
               >
                 <canvas
                   ref={canvasRef}
-                  onMouseDown={handleCanvasMouseDown}
-                  onMouseMove={handleCanvasMouseMove}
-                  onMouseUp={handleCanvasMouseUp}
-                  onMouseLeave={handleCanvasMouseUp}
+                  // While a brush or the eyedropper is active a finger draws instead of scrolling the picture.
+                  style={{ touchAction: bgTool === "eyedropper" || bgTool === "eraser" || bgTool === "restore" ? "none" : undefined }}
+                  onPointerDown={handleCanvasMouseDown}
+                  onPointerMove={handleCanvasMouseMove}
+                  onPointerUp={handleCanvasMouseUp}
+                  onPointerLeave={handleCanvasMouseUp}
+                  onPointerCancel={handleCanvasMouseUp}
                 />
 
                 {/* Interactive Crop Box Overlay (Percentage-scaled so it matches any CSS canvas size!) */}
@@ -2158,7 +2165,7 @@ export function ImageStudioModal({
                       width: `${(cropBox.width / canvasSize.width) * 100}%`,
                       height: `${(cropBox.height / canvasSize.height) * 100}%`,
                     }}
-                    onMouseDown={(e) => handleCropMouseDown(e, "move")}
+                    onPointerDown={(e) => handleCropMouseDown(e, "move")}
                   >
                     {/* Rule of Thirds Lines */}
                     <div className="xp-crop-grid-line-h1" />
@@ -2167,14 +2174,14 @@ export function ImageStudioModal({
                     <div className="xp-crop-grid-line-v2" />
 
                     {/* 8 Resize Handles (Corners + Edges) */}
-                    <div className="xp-crop-handle tl" onMouseDown={(e) => handleCropMouseDown(e, "tl")} />
-                    <div className="xp-crop-handle tc" onMouseDown={(e) => handleCropMouseDown(e, "tc")} />
-                    <div className="xp-crop-handle tr" onMouseDown={(e) => handleCropMouseDown(e, "tr")} />
-                    <div className="xp-crop-handle rc" onMouseDown={(e) => handleCropMouseDown(e, "rc")} />
-                    <div className="xp-crop-handle br" onMouseDown={(e) => handleCropMouseDown(e, "br")} />
-                    <div className="xp-crop-handle bc" onMouseDown={(e) => handleCropMouseDown(e, "bc")} />
-                    <div className="xp-crop-handle bl" onMouseDown={(e) => handleCropMouseDown(e, "bl")} />
-                    <div className="xp-crop-handle lc" onMouseDown={(e) => handleCropMouseDown(e, "lc")} />
+                    <div className="xp-crop-handle tl" onPointerDown={(e) => handleCropMouseDown(e, "tl")} />
+                    <div className="xp-crop-handle tc" onPointerDown={(e) => handleCropMouseDown(e, "tc")} />
+                    <div className="xp-crop-handle tr" onPointerDown={(e) => handleCropMouseDown(e, "tr")} />
+                    <div className="xp-crop-handle rc" onPointerDown={(e) => handleCropMouseDown(e, "rc")} />
+                    <div className="xp-crop-handle br" onPointerDown={(e) => handleCropMouseDown(e, "br")} />
+                    <div className="xp-crop-handle bc" onPointerDown={(e) => handleCropMouseDown(e, "bc")} />
+                    <div className="xp-crop-handle bl" onPointerDown={(e) => handleCropMouseDown(e, "bl")} />
+                    <div className="xp-crop-handle lc" onPointerDown={(e) => handleCropMouseDown(e, "lc")} />
                   </div>
                 )}
               </div>

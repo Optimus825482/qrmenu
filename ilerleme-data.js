@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 00:25",
+  updatedAt: "12.11.2026 01:00",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -323,5 +323,7 @@ window.ILERLEME = {
     { at: "11.11 23:50", text: "Liste ekranlarında otel adları kısa rozetlerle gösteriliyor (Royal / Diamond / Premium): Kullanıcı Yönetimi, Denetim Günlüğü, e-posta alıcıları, depo raporları ve tanımları, oda servisi kayıtları. Henüz yayına alınmadı." },
     { at: "11.11 23:58", text: "Kullanıcı Yönetimi'ne Ekranlar bölümü eklendi (yerelde denendi, henüz yayına alınmadı). Sistem yöneticisi her rol için açılış ekranını seçer ve Kat Planı, Depo Panosu, Komuta Merkezi ekranlarının öğelerini düzenler: öğeyi gizleme, sırasını değiştirme, gösterim stili (kutu/şerit, kart/liste) ve parça seçimi. Solda araçlar, sağda tablet/telefon önizlemesi var. Garson, kasa, mutfak gibi operasyon ekranları sabit kalır." },
     { at: "12.11 00:25", text: "Hata Denetimi ekranına Sunucu Kaynakları sekmesi eklendi (yerelde denendi, henüz yayına alınmadı): işlemci, sunucu belleği, uygulama belleği, yanıt gecikmesi ve veritabanı bağlantıları kadranlı göstergelerle; disk doluluğu eşik renkli bölmeli çubukla; veritabanlarının diskte kapladığı alan ayrıca gösterilir. Ölçümler 10 saniyede bir, yalnız sekme açıkken okunur ve sunucuya kayda değer yük bindirmez. Aynı ekrandaki geliştirici bildirim ayarları artık kaydedilen değerlerle açılıyor." },
+    { at: "12.11 00:45", text: "Yönetici ekranları telefon ve tablet için elden geçirildi (yerelde denendi, henüz yayına alınmadı): tablette Zeytin, Gümüş ve Royal temalarında saydam açılan pencereler düzeltildi; uzun formlar artık ekrana sığıyor, içi kaydırılıyor ve Kaydet düğmesi hep görünüyor. Telefonda Kullanıcı Yönetimi, Tanımlamalar, Ekipler ve Denetim Masası’nın yan menüsü üstte sekme sırasına dönüşüyor; Menü Tasarım Merkezi tek sütunda kaydırılabiliyor, Yayına al düğmesi ve elle düzenleme araçları görünüyor, bölüm sırası oklarla da değiştirilebiliyor. Canlı Radar, Oda Servisi Kayıtları, Outlet & Masa Tanımları ve Minibar Tanımları’ndaki taşmalar da giderildi. Görsel düzenleyicide kırpma çerçevesi, silgi ve renk seçici artık parmakla da kullanılabiliyor; telefonda düzenleyici tam ekran açılıyor." },
+    { at: "12.11 01:00", text: "Masaüstü görünümde sağ alttaki bildirim balonu görev çubuğunun arkasında kalıp görünmüyordu; artık her yazı boyutunda çubuğun üstünde açılıyor (yerelde denendi, henüz yayına alınmadı). Google Drive bağlantı yönergesi de düzeltildi: Apps Script artık doğru yerden açtırılıyor ve raporların seçilen klasöre düşmesi için gereken adım eklendi." },
   ]
 };

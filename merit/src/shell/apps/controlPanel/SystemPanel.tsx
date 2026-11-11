@@ -329,7 +329,7 @@ function SettingRow({
 
   return (
     <div role="group" aria-label={meta.label} className="xp-cp-choices" data-guide="ayar-degistir" style={{ marginBottom: 10, alignItems: "center" }}>
-      <label htmlFor={id} style={{ minWidth: 200, fontWeight: 600 }} title={meta.description}>
+      <label htmlFor={id} style={{ flex: "1 1 200px", fontWeight: 600 }} title={meta.description}>
         {meta.label}
       </label>
       {control}

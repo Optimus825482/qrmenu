@@ -107,7 +107,8 @@ export function UserCreateDialog({
   if (!open) return null;
 
   const startDrag = (e: ReactPointerEvent<HTMLElement>) => {
-    if (e.button !== 0 || (e.target as Element).closest("button")) return;
+    // Dragging is a mouse gesture: a finger on the title bar must not push the dialog off screen.
+    if (e.pointerType !== "mouse" || e.button !== 0 || (e.target as Element).closest("button")) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
     e.preventDefault();
@@ -227,6 +228,8 @@ export function UserCreateDialog({
   const onKeyDown = (e: ReactKeyboardEvent) => {
     if (e.key === "Escape") {
       e.preventDefault();
+      // The Android shell listens for Esc too: without this it would also leave the app.
+      e.stopPropagation();
       close();
     }
   };
@@ -250,7 +253,7 @@ export function UserCreateDialog({
         style={{
           width: "min(760px, calc(100% - 24px))",
           maxHeight: "calc(100% - 16px)",
-          overflow: step === "assignment" ? "auto" : "hidden",
+          overflow: "auto",
         }}
       >
         <header

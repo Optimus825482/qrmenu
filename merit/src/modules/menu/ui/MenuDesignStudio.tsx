@@ -849,6 +849,22 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 >
                   <small>{String(index + 1).padStart(2, "0")}</small>
                   {DESIGN_BLOCKS.find((item) => item.id === block)?.label}
+                  <span className="xp-design-order-move">
+                    {([-1, 1] as const).map((step) => {
+                      const neighbour = design.layout[index + step];
+                      return (
+                        <button
+                          key={step}
+                          type="button"
+                          disabled={!neighbour}
+                          aria-label={step < 0 ? "Yukarı taşı" : "Aşağı taşı"}
+                          onClick={() => neighbour && commit({ ...design, layout: reorder(design.layout, block, neighbour) })}
+                        >
+                          {step < 0 ? "▲" : "▼"}
+                        </button>
+                      );
+                    })}
+                  </span>
                   <span>⠿</span>
                 </div>
               ))}

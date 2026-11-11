@@ -26,6 +26,7 @@
  */
 .xp-shell,
 .xp-frame-page,
+.mb-shell,
 [data-theme="luna"] {
   /* Luna palette */
   --xp-title-1: #0058e6;
@@ -4051,7 +4052,6 @@
 
 @media (max-width: 1100px) {
   .xp-design-workspace { grid-template-columns: 150px minmax(260px, 1fr); }
-  .xp-design-inspector { display: none; }
   .xp-design-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -5153,3 +5153,89 @@
 .xp-sk-list li { display: flex; justify-content: space-between; padding: 3px 4px; border-bottom: 1px dotted #cbd5e1; }
 .xp-sk-note { padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; font-size: 11px; }
 @media (max-width: 820px) { .xp-screens { grid-template-columns: minmax(0, 1fr); overflow: auto; } .xp-screens-tools { overflow: visible; } }
+
+
+/* ---- narrow and touch screens ------------------------------------------------------------
+   Rules that keep the desktop screens usable when their window is as small as a phone or a tablet.
+   They sit at the end of the file on purpose: several earlier blocks restate the same selectors. */
+
+/* A form taller than its window scrolls inside itself and keeps its buttons in view. */
+/* One fixed track the size of the backdrop: the percentage max-height below needs a definite row. */
+.xp-form-backdrop { grid-template: minmax(0, 1fr) / minmax(0, 1fr); align-items: safe center; justify-items: safe center; }
+.xp-form-dialog { max-height: calc(100% - 16px); }
+.xp-form-dialog > .xp-form { min-height: 0; overflow-y: auto; }
+.xp-form-dialog > .xp-form > .xp-dialog-actions { position: sticky; bottom: 0; z-index: 1; }
+.xp-modal-backdrop { overflow: auto; }
+.xp-dialog-actions { flex-wrap: wrap; }
+
+.xp-defs-filters label { flex-wrap: wrap; max-width: 100%; }
+.xp-defs-filters select { min-width: 0; max-width: 100%; }
+.xp-screens-stage-bar { flex-wrap: wrap; }
+
+/* Menu studio */
+.xp-menu-studio-head { flex-wrap: wrap; row-gap: 8px; }
+.xp-design-canvas { align-items: start; justify-items: safe center; }
+.xp-design-choices { flex-wrap: wrap; }
+.xp-design-choices .xp-button { min-width: 0; }
+.xp-design-order-move { display: inline-flex; gap: 4px; margin-left: auto; }
+.xp-design-order-move button { min-width: 30px; min-height: 30px; border: 1px solid #ccd4e2; border-radius: 6px; background: #fff; cursor: pointer; }
+.xp-design-order-move button:disabled { opacity: .35; cursor: default; }
+.xp-studio-canvas-viewport { justify-content: safe center; align-items: safe center; }
+
+@media (max-width: 1100px) {
+  /* Two shrinkable columns instead of fixed minimums that add up to more than a tablet. */
+  .xp-menu-studio[data-rail="renk"] .xp-design-workspace,
+  .xp-menu-studio[data-rail="cagri"] .xp-design-workspace { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  /* The quality panel goes under the device, so the device keeps the column's width. */
+  .xp-design-canvas-body { flex-direction: column; }
+  .xp-design-canvas { min-height: 300px; }
+  .xp-design-canvas-aside { flex: 0 1 auto; width: 100%; max-width: none; max-height: 40%; overflow-y: auto; padding: 8px 12px 12px; }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  /* Tablet: the workspace keeps a usable height and the studio scrolls when the screen is shorter. */
+  .xp-menu-studio { overflow-y: auto; }
+  .xp-menu-studio .xp-design-workspace { flex: 1 0 600px; }
+}
+
+@media (max-width: 760px) {
+  /* Phone: one column, and the studio itself scrolls (tools first, device under them). */
+  .xp-menu-studio { overflow-y: auto; }
+  .xp-menu-studio .xp-design-workspace,
+  .xp-menu-studio[data-rail="renk"] .xp-design-workspace,
+  .xp-menu-studio[data-rail="cagri"] .xp-design-workspace { grid-template-columns: minmax(0, 1fr); flex: none; }
+  .xp-design-tools { max-height: 60vh; }
+  .xp-menu-studio[data-rail="renk"] .xp-design-tools { max-height: none; overflow: visible; }
+  .xp-menu-studio[data-rail="renk"] .xp-design-library { overflow: visible; flex: none; }
+  .xp-menu-studio[data-rail="renk"] .xp-themes-grid { min-height: 260px; max-height: none; }
+  .xp-menu-studio[data-rail="renk"] .xp-themes-assign { overflow: visible; }
+  .xp-design-canvas-wrap { min-height: 680px; }
+  .xp-design-rail { order: 3; flex: 1 1 100%; overflow-x: auto; }
+  .xp-design-rail button { flex: 1 0 auto; padding: 0 12px; white-space: nowrap; }
+  .xp-design-canvas-toolbar { flex-wrap: wrap; overflow-x: visible; }
+  .xp-design-zoom { flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
+  .xp-design-zoom .xp-button { flex: none; white-space: nowrap; }
+
+  .xp-theme-outlet-row { grid-template-columns: minmax(0, 1fr); }
+  .xp-theme-outlet-actions { flex-wrap: wrap; }
+  .xp-theme-dropdown { min-width: 0; flex: 1 1 140px; }
+  .xp-themes-assign-toolbar { flex-wrap: wrap; }
+  .xp-theme-search-input { flex: 1 1 120px; width: auto; min-width: 0; }
+
+  /* Product manager: tree above, form below. */
+  .xp-mm-body { flex-direction: column; }
+  .xp-mm-tree { flex: 0 0 42%; min-height: 0; border-right: 0; border-bottom: 1px solid var(--xp-body-edge); }
+  .xp-mm-list { min-height: 0; }
+
+  /* Image editor: full screen, tools above the picture. */
+  .xp-studio-overlay { padding: 0; }
+  .xp-studio-window { width: 100%; height: 100dvh; max-height: none; }
+  .xp-studio-body { flex-direction: column; }
+  .xp-studio-sidebar { width: auto; min-width: 0; max-height: 45%; border-right: 0; border-bottom: 1px solid #aca899; }
+}
+
+/* Image editor on touch screens: the crop box follows the finger, and its handles are big enough to grab. */
+.xp-crop-box, .xp-crop-handle { touch-action: none; }
+@media (pointer: coarse) {
+  .xp-crop-handle::after { content: ""; position: absolute; inset: -12px; }
+}

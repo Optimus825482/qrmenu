@@ -76,7 +76,7 @@ export function AccessPreviewDialog({ user, hotelId, onClose }: Props) {
         aria-labelledby={titleId}
         data-testid="access-preview-dialog"
         className="xp-window xp-dialog xp-form-dialog"
-        style={{ width: "min(720px, 94vw)", maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        style={{ width: "min(720px, 94vw)", maxHeight: "calc(100% - 16px)", display: "flex", flexDirection: "column" }}
       >
         <div className="xp-titlebar">
           <span id={titleId} className="xp-titlebar-text">

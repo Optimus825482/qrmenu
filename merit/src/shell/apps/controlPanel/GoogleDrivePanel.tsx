@@ -413,7 +413,10 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
             <div className="p-6 space-y-4 overflow-y-auto text-xs leading-relaxed text-text">
               <ol className="list-decimal list-inside space-y-2 font-medium">
                 <li>Google Drive&apos;ınızda raporların toplanmasını istediğiniz bir klasör açın.</li>
-                <li>Üst menüden <strong>Uzantılar &gt; Apps Script</strong> seçeneğine tıklayın.</li>
+                <li>
+                  Aynı Google hesabıyla <strong>script.google.com</strong> adresini açıp <strong>Yeni proje</strong>&apos;ye basın
+                  (Drive&apos;dan: <strong>Yeni &gt; Diğer &gt; Google Apps Script</strong>).
+                </li>
                 <li>Açılan editördeki kodu silip aşağıdaki kodu yapıştırın:</li>
               </ol>
 
@@ -431,11 +434,24 @@ export function GoogleDrivePanel({ setStatus }: { setStatus?(text: string): void
               </div>
 
               <ol start={4} className="list-decimal list-inside space-y-2 font-medium">
+                <li>
+                  Raporlar klasörünüze düşsün diye: klasörü Drive&apos;da açın, adres çubuğunda <strong>/folders/</strong>&apos;dan
+                  sonraki kodu kopyalayın ve koddaki <strong>DriveApp.getRootFolder()</strong> yerine{" "}
+                  <strong>DriveApp.getFolderById(&quot;KOPYALADIĞINIZ_KOD&quot;)</strong> yazın. Değiştirmezseniz dosyalar
+                  Drive&apos;ın ana dizinine kaydedilir.
+                </li>
                 <li>Sağ üstteki <strong>Dağıt (Deploy) &gt; Yeni Dağıtım</strong> butonuna basın.</li>
                 <li>Tür olarak <strong>Web Uygulaması (Web App)</strong> seçin.</li>
-                <li>Erişim yetkisini <strong>&ldquo;Herkes&rdquo; (Anyone)</strong> yapıp <strong>Dağıt</strong>&apos;a tıklayın.</li>
+                <li>
+                  <strong>Şu kullanıcı olarak yürüt: Ben</strong>, erişim yetkisini <strong>&ldquo;Herkes&rdquo; (Anyone)</strong> yapıp{" "}
+                  <strong>Dağıt</strong>&apos;a tıklayın; Google&apos;ın istediği izni onaylayın.
+                </li>
                 <li>Verilen <strong>Web Uygulaması URL&apos;sini</strong> kopyalayıp buradaki alana yapıştırın.</li>
               </ol>
+              <p className="text-muted">
+                Bu adresi bilen herkes klasöre dosya yükleyebilir: parola gibi saklayın. Kodu sonradan değiştirirseniz{" "}
+                <strong>Dağıt &gt; Dağıtımları yönet &gt; Düzenle &gt; Yeni sürüm</strong> demeniz gerekir.
+              </p>
             </div>
 
             <div className="px-6 py-3 border-t border-border bg-bg flex justify-end">

@@ -1299,3 +1299,14 @@ button.rd-alert-chip {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Phone-sized windows: the side panels go under the main view instead of squeezing it to nothing. */
+@media (max-width: 759px) {
+  .rd-workspace { flex-direction: column; }
+  .rd-ticker { width: auto; max-width: none; max-height: 40%; border-left: 0; border-top: 1px solid var(--app-line); }
+  .rd-floor, .rd-staff-layout, .rd-tables[data-has-detail="true"] { grid-template-columns: minmax(0, 1fr); }
+  .rd-overview { grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+  .rd-menu-list { max-width: calc(100vw - 16px); }
+  .rd-menu:nth-last-child(-n+2) .rd-menu-list { left: auto; right: 0; }
+  .rd-help { width: min(340px, calc(100% - 24px)); }
+}

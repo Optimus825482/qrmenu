@@ -95,7 +95,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
         </button>
 
         {stats && (
-          <div className="ml-auto flex items-center gap-2 text-[11px]">
+          <div className="ml-auto flex flex-wrap items-center gap-2 text-[11px]">
             <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-bold">
               Toplam: {stats.total}
             </span>
@@ -113,9 +113,9 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
       </div>
 
       {/* Main Grid & Detail Panel */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Table List */}
-        <div className="flex-1 overflow-auto border-r border-[#7f9db9] bg-white">
+        <div className="flex-1 min-h-0 overflow-auto border-r border-[#7f9db9] bg-white">
           <table className="w-full text-left border-collapse text-[11px]">
             <thead className="sticky top-0 bg-[#f7f5f0] border-b border-[#d4d0c8] shadow-sm">
               <tr>
@@ -200,7 +200,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
 
         {/* Detail Sidebar */}
         {selectedOrder ? (
-          <div className="w-80 bg-[#f9fafb] p-3 flex flex-col gap-2 overflow-auto border-l border-[#d4d0c8]">
+          <div className="w-full md:w-80 max-h-[55%] md:max-h-none bg-[#f9fafb] p-3 flex flex-col gap-2 overflow-auto border-t md:border-t-0 md:border-l border-[#d4d0c8]">
             <div className="flex justify-between items-center border-b pb-1">
               <span className="font-bold text-sm text-gray-800">
                 Sipariş Detayı #{selectedOrder.orderNo}
@@ -269,7 +269,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             </div>
           </div>
         ) : (
-          <div className="w-64 bg-[#f9fafb] p-4 flex flex-col items-center justify-center text-center text-gray-400">
+          <div className="hidden md:flex w-64 bg-[#f9fafb] p-4 flex-col items-center justify-center text-center text-gray-400">
             <span>Detayları görüntülemek için bir sipariş seçin</span>
           </div>
         )}

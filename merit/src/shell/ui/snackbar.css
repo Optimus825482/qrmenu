@@ -60,12 +60,13 @@
 .xp-balloon-host {
   position: fixed;
   right: 8px;
-  bottom: 40px;
+  /* The taskbar grows with the UI scale (and sits above the footer): a fixed 40px put the balloon behind it. */
+  bottom: calc(var(--xp-taskbar-height, 30px) + var(--xp-footer-offset, 0px) + 10px);
   z-index: 9000;
   display: flex;
   flex-direction: column-reverse;
   gap: 6px;
-  max-width: 320px;
+  max-width: min(calc(320px * var(--xp-ui-scale, 1)), calc(100vw - 16px));
   pointer-events: none;
 }
 .xp-balloon {
@@ -76,7 +77,7 @@
   border-radius: 8px;
   background: #ffffe1;
   color: #000;
-  font-size: 12px;
+  font-size: calc(12px * var(--xp-ui-scale, 1));
   line-height: 1.35;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
   animation: ui-snackbar-in 150ms ease-out;

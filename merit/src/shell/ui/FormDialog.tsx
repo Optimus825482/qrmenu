@@ -79,7 +79,8 @@ function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSu
   };
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || (e.target as Element).closest("button")) return;
+    // Dragging is a mouse gesture: a finger on the title bar must not push the dialog off screen.
+    if (e.pointerType !== "mouse" || e.button !== 0 || (e.target as Element).closest("button")) return;
     const dialog = dialogRef.current;
     if (!dialog) return;
     e.preventDefault();

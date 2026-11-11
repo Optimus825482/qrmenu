@@ -12,7 +12,7 @@ export function OutletDefinitionsWindow({ hotelId, setStatus }: AppProps) {
   return (
     <div className="flex flex-col h-full bg-[#ece9d8] text-xs font-sans overflow-hidden">
       {/* Top Tab Bar */}
-      <div className="bg-[#ece9d8] border-b border-[#7f9db9] p-1.5 flex gap-2 items-center">
+      <div className="bg-[#ece9d8] border-b border-[#7f9db9] p-1.5 flex flex-wrap gap-2 items-center">
         <button
           type="button"
           onClick={() => setTab("outlets")}
@@ -38,7 +38,7 @@ export function OutletDefinitionsWindow({ hotelId, setStatus }: AppProps) {
       </div>
 
       {/* Main Content View */}
-      <div className="flex-1 bg-white overflow-hidden">
+      <div className="xp-defs-main bg-white">
         {!hotelId ? (
           <div className="p-8 text-center text-gray-500">
             Lütfen pencere başlığından bir otel seçin.

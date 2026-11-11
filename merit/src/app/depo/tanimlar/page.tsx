@@ -1134,7 +1134,7 @@ export default function MinibarTanimlarPage() {
               </button>
             </div>
 
-            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
@@ -1239,7 +1239,7 @@ export default function MinibarTanimlarPage() {
               </button>
             </div>
 
-            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-x-auto">
               {assignments.length === 0 ? (
                 <div className="py-16 text-center text-muted text-sm">
                   Henüz bu otel için bir oda tipi - setup ataması yapılmamış.
@@ -1386,8 +1386,8 @@ export default function MinibarTanimlarPage() {
           MODAL 1: ÜRÜN GRUBU FORMU
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "GROUP_FORM" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="font-bold text-base text-text">
               {currentGroup.id ? "Ürün Grubunu Düzenle" : "Yeni Ürün Grubu"}
             </h3>
@@ -1452,8 +1452,8 @@ export default function MinibarTanimlarPage() {
           MODAL 2: ÜRÜN FORMU
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "PRODUCT_FORM" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="font-bold text-base text-text">
               {currentProduct.id ? "Ürünü Düzenle" : "Yeni Ürün Tanımla"}
             </h3>
@@ -1575,8 +1575,8 @@ export default function MinibarTanimlarPage() {
           MODAL 3: SETUP FORMU
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "SETUP_FORM" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="font-bold text-base text-text">
               {currentSetup.id ? "Setup Konseptini Düzenle" : "Yeni Setup Konsepti"}
             </h3>
@@ -1650,7 +1650,7 @@ export default function MinibarTanimlarPage() {
           MODAL 4: SETUP İÇERİK NORMU YÖNETİMİ
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "SETUP_ITEMS" && activeSetupForItems && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-2xl bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
@@ -1761,8 +1761,8 @@ export default function MinibarTanimlarPage() {
           MODAL 5: ODA TİPİ FORMU
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "ROOM_TYPE_FORM" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="font-bold text-base text-text">
               {currentRoomType.id ? "Oda Tipini Düzenle" : "Yeni Oda Tipi"}
             </h3>
@@ -1833,8 +1833,8 @@ export default function MinibarTanimlarPage() {
           MODAL 6: ODA TİPİNE SETUP ATAMA FORMU
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "ASSIGN_FORM" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <h3 className="font-bold text-base text-text">Oda Tipine Setup Konsepti Ata</h3>
 
             <form onSubmit={handleAssignSetup} className="space-y-4">
@@ -1896,7 +1896,7 @@ export default function MinibarTanimlarPage() {
           MODAL 7: SİLİNEMEZ AUDIT DIFF SNAPSHOT GÖRÜNTÜLEYİCİ
       ───────────────────────────────────────────────────────────────── */}
       {modalMode === "AUDIT_DIFF" && activeAuditLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-2xl bg-surface border border-info/40 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div>

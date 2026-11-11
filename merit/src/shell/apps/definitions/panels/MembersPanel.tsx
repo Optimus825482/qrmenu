@@ -355,7 +355,7 @@ export function MembersPanel({ hotelId, setStatus, selectedOutletId, showOutletP
               </button>
             </header>
             <div className="xp-form-fields">
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "10px" }}>
                 <Field name="searchQuery" label="İsim veya kullanıcı adı">
                   <input
                     type="search"

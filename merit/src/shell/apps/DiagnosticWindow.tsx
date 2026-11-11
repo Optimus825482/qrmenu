@@ -181,7 +181,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
   };
 
   return (
-    <div className="xp-defs flex flex-col h-full bg-[var(--xp-body)] select-none text-xs font-sans overflow-hidden">
+    <div className="xp-defs flex flex-col h-full bg-[var(--xp-body)] select-none text-xs font-sans overflow-auto">
       {/* Top Header Card */}
       <div className="bg-white border-b border-border p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
       </div>
 
       {/* Tabs Bar */}
-      <div className="flex border-b border-border bg-[var(--muted-bg)] px-3 pt-2 gap-1">
+      <div className="flex shrink-0 overflow-x-auto border-b border-border bg-[var(--muted-bg)] px-3 pt-2 gap-1 [&>button]:shrink-0 [&>button]:whitespace-nowrap">
         <button
           type="button"
           className={`px-3 py-1.5 font-bold rounded-t text-xs transition-colors ${
@@ -334,7 +334,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
       </div>
 
       {/* Tab Contents */}
-      <div className="flex-1 bg-white p-3.5 overflow-auto">
+      <div className="flex-1 min-h-[320px] bg-white p-3.5 overflow-auto">
         {tab === "resources" && <ServerResourcesPanel />}
 
         {/* TAB 1: HEALTH PROBES */}

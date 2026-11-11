@@ -1553,3 +1553,159 @@ button.mb-tile {
 .mb-shell[data-form="tablet"] .mb-sysnav {
   padding-inline: 34%;
 }
+
+
+/* ---- desktop apps on touch screens: dialogs and narrow layouts ------------------------------ */
+
+/* A dialog is the only thing on screen: dim what is behind it clearly. */
+.mb-shell {
+  --xp-backdrop: rgba(15, 23, 42, 0.5);
+}
+
+.mb-shell .xp-form-backdrop,
+.mb-shell .xp-modal-backdrop {
+  padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 8px)
+    calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 8px);
+}
+
+.mb-shell .xp-form-dialog {
+  max-height: 100%;
+}
+
+.mb-shell .xp-dialog {
+  min-width: min(300px, 100%);
+  max-width: 100%;
+}
+
+/* Messages stay readable (and dismissible) above an open dialog. */
+.mb-shell .ui-snackbar-host {
+  z-index: 100004;
+}
+
+/* Finger-sized controls. */
+.mb-shell .xp-button {
+  min-height: 34px;
+}
+
+.mb-shell .xp-dialog .xp-title-button {
+  width: 36px;
+  height: 30px;
+}
+
+.mb-shell .xp-grid-page-button {
+  min-width: 36px;
+}
+
+.mb-shell .xp-tree-item {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.mb-xp-body .xp-matrix-grid input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.mb-xp-body .xp-grid-footer {
+  flex-wrap: wrap;
+}
+
+.mb-xp-body .xp-system-input,
+.mb-xp-body .xp-system-select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Phone: a side menu would leave the content a sliver, so it becomes a row of tabs on top. */
+.mb-shell[data-form="phone"] .xp-defs-content {
+  flex-direction: column;
+}
+
+.mb-shell[data-form="phone"] .xp-defs-nav {
+  width: auto;
+  flex: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-right: 0;
+  border-bottom: 1px solid var(--xp-body-edge);
+}
+
+.mb-shell[data-form="phone"] .xp-defs-nav .xp-tree {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+}
+
+.mb-shell[data-form="phone"] .xp-defs-nav .xp-tree-item {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  margin-left: 0;
+  border-left: 0;
+  overflow: visible;
+}
+
+.mb-shell[data-form="phone"] .xp-defs-main {
+  flex: 1;
+  min-height: 0;
+}
+
+/* The list keeps a usable height when the toolbar above it wraps to several lines. */
+.mb-shell[data-form="phone"] .xp-defs-main .xp-grid-body {
+  min-height: 220px;
+}
+
+.mb-shell[data-form="phone"] .xp-grid-toolbar .xp-user-filter {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.mb-shell[data-form="phone"] .xp-grid-toolbar .xp-user-filter select {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+.mb-shell[data-form="phone"] .xp-cp {
+  flex-direction: column;
+}
+
+.mb-shell[data-form="phone"] .xp-cp-nav {
+  width: auto;
+  padding: 4px;
+  overflow-x: auto;
+}
+
+.mb-shell[data-form="phone"] .xp-cp-tabs {
+  flex-direction: row;
+}
+
+.mb-shell[data-form="phone"] .xp-cp-tab {
+  flex: none;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.mb-shell[data-form="phone"] .xp-cp-main {
+  flex: 1;
+  min-height: 0;
+  padding: 8px;
+}
+
+.mb-shell[data-form="phone"] .xp-cc-cols,
+.mb-shell[data-form="phone"] .xp-audit-detail {
+  grid-template-columns: 1fr;
+}
+
+/* A long value wraps inside its report card instead of widening the whole tab. */
+.rc[data-variant="mobile"] .rc-card dt {
+  flex: none;
+  max-width: 45%;
+}
+
+.rc[data-variant="mobile"] .rc-card dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
