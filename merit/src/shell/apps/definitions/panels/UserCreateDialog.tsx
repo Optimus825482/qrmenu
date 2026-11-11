@@ -428,6 +428,7 @@ export function UserCreateDialog({
                       {category === "KULLANICI" ? (
                         <optgroup label="Operasyonel Personel Görevleri">
                           <option value="Minibar Takip Operasyonu">Minibar Takip Operasyonu</option>
+                          <option value="Minibar Garson">Minibar Garson</option>
                           <option value="Minibar Takip Kat Sorumlusu">Minibar Takip Kat Sorumlusu</option>
                           <option value="Kat Sorumlusu">Kat Sorumlusu (Minibar Takip)</option>
                           <option value="Kat Görevlisi">Kat Görevlisi</option>

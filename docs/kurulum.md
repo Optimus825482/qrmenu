@@ -326,6 +326,25 @@ yapmaz: önce canlı veritabanının yedeği alınır. Yeniden çalıştırmak g
 dosyasından kaldırıldı. Yeniden gerekirse önce compose'a geri eklenmelidir (Coolify yalnız orada anılan değişkenleri
 kaba verir).
 
+**Kat personelinin sonradan aktarılması (`--new-credentials`):** Eski "kat_sorumlusu" kullanıcıları **Minibar Garson**
+(rol `R-KAT`, görev "Minibar Garson") olarak taşınır. `--new-credentials` ile bu çalıştırmada oluşan kullanıcılar eski
+girişlerini korumaz: kullanıcı adı ad-soyaddan üretilir (`ad.soyad`), kullanıcı formundaki standart geçici şifre verilir
+ve ilk girişte değiştirmeleri zorunludur. Eski → yeni kullanıcı adları raporun "Notlar" bölümünde listelenir. Canlıda,
+uygulama kabının içinden (eski veritabanı aynı PostgreSQL sunucusunda `minibar` adıyla duruyorsa):
+
+```bash
+docker exec $APP sh -c 'LEGACY_DATABASE_URL="$(echo "$DATABASE_URL" | sed "s#/merit?.*#/minibar#")" npx tsx scripts/migrate-from-minibarlatest/index.ts --only users --user-roles depo_sorumlusu,kat_sorumlusu --skip-users ERKANKAT,superadmindepo --new-credentials --frozen-catalog --report /tmp/kullanici.md'
+```
+
+Önce aynı komut `--dry-run` ile denenir. Daha önce taşınmış kullanıcılara dokunulmaz; geçmiş kayıtların personel alanı
+değişmez (aktörde kalır).
+
+**Örnek kullanıcıların silinmesi:** `npx tsx scripts/ornek-kullanici-temizle.ts` yalnız listeler; `--uygula` ile siler.
+`admin`, `admin2`, `--koru` ile sayılanlar ve eski sistemden aktarılan kullanıcılar korunur; diğer kullanıcılar ve
+onların minibar işlemleri, oda / DND kontrolleri, stok hareketleri, stok ve düzeltme talepleri, doluluk yüklemeleri,
+masa atamaları ve oturumları kalıcı olarak silinir (siparişler ve MyBar talepleri kalır, personel alanı boşalır).
+Önce veritabanı yedeği alınır.
+
 **Çıkış kodları:** `0` temiz; `1` en az bir adım hatası veya **doğrulama FAIL** (rapordaki `KALDI` satırları);
 `2` yapılandırma hatası (eksik/yanlış ortam değişkeni veya bayrak, hiçbir şey yazılmadı).
 

@@ -32,7 +32,7 @@ export const ROLES: RoleDef[] = [
   { code: "R-MUS", name: "Mutfak Şefi", kind: "MUTFAK", profile: "ISLET", modules: ["QR_ORDER", "ROOM_SERVICE"], defaultScreen: "QS-KDS" },
   { code: "R-MUP", name: "Mutfak Personeli", kind: "MUTFAK", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
   { code: "R-KDS", name: "KDS Operatörü", kind: "MUTFAK", profile: "SAHA", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
-  { code: "R-KAT", name: "Kat Sorumlusu", kind: "MINIBAR", profile: "SAHA", modules: ["MINIBAR"], maxOnlineMinutes: 600, defaultScreen: "MB-KAT" },
+  { code: "R-KAT", name: "Minibar Garson", kind: "MINIBAR", profile: "SAHA", modules: ["MINIBAR"], maxOnlineMinutes: 600, defaultScreen: "MB-KAT" },
   { code: "R-DEP", name: "Depo Sorumlusu", kind: "MINIBAR", profile: "ISLET", modules: ["MINIBAR"], defaultScreen: "MB-ZIM" },
   { code: "R-HKS", name: "Housekeeping Süpervizörü", kind: "MINIBAR", profile: "IZLE", modules: ["MINIBAR"], defaultScreen: "MB-RAP" },
   // Yönetici yardımcıları (10 Kas 2026): R-SYS'in devrettiği dar yetkiler. R-MTY / R-QMY yönetim masaüstünü kullanır

@@ -15,6 +15,7 @@ export const USER_JOB_TITLE_GROUPS = [
       "Minibar Takip Süpervizör",
       "Minibar Takip Depo Sorumlusu",
       "Minibar Takip Kat Sorumlusu",
+      "Minibar Garson",
     ],
   },
   {

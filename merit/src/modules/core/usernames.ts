@@ -1,3 +1,6 @@
+/** Standard temporary password of a newly onboarded staff user; it must be changed at the first login. */
+export const DEFAULT_TEMPORARY_PASSWORD = "123456";
+
 /** Builds the editable default login name from a full name (for example, Yiğit Avcı → yigit.avci). */
 export function suggestedUsername(fullName: string): string {
   const parts = fullName

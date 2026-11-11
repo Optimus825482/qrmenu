@@ -356,9 +356,13 @@ async function checkHashes(ctx: StepContext): Promise<ValidationResult> {
   for (const l of legacy) {
     const id = userOf.get(idOf(l.id));
     if (!id) continue;
-    if (targets.get(id) !== clean(l.sifre_hash)) bad.push(`kullanıcı ${clean(l.kullanici_adi)}: parola özeti legacy ile aynı değil`);
+    const target = targets.get(id) ?? "";
+    // A bcrypt hash where legacy had another format is expected: the user logged in since (re-hash at login) or was
+    // migrated with --new-credentials (temporary password).
+    if (target.startsWith("$2") && !clean(l.sifre_hash).startsWith("$2")) continue;
+    if (target !== clean(l.sifre_hash)) bad.push(`kullanıcı ${clean(l.kullanici_adi)}: parola özeti legacy ile aynı değil`);
   }
-  return outcome("HASH_FARKI", "Taşınan kullanıcıların parola özetleri legacy ile aynen eşit", bad, "FAIL");
+  return outcome("HASH_FARKI", "Taşınan kullanıcıların parola özetleri legacy ile aynen eşit (yeniden özetlenen / geçici şifre verilen hariç)", bad, "FAIL");
 }
 
 async function checkLogos(ctx: StepContext): Promise<ValidationResult> {

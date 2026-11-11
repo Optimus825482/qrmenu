@@ -26,6 +26,13 @@ export interface MigrationConfig {
   userRoles: string[] | null;
   /** The target catalogue is already the current one: legacy setup contents / room-type links are not written, legacy-only products and setups arrive inactive. */
   frozenCatalog: boolean;
+  /**
+   * Users created by this run follow the new system's onboarding rules instead of keeping their legacy login:
+   * user name from the full name (ad.soyad), the standard temporary password, and a forced change at first login.
+   */
+  newCredentials: boolean;
+  /** Legacy user names (lower case) that are never migrated, whatever their role (test accounts). */
+  skipUsers: string[];
   reportPath: string;
   batch: number;
   notificationsDays: number;
@@ -40,6 +47,7 @@ const VALUE_FLAGS = new Set([
   "--hotel-map",
   "--actor",
   "--user-roles",
+  "--skip-users",
   "--report",
   "--batch",
   "--notifications-days",
@@ -47,7 +55,7 @@ const VALUE_FLAGS = new Set([
   "--legacy-schema",
   "--logo-dir",
 ]);
-const BOOL_FLAGS = new Set(["--dry-run", "--skip-logs", "--frozen-catalog"]);
+const BOOL_FLAGS = new Set(["--dry-run", "--skip-logs", "--frozen-catalog", "--new-credentials"]);
 
 function parseSteps(flag: string, raw: string): StepName[] {
   const names = raw
@@ -134,6 +142,11 @@ export function parseConfig(argv: string[], env: Record<string, string | undefin
     skip: values.has("--skip") ? parseSteps("--skip", values.get("--skip")!) : [],
     skipLogs: flags.has("--skip-logs"),
     frozenCatalog: flags.has("--frozen-catalog"),
+    newCredentials: flags.has("--new-credentials"),
+    skipUsers: (values.get("--skip-users") ?? "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean),
     hotelMap,
     actor: values.get("--actor") ?? null,
     userRoles: values.has("--user-roles") ? parseUserRoles(values.get("--user-roles")!) : null,

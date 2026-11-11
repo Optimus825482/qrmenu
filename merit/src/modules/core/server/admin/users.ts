@@ -9,7 +9,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
 import { USER_JOB_TITLES } from "@/modules/core/jobTitles";
-import { suggestedUsername } from "@/modules/core/usernames";
+import { DEFAULT_TEMPORARY_PASSWORD, suggestedUsername } from "@/modules/core/usernames";
 import {
   uniqueConflictFromPrisma,
   listQuerySchema,
@@ -434,7 +434,7 @@ async function nextUsername(tx: Prisma.TransactionClient, fullName: string): Pro
   throw new DomainError("CONFLICT", "Otomatik kullanıcı adı oluşturulamadı");
 }
 
-export const DEFAULT_TEMPORARY_PASSWORD = "123456";
+export { DEFAULT_TEMPORARY_PASSWORD };
 
 /** Standard temporary password for newly onboarded staff users (must be changed on first login). */
 function temporaryPassword(): string {

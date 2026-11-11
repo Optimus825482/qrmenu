@@ -12,6 +12,11 @@ import {
   type RoleCode,
 } from "../mapping";
 import type { StepContext, TxClient } from "../types";
+import { hashPassword } from "../../../src/lib/password";
+import { DEFAULT_TEMPORARY_PASSWORD, suggestedUsername } from "../../../src/modules/core/usernames";
+
+/** Job title given to migrated floor staff (legacy "kat_sorumlusu"). */
+export const FLOOR_STAFF_JOB_TITLE = "Minibar Garson";
 import { chunked, idOf, num, opt, readAll, req, streamRows, type Row } from "./shared";
 
 const asDate = (v: unknown): Date | null => (v instanceof Date && !Number.isNaN(v.getTime()) ? v : null);
@@ -71,8 +76,10 @@ async function stepUsers(ctx: StepContext): Promise<void> {
   // Hash families (counts only) and the users who must reset their password (names only).
   const kinds = { pbkdf2: 0, bcrypt: 0, scrypt: 0, diger: 0 };
   const inScope = (row: Row): boolean => !ctx.cfg.userRoles || ctx.cfg.userRoles.includes(clean(row.rol).toLowerCase());
+  // --new-credentials: one hash of the standard temporary password for every user this run creates.
+  const temporaryHash = ctx.cfg.newCredentials ? await hashPassword(DEFAULT_TEMPORARY_PASSWORD) : null;
   for (const row of rows) {
-    if (roleCodeFor(clean(row.rol)) === null || !inScope(row)) continue;
+    if (temporaryHash || roleCodeFor(clean(row.rol)) === null || !inScope(row)) continue;
     const kind = passwordKindFor(clean(row.sifre_hash));
     kinds[kind] += 1;
     // A well-formed Werkzeug scrypt hash verifies at login (src/lib/password.ts); only a malformed one needs a reset.
@@ -108,6 +115,11 @@ async function stepUsers(ctx: StepContext): Promise<void> {
       for (const row of part) {
         const legacyId = idOf(row.id);
         const rawRole = clean(row.rol);
+        if (ctx.cfg.skipUsers.includes(clean(row.kullanici_adi).toLowerCase())) {
+          // --skip-users: named test account; its history rows go to the actor.
+          rep.dropped(1, "KULLANICI_HARIC");
+          continue;
+        }
         if (!inScope(row)) {
           // --user-roles: this role is set up by hand in the new system; the user's history rows go to the actor.
           rep.dropped(1, "ROL_KAPSAM_DISI");
@@ -120,11 +132,22 @@ async function stepUsers(ctx: StepContext): Promise<void> {
           ctx.report.warn("ROL_BILINMIYOR", "Rolü tanınmayan kullanıcı taşınmadı; geçmiş kayıtları aktöre yazılır", `kullanıcı ${legacyId}: rol "${rawRole}"`);
           continue;
         }
-        const base = clean(row.kullanici_adi) || `kullanici${legacyId}`;
-        let username = base;
-        for (let n = 1; taken.has(username.toLowerCase()); n++) username = n === 1 ? `${base}.legacy` : `${base}.legacy${n}`;
-        if (username !== base) {
-          ctx.report.warn("KULLANICI_ADI_CAKISTI", "Kullanıcı adı hedefte vardı; .legacy eki verildi", `${base} -> ${username}`);
+        const first = clean(row.ad);
+        const last = clean(row.soyad);
+        let username: string;
+        if (temporaryHash) {
+          // Same rule as the user form (admin/users.ts nextUsername): ad.soyad, then ad.soyad1, ad.soyad2…
+          const base = suggestedUsername(`${first} ${last}`.trim() || clean(row.kullanici_adi));
+          username = base;
+          for (let n = 1; taken.has(username.toLowerCase()); n++) username = `${base.slice(0, 40 - String(n).length)}${n}`;
+          ctx.report.note(`Yeni giriş bilgisi: ${clean(row.kullanici_adi)} -> ${username} (geçici şifre, ilk girişte değiştirilir)`);
+        } else {
+          const base = clean(row.kullanici_adi) || `kullanici${legacyId}`;
+          username = base;
+          for (let n = 1; taken.has(username.toLowerCase()); n++) username = n === 1 ? `${base}.legacy` : `${base}.legacy${n}`;
+          if (username !== base) {
+            ctx.report.warn("KULLANICI_ADI_CAKISTI", "Kullanıcı adı hedefte vardı; .legacy eki verildi", `${base} -> ${username}`);
+          }
         }
         taken.add(username.toLowerCase());
 
@@ -144,14 +167,14 @@ async function stepUsers(ctx: StepContext): Promise<void> {
           email = null;
         }
         if (email) emails.add(email);
-        const first = clean(row.ad);
-        const last = clean(row.soyad);
         const id = IdMap.newId();
         creates.push({
           id,
           username,
-          passwordHash: clean(row.sifre_hash),
+          passwordHash: temporaryHash ?? clean(row.sifre_hash),
+          mustChangePassword: temporaryHash !== null,
           fullName: `${first} ${last}`.trim() || username,
+          ...(roleCode === "R-KAT" ? { jobTitle: FLOOR_STAFF_JOB_TITLE } : {}),
           email,
           phone: orNull(row.telefon),
           roleId,
