@@ -1924,7 +1924,7 @@ export default function MinibarTanimlarPage() {
                   <span><Icon name="arrow-left" size={20} /> ÖNCEKİ DEĞER (BEFORE / SİLİNEN KAYIT)</span>
                   <span>{activeAuditLog.before ? "Mevcut" : "Yok (Yeni Kayıt)"}</span>
                 </div>
-                <pre className="p-3 bg-black/60 border border-t-0 border-border rounded-b-xl text-danger overflow-x-auto text-xs max-h-48">
+                <pre className="p-3 bg-bg border border-t-0 border-danger/40 rounded-b-xl text-text overflow-x-auto text-xs max-h-48">
                   {activeAuditLog.before
                     ? JSON.stringify(activeAuditLog.before, null, 2)
                     : "// Bu işlem yeni bir kayıt oluşturma olduğundan önceki değer bulunmuyor."}
@@ -1937,7 +1937,7 @@ export default function MinibarTanimlarPage() {
                   <span><Icon name="arrow-right" size={20} /> SONRAKİ DEĞER (AFTER / GÜNCEL KAYIT)</span>
                   <span>{activeAuditLog.after ? "Mevcut" : "Yok (Silinmiş Kayıt)"}</span>
                 </div>
-                <pre className="p-3 bg-black/60 border border-t-0 border-border rounded-b-xl text-success overflow-x-auto text-xs max-h-48">
+                <pre className="p-3 bg-bg border border-t-0 border-success/40 rounded-b-xl text-text overflow-x-auto text-xs max-h-48">
                   {activeAuditLog.after
                     ? JSON.stringify(activeAuditLog.after, null, 2)
                     : "// Bu işlem silme işlemi olduğundan sonraki değer bulunmuyor."}

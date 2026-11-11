@@ -177,15 +177,15 @@ export function WindowBanner({
 
       {/* Explorer Path Breadcrumb Bar */}
       <div className="bg-[#f0ede0] border-b border-[#d4d0c8] px-3 py-1 text-[11px] text-gray-600 flex items-center gap-1.5 overflow-hidden whitespace-nowrap flex-none">
-        <span className="text-gray-400">Konum:</span>
+        <span className="text-gray-600">Konum:</span>
         <span className="font-semibold text-gray-700">Masaüstü</span>
-        <span className="text-gray-400">›</span>
+        <span className="text-gray-600">›</span>
         {isFolder ? (
           <span className="font-bold text-blue-800">{title}</span>
         ) : (
           <>
             <span className="font-semibold text-gray-700">{parentFolderTitle}</span>
-            <span className="text-gray-400">›</span>
+            <span className="text-gray-600">›</span>
             <span className="font-bold text-blue-800 truncate">{title}</span>
           </>
         )}

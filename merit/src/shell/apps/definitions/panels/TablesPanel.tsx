@@ -322,7 +322,7 @@ export function TablesPanel({ hotelId, setStatus, outletId: fixedOutletId }: Pro
                 target="_blank"
                 rel="noopener"
                 title="Outletin masa QR kartlarını yazdır veya önizle"
-                style={{ fontWeight: 600, color: "var(--xp-accent, #0284c7)" }}
+                style={{ fontWeight: 600, color: "var(--xp-heading, #0040c0)" }}
               >
                 QR Kartları Yazdır
               </a>

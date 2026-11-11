@@ -25,6 +25,8 @@
 
   /* Sayfaların kullandığı genel belirteçler pencere gövdesine uyar. */
   --bg: var(--sx-body);
+  /* Status and accent text sits on the beige body here: one step darker keeps it at 4.5:1 or more. */
+  --accent: #1d4ed8;
   --radius-s: 2px;
   --radius-m: 3px;
   --radius-l: 4px;

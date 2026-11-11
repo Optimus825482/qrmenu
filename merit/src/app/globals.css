@@ -12,12 +12,12 @@
   --accent: #2563eb;
   --gold: #806629; /* >= 4.5:1 on --surface (target picker hotel name) */
   --danger: #b91c1c;
-  --success: #15803d;
+  --success: #166534;
 
   /* Status tokens: text on its tinted background is >= 4.5:1 (tests/unit/contrast.test.ts). */
   --warn: #92400e;
   --warn-bg: #fef3c7;
-  --info: #0369a1;
+  --info: #075985;
   --info-bg: #e0f2fe;
   --success-bg: #dcfce7;
   --danger-bg: #fee2e2;

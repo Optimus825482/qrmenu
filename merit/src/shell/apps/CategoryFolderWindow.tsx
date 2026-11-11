@@ -50,7 +50,7 @@ export function CategoryFolderWindow({
               <span className="font-semibold text-xs text-gray-800 group-hover:text-blue-900 leading-tight max-w-[130px] line-clamp-2 drop-shadow-sm">
                 {app.launchLabel ?? app.title}
               </span>
-              <span className="text-[10px] text-gray-400 mt-1 opacity-70 group-hover:opacity-100 font-medium">
+              <span className="text-[10px] text-gray-600 mt-1 font-medium">
                 {SCREEN_GUIDES[app.screenCode]?.purpose}
               </span>
             </button>

@@ -208,7 +208,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               <button aria-label="Kapat"
                 type="button"
                 onClick={() => setSelectedOrder(null)}
-                className="text-gray-400 hover:text-gray-700 font-bold"
+                className="text-gray-600 hover:text-gray-700 font-bold"
               >
                 <Icon name="close" size={16} />
               </button>
@@ -269,7 +269,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             </div>
           </div>
         ) : (
-          <div className="hidden md:flex w-64 bg-[#f9fafb] p-4 flex-col items-center justify-center text-center text-gray-400">
+          <div className="hidden md:flex w-64 bg-[#f9fafb] p-4 flex-col items-center justify-center text-center text-gray-600">
             <span>Detayları görüntülemek için bir sipariş seçin</span>
           </div>
         )}

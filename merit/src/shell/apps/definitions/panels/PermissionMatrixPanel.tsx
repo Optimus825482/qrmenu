@@ -394,7 +394,7 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
             <p className="xp-defs-note">Rolün açılış ekranını ve yetkilerini yalnızca sistem yöneticisi değiştirebilir.</p>
           ) : null}
           {locked ? (
-            <p className="xp-defs-note" style={{ color: "var(--xp-accent, #0055ea)", fontWeight: "bold" }}>
+            <p className="xp-defs-note" style={{ color: "var(--xp-heading, #0040c0)", fontWeight: "bold" }}>
               Sistem Yöneticisi rolünün ekran yetkileri sistem güvenliği gereği kilitlidir ve tam yetkilidir.
             </p>
           ) : null}
@@ -515,7 +515,7 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
                                 fontSize: "10px",
                                 padding: "1px 5px",
                                 borderRadius: "3px",
-                                background: "var(--xp-accent, #0055ea)",
+                                background: "var(--xp-select, #316ac5)",
                                 color: "#fff",
                                 fontWeight: "bold",
                               }}
