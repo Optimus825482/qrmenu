@@ -5,15 +5,17 @@ import { useState } from "react";
 import { UsersPanel } from "./definitions/panels/UsersPanel";
 import { RolesPanel } from "./definitions/panels/RolesPanel";
 import { PermissionMatrixPanel } from "./definitions/panels/PermissionMatrixPanel";
+import { ScreensPanel } from "./definitions/panels/ScreensPanel";
 
 const PANELS = [
   { id: "users", label: "Kullanıcılar" },
   { id: "roles", label: "Roller" },
   { id: "permissions", label: "Yetki Matrisi" },
+  { id: "screens", label: "Ekranlar" },
 ] as const;
 
 /** Kullanıcı, rol ve erişim yönetimi tek modülde; panel aksiyonları mevcut sunucu izinlerini kullanır. */
-export function UserManagement({ hotelId, initialPanel, setStatus }: AppProps) {
+export function UserManagement({ hotelId, initialPanel, setStatus, setDirty }: AppProps) {
   const [panel, setPanel] = useState(() => PANELS.some((item) => item.id === initialPanel) ? initialPanel! : "users");
   const selected = PANELS.find((item) => item.id === panel) ?? PANELS[0];
 
@@ -42,6 +44,7 @@ export function UserManagement({ hotelId, initialPanel, setStatus }: AppProps) {
           {selected.id === "users" ? <UsersPanel hotelId={hotelId} setStatus={setStatus} /> : null}
           {selected.id === "roles" ? <RolesPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}
           {selected.id === "permissions" ? <PermissionMatrixPanel hotelId={hotelId ?? ""} setStatus={setStatus} /> : null}
+          {selected.id === "screens" ? <ScreensPanel setStatus={setStatus} setDirty={setDirty} /> : null}
         </div>
       </div>
     </div>

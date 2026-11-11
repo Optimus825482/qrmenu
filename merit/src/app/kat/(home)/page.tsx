@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { visibleScreens } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
+import { myScreenLayout } from "@/modules/core/server/screenLayouts";
 import KatDashboard, { type KatFilter } from "./KatDashboard";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function KatPage({
       initialHotelId={activeHotelId}
       canSwitchHotel={userHotels.length > 1}
       filter={filter}
+      layout={await myScreenLayout(ctx, "kat")}
       links={{
         occupancy: visible.has("MB-DOL"),
         definitions: visible.has("MB-TAN"),

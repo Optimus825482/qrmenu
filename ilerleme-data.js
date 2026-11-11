@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "11.11.2026 23:40",
+  updatedAt: "11.11.2026 23:58",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -320,5 +320,7 @@ window.ILERLEME = {
     { at: "11.11 15:15", text: "Eski minibar verisinin aktarımı dağıtımda yalnız bir kez çalışacak şekilde otomatikleştirildi (canlıda denenmedi). Coolify'da LEGACY_DATABASE_URL tanımlanınca site açıldıktan sonra arka planda başlar (yaklaşık 10 dakika); temiz bitince veritabanına işaret yazılır ve sonraki dağıtımlarda atlanır, hata olursa sonraki açılışta kaldığı yerden yeniden dener. Ön koşul: eski yedeğin canlı sunucudan erişilen ayrı bir veritabanına yüklenmesi." },
     { at: "11.11 23:05", text: "Eski minibar verisi canlıya aktarıldı. Aktarım canlı sunucuda 12 dakikada temiz tamamlandı (11 Kasım 22:53–23:05) ve bir daha çalışmayacak şekilde işaretlendi. Yalnız depo sorumluları taşındı; kat sorumlularının adları eski veritabanında kaldı. Aktarım öncesi canlı yedeği sunucuda duruyor." },
     { at: "11.11 23:40", text: "Kat personeli için Minibar Garson tanımı ve kullanıcı temizliği hazırlandı (canlıda henüz çalıştırılmadı). Kat Sorumlusu rolünün adı Minibar Garson oldu. Eski sistemdeki 11 kat personeli yeni sistemin kurallarıyla aktarılabilir: kullanıcı adı ad.soyad, standart geçici şifre, ilk girişte şifre değiştirme zorunlu. admin ve admin2 dışındaki örnek kullanıcıları ve onlara ait işlemleri silen araç eklendi; önce listeler, onayla siler." },
+    { at: "11.11 23:50", text: "Liste ekranlarında otel adları kısa rozetlerle gösteriliyor (Royal / Diamond / Premium): Kullanıcı Yönetimi, Denetim Günlüğü, e-posta alıcıları, depo raporları ve tanımları, oda servisi kayıtları. Henüz yayına alınmadı." },
+    { at: "11.11 23:58", text: "Kullanıcı Yönetimi'ne Ekranlar bölümü eklendi (yerelde denendi, henüz yayına alınmadı). Sistem yöneticisi her rol için açılış ekranını seçer ve Kat Planı, Depo Panosu, Komuta Merkezi ekranlarının öğelerini düzenler: öğeyi gizleme, sırasını değiştirme, gösterim stili (kutu/şerit, kart/liste) ve parça seçimi. Solda araçlar, sağda tablet/telefon önizlemesi var. Garson, kasa, mutfak gibi operasyon ekranları sabit kalır." },
   ]
 };

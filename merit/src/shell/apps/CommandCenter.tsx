@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
 import { TZ } from "@/lib/time";
 import { formatInTimeZone } from "date-fns-tz";
@@ -13,6 +13,8 @@ import { useWindowStore } from "../windowStore";
 import { getApps } from "../registry";
 import { KpiChips } from "@/modules/reporting/ui/KpiChips";
 import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
+import { myScreenLayoutAction } from "@/modules/core/server/actions/screenLayouts";
+import { defaultLayout, type Layout, visibleBlocks, visibleItems } from "@/modules/core/screenLayouts";
 
 const FEED_LIMIT = 50;
 
@@ -23,6 +25,17 @@ const clock = (d: Date) => formatInTimeZone(d, TZ, "HH:mm:ss");
 /** Komuta Merkezi: KPI cards, online users per hotel and the live event stream. */
 export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  // Role layout (Kullanıcı Yönetimi → Ekranlar). The built-in screen shows until it arrives, and stays on failure.
+  const [layout, setLayout] = useState<Layout>(() => defaultLayout("komuta"));
+  useEffect(() => {
+    let live = true;
+    void myScreenLayoutAction({ screen: "komuta" }).then((result) => {
+      if (live && result.ok) setLayout(result.data);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const counter = useRef(0);
   const { kpis, error, scheduleRefresh } = useCommandCenterKpis(hotelId, (at) =>
     setStatus(`Son güncelleme ${clock(at)}`),
@@ -51,70 +64,29 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
 
   const hotelCode = (id?: string) => kpis?.openSessionsByHotel.find((h) => h.hotelId === id)?.code;
 
-  return (
-    <div className="xp-cc">
-      <div className="xp-cc-head">
-        <h2>Genel Durum</h2>
-        {status !== "open" ? (
-          <span className="xp-badge" role="status">
-            çevrimdışı
-          </span>
-        ) : null}
-      </div>
-      {error ? (
-        <div className="xp-app-error" role="alert">
-          {error}
-        </div>
-      ) : null}
-      <div className="my-2" data-guide="kpi-cipleri">
-        <KpiChips
-          data={radarKpi.data}
-          error={radarKpi.error}
-          stale={radarKpi.stale}
-          choice={radarKpi.choice}
-          hotels={radarKpi.hotels}
-          onScopeChange={radarKpi.selectScope}
-          canOpen={(code) => !!appForScreen(code)}
-          onOpen={(code) => {
-            const app = appForScreen(code);
-            if (app) openApp?.(app.id);
-          }}
-        />
-      </div>
-      <div className="xp-kpis">
-        <div className="xp-kpi" data-testid="kpi-hotels">
+  const kpiCells: Record<string, ReactNode> = {
+    otel: (
+        <div key="otel" className="xp-kpi" data-testid="kpi-hotels">
           <span className="xp-kpi-value">{kpis?.hotels ?? "—"}</span>
           <span className="xp-kpi-label">Otel</span>
         </div>
-        <div className="xp-kpi" data-testid="kpi-online">
+    ),
+    online: (
+        <div key="online" className="xp-kpi" data-testid="kpi-online">
           <span className="xp-kpi-value">{kpis?.onlineUsers ?? "—"}</span>
           <span className="xp-kpi-label">Online kullanıcı</span>
         </div>
-        <div className="xp-kpi" data-testid="kpi-notifications">
+    ),
+    bildirim: (
+        <div key="bildirim" className="xp-kpi" data-testid="kpi-notifications">
           <span className="xp-kpi-value">{kpis?.notificationsToday ?? "—"}</span>
           <span className="xp-kpi-label">Bugünkü bildirim</span>
         </div>
-      </div>
-
-      {/* Canlı Komuta Radarı (Canlı Doluluk, MyBar Talepleri, Geciken Siparişler, Personel Aktivitesi) */}
-      <fieldset className="xp-group my-2 p-2.5 bg-[#fcfdff] border-[#7f9db9] rounded shadow-xs">
-        <legend className="font-bold text-[#0c3276] px-1 flex items-center gap-1.5">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span>Canlı Komuta Radarı</span>
-          {canOpenRadar ? (
-            <button
-              type="button"
-              className="xp-button text-xs py-0.5 px-2 ml-2 font-normal"
-              onClick={() => openApp?.("core.radar")}
-            >
-              Canlı Radar&apos;ı aç
-            </button>
-          ) : null}
-        </legend>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge">
-          <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
+    ),
+  };
+  const radarCells: Record<string, ReactNode> = {
+    doluluk: (
+          <div key="doluluk" className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
             <div className="flex items-center justify-between text-muted text-[11px]">
               <span><Icon name="building" size={16} /> Canlı Doluluk</span>
               <span className="font-bold text-[#1e3a8a]">%{kpis?.radar?.occupancyPercent ?? 0}</span>
@@ -123,8 +95,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
               {kpis?.radar?.occupiedRooms ?? 0} <span className="text-xs font-normal text-muted">/ {kpis?.radar?.totalRooms ?? 0} oda</span>
             </p>
           </div>
-
-          <div
+    ),
+    mybar: (
+          <div key="mybar"
             className={`p-2 rounded border flex flex-col justify-between ${
               (kpis?.radar?.activeMybarRequests ?? 0) > 0
                 ? "bg-[#fffbeb] border-amber-400 text-amber-900"
@@ -143,8 +116,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
               {kpis?.radar?.activeMybarRequests ?? 0} <span className="text-xs font-normal opacity-80">bekleyen oda</span>
             </p>
           </div>
-
-          <div
+    ),
+    geciken: (
+          <div key="geciken"
             className={`p-2 rounded border flex flex-col justify-between ${
               (kpis?.radar?.delayedRoomOrders ?? 0) > 0
                 ? "bg-[#fef2f2] border-rose-400 text-rose-900"
@@ -163,8 +137,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
               {kpis?.radar?.delayedRoomOrders ?? 0} <span className="text-xs font-normal opacity-80">geciken</span>
             </p>
           </div>
-
-          <div className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
+    ),
+    kasa: (
+          <div key="kasa" className="p-2 rounded bg-white border border-[#b8cfe5] flex flex-col justify-between">
             <div className="flex items-center justify-between text-muted text-[11px]">
               <span><Icon name="utensils" size={16} /> Açık Kasa Kuyruğu</span>
               <span className="font-bold text-[#1e3a8a]">{kpis?.radar?.pendingPosOrders ?? 0} adisyon</span>
@@ -173,11 +148,11 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
               {kpis?.onlineUsers ?? 0} <span className="text-xs font-normal text-muted">personel aktif</span>
             </p>
           </div>
-        </div>
-      </fieldset>
-      {/* Operasyonlar Hızlı Erişim ve Lansman Paneli */}
-      <div className="flex flex-col gap-2 my-2.5">
-        <div className="flex flex-wrap gap-1.5 items-center bg-[#f0f4f9] p-2 rounded border border-[#b8cfe5]">
+    ),
+  };
+  const quickRows: Record<string, ReactNode> = {
+    outlet: (
+        <div key="outlet" className="flex flex-wrap gap-1.5 items-center bg-[#f0f4f9] p-2 rounded border border-[#b8cfe5]">
           <span className="font-bold text-[11px] text-[#1e3a8a] mr-1"><Icon name="store" size={16} /> OUTLET:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.outlet-tanim")}>
             <Icon name="building" size={16} /> Outlet & Masa Tanımları
@@ -192,8 +167,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="phone" size={16} /> Masa QR Kodları
           </button>
         </div>
-
-        <div className="flex flex-wrap gap-1.5 items-center bg-[#fdf2f8] p-2 rounded border border-[#fbcfe8]">
+    ),
+    odaServisi: (
+        <div key="odaServisi" className="flex flex-wrap gap-1.5 items-center bg-[#fdf2f8] p-2 rounded border border-[#fbcfe8]">
           <span className="font-bold text-[11px] text-[#831843] mr-1"><Icon name="concierge" size={16} /> ODA SERVİSİ:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.menu")}>
             <Icon name="concierge" size={16} /> Oda Servisi Menü Yönetimi
@@ -208,8 +184,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="trending" size={16} /> SLA & Operasyon Raporları
           </button>
         </div>
-
-        <div className="flex flex-wrap gap-1.5 items-center bg-[#f0fdf4] p-2 rounded border border-[#bbf7d0]">
+    ),
+    minibar: (
+        <div key="minibar" className="flex flex-wrap gap-1.5 items-center bg-[#f0fdf4] p-2 rounded border border-[#bbf7d0]">
           <span className="font-bold text-[11px] text-[#14532d] mr-1"><Icon name="minibar" size={16} /> MİNİBAR:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.kat")}>
             <Icon name="minibar" size={16} /> Minibar Kat Operasyon
@@ -233,8 +210,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="warning" size={16} /> Anormal Tüketim Takibi
           </button>
         </div>
-
-        <div className="flex flex-wrap gap-1.5 items-center bg-[#fafafa] p-2 rounded border border-[#d4d4d8]">
+    ),
+    sistem: (
+        <div key="sistem" className="flex flex-wrap gap-1.5 items-center bg-[#fafafa] p-2 rounded border border-[#d4d4d8]">
           <span className="font-bold text-[11px] text-[#27272a] mr-1"><Icon name="settings" size={16} /> SİSTEM & KULLANICI:</span>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.tanimlar")}>
             <Icon name="building" size={16} /> Otel & Genel Tanımlamalar
@@ -255,9 +233,62 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="list" size={16} /> Denetim Günlüğü (Audit Log)
           </button>
         </div>
+    ),
+  };
+  const items = (block: string, cells: Record<string, ReactNode>) => visibleItems(layout, block).map((id) => cells[id] ?? null);
+
+  const sections: Record<string, ReactNode> = {
+    cipler: (
+      <div key="cipler" className="my-2" data-guide="kpi-cipleri">
+        <KpiChips
+          data={radarKpi.data}
+          error={radarKpi.error}
+          stale={radarKpi.stale}
+          choice={radarKpi.choice}
+          hotels={radarKpi.hotels}
+          onScopeChange={radarKpi.selectScope}
+          canOpen={(code) => !!appForScreen(code)}
+          onOpen={(code) => {
+            const app = appForScreen(code);
+            if (app) openApp?.(app.id);
+          }}
+        />
       </div>
-      {setupRows.length > 0 ? (
-        <fieldset className="xp-group xp-cc-setup">
+    ),
+    kpi: (
+      <div key="kpi" className="xp-kpis">
+        {items("kpi", kpiCells)}
+      </div>
+    ),
+    radar: (
+      <fieldset key="radar" className="xp-group my-2 p-2.5 bg-[#fcfdff] border-[#7f9db9] rounded shadow-xs">
+        <legend className="font-bold text-[#0c3276] px-1 flex items-center gap-1.5">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span>Canlı Komuta Radarı</span>
+          {canOpenRadar ? (
+            <button
+              type="button"
+              className="xp-button text-xs py-0.5 px-2 ml-2 font-normal"
+              onClick={() => openApp?.("core.radar")}
+            >
+              Canlı Radar&apos;ı aç
+            </button>
+          ) : null}
+        </legend>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge">
+          {items("radar", radarCells)}
+        </div>
+      </fieldset>
+    ),
+    hizli: (
+      <div key="hizli" className="flex flex-col gap-2 my-2.5">
+        {items("hizli", quickRows)}
+      </div>
+    ),
+    kurulum: setupRows.length > 0 ? (
+        <fieldset key="kurulum" className="xp-group xp-cc-setup">
           <legend>Kurulum %</legend>
           <ul className="xp-list" aria-label="Kurulum durumu">
             {setupRows.map((r) => (
@@ -278,9 +309,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             ))}
           </ul>
         </fieldset>
-      ) : null}
-      <div className="xp-cc-cols">
-        <fieldset className="xp-group">
+      ) : null,
+    online: (
+        <fieldset key="online" className="xp-group">
           <legend>Otellere göre online</legend>
           <ul className="xp-list" aria-label="Otellere göre online">
             {kpis?.openSessionsByHotel.map((h) => (
@@ -291,7 +322,9 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             ))}
           </ul>
         </fieldset>
-        <fieldset className="xp-group">
+    ),
+    akis: (
+        <fieldset key="akis" className="xp-group">
           <legend>Canlı Akış</legend>
           <ul className="xp-list" aria-label="Canlı Akış">
             {feed.length === 0 ? <li className="xp-list-empty">Henüz olay yok</li> : null}
@@ -306,7 +339,41 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             ))}
           </ul>
         </fieldset>
+    ),
+  };
+  // The two lists share a row when they follow each other, as on the built-in screen.
+  const order = visibleBlocks(layout).map((b) => b.id);
+  const rendered: ReactNode[] = [];
+  for (let n = 0; n < order.length; n++) {
+    const id = order[n]!;
+    const next = order[n + 1];
+    if ((id === "online" && next === "akis") || (id === "akis" && next === "online")) {
+      rendered.push(
+        <div key="listeler" className="xp-cc-cols">
+          {sections[id]}
+          {sections[next]}
+        </div>,
+      );
+      n++;
+    } else rendered.push(sections[id] ?? null);
+  }
+
+  return (
+    <div className="xp-cc">
+      <div className="xp-cc-head">
+        <h2>Genel Durum</h2>
+        {status !== "open" ? (
+          <span className="xp-badge" role="status">
+            çevrimdışı
+          </span>
+        ) : null}
       </div>
+      {error ? (
+        <div className="xp-app-error" role="alert">
+          {error}
+        </div>
+      ) : null}
+      {rendered}
     </div>
   );
 }
