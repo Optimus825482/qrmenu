@@ -50,6 +50,7 @@ services:
       SMTP_FROM: ${SMTP_FROM:-}
       DB_POOL_MAX: ${DB_POOL_MAX:-}
       ENV_LABEL: ${ENV_LABEL:-}
+      LEGACY_DATABASE_URL: ${LEGACY_DATABASE_URL:-}
     depends_on:
       postgres:
         condition: service_healthy

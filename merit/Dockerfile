@@ -71,6 +71,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/assets ./assets
 # Printed room QR check (COOLIFY_DEPLOYMENT.md): compares the database with the printed cards.
 COPY --from=builder /app/scripts/oda-qr-dogrula.ts ./scripts/oda-qr-dogrula.ts
+COPY --from=builder /app/scripts/migrate-from-minibarlatest ./scripts/migrate-from-minibarlatest
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/.next ./.next

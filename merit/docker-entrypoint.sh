@@ -56,5 +56,13 @@ if [ "${SYNC_MERIT_MENUS:-true}" = "true" ]; then
   npx tsx prisma/seed/meritMenus.ts || echo "UYARI: Merit menü senkronu tamamlanamadı; site mevcut menülerle açılıyor. Yukarıdaki hatayı inceleyin." >&2
 fi
 
+# Eski minibar verisinin TEK SEFERLİK aktarımı: yalnız LEGACY_DATABASE_URL tanımlıysa çalışır. Arka planda yürür
+# (yaklaşık 10 dakika; sağlık denetimi beklemesin diye site önce açılır). Temiz bitince veritabanına işaret yazılır
+# ve sonraki açılışlarda atlanır; hata başlatmayı durdurmaz, sonraki açılışta kaldığı yerden yeniden denenir.
+if [ -n "${LEGACY_DATABASE_URL:-}" ]; then
+  echo "Eski veri aktarımı denetleniyor (tek seferlik, arka planda)..."
+  (npx tsx scripts/migrate-from-minibarlatest/once.ts || echo "UYARI: Eski veri aktarımı tamamlanamadı; site çalışıyor. Yukarıdaki raporu inceleyin." >&2) &
+fi
+
 echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
 exec npm run start

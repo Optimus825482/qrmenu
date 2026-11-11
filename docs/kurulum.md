@@ -316,6 +316,14 @@ taşınır; diğerlerinin geçmiş kayıtları aktöre yazılır), `--frozen-cat
 içerikleri ve oda tipi bağlantıları yazılmaz, yalnız eski sistemde olan ürün ve setuplar pasif gelir). Betik `.env`
 okumaz; `DATABASE_URL` de kabukta verilir. Kuru çalıştırma 250 bin+ satırlık canlı yedekte yaklaşık on dakika sürer.
 
+**Dağıtımda tek seferlik otomatik aktarım (Coolify):** Eski yedek canlı sunucudan erişilen ayrı bir veritabanına
+yüklenir ve Coolify'da `LEGACY_DATABASE_URL` tanımlanır. Kap açılırken site önce başlar, aktarım arka planda
+`--user-roles depo_sorumlusu --frozen-catalog` ile yürür (`scripts/migrate-from-minibarlatest/once.ts`); özeti kap
+günlüğüne yazılır. Temiz bitince `settings` tablosuna `migration.legacy.completedAt` işareti konur ve sonraki
+açılışlarda atlanır; hata olursa işaret konmaz, sonraki açılışta kaldığı yerden yeniden denenir. Bu yol kuru çalıştırma
+yapmaz: önce canlı veritabanının yedeği alınır. Bittikten sonra değişken kaldırılır. Yeniden çalıştırmak gerekirse
+işaret satırı silinir.
+
 **Çıkış kodları:** `0` temiz; `1` en az bir adım hatası veya **doğrulama FAIL** (rapordaki `KALDI` satırları);
 `2` yapılandırma hatası (eksik/yanlış ortam değişkeni veya bayrak, hiçbir şey yazılmadı).
 
