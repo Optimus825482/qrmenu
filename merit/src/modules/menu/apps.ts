@@ -38,6 +38,7 @@ export function registerMenuApps(): void {
     icon: "qr",
     moduleKey: "QR_MENU",
     screenCode: "QM-MEN",
+    purpose: "Masa QR kodlarını üretir ve baskıya hazırlarsın.",
     category: "OUTLET",
     needsHotel: true,
     window: { w: 860, h: 600, minW: 640, minH: 420 },

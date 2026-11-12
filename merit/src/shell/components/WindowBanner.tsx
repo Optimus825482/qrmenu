@@ -95,7 +95,7 @@ export function WindowBanner({
   const parentFolderTitle = folderMeta?.title ?? "Operasyonlar";
 
   let title = app.launchLabel ?? app.title;
-  let subtitle = SCREEN_GUIDES[app.screenCode]?.purpose ?? "";
+  let subtitle = app.purpose ?? SCREEN_GUIDES[app.screenCode]?.purpose ?? "";
 
   if (isFolder && folderMeta) {
     title = folderMeta.title;

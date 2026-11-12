@@ -51,7 +51,7 @@ export function CategoryFolderWindow({
                 {app.launchLabel ?? app.title}
               </span>
               <span className="text-[10px] text-gray-600 mt-1 font-medium">
-                {SCREEN_GUIDES[app.screenCode]?.purpose}
+                {app.purpose ?? SCREEN_GUIDES[app.screenCode]?.purpose}
               </span>
             </button>
           ))}

@@ -51,6 +51,11 @@ export type AppDefinition = {
   icon: string; // XP icon set key (shell/icons.tsx)
   moduleKey: ModuleKey | "CORE";
   screenCode: string; // AppScreen.code: visibility follows this permission
+  /**
+   * One-line description shown under the name in folders and in the window banner. Needed by a tool that
+   * shares another app's permission screen: otherwise it would repeat that screen's description.
+   */
+  purpose?: string;
   /** Also limited to these session role codes (a tool whose server side authorizes by role, not by screen). */
   roleCodes?: readonly string[];
   /**
