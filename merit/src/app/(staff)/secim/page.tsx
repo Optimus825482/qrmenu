@@ -36,8 +36,9 @@ export default async function TargetPickerPage() {
             Atama yok
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Hesabınıza henüz bir outlet veya minibar bölgesi atanmamış. Lütfen komuta merkezinden
-            atama yapılmasını isteyin.
+            Hesabınız henüz bir ekibe eklenmemiş. Yöneticinizden, Kullanıcı Yönetimi &gt; Ekip
+            Yönetimi ekranından sizi çalışacağınız outlet, oda servisi veya minibar ekibine
+            eklemesini isteyin.
           </p>
         </header>
         <LogoutButton />

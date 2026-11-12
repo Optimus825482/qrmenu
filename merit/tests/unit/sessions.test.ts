@@ -366,6 +366,15 @@ describe("performLogin / performSelectTarget (gerçek test DB)", () => {
     expect(res).toMatchObject({ ok: true, data: { next: "/admin" } });
   });
 
+  it("ekibi olmayan oda servisi kullanıcısı girişte oda servisi ekibine eklenir: /secim tek OUTLET hedefi sunar", async () => {
+    const user = await makeUser({ username: "ordertaker.mr", roleCode: "R-ODS", hotelCode: "ROYAL", passwordHash });
+    const rs = await testDb.outlet.findFirstOrThrow({ where: { hotelId: await hotelId("ROYAL"), type: "ODA_SERVISI" } });
+    expect(await testDb.outletMember.count({ where: { userId: user.id } })).toBe(0);
+    const res = await performLogin(creds("ordertaker.mr"), makeDeps());
+    expect(res).toMatchObject({ ok: true, data: { next: "/secim", targets: [{ kind: "OUTLET", outletId: rs.id }] } });
+    expect(await testDb.outletMember.count({ where: { userId: user.id, outletId: rs.id, isActive: true } })).toBe(1);
+  });
+
   it("HotelModule(MR, MINIBAR) kapalı: kat sorumlusu hedefsiz kalır, next /secim (Atama yok), oturum açılmaz", async () => {
     const user = await makeUser({
       username: "kat.mr",

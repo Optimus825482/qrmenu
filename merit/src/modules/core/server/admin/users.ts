@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
 import { assertCan, can } from "@/lib/rbac";
 import { audit } from "@/modules/core/server/audit";
+import { ensureRoomServiceMembership } from "@/modules/core/server/roomServiceTeam";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
 import { type JobTitleChoice, orderJobTitles } from "@/modules/core/jobTitles";
 import { DEFAULT_TEMPORARY_PASSWORD, suggestedUsername } from "@/modules/core/usernames";
@@ -521,6 +522,8 @@ async function createRecord(
           after: mustChangePassword ? { ...row, tempPasswordIssued: true } : row,
         });
         await publishUser(tx, row.id, hotels, "create");
+        // A room-service role needs no separate team assignment: the hotel has one such outlet.
+        await ensureRoomServiceMembership(tx, row.id, ctx.user.id);
         return row;
       },
     );
@@ -642,6 +645,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         after: scopeChanged ? { ...row, sessionsClosed } : row,
       });
       await publishUser(tx, id, [...hotelsOf(before), ...hotels], "update");
+      await ensureRoomServiceMembership(tx, id, ctx.user.id);
       return row;
     });
   } catch (error) {

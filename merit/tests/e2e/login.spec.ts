@@ -86,7 +86,7 @@ test("bos.kullanici → /secim 'Atama yok'; POST ile çıkış → /giris", asyn
   await expect(page.getByRole("heading", { name: "Atama yok" })).toBeVisible();
   await expect(
     page.getByText(
-      "Hesabınıza henüz bir outlet veya minibar bölgesi atanmamış. Lütfen komuta merkezinden atama yapılmasını isteyin.",
+      "Hesabınız henüz bir ekibe eklenmemiş. Yöneticinizden, Kullanıcı Yönetimi > Ekip Yönetimi ekranından sizi çalışacağınız outlet, oda servisi veya minibar ekibine eklemesini isteyin.",
     ),
   ).toBeVisible();
 

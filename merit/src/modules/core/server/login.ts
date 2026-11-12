@@ -6,6 +6,7 @@ import { createRateLimiter } from "@/lib/rate-limit";
 import { DomainError, safeAction, type Result } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { audit } from "./audit";
+import { ensureRoomServiceMembership } from "./roomServiceTeam";
 import { closeSession, createSession } from "./sessions";
 import { listTargets, type Target } from "./targets";
 
@@ -210,7 +211,13 @@ async function login(input: LoginInput, deps: LoginDeps): Promise<LoginData> {
     return { next: "/sifre-degistir", targets: [] };
   }
 
-  const targets = await listTargets(user.id);
+  let targets = await listTargets(user.id);
+  if (targets.length === 0) {
+    // Nowhere to work yet. A role that was given a room-service screen after the user was saved
+    // has no team membership: join the hotel's room-service outlet now instead of a dead end.
+    const joined = await prisma.$transaction((tx) => ensureRoomServiceMembership(tx, user.id));
+    if (joined.length > 0) targets = await listTargets(user.id);
+  }
   const auto = await getSetting("session.singleTargetAuto");
   // Outlet staff explicitly choose their work outlet on the login screen, even if they currently
   // have only one assignment. This keeps kiosk and waiter sessions unambiguous when assignments
