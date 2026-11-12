@@ -12,11 +12,13 @@ import {
   addToPool,
   adjustPool,
   countPool,
+  directCorrectionUntil,
   isStockManager,
   listExpiry,
   listMovements,
   listOpeningStock,
   listPoolAll,
+  mayCorrectDirectly,
   openingStockWindow,
   returnFromPool,
   setCriticalLevel,
@@ -51,7 +53,9 @@ export async function GET(request: Request) {
     // Stock managers (minibar operasyonları sistem sorumlusu) add stock and correct the opening quantities.
     const canManage = isStockManager(ctx) && (await can(ctx, "MB-ZIM", "O", hotelId));
     // The minibar system manager counts too, but the count waits for the system administrator (stockCorrections.ts).
-    const countNeedsApproval = mustRequestCorrection(ctx) && canManage;
+    // For one month the manager corrects directly instead (pool.mayCorrectDirectly).
+    const direct = canManage && (await mayCorrectDirectly(ctx));
+    const countNeedsApproval = mustRequestCorrection(ctx) && canManage && !direct;
     // The old field names stay (the page reads them); `status` and `criticalLevel` are new.
     const stockItems = rows
       .map((r) => ({
@@ -89,8 +93,9 @@ export async function GET(request: Request) {
         movementsPageSize: MOVEMENTS_PAGE_SIZE,
         hotels,
         selectedHotelId: hotelId,
-        canCount: canCount || countNeedsApproval,
+        canCount: canCount || countNeedsApproval || direct,
         countNeedsApproval,
+        directCorrectionUntil: direct ? ((await directCorrectionUntil())?.toISOString() ?? null) : null,
         canManage,
         expiry,
         opening: opening ? { ...opening, canEdit: canManage && opening.open } : null,
@@ -114,12 +119,13 @@ export async function POST(request: Request) {
   return handle(async (ctx) => {
     const body = await parseBody(request, bodySchema);
     // Entry and return = create (O), correction = approve (A, system and warehouse roles); the hotel selector is authorised, not trusted.
-    const needsApproval = body.movementType === "DUZELTME" && mustRequestCorrection(ctx);
+    const direct = body.movementType === "DUZELTME" && (await mayCorrectDirectly(ctx));
+    const needsApproval = body.movementType === "DUZELTME" && mustRequestCorrection(ctx) && !direct;
     const hotelId = await selectHotel(
       ctx,
       body.formHotelId,
       "MB-ZIM",
-      body.movementType === "DUZELTME" && !needsApproval ? "A" : "O",
+      body.movementType === "DUZELTME" && !needsApproval && !direct ? "A" : "O",
     );
     const note = body.note?.trim() || undefined;
     if (needsApproval) {

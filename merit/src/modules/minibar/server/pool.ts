@@ -594,7 +594,26 @@ export async function returnFromPool(
  * Who may book a correction: MB-ZIM A (checked by `withAdminTx`) held by a system role or by a minibar role
  * (the warehouse, R-DEP). Management roles keep their profile's A on the pool screen but do not correct counts.
  */
-function assertCorrector(ctx: Ctx): void {
+const DIRECT_CORRECTION_KEY = "minibar.directCorrectionUntil";
+/** Roles that normally send a count for approval (stockCorrections.ts) and correct directly while the window is open. */
+export const DIRECT_CORRECTION_ROLES: readonly string[] = ["R-MTY"];
+
+/** Until when Minibar Yönetimi corrects the hotel stock without the system administrator's approval (null = never set). */
+export async function directCorrectionUntil(db: Prisma.TransactionClient | typeof prisma = prisma): Promise<Date | null> {
+  const row = await db.setting.findFirst({ where: { key: DIRECT_CORRECTION_KEY, hotelId: null }, select: { value: true } });
+  const until = typeof row?.value === "string" ? new Date(row.value) : null;
+  return until && !Number.isNaN(until.getTime()) ? until : null;
+}
+
+/** True when this user is a minibar manager inside the approval-free period. */
+export async function mayCorrectDirectly(ctx: Ctx, now: Date = new Date()): Promise<boolean> {
+  if (!DIRECT_CORRECTION_ROLES.includes(ctx.user.roleCode)) return false;
+  const until = await directCorrectionUntil();
+  return until !== null && now < until;
+}
+
+function assertCorrector(ctx: Ctx, direct = false): void {
+  if (direct) return;
   if (ctx.user.roleKind !== "SISTEM" && ctx.user.roleKind !== "MINIBAR") {
     throw new DomainError("FORBIDDEN", "Stok düzeltmesini yalnızca depo sorumlusu ve sistem yöneticisi yapabilir");
   }
@@ -675,10 +694,13 @@ export async function adjustPool(
   ctx: Ctx,
   hotelId: string,
   raw: { productId: string; delta: number; reason: string },
+  now: Date = new Date(),
 ): Promise<StockRow> {
   const input = parse(adjustSchema, raw);
-  return withAdminTx(ctx, { screen: SCREEN, action: "A", hotelId }, async (tx) => {
-    assertCorrector(ctx);
+  // Minibar Yönetimi holds MB-ZIM O, not A: inside its approval-free period the correction is checked against O.
+  const direct = await mayCorrectDirectly(ctx, now);
+  return withAdminTx(ctx, { screen: SCREEN, action: direct ? "O" : "A", hotelId }, async (tx) => {
+    assertCorrector(ctx, direct);
     await assertProduct(tx, input.productId);
     await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
@@ -697,10 +719,12 @@ export async function countPool(
   ctx: Ctx,
   hotelId: string,
   raw: { productId: string; countedQty: number; reason: string },
+  now: Date = new Date(),
 ): Promise<StockRow & { delta: number; previousQty: number }> {
   const input = parse(countSchema, raw);
-  return withAdminTx(ctx, { screen: SCREEN, action: "A", hotelId }, async (tx) => {
-    assertCorrector(ctx);
+  const direct = await mayCorrectDirectly(ctx, now);
+  return withAdminTx(ctx, { screen: SCREEN, action: direct ? "O" : "A", hotelId }, async (tx) => {
+    assertCorrector(ctx, direct);
     await assertProduct(tx, input.productId);
     await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;

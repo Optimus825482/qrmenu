@@ -16,7 +16,7 @@ import {
   toPage,
   withAdminTx,
 } from "@/modules/core/server/admin/crud";
-import { CATALOG_SCREEN as SCREEN, nameTaken, priceText, pricesVisible } from "./catalogCommon";
+import { CATALOG_SCREEN as SCREEN, catalogWrite, nameTaken, pricesVisible, priceText } from "./catalogCommon";
 
 const NAME_TAKEN = "Bu adda bir setup zaten var";
 const NOT_FOUND = "Setup bulunamadı";
@@ -174,7 +174,7 @@ export async function get(ctx: Ctx, id: string): Promise<SetupDetail> {
 export async function create(ctx: Ctx, raw: SetupInput): Promise<SetupRow> {
   const input = parseInput(setupSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "O" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("O"), async (tx) => {
       await assertNameFree(tx, input.name);
       const created = await tx.setup.create({
         data: {
@@ -205,7 +205,7 @@ export async function create(ctx: Ctx, raw: SetupInput): Promise<SetupRow> {
 export async function update(ctx: Ctx, id: string, raw: SetupInput): Promise<SetupRow> {
   const input = parseInput(setupSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("D"), async (tx) => {
       await lockSetup(tx, id);
       const before = await tx.setup.findUnique({ where: { id }, select: ROW_SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
@@ -240,7 +240,7 @@ export async function update(ctx: Ctx, id: string, raw: SetupInput): Promise<Set
 }
 
 export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<SetupRow> {
-  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+  return withAdminTx(ctx, catalogWrite("D"), async (tx) => {
     await lockSetup(tx, id);
     const before = await tx.setup.findUnique({ where: { id }, select: ROW_SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
@@ -290,7 +290,7 @@ export { remove as delete };
 export async function addItem(ctx: Ctx, setupId: string, raw: SetupItemInput): Promise<SetupItemRow> {
   const input = parseInput(setupItemSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "O" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("O"), async (tx) => {
       await lockSetup(tx, setupId);
       const setup = await tx.setup.findUnique({ where: { id: setupId }, select: { name: true } });
       if (!setup) throw new DomainError("NOT_FOUND", NOT_FOUND);
@@ -349,7 +349,7 @@ async function readItem(tx: Prisma.TransactionClient, id: string, showPrices: bo
 
 export async function updateItem(ctx: Ctx, itemId: string, qty: number): Promise<SetupItemRow> {
   const input = parseInput(z.object({ qty: qtySchema }).strict(), { qty });
-  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+  return withAdminTx(ctx, catalogWrite("D"), async (tx) => {
     const found = await tx.setupItem.findUnique({ where: { id: itemId }, select: { setupId: true } });
     if (!found) throw new DomainError("NOT_FOUND", ITEM_NOT_FOUND);
     await lockSetup(tx, found.setupId);
@@ -372,7 +372,7 @@ export async function updateItem(ctx: Ctx, itemId: string, qty: number): Promise
 }
 
 export async function removeItem(ctx: Ctx, itemId: string): Promise<void> {
-  await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+  await withAdminTx(ctx, catalogWrite("D"), async (tx) => {
     const found = await tx.setupItem.findUnique({ where: { id: itemId }, select: { setupId: true } });
     if (!found) throw new DomainError("NOT_FOUND", ITEM_NOT_FOUND);
     await lockSetup(tx, found.setupId);

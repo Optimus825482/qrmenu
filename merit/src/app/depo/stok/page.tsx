@@ -242,6 +242,8 @@ export default function DepoStokPage() {
   const [canManage, setCanManage] = useState(false);
   // Minibar sistem sorumlusu: the count is sent to the system administrator instead of being booked.
   const [countNeedsApproval, setCountNeedsApproval] = useState(false);
+  // Set while Minibar Yönetimi corrects without approval: the last day of that period (ISO).
+  const [directUntil, setDirectUntil] = useState<string | null>(null);
   const [correctionsKey, setCorrectionsKey] = useState(0);
   const [sentNote, setSentNote] = useState<string | null>(null);
   const [opening, setOpening] = useState<OpeningWindow | null>(null);
@@ -316,6 +318,7 @@ export default function DepoStokPage() {
       setCanCount(data.canCount === true);
       setCanManage(data.canManage === true);
       setCountNeedsApproval(data.countNeedsApproval === true);
+      setDirectUntil(typeof data.directCorrectionUntil === "string" ? data.directCorrectionUntil : null);
       setExpiry(data.expiry || []);
       setOpening(data.opening ?? null);
       if (data.selectedHotelId) setSelectedHotelId(data.selectedHotelId);
@@ -713,6 +716,7 @@ export default function DepoStokPage() {
           type={movementType}
           hotelId={selectedHotelId}
           needsApproval={countNeedsApproval}
+          directUntil={directUntil}
           onClose={() => setSelectedProduct(null)}
           onSaved={(pendingMessage) => {
             setSelectedProduct(null);
@@ -731,6 +735,7 @@ function AdjustDialog({
   type,
   hotelId,
   needsApproval,
+  directUntil,
   onClose,
   onSaved,
 }: {
@@ -739,6 +744,7 @@ function AdjustDialog({
   hotelId: string;
   /** The count is sent to the system administrator for approval; the stock does not move yet. */
   needsApproval: boolean;
+  directUntil: string | null;
   onClose: () => void;
   /** `pendingMessage`: set when the count was sent for approval instead of being booked. */
   onSaved: (pendingMessage?: string) => void;
@@ -872,6 +878,13 @@ function AdjustDialog({
           {sendsForApproval ? (
             <p className="rounded-[var(--radius-m)] border border-info bg-[var(--info-bg)] p-3 text-sm text-text">
               Bu düzeltme sistem yöneticisinin onayına gönderilir. Onaylanana kadar stok değişmez.
+            </p>
+          ) : null}
+          {isCount && !sendsForApproval && directUntil ? (
+            <p className="rounded-[var(--radius-m)] border border-info bg-[var(--info-bg)] p-3 text-sm text-text">
+              Bu düzeltme onay beklemeden stoğa işlenir. Onaysız düzeltme süresi{" "}
+              {new Date(directUntil).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} günü sona
+              erer; sonrasında düzeltmeler sistem yöneticisinin onayına gider.
             </p>
           ) : null}
 

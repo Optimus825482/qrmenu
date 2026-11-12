@@ -4,6 +4,17 @@ import type { Ctx } from "@/lib/auth";
 /** Screen of the minibar catalogue (product groups, products, setups, room-type assignments). */
 export const CATALOG_SCREEN = "MB-TAN";
 
+/**
+ * Minibar Yönetimi (R-MTY) keeps the catalogue besides the system administrator: adds and edits product groups,
+ * products, setups and setup contents and takes them out of use. Deleting stays with the system administrator.
+ */
+export const CATALOG_MANAGER_ROLES: readonly string[] = ["R-MTY"];
+
+/** withAdminTx options of a catalogue write that the catalogue managers may also make. */
+export function catalogWrite(action: "O" | "D") {
+  return { screen: CATALOG_SCREEN, action, delegateRoles: CATALOG_MANAGER_ROLES } as const;
+}
+
 /** Purchase/sale prices are visible to system and management roles only. */
 export function pricesVisible(ctx: Ctx): boolean {
   return ctx.user.roleKind === "SISTEM" || ctx.user.roleKind === "YONETIM";

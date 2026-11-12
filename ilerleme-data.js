@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 14:45",
+  updatedAt: "12.11.2026 16:00",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -353,5 +353,7 @@ window.ILERLEME = {
     { at: "12.11 14:00", text: "Telefon ve tablet görünümünde geri oku düzeltildi (yerelde denendi, henüz yayına alınmadı). Minibar Operasyonları gibi bir klasörün içinden bir ekran açıp geri okuna basınca artık ana ekrana atmıyor, klasöre geri dönüyor; klasör bıraktığınız yerde duruyor ve oradan başka bir ekran seçebiliyorsunuz. Bir kez daha geri basınca ana ekrana gidiyor. Aynı kural bütün klasörlerde (Outlet, Oda Servisi, Sistem Yönetimi, Kullanıcı Yönetimi) ve telefonun kendi geri tuşunda da geçerli." },
     { at: "12.11 14:20", text: "Klasörlerdeki ekran açıklamaları düzeltildi (yerelde denendi, henüz yayına alınmadı). Aynı yetki ekranını paylaşan araçlar birbirinin açıklamasını gösteriyordu (örneğin Minibar Kullanıcıları altında oda kontrol açıklaması, Merkez Depo Tedarik altında otel deposu açıklaması). 13 ekrana kendi açıklaması yazıldı: Akıllı Tavsiye İş Planı, Merkez Depo Tedarik, Oda QR Kodları, Bekleyen Talepler ve Onaylar, Elle Oda Girişi, Minibar Kullanıcıları, Masa QR Kodları, Duvar Ekranı, Ekip Yönetimi, Outlet & Masa Tanımları, Hata Denetimi & Tanı, Erişimim, Hakkında." },
     { at: "12.11 14:45", text: "Minibar Tanımları › Setup içerik normu penceresi (yerelde denendi, henüz yayına alınmadı). Ürün seçimi artık yazarak aranıyor: kutuya dokununca klavye açılıyor, yazdıkça liste daralıyor (“seker” yazınca Beyaz Şeker ve Esmer Şeker çıkıyor; Türkçe harf ve büyük-küçük harf fark etmiyor). Norm adet kutusu düzeltildi: içindeki sayı silinebiliyor, kutuya dokununca sayı seçili geliyor ve yeni yazılan sayı eskisinin yerine geçiyor (3 yazınca 13 olmuyor). Listede zaten olan bir ürün seçilirse düğme “Adedi güncelle” oluyor ve ürünü kaldırıp yeniden eklemeden norm adedi değişiyor." },
+    { at: "12.11 15:00", text: "Setup içerik penceresi (yerelde denendi, henüz yayına alınmadı): başka bir setup açıldığında bir önceki pencerede seçilen ürün ve adet artık kalmıyor; her setup boş formla açılıyor." },
+    { at: "12.11 16:00", text: "Minibar Yönetimi rolünün yetkileri genişletildi (yerelde test edildi, henüz yayına alınmadı; yayında veritabanı güncellemesi otomatik çalışır). Bu roldeki kullanıcı artık Minibar Tanımları’nda ürün grubu, ürün, setup ve setup içeriği ekleyebiliyor, düzenleyebiliyor ve pasife alabiliyor; silme işlemi sistem yöneticisinde kaldı. Ayrıca yayına alındığı günden başlayarak bir ay boyunca otel deposu sayım düzeltmelerini sistem yöneticisinin onayını beklemeden doğrudan stoğa işleyebiliyor; düzeltme penceresinde sürenin biteceği gün yazıyor. Süre dolunca düzeltmeler yeniden onaya gidiyor." },
   ]
 };

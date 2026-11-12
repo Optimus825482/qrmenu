@@ -17,7 +17,7 @@ import {
   toPage,
   withAdminTx,
 } from "@/modules/core/server/admin/crud";
-import { CATALOG_SCREEN as SCREEN, priceText, pricesVisible } from "./catalogCommon";
+import { CATALOG_SCREEN as SCREEN, catalogWrite, pricesVisible, priceText } from "./catalogCommon";
 
 const NOT_FOUND = "Ürün bulunamadı";
 const BARCODE_TAKEN = "Bu barkod başka bir üründe kullanılıyor";
@@ -257,7 +257,7 @@ const auditView = (row: ProductRow) => ({ ...row, hasStock: undefined });
 export async function create(ctx: Ctx, raw: ProductInput): Promise<ProductRow> {
   const input = parseInput(productSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "O" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("O"), async (tx) => {
       await assertActiveGroup(tx, input.groupId);
       await assertUnique(tx, input);
       const created = await tx.product.create({
@@ -294,7 +294,7 @@ export async function create(ctx: Ctx, raw: ProductInput): Promise<ProductRow> {
 export async function update(ctx: Ctx, id: string, raw: ProductUpdateInput): Promise<ProductRow> {
   const input = parseInput(productUpdateSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("D"), async (tx) => {
       if (input.isActive === false) await tx.$queryRaw`SELECT id FROM products WHERE id = ${id} FOR UPDATE`;
       const before = await tx.product.findUnique({ where: { id }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
@@ -334,7 +334,7 @@ export async function update(ctx: Ctx, id: string, raw: ProductUpdateInput): Pro
 }
 
 export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<ProductRow> {
-  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+  return withAdminTx(ctx, catalogWrite("D"), async (tx) => {
     // Serialises against setups.addItem (FOR SHARE on the product row).
     await tx.$queryRaw`SELECT id FROM products WHERE id = ${id} FOR UPDATE`;
     const before = await tx.product.findUnique({ where: { id }, select: SELECT });

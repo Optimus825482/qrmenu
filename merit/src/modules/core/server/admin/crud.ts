@@ -26,7 +26,13 @@ export {
  * the client talks to it through Server Actions.
  */
 
-export type AdminTxOptions = { screen: string; action: Action; hotelId?: string };
+export type AdminTxOptions = {
+  screen: string;
+  action: Action;
+  hotelId?: string;
+  /** Role codes that may make this system-wide write besides SISTEM roles (they still need the screen permission). */
+  delegateRoles?: readonly string[];
+};
 
 /**
  * Authorises (`assertCan` audits a denial; no `hotelId` = system-wide, SISTEM roles only), then runs `fn` in one database transaction and returns
@@ -40,7 +46,8 @@ export async function withAdminTx<T>(
   await assertCan(ctx, options.screen, options.action, options.hotelId);
   // Without a hotel assertCan falls back to the session hotel, so a hotel manager holding the
   // permission would pass it: system-wide writes (hotels, roles...) are reserved for SISTEM roles.
-  if (options.hotelId === undefined && ctx.user.roleKind !== "SISTEM") {
+  const delegated = options.delegateRoles?.includes(ctx.user.roleCode) === true;
+  if (options.hotelId === undefined && ctx.user.roleKind !== "SISTEM" && !delegated) {
     try {
       await audit(prisma, {
         userId: ctx.user.id,

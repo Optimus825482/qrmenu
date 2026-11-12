@@ -6,7 +6,7 @@ import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 224; // 201 + 23 rows of the four YR delegate roles
+const EXPECTED_PERMISSION_ROWS = 225; // 201 + 23 rows of the four YR delegate roles + R-MTY CR-RAD (radar)
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -204,11 +204,11 @@ describe("seed (gerçek test DB)", () => {
     ]);
     expect(screens[1]).toMatchObject({ name: "Canlı Radar", path: "/radar", moduleKey: "CORE" });
     expect(await permission("R-SYS", "CR-RAD")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: true, canReport: true });
-    for (const role of ["R-ITT", "R-OTM", "R-FBM"]) {
+    for (const role of ["R-ITT", "R-OTM", "R-FBM", "R-MTY"]) {
       expect(await permission(role, "CR-RAD")).toMatchObject({ canView: true, canReport: true, canCreate: false, canEdit: false, canApprove: false });
     }
-    const others = (await db.role.findMany({ select: { code: true } })).map((r) => r.code).filter((c) => !["R-SYS", "R-ITT", "R-OTM", "R-FBM"].includes(c));
-    expect(others).toHaveLength(17);
+    const others = (await db.role.findMany({ select: { code: true } })).map((r) => r.code).filter((c) => !["R-SYS", "R-ITT", "R-OTM", "R-FBM", "R-MTY"].includes(c));
+    expect(others).toHaveLength(16);
     for (const role of others) expect(await permission(role, "CR-RAD")).toBeNull();
     const before = await db.roleScreenPermission.count();
     await runSeed(db);

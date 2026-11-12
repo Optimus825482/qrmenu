@@ -16,7 +16,7 @@ import {
   toPage,
   withAdminTx,
 } from "@/modules/core/server/admin/crud";
-import { CATALOG_SCREEN as SCREEN, nameTaken } from "./catalogCommon";
+import { CATALOG_SCREEN as SCREEN, catalogWrite, nameTaken } from "./catalogCommon";
 
 const NAME_TAKEN = "Bu adda bir ürün grubu zaten var";
 const NOT_FOUND = "Ürün grubu bulunamadı";
@@ -93,7 +93,7 @@ export async function listAll(ctx: Ctx): Promise<ProductGroupRow[]> {
 export async function create(ctx: Ctx, raw: ProductGroupInput): Promise<ProductGroupRow> {
   const input = parseInput(productGroupSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "O" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("O"), async (tx) => {
       await assertNameFree(tx, input.name);
       const created = await tx.productGroup.create({
         data: { name: input.name, description: input.description, isActive: input.isActive ?? true },
@@ -123,7 +123,7 @@ export type ProductGroupUpdateInput = z.input<typeof productGroupUpdateSchema>;
 export async function update(ctx: Ctx, id: string, raw: ProductGroupUpdateInput): Promise<ProductGroupRow> {
   const input = parseInput(productGroupUpdateSchema, raw);
   try {
-    return await withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    return await withAdminTx(ctx, catalogWrite("D"), async (tx) => {
       await tx.$queryRaw`SELECT id FROM product_groups WHERE id = ${id} FOR UPDATE`;
       const before = await tx.productGroup.findUnique({ where: { id }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
@@ -158,7 +158,7 @@ export async function update(ctx: Ctx, id: string, raw: ProductGroupUpdateInput)
 }
 
 export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<ProductGroupRow> {
-  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+  return withAdminTx(ctx, catalogWrite("D"), async (tx) => {
     const before = await tx.productGroup.findUnique({ where: { id }, select: SELECT });
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
     const updated = await tx.productGroup.update({ where: { id }, data: { isActive }, select: SELECT });

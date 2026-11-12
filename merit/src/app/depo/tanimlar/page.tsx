@@ -1301,6 +1301,11 @@ export default function MinibarTanimlarPage() {
                     <button
                       onClick={() => {
                         setActiveSetupForItems(s);
+                        // Each setup opens with an empty form: the product and quantity picked in another
+                        // setup's window must not carry over.
+                        setSelectedProductToAdd("");
+                        setSelectedQtyToAdd("2");
+                        setErrorMsg(null);
                         setModalMode("SETUP_ITEMS");
                       }}
                       className="flex-1 py-2 bg-warn hover:opacity-90 text-bg font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5"
