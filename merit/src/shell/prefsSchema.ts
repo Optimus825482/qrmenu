@@ -5,9 +5,12 @@ import {
   FONT_SCALES,
   HEX_COLOR,
   MAX_WINDOWS,
+  NOTE_MAX,
   THEMES,
   WALLPAPERS,
+  WIDGET_KINDS,
   type ShellPrefs,
+  type WidgetPos,
 } from "./types";
 
 /**
@@ -28,11 +31,35 @@ function lenientArray<T extends z.ZodType>(item: T, max: number) {
   return z
     .array(z.unknown())
     .catch([])
-    .transform((list) => list.flatMap((v) => {
-      const r = item.safeParse(v);
-      return r.success ? [r.data as z.output<T>] : [];
-    }).slice(0, max));
+    .transform((list) =>
+      list
+        .flatMap((v) => {
+          const r = item.safeParse(v);
+          return r.success ? [r.data as z.output<T>] : [];
+        })
+        .slice(0, max),
+    );
 }
+
+const widgetPos = z.object({ id: z.enum(WIDGET_KINDS), x: coord, y: coord });
+
+/**
+ * Widgets: valid entries, one per kind. A missing or non-array value stays undefined, which means
+ * "never chosen" (the default set), unlike an empty list (the user removed them all).
+ */
+const widgetList = z
+  .unknown()
+  .transform((value): WidgetPos[] | undefined => {
+    if (!Array.isArray(value)) return undefined;
+    const seen = new Set<string>();
+    return value.flatMap((v) => {
+      const r = widgetPos.safeParse(v);
+      if (!r.success || seen.has(r.data.id)) return [];
+      seen.add(r.data.id);
+      return [r.data];
+    });
+  })
+  .optional();
 
 const winState = z.object({
   id,
@@ -53,13 +80,22 @@ const shellPrefsShape = {
   recentApps: lenientArray(id, 6),
   xpDensity: z.enum(["comfortable", "compact"]).catch("comfortable"),
   wallpaper: z.enum(WALLPAPERS).catch(DEFAULT_APPEARANCE.wallpaper),
-  wallpaperColor: z.string().regex(HEX_COLOR).catch(DEFAULT_APPEARANCE.wallpaperColor),
+  wallpaperColor: z
+    .string()
+    .regex(HEX_COLOR)
+    .catch(DEFAULT_APPEARANCE.wallpaperColor),
   fontScale: z.enum(FONT_SCALES).catch(DEFAULT_APPEARANCE.fontScale),
   fontFamily: z.enum(FONT_FAMILIES).catch(DEFAULT_APPEARANCE.fontFamily),
   theme: z.enum(THEMES).catch(DEFAULT_APPEARANCE.theme),
   footerBand: z.boolean().catch(DEFAULT_APPEARANCE.footerBand),
   brandWatermark: z.boolean().catch(DEFAULT_APPEARANCE.brandWatermark),
   icons: lenientArray(z.object({ appId: id, x: coord, y: coord }), 200),
+  widgets: widgetList,
+  desktopLocked: z.boolean().catch(false),
+  note: z
+    .string()
+    .catch("")
+    .transform((text) => text.slice(0, NOTE_MAX)),
   windows: lenientArray(winState, MAX_WINDOWS),
   /** One-time shortcut migrations; absent in layouts saved before this field was introduced. */
   shortcutVersion: z.number().int().min(0).catch(0),
@@ -68,7 +104,8 @@ const shellPrefsShape = {
 };
 
 /** Read-side schema: a malformed stored field falls back to its default instead of dropping the layout. */
-export const shellPrefsSchema: z.ZodType<ShellPrefs> = z.object(shellPrefsShape);
+export const shellPrefsSchema: z.ZodType<ShellPrefs> =
+  z.object(shellPrefsShape);
 
 /**
  * Write-side schema for a NEW save request: the named choices (density, wallpaper, font size, font,

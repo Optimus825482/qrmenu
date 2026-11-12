@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 01:50",
+  updatedAt: "12.11.2026 02:15",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -328,5 +328,6 @@ window.ILERLEME = {
     { at: "12.11 01:20", text: "Pencerelerin içindeki kartlı “Otel seçin” ekranı kaldırıldı (yerelde denendi, henüz yayına alınmadı): otel isteyen pencereler artık doğrudan bir otelle açılıyor ve otel yalnızca pencerenin üstündeki seçiciden değiştiriliyor. Telefon ve tablet görünümünde de kartların yerini üstte bir otel seçicisi aldı." },
     { at: "12.11 01:45", text: "Görev ve rol birbirinden ayrıldı (yerelde denendi, henüz yayına alınmadı; yayında veritabanı güncellemesi otomatik çalışır). Görev artık personelin resmi F&B unvanı: Kullanıcı Yönetimi'ne Görevler bölümü eklendi, Otel Müdürü ve F&B Müdürü'nden garsona kadar 40 görevlik taslak hiyerarşi hazır geldi ve ekrandan düzeltilebiliyor. Rol ise yetkileri ve ekranları belirleyen profil oldu; rol adları buna göre değişti (ör. Garson rolü → Servis Personeli), kodlar ve yetkiler aynı kaldı. Kullanıcı eklerken görev seçilince o görevin önerdiği rol kendiliğinden gelir, istenirse değiştirilir. Mevcut kullanıcıların görevleri kataloğa bağlandı." },
     { at: "12.11 01:50", text: "Okunmayan yazılar düzeltildi (yerelde denendi, henüz yayına alınmadı): Minibar Tanımlamaları'ndaki Denetim Kaydı penceresinde koyu zemin üstündeki kırmızı/yeşil yazılar artık açık zeminde koyu yazı. Otomatik kontrast taramasıyla bulunan diğerleri de giderildi: pencere üstündeki “Konum” satırı ve klasör açıklamalarındaki soluk gri, bej zemin üstündeki altın rengi yazılar, yeni kullanıcı formundaki beyaz-altın seçili düğme, soluk yeşil ve mavi durum rozetleri." },
+    { at: "12.11 02:15", text: "Masaüstü kişiselleştirme eklendi (yerelde denendi, henüz yayına alınmadı): bilgisayardaki masaüstü görünümünde sağda analog saat ve altında yaprak takvim hazır geliyor; simgeler gibi fareyle sürüklenip istenen yere bırakılabiliyor. Masaüstünde boş yere sağ tıklayınca “Widget ekle…” ile açılan pencereden Aylık Takvim, Dijital Saat, Not Kağıdı ve Anlık Durum da eklenip kaldırılabiliyor. Aynı menüdeki “Masaüstü öğelerini kilitle” açıkken simgeler ve widget'lar yerinden oynamıyor. Seçimler, yerler, kilit ve not her kullanıcı için ayrı ayrı veritabanına kaydediliyor." },
   ]
 };

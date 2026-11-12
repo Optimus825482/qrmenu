@@ -7,8 +7,10 @@ import {
   FONT_SCALES,
   HEX_COLOR,
   MAX_WINDOWS,
+  NOTE_MAX,
   THEMES,
   WALLPAPERS,
+  WIDGET_KINDS,
   type FontFamily,
   type FontScale,
   type HotelRef,
@@ -17,8 +19,11 @@ import {
   type ShellPrefs,
   type Theme,
   type Wallpaper,
+  type WidgetId,
+  type WidgetPos,
   type WinState,
 } from "./types";
+import { defaultWidgets, nextWidgetPosition, widgetPosition } from "./widgets";
 
 /**
  * Window manager state of the XP shell. Pure (no DOM, no `window` access): the client feeds the
@@ -75,6 +80,11 @@ type ShellState = {
   recentApps: string[];
   xpDensity: NonNullable<ShellPrefs["xpDensity"]>;
   icons: IconPos[];
+  widgets: WidgetPos[];
+  /** Icons and widgets stay where they are (no dragging). */
+  desktopLocked: boolean;
+  /** Text of the note widget. */
+  note: string;
   /** Hotels in the user's scope (window context). */
   hotels: HotelRef[];
   /** Apps the user may see (union over their hotels); null = every registered app. */
@@ -130,6 +140,12 @@ type ShellActions = {
   removeIcon(appId: string): void;
   setIcons(icons: IconPos[]): void;
   arrangeIcons(): void;
+  /** Puts a widget on the desktop (right edge, under the others); a widget already there stays. */
+  addWidget(id: WidgetId): void;
+  moveWidget(id: WidgetId, x: number, y: number): void;
+  removeWidget(id: WidgetId): void;
+  setDesktopLocked(on: boolean): void;
+  setNote(text: string): void;
   snapshot(): ShellPrefs;
   restore(p: ShellPrefs): void;
 };
@@ -345,6 +361,9 @@ export function createWindowStore() {
       recentApps: [],
       xpDensity: "comfortable",
       icons: [],
+      widgets: [],
+      desktopLocked: false,
+      note: "",
       hotels: [],
       appIds: null,
       screensByHotel: null,
@@ -538,6 +557,7 @@ export function createWindowStore() {
           footerBand: on,
           windows: fitWindows(vp),
           icons: get().icons.map((i) => ({ appId: i.appId, ...iconPosition(i.x, i.y, vp) })),
+          widgets: get().widgets.map((w) => ({ id: w.id, ...widgetPosition(w.id, w.x, w.y, vp, deskHeight(vp)) })),
         });
       },
 
@@ -554,6 +574,7 @@ export function createWindowStore() {
           footerHeight,
           windows: fitWindows(vp),
           icons: get().icons.map((i) => ({ appId: i.appId, ...iconPosition(i.x, i.y, vp) })),
+          widgets: get().widgets.map((w) => ({ id: w.id, ...widgetPosition(w.id, w.x, w.y, vp, deskHeight(vp)) })),
         });
       },
 
@@ -581,6 +602,7 @@ export function createWindowStore() {
       },
 
       moveIcon(appId, x, y) {
+        if (get().desktopLocked) return;
         const pos = iconPosition(x, y, effectiveViewport(get()));
         set({ icons: get().icons.map((i) => (i.appId === appId ? { appId, ...pos } : i)) });
       },
@@ -594,10 +616,37 @@ export function createWindowStore() {
       },
 
       arrangeIcons() {
+        if (get().desktopLocked) return;
         const vp = effectiveViewport(get());
         // Keep the visual reading order: left-to-right columns, top-to-bottom within a column.
         const sorted = [...get().icons].sort((a, b) => a.x - b.x || a.y - b.y);
         set({ icons: sorted.map((i, n) => ({ appId: i.appId, ...gridPosition(n, vp) })) });
+      },
+
+      addWidget(id) {
+        const { widgets } = get();
+        if (!WIDGET_KINDS.includes(id) || widgets.some((w) => w.id === id)) return;
+        const vp = effectiveViewport(get());
+        set({ widgets: [...widgets, { id, ...nextWidgetPosition(id, widgets, vp, deskHeight(vp)) }] });
+      },
+
+      moveWidget(id, x, y) {
+        if (get().desktopLocked) return;
+        const vp = effectiveViewport(get());
+        const pos = widgetPosition(id, x, y, vp, deskHeight(vp));
+        set({ widgets: get().widgets.map((w) => (w.id === id ? { id, ...pos } : w)) });
+      },
+
+      removeWidget(id) {
+        set({ widgets: get().widgets.filter((w) => w.id !== id) });
+      },
+
+      setDesktopLocked(on) {
+        if (typeof on === "boolean") set({ desktopLocked: on });
+      },
+
+      setNote(text) {
+        if (typeof text === "string") set({ note: text.slice(0, NOTE_MAX) });
       },
 
       snapshot() {
@@ -613,6 +662,9 @@ export function createWindowStore() {
           recentApps,
           xpDensity,
           icons,
+          widgets,
+          desktopLocked,
+          note,
           order,
           windows,
         } = get();
@@ -628,6 +680,9 @@ export function createWindowStore() {
           recentApps,
           xpDensity,
           icons: icons.map((i) => ({ ...i })),
+          widgets: widgets.map((w) => ({ ...w })),
+          desktopLocked,
+          note,
           // Opening sub-view/outlet are one-off requests and are not saved in window preferences.
           windows: order.map((id) => {
             const win = { ...windows[id] };
@@ -673,6 +728,12 @@ export function createWindowStore() {
           seen.add(icon.appId);
           icons.push({ appId: icon.appId, ...iconPosition(icon.x, icon.y, vp) });
         }
+        // No saved widget list yet: the clock and the calendar leaf on the right.
+        const widgets: WidgetPos[] = [];
+        for (const w of p.widgets ?? defaultWidgets(vp, deskHeight(vp))) {
+          if (!WIDGET_KINDS.includes(w.id) || widgets.some((o) => o.id === w.id)) continue;
+          widgets.push({ id: w.id, ...widgetPosition(w.id, w.x, w.y, vp, deskHeight(vp)) });
+        }
         // Stored z values are only an order: renumber from Z_BASE so they can never creep upwards.
         const ranked = renumberZ(windows, order);
         set({
@@ -680,6 +741,9 @@ export function createWindowStore() {
           nextZ: ranked.nextZ,
           order,
           icons,
+          widgets,
+          desktopLocked: bool(p.desktopLocked, false),
+          note: typeof p.note === "string" ? p.note.slice(0, NOTE_MAX) : "",
           wallpaper: oneOf(WALLPAPERS, p.wallpaper, DEFAULT_APPEARANCE.wallpaper),
           wallpaperColor:
             typeof p.wallpaperColor === "string" && HEX_COLOR.test(p.wallpaperColor)

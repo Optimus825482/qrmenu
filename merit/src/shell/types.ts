@@ -76,11 +76,25 @@ export type WinState = {
 
 export type IconPos = { appId: string; x: number; y: number };
 
+/** Desktop widgets (catalogue: widgets.ts). At most one of each on a desktop. */
+export const WIDGET_KINDS = ["clock", "calendar", "month", "digital", "note", "status"] as const;
+export type WidgetId = (typeof WIDGET_KINDS)[number];
+export type WidgetPos = { id: WidgetId; x: number; y: number };
+
+/** Longest text of the note widget. */
+export const NOTE_MAX = 600;
+
 /** What is persisted per user in `User.prefs.shell` (and cached in localStorage). */
 export type ShellPrefs = Appearance & {
   recentApps?: string[];
   xpDensity?: "comfortable" | "compact";
   icons: IconPos[];
+  /** Desktop widgets and their places; missing = never chosen (the default set is shown). */
+  widgets?: WidgetPos[];
+  /** "Masaüstü öğelerini kilitle": icons and widgets cannot be dragged. */
+  desktopLocked?: boolean;
+  /** Text of the note widget. */
+  note?: string;
   windows: WinState[];
   shortcutVersion?: number;
   /** Kullanıcının tercih ettiği kabuk (yalnız rolüne izin verilenler arasından uygulanır, spec 4.1). */

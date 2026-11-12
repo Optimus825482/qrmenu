@@ -5239,3 +5239,129 @@
 @media (pointer: coarse) {
   .xp-crop-handle::after { content: ""; position: absolute; inset: -12px; }
 }
+
+/* ---- Desktop widgets (clock, calendars, note, live numbers). Fixed sizes; see src/shell/widgets.ts. ---- */
+.xp-widget {
+  position: absolute;
+  box-sizing: border-box;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  border-radius: 10px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+  font-family: Tahoma, "Segoe UI", Verdana, sans-serif;
+  color: #1b2a4a;
+}
+.xp-widget[data-locked="true"] { cursor: default; }
+.xp-widget.is-dragging { cursor: grabbing; opacity: 0.85; z-index: 2; }
+.xp-widget > div { width: 100%; height: 100%; box-sizing: border-box; }
+
+.xp-widget-clock { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.xp-widget-clock svg { width: 100%; flex: 1; min-height: 0; }
+.xp-widget-clock-rim { fill: #1f3f8f; stroke: #d9b65a; stroke-width: 2; }
+.xp-widget-clock-face { fill: #fdfcf6; stroke: #0f2466; stroke-width: 1; }
+.xp-widget-clock-tick { stroke: #7a8296; stroke-width: 0.5; }
+.xp-widget-clock-tick.is-major { stroke: #1b2a4a; stroke-width: 1.4; }
+.xp-widget-clock-num { font: 700 9px Tahoma, sans-serif; fill: #1b2a4a; }
+.xp-widget-clock-text {
+  padding: 1px 10px;
+  border-radius: 9px;
+  background: rgba(10, 21, 48, 0.78);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.xp-widget-leaf {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fffdf5;
+  border: 1px solid #b9b39c;
+  border-radius: 6px 6px 10px 10px;
+  overflow: hidden;
+  /* the leaves underneath */
+  box-shadow: 0 3px 0 -1px #f1ecd9, 0 4px 0 -1px #b9b39c, 0 7px 0 -3px #ece6cf, 0 8px 0 -3px #b9b39c;
+}
+.xp-widget-leaf-rings { position: absolute; top: 3px; left: 0; right: 0; display: flex; justify-content: space-around; padding: 0 34px; }
+.xp-widget-leaf-rings span { width: 9px; height: 9px; border-radius: 50%; background: #f4f1e4; border: 2px solid #6b0f0f; }
+.xp-widget-leaf-head {
+  width: 100%;
+  padding: 16px 4px 6px;
+  background: #b3261e;
+  color: #ffffff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.xp-widget-leaf-day { flex: 1; display: grid; place-items: center; font: 700 68px/1 Georgia, "Times New Roman", serif; color: #1b2a4a; }
+.xp-widget-leaf-weekday { font-size: 14px; font-weight: 700; color: #8a1c16; text-transform: capitalize; }
+.xp-widget-leaf-foot { width: 100%; margin-top: 4px; padding: 4px 0 6px; border-top: 1px dashed #c9c2a8; text-align: center; font-size: 11px; color: #4a4a4a; }
+
+.xp-widget-month { background: #fffdf5; border: 1px solid #b9b39c; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+.xp-widget-month-head { padding: 6px; background: #1f3f8f; color: #ffffff; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.xp-widget-month-grid { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); align-items: center; justify-items: center; padding: 4px 6px 6px; font-size: 12px; }
+.xp-widget-month-dow { font-size: 10px; font-weight: 700; color: #4a4a4a; }
+.xp-widget-month-dow[data-weekend="true"], .xp-widget-month-day[data-weekend="true"] { color: #8a1c16; }
+.xp-widget-month-day { width: 24px; height: 22px; display: grid; place-items: center; border-radius: 50%; }
+.xp-widget-month-day[data-today="true"] { background: #b3261e; color: #ffffff; font-weight: 700; }
+
+.xp-widget-digital {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(10, 21, 48, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  color: #ffffff;
+}
+.xp-widget-digital-time { font: 700 28px/1 "Consolas", "Courier New", monospace; letter-spacing: 0.06em; }
+.xp-widget-digital-date { font-size: 11px; color: #e6ebf7; }
+
+.xp-widget-note { display: flex; flex-direction: column; background: #fff7b0; border: 1px solid #d6c75a; border-radius: 3px 3px 12px 3px; padding: 6px 8px 8px; }
+.xp-widget-note-title { font-size: 11px; font-weight: 700; color: #5c4a00; padding-bottom: 4px; cursor: inherit; }
+.xp-widget-note textarea {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: 0;
+  outline-offset: 2px;
+  background: transparent;
+  color: #2b2300;
+  font: 13px/1.35 Tahoma, "Segoe UI", sans-serif;
+  cursor: text;
+  user-select: text;
+  touch-action: auto;
+}
+
+.xp-widget-status { display: flex; flex-direction: column; background: #f4f6fb; border: 1px solid #8fa3cf; border-radius: 8px; overflow: hidden; }
+.xp-widget-status-title { padding: 6px 8px; background: #1f3f8f; color: #ffffff; font-size: 12px; font-weight: 700; }
+.xp-widget-status dl { margin: 0; padding: 4px 8px 6px; display: flex; flex-direction: column; justify-content: space-around; flex: 1; }
+.xp-widget-status dl > div { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+.xp-widget-status dt { color: #33415c; }
+.xp-widget-status dd { margin: 0; font-weight: 700; color: #0f2466; }
+.xp-widget-status p { margin: 0; padding: 10px 8px; font-size: 12px; color: #33415c; }
+
+.xp-widget-gallery { width: min(480px, calc(100vw - 32px)); max-width: none; }
+.xp-widget-gallery-body { padding: 12px 14px 4px; background: var(--xp-body); max-height: min(60vh, 440px); overflow: auto; }
+.xp-widget-gallery-note { margin: 0 0 8px; color: var(--xp-muted); }
+.xp-widget-gallery ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.xp-widget-gallery li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--xp-body-light);
+  border: 1px solid var(--xp-body-edge);
+  border-radius: 3px;
+}
+.xp-widget-gallery li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.xp-widget-gallery li > div span { color: var(--xp-muted); }
+.xp-widget-gallery li .xp-button { min-width: 64px; }

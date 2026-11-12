@@ -12,7 +12,7 @@ import { effectiveViewport, gridPosition, windowStore } from "./windowStore";
 
 const SAVE_DEBOUNCE_MS = 1000;
 
-const layoutOf = (p: ShellPrefs): RestoredLayout => ({ windows: p.windows, icons: p.icons });
+const layoutOf = (p: ShellPrefs): RestoredLayout => ({ windows: p.windows, icons: p.icons, widgets: p.widgets });
 
 /** localStorage cache. `pending` = changed here but not yet confirmed saved on the server. */
 type LocalEntry = { prefs: ShellPrefs; pending: boolean };
@@ -122,7 +122,7 @@ export function useShellPersistence({
     // showing, saves send exactly this and only the appearance (wallpaper, font, theme, brand switches) may change.
     let layout: RestoredLayout =
       mode === "mobile"
-        ? { windows: chosen.windows, icons: chosen.icons }
+        ? { windows: chosen.windows, icons: chosen.icons, widgets: chosen.widgets }
         : layoutOf(windowStore.getState().snapshot());
     const persistSnapshot = (): ShellPrefs =>
       buildPersistSnapshot(mode, layout, windowStore.getState().snapshot());

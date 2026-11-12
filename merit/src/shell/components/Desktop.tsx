@@ -12,7 +12,8 @@ import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { alertDialog, confirm, confirmRemoveShortcut } from "../confirm";
 import { XpIcon } from "../icons";
 import type { AppDefinition } from "../registry";
-import { WALLPAPER_LABELS, type IconPos } from "../types";
+import { WALLPAPER_LABELS, type IconPos, type WidgetId } from "../types";
+import { WIDGET_IDS, WIDGETS } from "../widgets";
 import {
   deskHeight,
   effectiveViewport,
@@ -24,6 +25,7 @@ import {
 } from "../windowStore";
 import { BrandWatermark } from "./BrandWatermark";
 import { ContextMenu, type MenuItem } from "./ContextMenu";
+import { DesktopWidget, WidgetGallery } from "./DesktopWidgets";
 import { APP_DRAG_TYPE } from "./StartMenu";
 
 const CATEGORY_LABEL: Record<AppDefinition["category"], string> = {
@@ -42,7 +44,7 @@ const CATEGORY_LABEL: Record<AppDefinition["category"], string> = {
 /** Pointer travel (px) before a press on an icon becomes a drag. */
 const DRAG_THRESHOLD = 4;
 
-type MenuState = { x: number; y: number; appId?: string };
+type MenuState = { x: number; y: number; appId?: string; widgetId?: WidgetId };
 
 type Props = {
   /** Only the apps the user may see. */
@@ -56,9 +58,15 @@ export function Desktop({ apps, onOpenApp }: Props) {
   const wallpaper = useWindowStore((s) => s.wallpaper);
   const icons = useWindowStore((s) => s.icons);
   const brandWatermark = useWindowStore((s) => s.brandWatermark);
+  const widgets = useWindowStore((s) => s.widgets);
+  const locked = useWindowStore((s) => s.desktopLocked);
   const [selected, setSelected] = useState<string | null>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
+  const [gallery, setGallery] = useState(false);
   const appById = new Map(apps.map((a) => [a.id, a]));
+  // A widget that reads a screen's data is offered only to users who may see that screen.
+  const screens = new Set(apps.map((a) => a.screenCode));
+  const availableWidgets = WIDGET_IDS.map((id) => WIDGETS[id]).filter((def) => !def.screenCode || screens.has(def.screenCode));
 
   const menuAt = (e: ReactMouseEvent, appId?: string): MenuState => {
     // A keyboard-invoked context menu (Shift+F10, Menu key) carries no pointer position.
@@ -86,7 +94,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
     const y = e.clientY - r.top - ICON_CELL_H / 3;
     const store = windowStore.getState();
     if (store.icons.some((i) => i.appId === appId)) {
-      store.moveIcon(appId, x, y);
+      store.moveIcon(appId, x, y); // ignored while the desktop is locked
       return;
     }
     const yes = await confirm({
@@ -110,7 +118,9 @@ export function Desktop({ apps, onOpenApp }: Props) {
         onSelect: () => windowStore.getState().setWallpaper(w),
       })),
     },
-    { label: "Simgeleri hizala", onSelect: () => windowStore.getState().arrangeIcons() },
+    { label: "Simgeleri hizala", disabled: locked, onSelect: () => windowStore.getState().arrangeIcons() },
+    { kind: "separator" },
+    ...customizeItems(),
     { kind: "separator" },
     {
       label: "Özellikler",
@@ -118,10 +128,26 @@ export function Desktop({ apps, onOpenApp }: Props) {
         const s = windowStore.getState();
         void alertDialog({
           title: "Masaüstü Özellikleri",
-          message: `Duvar kağıdı: ${WALLPAPER_LABELS[s.wallpaper]}\nKısayol sayısı: ${s.icons.length}\nAçık pencere: ${s.order.length}`,
+          message: `Duvar kağıdı: ${WALLPAPER_LABELS[s.wallpaper]}\nKısayol sayısı: ${s.icons.length}\nWidget sayısı: ${s.widgets.length}\nÖğeler: ${s.desktopLocked ? "kilitli" : "taşınabilir"}\nAçık pencere: ${s.order.length}`,
         });
       },
     },
+  ];
+
+  /** Personalisation entries shared by the desktop's and a widget's menu. */
+  const customizeItems = (): MenuItem[] => [
+    { label: "Widget ekle…", onSelect: () => setGallery(true) },
+    {
+      label: "Masaüstü öğelerini kilitle",
+      checked: locked,
+      onSelect: () => windowStore.getState().setDesktopLocked(!locked),
+    },
+  ];
+
+  const widgetItems = (id: WidgetId): MenuItem[] => [
+    { label: `“${WIDGETS[id].title}” widget'ını kaldır`, onSelect: () => windowStore.getState().removeWidget(id) },
+    { kind: "separator" },
+    ...customizeItems(),
   ];
 
   const iconItems = (app: AppDefinition): MenuItem[] => [
@@ -158,6 +184,11 @@ export function Desktop({ apps, onOpenApp }: Props) {
       onDrop={(e) => void onDrop(e)}
     >
       {brandWatermark ? <BrandWatermark /> : null}
+      {widgets
+        .filter((w) => availableWidgets.some((def) => def.id === w.id))
+        .map((w) => (
+          <DesktopWidget key={w.id} widget={w} locked={locked} onMenu={(e) => setMenu({ ...menuAt(e), widgetId: w.id })} />
+        ))}
       {icons.map((icon) => {
         const app = appById.get(icon.appId);
         if (!app) return null;
@@ -166,6 +197,7 @@ export function Desktop({ apps, onOpenApp }: Props) {
             key={icon.appId}
             icon={icon}
             app={app}
+            locked={locked}
             selected={selected === icon.appId}
             onSelect={() => setSelected(icon.appId)}
             onOpen={() => onOpenApp(app.id)}
@@ -180,11 +212,12 @@ export function Desktop({ apps, onOpenApp }: Props) {
         <ContextMenu
           x={menu.x}
           y={menu.y}
-          label={menuApp ? "Simge menüsü" : "Masaüstü menüsü"}
-          items={menuApp ? iconItems(menuApp) : desktopItems()}
+          label={menuApp ? "Simge menüsü" : menu.widgetId ? "Widget menüsü" : "Masaüstü menüsü"}
+          items={menuApp ? iconItems(menuApp) : menu.widgetId ? widgetItems(menu.widgetId) : desktopItems()}
           onClose={() => setMenu(null)}
         />
       ) : null}
+      {gallery ? <WidgetGallery available={availableWidgets} onClose={() => setGallery(false)} /> : null}
       <ScreenGuideHost code="CR-KOM" density="xp" f1 />
     </div>
   );
@@ -193,6 +226,8 @@ export function Desktop({ apps, onOpenApp }: Props) {
 type IconProps = {
   icon: IconPos;
   app: AppDefinition;
+  /** Desktop items are locked: the icon still opens, but does not move. */
+  locked: boolean;
   selected: boolean;
   onSelect(): void;
   onOpen(): void;
@@ -203,7 +238,7 @@ type IconProps = {
  * A shortcut: click selects, double-click or Enter opens, drag (pointer events with capture) moves
  * it. While dragging only the element's style changes; the store is updated on release.
  */
-function DesktopIcon({ icon, app, selected, onSelect, onOpen, onMenu }: IconProps) {
+function DesktopIcon({ icon, app, locked, selected, onSelect, onOpen, onMenu }: IconProps) {
   const drag = useRef<{
     id: number;
     px: number;
@@ -216,6 +251,7 @@ function DesktopIcon({ icon, app, selected, onSelect, onOpen, onMenu }: IconProp
   const onPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return;
     onSelect();
+    if (locked) return;
     drag.current = { id: e.pointerId, px: e.clientX, py: e.clientY, moved: false, x: icon.x, y: icon.y };
   };
 
