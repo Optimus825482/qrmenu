@@ -10,6 +10,7 @@ import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { lockRow } from "./minibarCommon";
 import { STOCK_MANAGER_ROLES, isStockManager } from "./pool";
+import { withProductOrder } from "./productOrder";
 import { addedToday, capacityByProduct, loadRoomChecklist } from "./roomChecklist";
 import { bookReplacementTx } from "./roomCheckService";
 
@@ -18,7 +19,7 @@ import { bookReplacementTx } from "./roomCheckService";
  * Instead they pick the floor and the room, enter what they replaced, explain why, and send it to the minibar
  * system manager (Minibar Yönetimi / system administrator). Nothing touches the room or the hotel stock until a
  * manager approves; the approval books the same record a scanned room check would (`bookReplacementTx`), owned
- * by the attendant. Every request is notified to the managers and stays reportable whatever its outcome.
+ * by the attendant and dated when the request was sent (not when it was approved). Every request is notified to the managers and stays reportable whatever its outcome.
  */
 
 const SCREEN = "MB-TUK";
@@ -113,7 +114,7 @@ async function roomOf(ctx: Ctx, roomId: string) {
 export async function manualEntryLines(ctx: Ctx, roomId: string, now: Date = new Date()): Promise<ManualEntryLine[]> {
   const room = await roomOf(ctx, roomId);
   await assertCan(ctx, SCREEN, "O", room.hotelId);
-  const checklist = await loadRoomChecklist(prisma, room.id);
+  const checklist = await withProductOrder(ctx.user.id, await loadRoomChecklist(prisma, room.id));
   const caps = capacityByProduct(checklist);
   const done = await addedToday(prisma, room.id, businessDate(now));
   const lines = new Map<string, ManualEntryLine>();
@@ -161,7 +162,8 @@ export async function createManualEntryRequest(ctx: Ctx, input: unknown, now: Da
     });
 
     const request = await tx.minibarManualEntryRequest.create({
-      data: { hotelId: room.hotelId, roomId: room.id, requestedById: ctx.user.id, reason, items: stored },
+      // `createdAt` is the moment of the consumption: the approval books the record on this day.
+      data: { hotelId: room.hotelId, roomId: room.id, requestedById: ctx.user.id, reason, items: stored, createdAt: now },
       select: { id: true },
     });
     const totalQty = stored.reduce((sum, item) => sum + item.qty, 0);
@@ -303,6 +305,8 @@ export async function resolveManualEntryRequest(ctx: Ctx, input: unknown, now: D
       clientRequestId: randomUUID(),
       note: `Manuel kayıt (QR okutulamadı), onaylayan ${ctx.user.fullName}: ${request.reason}`.slice(0, 300),
       now,
+      // The consumption belongs to the day the attendant sent it, whenever the manager gets to approve it.
+      occurredAt: request.createdAt,
       manualRequestId: request.id,
     });
     await tx.minibarManualEntryRequest.update({

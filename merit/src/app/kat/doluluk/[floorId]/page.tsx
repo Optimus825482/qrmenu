@@ -1,6 +1,7 @@
 "use client";
 
 import { MMD_REASONS, mmdNote } from "@/modules/minibar/mmdReasons";
+import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -689,6 +690,20 @@ export default function KatDolulukDetailPage() {
                           {reason}
                         </button>
                       ))}
+                <button
+                  type="button"
+                  data-testid="mmd-custom"
+                  onClick={() => {
+                    void askMmdReason(selectedRoom.number).then((typed) => {
+                      if (typed) void handleMarkDndFromDialog(typed);
+                    });
+                  }}
+                  disabled={submittingDnd}
+                  style={{ minHeight: "var(--tap-action)" }}
+                  className="rounded-xl border border-dashed border-yellow-600 bg-surface px-3.5 py-2.5 text-xs font-bold text-text hover:bg-yellow-400/20 disabled:opacity-50"
+                >
+                  Diğer sebep (elle yaz)
+                </button>
                     </div>
                   ) : null}
                   {mmdAsk ? (

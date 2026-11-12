@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), "merit-uploads-"));
 process.env.UPLOADS_DIR = dir;
 
-const { UPLOADS_ROOT, readUpload, removeUpload, saveUpload } = await import("@/lib/uploads");
+const { UPLOADS_ROOT, isPrivateUpload, readUpload, removeUpload, saveUpload } = await import("@/lib/uploads");
 const { GET } = await import("@/app/uploads/[...path]/route");
 
 const ctx = (...segments: string[]) => ({ params: Promise.resolve({ path: segments }) });
@@ -83,8 +83,22 @@ describe("uploads", () => {
     expect((await GET(req("x"), ctx("receipts", "aabbccddeeff001122334455.jpg"))).status).toBe(404);
     expect((await GET(req("x"), ctx("Receipts", "aabbccddeeff001122334455.jpg"))).status).toBe(404);
     expect((await GET(req("x"), ctx("receipts\aabbccddeeff001122334455.jpg"))).status).toBe(404);
+    // Windows spellings of the same folder never reach the file system.
+    for (const alias of ["receipts.", "receipts ", "RECEIP~1", "receipts::$INDEX_ALLOCATION", "receipts:x"]) {
+      expect((await GET(req("x"), ctx(alias, "aabbccddeeff001122334455.jpg"))).status).toBe(404);
+      await expect(readUpload(`${alias}/aabbccddeeff001122334455.jpg`)).rejects.toMatchObject({ code: "VALIDATION" });
+    }
+    expect((await GET(req("x"), ctx("menu", "..", "receipts", "aabbccddeeff001122334455.jpg"))).status).toBe(404);
     // The authenticated route still reads it through readUpload.
     expect((await readUpload("receipts/aabbccddeeff001122334455.jpg"))?.data.toString()).toBe("gizli");
+  });
+
+  it("isPrivateUpload çözülmüş yola bakar", () => {
+    expect(isPrivateUpload("receipts/a.jpg")).toBe(true);
+    expect(isPrivateUpload("RECEIPTS\\a.jpg")).toBe(true);
+    expect(isPrivateUpload("menu/o1/a.webp")).toBe(false);
+    expect(isPrivateUpload("menu/receipts/a.webp")).toBe(false);
+    expect(() => isPrivateUpload("receipts./a.jpg")).toThrow();
   });
 
   it("yol geçişi: route kötü yolları 404 yapar; çözülmüş '%2e%2e' parçası kök dışına çıkamaz", async () => {

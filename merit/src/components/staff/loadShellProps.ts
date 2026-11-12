@@ -73,6 +73,10 @@ export async function loadStaffShellProps(
     sessionEndsAt: effectiveEndsAt?.toISOString() ?? null,
     warnMinutes: SESSION_WARN_MINUTES,
     layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
+    // Whoever records room checks may arrange the products of that screen for themselves.
+    profileExtras: visible.includes("MB-TUK")
+      ? [{ id: "urun-siralamasi", label: "Oda kontrol ürün sıralaması", icon: "list", href: "/kat/urun-siralamasi" }]
+      : undefined,
     formHint: formFromUserAgent((await headers()).get("user-agent")),
   };
 }

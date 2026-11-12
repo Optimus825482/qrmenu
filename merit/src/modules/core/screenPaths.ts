@@ -17,6 +17,7 @@ const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [
   // Merkez depo tedarik: the delivery wizard of the hotel warehouse screen.
   ["/depo/tedarik", "MB-ZIM"],
   ["/kat/manuel-kayit", "MB-TUK"],
+  ["/kat/urun-siralamasi", "MB-TUK"],
   // Outlet-session entry to the order reports (QS-RAP's catalogue path is a desktop window).
   ["/kasa/raporlar", "QS-RAP"],
 ];

@@ -3,6 +3,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
+import { withProductOrder } from "./productOrder";
 import { DomainError, fromZod } from "@/lib/result";
 import { getSettings } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
@@ -248,7 +249,8 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
   let checklist: Checklist | null = null;
   let checklistError: string | null = null;
   try {
-    checklist = await loadRoomChecklist(prisma, roomId);
+    // Products in the attendant's own order (Oda kontrol ürün sıralaması), when they saved one.
+    checklist = await withProductOrder(ctx.user.id, await loadRoomChecklist(prisma, roomId));
   } catch (e) {
     if (e instanceof DomainError && e.code === "VALIDATION") checklistError = e.message;
     else throw e;
@@ -508,10 +510,17 @@ export async function bookReplacementTx(
     clientRequestId: string;
     note?: string;
     now: Date;
+    /**
+     * When the check really happened, if earlier than `now` (a manual entry request approved later): the record,
+     * its day, the daily limit and the room's tasks/DND of that day follow it. The stock leaves at `now`.
+     */
+    occurredAt?: Date;
     manualRequestId?: string;
   },
 ): Promise<ReplacementResult> {
-  const { room, items, clientRequestId, note, now } = p;
+  const { room, items, clientRequestId, note } = p;
+  const stockAt = p.now;
+  const now = p.occurredAt ?? p.now;
   const day = businessDate(now);
   const checklist = await loadRoomChecklist(tx, room.id);
   const caps = capacityByProduct(checklist);
@@ -583,7 +592,7 @@ export async function bookReplacementTx(
       note: `Oda kontrolü: Oda ${room.number}`,
     },
     lines.map((l) => ({ productId: l.productId, qty: l.qty })),
-    now,
+    stockAt,
   );
 
   await finishRoomCheck(tx, {

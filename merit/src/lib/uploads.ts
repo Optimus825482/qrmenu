@@ -16,11 +16,11 @@ export const UPLOAD_CONTENT_TYPES: Record<string, string> = {
 /** Folders under the uploads root that the public /uploads route never serves (authenticated routes only). */
 const PRIVATE_UPLOAD_DIRS = ["receipts"];
 
-/** True when the file must not leave through the public /uploads route. Case-blind: Windows paths are. */
-export function isPrivateUpload(relPath: string): boolean {
-  const first = relPath.replaceAll("\\", "/").split("/")[0]?.trim().toLowerCase() ?? "";
-  return PRIVATE_UPLOAD_DIRS.includes(first);
-}
+/**
+ * Windows opens the same folder under other spellings: a trailing dot or space ("receipts."), an 8.3 short
+ * name ("RECEIP~1"), an NTFS stream ("receipts::$DATA"). No upload name needs these, so no path may carry them.
+ */
+const aliasSegment = (part: string) => /[. ]$/.test(part) || part.includes(":") || part.includes("~");
 
 /** Resolves `relPath` inside the uploads root; anything that could leave it is VALIDATION. */
 function resolveInside(relPath: string): string {
@@ -30,7 +30,7 @@ function resolveInside(relPath: string): string {
     normalized.includes("\0") ||
     normalized.startsWith("/") ||
     /^[A-Za-z]:/.test(normalized) ||
-    normalized.split("/").some((part) => part === ".." || part === "." || part === "")
+    normalized.split("/").some((part) => part === ".." || part === "." || part === "" || aliasSegment(part))
   ) {
     throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
   }
@@ -38,6 +38,17 @@ function resolveInside(relPath: string): string {
   const full = path.resolve(root, normalized);
   if (!full.startsWith(root + path.sep)) throw new DomainError("VALIDATION", "Geçersiz dosya yolu");
   return full;
+}
+
+/**
+ * True when the file must not leave through the public /uploads route. Decided on the path the file system
+ * will open (resolved, relative to the root), not on the text of the request. Case-blind: Windows paths are.
+ * A path that cannot be resolved is VALIDATION.
+ */
+export function isPrivateUpload(relPath: string): boolean {
+  const root = path.resolve(process.env.UPLOADS_DIR ?? UPLOADS_ROOT);
+  const first = path.relative(root, resolveInside(relPath)).split(path.sep)[0]?.trim().toLowerCase() ?? "";
+  return PRIVATE_UPLOAD_DIRS.includes(first);
 }
 
 export async function saveUpload(relPath: string, data: Buffer): Promise<void> {

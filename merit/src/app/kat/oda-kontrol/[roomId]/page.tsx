@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
 import { confirm } from "@/shell/confirm";
@@ -629,6 +630,20 @@ export default function OdaKontrolPage() {
                   {reason}
                 </button>
               ))}
+                <button
+                  type="button"
+                  data-testid="mmd-custom"
+                  onClick={() => {
+                    void askMmdReason(data.room.number).then((typed) => {
+                      if (typed) void handleMarkDnd(typed);
+                    });
+                  }}
+                  disabled={submitting}
+                  style={{ minHeight: "var(--tap-primary)" }}
+                  className="rounded-xl border border-dashed border-yellow-600 bg-surface px-3.5 py-2.5 text-xs font-bold text-text hover:bg-yellow-400/20 disabled:opacity-50"
+                >
+                  Diğer sebep (elle yaz)
+                </button>
             </div>
           ) : null}
           <div data-guide="eksik-ozeti" className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2">

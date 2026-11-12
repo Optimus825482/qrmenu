@@ -3,6 +3,8 @@ import { testDb } from "../helpers/db";
 import { dropReferenceData, resetReferenceData, resetTestData } from "../helpers/fixtures";
 import { minibarWorld, resetMinibarData, staff, stockOf } from "../helpers/minibarFixtures";
 
+import { businessDate } from "@/lib/time";
+
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
@@ -68,6 +70,34 @@ describe("manuel kayıt talebi", () => {
 
     // Decided once.
     expect(await codeOf(manual.resolveManualEntryRequest(mgr.ctx, { requestId: created.id, approved: false }))).toBe("CONFLICT");
+  });
+
+  it("ertesi gün onaylanan talep, gönderildiği güne işlenir", async () => {
+    const w = await minibarWorld({ setupQty: 2, stock: 100 });
+    const kat = await staff("R-KAT");
+    const mgr = await staff("R-MTY");
+    const sent = new Date("2026-11-10T14:00:00+02:00");
+    const approvedAt = new Date("2026-11-11T09:30:00+02:00");
+    const created = await manual.createManualEntryRequest(
+      kat.ctx,
+      { roomId: w.room.id, reason: REASON, items: [{ productId: w.cola.id, qty: 2 }] },
+      sent,
+    );
+    const sentAt = (await testDb.minibarManualEntryRequest.findUniqueOrThrow({ where: { id: created.id } })).createdAt;
+    expect(sentAt).toEqual(sent);
+
+    await manual.resolveManualEntryRequest(mgr.ctx, { requestId: created.id, approved: true }, approvedAt);
+    const row = await testDb.minibarManualEntryRequest.findUniqueOrThrow({ where: { id: created.id } });
+    expect(row.resolvedAt).toEqual(approvedAt);
+    const tx = await testDb.minibarTransaction.findUniqueOrThrow({ where: { id: row.transactionId! } });
+    expect(tx.occurredAt).toEqual(sentAt);
+    const check = await testDb.roomCheck.findFirstOrThrow({ where: { transactionId: tx.id } });
+    expect(check.checkDate.toISOString().slice(0, 10)).toBe(businessDate(sentAt));
+    // The room's limit of the approval day is untouched: nothing was added "today".
+    expect(businessDate(approvedAt)).not.toBe(businessDate(sent));
+    const lines = await manual.manualEntryLines(kat.ctx, w.room.id, approvedAt);
+    expect(lines.find((l) => l.productId === w.cola.id)?.max).toBe(2);
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(98);
   });
 
   it("ret: hiçbir şey işlenmez, gönderene neden bildirilir", async () => {
