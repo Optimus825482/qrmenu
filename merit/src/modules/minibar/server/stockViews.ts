@@ -6,6 +6,7 @@ import { assertCan } from "@/lib/rbac";
 
 import { businessDate, businessDateStart, TZ } from "@/lib/time";
 import { STATUS_RANK, type StockStatus, stockStatus } from "../stockStatus";
+import { applyStockView, type StockView } from "../stockView";
 import { addDays } from "./dates";
 import { isDepoOperator } from "./stockRequests";
 
@@ -201,12 +202,22 @@ export async function productHistory(
   };
 }
 
-/** The pool as an .xlsx file (no price column); the file name carries the Nicosia wall-clock time. */
+/** Name and code of the session hotel, for the heading (logo + name) of the stock screens. */
+export async function stockHotel(ctx: Ctx): Promise<{ name: string; code: string }> {
+  const hotel = await prisma.hotel.findUnique({ where: { id: ctx.session.hotelId }, select: { name: true, code: true } });
+  return { name: hotel?.name ?? "", code: hotel?.code ?? "" };
+}
+
+/**
+ * The pool as an .xlsx file (no price column); the file name carries the Nicosia wall-clock time. With a `view`
+ * the file holds what the stock screen shows under that filter and order: every matching row, not one page.
+ */
 export async function exportStockXlsx(
   ctx: Ctx,
   now: Date = new Date(),
+  view: StockView = { passive: true },
 ): Promise<{ fileName: string; data: Buffer }> {
-  const { rows } = await myStock(ctx);
+  const rows = applyStockView((await myStock(ctx)).rows, view);
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Otel Deposu Stokları");
   ws.columns = [
@@ -215,7 +226,6 @@ export async function exportStockXlsx(
     { header: "Toplam", key: "total", width: 10 },
     { header: "Kullanılan", key: "used", width: 12 },
     { header: "Kalan", key: "remaining", width: 10 },
-    { header: "Kritik Seviye", key: "critical", width: 14 },
     { header: "Durum", key: "status", width: 12 },
   ];
   ws.getRow(1).font = { bold: true };
@@ -226,7 +236,6 @@ export async function exportStockXlsx(
       total: r.total,
       used: r.used,
       remaining: r.remaining,
-      critical: r.critical,
       status: STATUS_LABEL[r.status],
     });
   }

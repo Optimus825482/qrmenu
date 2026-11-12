@@ -1,5 +1,6 @@
 "use client";
 
+import { NavClock } from "./NavClock";
 import Link from "next/link";
 import { useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -87,6 +88,7 @@ export function StaffNav({
             </Link>
           );
         })}
+        {side ? <NavClock /> : null}
       </nav>
       {moreOpen ? <MoreSheet nav={nav} pathname={pathname} sekme={sekme} onClose={() => setMoreOpen(false)} /> : null}
     </>

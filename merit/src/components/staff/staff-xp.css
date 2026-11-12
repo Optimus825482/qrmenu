@@ -189,6 +189,12 @@
   top: calc(var(--sx-title-h) + 62px);
   left: calc(var(--sx-frame) + 12px);
 }
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-clock {
+  margin: 16px 0 0;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-digital {
+  font-size: 30px;
+}
 .staff-shell.staff-xp[data-form="desktop"] .staff-nav[data-side="true"] .staff-nav-label {
   padding: 0;
   text-align: start;

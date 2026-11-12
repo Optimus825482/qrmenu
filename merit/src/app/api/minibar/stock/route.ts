@@ -2,7 +2,7 @@ import { z } from "zod";
 import { can } from "@/lib/rbac";
 import { handle, parseBody } from "@/modules/minibar/server/apiAuthHelper";
 import { setCriticalLevel } from "@/modules/minibar/server/pool";
-import { criticalStocks, myStock } from "@/modules/minibar/server/stockViews";
+import { criticalStocks, myStock, stockHotel } from "@/modules/minibar/server/stockViews";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,12 +11,13 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   return handle(async (ctx) => {
     const view = new URL(request.url).searchParams.get("view");
-    if (view === "critical") return criticalStocks(ctx);
-    const [data, canEditCritical] = await Promise.all([
-      myStock(ctx),
-      can(ctx, "MB-ZIM", "D", ctx.session.hotelId),
-    ]);
-    return { ...data, canEditCritical };
+    if (view === "critical") {
+      const data = await criticalStocks(ctx);
+      return { ...data, hotel: await stockHotel(ctx) };
+    }
+    const data = await myStock(ctx);
+    const [canEditCritical, hotel] = await Promise.all([can(ctx, "MB-ZIM", "D", ctx.session.hotelId), stockHotel(ctx)]);
+    return { ...data, canEditCritical, hotel };
   });
 }
 

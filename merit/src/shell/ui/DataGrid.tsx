@@ -35,6 +35,8 @@ type Props<T extends { id: string }> = {
   /** Optional actions shown when a row is right-clicked. */
   rowContextActions?: (row: T) => RowContextAction[];
   onPageSize?: (pageSize: PageSize) => void;
+  /** Choices of the page-size box; the list sizes (20/50/100) when omitted. */
+  pageSizes?: readonly number[];
   /** Current sort, drawn as an arrow on its header. */
   sort?: SortSpec;
   /** Search text; omit to let the box keep its own. */
@@ -104,6 +106,7 @@ export function DataGrid<T extends { id: string }>({
   onActivate,
   rowContextActions,
   onPageSize,
+  pageSizes,
   sort,
   q,
   toolbar,
@@ -407,11 +410,13 @@ export function DataGrid<T extends { id: string }>({
         <span className="xp-grid-pager">
           {onPageSize ? (
             <select
+              className="xp-grid-page-size"
+              title="Sayfada gösterilecek kayıt sayısı"
               aria-label="Sayfa başına kayıt"
               value={pageSize}
               onChange={(e) => onPageSize(Number(e.target.value) as PageSize)}
             >
-              {PAGE_SIZES.map((size) => (
+              {(pageSizes ?? PAGE_SIZES).map((size) => (
                 <option key={size} value={size}>
                   {size}
                 </option>

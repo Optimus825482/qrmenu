@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { HotelLogo } from "@/components/HotelLogo";
 import { Icon } from "@/components/icons/Icon";
+import { applyStockView, type StockSortKey, stockViewToQuery } from "@/modules/minibar/stockView";
 
 type Status = "STOKOUT" | "KRITIK" | "DIKKAT" | "NORMAL";
 type Row = {
@@ -17,11 +19,16 @@ type Row = {
   /** false: a product taken out of the catalogue whose leftover stock the hotel still holds. */
   active: boolean;
 };
-type Data = { rows: Row[]; counts: Record<Status, number>; canEditCritical: boolean };
-type SortKey = "name" | "groupName" | "total" | "used" | "remaining" | "critical" | "status";
+type Data = { rows: Row[]; counts: Record<Status, number>; hotel?: { name: string; code: string } };
+type SortKey = StockSortKey;
 
 const LABEL: Record<Status, string> = { STOKOUT: "Stok yok", KRITIK: "Kritik", DIKKAT: "Dikkat", NORMAL: "Normal" };
-const RANK: Record<Status, number> = { STOKOUT: 0, KRITIK: 1, DIKKAT: 2, NORMAL: 3 };
+/** A product at, under or close to its critical level stands out by the colour of its whole row. */
+const ROW_TONE: Record<Exclude<Status, "NORMAL">, string> = {
+  STOKOUT: "bg-danger/25 hover:bg-danger/30",
+  KRITIK: "bg-danger/15 hover:bg-danger/20",
+  DIKKAT: "bg-warn/20 hover:bg-warn/25",
+};
 const BADGE: Record<Status, string> = {
   STOKOUT: "border-danger bg-danger text-white",
   KRITIK: "border-danger/60 bg-danger/15 text-danger",
@@ -34,12 +41,9 @@ const COLUMNS: { key: SortKey; title: string; numeric: boolean }[] = [
   { key: "total", title: "Toplam", numeric: true },
   { key: "used", title: "Kullanılan", numeric: true },
   { key: "remaining", title: "Kalan", numeric: true },
-  { key: "critical", title: "Kritik", numeric: true },
   { key: "status", title: "Durum", numeric: false },
 ];
 const PAGE_SIZES = [25, 50, 100] as const;
-
-const fold = (text: string) => text.toLocaleLowerCase("tr");
 
 export default function KatStokPage() {
   const [data, setData] = useState<Data | null>(null);
@@ -50,7 +54,6 @@ export default function KatStokPage() {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 } | null>(null);
   const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
   const [page, setPage] = useState(1);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -68,25 +71,6 @@ export default function KatStokPage() {
     return () => clearTimeout(t);
   }, [load]);
 
-  async function saveLevel(productId: string) {
-    const level = Number(drafts[productId]);
-    const res = await fetch("/api/minibar/stock", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ productId, level }),
-    });
-    const json = await res.json();
-    setMessage(res.ok ? "Kritik seviye güncellendi" : (json.error ?? "Kaydedilemedi"));
-    if (res.ok) {
-      setDrafts((d) => {
-        const next = { ...d };
-        delete next[productId];
-        return next;
-      });
-      await load();
-    }
-  }
-
   const all = useMemo(() => data?.rows ?? [], [data]);
   const passiveCount = all.filter((r) => !r.active).length;
   // Products taken out of the catalogue are listed only on request: they are leftovers, not part of the minibar.
@@ -98,26 +82,14 @@ export default function KatStokPage() {
     return out;
   }, [scoped]);
 
-  const rows = useMemo(() => {
-    const needle = fold(search.trim());
-    const filtered = scoped.filter(
-      (r) =>
-        (filter === "ALL" || r.status === filter) &&
-        (group === "" || r.groupName === group) &&
-        (needle === "" || fold(r.name).includes(needle) || fold(r.groupName).includes(needle)),
-    );
-    if (!sort) return filtered;
-    const { key, dir } = sort;
-    return [...filtered].sort((a, b) => {
-      const diff =
-        key === "status"
-          ? RANK[a.status] - RANK[b.status]
-          : key === "name" || key === "groupName"
-            ? a[key].localeCompare(b[key], "tr")
-            : a[key] - b[key];
-      return (diff || a.name.localeCompare(b.name, "tr")) * dir;
-    });
-  }, [scoped, filter, group, search, sort]);
+  // The same definition filters the screen and its Excel file, so the file is what is listed here (every page of it).
+  const view = useMemo(
+    () => ({ search, group, status: filter, passive: showPassive, sort }),
+    [search, group, filter, showPassive, sort],
+  );
+  const rows = useMemo(() => applyStockView(all, view), [all, view]);
+  const exportQuery = stockViewToQuery(view);
+  const hotelName = data?.hotel?.name ?? "";
 
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const current = Math.min(page, pageCount);
@@ -139,24 +111,27 @@ export default function KatStokPage() {
   return (
     <main data-testid="kat-stok" className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold">Stoklarım</h1>
-          <p className="text-xs text-muted">Otel deposundaki ürünler: toplam, kullanılan, kalan ve kritik seviye</p>
+        <div className="flex min-w-0 items-center gap-3">
+          {data?.hotel?.code ? <HotelLogo hotelCode={data.hotel.code} size={56} /> : null}
+          <div className="min-w-0">
+            <h1 data-testid="stok-baslik" className="text-lg font-bold">
+              {hotelName ? `${hotelName} Stokları` : "Otel Stokları"}
+            </h1>
+            <p className="text-xs text-muted">Otel deposundaki ürünler: toplam, kullanılan ve kalan adet</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/kat/kritik" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-bg">
             <Icon name="warning" size={16} />
             Kritik stoklar
           </Link>
-          <Link href="/kat/talep" className="inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-bg">
-            Ek talep
-          </Link>
           <a
-            href="/api/minibar/stock/export"
+            href={`/api/minibar/stock/export${exportQuery ? `?${exportQuery}` : ""}`}
             data-testid="stok-excel"
+            title="Listede görünen bütün satırlar (tüm sayfalar) Excel dosyasına aktarılır"
             className="inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-bg"
           >
-            Excel indir
+            Excel&apos;e aktar ({rows.length})
           </a>
         </div>
       </div>
@@ -266,11 +241,11 @@ export default function KatStokPage() {
 
       <div
         role="region"
-        aria-label="Stoklarım"
+        aria-label="Stok listesi"
         tabIndex={0}
         className="overflow-x-auto rounded-2xl border border-border bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
-        <table data-testid="stok-tablo" className="w-full min-w-[720px] border-collapse text-sm">
+        <table data-testid="stok-tablo" className="w-full min-w-[640px] border-collapse text-sm">
           <thead>
             <tr className="border-b-2 border-border bg-bg text-xs text-text">
               {COLUMNS.map((c) => (
@@ -302,7 +277,9 @@ export default function KatStokPage() {
                 key={r.productId}
                 data-testid={`stok-satir-${r.productId}`}
                 data-status={r.status}
-                className={`border-b border-border last:border-b-0 hover:bg-accent/10 ${index % 2 === 0 ? "bg-surface" : "bg-bg"}`}
+                className={`border-b border-border last:border-b-0 ${
+                  r.status === "NORMAL" ? `hover:bg-accent/10 ${index % 2 === 0 ? "bg-surface" : "bg-bg"}` : ROW_TONE[r.status]
+                }`}
               >
                 <td className="px-3 py-2.5 font-semibold">
                   <Link href={`/kat/urun/${r.productId}`} className="text-text underline-offset-2 hover:underline">
@@ -316,35 +293,6 @@ export default function KatStokPage() {
                 <td className="px-3 py-2.5 text-center tabular-nums">{r.total}</td>
                 <td className="px-3 py-2.5 text-center tabular-nums">{r.used}</td>
                 <td className="px-3 py-2.5 text-center text-base font-bold tabular-nums">{r.remaining}</td>
-                <td className="px-3 py-2.5 text-center tabular-nums">
-                  {data?.canEditCritical ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={0}
-                        step={1}
-                        aria-label={`${r.name} kritik seviye`}
-                        data-testid={`kritik-input-${r.productId}`}
-                        value={drafts[r.productId] ?? String(r.critical)}
-                        onChange={(e) => setDrafts((d) => ({ ...d, [r.productId]: e.target.value }))}
-                        className="min-h-10 w-20 rounded-lg border border-border bg-bg px-2 text-center text-sm text-text"
-                      />
-                      {drafts[r.productId] !== undefined && (
-                        <button
-                          type="button"
-                          data-mutates=""
-                          data-testid={`kritik-kaydet-${r.productId}`}
-                          onClick={() => void saveLevel(r.productId)}
-                          className="min-h-10 rounded-lg bg-accent px-3 text-xs font-bold text-white"
-                        >
-                          Kaydet
-                        </button>
-                      )}
-                    </span>
-                  ) : (
-                    r.critical
-                  )}
-                </td>
                 <td className="px-3 py-2.5 text-center">
                   <span className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-bold ${BADGE[r.status]}`}>{LABEL[r.status]}</span>
                 </td>
@@ -352,14 +300,14 @@ export default function KatStokPage() {
             ))}
             {data && rows.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-sm text-muted">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted">
                   Bu süzgeçte ürün yok.
                 </td>
               </tr>
             )}
             {!data && (
               <tr>
-                <td colSpan={7} className="px-3 py-8 text-center text-sm text-muted">
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted">
                   Stoklar yükleniyor...
                 </td>
               </tr>

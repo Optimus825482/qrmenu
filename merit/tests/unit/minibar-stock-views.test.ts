@@ -170,10 +170,38 @@ describe("exportStockXlsx", () => {
     await wb.xlsx.load(file.data as unknown as ArrayBuffer);
     const ws = wb.worksheets[0]!;
     const header = (ws.getRow(1).values as unknown[]).slice(1).map(String);
-    expect(header).toEqual(["Ürün", "Grup", "Toplam", "Kullanılan", "Kalan", "Kritik Seviye", "Durum"]);
+    expect(header).toEqual(["Ürün", "Grup", "Toplam", "Kullanılan", "Kalan", "Durum"]);
     expect(ws.rowCount).toBe(1 + 2);
     expect(header.join(" ")).not.toMatch(/fiyat/i);
-    expect(String(ws.getRow(2).getCell(7).value)).toBe("Stok yok");
+    expect(String(ws.getRow(2).getCell(6).value)).toBe("Stok yok");
+  });
+});
+
+describe("exportStockXlsx: ekrandaki süzgeç", () => {
+  it("süzgeç ve sıralama dosyaya aynen yansır, sayfa sınırı yoktur", async () => {
+    const w = await minibarWorld();
+    for (let i = 0; i < 30; i += 1) {
+      const p = await extraProduct(w.group.id, `Ek ${String(i).padStart(2, "0")}`);
+      await setStock(w.hotelId, p.id, 500 + i);
+    }
+    await setStock(w.hotelId, w.cola.id, 0);
+    const kat = await makeKat();
+    const names = async (query: string) => {
+      const { stockViewFromQuery } = await import("@/modules/minibar/stockView");
+      const file = await views.exportStockXlsx(kat.ctx, new Date(), stockViewFromQuery(new URLSearchParams(query)));
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load(file.data as unknown as ArrayBuffer);
+      const out: string[] = [];
+      wb.worksheets[0]!.eachRow((row, n) => {
+        if (n > 1) out.push(String(row.getCell(1).value));
+      });
+      return out;
+    };
+    // More rows than one screen page (25): all of them are in the file.
+    const searched = await names("ara=ek&sirala=remaining:desc");
+    expect(searched).toHaveLength(30);
+    expect(searched[0]).toMatch(/^Ek 29/);
+    expect(await names("durum=STOKOUT")).toEqual([w.cola.name]);
   });
 });
 
@@ -186,13 +214,13 @@ describe("stok rotaları", () => {
     const gar = await staff("R-GAR");
     as(gar.ctx);
     expect((await stockRoute.GET(new Request("http://localhost/api/minibar/stock"))).status).toBe(403);
-    expect((await exportRoute.GET()).status).toBe(403);
+    expect((await exportRoute.GET(new Request("http://localhost/api/minibar/stock/export"))).status).toBe(403);
     const kat = await makeKat();
     as(kat.ctx);
     const ok = await stockRoute.GET(new Request("http://localhost/api/minibar/stock"));
     expect(ok.status).toBe(200);
     expect((await ok.json()).rows).toHaveLength(2);
-    const xl = await exportRoute.GET();
+    const xl = await exportRoute.GET(new Request("http://localhost/api/minibar/stock/export"));
     expect(xl.headers.get("content-disposition")).toMatch(/otel_deposu_stoklari_\d{8}_\d{6}\.xlsx/);
     const patch = await stockRoute.PATCH(
       new Request("http://localhost/api/minibar/stock", {

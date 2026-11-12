@@ -420,6 +420,66 @@
   left: var(--space-2);
   right: auto;
 }
+/* Hotel time under the side menu: digital clock + calendar leaf (NavClock). */
+.staff-nav-clock {
+  flex: 0 0 auto;
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) var(--space-2) var(--space-2);
+}
+.staff-nav-digital {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border: 2px solid #0b1f14;
+  border-radius: 8px;
+  background: #0b1f14;
+  color: #6dff9c;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+.staff-nav-digital small {
+  font-size: 13px;
+  opacity: 0.8;
+}
+.staff-nav-leaf {
+  display: grid;
+  justify-items: center;
+  overflow: hidden;
+  border: 1px solid #8a1c1c;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 2px 0 #d9d9d9, 0 4px 0 #bdbdbd;
+}
+.staff-nav-leaf-month {
+  width: 100%;
+  padding: 4px 2px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+.staff-nav-leaf-day {
+  padding-top: 2px;
+  font-size: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.staff-nav-leaf-weekday {
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
 .staff-nav[data-side="true"] .staff-nav-label {
   padding: 0 var(--space-1);
   overflow: visible;

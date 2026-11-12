@@ -476,13 +476,6 @@ function CriticalStockDialog({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">
           <Link
-            href="/kat/talep"
-            style={{ minHeight: "var(--tap-action)" }}
-            className="inline-flex items-center rounded-xl border border-border bg-bg px-4 text-xs font-semibold text-text hover:bg-surface"
-          >
-            Ek talep oluştur
-          </Link>
-          <Link
             href="/kat/stok"
             style={{ minHeight: "var(--tap-action)" }}
             className="inline-flex items-center rounded-xl bg-accent px-4 text-xs font-bold text-white hover:opacity-95"

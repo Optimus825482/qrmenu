@@ -203,6 +203,37 @@ describe("ReportCenter — çalıştırma ve sonuç", () => {
     expect(screen.queryByTestId("rc-truncated")).toBeNull();
   });
 
+  it("sütun başlığı bütün sonucu sıralar: sayı önce büyükten küçüğe, metin A'dan Z'ye; sayfa boyu varsayılan 25", async () => {
+    const rows = Array.from({ length: 30 }, (_, i) => ({ urun: `Ürün ${String(i + 1).padStart(2, "0")}`, adet: i + 1, sure: 1 }));
+    runMock.mockResolvedValue({ ok: true, data: result({ rows }) });
+    render(<ReportCenter />);
+    await open();
+    fireEvent.click(screen.getByRole("button", { name: "Raporu Göster" }));
+    await screen.findByText("Ürün 01");
+    const names = () => screen.getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("gridcell")[0].textContent);
+
+    // 25 of the 30 rows on the first page.
+    expect(names()).toHaveLength(25);
+    expect(screen.getByText("Sayfa 1 / 2")).toBeTruthy();
+    expect((screen.getByLabelText("Sayfa başına kayıt") as HTMLSelectElement).value).toBe("25");
+
+    // A number column starts from the largest, over the whole result (row 30 was on page 2).
+    fireEvent.click(screen.getByRole("columnheader", { name: /Adet/ }));
+    expect(names()[0]).toBe("Ürün 30");
+    fireEvent.click(screen.getByRole("columnheader", { name: /Adet/ }));
+    expect(names()[0]).toBe("Ürün 01");
+
+    // A text column starts from A, then Z.
+    fireEvent.click(screen.getByRole("columnheader", { name: /Ürün/ }));
+    expect(names()[0]).toBe("Ürün 01");
+    fireEvent.click(screen.getByRole("columnheader", { name: /Ürün/ }));
+    expect(names()[0]).toBe("Ürün 30");
+
+    fireEvent.change(screen.getByLabelText("Sayfa başına kayıt"), { target: { value: "50" } });
+    expect(names()).toHaveLength(30);
+    expect(screen.getByText("Sayfa 1 / 1")).toBeTruthy();
+  });
+
   it("kesilmiş sonuçta kesildi şeridi", async () => {
     runMock.mockResolvedValue({ ok: true, data: result({ truncated: true }) });
     render(<ReportCenter />);

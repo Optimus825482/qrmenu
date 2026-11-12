@@ -20,7 +20,21 @@ import {
   type ParamValue,
 } from "./reportQuery";
 
-const PAGE_SIZE = 50;
+/** Rows per page of a report; the viewer picks one under the table. */
+const PAGE_SIZES = [25, 50, 100, 250] as const;
+const DEFAULT_PAGE_SIZE = 25;
+
+type ReportSort = { field: string; dir: "asc" | "desc" };
+
+/** Empty cells always sort last; numbers by size, dates by time, everything else as Turkish text. */
+function compareCells(a: unknown, b: unknown): number {
+  if (a instanceof Date || b instanceof Date) {
+    return new Date(a as string | number | Date).getTime() - new Date(b as string | number | Date).getTime();
+  }
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  if (typeof a === "boolean" && typeof b === "boolean") return Number(a) - Number(b);
+  return String(a).localeCompare(String(b), "tr", { numeric: true, sensitivity: "base" });
+}
 const MAX_HOTELS = 10;
 const GROUP_ORDER = Object.keys(GROUP_LABEL);
 type FieldType = ParamField["type"] | "number";
@@ -74,6 +88,8 @@ export function ReportCenter({ variant = "window", initialKey, setStatus, onSche
   const [downloading, setDownloading] = useState<ExportFormat | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(DEFAULT_PAGE_SIZE);
+  const [sort, setSort] = useState<ReportSort | null>(null);
   const [q, setQ] = useState("");
   const runSeq = useRef(0);
 
@@ -479,11 +495,36 @@ export function ReportCenter({ variant = "window", initialKey, setStatus, onSche
       })),
     [columns],
   );
-  const gridRows = useMemo<GridRow[]>(
-    () => filteredRows.map((r, i) => ({ ...r, id: String(i) })),
-    [filteredRows],
-  );
-  const pageRows = gridRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  // Sorting covers the whole result, not only the page on screen. A column the report no longer has is ignored.
+  const activeSort = sort && columns.some((c) => c.key === sort.field) ? sort : null;
+  const gridRows = useMemo<GridRow[]>(() => {
+    const rows = filteredRows.map((r, i) => ({ ...r, id: String(i) }));
+    if (!activeSort) return rows;
+    const { field, dir } = activeSort;
+    const empty = (value: unknown) => value === null || value === undefined || value === "";
+    return rows
+      .map((row, index) => ({ row, index, value: (row as Record<string, unknown>)[field] }))
+      .sort((a, b) => {
+        if (empty(a.value) || empty(b.value)) return empty(a.value) === empty(b.value) ? a.index - b.index : empty(a.value) ? 1 : -1;
+        const result = compareCells(a.value, b.value);
+        return result === 0 ? a.index - b.index : dir === "asc" ? result : -result;
+      })
+      .map(({ row }) => row);
+  }, [filteredRows, activeSort]);
+  const pageCount = Math.max(1, Math.ceil(gridRows.length / pageSize));
+  const shownPage = Math.min(page, pageCount);
+  const pageRows = gridRows.slice((shownPage - 1) * pageSize, shownPage * pageSize);
+  /** First click: numbers from the largest, text from A; the next click on the same column turns it round. */
+  const onSort = (next: { field: string }) => {
+    const column = columns.find((c) => c.key === next.field);
+    if (!column) return;
+    setSort((current) =>
+      current?.field === next.field
+        ? { field: next.field, dir: current.dir === "asc" ? "desc" : "asc" }
+        : { field: next.field, dir: isNumericType(column.type) ? "desc" : "asc" },
+    );
+    setPage(1);
+  };
 
   const resultView = !item ? null : running ? (
     <p className="rc-note" role="status" aria-busy="true">
@@ -513,7 +554,7 @@ export function ReportCenter({ variant = "window", initialKey, setStatus, onSche
         </p>
       ) : null}
       {mobile ? (
-        <MobileRows columns={result.columns} rows={allRows.slice(0, PAGE_SIZE)} total={allRows.length} />
+        <MobileRows columns={result.columns} rows={allRows.slice(0, 50)} total={allRows.length} />
       ) : (
         <>
           <DataGrid<GridRow>
@@ -521,10 +562,16 @@ export function ReportCenter({ variant = "window", initialKey, setStatus, onSche
             columns={gridColumns}
             rows={pageRows}
             total={gridRows.length}
-            page={page}
-            pageSize={PAGE_SIZE}
+            page={shownPage}
+            pageSize={pageSize}
+            pageSizes={PAGE_SIZES}
+            onPageSize={(size) => {
+              setPageSize(size as number);
+              setPage(1);
+            }}
             onPage={setPage}
-            onSort={() => undefined}
+            onSort={onSort}
+            sort={activeSort ?? undefined}
             onSearch={(v) => {
               setQ(v);
               setPage(1);
