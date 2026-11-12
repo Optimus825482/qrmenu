@@ -273,7 +273,38 @@ export default function OdaKontrolPage() {
     }
   };
 
-  const handleMarkDnd = async (mmdReason?: string) => {
+  /** MMD is its own record (not a DND): no QR, no effect on the room's DND count or tasks. */
+  const handleMmd = async (reason: string) => {
+    if (!data) return;
+    setMmdOpen(false);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/minibar/room/${data.room.id}/mmd`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, clientRequestId: dndKey }),
+        signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "MMD kaydedilemedi.");
+      setDndKey(newRequestKey());
+      notify.success(`MMD kaydedildi: ${reason}`);
+      // The guest may have handed over products at the door: the consumption goes to the manager as a manual entry request.
+      const wants = await confirm({
+        title: "Tüketim kaydı",
+        message: mmdConsumptionQuestion(data.room.number, reason),
+        confirmLabel: "Evet",
+        cancelLabel: "Hayır",
+      });
+      if (wants) router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(data.room.id)}&mmd=${encodeURIComponent(reason)}`);
+    } catch (e) {
+      notify.error(errorText(e, "MMD hatası"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleMarkDnd = async () => {
     if (!data) return;
     setMmdOpen(false);
     setSubmitting(true);
@@ -281,32 +312,14 @@ export default function OdaKontrolPage() {
       const res = await fetch(`/api/minibar/room/${data.room.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // MMD (misafir müsait değil) is a DND check whose note carries the reason.
-          note: mmdReason ? `MMD: ${mmdReason}` : note.trim() || undefined,
-          clientRequestId: dndKey,
-        }),
+        body: JSON.stringify({ note: note.trim() || undefined, clientRequestId: dndKey }),
         signal: AbortSignal.timeout(WRITE_TIMEOUT_MS),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
       setDndKey(newRequestKey());
-      notify.success(
-        mmdReason
-          ? `MMD kaydedildi: ${mmdReason} (${json.count ?? 1}. kontrol).`
-          : (json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`),
-      );
+      notify.success(json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`);
       await loadRoom(false);
-      if (mmdReason) {
-        // The guest may have taken products at the door: the consumption goes to the manager as a manual entry request.
-        const wants = await confirm({
-          title: "Tüketim kaydı",
-          message: mmdConsumptionQuestion(data.room.number, mmdReason),
-          confirmLabel: "Evet",
-          cancelLabel: "Hayır",
-        });
-        if (wants) router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(data.room.id)}&mmd=${encodeURIComponent(mmdReason)}`);
-      }
     } catch (e) {
       notify.error(errorText(e, "DND hatası"));
     } finally {
@@ -632,7 +645,7 @@ export default function OdaKontrolPage() {
                   key={reason}
                   type="button"
                   data-mutates=""
-                  onClick={() => void handleMarkDnd(reason)}
+                  onClick={() => void handleMmd(reason)}
                   disabled={submitting}
                   style={{ minHeight: "var(--tap-primary)" }}
                   className="rounded-xl border border-yellow-500/60 bg-yellow-400/20 px-3.5 py-2.5 text-xs font-semibold text-text hover:bg-yellow-400/35 disabled:opacity-50"
@@ -645,7 +658,7 @@ export default function OdaKontrolPage() {
                   data-testid="mmd-custom"
                   onClick={() => {
                     void askMmdReason(data.room.number).then((typed) => {
-                      if (typed) void handleMarkDnd(typed);
+                      if (typed) void handleMmd(typed);
                     });
                   }}
                   disabled={submitting}

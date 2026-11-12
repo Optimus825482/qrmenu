@@ -1,6 +1,6 @@
 "use client";
 
-import { MMD_REASONS, mmdConsumptionQuestion, mmdNote } from "@/modules/minibar/mmdReasons";
+import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
 import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -109,6 +109,8 @@ function getDndRecheckStatus(lastDndAtStr: string | null | undefined, recheckMin
   };
 }
 
+type MmdRow = { id: string; at: string; reason: string; by: string };
+
 export default function KatDolulukDetailPage() {
   const params = useParams<{ floorId: string }>();
   const router = useRouter();
@@ -132,6 +134,7 @@ export default function KatDolulukDetailPage() {
   // MMD (misafir müsait değil): the reason list, then the "tüketim var mı?" question for the recorded reason.
   const [mmdOpen, setMmdOpen] = useState(false);
   const [mmdAsk, setMmdAsk] = useState<string | null>(null);
+  const [roomMmds, setRoomMmds] = useState<MmdRow[]>([]);
 
 
 
@@ -166,6 +169,16 @@ export default function KatDolulukDetailPage() {
   }, [loadFloor]);
 
   // Load DND details when selectedRoom changes
+  const loadRoomMmd = useCallback(async (roomId: string) => {
+    setRoomMmds([]);
+    try {
+      const res = await fetch(`/api/minibar/room/${roomId}/mmd`);
+      if (res.ok) setRoomMmds(((await res.json()) as { rows: MmdRow[] }).rows);
+    } catch {
+      // The list is informative; the dialog works without it.
+    }
+  }, []);
+
   const loadRoomDnd = useCallback(async (roomId: string) => {
     setLoadingDnd(true);
     setRoomDndData(null);
@@ -196,12 +209,40 @@ export default function KatDolulukDetailPage() {
     if (room && room.status !== "empty") {
       setDndNote("");
       void loadRoomDnd(room.id);
+      void loadRoomMmd(room.id);
     } else {
       setRoomDndData(null);
+      setRoomMmds([]);
     }
   };
 
-  const handleMarkDndFromDialog = async (mmdReason?: string) => {
+  /** MMD is its own record (not a DND): no QR, no effect on the room's DND count or tasks. */
+  const handleMmd = async (reason: string) => {
+    if (!selectedRoom) return;
+    setMmdOpen(false);
+    setSubmittingDnd(true);
+    try {
+      const res = await fetch(`/api/minibar/room/${selectedRoom.id}/mmd`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, clientRequestId: dndKey }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      const json = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(json.error ?? "MMD kaydedilemedi.");
+      notify.success(`Oda ${selectedRoom.number} MMD kaydedildi: ${reason}`);
+      // The guest may have handed over products at the door: ask whether there is consumption to record.
+      setMmdAsk(reason);
+      setDndKey(newRequestKey());
+      await loadRoomMmd(selectedRoom.id);
+    } catch (e) {
+      notify.error(e instanceof Error ? e.message : "MMD hatası");
+    } finally {
+      setSubmittingDnd(false);
+    }
+  };
+
+  const handleMarkDndFromDialog = async () => {
     if (!selectedRoom) return;
     setMmdOpen(false);
     setSubmittingDnd(true);
@@ -209,19 +250,12 @@ export default function KatDolulukDetailPage() {
       const res = await fetch(`/api/minibar/room/${selectedRoom.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // MMD is a DND check whose note carries the reason.
-        body: JSON.stringify({ note: mmdReason ? mmdNote(mmdReason) : dndNote.trim() || undefined, clientRequestId: dndKey }),
+        body: JSON.stringify({ note: dndNote.trim() || undefined, clientRequestId: dndKey }),
         signal: AbortSignal.timeout(15_000),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
-      notify.success(
-        mmdReason
-          ? `Oda ${selectedRoom.number} MMD kaydedildi: ${mmdReason}`
-          : (json.message ?? `Oda ${selectedRoom.number} DND olarak işaretlendi.`),
-      );
-      // The guest may have taken the missing products at the door: ask whether there is consumption to record.
-      if (mmdReason) setMmdAsk(mmdReason);
+      notify.success(json.message ?? `Oda ${selectedRoom.number} DND olarak işaretlendi.`);
       setDndNote("");
       setDndKey(newRequestKey());
       await loadRoomDnd(selectedRoom.id);
@@ -682,7 +716,7 @@ export default function KatDolulukDetailPage() {
                           key={reason}
                           type="button"
                           data-mutates=""
-                          onClick={() => void handleMarkDndFromDialog(reason)}
+                          onClick={() => void handleMmd(reason)}
                           disabled={submittingDnd}
                           style={{ minHeight: "var(--tap-action)" }}
                           className="rounded-xl border border-yellow-500/60 bg-yellow-400/20 px-3 py-2 text-xs font-semibold text-text hover:bg-yellow-400/35 disabled:opacity-50"
@@ -695,7 +729,7 @@ export default function KatDolulukDetailPage() {
                   data-testid="mmd-custom"
                   onClick={() => {
                     void askMmdReason(selectedRoom.number).then((typed) => {
-                      if (typed) void handleMarkDndFromDialog(typed);
+                      if (typed) void handleMmd(typed);
                     });
                   }}
                   disabled={submittingDnd}
@@ -740,6 +774,22 @@ export default function KatDolulukDetailPage() {
                     </div>
                   ) : null}
                 </div>
+
+                {roomMmds.length > 0 ? (
+                  <div data-testid="mmd-liste" className="pt-2 border-t border-warn/20">
+                    <h4 className="text-xs font-bold text-text mb-2">Bugünkü MMD Kayıtları</h4>
+                    <ul className="space-y-1">
+                      {roomMmds.map((m) => (
+                        <li key={m.id} className="text-xs text-text">
+                          <span className="font-semibold tabular-nums">
+                            {new Date(m.at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" })}
+                          </span>{" "}
+                          · {m.reason} <span className="text-muted">({m.by})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
 
                 {/* DND History */}
                 <div className="pt-2 border-t border-warn/20">

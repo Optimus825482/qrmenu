@@ -257,6 +257,7 @@ model Hotel {
   receiptAllocations        StockReceiptAllocation[]
   minibarTransactions       MinibarTransaction[]
   roomDnds                  RoomDnd[]
+  roomMmds                  RoomMmd[]
   mybarRequests             MybarRequest[]
   guestRecords              GuestRecord[]
   occupancyUploads          OccupancyUpload[]
@@ -343,6 +344,7 @@ model Room {
   roomChecks          RoomCheck[]
   manualEntryRequests MinibarManualEntryRequest[]
   roomDnds            RoomDnd[]
+  roomMmds            RoomMmd[]
   mybarRequests       MybarRequest[]
   guestRecords        GuestRecord[]
   dailyTaskItems      DailyTaskItem[]
@@ -498,6 +500,7 @@ model User {
   correctionRequestsApproved MinibarCorrectionRequest[] @relation("MinibarCorrectionApprover")
   manualEntryRequestsMade    MinibarManualEntryRequest[] @relation("MinibarManualEntryRequester")
   manualEntryRequestsDecided MinibarManualEntryRequest[] @relation("MinibarManualEntryDecider")
+  roomMmds                   RoomMmd[]
 
   @@map("users")
 }
@@ -1162,6 +1165,28 @@ model RoomDndCheck {
 
   @@index([at])
   @@map("room_dnd_checks")
+}
+
+/// MMD (misafir müsait değil): the attendant could not enter the room. Not a DND: it never counts towards
+/// `dnd.minChecks` and never completes the room; it is a record for the reports.
+model RoomMmd {
+  id              String   @id @default(cuid())
+  hotelId         String   @map("hotel_id")
+  roomId          String   @map("room_id")
+  userId          String   @map("user_id")
+  date            DateTime @db.Date
+  at              DateTime @default(now()) @db.Timestamptz(3)
+  reason          String   @db.VarChar(200)
+  clientRequestId String?  @unique @map("client_request_id")
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  room  Room  @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([hotelId, date])
+  @@index([roomId, date])
+  @@index([userId, at])
+  @@map("room_mmds")
 }
 
 model MybarRequest {

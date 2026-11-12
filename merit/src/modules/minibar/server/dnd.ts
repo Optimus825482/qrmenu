@@ -14,7 +14,6 @@ import { WIRE_ROLE_KINDS } from "@/modules/radar/constants";
 import { publishRadar } from "@/modules/radar/publish";
 import { DND_MIN_GAP_SECONDS } from "../constants";
 import { DND_REMINDER } from "../events";
-import { isMmdNote } from "../mmdReasons";
 import { lockRow } from "./minibarCommon";
 import { assertRoomVerified } from "./roomVerification";
 import { completeOpenItemsForRoom, failDndItems, markItemsDnd } from "./tasks";
@@ -148,9 +147,7 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
         };
       }
     }
-    // An MMD says the room could NOT be entered, and the room's QR code is inside it: asking for a scan would
-    // make the record impossible. The reason stays on the check (and in the audit row) for the manager to see.
-    if (!isMmdNote(note)) await assertRoomVerified({ userId: ctx.user.id, roomId, hotelId }, now, tx);
+    await assertRoomVerified({ userId: ctx.user.id, roomId, hotelId }, now, tx);
 
     const covered = await tx.roomCheck.count({
       where: { roomId, checkDate: date, type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] } },

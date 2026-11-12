@@ -18,6 +18,7 @@ const { publish } = await import("@/lib/realtime");
 const rc = await import("@/modules/minibar/server/roomCheckService");
 const checklistSvc = await import("@/modules/minibar/server/roomChecklist");
 const dnd = await import("@/modules/minibar/server/dnd");
+const mmd = await import("@/modules/minibar/server/mmd");
 const roomRoute = await import("@/app/api/minibar/room/[roomId]/route");
 const checkRoute = await import("@/app/api/minibar/room/[roomId]/check/route");
 const noUseRoute = await import("@/app/api/minibar/room/[roomId]/no-consumption/route");
@@ -647,13 +648,28 @@ describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => 
   const scan = (userId: string, roomId: string, at: Date) =>
     testDb.qrScanLog.create({ data: { userId, roomId, kind: "PERSONEL", ok: true, ip: "t", userAgent: "t", createdAt: at } });
 
-  it("MMD kaydı QR istemez: odaya girilemediği için okutulacak kod yoktur", async () => {
-    const { w, kat } = await world();
+  it("MMD ayrı bir kayıttır: QR istemez, DND sayısına girmez, odayı ve görevini tamamlamaz", async () => {
+    const { w, kat, kat2 } = await world();
     await requireQr(w.hotelId);
-    const view = await dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: Misafir uyuyor" }, T0);
-    expect(view.count).toBe(1);
-    const check = await testDb.roomDndCheck.findFirstOrThrow({ where: { dndId: view.dndId } });
-    expect(check.note).toBe("MMD: Misafir uyuyor");
+    const key = randomUUID();
+    const first = await mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor", clientRequestId: key }, T0);
+    expect(first).toMatchObject({ roomNumber: w.room.number, reason: "Misafir uyuyor", countToday: 1 });
+    // The same tap again is the same record; somebody else's use of the key is refused.
+    expect((await mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor", clientRequestId: key }, T0)).mmdId).toBe(first.mmdId);
+    expect(await codeOf(mmd.recordMmd(kat2.ctx, { roomId: w.room.id, reason: "x y", clientRequestId: key }, T0))).toBe("CONFLICT");
+    for (let i = 1; i <= 4; i += 1) await mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: `Sebep ${i}` }, minutes(T0, i));
+
+    expect(await testDb.roomMmd.count({ where: { roomId: w.room.id, date } })).toBe(5);
+    expect(await testDb.roomDnd.count({ where: { roomId: w.room.id } })).toBe(0);
+    expect(await testDb.roomCheck.count({ where: { roomId: w.room.id } })).toBe(0);
+    expect(await testDb.auditLog.count({ where: { action: "MMD_MARK", userId: kat.userId } })).toBe(5);
+    const listed = await mmd.roomMmdsToday(kat.ctx, w.room.id, minutes(T0, 10));
+    expect(listed.rows).toHaveLength(5);
+    expect(listed.rows[0]!.reason).toBe("Sebep 4");
+
+    expect(await codeOf(mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: " " }, T0))).toBe("VALIDATION");
+    const gar = await staff("R-GAR");
+    expect(await codeOf(mmd.recordMmd(gar.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, T0))).toBe("FORBIDDEN");
   });
 
   it("QR zorunluyken kanıtsız ikame / sarfiyat yok / DND / kontrol API'si FORBIDDEN; kanıtla serbest", async () => {
@@ -662,8 +678,8 @@ describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => 
     expect(await messageOf(rep(kat.ctx, w, 1))).toBe("Bu oda için QR doğrulaması gerekli. Lütfen odadaki QR kodu okutun.");
     expect(await codeOf(noUse(kat.ctx, w.room.id))).toBe("FORBIDDEN");
     expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0))).toBe("FORBIDDEN");
-    // A note that only looks like an MMD (no reason) is still a plain DND.
-    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: " }, T0))).toBe("FORBIDDEN");
+    // A note is free text: writing "MMD" into it never waives the QR rule of a DND.
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: Misafir uyuyor" }, T0))).toBe("FORBIDDEN");
     requireUser.mockResolvedValue(kat.ctx);
     const res = await checkRoute.POST(
       new Request("http://localhost/x", {
@@ -736,13 +752,12 @@ describe("KAT-11 / KAT-12", () => {
   });
 });
 
-describe("rotalar ve MMD kaldırıldı", () => {
+describe("rotalar ve eski servisler", () => {
   const json = (body: unknown, method = "POST") =>
     new Request("http://localhost/api/minibar/x", { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
   const params = <T extends object>(p: T) => ({ params: Promise.resolve(p) });
 
-  it("MMD uç noktası ve servisi yok", async () => {
-    expect(existsSync(path.join(process.cwd(), "src/app/api/minibar/room/[roomId]/mmd/route.ts"))).toBe(false);
+  it("eski MMD servisi yok (yeni MMD kaydı server/mmd.ts ve kendi uç noktasıdır)", async () => {
     expect((rc as Record<string, unknown>).submitRoomMmd).toBeUndefined();
     expect(existsSync(path.join(process.cwd(), "src/modules/minibar/server/minibarService.ts"))).toBe(false);
     expect((rc as Record<string, unknown>).getMyRoomCheckHistory).toBeUndefined();

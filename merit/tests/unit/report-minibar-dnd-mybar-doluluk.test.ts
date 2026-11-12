@@ -209,3 +209,31 @@ describe("doluluk", () => {
     expect(r.rows).toEqual([expect.objectContaining({ total: 0, occupied: 0, rate: 0 })]);
   });
 });
+
+describe("mmd", () => {
+  it("MMD kayıtları sebebi, kaydedeni ve aynı günkü tüketim talebinin durumuyla listelenir", async () => {
+    const hid = await hotelId("ROYAL");
+    const a = await makeUser({ username: "mmd.ayse", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    const [r1, r2] = await floorAndRooms("ROYAL", ["301", "302"]);
+    const [other] = await floorAndRooms("DIAMOND", ["901"]);
+    const at = new Date("2026-10-31T08:00:00Z");
+    await testDb.roomMmd.createMany({
+      data: [
+        { hotelId: hid, roomId: r1!.id, userId: a.id, date: DAY, at, reason: "Misafir uyuyor" },
+        { hotelId: hid, roomId: r2!.id, userId: a.id, date: DAY, at: new Date(at.getTime() + 60_000), reason: "Misafir banyoda" },
+        { hotelId: await hotelId("DIAMOND"), roomId: other!.id, userId: a.id, date: DAY, at, reason: "Başka otel" },
+      ],
+    });
+    await testDb.minibarManualEntryRequest.create({
+      data: { hotelId: hid, roomId: r1!.id, requestedById: a.id, reason: "MMD: Misafir uyuyor. Kapıdan aldı", items: [], status: "ONAYLANDI", createdAt: at },
+    });
+    const r = await call("mmd");
+    expect(r.columns.map((c) => c.title)).toEqual(["Zaman", "Otel", "Kat", "Oda", "Kaydeden", "Sebep", "Tüketim talebi"]);
+    expect(r.rows.map((row) => [row.room, row.reason, row.request])).toEqual([
+      ["302", "Misafir banyoda", "Yok"],
+      ["301", "Misafir uyuyor", "Onaylandı"],
+    ]);
+    expect(sum(r, "MMD kaydı")).toBe(2);
+    expect(sum(r, "Tüketim talebi olan")).toBe(1);
+  });
+});
