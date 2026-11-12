@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 06:30",
+  updatedAt: "12.11.2026 07:15",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -339,5 +339,6 @@ window.ILERLEME = {
     { at: "12.11 06:05", text: "MMD kaydı (yerelde test edildi, henüz yayına alınmadı). MMD · Misafir Müsait Değil kaydı artık QR okutma istemiyor: odaya girilemediği için okutulacak kod yoktur. Sebep seçildikten ya da yazıldıktan sonra sistem “… nedeni ile girilemeyen oda için tüketim kaydı oluşturmak istiyor musunuz?” diye soruyor; Evet denirse tüketim miktarları girilip Minibar Yönetimi onayına gönderiliyor. Soru hem kat ekranındaki oda penceresinde hem oda kontrol ekranında çıkıyor." },
     { at: "12.11 06:15", text: "MMD artık DND’den ayrı bir kayıt (yerelde test edildi, henüz yayına alınmadı). MMD kaydı QR istemez, DND kontrol sayısına girmez, odayı ya da görevini tamamlamaz; yalnızca kim, ne zaman, hangi sebeple kaydıdır. DND kaydı eskisi gibi QR ister. Oda penceresinde “Bugünkü MMD Kayıtları” listesi var. Raporlara “MMD Raporu” eklendi: oda, kaydeden, sebep ve aynı gün gönderilen tüketim talebinin durumu (onay bekliyor, onaylandı, reddedildi)." },
     { at: "12.11 06:30", text: "Ürün geçmişi sayfası yenilendi (yerelde denendi, henüz yayına alınmadı). Başlıkta otel logosu, ürün adı ve grubu; üstte özet kartları (toplam kullanım, günlük ortalama, hareket, otel deposunda kalan); altta tür ve oda süzgeçli, sıralanabilir, sayfalı tablo ve “Stoklara dön” düğmesi var." },
+    { at: "12.11 07:15", text: "Bütün liste, tablo ve form ekranları aynı düzene getirildi (yerelde denendi, henüz yayına alınmadı). Minibar sistem sorumlusu ekranları (otel deposu, talepler, tanımlar, raporlar, tedarik, doluluk yükleme, günlük görevler), minibar garson ekranları (ek talep, işlemlerim), kasa ve garson ekranları (yazıcı kuyruğu, masa atama, çağrılar, giriş ve şifre formları) ve sistem yöneticisi pencereleri (oda servisi siparişleri ve raporları, oda QR, rapor sihirbazı, otomatik raporlar, tanılama, çevrim içi kullanıcılar, ekip) tarandı. Tablolar aranabilir, sütuna göre sıralanabilir, sayfalı ve şeritli oldu; form alanları çerçeveli ve dokunmaya uygun boyutta; telefonda yazıcı kuyruğu sayfasının yana taşması giderildi. Telefon, tablet ve masaüstü genişliklerinde sayfa taşması kalmadı." },
   ]
 };

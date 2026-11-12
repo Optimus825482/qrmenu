@@ -77,9 +77,155 @@ const MOVEMENT_TONE: Record<string, string> = {
 };
 
 const FIELD =
-  "min-h-[var(--tap-std)] w-full rounded-[var(--radius-m)] border border-border bg-surface px-3 text-base text-text placeholder:text-muted";
+  "min-h-[var(--tap-std)] w-full rounded-[var(--radius-m)] border border-border bg-bg px-3 text-base text-text placeholder:text-muted";
 const LINK_BUTTON =
   "inline-flex min-h-[var(--tap-std)] items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-4 text-sm font-semibold text-text";
+
+const PAGE_SIZES = [25, 50, 100] as const;
+const TABLE_WRAP = "overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+const THEAD = "border-b-2 border-border bg-bg text-sm text-text";
+const rowClass = (i: number) => `border-b border-border last:border-b-0 hover:bg-accent/10 ${i % 2 === 0 ? "bg-surface" : "bg-bg"}`;
+
+type SortState = { key: string; dir: 1 | -1 } | null;
+type SortPageView = {
+  sort: SortState;
+  toggleSort: (key: string) => void;
+  pageSize: number;
+  setPageSize: (n: number) => void;
+  page: number;
+  pageCount: number;
+  setPage: (n: number) => void;
+  total: number;
+  first: number;
+};
+
+/** Client-side sorting and paging of a list. Empty cells sort last; numeric columns start from the largest. */
+function useSortPage<T>(
+  rows: T[],
+  values: Record<string, (row: T) => string | number | null>,
+  numeric: readonly string[],
+): SortPageView & { visible: T[] } {
+  const [sort, setSort] = useState<SortState>(null);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  const [page, setPage] = useState(1);
+
+  let list = rows;
+  const get = sort ? values[sort.key] : undefined;
+  if (sort && get) {
+    const empty = (v: unknown) => v === null || v === undefined || v === "";
+    list = rows
+      .map((row, index) => ({ row, index, v: get(row) }))
+      .sort((a, b) => {
+        if (empty(a.v) || empty(b.v)) return empty(a.v) === empty(b.v) ? a.index - b.index : empty(a.v) ? 1 : -1;
+        const result =
+          typeof a.v === "number" && typeof b.v === "number"
+            ? a.v - b.v
+            : String(a.v).localeCompare(String(b.v), "tr", { numeric: true, sensitivity: "base" });
+        return result === 0 ? a.index - b.index : sort.dir * result;
+      })
+      .map((x) => x.row);
+  }
+  const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
+  const current = Math.min(page, pageCount);
+  return {
+    visible: list.slice((current - 1) * pageSize, current * pageSize),
+    sort,
+    toggleSort: (key) => {
+      setSort((s) => (s?.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: numeric.includes(key) ? -1 : 1 }));
+      setPage(1);
+    },
+    pageSize,
+    setPageSize: (n) => {
+      setPageSize(n);
+      setPage(1);
+    },
+    page: current,
+    pageCount,
+    setPage,
+    total: list.length,
+    first: list.length === 0 ? 0 : (current - 1) * pageSize + 1,
+  };
+}
+
+/** Column header that sorts the table when pressed. */
+function SortTh({
+  view,
+  k,
+  align = "left",
+  guide,
+  children,
+}: {
+  view: SortPageView;
+  k: string;
+  align?: "left" | "center";
+  guide?: string;
+  children: string;
+}) {
+  const on = view.sort?.key === k;
+  return (
+    <th
+      scope="col"
+      data-guide={guide}
+      aria-sort={on ? (view.sort?.dir === 1 ? "ascending" : "descending") : "none"}
+      className={`whitespace-nowrap px-1 py-1 ${align === "center" ? "text-center" : "text-left"}`}
+    >
+      <button
+        type="button"
+        onClick={() => view.toggleSort(k)}
+        title={`${children} sütununa göre sırala`}
+        className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 font-bold hover:bg-surface"
+      >
+        {children}
+        <span aria-hidden="true" className={on ? "text-accent" : "text-muted"}>
+          {on ? (view.sort?.dir === 1 ? "▲" : "▼") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+/** Page size and page buttons under a table. */
+function Pager({ view, noun }: { view: SortPageView; noun: string }) {
+  const pager = "min-h-11 min-w-11 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-text hover:bg-bg disabled:opacity-40";
+  return (
+    <nav aria-label={`${noun} sayfalama`} className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-3">
+      <p className="text-xs text-muted">
+        {view.total === 0 ? `0 ${noun}` : `${view.first}–${Math.min(view.total, view.page * view.pageSize)} / ${view.total} ${noun}`}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="inline-flex items-center gap-2 text-xs font-semibold text-muted">
+          Sayfada
+          <select
+            value={view.pageSize}
+            onChange={(e) => view.setPageSize(Number(e.target.value))}
+            className="min-h-11 rounded-xl border border-border bg-bg px-3 text-sm text-text focus:border-accent focus:outline-none"
+          >
+            {PAGE_SIZES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className={pager} disabled={view.page <= 1} onClick={() => view.setPage(1)} aria-label="İlk sayfa">
+          «
+        </button>
+        <button type="button" className={pager} disabled={view.page <= 1} onClick={() => view.setPage(view.page - 1)}>
+          Önceki
+        </button>
+        <span className="text-sm font-bold tabular-nums text-text">
+          {view.page} / {view.pageCount}
+        </span>
+        <button type="button" className={pager} disabled={view.page >= view.pageCount} onClick={() => view.setPage(view.page + 1)}>
+          Sonraki
+        </button>
+        <button type="button" className={pager} disabled={view.page >= view.pageCount} onClick={() => view.setPage(view.pageCount)} aria-label="Son sayfa">
+          »
+        </button>
+      </div>
+    </nav>
+  );
+}
 
 export default function DepoStokPage() {
   const [hotels, setHotels] = useState<HotelItem[]>([]);
@@ -194,6 +340,37 @@ export default function DepoStokPage() {
     (item) => item.productName.toLowerCase().includes(needle) || item.categoryName.toLowerCase().includes(needle),
   );
 
+  const stockView = useSortPage(
+    filteredItems,
+    { name: (r) => r.productName, category: (r) => r.categoryName, qty: (r) => r.quantity, min: (r) => r.minLevel },
+    ["qty", "min"],
+  );
+  const expiryView = useSortPage(
+    expiry,
+    {
+      product: (r) => r.productName,
+      date: (r) => r.expiryDate,
+      // Fewer days left is more urgent, so the first (descending) click lists the expired lots first.
+      status: (r) => -r.daysLeft,
+      qty: (r) => r.remainingQty,
+      receipt: (r) => r.receiptCode,
+    },
+    ["status", "qty"],
+  );
+  const movementView = useSortPage(
+    movements,
+    {
+      date: (r) => new Date(r.createdAt).getTime(),
+      product: (r) => r.productName,
+      type: (r) => r.type,
+      change: (r) => r.quantity,
+      after: (r) => r.newQuantity,
+      user: (r) => r.userName,
+      note: (r) => r.note,
+    },
+    ["date", "change", "after"],
+  );
+
   return (
     <div className="flex flex-col gap-4 text-text">
       <div className="flex flex-wrap items-center gap-2">
@@ -209,8 +386,8 @@ export default function DepoStokPage() {
           <p className="text-sm text-muted">Minibar stok takibi: otelin deposundaki ürünler, SKT ve hareketler</p>
         </div>
         {hotels.length > 0 ? (
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-muted whitespace-nowrap flex items-center gap-1">
+          <div className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
+            <span className="flex items-center gap-1 whitespace-nowrap text-xs font-bold text-muted">
               <Icon name="building" size={16} />
               Otel:
             </span>
@@ -219,7 +396,7 @@ export default function DepoStokPage() {
                 aria-label="Otel Seçimi"
                 value={selectedHotelId}
                 onChange={(e) => handleHotelChange(e.target.value)}
-                className="bg-transparent text-sm font-bold text-text focus:outline-none cursor-pointer"
+                className="min-h-11 min-w-0 cursor-pointer rounded-xl border border-border bg-bg px-3 text-sm font-bold text-text focus:border-accent focus:outline-none"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id} className="bg-surface text-text">
@@ -307,7 +484,10 @@ export default function DepoStokPage() {
             aria-label="Ürün veya kategori ara"
             placeholder="Ürün veya kategori ara..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              stockView.setPage(1);
+            }}
             className={`${FIELD} sm:w-72`}
           />
         ) : null}
@@ -320,69 +500,72 @@ export default function DepoStokPage() {
           ) : filteredItems.length === 0 ? (
             <p className="py-12 text-center text-muted">Ürün bulunamadı.</p>
           ) : (
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Mevcut stok tablosu">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
-                    <th scope="col" className="px-4 py-3">Ürün adı</th>
-                    <th scope="col" className="px-4 py-3">Kategori</th>
-                    <th scope="col" className="px-4 py-3 text-center">Depodaki miktar</th>
-                    <th scope="col" data-guide="kritik-seviye" className="px-4 py-3 text-center">Kritik seviye</th>
-                    <th scope="col" className="px-4 py-3 text-right">İşlemler</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredItems.map((item, itemIdx) => {
-                    const isLow = item.quantity <= item.minLevel;
-                    return (
-                      <tr key={item.id}>
-                        <td className="px-4 py-3 font-bold">
-                          {item.productName}
-                          {item.productActive === false ? (
-                            <span className="ml-2 rounded border border-border bg-[var(--muted-bg)] px-2 py-0.5 text-[13px] font-semibold text-muted">
-                              Pasif ürün
+            <>
+              <div className={TABLE_WRAP} tabIndex={0} role="region" aria-label="Mevcut stok tablosu">
+                <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className={THEAD}>
+                      <SortTh view={stockView} k="name">Ürün adı</SortTh>
+                      <SortTh view={stockView} k="category">Kategori</SortTh>
+                      <SortTh view={stockView} k="qty" align="center">Depodaki miktar</SortTh>
+                      <SortTh view={stockView} k="min" align="center" guide="kritik-seviye">Kritik seviye</SortTh>
+                      <th scope="col" className="px-4 py-3 text-right">İşlemler</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockView.visible.map((item, itemIdx) => {
+                      const isLow = item.quantity <= item.minLevel;
+                      return (
+                        <tr key={item.id} className={rowClass(itemIdx)}>
+                          <td className="px-4 py-3 font-bold">
+                            {item.productName}
+                            {item.productActive === false ? (
+                              <span className="ml-2 rounded border border-border bg-[var(--muted-bg)] px-2 py-0.5 text-[13px] font-semibold text-muted">
+                                Pasif ürün
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="rounded border border-border bg-[var(--muted-bg)] px-2 py-1 text-[13px] text-muted">{item.categoryName}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center tabular-nums">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border-2 px-3 py-1 font-bold ${
+                                isLow ? "border-danger bg-[var(--danger-bg)] text-danger" : "border-success bg-[var(--success-bg)] text-success"
+                              }`}
+                            >
+                              <Icon name={isLow ? "warning" : "check"} size={16} />
+                              {item.quantity} adet{isLow ? " · düşük" : ""}
                             </span>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="rounded border border-border bg-[var(--muted-bg)] px-2 py-1 text-[13px] text-muted">{item.categoryName}</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full border-2 px-3 py-1 font-bold ${
-                              isLow ? "border-danger bg-[var(--danger-bg)] text-danger" : "border-success bg-[var(--success-bg)] text-success"
-                            }`}
-                          >
-                            <Icon name={isLow ? "warning" : "check"} size={16} />
-                            {item.quantity} adet{isLow ? " · düşük" : ""}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center font-mono text-muted">{item.minLevel} adet</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
-                            {canManage ? (
-                              <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
-                                Stok ekle
-                              </Button>
-                            ) : null}
-                            {opening?.canEdit && item.openingQty != null ? (
-                              <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => setOpeningProduct(item)}>
-                                Başlangıç stoğu ({item.openingQty})
-                              </Button>
-                            ) : null}
-                            {canCount ? (
-                              <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>
-                                Sayım düzeltme
-                              </Button>
-                            ) : null}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          <td className="px-4 py-3 text-center font-mono text-muted tabular-nums">{item.minLevel} adet</td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap items-center justify-end gap-2">
+                              {canManage ? (
+                                <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
+                                  Stok ekle
+                                </Button>
+                              ) : null}
+                              {opening?.canEdit && item.openingQty != null ? (
+                                <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => setOpeningProduct(item)}>
+                                  Başlangıç stoğu ({item.openingQty})
+                                </Button>
+                              ) : null}
+                              {canCount ? (
+                                <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>
+                                  Sayım düzeltme
+                                </Button>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <Pager view={stockView} noun="ürün" />
+            </>
           )}
         </div>
       ) : activeTab === "SKT" ? (
@@ -392,37 +575,40 @@ export default function DepoStokPage() {
               Bu otelin deposunda son kullanma tarihi kayıtlı ürün yok. SKT, merkez depo tedarik kaydı girilirken yazılır.
             </p>
           ) : (
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="SKT takip tablosu">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
-                    <th scope="col" className="px-4 py-3">Ürün</th>
-                    <th scope="col" className="px-4 py-3">SKT</th>
-                    <th scope="col" className="px-4 py-3 text-center">Durum</th>
-                    <th scope="col" className="px-4 py-3 text-center">Kalan / gelen</th>
-                    <th scope="col" className="px-4 py-3">Tedarik</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {expiry.map((lot) => (
-                    <tr key={lot.id}>
-                      <td className="px-4 py-3 font-bold">{lot.productName}</td>
-                      <td className="px-4 py-3 font-mono">{lot.expiryDate.split("-").reverse().join(".")}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${EXPIRY_TONE[lot.status]}`}>
-                          {EXPIRY_LABEL[lot.status]} ·{" "}
-                          {lot.daysLeft < 0 ? `${-lot.daysLeft} gün önce` : lot.daysLeft === 0 ? "bugün" : `${lot.daysLeft} gün kaldı`}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold">
-                        {lot.remainingQty} / {lot.qty} adet
-                      </td>
-                      <td className="px-4 py-3 font-mono text-muted">{lot.receiptCode ?? "-"}</td>
+            <>
+              <div className={TABLE_WRAP} tabIndex={0} role="region" aria-label="SKT takip tablosu">
+                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className={THEAD}>
+                      <SortTh view={expiryView} k="product">Ürün</SortTh>
+                      <SortTh view={expiryView} k="date">SKT</SortTh>
+                      <SortTh view={expiryView} k="status" align="center">Durum</SortTh>
+                      <SortTh view={expiryView} k="qty" align="center">Kalan / gelen</SortTh>
+                      <SortTh view={expiryView} k="receipt">Tedarik</SortTh>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {expiryView.visible.map((lot, i) => (
+                      <tr key={lot.id} className={rowClass(i)}>
+                        <td className="px-4 py-3 font-bold">{lot.productName}</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">{lot.expiryDate.split("-").reverse().join(".")}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${EXPIRY_TONE[lot.status]}`}>
+                            {EXPIRY_LABEL[lot.status]} ·{" "}
+                            {lot.daysLeft < 0 ? `${-lot.daysLeft} gün önce` : lot.daysLeft === 0 ? "bugün" : `${lot.daysLeft} gün kaldı`}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center font-bold tabular-nums">
+                          {lot.remainingQty} / {lot.qty} adet
+                        </td>
+                        <td className="px-4 py-3 font-mono text-muted">{lot.receiptCode ?? "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pager view={expiryView} noun="kayıt" />
+            </>
           )}
         </div>
       ) : (
@@ -430,42 +616,45 @@ export default function DepoStokPage() {
           {movements.length === 0 ? (
             <p className="py-12 text-center text-muted">Henüz stok hareketi kaydedilmemiş.</p>
           ) : (
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Hareket geçmişi tablosu">
-              <table className="w-full border-collapse text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
-                    <th scope="col" className="px-4 py-3">Tarih / saat</th>
-                    <th scope="col" className="px-4 py-3">Ürün</th>
-                    <th scope="col" className="px-4 py-3 text-center">İşlem tipi</th>
-                    <th scope="col" className="px-4 py-3 text-center">Değişim</th>
-                    <th scope="col" className="px-4 py-3 text-center">Önce / sonra</th>
-                    <th scope="col" className="px-4 py-3">İşlemi yapan</th>
-                    <th scope="col" className="px-4 py-3">Açıklama / not</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {movements.map((m) => (
-                    <tr key={m.id}>
-                      <td className="px-4 py-3 font-mono text-muted">
-                        {new Date(m.createdAt).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
-                      </td>
-                      <td className="px-4 py-3 font-bold">{m.productName}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${MOVEMENT_TONE[m.type] ?? "border-warn text-warn"}`}>
-                          {m.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center font-bold">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
-                      <td className="px-4 py-3 text-center font-mono text-muted">
-                        {m.previousQuantity} → {m.newQuantity}
-                      </td>
-                      <td className="px-4 py-3">{m.userName}</td>
-                      <td className="max-w-xs truncate px-4 py-3 text-muted">{m.note || "-"}</td>
+            <>
+              <div className={TABLE_WRAP} tabIndex={0} role="region" aria-label="Hareket geçmişi tablosu">
+                <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+                  <thead>
+                    <tr className={THEAD}>
+                      <SortTh view={movementView} k="date">Tarih / saat</SortTh>
+                      <SortTh view={movementView} k="product">Ürün</SortTh>
+                      <SortTh view={movementView} k="type" align="center">İşlem tipi</SortTh>
+                      <SortTh view={movementView} k="change" align="center">Değişim</SortTh>
+                      <SortTh view={movementView} k="after" align="center">Önce / sonra</SortTh>
+                      <SortTh view={movementView} k="user">İşlemi yapan</SortTh>
+                      <SortTh view={movementView} k="note">Açıklama / not</SortTh>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {movementView.visible.map((m, i) => (
+                      <tr key={m.id} className={rowClass(i)}>
+                        <td className="px-4 py-3 font-mono text-muted tabular-nums">
+                          {new Date(m.createdAt).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                        </td>
+                        <td className="px-4 py-3 font-bold">{m.productName}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${MOVEMENT_TONE[m.type] ?? "border-warn text-warn"}`}>
+                            {m.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center font-bold tabular-nums">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
+                        <td className="px-4 py-3 text-center font-mono text-muted tabular-nums">
+                          {m.previousQuantity} → {m.newQuantity}
+                        </td>
+                        <td className="px-4 py-3">{m.userName}</td>
+                        <td className="max-w-xs truncate px-4 py-3 text-muted">{m.note || "-"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <Pager view={movementView} noun="hareket" />
+            </>
           )}
           {movements.length < movementsTotal ? (
             <div className="flex justify-center border-t border-border p-3">

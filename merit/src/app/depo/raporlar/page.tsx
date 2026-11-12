@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
 import { HotelBadges } from "@/components/ui/HotelBadge";
@@ -73,6 +73,183 @@ interface AbnormalReportData {
     averageDailyConsumed: number;
     spikeRatio: number;
   }[];
+}
+
+const PAGE_SIZES = [25, 50, 100] as const;
+
+type ReportColumn<T> = {
+  key: string;
+  title: string;
+  align?: "left" | "center" | "right";
+  /** Numbers sort from the largest on the first click, text from A. */
+  numeric?: boolean;
+  value: (row: T) => string | number | null;
+  cell: (row: T) => ReactNode;
+};
+
+/** Empty cells always sort last; numbers by size, everything else as Turkish text. */
+function compareValues(a: string | number, b: string | number): number {
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), "tr", { numeric: true, sensitivity: "base" });
+}
+
+const ALIGN = { left: "text-left", center: "text-center", right: "text-right" } as const;
+
+/** Searchable, sortable, paged table in the staff-page look; scrolls sideways inside its own wrapper. */
+function ReportTable<T>({
+  label,
+  rows,
+  columns,
+  rowKey,
+  minWidth,
+  searchText,
+  hover = "hover:bg-accent/10",
+}: {
+  label: string;
+  rows: T[];
+  columns: ReportColumn<T>[];
+  rowKey: (row: T, index: number) => string;
+  minWidth: string;
+  searchText: (row: T) => string;
+  hover?: string;
+}) {
+  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState("");
+
+  const needle = query.trim().toLocaleLowerCase("tr");
+  let list = rows.map((row, index) => ({ row, index }));
+  if (needle) list = list.filter(({ row }) => searchText(row).toLocaleLowerCase("tr").includes(needle));
+  const sortColumn = sort ? columns.find((c) => c.key === sort.key) : undefined;
+  if (sort && sortColumn) {
+    const empty = (v: unknown) => v === null || v === undefined || v === "";
+    list = list
+      .map((entry) => ({ ...entry, v: sortColumn.value(entry.row) }))
+      .sort((a, b) => {
+        if (empty(a.v) || empty(b.v)) return empty(a.v) === empty(b.v) ? a.index - b.index : empty(a.v) ? 1 : -1;
+        const result = compareValues(a.v as string | number, b.v as string | number);
+        return result === 0 ? a.index - b.index : sort.dir * result;
+      });
+  }
+
+  const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
+  const current = Math.min(page, pageCount);
+  const visible = list.slice((current - 1) * pageSize, current * pageSize);
+  const first = list.length === 0 ? 0 : (current - 1) * pageSize + 1;
+
+  const toggleSort = (c: ReportColumn<T>) => {
+    setSort((s) => (s?.key === c.key ? { key: c.key, dir: s.dir === 1 ? -1 : 1 } : { key: c.key, dir: c.numeric ? -1 : 1 }));
+    setPage(1);
+  };
+  const control = "min-h-11 rounded-xl border border-border bg-bg px-3 text-sm text-text focus:border-accent focus:outline-none";
+  const pager = "min-h-11 min-w-11 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-text hover:bg-bg disabled:opacity-40";
+
+  return (
+    <div>
+      <div className="border-b border-border p-3 print:hidden">
+        <label className="block text-xs font-semibold text-muted sm:max-w-sm">
+          Ara
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tabloda ara"
+            aria-label={`${label}: ara`}
+            className={`${control} mt-1 w-full`}
+          />
+        </label>
+      </div>
+
+      <div role="region" aria-label={label} tabIndex={0} className="overflow-x-auto bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+        <table className={`w-full ${minWidth} border-collapse text-xs`}>
+          <thead>
+            <tr className="border-b-2 border-border bg-bg text-xs text-text">
+              {columns.map((c) => (
+                <th
+                  key={c.key}
+                  scope="col"
+                  aria-sort={sort?.key === c.key ? (sort.dir === 1 ? "ascending" : "descending") : "none"}
+                  className={`whitespace-nowrap px-1 py-1 ${ALIGN[c.align ?? "left"]}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleSort(c)}
+                    title={`${c.title} sütununa göre sırala`}
+                    className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 font-bold hover:bg-surface"
+                  >
+                    {c.title}
+                    <span aria-hidden="true" className={sort?.key === c.key ? "text-accent" : "text-muted"}>
+                      {sort?.key === c.key ? (sort.dir === 1 ? "▲" : "▼") : "↕"}
+                    </span>
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="text-text">
+            {visible.map(({ row, index }, i) => (
+              <tr key={rowKey(row, index)} className={`border-b border-border last:border-b-0 ${hover} ${i % 2 === 0 ? "bg-surface" : "bg-bg"}`}>
+                {columns.map((c) => (
+                  <td key={c.key} className={`px-3 py-2.5 ${ALIGN[c.align ?? "left"]}`}>
+                    {c.cell(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+            {list.length === 0 && (
+              <tr>
+                <td colSpan={columns.length} className="px-3 py-8 text-center text-sm text-muted">
+                  Aramaya uygun kayıt yok.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <nav aria-label={`${label}: sayfalama`} className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-3 print:hidden">
+        <p className="text-xs text-muted">{list.length === 0 ? "0 kayıt" : `${first}–${Math.min(list.length, current * pageSize)} / ${list.length} kayıt`}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex items-center gap-2 text-xs font-semibold text-muted">
+            Sayfada
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className={control}
+            >
+              {PAGE_SIZES.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className={pager} disabled={current <= 1} onClick={() => setPage(1)} aria-label="İlk sayfa">
+            «
+          </button>
+          <button type="button" className={pager} disabled={current <= 1} onClick={() => setPage(current - 1)}>
+            Önceki
+          </button>
+          <span className="text-sm font-bold tabular-nums text-text">
+            {current} / {pageCount}
+          </span>
+          <button type="button" className={pager} disabled={current >= pageCount} onClick={() => setPage(current + 1)}>
+            Sonraki
+          </button>
+          <button type="button" className={pager} disabled={current >= pageCount} onClick={() => setPage(pageCount)} aria-label="Son sayfa">
+            »
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
 }
 
 export default function RaporlarPage() {
@@ -232,7 +409,7 @@ export default function RaporlarPage() {
                 value={selectedHotelId}
                 onChange={handleHotelChange}
                 aria-label="Otel"
-                className="min-h-11 bg-bg text-warn border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-warn/40"
+                className="min-h-11 bg-bg text-warn border border-border rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-accent"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -281,7 +458,7 @@ export default function RaporlarPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
         {/* Rapor Sekmeleri */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
-          <div data-guide="rapor-secimi" className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-border">
+          <div data-guide="rapor-secimi" className="flex flex-wrap items-center gap-2 bg-surface p-1 rounded-xl border border-border">
             <button
               onClick={() => setActiveTab("CONSUMPTION")}
               type="button"
@@ -319,14 +496,14 @@ export default function RaporlarPage() {
 
           {/* Filtre Barı */}
           <div data-guide="filtreler" className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-xl px-2.5 py-1 text-xs text-text">
+            <div className="flex flex-wrap items-center gap-1.5 bg-surface border border-border rounded-xl px-2.5 py-1 text-xs text-text">
               <span className="text-muted">Tarih:</span>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 aria-label={activeTab === "CONSUMPTION" ? "Başlangıç tarihi" : "Tarih"}
-                className="min-h-11 bg-transparent border-0 text-text text-xs focus:outline-none"
+                className="min-h-11 rounded-xl border border-border bg-bg px-2 text-text text-xs focus:border-accent focus:outline-none"
               />
               {activeTab === "CONSUMPTION" && (
                 <>
@@ -336,7 +513,7 @@ export default function RaporlarPage() {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     aria-label="Bitiş tarihi"
-                    className="min-h-11 bg-transparent border-0 text-text text-xs focus:outline-none"
+                    className="min-h-11 rounded-xl border border-border bg-bg px-2 text-text text-xs focus:border-accent focus:outline-none"
                   />
                 </>
               )}
@@ -347,7 +524,7 @@ export default function RaporlarPage() {
                 value={selectedFloorId}
                 onChange={(e) => setSelectedFloorId(e.target.value)}
                 aria-label="Kat"
-                className="min-h-11 bg-surface text-text border border-border rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-warn/40"
+                className="min-h-11 bg-bg text-text border border-border rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accent"
               >
                 <option value="">Tüm Katlar</option>
                 {floors.map((f) => (
@@ -370,7 +547,7 @@ export default function RaporlarPage() {
         {activeTab === "CONSUMPTION" && (
           <div className="space-y-6">
             {/* Metrik Kartları */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <div className="p-4 bg-surface border border-border rounded-2xl shadow-lg">
                 <span className="text-xs text-muted font-medium">Toplam Tüketilen Ürün Adedi</span>
                 <p className="text-2xl font-black text-success mt-1">{totalQty} Adet</p>
@@ -391,47 +568,53 @@ export default function RaporlarPage() {
                   Seçilen tarih aralığında tüketim kaydı bulunamadı.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                        <th className="py-3 px-4">Tarih</th>
-                        <th className="py-3 px-4">Oda / Kat</th>
-                        <th className="py-3 px-4">Personel</th>
-                        <th className="py-3 px-4">Tüketilen / İkame Edilen Ürünler</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-text">
-                      {consumptionItems.map((tx) => (
-                        <tr key={tx.transactionId} className="hover:bg-border transition">
-                          <td className="py-3.5 px-4 font-mono text-muted text-xs">
-                            {new Date(tx.date).toLocaleString("tr-TR", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                            })}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span className="font-bold text-text text-sm">Oda {tx.roomNumber}</span>
-                            <span className="block text-xs text-muted">{tx.floorName}</span>
-                          </td>
-                          <td className="py-3.5 px-4 text-text font-medium">{tx.staffName}</td>
-                          <td className="py-3.5 px-4">
-                            <div className="flex flex-wrap gap-1.5">
-                              {tx.items.map((it, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-2 py-0.5 rounded bg-bg border border-border text-text text-xs"
-                                >
-                                  {it.productName}: <strong className="text-warn">{it.quantity} adet</strong>
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable
+                  label="Tüketim kayıtları"
+                  rows={consumptionItems}
+                  rowKey={(tx) => tx.transactionId}
+                  minWidth="min-w-[760px]"
+                  searchText={(tx) => `${tx.roomNumber} ${tx.floorName} ${tx.staffName} ${tx.items.map((i) => i.productName).join(" ")}`}
+                  columns={[
+                    {
+                      key: "date",
+                      title: "Tarih",
+                      numeric: true,
+                      value: (tx) => new Date(tx.date).getTime(),
+                      cell: (tx) => (
+                        <span className="font-mono text-muted text-xs tabular-nums">
+                          {new Date(tx.date).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}
+                        </span>
+                      ),
+                    },
+                    {
+                      key: "room",
+                      title: "Oda / Kat",
+                      value: (tx) => tx.roomNumber,
+                      cell: (tx) => (
+                        <span>
+                          <span className="font-bold text-text text-sm">Oda {tx.roomNumber}</span>
+                          <span className="block text-xs text-muted">{tx.floorName}</span>
+                        </span>
+                      ),
+                    },
+                    { key: "staff", title: "Personel", value: (tx) => tx.staffName, cell: (tx) => <span className="text-text font-medium">{tx.staffName}</span> },
+                    {
+                      key: "items",
+                      title: "Tüketilen / İkame Edilen Ürünler",
+                      numeric: true,
+                      value: (tx) => tx.items.reduce((sum, it) => sum + it.quantity, 0),
+                      cell: (tx) => (
+                        <div className="flex flex-wrap gap-1.5">
+                          {tx.items.map((it, idx) => (
+                            <span key={idx} className="px-2 py-0.5 rounded bg-bg border border-border text-text text-xs">
+                              {it.productName}: <strong className="text-warn">{it.quantity} adet</strong>
+                            </span>
+                          ))}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               )}
             </div>
           </div>
@@ -508,81 +691,96 @@ export default function RaporlarPage() {
                     </span>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                          <th className="py-3 px-4">Oda / Kat</th>
-                          <th className="py-3 px-4">Görev Tipi</th>
-                          <th className="py-3 px-4 text-center">Öncelik</th>
-                          <th className="py-3 px-4 text-center">DND Sayısı</th>
-                          <th className="py-3 px-4">Kontrol Zamanı</th>
-                          <th className="py-3 px-4">Not / Durum Açıklaması</th>
-                          <th className="py-3 px-4 text-right">Durum</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border text-text">
-                        {taskReport.items.map((it, idx) => {
-                          const isDone = it.status === "TAMAMLANDI";
-                          return (
-                            <tr key={idx} className="hover:bg-border transition">
-                              <td className="py-3.5 px-4 font-bold text-text">
-                                Oda {it.roomNumber}
-                                <span className="block text-xs font-normal text-muted">
-                                  {it.floorName}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-4 font-mono text-text">{it.taskType}</td>
-                              <td className="py-3.5 px-4 text-center font-bold">
-                                {it.priority === 10 ? (
-                                  <span className="text-danger">1. Öncelik</span>
-                                ) : it.priority === 20 ? (
-                                  <span className="text-warn">2. Öncelik</span>
-                                ) : (
-                                  <span className="text-muted">Standart</span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4 text-center">
-                                {it.dndCount > 0 ? (
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                      it.dndCount >= 3
-                                        ? "bg-info/20 text-info border border-info/40"
-                                        : "bg-warn/20 text-warn"
-                                    }`}
-                                  >
-                                    {it.dndCount}/3 DND
-                                  </span>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
-                              </td>
-                              <td className="py-3.5 px-4 font-mono text-muted">
-                                {it.checkedAt
-                                  ? new Date(it.checkedAt).toLocaleTimeString("tr-TR", {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })
-                                  : "-"}
-                              </td>
-                              <td className="py-3.5 px-4 text-muted max-w-xs truncate">{it.note || "-"}</td>
-                              <td className="py-3.5 px-4 text-right">
-                                <span
-                                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                                    isDone
-                                      ? "bg-success/20 text-success border border-success/40"
-                                      : "bg-danger/20 text-danger border border-danger/40"
-                                  }`}
-                                >
-                                  {it.status}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <ReportTable
+                    label="Oda bazlı görev durumları"
+                    rows={taskReport.items}
+                    rowKey={(_, i) => String(i)}
+                    minWidth="min-w-[900px]"
+                    searchText={(it) => `${it.roomNumber} ${it.floorName} ${it.taskType} ${it.status} ${it.note ?? ""}`}
+                    columns={[
+                      {
+                        key: "room",
+                        title: "Oda / Kat",
+                        value: (it) => it.roomNumber,
+                        cell: (it) => (
+                          <span className="font-bold text-text">
+                            Oda {it.roomNumber}
+                            <span className="block text-xs font-normal text-muted">{it.floorName}</span>
+                          </span>
+                        ),
+                      },
+                      { key: "type", title: "Görev Tipi", value: (it) => it.taskType, cell: (it) => <span className="font-mono text-text">{it.taskType}</span> },
+                      {
+                        key: "priority",
+                        title: "Öncelik",
+                        align: "center",
+                        numeric: true,
+                        // A lower code is a higher priority, so the first (descending) click lists the urgent rooms first.
+                        value: (it) => -it.priority,
+                        cell: (it) =>
+                          it.priority === 10 ? (
+                            <span className="font-bold text-danger">1. Öncelik</span>
+                          ) : it.priority === 20 ? (
+                            <span className="font-bold text-warn">2. Öncelik</span>
+                          ) : (
+                            <span className="font-bold text-muted">Standart</span>
+                          ),
+                      },
+                      {
+                        key: "dnd",
+                        title: "DND Sayısı",
+                        align: "center",
+                        numeric: true,
+                        value: (it) => it.dndCount,
+                        cell: (it) =>
+                          it.dndCount > 0 ? (
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-bold tabular-nums ${
+                                it.dndCount >= 3 ? "bg-info/20 text-info border border-info/40" : "bg-warn/20 text-warn"
+                              }`}
+                            >
+                              {it.dndCount}/3 DND
+                            </span>
+                          ) : (
+                            <span className="text-muted">-</span>
+                          ),
+                      },
+                      {
+                        key: "checked",
+                        title: "Kontrol Zamanı",
+                        numeric: true,
+                        value: (it) => (it.checkedAt ? new Date(it.checkedAt).getTime() : null),
+                        cell: (it) => (
+                          <span className="font-mono text-muted tabular-nums">
+                            {it.checkedAt ? new Date(it.checkedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }) : "-"}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "note",
+                        title: "Not / Durum Açıklaması",
+                        value: (it) => it.note,
+                        cell: (it) => <span className="block max-w-xs min-w-0 truncate text-muted">{it.note || "-"}</span>,
+                      },
+                      {
+                        key: "status",
+                        title: "Durum",
+                        align: "right",
+                        value: (it) => it.status,
+                        cell: (it) => (
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                              it.status === "TAMAMLANDI"
+                                ? "bg-success/20 text-success border border-success/40"
+                                : "bg-danger/20 text-danger border border-danger/40"
+                            }`}
+                          >
+                            {it.status}
+                          </span>
+                        ),
+                      },
+                    ]}
+                  />
                 </div>
               </>
             ) : (
@@ -596,7 +794,7 @@ export default function RaporlarPage() {
         {/* 3. SEKME: ANORMAL TÜKETİM RAPORU */}
         {activeTab === "ABNORMAL" && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <div className="p-4 bg-surface border border-danger/40 rounded-2xl shadow-lg">
                 <span className="text-xs text-danger font-bold uppercase tracking-wider">Oda Bazlı Anormal Sarfiyat</span>
                 <p className="text-2xl font-black text-danger mt-1">
@@ -636,52 +834,58 @@ export default function RaporlarPage() {
                   <Icon name="check" size={20} /> Seçilen tarihte anormal tüketim tespit edilen oda bulunmamaktadır.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                        <th className="py-3 px-4">Oda / Kat</th>
-                        <th className="py-3 px-4">Otel</th>
-                        <th className="py-3 px-4 text-center">Dolum Sayısı</th>
-                        <th className="py-3 px-4">Tüketilen Ürün Dökümü</th>
-                        <th className="py-3 px-4 text-right">Toplam Tüketim</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-text">
-                      {abnormalReport.roomAnomalies.map((a, idx) => (
-                        <tr key={idx} className="hover:bg-danger/20 transition">
-                          <td className="py-3.5 px-4 font-bold text-text">
-                            Oda {a.roomNumber}
-                            <span className="block text-xs font-normal text-muted">
-                              {a.floorName}
+                <ReportTable
+                  label="Oda bazlı anormal tüketim"
+                  rows={abnormalReport.roomAnomalies}
+                  rowKey={(_, i) => String(i)}
+                  minWidth="min-w-[760px]"
+                  hover="hover:bg-danger/20"
+                  searchText={(a) => `${a.roomNumber} ${a.floorName} ${a.hotelName} ${a.details.map((d) => d.productName).join(" ")}`}
+                  columns={[
+                    {
+                      key: "room",
+                      title: "Oda / Kat",
+                      value: (a) => a.roomNumber,
+                      cell: (a) => (
+                        <span className="font-bold text-text">
+                          Oda {a.roomNumber}
+                          <span className="block text-xs font-normal text-muted">{a.floorName}</span>
+                        </span>
+                      ),
+                    },
+                    { key: "hotel", title: "Otel", value: (a) => a.hotelName, cell: (a) => <HotelBadges names={[a.hotelName]} /> },
+                    {
+                      key: "count",
+                      title: "Dolum Sayısı",
+                      align: "center",
+                      numeric: true,
+                      value: (a) => a.replenishmentCount,
+                      cell: (a) => <span className="px-2 py-0.5 rounded bg-bg text-warn font-bold text-xs tabular-nums">{a.replenishmentCount} Kez</span>,
+                    },
+                    {
+                      key: "details",
+                      title: "Tüketilen Ürün Dökümü",
+                      value: (a) => a.details.map((d) => d.productName).join(", "),
+                      cell: (a) => (
+                        <div className="flex flex-wrap gap-1.5">
+                          {a.details.map((d, dIdx) => (
+                            <span key={dIdx} className="px-2 py-0.5 rounded bg-bg text-text text-xs border border-border">
+                              {d.productName}: <strong className="text-danger">{d.quantity}</strong>
                             </span>
-                          </td>
-                          <td className="py-3.5 px-4 text-text"><HotelBadges names={[a.hotelName]} /></td>
-                          <td className="py-3.5 px-4 text-center">
-                            <span className="px-2 py-0.5 rounded bg-bg text-warn font-bold text-xs">
-                              {a.replenishmentCount} Kez
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <div className="flex flex-wrap gap-1.5">
-                              {a.details.map((d, dIdx) => (
-                                <span
-                                  key={dIdx}
-                                  className="px-2 py-0.5 rounded bg-bg text-text text-xs"
-                                >
-                                  {d.productName}: <strong className="text-danger">{d.quantity}</strong>
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4 text-right font-black text-danger font-mono text-sm">
-                            {a.totalQuantity} Adet
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          ))}
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "total",
+                      title: "Toplam Tüketim",
+                      align: "right",
+                      numeric: true,
+                      value: (a) => a.totalQuantity,
+                      cell: (a) => <span className="font-black text-danger font-mono text-sm tabular-nums">{a.totalQuantity} Adet</span>,
+                    },
+                  ]}
+                />
               )}
             </div>
 
@@ -695,36 +899,21 @@ export default function RaporlarPage() {
                   <span className="text-xs text-muted">14 Günlük Hareketli Ortalamaya Göre</span>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                        <th className="py-3 px-4">Ürün Adı</th>
-                        <th className="py-3 px-4">Kategori</th>
-                        <th className="py-3 px-4 text-center">Günlük Ortalama</th>
-                        <th className="py-3 px-4 text-center">Dünkü Tüketim</th>
-                        <th className="py-3 px-4 text-right">Artış Katsayısı</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-text">
-                      {abnormalReport.productAnomalies.map((p, idx) => (
-                        <tr key={idx} className="hover:bg-warn/10 transition">
-                          <td className="py-3.5 px-4 font-bold text-text text-sm">{p.productName}</td>
-                          <td className="py-3.5 px-4 text-muted">{p.categoryName}</td>
-                          <td className="py-3.5 px-4 text-center font-mono text-text">
-                            {p.averageDailyConsumed} adet/gün
-                          </td>
-                          <td className="py-3.5 px-4 text-center font-bold text-warn font-mono text-sm">
-                            {p.todayConsumed} Adet
-                          </td>
-                          <td className="py-3.5 px-4 text-right font-black text-danger font-mono text-sm">
-                            +{p.spikeRatio}x
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <ReportTable
+                  label="Ürün bazlı olağandışı tüketim"
+                  rows={abnormalReport.productAnomalies}
+                  rowKey={(_, i) => String(i)}
+                  minWidth="min-w-[640px]"
+                  hover="hover:bg-warn/10"
+                  searchText={(p) => `${p.productName} ${p.categoryName}`}
+                  columns={[
+                    { key: "name", title: "Ürün Adı", value: (p) => p.productName, cell: (p) => <span className="font-bold text-text text-sm">{p.productName}</span> },
+                    { key: "cat", title: "Kategori", value: (p) => p.categoryName, cell: (p) => <span className="text-muted">{p.categoryName}</span> },
+                    { key: "avg", title: "Günlük Ortalama", align: "center", numeric: true, value: (p) => p.averageDailyConsumed, cell: (p) => <span className="font-mono text-text tabular-nums">{p.averageDailyConsumed} adet/gün</span> },
+                    { key: "today", title: "Dünkü Tüketim", align: "center", numeric: true, value: (p) => p.todayConsumed, cell: (p) => <span className="font-bold text-warn font-mono text-sm tabular-nums">{p.todayConsumed} Adet</span> },
+                    { key: "ratio", title: "Artış Katsayısı", align: "right", numeric: true, value: (p) => p.spikeRatio, cell: (p) => <span className="font-black text-danger font-mono text-sm tabular-nums">+{p.spikeRatio}x</span> },
+                  ]}
+                />
               </div>
             )}
           </div>

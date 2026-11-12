@@ -98,6 +98,168 @@ interface HotelOption {
   code: string;
 }
 
+const PAGE_SIZES = [25, 50, 100] as const;
+const TABLE_WRAP = "overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+const THEAD = "border-b-2 border-border bg-bg text-xs text-text";
+const rowClass = (i: number) => `border-b border-border last:border-b-0 hover:bg-accent/10 ${i % 2 === 0 ? "bg-surface" : "bg-bg"}`;
+
+type SortState = { key: string; dir: 1 | -1 } | null;
+type SortPageView = {
+  sort: SortState;
+  toggleSort: (key: string) => void;
+  pageSize: number;
+  setPageSize: (n: number) => void;
+  page: number;
+  pageCount: number;
+  setPage: (n: number) => void;
+  total: number;
+  first: number;
+};
+
+/** Client-side sorting and paging of a list. Empty cells sort last; numeric columns start from the largest. */
+function useSortPage<T>(
+  rows: T[],
+  values: Record<string, (row: T) => string | number | null>,
+  numeric: readonly string[],
+): SortPageView & { visible: T[] } {
+  const [sort, setSort] = useState<SortState>(null);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  const [page, setPage] = useState(1);
+
+  let list = rows;
+  const get = sort ? values[sort.key] : undefined;
+  if (sort && get) {
+    const empty = (v: unknown) => v === null || v === undefined || v === "";
+    list = rows
+      .map((row, index) => ({ row, index, v: get(row) }))
+      .sort((a, b) => {
+        if (empty(a.v) || empty(b.v)) return empty(a.v) === empty(b.v) ? a.index - b.index : empty(a.v) ? 1 : -1;
+        const result =
+          typeof a.v === "number" && typeof b.v === "number"
+            ? a.v - b.v
+            : String(a.v).localeCompare(String(b.v), "tr", { numeric: true, sensitivity: "base" });
+        return result === 0 ? a.index - b.index : sort.dir * result;
+      })
+      .map((x) => x.row);
+  }
+  const pageCount = Math.max(1, Math.ceil(list.length / pageSize));
+  const current = Math.min(page, pageCount);
+  return {
+    visible: list.slice((current - 1) * pageSize, current * pageSize),
+    sort,
+    toggleSort: (key) => {
+      setSort((s) => (s?.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: numeric.includes(key) ? -1 : 1 }));
+      setPage(1);
+    },
+    pageSize,
+    setPageSize: (n) => {
+      setPageSize(n);
+      setPage(1);
+    },
+    page: current,
+    pageCount,
+    setPage,
+    total: list.length,
+    first: list.length === 0 ? 0 : (current - 1) * pageSize + 1,
+  };
+}
+
+/** Column header that sorts the table when pressed. */
+function SortTh({
+  view,
+  k,
+  align = "left",
+  children,
+}: {
+  view: SortPageView;
+  k: string;
+  align?: "left" | "center";
+  children: string;
+}) {
+  const on = view.sort?.key === k;
+  return (
+    <th
+      scope="col"
+      aria-sort={on ? (view.sort?.dir === 1 ? "ascending" : "descending") : "none"}
+      className={`whitespace-nowrap px-1 py-1 ${align === "center" ? "text-center" : "text-left"}`}
+    >
+      <button
+        type="button"
+        onClick={() => view.toggleSort(k)}
+        title={`${children} sütununa göre sırala`}
+        className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 font-bold hover:bg-surface"
+      >
+        {children}
+        <span aria-hidden="true" className={on ? "text-accent" : "text-muted"}>
+          {on ? (view.sort?.dir === 1 ? "▲" : "▼") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+/** Search box above a table. */
+function TableSearch({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="border-b border-border p-3">
+      <label className="block text-xs font-semibold text-muted sm:max-w-sm">
+        Ara
+        <input
+          type="search"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Tabloda ara"
+          aria-label={label}
+          className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 text-sm text-text focus:border-accent focus:outline-none"
+        />
+      </label>
+    </div>
+  );
+}
+
+/** Page size and page buttons under a table. */
+function Pager({ view, noun }: { view: SortPageView; noun: string }) {
+  const pager = "min-h-11 min-w-11 rounded-xl border border-border bg-surface px-3 text-sm font-semibold text-text hover:bg-bg disabled:opacity-40";
+  return (
+    <nav aria-label={`${noun} sayfalama`} className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-3">
+      <p className="text-xs text-muted">
+        {view.total === 0 ? `0 ${noun}` : `${view.first}–${Math.min(view.total, view.page * view.pageSize)} / ${view.total} ${noun}`}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="inline-flex items-center gap-2 text-xs font-semibold text-muted">
+          Sayfada
+          <select
+            value={view.pageSize}
+            onChange={(e) => view.setPageSize(Number(e.target.value))}
+            className="min-h-11 rounded-xl border border-border bg-bg px-3 text-sm text-text focus:border-accent focus:outline-none"
+          >
+            {PAGE_SIZES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className={pager} disabled={view.page <= 1} onClick={() => view.setPage(1)} aria-label="İlk sayfa">
+          «
+        </button>
+        <button type="button" className={pager} disabled={view.page <= 1} onClick={() => view.setPage(view.page - 1)}>
+          Önceki
+        </button>
+        <span className="text-sm font-bold tabular-nums text-text">
+          {view.page} / {view.pageCount}
+        </span>
+        <button type="button" className={pager} disabled={view.page >= view.pageCount} onClick={() => view.setPage(view.page + 1)}>
+          Sonraki
+        </button>
+        <button type="button" className={pager} disabled={view.page >= view.pageCount} onClick={() => view.setPage(view.pageCount)} aria-label="Son sayfa">
+          »
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export default function MinibarTanimlarPage() {
   const [activeTab, setActiveTab] = useState<
     "GROUPS" | "PRODUCTS" | "ROOM_TYPES" | "SETUPS" | "ASSIGNMENTS" | "AUDIT"
@@ -120,6 +282,8 @@ export default function MinibarTanimlarPage() {
   // Search & Filters
   const [productSearch, setProductSearch] = useState<string>("");
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>("");
+  const [assignSearch, setAssignSearch] = useState<string>("");
+  const [auditSearch, setAuditSearch] = useState<string>("");
 
   // Modal states
   const [modalMode, setModalMode] = useState<
@@ -621,6 +785,49 @@ export default function MinibarTanimlarPage() {
     );
   });
 
+  const filteredAssignments = assignments.filter((a) => {
+    const q = assignSearch.trim().toLowerCase();
+    return !q || `${a.hotelName} ${a.roomTypeName} ${a.setupName}`.toLowerCase().includes(q);
+  });
+  const filteredAudit = auditLogs.filter((log) => {
+    const q = auditSearch.trim().toLowerCase();
+    return !q || `${log.action} ${log.entity} ${log.entityId ?? ""} ${log.userName} ${log.ip ?? ""}`.toLowerCase().includes(q);
+  });
+  const productView = useSortPage(
+    filteredProducts,
+    {
+      name: (r) => r.name,
+      group: (r) => r.groupName,
+      code: (r) => r.barcode || r.code,
+      unit: (r) => r.unit,
+      critical: (r) => r.criticalLevel,
+      status: (r) => (r.isActive ? 1 : 0),
+    },
+    ["critical", "status"],
+  );
+  const assignView = useSortPage(
+    filteredAssignments,
+    {
+      hotel: (r) => r.hotelName,
+      roomType: (r) => r.roomTypeName,
+      setup: (r) => r.setupName,
+      place: (r) => (r.isInsideCabinet ? 1 : 0),
+      items: (r) => r.itemCount,
+    },
+    ["place", "items"],
+  );
+  const auditView = useSortPage(
+    filteredAudit,
+    {
+      date: (r) => new Date(r.createdAt).getTime(),
+      action: (r) => r.action,
+      entity: (r) => r.entity,
+      user: (r) => r.userName,
+      ip: (r) => r.ip,
+    },
+    ["date"],
+  );
+
   return (
     <div className="depo-touch min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
@@ -656,7 +863,7 @@ export default function MinibarTanimlarPage() {
                   setSelectedHotelId(id);
                   void loadHotelSpecificData(id);
                 }}
-                className="bg-bg text-warn border border-border rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-warn/40"
+                className="bg-bg text-warn border border-border rounded-xl px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-accent"
               >
                 {hotels.map((h) => (
                   <option key={h.id} value={h.id}>
@@ -796,14 +1003,20 @@ export default function MinibarTanimlarPage() {
                   type="text"
                   placeholder="Ürün adı, kod veya barkod ara..."
                   value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
+                  onChange={(e) => {
+                    setProductSearch(e.target.value);
+                    productView.setPage(1);
+                  }}
                   className="bg-surface border border-border rounded-xl px-3 py-2 text-xs text-text placeholder-muted focus:outline-none focus:border-warn/40 w-full sm:w-64"
                 />
 
                 <select
                   aria-label="Ürün grubu filtresi"
                   value={selectedGroupFilter}
-                  onChange={(e) => setSelectedGroupFilter(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedGroupFilter(e.target.value);
+                    productView.setPage(1);
+                  }}
                   className="bg-surface text-text border border-border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-warn/40"
                 >
                   <option value="">Tüm Gruplar</option>
@@ -844,84 +1057,87 @@ export default function MinibarTanimlarPage() {
               ) : filteredProducts.length === 0 ? (
                 <div className="py-16 text-center text-muted text-sm">Ürün bulunamadı.</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                        <th className="py-3 px-4">Ürün Adı</th>
-                        <th className="py-3 px-4">Grup</th>
-                        <th className="py-3 px-4">Barkod / Kod</th>
-                        <th className="py-3 px-4 text-center">Birim</th>
-                        <th className="py-3 px-4 text-center">Kritik Seviye</th>
-                        <th className="py-3 px-4 text-center">Durum</th>
-                        <th className="py-3 px-4 text-right">İşlemler</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-text">
-                      {filteredProducts.map((p, pIdx) => (
-                        <tr key={p.id} className="hover:bg-border transition">
-                          <td className="py-3 px-4 font-bold text-text text-sm">
-                            {p.name}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded bg-bg text-warn text-xs font-semibold">
-                              {p.groupName}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 font-mono text-muted">
-                            {p.barcode || p.code || "-"}
-                          </td>
-                          <td className="py-3 px-4 text-center">{p.unit}</td>
-                          <td className="py-3 px-4 text-center font-mono">{p.criticalLevel}</td>
-                          <td className="py-3 px-4 text-center">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                                p.isActive
-                                  ? "bg-success/20 text-success border border-success/40"
-                                  : "bg-border text-muted"
-                              }`}
-                            >
-                              {p.isActive ? "Aktif" : "Pasif"}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                data-guide={pIdx === 0 ? "duzenle" : undefined}
-                                onClick={() => {
-                                  setCurrentProduct({
-                                    id: p.id,
-                                    groupId: p.groupId,
-                                    name: p.name,
-                                    code: p.code || "",
-                                    barcode: p.barcode || "",
-                                    unit: p.unit,
-                                    criticalLevel: p.criticalLevel,
-                                    purchasePrice: String(p.purchasePrice || 0),
-                                    salePrice: String(p.salePrice || 0),
-                                    isActive: p.isActive,
-                                  });
-                                  setModalMode("PRODUCT_FORM");
-                                }}
-                                className="px-2.5 py-1 bg-bg hover:bg-border text-text rounded-lg transition"
-                                title="Düzenle"
-                              >
-                                Düzenle
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(p.id, p.name)}
-                                className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
-                                title="Sil"
-                              >
-                                Sil
-                              </button>
-                            </div>
-                          </td>
+                <>
+                  <div className={TABLE_WRAP} role="region" aria-label="Ürünler tablosu" tabIndex={0}>
+                    <table className="w-full min-w-[820px] text-left text-xs border-collapse">
+                      <thead>
+                        <tr className={THEAD}>
+                          <SortTh view={productView} k="name">Ürün Adı</SortTh>
+                          <SortTh view={productView} k="group">Grup</SortTh>
+                          <SortTh view={productView} k="code">Barkod / Kod</SortTh>
+                          <SortTh view={productView} k="unit" align="center">Birim</SortTh>
+                          <SortTh view={productView} k="critical" align="center">Kritik Seviye</SortTh>
+                          <SortTh view={productView} k="status" align="center">Durum</SortTh>
+                          <th scope="col" className="py-3 px-4 text-right">İşlemler</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="text-text">
+                        {productView.visible.map((p, pIdx) => (
+                          <tr key={p.id} className={rowClass(pIdx)}>
+                            <td className="py-3 px-4 font-bold text-text text-sm">
+                              {p.name}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded bg-bg text-warn text-xs font-semibold border border-border">
+                                {p.groupName}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 font-mono text-muted">
+                              {p.barcode || p.code || "-"}
+                            </td>
+                            <td className="py-3 px-4 text-center">{p.unit}</td>
+                            <td className="py-3 px-4 text-center font-mono tabular-nums">{p.criticalLevel}</td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                  p.isActive
+                                    ? "bg-success/20 text-success border border-success/40"
+                                    : "bg-border text-muted"
+                                }`}
+                              >
+                                {p.isActive ? "Aktif" : "Pasif"}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  data-guide={pIdx === 0 ? "duzenle" : undefined}
+                                  onClick={() => {
+                                    setCurrentProduct({
+                                      id: p.id,
+                                      groupId: p.groupId,
+                                      name: p.name,
+                                      code: p.code || "",
+                                      barcode: p.barcode || "",
+                                      unit: p.unit,
+                                      criticalLevel: p.criticalLevel,
+                                      purchasePrice: String(p.purchasePrice || 0),
+                                      salePrice: String(p.salePrice || 0),
+                                      isActive: p.isActive,
+                                    });
+                                    setModalMode("PRODUCT_FORM");
+                                  }}
+                                  className="px-2.5 py-1 bg-bg hover:bg-border text-text border border-border rounded-lg transition"
+                                  title="Düzenle"
+                                >
+                                  Düzenle
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProduct(p.id, p.name)}
+                                  className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
+                                  title="Sil"
+                                >
+                                  Sil
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pager view={productView} noun="ürün" />
+                </>
               )}
             </div>
           </div>
@@ -932,7 +1148,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "GROUPS" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-muted">
                 Minibar ürünlerini kategorilendirmek ve raporlamak için ürün gruplarını yönetin.
               </p>
@@ -1011,7 +1227,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "SETUPS" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-muted">
                 Oda tiplerine atanacak minibar setup konseptlerini ve her konseptin norm hedef içeriklerini yönetin.
               </p>
@@ -1114,7 +1330,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "ROOM_TYPES" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-muted">
                 Seçili oteldeki oda tiplerini ve dolap kapasitelerini yönetin.
               </p>
@@ -1134,21 +1350,21 @@ export default function MinibarTanimlarPage() {
               </button>
             </div>
 
-            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" role="region" aria-label="Oda tipleri tablosu" tabIndex={0}>
+              <table className="w-full min-w-[820px] text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                    <th className="py-3 px-4">Oda Tipi Adı</th>
-                    <th className="py-3 px-4 text-center">Dolap Sayısı</th>
-                    <th className="py-3 px-4 text-center">Oteldeki Oda Sayısı</th>
-                    <th className="py-3 px-4">Atanmış Minibar Setupları</th>
-                    <th className="py-3 px-4 text-center">Durum</th>
-                    <th className="py-3 px-4 text-right">İşlemler</th>
+                  <tr className={THEAD}>
+                    <th scope="col" className="py-3 px-4">Oda Tipi Adı</th>
+                    <th scope="col" className="py-3 px-4 text-center">Dolap Sayısı</th>
+                    <th scope="col" className="py-3 px-4 text-center">Oteldeki Oda Sayısı</th>
+                    <th scope="col" className="py-3 px-4">Atanmış Minibar Setupları</th>
+                    <th scope="col" className="py-3 px-4 text-center">Durum</th>
+                    <th scope="col" className="py-3 px-4 text-right">İşlemler</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border text-text">
-                  {roomTypes.map((rt) => (
-                    <tr key={rt.id} className="hover:bg-border transition">
+                <tbody className="text-text">
+                  {roomTypes.map((rt, rtIdx) => (
+                    <tr key={rt.id} className={rowClass(rtIdx)}>
                       <td className="py-3.5 px-4 font-bold text-text text-sm">{rt.name}</td>
                       <td className="py-3.5 px-4 text-center font-mono font-bold text-warn">
                         {rt.cabinetCount} Dolap
@@ -1209,6 +1425,13 @@ export default function MinibarTanimlarPage() {
                       </td>
                     </tr>
                   ))}
+                  {roomTypes.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted">
+                        Bu otelde oda tipi bulunamadı.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1220,7 +1443,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "ASSIGNMENTS" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-muted">
                 Hangi oda tipinde hangi minibar setup konseptinin geçerli olacağını belirleyin.
               </p>
@@ -1239,49 +1462,62 @@ export default function MinibarTanimlarPage() {
               </button>
             </div>
 
-            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-x-auto">
+            <div className="bg-surface border border-border rounded-2xl shadow-xl overflow-hidden">
               {assignments.length === 0 ? (
                 <div className="py-16 text-center text-muted text-sm">
                   Henüz bu otel için bir oda tipi - setup ataması yapılmamış.
                 </div>
               ) : (
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                      <th className="py-3 px-4">Otel</th>
-                      <th className="py-3 px-4">Oda Tipi</th>
-                      <th className="py-3 px-4">Atanan Setup Konsepti</th>
-                      <th className="py-3 px-4 text-center">Konum</th>
-                      <th className="py-3 px-4 text-center">İçerik Çeşidi</th>
-                      <th className="py-3 px-4 text-right">İşlem</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border text-text">
-                    {assignments.map((a, idx) => (
-                      <tr key={idx} className="hover:bg-border transition">
-                        <td className="py-3.5 px-4 font-medium text-text"><HotelBadges names={[a.hotelName]} /></td>
-                        <td className="py-3.5 px-4 font-bold text-text text-sm">{a.roomTypeName}</td>
-                        <td className="py-3.5 px-4 font-bold text-warn">{a.setupName}</td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="px-2 py-0.5 rounded bg-bg text-text text-xs">
-                            {a.isInsideCabinet ? "Dolap İçi" : "Açıkta"}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-center font-bold text-text">
-                          {a.itemCount} Ürün
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleRemoveAssignment(a.roomTypeId, a.setupId)}
-                            className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
-                          >
-                            Atamayı Kaldır
-                          </button>
+                <>
+                  <TableSearch label="Atamalarda ara" value={assignSearch} onChange={(v) => { setAssignSearch(v); assignView.setPage(1); }} />
+                  <div className={TABLE_WRAP} role="region" aria-label="Setup atamaları tablosu" tabIndex={0}>
+                    <table className="w-full min-w-[760px] text-left text-xs border-collapse">
+                      <thead>
+                        <tr className={THEAD}>
+                          <SortTh view={assignView} k="hotel">Otel</SortTh>
+                          <SortTh view={assignView} k="roomType">Oda Tipi</SortTh>
+                          <SortTh view={assignView} k="setup">Atanan Setup Konsepti</SortTh>
+                          <SortTh view={assignView} k="place" align="center">Konum</SortTh>
+                          <SortTh view={assignView} k="items" align="center">İçerik Çeşidi</SortTh>
+                          <th scope="col" className="py-3 px-4 text-right">İşlem</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-text">
+                        {assignView.visible.map((a, i) => (
+                          <tr key={`${a.roomTypeId}-${a.setupId}`} className={rowClass(i)}>
+                            <td className="py-3.5 px-4 font-medium text-text"><HotelBadges names={[a.hotelName]} /></td>
+                            <td className="py-3.5 px-4 font-bold text-text text-sm">{a.roomTypeName}</td>
+                            <td className="py-3.5 px-4 font-bold text-warn">{a.setupName}</td>
+                            <td className="py-3.5 px-4 text-center">
+                              <span className="px-2 py-0.5 rounded bg-bg text-text text-xs border border-border">
+                                {a.isInsideCabinet ? "Dolap İçi" : "Açıkta"}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-center font-bold text-text tabular-nums">
+                              {a.itemCount} Ürün
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <button
+                                onClick={() => handleRemoveAssignment(a.roomTypeId, a.setupId)}
+                                className="px-2.5 py-1 bg-danger/10 hover:bg-danger/20 text-danger border border-danger/40 rounded-lg transition"
+                              >
+                                Atamayı Kaldır
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    {assignView.total === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted">
+                          Aramaya uygun kayıt yok.
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pager view={assignView} noun="atama" />
+                </>
               )}
             </div>
           </div>
@@ -1292,7 +1528,7 @@ export default function MinibarTanimlarPage() {
         ───────────────────────────────────────────────────────────────── */}
         {activeTab === "AUDIT" && (
           <div className="space-y-4">
-            <div className="p-4 bg-info/10 border border-info/40 rounded-2xl flex items-center justify-between gap-3 text-info text-xs">
+            <div className="p-4 bg-info/10 border border-info/40 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-info text-xs">
               <div className="flex items-center gap-2.5">
                 <Icon name="shield" size={24} />
                 <div>
@@ -1311,71 +1547,82 @@ export default function MinibarTanimlarPage() {
               {auditLogs.length === 0 ? (
                 <div className="py-16 text-center text-muted text-sm">Henüz denetim kaydı bulunamadı.</div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-border text-muted font-semibold uppercase tracking-wider bg-bg/40">
-                        <th className="py-3 px-4">Tarih / Saat Damgası</th>
-                        <th className="py-3 px-4 text-center">İşlem (Action)</th>
-                        <th className="py-3 px-4">Varlık (Entity)</th>
-                        <th className="py-3 px-4">Kullanıcı</th>
-                        <th className="py-3 px-4">IP Adresi</th>
-                        <th className="py-3 px-4 text-right">Eski vs Yeni Veri</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-text">
-                      {auditLogs.map((log) => {
-                        const isDelete = log.action === "DELETE" || log.action === "DEACTIVATE";
-                        const isUpdate = log.action === "UPDATE";
+                <>
+                  <TableSearch label="Denetim kaydında ara" value={auditSearch} onChange={(v) => { setAuditSearch(v); auditView.setPage(1); }} />
+                  <div className={TABLE_WRAP} role="region" aria-label="Denetim kayıtları tablosu" tabIndex={0}>
+                    <table className="w-full min-w-[820px] text-left text-xs border-collapse">
+                      <thead>
+                        <tr className={THEAD}>
+                          <SortTh view={auditView} k="date">Tarih / Saat Damgası</SortTh>
+                          <SortTh view={auditView} k="action" align="center">İşlem (Action)</SortTh>
+                          <SortTh view={auditView} k="entity">Varlık (Entity)</SortTh>
+                          <SortTh view={auditView} k="user">Kullanıcı</SortTh>
+                          <SortTh view={auditView} k="ip">IP Adresi</SortTh>
+                          <th scope="col" className="py-3 px-4 text-right">Eski vs Yeni Veri</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-text">
+                        {auditView.visible.map((log, i) => {
+                          const isDelete = log.action === "DELETE" || log.action === "DEACTIVATE";
+                          const isUpdate = log.action === "UPDATE";
 
-                        return (
-                          <tr key={log.id} className="hover:bg-border transition">
-                            <td className="py-3 px-4 font-mono text-muted">
-                              {new Date(log.createdAt).toLocaleString("tr-TR", {
-                                dateStyle: "short",
-                                timeStyle: "medium",
-                              })}
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <span
-                                className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                  isDelete
-                                    ? "bg-danger/20 text-danger border border-danger/40"
-                                    : isUpdate
-                                    ? "bg-warn/20 text-warn border border-warn/40"
-                                    : "bg-success/20 text-success border border-success/40"
-                                }`}
-                              >
-                                {log.action}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 font-bold text-text">
-                              {log.entity}
-                              {log.entityId && (
-                                <span className="block font-mono text-xs text-muted truncate max-w-[120px]">
-                                  {log.entityId}
+                          return (
+                            <tr key={log.id} className={rowClass(i)}>
+                              <td className="py-3 px-4 font-mono text-muted tabular-nums">
+                                {new Date(log.createdAt).toLocaleString("tr-TR", {
+                                  dateStyle: "short",
+                                  timeStyle: "medium",
+                                })}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                    isDelete
+                                      ? "bg-danger/20 text-danger border border-danger/40"
+                                      : isUpdate
+                                      ? "bg-warn/20 text-warn border border-warn/40"
+                                      : "bg-success/20 text-success border border-success/40"
+                                  }`}
+                                >
+                                  {log.action}
                                 </span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-text font-medium">{log.userName}</td>
-                            <td className="py-3 px-4 font-mono text-muted text-xs">{log.ip || "-"}</td>
-                            <td className="py-3 px-4 text-right">
-                              <button
-                                onClick={() => {
-                                  setActiveAuditLog(log);
-                                  setModalMode("AUDIT_DIFF");
-                                }}
-                                className="px-2.5 py-1 bg-info/20 hover:bg-info/30 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
-                              >
-                                <Icon name="search" size={20} /> Snapshot Gör
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                              </td>
+                              <td className="py-3 px-4 font-bold text-text">
+                                {log.entity}
+                                {log.entityId && (
+                                  <span className="block font-mono text-xs text-muted truncate max-w-[120px]">
+                                    {log.entityId}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-text font-medium">{log.userName}</td>
+                              <td className="py-3 px-4 font-mono text-muted text-xs">{log.ip || "-"}</td>
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => {
+                                    setActiveAuditLog(log);
+                                    setModalMode("AUDIT_DIFF");
+                                  }}
+                                  className="px-2.5 py-1 bg-info/20 hover:bg-info/30 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
+                                >
+                                  <Icon name="search" size={20} /> Snapshot Gör
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    {auditView.total === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted">
+                          Aramaya uygun kayıt yok.
+                        </td>
+                      </tr>
+                    )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pager view={auditView} noun="kayıt" />
+                </>
               )}
             </div>
           </div>
@@ -1415,13 +1662,13 @@ export default function MinibarTanimlarPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex min-h-11 items-center gap-2">
                 <input
                   type="checkbox"
                   id="grpActive"
                   checked={currentGroup.isActive}
                   onChange={(e) => setCurrentGroup({ ...currentGroup, isActive: e.target.checked })}
-                  className="rounded border-border text-warn focus:ring-0"
+                  className="h-5 w-5 shrink-0 rounded border-border text-warn focus:ring-0"
                 />
                 <label htmlFor="grpActive" className="text-xs text-text">
                   Aktif Grup
@@ -1538,13 +1785,13 @@ export default function MinibarTanimlarPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex min-h-11 items-center gap-2">
                 <input
                   type="checkbox"
                   id="prodActive"
                   checked={currentProduct.isActive}
                   onChange={(e) => setCurrentProduct({ ...currentProduct, isActive: e.target.checked })}
-                  className="rounded border-border text-warn focus:ring-0"
+                  className="h-5 w-5 shrink-0 rounded border-border text-warn focus:ring-0"
                 />
                 <label htmlFor="prodActive" className="text-xs text-text">
                   Aktif Ürün
@@ -1604,23 +1851,23 @@ export default function MinibarTanimlarPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+              <div className="flex flex-wrap items-center gap-x-4">
+                <label className="flex min-h-11 items-center gap-2 text-xs text-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentSetup.isInsideCabinet}
                     onChange={(e) => setCurrentSetup({ ...currentSetup, isInsideCabinet: e.target.checked })}
-                    className="rounded border-border text-warn focus:ring-0"
+                    className="h-5 w-5 shrink-0 rounded border-border text-warn focus:ring-0"
                   />
                   <span>Dolap İçi Ürünler</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs text-text cursor-pointer">
+                <label className="flex min-h-11 items-center gap-2 text-xs text-text cursor-pointer">
                   <input
                     type="checkbox"
                     checked={currentSetup.isActive}
                     onChange={(e) => setCurrentSetup({ ...currentSetup, isActive: e.target.checked })}
-                    className="rounded border-border text-warn focus:ring-0"
+                    className="h-5 w-5 shrink-0 rounded border-border text-warn focus:ring-0"
                   />
                   <span>Aktif</span>
                 </label>
@@ -1796,13 +2043,13 @@ export default function MinibarTanimlarPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex min-h-11 items-center gap-2">
                 <input
                   type="checkbox"
                   id="rtActive"
                   checked={currentRoomType.isActive}
                   onChange={(e) => setCurrentRoomType({ ...currentRoomType, isActive: e.target.checked })}
-                  className="rounded border-border text-warn focus:ring-0"
+                  className="h-5 w-5 shrink-0 rounded border-border text-warn focus:ring-0"
                 />
                 <label htmlFor="rtActive" className="text-xs text-text">
                   Aktif Oda Tipi

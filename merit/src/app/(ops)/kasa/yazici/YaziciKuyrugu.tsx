@@ -136,12 +136,12 @@ export function YaziciKuyrugu({
           <h1 className="text-xl font-extrabold">Fiş Yazıcı Kuyruğu</h1>
           <p className="text-sm text-muted">Bugünün işleri</p>
         </div>
-        {canTestPrint ? <div className="flex items-center" style={{ gap: "var(--tap-gap)" }}>
+        {canTestPrint ? <div className="flex flex-wrap items-center" style={{ gap: "var(--tap-gap)" }}>
           <select
             aria-label="Yazıcı"
             value={testPrinterId}
             onChange={(event) => setTestPrinterId(event.target.value)}
-            className="rounded-[var(--radius-m)] border border-border bg-surface px-3 text-base" style={{ minHeight: "var(--tap-action)" }}
+            className="min-h-11 min-w-0 rounded-xl border border-border bg-bg px-3 text-base text-text" style={{ minHeight: "var(--tap-action)" }}
           >
             {testPrinters.length === 0 ? <option value="">Yazıcı yok</option> : null}
             {testPrinters.map((printer) => (
@@ -180,10 +180,10 @@ export function YaziciKuyrugu({
         )}
       </section>
 
-      <section data-guide="bekleyen-fisler" role="region" aria-label="Yazıcı işleri" tabIndex={0} className="overflow-x-auto rounded-[var(--radius-l)] border border-border bg-surface">
-        <table className="w-full text-sm">
+      <section data-guide="bekleyen-fisler" role="region" aria-label="Yazıcı işleri" tabIndex={0} className="relative overflow-x-auto rounded-2xl border border-border bg-surface">
+        <table className="w-full min-w-[720px] text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-sm text-muted">
+            <tr className="border-b-2 border-border bg-bg text-left text-sm text-muted">
               <th scope="col" className="px-3 py-2">
                 Saat
               </th>
@@ -199,7 +199,7 @@ export function YaziciKuyrugu({
               <th scope="col" className="px-3 py-2">
                 Durum
               </th>
-              <th scope="col" className="px-3 py-2">
+              <th scope="col" className="px-3 py-2 text-center">
                 Deneme
               </th>
               <th scope="col" className="px-3 py-2">
@@ -209,8 +209,8 @@ export function YaziciKuyrugu({
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job) => (
-              <tr key={job.id} className="border-b border-border last:border-0">
+            {jobs.map((job, index) => (
+              <tr key={job.id} className={`border-b border-border last:border-0 hover:bg-accent/10 ${index % 2 === 0 ? "bg-surface" : "bg-bg"}`}>
                 <td className="whitespace-nowrap px-3 py-2">{formatInTimeZone(job.createdAt, TZ, "HH:mm")}</td>
                 <td className="px-3 py-2 font-medium">{jobLabel(job)}</td>
                 <td className="px-3 py-2">{jobTable(job)}</td>
@@ -218,7 +218,7 @@ export function YaziciKuyrugu({
                 <td className="px-3 py-2">
                   <StatusBadge status={job.status} />
                 </td>
-                <td className="px-3 py-2">{job.attempts}</td>
+                <td className="px-3 py-2 text-center tabular-nums">{job.attempts}</td>
                 <td className="max-w-64 truncate px-3 py-2">
                   {job.error ?? ""}
                 </td>

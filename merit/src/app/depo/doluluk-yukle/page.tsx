@@ -509,10 +509,10 @@ export default function DolulukYuklePage() {
               </ul>
             )}
             {preview.sample.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+              <div className="overflow-x-auto rounded-2xl border border-border" role="region" tabIndex={0} aria-label="Önizleme örnek satırları">
+                <table className="w-full min-w-[480px] text-left text-xs">
                   <thead>
-                    <tr className="text-muted border-b border-border">
+                    <tr className="text-muted border-b-2 border-border bg-bg">
                       <th className="py-2 px-2">Satır</th>
                       <th className="py-2 px-2">Oda</th>
                       <th className="py-2 px-2">Giriş</th>
@@ -521,8 +521,8 @@ export default function DolulukYuklePage() {
                     </tr>
                   </thead>
                   <tbody className="text-text">
-                    {preview.sample.map((s) => (
-                      <tr key={s.row} className="border-b border-border/60">
+                    {preview.sample.map((s, idx) => (
+                      <tr key={s.row} className={`${idx % 2 === 0 ? "bg-surface" : "bg-bg"} hover:bg-accent/10`}>
                         <td className="py-1.5 px-2">{s.row}</td>
                         <td className="py-1.5 px-2 font-semibold text-text">{s.roomNumber}</td>
                         <td className="py-1.5 px-2">
@@ -600,10 +600,10 @@ export default function DolulukYuklePage() {
               Henüz bu otel için bir doluluk dosyası yüklenmemiş.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table data-testid="occupancy-history" className="w-full text-left text-xs">
+            <div className="overflow-x-auto rounded-2xl border border-border" role="region" tabIndex={0} aria-label="Yükleme geçmişi tablosu">
+              <table data-testid="occupancy-history" className="w-full min-w-[860px] text-left text-xs">
                 <thead>
-                  <tr className="border-b border-border text-muted uppercase tracking-wider">
+                  <tr className="border-b-2 border-border bg-bg text-muted uppercase tracking-wider">
                     <th className="py-3 px-3">Tarih / Saat</th>
                     <th className="py-3 px-3">Kod</th>
                     <th className="py-3 px-3">Dosya</th>
@@ -616,9 +616,9 @@ export default function DolulukYuklePage() {
                     <th className="py-3 px-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/60 text-text">
-                  {history.map((item) => (
-                    <tr key={item.id}>
+                <tbody className="text-text">
+                  {history.map((item, idx) => (
+                    <tr key={item.id} className={`${idx % 2 === 0 ? "bg-surface" : "bg-bg"} hover:bg-accent/10`}>
                       <td className="py-3 px-3 font-mono text-muted">
                         {new Date(item.createdAt).toLocaleString("tr-TR", {
                           dateStyle: "short",
@@ -626,12 +626,12 @@ export default function DolulukYuklePage() {
                         })}
                       </td>
                       <td className="py-3 px-3 font-mono">{item.code}</td>
-                      <td className="py-3 px-3 text-text">{item.fileName}</td>
+                      <td className="py-3 px-3 text-text break-words">{item.fileName}</td>
                       <td className="py-3 px-3">{KIND_LABEL[item.kind as Kind] ?? item.kind}</td>
                       <td className="py-3 px-3 text-muted">{item.userName}</td>
-                      <td className="py-3 px-3 text-center">{item.totalRows}</td>
-                      <td className="py-3 px-3 text-center text-ok">{item.okRows}</td>
-                      <td className="py-3 px-3 text-center text-danger">{item.errorRows}</td>
+                      <td className="py-3 px-3 text-center tabular-nums">{item.totalRows}</td>
+                      <td className="py-3 px-3 text-center tabular-nums text-ok">{item.okRows}</td>
+                      <td className="py-3 px-3 text-center tabular-nums text-danger">{item.errorRows}</td>
                       <td className="py-3 px-3">{STATUS_LABEL[item.status] ?? item.status}</td>
                       <td className="py-3 px-3 text-right">
                         {item.status !== "SILINDI" && (

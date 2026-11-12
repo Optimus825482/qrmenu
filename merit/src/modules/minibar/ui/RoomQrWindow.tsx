@@ -11,6 +11,7 @@ import {
   setRoomGuestMessageAction,
 } from "../server/actions/roomQr";
 import type { RoomQrFilter, RoomQrPrintSheet as PrintData, RoomQrRow } from "../server/roomQr";
+import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 import { RoomQrPrintSheet } from "./RoomQrPrintSheet";
 
 type BulkMode = "MISSING" | "LEGACY" | "ALL";
@@ -219,9 +220,78 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
       return next;
     });
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const zipUrl = hotelId ? `/api/qr/hotel/${hotelId}/room-zip${floorId ? `?floorId=${floorId}` : ""}` : "#";
+    const zipUrl = hotelId ? `/api/qr/hotel/${hotelId}/room-zip${floorId ? `?floorId=${floorId}` : ""}` : "#";
   const pdfUrl = hotelId ? `/api/qr/hotel/${hotelId}/room-pdf${floorId ? `?floorId=${floorId}` : ""}` : "#";
+
+  const columns: Column<RoomQrRow>[] = [
+    {
+      key: "pick",
+      title: "Seç",
+      width: 52,
+      sortable: false,
+      render: (row) => (
+        <input
+          type="checkbox"
+          aria-label={`Oda ${row.number} seç`}
+          checked={selected.has(row.id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggle(row.id)}
+        />
+      ),
+    },
+    {
+      key: "number",
+      title: "Oda",
+      width: 100,
+      render: (row) => (
+        <b data-testid={`room-qr-row-${row.number}`}>
+          {row.number}
+          {row.isActive ? "" : " (pasif)"}
+        </b>
+      ),
+    },
+    { key: "floorName", title: "Kat", width: 130 },
+    { key: "roomTypeName", title: "Oda tipi", width: 140, render: (row) => row.roomTypeName ?? "Standart" },
+    {
+      key: "format",
+      title: "QR durumu",
+      width: 120,
+      render: (row) => {
+        const badge = BADGE[row.format ?? "YOK"];
+        return <span className={`inline-block rounded border px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}>{badge.text}</span>;
+      },
+    },
+    { key: "tokenTail", title: "Son 4", width: 80, render: (row) => <span className="font-mono">{row.tokenTail ?? ""}</span> },
+    { key: "guestMessage", title: "Mesaj", width: "minmax(140px, 1fr)", render: (row) => <span title={row.guestMessage ?? undefined}>{row.guestMessage ?? ""}</span> },
+    {
+      key: "actions",
+      title: "İşlemler",
+      width: 230,
+      sortable: false,
+      render: (row) => (
+        <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {row.hasQr ? (
+            <>
+              <a className="xp-button px-2 py-0.5 text-[11px] font-bold" href={`/api/qr/room/${row.id}?format=svg`} download>
+                SVG
+              </a>
+              <a className="xp-button px-2 py-0.5 text-[11px] font-bold" href={`/api/qr/room/${row.id}?format=png`} download>
+                PNG
+              </a>
+            </>
+          ) : null}
+          <button
+            type="button"
+            className="xp-button px-2 py-0.5 text-[11px] font-bold"
+            disabled={busy || !row.isActive}
+            onClick={() => void generateOne(row)}
+          >
+            {row.hasQr ? "Yenile" : "Üret"}
+          </button>
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="flex h-full flex-col gap-2 overflow-hidden bg-[#ece9d8] p-2 font-sans text-xs" data-testid="room-qr-window">
@@ -263,16 +333,6 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
               ))}
             </select>
           </label>
-          <input
-            type="search"
-            value={search}
-            placeholder="Oda no ara"
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="w-28 rounded border border-[#7f9db9] bg-white px-2 py-1 text-xs"
-          />
           <span className="rounded border border-[#b8cfe5] bg-white px-2.5 py-1 font-semibold text-[#1e3a8a]">
             {total} oda
           </span>
@@ -382,109 +442,46 @@ export function RoomQrWindow({ hotelId, setStatus }: AppProps) {
         </div>
       ) : null}
 
-      <div className="flex-1 overflow-y-auto rounded border border-[#7f9db9] bg-white">
-        <table className="w-full border-collapse text-left text-xs">
-          <thead>
-            <tr className="sticky top-0 z-10 border-b border-[#7f9db9] bg-[#ece9d8] text-[#1f2937]">
-              <th className="w-8 p-2">
-                <input
-                  type="checkbox"
-                  aria-label="Sayfadaki tüm odaları seç"
-                  checked={allSelected}
-                  onChange={() =>
-                    setSelected((prev) => {
-                      const next = new Set(prev);
-                      for (const r of rows) {
-                        if (allSelected) next.delete(r.id);
-                        else next.add(r.id);
-                      }
-                      return next;
-                    })
-                  }
-                />
-              </th>
-              <th className="p-2 font-bold">Oda</th>
-              <th className="p-2 font-bold">Kat</th>
-              <th className="p-2 font-bold">Oda tipi</th>
-              <th className="p-2 text-center font-bold">QR durumu</th>
-              <th className="p-2 font-bold">Son 4</th>
-              <th className="p-2 font-bold">Mesaj</th>
-              <th className="p-2 pr-4 text-right font-bold">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="p-8 text-center text-muted">
-                  Bu süzgece uyan oda yok.
-                </td>
-              </tr>
-            ) : null}
-            {rows.map((row) => {
-              const badge = BADGE[row.format ?? "YOK"];
-              return (
-                <tr key={row.id} className="border-b border-[#e5e5e5] hover:bg-[#f9fafb]" data-testid={`room-qr-row-${row.number}`}>
-                  <td className="p-2">
-                    <input
-                      type="checkbox"
-                      aria-label={`Oda ${row.number} seç`}
-                      checked={selected.has(row.id)}
-                      onChange={() => toggle(row.id)}
-                    />
-                  </td>
-                  <td className="p-2 font-black text-text">
-                    {row.number}
-                    {row.isActive ? "" : " (pasif)"}
-                  </td>
-                  <td className="p-2 font-bold text-[#0c3276]">{row.floorName}</td>
-                  <td className="p-2 text-muted">{row.roomTypeName ?? "Standart"}</td>
-                  <td className="p-2 text-center">
-                    <span className={`inline-block rounded border px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}>{badge.text}</span>
-                  </td>
-                  <td className="p-2 font-mono text-muted">{row.tokenTail ?? ""}</td>
-                  <td className="max-w-40 truncate p-2 text-muted" title={row.guestMessage ?? undefined}>
-                    {row.guestMessage ?? ""}
-                  </td>
-                  <td className="flex items-center justify-end gap-1.5 p-2 pr-3">
-                    {row.hasQr ? (
-                      <>
-                        <a className="xp-button px-2 py-0.5 text-[11px] font-bold" href={`/api/qr/room/${row.id}?format=svg`} download>
-                          SVG
-                        </a>
-                        <a className="xp-button px-2 py-0.5 text-[11px] font-bold" href={`/api/qr/room/${row.id}?format=png`} download>
-                          PNG
-                        </a>
-                      </>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="xp-button px-2 py-0.5 text-[11px] font-bold"
-                      disabled={busy || !row.isActive}
-                      onClick={() => void generateOne(row)}
-                    >
-                      {row.hasQr ? "Yenile" : "Üret"}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded border border-[#7f9db9] bg-white">
+        <DataGrid<RoomQrRow>
+          columns={columns}
+          rows={rows}
+          total={total}
+          page={page}
+          pageSize={PAGE_SIZE}
+          onPage={setPage}
+          onSort={() => {}}
+          onSearch={(q) => {
+            setSearch(q);
+            setPage(1);
+          }}
+          q={search}
+          onSelect={(row) => toggle(row.id)}
+          selectedIds={[...selected]}
+          multiSelect
+          emptyText="Bu süzgece uyan oda yok."
+          toolbar={
+            <label className="flex items-center gap-1.5 font-bold">
+              <input
+                type="checkbox"
+                aria-label="Sayfadaki tüm odaları seç"
+                checked={allSelected}
+                onChange={() =>
+                  setSelected((prev) => {
+                    const next = new Set(prev);
+                    for (const r of rows) {
+                      if (allSelected) next.delete(r.id);
+                      else next.add(r.id);
+                    }
+                    return next;
+                  })
+                }
+              />
+              Sayfadakileri seç
+            </label>
+          }
+        />
       </div>
-
-      {pageCount > 1 ? (
-        <div className="flex items-center justify-end gap-2">
-          <button type="button" className="xp-button px-2 py-0.5" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-            Önceki
-          </button>
-          <span>
-            {page} / {pageCount}
-          </span>
-          <button type="button" className="xp-button px-2 py-0.5" disabled={page >= pageCount} onClick={() => setPage((p) => p + 1)}>
-            Sonraki
-          </button>
-        </div>
-      ) : null}
 
       {printData ? <RoomQrPrintSheet data={printData} onClose={() => setPrintData(null)} /> : null}
     </div>

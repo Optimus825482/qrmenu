@@ -10,6 +10,9 @@ import {
 import { Icon } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
 import { HotelBadges } from "@/components/ui/HotelBadge";
+import { type Column, DataGrid } from "@/shell/ui/DataGrid";
+
+type OrderRow = RoomOrderListItem;
 
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   TEYIT_BEKLIYOR: { label: "Telefon Teyidi Bekliyor", color: "#b45309", bg: "#fef3c7" },
@@ -56,6 +59,41 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
     return () => clearTimeout(t);
   }, [loadData]);
 
+  const columns: Column<OrderRow>[] = [
+    { key: "orderNo", title: "Sipariş No", width: 110, render: (o) => <span className="font-mono font-bold">#{o.orderNo}</span> },
+    { key: "roomNumber", title: "Oda", width: 90, render: (o) => <b>Oda {o.roomNumber}</b> },
+    {
+      key: "status",
+      title: "Durum",
+      width: 170,
+      render: (o) => {
+        const badge = STATUS_LABELS[o.status] ?? { label: o.status, color: "#374151", bg: "#f3f4f6" };
+        return (
+          <span
+            className="rounded px-1.5 py-0.5 text-[10px] font-semibold"
+            style={{ backgroundColor: badge.bg, color: badge.color }}
+          >
+            {badge.label}
+          </span>
+        );
+      },
+    },
+    { key: "itemsSummary", title: "İçerik Özeti", width: "minmax(200px, 1fr)" },
+    {
+      key: "subtotal",
+      title: "Tutar",
+      width: 110,
+      render: (o) => <span className="font-mono font-semibold">{o.subtotal === undefined ? "—" : formatPrice(o.subtotal, o.currency)}</span>,
+    },
+    {
+      key: "createdAt",
+      title: "Zaman",
+      width: 80,
+      render: (o) => new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+    },
+    { key: "hotelName", title: "Otel", width: 150, render: (o) => <HotelBadges names={[o.hotelName]} /> },
+  ];
+
   return (
     <div className="flex flex-col h-full bg-[#f0f0f0] text-xs font-sans select-none overflow-hidden">
       {/* Top Bar / Stats KPIs */}
@@ -74,16 +112,6 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             <option value="TESLIM_EDILDI">Teslim Edilenler</option>
             <option value="IPTAL">İptal / Reddedilenler</option>
           </select>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <input
-            type="text"
-            placeholder="Oda no ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-[#7f9db9] px-2 py-0.5 rounded bg-white text-xs w-28"
-          />
         </div>
 
         <button
@@ -115,87 +143,22 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
       {/* Main Grid & Detail Panel */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Table List */}
-        <div className="flex-1 min-h-0 overflow-auto border-r border-[#7f9db9] bg-white">
-          <table className="w-full text-left border-collapse text-[11px]">
-            <thead className="sticky top-0 bg-[#f7f5f0] border-b border-[#d4d0c8] shadow-sm">
-              <tr>
-                <th className="p-1.5 border-r border-[#d4d0c8]">Sipariş No</th>
-                <th className="p-1.5 border-r border-[#d4d0c8]">Oda</th>
-                <th className="p-1.5 border-r border-[#d4d0c8]">Durum</th>
-                <th className="p-1.5 border-r border-[#d4d0c8]">İçerik Özeti</th>
-                <th className="p-1.5 border-r border-[#d4d0c8]">Tutar</th>
-                <th className="p-1.5 border-r border-[#d4d0c8]">Zaman</th>
-                <th className="p-1.5">Otel</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-500">
-                    Kayıtlar yükleniyor...
-                  </td>
-                </tr>
-              ) : orders.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-8 text-gray-500">
-                    Kayıt bulunamadı.
-                  </td>
-                </tr>
-              ) : (
-                orders.map((o) => {
-                  const badge = STATUS_LABELS[o.status] ?? {
-                    label: o.status,
-                    color: "#374151",
-                    bg: "#f3f4f6",
-                  };
-                  const isSelected = selectedOrder?.id === o.id;
-                  return (
-                    <tr
-                      key={o.id}
-                      onClick={() => setSelectedOrder(o)}
-                      className={`cursor-pointer border-b border-[#f0f0f0] transition-colors ${
-                        isSelected
-                          ? "bg-[#316ac5] text-white"
-                          : "hover:bg-[#f5f8ff] text-gray-900"
-                      }`}
-                    >
-                      <td className="p-1.5 font-mono font-bold border-r border-[#f0f0f0]">
-                        #{o.orderNo}
-                      </td>
-                      <td className="p-1.5 font-bold border-r border-[#f0f0f0]">
-                        Oda {o.roomNumber}
-                      </td>
-                      <td className="p-1.5 border-r border-[#f0f0f0]">
-                        <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-semibold"
-                          style={{
-                            backgroundColor: isSelected ? "transparent" : badge.bg,
-                            color: isSelected ? "#fff" : badge.color,
-                            border: isSelected ? "1px solid white" : "none",
-                          }}
-                        >
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="p-1.5 max-w-[240px] truncate border-r border-[#f0f0f0]" title={o.itemsSummary}>
-                        {o.itemsSummary}
-                      </td>
-                      <td className="p-1.5 font-mono font-semibold text-right border-r border-[#f0f0f0]">
-                        {o.subtotal === undefined ? "—" : formatPrice(o.subtotal, o.currency)}
-                      </td>
-                      <td className="p-1.5 text-gray-500 border-r border-[#f0f0f0]">
-                        {new Date(o.createdAt).toLocaleTimeString("tr-TR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td className="p-1.5"><HotelBadges names={[o.hotelName]} /></td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+        <div className="flex-1 min-h-0 min-w-0 border-r border-[#7f9db9] bg-white">
+          <DataGrid<OrderRow>
+            columns={columns}
+            rows={orders}
+            total={orders.length}
+            page={1}
+            // Every loaded order is on this one page (the grid sorts what it shows), so the pager never offers a dead "next".
+            pageSize={Math.max(orders.length, 1)}
+            onPage={() => {}}
+            onSort={() => {}}
+            onSearch={setSearch}
+            q={search}
+            selectedId={selectedOrder?.id}
+            onSelect={(row) => setSelectedOrder(row)}
+            emptyText={loading ? "Kayıtlar yükleniyor..." : "Kayıt bulunamadı."}
+          />
         </div>
 
         {/* Detail Sidebar */}

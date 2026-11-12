@@ -30,6 +30,10 @@ const STATUS_LABEL: Record<string, string> = {
   IPTAL: "İptal edildi",
 };
 
+const CONTROL = "min-h-11 rounded-xl border border-border bg-bg px-3 text-sm text-text focus:border-accent focus:outline-none";
+const LINK_BTN = "inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-bg";
+const TH = "whitespace-nowrap px-3 py-2.5 text-center text-xs font-bold";
+
 export default function KatTalepPage() {
   const [lines, setLines] = useState<Line[]>([]);
   const [qty, setQty] = useState<Record<string, string>>({});
@@ -96,94 +100,174 @@ export default function KatTalepPage() {
   }
 
   return (
-    <main data-testid="kat-talep" style={{ padding: 16 }}>
-      <h1>Ek talep</h1>
-      <p>
-        <Link href="/kat/stok">Stoklarım</Link> | <Link href="/kat/kritik">Kritik stoklar</Link>
-      </p>
-      {message && <p role="status" data-testid="talep-mesaj">{message}</p>}
-
-      <h2>Önerilen talep listesi</h2>
-      {lines.length === 0 && <p data-testid="oneri-bos">Önerilecek ürün yok.</p>}
-      {lines.length > 0 && (
-        <table data-testid="oneri-tablo" style={{ width: "100%" }}>
-          <thead>
-            <tr>
-              <th />
-              <th align="left">Ürün</th>
-              <th>Kalan</th>
-              <th>Kritik</th>
-              <th>Aciliyet</th>
-              <th>İstenen adet</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lines.map((x) => (
-              <tr key={x.productId} data-testid={`oneri-${x.productId}`}>
-                <td>
-                  <input
-                    type="checkbox"
-                    aria-label={`${x.name} talebe ekle`}
-                    checked={picked[x.productId] ?? false}
-                    onChange={(e) => setPicked((p) => ({ ...p, [x.productId]: e.target.checked }))}
-                  />
-                </td>
-                <td>{x.name}</td>
-                <td align="center">{x.remaining}</td>
-                <td align="center">{x.critical}</td>
-                <td align="center">{x.urgency === "ACIL" ? "Acil" : "Normal"}</td>
-                <td align="center">
-                  <input
-                    type="number"
-                    min={1}
-                    max={10000}
-                    aria-label={`${x.name} adet`}
-                    data-testid={`oneri-adet-${x.productId}`}
-                    value={qty[x.productId] ?? ""}
-                    onChange={(e) => setQty((q) => ({ ...q, [x.productId]: e.target.value }))}
-                    style={{ width: 80 }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-      {lines.length > 0 && (
-        <p>
-          <label>
-            Not{" "}
-            <input value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} data-testid="talep-not" />
-          </label>{" "}
-          <button type="button" data-mutates="" data-testid="talep-gonder" disabled={busy} onClick={() => void send()}>
-            Talebi Gönder
-          </button>
+    <main data-testid="kat-talep" className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold">Ek talep</h1>
+          <p className="text-xs text-muted">Önerilen ürünler için ek stok talebi oluşturun ve taleplerinizi izleyin</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/kat/stok" className={LINK_BTN}>
+            Stoklarım
+          </Link>
+          <Link href="/kat/kritik" className={LINK_BTN}>
+            Kritik stoklar
+          </Link>
+        </div>
+      </div>
+      {message && (
+        <p role="status" data-testid="talep-mesaj" className="rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+          {message}
         </p>
       )}
 
-      <h2>Taleplerim</h2>
-      <ul data-testid="taleplerim">
+      <h2 className="text-sm font-bold">Önerilen talep listesi</h2>
+      {lines.length === 0 && (
+        <p data-testid="oneri-bos" className="rounded-2xl border border-border bg-surface px-3 py-8 text-center text-sm text-muted">
+          Önerilecek ürün yok.
+        </p>
+      )}
+      {lines.length > 0 && (
+        <div
+          role="region"
+          aria-label="Önerilen talep listesi"
+          tabIndex={0}
+          className="relative overflow-x-auto rounded-2xl border border-border bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <table data-testid="oneri-tablo" className="w-full min-w-[560px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b-2 border-border bg-bg text-text">
+                <th scope="col" className={TH}>
+                  <span className="sr-only">Seç</span>
+                </th>
+                <th scope="col" className={`${TH} text-left`}>
+                  Ürün
+                </th>
+                <th scope="col" className={TH}>
+                  Kalan
+                </th>
+                <th scope="col" className={TH}>
+                  Kritik
+                </th>
+                <th scope="col" className={TH}>
+                  Aciliyet
+                </th>
+                <th scope="col" className={TH}>
+                  İstenen adet
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((x, idx) => (
+                <tr
+                  key={x.productId}
+                  data-testid={`oneri-${x.productId}`}
+                  className={`border-b border-border last:border-b-0 hover:bg-accent/10 ${idx % 2 === 0 ? "bg-surface" : "bg-bg"}`}
+                >
+                  <td className="px-3 py-1.5 text-center">
+                    <input
+                      type="checkbox"
+                      aria-label={`${x.name} talebe ekle`}
+                      checked={picked[x.productId] ?? false}
+                      onChange={(e) => setPicked((p) => ({ ...p, [x.productId]: e.target.checked }))}
+                      className="h-6 w-6 accent-accent"
+                    />
+                  </td>
+                  <td className="px-3 py-2.5 font-semibold">{x.name}</td>
+                  <td className="px-3 py-2.5 text-center font-bold tabular-nums">{x.remaining}</td>
+                  <td className="px-3 py-2.5 text-center tabular-nums">{x.critical}</td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span
+                      className={`inline-block whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-bold ${
+                        x.urgency === "ACIL" ? "border-danger bg-danger/15 text-danger" : "border-border text-muted"
+                      }`}
+                    >
+                      {x.urgency === "ACIL" ? "Acil" : "Normal"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-1.5 text-center">
+                    <input
+                      type="number"
+                      min={1}
+                      max={10000}
+                      aria-label={`${x.name} adet`}
+                      data-testid={`oneri-adet-${x.productId}`}
+                      value={qty[x.productId] ?? ""}
+                      onChange={(e) => setQty((q) => ({ ...q, [x.productId]: e.target.value }))}
+                      className={`${CONTROL} w-24 text-center tabular-nums`}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {lines.length > 0 && (
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="block min-w-0 flex-1 basis-64 text-xs font-semibold text-muted">
+            Not
+            <input
+              value={note}
+              maxLength={500}
+              onChange={(e) => setNote(e.target.value)}
+              data-testid="talep-not"
+              className={`${CONTROL} mt-1 w-full`}
+            />
+          </label>
+          <button
+            type="button"
+            data-mutates=""
+            data-testid="talep-gonder"
+            disabled={busy}
+            onClick={() => void send()}
+            className="min-h-11 w-full rounded-xl bg-accent px-5 text-sm font-bold text-white hover:opacity-95 disabled:opacity-50 sm:w-auto"
+          >
+            Talebi Gönder
+          </button>
+        </div>
+      )}
+
+      <h2 className="text-sm font-bold">Taleplerim</h2>
+      <ul data-testid="taleplerim" className="space-y-2.5">
         {mine.map((r) => (
-          <li key={r.id} data-testid={`talep-${r.code}`} data-status={r.status}>
-            <strong>{r.code}</strong> - {STATUS_LABEL[r.status] ?? r.status}
-            {r.rejectReason ? ` (${r.rejectReason})` : ""}
-            <ul>
+          <li
+            key={r.id}
+            data-testid={`talep-${r.code}`}
+            data-status={r.status}
+            className="space-y-2 rounded-2xl border border-border bg-surface p-4"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="min-w-0 break-words text-sm">
+                <strong>{r.code}</strong> - {STATUS_LABEL[r.status] ?? r.status}
+                {r.rejectReason ? ` (${r.rejectReason})` : ""}
+              </p>
+              {r.status === "BEKLEMEDE" && (
+                <button
+                  type="button"
+                  data-mutates=""
+                  data-testid={`talep-iptal-${r.code}`}
+                  onClick={() => void cancel(r.id)}
+                  className="min-h-11 rounded-xl border border-danger px-4 text-sm font-semibold text-danger hover:bg-danger/10"
+                >
+                  İptal et
+                </button>
+              )}
+            </div>
+            <ul className="divide-y divide-border rounded-xl border border-border bg-bg text-sm">
               {r.items.map((i) => (
-                <li key={i.id}>
+                <li key={i.id} className="px-3 py-2">
                   {i.productName}: istenen {i.requestedQty}
                   {i.approvedQty !== null ? `, onaylanan ${i.approvedQty}` : ""}
                   {i.deliveredQty !== null ? `, teslim ${i.deliveredQty}` : ""}
                 </li>
               ))}
             </ul>
-            {r.status === "BEKLEMEDE" && (
-              <button type="button" data-mutates="" data-testid={`talep-iptal-${r.code}`} onClick={() => void cancel(r.id)}>
-                İptal et
-              </button>
-            )}
           </li>
         ))}
-        {mine.length === 0 && <li>Henüz talebiniz yok.</li>}
+        {mine.length === 0 && (
+          <li className="rounded-2xl border border-border bg-surface px-3 py-8 text-center text-sm text-muted">Henüz talebiniz yok.</li>
+        )}
       </ul>
     </main>
   );

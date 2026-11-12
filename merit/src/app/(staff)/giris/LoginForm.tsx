@@ -18,7 +18,7 @@ const INITIAL: FormState = { status: "idle", username: "" };
 const REMEMBERED_USERNAME_KEY = "merit.rememberedUsername";
 
 const inputClass =
-  "min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-base text-text placeholder:text-muted/60 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent";
+  "min-h-11 w-full rounded-xl border border-border bg-bg px-3 text-base text-text placeholder:text-muted/60 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent";
 
 export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
@@ -193,7 +193,7 @@ export function LoginForm({ next }: { next?: string }) {
         />
       </div>
 
-      <label htmlFor="rememberMe" className="-mt-1 flex w-fit cursor-pointer items-center gap-2 text-sm text-muted">
+      <label htmlFor="rememberMe" className="-mt-1 flex min-h-11 w-fit cursor-pointer items-center gap-2 text-sm text-muted">
         <input
           id="rememberMe"
           name="rememberMe"
@@ -218,7 +218,7 @@ export function LoginForm({ next }: { next?: string }) {
       <button
         type="submit"
         disabled={!hydrated || busy}
-        className="min-h-11 rounded-lg bg-brand px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
+        className="min-h-11 rounded-xl bg-brand px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
       >
         Giriş Yap
       </button>

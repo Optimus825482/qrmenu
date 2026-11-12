@@ -431,7 +431,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                   placeholder="Örn: Günlük Minibar ve F&B Tüketim Raporu"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                  className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                 />
               </div>
 
@@ -445,7 +445,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                     const opt = STANDARD_REPORT_OPTIONS.find((o) => o.key === e.target.value);
                     if (opt) setFormReportTitle(opt.title);
                   }}
-                  className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                  className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                 >
                   {STANDARD_REPORT_OPTIONS.map((opt) => (
                     <option key={opt.key} value={opt.key}>
@@ -462,7 +462,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                   <select
                     value={formFrequency}
                     onChange={(e) => setFormFrequency(e.target.value as "DAILY" | "WEEKLY" | "MONTHLY")}
-                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                   >
                     <option value="DAILY">Her Gün (Günlük)</option>
                     <option value="WEEKLY">Her Hafta (Pazartesi)</option>
@@ -475,7 +475,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                     type="time"
                     value={formTimeOfDay}
                     onChange={(e) => setFormTimeOfDay(e.target.value)}
-                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
@@ -523,7 +523,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                       placeholder="muhasebe@merithotels.com, fnb@merithotels.com (virgülle ayırın)"
                       value={formRecipientsText}
                       onChange={(e) => setFormRecipientsText(e.target.value)}
-                      className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                      className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                     />
                     <p className="text-xs text-muted">
                       Rapor hazırlandığında ekli belge (PDF/Excel) olarak bu adreslere postalanır.
@@ -550,7 +550,7 @@ export function AutomatedReportsPanel({ hotels = [], initialPreFill, setStatus }
                       placeholder="Hedef Klasör Adı veya ID (Örn: Merit_Gunluk_Raporlar)"
                       value={formDriveFolder}
                       onChange={(e) => setFormDriveFolder(e.target.value)}
-                      className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                      className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                     />
                     <p className="text-xs text-muted">
                       Google Drive bağlantı parametreleri Denetim Masası → Google Drive ayarlarından yönetilir.

@@ -133,7 +133,7 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
             <select
               value={pick}
               onChange={(e) => setPick(e.target.value)}
-              className="rounded border border-border bg-surface px-2 py-1"
+              className="min-h-8 rounded border border-border bg-bg px-2 py-1 text-text"
             >
               <option value={WEEK}>Son 7 gün</option>
               {days.map((d) => (
@@ -227,23 +227,23 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
           {slowest.length === 0 ? (
             <p className="py-6 text-center text-muted">Teslim edilen sipariş yok</p>
           ) : (
-            <div className="max-h-52 overflow-auto">
-              <table className="w-full text-left text-[11px]">
-                <thead className="text-muted">
+            <div role="region" aria-label="En yavaş siparişler" tabIndex={0} className="max-h-52 overflow-auto rounded-xl border border-border">
+              <table className="w-full min-w-[300px] text-left text-[11px]">
+                <thead className="sticky top-0 border-b-2 border-border bg-bg text-muted">
                   <tr>
-                    <th className="p-1">Sipariş</th>
-                    <th className="p-1">Oda</th>
-                    <th className="p-1">Gün</th>
-                    <th className="p-1 text-right">Süre</th>
+                    <th className="p-1.5">Sipariş</th>
+                    <th className="p-1.5">Oda</th>
+                    <th className="p-1.5">Gün</th>
+                    <th className="p-1.5 text-right">Süre</th>
                   </tr>
                 </thead>
                 <tbody>
                   {slowest.map((o) => (
-                    <tr key={o.orderId} className="border-t border-border">
-                      <td className="p-1 font-mono">#{o.orderNo}</td>
-                      <td className="p-1">{o.roomNumber}</td>
-                      <td className="p-1">{formatDayTr(o.businessDate)}</td>
-                      <td className={`p-1 text-right font-semibold ${o.breached ? "text-danger" : "text-success"}`}>
+                    <tr key={o.orderId} className="odd:bg-surface even:bg-bg hover:bg-accent/10">
+                      <td className="p-1.5 font-mono">#{o.orderNo}</td>
+                      <td className="p-1.5">{o.roomNumber}</td>
+                      <td className="p-1.5">{formatDayTr(o.businessDate)}</td>
+                      <td className={`p-1.5 text-right font-semibold tabular-nums ${o.breached ? "text-danger" : "text-success"}`}>
                         {fmtDuration(o.sec)}
                       </td>
                     </tr>

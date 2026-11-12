@@ -179,7 +179,6 @@ function AllOutletsSummaryPanel({
       page={1}
       pageSize={100}
       onPage={() => {}}
-      onPageSize={() => {}}
       onSort={() => {}}
       onSearch={setQ}
       q={q}

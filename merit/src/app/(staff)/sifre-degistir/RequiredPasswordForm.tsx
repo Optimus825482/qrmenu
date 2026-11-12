@@ -4,7 +4,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { changeRequiredPasswordAction } from "@/modules/core/server/loginAction";
 
-const inputClass = "min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-base text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent";
+const inputClass = "min-h-11 w-full rounded-xl border border-border bg-bg px-3 text-base text-text focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent";
 
 export function RequiredPasswordForm({ username }: { username: string }) {
   const router = useRouter();
@@ -40,7 +40,7 @@ export function RequiredPasswordForm({ username }: { username: string }) {
         <input id="confirm-password" type="password" autoComplete="new-password" required minLength={6} maxLength={128} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={inputClass} />
       </div>
       <p className="text-xs text-muted">En az 6 karakter; büyük harf, küçük harf ve rakam içermeli.</p>
-      <button type="submit" disabled={pending} className="min-h-11 rounded-lg bg-brand px-4 text-base font-semibold text-white disabled:opacity-60">{pending ? "Kaydediliyor…" : "Şifremi kaydet ve devam et"}</button>
+      <button type="submit" disabled={pending} className="min-h-11 rounded-xl bg-brand px-4 text-base font-semibold text-white disabled:opacity-60">{pending ? "Kaydediliyor…" : "Şifremi kaydet ve devam et"}</button>
     </form>
   );
 }

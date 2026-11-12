@@ -22,7 +22,7 @@ export default function CallsClient({ outletId, initial }: { outletId: string; i
       <NotificationPermissionGate screen="Garson" />
       <h1 className="text-xl font-semibold">Çağrılar</h1>
       {calls.length === 0 ? <p className="text-muted">Açık çağrı yok.</p> : calls.map((call, callIdx) => (
-        <article key={call.id} data-guide={callIdx === 0 ? "cagri-al" : undefined} className={`flex items-center justify-between gap-2 rounded-lg border p-3 ${call.overdue ? "border-danger border-2" : "border-border"}`}>
+        <article key={call.id} data-guide={callIdx === 0 ? "cagri-al" : undefined} className={`flex items-center justify-between gap-2 rounded-xl border bg-surface p-3 ${call.overdue ? "border-danger border-2" : "border-border"}`}>
           <span>{call.tableLabel} · {call.type}{call.overdue ? " · gecikti" : ""}</span>
           <Button mutates data-guide={callIdx === 0 ? "cagri-kapat" : undefined} disabled={pending} onClick={() => start(async () => {
             const r = await resolveCallAction(call.id, "YANITLANDI");

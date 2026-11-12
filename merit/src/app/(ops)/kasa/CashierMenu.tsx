@@ -146,7 +146,7 @@ export default function CashierMenu({
               {path ? <p className="text-sm text-muted">{path}</p> : null}
               {node.price !== null ? <p className="text-sm">{node.price} {node.currency}</p> : null}
             </div>
-            <label className="flex shrink-0 items-center gap-2 text-sm font-medium">
+            <label className="flex min-h-11 shrink-0 items-center gap-2 text-sm font-medium">
               <input
                 type="checkbox"
                 role="switch"

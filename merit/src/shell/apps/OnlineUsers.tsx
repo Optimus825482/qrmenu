@@ -17,7 +17,6 @@ import type { PageSize, SortSpec } from "@/modules/core/server/admin/listQuery";
 const RELOAD_DEBOUNCE_MS = 150;
 const LOAD_FAILED = "Online kullanıcılar alınamadı";
 const SESSION_EVENTS = ["session.changed"] as const;
-const PAGE_SIZE: PageSize = 50;
 
 const STATUS_LABEL: Record<OnlineStatus, string> = {
   ONLINE: "Çevrimiçi",
@@ -78,6 +77,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(50);
   const [sort, setSort] = useState<SortSpec | undefined>({ field: "loginAt", dir: "desc" });
   const [busy, setBusy] = useState(false);
   const latest = useRef(0);
@@ -196,7 +196,7 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
     });
   }, [data, q, sort]);
 
-  const pageRows = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pageRows = visible.slice((page - 1) * pageSize, page * pageSize);
   const selected = data?.rows.find((row) => row.id === selectedId);
 
   const forceLogout = async () => {
@@ -280,8 +280,12 @@ export function OnlineUsers({ hotelId, setStatus }: AppProps) {
         rows={pageRows}
         total={visible.length}
         page={page}
-        pageSize={PAGE_SIZE}
+        pageSize={pageSize}
         onPage={setPage}
+        onPageSize={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
         onSort={(next) => {
           setSort(next);
           setPage(1);

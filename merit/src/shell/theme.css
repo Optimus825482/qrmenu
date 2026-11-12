@@ -1161,7 +1161,7 @@
 .xp-online .xp-grid-toolbar select {
   min-height: 21px;
   padding: 1px 4px;
-  border: 1px solid var(--xp-body-edge);
+  border: 1px solid #7f9db9;
   background: var(--xp-body-light);
   font: inherit;
 }
@@ -2264,7 +2264,7 @@
 .xp-field textarea {
   min-height: 21px;
   padding: 1px 4px;
-  border: 1px solid var(--xp-body-edge);
+  border: 1px solid #7f9db9;
   background: var(--xp-body-light);
   font: inherit;
 }
@@ -5447,3 +5447,65 @@
 .xp-grid-row[aria-selected="true"] .xp-jobtree-guide::before,
 .xp-grid-row[aria-selected="true"] .xp-jobtree-elbow::before,
 .xp-grid-row[aria-selected="true"] .xp-jobtree-elbow::after { border-color: #fff; }
+
+/* ---- shell-wide form fields, grid rows, admin tables ------------------------------------- */
+
+/* Zero specificity: every component rule still wins. Without this a bare select/input in a window
+   body (#ece9d8) is hardly told apart from the surrounding label text. */
+:where(.xp-window-body, .mb-xp-body, .xp-form-dialog)
+  :where(
+    select,
+    textarea,
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="hidden"], [type="button"], [type="submit"], [type="reset"], [type="image"])
+  ) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 21px;
+  border: 1px solid #7f9db9;
+  background-color: #fff;
+  color: #000;
+}
+
+:where(.xp-window-body, .mb-xp-body, .xp-form-dialog) :where(select, textarea, input):disabled {
+  background-color: var(--xp-body);
+  color: var(--xp-muted);
+}
+
+:where(.xp-window-body, .mb-xp-body, .xp-form-dialog) :where(select, textarea, input):focus-visible {
+  outline: 2px solid var(--xp-select);
+  outline-offset: 1px;
+}
+
+/* DataGrid: two close tones and a hover tint; the selected row keeps its own colour. */
+.xp-grid-body > .xp-grid-row:not(.xp-grid-head):not([aria-selected="true"]):nth-child(odd) {
+  background: color-mix(in srgb, var(--xp-body) 40%, var(--xp-body-light));
+}
+
+@media (hover: hover) {
+  .xp-grid-body > .xp-grid-row:not(.xp-grid-head):not([aria-selected="true"]):hover {
+    background: color-mix(in srgb, var(--xp-select) 14%, var(--xp-body-light));
+  }
+}
+
+/* Permission matrix: banded rows and a visible header on top of the existing scroll box. */
+.xp-matrix-grid {
+  min-width: 460px;
+}
+
+.xp-matrix-grid thead th {
+  border-bottom: 2px solid var(--xp-body-edge);
+}
+
+.xp-matrix-grid tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--xp-body) 40%, var(--xp-body-light));
+}
+
+.xp-matrix-grid tbody tr:hover {
+  background: color-mix(in srgb, var(--xp-select) 12%, var(--xp-body-light));
+}
+
+.xp-matrix-grid tbody th,
+.xp-matrix-grid tbody td:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

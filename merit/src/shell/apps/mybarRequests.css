@@ -158,3 +158,46 @@
   flex: 1 1 18rem;
   min-width: 0;
 }
+
+/* MyBar requests: the detail table reads like a grid, and the panes stack in a narrow window. */
+.xp-mybar {
+  container-type: inline-size;
+}
+
+.xp-mybar-detail table thead th {
+  background: linear-gradient(180deg, var(--xp-body-light), var(--xp-body));
+  border-bottom: 2px solid var(--xp-body-edge);
+}
+
+.xp-mybar-detail table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--xp-body) 40%, var(--xp-body-light));
+}
+
+.xp-mybar-detail table th:nth-child(n + 2),
+.xp-mybar-detail table td:nth-child(n + 2) {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 720px) {
+  .xp-mybar-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .xp-mybar-split {
+    flex-wrap: wrap;
+    overflow: auto;
+  }
+
+  .xp-mybar-split > .xp-grid {
+    flex: 1 1 100%;
+    min-height: 320px;
+  }
+
+  .xp-mybar-detail {
+    flex: 1 1 100%;
+    width: auto;
+    border-top: 1px solid var(--xp-body-edge);
+    border-left: 0;
+  }
+}

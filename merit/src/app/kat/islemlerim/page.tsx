@@ -310,7 +310,7 @@ export default function KatIslemlerimPage() {
                         [it.productId]: Math.max(0, Number(e.target.value)),
                       }))
                     }
-                    className="w-20 rounded-lg border border-border bg-surface px-2 py-1 text-center text-xs font-bold text-text"
+                    className="min-h-11 w-20 rounded-xl border border-border bg-surface px-2 text-center text-sm font-bold tabular-nums text-text"
                   />
                 </div>
               ))}
@@ -321,7 +321,7 @@ export default function KatIslemlerimPage() {
               value={editNote}
               onChange={(e) => setEditNote(e.target.value)}
               placeholder="Açıklama notu..."
-              className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-xs text-text placeholder:text-muted"
+              className="min-h-11 w-full rounded-xl border border-border bg-bg px-3 text-sm text-text placeholder:text-muted"
             />
             <div className="flex justify-end gap-2">
               <button
@@ -380,7 +380,7 @@ export default function KatIslemlerimPage() {
                           [it.productId]: Math.max(0, Number(e.target.value)),
                         }))
                       }
-                      className="w-20 rounded-lg border border-border bg-surface px-2 py-1 text-center text-xs font-bold text-text"
+                      className="min-h-11 w-20 rounded-xl border border-border bg-surface px-2 text-center text-sm font-bold tabular-nums text-text"
                     />
                   </div>
                 ))}
@@ -392,7 +392,7 @@ export default function KatIslemlerimPage() {
               value={correctionReason}
               onChange={(e) => setCorrectionReason(e.target.value)}
               placeholder="Düzeltme veya silme gerekçenizi detaylı yazın..."
-              className="w-full rounded-xl border border-border bg-bg p-3 text-xs text-text placeholder:text-muted"
+              className="w-full rounded-xl border border-border bg-bg p-3 text-sm text-text placeholder:text-muted"
             />
             <div className="flex justify-end gap-2">
               <button

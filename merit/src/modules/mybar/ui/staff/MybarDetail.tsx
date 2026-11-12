@@ -32,7 +32,7 @@ export function MybarDetail({ row }: { row: MybarRow }) {
       </div>
 
       {row.items.length > 0 ? (
-        <div className="overflow-x-auto rounded-xl border border-border bg-bg">
+        <div className="relative overflow-x-auto rounded-xl border border-border bg-bg">
           <table className="w-full text-sm">
             <caption className="sr-only">Talep edilen ürünler</caption>
             <thead className="text-left text-xs uppercase text-muted">

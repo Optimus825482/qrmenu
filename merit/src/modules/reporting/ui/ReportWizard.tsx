@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { DataGrid, type Column } from "@/shell/ui/DataGrid";
 import { notify } from "@/shell/notify";
@@ -13,6 +13,8 @@ import {
 import { PRESET_LABELS, presetRange, type Preset } from "./datePresets";
 
 type Step = 1 | 2 | 3 | 4 | 5;
+
+type GridRow = { id: string; cells: Record<string, unknown> };
 
 const MODULE_OPTIONS = [
   {
@@ -83,6 +85,38 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WizardQueryResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [gridQuery, setGridQuery] = useState("");
+  const [gridPage, setGridPage] = useState(1);
+  const [gridPageSize, setGridPageSize] = useState(25);
+
+  // Client-side search and paging over the fetched result
+  const gridColumns = useMemo<Column<GridRow>[]>(
+    () =>
+      (result?.columns ?? []).map((c) => ({
+        key: c.key,
+        title: c.title,
+        width: c.type === "number" || c.type === "currency" ? 130 : 160,
+        render: (row: GridRow) =>
+          c.type === "badge" ? (
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-accent/15 text-accent">
+              {String(row.cells[c.key] ?? "")}
+            </span>
+          ) : c.type === "number" || c.type === "currency" ? (
+            <span className="tabular-nums">{String(row.cells[c.key] ?? "—")}</span>
+          ) : (
+            String(row.cells[c.key] ?? "—")
+          ),
+      })),
+    [result],
+  );
+  const gridRows = useMemo<GridRow[]>(() => {
+    const all = (result?.rows ?? []).map((cells, i) => ({ id: String(i), cells }));
+    const q = gridQuery.trim().toLocaleLowerCase("tr");
+    if (!q) return all;
+    return all.filter((r) => Object.values(r.cells).some((v) => String(v ?? "").toLocaleLowerCase("tr").includes(q)));
+  }, [result, gridQuery]);
+  const safePage = Math.min(gridPage, Math.max(1, Math.ceil(gridRows.length / gridPageSize)));
+  const pagedRows = gridRows.slice((safePage - 1) * gridPageSize, safePage * gridPageSize);
 
   // Template Save Dialog
   const [templateName, setTemplateName] = useState("");
@@ -358,7 +392,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       setDatePreset("ozel");
                       setDateFrom(e.target.value);
                     }}
-                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-1.5 text-xs text-text focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
@@ -370,7 +404,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                       setDatePreset("ozel");
                       setDateTo(e.target.value);
                     }}
-                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-1.5 text-xs text-text focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
@@ -465,7 +499,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                   >
                     <option value="date">Tarih</option>
                     <option value="amount">Toplam Tutar</option>
@@ -478,7 +512,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   <select
                     value={sortOrder}
                     onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
-                    className="w-full rounded-lg border border-border p-2 text-xs focus:border-accent focus:outline-none"
+                    className="min-h-11 w-full rounded-xl border border-border bg-bg p-2 text-xs text-text focus:border-accent focus:outline-none"
                   >
                     <option value="desc">Yeniden Eskiye / En Yüksekten En Düşüğe</option>
                     <option value="asc">Eskiden Yeniye / En Düşükten En Yükseğe</option>
@@ -565,7 +599,7 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   placeholder="Bu rapor tanımını şablon olarak kaydet (Örn: Haftalık Minibar Özeti)..."
                   value={templateName}
                   onChange={(e) => setTemplateName(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-white px-3 py-1.5 text-xs focus:border-accent focus:outline-none"
+                  className="min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-1.5 text-xs text-text focus:border-accent focus:outline-none"
                 />
                 <button
                   type="button"
@@ -614,35 +648,28 @@ export function ReportWizard({ hotels = [], onScheduleReport, setStatus }: Props
                   Bu kriterlere uygun kayıt bulunamadı. Filtreleri değiştirip tekrar deneyin.
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-[420px]">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-[var(--muted-bg)] sticky top-0 border-b border-border text-text font-bold">
-                      <tr>
-                        {result.columns.map((c) => (
-                          <th key={c.key} className="p-3">
-                            {c.title}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {result.rows.map((row, i) => (
-                        <tr key={i} className="hover:bg-accent/10 transition">
-                          {result.columns.map((c) => (
-                            <td key={c.key} className="p-3 text-text">
-                              {c.type === "badge" ? (
-                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-accent/15 text-accent">
-                                  {String(row[c.key] ?? "")}
-                                </span>
-                              ) : (
-                                String(row[c.key] ?? "—")
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="h-[420px]">
+                  <DataGrid<GridRow>
+                    columns={gridColumns}
+                    rows={pagedRows}
+                    total={gridRows.length}
+                    page={safePage}
+                    pageSize={gridPageSize}
+                    onPage={setGridPage}
+                    onSort={() => {}}
+                    onSearch={(q) => {
+                      setGridQuery(q);
+                      setGridPage(1);
+                    }}
+                    q={gridQuery}
+                    onSelect={() => {}}
+                    onPageSize={(size) => {
+                      setGridPageSize(size);
+                      setGridPage(1);
+                    }}
+                    pageSizes={[25, 50, 100]}
+                    emptyText="Aramaya uyan kayıt yok."
+                  />
                 </div>
               )}
             </div>

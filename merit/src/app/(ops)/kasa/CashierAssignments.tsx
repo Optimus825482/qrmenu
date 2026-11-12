@@ -15,11 +15,11 @@ export default function CashierAssignments({ tables, waiters, canEdit }: { table
   return <div className="grid gap-3">{tables.map((table) => <article key={table.tableId} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4">
     <h2 className="mr-auto font-semibold">{table.label}</h2>
     <label className="sr-only" htmlFor={`assign-${table.tableId}`}>Garson · {table.label}</label>
-    <select id={`assign-${table.tableId}`} aria-label={`Garson · ${table.label}`} disabled={!canEdit || pending} className="rounded-lg border border-border bg-surface px-3 py-2 text-sm" value={selected[table.tableId] ?? table.waiter?.id ?? ""} onChange={(event) => setSelected((current) => ({ ...current, [table.tableId]: event.target.value }))}>
+    <select id={`assign-${table.tableId}`} aria-label={`Garson · ${table.label}`} disabled={!canEdit || pending} className="min-h-11 min-w-0 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text" value={selected[table.tableId] ?? table.waiter?.id ?? ""} onChange={(event) => setSelected((current) => ({ ...current, [table.tableId]: event.target.value }))}>
       <option value="">Atanmadı</option>
       {waiters.map((waiter) => <option key={waiter.id} value={waiter.id}>{waiter.fullName}</option>)}
     </select>
-    <button type="button" disabled={!canEdit || pending || !selected[table.tableId]} className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white disabled:opacity-50" onClick={() => startTransition(async () => {
+    <button type="button" disabled={!canEdit || pending || !selected[table.tableId]} className="min-h-11 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white disabled:opacity-50" onClick={() => startTransition(async () => {
       const result = await assignTableAction(table.tableId, selected[table.tableId]);
       if (!result.ok) { setError(result.error.message); return; }
       setError("");

@@ -316,18 +316,18 @@ export default function TedarikPage() {
               </div>
 
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Tedarik edilen ürünler">
-                <table className="w-full border-collapse text-left text-sm">
+                <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                   <thead>
-                    <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
+                    <tr className="border-b-2 border-border bg-bg font-semibold text-muted">
                       <th scope="col" className="px-3 py-2">Ürün</th>
                       <th scope="col" className="w-32 px-3 py-2">Miktar (adet)</th>
                       <th scope="col" className="w-44 px-3 py-2">SKT</th>
                       <th scope="col" className="w-16 px-3 py-2" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {lines.map((line, i) => (
-                      <tr key={line.key} className={line.raw && !line.productId ? "bg-[var(--warn-bg)]" : undefined}>
+                      <tr key={line.key} className={line.raw && !line.productId ? "bg-[var(--warn-bg)]" : `${i % 2 === 0 ? "bg-surface" : "bg-bg"} hover:bg-accent/10`}>
                         <td className="px-3 py-2">
                           <select
                             aria-label={`${i + 1}. satır ürün`}
@@ -417,7 +417,7 @@ export default function TedarikPage() {
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Otellere dağıtım">
                 <table className="w-full border-collapse text-left text-sm">
                   <thead>
-                    <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
+                    <tr className="border-b-2 border-border bg-bg font-semibold text-muted">
                       <th scope="col" className="px-3 py-2">Ürün</th>
                       <th scope="col" className="px-3 py-2 text-center">Alınan</th>
                       {hotels.map((h) => (
@@ -428,11 +428,11 @@ export default function TedarikPage() {
                       <th scope="col" className="px-3 py-2 text-center">Kalan</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    {lines.map((line) => {
+                  <tbody>
+                    {lines.map((line, lineIdx) => {
                       const left = line.qty - sharesTotal(line);
                       return (
-                        <tr key={line.key}>
+                        <tr key={line.key} className={`${lineIdx % 2 === 0 ? "bg-surface" : "bg-bg"} hover:bg-accent/10`}>
                           <td className="px-3 py-2 font-bold">
                             {productName.get(line.productId)}
                             {line.expiryDate ? <span className="ml-2 font-normal text-muted">SKT {trDate(line.expiryDate)}</span> : null}

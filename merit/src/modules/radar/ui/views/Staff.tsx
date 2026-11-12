@@ -108,6 +108,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                     {list.length} kişi
                   </span>
                 </div>
+                <div className="overflow-x-auto">
                 <table className="rd-table">
                   <caption>{label} çevrimiçi personel listesi</caption>
                   <thead>
@@ -133,6 +134,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                     ))}
                   </tbody>
                 </table>
+                </div>
               </section>
             );
           })

@@ -100,7 +100,7 @@ export default function TableSettingsDialog({
               value={selectedMinutes}
               disabled={!canEdit || pending}
               onChange={(e) => setSelectedMinutes(Number(e.target.value))}
-              className="mt-1.5 w-full rounded-[var(--radius-m)] border border-border bg-surface px-3 py-2 text-base font-medium"
+              className="mt-1.5 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-base font-medium text-text"
               style={{ minHeight: "var(--tap-action)" }}
             >
               <option value={0}>Kapalı (Otomatik doluluk devre dışı)</option>
@@ -120,7 +120,7 @@ export default function TableSettingsDialog({
 
           <div>
             <span className="block text-xs font-semibold uppercase tracking-wide text-muted">Hızlı Seçim</span>
-            <div className="mt-2 grid grid-cols-4 gap-2">
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {PRESET_MINUTES.map((p) => {
                 const isSelected = selectedMinutes === p.value;
                 return (
@@ -129,10 +129,10 @@ export default function TableSettingsDialog({
                     type="button"
                     disabled={!canEdit || pending}
                     onClick={() => setSelectedMinutes(p.value)}
-                    className="flex flex-col items-center justify-center rounded-[var(--radius-m)] border p-2 text-center transition"
+                    className="flex min-h-11 flex-col items-center justify-center rounded-xl border p-2 text-center transition"
                     style={{
                       borderColor: isSelected ? "var(--accent)" : "var(--border)",
-                      background: isSelected ? "var(--accent-bg)" : "var(--surface)",
+                      background: isSelected ? "var(--accent-bg)" : "var(--bg)",
                       fontWeight: isSelected ? 700 : 500,
                     }}
                   >

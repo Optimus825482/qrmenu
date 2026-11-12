@@ -94,7 +94,7 @@ export default function TablePanel({ table, orders, calls, waiters, capabilities
           <div className="mt-2 grid gap-2">
             <label className="grid gap-1 text-sm font-medium">
               Garson
-              <select aria-label="Garson" value={waiterId} onChange={(e) => setWaiterId(e.target.value)} className="rounded-[var(--radius-m)] border border-border bg-surface px-3 text-base" style={{ minHeight: "var(--tap-action)" }}>
+              <select aria-label="Garson" value={waiterId} onChange={(e) => setWaiterId(e.target.value)} className="min-h-11 rounded-xl border border-border bg-bg px-3 text-base text-text" style={{ minHeight: "var(--tap-action)" }}>
                 <option value="">Atanmadı</option>
                 {waiters.map((w) => <option key={w.id} value={w.id}>{w.fullName}</option>)}
               </select>

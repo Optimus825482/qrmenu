@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { businessDate } from "@/lib/time";
 import { listTaskItems, taskSummary } from "@/modules/minibar/server/tasks";
+import { GorevListesi } from "./GorevListesi";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function DepoGorevlerPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8 space-y-6 text-text">
+    <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <span className="text-sm font-semibold uppercase tracking-widest text-text">
@@ -61,36 +62,15 @@ export default async function DepoGorevlerPage() {
           Bugün için oluşturulmuş görev kalemi bulunmuyor.
         </div>
       ) : (
-        <ul className="space-y-2.5">
-          {items.map((i) => {
-            const tone =
-              i.status === "TAMAMLANDI"
-                ? "border-ok/40 bg-ok/10 text-ok"
-                : i.status === "DND_BEKLIYOR"
-                  ? "border-warn/40 bg-warn/10 text-warn"
-                  : "border-accent/40 bg-accent/10 text-text";
-            return (
-              <li
-                key={i.itemId}
-                data-testid="depo-gorevler-item"
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-bold text-text tabular-nums">
-                    Oda {i.roomNumber}
-                  </span>
-                  <span className="rounded-lg border border-border bg-bg px-2.5 py-0.5 text-xs font-medium text-muted">
-                    {i.taskType}
-                  </span>
-                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone}`}>
-                    {i.status}
-                  </span>
-                </div>
-                <span className="text-xs text-muted">{i.floorName}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <GorevListesi
+          items={items.map((i) => ({
+            itemId: i.itemId,
+            roomNumber: i.roomNumber,
+            floorName: i.floorName,
+            taskType: i.taskType,
+            status: i.status,
+          }))}
+        />
       )}
     </div>
   );

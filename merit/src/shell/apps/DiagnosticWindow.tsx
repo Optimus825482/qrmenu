@@ -5,6 +5,8 @@ import { notify } from "@/shell/notify";
 import { confirm } from "@/shell/confirm";
 import { Toolbar } from "@/shell/ui/Toolbar";
 import { Field } from "@/shell/ui/Field";
+import { DataGrid, type Column } from "@/shell/ui/DataGrid";
+import type { PageSize, SortSpec } from "@/modules/core/server/admin/listQuery";
 import type { AppProps } from "@/shell/registry";
 import {
   clearResolvedIncidentsAction,
@@ -33,6 +35,10 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
   const [inspecting, setInspecting] = useState<DiagnosticIncidentRow | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [incidentPage, setIncidentPage] = useState(1);
+  const [incidentPageSize, setIncidentPageSize] = useState<PageSize>(20);
+  const [incidentSort, setIncidentSort] = useState<SortSpec | undefined>();
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | undefined>();
   const [developerEmail, setDeveloperEmail] = useState("");
   const [autoNotify, setAutoNotify] = useState(true);
   const [minSeverity, setMinSeverity] = useState<DiagnosticSeverity>("HIGH");
@@ -173,6 +179,105 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
     }
     return true;
   });
+
+  const severityRank: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+  const incidentValue = (row: DiagnosticIncidentRow, field: string): string | number => {
+    switch (field) {
+      case "createdAt":
+        return new Date(row.createdAt).getTime();
+      case "module":
+        return row.data.module;
+      case "severity":
+        return severityRank[row.data.severity] ?? 0;
+      case "message":
+        return row.data.errorMessage;
+      case "mailSent":
+        return row.data.mailSent ? 1 : 0;
+      case "resolved":
+        return row.data.resolved ? 1 : 0;
+      default:
+        return 0;
+    }
+  };
+  const sortedIncidents = incidentSort
+    ? [...filteredIncidents].sort((a, b) => {
+        const x = incidentValue(a, incidentSort.field);
+        const y = incidentValue(b, incidentSort.field);
+        const result = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), "tr");
+        return incidentSort.dir === "asc" ? result : -result;
+      })
+    : filteredIncidents;
+  const shownPage = Math.min(incidentPage, Math.max(1, Math.ceil(sortedIncidents.length / incidentPageSize)));
+  const pagedIncidents = sortedIncidents.slice((shownPage - 1) * incidentPageSize, shownPage * incidentPageSize);
+
+  const incidentColumns: Column<DiagnosticIncidentRow>[] = [
+    {
+      key: "createdAt",
+      title: "Zaman",
+      width: 150,
+      sortable: true,
+      render: (row) => new Date(row.createdAt).toLocaleString("tr-TR"),
+    },
+    { key: "module", title: "Modül", width: 110, sortable: true, render: (row) => row.data.module },
+    {
+      key: "severity",
+      title: "Şiddet",
+      width: 90,
+      sortable: true,
+      render: (row) => (
+        <span
+          className={`px-1.5 py-0.5 rounded text-xs font-bold ${
+            row.data.severity === "CRITICAL"
+              ? "bg-[var(--danger-bg)] text-danger"
+              : row.data.severity === "HIGH"
+                ? "bg-[var(--warn-bg)] text-warn"
+                : "bg-accent/15 text-accent"
+          }`}
+        >
+          {row.data.severity}
+        </span>
+      ),
+    },
+    {
+      key: "message",
+      title: "Hata & Kök Neden Teşhisi",
+      width: "minmax(260px, 1fr)",
+      sortable: true,
+      render: (row) => `${row.data.errorMessage} — ${row.data.rootCause}`,
+    },
+    {
+      key: "mailSent",
+      title: "E-posta",
+      width: 90,
+      sortable: true,
+      render: (row) => (row.data.mailSent ? "Gönderildi" : "—"),
+    },
+    {
+      key: "resolved",
+      title: "Durum",
+      width: 90,
+      sortable: true,
+      render: (row) => (row.data.resolved ? "Çözüldü" : "● Açık"),
+    },
+    {
+      key: "inspect",
+      title: "İncele",
+      width: 84,
+      sortable: false,
+      render: (row) => (
+        <button
+          type="button"
+          className="xp-button text-xs font-bold"
+          onClick={(e) => {
+            e.stopPropagation();
+            setInspecting(row);
+          }}
+        >
+          Rapor
+        </button>
+      ),
+    },
+  ];
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "var(--success)";
@@ -385,116 +490,57 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
 
         {/* TAB 2: INCIDENTS & ROOT CAUSE LOGS */}
         {tab === "incidents" && (
-          <div className="flex flex-col h-full gap-2.5">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <input
-                  type="search"
-                  placeholder="Hata veya modül ara..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-2.5 py-1 border border-border rounded text-xs w-56"
-                />
-                <select
-                  value={filterSeverity}
-                  onChange={(e) => setFilterSeverity(e.target.value)}
-                  className="px-2 py-1 border border-border rounded text-xs bg-white"
-                >
-                  <option value="">Tüm Şiddet Seviyeleri</option>
-                  <option value="CRITICAL">Kritik</option>
-                  <option value="HIGH">Yüksek</option>
-                  <option value="MEDIUM">Orta</option>
-                  <option value="LOW">Düşük</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="xp-button text-xs"
-                  onClick={() => void handleClearResolved()}
-                >
-                  Çözülenleri Temizle
-                </button>
-              </div>
-            </div>
-
-            {filteredIncidents.length === 0 ? (
-              <div className="text-center p-8 bg-bg rounded-lg border border-dashed border-border">
-                <p className="text-sm font-semibold text-muted">Kayıtlı sistem hatası bulunamadı.</p>
-                <p className="text-xs text-muted mt-1">Sistem modülleri hatasız ve kararlı çalışmaktadır.</p>
-              </div>
-            ) : (
-              <div className="flex-1 overflow-auto border border-border rounded-lg">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-[var(--muted-bg)] text-muted font-bold border-b border-border sticky top-0">
-                    <tr>
-                      <th className="p-2 w-28">Zaman</th>
-                      <th className="p-2 w-24">Modül</th>
-                      <th className="p-2 w-24">Şiddet</th>
-                      <th className="p-2">Hata &amp; Kök Neden Teşhisi</th>
-                      <th className="p-2 w-24">E-posta</th>
-                      <th className="p-2 w-24">Durum</th>
-                      <th className="p-2 w-20 text-center">İncele</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredIncidents.map((row) => (
-                      <tr key={row.id} className="hover:bg-bg transition-colors">
-                        <td className="p-2 font-mono text-xs text-muted">
-                          {new Date(row.createdAt).toLocaleTimeString("tr-TR")}
-                          <br />
-                          <small>{new Date(row.createdAt).toLocaleDateString("tr-TR")}</small>
-                        </td>
-                        <td className="p-2 font-semibold text-text">{row.data.module}</td>
-                        <td className="p-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-xs font-bold ${
-                              row.data.severity === "CRITICAL"
-                                ? "bg-[var(--danger-bg)] text-danger"
-                                : row.data.severity === "HIGH"
-                                  ? "bg-[var(--warn-bg)] text-warn"
-                                  : "bg-accent/15 text-accent"
-                            }`}
-                          >
-                            {row.data.severity}
-                          </span>
-                        </td>
-                        <td className="p-2 max-w-md">
-                          <strong className="block text-text truncate">{row.data.errorMessage}</strong>
-                          <span className="text-xs text-muted truncate block mt-0.5">
-                            {row.data.rootCause}
-                          </span>
-                        </td>
-                        <td className="p-2 text-xs">
-                          {row.data.mailSent ? (
-                            <span className="text-success font-semibold">Gönderildi</span>
-                          ) : (
-                            <span className="text-muted">—</span>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          {row.data.resolved ? (
-                            <span className="text-success font-bold text-xs">Çözüldü</span>
-                          ) : (
-                            <span className="text-danger font-bold text-xs">● Açık</span>
-                          )}
-                        </td>
-                        <td className="p-2 text-center">
-                          <button
-                            type="button"
-                            className="xp-button text-xs font-bold"
-                            onClick={() => setInspecting(row)}
-                          >
-                            Rapor
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div className="flex flex-col h-full min-h-[360px]">
+            <DataGrid
+              columns={incidentColumns}
+              rows={pagedIncidents}
+              total={sortedIncidents.length}
+              page={shownPage}
+              pageSize={incidentPageSize}
+              onPage={setIncidentPage}
+              onPageSize={(size) => {
+                setIncidentPageSize(size);
+                setIncidentPage(1);
+              }}
+              sort={incidentSort}
+              onSort={(next) => {
+                setIncidentSort(next);
+                setIncidentPage(1);
+              }}
+              q={searchQuery}
+              onSearch={(next) => {
+                setSearchQuery(next);
+                setIncidentPage(1);
+              }}
+              selectedId={selectedIncidentId}
+              onSelect={(row) => setSelectedIncidentId(row.id)}
+              onActivate={(row) => setInspecting(row)}
+              emptyText={loading ? "Yükleniyor…" : "Kayıtlı sistem hatası bulunamadı."}
+              toolbar={
+                <div className="xp-grid-toolbar">
+                  <label className="xp-user-filter">
+                    Şiddet
+                    <select
+                      aria-label="Şiddet süzgeci"
+                      value={filterSeverity}
+                      onChange={(e) => {
+                        setFilterSeverity(e.target.value);
+                        setIncidentPage(1);
+                      }}
+                    >
+                      <option value="">Tüm Şiddet Seviyeleri</option>
+                      <option value="CRITICAL">Kritik</option>
+                      <option value="HIGH">Yüksek</option>
+                      <option value="MEDIUM">Orta</option>
+                      <option value="LOW">Düşük</option>
+                    </select>
+                  </label>
+                  <button type="button" className="xp-button" onClick={() => void handleClearResolved()}>
+                    Çözülenleri Temizle
+                  </button>
+                </div>
+              }
+            />
           </div>
         )}
 
@@ -512,7 +558,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
                 placeholder="gelistirici@merithotels.com"
                 value={developerEmail}
                 onChange={(e) => setDeveloperEmail(e.target.value)}
-                className="w-full px-2.5 py-1.5 border border-border rounded text-xs"
+                className="w-full px-2.5 py-1.5 text-xs"
               />
             </Field>
 
@@ -529,7 +575,7 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
               <select
                 value={minSeverity}
                 onChange={(e) => setMinSeverity(e.target.value as DiagnosticSeverity)}
-                className="w-full px-2.5 py-1.5 border border-border rounded text-xs bg-white"
+                className="w-full px-2.5 py-1.5 text-xs"
               >
                 <option value="CRITICAL">Yalnızca Kritik Hatalar</option>
                 <option value="HIGH">Yüksek ve Kritik (Önerilen)</option>

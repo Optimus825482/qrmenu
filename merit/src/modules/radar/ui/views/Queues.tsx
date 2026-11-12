@@ -150,6 +150,7 @@ export function Queues({ view, now, onOpenOutlet }: QueuesProps) {
 
   return (
     <div className="rd-queues">
+      <div className="overflow-x-auto">
       <table className="rd-table">
         <caption>Outlet kuyrukları ve yazıcı sağlığı</caption>
         <thead>
@@ -167,6 +168,7 @@ export function Queues({ view, now, onOpenOutlet }: QueuesProps) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
