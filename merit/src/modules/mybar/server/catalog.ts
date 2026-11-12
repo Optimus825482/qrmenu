@@ -87,9 +87,9 @@ export async function roomCatalog(roomId: string, locale: Locale): Promise<RoomC
 export async function catalogProductIds(
   roomId: string,
   db: Db = prisma,
-): Promise<Map<string, { name: string; maxQty: number }>> {
+): Promise<Map<string, { name: string; maxQty: number; setupQty: number }>> {
   const { groups } = await loadRoomProducts(db, roomId);
-  return new Map(groups.flatMap((g) => g.products.map((p) => [p.id, { name: p.name, maxQty: p.maxQty }] as const)));
+  return new Map(groups.flatMap((g) => g.products.map((p) => [p.id, { name: p.name, maxQty: p.maxQty, setupQty: p.setupQty }] as const)));
 }
 
 export async function catalogQuantityMode(roomId: string, db: Db = prisma): Promise<"QTY" | "TICK"> {

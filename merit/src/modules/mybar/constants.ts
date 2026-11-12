@@ -1,6 +1,8 @@
 import type { RoleKind } from "@/generated/prisma/client";
 
-export const MYBAR_NOTIFY_ROLES = ["R-KAT", "R-DEP", "R-OTM"] as const;
+export const MYBAR_NOTIFY_ROLES = ["R-KAT", "R-DEP", "R-OTM", "R-SYS"] as const;
+/** Requests are accepted around the clock; the floor team serves them inside this window. */
+export const MYBAR_SERVICE_HOURS = { start: "09:00", end: "18:00" } as const;
 export const MYBAR_ACK_ROLE_CODES = ["R-KAT"] as const;
 /** Who is told when no floor attendant has seen a request for `radar.mybarStaleMinutes`. */
 export const MYBAR_ESCALATE_ROLES = ["R-DEP", "R-OTM"] as const;

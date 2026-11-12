@@ -55,6 +55,7 @@ const row = (id: string, over: Record<string, unknown> = {}) => ({
   cancelledByName: null,
   cancelNote: null,
   items: [{ productId: "p1", name: "Kola", requestedQty: 2, deliveredQty: 1, remainingQty: 1, poolRemaining: null }],
+  removals: [],
   ...over,
 });
 const page = (items: unknown[], total = items.length) => ({
@@ -186,6 +187,20 @@ describe("MyBar Talepleri penceresi", () => {
     const detail = await screen.findByLabelText("Talep ayrıntısı");
     expect(within(detail).getByText("Kola")).toBeTruthy();
     expect(within(detail).getByRole("table", { name: "Ürünler" })).toBeTruthy();
+  });
+
+  it("detay paneli alınacak ve eklenecek ürünleri iki ayrı tabloda gösterir", async () => {
+    listMock.mockResolvedValue(
+      page([row("1", { removals: [{ productId: "p2", name: "Bira", requestedQty: 3, removedQty: 1, remainingQty: 2 }] })]),
+    );
+    await open();
+    fireEvent.click(screen.getByText("101"));
+    const detail = await screen.findByLabelText("Talep ayrıntısı");
+    const out = within(detail).getByRole("table", { name: "Odadan alınacak ürünler" });
+    expect(within(out).getByText("Bira")).toBeTruthy();
+    expect(within(out).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Ürün", "İstenen", "Alınan", "Kalan"]);
+    expect(within(detail).getByRole("table", { name: "Ürünler" })).toBeTruthy();
+    expect(within(detail).getByText("Odaya eklenecek ürünler")).toBeTruthy();
   });
 
   it("dışa aktarma süzgeçleri ve biçimi sunucu eylemine iletir", async () => {

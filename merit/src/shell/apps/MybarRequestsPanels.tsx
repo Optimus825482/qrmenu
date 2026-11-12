@@ -44,6 +44,13 @@ export function itemsSummary(row: Pick<MybarRow, "items">): string {
   return `${wanted} → ${given}`;
 }
 
+/** "6 → 4" for the products collected from the room (asked → collected). */
+export function removalsSummary(row: Pick<MybarRow, "removals">): string {
+  const wanted = row.removals.reduce((sum, it) => sum + it.requestedQty, 0);
+  const taken = row.removals.reduce((sum, it) => sum + it.removedQty, 0);
+  return `${wanted} → ${taken}`;
+}
+
 export function MybarKpiStrip({ kpis }: { kpis: MybarKpis | null }) {
   const tile = (label: string, value: number | undefined) => (
     <div className="xp-mybar-kpi">
@@ -76,12 +83,39 @@ export function MybarRequestDetail({
       <h3>
         Oda {row.roomNumber} · {row.floorName} <StatusBadge status={row.status} />
       </h3>
+      {row.removals.length > 0 ? (
+        <>
+          <h4>Odadan alınacak ürünler</h4>
+          <table aria-label="Odadan alınacak ürünler">
+            <thead>
+              <tr>
+                <th scope="col">Ürün</th>
+                <th scope="col">İstenen</th>
+                <th scope="col">Alınan</th>
+                <th scope="col">Kalan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {row.removals.map((it) => (
+                <tr key={it.productId}>
+                  <td>{it.name}</td>
+                  <td>{it.requestedQty}</td>
+                  <td>{it.removedQty}</td>
+                  <td>{it.remainingQty}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : null}
+      <h4>Odaya eklenecek ürünler</h4>
       <table aria-label="Ürünler">
         <thead>
           <tr>
             <th scope="col">Ürün</th>
             <th scope="col">İstenen</th>
             <th scope="col">Eklenen</th>
+            <th scope="col">Kalan</th>
           </tr>
         </thead>
         <tbody>
@@ -90,6 +124,7 @@ export function MybarRequestDetail({
               <td>{it.name}</td>
               <td>{it.requestedQty}</td>
               <td>{it.deliveredQty}</td>
+              <td>{it.remainingQty}</td>
             </tr>
           ))}
         </tbody>

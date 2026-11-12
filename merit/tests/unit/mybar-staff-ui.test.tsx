@@ -75,6 +75,7 @@ const row = (over: Partial<MybarRow> & { id: string }): MybarRow => ({
   cancelledByName: null,
   cancelNote: null,
   items: [{ productId: "su", name: "Su", requestedQty: 2, deliveredQty: 0, remainingQty: 2, poolRemaining: 10 }],
+  removals: [],
   ...over,
 });
 
@@ -304,5 +305,74 @@ describe("Karşılama ve kapatma", () => {
     await waitFor(() => expect(cancelMybar).toHaveBeenCalledWith("w1", { reason: "Misafir talebinden vazgeçti" }));
     expect(await screen.findByText("Üç kelimelik sebep zorunlu")).toBeTruthy();
     expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+});
+
+describe("Takas: odadan alınacak ve odaya eklenecek ürünler", () => {
+  const swap = () =>
+    row({
+      id: "w1",
+      roomNumber: "101",
+      seenAt: new Date(),
+      items: [{ productId: "su", name: "Su", requestedQty: 2, deliveredQty: 0, remainingQty: 2, poolRemaining: 10 }],
+      removals: [{ productId: "bira", name: "Bira", requestedQty: 3, removedQty: 1, remainingQty: 2 }],
+    });
+
+  it("ayrıntı iki ayrı blok çizer: alınacak (istenen/alınan/kalan) ve eklenecek (istenen/eklenen/kalan/otel deposunda)", async () => {
+    getMybar.mockResolvedValue(ok(swap()));
+    render(<MybarWorkbench requestId="w1" canCancel={false} />);
+    const out = await screen.findByTestId("detail-removals");
+    const add = screen.getByTestId("detail-items");
+    expect(within(out).getByRole("heading", { name: "Odadan alınacak ürünler" })).toBeTruthy();
+    expect(within(add).getByRole("heading", { name: "Odaya eklenecek ürünler" })).toBeTruthy();
+    expect(within(out).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Ürün", "İstenen", "Alınan", "Kalan"]);
+    expect(within(add).getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
+      "Ürün", "İstenen", "Eklenen", "Kalan", "Otel deposunda",
+    ]);
+    expect(within(out).getByText("Bira")).toBeTruthy();
+    expect(within(add).getByText("Su")).toBeTruthy();
+    expect(within(out).getByRole("region", { name: "Odadan alınacak ürünler tablosu" })).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/sepet|zimmet|havuz/i);
+  });
+
+  it("panel iki listeyi birlikte gönderir; yalnız dokunulan liste gider; sonuç iki listeyi de bildirir", async () => {
+    getMybar.mockResolvedValue(ok(swap()));
+    fulfillMybar.mockResolvedValue(
+      ok({ added: [{ productId: "su", name: "Su", qty: 2 }], removed: [{ productId: "bira", name: "Bira", qty: 1 }], fullyDelivered: false }),
+    );
+    const { notify } = await import("@/shell/notify");
+    render(<MybarWorkbench requestId="w1" canCancel={false} />);
+    await screen.findByTestId("fulfill-panel");
+    const bira = screen.getByTestId("fulfill-removal-bira");
+    expect(bira.querySelector("output")?.textContent).toBe("2");
+    fireEvent.click(within(bira).getByRole("button", { name: "Bira alınan azalt" }));
+    fireEvent.click(screen.getByRole("button", { name: "Seçilenleri Kaydet" }));
+    await waitFor(() =>
+      expect(fulfillMybar).toHaveBeenCalledWith("w1", {
+        lines: [{ productId: "su", qty: 2 }],
+        removed: [{ productId: "bira", qty: 1 }],
+      }),
+    );
+    await waitFor(() => expect(notify.success).toHaveBeenCalledWith("Oda 101: alınan: Bira 1 · eklenen: Su 2."));
+  });
+
+  it("Tümünü Karşıla all:true yollar; kalan alınacak varken kapatma eksik diyaloğunu açar ve 'alınacak N' gösterir", async () => {
+    getMybar.mockResolvedValue(ok(swap()));
+    fulfillMybar.mockResolvedValue(fail("VALIDATION", "Bira için en fazla 2 adet alınabilir"));
+    render(<MybarWorkbench requestId="w1" canCancel={false} />);
+    await screen.findByTestId("fulfill-panel");
+    fireEvent.click(screen.getByRole("button", { name: "Tümünü Karşıla" }));
+    await waitFor(() => expect(fulfillMybar).toHaveBeenCalledWith("w1", { all: true }));
+    expect((await screen.findByTestId("fulfill-error")).textContent).toBe("Bira için en fazla 2 adet alınabilir");
+    fireEvent.click(screen.getByRole("button", { name: "Eksiklerle Kapat" }));
+    const dialog = await screen.findByRole("dialog");
+    const list = within(dialog).getByRole("list", { name: "Eksik ürünler" });
+    expect(within(list).getByText("alınacak 2")).toBeTruthy();
+    expect(within(list).getByText("2 eksik")).toBeTruthy();
+  });
+
+  it("liste satırı kısa özet gösterir: '3 çıkarılacak · 2 eklenecek'", () => {
+    render(<MybarList hotelId="h1" canCancel={false} initial={[swap()]} />);
+    expect(screen.getByTestId("swap-summary").textContent).toBe("3 çıkarılacak · 2 eklenecek");
   });
 });

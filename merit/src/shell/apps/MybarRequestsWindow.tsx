@@ -10,6 +10,7 @@ import { useSse } from "../useSse";
 import {
   formatWhen,
   itemsSummary,
+  removalsSummary,
   type MybarKpis,
   MybarKpiStrip,
   MybarRequestDetail,
@@ -158,6 +159,7 @@ export function MybarRequestsWindow({ hotelId, setStatus }: { hotelId?: string; 
       { key: "roomNumber", title: "Oda", width: 70 },
       { key: "floorName", title: "Kat", width: 100 },
       { key: "status", title: "Durum", width: 100, render: (row) => <StatusBadge status={row.status} /> },
+      { key: "removals", title: "Çıkarılacak → alınan", width: 130, render: (row) => removalsSummary(row) },
       { key: "items", title: "İstenen → eklenen", width: 120, render: (row) => itemsSummary(row) },
       {
         key: "seenAt",

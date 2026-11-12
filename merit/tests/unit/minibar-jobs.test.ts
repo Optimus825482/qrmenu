@@ -86,13 +86,13 @@ const notes = (userId: string, type: string) => testDb.notification.count({ wher
 const TZ_OPTS = { tz: "Europe/Nicosia", key: "default" };
 
 describe("registerMinibarJobs", () => {
-  it("tam 6 kuyruk: createQueue/schedule/work, tablodaki cron ve tz/key", async () => {
+  it("tam 7 kuyruk: createQueue/schedule/work, tablodaki cron ve tz/key", async () => {
     const { boss } = fakeBoss();
     await jobs.registerMinibarJobs(boss as never);
 
-    expect(boss.createQueue).toHaveBeenCalledTimes(6);
-    expect(boss.schedule).toHaveBeenCalledTimes(6);
-    expect(boss.work).toHaveBeenCalledTimes(6);
+    expect(boss.createQueue).toHaveBeenCalledTimes(7);
+    expect(boss.schedule).toHaveBeenCalledTimes(7);
+    expect(boss.work).toHaveBeenCalledTimes(7);
     const scheduled = boss.schedule.mock.calls.map((c) => [...c]);
     expect(scheduled).toEqual([
       ["occupancy.daily-upload-tasks", "1 0 * * *", null, TZ_OPTS],
@@ -101,6 +101,7 @@ describe("registerMinibarJobs", () => {
       ["dnd.reminder", "* * * * *", null, TZ_OPTS],
       ["dnd.dayend", "59 23 * * *", null, TZ_OPTS],
       ["occupancy.cleanup", "0 2 * * *", null, TZ_OPTS],
+      ["stock.expiry-alert", "0 8 * * *", null, TZ_OPTS],
     ]);
     expect(jobs.MINIBAR_JOBS.map((j) => j.queue)).toEqual(scheduled.map((s) => s[0]));
   });
@@ -113,7 +114,7 @@ describe("registerMinibarJobs", () => {
       "minibar.occupancy-alert",
       "minibar.task-gen",
     ]);
-    expect(boss.work).toHaveBeenCalledTimes(6);
+    expect(boss.work).toHaveBeenCalledTimes(7);
   });
 
   it("bir kuyruğun kaydı fırlatırsa diğerleri kayıtlı kalır", async () => {
@@ -121,7 +122,7 @@ describe("registerMinibarJobs", () => {
     const { boss, handlers } = fakeBoss({ failQueue: "dnd.reminder" });
     await expect(jobs.registerMinibarJobs(boss as never)).resolves.toBeUndefined();
     expect([...handlers.keys()].sort()).toEqual(
-      ["dnd.dayend", "occupancy.cleanup", "occupancy.daily-upload-tasks", "occupancy.warn.1000", "occupancy.warn.1800"].sort(),
+      ["dnd.dayend", "occupancy.cleanup", "occupancy.daily-upload-tasks", "occupancy.warn.1000", "occupancy.warn.1800", "stock.expiry-alert"].sort(),
     );
     expect(err).toHaveBeenCalled();
   });

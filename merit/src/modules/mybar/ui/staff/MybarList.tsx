@@ -6,7 +6,7 @@ import type { MeritEvent } from "@/lib/realtime-events";
 import { useSse } from "@/shell/useSse";
 import { listMybarAction } from "../../server/actions/requests";
 import type { MybarRow } from "../../server/requests";
-import { itemsSummary, formatWait, orderRows, rowStatusLabel } from "./format";
+import { itemsSummary, formatWait, orderRows, rowStatusLabel, swapSummary } from "./format";
 import { MybarWorkbench } from "./MybarWorkbench";
 
 const LIVE = [
@@ -73,6 +73,11 @@ function RequestRow({
         <span className="text-2xl font-bold tabular-nums text-text">{row.roomNumber}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-text">{itemsSummary(row)}</span>
+          {swapSummary(row) ? (
+            <span data-testid="swap-summary" className="block text-xs font-semibold text-text">
+              {swapSummary(row)}
+            </span>
+          ) : null}
           <span className="block text-xs text-muted">
             {row.floorName}
             {waiting ? ` · ${formatWait(new Date(row.createdAt).getTime(), now)} bekliyor` : ""}

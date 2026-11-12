@@ -10,6 +10,8 @@ export type MybarRequestView = {
   status: MybarStatusKey;
   createdAt: string;
   items: { name: string; qty: number }[];
+  /** Setup products taken out of the minibar; older requests (before MyBar became a swap) have none. */
+  removals?: { name: string; qty: number }[];
 };
 
 const LIVE_EVENTS = ["mybar.seen", "mybar.fulfilled", "mybar.completed", "mybar.cancelled"] as const;

@@ -159,14 +159,12 @@
   "mybar": {
     "title": "MYBAR",
     "room": "Oda",
-    "subtitle": "{hotel} Minibar talebiniz en kısa sürede yerine getirilecektir. Lütfen minibarınızda olmasını istediğiniz ürünleri adetleriyle beraber işaretleyiniz.",
+    "subtitle": "{hotel} minibarınızı damak zevkinize göre kişiselleştirin. Talebiniz minibar ekibimiz tarafından özenle karşılanacaktır.",
     "groups": "Ürün grupları",
-    "selectedSummary": "Seçili ürünler",
     "noProductSelected": "Henüz bir ürün seçmediniz.",
     "removeItem": "{name} seçimini kaldır",
     "increase": "{name} adedini artır",
     "decrease": "{name} adedini azalt",
-    "tickLabel": "{name} seç",
     "noteLabel": "Ek notunuz veya özel istekleriniz",
     "notePlaceholder": "İstediğiniz dilde yazabilirsiniz (örn: Ekstra bardak, bol buz rica ediyoruz...)",
     "noteCounter": "{count}/{max}",
@@ -186,7 +184,6 @@
     "errClosed": "Bu oda için MyBar şu an kullanılamıyor.",
     "refresh": "Sayfayı yenile",
     "statusTitle": "Talebinizin durumu",
-    "requestedItems": "İstenen ürünler",
     "noteOnly": "Yalnızca not iletildi.",
     "liveRegion": "Talep durumu güncellendi: {status}",
     "status": {
@@ -216,7 +213,30 @@
       "subtitle": "{hotel} oda hizmetlerine hoş geldiniz. Lütfen yararlanmak istediğiniz hizmeti seçiniz.",
       "title": "Ne yapmak istersiniz?",
       "mybar": "MyBar talebi",
-      "mybarDesc": "Minibarınız için ürün seçin"
-    }
+      "mybarDesc": "Minibarınızı kendinize göre düzenleyin"
+    },
+    "introTitle": "MyBar ile minibarınız size özel",
+    "introBody": "Odanızdaki minibarı damak zevkinize göre düzenlemekten memnuniyet duyarız. Pek tercih etmediğiniz ürünleri bize bildirin; yerlerine, sevdiğiniz ürünlerden daha fazlasını bırakalım.",
+    "introHours": "Talebiniz, minibar ekibimiz tarafından {start} – {end} saatleri arasında özenle karşılanır.",
+    "introStart": "Başlayalım",
+    "introClose": "Kapat",
+    "howItWorks": "MyBar nasıl çalışır?",
+    "stepIndicator": "Adım {current} / {total}",
+    "step1Title": "Minibarınızda hangi ürünleri istemezsiniz?",
+    "step1Desc": "Pek tercih etmediğiniz ürünleri seçin; bir sonraki ziyaretimizde minibarınızdan çıkaralım.",
+    "inMinibar": "Minibarınızda: {count}",
+    "removedTotal": "Çıkarılacak: {count}",
+    "continue": "Devam",
+    "back": "Geri",
+    "step2Title": "Hangi ürünlerden daha fazla isterdiniz?",
+    "step2Desc": "Sevdiğiniz ürünleri seçin; çıkarılanların yerine bırakalım.",
+    "swapCounterLabel": "Seçimleriniz",
+    "swapCounter": "{used} / {total}",
+    "step2NoProducts": "Eklenebilecek başka ürün yok. Talebinizi bu haliyle gönderebilirsiniz.",
+    "removalsTitle": "Çıkarılacak ürünler",
+    "additionsTitle": "Eklenecek ürünler",
+    "noAdditions": "Eklenecek ürün yok",
+    "pendingHours": "Talebiniz {start} – {end} saatleri arasında karşılanır.",
+    "errRemovals": "Seçtiğiniz bazı ürünler artık minibar düzeninizde yer almıyor. Sayfayı yenileyip tekrar deneyin."
   }
 }

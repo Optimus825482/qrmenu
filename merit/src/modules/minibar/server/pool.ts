@@ -340,10 +340,13 @@ async function takeLines(
 /**
  * Gives back stock that a room check had taken (IADE +qty, used down, total unchanged). `usedQty` never
  * goes below 0: an excess over `usedQty` is booked as a DUZELTME (total up) and audited.
+ *
+ * `wholeReturn`: the products physically come back from a room (MyBar removals), so the whole quantity is one
+ * IADE movement; the part that exceeds `usedQty` still raises the total but is not a stock correction.
  */
 export async function restoreStock(
   tx: Prisma.TransactionClient,
-  p: PoolTx & { refType: string; refId: string },
+  p: PoolTx & { refType: string; refId: string; wholeReturn?: boolean },
 ): Promise<{ remainingQty: number }> {
   if (!Number.isInteger(p.qty) || p.qty <= 0) throw new DomainError("VALIDATION", "Miktar pozitif olmalıdır");
   await ensureRows(tx, p.hotelId, [p.productId], await defaultCriticalLevel(tx, p.hotelId));
@@ -359,21 +362,22 @@ export async function restoreStock(
       remainingQty: { increment: p.qty },
     },
   });
-  if (fromUsed > 0) {
+  const returned = p.wholeReturn ? p.qty : fromUsed;
+  if (returned > 0) {
     await tx.hotelStockMovement.create({
       data: {
         hotelId: p.hotelId,
         productId: p.productId,
         userId: p.userId,
         type: "IADE",
-        qty: fromUsed,
+        qty: returned,
         refType: p.refType,
         refId: p.refId,
         note: p.note,
       },
     });
   }
-  if (excess > 0) {
+  if (excess > 0 && !p.wholeReturn) {
     await tx.hotelStockMovement.create({
       data: {
         hotelId: p.hotelId,
@@ -635,6 +639,35 @@ async function bookCorrection(
     );
   }
   return row;
+}
+
+/** The balance of one product read under its row lock (a zero row is opened when none exists). */
+export async function lockedBalanceTx(tx: Prisma.TransactionClient, hotelId: string, productId: string): Promise<number> {
+  await assertProduct(tx, productId);
+  await ensureRows(tx, hotelId, [productId], await defaultCriticalLevel(tx, hotelId));
+  return (await lockStocks(tx, hotelId, [productId])).get(productId)!.remainingQty;
+}
+
+/**
+ * Books a correction that was decided elsewhere (an approved correction request, stockCorrections.ts) inside the
+ * caller's transaction; the caller has authorised it. Never drives the balance negative.
+ */
+export async function applyCorrectionTx(
+  tx: Prisma.TransactionClient,
+  ctx: Ctx,
+  hotelId: string,
+  productId: string,
+  delta: number,
+  note: string,
+  auditAfter: Record<string, unknown>,
+): Promise<StockRow> {
+  await assertProduct(tx, productId);
+  await ensureRows(tx, hotelId, [productId], await defaultCriticalLevel(tx, hotelId));
+  const s = (await lockStocks(tx, hotelId, [productId])).get(productId)!;
+  if (s.remainingQty + delta < 0) {
+    throw new DomainError("CONFLICT", `Düzeltme bakiyeyi eksiye düşürür; otel deposunda ${s.remainingQty} adet var`);
+  }
+  return bookCorrection(tx, ctx, hotelId, s, delta, note, auditAfter);
 }
 
 /** Signed correction with a reason (MB-ZIM A, system or warehouse role); never drives the balance negative. */

@@ -33,6 +33,11 @@ export const mybarSubmitSchema = z.object({
   idempotencyKey: z.uuid(),
   locale: z.enum(LOCALES),
   items: z.array(z.object({ productId: z.string().min(1).max(64), qty: z.int().min(1).max(MYBAR_QTY_CAP) })).max(100),
+  /** Setup products the guest would rather not have in the minibar; the additions may not outnumber them. */
+  removals: z
+    .array(z.object({ productId: z.string().min(1).max(64), qty: z.int().min(1).max(MYBAR_QTY_CAP) }))
+    .max(100)
+    .default([]),
   note: z.string().max(2000).optional(),
 });
 
@@ -44,12 +49,15 @@ export type GuestRequestStatusView = {
     status: GuestRequestStatus;
     createdAt: string;
     items: { name: string; qty: number }[];
+    removals: { name: string; qty: number }[];
   };
 };
 
 const RATE_MESSAGE = "Çok fazla deneme, biraz sonra tekrar deneyin";
 const EMPTY_MESSAGE = "En az bir ürün seçmeli veya not eklemelisiniz.";
 const NOTE_MESSAGE = "Not en fazla 500 karakter olabilir";
+const BALANCE_MESSAGE = "Eklenecek ürün adedi, çıkarılacak ürün adedini aşamaz";
+const REMOVAL_MESSAGE = "Çıkarılmak istenen ürünlerden bazıları minibar içeriğinde yok veya adedi aşıyor";
 
 const isUniqueViolation = (e: unknown) => (e as { code?: string } | null)?.code === "P2002";
 
@@ -97,7 +105,7 @@ async function replayOf(idempotencyKey: string, roomId: string): Promise<GuestRe
 }
 
 export async function createGuestRequest(
-  input: z.infer<typeof mybarSubmitSchema> & { token: string; ip: string; userAgent: string },
+  input: z.input<typeof mybarSubmitSchema> & { token: string; ip: string; userAgent: string },
 ): Promise<GuestRequestView> {
   // (1) per-IP limit first: cheap and it also covers token probing.
   if (!(await ipLimiter.hit(input.ip)).allowed) throw new DomainError("RATE_LIMITED", RATE_MESSAGE);
@@ -128,7 +136,12 @@ export async function createGuestRequest(
     throw new DomainError("VALIDATION", NOTE_MESSAGE, { fieldErrors: { note: [NOTE_MESSAGE] } });
   }
   // (7) something to send
-  if (data.items.length === 0 && !note) throw new DomainError("VALIDATION", EMPTY_MESSAGE);
+  if (data.items.length === 0 && data.removals.length === 0 && !note) throw new DomainError("VALIDATION", EMPTY_MESSAGE);
+  // (7b) personalisation is a swap: what comes in may not outnumber what goes out
+  const sum = (lines: { qty: number }[]) => lines.reduce((n, l) => n + l.qty, 0);
+  if (sum(data.items) > sum(data.removals)) {
+    throw new DomainError("VALIDATION", BALANCE_MESSAGE, { fieldErrors: { items: [BALANCE_MESSAGE] } });
+  }
 
   // (8) the network call stays outside the transaction (and outside the room lock)
   const translated = note ? await translateNoteForStaff(hotelId, note) : { noteTr: null, srcLang: null };
@@ -157,8 +170,22 @@ export async function createGuestRequest(
       for (const item of data.items) {
         const known = catalog.get(item.productId);
         const qty = quantityMode === "TICK" ? 1 : item.qty; // a tick box can only mean one
-        if (!known || qty > known.maxQty || seen.has(item.productId)) bad.push(item.productId);
+        // The swap balance (7b) is the limit of an addition; the per-product cap is only the absolute one.
+        if (!known || qty > MYBAR_QTY_CAP || seen.has(item.productId)) bad.push(item.productId);
         seen.add(item.productId);
+      }
+      const removedSeen = new Set<string>();
+      const badRemovals: string[] = [];
+      for (const line of data.removals) {
+        const known = catalog.get(line.productId);
+        // A product is either taken out or added, never both; a removal cannot exceed what the setup holds.
+        if (!known || line.qty > known.setupQty || removedSeen.has(line.productId) || seen.has(line.productId)) {
+          badRemovals.push(known?.name ?? "Bilinmeyen ürün");
+        }
+        removedSeen.add(line.productId);
+      }
+      if (badRemovals.length > 0) {
+        throw new DomainError("VALIDATION", REMOVAL_MESSAGE, { fieldErrors: { removals: [...new Set(badRemovals)] } });
       }
       if (bad.length > 0) {
         const named = await tx.product.findMany({ where: { id: { in: bad } }, select: { id: true, name: true } });
@@ -183,6 +210,7 @@ export async function createGuestRequest(
           idempotencyKey: data.idempotencyKey,
           clientIp: input.ip,
           items: { create: lines.map((l) => ({ productId: l.productId, requestedQty: l.qty })) },
+          removals: { create: data.removals.map((l) => ({ productId: l.productId, requestedQty: l.qty })) },
         },
         select: { id: true, createdAt: true },
       });
@@ -192,7 +220,7 @@ export async function createGuestRequest(
         action: "MYBAR_CREATE",
         entity: "MybarRequest",
         entityId: created.id,
-        after: { roomId, items: lines.length, locale: data.locale },
+        after: { roomId, items: lines.length, removals: data.removals.length, locale: data.locale },
         ip: input.ip,
       });
       await notifyNewRequest(tx, {
@@ -201,6 +229,7 @@ export async function createGuestRequest(
         roomNumber: state.roomNumber,
         floorName: state.floorName,
         items: lines.map((l) => ({ name: catalog.get(l.productId)?.name ?? "", qty: l.qty })),
+        removals: data.removals.map((l) => ({ name: catalog.get(l.productId)?.name ?? "", qty: l.qty })),
         noteTr: translated.noteTr,
         note: note || null,
       });
@@ -279,16 +308,18 @@ export async function roomRequestStatus(roomId: string, locale: Locale): Promise
       closedWithMissing: true,
       createdAt: true,
       items: { select: { requestedQty: true, product: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
+      removals: { select: { requestedQty: true, product: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
     },
   });
   if (!row) return { request: null };
-  const names = await localizeTexts(row.items.map((i) => i.product.name), locale);
+  const names = await localizeTexts([...row.items, ...row.removals].map((i) => i.product.name), locale);
   return {
     request: {
       requestId: row.id,
       status: GUEST_STATUS(row),
       createdAt: row.createdAt.toISOString(),
       items: row.items.map((i) => ({ name: names.get(i.product.name) ?? i.product.name, qty: i.requestedQty })),
+      removals: row.removals.map((i) => ({ name: names.get(i.product.name) ?? i.product.name, qty: i.requestedQty })),
     },
   };
 }

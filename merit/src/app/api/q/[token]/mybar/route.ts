@@ -50,12 +50,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       throw new DomainError("VALIDATION", "Geçersiz istek gövdesi");
     }
-    const { idempotencyKey, locale, items, note } = body as Record<string, unknown>;
+    const { idempotencyKey, locale, items, removals, note } = body as Record<string, unknown>;
     return createGuestRequest({
       token,
       idempotencyKey: idempotencyKey as string,
       locale: locale as never,
       items: items as never,
+      removals: removals as never,
       note: note as never,
       ip: clientIp(request.headers),
       userAgent: request.headers.get("user-agent") ?? "",

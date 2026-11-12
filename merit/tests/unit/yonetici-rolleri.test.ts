@@ -55,15 +55,17 @@ describe("seed matrisi (saf)", () => {
     for (const code of NEW_ROLES) expect(role(code), code).toBeDefined();
   });
 
-  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL V,O,D; çekirdekte yalnız CR-KOM, CR-RAP", () => {
+  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL ve MB-ZIM V,O,D; çekirdekte yalnız CR-KOM, CR-RAD, CR-RAP", () => {
     const minibar = SCREENS.filter((s) => s.moduleKey === "MINIBAR").map((s) => s.code);
     const depKat = minibar.filter((s) => acts("R-DEP", s) !== "" || acts("R-KAT", s) !== "");
     for (const s of depKat) expect(acts("R-MTY", s), s).toContain("V");
-    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    expect(acts("R-MTY", "MB-ZIM")).toBe("VOD"); // otel deposu: merkez depo tedariki ve başlangıç stoğu (12 Kas 2026)
     expect(acts("R-MTY", "MB-RAP")).toBe("VR");
     expect(acts("R-MTY", "MB-DOL")).toBe("VOD"); // yükleme O; silme / geri alma D
     for (const s of SCREENS.filter((x) => x.moduleKey === "CORE")) {
-      expect(acts("R-MTY", s.code), s.code).toBe(["CR-KOM", "CR-RAP"].includes(s.code) ? "VR" : "");
+      // CR-RAD: Operasyon Radarı, sunucuda yalnız MINIBAR katmanına indirilir (radar/server/scope.ts).
+      expect(acts("R-MTY", s.code), s.code).toBe(["CR-KOM", "CR-RAD", "CR-RAP"].includes(s.code) ? "VR" : "");
     }
   });
 
@@ -270,6 +272,17 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
     // 20261110161000 adds MB-DOL D for R-MTY on top of the block.
     const followUp = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261110161000_mty_doluluk_silme/migration.sql"), "utf8").replace(/^\s*--.*$/gm, "").trim();
     await testDb.$executeRawUnsafe(followUp);
+    // Later grants on top: MB-ZIM O,D (20261112030000, its @limits block) and CR-RAD V,R (20261112090000).
+    const limitsOf = (dir: string) => {
+      const sql = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${dir}/migration.sql`), "utf8");
+      return sql
+        .slice(sql.indexOf("-- @limits:begin"), sql.indexOf("-- @limits:end"))
+        .split(/;\s*\n/)
+        .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
+        .filter((x) => x.length > 0);
+    };
+    const later = [...limitsOf("20261112030000_otel_deposu_stok_takibi"), ...limitsOf("20261112090000_mty_radar")];
+    for (const statement of later) await testDb.$executeRawUnsafe(statement);
     expect(await read()).toEqual(expected);
 
     // The whole file runs twice without error (idempotent) and leaves the same matrix.
@@ -280,11 +293,28 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
     for (let i = 0; i < 2; i++) {
       for (const statement of all) await testDb.$executeRawUnsafe(statement);
       await testDb.$executeRawUnsafe(followUp);
+      for (const statement of later) await testDb.$executeRawUnsafe(statement);
     }
     expect(await read()).toEqual(expected);
     const access = await testDb.roleModuleAccess.findMany({ where: { hotelId: null, role: { code: { in: [...NEW_ROLES] } } }, include: { role: true } });
     expect(access.map((a) => `${a.role.code}|${a.moduleKey}`).sort()).toEqual(
       ["R-MTY|CORE", "R-MTY|MINIBAR", "R-QMY|CORE", "R-QMY|QR_MENU", "R-OUY|QR_ORDER", "R-MUY|QR_ORDER"].sort(),
     );
+  });
+});
+
+describe("Minibar Takip Yöneticisi: Operasyon Radarı", () => {
+  it("radarı yalnız MINIBAR katmanıyla izler; diğer yönetim rolleri sistem katmanını da görür", async () => {
+    const { assertRadarScope } = await import("@/modules/radar/server/scope");
+    const w = await minibarWorld();
+    const mty = (await ctxOf("R-MTY")).ctx;
+    expect(await assertRadarScope(mty, w.hotelId, "V")).toEqual(["MINIBAR"]);
+    const otm = (await ctxOf("R-OTM", "y-radar-otm")).ctx;
+    const layers = await assertRadarScope(otm, w.hotelId, "V");
+    expect(layers).toContain("SISTEM");
+    expect(layers).toContain("MINIBAR");
+    // QR Menü Yönetimi keeps no radar at all.
+    const qmy = (await ctxOf("R-QMY", "y-radar-qmy")).ctx;
+    await expect(assertRadarScope(qmy, w.hotelId, "V")).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });

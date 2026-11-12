@@ -114,7 +114,9 @@ describe("mybar", () => {
     const r = await call("mybar");
     expect(r.columns.map((c) => c.title)).toEqual([
       "Tarih", "Otel", "Oda", "Dil", "Durum", "Talep zamanı", "Görülme (dk)", "Karşılanma (dk)",
-      "İstenen adet", "Karşılanan adet", "Eksikle kapatıldı", "Not",
+      "İstenen adet", "Karşılanan adet", "Çıkarılacak adet", "Çıkarılan adet",
+      "Çıkarılan ürünler (alınan/istenen)", "Eklenen ürünler (eklenen/istenen)", "Karşılayan",
+      "Eksikle kapatıldı", "Not",
     ]);
     expect(r.columns.filter((c) => c.type === "minutes")).toHaveLength(2);
     expect(r.rows[0]).toMatchObject({
@@ -126,6 +128,36 @@ describe("mybar", () => {
     expect(sum(r, "Ortalama karşılanma (dk)")).toBe(12);
     expect(sum(r, "Tamamlanma oranı")).toBe("%50");
     expect(sum(r, "Eksik kapatma oranı")).toBe("%100");
+  });
+
+  it("çıkarılan/eklenen ürünler, karşılayan ve toplamlar; iptaldeki iade karşılayan sayılmaz", async () => {
+    const hid = await hotelId("ROYAL");
+    const kat = await staff("R-KAT", "ROYAL");
+    const bira = await testDb.product.create({
+      data: { name: "Bira", group: { create: { name: `G${randomUUID().slice(0, 6)}` } } },
+    });
+    const req = await request("101", {
+      status: "TAMAMLANDI",
+      completedAt: new Date("2026-10-31T10:30:00Z"),
+      removals: { create: [{ productId: bira.id, requestedQty: 3, removedQty: 2 }] },
+    });
+    const cola = await testDb.product.findFirstOrThrow({ where: { name: "Kola" } });
+    const move = (qty: number, productId: string, note: string | null, userId: string) =>
+      testDb.hotelStockMovement.create({
+        data: { hotelId: hid, productId, userId, type: qty < 0 ? "MYBAR" : "IADE", qty, refType: "MybarRequest", refId: req.id, note },
+      });
+    await move(-2, cola.id, null, kat.userId);
+    await move(2, bira.id, "MyBar talebi iadesi · Oda 101", kat.userId);
+    const other = await makeUser({ username: "iptal-eden", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    await move(2, cola.id, "MyBar talebi iptal edildi", other.id);
+
+    const r = await call("mybar");
+    expect(r.rows[0]).toMatchObject({
+      requested: 3, delivered: 2, toRemove: 3, removed: 2,
+      removedList: "Bira 2/3", addedList: "Kola 2/3", by: expect.stringContaining("r-kat"),
+    });
+    expect(String(r.rows[0]?.by)).not.toContain("iptal-eden");
+    expect([sum(r, "Çıkarılacak adet"), sum(r, "Çıkarılan adet"), sum(r, "Eklenecek adet"), sum(r, "Eklenen adet")]).toEqual([3, 2, 3, 2]);
   });
 
   it("tamamlanma oranı IPTAL'i paydadan çıkarır; hiç veri yoksa ortalamalar —", async () => {
@@ -151,6 +183,75 @@ describe("mybar", () => {
     expect(String(r.rows[1]?.note).endsWith("…")).toBe(true);
     const cut = await call("mybar", {}, range, 2);
     expect(cut.rows).toHaveLength(2);
+    expect(cut.truncated).toBe(true);
+  });
+});
+
+describe("mybar-degisim", () => {
+  async function swap(roomNo: string, status: "BEKLEMEDE" | "TAMAMLANDI" | "IPTAL", over: Record<string, unknown> = {}) {
+    const [room] = await floorAndRooms("ROYAL", [roomNo]).catch(async () => [
+      await testDb.room.findFirstOrThrow({ where: { number: roomNo } }),
+    ]);
+    const group = await testDb.productGroup.create({ data: { name: `G${randomUUID().slice(0, 6)}` } });
+    const bira = await testDb.product.create({ data: { name: `Bira${roomNo}`, groupId: group.id } });
+    const cola = await testDb.product.create({ data: { name: `Kola${roomNo}`, groupId: group.id } });
+    const req = await testDb.mybarRequest.create({
+      data: {
+        hotelId: await hotelId("ROYAL"),
+        roomId: room!.id,
+        businessDate: DAY,
+        status,
+        language: "tr",
+        idempotencyKey: randomUUID(),
+        clientIp: "10.0.0.1",
+        createdAt: new Date("2026-10-31T10:00:00Z"),
+        removals: { create: [{ productId: bira.id, requestedQty: 2, removedQty: status === "BEKLEMEDE" ? 0 : 2 }] },
+        items: { create: [{ productId: cola.id, requestedQty: 2, deliveredQty: status === "TAMAMLANDI" ? 1 : 0 }] },
+        ...over,
+      },
+    });
+    return { req, bira, cola };
+  }
+
+  it("istek-ürün başına satır: Çıkarıldı/Eklendi, istenen/gerçekleşen, durum, karşılayan; toplamlar", async () => {
+    const kat = await staff("R-KAT", "ROYAL");
+    const { req, bira, cola } = await swap("101", "TAMAMLANDI", { completedAt: new Date("2026-10-31T11:00:00Z") });
+    const hid = await hotelId("ROYAL");
+    await testDb.hotelStockMovement.create({
+      data: { hotelId: hid, productId: bira.id, userId: kat.userId, type: "IADE", qty: 2, refType: "MybarRequest", refId: req.id, note: "MyBar talebi iadesi · Oda 101", createdAt: new Date("2026-10-31T10:20:00Z") },
+    });
+    await testDb.hotelStockMovement.create({
+      data: { hotelId: hid, productId: cola.id, userId: kat.userId, type: "MYBAR", qty: -1, refType: "MybarRequest", refId: req.id, createdAt: new Date("2026-10-31T10:21:00Z") },
+    });
+    await swap("102", "BEKLEMEDE");
+    await swap("103", "IPTAL", { cancelledAt: new Date("2026-10-31T10:40:00Z") });
+
+    const r = await call("mybar-degisim");
+    expect(r.columns.map((c) => c.title)).toEqual([
+      "Zaman", "Otel", "Kat", "Oda", "Ürün", "İşlem", "Talep edilen", "Gerçekleşen", "Durum", "Karşılayan", "Karşılanma zamanı",
+    ]);
+    expect(r.rows.map((x) => [x.room, x.kind, x.wanted, x.done, x.status])).toEqual([
+      ["101", "Çıkarıldı", 2, 2, "Tamamlandı"],
+      ["101", "Eklendi", 2, 1, "Eksik kapatıldı"],
+      ["102", "Çıkarıldı", 2, 0, "Bekliyor"],
+      ["102", "Eklendi", 2, 0, "Bekliyor"],
+      ["103", "Çıkarıldı", 2, 2, "İptal edildi"],
+      ["103", "Eklendi", 2, 0, "İptal edildi"],
+    ]);
+    expect(r.rows[0]).toMatchObject({ product: "Bira101", hotel: expect.any(String), floor: "Kat 1", by: expect.stringContaining("r-kat") });
+    expect(r.rows[0]?.doneAt).toEqual(new Date("2026-10-31T10:20:00Z"));
+    expect(r.rows[2]).toMatchObject({ by: "—", doneAt: null });
+    expect([sum(r, "Çıkarılacak adet"), sum(r, "Çıkarılan adet"), sum(r, "Eklenecek adet"), sum(r, "Eklenen adet")]).toEqual([6, 4, 6, 1]);
+  });
+
+  it("kısmi satır Kısmi; limitte truncated", async () => {
+    await swap("201", "BEKLEMEDE");
+    const { req } = await swap("202", "BEKLEMEDE");
+    await testDb.mybarRequestRemoval.updateMany({ where: { requestId: req.id }, data: { removedQty: 1 } });
+    const r = await call("mybar-degisim");
+    expect(r.rows.find((x) => x.room === "202" && x.kind === "Çıkarıldı")?.status).toBe("Kısmi");
+    const cut = await call("mybar-degisim", {}, range, 3);
+    expect(cut.rows).toHaveLength(3);
     expect(cut.truncated).toBe(true);
   });
 });

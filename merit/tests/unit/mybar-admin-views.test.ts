@@ -63,6 +63,7 @@ describe("dışa aktarma", () => {
       status: "IPTAL",
       cancelledAt: new Date(),
       items: [{ productId: fxRoyal.products.kola, requested: 2, delivered: 1 }],
+      removals: [{ productId: fxRoyal.products.bira, requested: 3, removed: 2 }],
     });
     await makeRequest(fxRoyal, { status: "BEKLEMEDE" });
     await makeRequest(fxDiamond, { status: "IPTAL", cancelledAt: new Date() });
@@ -78,6 +79,7 @@ describe("dışa aktarma", () => {
     expect(lines[0]).toContain("101");
     expect(lines[0]).toContain("İptal");
     expect(lines[0]).toContain("Kola 2/1");
+    expect(lines[0]).toContain("Bira 3/2");
     expect(text.toLowerCase()).not.toMatch(/fiyat|price|tutar|₺|tl\b/);
 
     const audits = await testDb.auditLog.findMany({ where: { action: "MYBAR_EXPORT" } });

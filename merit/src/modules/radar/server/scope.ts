@@ -13,6 +13,9 @@ export const LAYER_GATES: Record<RadarLayer, { screen?: string }> = {
   SISTEM: {},
 };
 
+/** Roles whose radar is limited to the MINIBAR layer. */
+export const MINIBAR_ONLY_ROLES: readonly string[] = ["R-MTY"];
+
 const ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 
 /**
@@ -27,7 +30,9 @@ export async function assertRadarScope(ctx: Ctx, hotelId: string, action: "V" | 
       return screen === undefined || (await can(ctx, screen, "V", hotelId)) ? layer : null;
     }),
   );
-  return checks.filter((l): l is RadarLayer => l !== null);
+  const layers = checks.filter((l): l is RadarLayer => l !== null);
+  // Minibar Yönetimi follows the minibar operation only: no system alerts, staff or order layers.
+  return MINIBAR_ONLY_ROLES.includes(ctx.user.roleCode) ? layers.filter((l) => l === "MINIBAR") : layers;
 }
 
 /** Hotels the caller holds `CR-RAD V` on (cheap: no counters; the window learns its scope from this). */

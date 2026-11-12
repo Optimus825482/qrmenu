@@ -259,7 +259,11 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
 
   if (screen.moduleKey === "CORE") {
     if (CORE_ALL_ROLES.has(screen.code)) return VIEW_REPORT;
-    if (DELEGATE_MANAGERS.has(role.code)) return DELEGATE_CORE.has(screen.code) ? VIEW_REPORT : [];
+    if (DELEGATE_MANAGERS.has(role.code)) {
+      // Minibar Yönetimi also watches the radar; the server limits it to the minibar layer (radar/server/scope.ts).
+      if (role.code === "R-MTY" && screen.code === "CR-RAD") return VIEW_REPORT;
+      return DELEGATE_CORE.has(screen.code) ? VIEW_REPORT : [];
+    }
     if (CORE_DEFINITIONS.has(screen.code)) {
       if (role.code === "R-ITT") return DEFINITIONS_VIEW_ONLY;
       return role.kind === "YONETIM" ? DEFINITIONS_MANAGE : [];

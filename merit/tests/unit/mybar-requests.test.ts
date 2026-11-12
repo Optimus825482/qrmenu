@@ -270,7 +270,7 @@ describe("complete", () => {
 
     await expect(complete(kat1, req.id, {})).rejects.toMatchObject({
       code: "VALIDATION",
-      message: "Talep edilen ürünlerden bazıları henüz odaya eklenmemiş.",
+      message: "Talepteki ürünlerden bazıları henüz odaya eklenmemiş ya da odadan alınmamış.",
       fieldErrors: { missing: ["Kola (1)"] },
     });
 
@@ -289,6 +289,27 @@ describe("complete", () => {
     expect(row.status).toBe("TAMAMLANDI");
     expect(row.closedWithMissing).toBe(true);
     expect(row.closeNote).toBe("su ve kola eksikti");
+  });
+
+  it("an outstanding removal counts as missing: needs confirmMissing + explanation, listed as 'alınacak'", async () => {
+    const req = await makeRequest(fxRoyal, {
+      items: [{ productId: fxRoyal.products.su, requested: 1, delivered: 1 }],
+      removals: [{ productId: fxRoyal.products.bira, requested: 3, removed: 1 }],
+    });
+    await expect(complete(kat1, req.id, {})).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { missing: ["Bira (alınacak 2)"] },
+    });
+    await expect(complete(kat1, req.id, { confirmMissing: true, closeNote: "kısa not" })).rejects.toMatchObject({
+      message: CLOSE_MISSING_EXPLANATION_MSG,
+    });
+    expect((await complete(kat1, req.id, { confirmMissing: true, closeNote: "bira odada bulunamadı" })).closedWithMissing).toBe(true);
+
+    const full = await makeRequest(fxRoyal, {
+      items: [{ productId: fxRoyal.products.su, requested: 1, delivered: 1 }],
+      removals: [{ productId: fxRoyal.products.bira, requested: 1, removed: 1 }],
+    });
+    expect((await complete(kat1, full.id, {})).closedWithMissing).toBe(false);
   });
 
   it("completes note-only request without confirmMissing and prevents concurrent double complete", async () => {
@@ -360,6 +381,19 @@ describe("cancel", () => {
       code: "CONFLICT",
       message: "Bu talep zaten işlenmiş",
     });
+  });
+});
+
+describe("removals in the row view", () => {
+  it("get, list and listForRoom carry removals with collected and remaining quantities", async () => {
+    const req = await makeRequest(fxRoyal, {
+      items: [{ productId: fxRoyal.products.su, requested: 2 }],
+      removals: [{ productId: fxRoyal.products.bira, requested: 3, removed: 1 }],
+    });
+    const expected = [{ productId: fxRoyal.products.bira, name: "Bira", requestedQty: 3, removedQty: 1, remainingQty: 2 }];
+    expect((await get(kat1, req.id)).removals).toEqual(expected);
+    expect((await listForRoom(kat1, fxRoyal.roomId))[0]!.removals).toEqual(expected);
+    expect((await list(kat1, {})).items.find((r) => r.id === req.id)!.removals).toEqual(expected);
   });
 });
 

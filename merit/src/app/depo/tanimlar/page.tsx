@@ -1,5 +1,6 @@
 "use client";
 
+import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { confirm } from "@/shell/confirm";
@@ -266,7 +267,9 @@ export default function MinibarTanimlarPage() {
   >("PRODUCTS");
 
   const [hotels, setHotels] = useState<HotelOption[]>([]);
-  const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  // A shell window passes the hotel chosen in its banner as `?hotelId=`; the page starts from it.
+  const [selectedHotelId, setSelectedHotelId] = useState<string>(hotelFromAddress);
+  const inShellFrame = useInShellFrame();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -376,7 +379,11 @@ export default function MinibarTanimlarPage() {
       if (hRes.ok) {
         const hData = await hRes.json();
         setHotels(hData.hotels || []);
-        if (hData.selectedHotelId) setSelectedHotelId(hData.selectedHotelId);
+        // The hotel from the address wins when this account may open it; otherwise the server default.
+        const asked = hotelFromAddress();
+        const allowed = (hData.hotels || []).some((h: { id: string }) => h.id === asked);
+        if (allowed) setSelectedHotelId(asked);
+        else if (hData.selectedHotelId) setSelectedHotelId(hData.selectedHotelId);
       }
 
       // Gruplar ve Ürünler
@@ -854,7 +861,8 @@ export default function MinibarTanimlarPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {hotels.length > 0 && (
+            {/* Inside a shell window the banner already offers the hotel selector. */}
+            {hotels.length > 0 && !inShellFrame && (
               <select
                 aria-label="Otel"
                 value={selectedHotelId}

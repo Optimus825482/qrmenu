@@ -15,6 +15,7 @@ import { useAndroidForm } from "../useShellMode";
 import { useSse, type SseStatus } from "../useSse";
 import { useWindowStore } from "../windowStore";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ExpiryLoginNotice } from "./ExpiryLoginNotice";
 import type { SubscribeEvents } from "./mobile/events";
 import { type MobileTabId, NavGlyph, TabIcon } from "./mobile/icons";
 import { MobileAppHost, type MobileLaunch } from "./mobile/MobileAppHost";
@@ -31,7 +32,7 @@ import { SettingsTab } from "./mobile/SettingsTab";
 import { useNotifications } from "./mobile/useNotifications";
 
 type Props = {
-  user: { id: string; fullName: string };
+  user: { id: string; fullName: string; roleCode?: string };
   /** Default of the "Tanımlamaları mobilde aç" switch (setting `shell.mobileDefinitions`). */
   mobileDefinitions: boolean;
   /** Desktop apps the user may open (same permission filter as the XP desktop). */
@@ -333,7 +334,9 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
                 <b>{kpis?.onlineUsers ?? "—"}</b>Online
               </span>
               <span className="mb-widget-value" data-testid="home-kpi-notifications">
-                <b>{kpis?.notificationsToday ?? "—"}</b>Bildirim
+                {/* The user's own unread notifications: the same rows the Bildirimler app lists. The system-wide
+                    "today" count stays in İzleme as "Bugünkü bildirim". */}
+                <b>{notifications.items === null ? "—" : notifications.unread}</b>Yeni bildirim
               </span>
             </span>
           </button>
@@ -591,6 +594,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
         </button>
       </nav>
       <div id="xp-dialog-root" className="xp-dialog-root" />
+      <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY"} desktop={false} />
       <ConfirmDialog />
       <SnackbarHost bottomOffset="56px" />
     </div>

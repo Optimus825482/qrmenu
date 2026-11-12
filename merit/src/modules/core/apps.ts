@@ -102,6 +102,8 @@ export function registerCoreApps(): void {
     icon: "komuta",
     moduleKey: "CORE",
     screenCode: "CR-KOM",
+    // Minibar Yönetimi keeps CR-KOM only as the key to the desktop; its work is the minibar windows.
+    hiddenForRoleCodes: ["R-MTY"],
     category: "GENEL",
     needsHotel: false,
     window: { w: 900, h: 600 },

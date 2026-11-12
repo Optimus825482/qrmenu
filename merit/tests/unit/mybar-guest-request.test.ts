@@ -68,12 +68,29 @@ async function setSetting(_admin: unknown, key: string, value: unknown, hid: str
 const sysAdmin = async () => null;
 
 type World = Awaited<ReturnType<typeof minibarWorld>>;
-const submit = (
+
+/**
+ * A setup product that is never part of the additions: requests that only exercise other rules take it out
+ * in the same quantity as the additions, so the swap balance (additions <= removals) holds.
+ */
+const extraOf = new Map<string, string>();
+async function swapProduct(w: World): Promise<string> {
+  const known = extraOf.get(w.setup.id);
+  if (known) return known;
+  const p = await testDb.product.create({ data: { groupId: w.group.id, name: `Takas-${randomUUID().slice(0, 6)}` } });
+  await testDb.setupItem.create({ data: { setupId: w.setup.id, productId: p.id, qty: 20 } });
+  extraOf.set(w.setup.id, p.id);
+  return p.id;
+}
+
+const submit = async (
   w: World,
   items: { productId: string; qty: number }[] = [{ productId: w.cola.id, qty: 1 }],
   over: Record<string, unknown> = {},
-) =>
-  guest.createGuestRequest({
+) => {
+  const total = items.reduce((n, i) => n + i.qty, 0);
+  const removals = over.removals ?? (total > 0 ? [{ productId: await swapProduct(w), qty: total }] : []);
+  return guest.createGuestRequest({
     token: w.room.qrToken!,
     idempotencyKey: randomUUID(),
     locale: "tr",
@@ -81,7 +98,9 @@ const submit = (
     ip: "10.1.1.1",
     userAgent: "vitest",
     ...over,
+    removals,
   } as never);
+};
 
 describe("sanitizeNote", () => {
   it("etiketleri soyar, iç metni korur, kontrol karakterlerini atar", () => {
@@ -379,14 +398,15 @@ describe("talep oluşturma", () => {
     expect(await testDb.mybarRequest.count()).toBe(0);
   });
 
-  it("ürün setup'tan çıkarılmışsa VALIDATION ve ad; qty > maxQty VALIDATION; tekrar eden ürün VALIDATION", async () => {
+  it("ürün setup'tan çıkarılmışsa VALIDATION ve ad; qty > 20 VALIDATION; tekrar eden ürün VALIDATION", async () => {
     const w = await minibarWorld({ setupQty: 2 });
     await testDb.setupItem.deleteMany({ where: { setupId: w.setup.id, productId: w.water.id } });
     const e = await errOf(submit(w, [{ productId: w.water.id, qty: 1 }]));
     expect(e.code).toBe("VALIDATION");
     expect(e.fieldErrors?.items).toEqual([w.water.name]);
     expect(await testDb.mybarRequest.count()).toBe(0);
-    expect(await codeOf(submit(w, [{ productId: w.cola.id, qty: 3 }]))).toBe("VALIDATION");
+    // An addition may exceed the setup quantity (the swap balance limits it); only the absolute cap of 20 applies.
+    expect(await codeOf(submit(w, [{ productId: w.cola.id, qty: 21 }]))).toBe("VALIDATION");
     expect(
       await codeOf(
         submit(w, [
@@ -423,6 +443,85 @@ describe("talep oluşturma", () => {
     for (let i = 0; i < 30; i++) await submit(w, undefined, { ip: "9.9.9.9" });
     expect(await codeOf(submit(w, undefined, { ip: "9.9.9.9" }))).toBe("RATE_LIMITED");
     expect(await codeOf(submit(w, undefined, { ip: "9.9.9.8" }))).toBe("OK");
+  });
+});
+
+describe("talep oluşturma: çıkarılacak ürünler (takas)", () => {
+  it("çıkarılacak + eklenecek birlikte kaydedilir; bildirim iki listeyi de yazar; durum çıkarılanları döner", async () => {
+    const w = await minibarWorld({ setupQty: 4 });
+    await staff("R-KAT");
+    const res = await submit(
+      w,
+      [{ productId: w.cola.id, qty: 2 }],
+      { removals: [{ productId: w.water.id, qty: 3 }] },
+    );
+    const row = await testDb.mybarRequest.findUniqueOrThrow({
+      where: { id: res.requestId },
+      include: { items: true, removals: true },
+    });
+    expect(row.items.map((i) => [i.productId, i.requestedQty, i.deliveredQty])).toEqual([[w.cola.id, 2, 0]]);
+    expect(row.removals.map((i) => [i.productId, i.requestedQty, i.removedQty])).toEqual([[w.water.id, 3, 0]]);
+    const note = await testDb.notification.findFirstOrThrow({ where: { type: "mybar.created", refId: res.requestId } });
+    expect(note.body).toContain(`Çıkarılacak: ${w.water.name} ×3.`);
+    expect(note.body).toContain(`Eklenecek: ${w.cola.name} ×2.`);
+    expect(note.body.indexOf("Çıkarılacak")).toBeLessThan(note.body.indexOf("Eklenecek"));
+    const view = await guest.guestRequestStatus({ token: w.room.qrToken!, locale: "tr", ip: "1.1.1.1", userAgent: "t" });
+    expect(view.request?.removals).toEqual([{ name: w.water.name, qty: 3 }]);
+    expect(view.request?.items).toEqual([{ name: w.cola.name, qty: 2 }]);
+  });
+
+  it("yalnız çıkarılacak ürün geçerli bir taleptir (eklenecek yok)", async () => {
+    const w = await minibarWorld();
+    const res = await submit(w, [], { removals: [{ productId: w.water.id, qty: 1 }] });
+    const row = await testDb.mybarRequest.findUniqueOrThrow({ where: { id: res.requestId }, include: { items: true, removals: true } });
+    expect(row.items).toHaveLength(0);
+    expect(row.removals).toHaveLength(1);
+  });
+
+  it("eklenecek adet çıkarılacak adedi aşarsa VALIDATION ve kayıt yazılmaz", async () => {
+    const w = await minibarWorld({ setupQty: 4 });
+    const e = await errOf(
+      submit(w, [{ productId: w.cola.id, qty: 3 }], { removals: [{ productId: w.water.id, qty: 2 }] }),
+    );
+    expect(e.code).toBe("VALIDATION");
+    expect(e.fieldErrors?.items).toBeTruthy();
+    const none = await errOf(submit(w, [{ productId: w.cola.id, qty: 1 }], { removals: [] }));
+    expect(none.code).toBe("VALIDATION");
+    expect(await testDb.mybarRequest.count()).toBe(0);
+  });
+
+  it("çıkarılacak adet setup adedini aşarsa VALIDATION ve ürün adı döner", async () => {
+    const w = await minibarWorld({ setupQty: 2 });
+    const e = await errOf(submit(w, [], { removals: [{ productId: w.water.id, qty: 3 }] }));
+    expect(e.code).toBe("VALIDATION");
+    expect(e.fieldErrors?.removals).toEqual([w.water.name]);
+    expect(await testDb.mybarRequest.count()).toBe(0);
+  });
+
+  it("aynı ürün hem çıkarılacak hem eklenecek olamaz; çıkarılacaklarda tekrar ve setup dışı ürün reddedilir", async () => {
+    const w = await minibarWorld({ setupQty: 4 });
+    expect(
+      await codeOf(
+        submit(
+          w,
+          [{ productId: w.cola.id, qty: 1 }],
+          { removals: [{ productId: w.cola.id, qty: 2 }] },
+        ),
+      ),
+    ).toBe("VALIDATION");
+    expect(
+      await codeOf(
+        submit(w, [], {
+          removals: [
+            { productId: w.water.id, qty: 1 },
+            { productId: w.water.id, qty: 1 },
+          ],
+        }),
+      ),
+    ).toBe("VALIDATION");
+    const outside = await testDb.product.create({ data: { groupId: w.group.id, name: `Dışarı-${randomUUID().slice(0, 6)}` } });
+    expect(await codeOf(submit(w, [], { removals: [{ productId: outside.id, qty: 1 }] }))).toBe("VALIDATION");
+    expect(await testDb.mybarRequest.count()).toBe(0);
   });
 });
 
@@ -554,6 +653,7 @@ describe("route", () => {
       idempotencyKey: randomUUID(),
       locale: "tr",
       items: [{ productId: w.cola.id, qty: 1 }],
+      removals: [{ productId: w.water.id, qty: 1 }],
       hotelId: other.hotelId,
       roomId: other.room.id,
     });

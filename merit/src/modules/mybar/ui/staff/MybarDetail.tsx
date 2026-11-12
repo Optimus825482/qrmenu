@@ -7,7 +7,13 @@ import { rowStatusLabel } from "./format";
 const time = (d: Date | string) =>
   new Date(d).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-/** Read-only view of one request: items (asked / added / missing / pool), the guest's note and the timeline. No prices. */
+const TABLE_WRAP =
+  "relative overflow-x-auto rounded-xl border border-border bg-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+
+/**
+ * Read-only view of one request: the products to be taken out of the room (asked / taken / missing), the products
+ * to be added (asked / added / missing / hotel stock), the guest's note and the timeline. No prices.
+ */
 export function MybarDetail({ row }: { row: MybarRow }) {
   const [original, setOriginal] = useState(false);
   const showPool = row.status === "BEKLEMEDE" && row.items.some((i) => i.poolRemaining !== null);
@@ -31,37 +37,73 @@ export function MybarDetail({ row }: { row: MybarRow }) {
         ) : null}
       </div>
 
-      {row.items.length > 0 ? (
-        <div className="relative overflow-x-auto rounded-xl border border-border bg-bg">
-          <table className="w-full text-sm">
-            <caption className="sr-only">Talep edilen ürünler</caption>
-            <thead className="text-left text-xs uppercase text-muted">
-              <tr>
-                <th scope="col" className="px-3 py-2 font-semibold">Ürün</th>
-                <th scope="col" className="px-2 py-2 text-right font-semibold">İstenen</th>
-                <th scope="col" className="px-2 py-2 text-right font-semibold">Eklenen</th>
-                <th scope="col" className="px-2 py-2 text-right font-semibold">Kalan</th>
-                {showPool ? <th scope="col" className="px-3 py-2 text-right font-semibold">Depo</th> : null}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {row.items.map((it) => (
-                <tr key={it.productId}>
-                  <th scope="row" className="px-3 py-2 text-left font-medium text-text">{it.name}</th>
-                  <td className="px-2 py-2 text-right tabular-nums">{it.requestedQty}</td>
-                  <td className="px-2 py-2 text-right tabular-nums">{it.deliveredQty}</td>
-                  <td className={`px-2 py-2 text-right font-bold tabular-nums ${it.remainingQty > 0 ? "text-danger" : "text-text"}`}>
-                    {it.remainingQty}
-                  </td>
-                  {showPool ? <td className="px-3 py-2 text-right tabular-nums">{it.poolRemaining ?? "-"}</td> : null}
+      {row.removals.length > 0 ? (
+        <div data-testid="detail-removals" className="space-y-1.5">
+          <h3 className="text-sm font-semibold text-text">Odadan alınacak ürünler</h3>
+          <div role="region" aria-label="Odadan alınacak ürünler tablosu" tabIndex={0} className={TABLE_WRAP}>
+            <table className="w-full text-sm">
+              <caption className="sr-only">Odadan alınacak ürünler</caption>
+              <thead className="text-left text-xs uppercase text-muted">
+                <tr>
+                  <th scope="col" className="px-3 py-2 font-semibold">Ürün</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">İstenen</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">Alınan</th>
+                  <th scope="col" className="px-3 py-2 text-right font-semibold">Kalan</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {row.removals.map((it) => (
+                  <tr key={it.productId} className="odd:bg-surface even:bg-bg">
+                    <th scope="row" className="px-3 py-2 text-left font-medium text-text">{it.name}</th>
+                    <td className="px-2 py-2 text-right tabular-nums">{it.requestedQty}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{it.removedQty}</td>
+                    <td className={`px-3 py-2 text-right font-bold tabular-nums ${it.remainingQty > 0 ? "text-danger" : "text-text"}`}>
+                      {it.remainingQty}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      ) : (
+      ) : null}
+
+      {row.items.length > 0 ? (
+        <div data-testid="detail-items" className="space-y-1.5">
+          <h3 className="text-sm font-semibold text-text">Odaya eklenecek ürünler</h3>
+          <div role="region" aria-label="Odaya eklenecek ürünler tablosu" tabIndex={0} className={TABLE_WRAP}>
+            <table className="w-full text-sm">
+              <caption className="sr-only">Talep edilen ürünler</caption>
+              <thead className="text-left text-xs uppercase text-muted">
+                <tr>
+                  <th scope="col" className="px-3 py-2 font-semibold">Ürün</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">İstenen</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">Eklenen</th>
+                  <th scope="col" className="px-2 py-2 text-right font-semibold">Kalan</th>
+                  {showPool ? <th scope="col" className="px-3 py-2 text-right font-semibold">Otel deposunda</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {row.items.map((it) => (
+                  <tr key={it.productId} className="odd:bg-surface even:bg-bg">
+                    <th scope="row" className="px-3 py-2 text-left font-medium text-text">{it.name}</th>
+                    <td className="px-2 py-2 text-right tabular-nums">{it.requestedQty}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{it.deliveredQty}</td>
+                    <td className={`px-2 py-2 text-right font-bold tabular-nums ${it.remainingQty > 0 ? "text-danger" : "text-text"}`}>
+                      {it.remainingQty}
+                    </td>
+                    {showPool ? <td className="px-3 py-2 text-right tabular-nums">{it.poolRemaining ?? "-"}</td> : null}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
+
+      {row.items.length === 0 && row.removals.length === 0 ? (
         <p className="text-sm text-muted">Ürün seçilmedi, yalnız not var.</p>
-      )}
+      ) : null}
 
       {row.note ? (
         <div className="rounded-xl border border-warn/40 bg-warn/10 p-3 text-sm text-text">

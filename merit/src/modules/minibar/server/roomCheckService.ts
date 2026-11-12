@@ -15,7 +15,7 @@ import { dayRange } from "./dates";
 import { autoCompleteDnd } from "./dnd";
 import { lockRow } from "./minibarCommon";
 import type { CorrectionRequestItem, RoomCheckHistoryItem } from "./minibarTypes";
-import { lockStocks, restoreStock, takeManyFromPool } from "./pool";
+import { isStockManager, lockStocks, restoreStock, takeManyFromPool } from "./pool";
 import { addedToday, type Checklist, capacityByProduct, loadRoomChecklist } from "./roomChecklist";
 import { assertRoomVerified, hasRoomProof } from "./roomVerification";
 import { completeOpenItemsForRoom, reopenIfUncovered } from "./tasks";
@@ -1424,10 +1424,11 @@ export async function resolveCorrectionRequest(ctx: Ctx, input: unknown, now: Da
   });
   if (!known) throw new DomainError("NOT_FOUND", "Düzeltme talebi bulunamadı");
   const hotelId = known.hotelId;
-  await assertCan(ctx, SCREEN, "A", hotelId);
-  if (ctx.user.roleKind !== "SISTEM") {
-    throw new DomainError("FORBIDDEN", "Düzeltme taleplerini yalnızca Sistem Yöneticisi karara bağlayabilir");
+  // Decided by the system administrator or the minibar system manager (same roles as the manual entry requests).
+  if (!isStockManager(ctx)) {
+    throw new DomainError("FORBIDDEN", "Düzeltme taleplerini yalnızca Sistem Yöneticisi ve Minibar Yönetimi karara bağlayabilir");
   }
+  await assertCan(ctx, SCREEN, ctx.user.roleKind === "SISTEM" ? "A" : "V", hotelId);
   const approverId = ctx.user.id;
 
   return prisma.$transaction(async (tx) => {

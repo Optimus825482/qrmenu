@@ -42,7 +42,9 @@ function StartPanel({ apps, userName, onOpenApp, onHelp, onClose, startButtonRef
   const matches = search ? available.filter((app) =>
     [app.launchLabel ?? app.title, app.screenCode].some((value) => value.toLocaleLowerCase("tr-TR").includes(search)),
   ) : [];
-  const activeFolder = APP_FOLDERS.find(({ id }) => id === folder);
+  // Only folders this user has at least one program in.
+  const folders = APP_FOLDERS.filter(({ categories }) => available.some((app) => categories.includes(app.category)));
+  const activeFolder = folders.find(({ id }) => id === folder);
 
   useEffect(() => {
     searchRef.current?.focus();
@@ -169,7 +171,7 @@ function StartPanel({ apps, userName, onOpenApp, onHelp, onClose, startButtonRef
               </button>
               {programs ? (
                 <div role="menu" aria-label="Tüm Programlar" data-submenu="" className="xp-start-submenu">
-                  {APP_FOLDERS.map(({ id, label }) => (
+                  {folders.map(({ id, label }) => (
                     <button key={id} type="button" role="menuitem" className="xp-start-item" aria-haspopup="menu" aria-expanded={folder === id} onClick={(event) => {
                       folderButton.current = event.currentTarget;
                       setFolder(folder === id ? undefined : id);

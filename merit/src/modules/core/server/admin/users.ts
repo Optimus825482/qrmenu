@@ -747,3 +747,18 @@ export async function deleteUser(ctx: Ctx, id: string): Promise<void> {
     await publishUser(tx, id, hotelsOf(before), "delete");
   });
 }
+
+/**
+ * Building blocks for narrowly scoped user services (Minibar Kullanıcıları): they bring their own
+ * authorisation and do not go through the CR-KUL gate above, but reuse the row shape, the hotel
+ * bookkeeping, the username generator and the realtime notice so the behaviour stays identical.
+ */
+export {
+  hotelsOf as userHotelsOf,
+  jobTitleIdFor as userJobTitleIdFor,
+  nextUsername as nextUserUsername,
+  publishUser,
+  SELECT as USER_SELECT,
+  toRow as toUserRow,
+  USERNAME_TAKEN,
+};

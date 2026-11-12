@@ -138,7 +138,9 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
   } else if (node.id === "minibar-tanimlar") {
     body = (
       <iframe
-        src="/depo/tanimlar"
+        // The page follows the window's hotel (its own selector is hidden inside a frame).
+        key={hotelId ?? ""}
+        src={hotelId ? `/depo/tanimlar?hotelId=${encodeURIComponent(hotelId)}` : "/depo/tanimlar"}
         title="Minibar Tanımları"
         className="w-full h-full border-0 rounded-lg min-h-[500px]"
       />

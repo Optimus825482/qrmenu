@@ -108,6 +108,8 @@ export async function makeRequest(
     seen?: boolean;
     seenById?: string;
     items?: { productId: string; requested: number; delivered?: number }[];
+    /** Setup products the guest asked to have taken out of the room. */
+    removals?: { productId: string; requested: number; removed?: number }[];
     businessDate?: string;
     createdAt?: Date;
     completedAt?: Date;
@@ -120,6 +122,7 @@ export async function makeRequest(
   const now = opts.createdAt ?? new Date();
   const bDate = businessDay(opts.businessDate ?? businessDate(now));
   const items = opts.items ?? [{ productId: fx.products.su, requested: 2, delivered: 0 }];
+  const removals = opts.removals ?? [];
 
   return testDb.mybarRequest.create({
     data: {
@@ -142,6 +145,13 @@ export async function makeRequest(
           productId: it.productId,
           requestedQty: it.requested,
           deliveredQty: it.delivered ?? 0,
+        })),
+      },
+      removals: {
+        create: removals.map((it) => ({
+          productId: it.productId,
+          requestedQty: it.requested,
+          removedQty: it.removed ?? 0,
         })),
       },
     },

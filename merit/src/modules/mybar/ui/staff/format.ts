@@ -31,6 +31,18 @@ export function orderRows<T extends Pick<MybarRow, "status" | "seenAt" | "create
   return { waiting, recent };
 }
 
-export function itemsSummary(row: Pick<MybarRow, "items">): string {
-  return row.items.length === 0 ? "Yalnız not" : row.items.map((i) => `${i.name} ×${i.requestedQty}`).join(", ");
+export function itemsSummary(row: Pick<MybarRow, "items" | "removals">): string {
+  if (row.items.length > 0) return row.items.map((i) => `${i.name} ×${i.requestedQty}`).join(", ");
+  if (row.removals.length > 0) return row.removals.map((i) => `${i.name} ×${i.requestedQty}`).join(", ");
+  return "Yalnız not";
+}
+
+/** "6 çıkarılacak · 6 eklenecek": what the swap asks for, in pieces (empty when no products were asked). */
+export function swapSummary(row: Pick<MybarRow, "items" | "removals">): string {
+  const out = row.removals.reduce((sum, i) => sum + i.requestedQty, 0);
+  const add = row.items.reduce((sum, i) => sum + i.requestedQty, 0);
+  const parts: string[] = [];
+  if (out > 0) parts.push(`${out} çıkarılacak`);
+  if (add > 0) parts.push(`${add} eklenecek`);
+  return parts.join(" · ");
 }

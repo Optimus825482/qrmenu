@@ -196,3 +196,12 @@ describe("gun-sonu", () => {
     expect(prev.rows).toHaveLength(0);
   });
 });
+
+describe("movementLabel", () => {
+  it("IADE movements booked by a MyBar request read as 'MyBar iadesi'", async () => {
+    const { movementLabel } = await import("@/modules/reporting/server/reports/minibar/zimmetHareket");
+    expect(movementLabel("IADE", "MybarRequest")).toBe("MyBar iadesi");
+    expect(movementLabel("IADE", "MinibarTransaction")).toBe("İşlem silme geri yazımı");
+    expect(movementLabel("IADE", null)).toBe("Depoya iade");
+  });
+});

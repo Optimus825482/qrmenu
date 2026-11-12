@@ -90,6 +90,7 @@ describe("useMybarStream & applyMybarEvent", () => {
       id: "req-11", roomId: "r-102", roomNumber: "102", floorName: "1. Kat", createdAt: new Date("2026-11-03T10:00:00Z"),
       note: "ice please", noteTr: "buz lütfen", noteSrcLang: "en",
       items: [{ productId: "p1", name: "Su", requestedQty: 2, deliveredQty: 0, remainingQty: 2, poolRemaining: null }],
+      removals: [],
     };
     let served: unknown[] = [];
     listUnseen.mockImplementation(async () => ({ ok: true, data: served }));
@@ -131,7 +132,7 @@ describe("useMybarStream & applyMybarEvent", () => {
   it("ack hatası fırlatılır ve liste değişmez", async () => {
     listUnseen.mockResolvedValue({
       ok: true,
-      data: [{ id: "req-12", roomId: "r", roomNumber: "103", floorName: "", createdAt: new Date(), note: null, noteTr: null, noteSrcLang: null, items: [] }],
+      data: [{ id: "req-12", roomId: "r", roomNumber: "103", floorName: "", createdAt: new Date(), note: null, noteTr: null, noteSrcLang: null, items: [], removals: [] }],
     });
     acknowledge.mockResolvedValue({ ok: false, error: { code: "FORBIDDEN", message: "Bu işlem için yetkiniz yok" } });
     const { result } = renderHook(() => useMybarStream());

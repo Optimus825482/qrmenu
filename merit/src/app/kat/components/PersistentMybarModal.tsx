@@ -89,7 +89,20 @@ function AlertBody({ current, count, confirming, error, soundLocked, onConfirm }
 
         <div className="p-5 space-y-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Talep Edilen Ürünler</p>
+            {current.removals && current.removals.length > 0 ? (
+              <div className="mb-3" data-testid="mybar-removals">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Odadan Alınacak Ürünler</p>
+                <div className="divide-y divide-border rounded-xl border border-border bg-bg">
+                  {current.removals.map((it, idx) => (
+                    <div key={idx} className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                      <span className="font-medium text-text">{it.productName}</span>
+                      <span className="rounded-lg bg-warn/15 px-2.5 py-0.5 font-bold text-text tabular-nums">{it.qty} Adet</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Odaya Eklenecek Ürünler</p>
             {current.items.length > 0 ? (
               <div data-guide="talep-listesi" className="divide-y divide-border rounded-xl border border-border bg-bg">
                 {current.items.map((it, idx) => (
@@ -103,7 +116,7 @@ function AlertBody({ current, count, confirming, error, soundLocked, onConfirm }
               </div>
             ) : (
               <p data-guide="talep-listesi" className="rounded-xl border border-border bg-bg px-3.5 py-2.5 text-sm text-muted">
-                Ürün seçilmedi, yalnız not var.
+                {current.removals && current.removals.length > 0 ? "Eklenecek ürün yok." : "Ürün seçilmedi, yalnız not var."}
               </p>
             )}
           </div>

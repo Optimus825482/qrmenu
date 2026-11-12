@@ -128,6 +128,24 @@ export function registerMinibarApps(): void {
     mobile: "none",
   });
 
+  // Requests of the floor team that wait for a decision: corrections / deletions, manual entries, extra stock.
+  // The server decides who may resolve them (roomCheckService.resolveCorrectionRequest, manualEntryRequests).
+  registerCatalogApp({
+    id: "minibar.onaylar",
+    title: "Bekleyen Talepler ve Onaylar",
+    launchLabel: "Bekleyen Talepler ve Onaylar",
+    icon: "denetim",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-TAL",
+    roleCodes: ["R-MTY", "R-SYS"],
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 1150, h: 760, minW: 760, minH: 500 },
+    kind: "iframe",
+    url: "/kat/duzeltme-onay",
+    mobile: "full",
+  });
+
   // Minibar Takip Yöneticisi: the manual room entry switch without Denetim Masası (no CR-SYS). R-SYS keeps it
   // in Denetim Masası → Minibar ve Kat. The server re-checks the role and the hotel (manualRoomEntryAdmin).
   registerCatalogApp({
@@ -144,6 +162,25 @@ export function registerMinibarApps(): void {
     kind: "component",
     component: () =>
       import("@/shell/apps/ManualRoomEntryWindow").then((m) => ({ default: m.ManualRoomEntryWindow })),
+    mobile: "none",
+  });
+
+  // Minibar Yönetimi: the minibar staff of the manager's own hotels (list, add garson, edit, reset password,
+  // activate/deactivate) without CR-KUL. The server re-checks role, target role and shared hotel (minibarUsers).
+  registerCatalogApp({
+    id: "minibar.kullanicilar",
+    title: "Minibar Kullanıcıları",
+    launchLabel: "Minibar Kullanıcıları",
+    icon: "kullanicilar",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-TUK",
+    roleCodes: ["R-MTY", "R-SYS"],
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 980, h: 600, minW: 640, minH: 420 },
+    kind: "component",
+    component: () =>
+      import("@/shell/apps/MinibarUsersWindow").then((m) => ({ default: m.MinibarUsersWindow })),
     mobile: "none",
   });
 }

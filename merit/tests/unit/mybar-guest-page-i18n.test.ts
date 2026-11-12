@@ -62,7 +62,7 @@ describe("MyBar misafir sayfası mesajları", () => {
       expect(baseKeys).toContain(`status.${s}`);
       expect(baseKeys).toContain(`statusDesc.${s}`);
     }
-    for (const k of ["validationEmpty", "err409Daily", "errRate", "errNetwork", "errGeneric", "errItems", "errClosed"]) {
+    for (const k of ["validationEmpty", "err409Daily", "errRate", "errNetwork", "errGeneric", "errItems", "errRemovals", "errClosed"]) {
       expect(baseKeys).toContain(k);
     }
   });
@@ -84,5 +84,35 @@ describe("MyBar misafir sayfası mesajları", () => {
       expect(m.get("increase"), locale).toContain("{name}");
       expect(m.get("liveRegion"), locale).toContain("{status}");
     }
+  });
+
+  it("takas akışı metinleri: tüm dillerde var, yer tutucular korunur, sepet/sipariş dili yok", () => {
+    const keys = [
+      "introTitle", "introBody", "introHours", "introStart", "introClose", "howItWorks", "stepIndicator", "step1Title",
+      "step1Desc", "inMinibar", "removedTotal", "continue", "back", "step2Title", "step2Desc", "swapCounterLabel",
+      "swapCounter", "step2NoProducts", "removalsTitle", "additionsTitle", "noAdditions", "pendingHours", "errRemovals",
+    ];
+    for (const locale of LOCALES) {
+      const m = mybar(locale);
+      for (const k of keys) expect(m.get(k)?.trim(), `${locale}:${k}`).toBeTruthy();
+      expect(m.get("introHours"), locale).toContain("{start}");
+      expect(m.get("introHours"), locale).toContain("{end}");
+      expect(m.get("pendingHours"), locale).toContain("{start}");
+      expect(m.get("pendingHours"), locale).toContain("{end}");
+      expect(m.get("stepIndicator"), locale).toContain("{current}");
+      expect(m.get("stepIndicator"), locale).toContain("{total}");
+      expect(m.get("swapCounter"), locale).toBe("{used} / {total}");
+      expect(m.get("inMinibar"), locale).toContain("{count}");
+      expect(m.get("removedTotal"), locale).toContain("{count}");
+    }
+    expect(mybar("tr").get("introTitle")).toBe("MyBar ile minibarınız size özel");
+    const all = (l: string) => [...mybar(l).values()].join(" ").toLowerCase();
+    expect(all("tr")).not.toMatch(/sepet|sipariş/);
+    expect(all("de")).not.toMatch(/warenkorb|bestell/);
+    expect(all("fr")).not.toMatch(/panier|commande/);
+    expect(all("it")).not.toMatch(/carrello|ordin/);
+    expect(all("ru")).not.toMatch(/корзин|заказ/);
+    expect(all("el")).not.toMatch(/καλάθι|παραγγελ/);
+    expect(mybar("ar").get("introBody")).toMatch(/[؀-ۿ]/);
   });
 });

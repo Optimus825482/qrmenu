@@ -159,14 +159,12 @@
   "mybar": {
     "title": "MYBAR",
     "room": "Chambre",
-    "subtitle": "Votre demande de minibar à l'hôtel {hotel} sera traitée dans les plus brefs délais. Veuillez sélectionner les produits souhaités avec leurs quantités.",
+    "subtitle": "Personnalisez le minibar de {hotel} selon vos goûts. Notre équipe prendra soin de votre demande.",
     "groups": "Groupes de produits",
-    "selectedSummary": "Produits sélectionnés",
     "noProductSelected": "Aucun produit sélectionné pour le moment.",
     "removeItem": "Retirer {name}",
     "increase": "Ajouter un {name}",
     "decrease": "Retirer un {name}",
-    "tickLabel": "Sélectionner {name}",
     "noteLabel": "Notes ou demandes particulières",
     "notePlaceholder": "Écrivez dans votre langue (ex. plus de glaçons, verres supplémentaires...)",
     "noteCounter": "{count}/{max}",
@@ -186,7 +184,6 @@
     "errClosed": "MyBar est actuellement indisponible pour cette chambre.",
     "refresh": "Actualiser la page",
     "statusTitle": "État de votre demande",
-    "requestedItems": "Produits demandés",
     "noteOnly": "Seule une note a été envoyée.",
     "liveRegion": "Statut de la demande mis à jour : {status}",
     "status": {
@@ -216,7 +213,30 @@
       "subtitle": "Bienvenue aux services en chambre de l'hôtel {hotel}. Veuillez choisir le service souhaité.",
       "title": "Que souhaitez-vous faire ?",
       "mybar": "Demande MyBar",
-      "mybarDesc": "Choisissez des produits pour votre minibar"
-    }
+      "mybarDesc": "Personnalisez votre minibar"
+    },
+    "introTitle": "Votre minibar, selon vos goûts",
+    "introBody": "Nous serons ravis d'adapter votre minibar à vos goûts. Indiquez-nous les produits que vous appréciez peu : nous laisserons à leur place davantage de vos favoris.",
+    "introHours": "Notre équipe minibar prend soin de votre demande entre {start} et {end}.",
+    "introStart": "Commençons",
+    "introClose": "Fermer",
+    "howItWorks": "Comment fonctionne MyBar ?",
+    "stepIndicator": "Étape {current} / {total}",
+    "step1Title": "De quoi souhaitez-vous vous passer ?",
+    "step1Desc": "Choisissez les produits que vous appréciez peu. Nous les retirerons lors de notre prochain passage.",
+    "inMinibar": "Dans votre minibar : {count}",
+    "removedTotal": "À retirer : {count}",
+    "continue": "Continuer",
+    "back": "Retour",
+    "step2Title": "De quoi aimeriez-vous davantage ?",
+    "step2Desc": "Choisissez vos favoris ; nous les laisserons à la place des autres.",
+    "swapCounterLabel": "Vos choix",
+    "swapCounter": "{used} / {total}",
+    "step2NoProducts": "Aucun autre produit n'est disponible. Vous pouvez envoyer votre demande telle quelle.",
+    "removalsTitle": "À retirer",
+    "additionsTitle": "À ajouter",
+    "noAdditions": "Rien à ajouter",
+    "pendingHours": "Votre demande sera prise en charge entre {start} et {end}.",
+    "errRemovals": "Certains produits ne figurent plus dans votre minibar. Veuillez actualiser la page et réessayer."
   }
 }

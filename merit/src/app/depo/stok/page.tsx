@@ -1,11 +1,13 @@
 "use client";
 
+import { useInShellFrame } from "@/shell/useInShellFrame";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
+import { StockCorrectionRequests } from "@/modules/minibar/ui/StockCorrectionRequests";
 
 interface DepoStockItem {
   id: string;
@@ -54,6 +56,8 @@ interface StockMovementItem {
   id: string;
   productName: string;
   type: string;
+  /** Source of the movement ("MybarRequest" for a MyBar return). */
+  refType?: string | null;
   quantity: number;
   previousQuantity: number;
   newQuantity: number;
@@ -236,6 +240,10 @@ export default function DepoStokPage() {
   const [activeTab, setActiveTab] = useState<"STOCK" | "SKT" | "MOVEMENTS">("STOCK");
   const [expiry, setExpiry] = useState<ExpiryItem[]>([]);
   const [canManage, setCanManage] = useState(false);
+  // Minibar sistem sorumlusu: the count is sent to the system administrator instead of being booked.
+  const [countNeedsApproval, setCountNeedsApproval] = useState(false);
+  const [correctionsKey, setCorrectionsKey] = useState(0);
+  const [sentNote, setSentNote] = useState<string | null>(null);
   const [opening, setOpening] = useState<OpeningWindow | null>(null);
   const [openingProduct, setOpeningProduct] = useState<DepoStockItem | null>(null);
   // "Bir daha gösterme" on the rule note: remembered on this device.
@@ -266,6 +274,8 @@ export default function DepoStokPage() {
   const [canCount, setCanCount] = useState(false);
   const [movementsTotal, setMovementsTotal] = useState(0);
   const [movementsPage, setMovementsPage] = useState(1);
+
+  const inShellFrame = useInShellFrame();
 
   const loadData = useCallback(async (hotelId?: string, page = 1) => {
     try {
@@ -305,6 +315,7 @@ export default function DepoStokPage() {
       setHotels(data.hotels || []);
       setCanCount(data.canCount === true);
       setCanManage(data.canManage === true);
+      setCountNeedsApproval(data.countNeedsApproval === true);
       setExpiry(data.expiry || []);
       setOpening(data.opening ?? null);
       if (data.selectedHotelId) setSelectedHotelId(data.selectedHotelId);
@@ -385,7 +396,8 @@ export default function DepoStokPage() {
           </h1>
           <p className="text-sm text-muted">Minibar stok takibi: otelin deposundaki ürünler, SKT ve hareketler</p>
         </div>
-        {hotels.length > 0 ? (
+        {/* Inside a shell window the banner already offers the hotel selector. */}
+        {hotels.length > 0 && !inShellFrame ? (
           <div className="flex min-w-0 items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
             <span className="flex items-center gap-1 whitespace-nowrap text-xs font-bold text-muted">
               <Icon name="building" size={16} />
@@ -465,6 +477,21 @@ export default function DepoStokPage() {
         <div role="alert" className="rounded-[var(--radius-l)] border border-danger bg-[var(--danger-bg)] p-4 text-sm text-danger">
           {errorMsg}
         </div>
+      ) : null}
+
+      {sentNote ? (
+        <div role="status" className="rounded-[var(--radius-l)] border border-success bg-[var(--success-bg)] p-4 text-sm text-success">
+          {sentNote}
+        </div>
+      ) : null}
+
+      {selectedHotelId ? (
+        <StockCorrectionRequests
+          hotelId={selectedHotelId}
+          refreshKey={correctionsKey}
+          hideWhenEmpty
+          onResolved={() => void loadData(selectedHotelId)}
+        />
       ) : null}
 
       <div data-guide="hareketler" className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
@@ -639,7 +666,7 @@ export default function DepoStokPage() {
                         <td className="px-4 py-3 font-bold">{m.productName}</td>
                         <td className="px-4 py-3 text-center">
                           <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${MOVEMENT_TONE[m.type] ?? "border-warn text-warn"}`}>
-                            {m.type}
+                            {m.type === "IADE" && m.refType === "MybarRequest" ? "MyBar iadesi" : m.type}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center font-bold tabular-nums">{m.quantity > 0 ? `+${m.quantity}` : m.quantity}</td>
@@ -685,9 +712,12 @@ export default function DepoStokPage() {
           product={selectedProduct}
           type={movementType}
           hotelId={selectedHotelId}
+          needsApproval={countNeedsApproval}
           onClose={() => setSelectedProduct(null)}
-          onSaved={() => {
+          onSaved={(pendingMessage) => {
             setSelectedProduct(null);
+            setSentNote(pendingMessage ?? null);
+            setCorrectionsKey((k) => k + 1);
             void loadData(selectedHotelId);
           }}
         />
@@ -700,14 +730,18 @@ function AdjustDialog({
   product,
   type,
   hotelId,
+  needsApproval,
   onClose,
   onSaved,
 }: {
   product: DepoStockItem;
   type: MovementType;
   hotelId: string;
+  /** The count is sent to the system administrator for approval; the stock does not move yet. */
+  needsApproval: boolean;
   onClose: () => void;
-  onSaved: () => void;
+  /** `pendingMessage`: set when the count was sent for approval instead of being booked. */
+  onSaved: (pendingMessage?: string) => void;
 }) {
   const titleId = useId();
   const qtyId = useId();
@@ -715,6 +749,7 @@ function AdjustDialog({
   const boxRef = useRef<HTMLDivElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
   const isCount = type === "DUZELTME";
+  const sendsForApproval = isCount && needsApproval;
   // Count mode: the counted quantity starts at the system balance; the difference is shown live.
   const [qty, setQty] = useState<number>(isCount ? product.quantity : 50);
   const [note, setNote] = useState("");
@@ -743,7 +778,7 @@ function AdjustDialog({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Stok güncellenemedi.");
-      onSaved();
+      onSaved(data.pending ? String(data.message) : undefined);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "İşlem sırasında hata oluştu.");
     } finally {
@@ -762,7 +797,7 @@ function AdjustDialog({
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h2 id={titleId} className="text-lg font-bold">
-            {isCount ? "Sayım düzeltme" : "Otel deposuna stok ekle"}
+            {sendsForApproval ? "Sayım düzeltme talebi" : isCount ? "Sayım düzeltme" : "Otel deposuna stok ekle"}
           </h2>
           <button
             type="button"
@@ -819,7 +854,7 @@ function AdjustDialog({
 
           <div>
             <label htmlFor={noteId} className="mb-1 block text-sm font-semibold">
-              {isCount ? "Sebep (zorunlu, en az 3 karakter)" : "Açıklama / fiş / irsaliye no (isteğe bağlı)"}
+              {sendsForApproval ? "Açıklama (zorunlu, en az 3 karakter)" : isCount ? "Sebep (zorunlu, en az 3 karakter)" : "Açıklama / fiş / irsaliye no (isteğe bağlı)"}
             </label>
             <input
               id={noteId}
@@ -834,6 +869,12 @@ function AdjustDialog({
             />
           </div>
 
+          {sendsForApproval ? (
+            <p className="rounded-[var(--radius-m)] border border-info bg-[var(--info-bg)] p-3 text-sm text-text">
+              Bu düzeltme sistem yöneticisinin onayına gönderilir. Onaylanana kadar stok değişmez.
+            </p>
+          ) : null}
+
           {error ? (
             <p role="alert" className="text-sm text-danger">
               {error}
@@ -845,7 +886,7 @@ function AdjustDialog({
               Vazgeç
             </Button>
             <Button mutates variant="primary" type="submit" disabled={busy || (isCount ? diff === 0 || qty < 0 || !reasonOk : qty <= 0)}>
-              {busy ? "Kaydediliyor..." : isCount ? "Sayımı kaydet" : "Onayla ve stoğu güncelle"}
+              {busy ? "Kaydediliyor..." : sendsForApproval ? "Onaya gönder" : isCount ? "Sayımı kaydet" : "Onayla ve stoğu güncelle"}
             </Button>
           </div>
         </form>

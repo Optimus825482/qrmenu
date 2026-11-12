@@ -12,12 +12,15 @@ export async function notifyNewRequest(
     roomNumber: string;
     floorName: string;
     items: { name: string; qty: number }[];
+    removals?: { name: string; qty: number }[];
     noteTr?: string | null;
     note?: string | null;
   },
 ): Promise<number> {
   const parts = [`${req.floorName} - Oda ${req.roomNumber} misafiri MyBar talebi gönderdi.`];
-  if (req.items.length > 0) parts.push(`Ürünler: ${req.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}.`);
+  const list = (lines: { name: string; qty: number }[]) => lines.map((i) => `${i.name} ×${i.qty}`).join(", ");
+  if (req.removals && req.removals.length > 0) parts.push(`Çıkarılacak: ${list(req.removals)}.`);
+  if (req.items.length > 0) parts.push(`Eklenecek: ${list(req.items)}.`);
   const note = (req.noteTr ?? req.note ?? "").trim();
   if (note) parts.push(`Not: ${note.slice(0, NOTE_PREVIEW)}`);
   return notify(

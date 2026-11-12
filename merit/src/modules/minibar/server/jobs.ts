@@ -3,6 +3,7 @@ import type { PgBoss } from "pg-boss";
 import { businessDate, TZ } from "@/lib/time";
 import { addDays } from "./dates";
 import { closeDndDay, runDndReminders } from "./dnd";
+import { runExpiryAlerts } from "./expiryAlerts";
 import { announceOccupancyGaps } from "./minibarJobs";
 import { cleanupOldFiles } from "./occupancyUpload";
 import { reconcileAllHotels } from "./taskGeneration";
@@ -70,6 +71,8 @@ export const MINIBAR_JOBS: readonly MinibarJob[] = [
     ),
   },
   { queue: "occupancy.cleanup", cron: "0 2 * * *", run: (now) => cleanupOldFiles(now) },
+  // 08:00: SKT warning to the minibar system manager; one per hotel and day (runExpiryAlerts is idempotent).
+  { queue: "stock.expiry-alert", cron: "0 8 * * *", run: (now) => runExpiryAlerts(now) },
 ];
 
 /** Schedules retired by this module; removed on every start (errors swallowed: they may not exist). */

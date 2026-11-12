@@ -21,6 +21,7 @@ import {
   returnFromPool,
   setCriticalLevel,
 } from "@/modules/minibar/server/pool";
+import { mustRequestCorrection, requestStockCorrection } from "@/modules/minibar/server/stockCorrections";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,6 +50,8 @@ export async function GET(request: Request) {
     ]);
     // Stock managers (minibar operasyonları sistem sorumlusu) add stock and correct the opening quantities.
     const canManage = isStockManager(ctx) && (await can(ctx, "MB-ZIM", "O", hotelId));
+    // The minibar system manager counts too, but the count waits for the system administrator (stockCorrections.ts).
+    const countNeedsApproval = mustRequestCorrection(ctx) && canManage;
     // The old field names stay (the page reads them); `status` and `criticalLevel` are new.
     const stockItems = rows
       .map((r) => ({
@@ -71,6 +74,7 @@ export async function GET(request: Request) {
       id: m.id,
       productName: m.productName,
       type: m.type,
+      refType: m.refType,
       quantity: m.qty,
       note: m.note,
       userName: m.userName,
@@ -85,7 +89,8 @@ export async function GET(request: Request) {
         movementsPageSize: MOVEMENTS_PAGE_SIZE,
         hotels,
         selectedHotelId: hotelId,
-        canCount,
+        canCount: canCount || countNeedsApproval,
+        countNeedsApproval,
         canManage,
         expiry,
         opening: opening ? { ...opening, canEdit: canManage && opening.open } : null,
@@ -109,13 +114,18 @@ export async function POST(request: Request) {
   return handle(async (ctx) => {
     const body = await parseBody(request, bodySchema);
     // Entry and return = create (O), correction = approve (A, system and warehouse roles); the hotel selector is authorised, not trusted.
+    const needsApproval = body.movementType === "DUZELTME" && mustRequestCorrection(ctx);
     const hotelId = await selectHotel(
       ctx,
       body.formHotelId,
       "MB-ZIM",
-      body.movementType === "DUZELTME" ? "A" : "O",
+      body.movementType === "DUZELTME" && !needsApproval ? "A" : "O",
     );
     const note = body.note?.trim() || undefined;
+    if (needsApproval) {
+      await requestStockCorrection(ctx, hotelId, { productId: body.productId, countedQty: body.countedQty ?? -1, reason: note ?? "" });
+      return { success: true, pending: true, message: "Düzeltme talebi sistem yöneticisinin onayına gönderildi. Onaylanınca stoğa işlenir." };
+    }
     const qty = body.changeQuantity ?? 0;
     if (body.movementType === "GIRIS") {
       await addToPool(ctx, hotelId, { productId: body.productId, qty, note });

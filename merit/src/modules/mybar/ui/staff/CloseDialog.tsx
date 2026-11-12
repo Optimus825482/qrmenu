@@ -33,6 +33,7 @@ export function CloseDialog({ row, onCancel, onClosed }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const missingRemovals = row.removals.filter((i) => i.remainingQty > 0);
   const missing = row.items.filter((i) => i.remainingQty > 0);
   const stats = explanationStats(text);
   const valid = isValidExplanation(text);
@@ -70,10 +71,16 @@ export function CloseDialog({ row, onCancel, onClosed }: Props) {
         className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-surface p-5 shadow-2xl"
       >
         <h2 id={titleId} className="text-lg font-semibold text-text">Eksik ürünlerle kapat</h2>
-        <p className="mt-1 text-sm text-muted">Talep edilen ürünlerden bazıları henüz odaya eklenmedi.</p>
+        <p className="mt-1 text-sm text-muted">Talep edilen ürünlerden bazıları henüz odadan alınmadı ya da odaya eklenmedi.</p>
         <ul className="mt-3 divide-y divide-border rounded-xl border border-border bg-bg" aria-label="Eksik ürünler">
+          {missingRemovals.map((m) => (
+            <li key={`r-${m.productId}`} className="flex items-center justify-between px-3 py-2 text-sm odd:bg-surface even:bg-bg">
+              <span className="font-medium text-text">{m.name}</span>
+              <span className="font-bold tabular-nums text-danger">alınacak {m.remainingQty}</span>
+            </li>
+          ))}
           {missing.map((m) => (
-            <li key={m.productId} className="flex items-center justify-between px-3 py-2 text-sm">
+            <li key={m.productId} className="flex items-center justify-between px-3 py-2 text-sm odd:bg-surface even:bg-bg">
               <span className="font-medium text-text">{m.name}</span>
               <span className="font-bold tabular-nums text-danger">{m.remainingQty} eksik</span>
             </li>

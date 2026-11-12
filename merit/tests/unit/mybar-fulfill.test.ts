@@ -209,3 +209,129 @@ describe("cancel after a partial fulfilment", () => {
     expect(await testDb.hotelStockMovement.count({ where: { refId: reqId } })).toBe(0);
   });
 });
+
+describe("çıkarılacak ürünler (takas)", () => {
+  let swapId: string;
+  const removedOf = async () =>
+    Object.fromEntries(
+      (await testDb.mybarRequestRemoval.findMany({ where: { requestId: swapId } })).map((i) => [i.productId, i.removedQty]),
+    );
+  const addedOf = async () =>
+    Object.fromEntries(
+      (await testDb.mybarRequestItem.findMany({ where: { requestId: swapId } })).map((i) => [i.productId, i.deliveredQty]),
+    );
+
+  beforeEach(async () => {
+    // The guest takes 2 beers out of the room and gets 1 water and 1 cola instead.
+    const r = await makeRequest(fx, {
+      items: [
+        { productId: fx.products.su, requested: 1 },
+        { productId: fx.products.kola, requested: 1 },
+      ],
+      removals: [{ productId: fx.products.bira, requested: 2 }],
+    });
+    swapId = r.id;
+  });
+
+  it("all: collected products return to the hotel stock as a MyBar IADE and the additions are taken out", async () => {
+    const res = await fulfill(kat1, swapId, { all: true });
+    expect(res.fullyDelivered).toBe(true);
+    expect(res.removed).toEqual([{ productId: fx.products.bira, name: "Bira", qty: 2 }]);
+    expect(res.added.map((a) => [a.name, a.qty]).sort()).toEqual([["Kola", 1], ["Su 0.5L", 1]]);
+
+    expect(await removedOf()).toEqual({ [fx.products.bira]: 2 });
+    expect(await addedOf()).toEqual({ [fx.products.su]: 1, [fx.products.kola]: 1 });
+    expect(await remaining(fx.products.bira)).toBe(102);
+    expect(await remaining(fx.products.su)).toBe(99);
+    expect(await remaining(fx.products.kola)).toBe(99);
+
+    const back = await testDb.hotelStockMovement.findMany({ where: { refId: swapId, productId: fx.products.bira } });
+    expect(back).toHaveLength(1);
+    expect(back[0]).toMatchObject({
+      type: "IADE",
+      qty: 2,
+      refType: "MybarRequest",
+      userId: kat1.user.id,
+      note: "MyBar talebi iadesi · Oda 101",
+    });
+    // The room transaction carries only the additions.
+    const tx = await testDb.minibarTransaction.findMany({ where: { mybarRequestId: swapId }, include: { items: true } });
+    expect(tx).toHaveLength(1);
+    expect(tx[0]!.items.map((i) => i.productId).sort()).toEqual([fx.products.su, fx.products.kola].sort());
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "MYBAR_FULFILL", entityId: swapId } });
+    expect(JSON.stringify(log.after)).toContain("Bira");
+
+    expect((await complete(kat1, swapId)).closedWithMissing).toBe(false);
+  });
+
+  it("lines and removed go together; partial collection accumulates and over-collecting is rejected without writes", async () => {
+    const r1 = await fulfill(kat1, swapId, {
+      lines: [{ productId: fx.products.su, qty: 1 }],
+      removed: [{ productId: fx.products.bira, qty: 1 }],
+    });
+    expect(r1.fullyDelivered).toBe(false);
+    expect(r1.removed.map((x) => x.qty)).toEqual([1]);
+    expect(await removedOf()).toEqual({ [fx.products.bira]: 1 });
+    expect(await remaining(fx.products.bira)).toBe(101);
+
+    await expect(fulfill(kat1, swapId, { removed: [{ productId: fx.products.bira, qty: 2 }] })).rejects.toMatchObject({
+      code: "VALIDATION",
+      message: "Bira için en fazla 1 adet alınabilir",
+    });
+    expect(await removedOf()).toEqual({ [fx.products.bira]: 1 });
+    expect(await remaining(fx.products.bira)).toBe(101);
+
+    // Only removals: no room transaction is written for it.
+    const before = await testDb.minibarTransaction.count({ where: { mybarRequestId: swapId } });
+    const r2 = await fulfill(kat1, swapId, { removed: [{ productId: fx.products.bira, qty: 1 }] });
+    expect(r2.added).toEqual([]);
+    expect(await testDb.minibarTransaction.count({ where: { mybarRequestId: swapId } })).toBe(before);
+    expect(await remaining(fx.products.bira)).toBe(102);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: swapId, productId: fx.products.bira, type: "IADE" } })).toBe(2);
+  });
+
+  it("a product that is not in the removals cannot be collected", async () => {
+    await expect(fulfill(kat1, swapId, { removed: [{ productId: fx.products.kola, qty: 1 }] })).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    expect(await remaining(fx.products.kola)).toBe(100);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: swapId } })).toBe(0);
+  });
+
+  it("complete needs confirmMissing while a removal is outstanding and names it", async () => {
+    await fulfill(kat1, swapId, { lines: [{ productId: fx.products.su, qty: 1 }, { productId: fx.products.kola, qty: 1 }] });
+    await expect(complete(kat1, swapId)).rejects.toMatchObject({
+      code: "VALIDATION",
+      fieldErrors: { missing: ["Bira (alınacak 2)"] },
+    });
+    const done = await complete(kat1, swapId, { confirmMissing: true, closeNote: "Bira odada bulunamadı" });
+    expect(done.closedWithMissing).toBe(true);
+  });
+
+  it("cancel after a partial collection returns the additions but keeps the collected products returned", async () => {
+    await fulfill(kat1, swapId, {
+      lines: [{ productId: fx.products.su, qty: 1 }],
+      removed: [{ productId: fx.products.bira, qty: 1 }],
+    });
+    expect(await remaining(fx.products.bira)).toBe(101);
+    expect(await remaining(fx.products.su)).toBe(99);
+
+    await cancel(dep1, swapId, { reason: "misafir vazgeçti kapatın" });
+
+    // The addition goes back to the stock, the beer the attendant already took out of the room stays returned.
+    expect(await remaining(fx.products.su)).toBe(100);
+    expect(await remaining(fx.products.bira)).toBe(101);
+    expect(await removedOf()).toEqual({ [fx.products.bira]: 1 });
+    const beer = await testDb.hotelStockMovement.findMany({ where: { refId: swapId, productId: fx.products.bira } });
+    expect(beer.map((m) => [m.type, m.qty])).toEqual([["IADE", 1]]);
+    const log = await testDb.auditLog.findFirstOrThrow({ where: { action: "MYBAR_CANCEL", entityId: swapId } });
+    expect(log.after).toMatchObject({ removedKept: [{ productId: fx.products.bira, removedQty: 1 }] });
+    expect((await testDb.mybarRequest.findUniqueOrThrow({ where: { id: swapId } })).status).toBe("IPTAL");
+  });
+
+  it("cancel with nothing collected yet does not crash and touches no stock", async () => {
+    await cancel(dep1, swapId, { reason: "misafir vazgeçti kapatın" });
+    expect(await remaining(fx.products.bira)).toBe(100);
+    expect(await testDb.hotelStockMovement.count({ where: { refId: swapId } })).toBe(0);
+  });
+});

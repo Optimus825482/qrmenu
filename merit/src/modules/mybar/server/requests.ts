@@ -20,6 +20,15 @@ export type MybarItemView = {
   poolRemaining: number | null;
 };
 
+/** A setup product the guest asked to have taken out; `removedQty` is what the attendant has collected so far. */
+export type MybarRemovalView = {
+  productId: string;
+  name: string;
+  requestedQty: number;
+  removedQty: number;
+  remainingQty: number;
+};
+
 export type MybarRow = {
   id: string;
   hotelId: string;
@@ -42,6 +51,7 @@ export type MybarRow = {
   cancelledByName: string | null;
   cancelNote: string | null;
   items: MybarItemView[];
+  removals: MybarRemovalView[];
 };
 
 export const mybarFilterSchema = z.object({
@@ -75,6 +85,10 @@ const rowInclude = {
   completedBy: { select: { fullName: true } },
   cancelledBy: { select: { fullName: true } },
   items: {
+    include: { product: { select: { name: true } } },
+    orderBy: { createdAt: "asc" as const },
+  },
+  removals: {
     include: { product: { select: { name: true } } },
     orderBy: { createdAt: "asc" as const },
   },
@@ -112,6 +126,13 @@ function toMybarRow(row: LoadedRequest, poolMap?: Map<string, number>): MybarRow
       remainingQty: Math.max(0, it.requestedQty - it.deliveredQty),
       poolRemaining: poolMap ? (poolMap.get(it.productId) ?? 0) : null,
     })),
+    removals: row.removals.map((it) => ({
+      productId: it.productId,
+      name: it.product.name,
+      requestedQty: it.requestedQty,
+      removedQty: it.removedQty,
+      remainingQty: Math.max(0, it.requestedQty - it.removedQty),
+    })),
   };
 }
 
@@ -132,6 +153,10 @@ export async function loadRequestForUpdate(tx: Prisma.TransactionClient, id: str
     include: {
       room: { select: { id: true, number: true } },
       items: {
+        include: { product: { select: { name: true } } },
+        orderBy: { createdAt: "asc" },
+      },
+      removals: {
         include: { product: { select: { name: true } } },
         orderBy: { createdAt: "asc" },
       },
@@ -387,14 +412,21 @@ export async function complete(
         missingQty: it.requestedQty - it.deliveredQty,
       }))
       .filter((m) => m.missingQty > 0);
+    // Products still to be taken out of the room count as open work too.
+    const missingRemovals = req.removals
+      .map((it) => ({ name: it.product.name, missingQty: it.requestedQty - it.removedQty }))
+      .filter((m) => m.missingQty > 0);
 
-    const hasMissing = missingItems.length > 0;
-    const missingFormatted = missingItems.map((m) => `${m.name} (${m.missingQty})`);
+    const hasMissing = missingItems.length > 0 || missingRemovals.length > 0;
+    const missingFormatted = [
+      ...missingItems.map((m) => `${m.name} (${m.missingQty})`),
+      ...missingRemovals.map((m) => `${m.name} (alınacak ${m.missingQty})`),
+    ];
 
     if (hasMissing && !input.confirmMissing) {
       throw new DomainError(
         "VALIDATION",
-        "Talep edilen ürünlerden bazıları henüz odaya eklenmemiş.",
+        "Talepteki ürünlerden bazıları henüz odaya eklenmemiş ya da odadan alınmamış.",
         { fieldErrors: { missing: missingFormatted } },
       );
     }
@@ -542,6 +574,9 @@ export async function applyCancel(
     data: { isRead: true, readAt: now },
   });
 
+  // Removals are NOT reversed: what the attendant already collected from the room was physically taken out and has
+  // been booked back into the hotel stock (IADE) by `fulfill`; cancelling the request does not put it back in the
+  // room, so those movements stay as they are (the audit row lists them as `removedKept`).
   // What was already taken from the hotel pool for this request goes back (IADE), in product-id order like fulfill.
   for (const line of [...deliveredBefore].sort((a, b) => a.productId.localeCompare(b.productId))) {
     const userId = actorId ?? (await delivererOf(tx, id, line.productId));
@@ -565,6 +600,9 @@ export async function applyCancel(
     after: {
       cancelNote: reason,
       deliveredBefore,
+      removedKept: req.removals
+        .filter((it) => it.removedQty > 0)
+        .map((it) => ({ productId: it.productId, removedQty: it.removedQty })),
       ...opts.auditAfter,
     },
   });

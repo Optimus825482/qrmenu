@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { askReason } from "@/components/ui/reason";
 import type { CorrectionRequestItem } from "@/modules/minibar/server/minibarTypes";
+import { StockCorrectionRequests } from "@/modules/minibar/ui/StockCorrectionRequests";
 import { notify } from "@/shell/notify";
 
 type ManualRow = {
@@ -145,6 +146,9 @@ export default function KatDuzeltmeOnayPage() {
       </header>
 
       <main data-guide="talep-listesi" className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+        {/* Otel deposu sayım düzeltmeleri: yalnız sistem yöneticisi ve minibar sistem sorumlusu görür. */}
+        <StockCorrectionRequests />
+
         <section data-testid="bekleyen-manuel" className="space-y-2 rounded-2xl border border-border bg-surface p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold text-text">Manuel kayıt talepleri ({manual.length} bekleyen)</h2>

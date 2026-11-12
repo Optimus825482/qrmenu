@@ -38,7 +38,8 @@ export const EXPORT_HEADER = [
   "Kat",
   "Durum",
   "Dil",
-  "Ürünler (istenen/eklenen)",
+  "Eklenecek ürünler (istenen/eklenen)",
+  "Çıkarılacak ürünler (istenen/alınan)",
   "Misafir notu",
   "Not (Türkçe)",
   "Oluşturulma",
@@ -75,6 +76,7 @@ const rowInclude = {
   completedBy: { select: { fullName: true } },
   cancelledBy: { select: { fullName: true } },
   items: { include: { product: { select: { name: true } } }, orderBy: { createdAt: "asc" as const } },
+  removals: { include: { product: { select: { name: true } } }, orderBy: { createdAt: "asc" as const } },
 } satisfies Prisma.MybarRequestInclude;
 
 type ExportRow = Prisma.MybarRequestGetPayload<{ include: typeof rowInclude }>;
@@ -89,6 +91,7 @@ export function exportTable(rows: ExportRow[]): string[][] {
     STATUS_TR[r.status],
     r.language,
     r.items.map((it) => `${it.product.name} ${it.requestedQty}/${it.deliveredQty}`).join("; "),
+    r.removals.map((it) => `${it.product.name} ${it.requestedQty}/${it.removedQty}`).join("; "),
     r.note ?? "",
     r.noteTr ?? "",
     when(r.createdAt),
@@ -128,7 +131,7 @@ export async function exportRequests(ctx: Ctx, rawInput: MybarExportInput = {}):
     const ws = wb.addWorksheet("MyBar Talepleri");
     ws.addRows(table);
     ws.getRow(1).font = { bold: true };
-    const widths = [8, 14, 12, 6, 44, 36, 36, 17, 20, 17, 20, 17, 40];
+    const widths = [8, 14, 12, 6, 44, 44, 36, 36, 17, 20, 17, 20, 17, 40];
     ws.columns.forEach((col, i) => {
       col.width = widths[i] ?? 16;
     });

@@ -1,5 +1,6 @@
 "use client";
 
+import { ExpiryLoginNotice } from "@/shell/components/ExpiryLoginNotice";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { WelcomeOpener } from "@/components/guide/WelcomeOpener";
@@ -72,7 +73,10 @@ export function ShellClient({
   const apps = useMemo(() => {
     const visible = new Set(Object.values(screensByHotel).flat());
     return getApps().filter(
-      (a) => visible.has(a.screenCode) && (!a.roleCodes || a.roleCodes.includes(user.roleCode)),
+      (a) =>
+        visible.has(a.screenCode) &&
+        (!a.roleCodes || a.roleCodes.includes(user.roleCode)) &&
+        !a.hiddenForRoleCodes?.includes(user.roleCode),
     );
   }, [screensByHotel, user.roleCode]);
   const appIds = useMemo(() => apps.map((a) => a.id), [apps]);
@@ -171,6 +175,7 @@ export function ShellClient({
           />
           {footerBand ? <FooterBand /> : null}
           <WelcomeOpener needed={welcomeNeeded} hotelId={welcomeHotelId} />
+          <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY"} />
           <ConfirmDialog />
           <TrayBalloonHost />
         </>

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Icon, type IconName } from "@/components/icons/Icon";
+import { MYBAR_SERVICE_HOURS } from "../../constants";
 import type { GuestErrorKey } from "./useMybarSubmit";
-import type { MybarRequestView, MybarStatusKey } from "./useMybarStatus";
+import { isTerminal, type MybarRequestView, type MybarStatusKey } from "./useMybarStatus";
 
 const ICONS: Record<MybarStatusKey, IconName> = {
   BEKLIYOR: "clock",
@@ -40,6 +41,7 @@ export function MybarStatus({
     setAnnounce(t("liveRegion", { status: t(`status.${status}`) }));
   }, [status, t]);
 
+  const removals = request.removals ?? [];
   const canStartNew = status === "IPTAL" || !dailyLimit;
   return (
     <section className="mb-status" data-status={status} aria-labelledby="mb-status-title">
@@ -68,20 +70,22 @@ export function MybarStatus({
         {announce}
       </div>
 
-      <h3 className="mb-label">{t("requestedItems")}</h3>
-      {request.items.length === 0 ? (
+      {!isTerminal(status) ? <p className="mb-muted mb-hours">{t("pendingHours", MYBAR_SERVICE_HOURS)}</p> : null}
+
+      {removals.length === 0 && request.items.length === 0 ? (
         <p className="mb-muted">{t("noteOnly")}</p>
       ) : (
-        <ul className="mb-chips">
-          {request.items.map((item, i) => (
-            <li key={`${item.name}-${i}`} className="mb-chip">
-              <span>
-                {item.name}
-                <bdi className="mb-chip-qty"> ×{item.qty}</bdi>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <>
+          {removals.length > 0 ? <LineList title={t("removalsTitle")} lines={removals} /> : null}
+          {request.items.length > 0 ? (
+            <LineList title={t("additionsTitle")} lines={request.items} />
+          ) : (
+            <>
+              <h3 className="mb-label">{t("additionsTitle")}</h3>
+              <p className="mb-muted">{t("noAdditions")}</p>
+            </>
+          )}
+        </>
       )}
 
       {dailyLimit && status !== "IPTAL" && !justSent ? (
@@ -97,5 +101,23 @@ export function MybarStatus({
         </button>
       ) : null}
     </section>
+  );
+}
+
+function LineList({ title, lines }: { title: string; lines: { name: string; qty: number }[] }) {
+  return (
+    <>
+      <h3 className="mb-label">{title}</h3>
+      <ul className="mb-chips">
+        {lines.map((line, i) => (
+          <li key={`${line.name}-${i}`} className="mb-chip">
+            <span>
+              {line.name}
+              <bdi className="mb-chip-qty"> ×{line.qty}</bdi>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

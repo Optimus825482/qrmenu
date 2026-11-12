@@ -73,7 +73,7 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
   const waiting = row.status === "BEKLEMEDE";
   const mayAct = caps?.canAct ?? false;
   const mayCancel = canCancel ?? caps?.canCancel ?? false;
-  const missing = row.items.some((i) => i.remainingQty > 0);
+  const missing = row.items.some((i) => i.remainingQty > 0) || row.removals.some((i) => i.remainingQty > 0);
 
   const changed = async () => {
     setDialog(null);
@@ -99,7 +99,7 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
     }
     const yes = await confirm({
       title: `Oda ${row.roomNumber} talebi kapatılsın mı?`,
-      message: "Tüm ürünler odaya eklendi. Talep tamamlandı olarak işaretlenir.",
+      message: "Talepteki tüm ürünler karşılandı. Talep tamamlandı olarak işaretlenir.",
       confirmLabel: "Kapat",
       cancelLabel: "Vazgeç",
       danger: true,
@@ -135,12 +135,14 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
             </button>
           ) : null}
           <FulfillPanel
-            key={row.items.map((i) => `${i.remainingQty}:${i.poolRemaining ?? "-"}`).join("-")}
+            key={`${row.items.map((i) => `${i.remainingQty}:${i.poolRemaining ?? "-"}`).join("-")}|${row.removals.map((i) => i.remainingQty).join("-")}`}
             row={row}
             onFulfilled={(r) => {
-              notify.success(
-                `Oda ${row.roomNumber}: ${r.added.map((a) => `${a.name} ${a.qty}`).join(", ")} eklendi.`,
-              );
+              const parts = [
+                r.removed && r.removed.length > 0 ? `alınan: ${r.removed.map((a) => `${a.name} ${a.qty}`).join(", ")}` : "",
+                r.added.length > 0 ? `eklenen: ${r.added.map((a) => `${a.name} ${a.qty}`).join(", ")}` : "",
+              ].filter(Boolean);
+              notify.success(`Oda ${row.roomNumber}: ${parts.join(" · ")}.`);
               void changed();
             }}
           />

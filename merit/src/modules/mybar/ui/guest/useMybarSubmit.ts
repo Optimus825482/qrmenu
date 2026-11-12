@@ -11,8 +11,10 @@ export type GuestErrorKey =
   | "errNetwork"
   | "errGeneric"
   | "errItems"
+  | "errRemovals"
   | "errClosed";
 
+export type MybarLine = { productId: string; qty: number };
 export type SubmitOutcome = { ok: true } | { ok: false; error: GuestErrorKey };
 
 type ApiBody = {
@@ -62,6 +64,7 @@ export function errorKeyFor(status: number, body: ApiBody | null): GuestErrorKey
   const code = body?.error?.code;
   if (status === 429 || code === "RATE_LIMITED") return "errRate";
   if (code === "DAILY_LIMIT") return "err409Daily";
+  if (code === "VALIDATION" && body?.error?.fieldErrors?.removals) return "errRemovals";
   if (code === "VALIDATION" && body?.error?.fieldErrors?.items) return "errItems";
   if (code === "CONFLICT" || code === "NOT_FOUND") return "errClosed";
   return "errGeneric";
@@ -76,10 +79,13 @@ export function useMybarSubmit(token: string, locale: Locale) {
   const [sending, setSending] = useState(false);
 
   const submit = useCallback(
-    async (items: { productId: string; qty: number }[], note: string): Promise<SubmitOutcome> => {
+    async (
+      lines: { items: MybarLine[]; removals: MybarLine[]; note: string },
+    ): Promise<SubmitOutcome> => {
       key.current ??= readKey(token);
       setSending(true);
       try {
+        const { items, removals, note } = lines;
         const trimmed = note.trim();
         const send = async () => {
           const res = await fetch(`/api/q/${encodeURIComponent(token)}/mybar`, {
@@ -89,6 +95,7 @@ export function useMybarSubmit(token: string, locale: Locale) {
               idempotencyKey: key.current,
               locale,
               items,
+              removals,
               ...(trimmed ? { note: trimmed } : {}),
             }),
           });

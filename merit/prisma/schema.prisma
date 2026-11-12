@@ -264,6 +264,7 @@ model Hotel {
   uploadTasks               UploadTask[]
   dailyTasks                DailyTask[]
   stockRequests             StockRequest[]
+  stockCorrectionRequests   StockCorrectionRequest[]
   minibarCorrectionRequests MinibarCorrectionRequest[]
   minibarManualEntryRequests MinibarManualEntryRequest[]
   orders                    Order[]
@@ -488,6 +489,8 @@ model User {
   taskStatusLogs             TaskStatusLog[]
   stockRequestsMade          StockRequest[]             @relation("StockRequestRequestedBy")
   stockRequestsHandled       StockRequest[]             @relation("StockRequestHandledBy")
+  stockCorrectionsRequested  StockCorrectionRequest[]   @relation("StockCorrectionRequestedBy")
+  stockCorrectionsResolved   StockCorrectionRequest[]   @relation("StockCorrectionResolvedBy")
   emailLogs                  EmailLog[]
   ordersApproved             Order[]                    @relation("OrderApprovedBy")
   ordersPhoneConfirmed       Order[]                    @relation("OrderPhoneConfirmedBy")
@@ -833,6 +836,8 @@ model Product {
   stockMovements    HotelStockMovement[]
   transactionItems  MinibarTransactionItem[]
   mybarRequestItems MybarRequestItem[]
+  mybarRemovals MybarRequestRemoval[]
+  stockCorrectionRequests StockCorrectionRequest[]
   stockRequestItems StockRequestItem[]
   receiptItems      StockReceiptItem[]
   stockLots         HotelStockLot[]
@@ -1219,6 +1224,7 @@ model MybarRequest {
   completedBy User?              @relation("MybarCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
   cancelledBy User?              @relation("MybarCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
   items       MybarRequestItem[]
+  removals    MybarRequestRemoval[]
   transactions MinibarTransaction[]
 
   @@index([hotelId, status])
@@ -1243,6 +1249,23 @@ model MybarRequestItem {
 
   @@unique([requestId, productId])
   @@map("mybar_request_items")
+}
+
+/// A setup product the guest asked to have taken out of the room minibar (the "swap out" half of a MyBar request).
+model MybarRequestRemoval {
+  id           String   @id @default(cuid())
+  requestId    String   @map("request_id")
+  productId    String   @map("product_id")
+  requestedQty Int      @map("requested_qty")
+  removedQty   Int      @default(0) @map("removed_qty")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  request MybarRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([requestId, productId])
+  @@map("mybar_request_removals")
 }
 
 model GuestRecord {
@@ -1373,6 +1396,33 @@ model TaskStatusLog {
   @@index([createdAt])
   @@index([taskItemId, createdAt])
   @@map("task_status_logs")
+}
+
+/// Minibar sistem sorumlusunun otel deposu sayım düzeltmesi: sistem yöneticisi onaylayınca stoğa işlenir.
+model StockCorrectionRequest {
+  id            String                  @id @default(cuid())
+  hotelId       String                  @map("hotel_id")
+  productId     String                  @map("product_id")
+  requestedById String                  @map("requested_by_id")
+  resolvedById  String?                 @map("resolved_by_id")
+  /// Balance when the request was written; `countedQty - systemQty` = `delta`, which is what approval books.
+  systemQty     Int                     @map("system_qty")
+  countedQty    Int                     @map("counted_qty")
+  delta         Int
+  reason        String
+  status        CorrectionRequestStatus @default(BEKLIYOR)
+  resolveNote   String?                 @map("resolve_note")
+  resolvedAt    DateTime?               @map("resolved_at") @db.Timestamptz(3)
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  hotel       Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  requestedBy User    @relation("StockCorrectionRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  resolvedBy  User?   @relation("StockCorrectionResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([hotelId, status])
+  @@index([hotelId, productId, status])
+  @@map("stock_correction_requests")
 }
 
 model StockRequest {

@@ -19,6 +19,7 @@ const TYPE_LABEL: Record<Exclude<StockMovementType, "IADE">, string> = {
 export function movementLabel(type: StockMovementType, refType: string | null): string {
   if (type !== "IADE") return TYPE_LABEL[type];
   if (!refType) return "Depoya iade";
+  if (refType === "MybarRequest") return "MyBar iadesi";
   return refType === "MinibarTransaction" ? "İşlem silme geri yazımı" : "İade";
 }
 

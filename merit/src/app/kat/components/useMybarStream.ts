@@ -15,6 +15,8 @@ export interface MybarItem {
   floorName: string;
   requestedAt: string;
   items: { productName: string; qty: number }[];
+  /** Setup products the guest asked to have taken out of the room (absent on an SSE-built entry until the next refetch). */
+  removals?: { productName: string; qty: number }[];
   /** What the attendant reads: the Turkish translation when there is one, else the original. */
   notes: string | null;
   /** Guest's own wording, only when a translation replaced it. */
@@ -31,6 +33,7 @@ export function toMybarItem(row: MybarRow): MybarItem {
     floorName: row.floorName,
     requestedAt: new Date(row.createdAt).toISOString(),
     items: row.items.map((it) => ({ productName: it.name, qty: it.requestedQty })),
+    removals: row.removals.map((it) => ({ productName: it.name, qty: it.requestedQty })),
     notes: row.noteTr ?? row.note,
     noteOriginal: row.noteTr ? row.note : null,
     noteLang: row.noteTr ? row.noteSrcLang : null,

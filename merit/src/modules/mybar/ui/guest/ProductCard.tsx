@@ -2,47 +2,34 @@
 
 import { useTranslations } from "next-intl";
 import { Icon } from "@/components/icons/Icon";
-import type { CatalogProduct } from "../../server/catalog";
 
-/** One product: `− n +` stepper (quantity mode) or a tick box (tick mode). Prices are never shown. */
+/**
+ * One product with a `− n +` stepper. `max` is the most the guest may pick of this product, `canIncrease`
+ * lets the caller switch the + button off earlier (the swap balance); nothing explains why, the button just rests.
+ * Prices are never shown.
+ */
 export function ProductCard({
-  product,
+  name,
+  hint,
   qty,
-  mode,
+  max,
+  canIncrease = true,
   onChange,
 }: {
-  product: CatalogProduct;
+  name: string;
+  hint?: string;
   qty: number;
-  mode: "QTY" | "TICK";
+  max: number;
+  canIncrease?: boolean;
   onChange: (qty: number) => void;
 }) {
   const t = useTranslations("mybar");
-  const name = product.nameLocal;
-  const selected = qty > 0;
-
-  if (mode === "TICK") {
-    return (
-      <li className={`mb-product${selected ? " is-selected" : ""}`}>
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={selected}
-          aria-label={t("tickLabel", { name })}
-          className="mb-tick"
-          onClick={() => onChange(selected ? 0 : 1)}
-        >
-          <span className="mb-tick-name">{name}</span>
-          <span className="mb-tick-box" aria-hidden="true">
-            {selected ? <Icon name="check" size={20} /> : null}
-          </span>
-        </button>
-      </li>
-    );
-  }
-
   return (
-    <li className={`mb-product${selected ? " is-selected" : ""}`}>
-      <span className="mb-product-name">{name}</span>
+    <li className={`mb-product${qty > 0 ? " is-selected" : ""}`}>
+      <span className="mb-product-text">
+        <span className="mb-product-name">{name}</span>
+        {hint ? <span className="mb-product-hint">{hint}</span> : null}
+      </span>
       <span className="mb-stepper" role="group" aria-label={name}>
         <button
           type="button"
@@ -60,7 +47,7 @@ export function ProductCard({
           type="button"
           className="mb-step mb-step-plus"
           aria-label={t("increase", { name })}
-          disabled={qty >= product.maxQty}
+          disabled={!canIncrease || qty >= max}
           onClick={() => onChange(qty + 1)}
         >
           <Icon name="plus" size={20} />

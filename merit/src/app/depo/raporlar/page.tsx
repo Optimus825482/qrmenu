@@ -1,5 +1,6 @@
 "use client";
 
+import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback, type ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
@@ -254,7 +255,9 @@ function ReportTable<T>({
 
 export default function RaporlarPage() {
   const [hotels, setHotels] = useState<HotelItem[]>([]);
-  const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  // A shell window passes the hotel chosen in its banner as `?hotelId=`; the page starts from it.
+  const [selectedHotelId, setSelectedHotelId] = useState<string>(hotelFromAddress);
+  const inShellFrame = useInShellFrame();
   const [floors, setFloors] = useState<FloorItem[]>([]);
   const [selectedFloorId, setSelectedFloorId] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"CONSUMPTION" | "TASKS" | "ABNORMAL">("CONSUMPTION");
@@ -404,7 +407,8 @@ export default function RaporlarPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {hotels.length > 0 && (
+            {/* Inside a shell window the banner already offers the hotel selector. */}
+            {hotels.length > 0 && !inShellFrame && (
               <select
                 value={selectedHotelId}
                 onChange={handleHotelChange}
