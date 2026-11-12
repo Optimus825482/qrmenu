@@ -99,7 +99,6 @@ export function OutletsPanel({ hotelId, setStatus }: Props) {
       // Only sent while the field is shown (prices may show); otherwise the stored currency stays.
       ...(values.currency !== undefined ? { currency: values.currency } : {}),
       kdsEnabled: flag("kdsEnabled"),
-      phoneConfirmRequired: flag("phoneConfirmRequired"),
       autoPrintReceipt: flag("autoPrintReceipt"),
       autoPrintKitchen: flag("autoPrintKitchen"),
       waiterAssignmentEnabled: flag("waiterAssignmentEnabled"),
@@ -343,9 +342,6 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
       </Field>
       <Field name="autoPrintKitchen" label="Mutfak fişini otomatik yazdır (fiyatsız)">
         <input type="checkbox" defaultChecked={editing?.autoPrintKitchen ?? false} />
-      </Field>
-      <Field name="phoneConfirmRequired" label="Telefon onayı gerekli">
-        <input type="checkbox" defaultChecked={editing?.phoneConfirmRequired ?? false} />
       </Field>
       <Field name="waiterAssignmentEnabled" label="Masa garson ataması">
         <input

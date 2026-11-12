@@ -87,13 +87,13 @@ describe("buildNav — garson ve oda servisi", () => {
     expect(labels(buildNav("R-BAR", without("QM-CAG")).primary)).toEqual(["Kuyruk", "Masalarım", "Daha"]);
   });
 
-  it("oda servisi: Talepler · Teyit · Teslim · Daha", () => {
+  it("oda servisi: Talepler · Teslim · Daha", () => {
     const nav = buildNav("R-ODS", ALL);
-    expect(labels(nav.primary)).toEqual(["Talepler", "Teyit", "Teslim", "Daha"]);
+    expect(labels(nav.primary)).toEqual(["Talepler", "Teslim", "Daha"]);
   });
 
   it("rolü bilinmeyen kullanıcı (F&B müdürü) yola göre gezinme alır", () => {
-    expect(labels(buildNav("R-FBM", ALL, { pathname: "/oda-servisi" }).primary)).toEqual(["Talepler", "Teyit", "Teslim", "Daha"]);
+    expect(labels(buildNav("R-FBM", ALL, { pathname: "/oda-servisi" }).primary)).toEqual(["Talepler", "Teslim", "Daha"]);
     expect(labels(buildNav("R-FBM", ALL, { pathname: "/garson" }).primary)).toEqual(["Kuyruk", "Masalarım", "Çağrılar", "Daha"]);
     expect(buildNav("R-FBM", ALL).primary).toEqual([]);
   });

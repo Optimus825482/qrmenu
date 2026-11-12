@@ -243,7 +243,8 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
           ...(input.currency ? { currency: input.currency } : {}),
-          phoneConfirmRequired: input.phoneConfirmRequired,
+          // The phone confirmation step is retired: whatever a client sends, no outlet asks for it.
+          phoneConfirmRequired: false,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,
@@ -324,7 +325,8 @@ export async function update(
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
           ...(input.currency ? { currency: input.currency } : {}),
-          phoneConfirmRequired: input.phoneConfirmRequired,
+          // The phone confirmation step is retired: whatever a client sends, no outlet asks for it.
+          phoneConfirmRequired: false,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,

@@ -59,7 +59,6 @@ const GARSON_MORE: Def[] = [
 
 const ODS_PRIMARY: Def[] = [
   { id: "requests", label: "Talepler", icon: "concierge", href: "/oda-servisi", screen: "RO-TAL" },
-  { id: "confirm", label: "Teyit", icon: "call", href: "/oda-servisi?sekme=teyit", screen: "RO-TEL" },
   { id: "delivery", label: "Teslim", icon: "walk", href: "/oda-servisi?sekme=teslim", screen: "RO-TES" },
 ];
 const ODS_MORE: Def[] = []; // no history screen on the room-service board (the "Geçmiş" link had no target)
