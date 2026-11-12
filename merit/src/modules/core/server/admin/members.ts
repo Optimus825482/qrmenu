@@ -225,11 +225,14 @@ export async function assign(ctx: Ctx, raw: AssignInput): Promise<MemberRow> {
         });
       }
       if (input.roleId) {
-        const role = await tx.role.findUnique({ where: { id: input.roleId }, select: { kind: true } });
+        const role = await tx.role.findUnique({ where: { id: input.roleId }, select: { kind: true, code: true } });
         if (!role || !OUTLET_ROLE_KINDS.includes(role.kind)) {
           throw new DomainError("VALIDATION", INVALID, {
             fieldErrors: { roleId: ["Ekip rolü bir outlet veya mutfak rolü olmalı"] },
           });
+        }
+        if (!mayManageRole(ctx.user, role)) {
+          await deny(ctx, hotelId, { action: "O", op: "assign", userId: input.userId, roleId: input.roleId, reason: "TEAM_ROLE" });
         }
       }
       if (
@@ -318,11 +321,14 @@ export async function updateRole(ctx: Ctx, id: string, roleId: string | null): P
     if (!before) throw new DomainError("NOT_FOUND", NOT_FOUND);
     await assertTargetAllowed(ctx, hotelId, { id: before.userId, kind: before.user.role.kind, code: before.user.role.code }, "updateRole");
     if (roleId) {
-      const role = await tx.role.findUnique({ where: { id: roleId }, select: { kind: true } });
+      const role = await tx.role.findUnique({ where: { id: roleId }, select: { kind: true, code: true } });
       if (!role || !OUTLET_ROLE_KINDS.includes(role.kind)) {
         throw new DomainError("VALIDATION", INVALID, {
           fieldErrors: { roleId: ["Ekip rolü bir outlet veya mutfak rolü olmalı"] },
         });
+      }
+      if (!mayManageRole(ctx.user, role)) {
+        await deny(ctx, hotelId, { action: "O", op: "updateRole", userId: before.userId, roleId, reason: "TEAM_ROLE" });
       }
     }
     const updated = await tx.outletMember.update({

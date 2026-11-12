@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Result } from "@/lib/result";
 import { confirm } from "@/shell/confirm";
 import { Field } from "@/shell/ui/Field";
@@ -47,13 +47,16 @@ export function CallOptionsPanel({
   const [dialog, setDialog] = useState<Dialog>(null);
   const [dragging, setDragging] = useState<string | null>(null);
 
-  const apply = useCallback(
-    (next: CallOptionRow[]) => {
-      setRows(next);
-      onChanged(next);
-    },
-    [onChanged],
-  );
+  // The studio passes an inline `onChanged` that sets its own state. As a dependency it made `load` new on every
+  // studio render, so the list was fetched again, which re-rendered the studio: an endless request loop.
+  const onChangedRef = useRef(onChanged);
+  useEffect(() => {
+    onChangedRef.current = onChanged;
+  }, [onChanged]);
+  const apply = useCallback((next: CallOptionRow[]) => {
+    setRows(next);
+    onChangedRef.current(next);
+  }, []);
 
   const load = useCallback(async () => {
     if (!outletId) return;

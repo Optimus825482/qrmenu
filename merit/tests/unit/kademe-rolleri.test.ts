@@ -13,6 +13,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
 const users = await import("@/modules/core/server/admin/users");
+const members = await import("@/modules/core/server/admin/members");
 const dnd = await import("@/modules/minibar/server/dnd");
 const mmd = await import("@/modules/minibar/server/mmd");
 const { can } = await import("@/lib/rbac");
@@ -145,6 +146,20 @@ describe("Oda Servisi Sorumlusu (gerçek test DB)", () => {
     ).toBe("FORBIDDEN");
     const offered = (await users.options(ctx)).roles.map((r) => r.code).sort();
     expect(offered).toEqual([...TEAM_ROLES["R-OSS"]!].sort());
+  });
+
+  it("ekip üyesine yalnız kendi ekibinin rolünü ekip rolü olarak verir; başka outlet rolü FORBIDDEN", async () => {
+    const { ctx } = await ctxOf("R-OSS");
+    const outlet = await testDb.outlet.findFirstOrThrow({ where: { hotelId: await hotelId("ROYAL") } });
+    const ods = await makeUser({ username: "ekip-ods", roleCode: "R-ODS", hotelCode: "ROYAL" });
+    const sgf = (await roleByCode("R-SGF")).id;
+    const odsRole = (await roleByCode("R-ODS")).id;
+
+    expect(await codeOf(members.assign(ctx, { userId: ods.id, outletId: outlet.id, roleId: sgf }))).toBe("FORBIDDEN");
+    const row = await members.assign(ctx, { userId: ods.id, outletId: outlet.id, roleId: odsRole });
+    expect(await codeOf(members.updateRole(ctx, row.id, sgf))).toBe("FORBIDDEN");
+    expect(await codeOf(members.updateRole(ctx, row.id, null))).toBe("OK");
+    expect((await testDb.outletMember.findUniqueOrThrow({ where: { id: row.id } })).roleId).toBeNull();
   });
 });
 

@@ -25,6 +25,12 @@ export function CallSheet({
   const t = useTranslations("guest");
   const sheetRef = useRef<HTMLDivElement>(null);
   const firstButtonRef = useRef<HTMLButtonElement>(null);
+  // The caller passes a fresh `onClose` on every render; as a dependency it would re-run the effect below and
+  // pull the focus back to the first button each time (same fault as useModalFocusTrap had).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +43,7 @@ export function CallSheet({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key === "Tab" && sheetRef.current) {
@@ -62,7 +68,7 @@ export function CallSheet({
       clearTimeout(timer);
       doc.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
