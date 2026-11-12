@@ -31,8 +31,22 @@ export type RoomOrderCard = {
   currency?: string;
 };
 
+/** A delivered order of today: read-only on the board. */
+export type RoomDeliveredCard = {
+  id: string;
+  orderNo: number;
+  roomNumber: string;
+  deliveredAt: Date;
+  items: { name: string; qty: number }[];
+};
+
+/** How many of today's delivered orders the board carries (newest first). */
+export const DELIVERED_LIMIT = 20;
+
 export type RoomBoard = {
   columns: Record<RoomBoardColumn, RoomOrderCard[]>;
+  /** Today's delivered orders, newest first, at most `DELIVERED_LIMIT`. */
+  delivered?: RoomDeliveredCard[];
   kpis: { open: number; overdue: number; today: number; avgDeliverySec?: number };
   orderingEnabled: boolean;
   confirmRequired: boolean;
@@ -83,7 +97,7 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
     room: { select: { number: true, extension: true } },
     items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true } },
   };
-  const [openRows, todayRows] = await Promise.all([
+  const [openRows, todayRows, deliveredRows] = await Promise.all([
     prisma.order.findMany({
       where: { outletId, kind: "ODA_SERVISI", status: { in: OPEN_STATUSES } },
       select,
@@ -91,6 +105,18 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
     prisma.order.findMany({
       where: { outletId, kind: "ODA_SERVISI", businessDate: today },
       select: { status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
+    }),
+    prisma.order.findMany({
+      where: { outletId, kind: "ODA_SERVISI", businessDate: today, status: "TESLIM_EDILDI", deliveredAt: { not: null } },
+      orderBy: [{ deliveredAt: "desc" }, { orderNo: "desc" }],
+      take: DELIVERED_LIMIT,
+      select: {
+        id: true,
+        orderNo: true,
+        deliveredAt: true,
+        room: { select: { number: true } },
+        items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true } },
+      },
     }),
   ]);
 
@@ -138,6 +164,13 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
 
   return {
     columns,
+    delivered: deliveredRows.map((row) => ({
+      id: row.id,
+      orderNo: row.orderNo,
+      roomNumber: row.room?.number ?? "—",
+      deliveredAt: row.deliveredAt!,
+      items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty })),
+    })),
     kpis: {
       open: Object.values(columns).reduce((n, l) => n + l.length, 0),
       overdue,

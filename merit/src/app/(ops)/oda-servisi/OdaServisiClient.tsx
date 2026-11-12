@@ -14,12 +14,22 @@ import {
   markRoomOnWayAction,
   markRoomReadyAction,
 } from "@/modules/order/server/actions/roomService";
-import type {
-  RoomBoard,
-  RoomBoardColumn,
-  RoomOrderCard as RoomOrderData,
-} from "@/modules/order/server/roomService/board";
+import type { RoomBoard, RoomDeliveredCard, RoomOrderCard as RoomOrderData } from "@/modules/order/server/roomService/board";
+import { MybarLivePanel, type MybarPending, useMybarPending } from "@/modules/order/ui/roomService/MybarLivePanel";
+import { type RoomNotice, RoomNotices } from "@/modules/order/ui/roomService/RoomNotices";
 import { RoomOrderCard, type RoomCardActions, type RoomOpsFlags, type RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
+import {
+  entriesOf,
+  MYBAR_STAGE,
+  type QueueEntry,
+  queueOf,
+  QUEUE_STAGE,
+  type RoomStage,
+  type RoomStageId,
+  stageOfColumn,
+  STEP_LABEL,
+  TAB_STAGES,
+} from "@/modules/order/ui/roomService/stages";
 import { REASON_MIN_LENGTH } from "@/modules/order/ui/reasons";
 import { confirm } from "@/shell/confirm";
 import { useSse } from "@/shell/useSse";
@@ -41,21 +51,24 @@ const LIVE_EVENTS = [
   "realtime.resync",
 ] as const;
 
-/** Visible columns of each tab, in display order. */
-const TAB_COLUMNS: Record<RoomOpsTab, readonly RoomBoardColumn[]> = {
-  tumu: ["CONFIRM", "NEW", "PREP", "READY", "ONWAY"],
-  teyit: ["CONFIRM"],
-  teslim: ["READY", "ONWAY"],
-};
+type BoardView = "pano" | "kuyruk";
+const VIEW_KEY = "merit.rs.view";
+const VIEW_LABEL: Record<BoardView, string> = { pano: "Yan yana", kuyruk: "Kuyruk" };
 
-const COLUMN_TITLE: Record<RoomBoardColumn, string> = {
-  CONFIRM: "Teyit",
-  NEW: "Yeni",
-  PREP: "Hazırlanıyor",
-  READY: "Hazır",
-  ONWAY: "Yolda",
+/** Grid of the stage sections, by how many there are (literal classes: Tailwind reads them from the source). */
+const GRID_BY_COUNT: Record<number, string> = {
+  1: "",
+  2: "md:grid-cols-2",
+  3: "md:grid-cols-3",
+  4: "md:grid-cols-2 xl:grid-cols-4",
+  5: "md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
 };
+/** Queue next to the MyBar panel: the queue takes the wider part. */
+const QUEUE_WITH_MYBAR_GRID = "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]";
 
+/** Notification cards shown at once; the rest is summarised in one line. */
+const MAX_NOTICES = 4;
+const HIGHLIGHT_MS = 4000;
 
 const CONFIRM_FAIL_REASONS = ["Açmadı", "Misafir istemedi", "Hatalı sipariş"] as const;
 const CANCEL_REASONS = ["Stok yok", "Misafir vazgeçti", "Hatalı sipariş", "Mutfak yoğun"] as const;
@@ -78,6 +91,8 @@ type Props = {
   loadError?: string | null;
   /** Permission flags computed on the server. */
   flags: RoomOpsFlags;
+  /** MB-PERS V, computed on the server: shows the read-only MyBar panel on the full board. */
+  showMybar?: boolean;
 };
 
 type ActionResult = { ok: boolean; error?: { message: string } };
@@ -88,11 +103,24 @@ function offsetOf(board: RoomBoard | null): number {
   return Number.isNaN(server) ? 0 : server - Date.now();
 }
 
+/** Ids of every open order of a board. */
+function openIds(board: RoomBoard | null): string[] {
+  return board ? queueOf(board).map((entry) => entry.card.id) : [];
+}
+
+function itemCount(items: readonly { qty?: number; requestedQty?: number }[]): number {
+  return items.reduce((sum, item) => sum + (item.qty ?? item.requestedQty ?? 0), 0);
+}
+
+function clock(value: Date | string): string {
+  return new Date(value).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" });
+}
+
 function minutes(sec: number): string {
   return `${Math.round(sec / 60)} dk`;
 }
 
-export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags }: Props) {
+export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags, showMybar = false }: Props) {
   const [data, setData] = useState<RoomBoard | null>(initialBoard);
   // Load errors (a failed refresh) clear on the next successful refresh; action errors stay until dismissed.
   const [loadErr, setLoadErr] = useState<string>(loadError ?? "");
@@ -100,7 +128,11 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   // Server clock minus device clock at the moment the board arrived: keeps SLA timers right on a wrong tablet clock.
   const [clockOffset, setClockOffset] = useState(() => offsetOf(initialBoard));
   const [busy, setBusy] = useState(false);
-  const [activeColumn, setActiveColumn] = useState<RoomBoardColumn>(tab === "tumu" ? "NEW" : TAB_COLUMNS[tab][0]);
+  const [activeStage, setActiveStage] = useState<RoomStageId>(TAB_STAGES[tab][0].id);
+  const [view, setView] = useState<BoardView>("pano");
+  const [notices, setNotices] = useState<RoomNotice[]>([]);
+  const [highlight, setHighlight] = useState("");
+  const mybarOn = showMybar && tab === "tumu";
   const [phoneFor, setPhoneFor] = useState<RoomOrderData | null>(null);
   const [phoneNote, setPhoneNote] = useState("");
   const [cancelFor, setCancelFor] = useState<RoomOrderData | null>(null);
@@ -109,11 +141,73 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   const playReady = useSound("ready");
   const playAlarm = useSound("call");
 
+  // The view choice is a per-device convenience; the board works the same without storage.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        if (window.localStorage.getItem(VIEW_KEY) === "kuyruk") setView("kuyruk");
+      } catch {
+        /* storage blocked: keep the default view */
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  const chooseView = (next: BoardView) => {
+    setView(next);
+    setActiveStage(next === "kuyruk" ? QUEUE_STAGE.id : TAB_STAGES[tab][0].id);
+    try {
+      window.localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      /* storage blocked: the choice lasts for this visit */
+    }
+  };
+
+  // Orders already on the board when it opened are not news; only the ones that arrive later are announced.
+  const knownOrders = useRef<Set<string> | null>(null);
+  const announce = useCallback(
+    (board: RoomBoard) => {
+      const known = (knownOrders.current ??= new Set(openIds(initialBoard)));
+      const columns = TAB_STAGES[tab].flatMap((stage) => stage.columns).filter((col) => col === "CONFIRM" || col === "NEW");
+      const fresh = entriesOf(board, columns).filter((entry) => !known.has(entry.card.id));
+      for (const id of openIds(board)) known.add(id);
+      if (fresh.length === 0) return;
+      setNotices((prev) => [
+        ...prev,
+        ...fresh.map(
+          ({ card }): RoomNotice => ({
+            key: `order:${card.id}`,
+            kind: "order",
+            title: `Yeni oda servisi talebi · Oda ${card.roomNumber}`,
+            detail: `#${card.orderNo} · ${itemCount(card.items)} ürün · ${clock(card.createdAt)}`,
+          }),
+        ),
+      ]);
+    },
+    [tab, initialBoard],
+  );
+
+  const announceMybar = useCallback((rows: MybarPending[]) => {
+    setNotices((prev) => [
+      ...prev,
+      ...rows.map(
+        (row): RoomNotice => ({
+          key: `mybar:${row.id}`,
+          kind: "mybar",
+          title: `Yeni MyBar talebi · Oda ${row.roomNumber}`,
+          detail: `${row.floorName} · ${itemCount(row.items)} ürün · ${clock(row.createdAt)}`,
+        }),
+      ),
+    ]);
+  }, []);
+  const playMybar = useSound("mybar");
+  const mybar = useMybarPending(mybarOn, playMybar, announceMybar);
+
   const refresh = useCallback(async () => {
     try {
       const res = await getRoomBoardAction(outletId);
       if (res.ok) {
         setData(res.data);
+        announce(res.data);
         setClockOffset(offsetOf(res.data));
         setLoadErr("");
       } else {
@@ -122,7 +216,10 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
     } catch {
       setLoadErr(CONN_LOAD_ERROR);
     }
-  }, [outletId]);
+  }, [outletId, announce]);
+
+  const highlightTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(highlightTimer.current), []);
 
   const refreshTimer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
@@ -215,14 +312,62 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
     });
   };
 
-  const columns = TAB_COLUMNS[tab];
-  // After a soft navigation to another ?sekme= the remembered column may not exist in this tab.
-  const shownColumn = columns.includes(activeColumn) ? activeColumn : columns[0];
+  const queueView = tab === "tumu" && view === "kuyruk";
+  const stages: readonly RoomStage[] = [
+    ...(queueView ? [QUEUE_STAGE] : TAB_STAGES[tab]),
+    ...(mybarOn ? [MYBAR_STAGE] : []),
+  ];
+  // After a soft navigation to another ?sekme= (or a view switch) the remembered stage may not be shown.
+  const shownStage = stages.some((stage) => stage.id === activeStage) ? activeStage : stages[0].id;
   const error = actionErr || loadErr;
   const confirmRequired = data?.confirmRequired ?? false;
 
+  const entriesByStage = new Map<RoomStageId, QueueEntry[]>();
+  if (data) {
+    for (const stage of stages) {
+      if (stage.id === QUEUE_STAGE.id) entriesByStage.set(stage.id, queueOf(data));
+      else if (stage.columns.length > 0) entriesByStage.set(stage.id, entriesOf(data, stage.columns));
+    }
+  }
+  const delivered: RoomDeliveredCard[] = data?.delivered ?? [];
+  const countOf = (stage: RoomStage): number =>
+    stage.id === "MYBAR" ? (mybar.rows?.length ?? 0) : stage.id === "TESLIM" ? delivered.length : (entriesByStage.get(stage.id)?.length ?? 0);
+  /** First card of the screen: carries the screen-guide anchors. */
+  const firstCardId = stages.flatMap((stage) => entriesByStage.get(stage.id) ?? [])[0]?.card.id;
+
+  // A notice lives until it is closed or its request is handled by someone.
+  const waitingOrders = new Set(data ? entriesOf(data, ["CONFIRM", "NEW"]).map((entry) => entry.card.id) : []);
+  const pendingMybar = new Set((mybar.rows ?? []).map((row) => row.id));
+  const liveNotices = notices.filter((notice) => {
+    const id = notice.key.slice(notice.key.indexOf(":") + 1);
+    return notice.kind === "order" ? waitingOrders.has(id) : pendingMybar.has(id);
+  });
+
+  const dismissNotice = (notice: RoomNotice) => setNotices((prev) => prev.filter((n) => n.key !== notice.key));
+  const showNotice = (notice: RoomNotice) => {
+    const id = notice.key.slice(notice.key.indexOf(":") + 1);
+    dismissNotice(notice);
+    setHighlight(notice.key);
+    window.clearTimeout(highlightTimer.current);
+    highlightTimer.current = window.setTimeout(() => setHighlight(""), HIGHLIGHT_MS);
+    if (notice.kind === "mybar") setActiveStage("MYBAR");
+    else if (!queueView && tab === "tumu" && data) {
+      const entry = queueOf(data).find((e) => e.card.id === id);
+      if (entry) setActiveStage(stageOfColumn(entry.column));
+    }
+    const selector = notice.kind === "mybar" ? `[data-mybar-id="${id}"]` : `[data-order-id="${id}"]`;
+    // After the paint: on a phone the stage of the card may have been hidden until now.
+    window.setTimeout(() => document.querySelector(selector)?.scrollIntoView?.({ block: "center", behavior: "smooth" }), 50);
+  };
+
   return (
     <section aria-label="Oda servisi operasyon paneli" className="space-y-4">
+      <RoomNotices notices={liveNotices.slice(0, MAX_NOTICES)} onShow={showNotice} onDismiss={dismissNotice} />
+      {liveNotices.length > MAX_NOTICES ? (
+        <p role="status" className="rounded-xl border border-warn bg-surface p-3 text-sm font-bold text-warn">
+          {`${liveNotices.length - MAX_NOTICES} yeni talep daha bekliyor`}
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-black tracking-tight text-text">
@@ -238,7 +383,22 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
         </div>
 
         {data ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {tab === "tumu" ? (
+              <div role="group" aria-label="Görünüm" className="mr-2 flex overflow-hidden rounded-xl border border-border">
+                {(["pano", "kuyruk"] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={view === option}
+                    onClick={() => chooseView(option)}
+                    className={`min-h-11 px-4 text-sm font-black ${view === option ? "bg-accent text-bg" : "bg-surface text-text"}`}
+                  >
+                    {VIEW_LABEL[option]}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <span className="text-[13px] font-semibold text-muted">Sipariş alımı</span>
             {flags.talepA ? (
               <button
@@ -290,20 +450,20 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
         </div>
       ) : null}
 
-      {columns.length > 1 && data ? (
+      {stages.length > 1 && data ? (
         <div role="tablist" aria-label="Sütunlar" className="flex gap-2 overflow-x-auto md:hidden">
-          {columns.map((col) => (
+          {stages.map((stage) => (
             <button
-              key={col}
+              key={stage.id}
               type="button"
               role="tab"
-              aria-selected={shownColumn === col}
-              onClick={() => setActiveColumn(col)}
+              aria-selected={shownStage === stage.id}
+              onClick={() => setActiveStage(stage.id)}
               className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-bold ${
-                shownColumn === col ? "border-accent bg-accent text-bg" : "border-border bg-surface text-text"
+                shownStage === stage.id ? "border-accent bg-accent text-bg" : "border-border bg-surface text-text"
               }`}
             >
-              {COLUMN_TITLE[col]} ({data.columns[col].length})
+              {stage.title} ({countOf(stage)})
             </button>
           ))}
         </div>
@@ -312,39 +472,70 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
       {data ? (
         <div
           data-guide={tab === "teyit" ? "teyit-listesi" : tab === "teslim" ? "teslim-listesi" : "talep-listesi"}
-          className={`grid gap-4 ${columns.length === 1 ? "" : columns.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3 xl:grid-cols-5"}`}
+          data-view={queueView ? "kuyruk" : "pano"}
+          className={`grid gap-4 ${queueView && mybarOn ? QUEUE_WITH_MYBAR_GRID : (GRID_BY_COUNT[stages.length] ?? "")}`}
         >
-          {columns.map((col, colIndex) => {
-            const list = data.columns[col];
-            const firstColumnWithCards = columns.findIndex((c) => data.columns[c].length > 0);
+          {stages.map((stage) => {
+            const entries = entriesByStage.get(stage.id) ?? [];
+            const isQueue = stage.id === QUEUE_STAGE.id;
+            const mixed = isQueue || stage.columns.length > 1;
             return (
               <section
-                key={col}
-                data-column-id={col}
-                aria-label={COLUMN_TITLE[col]}
-                className={`${columns.length > 1 && shownColumn !== col ? "hidden" : "block"} min-w-0 space-y-3 md:block`}
+                key={stage.id}
+                data-stage-id={stage.id}
+                aria-label={stage.title}
+                className={`${stages.length > 1 && shownStage !== stage.id ? "hidden" : "flex"} min-w-0 flex-col gap-3 md:flex`}
               >
                 <h2 className="flex items-center justify-between text-base font-black text-text">
-                  <span>{COLUMN_TITLE[col]}</span>
-                  <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-[13px] text-muted">{list.length}</span>
+                  <span>{stage.title}</span>
+                  <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-[13px] text-muted">{countOf(stage)}</span>
                 </h2>
-                {list.length === 0 ? (
+                {stage.id === "MYBAR" ? (
+                  <MybarLivePanel
+                    rows={mybar.rows}
+                    error={mybar.error}
+                    highlightId={highlight.startsWith("mybar:") ? highlight.slice(6) : undefined}
+                  />
+                ) : stage.id === "TESLIM" ? (
+                  delivered.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-border p-6 text-center text-[13px] text-muted">Bugün teslim edilen yok</p>
+                  ) : (
+                    delivered.map((order) => (
+                      <div key={order.id} data-delivered-id={order.id} className="rounded-2xl border border-success/40 bg-surface p-3">
+                        <p className="flex items-center justify-between gap-2 text-sm font-black text-text">
+                          <span>{`#${order.orderNo} · Oda ${order.roomNumber}`}</span>
+                          <span className="text-[13px] font-bold text-success">{clock(order.deliveredAt)}</span>
+                        </p>
+                        <p className="mt-0.5 truncate text-[13px] text-muted">
+                          {order.items.map((item) => `${item.qty}× ${item.name}`).join(", ")}
+                        </p>
+                      </div>
+                    ))
+                  )
+                ) : entries.length === 0 ? (
                   <p className="rounded-2xl border border-dashed border-border p-6 text-center text-[13px] text-muted">Sipariş yok</p>
                 ) : (
-                  list.map((card, index) => (
-                    <RoomOrderCard
-                      key={card.id}
-                      card={card}
-                      column={col}
-                      flags={flags}
-                      confirmRequired={confirmRequired}
-                      actions={actions}
-                      busy={busy}
-                      tab={tab}
-                      clockOffsetMs={clockOffset}
-                      first={index === 0 && colIndex === firstColumnWithCards}
-                    />
-                  ))
+                  <div className={isQueue ? "grid gap-3 xl:grid-cols-2" : "contents"}>
+                    {entries.map(({ card, column }, index) => (
+                      // The wrapper names the server step of the card; it takes no box of its own.
+                      <div key={card.id} data-column-id={column} className="contents">
+                        <RoomOrderCard
+                          card={card}
+                          column={column}
+                          flags={flags}
+                          confirmRequired={confirmRequired}
+                          actions={actions}
+                          busy={busy}
+                          tab={tab}
+                          clockOffsetMs={clockOffset}
+                          first={card.id === firstCardId}
+                          stepLabel={mixed ? STEP_LABEL[column] : undefined}
+                          position={isQueue ? index + 1 : undefined}
+                          highlight={highlight === `order:${card.id}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </section>
             );

@@ -454,12 +454,17 @@ const LIST: ScreenGuide[] = [
     "personel",
     "Odalardan gelen servis taleplerini görür ve karşılarsın.",
     [
-      ["talep-listesi", "Talepler", "Yeni talepler oda numarasıyla ve bekleme süresiyle listelenir."],
+      [
+        "talep-listesi",
+        "Talepler",
+        "Talepler dört sütunda (Talep Alındı, Hazırlanıyor, Gönderildi, Teslim Edildi) geliş saatine göre listelenir; Kuyruk görünümü hepsini tek sırada gösterir.",
+      ],
       ["talep-ac", "Talep detayı", "İçeriği, notu ve toplamı detayda gör."],
       ["onayla", "Onayla", "Teyit sonrası talebi hazırlığa gönder."],
     ],
     [
       "Telefon teyidi yapılmadan onaylanmaz.",
+      "Yeni talep sesle ve köşedeki bildirim penceresiyle haber verilir; MyBar talepleri yan panelde yalnızca izlenir.",
       "Bekleme süresi dolan talep yöneticiye yükselir.",
     ],
     { settings: ["rs.slaMinutes"] },

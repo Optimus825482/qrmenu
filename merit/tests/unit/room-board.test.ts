@@ -242,6 +242,20 @@ describe("board.get", () => {
     expect(b.orderingEnabled).toBe(false);
   });
 
+  it("delivered: yalnız bugünün teslimleri, en yeni teslim en üstte, açık siparişler yok", async () => {
+    const e = await env();
+    const room = await e.mkRoom("214", "4214");
+    const yesterday = new Date(businessDay(businessDate()).getTime() - 86_400_000);
+    await mkOrder(e, room.id, "TESLIM_EDILDI", { businessDate: yesterday, createdAt: min(60 * 24), deliveredAt: min(60 * 24 - 5) });
+    const older = await mkOrder(e, room.id, "TESLIM_EDILDI", { createdAt: min(40), deliveredAt: min(20) });
+    const newer = await mkOrder(e, room.id, "TESLIM_EDILDI", { createdAt: min(30), deliveredAt: min(5) });
+    await mkOrder(e, room.id, "YOLDA");
+    const { ctx } = await ods(e);
+    const b = await board.get(ctx, e.outlet.id);
+    expect(b.delivered?.map((d) => d.id)).toEqual([newer.id, older.id]);
+    expect(b.delivered?.[0]).toMatchObject({ roomNumber: "214", orderNo: newer.orderNo });
+  });
+
   it("serverNow: ISO zaman damgası sunucu saatine yakın", async () => {
     const e = await env();
     const { ctx } = await ods(e);

@@ -6,13 +6,13 @@ import { createStore } from "zustand/vanilla";
  * düğmesi / ilk dokunuş) `AudioContext`'i uyandırır; kilitliyken `playCue` hiçbir ses nesnesi yaratmaz.
  * Kullanıcı sesi kapatabilir (`setMuted`); desteklenmiyorsa durum `unsupported` olur ve uygulama çalışmaya devam eder.
  */
-export type SoundName = "new-order" | "ready" | "call" | "error";
+export type SoundName = "new-order" | "ready" | "call" | "error" | "mybar";
 export type SoundState = "locked" | "on" | "off" | "unsupported";
 
 export const soundStore = createStore<{ state: SoundState }>()(() => ({ state: "locked" }));
 
 const MUTE_KEY = "merit.pos.muted";
-const FREQ: Record<SoundName, number> = { "new-order": 520, ready: 660, call: 880, error: 220 };
+const FREQ: Record<SoundName, number> = { "new-order": 520, ready: 660, call: 880, error: 220, mybar: 740 };
 
 type AudioCtor = new () => AudioContext;
 let context: AudioContext | undefined;

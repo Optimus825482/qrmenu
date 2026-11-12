@@ -42,6 +42,20 @@ type Props = {
   first?: boolean;
   /** Server clock minus device clock (ms), for the SLA timer. */
   clockOffsetMs?: number;
+  /** Step badge, shown where one list mixes several steps (folded stage, queue). */
+  stepLabel?: string;
+  /** Place in the service queue (1 = next). */
+  position?: number;
+  /** Card the staff jumped to from a notification. */
+  highlight?: boolean;
+};
+
+const STEP_TONE: Record<RoomBoardColumn, string> = {
+  CONFIRM: "border-warn bg-warn text-bg",
+  NEW: "border-warn text-warn",
+  PREP: "border-info text-info",
+  READY: "border-success bg-success text-bg",
+  ONWAY: "border-info bg-info text-white",
 };
 
 const TONE: Record<RoomBoardColumn, string> = {
@@ -60,7 +74,20 @@ function clock(value: Date | string): string {
 }
 
 /** One order of the staff board. Which buttons exist is decided only by the server-computed `flags`. */
-export function RoomOrderCard({ card, column, flags, confirmRequired, actions, busy, tab = "tumu", first, clockOffsetMs }: Props) {
+export function RoomOrderCard({
+  card,
+  column,
+  flags,
+  confirmRequired,
+  actions,
+  busy,
+  tab = "tumu",
+  first,
+  clockOffsetMs,
+  stepLabel,
+  position,
+  highlight,
+}: Props) {
   const rtl = card.guestLanguage === "ar";
   const showApprove = tab !== "teyit" && flags.talepD && (column === "NEW" || column === "CONFIRM");
   const approveBlocked = confirmRequired || column === "CONFIRM";
@@ -82,7 +109,7 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
       data-guide={first ? "talep-ac" : undefined}
       className={`flex flex-col justify-between gap-3 rounded-2xl border bg-surface p-4 shadow-sm ${TONE[column]} ${
         card.slaState === "BREACH" && column !== "CONFIRM" ? "bg-danger/5 ring-2 ring-danger" : ""
-      }`}
+      } ${highlight ? "outline outline-4 outline-offset-2 outline-accent" : ""}`}
     >
       <div className="space-y-2.5">
         <div className="flex items-start justify-between gap-2">
@@ -101,6 +128,22 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
         </div>
 
         <div className="flex flex-wrap gap-1.5">
+          {position !== undefined ? (
+            <span
+              aria-label={`Kuyruk sırası ${position}`}
+              className="inline-flex items-center rounded-full bg-text px-2 py-0.5 text-[13px] font-black text-bg"
+            >
+              {`${position}. sıra`}
+            </span>
+          ) : null}
+          {stepLabel ? (
+            <span
+              data-step={column}
+              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[13px] font-bold ${STEP_TONE[column]}`}
+            >
+              {stepLabel}
+            </span>
+          ) : null}
           <span
             aria-label={`Misafir dili: ${card.guestLanguage.toUpperCase()}`}
             className="inline-flex items-center rounded-full border border-border bg-surface-sunken px-2 py-0.5 text-[13px] font-bold text-muted"

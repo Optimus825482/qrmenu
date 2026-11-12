@@ -5,10 +5,15 @@ import type { MeritEvent } from "@/lib/realtime-events";
 import type { RoomBoard, RoomBoardColumn, RoomOrderCard } from "@/modules/order/server/roomService/board";
 import type { RoomOpsFlags } from "@/modules/order/ui/roomService/RoomOrderCard";
 
+// One subscriber per type list (the board and its MyBar panel each have one); an event reaches those that listen for its type.
+const sseSubscribers = new Map<string, { types: readonly string[]; cb: (e: MeritEvent) => void }>();
 let sseHandler: ((e: MeritEvent) => void) | null = null;
 vi.mock("@/shell/useSse", () => ({
-  useSse: (cb: (e: MeritEvent) => void) => {
-    sseHandler = cb;
+  useSse: (cb: (e: MeritEvent) => void, types: readonly string[] = []) => {
+    sseSubscribers.set(types.join(","), { types, cb });
+    sseHandler = (e) => {
+      for (const sub of sseSubscribers.values()) if (sub.types.includes(e.type)) sub.cb(e);
+    };
     return { status: "open" };
   },
 }));
@@ -37,6 +42,8 @@ vi.mock("@/modules/order/server/actions/roomService", () => ({
   markRoomDeliveredAction: delivered,
 }));
 vi.mock("@/modules/menu/server/actions/outletSwitches", () => ({ setOutletOrderingEnabledAction: setOrdering }));
+const listMybar = vi.hoisted(() => vi.fn());
+vi.mock("@/modules/mybar/server/actions/requests", () => ({ listMybarAction: listMybar }));
 
 const confirmDialog = vi.hoisted(() => vi.fn());
 vi.mock("@/shell/confirm", () => ({ confirm: confirmDialog }));
@@ -58,6 +65,7 @@ vi.mock("next/navigation", () => ({
 import OdaServisiClient from "@/app/(ops)/oda-servisi/OdaServisiClient";
 import { renderOdaServisi } from "@/app/(ops)/oda-servisi/renderOdaServisi";
 import { SlaTimer, formatSlaClock, slaTimerState } from "@/modules/order/ui/roomService/SlaTimer";
+import { byRequestTime, queueOf, stageOfColumn } from "@/modules/order/ui/roomService/stages";
 
 const NOW = Date.now();
 const min = 60_000;
@@ -97,9 +105,26 @@ function boardOf(cols: Partial<Record<RoomBoardColumn, RoomOrderCard[]>>, over: 
 const ALL: RoomOpsFlags = { talepD: true, teyitD: true, teslimD: true, teslimA: true, talepA: true };
 const NONE: RoomOpsFlags = { talepD: false, teyitD: false, teslimD: false, teslimA: false, talepA: false };
 
-function ui(b: RoomBoard, flags: RoomOpsFlags, tab: "tumu" | "teyit" | "teslim" = "tumu") {
-  return <OdaServisiClient outletId="out1" hotelName="Merit Royal" tab={tab} initialBoard={b} flags={flags} />;
+function ui(b: RoomBoard, flags: RoomOpsFlags, tab: "tumu" | "teyit" | "teslim" = "tumu", showMybar = false) {
+  return <OdaServisiClient outletId="out1" hotelName="Merit Royal" tab={tab} initialBoard={b} flags={flags} showMybar={showMybar} />;
 }
+
+function mybarRow(over: Record<string, unknown> = {}) {
+  return {
+    id: "m1",
+    roomNumber: "305",
+    floorName: "3. Kat",
+    createdAt: new Date(NOW - 3 * min),
+    seenAt: null,
+    seenByName: null,
+    note: null,
+    noteTr: null,
+    items: [{ productId: "p1", name: "Su", requestedQty: 2, deliveredQty: 0, remainingQty: 2, poolRemaining: null }],
+    removals: [],
+    ...over,
+  };
+}
+const mybarPage = (items: unknown[]) => ({ ok: true, data: { items, total: items.length, page: 1, pageSize: 50 } });
 
 function allBoard(): RoomBoard {
   return boardOf({
@@ -113,10 +138,14 @@ function allBoard(): RoomBoard {
 beforeEach(() => {
   seq = 0;
   sseHandler = null;
+  sseSubscribers.clear();
   getBoard.mockReset();
   getBoard.mockResolvedValue({ ok: true, data: boardOf({}) });
   confirmDialog.mockReset();
   confirmDialog.mockResolvedValue(true);
+  listMybar.mockReset();
+  listMybar.mockResolvedValue(mybarPage([]));
+  window.localStorage.clear();
   for (const fn of [approve, confirmPhone, cancel, ready, onWay, delivered, setOrdering, playNew, playReady, playCall]) {
     fn.mockReset();
   }
@@ -259,22 +288,42 @@ describe("RoomService staff board - confirmation, labels, order", () => {
     expect(screen.getByLabelText("Misafir dili: DE").textContent).toBe("DE");
   });
 
-  it("renders the five columns in order and the cards in the given (slaDueAt) order", () => {
-    const urgent = card({ orderNo: 7, slaDueAt: new Date(NOW + min) });
-    const later = card({ orderNo: 8, slaDueAt: new Date(NOW + 20 * min) });
-    render(ui(boardOf({ NEW: [urgent, later] }), ALL));
-    const titles = Array.from(document.querySelectorAll("[data-column-id] > h2")).map((h) => h.firstElementChild?.textContent);
-    expect(titles).toEqual(["Teyit", "Yeni", "Hazırlanıyor", "Hazır", "Yolda"]);
-    const headings = within(document.querySelector('[data-column-id="NEW"]') as HTMLElement).getAllByRole("heading", { level: 3 });
+  it("renders the four stages in order and the cards of a stage in request-time order", () => {
+    const later = card({ orderNo: 8, createdAt: new Date(NOW - 2 * min) });
+    const earlier = card({ orderNo: 7, createdAt: new Date(NOW - 9 * min) });
+    render(ui(boardOf({ NEW: [later, earlier] }), ALL));
+    const titles = Array.from(document.querySelectorAll("[data-stage-id] > h2")).map((h) => h.firstElementChild?.textContent);
+    expect(titles).toEqual(["Talep Alındı", "Hazırlanıyor", "Gönderildi", "Teslim Edildi"]);
+    const headings = within(document.querySelector('[data-stage-id="ALINDI"]') as HTMLElement).getAllByRole("heading", { level: 3 });
     expect(headings.map((h) => h.textContent)).toEqual(["#7 · Oda 101 · Dahili 4101", "#8 · Oda 101 · Dahili 4101"]);
   });
 
-  it("tabs filter the columns: teyit shows one, teslim shows Hazır and Yolda", () => {
+  it("folds Teyit + Yeni and Hazırlanıyor + Hazır into one stage each, with a step badge per card", () => {
+    render(ui(boardOf({ CONFIRM: [card({ status: "TEYIT_BEKLIYOR" })], NEW: [card()], PREP: [card()], READY: [card()], ONWAY: [card()] }), ALL));
+    const steps = (stage: string) =>
+      Array.from(document.querySelectorAll(`[data-stage-id="${stage}"] [data-step]`)).map((n) => n.textContent);
+    expect(steps("ALINDI").sort()).toEqual(["Talep alındı", "Teyit bekliyor"]);
+    expect(steps("HAZIRLANIYOR").sort()).toEqual(["Hazır", "Hazırlanıyor"]);
+    // one step in the stage: the column title already says it
+    expect(steps("GONDERILDI")).toEqual([]);
+  });
+
+  it("the Teslim Edildi stage lists today's delivered orders read-only", () => {
+    const b = boardOf({}, { delivered: [{ id: "d1", orderNo: 90, roomNumber: "404", deliveredAt: new Date(NOW), items: [{ name: "Çay", qty: 2 }] }] });
+    render(ui(b, ALL));
+    const stage = within(document.querySelector('[data-stage-id="TESLIM"]') as HTMLElement);
+    expect(stage.getByText("#90 · Oda 404")).toBeTruthy();
+    expect(stage.getByText("2× Çay")).toBeTruthy();
+    expect(stage.queryByRole("button")).toBeNull();
+  });
+
+  it("tabs filter the stages: teyit shows one, teslim shows Hazır and Yolda", () => {
     const { unmount } = render(ui(allBoard(), ALL, "teyit"));
-    expect(document.querySelectorAll("[data-column-id]")).toHaveLength(1);
+    expect(document.querySelectorAll("[data-stage-id]")).toHaveLength(1);
+    expect(screen.queryByRole("group", { name: "Görünüm" })).toBeNull();
     unmount();
     render(ui(allBoard(), ALL, "teslim"));
-    expect(Array.from(document.querySelectorAll("[data-column-id]")).map((n) => n.getAttribute("data-column-id"))).toEqual(["READY", "ONWAY"]);
+    expect(Array.from(document.querySelectorAll("[data-stage-id]")).map((n) => n.getAttribute("data-stage-id"))).toEqual(["READY", "ONWAY"]);
   });
 
   it("shows prices only when the card carries a subtotal", () => {
@@ -351,7 +400,7 @@ describe("RoomService staff board - live refresh", () => {
   it("the shown column falls back to the first one of the tab when the remembered one is not in it", () => {
     const { rerender } = render(ui(allBoard(), ALL, "tumu"));
     rerender(ui(allBoard(), ALL, "teslim"));
-    const hidden = (col: string) => document.querySelector(`[data-column-id="${col}"]`)?.className.split(" ").includes("hidden");
+    const hidden = (col: string) => document.querySelector(`[data-stage-id="${col}"]`)?.className.split(" ").includes("hidden");
     expect(hidden("READY")).toBe(false);
     expect(hidden("ONWAY")).toBe(true);
   });
@@ -361,6 +410,144 @@ describe("RoomService staff board - live refresh", () => {
     getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [card({ orderNo: 41 })] }) });
     act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
     expect(await screen.findByRole("heading", { name: /#41/ })).toBeTruthy();
+  });
+});
+
+describe("RoomService staff board - service queue", () => {
+  it("queue rule: the earliest request comes first, the order number breaks a tie", () => {
+    const a = card({ orderNo: 3, createdAt: new Date(NOW - 2 * min) });
+    const b = card({ orderNo: 2, createdAt: new Date(NOW - 8 * min), status: "YOLDA" });
+    const c = card({ orderNo: 1, createdAt: new Date(NOW - 2 * min), status: "ONAYLANDI" });
+    const queue = queueOf(boardOf({ NEW: [a], ONWAY: [b], PREP: [c] }));
+    expect(queue.map((e) => e.card.orderNo)).toEqual([2, 1, 3]);
+    expect(queue.map((e) => e.column)).toEqual(["ONWAY", "PREP", "NEW"]);
+    expect(byRequestTime(queue[0], queue[1])).toBeLessThan(0);
+    expect(stageOfColumn("READY")).toBe("HAZIRLANIYOR");
+    expect(stageOfColumn("CONFIRM")).toBe("ALINDI");
+  });
+
+  it("Kuyruk shows every open order as one numbered list and keeps the step buttons", async () => {
+    const first = card({ orderNo: 5, createdAt: new Date(NOW - 20 * min), status: "HAZIR" });
+    const second = card({ orderNo: 6, createdAt: new Date(NOW - 4 * min) });
+    const b = boardOf({ NEW: [second], READY: [first] });
+    getBoard.mockResolvedValue({ ok: true, data: b });
+    render(ui(b, ALL));
+    fireEvent.click(screen.getByRole("button", { name: "Kuyruk" }));
+    expect(Array.from(document.querySelectorAll("[data-stage-id]")).map((n) => n.getAttribute("data-stage-id"))).toEqual(["KUYRUK"]);
+    const queue = within(document.querySelector('[data-stage-id="KUYRUK"]') as HTMLElement);
+    expect(queue.getAllByRole("heading", { level: 3 }).map((h) => h.textContent?.slice(0, 2))).toEqual(["#5", "#6"]);
+    expect(queue.getByLabelText("Kuyruk sırası 1")).toBeTruthy();
+    expect(queue.getByLabelText("Kuyruk sırası 2")).toBeTruthy();
+    fireEvent.click(queue.getByRole("button", { name: "Yola çıktı" }));
+    await waitFor(() => expect(onWay).toHaveBeenCalledWith({ orderId: first.id }));
+  });
+
+  it("remembers the chosen view on the device", async () => {
+    const { unmount } = render(ui(allBoard(), ALL));
+    fireEvent.click(screen.getByRole("button", { name: "Kuyruk" }));
+    expect(window.localStorage.getItem("merit.rs.view")).toBe("kuyruk");
+    unmount();
+    render(ui(allBoard(), ALL));
+    await waitFor(() => expect(document.querySelector('[data-stage-id="KUYRUK"]')).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Yan yana" }));
+    expect(document.querySelector('[data-stage-id="ALINDI"]')).toBeTruthy();
+  });
+});
+
+describe("RoomService staff board - notification window", () => {
+  const notices = () => within(screen.getByRole("region", { name: "Yeni talep bildirimleri" }));
+
+  it("orders already on the board are not announced; one that arrives later is", async () => {
+    const old = card({ orderNo: 10 });
+    render(ui(boardOf({ NEW: [old] }), ALL));
+    expect(notices().queryByRole("button", { name: "Göster" })).toBeNull();
+    const fresh = card({ orderNo: 11, roomNumber: "512", items: [{ name: "Çay", qty: 2 }, { name: "Kek", qty: 1 }] });
+    getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [old, fresh] }) });
+    act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
+    expect(await notices().findByText("Yeni oda servisi talebi · Oda 512")).toBeTruthy();
+    expect(notices().getByText(/^#11 · 3 ürün · /)).toBeTruthy();
+    expect(notices().getAllByRole("button", { name: "Göster" })).toHaveLength(1);
+  });
+
+  it("Kapat removes the notice; Göster removes it and highlights the card", async () => {
+    render(ui(boardOf({}), ALL));
+    const a = card({ orderNo: 21 });
+    const b = card({ orderNo: 22 });
+    getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [a, b] }) });
+    act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
+    await waitFor(() => expect(notices().getAllByRole("button", { name: "Kapat" })).toHaveLength(2));
+    fireEvent.click(notices().getAllByRole("button", { name: "Kapat" })[0]);
+    expect(notices().getAllByRole("button", { name: "Göster" })).toHaveLength(1);
+    fireEvent.click(notices().getByRole("button", { name: "Göster" }));
+    expect(notices().queryByRole("button", { name: "Göster" })).toBeNull();
+    expect(document.querySelector(`[data-order-id="${b.id}"]`)?.className).toContain("outline-accent");
+    expect(document.querySelector(`[data-order-id="${a.id}"]`)?.className).not.toContain("outline-accent");
+  });
+
+  it("a notice disappears by itself once the request is handled", async () => {
+    render(ui(boardOf({}), ALL));
+    const a = card({ orderNo: 31 });
+    getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [a] }) });
+    act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
+    await notices().findByRole("button", { name: "Göster" });
+    getBoard.mockResolvedValue({ ok: true, data: boardOf({ PREP: [{ ...a, status: "ONAYLANDI" }] }) });
+    act(() => sseHandler?.({ type: "order.approved", outletId: "out1", at: "" }));
+    await waitFor(() => expect(notices().queryByRole("button", { name: "Göster" })).toBeNull());
+  });
+
+  it("the delivery tab announces no new requests", async () => {
+    render(ui(boardOf({}), ALL, "teslim"));
+    getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [card()] }) });
+    act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
+    await waitFor(() => expect(getBoard).toHaveBeenCalled());
+    expect(notices().queryByRole("button", { name: "Göster" })).toBeNull();
+  });
+});
+
+describe("RoomService staff board - MyBar panel", () => {
+  it("is absent without the MyBar permission and on the other tabs", () => {
+    const { unmount } = render(ui(allBoard(), ALL));
+    expect(document.querySelector('[data-stage-id="MYBAR"]')).toBeNull();
+    unmount();
+    render(ui(allBoard(), ALL, "teslim", true));
+    expect(document.querySelector('[data-stage-id="MYBAR"]')).toBeNull();
+    expect(listMybar).not.toHaveBeenCalled();
+  });
+
+  it("lists the pending requests read-only, oldest first", async () => {
+    listMybar.mockResolvedValue(
+      mybarPage([mybarRow({ id: "m2", roomNumber: "410", createdAt: new Date(NOW - min) }), mybarRow({ seenAt: new Date(NOW), seenByName: "Ayşe" })]),
+    );
+    render(ui(allBoard(), ALL, "tumu", true));
+    const panel = within(document.querySelector('[data-stage-id="MYBAR"]') as HTMLElement);
+    expect(await panel.findByText("Oda 305")).toBeTruthy();
+    expect(listMybar).toHaveBeenCalledWith({ view: "management", status: "BEKLEMEDE", page: 1, pageSize: 50 });
+    expect(Array.from(document.querySelectorAll("[data-mybar-id]")).map((n) => n.getAttribute("data-mybar-id"))).toEqual(["m1", "m2"]);
+    expect(panel.getByText("Görüldü · Ayşe")).toBeTruthy();
+    expect(panel.getByText("Kat ekibi henüz görmedi")).toBeTruthy();
+    expect(panel.queryByRole("button")).toBeNull();
+  });
+
+  it("a new MyBar request plays its own sound and opens a notice; the first load does not", async () => {
+    listMybar.mockResolvedValue(mybarPage([mybarRow()]));
+    render(ui(boardOf({}), ALL, "tumu", true));
+    await screen.findByText("Oda 305");
+    const region = within(screen.getByRole("region", { name: "Yeni talep bildirimleri" }));
+    expect(region.queryByRole("button", { name: "Göster" })).toBeNull();
+    listMybar.mockResolvedValue(mybarPage([mybarRow(), mybarRow({ id: "m9", roomNumber: "777" })]));
+    playCall.mockClear();
+    act(() => sseHandler?.({ type: "mybar.created", hotelId: "h1", at: "" }));
+    expect(await region.findByText("Yeni MyBar talebi · Oda 777")).toBeTruthy();
+    // the sound mock returns `playCall` for every name but new-order / ready
+    expect(playCall).toHaveBeenCalledTimes(1);
+    fireEvent.click(region.getByRole("button", { name: "Göster" }));
+    expect(document.querySelector('[data-mybar-id="m9"]')?.className).toContain("outline-accent");
+  });
+
+  it("shows the load error instead of an empty list", async () => {
+    listMybar.mockResolvedValue({ ok: false, error: { message: "Yetkiniz yok" } });
+    render(ui(boardOf({}), ALL, "tumu", true));
+    expect(await screen.findByText("Yetkiniz yok")).toBeTruthy();
   });
 });
 
@@ -408,6 +595,7 @@ describe("/oda-servisi server page gates", () => {
     ctxOf({ "RO-TAL:V": true, "RO-TAL:D": true, "RO-TES:D": true, "RO-TES:A": true });
     const el = (await renderOdaServisi(Promise.resolve({}))) as { props: { flags: RoomOpsFlags; tab: string; outletId: string } };
     expect(el.props.flags).toEqual({ talepD: true, teyitD: false, teslimD: true, teslimA: true, talepA: false });
+    expect((el.props as { showMybar?: boolean }).showMybar).toBe(false);
     expect(el.props.tab).toBe("tumu");
     expect(el.props.outletId).toBe("out1");
   });
@@ -423,6 +611,12 @@ describe("/oda-servisi server page gates", () => {
     await expect(renderOdaServisi(Promise.resolve({ sekme: "teslim" }))).rejects.toThrow("RO-TES");
     ctxOf({ "RO-TEL:V": true });
     await expect(renderOdaServisi(Promise.resolve({}))).rejects.toThrow("NEXT_REDIRECT:/yetkisiz?ekran=RO-TAL");
+  });
+
+  it("the MyBar panel follows MB-PERS V", async () => {
+    ctxOf({ "RO-TAL:V": true, "MB-PERS:V": true });
+    const el = (await renderOdaServisi(Promise.resolve({}))) as { props: { showMybar: boolean } };
+    expect(el.props.showMybar).toBe(true);
   });
 
   it("allows ?sekme=teyit with RO-TEL V (no RO-TAL V needed for the gate)", async () => {

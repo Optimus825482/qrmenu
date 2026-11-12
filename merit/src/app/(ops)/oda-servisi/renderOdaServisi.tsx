@@ -28,13 +28,15 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
   const hotelId = ctx.session.hotelId;
   if (!hotelId) redirect("/secim");
 
-  const [viewOk, talepD, teyitD, teslimD, teslimA, talepA] = await Promise.all([
+  const [viewOk, talepD, teyitD, teslimD, teslimA, talepA, mybarV] = await Promise.all([
     can(ctx, TAB_SCREEN[tab], "V", hotelId),
     can(ctx, "RO-TAL", "D", hotelId),
     can(ctx, "RO-TEL", "D", hotelId),
     can(ctx, "RO-TES", "D", hotelId),
     can(ctx, "RO-TES", "A", hotelId),
     can(ctx, "RO-TAL", "A", hotelId),
+    // The read-only MyBar panel of the full board follows the MyBar screen itself.
+    can(ctx, "MB-PERS", "V", hotelId),
   ]);
   if (!viewOk) denyScreen(TAB_SCREEN[tab]);
 
@@ -61,6 +63,7 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
       initialBoard={initial}
       loadError={loadError}
       flags={{ talepD, teyitD, teslimD, teslimA, talepA }}
+      showMybar={mybarV}
     />
   );
 }
