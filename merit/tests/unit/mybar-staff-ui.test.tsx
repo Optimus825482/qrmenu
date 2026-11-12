@@ -248,7 +248,7 @@ describe("Karşılama ve kapatma", () => {
     const su = screen.getByTestId("fulfill-line-su");
     expect(su.querySelector("output")?.textContent).toBe("2");
     const kola = screen.getByTestId("fulfill-line-kola");
-    expect(within(kola).getByText("Havuzda yok")).toBeTruthy();
+    expect(within(kola).getByText("Depoda yok")).toBeTruthy();
     expect((within(kola).getByRole("button", { name: "Kola artır" }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(within(su).getByRole("button", { name: "Su azalt" }));
     fireEvent.click(screen.getByRole("button", { name: "Seçilenleri Ekle" }));

@@ -47,9 +47,9 @@ describe("buildNav — kat sorumlusu", () => {
 });
 
 describe("buildNav — depo", () => {
-  it("R-DEP tüm ekranlarla: Havuz · Talepler · Raporlar · Daha", () => {
+  it("R-DEP tüm ekranlarla: Otel deposu · Talepler · Raporlar · Daha", () => {
     const nav = buildNav("R-DEP", ALL);
-    expect(labels(nav.primary)).toEqual(["Havuz", "Talepler", "Raporlar", "Daha"]);
+    expect(labels(nav.primary)).toEqual(["Otel deposu", "Talepler", "Raporlar", "Daha"]);
     expect(nav.primary[0].href).toBe("/depo/stok");
     expect(nav.primary[1].href).toBe("/kat/duzeltme-onay");
   });
@@ -57,13 +57,13 @@ describe("buildNav — depo", () => {
   it("ikinci otelde MB-ZIM yoksa Havuz çıkmaz; more yalnız görünür ekranları içerir", () => {
     const visible = without("MB-ZIM");
     const nav = buildNav("R-DEP", visible);
-    expect(labels(nav.primary)).not.toContain("Havuz");
-    expect(labels(nav.more)).not.toContain("Havuz");
+    expect(labels(nav.primary)).not.toContain("Otel deposu");
+    expect(labels(nav.more)).not.toContain("Otel deposu");
     for (const item of allItems(nav)) expect(visible.has(item.screen)).toBe(true);
   });
 
   it("R-HKS aynı depo gezinmesini kullanır", () => {
-    expect(labels(buildNav("R-HKS", ALL).primary)).toEqual(["Havuz", "Talepler", "Raporlar", "Daha"]);
+    expect(labels(buildNav("R-HKS", ALL).primary)).toEqual(["Otel deposu", "Talepler", "Raporlar", "Daha"]);
   });
 });
 

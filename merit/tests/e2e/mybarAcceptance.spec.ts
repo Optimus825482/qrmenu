@@ -122,7 +122,7 @@ test("eksik ürünle kapatma: havuzda olmayan ürün karşılanmaz, açıklamayl
     await page.getByRole("alertdialog").getByRole("button", { name: "Gördüm" }).click();
     const row = page.getByTestId("mybar-row").filter({ hasText: "101" });
     await row.getByRole("button", { expanded: false }).click();
-    await expect(page.getByText("Havuzda yok")).toBeVisible();
+    await expect(page.getByText("Depoda yok")).toBeVisible();
     await page.getByRole("button", { name: "Seçilenleri Ekle" }).click();
     await expect(page.getByTestId("fulfill-line-" + (await productId("Kola")))).toContainText("Kalan 2");
 

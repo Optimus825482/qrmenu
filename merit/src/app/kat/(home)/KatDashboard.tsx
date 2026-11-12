@@ -372,7 +372,7 @@ function CriticalStock({ count }: { count: number }) {
       <div className="flex items-center gap-2.5">
         <Icon name="warning" size={20} className="text-warn" />
         <span>
-          Otel havuz stoğunda <strong>{count} ürün</strong> kritik seviyenin altında!
+          Otel deposunda <strong>{count} ürün</strong> kritik seviyenin altında!
         </span>
       </div>
       <Link

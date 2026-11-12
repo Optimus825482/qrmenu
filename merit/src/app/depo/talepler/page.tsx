@@ -118,7 +118,7 @@ export default function DepoTaleplerPage() {
               <tr>
                 <th align="left">Ürün</th>
                 <th>İstenen</th>
-                <th>Havuzda</th>
+                <th>Depoda</th>
                 <th>Aciliyet</th>
                 {r.status === "ONAYLANDI" && <th>Onaylanan / teslim edilen</th>}
                 <th>{r.status === "ONAYLANDI" ? "Şimdi teslim" : r.status === "BEKLEMEDE" ? "Onay" : "Onaylanan / Teslim"}</th>

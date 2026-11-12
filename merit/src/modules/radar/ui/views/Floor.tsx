@@ -248,8 +248,8 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
           )}
         </section>
 
-        <section className="rd-panel" aria-label="Havuz stoku">
-          <h3>Havuz stoku</h3>
+        <section className="rd-panel" aria-label="Otel deposu stoku">
+          <h3>Otel deposu stoku</h3>
           {near.length === 0 ? (
             <p className="rd-muted">Kritik ürün yok.</p>
           ) : (

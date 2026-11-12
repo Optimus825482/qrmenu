@@ -31,8 +31,8 @@ const paramsSchema = z.object({
 export const zimmetHareket = defineReport({
   key: "zimmet-hareket",
   group: "MINIBAR",
-  title: "Zimmet Hareketleri",
-  description: "Otel havuzundaki giriş, kullanım, MyBar, iade ve düzeltme hareketleri (işaretli adet)",
+  title: "Otel Deposu Hareketleri",
+  description: "Otel deposundaki giriş, kullanım, MyBar, iade ve düzeltme hareketleri (işaretli adet)",
   moduleKey: "MINIBAR",
   screenCode: "MB-RAP",
   dateMode: "range",

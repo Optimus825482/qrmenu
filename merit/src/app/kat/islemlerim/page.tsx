@@ -59,7 +59,7 @@ export default function KatIslemlerimPage() {
 
     const ok = await confirm({
       title: `Oda ${tx.roomNumber} kontrol kaydı silinsin mi?`,
-      message: "Eklenen ürünler otel havuz stoğuna geri iade edilecektir.",
+      message: "Eklenen ürünler otel deposuna geri eklenecektir.",
       confirmLabel: "Sil",
       cancelLabel: "Vazgeç",
       danger: true,

@@ -205,7 +205,7 @@ export async function exportStockXlsx(
 ): Promise<{ fileName: string; data: Buffer }> {
   const { rows } = await myStock(ctx);
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet("Zimmet Stokları");
+  const ws = wb.addWorksheet("Otel Deposu Stokları");
   ws.columns = [
     { header: "Ürün", key: "name", width: 32 },
     { header: "Grup", key: "group", width: 22 },
@@ -228,5 +228,5 @@ export async function exportStockXlsx(
     });
   }
   const data = Buffer.from(await wb.xlsx.writeBuffer());
-  return { fileName: `zimmet_stoklari_${formatInTimeZone(now, TZ, "yyyyMMdd_HHmmss")}.xlsx`, data };
+  return { fileName: `otel_deposu_stoklari_${formatInTimeZone(now, TZ, "yyyyMMdd_HHmmss")}.xlsx`, data };
 }

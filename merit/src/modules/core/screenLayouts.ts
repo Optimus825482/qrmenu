@@ -70,7 +70,7 @@ export const SCREEN_LAYOUT_DEFS: { [K in LayoutScreenKey]: ScreenLayoutDef } = {
       {
         id: "kritikStok",
         label: "Kritik stok uyarısı",
-        description: "Havuz stoğunda kritik seviyenin altına düşen ürün varsa görünen uyarı bandı.",
+        description: "Otel deposunda kritik seviyenin altına düşen ürün varsa görünen uyarı bandı.",
         sketch: "banner",
       },
       {

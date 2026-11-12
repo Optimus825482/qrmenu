@@ -39,7 +39,7 @@ const MODULE_OPTIONS = [
   {
     id: "DEPO" as const,
     title: "Depo & Stok Hareketleri",
-    desc: "Giriş/çıkış, konsinye zimmet ve kritik stok hareketleri",
+    desc: "Giriş/çıkış, otel deposu ve kritik stok hareketleri",
     icon: "otel",
     color: "from-info to-brand",
   },

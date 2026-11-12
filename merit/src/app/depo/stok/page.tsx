@@ -18,8 +18,37 @@ interface DepoStockItem {
   minLevel: number;
   /** false: deactivated product the hotel still holds. */
   productActive?: boolean;
+  /** Opening quantity booked when stock tracking started; null when the product has none. */
+  openingQty?: number | null;
   lastUpdated: string;
 }
+
+interface ExpiryItem {
+  id: string;
+  productName: string;
+  groupName: string;
+  expiryDate: string;
+  daysLeft: number;
+  qty: number;
+  remainingQty: number;
+  status: "GECTI" | "YAKIN" | "NORMAL";
+  receiptCode: string | null;
+}
+
+interface OpeningWindow {
+  editableUntil: string;
+  open: boolean;
+  canEdit: boolean;
+}
+
+const RULE_NOTE_KEY = "merit.depo.stok.kuralNotuGizli";
+
+const EXPIRY_TONE: Record<ExpiryItem["status"], string> = {
+  GECTI: "border-danger bg-[var(--danger-bg)] text-danger",
+  YAKIN: "border-warn bg-[var(--warn-bg)] text-warn",
+  NORMAL: "border-success bg-[var(--success-bg)] text-success",
+};
+const EXPIRY_LABEL: Record<ExpiryItem["status"], string> = { GECTI: "SKT geçti", YAKIN: "SKT yakın", NORMAL: "Normal" };
 
 interface StockMovementItem {
   id: string;
@@ -58,7 +87,31 @@ export default function DepoStokPage() {
   const [stockItems, setStockItems] = useState<DepoStockItem[]>([]);
   const [movements, setMovements] = useState<StockMovementItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"STOCK" | "MOVEMENTS">("STOCK");
+  const [activeTab, setActiveTab] = useState<"STOCK" | "SKT" | "MOVEMENTS">("STOCK");
+  const [expiry, setExpiry] = useState<ExpiryItem[]>([]);
+  const [canManage, setCanManage] = useState(false);
+  const [opening, setOpening] = useState<OpeningWindow | null>(null);
+  const [openingProduct, setOpeningProduct] = useState<DepoStockItem | null>(null);
+  // "Bir daha gösterme" on the rule note: remembered on this device.
+  const [ruleHidden, setRuleHidden] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        setRuleHidden(window.localStorage.getItem(RULE_NOTE_KEY) === "1");
+      } catch {
+        setRuleHidden(false);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+  const hideRule = () => {
+    setRuleHidden(true);
+    try {
+      window.localStorage.setItem(RULE_NOTE_KEY, "1");
+    } catch {
+      // Storage blocked: the note stays hidden until the page is reloaded.
+    }
+  };
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [selectedProduct, setSelectedProduct] = useState<DepoStockItem | null>(null);
@@ -92,12 +145,12 @@ export default function DepoStokPage() {
       if (!res.ok) {
         throw new Error(
           res.status === 403
-            ? "Zimmet havuzunu görme yetkiniz yok."
+            ? "Otel deposunu görme yetkiniz yok."
             : data.error || "Stok bilgileri alınamadı.",
         );
       }
       if (deniedHotel) {
-        setErrorMsg("Seçilen otelin zimmet havuzunu görme yetkiniz yok; kendi otelinizin havuzu gösteriliyor.");
+        setErrorMsg("Seçilen otelin deposunu görme yetkiniz yok; kendi otelinizin deposu gösteriliyor.");
       }
       setStockItems(data.stockItems || []);
       setMovements((prev) => (page > 1 ? [...prev, ...(data.movements || [])] : data.movements || []));
@@ -105,6 +158,9 @@ export default function DepoStokPage() {
       setMovementsPage(page);
       setHotels(data.hotels || []);
       setCanCount(data.canCount === true);
+      setCanManage(data.canManage === true);
+      setExpiry(data.expiry || []);
+      setOpening(data.opening ?? null);
       if (data.selectedHotelId) setSelectedHotelId(data.selectedHotelId);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Bağlantı hatası.");
@@ -148,9 +204,9 @@ export default function DepoStokPage() {
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-xl font-bold">
             <Icon name="box" size={24} />
-            Zimmet havuzu
+            Otel deposu
           </h1>
-          <p className="text-sm text-muted">Depo sorumlusu zimmet takibi, otel bazlı ortak havuz</p>
+          <p className="text-sm text-muted">Minibar stok takibi: otelin deposundaki ürünler, SKT ve hareketler</p>
         </div>
         {hotels.length > 0 ? (
           <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 shadow-sm">
@@ -179,6 +235,12 @@ export default function DepoStokPage() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {canManage ? (
+          <Link href="/depo/tedarik" className={LINK_BUTTON}>
+            <Icon name="plus" size={20} />
+            Merkez depo tedarik
+          </Link>
+        ) : null}
         <Link href="/depo/doluluk-yukle" className={LINK_BUTTON}>
           <Icon name="chart" size={20} />
           Doluluk girişi
@@ -193,13 +255,34 @@ export default function DepoStokPage() {
         </Link>
       </div>
 
-      <div className="flex items-start gap-3 rounded-[var(--radius-l)] border border-success bg-[var(--success-bg)] p-4 text-sm text-text">
-        <Icon name="info" size={24} />
-        <p>
-          <strong>Otel bazlı ortak zimmet kuralı:</strong> Bu ekrandan otele tanımlanan zimmet stoğu (örneğin 100 Kola), o oteldeki tüm kat
-          görevlilerinin ortak havuzudur. Kat görevlisi minibar dolumu yaptıkça havuzdan otomatik düşer.
-        </p>
-      </div>
+      {ruleHidden ? null : (
+        <div className="flex items-start gap-3 rounded-[var(--radius-l)] border border-success bg-[var(--success-bg)] p-4 text-sm text-text">
+          <Icon name="info" size={24} />
+          <div className="min-w-0 flex-1 space-y-2">
+            <p>
+              <strong>Otel deposu kuralı:</strong> Merkez depodan alınan ürünler doğrudan otel depolarına dağıtılır; kişiye stok
+              atanmaz. Oda kontrolünde tamamlanan her ürün, odanın bulunduğu otelin deposundan otomatik düşer.
+            </p>
+            <label className="inline-flex min-h-[var(--tap-min)] cursor-pointer items-center gap-2 font-semibold">
+              <input type="checkbox" className="h-5 w-5" onChange={(e) => e.target.checked && hideRule()} />
+              Bir daha gösterme
+            </label>
+          </div>
+        </div>
+      )}
+
+      {opening?.open ? (
+        <div className="flex items-start gap-3 rounded-[var(--radius-l)] border border-info bg-[var(--info-bg)] p-4 text-sm text-text">
+          <Icon name="info" size={24} />
+          <p>
+            <strong>Başlangıç stoğu:</strong> Her ürün 1000 adetle açıldı.{" "}
+            {opening.canEdit
+              ? "Gerçek miktarı ürün satırındaki “Başlangıç stoğu” düğmesinden düzeltebilirsiniz."
+              : "Düzeltmeyi minibar operasyonları sistem sorumlusu yapar."}{" "}
+            Son gün: {new Date(opening.editableUntil).toLocaleString("tr-TR", { dateStyle: "long", timeStyle: "short" })}.
+          </p>
+        </div>
+      ) : null}
 
       {errorMsg ? (
         <div role="alert" className="rounded-[var(--radius-l)] border border-danger bg-[var(--danger-bg)] p-4 text-sm text-danger">
@@ -209,11 +292,12 @@ export default function DepoStokPage() {
 
       <div data-guide="hareketler" className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
         <Segmented
-          label="Havuz bölümleri"
+          label="Depo bölümleri"
           value={activeTab}
           onChange={setActiveTab}
           options={[
             { value: "STOCK", label: `Mevcut stok (${filteredItems.length})`, icon: <Icon name="box" size={20} /> },
+            { value: "SKT", label: `SKT takibi (${expiry.length})`, icon: <Icon name="warning" size={20} /> },
             { value: "MOVEMENTS", label: `Hareket geçmişi (${movementsTotal})`, icon: <Icon name="list" size={20} /> },
           ]}
         />
@@ -242,7 +326,7 @@ export default function DepoStokPage() {
                   <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
                     <th scope="col" className="px-4 py-3">Ürün adı</th>
                     <th scope="col" className="px-4 py-3">Kategori</th>
-                    <th scope="col" className="px-4 py-3 text-center">Mevcut havuz stoğu</th>
+                    <th scope="col" className="px-4 py-3 text-center">Depodaki miktar</th>
                     <th scope="col" data-guide="kritik-seviye" className="px-4 py-3 text-center">Kritik seviye</th>
                     <th scope="col" className="px-4 py-3 text-right">İşlemler</th>
                   </tr>
@@ -276,9 +360,16 @@ export default function DepoStokPage() {
                         <td className="px-4 py-3 text-center font-mono text-muted">{item.minLevel} adet</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-2">
-                            <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
-                              Zimmet ekle
-                            </Button>
+                            {canManage ? (
+                              <Button mutates variant="primary" data-guide={itemIdx === 0 ? "havuz-giris" : undefined} icon={<Icon name="plus" size={20} />} onClick={() => openAdjustModal(item, "GIRIS")}>
+                                Stok ekle
+                              </Button>
+                            ) : null}
+                            {opening?.canEdit && item.openingQty != null ? (
+                              <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => setOpeningProduct(item)}>
+                                Başlangıç stoğu ({item.openingQty})
+                              </Button>
+                            ) : null}
                             {canCount ? (
                               <Button mutates icon={<Icon name="settings" size={20} />} onClick={() => openAdjustModal(item, "DUZELTME")}>
                                 Sayım düzeltme
@@ -289,6 +380,46 @@ export default function DepoStokPage() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : activeTab === "SKT" ? (
+        <div className="overflow-hidden rounded-[var(--radius-l)] border border-border bg-surface">
+          {expiry.length === 0 ? (
+            <p className="px-4 py-12 text-center text-muted">
+              Bu otelin deposunda son kullanma tarihi kayıtlı ürün yok. SKT, merkez depo tedarik kaydı girilirken yazılır.
+            </p>
+          ) : (
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="SKT takip tablosu">
+              <table className="w-full border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-[var(--muted-bg)] font-semibold text-muted">
+                    <th scope="col" className="px-4 py-3">Ürün</th>
+                    <th scope="col" className="px-4 py-3">SKT</th>
+                    <th scope="col" className="px-4 py-3 text-center">Durum</th>
+                    <th scope="col" className="px-4 py-3 text-center">Kalan / gelen</th>
+                    <th scope="col" className="px-4 py-3">Tedarik</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {expiry.map((lot) => (
+                    <tr key={lot.id}>
+                      <td className="px-4 py-3 font-bold">{lot.productName}</td>
+                      <td className="px-4 py-3 font-mono">{lot.expiryDate.split("-").reverse().join(".")}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-block rounded border px-2 py-1 text-[13px] font-bold ${EXPIRY_TONE[lot.status]}`}>
+                          {EXPIRY_LABEL[lot.status]} ·{" "}
+                          {lot.daysLeft < 0 ? `${-lot.daysLeft} gün önce` : lot.daysLeft === 0 ? "bugün" : `${lot.daysLeft} gün kaldı`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center font-bold">
+                        {lot.remainingQty} / {lot.qty} adet
+                      </td>
+                      <td className="px-4 py-3 font-mono text-muted">{lot.receiptCode ?? "-"}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -345,6 +476,19 @@ export default function DepoStokPage() {
           ) : null}
         </div>
       )}
+
+      {openingProduct ? (
+        <OpeningDialog
+          key={openingProduct.productId}
+          product={openingProduct}
+          hotelId={selectedHotelId}
+          onClose={() => setOpeningProduct(null)}
+          onSaved={() => {
+            setOpeningProduct(null);
+            void loadData(selectedHotelId);
+          }}
+        />
+      ) : null}
 
       {selectedProduct ? (
         <AdjustDialog
@@ -429,7 +573,7 @@ function AdjustDialog({
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <h2 id={titleId} className="text-lg font-bold">
-            {isCount ? "Sayım düzeltme" : "Zimmet stoğu ekle"}
+            {isCount ? "Sayım düzeltme" : "Otel deposuna stok ekle"}
           </h2>
           <button
             type="button"
@@ -446,7 +590,7 @@ function AdjustDialog({
             <span className="text-sm text-muted">Seçilen ürün</span>
             <p className="text-base font-bold">{product.productName}</p>
             <p className="text-sm text-muted">
-              Mevcut havuz stoğu: <span className="font-bold text-text">{product.quantity} adet</span>
+              Depodaki miktar: <span className="font-bold text-text">{product.quantity} adet</span>
             </p>
           </div>
 
@@ -513,6 +657,109 @@ function AdjustDialog({
             </Button>
             <Button mutates variant="primary" type="submit" disabled={busy || (isCount ? diff === 0 || qty < 0 || !reasonOk : qty <= 0)}>
               {busy ? "Kaydediliyor..." : isCount ? "Sayımı kaydet" : "Onayla ve stoğu güncelle"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/** Corrects the opening quantity (1000) of one product during the first week. */
+function OpeningDialog({
+  product,
+  hotelId,
+  onClose,
+  onSaved,
+}: {
+  product: DepoStockItem;
+  hotelId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const titleId = useId();
+  const qtyId = useId();
+  const boxRef = useRef<HTMLDivElement>(null);
+  const qtyRef = useRef<HTMLInputElement>(null);
+  const previous = product.openingQty ?? 0;
+  const [qty, setQty] = useState<number>(previous);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const diff = qty - previous;
+
+  useDialogFocus(boxRef, onClose, () => qtyRef.current);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      setBusy(true);
+      setError(null);
+      const res = await fetch("/api/minibar/stock/opening", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formHotelId: hotelId, productId: product.productId, qty }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Başlangıç stoğu güncellenemedi.");
+      onSaved();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "İşlem sırasında hata oluştu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <div
+        ref={boxRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="max-h-dvh w-full max-w-md space-y-4 overflow-y-auto rounded-t-[var(--radius-l)] border border-border bg-surface p-5 sm:rounded-[var(--radius-l)]"
+      >
+        <h2 id={titleId} className="border-b border-border pb-3 text-lg font-bold">
+          Başlangıç stoğunu düzelt
+        </h2>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="space-y-1 rounded-[var(--radius-m)] border border-border bg-[var(--muted-bg)] p-3">
+            <p className="text-base font-bold">{product.productName}</p>
+            <p className="text-sm text-muted">
+              Kayıtlı başlangıç: <span className="font-bold text-text">{previous} adet</span> · depoda şu an{" "}
+              <span className="font-bold text-text">{product.quantity} adet</span>
+            </p>
+          </div>
+          <div>
+            <label htmlFor={qtyId} className="mb-1 block text-sm font-semibold">
+              Gerçek başlangıç miktarı (adet)
+            </label>
+            <input
+              ref={qtyRef}
+              id={qtyId}
+              type="number"
+              min={0}
+              max={100000}
+              value={qty}
+              onChange={(e) => setQty(parseInt(e.target.value, 10) || 0)}
+              className={`${FIELD} font-bold`}
+              required
+            />
+            <p className="mt-2 text-sm text-muted" aria-live="polite">
+              Depodaki miktar {diff > 0 ? `+${diff}` : diff} adet değişir; yeni miktar{" "}
+              <span className="font-bold text-text">{product.quantity + diff} adet</span>.
+            </p>
+          </div>
+          {error ? (
+            <p role="alert" className="text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+            <Button onClick={onClose} disabled={busy}>
+              Vazgeç
+            </Button>
+            <Button mutates variant="primary" type="submit" disabled={busy || diff === 0 || qty < 0 || product.quantity + diff < 0}>
+              {busy ? "Kaydediliyor..." : "Kaydet"}
             </Button>
           </div>
         </form>

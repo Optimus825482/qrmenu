@@ -34,7 +34,7 @@ const FORMAT_BADGE: Record<string, { label: string; color: string }> = {
 const STANDARD_REPORT_OPTIONS = [
   { key: "minibar.tuketim", title: "Minibar Tüketim Raporu" },
   { key: "minibar.gunSonu", title: "Minibar Gün Sonu Özeti" },
-  { key: "minibar.zimmetDurum", title: "Personel Zimmet Durumu" },
+  { key: "minibar.zimmetDurum", title: "Otel Deposu Stok Durumu" },
   { key: "minibar.gorevPerformans", title: "Kat Görevlisi Performansı" },
   { key: "minibar.dnd", title: "DND (Rahatsız Etmeyin) Analizi" },
   { key: "menu.siparisOzet", title: "Outlet Sipariş Özeti" },

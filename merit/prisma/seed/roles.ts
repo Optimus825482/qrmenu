@@ -134,7 +134,7 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
     match: { exceptCodes: P5_APPROVERS },
     keep: { "QS-KUY": ["V", "O", "D", "R"], "QS-IPT": ["V", "O", "D", "R"] },
   },
-  // P2: definitions and pool (Zimmet Havuzu).
+  // P2: definitions and hotel warehouse stock (Otel Deposu).
   { plan: "P2", match: { codes: ["R-OTM"] }, keep: { "MB-TAN": ["V", "O", "D"], "MB-ZIM": ["V"] } },
   // D2 (10 Kas 2026): the warehouse corrects counts on the pool (MB-ZIM A); see pool.countPool.
   { plan: "P2", match: { codes: ["R-DEP"] }, keep: { "MB-TAN": ["V"], "MB-ZIM": ["V", "O", "D", "A"] } },
@@ -195,7 +195,8 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
       "MB-RAP": ["V", "R"],
       "MB-TAN": ["V"],
     },
-    grant: { "MB-DOL": ["O", "D"] },
+    // Otel deposu (12 Kas 2026): merkez depo teslimini otellere dağıtır, başlangıç stoğunu düzeltir (receipts.ts).
+    grant: { "MB-DOL": ["O", "D"], "MB-ZIM": ["O", "D"] },
   },
   // QR Menü Yöneticisi (varsayım: ürün sahibi ayrıntı vermedi): menü ağacı / çeviri / masa QR'ları (QM-MEN) ve
   // outlet tasarımı (QM-TEM) V,O,D; menü raporları V,R; garson çağrıları (QM-CAG) ve QR_ORDER yok.

@@ -46,7 +46,7 @@ export const ROUTE_MATRIX: RouteEntry[] = ([
   { key: "kat-mybar", path: "/kat/mybar", user: "kat.mr", tier: "personel", ready: /MyBar Talepleri/ },
   { key: "kat-dnd", path: "/kat/dnd", user: "kat.mr", tier: "personel", ready: /Rahatsız Etmeyin/ },
   { key: "depo-gorevler", path: "/depo/gorevler", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Günlük Görevler/ },
-  { key: "depo-stok", path: "/depo/stok", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Zimmet havuzu/ },
+  { key: "depo-stok", path: "/depo/stok", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Otel deposu/ },
   { key: "depo-tanimlar", path: "/depo/tanimlar", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Minibar & Sistem Tanımlamaları/ },
   { key: "depo-raporlar", path: "/depo/raporlar", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Detaylı Minibar/ },
   { key: "kat-duzeltme-onay", path: "/kat/duzeltme-onay", user: "depo.cok", outlet: /Minibar/, tier: "personel", ready: /Düzeltme Onayları/ },

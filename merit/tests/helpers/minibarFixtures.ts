@@ -9,7 +9,7 @@ const uniq = (p: string) => `${p}-${randomUUID().slice(0, 8)}`;
 /** Removes everything the minibar fixtures create (CASCADE also clears movements, checks, requests). */
 export async function resetMinibarData(): Promise<void> {
   await testDb.$executeRawUnsafe(
-    `TRUNCATE TABLE "daily_tasks", "guest_records", "occupancy_uploads", "upload_tasks", "room_dnds", "rooms", "floors", "room_types", "products", "product_groups", "setups", "email_logs", "notifications", "audit_logs" RESTART IDENTITY CASCADE`,
+    `TRUNCATE TABLE "stock_receipts", "daily_tasks", "guest_records", "occupancy_uploads", "upload_tasks", "room_dnds", "rooms", "floors", "room_types", "products", "product_groups", "setups", "email_logs", "notifications", "audit_logs" RESTART IDENTITY CASCADE`,
   );
   // No FK: radar OperationEvent rows (upload.missing) would otherwise leak between runs and tests.
   await testDb.operationEvent.deleteMany();

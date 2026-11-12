@@ -152,26 +152,26 @@ const LIST: ScreenGuide[] = [
   guide(
     "MB-ZIM",
     "personel",
-    "Zimmet havuzundaki ürün stokunu ve kritik seviyeleri izlersin.",
+    "Otel deposundaki ürün stokunu, SKT durumunu ve kritik seviyeleri izlersin.",
     [
-      ["havuz-listesi", "Havuz", "Otelin havuzundaki ürünler ve eldeki adetleri burada durur."],
+      ["havuz-listesi", "Otel deposu", "Otelin deposundaki ürünler ve eldeki adetleri burada durur."],
       ["kritik-seviye", "Kritik seviye", "Adet kritik seviyenin altına inince satır uyarı rengine döner."],
       ["hareketler", "Hareketler", "Her giriş ve çıkış kayıt altındadır; bir adet şüpheliyse hareketlere bak."],
-      ["havuz-giris", "Havuza giriş", "Teslim aldığın ürünü havuza giriş olarak kaydet; eldeki adet hemen güncellenir."],
+      ["havuz-giris", "Stok ekle", "Tek bir ürünü otel deposuna eklersin; merkez depodan gelenler Merkez Depo Tedarik ekranından girilir."],
     ],
     [
-      "Havuz yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.",
-      "Başka otelin havuzuna bakıyorsan üstteki otel seçimini kontrol et.",
+      "Otel deposu yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.",
+      "Başka otelin deposuna bakıyorsan üstteki otel seçimini kontrol et.",
     ],
     {
       actions: {
-        V: "Havuzdaki ürünleri ve eldeki adetleri görürsün.",
-        O: "Havuza yeni giriş yaparsın.",
+        V: "Otel deposundaki ürünleri ve eldeki adetleri görürsün.",
+        O: "Otel deposuna stok eklersin.",
         D: "Ürünün kritik seviyesini güncellersin.",
       },
       settings: ["stock.defaultCriticalLevel"],
       requires: { "havuz-giris": ["O"] },
-      mistakeRequires: { "Havuz yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.": ["O"] },
+      mistakeRequires: { "Otel deposu yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.": ["O"] },
     },
   ),
   guide(

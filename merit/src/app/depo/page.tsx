@@ -49,7 +49,7 @@ export default async function DepoHomePage() {
       href: "/depo/stok",
       show: seeStock,
       title: "Minibar Stok & Talepler",
-      subtitle: "Otel havuz stoğu, fatura alış ve zayi girişleri, bekleyen kat talepleri",
+      subtitle: "Otel deposu stoğu, SKT takibi ve bekleyen kat talepleri",
       badge:
         pano && pano.pendingRequests > 0
           ? `${pano.pendingRequests} bekleyen talep`

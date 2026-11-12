@@ -494,7 +494,7 @@ export default function OdaKontrolPage() {
                     const quickNumbers = Array.from({ length: buttonCap }, (_, i) => i + 1);
                     const poolShortReason =
                       item.poolRemaining < buttonCap
-                        ? "Havuzda yeterli stok yok"
+                        ? "Otel deposunda yeterli stok yok"
                         : item.allowedLeft === 0
                           ? "Günlük setup sınırı doldu"
                           : null;
@@ -539,7 +539,7 @@ export default function OdaKontrolPage() {
                               const overCap = item.allowedLeft < n;
                               const disabled = outOfPool || overCap || addingProductId === item.productId || submitting;
                               const reason = outOfPool
-                                ? "Havuzda yeterli stok yok"
+                                ? "Otel deposunda yeterli stok yok"
                                 : overCap
                                   ? "Günlük setup sınırı doldu"
                                   : undefined;

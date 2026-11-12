@@ -364,6 +364,7 @@ describe("doluluk yükleme ve havuz stok yayınları (G15, G16)", () => {
   it("occupancy.uploaded ve stock.changed + stock.critical yalnız eşik aşağı geçildiğinde (6->5 evet, 5->3 hayır, 3->9 sonra 9->4 evet)", async () => {
     const w = await minibarWorld({ stock: 6 });
     const dep = await staff("R-DEP", w.hotelCode);
+    const mgr = await staff("R-MTY");
     await pool.setCriticalLevel(dep.ctx, w.hotelId, { productId: w.cola.id, level: 5 });
     publishMock.mockClear();
 
@@ -396,7 +397,7 @@ describe("doluluk yükleme ve havuz stok yayınları (G15, G16)", () => {
 
     // 3) replenish 3 -> 9 (> 5), then 9 -> 4 (<= 5): stock.critical emitted again!
     publishMock.mockClear();
-    await pool.addToPool(dep.ctx, w.hotelId, { productId: w.cola.id, qty: 6 });
+    await pool.addToPool(mgr.ctx, w.hotelId, { productId: w.cola.id, qty: 6 });
     expect(sent("stock.critical")).toHaveLength(0);
 
     publishMock.mockClear();

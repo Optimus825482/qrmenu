@@ -15,7 +15,9 @@ import { STATUS_RANK, type StockStatus, stockStatus } from "../stockStatus";
 import { dayRange } from "./dates";
 
 /*
- * The single owner of the hotel consignment pool (HotelStock + HotelStockMovement).
+ * The single owner of the hotel warehouse stock ("otel deposu": HotelStock + HotelStockMovement + HotelStockLot).
+ * There is no personal custody and no second main warehouse: a delivery from the central warehouse goes
+ * straight into the hotels (receipts.ts) and room checks take from the stock of the room's hotel.
  *
  * Rules every mutation here obeys:
  *  - it runs inside ONE transaction and locks the HotelStock rows with SELECT ... FOR UPDATE, in
@@ -213,12 +215,55 @@ async function notifyIfCritical(
       recipients: { hotelId, roleCodes: ["R-DEP"] },
       type: "stock.critical",
       title: `Kritik stok · ${product?.name ?? s.productId}`,
-      body: `${hotel?.name ?? "Otel"} havuzunda ${s.remainingQty} adet kaldı (kritik seviye ${s.criticalLevel})`,
+      body: `${hotel?.name ?? "Otel"} deposunda ${s.remainingQty} adet kaldı (kritik seviye ${s.criticalLevel})`,
       refType: "HotelStock",
       refId: s.id,
     },
     tx,
   );
+}
+
+// ---------------------------------------------------------------- stock managers and dated lots
+
+/**
+ * Minibar operasyonları sistem sorumlusu: the roles that book deliveries from the central warehouse and may
+ * correct the opening stock (prisma/seed/roles.ts). Hotel warehouse staff (R-DEP) count and watch their own hotel.
+ */
+export const STOCK_MANAGER_ROLES: readonly string[] = ["R-SYS", "R-MTY"];
+
+export function isStockManager(ctx: Ctx): boolean {
+  return ctx.user.roleKind === "SISTEM" || STOCK_MANAGER_ROLES.includes(ctx.user.roleCode);
+}
+
+export function assertStockManager(ctx: Ctx): void {
+  if (!isStockManager(ctx)) {
+    throw new DomainError("FORBIDDEN", "Bu işlemi yalnızca minibar operasyonları sistem sorumlusu yapabilir");
+  }
+}
+
+/**
+ * Keeps the dated lots of a product inside its balance after a decrease. Stock without a date is the oldest
+ * (it was there before any dated delivery), so it is used first; only what no longer fits in `remainingQty`
+ * comes off the lots, the earliest SKT first. Call under the row lock with the new balance.
+ */
+export async function trimLots(
+  tx: Prisma.TransactionClient,
+  hotelId: string,
+  productId: string,
+  remainingQty: number,
+): Promise<void> {
+  const lots = await tx.hotelStockLot.findMany({
+    where: { hotelId, productId, remainingQty: { gt: 0 } },
+    orderBy: [{ expiryDate: "asc" }, { createdAt: "asc" }],
+    select: { id: true, remainingQty: true },
+  });
+  let excess = lots.reduce((sum, lot) => sum + lot.remainingQty, 0) - Math.max(remainingQty, 0);
+  for (const lot of lots) {
+    if (excess <= 0) break;
+    const take = Math.min(excess, lot.remainingQty);
+    await tx.hotelStockLot.update({ where: { id: lot.id }, data: { remainingQty: { decrement: take } } });
+    excess -= take;
+  }
 }
 
 // ---------------------------------------------------------------- transaction primitives
@@ -278,6 +323,7 @@ async function takeLines(
         note: base.note,
       },
     });
+    await trimLots(tx, base.hotelId, line.productId, remainingQty);
     await announce(tx, base.hotelId, { productId: line.productId, remainingQty, criticalLevel: s.criticalLevel }, -line.qty, base.type);
     await notifyIfCritical(
       tx,
@@ -466,13 +512,14 @@ function toRow(
   };
 }
 
-/** Warehouse receipt into the pool (MB-ZIM O). */
+/** One product added to one hotel by hand (MB-ZIM O, stock managers only); deliveries go through receipts.ts. */
 export async function addToPool(
   ctx: Ctx,
   hotelId: string,
   raw: { productId: string; qty: number; note?: string },
 ): Promise<StockRow> {
   const input = parse(receiveSchema, raw);
+  assertStockManager(ctx);
   return withAdminTx(ctx, { screen: SCREEN, action: "O", hotelId }, async (tx) => {
     await assertProduct(tx, input.productId);
     const before = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId);
@@ -481,7 +528,7 @@ export async function addToPool(
       productId: input.productId,
       qty: input.qty,
       userId: ctx.user.id,
-      note: input.note || "Depo sorumlusu zimmet girişi",
+      note: input.note || "Otel deposuna stok girişi",
     });
     const row = await rowOf(tx, hotelId, input.productId);
     await audit(tx, {
@@ -508,7 +555,7 @@ export async function returnFromPool(
     await assertProduct(tx, input.productId);
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId);
     const have = s?.remainingQty ?? 0;
-    if (!s || input.qty > have) throw insufficient(have, (n) => `Havuzda yalnız ${n} adet var`);
+    if (!s || input.qty > have) throw insufficient(have, (n) => `Otel deposunda yalnız ${n} adet var`);
     await tx.hotelStock.update({
       where: { id: s.id },
       data: { totalQty: { decrement: input.qty }, remainingQty: { decrement: input.qty } },
@@ -523,6 +570,7 @@ export async function returnFromPool(
         note: input.note || "Depoya iade",
       },
     });
+    await trimLots(tx, hotelId, input.productId, s.remainingQty - input.qty);
     const row = await rowOf(tx, hotelId, input.productId);
     await audit(tx, {
       userId: ctx.user.id,
@@ -577,6 +625,7 @@ async function bookCorrection(
   });
   await announce(tx, hotelId, { productId: s.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, delta, "DUZELTME");
   if (delta < 0) {
+    await trimLots(tx, hotelId, s.productId, row.remainingQty);
     await notifyIfCritical(
       tx,
       hotelId,
@@ -601,7 +650,7 @@ export async function adjustPool(
     await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
     if (s.remainingQty + input.delta < 0) {
-      throw new DomainError("CONFLICT", `Düzeltme bakiyeyi eksiye düşürür; havuzda ${s.remainingQty} adet var`);
+      throw new DomainError("CONFLICT", `Düzeltme bakiyeyi eksiye düşürür; otel deposunda ${s.remainingQty} adet var`);
     }
     return bookCorrection(tx, ctx, hotelId, s, input.delta, input.reason, { reason: input.reason });
   });
@@ -624,7 +673,7 @@ export async function countPool(
     const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
     const delta = input.countedQty - s.remainingQty;
     if (delta === 0) {
-      const message = `Sayılan miktar havuzdaki miktarla aynı (${s.remainingQty} adet); düzeltme gerekmez`;
+      const message = `Sayılan miktar otel deposundaki miktarla aynı (${s.remainingQty} adet); düzeltme gerekmez`;
       throw new DomainError("VALIDATION", message, { fieldErrors: { countedQty: [message] } });
     }
     const note = `Sayım: ${input.countedQty} adet (sistem ${s.remainingQty}) · ${input.reason}`;
@@ -661,6 +710,155 @@ export async function setCriticalLevel(
     });
     await announce(tx, hotelId, { productId: input.productId, remainingQty: row.remainingQty, criticalLevel: input.level }, 0, "CRITICAL_LEVEL");
     return row;
+  });
+}
+
+// ---------------------------------------------------------------- opening stock
+
+const OPENING_KEY = "minibar.openingStockAt";
+const OPENING_EDIT_DAYS = 7;
+
+/** When the opening stock (1000 of every product in every hotel) was booked, and until when it may be corrected. */
+export async function openingStockWindow(
+  db: Prisma.TransactionClient | typeof prisma = prisma,
+  now: Date = new Date(),
+): Promise<{ openedAt: string; editableUntil: string; open: boolean } | null> {
+  const row = await db.setting.findFirst({ where: { key: OPENING_KEY, hotelId: null }, select: { value: true } });
+  const openedAt = typeof row?.value === "string" ? new Date(row.value) : null;
+  if (!openedAt || Number.isNaN(openedAt.getTime())) return null;
+  const until = new Date(openedAt.getTime() + OPENING_EDIT_DAYS * 86_400_000);
+  return { openedAt: openedAt.toISOString(), editableUntil: until.toISOString(), open: now < until };
+}
+
+const OPENING_MSG = "Başlangıç stoğu 0 ile 100000 arasında tam sayı olmalıdır";
+const openingSchema = z
+  .object({
+    productId: productIdSchema,
+    qty: z.number(OPENING_MSG).int(OPENING_MSG).min(0, OPENING_MSG).max(100000, OPENING_MSG),
+  })
+  .strict();
+
+/**
+ * Corrects the opening quantity of one product in one hotel (stock managers, MB-ZIM D, only while the
+ * one-week window is open). The difference to the previous opening quantity moves total and balance
+ * together, so what has been used or received since stays as it is.
+ */
+export async function setOpeningStock(
+  ctx: Ctx,
+  hotelId: string,
+  raw: { productId: string; qty: number },
+  now: Date = new Date(),
+): Promise<StockRow & { openingQty: number }> {
+  const input = parse(openingSchema, raw);
+  assertStockManager(ctx);
+  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
+    const window = await openingStockWindow(tx, now);
+    if (!window?.open) {
+      throw new DomainError("CONFLICT", "Başlangıç stoğu düzeltme süresi (1 hafta) doldu; düzeltme için sayım kullanın");
+    }
+    await assertProduct(tx, input.productId);
+    await ensureRows(tx, hotelId, [input.productId], await defaultCriticalLevel(tx, hotelId));
+    const s = (await lockStocks(tx, hotelId, [input.productId])).get(input.productId)!;
+    const current = await tx.hotelStock.findUniqueOrThrow({ where: { id: s.id }, select: { openingQty: true } });
+    const previous = current.openingQty ?? 0;
+    const delta = input.qty - previous;
+    if (delta === 0) {
+      throw new DomainError("VALIDATION", `Başlangıç stoğu zaten ${previous} adet`, { fieldErrors: { qty: [`Başlangıç stoğu zaten ${previous} adet`] } });
+    }
+    if (s.remainingQty + delta < 0) {
+      throw new DomainError("CONFLICT", `Bu üründen ${s.usedQty} adet kullanılmış; başlangıç stoğu en az ${previous - s.remainingQty} olabilir`);
+    }
+    await tx.hotelStock.update({
+      where: { id: s.id },
+      data: { openingQty: input.qty, totalQty: { increment: delta }, remainingQty: { increment: delta } },
+    });
+    await tx.hotelStockMovement.create({
+      data: {
+        hotelId,
+        productId: input.productId,
+        userId: ctx.user.id,
+        type: "DUZELTME",
+        qty: delta,
+        refType: "OpeningStock",
+        note: `Başlangıç stoğu düzeltmesi: ${previous} → ${input.qty}`,
+      },
+    });
+    const row = await rowOf(tx, hotelId, input.productId);
+    if (delta < 0) await trimLots(tx, hotelId, input.productId, row.remainingQty);
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId,
+      action: "STOCK_OPENING",
+      entity: "HotelStock",
+      entityId: s.id,
+      before: { openingQty: previous, totalQty: s.totalQty, remainingQty: s.remainingQty },
+      after: { productId: input.productId, openingQty: input.qty, totalQty: row.totalQty, remainingQty: row.remainingQty },
+    });
+    await announce(tx, hotelId, { productId: input.productId, remainingQty: row.remainingQty, criticalLevel: row.criticalLevel }, delta, "DUZELTME");
+    return { ...row, openingQty: input.qty };
+  });
+}
+
+/** Opening quantities of a hotel by product (V). */
+export async function listOpeningStock(ctx: Ctx, hotelId: string): Promise<Record<string, number>> {
+  await assertCan(ctx, SCREEN, "V", hotelId);
+  const rows = await prisma.hotelStock.findMany({ where: { hotelId, openingQty: { not: null } }, select: { productId: true, openingQty: true } });
+  return Object.fromEntries(rows.map((r) => [r.productId, r.openingQty ?? 0]));
+}
+
+// ---------------------------------------------------------------- SKT (expiry)
+
+export type ExpiryStatus = "GECTI" | "YAKIN" | "NORMAL";
+export type ExpiryRow = {
+  id: string;
+  productId: string;
+  productName: string;
+  groupName: string;
+  expiryDate: string;
+  daysLeft: number;
+  qty: number;
+  remainingQty: number;
+  status: ExpiryStatus;
+  receiptCode: string | null;
+};
+
+/** Days before the SKT from which a lot is shown as "yakın". */
+export const EXPIRY_WARN_DAYS = 30;
+
+export function expiryStatus(daysLeft: number): ExpiryStatus {
+  return daysLeft < 0 ? "GECTI" : daysLeft <= EXPIRY_WARN_DAYS ? "YAKIN" : "NORMAL";
+}
+
+/** Dated stock still in the hotel, the earliest SKT first (V). */
+export async function listExpiry(ctx: Ctx, hotelId: string, today: string = businessDate()): Promise<ExpiryRow[]> {
+  await assertCan(ctx, SCREEN, "V", hotelId);
+  const lots = await prisma.hotelStockLot.findMany({
+    where: { hotelId, remainingQty: { gt: 0 } },
+    include: { product: { select: { name: true, group: { select: { name: true } } } } },
+    orderBy: [{ expiryDate: "asc" }, { createdAt: "asc" }],
+  });
+  const itemIds = lots.map((lot) => lot.receiptItemId).filter((id): id is string => !!id);
+  const items = itemIds.length
+    ? await prisma.stockReceiptItem.findMany({ where: { id: { in: itemIds } }, select: { id: true, receipt: { select: { code: true } } } })
+    : [];
+  const codeOf = new Map(items.map((item) => [item.id, item.receipt.code]));
+  const dayMs = 86_400_000;
+  const base = Date.parse(`${today}T00:00:00Z`);
+  return lots.map((lot) => {
+    const expiryDate = lot.expiryDate.toISOString().slice(0, 10);
+    const daysLeft = Math.round((Date.parse(`${expiryDate}T00:00:00Z`) - base) / dayMs);
+    return {
+      id: lot.id,
+      productId: lot.productId,
+      productName: lot.product.name,
+      groupName: lot.product.group.name,
+      expiryDate,
+      daysLeft,
+      qty: lot.qty,
+      remainingQty: lot.remainingQty,
+      status: expiryStatus(daysLeft),
+      receiptCode: lot.receiptItemId ? (codeOf.get(lot.receiptItemId) ?? null) : null,
+    };
   });
 }
 

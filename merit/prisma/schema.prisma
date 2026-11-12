@@ -253,6 +253,8 @@ model Hotel {
   roomTypeSetups            RoomTypeSetup[]
   stocks                    HotelStock[]
   stockMovements            HotelStockMovement[]
+  stockLots                 HotelStockLot[]
+  receiptAllocations        StockReceiptAllocation[]
   minibarTransactions       MinibarTransaction[]
   roomDnds                  RoomDnd[]
   mybarRequests             MybarRequest[]
@@ -463,6 +465,7 @@ model User {
   supervisor                 User?                      @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
   supervisees                User[]                     @relation("UserSupervisor")
   userHotels                 UserHotel[]
+  stockReceipts              StockReceipt[]             @relation("StockReceiptCreatedBy")
   outletMemberships          OutletMember[]
   tableAssignments           TableAssignment[]
   sessions                   UserSession[]
@@ -824,6 +827,8 @@ model Product {
   transactionItems  MinibarTransactionItem[]
   mybarRequestItems MybarRequestItem[]
   stockRequestItems StockRequestItem[]
+  receiptItems      StockReceiptItem[]
+  stockLots         HotelStockLot[]
 
   @@map("products")
 }
@@ -882,6 +887,8 @@ model HotelStock {
   usedQty       Int      @default(0) @map("used_qty")
   remainingQty  Int      @default(0) @map("remaining_qty")
   criticalLevel Int      @default(50) @map("critical_level")
+  /// Opening quantity booked when stock tracking started (1000); the minibar manager may correct it for a week.
+  openingQty    Int?     @map("opening_qty")
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -890,6 +897,76 @@ model HotelStock {
 
   @@unique([hotelId, productId])
   @@map("hotel_stocks")
+}
+
+/// A delivery taken from the central warehouse. It never becomes a stock of its own: every item is split
+/// between the hotels on the same save (StockReceiptAllocation) and lands in their HotelStock.
+model StockReceipt {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  documentNo  String?  @map("document_no")
+  receivedOn  DateTime @map("received_on") @db.Date
+  /// MANUEL (typed in) or GORSEL (read from a photo of the delivery document).
+  source      String   @default("MANUEL")
+  imagePath   String?  @map("image_path")
+  note        String?
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  createdBy User               @relation("StockReceiptCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  items     StockReceiptItem[]
+
+  @@index([createdAt])
+  @@map("stock_receipts")
+}
+
+model StockReceiptItem {
+  id         String    @id @default(cuid())
+  receiptId  String    @map("receipt_id")
+  productId  String    @map("product_id")
+  qty        Int
+  /// Son kullanma tarihi (SKT) of this delivery, when the document carries one.
+  expiryDate DateTime? @map("expiry_date") @db.Date
+
+  receipt     StockReceipt             @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  product     Product                  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  allocations StockReceiptAllocation[]
+
+  @@index([receiptId])
+  @@map("stock_receipt_items")
+}
+
+model StockReceiptAllocation {
+  id      String @id @default(cuid())
+  itemId  String @map("item_id")
+  hotelId String @map("hotel_id")
+  qty     Int
+
+  item  StockReceiptItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  hotel Hotel            @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, hotelId])
+  @@map("stock_receipt_allocations")
+}
+
+/// The dated part of a hotel's stock: what is left of one delivery with an SKT. The sum of a product's lots
+/// never exceeds its HotelStock.remainingQty (pool.trimLots); stock without a date has no lot.
+model HotelStockLot {
+  id            String   @id @default(cuid())
+  hotelId       String   @map("hotel_id")
+  productId     String   @map("product_id")
+  receiptItemId String?  @map("receipt_item_id")
+  expiryDate    DateTime @map("expiry_date") @db.Date
+  qty           Int
+  remainingQty  Int      @map("remaining_qty")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  hotel   Hotel   @relation(fields: [hotelId], references: [id], onDelete: Restrict)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([hotelId, productId, expiryDate])
+  @@index([hotelId, expiryDate])
+  @@map("hotel_stock_lots")
 }
 
 model HotelStockMovement {

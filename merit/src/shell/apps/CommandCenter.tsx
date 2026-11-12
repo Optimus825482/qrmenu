@@ -195,7 +195,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             <Icon name="settings" size={16} /> Minibar & Setup Tanımları
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.stok")}>
-            <Icon name="box" size={16} /> Konsinye Stok Havuzu
+            <Icon name="box" size={16} /> Otel Deposu Stoğu
           </button>
           <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.doluluk")}>
             <Icon name="chart" size={16} /> Excel Doluluk Girişi

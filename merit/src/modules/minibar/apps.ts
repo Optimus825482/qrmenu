@@ -52,8 +52,8 @@ export function registerMinibarApps(): void {
 
   registerCatalogApp({
     id: "minibar.stok",
-    title: "Zimmet Havuzu",
-    launchLabel: "Zimmet Havuzu",
+    title: "Otel Deposu",
+    launchLabel: "Otel Deposu",
     icon: "otel",
     moduleKey: "MINIBAR",
     screenCode: "MB-ZIM",
@@ -62,6 +62,21 @@ export function registerMinibarApps(): void {
     window: { w: 1150, h: 750, minW: 760, minH: 500 },
     kind: "iframe",
     url: "/depo/stok",
+    mobile: "full",
+  });
+
+  registerCatalogApp({
+    id: "minibar.tedarik",
+    title: "Merkez Depo Tedarik",
+    launchLabel: "Merkez Depo Tedarik",
+    icon: "otel",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-ZIM",
+    category: "MINIBAR",
+    needsHotel: false,
+    window: { w: 1150, h: 780, minW: 760, minH: 500 },
+    kind: "iframe",
+    url: "/depo/tedarik",
     mobile: "full",
   });
 

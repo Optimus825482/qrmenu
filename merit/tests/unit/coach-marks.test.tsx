@@ -23,11 +23,11 @@ const allPresent = (t: string) => t;
 describe("resolveSteps", () => {
   const zim = SCREEN_GUIDES["MB-ZIM"];
 
-  it("R-KAT (yalnız V,D) Havuza giriş adımını görmez, R-DEP görür", () => {
+  it("R-KAT (yalnız V,D) Stok ekle adımını görmez, R-DEP görür", () => {
     const kat = resolveSteps(zim, ["V", "D"], allPresent).map((s) => s.title);
     const dep = resolveSteps(zim, ["V", "O", "D"], allPresent).map((s) => s.title);
-    expect(kat).not.toContain("Havuza giriş");
-    expect(dep).toContain("Havuza giriş");
+    expect(kat).not.toContain("Stok ekle");
+    expect(dep).toContain("Stok ekle");
     expect(dep).toHaveLength(kat.length + 1);
   });
 

@@ -41,7 +41,7 @@ export function MybarDetail({ row }: { row: MybarRow }) {
                 <th scope="col" className="px-2 py-2 text-right font-semibold">İstenen</th>
                 <th scope="col" className="px-2 py-2 text-right font-semibold">Eklenen</th>
                 <th scope="col" className="px-2 py-2 text-right font-semibold">Kalan</th>
-                {showPool ? <th scope="col" className="px-3 py-2 text-right font-semibold">Havuz</th> : null}
+                {showPool ? <th scope="col" className="px-3 py-2 text-right font-semibold">Depo</th> : null}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

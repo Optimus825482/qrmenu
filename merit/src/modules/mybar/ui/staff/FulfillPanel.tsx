@@ -70,9 +70,9 @@ export function FulfillPanel({ row, onFulfilled, disabled }: Props) {
                 <p className="truncate text-sm font-medium text-text">{item.name}</p>
                 <p className="text-xs text-muted">
                   Kalan {item.remainingQty}
-                  {item.poolRemaining !== null ? ` · Havuzda ${item.poolRemaining}` : ""}
+                  {item.poolRemaining !== null ? ` · Depoda ${item.poolRemaining}` : ""}
                 </p>
-                {poolEmpty ? <p className="text-xs font-semibold text-danger">Havuzda yok</p> : null}
+                {poolEmpty ? <p className="text-xs font-semibold text-danger">Depoda yok</p> : null}
               </div>
               <div className="flex shrink-0 items-center gap-1" role="group" aria-label={`${item.name} adedi`}>
                 <button

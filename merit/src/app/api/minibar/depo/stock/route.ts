@@ -12,8 +12,12 @@ import {
   addToPool,
   adjustPool,
   countPool,
+  isStockManager,
+  listExpiry,
   listMovements,
+  listOpeningStock,
   listPoolAll,
+  openingStockWindow,
   returnFromPool,
   setCriticalLevel,
 } from "@/modules/minibar/server/pool";
@@ -29,7 +33,7 @@ export async function GET(request: Request) {
     const hotelId = await selectHotel(ctx, params.get("hotelId"), "MB-ZIM", "V");
     // Movement history is paged (newest first); `movementsPage` asks for older pages.
     const page = Math.min(Math.max(Math.trunc(Number(params.get("movementsPage") ?? 1)) || 1, 1), 10_000);
-    const [rows, moves, hotels, canCount] = await Promise.all([
+    const [rows, moves, hotels, canCount, expiry, openingQty, opening] = await Promise.all([
       listPoolAll(ctx, hotelId, { includeEmpty: true }),
       listMovements(ctx, hotelId, { page, pageSize: MOVEMENTS_PAGE_SIZE }),
       prisma.hotel.findMany({
@@ -39,7 +43,12 @@ export async function GET(request: Request) {
       }),
       // Count corrections: MB-ZIM A held by a system or minibar role (pool.countPool).
       ctx.user.roleKind === "SISTEM" || ctx.user.roleKind === "MINIBAR" ? can(ctx, "MB-ZIM", "A", hotelId) : false,
+      listExpiry(ctx, hotelId),
+      listOpeningStock(ctx, hotelId),
+      openingStockWindow(),
     ]);
+    // Stock managers (minibar operasyonları sistem sorumlusu) add stock and correct the opening quantities.
+    const canManage = isStockManager(ctx) && (await can(ctx, "MB-ZIM", "O", hotelId));
     // The old field names stay (the page reads them); `status` and `criticalLevel` are new.
     const stockItems = rows
       .map((r) => ({
@@ -54,6 +63,7 @@ export async function GET(request: Request) {
         criticalLevel: r.criticalLevel,
         status: r.status,
         productActive: r.productActive,
+        openingQty: openingQty[r.productId] ?? null,
         lastUpdated: r.updatedAt ?? new Date().toISOString(),
       }))
       .sort((a, b) => a.categoryName.localeCompare(b.categoryName, "tr") || a.productName.localeCompare(b.productName, "tr"));
@@ -76,6 +86,9 @@ export async function GET(request: Request) {
         hotels,
         selectedHotelId: hotelId,
         canCount,
+        canManage,
+        expiry,
+        opening: opening ? { ...opening, canEdit: canManage && opening.open } : null,
       },
       canSeePrices(ctx),
     );

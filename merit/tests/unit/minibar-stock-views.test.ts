@@ -165,7 +165,7 @@ describe("exportStockXlsx", () => {
     await setStock(w.hotelId, w.cola.id, 0);
     const kat = await makeKat();
     const file = await views.exportStockXlsx(kat.ctx);
-    expect(file.fileName).toMatch(/^zimmet_stoklari_\d{8}_\d{6}\.xlsx$/);
+    expect(file.fileName).toMatch(/^otel_deposu_stoklari_\d{8}_\d{6}\.xlsx$/);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.load(file.data as unknown as ArrayBuffer);
     const ws = wb.worksheets[0]!;
@@ -193,7 +193,7 @@ describe("stok rotaları", () => {
     expect(ok.status).toBe(200);
     expect((await ok.json()).rows).toHaveLength(2);
     const xl = await exportRoute.GET();
-    expect(xl.headers.get("content-disposition")).toMatch(/zimmet_stoklari_\d{8}_\d{6}\.xlsx/);
+    expect(xl.headers.get("content-disposition")).toMatch(/otel_deposu_stoklari_\d{8}_\d{6}\.xlsx/);
     const patch = await stockRoute.PATCH(
       new Request("http://localhost/api/minibar/stock", {
         method: "PATCH",

@@ -128,6 +128,7 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
       "20261110140100_minibar_depo_rol_yetkileri",
       "20261110160000_yonetici_rolleri",
       "20261110161000_mty_doluluk_silme",
+      "20261112030000_otel_deposu_stok_takibi",
     ]) {
       const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
       const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));

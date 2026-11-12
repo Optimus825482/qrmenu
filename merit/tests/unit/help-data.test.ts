@@ -10,7 +10,7 @@ const { setWelcomeSeen } = await import("@/modules/core/server/guidePrefs");
 const { eligibleMistakes } = await import("@/components/guide/tourModel");
 const { SCREEN_GUIDES } = await import("@/modules/core/screenGuide");
 
-const EK_TALEP = "Havuz yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.";
+const EK_TALEP = "Otel deposu yetersizken kontrol kaydı açılamaz; önce Ek Talep ile stok iste.";
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {

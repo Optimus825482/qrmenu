@@ -24,7 +24,7 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["MINIBAR", "MB-KAT", "Kat Planı", "/kat"],
   ["MINIBAR", "MB-KF", "Kat Formu — QR", "/kat/qr"],
   ["MINIBAR", "MB-TUK", "Oda Kontrolü", "/kat"],
-  ["MINIBAR", "MB-ZIM", "Zimmet Havuzu", "/depo/stok"],
+  ["MINIBAR", "MB-ZIM", "Otel Deposu", "/depo/stok"],
   ["MINIBAR", "MB-TAL", "Düzeltme ve Ek Talepler", "/kat/duzeltme-onay"],
   ["MINIBAR", "MB-DOL", "Doluluk Yükleme", "/depo/doluluk-yukle"],
   ["MINIBAR", "MB-PERS", "MyBar Talepleri", "/kat?filtre=mybar"],

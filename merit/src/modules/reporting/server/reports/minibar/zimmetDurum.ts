@@ -16,8 +16,8 @@ const paramsSchema = z.object({ onlyCritical: boolParam });
 export const zimmetDurum = defineReport({
   key: "zimmet-durum",
   group: "MINIBAR",
-  title: "Zimmet Durumu",
-  description: "Otel havuzundaki ürünlerin toplam, kullanılan, kalan ve kritik seviye durumu (anlık)",
+  title: "Otel Deposu Stok Durumu",
+  description: "Otel deposundaki ürünlerin toplam, kullanılan, kalan ve kritik seviye durumu (anlık)",
   moduleKey: "MINIBAR",
   screenCode: "MB-RAP",
   dateMode: "asOf",

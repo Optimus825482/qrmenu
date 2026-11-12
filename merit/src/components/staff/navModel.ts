@@ -41,7 +41,7 @@ const KAT_PRIMARY: Def[] = [
 ];
 const KAT_MORE: Def[] = [
   { id: "requests", label: "Düzeltme ve ek talepler", icon: "inbox", href: "/kat/duzeltme-onay", screen: "MB-TAL" },
-  { id: "stock", label: "Zimmet stoğu", icon: "box", href: "/kat/stok", screen: "MB-ZIM" },
+  { id: "stock", label: "Otel deposu", icon: "box", href: "/kat/stok", screen: "MB-ZIM" },
   { id: "mybar", label: "MyBar talepleri", icon: "bell", href: "/kat/mybar", screen: "MB-PERS" },
 ];
 
@@ -64,7 +64,7 @@ const ODS_PRIMARY: Def[] = [
 const ODS_MORE: Def[] = []; // no history screen on the room-service board (the "Geçmiş" link had no target)
 
 const DEPO_PRIMARY: Def[] = [
-  { id: "pool", label: "Havuz", icon: "box", href: "/depo/stok", screen: "MB-ZIM" },
+  { id: "pool", label: "Otel deposu", icon: "box", href: "/depo/stok", screen: "MB-ZIM" },
   { id: "requests", label: "Talepler", icon: "inbox", href: "/kat/duzeltme-onay", screen: "MB-TAL" },
   { id: "reports", label: "Raporlar", icon: "chart", href: "/depo/raporlar", screen: "MB-RAP" },
 ];
