@@ -7,15 +7,62 @@ import { askReason } from "@/components/ui/reason";
 import type { CorrectionRequestItem } from "@/modules/minibar/server/minibarTypes";
 import { notify } from "@/shell/notify";
 
+type ManualRow = {
+  id: string;
+  roomNumber: string;
+  floorName: string;
+  reason: string;
+  status: string;
+  requestedByName: string;
+  createdAt: string;
+  totalQty: number;
+  items: { productName: string; qty: number }[];
+};
+type StockRow = {
+  id: string;
+  code: string;
+  note: string | null;
+  createdAt: string;
+  requestedByName: string;
+  items: { productName: string; requestedQty: number }[];
+};
+
 export default function KatDuzeltmeOnayPage() {
   const [requests, setRequests] = useState<CorrectionRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [manual, setManual] = useState<ManualRow[]>([]);
+  const [stock, setStock] = useState<StockRow[]>([]);
+  const waitingCorrections = requests.filter((r) => r.status === "BEKLIYOR").length;
+  const openLink =
+    "inline-flex items-center rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text hover:bg-surface";
+  // The warehouse decides ek talepler on its own screen; everybody else follows their own on the request screen.
+  const stockHref = "/kat/talep";
+
+  // The other approvals that wait for a manager. Each list is optional: a role without that screen simply
+  // sees none of it.
+  const loadOthers = useCallback(async () => {
+    const read = async <T,>(url: string): Promise<T | null> => {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        return res.ok ? ((await res.json()) as T) : null;
+      } catch {
+        return null;
+      }
+    };
+    const [manualJson, stockJson] = await Promise.all([
+      read<{ requests?: ManualRow[] }>("/api/minibar/manual-requests"),
+      read<{ items?: StockRow[]; operator?: boolean }>("/api/minibar/stock-requests?status=BEKLEMEDE&pageSize=100"),
+    ]);
+    setManual((manualJson?.requests ?? []).filter((r) => r.status === "BEKLIYOR"));
+    setStock(stockJson?.items ?? []);
+  }, []);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
     setError(null);
+    void loadOthers();
     try {
       const res = await fetch("/api/minibar/corrections");
       const json = (await res.json()) as { requests?: CorrectionRequestItem[]; error?: string };
@@ -26,7 +73,7 @@ export default function KatDuzeltmeOnayPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadOthers]);
 
   useEffect(() => {
     const t = setTimeout(() => void loadRequests(), 0);
@@ -80,9 +127,9 @@ export default function KatDuzeltmeOnayPage() {
               Geri
             </Link>
             <div>
-              <h1 className="text-lg font-bold">Geçmiş Tarihli İşlem Düzeltme Onayları</h1>
+              <h1 className="text-lg font-bold">Bekleyen Yönetici Onayları</h1>
               <p className="text-xs text-muted">
-                Sistem Yöneticisi onay ekranı — onaylanan düzeltmeler denetim kaydına yazılır
+                Düzeltme ve silme talepleri, manuel kayıt talepleri ve ek stok talepleri — toplam {waitingCorrections + manual.length + stock.length} bekleyen
               </p>
             </div>
           </div>
@@ -98,6 +145,61 @@ export default function KatDuzeltmeOnayPage() {
       </header>
 
       <main data-guide="talep-listesi" className="mx-auto max-w-4xl px-4 py-6 space-y-4">
+        <section data-testid="bekleyen-manuel" className="space-y-2 rounded-2xl border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-text">Manuel kayıt talepleri ({manual.length} bekleyen)</h2>
+            <Link href="/kat/manuel-kayit" style={{ minHeight: "var(--tap-action)" }} className={openLink}>
+              Manuel kayıt taleplerini aç
+            </Link>
+          </div>
+          {manual.length === 0 ? (
+            <p className="text-xs text-muted">Onay bekleyen manuel kayıt talebi yok.</p>
+          ) : (
+            <ul className="space-y-2">
+              {manual.map((m) => (
+                <li key={m.id} className="rounded-xl border border-border bg-bg p-3 text-xs text-text">
+                  <p className="text-sm font-bold">
+                    Oda {m.roomNumber} <span className="font-normal text-muted">· {m.floorName}</span>
+                  </p>
+                  <p className="text-muted">
+                    Talep Eden: {m.requestedByName} · {new Date(m.createdAt).toLocaleString("tr-TR")}
+                  </p>
+                  <p className="mt-1">
+                    <span className="font-semibold">Tüketim ({m.totalQty} adet):</span> {m.items.map((i) => `${i.productName} x${i.qty}`).join(", ")}
+                  </p>
+                  <p className="mt-1 text-muted">Açıklama: {m.reason}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section data-testid="bekleyen-ek-talep" className="space-y-2 rounded-2xl border border-border bg-surface p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-bold text-text">Ek stok talepleri ({stock.length} bekleyen)</h2>
+            <Link href={stockHref} style={{ minHeight: "var(--tap-action)" }} className={openLink}>
+              Ek talepleri aç
+            </Link>
+          </div>
+          {stock.length === 0 ? (
+            <p className="text-xs text-muted">Onay bekleyen ek stok talebi yok.</p>
+          ) : (
+            <ul className="space-y-2">
+              {stock.map((s) => (
+                <li key={s.id} className="rounded-xl border border-border bg-bg p-3 text-xs text-text">
+                  <p className="text-sm font-bold">{s.code}</p>
+                  <p className="text-muted">
+                    Talep Eden: {s.requestedByName} · {new Date(s.createdAt).toLocaleString("tr-TR")}
+                  </p>
+                  <p className="mt-1">{s.items.map((i) => `${i.productName} x${i.requestedQty}`).join(", ")}</p>
+                  {s.note ? <p className="mt-1 text-muted">Not: {s.note}</p> : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <h2 className="px-1 text-sm font-bold text-text">Düzeltme ve silme talepleri ({waitingCorrections} bekleyen)</h2>
         {loading ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
             Onay talepleri yükleniyor...
@@ -108,7 +210,7 @@ export default function KatDuzeltmeOnayPage() {
           </div>
         ) : requests.length === 0 ? (
           <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
-            Bekleyen veya geçmiş düzeltme talebi bulunmuyor.
+            Bekleyen veya geçmiş düzeltme talebi yok.
           </div>
         ) : (
           <div className="space-y-3">

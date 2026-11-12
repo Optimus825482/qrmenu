@@ -66,6 +66,8 @@ export const manuelKayit = defineReport({
           createdAt: true,
           resolvedAt: true,
           status: true,
+          requestedById: true,
+          decidedById: true,
           reason: true,
           rejectReason: true,
           items: true,
@@ -107,7 +109,8 @@ export const manuelKayit = defineReport({
           products: items.map((item) => `${nameOf.get(item.productId) ?? "Ürün"} x${item.qty}`).join(", "),
           qty: items.reduce((sum, item) => sum + item.qty, 0),
           reason: row.reason,
-          status: STATUS_LABEL[row.status],
+          // Closed by its own sender: a cancellation, not a manager's rejection.
+          status: row.status === "REDDEDILDI" && row.decidedById === row.requestedById ? "İptal edildi" : STATUS_LABEL[row.status],
           decidedBy: row.decidedBy?.fullName ?? null,
           decidedAt: row.resolvedAt,
           rejectReason: row.rejectReason,

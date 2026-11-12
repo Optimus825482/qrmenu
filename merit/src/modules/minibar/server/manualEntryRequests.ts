@@ -68,7 +68,14 @@ export type ManualEntryRow = {
   resolvedAt: string | null;
   totalQty: number;
   items: { productId: string; productName: string; qty: number }[];
+  /** Closed by its own sender (not a manager's rejection). */
+  cancelled: boolean;
+  /** The viewer may still cancel it: their own, waiting, sent today. */
+  canCancel: boolean;
 };
+
+/** A request closed by its sender is stored as REDDEDILDI decided by the sender, with this reason. */
+export const CANCEL_REASON = "Talebi gönderen iptal etti";
 
 export type ManualEntryLine = { productId: string; name: string; groupName: string; unit: string; max: number };
 
@@ -195,8 +202,9 @@ export async function createManualEntryRequest(ctx: Ctx, input: unknown, now: Da
  * Managers see the requests of their hotels (waiting ones first); everybody else sees their own.
  * `take` newest rows.
  */
-export async function listManualEntryRequests(ctx: Ctx, take = 60): Promise<ManualEntryRow[]> {
+export async function listManualEntryRequests(ctx: Ctx, take = 60, now: Date = new Date()): Promise<ManualEntryRow[]> {
   const manager = isStockManager(ctx);
+  const today = businessDate(now);
   const rows = await prisma.minibarManualEntryRequest.findMany({
     where: manager ? { hotelId: { in: ctx.hotelIds } } : { requestedById: ctx.user.id },
     orderBy: [{ createdAt: "desc" }],
@@ -232,6 +240,8 @@ export async function listManualEntryRequests(ctx: Ctx, take = 60): Promise<Manu
       resolvedAt: row.resolvedAt?.toISOString() ?? null,
       totalQty: items.reduce((sum, item) => sum + item.qty, 0),
       items,
+      cancelled: row.status === "REDDEDILDI" && row.decidedById === row.requestedById,
+      canCancel: row.status === "BEKLIYOR" && row.requestedById === ctx.user.id && businessDate(row.createdAt) === today,
     };
   });
   return [...mapped.filter((row) => row.status === "BEKLIYOR"), ...mapped.filter((row) => row.status !== "BEKLIYOR")];
@@ -334,5 +344,55 @@ export async function resolveManualEntryRequest(ctx: Ctx, input: unknown, now: D
       tx,
     );
     return { message: `Oda ${room.number} için ${booked.added} adet tüketim odaya işlendi.` };
+  });
+}
+
+/**
+ * The sender takes back a request that is still waiting, on the day they sent it (afterwards only a manager
+ * closes it). Nothing was booked, so nothing is undone; the managers who were asked are told.
+ */
+export async function cancelManualEntryRequest(ctx: Ctx, requestId: string, now: Date = new Date()): Promise<{ message: string }> {
+  const known = await prisma.minibarManualEntryRequest.findFirst({
+    where: { id: requestId, requestedById: ctx.user.id },
+    select: { id: true },
+  });
+  if (!known) throw new DomainError("NOT_FOUND", "Manuel kayıt talebi bulunamadı");
+
+  return prisma.$transaction(async (tx) => {
+    await lockRow(tx, "minibar_manual_entry_requests", requestId);
+    const request = await tx.minibarManualEntryRequest.findUniqueOrThrow({
+      where: { id: requestId },
+      include: { room: { select: { number: true } } },
+    });
+    if (request.status !== "BEKLIYOR") throw new DomainError("CONFLICT", "Bu talep karara bağlanmış; iptal edilemez");
+    if (businessDate(request.createdAt) !== businessDate(now)) {
+      throw new DomainError("CONFLICT", "Talep yalnızca gönderildiği gün iptal edilebilir");
+    }
+    await tx.minibarManualEntryRequest.update({
+      where: { id: request.id },
+      data: { status: "REDDEDILDI", decidedById: ctx.user.id, rejectReason: CANCEL_REASON, resolvedAt: now },
+    });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: request.hotelId,
+      action: "MINIBAR_MANUAL_REQUEST_CANCEL",
+      entity: "MinibarManualEntryRequest",
+      entityId: request.id,
+      before: { status: "BEKLIYOR" },
+      after: { status: "REDDEDILDI", roomNumber: request.room.number, rejectReason: CANCEL_REASON },
+    });
+    await notify(
+      {
+        recipients: { hotelId: request.hotelId, roleCodes: [...STOCK_MANAGER_ROLES] },
+        fallbackHotelId: request.hotelId,
+        type: "minibar.manual.resolved",
+        title: `Manuel kayıt talebi iptal edildi · Oda ${request.room.number}`,
+        body: `${ctx.user.fullName} talebini geri aldı; onayınız gerekmiyor.`,
+        refType: "MinibarManualEntryRequest",
+        refId: request.id,
+      },
+      tx,
+    );
+    return { message: `Oda ${request.room.number} için manuel kayıt talebi iptal edildi.` };
   });
 }

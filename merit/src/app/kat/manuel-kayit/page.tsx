@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { confirm } from "@/shell/confirm";
 
 type Floor = { id: string; name: string; rooms: { id: string; number: string }[] };
 type Line = { productId: string; name: string; groupName: string; unit: string; max: number };
@@ -22,6 +23,8 @@ type RequestRow = {
   resolvedAt: string | null;
   totalQty: number;
   items: { productId: string; productName: string; qty: number }[];
+  cancelled: boolean;
+  canCancel: boolean;
 };
 type Overview = { floors: Floor[]; canCreate: boolean; canDecide: boolean; userId: string; requests: RequestRow[] };
 
@@ -174,6 +177,30 @@ export default function ManuelKayitPage() {
       await load();
     } catch (error) {
       setMessage({ tone: "error", text: error instanceof Error ? error.message : "Karar kaydedilemedi" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = async (id: string, roomNumber: string) => {
+    const ok = await confirm({
+      title: `Oda ${roomNumber} talebi iptal edilsin mi?`,
+      message: "Talep yönetici onayına gitmeden kapatılır; odaya hiçbir tüketim işlenmez.",
+      confirmLabel: "Talebi iptal et",
+      cancelLabel: "Vazgeç",
+      danger: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/minibar/manual-requests/${encodeURIComponent(id)}/cancel`, { method: "POST" });
+      if (!res.ok) throw new Error(await readError(res));
+      const json = (await res.json()) as { message: string };
+      setMessage({ tone: "ok", text: json.message });
+      await load();
+    } catch (error) {
+      setMessage({ tone: "error", text: error instanceof Error ? error.message : "Talep iptal edilemedi" });
     } finally {
       setBusy(false);
     }
@@ -355,7 +382,11 @@ export default function ManuelKayitPage() {
                     <div className="text-sm font-bold text-text">
                       Oda {r.roomNumber} <span className="font-normal text-muted">· {r.floorName} · {r.hotelName}</span>
                     </div>
-                    <span className={`rounded-full border px-2 py-0.5 text-xs font-bold ${STATUS_CLASS[r.status]}`}>{STATUS_LABEL[r.status]}</span>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-bold ${r.cancelled ? "border-border bg-surface text-muted" : STATUS_CLASS[r.status]}`}
+                    >
+                      {r.cancelled ? "İptal edildi" : STATUS_LABEL[r.status]}
+                    </span>
                   </div>
                   <div className="text-xs text-muted">
                     {r.requestedByName} · {stamp(r.createdAt)}
@@ -370,6 +401,17 @@ export default function ManuelKayitPage() {
                       {r.decidedByName ?? "Yönetici"} · {r.resolvedAt ? stamp(r.resolvedAt) : ""}
                       {r.rejectReason ? ` · ${r.rejectReason}` : ""}
                     </p>
+                  ) : null}
+                  {r.canCancel ? (
+                    <button
+                      type="button"
+                      data-testid="manuel-iptal"
+                      disabled={busy}
+                      onClick={() => void cancel(r.id, r.roomNumber)}
+                      className="min-h-11 rounded-xl border border-danger/50 bg-danger/10 px-4 text-sm font-bold text-danger disabled:opacity-50"
+                    >
+                      Talebi iptal et
+                    </button>
                   ) : null}
                   {mayDecide ? (
                     rejecting === r.id ? (

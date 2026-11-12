@@ -32,6 +32,8 @@ export type StockRow = {
   remaining: number;
   critical: number;
   status: StockStatus;
+  /** false: taken out of the catalogue; listed only because the hotel still holds some of it. */
+  active: boolean;
 };
 
 export type CriticalRow = {
@@ -55,7 +57,7 @@ async function loadRows(hotelId: string): Promise<StockRow[]> {
       usedQty: true,
       remainingQty: true,
       criticalLevel: true,
-      product: { select: { name: true, group: { select: { name: true } } } },
+      product: { select: { name: true, isActive: true, group: { select: { name: true } } } },
     },
   });
   return stocks
@@ -68,6 +70,7 @@ async function loadRows(hotelId: string): Promise<StockRow[]> {
       remaining: s.remainingQty,
       critical: s.criticalLevel,
       status: stockStatus(s.remainingQty, s.criticalLevel),
+      active: s.product.isActive,
     }))
     .sort((a, b) => STATUS_RANK[a.status] - STATUS_RANK[b.status] || byName(a, b));
 }

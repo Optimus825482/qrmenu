@@ -144,6 +144,43 @@ describe("manuel kayıt talebi", () => {
     expect(await codeOf(manual.resolveManualEntryRequest(mgr.ctx, { requestId: created.id, approved: true }))).toBe("OK");
   });
 
+  it("gönderen, bekleyen talebini aynı gün iptal edebilir; ertesi gün ya da başkası edemez", async () => {
+    const w = await minibarWorld({ rooms: 2 });
+    const kat = await staff("R-KAT");
+    const other = await staff("R-KAT");
+    const mgr = await staff("R-MTY");
+    const day1 = new Date("2026-11-10T10:00:00+02:00");
+    const sameDay = new Date("2026-11-10T22:00:00+02:00");
+    const nextDay = new Date("2026-11-11T08:00:00+02:00");
+    const items = [{ productId: w.cola.id, qty: 1 }];
+
+    const a = await manual.createManualEntryRequest(kat.ctx, { roomId: w.rooms[0].id, reason: REASON, items }, day1);
+    expect((await manual.listManualEntryRequests(kat.ctx, 60, sameDay))[0]).toMatchObject({ canCancel: true, cancelled: false });
+    expect((await manual.listManualEntryRequests(mgr.ctx, 60, sameDay))[0]).toMatchObject({ canCancel: false });
+    expect((await manual.listManualEntryRequests(kat.ctx, 60, nextDay))[0]).toMatchObject({ canCancel: false });
+    expect(await codeOf(manual.cancelManualEntryRequest(other.ctx, a.id, sameDay))).toBe("NOT_FOUND");
+    expect(await codeOf(manual.cancelManualEntryRequest(kat.ctx, a.id, nextDay))).toBe("CONFLICT");
+
+    await manual.cancelManualEntryRequest(kat.ctx, a.id, sameDay);
+    expect(await testDb.minibarManualEntryRequest.findUniqueOrThrow({ where: { id: a.id } })).toMatchObject({
+      status: "REDDEDILDI",
+      decidedById: kat.userId,
+      rejectReason: manual.CANCEL_REASON,
+      transactionId: null,
+    });
+    expect(await testDb.minibarTransaction.count()).toBe(0);
+    expect((await manual.listManualEntryRequests(kat.ctx, 60, sameDay))[0]).toMatchObject({ cancelled: true, canCancel: false });
+    expect(await testDb.notification.count({ where: { userId: mgr.userId, type: "minibar.manual.resolved", refId: a.id } })).toBe(1);
+    // Closed: neither a second cancel nor an approval; the room is free for a new request.
+    expect(await codeOf(manual.cancelManualEntryRequest(kat.ctx, a.id, sameDay))).toBe("CONFLICT");
+    expect(await codeOf(manual.resolveManualEntryRequest(mgr.ctx, { requestId: a.id, approved: true }, sameDay))).toBe("CONFLICT");
+    expect(await codeOf(manual.createManualEntryRequest(kat.ctx, { roomId: w.rooms[0].id, reason: REASON, items }, sameDay))).toBe("OK");
+
+    const report = BUILTIN_REPORTS.find((r) => r.key === "manuel-kayit")!;
+    const scope = { hotelIds: [w.hotelId], start: new Date("2026-11-09T00:00:00Z"), end: new Date("2026-11-12T00:00:00Z"), limit: 100 } as unknown as Parameters<typeof report.run>[0];
+    expect((await report.run(scope, {})).rows.map((row) => row.status).sort()).toEqual(["Onay bekliyor", "İptal edildi"]);
+  });
+
   it("Manuel Kayıt Talepleri raporu talepleri durumuyla listeler", async () => {
     const w = await minibarWorld({ rooms: 2 });
     const kat = await staff("R-KAT");

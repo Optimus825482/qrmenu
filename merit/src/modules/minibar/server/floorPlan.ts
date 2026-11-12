@@ -168,7 +168,11 @@ export async function katPlan(ctx: Ctx, day: string = businessDate(), now: Date 
     prisma.dailyTaskItem.count({
       where: { task: { hotelId, date }, arrivalTime: { not: null }, departureTime: { not: null } },
     }),
-    prisma.hotelStock.findMany({ where: { hotelId }, select: { remainingQty: true, criticalLevel: true } }),
+    prisma.hotelStock.findMany({
+      // Same products as the stock and critical lists (stockViews.loadRows).
+      where: { hotelId, OR: [{ product: { isActive: true } }, { remainingQty: { gt: 0 } }] },
+      select: { remainingQty: true, criticalLevel: true },
+    }),
     prisma.dailyTaskItem.findMany({
       where: { task: { hotelId, date } },
       select: { roomId: true, status: true, dndCount: true },

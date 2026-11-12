@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
+import { useDialogFocus } from "@/components/ui/useDialogFocus";
 import { formatDayTr } from "@/lib/time";
 import { blockStyle, defaultLayout, type Layout, visibleBlocks, visibleItems } from "@/modules/core/screenLayouts";
 import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
@@ -367,22 +368,129 @@ export function KatDashboard({
 }
 
 function CriticalStock({ count }: { count: number }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-text">
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-text">
       <div className="flex items-center gap-2.5">
         <Icon name="warning" size={20} className="text-warn" />
         <span>
           Otel deposunda <strong>{count} ürün</strong> kritik seviyenin altında!
         </span>
       </div>
-      <Link
-        href="/kat/stok?tab=critical"
+      <button
+        type="button"
+        data-testid="kritik-stok-ac"
+        onClick={() => setOpen(true)}
         style={{ minHeight: "var(--tap-action)" }}
-        className="inline-flex items-center gap-1 rounded-xl bg-warn px-3 py-2 text-xs font-bold text-bg hover:opacity-95"
+        className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-warn px-3 py-2 text-xs font-bold text-bg hover:opacity-95"
       >
         Kritik Stokları Gör
         <Icon name="arrow-right" size={16} />
-      </Link>
+      </button>
+      {open ? <CriticalStockDialog onClose={() => setOpen(false)} /> : null}
+    </div>
+  );
+}
+
+type CriticalRow = { productId: string; name: string; remaining: number; critical: number; missing: number; status: string };
+type CriticalData = { counts: { total: number }; groups: { stokout: CriticalRow[]; kritik: CriticalRow[]; dikkat: CriticalRow[] } };
+
+const CRITICAL_SECTIONS: { key: keyof CriticalData["groups"]; title: string; badge: string }[] = [
+  { key: "stokout", title: "Stok yok", badge: "border-danger bg-danger text-white" },
+  { key: "kritik", title: "Kritik", badge: "border-danger/60 bg-danger/15 text-danger" },
+  { key: "dikkat", title: "Dikkat", badge: "border-warn/60 bg-warn/15 text-warn" },
+];
+
+/** The products behind the banner's number: what is left, the critical level and how many are missing. */
+function CriticalStockDialog({ onClose }: { onClose: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [data, setData] = useState<CriticalData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useDialogFocus(box, onClose, () => box.current?.querySelector<HTMLElement>("button"));
+
+  useEffect(() => {
+    const first = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/minibar/stock?view=critical", { cache: "no-store" });
+        const json = (await res.json()) as CriticalData & { error?: string };
+        if (!res.ok) throw new Error(json.error ?? "Kritik stoklar yüklenemedi.");
+        setData(json);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Kritik stoklar yüklenemedi.");
+      }
+    }, 0);
+    return () => clearTimeout(first);
+  }, []);
+
+  const rows = data ? CRITICAL_SECTIONS.flatMap((s) => data.groups[s.key].map((row) => ({ ...row, section: s }))) : [];
+  return (
+    <div className="fixed inset-0 z-[900] grid place-items-center bg-black/50 p-4">
+      <div
+        ref={box}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="kritik-stok-baslik"
+        data-testid="kritik-stok-pencere"
+        className="flex max-h-[88dvh] w-full max-w-xl flex-col rounded-2xl border border-border bg-surface text-text shadow-2xl"
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+          <h2 id="kritik-stok-baslik" className="text-base font-bold">
+            Kritik seviyenin altındaki ürünler{data ? ` (${rows.length})` : ""}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Kapat"
+            style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-bg text-text hover:bg-surface"
+          >
+            <Icon name="close" size={18} />
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {error ? (
+            <p role="alert" className="text-sm text-danger">{error}</p>
+          ) : !data ? (
+            <p className="text-sm text-muted">Yükleniyor...</p>
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-muted">Şu anda kritik seviyenin altında ürün yok.</p>
+          ) : (
+            <ul className="space-y-2">
+              {rows.map((row, index) => (
+                <li
+                  key={row.productId}
+                  className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2.5 ${index % 2 === 0 ? "bg-bg" : "bg-surface"}`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-text">{row.name}</p>
+                    <p className="text-xs text-muted">
+                      Kalan <strong className="text-text">{row.remaining}</strong> · Kritik seviye {row.critical}
+                      {row.missing > 0 ? ` · Eksik ${row.missing}` : ""}
+                    </p>
+                  </div>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${row.section.badge}`}>{row.section.title}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">
+          <Link
+            href="/kat/talep"
+            style={{ minHeight: "var(--tap-action)" }}
+            className="inline-flex items-center rounded-xl border border-border bg-bg px-4 text-xs font-semibold text-text hover:bg-surface"
+          >
+            Ek talep oluştur
+          </Link>
+          <Link
+            href="/kat/stok"
+            style={{ minHeight: "var(--tap-action)" }}
+            className="inline-flex items-center rounded-xl bg-accent px-4 text-xs font-bold text-white hover:opacity-95"
+          >
+            Tüm stoklar
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

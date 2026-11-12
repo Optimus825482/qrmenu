@@ -188,7 +188,7 @@ export default function KatIslemlerimPage() {
             className="inline-flex items-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-3 py-2 text-xs font-semibold text-warn hover:bg-warn/25"
           >
             <Icon name="shield" size={16} />
-            Yönetici Düzeltme Onayları
+            Bekleyen Yönetici Onayları
           </Link>
         </div>
       </header>
