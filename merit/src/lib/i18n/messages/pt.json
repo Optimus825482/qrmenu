@@ -1,0 +1,241 @@
+{
+  "guest": {
+    "menu": {
+      "title": "Cardápio",
+      "closed": "O cardápio está fechado no momento",
+      "orderingClosed": "Os pedidos estão encerrados no momento; fique à vontade para consultar o cardápio",
+      "allergens": "Alérgenos",
+      "empty": "O cardápio ainda não está pronto",
+      "featured": "Destaques",
+      "search": "Buscar no cardápio",
+      "noResults": "Nenhum item corresponde à sua busca",
+      "nothingAvailable": "Nenhum item está disponível no momento",
+      "filters": "Etiquetas",
+      "allergenNote": "As informações sobre alérgenos seguem o Regulamento (UE) n.º 1169/2011. Por favor, consulte a nossa equipe antes de pedir.",
+      "clearSearch": "Limpar busca",
+      "clear": "Limpar",
+      "itemsFound": "{count} itens encontrados",
+      "subcategories": "Subcategorias",
+      "all": "Todos",
+      "allCategories": "Todas as categorias",
+      "backToTop": "Voltar ao topo",
+      "collapse": "Fechar",
+      "photoCount": "{count} fotos"
+    },
+    "allergen": {
+      "gluten": "Glúten",
+      "sut": "Leite",
+      "yumurta": "Ovo",
+      "kuruyemis": "Castanhas e nozes",
+      "yerfistigi": "Amendoim",
+      "deniz_urunu": "Crustáceos",
+      "yumusakca": "Moluscos",
+      "balik": "Peixe",
+      "alkol": "Álcool",
+      "soya": "Soja",
+      "susam": "Gergelim",
+      "kereviz": "Aipo",
+      "hardal": "Mostarda",
+      "sulfit": "Sulfitos",
+      "acibakla": "Tremoço"
+    },
+    "tag": {
+      "VEGAN": "Vegano",
+      "VEJETARYEN": "Vegetariano",
+      "GLUTENSIZ": "Sem glúten",
+      "SEFIN_SECIMI": "Escolha do chef",
+      "POPULER": "Popular",
+      "YENI": "Novo",
+      "ACILI": "Picante"
+    },
+    "cart": {
+      "title": "Minhas seleções",
+      "empty": "Você ainda não selecionou nada",
+      "add": "Adicionar às seleções",
+      "note": "Observação",
+      "submit": "Enviar seleções",
+      "total": "Total",
+      "unavailableItems": "Itens esgotados",
+      "quantity": "Quantidade"
+    },
+    "order": {
+      "status": {
+        "TEYIT_BEKLIYOR": "Aguardando confirmação",
+        "YOLDA": "A caminho",
+        "TESLIM_EDILDI": "Entregue",
+        "GONDERILDI": "Enviado",
+        "ONAYLANDI": "Confirmado",
+        "HAZIR": "Pronto",
+        "SERVIS_EDILDI": "Servido",
+        "REDDEDILDI": "Recusado",
+        "IPTAL": "Cancelado"
+      },
+      "number": "Pedido n.º: {no}",
+      "thanks": "Obrigado, seu pedido foi enviado",
+      "rejected": "Não foi possível aceitar o seu pedido"
+    },
+    "call": {
+      "waiter": "Chamar o garçom",
+      "bill": "Pedir a conta",
+      "sent": "Sua solicitação foi enviada",
+      "tooMany": "Muitas solicitações, aguarde um momento",
+      "title": "Como podemos ajudar?",
+      "justCall": "Apenas chamar",
+      "close": "Fechar"
+    },
+    "common": {
+      "back": "Voltar",
+      "retry": "Por favor, tente novamente",
+      "offline": "Sem conexão, reconectando",
+      "close": "Fechar",
+      "language": "Idioma",
+      "gallery": "Galeria de imagens",
+      "prevPhoto": "Foto anterior",
+      "nextPhoto": "Próxima foto",
+      "photoIndex": "Foto {index}",
+      "selectPhoto": "Selecionar foto {index}",
+      "languages": "Idiomas",
+      "selectLanguage": "Idioma: {name}"
+    },
+    "room": {
+      "card": {
+        "roomService": "Serviço de Quarto",
+        "roomServiceHint": "Consulte o cardápio e peça a entrega no seu quarto"
+      }
+    },
+    "rs": {
+      "menu": {
+        "title": "Cardápio do Serviço de Quarto"
+      },
+      "selections": {
+        "submit": "Enviar seleções"
+      },
+      "limit": "Você atingiu o limite de pedidos do serviço de quarto.",
+      "order": {
+        "status": {
+          "TEYIT_BEKLIYOR": "Aguardando confirmação",
+          "ONAYLANDI": "Em preparo",
+          "HAZIR": "Pronto",
+          "YOLDA": "A caminho",
+          "TESLIM_EDILDI": "Entregue",
+          "IPTAL": "Cancelado"
+        },
+        "confirmHint": "Ligaremos para o telefone do seu quarto para confirmar o pedido.",
+        "eta": "Tempo estimado: {min} min",
+        "cancelByPhone": "Caso deseje alterar ou cancelar o seu pedido, pedimos a gentileza de ligar para o Serviço de Quarto pelo telefone do seu quarto; nossa equipe terá o maior prazer em ajudar.",
+        "cancelled": "Seu pedido foi cancelado.",
+        "cancelledHint": "Para mais detalhes, ligue para o Serviço de Quarto pelo telefone do seu quarto."
+      },
+      "unavailable": "Indisponível no momento"
+    },
+    "unavailable": {
+      "title": "Este cardápio não está disponível no momento",
+      "BILINMEYEN": "Este código QR não foi reconhecido. Por favor, leia novamente o código da sua mesa.",
+      "MASA_PASIF": "Esta mesa não está em uso no momento.",
+      "OUTLET_PASIF": "Este espaço não está atendendo no momento.",
+      "OTEL_PASIF": "O cardápio deste hotel não está disponível no momento.",
+      "MENU_KAPALI": "O cardápio está fechado no momento.",
+      "RATE_LIMITED": "Muitas tentativas. Aguarde um momento e tente novamente.",
+      "HATA": "Algo deu errado. Por favor, tente novamente."
+    },
+    "selections": {
+      "remove": "Remover",
+      "generalNote": "Observação para o pedido",
+      "sending": "Enviando…",
+      "failed": "Não foi possível enviar, tente novamente",
+      "removed": "Não está mais no cardápio e foi removido das suas seleções: {names}",
+      "mine": "Meus pedidos",
+      "backToMenu": "Voltar ao cardápio",
+      "reason": "Motivo: {reason}",
+      "items": "Itens",
+      "notFound": "Pedido não encontrado",
+      "optWaiter": "Garçom",
+      "optBill": "Conta",
+      "openSelections": "Minhas seleções ({count})",
+      "callFailed": "Não foi possível enviar a solicitação, tente novamente"
+    }
+  },
+  "mybar": {
+    "title": "MYBAR",
+    "room": "Quarto",
+    "subtitle": "Personalize o minibar do {hotel} ao seu gosto. Nossa equipe de minibar cuidará da sua solicitação.",
+    "groups": "Grupos de produtos",
+    "noProductSelected": "Nenhum produto selecionado ainda",
+    "removeItem": "Remover {name}",
+    "increase": "Adicionar um {name}",
+    "decrease": "Retirar um {name}",
+    "noteLabel": "Observações adicionais ou solicitações especiais",
+    "notePlaceholder": "Você pode escrever no seu idioma (ex.: gelo extra, copos extras, por favor...)",
+    "noteCounter": "{count}/{max}",
+    "submit": "ENVIAR SOLICITAÇÃO MYBAR",
+    "submitting": "Enviando sua solicitação...",
+    "validationEmpty": "Selecione pelo menos um item ou escreva uma observação.",
+    "noSetupMessage": "Não há produtos para escolher no seu quarto. Você ainda pode deixar uma observação.",
+    "successTitle": "Solicitação recebida!",
+    "successDesc": "Nossa equipe de andar preparará o seu minibar o mais breve possível. Desejamos uma excelente estadia.",
+    "dailyTitle": "A solicitação de hoje foi recebida",
+    "dailyDesc": "A solicitação MyBar de hoje para o seu quarto foi enviada. Só é possível uma solicitação por dia.",
+    "err409Daily": "Já foi enviada uma solicitação deste quarto hoje. Só é possível uma solicitação por dia.",
+    "errRate": "Muitas tentativas. Aguarde um minuto.",
+    "errNetwork": "Não foi possível conectar. Tente novamente.",
+    "errGeneric": "Erro ao enviar a solicitação. Tente novamente.",
+    "errItems": "Alguns itens não estão mais disponíveis. Atualize a página e tente novamente.",
+    "errClosed": "O MyBar está indisponível para este quarto no momento.",
+    "refresh": "Atualizar a página",
+    "statusTitle": "Status da sua solicitação",
+    "noteOnly": "Apenas uma observação foi enviada.",
+    "liveRegion": "Status da solicitação atualizado: {status}",
+    "status": {
+      "BEKLIYOR": "Pendente",
+      "GORULDU": "Visualizada",
+      "KARSILANDI": "Atendida",
+      "KISMEN": "Parcialmente atendida",
+      "IPTAL": "Cancelada"
+    },
+    "statusDesc": {
+      "BEKLIYOR": "Sua solicitação foi encaminhada à nossa equipe de andar.",
+      "GORULDU": "Nosso atendente de andar viu a sua solicitação e a está preparando.",
+      "KARSILANDI": "Seu minibar foi preparado. Aproveite a sua estadia.",
+      "KISMEN": "Parte da sua solicitação foi preparada. Fale com a nossa equipe sobre os itens que faltam.",
+      "IPTAL": "Esta solicitação foi cancelada. Você pode enviar uma nova."
+    },
+    "newRequest": "Enviar nova solicitação",
+    "unavailable": {
+      "title": "MyBar indisponível",
+      "ODA_PASIF": "Este quarto está indisponível no momento.",
+      "OTEL_PASIF": "O serviço está indisponível para este hotel no momento.",
+      "MYBAR_KAPALI": "O MyBar está indisponível para este quarto no momento.",
+      "ODA_BOS": "Este quarto não consta como ocupado; por isso, não é possível receber solicitações MyBar."
+    },
+    "chooser": {
+      "heading": "SERVIÇOS DE QUARTO",
+      "subtitle": "Bem-vindo aos serviços de quarto do {hotel}. Escolha o serviço que deseja utilizar.",
+      "title": "O que você gostaria de fazer?",
+      "mybar": "Solicitação MyBar",
+      "mybarDesc": "Personalize o seu minibar"
+    },
+    "introTitle": "Seu minibar, do seu jeito",
+    "introBody": "Teremos o maior prazer em preparar o seu minibar ao seu gosto. Diga-nos quais produtos você não costuma apreciar e deixaremos mais dos seus favoritos no lugar deles.",
+    "introHours": "Nossa equipe de minibar atende a sua solicitação entre {start} e {end}.",
+    "introStart": "Vamos começar",
+    "introClose": "Fechar",
+    "howItWorks": "Como funciona o MyBar?",
+    "stepIndicator": "Etapa {current} / {total}",
+    "step1Title": "O que você prefere não ter?",
+    "step1Desc": "Escolha os produtos que você não costuma apreciar. Vamos retirá-los na nossa próxima visita.",
+    "inMinibar": "No seu minibar: {count}",
+    "removedTotal": "A retirar: {count}",
+    "continue": "Continuar",
+    "back": "Voltar",
+    "step2Title": "Do que você gostaria de ter mais?",
+    "step2Desc": "Escolha os seus favoritos e os deixaremos no lugar dos outros.",
+    "swapCounterLabel": "Suas seleções",
+    "swapCounter": "{used} / {total}",
+    "step2NoProducts": "Não há outros produtos para adicionar. Você pode enviar a sua solicitação como está.",
+    "removalsTitle": "A retirar",
+    "additionsTitle": "A adicionar",
+    "noAdditions": "Nada a adicionar",
+    "pendingHours": "Sua solicitação será atendida entre {start} e {end}.",
+    "errRemovals": "Alguns dos produtos não estão mais no seu minibar. Atualize a página e tente novamente."
+  }
+}

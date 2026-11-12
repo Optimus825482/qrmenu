@@ -23,6 +23,7 @@ const LANG_LABEL: Record<CallLang, string> = {
   fr: "Fransızca",
   el: "Yunanca",
   it: "İtalyanca",
+  pt: "Portekizce",
 };
 const TYPE_LABEL = { GARSON: "Garson", HESAP: "Hesap", DIGER: "Diğer" } as const;
 

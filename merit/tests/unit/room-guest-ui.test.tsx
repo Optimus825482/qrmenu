@@ -9,6 +9,7 @@ import el from "@/lib/i18n/messages/el.json";
 import en from "@/lib/i18n/messages/en.json";
 import fr from "@/lib/i18n/messages/fr.json";
 import itMessages from "@/lib/i18n/messages/it.json";
+import pt from "@/lib/i18n/messages/pt.json";
 import ru from "@/lib/i18n/messages/ru.json";
 import tr from "@/lib/i18n/messages/tr.json";
 import { DomainError } from "@/lib/result";
@@ -322,8 +323,8 @@ describe("oda-servisi sayfası", () => {
 });
 
 describe("yeni metinler", () => {
-  const all = { tr, en, de, ru, ar, fr, el, it: itMessages } as const;
-  it("guest.rs.unavailable ve telefonla iptal metinleri sekiz dilde dolu", () => {
+  const all = { tr, en, de, ru, ar, fr, el, it: itMessages, pt } as const;
+  it("guest.rs.unavailable ve telefonla iptal metinleri bütün dillerde dolu", () => {
     for (const [locale, messages] of Object.entries(all)) {
       const rs = (messages as typeof tr).guest.rs;
       expect(rs.unavailable, locale).toBeTruthy();

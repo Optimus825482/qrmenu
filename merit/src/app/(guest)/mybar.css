@@ -70,7 +70,12 @@
 .mb-root .g-lang-item {
   min-height: 44px;
   font-size: 0.8125rem;
+  /* The menu is a white card on the dark page: the page's light text colour must not leak into it. */
+  color: var(--mb-ink);
 }
+.mb-root .g-lang-menu { background: #ffffff; }
+.mb-root .g-lang-item:hover { background: #f1f5f9; }
+.mb-root .g-lang-item-code { color: #475569; }
 
 .mb-header {
   display: flex;
@@ -165,14 +170,13 @@
 }
 
 /* group pills */
+/* The groups wrap onto further lines: every group is visible without sideways scrolling. */
 .mb-pills {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  overflow-x: auto;
   padding-block-end: 0.25rem;
-  scrollbar-width: none;
 }
-.mb-pills::-webkit-scrollbar { display: none; }
 .mb-pill {
   flex: none;
   min-height: 44px;
@@ -373,6 +377,11 @@
 /* intro dialog */
 .mb-dialog {
   box-sizing: border-box;
+  /* Centred in the viewport both ways (the page reset removes the dialog's own auto margin). */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  height: fit-content;
   width: min(24rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   padding: 0;
@@ -409,7 +418,7 @@
 }
 .mb-dialog-title {
   margin: 0;
-  padding-inline-end: 2rem;
+  padding-inline-end: 2.75rem;
   font-size: 1.375rem;
   font-weight: 900;
   line-height: 1.25;

@@ -8,51 +8,78 @@ import { audit } from "@/modules/core/server/audit";
 import { assertOutletScope, loadNodeScope, outletScope } from "./menuNodeAccess";
 import { assertMenuAccess } from "./menuAccess";
 
-export const TRANSLATION_LANGS = ["en", "de", "ru", "ar", "fr", "el", "it"] as const;
+export const TRANSLATION_LANGS = ["en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 export type TranslationLang = (typeof TRANSLATION_LANGS)[number];
 export type TranslationProvider = "DeepL" | "Gemini" | "AutoCloud";
+/**
+ * Translations of one record. A call that asked for only some languages (filling in what a node lacks)
+ * carries only those: such callers read it through the same language list they passed.
+ */
+export type TranslationSet = Record<TranslationLang, { name: string; detail: string | null }>;
+type Langs = readonly TranslationLang[];
 
 const sha256 = (text: string) => createHash("sha256").update(text.trim()).digest("hex");
 
 /** Built-in culinary & hospitality glossary for instant offline fallback if external network is unreachable. */
 const CULINARY_GLOSSARY: Record<string, Record<TranslationLang, string>> = {
-  "İÇECEKLER": { en: "Beverages", de: "Getränke", ru: "Напитки", ar: "المشروبات", fr: "Boissons", el: "Ποτά", it: "Bevande" },
-  "SOĞUK İÇECEKLER": { en: "Cold Beverages", de: "Kalte Getränke", ru: "Холодные напитки", ar: "المشروبات الباردة", fr: "Boissons Froides", el: "Κρύα Ποτά", it: "Bevande Fredde" },
-  "SICAK İÇECEKLER": { en: "Hot Beverages", de: "Heiße Getränke", ru: "Горячие напитки", ar: "المشروبات الساخنة", fr: "Boissons Chaudes", el: "Ζεστά Ποτά", it: "Bevande Calde" },
-  "ALKOLSÜZ İÇECEKLER": { en: "Non-Alcoholic Beverages", de: "Alkoholfreie Getränke", ru: "Безалкогольные напитки", ar: "مشروبات غير كحولية", fr: "Boissons Sans Alcool", el: "Μη Αλκοολούχα Ποτά", it: "Bevande Analcoliche" },
-  "ALKOLLÜ İÇECEKLER": { en: "Alcoholic Beverages", de: "Alkoholische Getränke", ru: "Алкогольные напитки", ar: "المشروبات الكحولية", fr: "Boissons Alcoolisées", el: "Αλκοολούχα Ποτά", it: "Bevande Alcoliche" },
-  "KOKTEYLLER": { en: "Cocktails", de: "Cocktails", ru: "Коктейли", ar: "الكوكتيلات", fr: "Cocktails", el: "Κοκτέιλ", it: "Cocktail" },
-  "ŞARAPLAR": { en: "Wines", de: "Weine", ru: "Вина", ar: "النبيذ", fr: "Vins", el: "Κρασιά", it: "Vini" },
-  "BİRALAR": { en: "Beers", de: "Biere", ru: "Пиво", ar: "البيرة", fr: "Bières", el: "Μπύρες", it: "Birre" },
-  "NARGİLE": { en: "Shisha & Hookah", de: "Shisha & Wasserpfeife", ru: "Кальян", ar: "الشيشة", fr: "Chicha & Narguilé", el: "Ναργιλές", it: "Narghilè" },
-  "BAŞLANGIÇLAR": { en: "Starters & Appetizers", de: "Vorspeisen", ru: "Закуски", ar: "المقبلات", fr: "Entrées", el: "Ορεκτικά", it: "Antipasti" },
-  "ANA YEMEKLER": { en: "Main Courses", de: "Hauptgerichte", ru: "Основные блюда", ar: "الأطباق الرئيسية", fr: "Plats Principaux", el: "Κυρίως Πιάτα", it: "Piatti Principali" },
-  "SALATALAR": { en: "Salads", de: "Salate", ru: "Салаты", ar: "السلطات", fr: "Salades", el: "Σαλάτες", it: "Insalate" },
-  "TATLILAR": { en: "Desserts", de: "Desserts", ru: "Десерты", ar: "الحلويات", fr: "Desserts", el: "Επιδόρπια", it: "Dolci" },
-  "ÇORBALAR": { en: "Soups", de: "Suppen", ru: "Супы", ar: "الشوربات", fr: "Soupes", el: "Σούπες", it: "Zuppe" },
-  "KAHVALTI": { en: "Breakfast", de: "Frühstück", ru: "Завтрак", ar: "الإفطار", fr: "Petit-déjeuner", el: "Πρωινό", it: "Colazione" },
-  "ATIŞTIRMALIKLAR": { en: "Snacks & Bites", de: "Snacks", ru: "Закуски и снеки", ar: "الوجبات الخفيفة", fr: "Snacks & En-cas", el: "Σνακ", it: "Snack e Stuzzichini" },
-  "MAKARNALAR": { en: "Pastas", de: "Pasta", ru: "Паста", ar: "المعكرونة", fr: "Pâtes", el: "Ζυμαρικά", it: "Pasta" },
-  "PİZZALAR": { en: "Pizzas", de: "Pizzen", ru: "Пицца", ar: "البيتزا", fr: "Pizzas", el: "Πίτσες", it: "Pizze" },
-  "BURGERLER": { en: "Burgers", de: "Burger", ru: "Бургеры", ar: "البرغر", fr: "Burgers", el: "Μπέργκερ", it: "Burger" },
+  "İÇECEKLER": { en: "Beverages", de: "Getränke", ru: "Напитки", ar: "المشروبات", fr: "Boissons", el: "Ποτά", it: "Bevande", pt: "Bebidas" },
+  "SOĞUK İÇECEKLER": { en: "Cold Beverages", de: "Kalte Getränke", ru: "Холодные напитки", ar: "المشروبات الباردة", fr: "Boissons Froides", el: "Κρύα Ποτά", it: "Bevande Fredde", pt: "Bebidas Frias" },
+  "SICAK İÇECEKLER": { en: "Hot Beverages", de: "Heiße Getränke", ru: "Горячие напитки", ar: "المشروبات الساخنة", fr: "Boissons Chaudes", el: "Ζεστά Ποτά", it: "Bevande Calde", pt: "Bebidas Quentes" },
+  "ALKOLSÜZ İÇECEKLER": { en: "Non-Alcoholic Beverages", de: "Alkoholfreie Getränke", ru: "Безалкогольные напитки", ar: "مشروبات غير كحولية", fr: "Boissons Sans Alcool", el: "Μη Αλκοολούχα Ποτά", it: "Bevande Analcoliche", pt: "Bebidas Sem Álcool" },
+  "ALKOLLÜ İÇECEKLER": { en: "Alcoholic Beverages", de: "Alkoholische Getränke", ru: "Алкогольные напитки", ar: "المشروبات الكحولية", fr: "Boissons Alcoolisées", el: "Αλκοολούχα Ποτά", it: "Bevande Alcoliche", pt: "Bebidas Alcoólicas" },
+  "KOKTEYLLER": { en: "Cocktails", de: "Cocktails", ru: "Коктейли", ar: "الكوكتيلات", fr: "Cocktails", el: "Κοκτέιλ", it: "Cocktail", pt: "Coquetéis" },
+  "ŞARAPLAR": { en: "Wines", de: "Weine", ru: "Вина", ar: "النبيذ", fr: "Vins", el: "Κρασιά", it: "Vini", pt: "Vinhos" },
+  "BİRALAR": { en: "Beers", de: "Biere", ru: "Пиво", ar: "البيرة", fr: "Bières", el: "Μπύρες", it: "Birre", pt: "Cervejas" },
+  "NARGİLE": { en: "Shisha & Hookah", de: "Shisha & Wasserpfeife", ru: "Кальян", ar: "الشيشة", fr: "Chicha & Narguilé", el: "Ναργιλές", it: "Narghilè", pt: "Narguilé" },
+  "BAŞLANGIÇLAR": { en: "Starters & Appetizers", de: "Vorspeisen", ru: "Закуски", ar: "المقبلات", fr: "Entrées", el: "Ορεκτικά", it: "Antipasti", pt: "Entradas" },
+  "ANA YEMEKLER": { en: "Main Courses", de: "Hauptgerichte", ru: "Основные блюда", ar: "الأطباق الرئيسية", fr: "Plats Principaux", el: "Κυρίως Πιάτα", it: "Piatti Principali", pt: "Pratos Principais" },
+  "SALATALAR": { en: "Salads", de: "Salate", ru: "Салаты", ar: "السلطات", fr: "Salades", el: "Σαλάτες", it: "Insalate", pt: "Saladas" },
+  "TATLILAR": { en: "Desserts", de: "Desserts", ru: "Десерты", ar: "الحلويات", fr: "Desserts", el: "Επιδόρπια", it: "Dolci", pt: "Sobremesas" },
+  "ÇORBALAR": { en: "Soups", de: "Suppen", ru: "Супы", ar: "الشوربات", fr: "Soupes", el: "Σούπες", it: "Zuppe", pt: "Sopas" },
+  "KAHVALTI": { en: "Breakfast", de: "Frühstück", ru: "Завтрак", ar: "الإفطار", fr: "Petit-déjeuner", el: "Πρωινό", it: "Colazione", pt: "Café da Manhã" },
+  "ATIŞTIRMALIKLAR": { en: "Snacks & Bites", de: "Snacks", ru: "Закуски и снеки", ar: "الوجبات الخفيفة", fr: "Snacks & En-cas", el: "Σνακ", it: "Snack e Stuzzichini", pt: "Petiscos" },
+  "MAKARNALAR": { en: "Pastas", de: "Pasta", ru: "Паста", ar: "المعكرونة", fr: "Pâtes", el: "Ζυμαρικά", it: "Pasta", pt: "Massas" },
+  "PİZZALAR": { en: "Pizzas", de: "Pizzen", ru: "Пицца", ar: "البيتزا", fr: "Pizzas", el: "Πίτσες", it: "Pizze", pt: "Pizzas" },
+  "BURGERLER": { en: "Burgers", de: "Burger", ru: "Бургеры", ar: "البرغر", fr: "Burgers", el: "Μπέργκερ", it: "Burger", pt: "Hambúrgueres" },
 };
 
-/**
- * Keyless automatic translation via Google Translate GTX API with glossary fallback.
- * `null` when the service gives no translation: the Turkish text is never passed off (and cached) as one.
- */
-async function googleGtxTranslateSingle(text: string, targetLang: TranslationLang): Promise<string | null> {
-  const trimmed = text.trim();
-  if (!trimmed) return "";
-  const upper = trimmed.toLocaleUpperCase("tr-TR");
-  if (CULINARY_GLOSSARY[upper]?.[targetLang]) {
-    return CULINARY_GLOSSARY[upper][targetLang];
-  }
+/** The keyless endpoint throttles bursts: at most this many requests are in flight at once (whole process). */
+const GTX_MAX_CONCURRENT = 3;
+/** Waits before the 2nd and 3rd attempt of one text. */
+const GTX_RETRY_DELAYS_MS = [400, 1200];
+/** Longer texts go in a POST body: a GET URL that long is refused. */
+const GTX_GET_MAX_CHARS = 1200;
+
+let gtxInFlight = 0;
+const gtxWaiters: (() => void)[] = [];
+
+async function withGtxSlot<T>(run: () => Promise<T>): Promise<T> {
+  if (gtxInFlight >= GTX_MAX_CONCURRENT) await new Promise<void>((resolve) => gtxWaiters.push(resolve));
+  else gtxInFlight++;
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=${encodeURIComponent(targetLang)}&dt=t&q=${encodeURIComponent(trimmed)}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: { "User-Agent": "Mozilla/5.0" },
+    return await run();
+  } finally {
+    const next = gtxWaiters.shift();
+    // The slot is handed straight to the next waiter; the counter only drops when nobody waits.
+    if (next) next();
+    else gtxInFlight--;
+  }
+}
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** One request to the keyless endpoint; `null` when it gave no usable translation. */
+async function gtxRequest(text: string, targetLang: TranslationLang): Promise<string | null> {
+  try {
+    const base = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=tr&tl=${encodeURIComponent(targetLang)}&dt=t`;
+    const q = encodeURIComponent(text);
+    const long = q.length > GTX_GET_MAX_CHARS;
+    const response = await fetch(long ? base : `${base}&q=${q}`, {
+      method: long ? "POST" : "GET",
+      headers: long
+        ? { "User-Agent": "Mozilla/5.0", "content-type": "application/x-www-form-urlencoded" }
+        : { "User-Agent": "Mozilla/5.0" },
+      body: long ? `q=${q}` : undefined,
       signal: AbortSignal.timeout(8_000),
       cache: "no-store",
     });
@@ -67,35 +94,103 @@ async function googleGtxTranslateSingle(text: string, targetLang: TranslationLan
       }
     }
   } catch {
-    // Offline / timeout: no translation (the caller fails and the node is retried later).
+    // Offline / timeout / throttled: no translation from this attempt.
   }
   return null;
 }
 
+/**
+ * Keyless automatic translation via Google Translate GTX API with glossary fallback.
+ * Requests are limited to a few at a time and retried, because the endpoint drops bursts.
+ * `null` when the service gives no translation: the Turkish text is never passed off (and cached) as one.
+ */
+async function googleGtxTranslateSingle(text: string, targetLang: TranslationLang): Promise<string | null> {
+  const trimmed = text.trim();
+  if (!trimmed) return "";
+  const upper = trimmed.toLocaleUpperCase("tr-TR");
+  if (CULINARY_GLOSSARY[upper]?.[targetLang]) {
+    return CULINARY_GLOSSARY[upper][targetLang];
+  }
+  for (let attempt = 0; ; attempt++) {
+    const result = await withGtxSlot(() => gtxRequest(trimmed, targetLang));
+    if (result) return result;
+    if (attempt >= GTX_RETRY_DELAYS_MS.length) return null;
+    await sleep(GTX_RETRY_DELAYS_MS[attempt]);
+  }
+}
+
+/**
+ * Translates with the keyless service, text by text and language by language. What is already in the
+ * `TextTranslation` cache is reused and every fresh answer is cached at once, so when the service drops a
+ * language the next try only asks for what is still missing. Fails (expected error, no incident) while any
+ * language is missing: a half-translated record is never returned.
+ */
 export async function autoCloudTranslate(
   name: string,
   detail: string | null,
-): Promise<Record<TranslationLang, { name: string; detail: string | null }>> {
+  langs: Langs = TRANSLATION_LANGS,
+): Promise<TranslationSet> {
+  const nameText = name.trim();
+  // A blank detail is no detail: it has nothing to translate and must not count as a missing translation.
+  const detailText = detail?.trim() || null;
+  const texts = detailText ? [nameText, detailText] : [nameText];
+
+  const known = new Map<string, string>();
+  try {
+    const rows = await prisma.textTranslation.findMany({
+      where: { sourceHash: { in: texts.map(sha256) }, targetLang: { in: [...langs] } },
+      select: { sourceHash: true, targetLang: true, translated: true },
+    });
+    for (const row of rows) if (row.translated.trim()) known.set(`${row.sourceHash}:${row.targetLang}`, row.translated);
+  } catch {
+    // Cache unreadable: everything is asked from the service.
+  }
+
+  const one = async (text: string, lang: TranslationLang): Promise<string | null> => {
+    const hash = sha256(text);
+    const cached = known.get(`${hash}:${lang}`);
+    if (cached) return cached;
+    const translated = await googleGtxTranslateSingle(text, lang);
+    if (!translated) return null;
+    await prisma.textTranslation
+      .upsert({
+        where: { sourceHash_targetLang: { sourceHash: hash, targetLang: lang } },
+        create: { sourceHash: hash, sourceText: text, targetLang: lang, translated, provider: "AutoCloud" },
+        update: { translated, provider: "AutoCloud" },
+      })
+      .catch(() => {});
+    return translated;
+  };
+
   const entries = await Promise.all(
-    TRANSLATION_LANGS.map(async (lang) => {
+    langs.map(async (lang) => {
       const [translatedName, translatedDetail] = await Promise.all([
-        googleGtxTranslateSingle(name, lang),
-        detail ? googleGtxTranslateSingle(detail, lang) : Promise.resolve(null),
+        one(nameText, lang),
+        detailText ? one(detailText, lang) : Promise.resolve(null),
       ]);
-      if (!translatedName || (detail && !translatedDetail)) {
-        throw new Error(`Otomatik çeviri servisi ${lang.toUpperCase()} çevirisini döndürmedi.`);
-      }
-      return [lang, { name: translatedName, detail: detail ? translatedDetail : null }] as const;
+      return { lang, name: translatedName, detail: translatedDetail };
     }),
   );
-  return Object.fromEntries(entries) as Record<TranslationLang, { name: string; detail: string | null }>;
+
+  const missing = entries.filter((e) => !e.name || (detailText && !e.detail)).map((e) => e.lang.toUpperCase());
+  if (missing.length > 0) {
+    throw new DomainError(
+      "RATE_LIMITED",
+      `Otomatik çeviri servisi şu anda ${missing.join(", ")} çevirisini vermedi. Tamamlanan diller saklandı; ` +
+        "birkaç dakika sonra yeniden deneyin.",
+    );
+  }
+  return Object.fromEntries(
+    entries.map((e) => [e.lang, { name: e.name as string, detail: detailText ? e.detail : null }]),
+  ) as TranslationSet;
 }
 
 /** Check DB cache (`TextTranslation` or existing verified `MenuNodeTranslation`) for already translated text. */
 async function findCachedTranslations(
   name: string,
   detail: string | null,
-): Promise<Record<TranslationLang, { name: string; detail: string | null }> | null> {
+  langs: Langs,
+): Promise<TranslationSet | null> {
   try {
     const nameHash = sha256(name);
     const detailHash = detail ? sha256(detail) : null;
@@ -103,7 +198,7 @@ async function findCachedTranslations(
     const cached = await prisma.textTranslation.findMany({
       where: {
         sourceHash: { in: hashes },
-        targetLang: { in: [...TRANSLATION_LANGS] },
+        targetLang: { in: [...langs] },
       },
       select: { sourceHash: true, targetLang: true, translated: true },
     });
@@ -111,7 +206,7 @@ async function findCachedTranslations(
     const byHashAndLang = new Map(cached.map((r) => [`${r.sourceHash}:${r.targetLang}`, r.translated]));
     const result: Partial<Record<TranslationLang, { name: string; detail: string | null }>> = {};
     let allFound = true;
-    for (const lang of TRANSLATION_LANGS) {
+    for (const lang of langs) {
       const tName = byHashAndLang.get(`${nameHash}:${lang}`);
       const tDetail = detailHash ? byHashAndLang.get(`${detailHash}:${lang}`) : null;
       if (!tName || (detailHash && !tDetail)) {
@@ -121,7 +216,7 @@ async function findCachedTranslations(
       result[lang] = { name: tName, detail: detailHash ? (tDetail ?? null) : null };
     }
     if (allFound) {
-      return result as Record<TranslationLang, { name: string; detail: string | null }>;
+      return result as TranslationSet;
     }
   } catch {
     // Ignore cache read errors
@@ -133,7 +228,7 @@ async function findCachedTranslations(
 async function saveCachedTranslations(
   name: string,
   detail: string | null,
-  translations: Record<TranslationLang, { name: string; detail: string | null }>,
+  translations: TranslationSet,
   provider: string,
 ): Promise<void> {
   try {
@@ -165,7 +260,7 @@ async function saveCachedTranslations(
 }
 
 const DEEPL_TARGET: Record<TranslationLang, string> = {
-  en: "EN-GB", de: "DE", ru: "RU", ar: "AR", fr: "FR", el: "EL", it: "IT",
+  en: "EN-GB", de: "DE", ru: "RU", ar: "AR", fr: "FR", el: "EL", it: "IT", pt: "PT-BR",
 };
 
 /** Translate a Turkish menu record using DeepL API. */
@@ -173,11 +268,12 @@ async function deeplTranslate(
   name: string,
   detail: string | null,
   apiKey: string,
-): Promise<Record<TranslationLang, { name: string; detail: string | null }>> {
+  langs: Langs = TRANSLATION_LANGS,
+): Promise<TranslationSet> {
   const endpoint = apiKey.endsWith(":fx") ? "https://api-free.deepl.com/v2/translate" : "https://api.deepl.com/v2/translate";
   const sourceTexts = detail ? [name, detail] : [name];
   const entries = await Promise.all(
-    TRANSLATION_LANGS.map(async (lang) => {
+    langs.map(async (lang) => {
       const body = new URLSearchParams({ source_lang: "TR", target_lang: DEEPL_TARGET[lang] });
       for (const text of sourceTexts) body.append("text", text);
       const response = await fetch(endpoint, {
@@ -211,7 +307,7 @@ async function deeplTranslate(
       ] as const;
     }),
   );
-  return Object.fromEntries(entries) as Record<TranslationLang, { name: string; detail: string | null }>;
+  return Object.fromEntries(entries) as TranslationSet;
 }
 
 export function normalizeGeminiModel(model?: string | null): string {
@@ -231,16 +327,25 @@ export function normalizeGeminiModel(model?: string | null): string {
   return model.trim();
 }
 
-/** Translate a Turkish menu record into all supported guest languages using Google AI Studio (Gemini). */
+const GEMINI_LANG_NAME: Record<TranslationLang, string> = {
+  en: "English", de: "German", ru: "Russian", ar: "Arabic", fr: "French", el: "Greek", it: "Italian",
+  pt: "Brazilian Portuguese",
+};
+
+/** Translate a Turkish menu record into the given guest languages using Google AI Studio (Gemini). */
 async function geminiTranslate(
   name: string,
   detail: string | null,
   apiKey: string,
   model = "gemini-3.8-flash",
-): Promise<Record<TranslationLang, { name: string; detail: string | null }>> {
+  langs: Langs = TRANSLATION_LANGS,
+): Promise<TranslationSet> {
   const activeModel = normalizeGeminiModel(model);
+  const languageList = langs.map((l) => `${GEMINI_LANG_NAME[l]} (${l})`).join(", ");
+  const detailShape = detail ? '"..."' : "null";
+  const shape = langs.map((l) => `  "${l}": { "name": "...", "detail": ${detailShape} }`).join(",\n");
   const prompt = `You are a culinary expert and professional luxury hotel menu translator.
-Translate this Turkish menu dish/item into English (en), German (de), Russian (ru), Arabic (ar), French (fr), Greek (el), and Italian (it).
+Translate this Turkish menu dish/item into these languages: ${languageList}.
 Ensure appetizing, authentic culinary terminology, preserving ingredient clarity.
 
 Item to translate:
@@ -249,13 +354,7 @@ ${detail ? `Detail: "${detail}"` : "Detail: null"}
 
 Respond ONLY with a JSON object with this exact structure (no markdown fences, just pure JSON):
 {
-  "en": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "de": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "ru": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "ar": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "fr": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "el": { "name": "...", "detail": ${detail ? '"..."' : "null"} },
-  "it": { "name": "...", "detail": ${detail ? '"..."' : "null"} }
+${shape}
 }`;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent`;
@@ -292,7 +391,7 @@ Respond ONLY with a JSON object with this exact structure (no markdown fences, j
   const parsed = JSON.parse(rawText) as Record<string, { name?: string; detail?: string | null }>;
   const out: Partial<Record<TranslationLang, { name: string; detail: string | null }>> = {};
 
-  for (const lang of TRANSLATION_LANGS) {
+  for (const lang of langs) {
     const item = parsed[lang];
     if (!item?.name || typeof item.name !== "string" || !item.name.trim()) {
       throw new Error(`Gemini ${lang.toUpperCase()} çevirisini eksik döndürdü.`);
@@ -303,7 +402,7 @@ Respond ONLY with a JSON object with this exact structure (no markdown fences, j
     };
   }
 
-  return out as Record<TranslationLang, { name: string; detail: string | null }>;
+  return out as TranslationSet;
 }
 
 /** Keys, preferred provider and Gemini model: Denetim Masası → Sistem → Çeviri, environment as fallback. */
@@ -355,11 +454,13 @@ export async function loadTranslationConfig(): Promise<{
 export async function translateMenuItem(
   name: string,
   detail: string | null,
+  /** Languages to produce; the background completion passes only what a node still lacks. */
+  langs: Langs = TRANSLATION_LANGS,
 ): Promise<{
-  translations: Record<TranslationLang, { name: string; detail: string | null }>;
+  translations: TranslationSet;
   provider: TranslationProvider;
 }> {
-  const cached = await findCachedTranslations(name, detail);
+  const cached = await findCachedTranslations(name, detail, langs);
   if (cached) {
     return { translations: cached, provider: "AutoCloud" };
   }
@@ -371,7 +472,7 @@ export async function translateMenuItem(
   // Yalnızca Gemini seçildiyse ve anahtar varsa:
   if (config.provider === "GEMINI" && hasGemini) {
     try {
-      const translations = await geminiTranslate(name, detail, config.geminiKey!, config.geminiModel);
+      const translations = await geminiTranslate(name, detail, config.geminiKey!, config.geminiModel, langs);
       await saveCachedTranslations(name, detail, translations, "Gemini");
       return { translations, provider: "Gemini" };
     } catch (err) {
@@ -382,7 +483,7 @@ export async function translateMenuItem(
   // Yalnızca DeepL seçildiyse ve anahtar varsa:
   if (config.provider === "DEEPL" && hasDeepl) {
     try {
-      const translations = await deeplTranslate(name, detail, config.deeplKey!);
+      const translations = await deeplTranslate(name, detail, config.deeplKey!, langs);
       await saveCachedTranslations(name, detail, translations, "DeepL");
       return { translations, provider: "DeepL" };
     } catch (err) {
@@ -393,7 +494,7 @@ export async function translateMenuItem(
   // AUTO Modu: Birincil DeepL, ikincil Gemini, üçüncül Kesintisiz Otomatik Bulut Çevirisi
   if (hasDeepl) {
     try {
-      const translations = await deeplTranslate(name, detail, config.deeplKey!);
+      const translations = await deeplTranslate(name, detail, config.deeplKey!, langs);
       await saveCachedTranslations(name, detail, translations, "DeepL");
       return { translations, provider: "DeepL" };
     } catch (deeplErr) {
@@ -403,7 +504,7 @@ export async function translateMenuItem(
 
   if (hasGemini) {
     try {
-      const translations = await geminiTranslate(name, detail, config.geminiKey!, config.geminiModel);
+      const translations = await geminiTranslate(name, detail, config.geminiKey!, config.geminiModel, langs);
       await saveCachedTranslations(name, detail, translations, "Gemini");
       return { translations, provider: "Gemini" };
     } catch (geminiErr) {
@@ -411,7 +512,7 @@ export async function translateMenuItem(
     }
   }
 
-  const translations = await autoCloudTranslate(name, detail);
+  const translations = await autoCloudTranslate(name, detail, langs);
   await saveCachedTranslations(name, detail, translations, "AutoCloud");
   return { translations, provider: "AutoCloud" };
 }
@@ -472,7 +573,7 @@ export interface OutletTranslationAuditStatus {
 
 /**
  * Inspects all categories, subcategories, groups, and items in an outlet
- * and returns how many nodes have complete 7-language translations vs missing ones.
+ * and returns how many nodes have complete translations in every guest language vs missing ones.
  */
 export async function getOutletTranslationAudit(outletId: string): Promise<OutletTranslationAuditStatus> {
   const nodes = await prisma.menuNode.findMany({
@@ -520,7 +621,7 @@ export async function getOutletTranslationAudit(outletId: string): Promise<Outle
 
 /**
  * Background daemon that scans an outlet for any MenuNode (category, subcategory, group, or item)
- * with missing or unverified translations across the 7 supported languages, completes them automatically
+ * with missing translations in any supported guest language, completes them automatically
  * in batches, and emits `menu.changed` SSE events so `Menü Yönetim Merkezi` updates live.
  */
 export async function syncOutletMissingTranslations(
@@ -545,15 +646,18 @@ export async function syncOutletMissingTranslations(
       orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
     });
 
-    const incomplete = nodes.filter((node) => {
-      const byLang = new Map(node.translations.map((t) => [t.lang, t]));
-      for (const lang of TRANSLATION_LANGS) {
-        const tr = byLang.get(lang);
-        if (!tr || !tr.name?.trim()) return true;
-        if (node.detail?.trim() && !tr.detail?.trim()) return true;
-      }
-      return false;
-    });
+    // Only the languages a node lacks are produced and written: a newly added guest language is filled in
+    // without asking the provider again for (or overwriting) the languages the node already has.
+    const incomplete = nodes
+      .map((node) => {
+        const byLang = new Map(node.translations.map((t) => [t.lang, t]));
+        const missing = TRANSLATION_LANGS.filter((lang) => {
+          const tr = byLang.get(lang);
+          return !tr || !tr.name?.trim() || Boolean(node.detail?.trim() && !tr.detail?.trim());
+        });
+        return { node, missing };
+      })
+      .filter((entry) => entry.missing.length > 0);
 
     if (incomplete.length === 0) {
       return { translatedNodes: 0, remainingNodes: 0 };
@@ -566,10 +670,10 @@ export async function syncOutletMissingTranslations(
     for (let i = 0; i < targetNodes.length; i += BATCH_SIZE) {
       const batch = targetNodes.slice(i, i + BATCH_SIZE);
       await Promise.all(
-        batch.map(async (node) => {
+        batch.map(async ({ node, missing }) => {
           try {
-            const { translations } = await translateMenuItem(node.name, node.detail);
-            if (await saveIfSourceUnchanged(node.id, node.name, node.detail, translations)) translatedNodes++;
+            const { translations } = await translateMenuItem(node.name, node.detail, missing);
+            if (await saveIfSourceUnchanged(node.id, node.name, node.detail, translations, missing)) translatedNodes++;
           } catch (err) {
             console.warn(`[i18n] Eksik çeviri tamamlanamadı (${node.id} - "${node.name}"):`, err);
           }
@@ -613,7 +717,7 @@ export async function auditAndSyncOutletTranslations(
 
 /**
  * Automatically translates a menu node (category, subcategory, group, or item)
- * into all 7 supported guest languages and saves them (call it after the node's transaction committed),
+ * into all supported guest languages and saves them (call it after the node's transaction committed),
  * then triggers a background check for any other missing translations in the same outlet.
  * Safe to fire-and-forget in background.
  */
@@ -651,14 +755,16 @@ async function saveIfSourceUnchanged(
   nodeId: string,
   name: string,
   detail: string | null,
-  translations: Record<TranslationLang, { name: string; detail: string | null }>,
+  translations: TranslationSet,
+  langs: Langs = TRANSLATION_LANGS,
 ): Promise<boolean> {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM menu_nodes WHERE id = ${nodeId} FOR UPDATE`;
     const current = await tx.menuNode.findUnique({ where: { id: nodeId }, select: { name: true, detail: true } });
     if (!current || current.name !== name || (current.detail ?? null) !== (detail ?? null)) return false;
-    for (const lang of TRANSLATION_LANGS) {
+    for (const lang of langs) {
       const val = translations[lang];
+      if (!val) continue;
       await tx.menuNodeTranslation.upsert({
         where: { nodeId_lang: { nodeId, lang } },
         create: { nodeId, lang, name: val.name, detail: val.detail },

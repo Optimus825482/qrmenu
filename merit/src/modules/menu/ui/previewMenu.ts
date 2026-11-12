@@ -228,6 +228,28 @@ const SAMPLE_DATA: Record<
     tartName: "Crostata al cioccolato",
     tartDesc: "Ganache al cioccolato fondente e frolla croccante.",
   },
+  pt: {
+    catSignatures: "Assinaturas",
+    mojitoName: "Royal Mojito",
+    mojitoDesc: "Hortelã fresca, limão e um toque equilibrado de rum.",
+    spritzName: "Sunset Spritz",
+    spritzDesc: "Aroma cítrico com um final delicadamente espumante.",
+    catCool: "Refrescantes",
+    subSoft: "Sem álcool",
+    fizzName: "Hibiscus Fizz",
+    fizzDesc: "Hibisco, limão e soda gelada.",
+    coolerName: "Berry Cooler",
+    coolerDesc: "Frutas vermelhas da estação, limão e manjericão fresco.",
+    catShare: "Para compartilhar",
+    subPlates: "Para a mesa",
+    burgerName: "Mini Royal Burger",
+    burgerDesc: "Hambúrguer grelhado, cheddar e molho da casa.",
+    saladName: "Tábua mediterrânea",
+    saladDesc: "Azeitonas, queijos, frutas secas e pão crocante.",
+    catSweet: "Sobremesa",
+    tartName: "Torta de chocolate",
+    tartDesc: "Ganache de chocolate amargo em massa crocante.",
+  },
 };
 
 export function getSampleCategories(locale: Locale = "tr"): GuestCategory[] {

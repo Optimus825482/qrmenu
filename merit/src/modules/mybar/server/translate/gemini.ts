@@ -1,7 +1,7 @@
 import type { TranslationProvider } from "./provider";
 
 const LANGUAGE: Record<string, string> = {
-  tr: "Turkish", en: "English", de: "German", ru: "Russian", ar: "Arabic", fr: "French", el: "Greek", it: "Italian",
+  tr: "Turkish", en: "English", de: "German", ru: "Russian", ar: "Arabic", fr: "French", el: "Greek", it: "Italian", pt: "Brazilian Portuguese",
 };
 
 /** Google Gemini with the key and model from Denetim Masası → Sistem → Çeviri. */

@@ -111,6 +111,7 @@ describe("MyBar misafir sayfası mesajları", () => {
     expect(all("de")).not.toMatch(/warenkorb|bestell/);
     expect(all("fr")).not.toMatch(/panier|commande/);
     expect(all("it")).not.toMatch(/carrello|ordin/);
+    expect(all("pt")).not.toMatch(/carrinho|pedido|encomenda/);
     expect(all("ru")).not.toMatch(/корзин|заказ/);
     expect(all("el")).not.toMatch(/καλάθι|παραγγελ/);
     expect(mybar("ar").get("introBody")).toMatch(/[؀-ۿ]/);

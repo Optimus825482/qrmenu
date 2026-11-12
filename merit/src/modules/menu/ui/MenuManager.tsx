@@ -122,7 +122,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
       if (translationAudit.missingNodes > 0) {
         setStatus(`${total} menü kaydı · Çeviri kontrolü: ${translationAudit.missingNodes} kayıtta eksikler arka planda tamamlanıyor...`);
       } else {
-        setStatus(`${total} menü kaydı · 7 dil çevirisi tam (%100)`);
+        setStatus(`${total} menü kaydı · 8 dil çevirisi tam (%100)`);
       }
     } else {
       setStatus(`${total} menü kaydı`);
@@ -318,7 +318,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
             title={
               translationAudit.missingNodes > 0
                 ? `${translationAudit.missingNodes} kayıtta eksik çeviriler arka planda otomatik tamamlanıyor`
-                : `Tüm ${translationAudit.totalNodes} menü kaydının 7 dilde çevirisi eksiksiz tamamlandı`
+                : `Tüm ${translationAudit.totalNodes} menü kaydının 8 dilde çevirisi eksiksiz tamamlandı`
             }
             style={{
               marginLeft: "auto",

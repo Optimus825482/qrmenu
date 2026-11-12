@@ -156,6 +156,25 @@ export function FlagIcon({ locale, width = 20, height = 14, className = "" }: Fl
         </svg>
       );
 
+    case "pt":
+    case "br":
+      // Brazil: green field, yellow rhombus, blue disc with the white band.
+      return (
+        <svg
+          viewBox="0 0 20 14"
+          width={width}
+          height={height}
+          className={className}
+          style={baseStyle}
+          aria-hidden="true"
+        >
+          <rect width="20" height="14" fill="#009c3b" />
+          <polygon points="10,1.7 18.3,7 10,12.3 1.7,7" fill="#ffdf00" />
+          <circle cx="10" cy="7" r="3.5" fill="#002776" />
+          <path d="M6.6 6.2 Q10 5.4 13.4 8" fill="none" stroke="#ffffff" strokeWidth="0.7" />
+        </svg>
+      );
+
     default:
       return null;
   }

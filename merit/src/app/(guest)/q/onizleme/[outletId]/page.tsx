@@ -17,6 +17,7 @@ import ar from "@/lib/i18n/messages/ar.json";
 import fr from "@/lib/i18n/messages/fr.json";
 import el from "@/lib/i18n/messages/el.json";
 import it from "@/lib/i18n/messages/it.json";
+import pt from "@/lib/i18n/messages/pt.json";
 import "../../../guest.css";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ const MESSAGES: Record<Locale, Record<string, unknown>> = {
   fr,
   el,
   it,
+  pt,
 };
 
 export default async function OutletMenuPreviewPage({

@@ -13,6 +13,7 @@ export const DEFAULT_CALL_OPTIONS = [
       fr: "Des serviettes, s'il vous plaît",
       el: "Χαρτοπετσέτες, παρακαλώ",
       it: "Tovaglioli, per favore",
+      pt: "Guardanapos, por favor",
     },
   },
   {
@@ -27,6 +28,7 @@ export const DEFAULT_CALL_OPTIONS = [
       fr: "Je voudrais commander",
       el: "Θα ήθελα να παραγγείλω",
       it: "Vorrei ordinare",
+      pt: "Gostaria de fazer o pedido",
     },
   },
   {
@@ -41,6 +43,7 @@ export const DEFAULT_CALL_OPTIONS = [
       fr: "De l'eau, s'il vous plaît",
       el: "Νερό, παρακαλώ",
       it: "Acqua, per favore",
+      pt: "Água, por favor",
     },
   },
   {
@@ -55,6 +58,7 @@ export const DEFAULT_CALL_OPTIONS = [
       fr: "L'addition, s'il vous plaît",
       el: "Το λογαριασμό, παρακαλώ",
       it: "Il conto, per favore",
+      pt: "A conta, por favor",
     },
   },
 ] as const;

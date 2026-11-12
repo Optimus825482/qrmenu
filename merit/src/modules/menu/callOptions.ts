@@ -1,4 +1,4 @@
-export const CALL_LANGS = ["en", "de", "ru", "ar", "fr", "el", "it"] as const;
+export const CALL_LANGS = ["en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 export type CallLang = (typeof CALL_LANGS)[number];
 
 /** Most active call options one outlet may have ("Sadece çağır" is fixed and not counted). */

@@ -50,8 +50,8 @@ describe("mesaj dosyaları", () => {
       "guest.rs.order.status.IPTAL",
       "guest.rs.order.confirmHint",
       "guest.rs.order.eta",
-      "guest.rs.order.cancel",
-      "guest.rs.order.cancelConfirm",
+      "guest.rs.order.cancelByPhone",
+      "guest.rs.order.cancelledHint",
       "guest.rs.order.cancelled",
       "guest.allergen.deniz_urunu",
       "guest.unavailable.title",
@@ -99,6 +99,9 @@ describe("pickLocale", () => {
     expect(pickLocale({ acceptLanguage: "fr" })).toBe("fr");
     expect(pickLocale({ acceptLanguage: "el" })).toBe("el");
     expect(pickLocale({ acceptLanguage: "it" })).toBe("it");
+    // Brazilian and European Portuguese browsers both get the Portuguese pages.
+    expect(pickLocale({ acceptLanguage: "pt-BR,pt;q=0.9,en;q=0.8" })).toBe("pt");
+    expect(pickLocale({ acceptLanguage: "pt-PT" })).toBe("pt");
     expect(pickLocale({ query: "tr", cookie: "ar", acceptLanguage: "de" })).toBe("tr");
     expect(pickLocale({ query: "xx", cookie: "ar" })).toBe("ar");
     expect(pickLocale({ cookie: "zz", acceptLanguage: "de-DE,en;q=0.8" })).toBe("de");

@@ -10,6 +10,7 @@ import ar from "@/lib/i18n/messages/ar.json";
 import fr from "@/lib/i18n/messages/fr.json";
 import el from "@/lib/i18n/messages/el.json";
 import it from "@/lib/i18n/messages/it.json";
+import pt from "@/lib/i18n/messages/pt.json";
 import type { Locale } from "@/lib/i18n/locales";
 import { useSse } from "@/shell/useSse";
 import {
@@ -84,6 +85,7 @@ const PREVIEW_MESSAGES: Record<Locale, Record<string, unknown>> = {
   fr,
   el,
   it,
+  pt,
 };
 
 const FALLBACK_THEME: ThemeRow = {

@@ -17,7 +17,7 @@ import { validateCartItems } from "./cart";
 /** Guest orders: 10 per minute per IP. */
 export const orderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
 
-const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
+const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 const GUEST_REJECT_TEXT = "Siparişiniz işleme alınamadı. Ayrıntı için lütfen görevlimize danışın.";
 
 /** Strips HTML tags and control characters (line breaks become spaces), then trims. */

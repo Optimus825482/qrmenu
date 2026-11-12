@@ -19,7 +19,7 @@ import { validateCartItems } from "../cart";
 import { CLOSED_STATUSES } from "../transitions";
 import { roomServiceState } from "./roomState";
 
-const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
+const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 const roomOrderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
 
 function sanitize(text: string): string {

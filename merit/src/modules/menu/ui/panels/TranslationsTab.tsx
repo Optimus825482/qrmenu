@@ -13,6 +13,7 @@ const LANGS = [
   { code: "fr", label: "FR" },
   { code: "el", label: "EL" },
   { code: "it", label: "IT" },
+  { code: "pt", label: "PT" },
 ] as const;
 
 type Props = { node: MenuTreeNode; canEdit: boolean; onChanged(): void };
@@ -30,7 +31,7 @@ export function TranslationsTab({ node, canEdit, onChanged }: Props) {
 
   const regenerate = async () => {
     setBusy(true);
-    setMessage({ ok: true, text: "7 dil için çeviriler otomatik oluşturuluyor..." });
+    setMessage({ ok: true, text: "8 dil için çeviriler otomatik oluşturuluyor..." });
     const res = await autoTranslateMenuNodeAction({ nodeId: node.id });
     setBusy(false);
     if (res.ok) {

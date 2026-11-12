@@ -2,7 +2,7 @@ import type { TranslationProvider } from "./provider";
 
 /** Our locale -> DeepL target code. */
 const TARGET: Record<string, string> = {
-  tr: "TR", en: "EN-GB", de: "DE", ru: "RU", ar: "AR", fr: "FR", el: "EL", it: "IT",
+  tr: "TR", en: "EN-GB", de: "DE", ru: "RU", ar: "AR", fr: "FR", el: "EL", it: "IT", pt: "PT-BR",
 };
 
 /** DeepL with the key from Denetim Masası → Sistem → Çeviri (free keys end in ":fx"). */

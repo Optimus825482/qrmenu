@@ -1,4 +1,4 @@
-export const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
+export const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -17,6 +17,8 @@ export const LOCALE_META: Record<Locale, LocaleMeta> = {
   fr: { name: "Fransızca", nativeName: "Français", label: "FR" },
   el: { name: "Yunanca", nativeName: "Ελληνικά", label: "EL" },
   it: { name: "İtalyanca", nativeName: "Italiano", label: "IT" },
+  // Brazilian Portuguese (Brazil flag); every `pt-*` browser language lands here.
+  pt: { name: "Portekizce", nativeName: "Português", label: "PT" },
 };
 /** Cookie that remembers the guest's language choice. */
 export const LANG_COOKIE = "merit_lang";
