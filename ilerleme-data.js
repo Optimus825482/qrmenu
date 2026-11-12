@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 16:00",
+  updatedAt: "12.11.2026 16:30",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -355,5 +355,6 @@ window.ILERLEME = {
     { at: "12.11 14:45", text: "Minibar Tanımları › Setup içerik normu penceresi (yerelde denendi, henüz yayına alınmadı). Ürün seçimi artık yazarak aranıyor: kutuya dokununca klavye açılıyor, yazdıkça liste daralıyor (“seker” yazınca Beyaz Şeker ve Esmer Şeker çıkıyor; Türkçe harf ve büyük-küçük harf fark etmiyor). Norm adet kutusu düzeltildi: içindeki sayı silinebiliyor, kutuya dokununca sayı seçili geliyor ve yeni yazılan sayı eskisinin yerine geçiyor (3 yazınca 13 olmuyor). Listede zaten olan bir ürün seçilirse düğme “Adedi güncelle” oluyor ve ürünü kaldırıp yeniden eklemeden norm adedi değişiyor." },
     { at: "12.11 15:00", text: "Setup içerik penceresi (yerelde denendi, henüz yayına alınmadı): başka bir setup açıldığında bir önceki pencerede seçilen ürün ve adet artık kalmıyor; her setup boş formla açılıyor." },
     { at: "12.11 16:00", text: "Minibar Yönetimi rolünün yetkileri genişletildi (yerelde test edildi, henüz yayına alınmadı; yayında veritabanı güncellemesi otomatik çalışır). Bu roldeki kullanıcı artık Minibar Tanımları’nda ürün grubu, ürün, setup ve setup içeriği ekleyebiliyor, düzenleyebiliyor ve pasife alabiliyor; silme işlemi sistem yöneticisinde kaldı. Ayrıca yayına alındığı günden başlayarak bir ay boyunca otel deposu sayım düzeltmelerini sistem yöneticisinin onayını beklemeden doğrudan stoğa işleyebiliyor; düzeltme penceresinde sürenin biteceği gün yazıyor. Süre dolunca düzeltmeler yeniden onaya gidiyor." },
+    { at: "12.11 16:30", text: "Pencere içinde iç içe ekran sorunu düzeltildi (yerelde denendi, henüz yayına alınmadı). Sistem yöneticisi masaüstünde bir minibar penceresinin (örneğin Doluluk Yükleme) içindeki bağlantıya, örneğin “Tavsiye İş Planı”na tıklanınca, açılan sayfa kat personeli ekranının menüsünü, saatini ve takvimini pencerenin içine ikinci kez çiziyordu. Artık pencere içinde izlenen bağlantılar da yalnız sayfanın kendisini gösteriyor." },
   ]
 };
