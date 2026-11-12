@@ -54,6 +54,8 @@ const LIVE_EVENTS = [
 type BoardView = "pano" | "kuyruk";
 const VIEW_KEY = "merit.rs.view";
 const VIEW_LABEL: Record<BoardView, string> = { pano: "Yan yana", kuyruk: "Kuyruk" };
+/** Requests are served in the order they arrive, so the queue is what staff see first. */
+const DEFAULT_VIEW: BoardView = "kuyruk";
 
 /** Grid of the stage sections, by how many there are (literal classes: Tailwind reads them from the source). */
 const GRID_BY_COUNT: Record<number, string> = {
@@ -93,6 +95,8 @@ type Props = {
   flags: RoomOpsFlags;
   /** MB-PERS V, computed on the server: shows the read-only MyBar panel on the full board. */
   showMybar?: boolean;
+  /** View the full board opens in before the device's remembered choice is read. */
+  initialView?: BoardView;
 };
 
 type ActionResult = { ok: boolean; error?: { message: string } };
@@ -120,7 +124,7 @@ function minutes(sec: number): string {
   return `${Math.round(sec / 60)} dk`;
 }
 
-export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags, showMybar = false }: Props) {
+export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags, showMybar = false, initialView = DEFAULT_VIEW }: Props) {
   const [data, setData] = useState<RoomBoard | null>(initialBoard);
   // Load errors (a failed refresh) clear on the next successful refresh; action errors stay until dismissed.
   const [loadErr, setLoadErr] = useState<string>(loadError ?? "");
@@ -129,7 +133,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   const [clockOffset, setClockOffset] = useState(() => offsetOf(initialBoard));
   const [busy, setBusy] = useState(false);
   const [activeStage, setActiveStage] = useState<RoomStageId>(TAB_STAGES[tab][0].id);
-  const [view, setView] = useState<BoardView>("pano");
+  const [view, setView] = useState<BoardView>(initialView);
   const [notices, setNotices] = useState<RoomNotice[]>([]);
   const [highlight, setHighlight] = useState("");
   const mybarOn = showMybar && tab === "tumu";
@@ -145,7 +149,8 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   useEffect(() => {
     const timer = window.setTimeout(() => {
       try {
-        if (window.localStorage.getItem(VIEW_KEY) === "kuyruk") setView("kuyruk");
+        const stored = window.localStorage.getItem(VIEW_KEY);
+        if (stored === "pano" || stored === "kuyruk") setView(stored);
       } catch {
         /* storage blocked: keep the default view */
       }

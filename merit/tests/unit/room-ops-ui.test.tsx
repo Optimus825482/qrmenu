@@ -105,8 +105,15 @@ function boardOf(cols: Partial<Record<RoomBoardColumn, RoomOrderCard[]>>, over: 
 const ALL: RoomOpsFlags = { talepD: true, teyitD: true, teslimD: true, teslimA: true, talepA: true };
 const NONE: RoomOpsFlags = { talepD: false, teyitD: false, teslimD: false, teslimA: false, talepA: false };
 
-function ui(b: RoomBoard, flags: RoomOpsFlags, tab: "tumu" | "teyit" | "teslim" = "tumu", showMybar = false) {
-  return <OdaServisiClient outletId="out1" hotelName="Merit Royal" tab={tab} initialBoard={b} flags={flags} showMybar={showMybar} />;
+// Most cases read the side-by-side board; the queue (the default the staff sees) has its own cases.
+function ui(
+  b: RoomBoard,
+  flags: RoomOpsFlags,
+  tab: "tumu" | "teyit" | "teslim" = "tumu",
+  showMybar = false,
+  view: "pano" | "kuyruk" | "default" = "pano",
+) {
+  return <OdaServisiClient outletId="out1" hotelName="Merit Royal" tab={tab} initialBoard={b} flags={flags} showMybar={showMybar} initialView={view === "default" ? undefined : view} />;
 }
 
 function mybarRow(over: Record<string, unknown> = {}) {
@@ -440,6 +447,16 @@ describe("RoomService staff board - service queue", () => {
     expect(queue.getByLabelText("Kuyruk sırası 2")).toBeTruthy();
     fireEvent.click(queue.getByRole("button", { name: "Yola çıktı" }));
     await waitFor(() => expect(onWay).toHaveBeenCalledWith({ orderId: first.id }));
+  });
+
+  it("opens in the queue by default; a remembered side-by-side choice wins", async () => {
+    const { unmount } = render(ui(allBoard(), ALL, "tumu", false, "default"));
+    expect(document.querySelector('[data-stage-id="KUYRUK"]')).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Kuyruk" }).getAttribute("aria-pressed")).toBe("true");
+    unmount();
+    window.localStorage.setItem("merit.rs.view", "pano");
+    render(ui(allBoard(), ALL, "tumu", false, "default"));
+    await waitFor(() => expect(document.querySelector('[data-stage-id="ALINDI"]')).toBeTruthy());
   });
 
   it("remembers the chosen view on the device", async () => {

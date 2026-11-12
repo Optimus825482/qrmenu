@@ -99,7 +99,8 @@
         "title": "Menù del servizio in camera"
       },
       "selections": {
-        "submit": "Invia selezioni"
+        "submit": "Invia selezioni",
+        "note": "Nota (facoltativa)"
       },
       "limit": "Hai raggiunto il limite di ordini per il servizio in camera.",
       "order": {
@@ -115,7 +116,8 @@
         "eta": "Tempo stimato: {min} min",
         "cancelByPhone": "Se desidera modificare o annullare l'ordine, La preghiamo di chiamare il Servizio in Camera dal telefono della Sua camera; il nostro team sarà lieto di assisterLa.",
         "cancelled": "Il tuo ordine è stato annullato.",
-        "cancelledHint": "Per i dettagli, La preghiamo di chiamare il Servizio in Camera dal telefono della camera."
+        "cancelledHint": "Per i dettagli, La preghiamo di chiamare il Servizio in Camera dal telefono della camera.",
+        "received": "La Sua richiesta è stata ricevuta e sarà evasa al più presto."
       },
       "unavailable": "Al momento non disponibile"
     },

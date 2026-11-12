@@ -1060,6 +1060,14 @@ body {
 .g-banner-warn {
   border-color: var(--m-accent);
 }
+/* Confirmation after a request is sent: the same box, read first. */
+.g-banner-ok {
+  border: 2px solid var(--m-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
 .g-empty {
   padding: 48px 16px;
   text-align: center;

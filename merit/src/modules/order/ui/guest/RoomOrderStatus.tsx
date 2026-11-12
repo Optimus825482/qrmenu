@@ -45,7 +45,12 @@ export function RoomOrderStatus({ order }: { token: string; order: GuestOrderVie
   return (
     <>
       {status === "TEYIT_BEKLIYOR" ? <p className="g-detail">{t("rs.order.confirmHint")}</p> : null}
-      {status === "GONDERILDI" ? <p className="g-detail">{t("order.thanks")}</p> : null}
+      {status === "GONDERILDI" ? (
+        // What the guest sees right after pressing send: the request arrived and is being handled.
+        <p className="g-banner g-banner-ok" role="status" data-testid="rs-received">
+          {t("rs.order.received")}
+        </p>
+      ) : null}
       {status === "TESLIM_EDILDI" ? <p className="g-detail">{t("order.thanks")}</p> : null}
       <ol className="g-steps">
         {steps.map((step, index) => (

@@ -165,6 +165,15 @@ describe("OrderStatus - oda servisi adımları", () => {
     }
   });
 
+  it("GONDERILDI iken 'talebiniz alındı' bildirimi görünür; sonraki adımlarda görünmez", () => {
+    status(order({ status: "GONDERILDI" }));
+    expect(screen.getByTestId("rs-received").textContent).toBe(tr.guest.rs.order.received);
+    expect(tr.guest.rs.order.received).toContain("En kısa zamanda karşılanacaktır");
+    cleanup();
+    status(order({ status: "ONAYLANDI" }));
+    expect(screen.queryByTestId("rs-received")).toBeNull();
+  });
+
   it("TESLIM_EDILDI iken teşekkür metni", () => {
     status(order({ status: "TESLIM_EDILDI" }));
     expect(screen.getByText(tr.guest.order.thanks)).toBeTruthy();

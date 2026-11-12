@@ -108,7 +108,8 @@
         "title": "Zimmerservice-Speisekarte"
       },
       "selections": {
-        "submit": "Auswahl senden"
+        "submit": "Auswahl senden",
+        "note": "Anmerkung (optional)"
       },
       "limit": "Sie haben das Bestelllimit für den Zimmerservice erreicht.",
       "order": {
@@ -124,7 +125,8 @@
         "eta": "Voraussichtliche Wartezeit: {min} Min.",
         "cancelByPhone": "Wenn Sie Ihre Bestellung ändern oder stornieren möchten, rufen Sie bitte den Zimmerservice über das Telefon in Ihrem Zimmer an; unser Team hilft Ihnen gern.",
         "cancelled": "Ihre Bestellung wurde storniert.",
-        "cancelledHint": "Für Einzelheiten rufen Sie bitte den Zimmerservice über Ihr Zimmertelefon an."
+        "cancelledHint": "Für Einzelheiten rufen Sie bitte den Zimmerservice über Ihr Zimmertelefon an.",
+        "received": "Ihre Bestellung ist eingegangen und wird so schnell wie möglich bearbeitet."
       },
       "unavailable": "Derzeit nicht verfügbar"
     },

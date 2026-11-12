@@ -99,7 +99,8 @@
         "title": "Menu du service en chambre"
       },
       "selections": {
-        "submit": "Envoyer la sélection"
+        "submit": "Envoyer la sélection",
+        "note": "Remarque (facultatif)"
       },
       "limit": "Vous avez atteint la limite de commandes pour le service en chambre.",
       "order": {
@@ -115,7 +116,8 @@
         "eta": "Délai estimé : {min} min",
         "cancelByPhone": "Si vous souhaitez modifier ou annuler votre commande, nous vous prions d'appeler le service en chambre depuis le téléphone de votre chambre ; notre équipe se fera un plaisir de vous aider.",
         "cancelled": "Votre commande a été annulée.",
-        "cancelledHint": "Pour plus de détails, veuillez appeler le service en chambre depuis le téléphone de votre chambre."
+        "cancelledHint": "Pour plus de détails, veuillez appeler le service en chambre depuis le téléphone de votre chambre.",
+        "received": "Votre demande a bien été reçue et sera traitée dans les plus brefs délais."
       },
       "unavailable": "Indisponible pour le moment"
     },

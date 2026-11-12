@@ -791,6 +791,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
           item={visibleOpenItem}
           price={showPrice && visibleOpenItem.price ? format(visibleOpenItem.price) : undefined}
           orderingOpen={orderingOpen}
+          itemNote={mode !== "room"}
           onClose={() => setOpenId(null)}
           onAdd={(item, quantity, note) =>
             addSelection({

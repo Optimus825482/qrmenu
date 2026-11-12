@@ -108,7 +108,8 @@
         "title": "Oda Servisi Menüsü"
       },
       "selections": {
-        "submit": "Seçimleri gönder"
+        "submit": "Seçimleri gönder",
+        "note": "Açıklama (isteğe bağlı)"
       },
       "limit": "Oda servisi için sipariş sınırına ulaştınız.",
       "order": {
@@ -124,7 +125,8 @@
         "eta": "Tahmini süre: {min} dk",
         "cancelByPhone": "Siparişinizde değişiklik yapmak ya da siparişinizi iptal etmek isterseniz, odanızdaki telefondan Oda Servisi'ni aramanızı rica ederiz; ekibimiz memnuniyetle yardımcı olacaktır.",
         "cancelled": "Siparişiniz iptal edildi.",
-        "cancelledHint": "Ayrıntı için odanızdaki telefondan Oda Servisi'ni arayabilirsiniz."
+        "cancelledHint": "Ayrıntı için odanızdaki telefondan Oda Servisi'ni arayabilirsiniz.",
+        "received": "Talebiniz alındı. En kısa zamanda karşılanacaktır."
       },
       "unavailable": "Şu an kullanılamıyor"
     },

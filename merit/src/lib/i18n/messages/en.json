@@ -108,7 +108,8 @@
         "title": "Room Service Menu"
       },
       "selections": {
-        "submit": "Send selections"
+        "submit": "Send selections",
+        "note": "Note (optional)"
       },
       "limit": "You’ve reached the room service order limit.",
       "order": {
@@ -124,7 +125,8 @@
         "eta": "Estimated time: {min} min",
         "cancelByPhone": "Should you wish to change or cancel your order, kindly call Room Service from the telephone in your room; our team will be delighted to assist you.",
         "cancelled": "Your order has been cancelled.",
-        "cancelledHint": "For details, please call Room Service from the telephone in your room."
+        "cancelledHint": "For details, please call Room Service from the telephone in your room.",
+        "received": "Your request has been received and will be taken care of as soon as possible."
       },
       "unavailable": "Currently unavailable"
     },

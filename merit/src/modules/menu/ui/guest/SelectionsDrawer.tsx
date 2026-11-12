@@ -30,8 +30,9 @@ type Problem =
   | { kind: "unavailable"; names: string[]; ids: string[] };
 
 /**
- * The guest's selections: quantity, per-item note, remove, optional total (only while prices are
- * shown), a general note and the send button. The server decides whether ordering is open: a CONFLICT
+ * The guest's selections: quantity, per-item note (table orders only; a room-service order has one
+ * optional note for the whole order), remove, optional total (only while prices are shown), a
+ * general note and the send button. The server decides whether ordering is open: a CONFLICT
  * answer shows the closed notice and keeps every selection; the idempotency key survives a failure so a
  * retry cannot create a second order.
  */
@@ -84,6 +85,8 @@ export function SelectionsDrawer({
   const unavailable = problem?.kind === "unavailable" ? problem.names : [];
   const unavailableIds = problem?.kind === "unavailable" ? problem.ids : [];
   const closed = problem?.kind === "closed" || !orderingOpen;
+  // Room service asks for one note at the end; a per-dish note is neither shown nor sent.
+  const itemNotes = mode !== "room";
   const submitDisabled = items.length === 0 || !online || sending || (mode === "room" && !orderingOpen);
 
   async function submit() {
@@ -96,7 +99,7 @@ export function SelectionsDrawer({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: ensureIdempotencyKey(),
-          items: items.map((i) => ({ menuNodeId: i.menuNodeId, qty: i.qty, ...(i.note ? { note: i.note } : {}) })),
+          items: items.map((i) => ({ menuNodeId: i.menuNodeId, qty: i.qty, ...(itemNotes && i.note ? { note: i.note } : {}) })),
           note,
           locale,
         }),
@@ -222,15 +225,17 @@ export function SelectionsDrawer({
                       {t("selections.remove")}
                     </button>
                   </div>
-                  <label className="g-note">
-                    <span>{t("cart.note")}</span>
-                    <input
-                      type="text"
-                      value={item.note ?? ""}
-                      maxLength={ITEM_NOTE_MAX}
-                      onChange={(event) => setItemNote(item.lineId, event.target.value)}
-                    />
-                  </label>
+                  {itemNotes ? (
+                    <label className="g-note">
+                      <span>{t("cart.note")}</span>
+                      <input
+                        type="text"
+                        value={item.note ?? ""}
+                        maxLength={ITEM_NOTE_MAX}
+                        onChange={(event) => setItemNote(item.lineId, event.target.value)}
+                      />
+                    </label>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -239,7 +244,7 @@ export function SelectionsDrawer({
           {items.length > 0 ? (
             <>
               <label className="g-note">
-                <span>{t("selections.generalNote")}</span>
+                <span>{t(mode === "room" ? "rs.selections.note" : "selections.generalNote")}</span>
                 <textarea value={note} maxLength={NOTE_MAX} rows={2} onChange={(event) => setNote(event.target.value)} />
               </label>
               {pricesShown && total > 0 ? (

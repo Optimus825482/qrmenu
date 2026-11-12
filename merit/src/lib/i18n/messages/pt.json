@@ -108,7 +108,8 @@
         "title": "Cardápio do Serviço de Quarto"
       },
       "selections": {
-        "submit": "Enviar seleções"
+        "submit": "Enviar seleções",
+        "note": "Observação (opcional)"
       },
       "limit": "Você atingiu o limite de pedidos do serviço de quarto.",
       "order": {
@@ -124,7 +125,8 @@
         "eta": "Tempo estimado: {min} min",
         "cancelByPhone": "Caso deseje alterar ou cancelar o seu pedido, pedimos a gentileza de ligar para o Serviço de Quarto pelo telefone do seu quarto; nossa equipe terá o maior prazer em ajudar.",
         "cancelled": "Seu pedido foi cancelado.",
-        "cancelledHint": "Para mais detalhes, ligue para o Serviço de Quarto pelo telefone do seu quarto."
+        "cancelledHint": "Para mais detalhes, ligue para o Serviço de Quarto pelo telefone do seu quarto.",
+        "received": "Seu pedido foi recebido e será atendido o mais breve possível."
       },
       "unavailable": "Indisponível no momento"
     },

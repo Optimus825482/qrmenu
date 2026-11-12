@@ -122,6 +122,28 @@ describe("guest room service menu", () => {
     expect(container.textContent).not.toContain("€");
   });
 
+  it("room service asks for one optional note at the end, not one per dish", () => {
+    render(guestMenu({ token: "room-notes", mode: "room" }));
+    fireEvent.click(screen.getByRole("button", { name: /Çay/ }));
+    // item sheet: quantity and add only
+    expect(screen.queryByLabelText(tr.guest.cart.note)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: tr.guest.cart.add }));
+    fireEvent.click(screen.getByRole("button", { name: /^Seçimlerim/ }));
+    expect(screen.queryByLabelText(tr.guest.cart.note)).toBeNull();
+    expect(screen.getByLabelText(tr.guest.rs.selections.note)).toBeTruthy();
+    expect(screen.queryByLabelText(tr.guest.selections.generalNote)).toBeNull();
+  });
+
+  it("a table order keeps the per-dish note and the general note", () => {
+    render(guestMenu({ token: "table-notes", mode: "table" }));
+    fireEvent.click(screen.getByRole("button", { name: /Çay/ }));
+    expect(screen.getByLabelText(tr.guest.cart.note)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: tr.guest.cart.add }));
+    fireEvent.click(screen.getByRole("button", { name: /^Seçimlerim/ }));
+    expect(screen.getByLabelText(tr.guest.cart.note)).toBeTruthy();
+    expect(screen.getByLabelText(tr.guest.selections.generalNote)).toBeTruthy();
+  });
+
   it("hides the room selections button when ordering closes with selections still pending", () => {
     const options = { token: "room-closed", mode: "room" } as const;
     const { rerender } = render(guestMenu(options));

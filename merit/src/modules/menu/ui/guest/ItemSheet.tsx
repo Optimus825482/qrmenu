@@ -41,6 +41,7 @@ export function ItemSheet({
   item,
   price,
   orderingOpen,
+  itemNote = true,
   onClose,
   onAdd,
 }: {
@@ -48,6 +49,8 @@ export function ItemSheet({
   /** Already formatted; undefined when prices are hidden. */
   price?: string;
   orderingOpen: boolean;
+  /** Per-dish note field. Room service has one note for the whole order instead, asked at the end. */
+  itemNote?: boolean;
   onClose: () => void;
   onAdd?: (item: GuestItem, quantity: number, note: string) => void;
 }) {
@@ -210,21 +213,23 @@ export function ItemSheet({
                   +
                 </button>
               </div>
-              <label className="g-note">
-                <span>{t("cart.note")}</span>
-                <textarea
-                  value={note}
-                  maxLength={ITEM_NOTE_MAX}
-                  rows={2}
-                  onChange={(event) => setNote(event.target.value)}
-                />
-              </label>
+              {itemNote ? (
+                <label className="g-note">
+                  <span>{t("cart.note")}</span>
+                  <textarea
+                    value={note}
+                    maxLength={ITEM_NOTE_MAX}
+                    rows={2}
+                    onChange={(event) => setNote(event.target.value)}
+                  />
+                </label>
+              ) : null}
               <button
                 type="button"
                 className="g-button"
                 disabled={!item.isAvailable}
                 onClick={() => {
-                  onAdd?.(item, quantity, note.trim());
+                  onAdd?.(item, quantity, itemNote ? note.trim() : "");
                   onClose();
                 }}
               >
