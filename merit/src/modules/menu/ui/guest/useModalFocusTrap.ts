@@ -14,6 +14,12 @@ export function useModalFocusTrap({
   containerRef: React.RefObject<HTMLElement | null>;
 }) {
   const triggerRef = useRef<HTMLElement | null>(null);
+  // Callers pass a fresh `onClose` on every render. Were it a dependency of the effect below, each keystroke in
+  // a field of the modal would re-run it and move the focus back to the initial element.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!active) return;
@@ -39,7 +45,7 @@ export function useModalFocusTrap({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -75,5 +81,5 @@ export function useModalFocusTrap({
         triggerRef.current.focus();
       }
     };
-  }, [active, onClose, initialFocusRef, containerRef]);
+  }, [active, initialFocusRef, containerRef]);
 }
