@@ -647,12 +647,23 @@ describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => 
   const scan = (userId: string, roomId: string, at: Date) =>
     testDb.qrScanLog.create({ data: { userId, roomId, kind: "PERSONEL", ok: true, ip: "t", userAgent: "t", createdAt: at } });
 
+  it("MMD kaydı QR istemez: odaya girilemediği için okutulacak kod yoktur", async () => {
+    const { w, kat } = await world();
+    await requireQr(w.hotelId);
+    const view = await dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: Misafir uyuyor" }, T0);
+    expect(view.count).toBe(1);
+    const check = await testDb.roomDndCheck.findFirstOrThrow({ where: { dndId: view.dndId } });
+    expect(check.note).toBe("MMD: Misafir uyuyor");
+  });
+
   it("QR zorunluyken kanıtsız ikame / sarfiyat yok / DND / kontrol API'si FORBIDDEN; kanıtla serbest", async () => {
     const { w, kat, kat2 } = await world();
     await requireQr(w.hotelId);
     expect(await messageOf(rep(kat.ctx, w, 1))).toBe("Bu oda için QR doğrulaması gerekli. Lütfen odadaki QR kodu okutun.");
     expect(await codeOf(noUse(kat.ctx, w.room.id))).toBe("FORBIDDEN");
     expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0))).toBe("FORBIDDEN");
+    // A note that only looks like an MMD (no reason) is still a plain DND.
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: " }, T0))).toBe("FORBIDDEN");
     requireUser.mockResolvedValue(kat.ctx);
     const res = await checkRoute.POST(
       new Request("http://localhost/x", {

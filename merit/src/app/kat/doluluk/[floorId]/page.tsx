@@ -1,6 +1,6 @@
 "use client";
 
-import { MMD_REASONS, mmdNote } from "@/modules/minibar/mmdReasons";
+import { MMD_REASONS, mmdConsumptionQuestion, mmdNote } from "@/modules/minibar/mmdReasons";
 import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -707,10 +707,15 @@ export default function KatDolulukDetailPage() {
                     </div>
                   ) : null}
                   {mmdAsk ? (
-                    <div role="alertdialog" aria-label="Tüketim var mı?" className="space-y-2 rounded-xl border-2 border-accent bg-bg p-3">
-                      <p className="text-sm font-bold text-text">Tüketim var mı?</p>
+                    <div
+                      role="alertdialog"
+                      aria-label="Tüketim kaydı"
+                      data-testid="mmd-soru"
+                      className="space-y-2 rounded-xl border-2 border-accent bg-bg p-3"
+                    >
+                      <p className="text-sm font-bold text-text">{mmdConsumptionQuestion(selectedRoom.number, mmdAsk)}</p>
                       <p className="text-xs text-muted">
-                        Misafir eksilen ürünleri kendisi aldıysa tüketimi manuel kayıt talebiyle Minibar Yönetimi onayına gönderin.
+                        Evet derseniz tüketim miktarlarını girersiniz; kayıt Minibar Yönetimi onayına gönderilir.
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -721,7 +726,7 @@ export default function KatDolulukDetailPage() {
                           style={{ minHeight: "var(--tap-action)" }}
                           className="flex-1 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white hover:opacity-90"
                         >
-                          Evet, tüketim gir
+                          Evet
                         </button>
                         <button
                           type="button"

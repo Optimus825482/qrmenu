@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 05:35",
+  updatedAt: "12.11.2026 06:05",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -336,5 +336,6 @@ window.ILERLEME = {
     { at: "12.11 05:00", text: "Otel deposu ve onay ekranları (yerelde denendi, henüz yayına alınmadı). Stoklarım sayfası aranabilir, gruba ve duruma göre süzülebilir, sütuna göre sıralanabilir, sayfalı ve şeritli bir tabloya dönüştü. Katalogdan çıkarılmış eski ürünler (stoku 1000 olmayanlar) artık listede varsayılan olarak gizli; istenirse bir kutucukla gösteriliyor. Katlar sayfasındaki kritik stok uyarısı, ürünleri bir pencerede listeliyor; uyarıdaki sayı liste ile aynı kurala bağlandı. “Bekleyen Yönetici Onayları” sayfası düzeltme/silme, manuel kayıt ve ek stok taleplerini birlikte gösteriyor. Onay bekleyen manuel kayıt talebini gönderen kişi aynı gün içinde iptal edebiliyor. Kat ve depo sayfalarının tamamı telefon ve tablet genişliğinde tarandı, taşma bulunmadı." },
     { at: "12.11 05:20", text: "Raporlar (yerelde denendi, henüz yayına alınmadı). Rapor tablosunda sütun başlığına tıklayınca bütün sonuç sıralanıyor: sayılar önce büyükten küçüğe, metinler A’dan Z’ye; tekrar tıklayınca tersine dönüyor. Tablonun altından sayfada gösterilecek kayıt sayısı seçilebiliyor (25, 50, 100, 250; varsayılan 25). Süzgeçlerdeki seçim kutuları beyaz zeminli ve siyah çerçeveli oldu, her biri tarih bölümü gibi kendi çerçevesinde duruyor. Katalogdan çıkarılmış ürünlerin otel deposu stoğu sıfırlandı." },
     { at: "12.11 05:35", text: "Minibar garson ekranı (yerelde denendi, henüz yayına alınmadı). Stok sayfasının başlığı otel logosu ve “otel adı Stokları” oldu; kritik seviye ayar sütunu kaldırıldı. Kritik seviyeye yaklaşan, ulaşan ya da altına düşen ürünlerin satırı renkli gösteriliyor. Excel’e aktar, ekranda süzülmüş ve sıralanmış listenin tamamını (bütün sayfaları) aktarıyor. Kritik stoklar sayfası özet kartları, tablo ve “Stoklara dön” düğmesiyle yenilendi. Bu ekranlardaki ek talep bağlantıları kaldırıldı. Sol menünün altına dijital saat ve takvim yaprağı eklendi." },
+    { at: "12.11 06:05", text: "MMD kaydı (yerelde test edildi, henüz yayına alınmadı). MMD · Misafir Müsait Değil kaydı artık QR okutma istemiyor: odaya girilemediği için okutulacak kod yoktur. Sebep seçildikten ya da yazıldıktan sonra sistem “… nedeni ile girilemeyen oda için tüketim kaydı oluşturmak istiyor musunuz?” diye soruyor; Evet denirse tüketim miktarları girilip Minibar Yönetimi onayına gönderiliyor. Soru hem kat ekranındaki oda penceresinde hem oda kontrol ekranında çıkıyor." },
   ]
 };

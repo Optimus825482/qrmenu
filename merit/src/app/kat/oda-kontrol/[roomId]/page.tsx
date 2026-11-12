@@ -1,6 +1,6 @@
 "use client";
 
-import { MMD_REASONS } from "@/modules/minibar/mmdReasons";
+import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -297,6 +297,16 @@ export default function OdaKontrolPage() {
           : (json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`),
       );
       await loadRoom(false);
+      if (mmdReason) {
+        // The guest may have taken products at the door: the consumption goes to the manager as a manual entry request.
+        const wants = await confirm({
+          title: "Tüketim kaydı",
+          message: mmdConsumptionQuestion(data.room.number, mmdReason),
+          confirmLabel: "Evet",
+          cancelLabel: "Hayır",
+        });
+        if (wants) router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(data.room.id)}&mmd=${encodeURIComponent(mmdReason)}`);
+      }
     } catch (e) {
       notify.error(errorText(e, "DND hatası"));
     } finally {
