@@ -277,6 +277,9 @@ export function registerCoreApps(): void {
     icon: "ayarlar",
     moduleKey: "CORE",
     screenCode: "CR-SYS",
+    // Minibar Yönetimi has no CR-SYS: it gets the window for its own display settings (Görünüm, Uygulama);
+    // the system tabs stay hidden and are authorised on the server (settingsScopesAction).
+    alwaysForRoleCodes: ["R-MTY"],
     category: "SISTEM",
     needsHotel: false,
     window: { w: 640, h: 480 },

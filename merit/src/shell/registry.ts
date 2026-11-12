@@ -53,6 +53,11 @@ export type AppDefinition = {
   screenCode: string; // AppScreen.code: visibility follows this permission
   /** Also limited to these session role codes (a tool whose server side authorizes by role, not by screen). */
   roleCodes?: readonly string[];
+  /**
+   * Offered to these session role codes even without the screen permission. Only for a window whose content
+   * is personal (Denetim Masası → Görünüm); whatever else the window holds must authorise itself on the server.
+   */
+  alwaysForRoleCodes?: readonly string[];
   /** Never offered to these session role codes, whatever the screen permission says. */
   hiddenForRoleCodes?: readonly string[];
   category: AppCategory;

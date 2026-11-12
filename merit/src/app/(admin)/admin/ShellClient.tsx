@@ -74,7 +74,7 @@ export function ShellClient({
     const visible = new Set(Object.values(screensByHotel).flat());
     return getApps().filter(
       (a) =>
-        visible.has(a.screenCode) &&
+        (visible.has(a.screenCode) || a.alwaysForRoleCodes?.includes(user.roleCode) === true) &&
         (!a.roleCodes || a.roleCodes.includes(user.roleCode)) &&
         !a.hiddenForRoleCodes?.includes(user.roleCode),
     );
