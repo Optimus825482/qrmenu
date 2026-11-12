@@ -36,11 +36,26 @@ function assertGeneralWrite(k: string): void {
   }
 }
 
+/**
+ * Room-service order limits: only the system administrator may write them here. A hotel-level CR-SYS editor of
+ * another role may not; the Oda Servisi Sorumlusu uses "Oda Servisi Sınırları" (order/roomService/limitsAdmin).
+ */
+const SYSTEM_ADMIN_ONLY_KEYS: readonly string[] = ["rs.maxOpenPerRoom", "rs.minMinutesBetweenOrders"];
+
+function assertRoleMayWrite(ctx: Awaited<ReturnType<typeof requireUser>>, k: string): void {
+  if (SYSTEM_ADMIN_ONLY_KEYS.includes(k) && ctx.user.roleKind !== "SISTEM") {
+    const message = "Bu ayarı yalnızca Sistem Yöneticisi ve Oda Servisi Sorumlusu değiştirebilir";
+    throw new DomainError("FORBIDDEN", message, { fieldErrors: { key: [message] } });
+  }
+}
+
 export async function setSettingAction(raw: unknown): Promise<Result<settingsAdmin.SettingItem>> {
   // The value is validated against the key's own schema by the service (field error on "value").
   return safeAction(z.object({ hotelId, key, value: z.unknown() }), async (input) => {
     assertGeneralWrite(input.key);
-    return settingsAdmin.set(await requireUser(), input.hotelId, input.key, input.value);
+    const ctx = await requireUser();
+    assertRoleMayWrite(ctx, input.key);
+    return settingsAdmin.set(ctx, input.hotelId, input.key, input.value);
   })(raw);
 }
 
@@ -49,7 +64,9 @@ export async function clearSettingOverrideAction(
 ): Promise<Result<settingsAdmin.SettingItem>> {
   return safeAction(z.object({ hotelId: z.string().min(1), key }), async (input) => {
     assertGeneralWrite(input.key);
-    return settingsAdmin.clearHotelOverride(await requireUser(), input.hotelId, input.key);
+    const ctx = await requireUser();
+    assertRoleMayWrite(ctx, input.key);
+    return settingsAdmin.clearHotelOverride(ctx, input.hotelId, input.key);
   })(raw);
 }
 

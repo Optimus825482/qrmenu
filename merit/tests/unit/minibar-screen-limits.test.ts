@@ -13,7 +13,7 @@ const set = (...a: Action[]) => [...a].sort().join("");
 
 describe("SCREEN_LIMITS tek liste", () => {
   it("her girdi plan etiketi taşır ve P5/P2/P3 girdileri vardır", () => {
-    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR"].includes(l.plan))).toBe(true);
+    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR", "KD"].includes(l.plan))).toBe(true);
     for (const plan of ["P5", "P2", "P3"]) expect(SCREEN_LIMITS.some((l) => l.plan === plan)).toBe(true);
   });
 
@@ -130,6 +130,7 @@ describe("migration SQL'i seed çıktısıyla aynı sonucu verir (gerçek test D
       "20261110161000_mty_doluluk_silme",
       "20261112030000_otel_deposu_stok_takibi",
       "20261112120000_mty_tanim_ve_onaysiz_duzeltme",
+      "20261112150000_kademe_rolleri",
     ]) {
       const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${migration}/migration.sql`), "utf8");
       const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));

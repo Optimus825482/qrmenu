@@ -6,7 +6,7 @@ import { DomainError, fromZod } from "@/lib/result";
 import { withAdminTx } from "@/modules/core/server/admin/crud";
 import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
-import { applyCorrectionTx, lockedBalanceTx } from "./pool";
+import { applyCorrectionTx, DIRECT_CORRECTION_ROLES, lockedBalanceTx } from "./pool";
 
 /**
  * Otel deposu sayım düzeltmesi, iki adımlı: minibar sistem sorumlusu (R-MTY) sayılan miktarı ve açıklamasını
@@ -115,7 +115,7 @@ const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
 
 /** Who writes a request instead of correcting directly: the minibar system manager. */
 export function mustRequestCorrection(ctx: Ctx): boolean {
-  return ctx.user.roleKind !== "SISTEM" && ctx.user.roleCode === "R-MTY";
+  return ctx.user.roleKind !== "SISTEM" && DIRECT_CORRECTION_ROLES.includes(ctx.user.roleCode);
 }
 
 /** Only the system administrator approves or rejects. */

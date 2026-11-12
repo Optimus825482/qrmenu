@@ -6,8 +6,9 @@ import { getSettings } from "@/lib/settings";
 /*
  * Room verification proof for `minibar.requireQrForControl` (KAT-1/KAT-2). A successful room scan of the
  * floor attendant (`resolveRoomByQr`) writes a `QrScanLog` row (ok, PERSONEL, user, room); that row is the
- * proof for the next QR_PROOF_MINUTES. The room check writers (replacement, "Sarfiyat Yok", DND) ask for it
- * on the server, so neither a URL parameter nor a direct API call bypasses the QR. A typed room number is
+ * proof for the next QR_PROOF_MINUTES. The room check writers (replacement, "Sarfiyat Yok") ask for it
+ * on the server, so neither a URL parameter nor a direct API call bypasses the QR. DND and MMD never ask:
+ * both are recorded exactly when the attendant could not get into the room. A typed room number is
  * accepted only where the hotel allows manual entry (whole hotel, listed floors or listed rooms); every such
  * verification is audited as ELLE (`ODA_DOGRULAMA_ELLE`).
  */

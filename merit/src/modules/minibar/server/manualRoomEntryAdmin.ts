@@ -15,7 +15,7 @@ import { audit } from "@/modules/core/server/audit";
  */
 
 /** Role codes allowed to edit manual room entry (prisma/seed/roles.ts). */
-export const MANUAL_ENTRY_EDITOR_ROLES: readonly string[] = ["R-SYS", "R-MTY"];
+export const MANUAL_ENTRY_EDITOR_ROLES: readonly string[] = ["R-SYS", "R-MTY", "R-OSS", "R-FBY", "R-FBM"];
 
 /**
  * Editors that are not system administrators (Minibar Takip Yöneticisi): no CR-SYS at all, so the rest of the

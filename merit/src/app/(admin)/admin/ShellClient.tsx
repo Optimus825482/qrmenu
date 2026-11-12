@@ -175,7 +175,7 @@ export function ShellClient({
           />
           {footerBand ? <FooterBand /> : null}
           <WelcomeOpener needed={welcomeNeeded} hotelId={welcomeHotelId} />
-          <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY"} />
+          <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY" || user.roleCode === "R-OSS"} />
           <ConfirmDialog />
           <TrayBalloonHost />
         </>

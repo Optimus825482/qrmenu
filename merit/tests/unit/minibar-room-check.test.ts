@@ -672,14 +672,21 @@ describe("QR doğrulama kanıtı (KAT-1) ve DND bekleme süresi (KAT-3)", () => 
     expect(await codeOf(mmd.recordMmd(gar.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, T0))).toBe("FORBIDDEN");
   });
 
-  it("QR zorunluyken kanıtsız ikame / sarfiyat yok / DND / kontrol API'si FORBIDDEN; kanıtla serbest", async () => {
+  it("QR zorunluyken DND ve MMD kanıt istemez: odaya girilemediği için kaydedilirler", async () => {
+    const { w, kat } = await world();
+    await requireQr(w.hotelId);
+    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0))).toBe("OK");
+    expect(await codeOf(mmd.recordMmd(kat.ctx, { roomId: w.room.id, reason: "Misafir uyuyor" }, T0))).toBe("OK");
+    // The writers that mean "I was inside the room" still ask for the scan.
+    expect(await codeOf(rep(kat.ctx, w, 1))).toBe("FORBIDDEN");
+    expect(await codeOf(noUse(kat.ctx, w.room.id))).toBe("FORBIDDEN");
+  });
+
+  it("QR zorunluyken kanıtsız ikame / sarfiyat yok / kontrol API'si FORBIDDEN; kanıtla serbest", async () => {
     const { w, kat, kat2 } = await world();
     await requireQr(w.hotelId);
     expect(await messageOf(rep(kat.ctx, w, 1))).toBe("Bu oda için QR doğrulaması gerekli. Lütfen odadaki QR kodu okutun.");
     expect(await codeOf(noUse(kat.ctx, w.room.id))).toBe("FORBIDDEN");
-    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id }, T0))).toBe("FORBIDDEN");
-    // A note is free text: writing "MMD" into it never waives the QR rule of a DND.
-    expect(await codeOf(dnd.markDnd(kat.ctx, { roomId: w.room.id, note: "MMD: Misafir uyuyor" }, T0))).toBe("FORBIDDEN");
     requireUser.mockResolvedValue(kat.ctx);
     const res = await checkRoute.POST(
       new Request("http://localhost/x", {

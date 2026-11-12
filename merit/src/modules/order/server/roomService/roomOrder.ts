@@ -3,7 +3,7 @@ import { Prisma, type OrderStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/realtime";
 import { createRateLimiter, scaledMax } from "@/lib/rate-limit";
-import { getSetting } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
 import { audit } from "@/modules/core/server/audit";
@@ -80,6 +80,9 @@ async function resolveRoom(token: string, meta: GuestMeta) {
   throw new DomainError("NOT_FOUND", "Oda bulunamadı");
 }
 
+/** An order staff cancelled or rejected does not start the wait before the room's next order. */
+const WAIT_EXEMPT_STATUSES = ["IPTAL", "REDDEDILDI"] as const satisfies readonly OrderStatus[];
+
 const isUniqueViolation = (error: unknown) => (error as { code?: string } | null)?.code === "P2002";
 
 async function create(input: RoomOrderInput): Promise<GuestOrderView> {
@@ -117,7 +120,9 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
   if (!state.orderingOpen || !state.rsOutletId) {
     throw new DomainError("CONFLICT", "Şu an oda servisi siparişi alınmıyor");
   }
-  const maxOpen = await getSetting("rs.maxOpenPerRoom", state.hotelId);
+  const limits = await getSettings(["rs.maxOpenPerRoom", "rs.minMinutesBetweenOrders"], state.hotelId);
+  const maxOpen = limits["rs.maxOpenPerRoom"];
+  const waitMinutes = limits["rs.minMinutesBetweenOrders"];
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -136,6 +141,27 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
         // `limit` tells the guest page this is the open-order limit, not "ordering is closed".
         const message = `Odanız için en fazla ${maxOpen} açık sipariş olabilir`;
         throw new DomainError("CONFLICT", message, { fieldErrors: { limit: [message] } });
+      }
+
+      // Wait between two orders of the room (0 = off), counted from the latest order staff did not cancel or
+      // reject. Same room lock as the check above, so two requests cannot both pass.
+      if (waitMinutes > 0) {
+        const latest = await tx.order.findFirst({
+          where: {
+            roomId: target.room.id,
+            kind: "ODA_SERVISI",
+            status: { notIn: [...WAIT_EXEMPT_STATUSES] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { createdAt: true },
+        });
+        const remainingMs = latest ? latest.createdAt.getTime() + waitMinutes * 60_000 - Date.now() : 0;
+        if (remainingMs > 0) {
+          const remainingSeconds = Math.ceil(remainingMs / 1000);
+          const message = `Yeni sipariş için ${Math.ceil(remainingSeconds / 60)} dakika sonra tekrar deneyebilirsiniz`;
+          // `cooldown` (seconds left) tells the guest page this is the wait between orders.
+          throw new DomainError("CONFLICT", message, { fieldErrors: { cooldown: [String(remainingSeconds)] } });
+        }
       }
 
       // Validate selected items

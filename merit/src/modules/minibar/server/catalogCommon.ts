@@ -8,7 +8,7 @@ export const CATALOG_SCREEN = "MB-TAN";
  * Minibar Yönetimi (R-MTY) keeps the catalogue besides the system administrator: adds and edits product groups,
  * products, setups and setup contents and takes them out of use. Deleting stays with the system administrator.
  */
-export const CATALOG_MANAGER_ROLES: readonly string[] = ["R-MTY"];
+export const CATALOG_MANAGER_ROLES: readonly string[] = ["R-MTY", "R-OSS", "R-FBY", "R-FBM"];
 
 /** withAdminTx options of a catalogue write that the catalogue managers may also make. */
 export function catalogWrite(action: "O" | "D") {

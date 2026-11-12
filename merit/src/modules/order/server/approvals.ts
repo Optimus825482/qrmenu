@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
+import { coverage } from "./roomService/coverage";
 
 export type ApprovalSubject = Pick<Order, "hotelId" | "outletId" | "assignedWaiterId"> &
   Partial<Pick<Order, "tableId" | "kind">>;
@@ -39,7 +40,11 @@ async function recipientsFor(tx: Prisma.TransactionClient, order: ApprovalSubjec
     for (const id of await onlineAt(tx, order.outletId, ["R-ODS", "R-BUT", "R-MUS"])) {
       out.add(id);
     }
-    for (const id of await usersEntitledTo(order.hotelId, ["R-FBM"], tx)) {
+    for (const id of await usersEntitledTo(order.hotelId, ["R-FBM", "R-FBY", "R-OSS"], tx)) {
+      out.add(id);
+    }
+    // Cross-hotel coverage: signed-in users who currently process this hotel's requests from another hotel.
+    for (const id of await coverage.onlineProcessors(tx, order.hotelId)) {
       out.add(id);
     }
     return [...out];

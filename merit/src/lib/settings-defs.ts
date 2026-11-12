@@ -47,6 +47,8 @@ export const SETTING_SCHEMAS = {
   "order.callAlertSeconds": z.number().int().min(1).max(3600),
   "rs.slaMinutes": minutes,
   "rs.maxOpenPerRoom": z.number().int().min(1).max(10),
+  /** Wait between two room-service orders of one room; 0 = no waiting (so not the shared `minutes`, which starts at 1). */
+  "rs.minMinutesBetweenOrders": z.number().int().min(0).max(1440),
   "email.notifyEnabled": flag,
   "email.alertEnabled": flag,
   "email.reportEnabled": flag,
@@ -115,6 +117,7 @@ export const DEFAULT_SETTINGS: { [K in SettingKey]: SettingValue<K> } = {
   "order.callAlertSeconds": 60,
   "rs.slaMinutes": 30,
   "rs.maxOpenPerRoom": 3,
+  "rs.minMinutesBetweenOrders": 15,
   "email.notifyEnabled": false,
   "email.alertEnabled": false,
   "email.reportEnabled": false,
@@ -397,6 +400,15 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     group: "Oda Servisi",
     type: "number",
     unit: "adet",
+  },
+  "rs.minMinutesBetweenOrders": {
+    label: "İki sipariş arasındaki bekleme süresi",
+    description:
+      "Bir oda sipariş gönderdikten sonra yeni siparişi bu süre dolunca gönderebilir. Personelin iptal ettiği ya da reddettiği sipariş süreyi başlatmaz. 0 yazılırsa bekleme uygulanmaz.",
+    group: "Oda Servisi",
+    type: "number",
+    unit: "dk",
+    step: 1,
   },
   "email.notifyEnabled": {
     label: "Bildirim e-postaları",

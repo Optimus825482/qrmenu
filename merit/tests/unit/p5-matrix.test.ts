@@ -52,12 +52,12 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     expect(await permission("R-KDS", "QS-KDS")).toMatchObject({ canEdit: true });
   });
 
-  it("onay (A) QS-KUY ve QS-IPT'de yalnız R-SYS, R-OTM, R-FBM, R-SGF, R-KAS'ta kalır", async () => {
+  it("onay (A) QS-KUY ve QS-IPT'de yalnız R-SYS, R-OTM, R-FBM, R-FBY, R-SGF, R-KAS'ta kalır", async () => {
     await runSeed(db, { legacyDefinitions: false });
     expect(await permission("R-SGF", "QS-KUY")).toMatchObject({ canApprove: true });
     expect(await permission("R-SGF", "QM-MEN")).toMatchObject({ canEdit: true });
     expect(await permission("R-KAS", "QS-IPT")).toMatchObject({ canApprove: true });
-    const allowed = new Set(["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS"]);
+    const allowed = new Set(["R-SYS", "R-OTM", "R-FBM", "R-FBY", "R-SGF", "R-KAS"]);
     const rows = await db.roleScreenPermission.findMany({
       where: { hotelId: null, canApprove: true, screen: { code: { in: ["QS-KUY", "QS-IPT"] } } },
       include: { role: true },
@@ -132,8 +132,13 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
       await db.$executeRawUnsafe(statement);
     }
     // YR (20261110160000) sets the four delegate roles' whole global matrix, QR screens included.
+    // KD (20261112150000) does the same for R-FBY and R-OSS.
+    const kd = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261112150000_kademe_rolleri/migration.sql"), "utf8");
     const yr = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261110160000_yonetici_rolleri/migration.sql"), "utf8");
-    const yrBlock = yr.slice(yr.indexOf("-- @limits:begin"), yr.indexOf("-- @limits:end"));
+    const yrBlock =
+      yr.slice(yr.indexOf("-- @limits:begin"), yr.indexOf("-- @limits:end")) +
+      ";\n" +
+      kd.slice(kd.indexOf("-- @limits:begin"), kd.indexOf("-- @limits:end"));
     for (const statement of yrBlock.split(/;\s*\n/).map((x) => x.replace(/^\s*--.*$/gm, "").trim()).filter((x) => x.length > 0)) {
       await db.$executeRawUnsafe(statement);
     }

@@ -20,6 +20,9 @@ export default async function TargetPickerPage() {
             Başka bir hesapla girmek için önce oturumu kapatın.
           </p>
         </header>
+        <a href="/baslat" className="rounded-xl bg-accent px-4 py-3 text-center text-sm font-bold text-white">
+          Ana ekrana dön
+        </a>
         <LogoutButton />
       </section>
     );

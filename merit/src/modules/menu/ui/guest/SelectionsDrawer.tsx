@@ -26,6 +26,7 @@ type Sent = { orderId: string; orderNo: number };
 type Problem =
   | { kind: "closed" }
   | { kind: "limit" }
+  | { kind: "cooldown"; minutes: number }
   | { kind: "failed" }
   | { kind: "unavailable"; names: string[]; ids: string[] };
 
@@ -33,8 +34,8 @@ type Problem =
  * The guest's selections: quantity, per-item note (table orders only; a room-service order has one
  * optional note for the whole order), remove, optional total (only while prices are shown), a
  * general note and the send button. The server decides whether ordering is open: a CONFLICT
- * answer shows the closed notice and keeps every selection; the idempotency key survives a failure so a
- * retry cannot create a second order.
+ * answer shows the closed notice (or, for room service, the open-order limit / wait-between-orders notice)
+ * and keeps every selection; the idempotency key survives a failure so a retry cannot create a second order.
  */
 export function SelectionsDrawer({
   token,
@@ -119,8 +120,14 @@ export function SelectionsDrawer({
         setProblem({ kind: "unavailable", names: fieldErrors.items, ids: fieldErrors.itemIds ?? [] });
       }
       else if (code === "CONFLICT") {
-        // Room service: the room already has the allowed number of open orders; ordering itself is open.
-        setProblem({ kind: (fieldErrors as { limit?: string[] } | undefined)?.limit?.length ? "limit" : "closed" });
+        // Room service, ordering itself is open: the room already has the allowed number of open orders
+        // (`limit`), or its last order is too recent (`cooldown` = seconds left).
+        const marks = fieldErrors as { limit?: string[]; cooldown?: string[] } | undefined;
+        if (marks?.limit?.length) setProblem({ kind: "limit" });
+        else if (marks?.cooldown?.length) {
+          const seconds = Number(marks.cooldown[0]);
+          setProblem({ kind: "cooldown", minutes: Math.max(1, Math.ceil((Number.isFinite(seconds) ? seconds : 0) / 60)) });
+        } else setProblem({ kind: "closed" });
       }
       else setProblem({ kind: "failed" });
     } catch {
@@ -153,6 +160,11 @@ export function SelectionsDrawer({
           {problem?.kind === "limit" ? (
             <p className="g-banner g-banner-warn" role="alert">
               {t("rs.limit")}
+            </p>
+          ) : null}
+          {problem?.kind === "cooldown" ? (
+            <p className="g-banner g-banner-warn" role="alert">
+              {t("rs.cooldown", { min: problem.minutes })}
             </p>
           ) : null}
           {problem?.kind === "failed" ? (

@@ -16,6 +16,11 @@ export type DeviceFormInput = {
   height: number;
   /** `matchMedia("(pointer: coarse)")`: the primary pointer is a finger. */
   coarsePointer: boolean;
+  /**
+   * The browser says it runs on a phone/tablet OS. A tablet with a mouse or keyboard cover reports a fine
+   * primary pointer; without this it would be handed the XP desktop, which has no way back.
+   */
+  handheld?: boolean;
   /** `?cihaz=telefon|tablet|masaustu`: forces a form (support and testing on a PC). */
   query?: string | null;
 };
@@ -35,9 +40,14 @@ export function formFromUserAgent(userAgent: string | null | undefined): DeviceF
   return /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent ?? "") ? "phone" : "desktop";
 }
 
+/** Android, iOS and iPadOS (which calls itself a Mac but has a multi-touch screen). */
+export function isHandheld(userAgent: string, platform: string, maxTouchPoints: number): boolean {
+  return /Android|iPhone|iPad|iPod/i.test(userAgent) || (/Mac/i.test(platform) && maxTouchPoints > 1);
+}
+
 export function resolveDeviceForm(input: DeviceFormInput): DeviceForm {
   const forced = input.query ? QUERY_FORMS[input.query] : undefined;
   if (forced) return forced;
   if (input.width < XP_ANDROID_MAX_WIDTH || input.height < XP_ANDROID_MAX_HEIGHT) return "phone";
-  return input.coarsePointer ? "tablet" : "desktop";
+  return input.coarsePointer || input.handheld ? "tablet" : "desktop";
 }

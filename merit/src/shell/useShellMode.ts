@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
-import { parseFormQuery, resolveDeviceForm, type DeviceForm } from "./deviceForm";
+import { isHandheld, parseFormQuery, resolveDeviceForm, type DeviceForm } from "./deviceForm";
 import { DEVICE_EVENT, parseDevice, readDeviceRaw, type DeviceRecord } from "./deviceRecord";
 import {
   XP_ANDROID_MAX_WIDTH,
@@ -35,6 +35,7 @@ export function currentDeviceForm(): DeviceForm {
     width: window.innerWidth,
     height: window.innerHeight,
     coarsePointer: window.matchMedia?.(COARSE_POINTER).matches === true,
+    handheld: isHandheld(navigator.userAgent, navigator.platform ?? "", navigator.maxTouchPoints ?? 0),
     query: new URLSearchParams(window.location.search).get("cihaz"),
   });
 }

@@ -74,5 +74,45 @@ export function registerRoomServiceApps(): void {
       import("./ui/RoomServiceReportsWindow").then((m) => ({ default: m.RoomServiceReportsWindow })),
     mobile: "readonly",
   });
+
+  // Oda Servisi Sorumlusu: the two per-room order limits without Denetim Masası (no CR-SYS). The server
+  // re-checks the role and the hotel (roomService/limitsAdmin).
+  registerCatalogApp({
+    id: "rs.sinirlar",
+    title: "Oda Servisi Sınırları",
+    launchLabel: "Oda Servisi Sınırları",
+    icon: "ayarlar",
+    moduleKey: "ROOM_SERVICE",
+    screenCode: "RO-TAL",
+    purpose: "Bir odanın aynı anda kaç açık siparişi olabileceğini ve iki sipariş arasındaki bekleme süresini belirlersin.",
+    roleCodes: ["R-OSS", "R-SYS"],
+    category: "ROOM_SERVICE",
+    needsHotel: false,
+    window: { w: 640, h: 560, minW: 420, minH: 380 },
+    kind: "component",
+    component: () =>
+      import("./ui/RoomServiceLimitsWindow").then((m) => ({ default: m.RoomServiceLimitsWindow })),
+    mobile: "full",
+  });
+
+  // Cross-hotel coverage: who may watch or process the room-service requests of another hotel, and until when.
+  // The server re-checks the role, the hotel and the grantee's rank (roomService/coverage).
+  registerCatalogApp({
+    id: "rs.oteller-arasi",
+    title: "Oteller Arası Oda Servisi",
+    launchLabel: "Oteller Arası Oda Servisi",
+    icon: "otel",
+    moduleKey: "ROOM_SERVICE",
+    screenCode: "RO-TAL",
+    purpose: "Bir kullanıcıya başka bir otelin oda servisi taleplerini süreli olarak izleme ya da işleme izni verirsin.",
+    roleCodes: ["R-OSS", "R-FBY", "R-FBM", "R-SYS"],
+    category: "ROOM_SERVICE",
+    needsHotel: false,
+    window: { w: 980, h: 680, minW: 560, minH: 420 },
+    kind: "component",
+    component: () =>
+      import("./ui/RoomServiceCoverageWindow").then((m) => ({ default: m.RoomServiceCoverageWindow })),
+    mobile: "full",
+  });
 }
 

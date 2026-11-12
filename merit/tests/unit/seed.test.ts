@@ -6,7 +6,7 @@ import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 225; // 201 + 23 rows of the four YR delegate roles + R-MTY CR-RAD (radar)
+const EXPECTED_PERMISSION_ROWS = 276; // 201 + 23 rows of the four YR delegate roles + R-MTY CR-RAD (radar) + 51 rows of R-FBY and R-OSS (KD)
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -45,11 +45,11 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 21 rol, 34 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
+  it("seed 3 otel, 23 rol, 34 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
-    expect(await db.role.count()).toBe(21);
+    expect(await db.role.count()).toBe(23);
     expect(await db.appScreen.count()).toBe(34);
     expect(await db.outlet.count()).toBe(3);
     expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
@@ -204,10 +204,10 @@ describe("seed (gerçek test DB)", () => {
     ]);
     expect(screens[1]).toMatchObject({ name: "Canlı Radar", path: "/radar", moduleKey: "CORE" });
     expect(await permission("R-SYS", "CR-RAD")).toMatchObject({ canView: true, canCreate: true, canEdit: true, canApprove: true, canReport: true });
-    for (const role of ["R-ITT", "R-OTM", "R-FBM", "R-MTY"]) {
+    for (const role of ["R-ITT", "R-OTM", "R-FBM", "R-MTY", "R-FBY", "R-OSS"]) {
       expect(await permission(role, "CR-RAD")).toMatchObject({ canView: true, canReport: true, canCreate: false, canEdit: false, canApprove: false });
     }
-    const others = (await db.role.findMany({ select: { code: true } })).map((r) => r.code).filter((c) => !["R-SYS", "R-ITT", "R-OTM", "R-FBM", "R-MTY"].includes(c));
+    const others = (await db.role.findMany({ select: { code: true } })).map((r) => r.code).filter((c) => !["R-SYS", "R-ITT", "R-OTM", "R-FBM", "R-MTY", "R-FBY", "R-OSS"].includes(c));
     expect(others).toHaveLength(16);
     for (const role of others) expect(await permission(role, "CR-RAD")).toBeNull();
     const before = await db.roleScreenPermission.count();

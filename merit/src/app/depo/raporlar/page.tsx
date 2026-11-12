@@ -387,15 +387,19 @@ export default function RaporlarPage() {
       <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md print:hidden">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link
-              href="/kat"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center bg-bg hover:bg-border text-text rounded-lg transition"
-              aria-label="Kat paneline dön"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
+            {/* Inside the management shell the shell's own "Geri" leaves the report; an arrow here would
+                load the floor plan into the report's window instead. */}
+            {inShellFrame ? null : (
+              <Link
+                href="/kat"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center bg-bg hover:bg-border text-text rounded-lg transition"
+                aria-label="Kat paneline dön"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </Link>
+            )}
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-text flex items-center gap-2">
                 <span><Icon name="chart" size={20} /> Detaylı Minibar & Operasyon Raporları</span>

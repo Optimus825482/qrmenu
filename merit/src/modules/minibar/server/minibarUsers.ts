@@ -38,7 +38,7 @@ import { DEFAULT_TEMPORARY_PASSWORD } from "@/modules/core/usernames";
  *   5. the role is never edited (a new user is always R-KAT).
  */
 
-export const MINIBAR_USER_MANAGER_ROLES: readonly string[] = ["R-MTY", "R-SYS"];
+export const MINIBAR_USER_MANAGER_ROLES: readonly string[] = ["R-MTY", "R-OSS", "R-FBY", "R-FBM", "R-SYS"];
 export const MINIBAR_USER_ROLES: readonly string[] = ["R-KAT", "R-DEP", "R-HKS"];
 const WAITER_ROLE = "R-KAT";
 const WAITER_JOB_TITLE = "Minibar Garson";

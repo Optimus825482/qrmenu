@@ -41,6 +41,12 @@ export const ROLES: RoleDef[] = [
   { code: "R-QMY", name: "QR Menü Yönetimi", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "QR_MENU"], defaultScreen: "CR-KOM" },
   { code: "R-OUY", name: "Outlet İzleme", kind: "OUTLET", profile: "IZLE", modules: ["QR_ORDER"], defaultScreen: "QS-KAS" },
   { code: "R-MUY", name: "Mutfak İzleme", kind: "MUTFAK", profile: "IZLE", modules: ["QR_ORDER"], defaultScreen: "QS-KDS" },
+  // Kademe (12 Kas 2026): F&B Müdürü > F&B Müdür Yardımcısı > Oda Servisi Sorumlusu > saha rolleri. Kimin kimi
+  // yönettiği roleRanks.ts'te; ekran hakları burada. R-FBY, R-FBM'nin haklarını taşır. R-OSS minibar takibinin ve
+  // oda servisinin tamamını yürütür: bir minibar garsonunun (R-KAT) ya da oda servisi personelinin (R-ODS)
+  // yapabildiği her şeyi yapar ve onaylar, kendi ekibinin kullanıcılarını tanımlar (CR-KUL).
+  { code: "R-FBY", name: "F&B Müdür Yardımcısı", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "MINIBAR", "QR_MENU", "QR_ORDER", "ROOM_SERVICE"], defaultScreen: "CR-KOM" },
+  { code: "R-OSS", name: "Oda Servisi Sorumlusu", kind: "YONETIM", profile: "ISLET", modules: ["CORE", "MINIBAR", "ROOM_SERVICE"], defaultScreen: "CR-KOM" },
 ];
 
 export const PROFILE_ACTIONS: Record<Profile, readonly Action[]> = {
@@ -74,6 +80,13 @@ const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
  */
 const DELEGATE_MANAGERS = new Set(["R-MTY", "R-QMY"]);
 const DELEGATE_CORE = new Set(["CR-KOM", "CR-RAP"]);
+/**
+ * Oda Servisi Sorumlusu: a department head, not a hotel manager. Desktop, reports and the live radar to
+ * watch the operation, user management for its own team (the roles it may assign are in roleRanks.ts);
+ * no definitions, online users, audit log or system settings.
+ */
+const DEPARTMENT_HEADS = new Set(["R-OSS"]);
+const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD"]);
 
 /**
  * One list of screen limits applied to module screens (never CORE, never `modules: "ALL"` roles). Each entry
@@ -86,7 +99,7 @@ const DELEGATE_CORE = new Set(["CR-KOM", "CR-RAP"]);
  * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7" | "YR";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -99,7 +112,7 @@ export type ScreenLimit = {
 };
 
 /** P5: field staff of an outlet and kitchen roles see less, the A action on QS-KUY / QS-IPT is role-bound. */
-const P5_APPROVERS = ["R-SYS", "R-OTM", "R-FBM", "R-SGF", "R-KAS", "R-GAR"] as const;
+const P5_APPROVERS = ["R-SYS", "R-OTM", "R-FBM", "R-FBY", "R-SGF", "R-KAS", "R-GAR"] as const;
 
 export const SCREEN_LIMITS: ScreenLimit[] = [
   {
@@ -219,6 +232,14 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
     match: { codes: ["R-MUY"] },
     keep: { "QS-KUY": [], "QS-KAS": [], "QS-KDS": ["V"], "QS-FIS": [], "QS-IPT": [], "QS-RAP": [] },
   },
+  // KD (12 Kas 2026) — kademe. ISLET profilinde R yok: F&B Müdürü ve yardımcısı kendi modüllerinin bütün
+  // raporlarını, Oda Servisi Sorumlusu minibar ve oda servisi raporlarını tam alır. Migration 20261112150000.
+  {
+    plan: "KD",
+    match: { codes: ["R-FBM", "R-FBY"] },
+    grant: { "MB-RAP": ["R"], "QM-RAP": ["R"], "QS-RAP": ["R"], "RO-SLA": ["R"] },
+  },
+  { plan: "KD", match: { codes: ["R-OSS"] }, grant: { "MB-RAP": ["R"], "RO-SLA": ["R"] } },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];
@@ -264,6 +285,10 @@ export function actionsFor(role: RoleDef, screen: ScreenDef): readonly Action[] 
       // Minibar Yönetimi also watches the radar; the server limits it to the minibar layer (radar/server/scope.ts).
       if (role.code === "R-MTY" && screen.code === "CR-RAD") return VIEW_REPORT;
       return DELEGATE_CORE.has(screen.code) ? VIEW_REPORT : [];
+    }
+    if (DEPARTMENT_HEADS.has(role.code)) {
+      if (DEPARTMENT_CORE_VIEW.has(screen.code)) return VIEW_REPORT;
+      return screen.code === "CR-KUL" ? DEFINITIONS_MANAGE : [];
     }
     if (CORE_DEFINITIONS.has(screen.code)) {
       if (role.code === "R-ITT") return DEFINITIONS_VIEW_ONLY;

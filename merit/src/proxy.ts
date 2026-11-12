@@ -5,6 +5,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const SESSION_COOKIE = "merit_session";
 
 const EMBED_PARAMS = ["font", "theme"] as const;
+/** The hotel a shell window shows (MobileAppHost / the desktop window banner put it on the frame's address). */
+const HOTEL_PARAM = "hotelId";
 
 /**
  * A page shown inside a shell window is marked by `?font=&theme=` (shell/appearance.ts appFrameUrl); the staff
@@ -33,8 +35,16 @@ export function embedCarryUrl(input: {
   }
   if (from.origin !== target.origin) return null;
   if (!EMBED_PARAMS.every((key) => from.searchParams.has(key))) return null;
-  if (EMBED_PARAMS.every((key) => target.searchParams.has(key))) return null;
-  for (const key of EMBED_PARAMS) target.searchParams.set(key, from.searchParams.get(key) ?? "");
+  // The window's hotel selector reaches the page only as `?hotelId=` on its first address. Without carrying
+  // it, "back to the floor list" inside the window showed the session's hotel under a selector that still
+  // named the chosen one. A target that names its own hotel keeps it.
+  const hotelId = from.searchParams.get(HOTEL_PARAM);
+  const needsHotel = Boolean(hotelId) && !target.searchParams.has(HOTEL_PARAM);
+  if (EMBED_PARAMS.every((key) => target.searchParams.has(key)) && !needsHotel) return null;
+  for (const key of EMBED_PARAMS) {
+    if (!target.searchParams.has(key)) target.searchParams.set(key, from.searchParams.get(key) ?? "");
+  }
+  if (needsHotel) target.searchParams.set(HOTEL_PARAM, hotelId!);
   return target.toString();
 }
 

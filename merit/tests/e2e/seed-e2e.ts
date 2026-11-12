@@ -160,6 +160,11 @@ async function seedRoomServiceWorld(db: PrismaClient, ids: { royal: string; diam
   const food = await node({ kind: "ALT_KATEGORI", name: "Yemekler", parentId: category.id, sortOrder: 1 });
   const sandwiches = await node({ kind: "GRUP", name: "Sandviçler", parentId: food.id });
   await node({ kind: "OGE", name: "Club Sandviç", parentId: sandwiches.id, price: 320, sortOrder: 0, allergens: ["gluten", "yumurta"] });
+
+  // The specs send several orders for one room within minutes: no wait between two orders of a room
+  // (rs.minMinutesBetweenOrders, default 15). A spec that needs the wait sets its own hotel value.
+  await db.setting.deleteMany({ where: { key: "rs.minMinutesBetweenOrders", hotelId: null } });
+  await db.setting.create({ data: { key: "rs.minMinutesBetweenOrders", hotelId: null, value: 0 } });
 }
 
 

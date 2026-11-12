@@ -31,8 +31,8 @@ async function ctxOf(roleCode: string, hotelCode = "ROYAL", extra: string[] = []
 const flat = (s: Awaited<ReturnType<typeof accessSummary>>) => s.modules.flatMap((m) => m.screens);
 
 describe("accessSummary (gerçek test DB)", () => {
-  it("21 rolün özeti rbac matrisiyle birebir aynı: ekran kodu -> eylem dizisi", async () => {
-    expect(ROLES).toHaveLength(21);
+  it("23 rolün özeti rbac matrisiyle birebir aynı: ekran kodu -> eylem dizisi", async () => {
+    expect(ROLES).toHaveLength(23);
     for (const role of ROLES) {
       const ctx = await ctxOf(role.code);
       const summary = await accessSummary(ctx);

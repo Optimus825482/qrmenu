@@ -15,7 +15,6 @@ import { publishRadar } from "@/modules/radar/publish";
 import { DND_MIN_GAP_SECONDS } from "../constants";
 import { DND_REMINDER } from "../events";
 import { lockRow } from "./minibarCommon";
-import { assertRoomVerified } from "./roomVerification";
 import { completeOpenItemsForRoom, failDndItems, markItemsDnd } from "./tasks";
 
 /*
@@ -147,7 +146,7 @@ export async function markDnd(ctx: Ctx, input: unknown, now: Date = new Date()):
         };
       }
     }
-    await assertRoomVerified({ userId: ctx.user.id, roomId, hotelId }, now, tx);
+    // No QR proof here: a DND is recorded because the attendant could not enter the room to scan it.
 
     const covered = await tx.roomCheck.count({
       where: { roomId, checkDate: date, type: { in: ["URUN_EKLENDI", "SARFIYAT_YOK"] } },

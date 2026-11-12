@@ -102,7 +102,8 @@
         "submit": "Invia selezioni",
         "note": "Nota (facoltativa)"
       },
-      "limit": "Hai raggiunto il limite di ordini per il servizio in camera.",
+      "limit": "La sua camera ha raggiunto il numero di ordini del servizio in camera che possiamo accogliere contemporaneamente. Potrà inviarne uno nuovo non appena uno degli ordini aperti sarà stato consegnato.",
+      "cooldown": "Abbiamo ricevuto il suo ordine poco fa. Potrà inviare il prossimo tra circa {min} min; le sue scelte restano salvate qui.",
       "order": {
         "status": {
           "TEYIT_BEKLIYOR": "In attesa di conferma",

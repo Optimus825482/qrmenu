@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth";
 import { isListening, startRealtimeListener } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
 import { createSseStream } from "@/lib/sse";
+import { sseCoverage } from "@/modules/order/server/roomService/coverageAccess";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -28,7 +29,12 @@ export async function GET(request: Request): Promise<Response> {
       outletId: ctx.session.outletId,
       roleKind: ctx.user.roleKind,
     },
-    { signal: request.signal },
+    {
+      signal: request.signal,
+      // Cross-hotel room-service coverage, gated exactly like the covered board (RO-TAL view at home, home desk,
+      // hotels outside the session scope); re-read on change and on a short interval (lib/sse.ts).
+      loadCoverage: () => sseCoverage(ctx),
+    },
   );
 
   return new Response(stream, {

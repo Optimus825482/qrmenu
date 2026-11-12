@@ -111,7 +111,8 @@
         "submit": "Send selections",
         "note": "Note (optional)"
       },
-      "limit": "You’ve reached the room service order limit.",
+      "limit": "Your room has reached the number of room service orders we can take at one time. You can send a new one as soon as one of your open orders has been delivered.",
+      "cooldown": "We received your order a short while ago. You can send your next one in about {min} min; your selections will be kept here.",
       "order": {
         "status": {
           "TEYIT_BEKLIYOR": "Awaiting confirmation",

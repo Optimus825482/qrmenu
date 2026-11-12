@@ -46,13 +46,48 @@ function state(): RealtimeState {
   });
 }
 
+/** One cross-hotel room-service grant of the connection's user, as a time window (epoch ms). */
+export type ScopeCoverage = { hotelId: string; startsAt: number; endsAt: number | null };
+
 export type Scope = {
   userId: string;
   sessionId: string;
   hotelIds: string[];
   outletId?: string;
   roleKind: RoleKind;
+  /**
+   * Cross-hotel room-service coverage (roomService/coverage.ts): hotels outside `hotelIds` whose room-service
+   * order events this connection may also receive, each only inside its time window.
+   */
+  coverage?: readonly ScopeCoverage[];
 };
+
+/** Order event types of the room-service board; nothing else of a covered hotel is delivered. */
+const COVERED_EVENT_TYPES: ReadonlySet<string> = new Set([
+  "order.created",
+  "order.confirmed",
+  "order.approved",
+  "order.prep",
+  "order.ready",
+  "order.onway",
+  "order.delivered",
+  "order.cancelled",
+]);
+
+/**
+ * Whether `e` is a room-service order event of a hotel `scope` covers at `now`. Deliberately narrow and
+ * fail-closed: the type must be a board event, it must be bound to an outlet, and its payload must say
+ * `kind: "ODA_SERVISI"` (a truncated payload therefore never passes). Table orders, calls, minibar, MyBar,
+ * settings and every other event of that hotel stay out.
+ */
+function coveredRoomServiceEvent(e: MeritEvent, scope: Scope, now: number): boolean {
+  if (!scope.coverage?.length || !e.hotelId || !e.outletId) return false;
+  if (!COVERED_EVENT_TYPES.has(e.type)) return false;
+  if ((e.payload as { kind?: unknown } | null | undefined)?.kind !== "ODA_SERVISI") return false;
+  return scope.coverage.some(
+    (c) => c.hotelId === e.hotelId && c.startsAt <= now && (c.endsAt === null || now < c.endsAt),
+  );
+}
 
 /**
  * Whether `scope` (one SSE connection) may see event `e`:
@@ -60,12 +95,16 @@ export type Scope = {
  *    (an event with neither is system-wide and reaches everyone);
  *  - `outletId` set -> the session's outlet, or a SISTEM/YONETIM role;
  *  - `roleKinds` set -> the session's role kind must be listed.
+ * One exception to the hotel rule: a room-service order event of a hotel the user covers at `now`
+ * (`scope.coverage`, see coveredRoomServiceEvent) is delivered whatever the session's hotel and outlet are.
  */
-export function matchesScope(e: MeritEvent, scope: Scope): boolean {
+export function matchesScope(e: MeritEvent, scope: Scope, now: number = Date.now()): boolean {
   if (e.userIds) {
     if (!e.userIds.includes(scope.userId)) return false;
   } else if (e.hotelId && !scope.hotelIds.includes(e.hotelId)) {
-    return false;
+    if (!coveredRoomServiceEvent(e, scope, now)) return false;
+    // The outlet rule below compares with the session's own outlet; a covered event has passed its own check.
+    return !e.roleKinds || e.roleKinds.includes(scope.roleKind);
   }
   if (e.outletId) {
     const privileged = scope.roleKind === "SISTEM" || scope.roleKind === "YONETIM";

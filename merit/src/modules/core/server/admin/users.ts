@@ -10,6 +10,7 @@ import { audit } from "@/modules/core/server/audit";
 import { ensureRoomServiceMembership } from "@/modules/core/server/roomServiceTeam";
 import { closeUserSessionsInTx } from "@/modules/core/server/sessions";
 import { type JobTitleChoice, orderJobTitles } from "@/modules/core/jobTitles";
+import { mayManageRole } from "@/modules/core/roleRanks";
 import { DEFAULT_TEMPORARY_PASSWORD, suggestedUsername } from "@/modules/core/usernames";
 import {
   uniqueConflictFromPrisma,
@@ -30,6 +31,8 @@ const USERNAME_TAKEN = "Bu kullanıcı adı zaten kullanılıyor";
 const SYSTEM_ROLE_FORBIDDEN = "Sistem rolleri yalnızca sistem yöneticisi tarafından atanabilir";
 const MANAGER_ROLE_FORBIDDEN = "Yönetici rolleri yalnızca sistem yöneticisi tarafından atanabilir";
 const MANAGER_TARGET_FORBIDDEN = "Yönetici kullanıcıları yalnızca sistem yöneticisi yönetebilir";
+const TEAM_ROLE_FORBIDDEN = "Bu rol sizin ekibinizin rolü değil; yalnızca kendi ekibinizin rollerini atayabilirsiniz";
+const TEAM_TARGET_FORBIDDEN = "Bu kullanıcı sizin ekibinizde değil; yalnızca kendi ekibinizin kullanıcılarını yönetebilirsiniz";
 const SELF_SCOPE_FORBIDDEN = "Kendi rolünüzü veya otel yetkinizi değiştiremezsiniz";
 const OUT_OF_SCOPE = "Bu kullanıcı yetki alanınızın dışındaki otellere bağlı";
 const SYSTEM_ADMIN_ROLE = "R-SYS";
@@ -250,7 +253,7 @@ async function deny(ctx: Ctx, message: string, detail: Record<string, unknown>):
  */
 async function assertCanManage(
   ctx: Ctx,
-  target: { id: string; role: { kind: RoleKind }; hotelId: string | null; userHotels: { hotelId: string }[] },
+  target: { id: string; role: { kind: RoleKind; code: string }; hotelId: string | null; userHotels: { hotelId: string }[] },
   action: "D",
   op: "update" | "setPassword" | "setActive" | "delete",
 ): Promise<void> {
@@ -258,12 +261,13 @@ async function assertCanManage(
   if (target.role.kind === "SISTEM") {
     return deny(ctx, SYSTEM_ROLE_FORBIDDEN, { action, userId: target.id, reason: "SISTEM_ROLE_TARGET" });
   }
-  if (target.role.kind === "YONETIM") {
-    // Managers are managed by SISTEM only; a manager may change their own password and profile.
-    const own = target.id === ctx.user.id && (op === "setPassword" || op === "update");
-    if (!own) {
-      return deny(ctx, MANAGER_TARGET_FORBIDDEN, { action, userId: target.id, reason: "YONETIM_TARGET" });
-    }
+  // Rank (roleRanks.ts): a manager reaches only the management roles below it, a department head only its own
+  // team. Everybody may still change their own profile; the caller refuses own role and hotel changes.
+  const own = target.id === ctx.user.id && (op === "setPassword" || op === "update");
+  if (!own && !mayManageRole(ctx.user, target.role)) {
+    return target.role.kind === "YONETIM"
+      ? deny(ctx, MANAGER_TARGET_FORBIDDEN, { action, userId: target.id, reason: "YONETIM_TARGET" })
+      : deny(ctx, TEAM_TARGET_FORBIDDEN, { action, userId: target.id, reason: "TEAM_TARGET" });
   }
   const hotels = hotelsOf(target);
   const scope = new Set(await scopeHotels(ctx, action));
@@ -296,8 +300,10 @@ async function assertCanAssign(
   if (role.kind === "SISTEM") {
     return deny(ctx, SYSTEM_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "SISTEM_ROLE" });
   }
-  if (role.kind === "YONETIM") {
-    return deny(ctx, MANAGER_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "YONETIM_ROLE" });
+  if (!mayManageRole(ctx.user, role)) {
+    return role.kind === "YONETIM"
+      ? deny(ctx, MANAGER_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "YONETIM_ROLE" })
+      : deny(ctx, TEAM_ROLE_FORBIDDEN, { action, roleCode: role.code, reason: "TEAM_ROLE" });
   }
   if (hotels.length === 0) {
     return deny(ctx, "Otelsiz kullanıcıyı yalnızca sistem yöneticisi oluşturabilir", { action });
@@ -390,12 +396,13 @@ export async function options(ctx: Ctx): Promise<UserOptions> {
   await assertCan(ctx, SCREEN, "V");
   const scope = await scopeHotels(ctx, "O");
   const [roles, hotels, savedJobTitles, catalogue] = await Promise.all([
-    prisma.role.findMany({
-      // Only SISTEM may assign SISTEM and YONETIM roles (assertCanAssign): do not offer what is refused.
-      where: isSystem(ctx) ? {} : { kind: { notIn: ["SISTEM", "YONETIM"] } },
-      select: { id: true, code: true, name: true, kind: true, defaultScreen: true },
-      orderBy: [{ name: "asc" }],
-    }),
+    prisma.role
+      .findMany({
+        select: { id: true, code: true, name: true, kind: true, defaultScreen: true },
+        orderBy: [{ name: "asc" }],
+      })
+      // Do not offer what assertCanAssign refuses (rank rules: roleRanks.ts).
+      .then((all) => all.filter((role) => mayManageRole(ctx.user, role))),
     prisma.hotel.findMany({
       where: { isActive: true, ...(scope ? { id: { in: scope } } : {}) },
       select: { id: true, code: true, name: true },

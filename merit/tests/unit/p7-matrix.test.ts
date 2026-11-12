@@ -24,7 +24,7 @@ describe("P7 rapor yetki matrisi (saf)", () => {
     expect(acts("R-FBM", "RO-SLA")).toBe("VODAR");
     expect(acts("R-FBM", "QM-RAP")).toBe("VODAR");
     expect(acts("R-FBM", "QS-RAP")).toBe("VODAR");
-    expect(acts("R-FBM", "MB-RAP")).toBe("VODA");
+    expect(acts("R-FBM", "MB-RAP")).toBe("VODAR"); // KD: F&B Müdürü minibar raporlarını tam alır
     expect(acts("R-DEP", "MB-RAP")).toBe("VODAR");
     expect(acts("R-SGF", "QS-RAP")).toBe("VODAR");
     expect(acts("R-SGF", "QM-RAP")).toBe("VODAR");
@@ -99,7 +99,7 @@ describe("tohumlu eski veritabanına P7 migration'ı", () => {
       });
     expect((await r("R-OTM", "MB-RAP"))?.canReport).toBe(true);
     expect((await r("R-FBM", "RO-SLA"))?.canReport).toBe(true);
-    expect((await r("R-FBM", "MB-RAP"))?.canReport).toBe(false);
+    expect((await r("R-FBM", "MB-RAP"))?.canReport).toBe(true); // KD
     expect(await r("R-GAR", "QS-RAP")).toBeNull();
     expect(await r("R-KAT", "MB-RAP")).toMatchObject({ canView: true, canReport: false });
   });

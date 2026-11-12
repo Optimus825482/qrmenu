@@ -181,6 +181,12 @@ enum OrderKind {
   ODA_SERVISI
 }
 
+/// Cross-hotel room-service coverage: IZLEME = watch (read-only), ISLEME = watch and process.
+enum RoomServiceCoverageMode {
+  IZLEME
+  ISLEME
+}
+
 enum OrderStatus {
   GONDERILDI
   TEYIT_BEKLIYOR
@@ -258,6 +264,7 @@ model Hotel {
   minibarTransactions       MinibarTransaction[]
   roomDnds                  RoomDnd[]
   roomMmds                  RoomMmd[]
+  roomServiceCoverages      RoomServiceCoverage[]
   mybarRequests             MybarRequest[]
   guestRecords              GuestRecord[]
   occupancyUploads          OccupancyUpload[]
@@ -504,6 +511,9 @@ model User {
   manualEntryRequestsMade    MinibarManualEntryRequest[] @relation("MinibarManualEntryRequester")
   manualEntryRequestsDecided MinibarManualEntryRequest[] @relation("MinibarManualEntryDecider")
   roomMmds                   RoomMmd[]
+  roomServiceCoverages        RoomServiceCoverage[]       @relation("RoomServiceCoverageUser")
+  roomServiceCoveragesGranted RoomServiceCoverage[]       @relation("RoomServiceCoverageGrantor")
+  roomServiceCoveragesRevoked RoomServiceCoverage[]       @relation("RoomServiceCoverageRevoker")
 
   @@map("users")
 }
@@ -1192,6 +1202,35 @@ model RoomMmd {
   @@index([roomId, date])
   @@index([userId, at])
   @@map("room_mmds")
+}
+
+/// Cross-hotel room-service coverage (12 Kas 2026): `user` may watch (IZLEME) or also process (ISLEME) the
+/// room-service requests of `hotel`, a hotel outside their own scope, from `startsAt` until `endsAt` (null = until
+/// revoked). It never widens the session's hotel scope; only the room-service paths check it (coverage.ts), at
+/// every use: `revokedAt IS NULL AND startsAt <= now AND (endsAt IS NULL OR now < endsAt)`.
+model RoomServiceCoverage {
+  id          String                  @id @default(cuid())
+  userId      String                  @map("user_id")
+  hotelId     String                  @map("hotel_id")
+  mode        RoomServiceCoverageMode
+  startsAt    DateTime                @default(now()) @map("starts_at") @db.Timestamptz(3)
+  endsAt      DateTime?               @map("ends_at") @db.Timestamptz(3)
+  revokedAt   DateTime?               @map("revoked_at") @db.Timestamptz(3)
+  revokedById String?                 @map("revoked_by_id")
+  grantedById String                  @map("granted_by_id")
+  note        String?                 @db.VarChar(200)
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime                @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user      User  @relation("RoomServiceCoverageUser", fields: [userId], references: [id], onDelete: Cascade)
+  hotel     Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  grantedBy User  @relation("RoomServiceCoverageGrantor", fields: [grantedById], references: [id], onDelete: Restrict)
+  revokedBy User? @relation("RoomServiceCoverageRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, hotelId])
+  @@index([userId, revokedAt, endsAt])
+  @@index([hotelId, revokedAt, endsAt])
+  @@map("room_service_coverages")
 }
 
 model MybarRequest {

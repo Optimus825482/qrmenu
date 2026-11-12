@@ -14,7 +14,8 @@ import {
   markRoomOnWayAction,
   markRoomReadyAction,
 } from "@/modules/order/server/actions/roomService";
-import type { RoomBoard, RoomDeliveredCard, RoomOrderCard as RoomOrderData } from "@/modules/order/server/roomService/board";
+import type { CoveredBoard, RoomBoard, RoomDeliveredCard, RoomOrderCard as RoomOrderData } from "@/modules/order/server/roomService/board";
+import { CoverageBand } from "@/modules/order/ui/roomService/CoverageBand";
 import { MybarLivePanel, type MybarPending, useMybarPending } from "@/modules/order/ui/roomService/MybarLivePanel";
 import { type RoomNotice, RoomNotices } from "@/modules/order/ui/roomService/RoomNotices";
 import { RoomOrderCard, type RoomCardActions, type RoomOpsFlags, type RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
@@ -97,6 +98,10 @@ type Props = {
   showMybar?: boolean;
   /** View the full board opens in before the device's remembered choice is read. */
   initialView?: BoardView;
+  /** RO-TAL V at home, computed on the server: the cross-hotel coverage band is mounted (it shows only with a grant). */
+  coverageEnabled?: boolean;
+  /** Open requests of the hotels this user covers, read with the first render. */
+  initialCovered?: CoveredBoard | null;
 };
 
 type ActionResult = { ok: boolean; error?: { message: string } };
@@ -124,7 +129,18 @@ function minutes(sec: number): string {
   return `${Math.round(sec / 60)} dk`;
 }
 
-export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags, showMybar = false, initialView = DEFAULT_VIEW }: Props) {
+export default function OdaServisiClient({
+  outletId,
+  hotelName,
+  tab,
+  initialBoard,
+  loadError,
+  flags,
+  showMybar = false,
+  initialView = DEFAULT_VIEW,
+  coverageEnabled = false,
+  initialCovered = null,
+}: Props) {
   const [data, setData] = useState<RoomBoard | null>(initialBoard);
   // Load errors (a failed refresh) clear on the next successful refresh; action errors stay until dismissed.
   const [loadErr, setLoadErr] = useState<string>(loadError ?? "");
@@ -140,6 +156,8 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   const [phoneFor, setPhoneFor] = useState<RoomOrderData | null>(null);
   const [phoneNote, setPhoneNote] = useState("");
   const [cancelFor, setCancelFor] = useState<RoomOrderData | null>(null);
+  // Bumped after every action: the coverage band refetches the covered hotels' requests.
+  const [coverageTick, setCoverageTick] = useState(0);
 
   const playNew = useSound("new-order");
   const playReady = useSound("ready");
@@ -274,6 +292,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
       try {
         const res = await fn();
         setActionErr(res.ok ? "" : (res.error?.message ?? "İşlem gerçekleştirilemedi"));
+        setCoverageTick((n) => n + 1);
         await refresh();
       } catch {
         setActionErr(CONN_ACTION_ERROR);
@@ -433,6 +452,10 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
           </div>
         ) : null}
       </div>
+
+      {coverageEnabled ? (
+        <CoverageBand initial={initialCovered} flags={flags} actions={actions} busy={busy} refreshKey={coverageTick} />
+      ) : null}
 
       {data ? (
         <dl className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">

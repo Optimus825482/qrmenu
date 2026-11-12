@@ -229,7 +229,7 @@ async function notifyIfCritical(
  * Minibar operasyonları sistem sorumlusu: the roles that book deliveries from the central warehouse and may
  * correct the opening stock (prisma/seed/roles.ts). Hotel warehouse staff (R-DEP) count and watch their own hotel.
  */
-export const STOCK_MANAGER_ROLES: readonly string[] = ["R-SYS", "R-MTY"];
+export const STOCK_MANAGER_ROLES: readonly string[] = ["R-SYS", "R-MTY", "R-OSS", "R-FBY", "R-FBM"];
 
 export function isStockManager(ctx: Ctx): boolean {
   return ctx.user.roleKind === "SISTEM" || STOCK_MANAGER_ROLES.includes(ctx.user.roleCode);
@@ -596,7 +596,7 @@ export async function returnFromPool(
  */
 const DIRECT_CORRECTION_KEY = "minibar.directCorrectionUntil";
 /** Roles that normally send a count for approval (stockCorrections.ts) and correct directly while the window is open. */
-export const DIRECT_CORRECTION_ROLES: readonly string[] = ["R-MTY"];
+export const DIRECT_CORRECTION_ROLES: readonly string[] = ["R-MTY", "R-OSS"];
 
 /** Until when Minibar Yönetimi corrects the hotel stock without the system administrator's approval (null = never set). */
 export async function directCorrectionUntil(db: Prisma.TransactionClient | typeof prisma = prisma): Promise<Date | null> {

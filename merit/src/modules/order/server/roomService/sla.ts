@@ -42,7 +42,7 @@ async function outletManagers(tx: Prisma.TransactionClient, order: Subject): Pro
 /** WARN: the outlet's online room-service staff + F&B managers. BREACH: F&B managers + outlet managers + online staff. */
 async function slaRecipients(tx: Prisma.TransactionClient, order: Subject, level: Level): Promise<string[]> {
   const [fbm, online, managers] = await Promise.all([
-    usersEntitledTo(order.hotelId, ["R-FBM"], tx),
+    usersEntitledTo(order.hotelId, ["R-FBM", "R-FBY", "R-OSS"], tx),
     onlineAt(tx, order.outletId, ["R-ODS", "R-BUT", "R-MUS"]),
     level === "BREACH" ? outletManagers(tx, order) : Promise.resolve([] as string[]),
   ]);

@@ -26,3 +26,26 @@ describe("pencere içindeki sayfadan izlenen bağlantı", () => {
     expect(carry({ referer: "bozuk" })).toBeNull();
   });
 });
+
+describe("pencerenin seçili oteli", () => {
+  const premium = `${ORIGIN}/kat/doluluk/f1?font=tahoma&theme=mavi&hotelId=premium`;
+
+  it("kat listesine dönüşte ve sonraki her sayfada taşınır; otel seçicinin gösterdiği otel değişmez", () => {
+    expect(carry({ referer: premium, url: `${ORIGIN}/kat` })).toBe(`${ORIGIN}/kat?font=tahoma&theme=mavi&hotelId=premium`);
+    // The mark is already there (a second hop): the hotel alone is still carried.
+    expect(carry({ referer: premium, url: `${ORIGIN}/kat?font=tahoma&theme=mavi` })).toBe(
+      `${ORIGIN}/kat?font=tahoma&theme=mavi&hotelId=premium`,
+    );
+    expect(carry({ referer: premium, fetchDest: "empty", url: `${ORIGIN}/kat/manuel-kayit?oda=r1&_rsc=x` })).toBe(
+      `${ORIGIN}/kat/manuel-kayit?oda=r1&_rsc=x&font=tahoma&theme=mavi&hotelId=premium`,
+    );
+  });
+
+  it("kendi otelini söyleyen adres ve oteli olmayan pencere olduğu gibi kalır", () => {
+    expect(carry({ referer: premium, url: `${ORIGIN}/depo/stok?hotelId=diamond` })).toBe(
+      `${ORIGIN}/depo/stok?hotelId=diamond&font=tahoma&theme=mavi`,
+    );
+    expect(carry({ referer: premium, url: `${ORIGIN}/kat?font=tahoma&theme=mavi&hotelId=diamond` })).toBeNull();
+    expect(carry({ url: `${ORIGIN}/kat?font=tahoma&theme=mavi` })).toBeNull();
+  });
+});

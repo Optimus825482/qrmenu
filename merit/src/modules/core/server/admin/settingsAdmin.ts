@@ -175,6 +175,24 @@ export async function setManualRoomEntrySetting(
   return prisma.$transaction((tx) => writeSetting(tx, ctx, hotelId, k, value));
 }
 
+/**
+ * Hotel-scope write of a room-service limit key for a caller that the order module's `limitsAdmin` has already
+ * authorized (system administrator or its editor role list, hotel in scope). Same validation, audit row and
+ * `settings.changed` as `set`; no CR-SYS check, so the delegate role edits these two keys only.
+ */
+export async function setRoomServiceLimitSetting(
+  ctx: Ctx,
+  hotelId: string,
+  key: string,
+  value: unknown,
+): Promise<SettingItem> {
+  if (key !== "rs.maxOpenPerRoom" && key !== "rs.minMinutesBetweenOrders") {
+    throw new DomainError("FORBIDDEN", "Bu ayar oda servisi sınırları penceresinden değiştirilemez");
+  }
+  const k = parseWrite(key, value, hotelId);
+  return prisma.$transaction((tx) => writeSetting(tx, ctx, hotelId, k, value));
+}
+
 async function writeSetting(
   tx: Prisma.TransactionClient,
   ctx: Ctx,

@@ -111,7 +111,8 @@
         "submit": "Auswahl senden",
         "note": "Anmerkung (optional)"
       },
-      "limit": "Sie haben das Bestelllimit für den Zimmerservice erreicht.",
+      "limit": "Für Ihr Zimmer ist die Anzahl gleichzeitig möglicher Zimmerservice-Bestellungen erreicht. Sobald eine Ihrer offenen Bestellungen geliefert wurde, können Sie eine neue senden.",
+      "cooldown": "Ihre Bestellung ist vor Kurzem bei uns eingegangen. Die nächste können Sie in etwa {min} Min. senden; Ihre Auswahl bleibt hier erhalten.",
       "order": {
         "status": {
           "TEYIT_BEKLIYOR": "Bestätigung ausstehend",

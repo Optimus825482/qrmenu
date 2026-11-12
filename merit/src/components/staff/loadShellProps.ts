@@ -35,7 +35,7 @@ export async function loadStaffShellProps(
   const [hotel, outlet, role, session, visible, targets, ordering, idleMinutes] = await Promise.all([
     prisma.hotel.findUnique({ where: { id: hotelId }, select: { name: true } }),
     outletId ? prisma.outlet.findUnique({ where: { id: outletId }, select: { name: true, hasOrdering: true } }) : null,
-    prisma.role.findUnique({ where: { id: ctx.user.roleId }, select: { name: true } }),
+    prisma.role.findUnique({ where: { id: ctx.user.roleId }, select: { name: true, kind: true } }),
     prisma.userSession.findUnique({ where: { id: ctx.session.id }, select: { expiresAt: true, lastSeenAt: true } }),
     visibleScreens(ctx, hotelId),
     listTargets(ctx.user.id),
@@ -73,10 +73,17 @@ export async function loadStaffShellProps(
     sessionEndsAt: effectiveEndsAt?.toISOString() ?? null,
     warnMinutes: SESSION_WARN_MINUTES,
     layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
-    // Whoever records room checks may arrange the products of that screen for themselves.
-    profileExtras: visible.includes("MB-TUK")
-      ? [{ id: "urun-siralamasi", label: "Oda kontrol ürün sıralaması", icon: "list", href: "/kat/urun-siralamasi" }]
-      : undefined,
+    profileExtras: [
+      // A manager's home is the management desktop; a floor screen opened from a notification or the
+      // personel app has no other way back to it.
+      ...(role?.kind === "SISTEM" || role?.kind === "YONETIM"
+        ? [{ id: "ana-ekran", label: "Ana ekran", icon: "home" as const, href: "/admin" }]
+        : []),
+      // Whoever records room checks may arrange the products of that screen for themselves.
+      ...(visible.includes("MB-TUK")
+        ? [{ id: "urun-siralamasi", label: "Oda kontrol ürün sıralaması", icon: "list" as const, href: "/kat/urun-siralamasi" }]
+        : []),
+    ],
     formHint: formFromUserAgent((await headers()).get("user-agent")),
   };
 }

@@ -42,6 +42,7 @@ describe("mesaj dosyaları", () => {
       "guest.rs.menu.title",
       "guest.rs.selections.submit",
       "guest.rs.limit",
+      "guest.rs.cooldown",
       "guest.rs.order.status.TEYIT_BEKLIYOR",
       "guest.rs.order.status.ONAYLANDI",
       "guest.rs.order.status.HAZIR",
@@ -74,6 +75,13 @@ describe("mesaj dosyaları", () => {
     for (const [locale, entries] of sets) {
       const eta = entries.find(([key]) => key === "guest.rs.order.eta")?.[1] ?? "";
       expect(eta, locale).toContain("{min}");
+    }
+  });
+
+  it("oda servisi bekleme mesajı kalan dakikayı kullanır", () => {
+    for (const [locale, entries] of sets) {
+      const cooldown = entries.find(([key]) => key === "guest.rs.cooldown")?.[1] ?? "";
+      expect(cooldown, locale).toContain("{min}");
     }
   });
 

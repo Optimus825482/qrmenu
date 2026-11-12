@@ -636,7 +636,8 @@ export default function OdaKontrolPage() {
         ) : null}
       </main>
 
-      {data && (!data.requireQrForControl || data.qrVerified) ? (
+      {/* MMD and DND stay reachable without a scan: they are recorded when the room could not be entered. */}
+      {data ? (
         <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
           {mmdOpen ? (
             <div data-testid="mmd-options" className="mx-auto mb-2 flex max-w-4xl flex-wrap gap-2" role="group" aria-label="MMD nedeni">
@@ -677,24 +678,26 @@ export default function OdaKontrolPage() {
                   data-testid="mmd-button"
                   aria-expanded={mmdOpen}
                   onClick={() => setMmdOpen((v) => !v)}
-                  disabled={submitting || (data.taskItem ? !data.taskItem.dndAllowed : false)}
+                  disabled={submitting}
                   style={{ minHeight: "var(--tap-primary)" }}
                   className="inline-flex items-center justify-center rounded-xl border border-yellow-500 bg-yellow-400 px-4 py-3 text-xs font-bold text-black hover:bg-yellow-300 disabled:opacity-40"
                 >
                   MMD
                 </button>
               ) : null}
-              <button
-                type="button"
-                data-mutates=""
-                onClick={() => void handleSaveCheck(true)}
-                disabled={submitting}
-                style={{ minHeight: "var(--tap-primary)" }}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-semibold text-text hover:bg-bg disabled:opacity-50"
-              >
-                <Icon name="check-circle" size={18} />
-                Sarfiyat Yok
-              </button>
+              {!data.requireQrForControl || data.qrVerified ? (
+                <button
+                  type="button"
+                  data-mutates=""
+                  onClick={() => void handleSaveCheck(true)}
+                  disabled={submitting}
+                  style={{ minHeight: "var(--tap-primary)" }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-3 text-xs font-semibold text-text hover:bg-bg disabled:opacity-50"
+                >
+                  <Icon name="check-circle" size={18} />
+                  Sarfiyat Yok
+                </button>
+              ) : null}
 
               {!data.emptyRoomWarning && data.guestStatus.kind !== "EMPTY" ? (
                 <button
@@ -712,23 +715,25 @@ export default function OdaKontrolPage() {
               ) : null}
             </div>
 
-            <button
-              type="button"
-              data-primary=""
-              data-mutates=""
-              data-guide="kaydet"
-              onClick={() => void handleSaveCheck(false)}
-              disabled={submitting}
-              style={{ minHeight: "var(--tap-primary)" }}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:opacity-95 disabled:opacity-50"
-            >
-              <Icon name="check" size={20} />
-              {submitting
-                ? "Kaydediliyor..."
-                : totalSelected > 0
-                  ? `Kaydet (${totalSelected} ürün ikame)`
-                  : "Kaydet (Sarfiyat Yok)"}
-            </button>
+            {!data.requireQrForControl || data.qrVerified ? (
+              <button
+                type="button"
+                data-primary=""
+                data-mutates=""
+                data-guide="kaydet"
+                onClick={() => void handleSaveCheck(false)}
+                disabled={submitting}
+                style={{ minHeight: "var(--tap-primary)" }}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:opacity-95 disabled:opacity-50"
+              >
+                <Icon name="check" size={20} />
+                {submitting
+                  ? "Kaydediliyor..."
+                  : totalSelected > 0
+                    ? `Kaydet (${totalSelected} ürün ikame)`
+                    : "Kaydet (Sarfiyat Yok)"}
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}

@@ -31,7 +31,8 @@ export interface JobTitleDef {
 export const JOB_TITLE_CATALOG: JobTitleDef[] = [
   { code: "G-OTM", name: "Otel Müdürü", department: "YONETIM", role: "R-OTM" },
   { code: "G-FBM", name: "F&B Müdürü", department: "YONETIM", parent: "G-OTM", role: "R-FBM" },
-  { code: "G-FBA", name: "F&B Müdür Yardımcısı", department: "YONETIM", parent: "G-FBM", role: "R-FBM" },
+  { code: "G-FBA", name: "F&B Müdür Yardımcısı", department: "YONETIM", parent: "G-FBM", role: "R-FBY" },
+  { code: "G-OSS", name: "Oda Servisi Sorumlusu", department: "YONETIM", parent: "G-FBA", role: "R-OSS" },
   { code: "G-SRM", name: "Servis Müdürü", department: "YONETIM", parent: "G-FBA", role: "R-OUY" },
   { code: "G-RSM", name: "Restoran Müdürü", department: "YONETIM", parent: "G-FBA", role: "R-OUY" },
   { code: "G-OUM", name: "Outlet Müdürü", department: "YONETIM", parent: "G-FBA", role: "R-OUY" },
@@ -47,7 +48,7 @@ export const JOB_TITLE_CATALOG: JobTitleDef[] = [
   { code: "G-RUN", name: "Runner", department: "SERVIS", parent: "G-GAR", role: "R-GAR" },
   { code: "G-HOS", name: "Host / Hostes", department: "SERVIS", parent: "G-SGF", role: "R-OUT" },
   { code: "G-KAS", name: "Kasiyer", department: "SERVIS", parent: "G-OUM", role: "R-KAS" },
-  { code: "G-ODS", name: "Oda Servisi Görevlisi", department: "SERVIS", parent: "G-SRM", role: "R-ODS" },
+  { code: "G-ODS", name: "Oda Servisi Görevlisi", department: "SERVIS", parent: "G-OSS", role: "R-ODS" },
   { code: "G-BUT", name: "Butler (VIP)", department: "SERVIS", parent: "G-SRM", role: "R-BUT" },
   { code: "G-BAR", name: "Barmen / Barmaid", department: "BAR", parent: "G-BRM", role: "R-BAR" },
   { code: "G-BRS", name: "Barista", department: "BAR", parent: "G-BRM", role: "R-BAR" },

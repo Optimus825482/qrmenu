@@ -594,7 +594,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
         </button>
       </nav>
       <div id="xp-dialog-root" className="xp-dialog-root" />
-      <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY"} desktop={false} />
+      <ExpiryLoginNotice userId={user.id} enabled={user.roleCode === "R-MTY" || user.roleCode === "R-OSS"} desktop={false} />
       <ConfirmDialog />
       <SnackbarHost bottomOffset="56px" />
     </div>

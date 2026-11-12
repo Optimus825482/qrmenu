@@ -35,3 +35,30 @@ describe("genel ayar eylemi: elle oda girişi anahtarları", () => {
     expect(set).toHaveBeenCalledWith({ user: { id: "u1" } }, "h1", "minibar.requireQrForControl", true);
   });
 });
+
+describe("genel ayar eylemi: oda servisi sınırları", () => {
+  const keys = ["rs.maxOpenPerRoom", "rs.minMinutesBetweenOrders"];
+
+  it.each(keys)("%s: SISTEM dışı rol genel yoldan yazamaz ve temizleyemez (FORBIDDEN, servis çağrılmaz)", async (key) => {
+    requireUser.mockResolvedValue({ user: { id: "u1", roleKind: "YONETIM", roleCode: "R-FBM" } } as never);
+    try {
+      expect(await actions.setSettingAction({ hotelId: "h1", key, value: 2 })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+      expect(await actions.clearSettingOverrideAction({ hotelId: "h1", key })).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
+      expect(set).not.toHaveBeenCalled();
+      expect(clearHotelOverride).not.toHaveBeenCalled();
+    } finally {
+      requireUser.mockResolvedValue({ user: { id: "u1" } });
+    }
+  });
+
+  it.each(keys)("%s: sistem yöneticisi genel yoldan yazar", async (key) => {
+    const ctx = { user: { id: "u1", roleKind: "SISTEM", roleCode: "R-SYS" } };
+    requireUser.mockResolvedValue(ctx as never);
+    try {
+      expect((await actions.setSettingAction({ hotelId: "h1", key, value: 2 })).ok).toBe(true);
+      expect(set).toHaveBeenCalledWith(ctx, "h1", key, 2);
+    } finally {
+      requireUser.mockResolvedValue({ user: { id: "u1" } });
+    }
+  });
+});

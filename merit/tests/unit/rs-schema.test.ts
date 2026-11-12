@@ -86,4 +86,19 @@ describe("P6 Oda Servisi Şema ve Ayar Kuralları", () => {
     expect(schema.safeParse(11).success).toBe(false);
     expect(schema.safeParse("3").success).toBe(false);
   });
+
+  it("rs.minMinutesBetweenOrders varsayılan 15; 0 (bekleme yok) ve 1440 geçerli, -1, 1441, ondalık ve metin zod reddi", async () => {
+    const key = "rs.minMinutesBetweenOrders" as SettingKey;
+    const schema = SETTING_SCHEMAS[key];
+    expect(schema).toBeDefined();
+    expect(DEFAULT_SETTINGS[key]).toBe(15);
+
+    expect(schema.safeParse(0).success).toBe(true);
+    expect(schema.safeParse(15).success).toBe(true);
+    expect(schema.safeParse(1440).success).toBe(true);
+    expect(schema.safeParse(-1).success).toBe(false);
+    expect(schema.safeParse(1441).success).toBe(false);
+    expect(schema.safeParse(1.5).success).toBe(false);
+    expect(schema.safeParse("15").success).toBe(false);
+  });
 });

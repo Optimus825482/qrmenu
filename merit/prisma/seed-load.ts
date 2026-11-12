@@ -42,6 +42,8 @@ export async function runLoadSeed(db: PrismaClient): Promise<Targets> {
   }
   const rs = await db.outlet.findFirstOrThrow({ where: { hotelId: hotel.id, type: "ODA_SERVISI" } });
   await db.outlet.update({ where: { id: rs.id }, data: { hasMenu: true, hasOrdering: true, orderingEnabled: true, phoneConfirmRequired: false, themeId: theme.id } });
+  // Load guests may send more than one room-service order per room within minutes: no wait between orders here.
+  await db.setting.upsert({ where: { hotelId_key: { hotelId: hotel.id, key: "rs.minMinutesBetweenOrders" } }, create: { hotelId: hotel.id, key: "rs.minMinutesBetweenOrders", value: 0 }, update: { value: 0 } });
   const rsItem = await db.menuNode.upsert({ where: { id: "load-rs-item" }, create: { id: "load-rs-item", outletId: rs.id, kind: "OGE", name: "Yük Sandviç", price: "5" }, update: {} });
   const floor = await db.floor.upsert({ where: { hotelId_number: { hotelId: hotel.id, number: 99 } }, create: { hotelId: hotel.id, number: 99, name: "Yük Katı" }, update: {} });
   const roomType = await db.roomType.upsert({ where: { hotelId_name: { hotelId: hotel.id, name: "Yük Odası" } }, create: { hotelId: hotel.id, name: "Yük Odası", cabinetCount: 1 }, update: {} });

@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/generated/prisma/client";
+import type { OrderStatus, Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan } from "@/lib/rbac";
@@ -6,6 +6,8 @@ import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay } from "@/lib/time";
 import { outletAllowed } from "../approvals";
+import type { CoverageMode } from "./coverage";
+import { coveredModes } from "./coverageAccess";
 import { occupancyHint, type OccupancyStatus } from "./occupancy";
 import { slaDue, slaStart, slaStateOf } from "./sla";
 
@@ -63,6 +65,60 @@ const COLUMN_OF: Partial<Record<OrderStatus, RoomBoardColumn>> = {
 };
 const OPEN_STATUSES = Object.keys(COLUMN_OF) as OrderStatus[];
 
+/** Fields of an open order a board card is built from. */
+const CARD_SELECT = {
+  id: true,
+  orderNo: true,
+  roomId: true,
+  status: true,
+  createdAt: true,
+  phoneConfirmedAt: true,
+  deliveredAt: true,
+  note: true,
+  guestLanguage: true,
+  pricesShown: true,
+  subtotal: true,
+  currency: true,
+  room: { select: { number: true, extension: true } },
+  items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true } },
+} satisfies Prisma.OrderSelect;
+
+type CardRow = Prisma.OrderGetPayload<{ select: typeof CARD_SELECT }>;
+
+/** One open order as a board card; `null` for a row that has no column or no room. */
+function toCard(
+  row: CardRow,
+  now: Date,
+  slaMinutes: number,
+  occupancy: Map<string, OccupancyStatus>,
+): { card: RoomOrderCard; column: RoomBoardColumn; breached: boolean } | null {
+  const column = COLUMN_OF[row.status];
+  if (!column || !row.roomId) return null;
+  const state = slaStateOf(row, now, slaMinutes);
+  const card: RoomOrderCard = {
+    id: row.id,
+    orderNo: row.orderNo,
+    roomId: row.roomId,
+    roomNumber: row.room?.number ?? "—",
+    ...(row.room?.extension ? { extension: row.room.extension } : {}),
+    status: row.status,
+    createdAt: row.createdAt,
+    slaStartAt: slaStart(row),
+    slaDueAt: slaDue(row, slaMinutes),
+    slaState: state === "WARN" || state === "BREACH" ? state : "OK",
+    items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...(i.note ? { note: i.note } : {}) })),
+    ...(row.note ? { note: row.note } : {}),
+    guestLanguage: row.guestLanguage,
+    occupancy: occupancy.get(row.roomId) ?? "BILINMIYOR",
+    ...(row.pricesShown && row.subtotal !== null
+      ? { subtotal: row.subtotal.toFixed(2), currency: row.currency }
+      : {}),
+  };
+  return { card, column, breached: state === "BREACH" };
+}
+
+const bySla = (a: RoomOrderCard, b: RoomOrderCard) => a.slaDueAt.getTime() - b.slaDueAt.getTime() || a.orderNo - b.orderNo;
+
 /**
  * Room-service staff board of one outlet: five open-order columns (most urgent SLA first) and the
  * day's KPIs. RO-TAL view in the outlet's hotel; outlet roles are bound to their session outlet.
@@ -81,22 +137,7 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
   const today = businessDay(businessDate(now));
   const slaMinutes = await getSetting("rs.slaMinutes", outlet.hotelId);
 
-  const select = {
-    id: true,
-    orderNo: true,
-    roomId: true,
-    status: true,
-    createdAt: true,
-    phoneConfirmedAt: true,
-    deliveredAt: true,
-    note: true,
-    guestLanguage: true,
-    pricesShown: true,
-    subtotal: true,
-    currency: true,
-    room: { select: { number: true, extension: true } },
-    items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true } },
-  };
+  const select = CARD_SELECT;
   const [openRows, todayRows, deliveredRows] = await Promise.all([
     prisma.order.findMany({
       where: { outletId, kind: "ODA_SERVISI", status: { in: OPEN_STATUSES } },
@@ -126,33 +167,13 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
   const columns: RoomBoard["columns"] = { CONFIRM: [], NEW: [], PREP: [], READY: [], ONWAY: [] };
   let overdue = 0;
   for (const row of openRows) {
-    const col = COLUMN_OF[row.status];
-    if (!col || !row.roomId) continue;
-    const state = slaStateOf(row, now, slaMinutes);
-    if (state === "BREACH") overdue += 1;
-    const card: RoomOrderCard = {
-      id: row.id,
-      orderNo: row.orderNo,
-      roomId: row.roomId,
-      roomNumber: row.room?.number ?? "—",
-      ...(row.room?.extension ? { extension: row.room.extension } : {}),
-      status: row.status,
-      createdAt: row.createdAt,
-      slaStartAt: slaStart(row),
-      slaDueAt: slaDue(row, slaMinutes),
-      slaState: state === "WARN" || state === "BREACH" ? state : "OK",
-      items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...(i.note ? { note: i.note } : {}) })),
-      ...(row.note ? { note: row.note } : {}),
-      guestLanguage: row.guestLanguage,
-      occupancy: occupancy.get(row.roomId) ?? "BILINMIYOR",
-      ...(row.pricesShown && row.subtotal !== null
-        ? { subtotal: row.subtotal.toFixed(2), currency: row.currency }
-        : {}),
-    };
-    columns[col].push(card);
+    const built = toCard(row, now, slaMinutes, occupancy);
+    if (!built) continue;
+    if (built.breached) overdue += 1;
+    columns[built.column].push(built.card);
   }
   for (const list of Object.values(columns)) {
-    list.sort((a, b) => a.slaDueAt.getTime() - b.slaDueAt.getTime() || a.orderNo - b.orderNo);
+    list.sort(bySla);
   }
 
   const durations = todayRows
@@ -183,4 +204,79 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
   };
 }
 
-export const board = { get };
+/** Open requests of one covered hotel (cross-hotel coverage, roomService/coverage.ts). */
+export type CoveredHotelBoard = {
+  hotelId: string;
+  hotelName: string;
+  hotelCode: string;
+  /** The hotel's room-service outlet (events of the covered hotel carry this id). */
+  outletId: string;
+  mode: CoverageMode;
+  /** ISLEME: the caller may move these requests with their own (home) rights. IZLEME: read-only. */
+  canProcess: boolean;
+  /** The outlet's phone-confirmation switch, as the own board carries it. */
+  confirmRequired: boolean;
+  /** Open requests, most urgent SLA first, each with its board column. */
+  cards: { card: RoomOrderCard; column: RoomBoardColumn }[];
+};
+
+export type CoveredBoard = { hotels: CoveredHotelBoard[]; serverNow: string };
+
+/**
+ * Open room-service requests of every hotel the caller covers right now. Needs RO-TAL view in the caller's
+ * own session hotel (the same right their own board needs) and an active grant per hotel; a caller without
+ * any active grant gets an empty list. Nothing but the open requests of the covered hotels is read: no KPIs,
+ * no delivered history, no switches.
+ */
+async function covered(ctx: Ctx): Promise<CoveredBoard> {
+  await assertCan(ctx, "RO-TAL", "V", ctx.session.hotelId);
+  const now = new Date();
+  const modes = await coveredModes(ctx, now);
+  if (modes.size === 0) return { hotels: [], serverNow: now.toISOString() };
+
+  const today = businessDay(businessDate(now));
+  const outlets = await prisma.outlet.findMany({
+    where: { hotelId: { in: [...modes.keys()] }, type: "ODA_SERVISI", hotel: { isActive: true } },
+    orderBy: [{ hotel: { name: "asc" } }, { createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      hotelId: true,
+      phoneConfirmRequired: true,
+      hotel: { select: { name: true, code: true } },
+    },
+  });
+
+  const hotels: CoveredHotelBoard[] = [];
+  for (const outlet of outlets) {
+    const mode = modes.get(outlet.hotelId);
+    if (!mode) continue;
+    const [rows, slaMinutes] = await Promise.all([
+      prisma.order.findMany({
+        where: { outletId: outlet.id, hotelId: outlet.hotelId, kind: "ODA_SERVISI", status: { in: OPEN_STATUSES } },
+        select: CARD_SELECT,
+      }),
+      getSetting("rs.slaMinutes", outlet.hotelId),
+    ]);
+    const roomIds = [...new Set(rows.flatMap((r) => (r.roomId ? [r.roomId] : [])))];
+    const occupancy = await occupancyHint(outlet.hotelId, roomIds, today);
+    const cards = rows
+      .flatMap((row) => {
+        const built = toCard(row, now, slaMinutes, occupancy);
+        return built ? [{ card: built.card, column: built.column }] : [];
+      })
+      .sort((a, b) => bySla(a.card, b.card));
+    hotels.push({
+      hotelId: outlet.hotelId,
+      hotelName: outlet.hotel.name,
+      hotelCode: outlet.hotel.code,
+      outletId: outlet.id,
+      mode,
+      canProcess: mode === "ISLEME",
+      confirmRequired: outlet.phoneConfirmRequired,
+      cards,
+    });
+  }
+  return { hotels, serverNow: now.toISOString() };
+}
+
+export const board = { get, covered };

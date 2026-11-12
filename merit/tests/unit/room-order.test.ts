@@ -38,6 +38,8 @@ async function setupRsEnv(over: {
   phoneConfirmRequired?: boolean;
   pricesShown?: boolean;
   maxOpenPerRoom?: number;
+  /** Wait between two orders of a room (`rs.minMinutesBetweenOrders`). The fixture turns it off (0) by default. */
+  minMinutesBetweenOrders?: number;
   orderingEnabled?: boolean;
 } = {}) {
   const mrId = await hotelId("ROYAL");
@@ -116,7 +118,18 @@ async function setupRsEnv(over: {
       create: { key: "rs.maxOpenPerRoom", hotelId: mrId, value: over.maxOpenPerRoom },
       update: { value: over.maxOpenPerRoom },
     });
+  } else {
+    // Settings survive resetTestData: a limit left by an earlier test must not leak into this one.
+    await testDb.setting.deleteMany({ where: { key: "rs.maxOpenPerRoom", hotelId: mrId } });
   }
+
+  // Most tests send several orders for one room back to back: no wait unless the test asks for one.
+  const wait = over.minMinutesBetweenOrders ?? 0;
+  await testDb.setting.upsert({
+    where: { hotelId_key: { key: "rs.minMinutesBetweenOrders", hotelId: mrId } },
+    create: { key: "rs.minMinutesBetweenOrders", hotelId: mrId, value: wait },
+    update: { value: wait },
+  });
 
   return { mrId, room, room2, roomToken, room2Token, outlet, sandwich, tea };
 }
@@ -477,6 +490,110 @@ describe("roomOrder.create & get", () => {
       });
     await make();
     await expect(make()).rejects.toMatchObject({ code: "CONFLICT", fieldErrors: { limit: [expect.any(String)] } });
+  });
+});
+
+describe("iki sipariş arasındaki bekleme (rs.minMinutesBetweenOrders)", () => {
+  type Env = Awaited<ReturnType<typeof setupRsEnv>>;
+  type Refusal = { code: string; message: string; fieldErrors?: Record<string, string[]> };
+  let ipSeq = 0;
+  const send = (s: Env, over: { token?: string; idempotencyKey?: string } = {}) =>
+    roomOrder.create({
+      token: over.token ?? s.roomToken,
+      idempotencyKey: over.idempotencyKey ?? randomUUID(),
+      locale: "tr",
+      items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
+      ip: `10.77.0.${++ipSeq}`,
+      userAgent: "vitest",
+    });
+  const refusal = (s: Env) =>
+    send(s).then(
+      () => null,
+      (e: unknown) => e as Refusal,
+    );
+  const backdate = (orderId: string, minutes: number) =>
+    testDb.order.update({ where: { id: orderId }, data: { createdAt: new Date(Date.now() - minutes * 60_000) } });
+  const COOLDOWN = { code: "CONFLICT", fieldErrors: { cooldown: [expect.any(String)] } };
+
+  it("süre dolmadan ikinci sipariş CONFLICT + fieldErrors.cooldown (kalan saniye); başka oda etkilenmez", async () => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 15 });
+    const first = await send(s);
+    await backdate(first.orderId, 5);
+
+    const error = await refusal(s);
+    expect(error).toMatchObject({ code: "CONFLICT", message: "Yeni sipariş için 10 dakika sonra tekrar deneyebilirsiniz" });
+    expect(Object.keys(error!.fieldErrors ?? {})).toEqual(["cooldown"]);
+    const seconds = Number(error!.fieldErrors!.cooldown[0]);
+    expect(seconds).toBeGreaterThan(9 * 60);
+    expect(seconds).toBeLessThanOrEqual(10 * 60);
+    expect(await testDb.order.count({ where: { roomId: s.room.id } })).toBe(1);
+
+    await expect(send(s, { token: s.room2Token })).resolves.toMatchObject({ kind: "ODA_SERVISI" });
+  });
+
+  it("süre dolunca yeni sipariş kabul edilir; teslim edilmiş sipariş de süreyi başlatır", async () => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 15 });
+    const first = await send(s);
+    await testDb.order.update({ where: { id: first.orderId }, data: { status: "TESLIM_EDILDI" } });
+    await expect(send(s)).rejects.toMatchObject(COOLDOWN);
+
+    await backdate(first.orderId, 16);
+    const second = await send(s);
+    expect(second.orderId).not.toBe(first.orderId);
+  });
+
+  it.each(["IPTAL", "REDDEDILDI"] as const)("personelin %s yaptığı sipariş süreyi başlatmaz", async (status) => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 15 });
+    const first = await send(s);
+    await testDb.order.update({ where: { id: first.orderId }, data: { status } });
+    const second = await send(s);
+    expect(second.orderId).not.toBe(first.orderId);
+    // The accepted second order starts the wait.
+    await expect(send(s)).rejects.toMatchObject(COOLDOWN);
+  });
+
+  it("0 beklemeyi kapatır", async () => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 0 });
+    await send(s);
+    await expect(send(s)).resolves.toMatchObject({ status: "GONDERILDI" });
+    expect(await testDb.order.count({ where: { roomId: s.room.id } })).toBe(2);
+  });
+
+  it("otel ve sistem satırı yokken varsayılan 15 dakika uygulanır", async () => {
+    const s = await setupRsEnv();
+    await testDb.setting.deleteMany({ where: { key: "rs.minMinutesBetweenOrders" } });
+    const first = await send(s);
+    await backdate(first.orderId, 14);
+    await expect(send(s)).rejects.toMatchObject(COOLDOWN);
+    await backdate(first.orderId, 15.1);
+    await expect(send(s)).resolves.toMatchObject({ status: "GONDERILDI" });
+  });
+
+  it("iki sınır birlikte geçerliyken açık sipariş sınırı (limit) bildirilir", async () => {
+    const s = await setupRsEnv({ maxOpenPerRoom: 1, minMinutesBetweenOrders: 15 });
+    await send(s);
+    const error = await refusal(s);
+    expect(error).toMatchObject({ code: "CONFLICT" });
+    expect(Object.keys(error!.fieldErrors ?? {})).toEqual(["limit"]);
+  });
+
+  it("aynı idempotencyKey bekleme süresi içinde aynı siparişi döner", async () => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 15 });
+    const idempotencyKey = randomUUID();
+    const first = await send(s, { idempotencyKey });
+    const replay = await send(s, { idempotencyKey });
+    expect(replay.orderId).toBe(first.orderId);
+    expect(await testDb.order.count({ where: { roomId: s.room.id } })).toBe(1);
+  });
+
+  it("eşzamanlı üç istekten yalnız biri kabul edilir", async () => {
+    const s = await setupRsEnv({ minMinutesBetweenOrders: 15 });
+    const results = await Promise.allSettled([send(s), send(s), send(s)]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    for (const r of results) {
+      if (r.status === "rejected") expect(r.reason).toMatchObject(COOLDOWN);
+    }
+    expect(await testDb.order.count({ where: { roomId: s.room.id } })).toBe(1);
   });
 });
 

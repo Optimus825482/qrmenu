@@ -111,7 +111,8 @@
         "submit": "Enviar seleções",
         "note": "Observação (opcional)"
       },
-      "limit": "Você atingiu o limite de pedidos do serviço de quarto.",
+      "limit": "Seu quarto atingiu o número de pedidos de serviço de quarto que podemos receber ao mesmo tempo. Você poderá enviar um novo assim que um dos pedidos em aberto for entregue.",
+      "cooldown": "Recebemos seu pedido há pouco. Você poderá enviar o próximo em cerca de {min} min; suas escolhas ficam guardadas aqui.",
       "order": {
         "status": {
           "TEYIT_BEKLIYOR": "Aguardando confirmação",

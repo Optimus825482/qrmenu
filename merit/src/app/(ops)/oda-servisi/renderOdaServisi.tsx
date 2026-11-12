@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
-import { board, type RoomBoard } from "@/modules/order/server/roomService/board";
+import { board, type CoveredBoard, type RoomBoard } from "@/modules/order/server/roomService/board";
 import OdaServisiClient, { type RoomOpsTab } from "./OdaServisiClient";
 
 export type OdaServisiSearch = { sekme?: string | string[] };
@@ -28,8 +28,10 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
   const hotelId = ctx.session.hotelId;
   if (!hotelId) redirect("/secim");
 
-  const [viewOk, talepD, teyitD, teslimD, teslimA, talepA, mybarV] = await Promise.all([
+  const [viewOk, talepV, talepD, teyitD, teslimD, teslimA, talepA, mybarV] = await Promise.all([
     can(ctx, TAB_SCREEN[tab], "V", hotelId),
+    // Cross-hotel coverage band: the same right the covered read asserts (board.covered).
+    can(ctx, "RO-TAL", "V", hotelId),
     can(ctx, "RO-TAL", "D", hotelId),
     can(ctx, "RO-TEL", "D", hotelId),
     can(ctx, "RO-TES", "D", hotelId),
@@ -54,6 +56,16 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
     loadError = error instanceof Error ? error.message : "Pano yüklenemedi";
   }
 
+  // Requests of the hotels this user covers (empty without an active grant). A failure never blocks the board.
+  let covered: CoveredBoard | null = null;
+  if (talepV) {
+    try {
+      covered = await board.covered(ctx);
+    } catch {
+      covered = null;
+    }
+  }
+
   return (
     <OdaServisiClient
       key={outlet.id}
@@ -64,6 +76,8 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
       loadError={loadError}
       flags={{ talepD, teyitD, teslimD, teslimA, talepA }}
       showMybar={mybarV}
+      coverageEnabled={talepV}
+      initialCovered={covered}
     />
   );
 }

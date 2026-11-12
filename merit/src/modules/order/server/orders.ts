@@ -9,6 +9,7 @@ import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { approvals, onlineAt, outletAllowed } from "./approvals";
 import { printJobs } from "./printJobs";
+import { coveredMode } from "./roomService/coverageAccess";
 import { CLOSED_STATUSES, isAllowed } from "./transitions";
 
 /** Overrides the default receipt enqueuer inside the approval transaction (tests, future kinds). */
@@ -41,8 +42,47 @@ async function lockedOrder(tx: Prisma.TransactionClient, ctx: Ctx, orderId: stri
   const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE`;
   if (rows.length === 0) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
   const order = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: INCLUDE });
-  if (!ctx.hotelIds.includes(order.hotelId)) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
+  if (!ctx.hotelIds.includes(order.hotelId)) {
+    // Cross-hotel coverage: a room-service order of a hotel the user currently covers exists for them (what
+    // they may do with it is decided by roomRights). Everything else outside the scope stays NOT_FOUND.
+    const covered = order.kind === "ODA_SERVISI" && (await coveredMode(ctx, order.hotelId, new Date(), tx)) !== null;
+    if (!covered) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
+  }
   return order;
+}
+
+/**
+ * Where the caller's screen rights are read for a room-service order.
+ *  - Order of a hotel in the session's scope: that hotel, and the outlet rule applies (`covered: false`). This
+ *    is the only path for users without a coverage grant.
+ *  - Order of a covered hotel (roomService/coverage.ts): only with an active ISLEME grant, and the rights are
+ *    the caller's own rights in their SESSION hotel, action by action. The grant adds no power; the outlet rule
+ *    was already applied against the caller's home desk (coveredMode). Anything else is FORBIDDEN (audited).
+ */
+async function roomRights(
+  tx: Prisma.TransactionClient,
+  ctx: Ctx,
+  order: Order,
+  attempted: string,
+): Promise<{ hotelId: string; covered: boolean }> {
+  if (ctx.hotelIds.includes(order.hotelId)) return { hotelId: order.hotelId, covered: false };
+  if ((await coveredMode(ctx, order.hotelId, new Date(), tx)) === "ISLEME") {
+    return { hotelId: ctx.session.hotelId, covered: true };
+  }
+  try {
+    // Outside the transaction: the denial must survive the rollback.
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId: order.hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: "Order",
+      entityId: order.id,
+      after: { to: attempted, coverage: true },
+    });
+  } catch (error) {
+    console.error("orders: YETKISIZ_DENEME denetim kaydı yazılamadı", error);
+  }
+  throw new DomainError("FORBIDDEN", "Bu oteli yalnızca izleyebilirsiniz; işlem yetkiniz yok");
 }
 
 function forbidOutlet(ctx: Ctx, order: Order): void {
@@ -94,6 +134,7 @@ async function authorizeRoomTransition(
   from: OrderStatus,
   to: OrderStatus,
 ): Promise<void> {
+  const rights = await roomRights(tx, ctx, order, to);
   switch (to) {
     case "ONAYLANDI": {
       const outlet = await tx.outlet.findUnique({
@@ -103,22 +144,22 @@ async function authorizeRoomTransition(
       if (outlet?.phoneConfirmRequired) {
         throw new DomainError("CONFLICT", "Bu outlette telefon teyidi zorunlu");
       }
-      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
       break;
     }
     case "HAZIR":
-      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
       break;
     case "YOLDA":
     case "TESLIM_EDILDI":
-      await assertCan(ctx, "RO-TES", "D", order.hotelId);
+      await assertCan(ctx, "RO-TES", "D", rights.hotelId);
       break;
     case "IPTAL": {
       const isPreApproval = from === "GONDERILDI" || from === "TEYIT_BEKLIYOR";
       if (isPreApproval) {
-        await assertCan(ctx, "RO-TEL", "D", order.hotelId);
+        await assertCan(ctx, "RO-TEL", "D", rights.hotelId);
       } else {
-        const hasTesA = await can(ctx, "RO-TES", "A", order.hotelId);
+        const hasTesA = await can(ctx, "RO-TES", "A", rights.hotelId);
         if (!hasTesA) {
           await deny(ctx, order, to);
         }
@@ -128,7 +169,7 @@ async function authorizeRoomTransition(
     default:
       throw new DomainError("CONFLICT", ALREADY);
   }
-  forbidOutlet(ctx, order);
+  if (!rights.covered) forbidOutlet(ctx, order);
 }
 
 function stamps(to: OrderStatus, ctx: Ctx, now: Date, reason?: string): Prisma.OrderUncheckedUpdateInput {
@@ -364,8 +405,9 @@ async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<O
     if (order.kind !== "ODA_SERVISI" || !(order.status === "GONDERILDI" || order.status === "TEYIT_BEKLIYOR")) {
       throw new DomainError("CONFLICT", ALREADY);
     }
-    await assertCan(ctx, "RO-TEL", "D", order.hotelId);
-    forbidOutlet(ctx, order);
+    const rights = await roomRights(tx, ctx, order, "TELEFON_TEYIDI");
+    await assertCan(ctx, "RO-TEL", "D", rights.hotelId);
+    if (!rights.covered) forbidOutlet(ctx, order);
 
     const now = new Date();
     const updated = await tx.order.update({
@@ -445,14 +487,17 @@ async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<O
 async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const order = await lockedOrder(tx, ctx, orderId);
+    let covered = false;
     if (order.kind === "MASA") {
       await assertCan(ctx, "QS-KDS", "D", order.hotelId);
     } else if (order.kind === "ODA_SERVISI") {
-      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      const rights = await roomRights(tx, ctx, order, "HAZIRLANIYOR");
+      covered = rights.covered;
+      await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
     } else {
       throw new DomainError("CONFLICT", ALREADY);
     }
-    forbidOutlet(ctx, order);
+    if (!covered) forbidOutlet(ctx, order);
     if (order.status !== "ONAYLANDI" || order.prepStartedAt) return;
     const now = new Date();
     const updated = await tx.order.update({ where: { id: order.id }, data: { prepStartedAt: now } });
@@ -500,14 +545,17 @@ export const REVERT_READY_TOLERANCE_MS = 30_000;
 async function revertReady(ctx: Ctx, orderId: string): Promise<{ status: "ONAYLANDI" }> {
   await prisma.$transaction(async (tx) => {
     const order = await lockedOrder(tx, ctx, orderId);
+    let covered = false;
     if (order.kind === "MASA") {
       await assertCan(ctx, "QS-KDS", "D", order.hotelId);
     } else if (order.kind === "ODA_SERVISI") {
-      await assertCan(ctx, "RO-TAL", "D", order.hotelId);
+      const rights = await roomRights(tx, ctx, order, "HAZIR_GERI_ALMA");
+      covered = rights.covered;
+      await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
     } else {
       throw new DomainError("CONFLICT", ALREADY);
     }
-    forbidOutlet(ctx, order);
+    if (!covered) forbidOutlet(ctx, order);
     const now = new Date();
     if (order.status !== "HAZIR" || !order.readyAt || now.getTime() - order.readyAt.getTime() > REVERT_READY_TOLERANCE_MS) {
       throw new DomainError("CONFLICT", "Geri alma süresi doldu");

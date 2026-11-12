@@ -102,7 +102,8 @@
         "submit": "Envoyer la sélection",
         "note": "Remarque (facultatif)"
       },
-      "limit": "Vous avez atteint la limite de commandes pour le service en chambre.",
+      "limit": "Votre chambre a atteint le nombre de commandes de service en chambre que nous pouvons prendre en même temps. Vous pourrez en envoyer une nouvelle dès que l’une de vos commandes en cours aura été livrée.",
+      "cooldown": "Nous avons reçu votre commande il y a peu. Vous pourrez envoyer la suivante dans environ {min} min ; votre sélection reste enregistrée ici.",
       "order": {
         "status": {
           "TEYIT_BEKLIYOR": "En attente de confirmation",
