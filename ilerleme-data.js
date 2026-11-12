@@ -1,7 +1,7 @@
 // Merit OS / F&B Command Center proje ilerleme verisi — ilerleme.html bu dosyayı okur.
 // status: "done" | "active" | "pending". Yüzde, faz ağırlıkları (weight, toplam 100) üzerinden hesaplanır.
 window.ILERLEME = {
-  updatedAt: "12.11.2026 13:30",
+  updatedAt: "12.11.2026 14:00",
   headline: "P0–P8, UX ve Canlı Radar'ın tüm görevleri tamamlandı ve doğrulandı. P8 T4/T6/T8 commit'lendi, P8 kapanış doğrulaması yeşil (check 2583/2583, migrate diff boş, build temiz, test:kabul 68/68, MyBar 5'li paket 17/17, matris 492/492). Pazartesi: Fable Opus incelemeleri; main birleştirme ve push Erkan'da.",
   phases: [
     {
@@ -350,5 +350,6 @@ window.ILERLEME = {
     { at: "12.11 12:30", text: "Otomatik menü çevirisi sağlamlaştırıldı (yerelde test edildi, henüz yayına alınmadı). “Otomatik çeviri servisi IT/AR çevirisini döndürmedi” hatasının nedeni, anahtarsız çeviri servisine bir ürün için aynı anda 14 istek gönderilmesi ve servisin bazılarını boş çevirmesiydi. Artık aynı anda en fazla 3 istek gidiyor, boş dönen dil iki kez daha deneniyor, gelen diller hemen saklanıyor ve sonraki deneme yalnız eksik dili istiyor. Servis yine de yanıt vermezse ekranda “birkaç dakika sonra yeniden deneyin” mesajı çıkıyor; bu durum artık Hata Günlüğü’ne beklenmeyen hata olarak düşmüyor ve e-posta üretmiyor." },
     { at: "12.11 13:15", text: "Portekizce eklendi (yerelde denendi, henüz yayına alınmadı; yayında veritabanı güncellemesi otomatik çalışır). Misafir sayfalarının tamamı (menüler, oda servisi, sipariş durumu, MyBar, garson çağrı seçenekleri) artık Brezilya bayrağıyla Portekizce de görüntüleniyor; tarayıcı dili Portekizce olan misafire kendiliğinden Portekizce açılıyor. Menü ürün adları Portekizceye arka planda otomatik çevriliyor; mevcut 7 dilin çevirisine dokunulmuyor, yalnız eksik dil tamamlanıyor. Ayrıca: MyBar ve oda servisi sayfalarında dil menüsündeki dil adları okunmuyordu, düzeltildi; MyBar tanıtım penceresi ekranın ortasında açılıyor; MyBar ürün grupları yana kaydırma yerine alt alta satırlara diziliyor." },
     { at: "12.11 13:30", text: "MyBar tanıtım penceresinin metni güncellendi (yerelde, henüz yayına alınmadı): “Odanızdaki minibarı damak zevkinize göre düzenlemekten memnuniyet duyarız. Tercih etmediğiniz ürünleri MyBar sistemimiz ile seçerek onların yerine istediğiniz ürünleri bize bildirebilirsiniz.” Diğer 8 dildeki karşılığı da aynı anlama göre yenilendi." },
+    { at: "12.11 14:00", text: "Telefon ve tablet görünümünde geri oku düzeltildi (yerelde denendi, henüz yayına alınmadı). Minibar Operasyonları gibi bir klasörün içinden bir ekran açıp geri okuna basınca artık ana ekrana atmıyor, klasöre geri dönüyor; klasör bıraktığınız yerde duruyor ve oradan başka bir ekran seçebiliyorsunuz. Bir kez daha geri basınca ana ekrana gidiyor. Aynı kural bütün klasörlerde (Outlet, Oda Servisi, Sistem Yönetimi, Kullanıcı Yönetimi) ve telefonun kendi geri tuşunda da geçerli." },
   ]
 };
