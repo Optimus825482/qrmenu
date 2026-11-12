@@ -6,6 +6,7 @@ import Link from "next/link";
 import { confirm } from "@/shell/confirm";
 import { Icon } from "@/components/icons/Icon";
 import { HotelBadges } from "@/components/ui/HotelBadge";
+import { SearchSelect } from "@/components/ui/SearchSelect";
 
 interface ProductGroupItem {
   id: string;
@@ -357,7 +358,8 @@ export default function MinibarTanimlarPage() {
   // Setup Items Modal state
   const [activeSetupForItems, setActiveSetupForItems] = useState<SetupItem | null>(null);
   const [selectedProductToAdd, setSelectedProductToAdd] = useState<string>("");
-  const [selectedQtyToAdd, setSelectedQtyToAdd] = useState<number>(2);
+  // Kept as typed text: the box can be emptied and a new number written (a forced "1" turned 3 into 13).
+  const [selectedQtyToAdd, setSelectedQtyToAdd] = useState<string>("2");
 
   // Assignment Modal state
   const [assignForm, setAssignForm] = useState<{ roomTypeId: string; setupId: string }>({
@@ -670,24 +672,29 @@ export default function MinibarTanimlarPage() {
   // ─────────────────────────────────────────────────────────────────────────
   const handleAddSetupItem = async () => {
     if (!activeSetupForItems || !selectedProductToAdd) return;
+    const qty = Number(selectedQtyToAdd);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 50) {
+      setErrorMsg("Norm adet 1 ile 50 arasında bir sayı olmalı.");
+      return;
+    }
     try {
       setErrorMsg(null);
+      // A product already in the list is not added twice: its norm quantity is changed.
+      const existing = activeSetupForItems.items.find((it) => it.productId === selectedProductToAdd);
       const res = await fetch("/api/minibar/definitions/setup-items", {
-        method: "POST",
+        method: existing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          setupId: activeSetupForItems.id,
-          productId: selectedProductToAdd,
-          qty: selectedQtyToAdd,
-        }),
+        body: JSON.stringify(
+          existing ? { id: existing.id, qty } : { setupId: activeSetupForItems.id, productId: selectedProductToAdd, qty },
+        ),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Setup içeriği eklenemedi.");
+      if (!res.ok) throw new Error(data.error || "Setup içeriği kaydedilemedi.");
 
-      notifySuccess("Ürün setup normuna eklendi.");
+      notifySuccess(existing ? "Ürünün norm adedi güncellendi." : "Ürün setup normuna eklendi.");
       setSelectedProductToAdd("");
-      setSelectedQtyToAdd(2);
+      setSelectedQtyToAdd("2");
 
       // Refresh setups
       const sRes = await fetch("/api/minibar/definitions/setups");
@@ -1926,30 +1933,28 @@ export default function MinibarTanimlarPage() {
 
             {/* Yeni Ürün Ekleme Çubuğu */}
             <div className="p-3 bg-bg/80 rounded-xl border border-border flex flex-wrap items-center gap-2">
-              <select
-                aria-label="Eklenecek ürün"
+              <SearchSelect
+                ariaLabel="Eklenecek ürün"
+                placeholder="Ürün adı yazın ya da listeden seçin..."
+                className="flex-1 min-w-[200px]"
                 value={selectedProductToAdd}
-                onChange={(e) => setSelectedProductToAdd(e.target.value)}
-                className="flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-xs text-text focus:outline-none focus:border-warn/40 min-w-[200px]"
-              >
-                <option value="">Setup&apos;a eklenecek ürünü seçin...</option>
-                {products
+                onChange={setSelectedProductToAdd}
+                options={products
                   .filter((p) => p.isActive)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.groupName})
-                    </option>
-                  ))}
-              </select>
+                  .map((p) => ({ value: p.id, label: `${p.name} (${p.groupName})` }))}
+              />
 
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted">Norm Adet:</span>
                 <input
-                  type="number"
-                  min="1"
-                  max="50"
+                  type="text"
+                  inputMode="numeric"
+                  aria-label="Norm adet"
+                  maxLength={2}
                   value={selectedQtyToAdd}
-                  onChange={(e) => setSelectedQtyToAdd(parseInt(e.target.value, 10) || 1)}
+                  // Tapping the box selects the number, so the next key replaces it.
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setSelectedQtyToAdd(e.target.value.replace(/\D/g, "").slice(0, 2))}
                   className="w-16 bg-surface border border-border rounded-lg px-2 py-2 text-xs text-center text-text font-bold"
                 />
               </div>
@@ -1960,7 +1965,7 @@ export default function MinibarTanimlarPage() {
                 disabled={!selectedProductToAdd}
                 className="px-4 py-2 bg-warn hover:opacity-90 disabled:opacity-50 text-bg font-bold rounded-lg text-xs transition"
               >
-                + Ekle
+                {activeSetupForItems.items.some((it) => it.productId === selectedProductToAdd) ? "Adedi güncelle" : "+ Ekle"}
               </button>
             </div>
 
