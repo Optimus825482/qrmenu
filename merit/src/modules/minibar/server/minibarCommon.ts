@@ -53,7 +53,7 @@ export async function roomCatalogue(
   return { setups, caps, setupOf };
 }
 
-export async function lockRow(tx: Prisma.TransactionClient, table: "rooms" | "minibar_transactions" | "mybar_requests" | "minibar_correction_requests", id: string) {
+export async function lockRow(tx: Prisma.TransactionClient, table: "rooms" | "minibar_transactions" | "mybar_requests" | "minibar_correction_requests" | "minibar_manual_entry_requests", id: string) {
   // Table names come from the closed union above, never from input.
   await tx.$queryRawUnsafe(`SELECT id FROM ${table} WHERE id = $1 FOR UPDATE`, id);
 }

@@ -156,6 +156,43 @@
   font-size: 13px;
   font-weight: 700;
 }
+/* Zil ve profil düğmesi görev bölmesinin en üstünde, "Ekranlar" başlığının üzerinde. */
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 0 12px;
+  margin: 0;
+  border: 0;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools .staff-icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--sx-body-light);
+  border-radius: 4px;
+  background: linear-gradient(180deg, var(--sx-body-light), var(--sx-group-head));
+  color: var(--sx-link);
+  box-shadow: 1px 1px 2px color-mix(in srgb, var(--text) 30%, transparent);
+  cursor: pointer;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools .staff-icon-button:hover {
+  filter: brightness(1.06);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools .staff-icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools .staff-badge {
+  top: -6px;
+  right: -6px;
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav-tools .staff-menu {
+  top: calc(var(--sx-title-h) + 62px);
+  left: calc(var(--sx-frame) + 12px);
+}
+.staff-shell.staff-xp[data-form="desktop"] .staff-nav[data-side="true"] .staff-nav-label {
+  padding: 0;
+  text-align: start;
+}
 .staff-shell.staff-xp[data-form="desktop"] .staff-nav-item {
   flex: 0 0 auto;
   flex-direction: row;

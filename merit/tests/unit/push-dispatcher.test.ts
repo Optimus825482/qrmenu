@@ -193,6 +193,13 @@ describe("dispatchNotificationEvent", () => {
     expect(PUSH_TYPES.get("order.sla.breach")!({ refId: "o1", title: "T", body: "B" })).toMatchObject({ title: "T", url: "/oda-servisi" });
   });
 
+  it("minibar uyarıları (DND, kritik stok) push türü olarak kayıtlı ve zil etiketiyle aynı etiketi taşır", () => {
+    for (const type of ["dnd.marked", "dnd.reminder", "dnd.dayend", "stock.critical"]) {
+      expect(PUSH_TYPES.get(type)!({ refId: "r1", title: "T", body: "B" })).toMatchObject({ title: "T", body: "B", tag: `merit-${type}-r1` });
+    }
+    expect(PUSH_TYPES.get("stock.critical")!({ refId: null, title: "T", body: "B" }).url).toBe("/kat/stok");
+  });
+
   it("kayıtsız tür: claimed 0, gönderim yok", async () => {
     const { a } = await setup();
     await notify({ recipients: [a.id], type: "session.warn", title: "t", body: "b", refId: "s1" });

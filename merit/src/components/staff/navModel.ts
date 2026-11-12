@@ -40,6 +40,7 @@ const KAT_PRIMARY: Def[] = [
   { id: "mine", label: "İşlemlerim", icon: "list", href: "/kat/islemlerim", screen: "MB-TUK" },
 ];
 const KAT_MORE: Def[] = [
+  { id: "manual", label: "Manuel kayıt talebi", icon: "edit", href: "/kat/manuel-kayit", screen: "MB-TUK" },
   { id: "requests", label: "Düzeltme ve ek talepler", icon: "inbox", href: "/kat/duzeltme-onay", screen: "MB-TAL" },
   { id: "stock", label: "Otel deposu", icon: "box", href: "/kat/stok", screen: "MB-ZIM" },
   { id: "mybar", label: "MyBar talepleri", icon: "bell", href: "/kat/mybar", screen: "MB-PERS" },
@@ -70,6 +71,7 @@ const DEPO_PRIMARY: Def[] = [
 ];
 const DEPO_MORE: Def[] = [
   { id: "mybar", label: "MyBar talepleri", icon: "bell", href: "/depo/mybar", screen: "MB-PERS" },
+  { id: "manual", label: "Manuel kayıt talepleri", icon: "edit", href: "/kat/manuel-kayit", screen: "MB-TUK" },
   { id: "home", label: "Depo panosu", icon: "home", href: "/depo", screen: ["MB-ZIM", "MB-RAP"] },
   { id: "occupancy", label: "Doluluk yükleme", icon: "trending", href: "/depo/doluluk-yukle", screen: "MB-DOL" },
   { id: "definitions", label: "Tanımlar", icon: "settings", href: "/depo/tanimlar", screen: "MB-TAN" },

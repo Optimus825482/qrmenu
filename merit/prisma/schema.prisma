@@ -264,6 +264,7 @@ model Hotel {
   dailyTasks                DailyTask[]
   stockRequests             StockRequest[]
   minibarCorrectionRequests MinibarCorrectionRequest[]
+  minibarManualEntryRequests MinibarManualEntryRequest[]
   orders                    Order[]
   orderCounters             OrderCounter[]
   printers                  Printer[]
@@ -340,6 +341,7 @@ model Room {
   qrScanLogs          QrScanLog[]
   minibarTransactions MinibarTransaction[]
   roomChecks          RoomCheck[]
+  manualEntryRequests MinibarManualEntryRequest[]
   roomDnds            RoomDnd[]
   mybarRequests       MybarRequest[]
   guestRecords        GuestRecord[]
@@ -494,6 +496,8 @@ model User {
   waiterCallsResolved        WaiterCall[]
   correctionRequestsMade     MinibarCorrectionRequest[] @relation("MinibarCorrectionRequester")
   correctionRequestsApproved MinibarCorrectionRequest[] @relation("MinibarCorrectionApprover")
+  manualEntryRequestsMade    MinibarManualEntryRequest[] @relation("MinibarManualEntryRequester")
+  manualEntryRequestsDecided MinibarManualEntryRequest[] @relation("MinibarManualEntryDecider")
 
   @@map("users")
 }
@@ -1010,6 +1014,7 @@ model MinibarTransaction {
   roomChecks         RoomCheck[]
   mybarRequest       MybarRequest?              @relation(fields: [mybarRequestId], references: [id], onDelete: SetNull)
   correctionRequests MinibarCorrectionRequest[]
+  manualEntryRequest MinibarManualEntryRequest?
 
   @@index([roomId, occurredAt])
   @@index([hotelId, occurredAt])
@@ -1063,6 +1068,35 @@ model MinibarCorrectionRequest {
 
   @@index([hotelId, status])
   @@map("minibar_correction_requests")
+}
+
+model MinibarManualEntryRequest {
+  id            String                  @id @default(cuid())
+  hotelId       String                  @map("hotel_id")
+  roomId        String                  @map("room_id")
+  requestedById String                  @map("requested_by_id")
+  decidedById   String?                 @map("decided_by_id")
+  /// Why the room QR could not be read (written by the floor attendant).
+  reason        String
+  /// Consumption found in the room: [{ productId, setupId, qty }]. Booked to the room only on approval.
+  items         Json
+  status        CorrectionRequestStatus @default(BEKLIYOR)
+  rejectReason  String?                 @map("reject_reason")
+  /// The room-check record created by the approval.
+  transactionId String?                 @unique @map("transaction_id")
+  createdAt     DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
+  resolvedAt    DateTime?               @map("resolved_at") @db.Timestamptz(3)
+
+  hotel       Hotel               @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  room        Room                @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  requestedBy User                @relation("MinibarManualEntryRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  decidedBy   User?               @relation("MinibarManualEntryDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  transaction MinibarTransaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@index([hotelId, status])
+  @@index([hotelId, createdAt])
+  @@index([requestedById, createdAt])
+  @@map("minibar_manual_entry_requests")
 }
 
 model RoomCheck {

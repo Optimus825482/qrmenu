@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { DensityRoot } from "@/components/ui/Density";
@@ -12,6 +12,7 @@ import { InstallPrompt } from "./InstallPrompt";
 import { isNavActive, type NavModel } from "./navModel";
 import { ProfileMenu, type ProfileExtra } from "./ProfileMenu";
 import { EnvLabel } from "@/components/EnvLabel";
+import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
 import { SessionBanner } from "./SessionBanner";
 import { StaffBell } from "./StaffBell";
 import { StaffNav } from "./StaffNav";
@@ -75,6 +76,26 @@ export function titleFor(pathname: string, sekme: string | null, nav: NavModel):
   return fallback ? fallback[1] : "Merit";
 }
 
+/** Same breakpoint as the rail rule in staff.css: from here on the navigation is a left menu. */
+const WIDE_QUERY = "(min-width: 1024px)";
+
+function useWideWindow(fallback: boolean): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const query = window.matchMedia(WIDE_QUERY);
+      query.addEventListener("change", onChange);
+      return () => query.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(WIDE_QUERY).matches,
+    () => fallback,
+  );
+}
+
+/** Minibar screens: the floor team and their managers must hear about MyBar requests, DND and stock alerts. */
+function needsNotifications(pathname: string): boolean {
+  return pathname === "/kat" || pathname.startsWith("/kat/") || pathname === "/depo" || pathname.startsWith("/depo/");
+}
+
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Nicosia" });
 }
@@ -110,6 +131,22 @@ export function StaffShell({
   const title = useMemo(() => titleFor(pathname, sekme, nav), [pathname, sekme, nav]);
   const subtitle = outletName ? `${hotelName} · ${outletName}` : hotelName;
   const showFab = nav.fab && pathname === "/garson" && sekme === "masalar";
+  // Left menu (PC window, rail roles, wide tablets): room for every screen, the bell and the profile button.
+  const wide = useWideWindow(desktop || layout === "rail");
+  const side = desktop || layout === "rail" || wide;
+  const tools = (
+    <>
+      <StaffBell />
+      <ProfileMenu
+        user={user}
+        hotelName={hotelName}
+        outletName={outletName}
+        targets={targets}
+        currentTargetIndex={currentTargetIndex}
+        extraItems={profileExtras}
+      />
+    </>
+  );
 
   return (
     <DensityRoot density="personel">
@@ -119,17 +156,7 @@ export function StaffShell({
             title={title}
             subtitle={subtitle}
             state={state}
-            bell={<StaffBell />}
-            profile={
-              <ProfileMenu
-                user={user}
-                hotelName={hotelName}
-                outletName={outletName}
-                targets={targets}
-                currentTargetIndex={currentTargetIndex}
-                extraItems={profileExtras}
-              />
-            }
+            tools={side ? undefined : tools}
           />
           <div className="staff-banners">
             {state === "offline" ? (
@@ -139,6 +166,7 @@ export function StaffShell({
                 {lastOnline ? <small>Son güncelleme {formatTime(lastOnline)}</small> : null}
               </div>
             ) : null}
+            {needsNotifications(pathname) ? <NotificationPermissionGate screen="Minibar" subject="minibar" /> : null}
             <EnvLabel className="staff-env-label" />
             <SessionBanner sessionEndsAt={sessionEndsAt} warnMinutes={warnMinutes} />
             <InstallPrompt />
@@ -147,7 +175,7 @@ export function StaffShell({
         <main className="staff-main" id="icerik" style={showFab ? { paddingBottom: "calc(var(--tap-pri) + var(--space-6))" } : undefined}>
           <div className="staff-content">{children}</div>
         </main>
-        <StaffNav nav={nav} pathname={pathname} sekme={sekme} />
+        <StaffNav nav={nav} pathname={pathname} sekme={sekme} side={side} tools={tools} />
         {showFab && nav.fab ? (
           <Link href={nav.fab.href} className="staff-fab" data-primary="">
             <Icon name={nav.fab.icon} size={24} />

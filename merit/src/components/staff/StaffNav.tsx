@@ -1,24 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
 import { isNavActive, type NavModel } from "./navModel";
 
 /**
  * Sayfadaki TEK `<nav>`: altta 80 px Material 3 çubuğu (ya da `layout="rail"` / geniş ekranda sol ray).
- * "Daha" düğmesi kalan yetkili ekranları bir alt sayfada listeler (tam sayfa gezinme: layout, yeni
- * bağlamın gezinmesiyle yeniden kurulsun).
+ * Alt çubukta "Daha" düğmesi kalan yetkili ekranları bir alt sayfada listeler (tam sayfa gezinme: layout,
+ * yeni bağlamın gezinmesiyle yeniden kurulsun). Sol menüde (`side`) yer vardır: "Daha" yoktur, bütün ekranlar
+ * doğrudan listelenir ve en üstte `tools` (bildirim zili, profil) durur.
  */
-export function StaffNav({ nav, pathname, sekme }: { nav: NavModel; pathname: string; sekme: string | null }) {
+export function StaffNav({
+  nav,
+  pathname,
+  sekme,
+  side = false,
+  tools,
+}: {
+  nav: NavModel;
+  pathname: string;
+  sekme: string | null;
+  side?: boolean;
+  tools?: ReactNode;
+}) {
   const [moreOpen, setMoreOpen] = useState(false);
   if (nav.primary.length === 0) return null;
   const moreActive = nav.more.some((item) => isNavActive(item, pathname, sekme));
+  const entries = side ? [...nav.primary.filter((item) => item.id !== "more"), ...nav.more] : nav.primary;
+  const fromMore = new Set(side ? nav.more.map((item) => item.id) : []);
   return (
     <>
-      <nav aria-label="Ana gezinme" className="staff-nav">
-        {nav.primary.map((item) => {
+      <nav aria-label="Ana gezinme" className="staff-nav" data-side={side ? "true" : undefined}>
+        {side && tools ? <div className="staff-nav-tools">{tools}</div> : null}
+        {entries.map((item) => {
           if (item.id === "more") {
             return (
               <button
@@ -38,14 +54,8 @@ export function StaffNav({ nav, pathname, sekme }: { nav: NavModel; pathname: st
             );
           }
           const active = isNavActive(item, pathname, sekme);
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className="staff-nav-item"
-              data-emphasis={item.emphasis}
-              aria-current={active ? "page" : undefined}
-            >
+          const body = (
+            <>
               <span className="staff-nav-icon">
                 <Icon name={item.icon} size={24} />
               </span>
@@ -55,6 +65,25 @@ export function StaffNav({ nav, pathname, sekme }: { nav: NavModel; pathname: st
                   {item.badge > 99 ? "99+" : item.badge}
                 </span>
               ) : null}
+            </>
+          );
+          // Screens of the "Daha" list are plain anchors on purpose: the shell layout is rebuilt for the target page.
+          if (fromMore.has(item.id)) {
+            return (
+              <a key={item.id} href={item.href} className="staff-nav-item" aria-current={active ? "page" : undefined}>
+                {body}
+              </a>
+            );
+          }
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              className="staff-nav-item"
+              data-emphasis={item.emphasis}
+              aria-current={active ? "page" : undefined}
+            >
+              {body}
             </Link>
           );
         })}

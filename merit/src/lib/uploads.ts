@@ -13,6 +13,15 @@ export const UPLOAD_CONTENT_TYPES: Record<string, string> = {
   ".svg": "image/svg+xml",
 };
 
+/** Folders under the uploads root that the public /uploads route never serves (authenticated routes only). */
+const PRIVATE_UPLOAD_DIRS = ["receipts"];
+
+/** True when the file must not leave through the public /uploads route. Case-blind: Windows paths are. */
+export function isPrivateUpload(relPath: string): boolean {
+  const first = relPath.replaceAll("\\", "/").split("/")[0]?.trim().toLowerCase() ?? "";
+  return PRIVATE_UPLOAD_DIRS.includes(first);
+}
+
 /** Resolves `relPath` inside the uploads root; anything that could leave it is VALIDATION. */
 function resolveInside(relPath: string): string {
   const normalized = relPath.replaceAll("\\", "/");

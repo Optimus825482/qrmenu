@@ -38,7 +38,7 @@ const id = z.string().min(1).max(64);
 
 // ---------------------------------------------------------------- shared helpers
 
-type RoomRef = { id: string; hotelId: string; number: string; floorId: string };
+export type RoomRef = { id: string; hotelId: string; number: string; floorId: string };
 
 /** The room, only when it belongs to a hotel of the session scope (anything else is "not found"). */
 async function resolveRoom(ctx: Ctx, roomId: string): Promise<RoomRef> {
@@ -494,6 +494,157 @@ async function findReplay(tx: Tx, ctx: Ctx, roomId: string, clientRequestId: str
 }
 
 /**
+ * Books a replacement inside the caller's transaction (room row already locked, the caller has authorised it):
+ * the room-check record, the hotel stock, the room check, DND and the day's task. Used by the attendant's own
+ * +N (`addReplacement`) and by an approved manual entry request, where the attendant could not scan the room.
+ */
+export async function bookReplacementTx(
+  tx: Tx,
+  p: {
+    room: RoomRef;
+    /** The attendant who checked the room: owner of the record. */
+    userId: string;
+    items: { productId: string; setupId: string; qty: number }[];
+    clientRequestId: string;
+    note?: string;
+    now: Date;
+    manualRequestId?: string;
+  },
+): Promise<ReplacementResult> {
+  const { room, items, clientRequestId, note, now } = p;
+  const day = businessDate(now);
+  const checklist = await loadRoomChecklist(tx, room.id);
+  const caps = capacityByProduct(checklist);
+  const done = await addedToday(tx, room.id, day);
+
+  const lines = items.map((it) => {
+    const setup = checklist.setups.find(
+      (s) => s.setupId === it.setupId && s.items.some((i) => i.productId === it.productId),
+    );
+    if (!setup) {
+      throw new DomainError("VALIDATION", "Ürün bu setup'ta bulunamadı", {
+        fieldErrors: { productId: [it.productId] },
+      });
+    }
+    return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty };
+  });
+  for (const l of lines) {
+    const capacity = caps.get(l.productId) ?? 0;
+    const added = done.get(l.productId) ?? 0;
+    if (added + l.qty > capacity) {
+      throw new DomainError(
+        "DAILY_LIMIT",
+        `Setup miktarı aşılamaz: setup ${capacity}, bugün eklenen ${added}, kalan ${Math.max(0, capacity - added)}`,
+      );
+    }
+  }
+
+  const prices = await tx.product.findMany({
+    where: { id: { in: lines.map((l) => l.productId) } },
+    select: { id: true, purchasePrice: true, salePrice: true },
+  });
+  const priceOf = new Map(prices.map((p) => [p.id, p]));
+  const total = lines.reduce((a, l) => a + l.qty, 0);
+
+  const created = await tx.minibarTransaction.create({
+    data: {
+      hotelId: room.hotelId,
+      roomId: room.id,
+      userId: p.userId,
+      type: "SETUP_KONTROL",
+      note: note || `${total} ürün eksik tamamlandı.`,
+      clientRequestId,
+      occurredAt: now,
+      items: {
+        create: lines.map((l) => ({
+          productId: l.productId,
+          setupId: l.setupId,
+          setupQty: l.setupQty,
+          startStock: Math.max(0, l.setupQty - l.qty),
+          endStock: l.setupQty,
+          consumed: l.qty,
+          added: l.qty,
+          purchasePrice: priceOf.get(l.productId)?.purchasePrice ?? null,
+          salePrice: priceOf.get(l.productId)?.salePrice ?? null,
+        })),
+      },
+    },
+    select: { id: true },
+  });
+
+  await takeManyFromPool(
+    tx,
+    {
+      hotelId: room.hotelId,
+      userId: p.userId,
+      type: "KULLANIM",
+      refType: "MinibarTransaction",
+      refId: created.id,
+      note: `Oda kontrolü: Oda ${room.number}`,
+    },
+    lines.map((l) => ({ productId: l.productId, qty: l.qty })),
+    now,
+  );
+
+  await finishRoomCheck(tx, {
+    roomId: room.id,
+    userId: p.userId,
+    day,
+    type: "URUN_EKLENDI",
+    transactionId: created.id,
+    now,
+  });
+  const dndCompleted = await autoCompleteDnd(
+    tx,
+    { hotelId: room.hotelId, roomId: room.id, day, userId: p.userId, reason: "IKAME" },
+    now,
+  );
+  const moved = await completeOpenItemsForRoom(tx, {
+    hotelId: room.hotelId,
+    roomId: room.id,
+    day,
+    userId: p.userId,
+    reason: "IKAME",
+    now,
+  });
+
+  await audit(tx, {
+    userId: p.userId,
+    hotelId: room.hotelId,
+    action: "MINIBAR_REPLACE",
+    entity: "MinibarTransaction",
+    entityId: created.id,
+    after: {
+      roomId: room.id,
+      roomNumber: room.number,
+      items: lines.map((l) => ({ productId: l.productId, setupId: l.setupId, qty: l.qty })),
+      clientRequestId,
+      ...(p.manualRequestId ? { manualRequestId: p.manualRequestId } : {}),
+    },
+  });
+  await announceDone(tx, {
+    room,
+    userId: p.userId,
+    checkType: "URUN_EKLENDI",
+    addedQty: total,
+    taskItemId: moved.itemIds[0],
+  });
+
+  return {
+    transactionId: created.id,
+    added: total,
+    poolRemaining: await poolRemainingOf(
+      tx,
+      room.hotelId,
+      lines.map((l) => l.productId),
+    ),
+    taskCompleted: moved.itemIds.length > 0,
+    dndCompleted,
+    replayed: false,
+  };
+}
+
+/**
  * +N replacement: one or several products in one atomic call. The daily capacity of a product is its setup
  * quantity over all cabinet copies, minus what any staff member already added to the room today.
  * The same `clientRequestId` returns the first result and changes nothing.
@@ -504,7 +655,6 @@ export async function addReplacement(ctx: Ctx, input: unknown, now: Date = new D
   const { roomId, items, clientRequestId, note } = parsed.data;
   const room = await resolveRoom(ctx, roomId);
   await assertCan(ctx, SCREEN, "O", room.hotelId);
-  const day = businessDate(now);
 
   const run = () =>
     prisma.$transaction(async (tx): Promise<ReplacementResult> => {
@@ -513,134 +663,7 @@ export async function addReplacement(ctx: Ctx, input: unknown, now: Date = new D
       if (replay) return replay;
       await assertRoomVerified({ userId: ctx.user.id, roomId: room.id, hotelId: room.hotelId }, now, tx);
 
-      const checklist = await loadRoomChecklist(tx, room.id);
-      const caps = capacityByProduct(checklist);
-      const done = await addedToday(tx, room.id, day);
-
-      const lines = items.map((it) => {
-        const setup = checklist.setups.find(
-          (s) => s.setupId === it.setupId && s.items.some((i) => i.productId === it.productId),
-        );
-        if (!setup) {
-          throw new DomainError("VALIDATION", "Ürün bu setup'ta bulunamadı", {
-            fieldErrors: { productId: [it.productId] },
-          });
-        }
-        return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty };
-      });
-      for (const l of lines) {
-        const capacity = caps.get(l.productId) ?? 0;
-        const added = done.get(l.productId) ?? 0;
-        if (added + l.qty > capacity) {
-          throw new DomainError(
-            "DAILY_LIMIT",
-            `Setup miktarı aşılamaz: setup ${capacity}, bugün eklenen ${added}, kalan ${Math.max(0, capacity - added)}`,
-          );
-        }
-      }
-
-      const prices = await tx.product.findMany({
-        where: { id: { in: lines.map((l) => l.productId) } },
-        select: { id: true, purchasePrice: true, salePrice: true },
-      });
-      const priceOf = new Map(prices.map((p) => [p.id, p]));
-      const total = lines.reduce((a, l) => a + l.qty, 0);
-
-      const created = await tx.minibarTransaction.create({
-        data: {
-          hotelId: room.hotelId,
-          roomId: room.id,
-          userId: ctx.user.id,
-          type: "SETUP_KONTROL",
-          note: note || `${total} ürün eksik tamamlandı.`,
-          clientRequestId,
-          occurredAt: now,
-          items: {
-            create: lines.map((l) => ({
-              productId: l.productId,
-              setupId: l.setupId,
-              setupQty: l.setupQty,
-              startStock: Math.max(0, l.setupQty - l.qty),
-              endStock: l.setupQty,
-              consumed: l.qty,
-              added: l.qty,
-              purchasePrice: priceOf.get(l.productId)?.purchasePrice ?? null,
-              salePrice: priceOf.get(l.productId)?.salePrice ?? null,
-            })),
-          },
-        },
-        select: { id: true },
-      });
-
-      await takeManyFromPool(
-        tx,
-        {
-          hotelId: room.hotelId,
-          userId: ctx.user.id,
-          type: "KULLANIM",
-          refType: "MinibarTransaction",
-          refId: created.id,
-          note: `Oda kontrolü: Oda ${room.number}`,
-        },
-        lines.map((l) => ({ productId: l.productId, qty: l.qty })),
-        now,
-      );
-
-      await finishRoomCheck(tx, {
-        roomId: room.id,
-        userId: ctx.user.id,
-        day,
-        type: "URUN_EKLENDI",
-        transactionId: created.id,
-        now,
-      });
-      const dndCompleted = await autoCompleteDnd(
-        tx,
-        { hotelId: room.hotelId, roomId: room.id, day, userId: ctx.user.id, reason: "IKAME" },
-        now,
-      );
-      const moved = await completeOpenItemsForRoom(tx, {
-        hotelId: room.hotelId,
-        roomId: room.id,
-        day,
-        userId: ctx.user.id,
-        reason: "IKAME",
-        now,
-      });
-
-      await audit(tx, {
-        userId: ctx.user.id,
-        hotelId: room.hotelId,
-        action: "MINIBAR_REPLACE",
-        entity: "MinibarTransaction",
-        entityId: created.id,
-        after: {
-          roomId: room.id,
-          roomNumber: room.number,
-          items: lines.map((l) => ({ productId: l.productId, setupId: l.setupId, qty: l.qty })),
-          clientRequestId,
-        },
-      });
-      await announceDone(tx, {
-        room,
-        userId: ctx.user.id,
-        checkType: "URUN_EKLENDI",
-        addedQty: total,
-        taskItemId: moved.itemIds[0],
-      });
-
-      return {
-        transactionId: created.id,
-        added: total,
-        poolRemaining: await poolRemainingOf(
-          tx,
-          room.hotelId,
-          lines.map((l) => l.productId),
-        ),
-        taskCompleted: moved.itemIds.length > 0,
-        dndCompleted,
-        replayed: false,
-      };
+      return bookReplacementTx(tx, { room, userId: ctx.user.id, items, clientRequestId, note, now });
     });
 
   try {
@@ -1437,6 +1460,17 @@ export async function resolveCorrectionRequest(ctx: Ctx, input: unknown, now: Da
         before: { status: "BEKLIYOR" },
         after: { status: "ONAYLANDI", actionType: req.actionType, roomNumber, resolvedAt: now.toISOString() },
       });
+      await notify(
+        {
+          recipients: [req.requestedById],
+          type: "minibar.correction.resolved",
+          title: `Düzeltme talebi onaylandı · Oda ${roomNumber}`,
+          body: req.actionType === "SILME" ? "Kayıt silindi." : "Kayıt önerdiğiniz miktarlarla düzeltildi.",
+          refType: "MinibarCorrectionRequest",
+          refId: req.id,
+        },
+        tx,
+      );
       return { success: true, message: `Oda ${roomNumber} için talep onaylandı ve uygulandı.` };
     }
 
@@ -1454,6 +1488,17 @@ export async function resolveCorrectionRequest(ctx: Ctx, input: unknown, now: Da
       before: { status: "BEKLIYOR" },
       after: { status: "REDDEDILDI", rejectReason: reason, roomNumber, resolvedAt: now.toISOString() },
     });
+    await notify(
+      {
+        recipients: [req.requestedById],
+        type: "minibar.correction.resolved",
+        title: `Düzeltme talebi reddedildi · Oda ${roomNumber}`,
+        body: reason.slice(0, 300),
+        refType: "MinibarCorrectionRequest",
+        refId: req.id,
+      },
+      tx,
+    );
     return { success: true, message: `Oda ${roomNumber} için talep reddedildi.` };
   });
 }

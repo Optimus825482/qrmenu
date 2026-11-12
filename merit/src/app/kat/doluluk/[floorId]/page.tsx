@@ -1,5 +1,6 @@
 "use client";
 
+import { MMD_REASONS, mmdNote } from "@/modules/minibar/mmdReasons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -127,6 +128,9 @@ export default function KatDolulukDetailPage() {
   const [submittingDnd, setSubmittingDnd] = useState(false);
   // Idempotency key of the DND mark: the same until it succeeds (a retried tap is not a second mark).
   const [dndKey, setDndKey] = useState(newRequestKey);
+  // MMD (misafir müsait değil): the reason list, then the "tüketim var mı?" question for the recorded reason.
+  const [mmdOpen, setMmdOpen] = useState(false);
+  const [mmdAsk, setMmdAsk] = useState<string | null>(null);
 
 
 
@@ -177,11 +181,17 @@ export default function KatDolulukDetailPage() {
     }
   }, []);
 
+  // Only today's earlier checks matter while deciding on the room; older days are in the reports.
+  const today = new Date(now).toLocaleDateString("sv-SE", { timeZone: "Europe/Nicosia" });
+  const todaysDnd = (roomDndData?.history ?? []).filter((h) => h.date === today);
+
   // Opening a room card resets the dialog and loads its DND details (event handler, not an effect).
   // Empty rooms have no DND action, so their history is not loaded.
   const openRoom = (room: RoomCardData | null) => {
     setSelectedRoom(room);
     setDndKey(newRequestKey());
+    setMmdOpen(false);
+    setMmdAsk(null);
     if (room && room.status !== "empty") {
       setDndNote("");
       void loadRoomDnd(room.id);
@@ -190,19 +200,27 @@ export default function KatDolulukDetailPage() {
     }
   };
 
-  const handleMarkDndFromDialog = async () => {
+  const handleMarkDndFromDialog = async (mmdReason?: string) => {
     if (!selectedRoom) return;
+    setMmdOpen(false);
     setSubmittingDnd(true);
     try {
       const res = await fetch(`/api/minibar/room/${selectedRoom.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: dndNote.trim() || undefined, clientRequestId: dndKey }),
+        // MMD is a DND check whose note carries the reason.
+        body: JSON.stringify({ note: mmdReason ? mmdNote(mmdReason) : dndNote.trim() || undefined, clientRequestId: dndKey }),
         signal: AbortSignal.timeout(15_000),
       });
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
-      notify.success(json.message ?? `Oda ${selectedRoom.number} DND olarak işaretlendi.`);
+      notify.success(
+        mmdReason
+          ? `Oda ${selectedRoom.number} MMD kaydedildi: ${mmdReason}`
+          : (json.message ?? `Oda ${selectedRoom.number} DND olarak işaretlendi.`),
+      );
+      // The guest may have taken the missing products at the door: ask whether there is consumption to record.
+      if (mmdReason) setMmdAsk(mmdReason);
       setDndNote("");
       setDndKey(newRequestKey());
       await loadRoomDnd(selectedRoom.id);
@@ -637,7 +655,7 @@ export default function KatDolulukDetailPage() {
                   <button
                     type="button"
                     data-mutates=""
-                    onClick={handleMarkDndFromDialog}
+                    onClick={() => void handleMarkDndFromDialog()}
                     disabled={submittingDnd}
                     style={{ minHeight: "var(--tap-action)" }}
                     className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-warn px-4 py-2.5 text-xs font-bold text-white hover:opacity-90 disabled:opacity-50 transition"
@@ -645,16 +663,72 @@ export default function KatDolulukDetailPage() {
                     <Icon name="moon" size={16} />
                     {submittingDnd ? "Kaydediliyor..." : "Odayı DND Olarak İşaretle"}
                   </button>
+                  <button
+                    type="button"
+                    data-testid="mmd-button"
+                    aria-expanded={mmdOpen}
+                    onClick={() => setMmdOpen((v) => !v)}
+                    disabled={submittingDnd}
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-yellow-500 bg-yellow-400 px-4 py-2.5 text-xs font-bold text-black hover:bg-yellow-300 disabled:opacity-40 transition"
+                  >
+                    MMD · Misafir Müsait Değil
+                  </button>
+                  {mmdOpen ? (
+                    <div data-testid="mmd-options" className="flex flex-wrap gap-2" role="group" aria-label="MMD nedeni">
+                      {MMD_REASONS.map((reason) => (
+                        <button
+                          key={reason}
+                          type="button"
+                          data-mutates=""
+                          onClick={() => void handleMarkDndFromDialog(reason)}
+                          disabled={submittingDnd}
+                          style={{ minHeight: "var(--tap-action)" }}
+                          className="rounded-xl border border-yellow-500/60 bg-yellow-400/20 px-3 py-2 text-xs font-semibold text-text hover:bg-yellow-400/35 disabled:opacity-50"
+                        >
+                          {reason}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {mmdAsk ? (
+                    <div role="alertdialog" aria-label="Tüketim var mı?" className="space-y-2 rounded-xl border-2 border-accent bg-bg p-3">
+                      <p className="text-sm font-bold text-text">Tüketim var mı?</p>
+                      <p className="text-xs text-muted">
+                        Misafir eksilen ürünleri kendisi aldıysa tüketimi manuel kayıt talebiyle Minibar Yönetimi onayına gönderin.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(selectedRoom.id)}&mmd=${encodeURIComponent(mmdAsk)}`)
+                          }
+                          style={{ minHeight: "var(--tap-action)" }}
+                          className="flex-1 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white hover:opacity-90"
+                        >
+                          Evet, tüketim gir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMmdAsk(null)}
+                          style={{ minHeight: "var(--tap-action)" }}
+                          className="flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs font-semibold text-text hover:bg-bg"
+                        >
+                          Hayır
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* DND History */}
                 <div className="pt-2 border-t border-warn/20">
-                  <h4 className="text-xs font-bold text-text mb-2">DND Kayıtları ve Geçmişi</h4>
+                  <h4 className="text-xs font-bold text-text mb-2">Bugünkü DND Kayıtları</h4>
                   {loadingDnd ? (
-                    <p className="text-xs text-muted italic">DND geçmişi yükleniyor...</p>
-                  ) : roomDndData && roomDndData.history.length > 0 ? (
+                    <p className="text-xs text-muted italic">DND kayıtları yükleniyor...</p>
+                  ) : todaysDnd.length > 0 ? (
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {roomDndData.history.map((h, idx) => (
+                      {todaysDnd.map((h, idx) => (
                         <div key={idx} className="rounded-lg border border-border bg-bg p-2 text-xs space-y-1">
                           <div className="flex items-center justify-between text-muted">
                             <span className="font-semibold text-text">{h.date}</span>
@@ -672,7 +746,7 @@ export default function KatDolulukDetailPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted italic">Bu odaya ait önceki DND kaydı bulunmuyor.</p>
+                    <p className="text-xs text-muted italic">Bu odada bugün DND kaydı yok.</p>
                   )}
                 </div>
               </div>

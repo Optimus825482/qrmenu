@@ -43,7 +43,10 @@ test("tek gezinme: kat sorumlusu üç sayfada yalnız Ana gezinme çubuğunu gö
   for (const path of ["/kat", "/kat/tavsiye-is-plani", "/kat/islemlerim"]) await expectSingleNav(page, path);
   const items = nav(page).getByRole("link");
   await expect(items.nth(2)).toHaveText(/QR Okut/);
-  await expect(nav(page).getByRole("button", { name: "Daha" })).toBeVisible();
+  // Bottom bar: the rest sits behind "Daha"; left menu (wide window): every screen is listed directly.
+  await expect(
+    nav(page).getByRole("button", { name: "Daha" }).or(nav(page).getByRole("link", { name: "Düzeltme ve ek talepler" })),
+  ).toBeVisible();
 });
 
 test("tek gezinme: garson, iç sekmeler tablist; depo ve oda servisi de tek nav", async ({ page, browser }) => {

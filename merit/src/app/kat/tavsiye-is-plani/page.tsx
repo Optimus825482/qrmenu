@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Icon } from "@/components/icons/Icon";
 
 interface PriorityPlanEntry {
@@ -85,7 +84,7 @@ export default function KatTavsiyeIsPlaniPage() {
   const [selectedFloor, setSelectedFloor] = useState<number | "ALL">("ALL");
   const [expandedFloors, setExpandedFloors] = useState<Record<number, boolean>>({});
   const [expandedHotelFloors, setExpandedHotelFloors] = useState<Record<string, boolean>>({});
-  const [showGuide, setShowGuide] = useState(true);
+  const [showGuide, setShowGuide] = useState(false);
 
   const loadPlan = async (hId?: string) => {
     setLoading(true);
@@ -111,22 +110,7 @@ export default function KatTavsiyeIsPlaniPage() {
       if (json.selectedHotelId) setSelectedHotelId(json.selectedHotelId);
       setRequireQrForControl(Boolean(json.requireQrForControl));
 
-      // Tek otel kat accordion varsayılan açık
-      const exp: Record<number, boolean> = {};
-      allEntries.forEach((r) => {
-        const fn = r.floorNumber ?? 0;
-        exp[fn] = true;
-      });
-      setExpandedFloors(exp);
-
-      // Çoklu otel kat accordion varsayılan açık
-      const expH: Record<string, boolean> = {};
-      loadedMulti.forEach((h) => {
-        h.plan.entries.forEach((r) => {
-          expH[`${h.hotelId}-${r.floorNumber ?? 0}`] = true;
-        });
-      });
-      setExpandedHotelFloors(expH);
+      // Kat bölümleri kapalı gelir (tek otel ve çoklu otel); kullanıcının açtıkları yenilemede açık kalır.
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {
@@ -166,7 +150,7 @@ export default function KatTavsiyeIsPlaniPage() {
     const key = `${hotelId}-${floorNumber}`;
     setExpandedHotelFloors((prev) => ({
       ...prev,
-      [key]: !(prev[key] ?? true),
+      [key]: !(prev[key] ?? false),
     }));
   };
 
@@ -293,8 +277,6 @@ export default function KatTavsiyeIsPlaniPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6 space-y-4">
-        <RoutineCard />
-
         {/* Otel Seçim / Çoklu Otel Görünüm Barı */}
         {hotels.length > 1 ? (
           <div className="rounded-2xl border border-border bg-surface p-3.5 shadow-sm space-y-2">
@@ -520,7 +502,7 @@ export default function KatTavsiyeIsPlaniPage() {
                     <div className="space-y-3">
                       {hGrouped.map((grp) => {
                         const floorKey = `${hSummary.hotelId}-${grp.floorNumber}`;
-                        const isExpanded = expandedHotelFloors[floorKey] ?? true;
+                        const isExpanded = expandedHotelFloors[floorKey] ?? false;
                         const criticalCount = grp.rooms.filter(
                           (r) => r.rank === 1 || r.isCritical || r.isCriticalClash,
                         ).length;
@@ -619,7 +601,7 @@ export default function KatTavsiyeIsPlaniPage() {
             {groupedByFloor
               .filter((grp) => selectedFloor === "ALL" || grp.floorNumber === selectedFloor)
               .map((grp) => {
-                const isExpanded = expandedFloors[grp.floorNumber] ?? true;
+                const isExpanded = expandedFloors[grp.floorNumber] ?? false;
                 const criticalCount = grp.rooms.filter(
                   (r) => r.rank === 1 || r.isCritical || r.isCriticalClash,
                 ).length;

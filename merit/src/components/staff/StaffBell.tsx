@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { showOpsNotification } from "@/components/ops/opsNotification";
+import { useSound } from "@/components/ops/useSound";
 import type { MeritEvent } from "@/lib/realtime-events";
 import { useNotifications } from "@/shell/components/mobile/useNotifications";
 import { useSse } from "@/shell/useSse";
@@ -19,14 +21,33 @@ function stamp(iso: string): string {
   });
 }
 
+/** Same tag as the Web Push of that notification (pushDispatcher), so the two never show twice. */
+export function notificationTag(type: string, refId: string | null): string {
+  if (type === "mybar.created") return `mybar-${refId ?? "yeni"}`;
+  return `merit-${type || "bildirim"}-${refId ?? "yeni"}`;
+}
+
 /**
  * Bildirim çanı (personel kabuğu): `NotificationBell` ile aynı veri kancası (`useNotifications`, aynı
  * SSE olayı), ama XP görev çubuğu stili yerine belirteçli, 44 px dokunma hedefli bir sayfa.
+ * Her yeni bildirim ayrıca sesli uyarı verir ve (izin verilmişse) sistem bildirimi olarak gösterilir.
  */
 export function StaffBell() {
   const listeners = useRef(new Set<(event: MeritEvent) => void>());
+  const playAlert = useSound("call");
   useSse((event) => {
     for (const listener of listeners.current) listener(event);
+    if (event.type !== "notification.created") return;
+    const payload = (event.payload ?? {}) as { type?: unknown; refId?: unknown; title?: unknown; body?: unknown };
+    const title = typeof payload.title === "string" && payload.title ? payload.title : "Merit OS";
+    playAlert();
+    showOpsNotification(title, {
+      body: typeof payload.body === "string" ? payload.body : undefined,
+      tag: notificationTag(
+        typeof payload.type === "string" ? payload.type : "",
+        typeof payload.refId === "string" ? payload.refId : null,
+      ),
+    });
   }, TYPES);
   const subscribe = useCallback((listener: (event: MeritEvent) => void) => {
     listeners.current.add(listener);

@@ -44,6 +44,26 @@ registerPushType("order.sla.breach", (n) => ({
   tag: `order-sla-${n.refId ?? "yeni"}`,
 }));
 
+// Minibar uyarıları: kat ekibi ve yöneticileri uygulama kapalıyken de görmeli.
+for (const type of ["dnd.marked", "dnd.reminder", "dnd.dayend"]) {
+  registerPushType(type, (n) => ({ title: n.title, body: n.body, url: "/kat", tag: `merit-${type}-${n.refId ?? "yeni"}` }));
+}
+for (const type of ["minibar.manual.created", "minibar.manual.resolved"]) {
+  registerPushType(type, (n) => ({ title: n.title, body: n.body, url: "/kat/manuel-kayit", tag: `merit-${type}-${n.refId ?? "yeni"}` }));
+}
+registerPushType("minibar.correction.resolved", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: "/kat/islemlerim",
+  tag: `merit-minibar.correction.resolved-${n.refId ?? "yeni"}`,
+}));
+registerPushType("stock.critical", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: "/kat/stok",
+  tag: `merit-stock.critical-${n.refId ?? "yeni"}`,
+}));
+
 export type DispatchResult = { claimed: number; sent: number; gone: number; failed: number };
 
 function str(value: unknown): string {

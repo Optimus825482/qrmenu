@@ -126,7 +126,7 @@ const LIST: ScreenGuide[] = [
     [
       ["qr-okut", "QR okut", "Kameraya izin ver ve oda kapısındaki QR kodu okut."],
       ["oda-bilgisi", "Oda bilgisi", "Açılan formda oda numarasını ve katı kontrol et; yanlışsa geri dön."],
-      ["form-gonder", "Formu tamamla", "Eksik ürünleri gir ve kaydet. Kayıt anında kat planına yansır."],
+      ["form-gonder", "QR okutulamıyorsa", "Manuel kayıt talebi ile odadaki tüketimi açıklamasıyla onaya gönder; onaylanınca odaya işlenir."],
     ],
     [
       "Başka odanın QR kodunu okutursan form o odaya açılır; oda numarasına bak.",

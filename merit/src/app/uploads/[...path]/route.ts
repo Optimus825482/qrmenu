@@ -1,13 +1,17 @@
 import { DomainError } from "@/lib/result";
-import { readUpload } from "@/lib/uploads";
+import { isPrivateUpload, readUpload } from "@/lib/uploads";
 
-/** Serves files saved with saveUpload (menu images). Only image types; file names carry a content hash. */
+/**
+ * Serves files saved with saveUpload (menu images). Only image types; file names carry a content hash.
+ * Private folders (delivery documents) are never served here: they have their own authenticated route.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
   const { path: segments } = await params;
   try {
+    if (isPrivateUpload(segments.join("/"))) return new Response("Not found", { status: 404 });
     const file = await readUpload(segments.join("/"));
     if (!file) return new Response("Not found", { status: 404 });
     const headers: Record<string, string> = {

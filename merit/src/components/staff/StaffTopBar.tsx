@@ -5,19 +5,20 @@ import { ScreenGuideHost } from "@/components/guide/ScreenGuideHost";
 import { ConnectionBadge } from "./ConnectionBadge";
 import type { OnlineState } from "./useOnline";
 
-/** 56 px üst çubuk: solda ekran adı ve "Otel · Outlet", sağda bağlantı rozeti, bildirim çanı ve profil menüsü. */
+/**
+ * 56 px üst çubuk: solda ekran adı ve "Otel · Outlet", sağda bağlantı rozeti. Bildirim çanı ve profil menüsü
+ * yalnız alt çubuklu düzende buradadır; sol menülü düzende menünün üstüne taşınır (`tools` verilmez).
+ */
 export function StaffTopBar({
   title,
   subtitle,
   state,
-  bell,
-  profile,
+  tools,
 }: {
   title: string;
   subtitle: string;
   state: OnlineState;
-  bell: ReactNode;
-  profile: ReactNode;
+  tools?: ReactNode;
 }) {
   return (
     <header className="staff-top">
@@ -27,8 +28,7 @@ export function StaffTopBar({
           <span className="staff-sub">{subtitle}</span>
         </div>
         <ConnectionBadge state={state} />
-        {bell}
-        {profile}
+        {tools}
       </div>
       <ScreenGuideHost density="personel" f1 />
     </header>

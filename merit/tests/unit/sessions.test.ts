@@ -241,6 +241,29 @@ describe("createSession / closeSession (gerçek test DB)", () => {
     const row = await testDb.userSession.findUniqueOrThrow({ where: { id: s.id } });
     expect(Date.now() - row.lastSeenAt.getTime()).toBeLessThan(5000);
   });
+
+  it("touchSession uyarıyı yalnız yeni bitiş uyarı penceresinin dışındaysa geri alır", async () => {
+    const user = await makeUser({ username: "gar-warn", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    const warned = new Date(Date.now() - 60_000);
+
+    // Normal case: activity moves the deadline far away, the warning is withdrawn.
+    const far = await newSession(user.id, "ROYAL", user.roleId);
+    await testDb.userSession.update({ where: { id: far.id }, data: { status: "UYARI", warnedAt: warned } });
+    await touchSession(far.id);
+    expect(await testDb.userSession.findUniqueOrThrow({ where: { id: far.id } })).toMatchObject({ status: "ONLINE", warnedAt: null });
+
+    // Absolute deadline 2 minutes away: activity cannot extend it, so the session stays warned (no repeat warning).
+    const near = await newSession(user.id, "ROYAL", user.roleId);
+    await testDb.userSession.update({
+      where: { id: near.id },
+      data: { status: "UYARI", warnedAt: warned, loginAt: new Date(Date.now() - 718 * 60_000) },
+    });
+    await touchSession(near.id);
+    const row = await testDb.userSession.findUniqueOrThrow({ where: { id: near.id } });
+    expect(row.status).toBe("UYARI");
+    expect(row.warnedAt?.getTime()).toBe(warned.getTime());
+    expect(Date.now() - row.lastSeenAt.getTime()).toBeLessThan(5000);
+  });
 });
 
 describe("performLogin / performSelectTarget (gerçek test DB)", () => {

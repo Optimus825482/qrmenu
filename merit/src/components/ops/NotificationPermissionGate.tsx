@@ -6,13 +6,25 @@ import { usePushSubscription } from "@/shell/push/usePushSubscription";
 
 export type NotificationPermissionGateProps = {
   screen?: "Garson" | "Şef / Mutfak" | string;
+  /** What the notifications are about: decides the explanation text. */
+  subject?: "orders" | "minibar";
 };
 
-export function NotificationPermissionGate({ screen = "Garson / Şef" }: NotificationPermissionGateProps) {
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
-    return Notification.permission;
-  });
+const WHAT: Record<"orders" | "minibar", { missed: string; needed: string }> = {
+  orders: {
+    missed: "Yeni sipariş ve masa çağrılarını",
+    needed: "Yeni siparişler, masa çağrıları ve durum güncellemelerini",
+  },
+  minibar: {
+    missed: "Yeni MyBar taleplerini, DND ve stok uyarılarını",
+    needed: "Yeni MyBar talepleri, DND hatırlatmaları ve stok uyarılarını",
+  },
+};
+
+export function NotificationPermissionGate({ screen = "Garson / Şef", subject = "orders" }: NotificationPermissionGateProps) {
+  const what = WHAT[subject];
+  // Unknown until mounted: the server cannot read the browser's permission, so both render nothing first.
+  const [permission, setPermission] = useState<NotificationPermission | "unsupported" | null>(null);
   const { enable: enablePush } = usePushSubscription();
 
   const checkPermission = useCallback(() => {
@@ -37,7 +49,8 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
   }, [checkPermission, enablePush]);
 
   useEffect(() => {
-    // The initial state is already read from Notification.permission; no synchronous set here.
+    // Deferred: react-hooks/set-state-in-effect rejects a direct call that ends in setState.
+    const first = window.setTimeout(checkPermission, 0);
     // Sayfa açıldığında henüz sorulmamışsa doğrudan izin penceresini tetikle
     if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
       Notification.requestPermission()
@@ -53,13 +66,14 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
     window.addEventListener("focus", checkPermission);
 
     return () => {
+      window.clearTimeout(first);
       window.clearInterval(interval);
       window.removeEventListener("focus", checkPermission);
     };
   }, [checkPermission, enablePush]);
 
   // Bildirim izni verilmişse veya tarayıcı desteklemiyorsa hiçbir engel gösterme
-  if (permission === "granted" || permission === "unsupported") {
+  if (permission === null || permission === "granted" || permission === "unsupported") {
     return null;
   }
 
@@ -98,8 +112,8 @@ export function NotificationPermissionGate({ screen = "Garson / Şef" }: Notific
             </div>
             <p className="mt-1 text-xs leading-relaxed sm:text-sm">
               {isDenied
-                ? "Tarayıcınızda bildirimler engellenmiş! Yeni sipariş ve masa çağrılarını kaçırmamak için lütfen adres çubuğundaki kilit (site ayarları) simgesine tıklayıp Bildirimler'e 'İzin Ver' seçeneğini işaretleyin."
-                : "Yeni siparişler, masa çağrıları ve durum güncellemelerini anında alabilmek için bildirim izni vermeniz zorunludur."}
+                ? `Tarayıcınızda bildirimler engellenmiş! ${what.missed} kaçırmamak için lütfen adres çubuğundaki kilit (site ayarları) simgesine tıklayıp Bildirimler'e 'İzin Ver' seçeneğini işaretleyin.`
+                : `${what.needed} anında alabilmek için bildirim izni vermeniz zorunludur.`}
             </p>
           </div>
         </div>

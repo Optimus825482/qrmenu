@@ -33,8 +33,8 @@ async function withDb<T>(fn: (client: Client) => Promise<T>): Promise<T> {
 const win = (page: Page) => page.getByRole("region", { name: /^MyBar Talepleri/ });
 
 async function openDepotMybar(page: Page): Promise<void> {
-  await page.getByRole("navigation", { name: "Ana gezinme" }).getByRole("button", { name: "Daha" }).click();
-  await page.getByRole("dialog", { name: "Daha" }).getByRole("link", { name: "MyBar talepleri", exact: true }).click();
+  // Wide window: the left menu lists every screen, there is no "Daha" sheet.
+  await page.getByRole("navigation", { name: "Ana gezinme" }).getByRole("link", { name: "MyBar talepleri", exact: true }).click();
   await expect(page).toHaveURL(/\/depo\/mybar$/);
 }
 

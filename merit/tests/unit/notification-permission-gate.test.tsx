@@ -32,7 +32,7 @@ describe("NotificationPermissionGate", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders prompt banner when permission is default", () => {
+  it("renders prompt banner when permission is default", async () => {
     const requestPermission = vi.fn().mockResolvedValue("default");
     vi.stubGlobal("Notification", {
       permission: "default",
@@ -40,19 +40,19 @@ describe("NotificationPermissionGate", () => {
     });
 
     render(<NotificationPermissionGate screen="Garson" />);
-    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText(/Garson Ekranı · Bildirim İzni Gerekli/)).toBeTruthy();
     expect(screen.getByRole("button", { name: /Bildirimlere İzin Ver/i })).toBeTruthy();
   });
 
-  it("renders warning banner when permission is denied", () => {
+  it("renders warning banner when permission is denied", async () => {
     vi.stubGlobal("Notification", {
       permission: "denied",
       requestPermission: vi.fn(),
     });
 
     render(<NotificationPermissionGate screen="Şef / Mutfak" />);
-    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(await screen.findByRole("alert")).toBeTruthy();
     expect(screen.getByText(/Şef \/ Mutfak Ekranı · Bildirim İzni Gerekli/)).toBeTruthy();
     expect(screen.getByText(/Engellendi/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /İzni Tekrar Kontrol Et/i })).toBeTruthy();
@@ -66,7 +66,7 @@ describe("NotificationPermissionGate", () => {
     });
 
     render(<NotificationPermissionGate screen="Garson" />);
-    const btn = screen.getByRole("button", { name: /Bildirimlere İzin Ver/i });
+    const btn = await screen.findByRole("button", { name: /Bildirimlere İzin Ver/i });
     fireEvent.click(btn);
 
     await waitFor(() => {

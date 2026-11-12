@@ -253,7 +253,7 @@ export default function KatQrScannerPage() {
               <div className="text-center p-6 space-y-2">
                 <Icon name="qr" size={32} className="mx-auto text-muted" />
                 <p className="text-xs text-muted">
-                  {cameraError ?? "Kamera kapalı. QR okutmak için kamerayı açın veya aşağıdan QR etiketindeki kodu yazın."}
+                  {cameraError ?? "Kamera kapalı. QR okutmak için kamerayı açın."}
                 </p>
               </div>
             ) : (
@@ -265,21 +265,21 @@ export default function KatQrScannerPage() {
         </div>
 
         <div data-guide="oda-bilgisi" className="rounded-2xl border border-border bg-surface p-5 space-y-3">
+          {/* Typing replaces the scan only where a manager opened room-number entry; the QR code itself is never typed. */}
+          {roomNumberAllowed ? (
+            <>
           <div>
             <label htmlFor="qr-code-input" className="block text-sm font-bold text-text">
-              {roomNumberAllowed ? "Oda numarası yaz veya QR kodu gir" : "QR etiketindeki kodu gir"}
+              Oda numarası yaz
             </label>
             <p id="qr-code-hint" className="text-xs text-muted mt-0.5">
               {manualEntry === "ALL"
-                ? "Kamera kullanılamıyorsa oda numarasını (örn: 101) veya 6 haneli QR kodunu yazın"
-                : manualEntry === "SOME"
-                  ? "Oda numarası yalnız elle girişe izin verilen odalarda kabul edilir; diğerlerinde QR etiketindeki kodu yazın"
-                  : "Kamera kullanılamıyorsa QR etiketinin altındaki 6 haneli kodu yazın. Oda numarası ile giriş kapalıdır."}
+                ? "Kamera kullanılamıyorsa oda numarasını yazın (örn: 101)"
+                : "Oda numarası yalnız elle girişe izin verilen odalarda kabul edilir"}
             </p>
           </div>
 
           <form
-            data-guide="form-gonder"
             onSubmit={(e) => {
               e.preventDefault();
               void resolveToken(manualToken);
@@ -298,7 +298,7 @@ export default function KatQrScannerPage() {
                 setManualToken(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder={roomNumberAllowed ? "Oda numarası veya QR kod (örn: 101)" : "QR kodu (örn: 482913)"}
+              placeholder="Oda numarası (örn: 101)"
               className="flex-1 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-mono tracking-wider text-text placeholder:text-muted focus:border-accent focus:outline-none"
             />
             <button
@@ -311,6 +311,8 @@ export default function KatQrScannerPage() {
               {resolving ? "Açılıyor..." : "Aç"}
             </button>
           </form>
+            </>
+          ) : null}
 
           {error ? (
             <div
@@ -321,6 +323,23 @@ export default function KatQrScannerPage() {
               {error}
             </div>
           ) : null}
+
+          <div data-guide="form-gonder" className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-text">QR kodu okutulamıyor mu?</p>
+              <p className="text-xs text-muted mt-0.5">
+                Odadaki tüketimi açıklamasıyla birlikte Minibar Yönetimi onayına gönderin; onaylanınca odaya işlenir.
+              </p>
+            </div>
+            <Link
+              href="/kat/manuel-kayit"
+              style={{ minHeight: "var(--tap-primary)" }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-bold text-text hover:bg-surface"
+            >
+              <Icon name="edit" size={18} />
+              Manuel kayıt talebi
+            </Link>
+          </div>
         </div>
       </main>
     </div>

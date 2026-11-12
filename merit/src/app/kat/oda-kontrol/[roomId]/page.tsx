@@ -1,5 +1,6 @@
 "use client";
 
+import { MMD_REASONS } from "@/modules/minibar/mmdReasons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -78,15 +79,6 @@ interface RoomCheckData {
   /** The server holds a fresh QR scan of this user for the room (the only source of the QR permission). */
   qrVerified?: boolean;
 }
-
-/** MMD (misafir müsait değil): why the room could not be checked now. Recorded as a DND check with this note. */
-const MMD_REASONS = [
-  "Misafir uyuyor",
-  "Misafir banyoda",
-  "Misafir istemedi",
-  "Misafir daha sonra gelmemizi istedi",
-  "Misafir telefonda",
-] as const;
 
 export default function OdaKontrolPage() {
   const params = useParams<{ roomId: string }>();

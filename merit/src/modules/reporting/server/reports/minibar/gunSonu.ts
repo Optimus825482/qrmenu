@@ -69,6 +69,16 @@ export const gunSonu = defineReport({
 
     const showHotel = scope.hotelIds.length > 1;
     const capped = capRows(rows, scope);
+    // Room checks that could not be opened by QR and went through approval (manualEntryRequests.ts).
+    const manual = await prisma.minibarManualEntryRequest.groupBy({
+      by: ["status"],
+      where: {
+        hotelId: { in: scope.hotelIds },
+        createdAt: { gte: scope.start, lt: scope.end },
+        ...(userId ? { requestedById: userId } : {}),
+      },
+      _count: { _all: true },
+    });
     const columns: ReportColumn[] = [
       { key: "day", title: "Tarih", type: "date" },
       ...(showHotel ? [{ key: "hotel", title: "Otel", type: "text" as const, width: 24 }] : []),
@@ -95,6 +105,8 @@ export const gunSonu = defineReport({
         { label: "Kontrol edilen oda", value: checks?.rooms ?? 0 },
         { label: "Sarfiyat Yok", value: checks?.none ?? 0 },
         { label: "DND", value: checks?.dnd ?? 0 },
+        { label: "Manuel kayıt talebi", value: manual.reduce((sum, row) => sum + row._count._all, 0) },
+        { label: "Onaylanan manuel kayıt", value: manual.find((row) => row.status === "ONAYLANDI")?._count._all ?? 0 },
       ],
       truncated: capped.truncated,
     };

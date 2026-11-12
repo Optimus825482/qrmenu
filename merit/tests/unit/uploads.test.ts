@@ -78,6 +78,15 @@ describe("uploads", () => {
     }
   });
 
+  it("evrak görselleri (receipts/) herkese açık yoldan verilmez", async () => {
+    await saveUpload("receipts/aabbccddeeff001122334455.jpg", Buffer.from("gizli"));
+    expect((await GET(req("x"), ctx("receipts", "aabbccddeeff001122334455.jpg"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("Receipts", "aabbccddeeff001122334455.jpg"))).status).toBe(404);
+    expect((await GET(req("x"), ctx("receipts\aabbccddeeff001122334455.jpg"))).status).toBe(404);
+    // The authenticated route still reads it through readUpload.
+    expect((await readUpload("receipts/aabbccddeeff001122334455.jpg"))?.data.toString()).toBe("gizli");
+  });
+
   it("yol geçişi: route kötü yolları 404 yapar; çözülmüş '%2e%2e' parçası kök dışına çıkamaz", async () => {
     expect((await GET(req("x"), ctx("..\\x.webp"))).status).toBe(404);
     expect((await GET(req("x"), ctx("", "etc", "x.webp"))).status).toBe(404);

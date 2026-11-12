@@ -169,14 +169,18 @@ export async function touchSession(id: string): Promise<void> {
   );
 
   if (session.status === "UYARI") {
+    // The warning is withdrawn only when the new deadline is outside the warning window. Otherwise (absolute
+    // deadline close, or a warning window as long as the session itself) the session would flip back to
+    // ONLINE and be warned again by every sweep: one "oturum süreniz bitiyor" notification a minute.
+    const warnMinutes = await getSetting("session.warnBeforeMinutes");
+    const cleared = expiresAt.getTime() - now.getTime() > warnMinutes * MINUTE_MS;
     await prisma.$transaction(async (tx) => {
       await tx.userSession.updateMany({
         where: { id, status: { in: ACTIVE_STATUSES } },
         data: {
           lastSeenAt: now,
           expiresAt,
-          status: "ONLINE",
-          warnedAt: null,
+          ...(cleared ? { status: "ONLINE" as const, warnedAt: null } : {}),
         },
       });
       const named = await tx.userSession.findUnique({ where: { id }, ...sessionWithNames });

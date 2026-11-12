@@ -365,6 +365,10 @@
   padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   border-radius: var(--radius-l) var(--radius-l) 0 0;
   background: var(--surface);
+  /* The sheet may open from the title bar or the left menu: it never inherits their text colour. */
+  color: var(--text);
+  font-weight: 400;
+  text-shadow: none;
 }
 .staff-sheet h2 {
   margin: 0 0 var(--space-2);
@@ -383,9 +387,51 @@
   min-height: var(--tap-pri);
 }
 
+/*
+ * Sol menü (data-side): "Daha" yoktur, bütün ekranlar listelenir; en üstte bildirim zili ve profil düğmesi
+ * durur (alt çubuklu düzende bunlar üst çubuktadır).
+ */
+.staff-shell {
+  --staff-rail-w: 112px;
+}
+.staff-nav-tools {
+  order: -1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-1) var(--space-3);
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.staff-nav-tools .staff-icon-button {
+  width: 48px;
+  height: 48px;
+  border-color: var(--border);
+  background: var(--surface);
+}
+.staff-nav-tools .staff-icon-button svg {
+  width: 26px;
+  height: 26px;
+}
+.staff-nav-tools .staff-menu {
+  position: fixed;
+  top: 68px;
+  left: var(--space-2);
+  right: auto;
+}
+.staff-nav[data-side="true"] .staff-nav-label {
+  padding: 0 var(--space-1);
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.2;
+}
+
 /* Ray: R-DEP / R-HKS ve en az 1024 px genişlikte aynı nav sola dikey ray olur. */
 .staff-shell[data-layout="rail"] {
-  grid-template-columns: 80px minmax(0, 1fr);
+  grid-template-columns: var(--staff-rail-w) minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     "nav top"
@@ -398,7 +444,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  width: 80px;
+  width: var(--staff-rail-w);
   height: 100dvh;
   padding: var(--space-2) 0;
   border-top: 0;
@@ -420,12 +466,12 @@
   bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 .staff-shell[data-layout="rail"] .staff-action-bar {
-  left: 80px;
+  left: var(--staff-rail-w);
   bottom: 0;
 }
 @media (min-width: 1024px) {
   .staff-shell {
-    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-columns: var(--staff-rail-w) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
       "nav top"
@@ -438,7 +484,7 @@
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    width: 80px;
+    width: var(--staff-rail-w);
     height: 100dvh;
     padding: var(--space-2) 0;
     border-top: 0;
@@ -456,7 +502,7 @@
     bottom: var(--space-4);
   }
   .staff-shell .staff-action-bar {
-    left: 80px;
+    left: var(--staff-rail-w);
     bottom: 0;
   }
 }
