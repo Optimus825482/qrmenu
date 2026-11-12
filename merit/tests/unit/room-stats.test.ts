@@ -167,15 +167,15 @@ describe("stats.sla", () => {
     expect((await stats.sla(ctx, e.hid, { from: DAY, to: "2026-03-11" })).total).toBe(1);
   });
 
-  it("92 gün serbest, 93 gün VALIDATION; ters ve geçersiz tarih VALIDATION", async () => {
+  it("92 gün (uçlar dahil) serbest, 93 gün VALIDATION; ters ve geçersiz tarih VALIDATION", async () => {
     const e = await env();
     const { ctx } = await fbm();
-    await expect(stats.sla(ctx, e.hid, { from: "2026-01-01", to: "2026-04-03" })).resolves.toBeDefined();
-    await expect(stats.sla(ctx, e.hid, { from: "2026-01-01", to: "2026-04-04" })).rejects.toMatchObject({
+    await expect(stats.sla(ctx, e.hid, { from: "2026-01-01", to: "2026-04-02" })).resolves.toBeDefined();
+    await expect(stats.sla(ctx, e.hid, { from: "2026-01-01", to: "2026-04-03" })).rejects.toMatchObject({
       code: "VALIDATION",
       message: "Tarih aralığı en fazla 92 gün olabilir",
     });
-    await expect(stats.slowest(ctx, e.hid, { from: "2026-01-01", to: "2026-04-04" })).rejects.toMatchObject({
+    await expect(stats.slowest(ctx, e.hid, { from: "2026-01-01", to: "2026-04-03" })).rejects.toMatchObject({
       code: "VALIDATION",
     });
     await expect(stats.sla(ctx, e.hid, { from: "2026-03-11", to: "2026-03-10" })).rejects.toMatchObject({

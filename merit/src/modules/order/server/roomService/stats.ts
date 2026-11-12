@@ -7,7 +7,7 @@ import { getSetting } from "@/lib/settings";
 import { businessDate, businessDay, TZ } from "@/lib/time";
 import { slaStart } from "./sla";
 
-/** Longest report range in days between `from` and `to` (inclusive of both ends beyond that = VALIDATION). */
+/** Longest report range in days, counting both `from` and `to` (the report engine counts the same way). */
 export const MAX_RANGE_DAYS = 92;
 
 export type SlaRange = { from: string; to: string };
@@ -23,7 +23,7 @@ export type SlaStats = {
   p90DeliverySec?: number;
   /** Mean time from creation to the phone confirmation (orders that were confirmed). */
   avgConfirmSec?: number;
-  /** Orders with a recorded SLA breach. */
+  /** Orders flagged with an SLA warning (`slaBreachedAt`), whatever their final status; not the same as late deliveries. */
   breaches: number;
   /** Only hours (Nicosia, by creation time) that have orders, ascending. */
   byHour: { hour: number; count: number; avgSec?: number }[];
@@ -46,8 +46,8 @@ function checkRange(range: SlaRange): { from: Date; to: Date } {
   const from = businessDay(range.from);
   const to = businessDay(range.to);
   if (to.getTime() < from.getTime()) throw new DomainError("VALIDATION", "Bitiş tarihi başlangıçtan önce olamaz");
-  if ((to.getTime() - from.getTime()) / 86_400_000 > MAX_RANGE_DAYS) {
-    throw new DomainError("VALIDATION", "Tarih aralığı en fazla 92 gün olabilir");
+  if ((to.getTime() - from.getTime()) / 86_400_000 + 1 > MAX_RANGE_DAYS) {
+    throw new DomainError("VALIDATION", `Tarih aralığı en fazla ${MAX_RANGE_DAYS} gün olabilir`);
   }
   return { from, to };
 }

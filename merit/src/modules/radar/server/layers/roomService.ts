@@ -1,12 +1,14 @@
 // Room-service layer: open room-service orders with their SLA level. Read-only; no items, notes or prices.
 import { prisma } from "@/lib/prisma";
-import { SLA_OPEN_STATUSES, SLA_WARN_RATIO, slaStart } from "@/modules/order/server/roomService/sla";
+import { RADAR_ROOM_OPEN_STATUSES, SLA_WARN_RATIO, slaStart } from "@/modules/order/server/roomService/sla";
 import type { RadarSnapshot } from "../../types";
 import type { LayerEnv } from "../config";
 import { orderStatusesAt } from "./asOf";
 
 /** Room-service orders older than this are not part of a past instant's open list. */
 const HISTORY_WINDOW_MS = 48 * 3_600_000;
+/** Live open list: same window as the table layer (`layers/order.ts`), so abandoned orders drop off. */
+const OPEN_WINDOW_MS = 24 * 3_600_000;
 
 export type RoomServiceLayer = NonNullable<RadarSnapshot["layers"]["roomService"]>;
 
@@ -19,7 +21,12 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
           kind: "ODA_SERVISI",
           createdAt: { gte: new Date(env.now.getTime() - HISTORY_WINDOW_MS), lte: env.now },
         }
-      : { hotelId: env.hotelId, kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
+      : {
+          hotelId: env.hotelId,
+          kind: "ODA_SERVISI",
+          status: { in: [...RADAR_ROOM_OPEN_STATUSES] },
+          createdAt: { gte: new Date(env.now.getTime() - OPEN_WINDOW_MS) },
+        },
     select: {
       id: true,
       orderNo: true,
@@ -38,7 +45,7 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
     const statusAt = await orderStatusesAt(rows.map((r) => r.id), env.now);
     const kept = rows.flatMap((r) => {
       const status = statusAt(r.id, r.status);
-      if (!status || !SLA_OPEN_STATUSES.includes(status)) return [];
+      if (!status || !RADAR_ROOM_OPEN_STATUSES.includes(status)) return [];
       return [
         {
           ...r,

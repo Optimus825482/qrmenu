@@ -25,6 +25,13 @@ registerPushType("mybar.created", (n) => ({
 }));
 
 // Onay/SLA uyarıları: personel uygulama kapalıyken de duymalı (zil + SSE yetmez).
+// Yeni sipariş: yalnız başlık/gövde (misafir bilgisi yok); zil + SSE ile aynı bildirim metni.
+registerPushType("order.created", (n) => ({
+  title: n.title,
+  body: n.body,
+  url: n.title.startsWith("Yeni oda servisi") ? "/oda-servisi" : "/garson",
+  tag: `order-created-${n.refId ?? "yeni"}`,
+}));
 registerPushType("order.escalated", (n) => ({
   title: n.title,
   body: n.body,

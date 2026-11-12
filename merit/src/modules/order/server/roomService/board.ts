@@ -36,6 +36,8 @@ export type RoomBoard = {
   kpis: { open: number; overdue: number; today: number; avgDeliverySec?: number };
   orderingEnabled: boolean;
   confirmRequired: boolean;
+  /** Server clock (ISO) at read time: clients derive their clock offset from it for the SLA countdown. */
+  serverNow: string;
 };
 
 const COLUMN_OF: Partial<Record<OrderStatus, RoomBoardColumn>> = {
@@ -144,6 +146,7 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
     },
     orderingEnabled: outlet.orderingEnabled,
     confirmRequired: outlet.phoneConfirmRequired,
+    serverNow: now.toISOString(),
   };
 }
 

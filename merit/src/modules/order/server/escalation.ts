@@ -6,6 +6,9 @@ import { notify } from "@/modules/core/server/notifications";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
 const WAITING = ["GONDERILDI", "TEYIT_BEKLIYOR"] as const;
+/** Per-run cap and age bound: a backlog or one bad row can never make a run unbounded. */
+const BATCH_SIZE = 200;
+const MAX_AGE_MS = 24 * 3_600_000;
 
 /** Active members of `outletId` among `userIds`. */
 async function activeMembers(tx: Prisma.TransactionClient, outletId: string, userIds: string[]): Promise<string[]> {
@@ -43,7 +46,13 @@ async function recipients(
  */
 async function run(now: Date): Promise<number> {
   const candidates = await prisma.order.findMany({
-    where: { status: { in: [...WAITING] }, escalatedAt: null },
+    where: {
+      status: { in: [...WAITING] },
+      escalatedAt: null,
+      createdAt: { gte: new Date(now.getTime() - MAX_AGE_MS) },
+    },
+    orderBy: { createdAt: "asc" },
+    take: BATCH_SIZE,
     select: {
       id: true,
       hotelId: true,
@@ -64,64 +73,69 @@ async function run(now: Date): Promise<number> {
   // One lookup per hotel per run instead of one per candidate order.
   const minutesByHotel = new Map<string, number>();
   for (const order of candidates) {
-    let minutes = minutesByHotel.get(order.hotelId);
-    if (minutes === undefined) {
-      minutes = await getSetting("order.approvalEscalationMinutes", order.hotelId);
-      minutesByHotel.set(order.hotelId, minutes);
-    }
-    const cutoff = new Date(now.getTime() - minutes * 60_000);
-    if (order.createdAt >= cutoff) continue;
+    try {
+      let minutes = minutesByHotel.get(order.hotelId);
+      if (minutes === undefined) {
+        minutes = await getSetting("order.approvalEscalationMinutes", order.hotelId);
+        minutesByHotel.set(order.hotelId, minutes);
+      }
+      const cutoff = new Date(now.getTime() - minutes * 60_000);
+      if (order.createdAt >= cutoff) continue;
 
-    const escalated = await prisma.$transaction(async (tx) => {
-      const claimed = await tx.order.updateMany({
-        where: { id: order.id, status: { in: [...WAITING] }, escalatedAt: null },
-        data: { escalatedAt: now },
-      });
-      if (claimed.count === 0) return false;
+      const escalated = await prisma.$transaction(async (tx) => {
+        const claimed = await tx.order.updateMany({
+          where: { id: order.id, status: { in: [...WAITING] }, escalatedAt: null },
+          data: { escalatedAt: now },
+        });
+        if (claimed.count === 0) return false;
 
-      const isRoom = order.kind === "ODA_SERVISI";
-      const title = isRoom ? "Oda servisi onay bekliyor" : "Onay bekleyen sipariş";
-      const body = isRoom
-        ? `#${order.orderNo} · Oda ${order.room?.number ?? "-"} · ${minutes} dk · ${
-            order.status === "TEYIT_BEKLIYOR" ? "Teyit bekliyor" : "Onay bekliyor"
-          }`
-        : `#${order.orderNo} · ${order.outlet.name} ${order.table?.label ?? "Masa yok"} · ${minutes} dk`;
+        const isRoom = order.kind === "ODA_SERVISI";
+        const title = isRoom ? "Oda servisi onay bekliyor" : "Onay bekleyen sipariş";
+        const body = isRoom
+          ? `#${order.orderNo} · Oda ${order.room?.number ?? "-"} · ${minutes} dk · ${
+              order.status === "TEYIT_BEKLIYOR" ? "Teyit bekliyor" : "Onay bekliyor"
+            }`
+          : `#${order.orderNo} · ${order.outlet.name} ${order.table?.label ?? "Masa yok"} · ${minutes} dk`;
 
-      await notify(
-        {
-          recipients: await recipients(tx, order),
-          type: "order.escalated",
-          title,
-          body,
-          refType: "Order",
-          refId: order.id,
-          fallbackHotelId: order.hotelId,
-        },
-        tx,
-      );
-      await publish(
-        {
-          type: "order.escalated",
-          hotelId: order.hotelId,
-          outletId: order.outletId,
-          payload: {
-            orderId: order.id,
-            orderNo: order.orderNo,
-            status: order.status,
-            from: null,
-            kind: order.kind,
-            tableId: order.tableId,
-            tableLabel: order.table?.label ?? null,
-            roomId: order.roomId,
-            roomNumber: order.room?.number ?? null,
-            byUserId: null,
+        await notify(
+          {
+            recipients: await recipients(tx, order),
+            type: "order.escalated",
+            title,
+            body,
+            refType: "Order",
+            refId: order.id,
+            fallbackHotelId: order.hotelId,
           },
-        },
-        tx,
-      );
-      return true;
-    });
-    if (escalated) count += 1;
+          tx,
+        );
+        await publish(
+          {
+            type: "order.escalated",
+            hotelId: order.hotelId,
+            outletId: order.outletId,
+            payload: {
+              orderId: order.id,
+              orderNo: order.orderNo,
+              status: order.status,
+              from: null,
+              kind: order.kind,
+              tableId: order.tableId,
+              tableLabel: order.table?.label ?? null,
+              roomId: order.roomId,
+              roomNumber: order.room?.number ?? null,
+              byUserId: null,
+            },
+          },
+          tx,
+        );
+        return true;
+      });
+      if (escalated) count += 1;
+    } catch (error) {
+      // One bad order must not block the ones after it; the rolled-back claim is retried next minute.
+      console.error("[order.escalation]", order.id, error);
+    }
   }
   return count;
 }

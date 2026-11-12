@@ -71,6 +71,15 @@ describe("zimmet-durum", () => {
     ]);
   });
 
+  it("pasif ürün: stoğu bitmişse listelenmez, elde kalanı varsa listelenir", async () => {
+    await stock("ROYAL", "PasifBos", { total: 40, used: 40 });
+    await stock("ROYAL", "PasifDolu", { total: 40, used: 30 });
+    await stock("ROYAL", "AktifBos", { total: 40, used: 40 });
+    await testDb.product.updateMany({ where: { name: { in: ["PasifBos", "PasifDolu"] } }, data: { isActive: false } });
+    const r = await call("zimmet-durum");
+    expect(r.rows.map((x) => x.product).sort()).toEqual(["AktifBos", "PasifDolu"]);
+  });
+
   it("onlyCritical NORMAL'leri eler (\"true\" dizgesi de kabul); toplamı 0 olan ürün %0", async () => {
     await stock("ROYAL", "Normal", { total: 200, used: 20 });
     await stock("ROYAL", "Kritik", { total: 100, used: 50 });

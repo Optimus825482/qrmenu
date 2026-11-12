@@ -122,10 +122,9 @@
         },
         "confirmHint": "We’ll call your room phone to confirm your order.",
         "eta": "Estimated time: {min} min",
-        "cancel": "Cancel order",
-        "cancelConfirm": "Would you like to cancel your order?",
+        "cancelByPhone": "Should you wish to change or cancel your order, kindly call Room Service from the telephone in your room; our team will be delighted to assist you.",
         "cancelled": "Your order has been cancelled.",
-        "keep": "Keep my order"
+        "cancelledHint": "For details, please call Room Service from the telephone in your room."
       },
       "unavailable": "Currently unavailable"
     },

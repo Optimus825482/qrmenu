@@ -33,13 +33,19 @@ export async function sendMail(opts: MailOptions): Promise<boolean> {
     }
     const transport = createMailTransport(resolved.config);
     try {
-      await transport.sendMail({
+      const info = await transport.sendMail({
         from: { name: resolved.config.fromName, address: resolved.config.fromEmail },
         to: recipients,
         subject: opts.subject,
         html: opts.html,
         text: opts.text || opts.subject,
       });
+      // A server may accept the message while refusing a recipient without raising an error: that is not "sent".
+      const rejected = Array.isArray(info?.rejected) ? info.rejected.length : 0;
+      if (rejected > 0) {
+        console.error(`[MAIL REJECTED] ${rejected} recipient(s) refused by the server | Subject: ${opts.subject}`);
+        return false;
+      }
     } finally {
       transport.close();
     }

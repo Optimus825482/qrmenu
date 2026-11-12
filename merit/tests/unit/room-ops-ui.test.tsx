@@ -38,6 +38,9 @@ vi.mock("@/modules/order/server/actions/roomService", () => ({
 }));
 vi.mock("@/modules/menu/server/actions/outletSwitches", () => ({ setOutletOrderingEnabledAction: setOrdering }));
 
+const confirmDialog = vi.hoisted(() => vi.fn());
+vi.mock("@/shell/confirm", () => ({ confirm: confirmDialog }));
+
 const requireUser = vi.hoisted(() => vi.fn());
 const can = vi.hoisted(() => vi.fn());
 const findOutlet = vi.hoisted(() => vi.fn());
@@ -54,7 +57,7 @@ vi.mock("next/navigation", () => ({
 
 import OdaServisiClient from "@/app/(ops)/oda-servisi/OdaServisiClient";
 import { renderOdaServisi } from "@/app/(ops)/oda-servisi/renderOdaServisi";
-import { formatSlaClock, slaTimerState } from "@/modules/order/ui/roomService/SlaTimer";
+import { SlaTimer, formatSlaClock, slaTimerState } from "@/modules/order/ui/roomService/SlaTimer";
 
 const NOW = Date.now();
 const min = 60_000;
@@ -86,6 +89,7 @@ function boardOf(cols: Partial<Record<RoomBoardColumn, RoomOrderCard[]>>, over: 
     kpis: { open: 0, overdue: 0, today: 0 },
     orderingEnabled: true,
     confirmRequired: false,
+    serverNow: new Date().toISOString(),
     ...over,
   };
 }
@@ -111,6 +115,8 @@ beforeEach(() => {
   sseHandler = null;
   getBoard.mockReset();
   getBoard.mockResolvedValue({ ok: true, data: boardOf({}) });
+  confirmDialog.mockReset();
+  confirmDialog.mockResolvedValue(true);
   for (const fn of [approve, confirmPhone, cancel, ready, onWay, delivered, setOrdering, playNew, playReady, playCall]) {
     fn.mockReset();
   }
@@ -164,6 +170,20 @@ describe("RoomService staff board - button visibility per permission flag", () =
     await waitFor(() => expect(setOrdering).toHaveBeenCalledWith({ id: "out1", enabled: false }));
   });
 
+  it("switching ordering off asks first; declining keeps it on, switching on needs no question", async () => {
+    confirmDialog.mockResolvedValueOnce(false);
+    const { unmount } = render(ui(allBoard(), ALL));
+    fireEvent.click(screen.getByRole("switch", { name: "Sipariş alımı" }));
+    await waitFor(() => expect(confirmDialog).toHaveBeenCalledTimes(1));
+    expect(confirmDialog.mock.calls[0]?.[0]).toMatchObject({ danger: true });
+    expect(setOrdering).not.toHaveBeenCalled();
+    unmount();
+    render(ui(boardOf({}, { orderingEnabled: false }), ALL));
+    fireEvent.click(screen.getByRole("switch", { name: "Sipariş alımı" }));
+    await waitFor(() => expect(setOrdering).toHaveBeenCalledWith({ id: "out1", enabled: true }));
+    expect(confirmDialog).toHaveBeenCalledTimes(1);
+  });
+
   it("transition buttons call the existing room actions", async () => {
     const full = allBoard();
     getBoard.mockResolvedValue({ ok: true, data: full });
@@ -190,6 +210,18 @@ describe("RoomService staff board - confirmation, labels, order", () => {
   it("Onayla is disabled on a NEW card when the outlet requires phone confirmation", () => {
     render(ui(boardOf({ NEW: [card()] }, { confirmRequired: true }), ALL));
     expect((screen.getByRole("button", { name: "Onayla" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("a GONDERILDI card of an outlet requiring phone confirmation offers the phone confirmation", async () => {
+    render(ui(boardOf({ NEW: [card()] }, { confirmRequired: true }), ALL));
+    fireEvent.click(screen.getByRole("button", { name: "Telefonla teyit edildi" }));
+    fireEvent.click(screen.getByRole("button", { name: "Teyidi kaydet" }));
+    await waitFor(() => expect(confirmPhone).toHaveBeenCalledWith({ orderId: "o1", note: undefined }));
+  });
+
+  it("a GONDERILDI card without the phone requirement has no phone confirmation button", () => {
+    render(ui(boardOf({ NEW: [card()] }), ALL));
+    expect(screen.queryByRole("button", { name: "Telefonla teyit edildi" })).toBeNull();
   });
 
   it("Telefonla teyit edildi asks for an optional note and confirms", async () => {
@@ -271,11 +303,78 @@ describe("RoomService staff board - live refresh", () => {
     expect(playReady).not.toHaveBeenCalled();
   });
 
+  it("debounces an event burst into one refresh", async () => {
+    render(ui(boardOf({}), ALL));
+    act(() => {
+      sseHandler?.({ type: "order.approved", outletId: "out1", at: "" });
+      sseHandler?.({ type: "order.prep", outletId: "out1", at: "" });
+      sseHandler?.({ type: "order.ready", outletId: "out1", at: "" });
+    });
+    await waitFor(() => expect(getBoard).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 300));
+    expect(getBoard).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes on realtime.resync (any outlet), on becoming visible and on the online event", async () => {
+    render(ui(boardOf({}), ALL));
+    act(() => sseHandler?.({ type: "realtime.resync", at: "" }));
+    await waitFor(() => expect(getBoard).toHaveBeenCalledTimes(1));
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await waitFor(() => expect(getBoard).toHaveBeenCalledTimes(2));
+    act(() => {
+      window.dispatchEvent(new Event("online"));
+    });
+    await waitFor(() => expect(getBoard).toHaveBeenCalledTimes(3));
+  });
+
+  it("a rejected refresh shows a connection error that the next good refresh clears", async () => {
+    render(ui(boardOf({}), ALL));
+    getBoard.mockRejectedValueOnce(new Error("offline"));
+    act(() => sseHandler?.({ type: "realtime.resync", at: "" }));
+    expect(await screen.findByText("Bağlantı hatası: liste yenilenemedi.")).toBeTruthy();
+    act(() => sseHandler?.({ type: "realtime.resync", at: "" }));
+    await waitFor(() => expect(screen.queryByText("Bağlantı hatası: liste yenilenemedi.")).toBeNull());
+  });
+
+  it("a rejected action shows a connection error that a later refresh does not clear", async () => {
+    approve.mockRejectedValueOnce(new Error("offline"));
+    render(ui(boardOf({ NEW: [card()] }), ALL));
+    fireEvent.click(screen.getByRole("button", { name: "Onayla" }));
+    expect(await screen.findByText("Bağlantı hatası: işlem gönderilemedi. Tekrar deneyin.")).toBeTruthy();
+    act(() => sseHandler?.({ type: "realtime.resync", at: "" }));
+    await waitFor(() => expect(getBoard).toHaveBeenCalled());
+    expect(screen.getByText("Bağlantı hatası: işlem gönderilemedi. Tekrar deneyin.")).toBeTruthy();
+  });
+
+  it("the shown column falls back to the first one of the tab when the remembered one is not in it", () => {
+    const { rerender } = render(ui(allBoard(), ALL, "tumu"));
+    rerender(ui(allBoard(), ALL, "teslim"));
+    const hidden = (col: string) => document.querySelector(`[data-column-id="${col}"]`)?.className.split(" ").includes("hidden");
+    expect(hidden("READY")).toBe(false);
+    expect(hidden("ONWAY")).toBe(true);
+  });
+
   it("applies the refreshed board", async () => {
     render(ui(boardOf({}), ALL));
     getBoard.mockResolvedValue({ ok: true, data: boardOf({ NEW: [card({ orderNo: 41 })] }) });
     act(() => sseHandler?.({ type: "order.created", outletId: "out1", at: "" }));
     expect(await screen.findByRole("heading", { name: /#41/ })).toBeTruthy();
+  });
+});
+
+describe("SlaTimer clock offset", () => {
+  it("applies the server offset to the device clock and works without one", () => {
+    const due = new Date(Date.now() + 10 * min);
+    const start = new Date(Date.now() - 5 * min);
+    const { unmount } = render(<SlaTimer startAt={start} dueAt={due} />);
+    expect(screen.getByRole("timer").textContent).toMatch(/^(09:5\d|10:00)$/);
+    unmount();
+    // the device clock runs 20 minutes behind the server: the deadline is 10 minutes ahead of the device but 10 behind the server
+    render(<SlaTimer startAt={start} dueAt={due} offsetMs={20 * min} />);
+    expect(screen.getByRole("timer").textContent).toMatch(/^\+(09:5\d|10:00)$/);
+    expect(screen.getByRole("timer").getAttribute("data-sla-state")).toBe("BREACH");
   });
 });
 

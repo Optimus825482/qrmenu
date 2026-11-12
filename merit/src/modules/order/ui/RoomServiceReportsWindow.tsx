@@ -3,17 +3,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppProps } from "@/shell/registry";
 import { formatPrice } from "@/lib/formatPrice";
-import { businessDate, businessDateStart, formatDayTr } from "@/lib/time";
-import { listRoomServiceOrdersAction, type RoomOrderListItem, type RoomServiceStats } from "../server/actions/roomServiceRecords";
+import { businessDate, businessDay, formatDayTr } from "@/lib/time";
+import { listRoomServiceOrdersAction, type RoomOrderListItem } from "../server/actions/roomServiceRecords";
 import { getSlaStatsAction, getSlowestOrdersAction } from "../server/actions/roomServiceStats";
 import type { SlaStats, SlowOrder } from "../server/roomService/stats";
 
 const DAY_MS = 86_400_000;
 const WEEK = "week";
 
-/** Last 7 business days (Nicosia), newest first. */
-function lastSevenDays(now: number): string[] {
-  return Array.from({ length: 7 }, (_, i) => businessDate(new Date(now - i * DAY_MS)));
+/** `day` ('yyyy-MM-dd') moved by `offset` calendar days; pure date arithmetic, so DST never skips a day. */
+function shiftDay(day: string, offset: number): string {
+  return new Date(businessDay(day).getTime() + offset * DAY_MS).toISOString().slice(0, 10);
+}
+
+/** Last 7 business days (Nicosia) ending at `today`, newest first. */
+function lastSevenDays(today: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => shiftDay(today, -i));
 }
 
 /** Seconds as "12 dk 05 sn" (or "45 sn"); "—" when there is nothing to show. */
@@ -24,9 +29,10 @@ function fmtDuration(sec: number | undefined): string {
   return m === 0 ? `${s} sn` : `${m} dk ${String(s).padStart(2, "0")} sn`;
 }
 
-function nextDay(day: string): string {
-  return new Date(Date.parse(`${day}T00:00:00Z`) + DAY_MS).toISOString().slice(0, 10);
-}
+/** Orders fetched per request when the CSV collects every row of the range. */
+const EXPORT_PAGE = 100;
+/** Upper bound of exported rows; beyond it the export says it is partial. */
+const EXPORT_MAX = 5000;
 
 function Card({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: string }) {
   return (
@@ -39,19 +45,27 @@ function Card({ label, value, hint, tone }: { label: string; value: string; hint
 }
 
 export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
-  const [days] = useState(() => lastSevenDays(Date.now()));
-  const [pick, setPick] = useState<string>(days[0]);
+  const [today, setToday] = useState(() => businessDate());
+  const days = useMemo(() => lastSevenDays(today), [today]);
+  const [pick, setPick] = useState<string>(today);
   const [stats, setStats] = useState<SlaStats | null>(null);
   const [slowest, setSlowest] = useState<SlowOrder[]>([]);
-  const [orders, setOrders] = useState<RoomOrderListItem[]>([]);
-  const [revenue, setRevenue] = useState<RoomServiceStats["totalRevenue"]>(0);
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [revenue, setRevenue] = useState<{ amount: number; currency: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const range = useMemo(
     () => (pick === WEEK ? { from: days[6], to: days[0] } : { from: pick, to: pick }),
     [pick, days],
   );
+
+  // The business day rolls over at Nicosia midnight: keep the day list current while the window stays open.
+  useEffect(() => {
+    const t = setInterval(() => setToday(businessDate()), 60_000);
+    return () => clearInterval(t);
+  }, []);
 
   const loadData = useCallback(async () => {
     if (!hotelId) return;
@@ -63,9 +77,9 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
         getSlowestOrdersAction(hotelId, range),
         listRoomServiceOrdersAction({
           hotelId,
-          dateFrom: businessDateStart(range.from).toISOString(),
-          dateTo: new Date(businessDateStart(nextDay(range.to)).getTime() - 1).toISOString(),
-          limit: 200,
+          dateFrom: range.from,
+          dateTo: range.to,
+          pageSize: 1, // only the totals are needed here; the CSV pages through the rows itself
         }),
       ]);
       if (!s.ok) {
@@ -75,8 +89,8 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
       }
       setStats(s.data);
       setSlowest(w.ok ? w.data : []);
-      setOrders(list.ok ? list.data.orders : []);
-      setRevenue(list.ok ? list.data.stats.totalRevenue : 0);
+      setOrderTotal(list.ok ? list.data.total : 0);
+      setRevenue(list.ok ? { amount: list.data.stats.totalRevenue, currency: list.data.stats.currency } : null);
       setStatus("Oda servisi SLA raporu güncellendi");
     } finally {
       setLoading(false);
@@ -89,35 +103,63 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
   }, [loadData]);
 
   /** Report rows as a semicolon CSV (Excel opens it as is); quotes are doubled, formulas are neutralised. */
-  const exportCsv = () => {
-    const cell = (value: string | number | null | undefined): string => {
-      const text = value === null || value === undefined ? "" : String(value);
-      const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
-      return `"${safe.replace(/"/g, '""')}"`;
-    };
-    const header = ["Sipariş No", "Otel", "Oda", "Durum", "Tutar", "Para birimi", "Oluşturma", "Teslim", "SLA aşımı"];
-    const lines = orders.map((o) =>
-      [o.orderNo, o.hotelName, o.roomNumber, o.status, o.subtotal, o.currency, o.createdAt, o.deliveredAt, o.slaBreachedAt]
-        .map(cell)
-        .join(";"),
-    );
-    const csv = [header.map(cell).join(";"), ...lines].join("\r\n");
-    const blob = new Blob(["﻿", csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `oda-servisi-sla-${range.from}${range.to === range.from ? "" : `_${range.to}`}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setStatus(`${orders.length} satır indirildi`);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows: RoomOrderListItem[] = [];
+      let total = 0;
+      for (let page = 1; rows.length < EXPORT_MAX; page += 1) {
+        const res = await listRoomServiceOrdersAction({
+          hotelId,
+          dateFrom: range.from,
+          dateTo: range.to,
+          page,
+          pageSize: EXPORT_PAGE,
+        });
+        if (!res.ok) {
+          setStatus(`CSV hazırlanamadı: ${res.error.message}`);
+          return;
+        }
+        total = res.data.total;
+        rows.push(...res.data.orders);
+        if (res.data.orders.length < EXPORT_PAGE || rows.length >= total) break;
+      }
+      const exported = rows.slice(0, EXPORT_MAX);
+
+      const cell = (value: string | number | null | undefined): string => {
+        const text = value === null || value === undefined ? "" : String(value);
+        const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+        return `"${safe.replace(/"/g, '""')}"`;
+      };
+      const header = ["Sipariş No", "Otel", "Oda", "Durum", "Tutar", "Para birimi", "Oluşturma", "Teslim", "SLA uyarısı"];
+      const lines = exported.map((o) =>
+        [o.orderNo, o.hotelName, o.roomNumber, o.status, o.subtotal, o.currency, o.createdAt, o.deliveredAt, o.slaBreachedAt]
+          .map(cell)
+          .join(";"),
+      );
+      const csv = [header.map(cell).join(";"), ...lines].join("\r\n");
+      const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `oda-servisi-sla-${range.from}${range.to === range.from ? "" : `_${range.to}`}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setStatus(
+        exported.length < total
+          ? `Yalnızca ilk ${exported.length} satır indirildi (toplam ${total} kayıt)`
+          : `${exported.length} satır indirildi`,
+      );
+    } finally {
+      setExporting(false);
+    }
   };
 
   const show = (v: string) => (loading ? "..." : v);
   const hourMax = Math.max(1, ...(stats?.byHour.map((h) => h.count) ?? [0]));
   const byHour = new Map(stats?.byHour.map((h) => [h.hour, h]) ?? []);
-  const pricesShown = orders.some((o) => o.subtotal !== undefined);
   const slaLabel = stats ? `${stats.slaMinutes} dk hedef` : undefined;
 
   return (
@@ -155,8 +197,8 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
             type="button"
             data-guide="sla-indir"
             data-xp-command="export"
-            disabled={loading || orders.length === 0}
-            onClick={exportCsv}
+            disabled={loading || exporting || orderTotal === 0}
+            onClick={() => void exportCsv()}
             className="rounded border border-border bg-surface px-3 py-1 font-bold hover:bg-bg disabled:opacity-50"
           >
             CSV indir
@@ -185,15 +227,15 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
           tone="text-accent"
         />
         <Card
-          label="SLA ihlali"
+          label="SLA uyarısı alan"
           value={show(String(stats?.breaches ?? 0))}
-          hint="ihlal işaretli sipariş"
+          hint="uyarı işaretli sipariş (iptal ve açık dahil)"
           tone={stats && stats.breaches > 0 ? "text-danger" : undefined}
         />
         <Card label="Ortalama teslim" value={show(fmtDuration(stats?.avgDeliverySec))} />
         <Card label="Teslim süresi P90" value={show(fmtDuration(stats?.p90DeliverySec))} hint="siparişlerin %90'ı bu sürede" />
         <Card label="Ortalama teyit" value={show(fmtDuration(stats?.avgConfirmSec))} hint="oluşma - telefon teyidi" />
-        {pricesShown ? <Card label="Toplam tutar" value={show(formatPrice(revenue, orders[0]?.currency ?? "EUR"))} hint="fiyatı gösterilen siparişler" /> : null}
+        {revenue ? <Card label="Teslim edilen ciro" value={show(formatPrice(revenue.amount, revenue.currency))} hint="fiyatı gösterilen teslimler" /> : null}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2" data-guide="sla-detay">

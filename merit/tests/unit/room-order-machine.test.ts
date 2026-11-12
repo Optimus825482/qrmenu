@@ -339,7 +339,7 @@ describe("orders.transition (ODA_SERVISI)", () => {
     expect(cancelledPost.status).toBe("IPTAL");
   });
 
-  it("eşzamanlı confirmPhone ve guestCancel: biri ok biri CONFLICT, nihai durum tutarlı", async () => {
+  it("eşzamanlı confirmPhone ve personel iptali: biri ok biri CONFLICT, nihai durum tutarlı", async () => {
     const mrId = await hotelId("ROYAL");
     const outlet = await getOrCreateRsOutlet(mrId, true);
     const room = await getOrCreateRoom(mrId);

@@ -502,8 +502,8 @@ const LIST: ScreenGuide[] = [
       ["sla-indir", "İndir", "Listelenen siparişleri CSV olarak indir; Excel açar."],
     ],
     [
-      "Hedef süreler sistem ayarlarından değişir; eski raporlar eski hedefle hesaplanmıştır.",
-      "Tarih aralığını gün sonuyla birlikte seç.",
+      "Hedef süre sistem ayarlarından değişir; güncel hedef geçmiş günler dahil tüm günlere uygulanır.",
+      "Tek bir gün ya da son 7 gün seçilir.",
     ],
     { settings: ["rs.slaMinutes"] },
   ),

@@ -352,14 +352,18 @@ export async function runSelfDiagnostics(): Promise<SystemHealthReport> {
 /**
  * Dispatches an automated, rich diagnostic incident email to the system developer / administrator.
  */
-export async function sendDeveloperAlertMail(incident: DiagnosticIncidentData): Promise<{ ok: boolean; error?: string }> {
+export async function sendDeveloperAlertMail(
+  incident: DiagnosticIncidentData,
+  /** Test alerts only: send to this address instead of the configured one (checks delivery to a mailbox). */
+  overrideRecipient?: string,
+): Promise<{ ok: boolean; error?: string; recipient?: string }> {
   try {
     const configuredDevEmail = await getSetting("diagnostic.developerEmail");
     const adminUser = await prisma.user.findFirst({
       where: { username: "admin", isActive: true },
       select: { email: true },
     });
-    const recipient = configuredDevEmail?.trim() || adminUser?.email || "erkan.erdem@merithotels.com";
+    const recipient = overrideRecipient?.trim() || configuredDevEmail?.trim() || adminUser?.email || "erkan.erdem@merithotels.com";
 
     if (!recipient) {
       return { ok: false, error: "Alıcı e-posta adresi yapılandırılmamış" };
@@ -472,7 +476,7 @@ export async function sendDeveloperAlertMail(incident: DiagnosticIncidentData): 
       html,
     });
 
-    return { ok: success, error: success ? undefined : "SMTP gönderimi başarısız oldu" };
+    return { ok: success, recipient, error: success ? undefined : "SMTP gönderimi başarısız oldu" };
   } catch (err) {
     return { ok: false, error: (err as Error).message };
   }
@@ -559,6 +563,7 @@ export async function captureException(
       const mailRes = await sendDeveloperAlertMail(incidentData);
       if (mailRes.ok) {
         incidentData.mailSent = true;
+        incidentData.mailTo = mailRes.recipient;
         // Update DB record with mail status
         await prisma.auditLog.updateMany({
           where: { action: DIAGNOSTIC_ACTION, entityId: errorId },

@@ -25,6 +25,7 @@ const INVALID = "Girilen bilgiler geçersiz";
 const NAME_TAKEN = "Bu adda bir outlet zaten var";
 const ONE_ROOM_SERVICE = "Her otelde bir oda servisi outleti olabilir";
 const CURRENCY_REQUIRED = "Para birimini seçin (3 harfli kod, örn. EUR, TRY, USD)";
+const HAS_OPEN_ROOM_ORDERS = "Bu outlette açık oda servisi siparişi var; önce siparişler kapatılmalı";
 const HAS_RECORDS =
   "Outlete bağlı masa, alan, sipariş, ekip, oturum veya menü kaydı var; silmek yerine pasife alın";
 
@@ -181,6 +182,17 @@ async function assertRoomServiceFree(
   if (other) throw new DomainError("CONFLICT", ONE_ROOM_SERVICE, { fieldErrors: { type: [ONE_ROOM_SERVICE] } });
 }
 
+/** Room orders still in flight: the outlet cannot stop being room service or go inactive under them. */
+const OPEN_ROOM_STATUSES = ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] as const;
+
+async function assertNoOpenRoomOrders(tx: Pick<Prisma.TransactionClient, "order">, outletId: string): Promise<void> {
+  const open = await tx.order.findFirst({
+    where: { outletId, kind: "ODA_SERVISI", status: { in: [...OPEN_ROOM_STATUSES] } },
+    select: { id: true },
+  });
+  if (open) throw new DomainError("CONFLICT", HAS_OPEN_ROOM_ORDERS);
+}
+
 /** The unique index that tripped is not told apart by Prisma: look which rule the input breaks. */
 async function conflictMessage(hotelId: string, type: OutletType, exceptId?: string): Promise<string> {
   try {
@@ -299,6 +311,9 @@ export async function update(
       const before = await tx.outlet.findFirst({ where: { id, hotelId }, select: SELECT });
       if (!before) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
       await assertRoomServiceFree(tx, hotelId, input.type, id);
+      if (before.type === "ODA_SERVISI" && (input.type !== "ODA_SERVISI" || (before.isActive && input.isActive === false))) {
+        await assertNoOpenRoomOrders(tx, id);
+      }
       const updated = await tx.outlet.update({
         where: { id },
         data: {
@@ -347,6 +362,7 @@ async function patchById(
   id: string,
   action: string,
   change: (before: OutletRow) => Prisma.OutletUpdateInput | undefined,
+  guard?: (tx: Prisma.TransactionClient, before: OutletRow) => Promise<void>,
 ): Promise<OutletRow> {
   const found = await prisma.outlet.findUnique({ where: { id }, select: { hotelId: true } });
   if (!found) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
@@ -357,6 +373,7 @@ async function patchById(
     const before = toRow(raw);
     const data = change(before);
     if (!data) return before;
+    await guard?.(tx, before);
     const row = toRow(await tx.outlet.update({ where: { id }, data, select: SELECT }));
     await audit(tx, {
       userId: ctx.user.id,
@@ -374,8 +391,14 @@ async function patchById(
 }
 
 export function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<OutletRow> {
-  return patchById(ctx, id, "OUTLET_SET_ACTIVE", (before) =>
-    before.isActive === isActive ? undefined : { isActive },
+  return patchById(
+    ctx,
+    id,
+    "OUTLET_SET_ACTIVE",
+    (before) => (before.isActive === isActive ? undefined : { isActive }),
+    async (tx, before) => {
+      if (!isActive && before.type === "ODA_SERVISI") await assertNoOpenRoomOrders(tx, id);
+    },
   );
 }
 

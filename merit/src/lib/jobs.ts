@@ -5,6 +5,7 @@ import { TZ } from "@/lib/time";
 import { printJobs } from "@/modules/order/server/printJobs";
 import { escalation } from "@/modules/order/server/escalation";
 import { rsSlaSweep } from "@/modules/order/server/roomService/sla";
+import { closeStaleRoomOrders } from "@/modules/order/server/roomService/staleOrders";
 import { purgeOperations } from "@/modules/radar/server/operations";
 import { presenceSweep } from "@/modules/core/server/sessionPresence";
 import { printers } from "@/modules/order/server/printers";
@@ -18,6 +19,7 @@ import { mybarCheckoutSweep } from "@/modules/mybar/server/checkout";
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
 export const RS_SLA_SWEEP_QUEUE = "rs.sla-sweep";
+export const RS_STALE_ORDERS_QUEUE = "rs.stale-orders";
 export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
 export const MYBAR_STALE_QUEUE = "mybar.stale-sweep";
@@ -90,6 +92,13 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
       if (res.warned + res.breached > 0) {
         console.log(`[rs.sla-sweep] ${res.warned} uyarı, ${res.breached} aşım`);
       }
+    });
+    // Room orders nobody marked delivered within 12 hours are closed hourly so they stop blocking the room.
+    await boss.createQueue(RS_STALE_ORDERS_QUEUE); // idempotent
+    await boss.schedule(RS_STALE_ORDERS_QUEUE, "0 * * * *", null, { tz: TZ });
+    await boss.work(RS_STALE_ORDERS_QUEUE, async () => {
+      const closed = await closeStaleRoomOrders(new Date());
+      if (closed > 0) console.log(`[rs.stale-orders] ${closed} oda servisi siparişi kapatıldı`);
     });
     // Radar replay traces older than radar.replayRetentionDays (90) are removed every night.
     await boss.createQueue(RADAR_PURGE_QUEUE); // idempotent

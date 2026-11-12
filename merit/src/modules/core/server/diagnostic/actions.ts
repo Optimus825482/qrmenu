@@ -136,10 +136,11 @@ export async function sendTestDiagnosticAlertAction(
       resolved: true,
     };
 
-    const res = await sendDeveloperAlertMail(sampleIncident);
+    const res = await sendDeveloperAlertMail(sampleIncident, input.email);
     return {
       sent: res.ok,
-      recipient: input.email,
+      // The address the mail was really handed over for, not merely the one typed in the window.
+      recipient: res.recipient,
       error: res.error,
     };
   })(raw);

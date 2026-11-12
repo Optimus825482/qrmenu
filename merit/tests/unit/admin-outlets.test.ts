@@ -208,6 +208,50 @@ describe("outlets: CRUD", () => {
     expect(await testDb.outlet.count({ where: { hotelId: mr, type: "ODA_SERVISI" } })).toBe(1);
   });
 
+  it("açık oda servisi siparişi varken ODA_SERVISI türü değişmez, outlet pasife alınamaz; kapanınca olur", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("ROYAL");
+    const rs = await testDb.outlet.findFirstOrThrow({ where: { hotelId: mr, type: "ODA_SERVISI" } });
+    const floor =
+      (await testDb.floor.findFirst({ where: { hotelId: mr } })) ??
+      (await testDb.floor.create({ data: { hotelId: mr, name: "1. Kat", number: 1 } }));
+    const room = await testDb.room.create({ data: { hotelId: mr, floorId: floor.id, number: "OUT-1", isActive: true } });
+    await testDb.orderEvent.deleteMany({});
+    await testDb.orderItem.deleteMany({});
+    await testDb.order.deleteMany({});
+    const open = await testDb.order.create({
+      data: {
+        hotelId: mr,
+        outletId: rs.id,
+        kind: "ODA_SERVISI",
+        roomId: room.id,
+        businessDate: new Date("2026-11-03T00:00:00.000Z"),
+        orderNo: 1,
+        status: "YOLDA",
+        guestLanguage: "tr",
+        idempotencyKey: "outlet-open-room-order",
+        clientIp: "10.0.0.1",
+      },
+    });
+    const message = "Bu outlette açık oda servisi siparişi var; önce siparişler kapatılmalı";
+    const keep = { ...BAR, name: rs.name, type: "ODA_SERVISI" as const };
+
+    await expect(outlets.update(ctx, mr, rs.id, { ...BAR, name: rs.name, type: "BAR" })).rejects.toMatchObject({
+      code: "CONFLICT",
+      message,
+    });
+    await expect(outlets.update(ctx, mr, rs.id, { ...keep, isActive: false })).rejects.toMatchObject({
+      code: "CONFLICT",
+      message,
+    });
+    await expect(outlets.setActive(ctx, rs.id, false)).rejects.toMatchObject({ code: "CONFLICT", message });
+    expect((await testDb.outlet.findUniqueOrThrow({ where: { id: rs.id } })).isActive).toBe(true);
+
+    await testDb.order.update({ where: { id: open.id }, data: { status: "TESLIM_EDILDI" } });
+    expect((await outlets.setActive(ctx, rs.id, false)).isActive).toBe(false);
+    await testDb.order.deleteMany({});
+  });
+
   it("eşzamanlı iki ODA_SERVISI oluşturma: biri başarır, diğeri Türkçe CONFLICT (kısmi unique yarışı)", async () => {
     const ctx = await sys();
     const mrp = await hotelId("PREMIUM");

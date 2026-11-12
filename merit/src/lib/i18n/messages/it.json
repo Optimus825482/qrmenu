@@ -113,10 +113,9 @@
         },
         "confirmHint": "Ti chiameremo al telefono della camera per confermare il tuo ordine.",
         "eta": "Tempo stimato: {min} min",
-        "cancel": "Annulla ordine",
-        "cancelConfirm": "Vuoi annullare il tuo ordine?",
+        "cancelByPhone": "Se desidera modificare o annullare l'ordine, La preghiamo di chiamare il Servizio in Camera dal telefono della Sua camera; il nostro team sarà lieto di assisterLa.",
         "cancelled": "Il tuo ordine è stato annullato.",
-        "keep": "Mantieni l'ordine"
+        "cancelledHint": "Per i dettagli, La preghiamo di chiamare il Servizio in Camera dal telefono della camera."
       },
       "unavailable": "Al momento non disponibile"
     },

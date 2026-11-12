@@ -40,6 +40,8 @@ type Props = {
   tab?: RoomOpsTab;
   /** First card of its list: carries the screen-guide anchors. */
   first?: boolean;
+  /** Server clock minus device clock (ms), for the SLA timer. */
+  clockOffsetMs?: number;
 };
 
 const TONE: Record<RoomBoardColumn, string> = {
@@ -58,11 +60,12 @@ function clock(value: Date | string): string {
 }
 
 /** One order of the staff board. Which buttons exist is decided only by the server-computed `flags`. */
-export function RoomOrderCard({ card, column, flags, confirmRequired, actions, busy, tab = "tumu", first }: Props) {
+export function RoomOrderCard({ card, column, flags, confirmRequired, actions, busy, tab = "tumu", first, clockOffsetMs }: Props) {
   const rtl = card.guestLanguage === "ar";
   const showApprove = tab !== "teyit" && flags.talepD && (column === "NEW" || column === "CONFIRM");
   const approveBlocked = confirmRequired || column === "CONFIRM";
-  const showConfirm = flags.teyitD && column === "CONFIRM";
+  // A sent order of an outlet that requires phone confirmation can only be confirmed by phone (the server accepts GONDERILDI).
+  const showConfirm = flags.teyitD && (column === "CONFIRM" || (column === "NEW" && confirmRequired));
   const showPreCancel = flags.teyitD && (column === "NEW" || column === "CONFIRM");
   const showPostCancel = flags.teslimA && (column === "PREP" || column === "READY" || column === "ONWAY");
   const showReady = tab !== "teyit" && flags.talepD && column === "PREP";
@@ -94,7 +97,7 @@ export function RoomOrderCard({ card, column, flags, confirmRequired, actions, b
             </h3>
             <p className="mt-0.5 text-[13px] text-muted">{clock(card.createdAt)}</p>
           </div>
-          <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} paused={column === "CONFIRM"} />
+          <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} paused={column === "CONFIRM"} offsetMs={clockOffsetMs} />
         </div>
 
         <div className="flex flex-wrap gap-1.5">

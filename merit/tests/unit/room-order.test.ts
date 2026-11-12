@@ -121,7 +121,7 @@ async function setupRsEnv(over: {
   return { mrId, room, room2, roomToken, room2Token, outlet, sandwich, tea };
 }
 
-describe("roomOrder.create & get & guestCancel", () => {
+describe("roomOrder.create & get", () => {
   it("başarılı sipariş: orderNo 1, kind ODA_SERVISI, roomId dolu, tableId null, status GONDERILDI", async () => {
     const s = await setupRsEnv();
     const res = await roomOrder.create({
@@ -433,32 +433,6 @@ describe("roomOrder.create & get & guestCancel", () => {
     });
   });
 
-  it("guestCancel IP çarpanından ve sipariş oluşturma sayacından bağımsızdır", async () => {
-    const s = await setupRsEnv();
-    const ip = "10.99.88.91";
-    const meta = { ip, userAgent: "vitest" };
-    await testDb.setting.deleteMany({ where: { key: "guest.ipRateMultiplier", hotelId: null } });
-    await testDb.setting.create({ data: { key: "guest.ipRateMultiplier", value: 3 } });
-    const input = {
-      token: s.roomToken,
-      idempotencyKey: randomUUID(),
-      items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
-      ...meta,
-    };
-    const order = await roomOrder.create(input);
-    for (let i = 0; i < 9; i++) await roomOrder.create(input);
-
-    await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).resolves.toEqual({ ok: true });
-    for (let i = 0; i < 9; i++) {
-      await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).rejects.toMatchObject({
-        code: "CONFLICT",
-      });
-    }
-    await expect(roomOrder.guestCancel(s.roomToken, order.orderId, meta)).rejects.toMatchObject({
-      code: "RATE_LIMITED",
-    });
-  });
-
   it("açık sipariş sınırı okunamazsa sipariş oluşturulmaz", async () => {
     const s = await setupRsEnv();
     const failure = new Error("setting read failed");
@@ -483,67 +457,26 @@ describe("roomOrder.create & get & guestCancel", () => {
     }
   });
 
-  it("guestCancel: TEYIT_BEKLIYOR'da ok (order.cancelled olayı), ONAYLANDI'da CONFLICT, başka odanın siparişi NOT_FOUND", async () => {
-    const s = await setupRsEnv({ phoneConfirmRequired: true });
-    const order = await roomOrder.create({
-      token: s.roomToken,
-      idempotencyKey: randomUUID(),
-      locale: "tr",
-      items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
-      ip: "127.0.0.70",
-      userAgent: "vitest",
-    });
+  it("misafir kendi siparişini iptal edemez: iptal işlevi ve uç noktası yoktur", async () => {
+    // Guests are asked to call Room Service from the room phone; staff cancel with a written reason.
+    expect(Object.keys(roomOrder).sort()).toEqual(["create", "get"]);
+    const { existsSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    expect(existsSync(resolve(__dirname, "../../src/app/api/q/[token]/order/cancel/route.ts"))).toBe(false);
+  });
 
-    // Başka oda iptal edemez -> NOT_FOUND
-    await expect(
-      roomOrder.guestCancel(s.room2Token, order.orderId, { ip: "127.0.0.71", userAgent: "" }),
-    ).rejects.toMatchObject({
-      code: "NOT_FOUND",
-      message: "Sipariş bulunamadı",
-    });
-
-    // Kendi odası iptal eder ok
-    publishMock.mockClear();
-    const cancelRes = await roomOrder.guestCancel(s.roomToken, order.orderId, { ip: "127.0.0.70", userAgent: "" });
-    expect(cancelRes.ok).toBe(true);
-
-    const cancelledRow = await testDb.order.findUniqueOrThrow({ where: { id: order.orderId } });
-    expect(cancelledRow.status).toBe("IPTAL");
-    expect(cancelledRow.rejectReason).toBe("Misafir vazgeçti");
-
-    expect(publishMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "order.cancelled",
-        payload: expect.objectContaining({
-          orderId: order.orderId,
-          cancelReason: "Misafir vazgeçti",
-        }),
-      }),
-      expect.anything(),
-    );
-
-    // ONAYLANDI siparişi misafir iptal edemez -> CONFLICT
-    const orderApproved = await testDb.order.create({
-      data: {
-        hotelId: s.mrId,
-        outletId: s.outlet.id,
-        kind: "ODA_SERVISI",
-        roomId: s.room.id,
-        status: "ONAYLANDI",
-        orderNo: 99,
-        guestLanguage: "tr",
+  it("açık sipariş sınırı: CONFLICT, misafir sayfası için `limit` işaretiyle", async () => {
+    const s = await setupRsEnv({ maxOpenPerRoom: 1 });
+    const make = () =>
+      roomOrder.create({
+        token: s.roomToken,
         idempotencyKey: randomUUID(),
-        clientIp: "127.0.0.72",
-        businessDate: new Date("2026-10-31"),
-      },
-    });
-
-    await expect(
-      roomOrder.guestCancel(s.roomToken, orderApproved.id, { ip: "127.0.0.72", userAgent: "" }),
-    ).rejects.toMatchObject({
-      code: "CONFLICT",
-      message: "Sipariş zaten işlendi",
-    });
+        items: [{ menuNodeId: s.sandwich.id, qty: 1 }],
+        ip: "127.0.0.73",
+        userAgent: "vitest",
+      });
+    await make();
+    await expect(make()).rejects.toMatchObject({ code: "CONFLICT", fieldErrors: { limit: [expect.any(String)] } });
   });
 });
 

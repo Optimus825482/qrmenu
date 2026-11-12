@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { useSound } from "@/components/ops/useSound";
 import { ReasonDialog } from "@/components/ui/ReasonDialog";
@@ -21,6 +21,7 @@ import type {
 } from "@/modules/order/server/roomService/board";
 import { RoomOrderCard, type RoomCardActions, type RoomOpsFlags, type RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
 import { REASON_MIN_LENGTH } from "@/modules/order/ui/reasons";
+import { confirm } from "@/shell/confirm";
 import { useSse } from "@/shell/useSse";
 
 export type { RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
@@ -36,6 +37,8 @@ const LIVE_EVENTS = [
   "order.delivered",
   "order.cancelled",
   "order.sla",
+  "ordering.changed",
+  "realtime.resync",
 ] as const;
 
 /** Visible columns of each tab, in display order. */
@@ -60,6 +63,11 @@ const CANCEL_REASONS = ["Stok yok", "Misafir vazgeçti", "Hatalı sipariş", "Mu
 /** Safety refresh while the push channel is healthy / while it is down. */
 const POLL_OPEN_MS = 60_000;
 const POLL_DOWN_MS = 10_000;
+/** SSE bursts collapse into one refetch. */
+const REFRESH_DEBOUNCE_MS = 200;
+
+const CONN_ACTION_ERROR = "Bağlantı hatası: işlem gönderilemedi. Tekrar deneyin.";
+const CONN_LOAD_ERROR = "Bağlantı hatası: liste yenilenemedi.";
 
 type Props = {
   outletId: string;
@@ -74,13 +82,23 @@ type Props = {
 
 type ActionResult = { ok: boolean; error?: { message: string } };
 
+/** Server clock minus device clock (ms) for a board payload; 0 when unknown. */
+function offsetOf(board: RoomBoard | null): number {
+  const server = board?.serverNow ? Date.parse(board.serverNow) : NaN;
+  return Number.isNaN(server) ? 0 : server - Date.now();
+}
+
 function minutes(sec: number): string {
   return `${Math.round(sec / 60)} dk`;
 }
 
 export default function OdaServisiClient({ outletId, hotelName, tab, initialBoard, loadError, flags }: Props) {
   const [data, setData] = useState<RoomBoard | null>(initialBoard);
-  const [error, setError] = useState<string>(loadError ?? "");
+  // Load errors (a failed refresh) clear on the next successful refresh; action errors stay until dismissed.
+  const [loadErr, setLoadErr] = useState<string>(loadError ?? "");
+  const [actionErr, setActionErr] = useState("");
+  // Server clock minus device clock at the moment the board arrived: keeps SLA timers right on a wrong tablet clock.
+  const [clockOffset, setClockOffset] = useState(() => offsetOf(initialBoard));
   const [busy, setBusy] = useState(false);
   const [activeColumn, setActiveColumn] = useState<RoomBoardColumn>(tab === "tumu" ? "NEW" : TAB_COLUMNS[tab][0]);
   const [phoneFor, setPhoneFor] = useState<RoomOrderData | null>(null);
@@ -92,22 +110,55 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
   const playAlarm = useSound("call");
 
   const refresh = useCallback(async () => {
-    const res = await getRoomBoardAction(outletId);
-    if (res.ok) {
-      setData(res.data);
-      setError((current) => (current === loadError ? "" : current));
-    } else {
-      setError(res.error.message);
+    try {
+      const res = await getRoomBoardAction(outletId);
+      if (res.ok) {
+        setData(res.data);
+        setClockOffset(offsetOf(res.data));
+        setLoadErr("");
+      } else {
+        setLoadErr(res.error.message);
+      }
+    } catch {
+      setLoadErr(CONN_LOAD_ERROR);
     }
-  }, [outletId, loadError]);
+  }, [outletId]);
+
+  const refreshTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(refreshTimer.current), []);
+  const scheduleRefresh = useCallback(
+    (immediate = false) => {
+      window.clearTimeout(refreshTimer.current);
+      refreshTimer.current = window.setTimeout(() => void refresh(), immediate ? 0 : REFRESH_DEBOUNCE_MS);
+    },
+    [refresh],
+  );
 
   const { status } = useSse((event) => {
+    if (event.type === "realtime.resync") {
+      scheduleRefresh(true);
+      return;
+    }
     if (event.outletId !== outletId) return;
     if (event.type === "order.created") playNew();
     else if (event.type === "order.ready" && flags.teslimD) playReady();
     else if (event.type === "order.sla" && (event.payload as { level?: string } | undefined)?.level === "BREACH") playAlarm();
-    void refresh();
+    scheduleRefresh();
   }, LIVE_EVENTS);
+
+  // A tablet that slept or lost the network may have missed events: refetch when it is back.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") scheduleRefresh(true);
+    };
+    const onOnline = () => scheduleRefresh(true);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
+    };
+  }, [scheduleRefresh]);
 
   useEffect(() => {
     const timer = window.setInterval(() => void refresh(), status === "open" ? POLL_OPEN_MS : POLL_DOWN_MS);
@@ -120,8 +171,10 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
       setBusy(true);
       try {
         const res = await fn();
-        setError(res.ok ? "" : (res.error?.message ?? "İşlem gerçekleştirilemedi"));
+        setActionErr(res.ok ? "" : (res.error?.message ?? "İşlem gerçekleştirilemedi"));
         await refresh();
+      } catch {
+        setActionErr(CONN_ACTION_ERROR);
       } finally {
         setBusy(false);
       }
@@ -144,15 +197,28 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
     [run],
   );
 
-  const toggleOrdering = () => {
+  const toggleOrdering = async () => {
     if (!data || !flags.talepA) return;
-    void run(async () => {
+    // Switching off stops all guest ordering with one tap: ask first (switching on needs no question).
+    if (data.orderingEnabled) {
+      const ok = await confirm({
+        title: "Sipariş alımı kapatılsın mı?",
+        message: "Kapatınca misafirler oda servisi için yeni sipariş veremez.",
+        danger: true,
+        confirmLabel: "Kapat",
+      });
+      if (!ok) return;
+    }
+    await run(async () => {
       const res = await setOutletOrderingEnabledAction({ id: outletId, enabled: !data.orderingEnabled });
       return res.ok ? { ok: true } : { ok: false, error: res.error };
     });
   };
 
   const columns = TAB_COLUMNS[tab];
+  // After a soft navigation to another ?sekme= the remembered column may not exist in this tab.
+  const shownColumn = columns.includes(activeColumn) ? activeColumn : columns[0];
+  const error = actionErr || loadErr;
   const confirmRequired = data?.confirmRequired ?? false;
 
   return (
@@ -182,7 +248,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
                 aria-label="Sipariş alımı"
                 data-mutates
                 disabled={busy}
-                onClick={toggleOrdering}
+                onClick={() => void toggleOrdering()}
                 className={`min-h-11 min-w-20 rounded-xl border px-3 text-sm font-black disabled:opacity-50 ${
                   data.orderingEnabled ? "border-success bg-surface text-success" : "border-danger bg-surface text-danger"
                 }`}
@@ -218,7 +284,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
           className="flex items-center justify-between rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm font-semibold text-danger"
         >
           <span>{error}</span>
-          <button type="button" onClick={() => setError("")} className="min-h-11 min-w-11 px-2 text-[13px] underline">
+          <button type="button" onClick={() => (actionErr ? setActionErr("") : setLoadErr(""))} className="min-h-11 min-w-11 px-2 text-[13px] underline">
             Kapat
           </button>
         </div>
@@ -231,10 +297,10 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
               key={col}
               type="button"
               role="tab"
-              aria-selected={activeColumn === col}
+              aria-selected={shownColumn === col}
               onClick={() => setActiveColumn(col)}
               className={`min-h-11 shrink-0 rounded-full border px-4 text-sm font-bold ${
-                activeColumn === col ? "border-accent bg-accent text-bg" : "border-border bg-surface text-text"
+                shownColumn === col ? "border-accent bg-accent text-bg" : "border-border bg-surface text-text"
               }`}
             >
               {COLUMN_TITLE[col]} ({data.columns[col].length})
@@ -256,7 +322,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
                 key={col}
                 data-column-id={col}
                 aria-label={COLUMN_TITLE[col]}
-                className={`${columns.length > 1 && activeColumn !== col ? "hidden" : "block"} min-w-0 space-y-3 md:block`}
+                className={`${columns.length > 1 && shownColumn !== col ? "hidden" : "block"} min-w-0 space-y-3 md:block`}
               >
                 <h2 className="flex items-center justify-between text-base font-black text-text">
                   <span>{COLUMN_TITLE[col]}</span>
@@ -275,6 +341,7 @@ export default function OdaServisiClient({ outletId, hotelName, tab, initialBoar
                       actions={actions}
                       busy={busy}
                       tab={tab}
+                      clockOffsetMs={clockOffset}
                       first={index === 0 && colIndex === firstColumnWithCards}
                     />
                   ))

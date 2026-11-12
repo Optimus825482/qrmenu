@@ -68,6 +68,7 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
       },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
+    // Deactivated products are no longer stocked: they never count as critical, whatever their balance.
     prisma.$queryRaw<{ product_id: string; name: string; remaining_qty: number; critical_level: number }[]>(
       env.historical
         ? // Past level = today's remaining minus the signed movements after the instant.
@@ -78,14 +79,14 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
             SELECT SUM(m.qty) FROM hotel_stock_movements m
             WHERE m.hotel_id = hs.hotel_id AND m.product_id = hs.product_id AND m.created_at > ${now}), 0) AS remaining_qty
         FROM hotel_stocks hs JOIN products p ON p.id = hs.product_id
-        WHERE hs.hotel_id = ${hotelId}
+        WHERE hs.hotel_id = ${hotelId} AND p.is_active
       ) s
       WHERE s.remaining_qty <= s.critical_level * ${STOCK_BAND}::numeric
       ORDER BY s.name ASC, s.product_id ASC`
         : Prisma.sql`
       SELECT hs.product_id, p.name, hs.remaining_qty, hs.critical_level
       FROM hotel_stocks hs JOIN products p ON p.id = hs.product_id
-      WHERE hs.hotel_id = ${hotelId} AND hs.remaining_qty <= hs.critical_level * ${STOCK_BAND}::numeric
+      WHERE hs.hotel_id = ${hotelId} AND p.is_active AND hs.remaining_qty <= hs.critical_level * ${STOCK_BAND}::numeric
       ORDER BY p.name ASC, hs.product_id ASC`,
     ),
     prisma.uploadTask.findMany({

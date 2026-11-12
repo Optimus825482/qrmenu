@@ -25,7 +25,11 @@ export const zimmetDurum = defineReport({
   paramsSchema,
   async run(scope, params) {
     const stocks = await prisma.hotelStock.findMany({
-      where: { hotelId: { in: scope.hotelIds } },
+      // Same rule as the stock screen: a deactivated product is listed only while the hotel still holds some.
+      where: {
+        hotelId: { in: scope.hotelIds },
+        OR: [{ product: { isActive: true } }, { remainingQty: { gt: 0 } }],
+      },
       select: {
         totalQty: true,
         usedQty: true,

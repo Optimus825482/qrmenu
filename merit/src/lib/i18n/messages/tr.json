@@ -122,10 +122,9 @@
         },
         "confirmHint": "Siparişinizi teyit etmek için odanızdaki telefonu arayacağız.",
         "eta": "Tahmini süre: {min} dk",
-        "cancel": "Vazgeç",
-        "cancelConfirm": "Siparişinizden vazgeçmek istiyor musunuz?",
+        "cancelByPhone": "Siparişinizde değişiklik yapmak ya da siparişinizi iptal etmek isterseniz, odanızdaki telefondan Oda Servisi'ni aramanızı rica ederiz; ekibimiz memnuniyetle yardımcı olacaktır.",
         "cancelled": "Siparişiniz iptal edildi.",
-        "keep": "Siparişi koru"
+        "cancelledHint": "Ayrıntı için odanızdaki telefondan Oda Servisi'ni arayabilirsiniz."
       },
       "unavailable": "Şu an kullanılamıyor"
     },

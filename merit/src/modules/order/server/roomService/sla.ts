@@ -7,19 +7,22 @@ import { usersEntitledTo } from "@/modules/core/server/entitlements";
 import { onlineAt } from "@/modules/order/server/approvals";
 import { publishRadar } from "@/modules/radar/publish";
 
-/** Open room-service order states the SLA clock still runs in. */
+/**
+ * Open room-service states used by the radar metrics (`reporting/server/radar/metrics.ts`): leaves out
+ * GONDERILDI (not yet seen by staff). The radar layer and client reducer use `RADAR_ROOM_OPEN_STATUSES`.
+ */
 export const SLA_OPEN_STATUSES: OrderStatus[] = ["TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"];
 
 /**
  * Statuses the SLA sweep times: the clock runs from submission/confirmation. TEYIT_BEKLIYOR is
- * excluded (clock not running); GONDERILDI is included. `SLA_OPEN_STATUSES` (radar layer) is a
- * separate, wider "still open" set and stays unchanged.
+ * excluded (clock not running); GONDERILDI is included. `SLA_OPEN_STATUSES` (radar metrics) is a
+ * separate set that omits GONDERILDI; the radar layer shows `RADAR_ROOM_OPEN_STATUSES`.
  */
 export const SLA_SWEEP_STATUSES: OrderStatus[] = ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"];
 
-import { SLA_WARN_RATIO, slaDue, slaStart, slaStateOf, type SlaState } from "./slaConstants";
+import { RADAR_ROOM_OPEN_STATUSES, SLA_WARN_RATIO, slaDue, slaStart, slaStateOf, type SlaState } from "./slaConstants";
 
-export { SLA_WARN_RATIO, slaDue, slaStart, slaStateOf, type SlaState };
+export { RADAR_ROOM_OPEN_STATUSES, SLA_WARN_RATIO, slaDue, slaStart, slaStateOf, type SlaState };
 
 type Level = "WARN" | "BREACH";
 
@@ -47,7 +50,8 @@ async function slaRecipients(tx: Prisma.TransactionClient, order: Subject, level
 }
 
 /**
- * Room-service SLA sweep (every minute). For each hotel with the ROOM_SERVICE module on, orders in
+ * Room-service SLA sweep (every minute). For each hotel with the ROOM_SERVICE module on (or that still
+ * has open room orders), orders in
  * `SLA_SWEEP_STATUSES` whose clock (`slaStart`) reached 80 % of `rs.slaMinutes` are WARNed and at
  * 100 % BREACHed. Inside one transaction the order is re-read, the threshold re-checked on the
  * current row, then claimed with a conditional `updateMany`, so overlapping runs notify each level
@@ -55,10 +59,16 @@ async function slaRecipients(tx: Prisma.TransactionClient, order: Subject, level
  * WARN window gets only BREACH (and `slaWarnedAt` is stamped if still empty, never overwritten).
  */
 export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached: number }> {
-  const modules = await prisma.hotelModule.findMany({
-    where: { moduleKey: "ROOM_SERVICE", enabled: true },
-    select: { hotelId: true },
-  });
+  const [modules, withOpenOrders] = await Promise.all([
+    prisma.hotelModule.findMany({ where: { moduleKey: "ROOM_SERVICE", enabled: true }, select: { hotelId: true } }),
+    // A hotel that switched the module off while orders are still open keeps its clock running.
+    prisma.order.findMany({
+      where: { kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
+      select: { hotelId: true },
+      distinct: ["hotelId"],
+    }),
+  ]);
+  const hotelIds = [...new Set([...modules, ...withOpenOrders].map((m) => m.hotelId))];
   let warned = 0;
   let breached = 0;
   const levelOf = (o: { phoneConfirmedAt: Date | null; createdAt: Date }, slaMinutes: number): Level | null => {
@@ -66,94 +76,99 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
     const limit = slaMinutes * 60_000;
     return ageMs >= limit ? "BREACH" : ageMs >= limit * SLA_WARN_RATIO ? "WARN" : null;
   };
-  for (const { hotelId } of modules) {
-    const slaMinutes = await getSetting("rs.slaMinutes", hotelId);
-    if (!(slaMinutes > 0)) continue;
-    const candidates = await prisma.order.findMany({
-      where: { hotelId, kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
-      select: { id: true, phoneConfirmedAt: true, createdAt: true, slaWarnedAt: true },
-    });
-    for (const candidate of candidates) {
-      const first = levelOf(candidate, slaMinutes);
-      if (!first || (first === "WARN" && candidate.slaWarnedAt)) continue;
-      try {
-        const claimed = await prisma.$transaction(async (tx) => {
-          const order = await tx.order.findFirst({
-            where: { id: candidate.id, kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
-            select: {
-              id: true,
-              outletId: true,
-              orderNo: true,
-              roomId: true,
-              phoneConfirmedAt: true,
-              createdAt: true,
-              slaWarnedAt: true,
-              room: { select: { number: true } },
-            },
+  for (const hotelId of hotelIds) {
+    try {
+      const slaMinutes = await getSetting("rs.slaMinutes", hotelId);
+      if (!(slaMinutes > 0)) continue;
+      const candidates = await prisma.order.findMany({
+        where: { hotelId, kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
+        select: { id: true, phoneConfirmedAt: true, createdAt: true, slaWarnedAt: true },
+      });
+      for (const candidate of candidates) {
+        const first = levelOf(candidate, slaMinutes);
+        if (!first || (first === "WARN" && candidate.slaWarnedAt)) continue;
+        try {
+          const claimed = await prisma.$transaction(async (tx) => {
+            const order = await tx.order.findFirst({
+              where: { id: candidate.id, kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
+              select: {
+                id: true,
+                outletId: true,
+                orderNo: true,
+                roomId: true,
+                phoneConfirmedAt: true,
+                createdAt: true,
+                slaWarnedAt: true,
+                room: { select: { number: true } },
+              },
+            });
+            if (!order?.roomId) return null;
+            const level = levelOf(order, slaMinutes);
+            if (!level || (level === "WARN" && order.slaWarnedAt)) return null;
+            const claim = await tx.order.updateMany({
+              where: {
+                id: order.id,
+                slaBreachedAt: null,
+                status: { in: SLA_SWEEP_STATUSES },
+                ...(level === "WARN" ? { slaWarnedAt: null } : {}),
+              },
+              data: level === "BREACH" ? { slaBreachedAt: now } : { slaWarnedAt: now },
+            });
+            if (claim.count !== 1) return null;
+            if (level === "BREACH") {
+              // Stamp the warning only if nobody has; a concurrent WARN time is never overwritten.
+              await tx.order.updateMany({ where: { id: order.id, slaWarnedAt: null }, data: { slaWarnedAt: now } });
+            }
+            const roomId = order.roomId;
+            const roomNumber = order.room?.number ?? null;
+            const ageMin = Math.floor((now.getTime() - slaStart(order).getTime()) / 60_000);
+            await audit(tx, {
+              hotelId,
+              action: level === "BREACH" ? "RS_SLA_BREACH" : "RS_SLA_WARN",
+              entity: "Order",
+              entityId: order.id,
+              after: { level, ageMin, slaMinutes },
+            });
+            const roomLabel = roomNumber ?? "-";
+            const remaining = Math.max(1, Math.ceil((slaDue(order, slaMinutes).getTime() - now.getTime()) / 60_000));
+            await notify(
+              {
+                recipients: await slaRecipients(tx, { hotelId, outletId: order.outletId }, level),
+                type: level === "BREACH" ? "order.sla.breach" : "order.sla.warn",
+                title:
+                  level === "BREACH" ? `Oda servisi SLA aşıldı · Oda ${roomLabel}` : `Oda servisi gecikiyor · Oda ${roomLabel}`,
+                body: level === "BREACH" ? `#${order.orderNo} · ${ageMin} dk` : `#${order.orderNo} · ${remaining} dk kaldı`,
+                refType: "Order",
+                refId: order.id,
+                fallbackHotelId: hotelId,
+              },
+              tx,
+            );
+            await publishRadar(
+              "order.sla",
+              { hotelId, outletId: order.outletId, roomId },
+              {
+                orderId: order.id,
+                orderNo: order.orderNo,
+                roomId,
+                ...(roomNumber ? { roomNumber } : {}),
+                level,
+                ageMin,
+              },
+              tx,
+            );
+            return level;
           });
-          if (!order?.roomId) return null;
-          const level = levelOf(order, slaMinutes);
-          if (!level || (level === "WARN" && order.slaWarnedAt)) return null;
-          const claim = await tx.order.updateMany({
-            where: {
-              id: order.id,
-              slaBreachedAt: null,
-              status: { in: SLA_SWEEP_STATUSES },
-              ...(level === "WARN" ? { slaWarnedAt: null } : {}),
-            },
-            data: level === "BREACH" ? { slaBreachedAt: now } : { slaWarnedAt: now },
-          });
-          if (claim.count !== 1) return null;
-          if (level === "BREACH") {
-            // Stamp the warning only if nobody has; a concurrent WARN time is never overwritten.
-            await tx.order.updateMany({ where: { id: order.id, slaWarnedAt: null }, data: { slaWarnedAt: now } });
-          }
-          const roomId = order.roomId;
-          const roomNumber = order.room?.number ?? null;
-          const ageMin = Math.floor((now.getTime() - slaStart(order).getTime()) / 60_000);
-          await audit(tx, {
-            hotelId,
-            action: level === "BREACH" ? "RS_SLA_BREACH" : "RS_SLA_WARN",
-            entity: "Order",
-            entityId: order.id,
-            after: { level, ageMin, slaMinutes },
-          });
-          const roomLabel = roomNumber ?? "-";
-          const remaining = Math.max(1, Math.ceil((slaDue(order, slaMinutes).getTime() - now.getTime()) / 60_000));
-          await notify(
-            {
-              recipients: await slaRecipients(tx, { hotelId, outletId: order.outletId }, level),
-              type: level === "BREACH" ? "order.sla.breach" : "order.sla.warn",
-              title:
-                level === "BREACH" ? `Oda servisi SLA aşıldı · Oda ${roomLabel}` : `Oda servisi gecikiyor · Oda ${roomLabel}`,
-              body: level === "BREACH" ? `#${order.orderNo} · ${ageMin} dk` : `#${order.orderNo} · ${remaining} dk kaldı`,
-              refType: "Order",
-              refId: order.id,
-              fallbackHotelId: hotelId,
-            },
-            tx,
-          );
-          await publishRadar(
-            "order.sla",
-            { hotelId, outletId: order.outletId, roomId },
-            {
-              orderId: order.id,
-              orderNo: order.orderNo,
-              roomId,
-              ...(roomNumber ? { roomNumber } : {}),
-              level,
-              ageMin,
-            },
-            tx,
-          );
-          return level;
-        });
-        if (claimed === "BREACH") breached += 1;
-        else if (claimed === "WARN") warned += 1;
-      } catch (error) {
-        // One bad order must not starve the rest; the rolled-back claim is retried next minute.
-        console.error("[rs.sla-sweep]", candidate.id, error);
+          if (claimed === "BREACH") breached += 1;
+          else if (claimed === "WARN") warned += 1;
+        } catch (error) {
+          // One bad order must not starve the rest; the rolled-back claim is retried next minute.
+          console.error("[rs.sla-sweep]", candidate.id, error);
+        }
       }
+    } catch (error) {
+      // One hotel's failure (settings, query) must not stop the other hotels' sweep.
+      console.error("[rs.sla-sweep] hotel", hotelId, error);
     }
   }
   return { warned, breached };

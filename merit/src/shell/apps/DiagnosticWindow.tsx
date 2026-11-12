@@ -111,7 +111,10 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
   const handleSendTestAlert = async () => {
     const res = await sendTestDiagnosticAlertAction({ email: developerEmail || undefined });
     if (res.ok && res.data.sent) {
-      notify.success("Geliştiriciye test diagnostik e-posta bildirimi başarıyla iletildi.");
+      notify.success(
+        `Test bildirimi posta sunucusuna teslim edildi${res.data.recipient ? ` (alıcı: ${res.data.recipient})` : ""}. ` +
+          "Gelen kutusunda yoksa gereksiz (spam) klasörüne bakın.",
+      );
     } else {
       notify.error(res.ok ? (res.data.error || "Mail iletilemedi") : res.error.message);
     }
@@ -248,9 +251,17 @@ export function DiagnosticWindow({ setStatus }: Pick<AppProps, "setStatus">) {
     {
       key: "mailSent",
       title: "E-posta",
-      width: 90,
+      width: 190,
       sortable: true,
-      render: (row) => (row.data.mailSent ? "Gönderildi" : "—"),
+      // "Gönderildi" = the mail server accepted it for this address; delivery (spam, wrong address) is beyond that.
+      render: (row) =>
+        row.data.mailSent ? (
+          <span title={row.data.mailTo ? `Alıcı: ${row.data.mailTo}` : "Posta sunucusu kabul etti"}>
+            Gönderildi{row.data.mailTo ? ` → ${row.data.mailTo}` : ""}
+          </span>
+        ) : (
+          "—"
+        ),
     },
     {
       key: "resolved",

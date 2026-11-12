@@ -34,18 +34,20 @@ type Props = {
   paused?: boolean;
   /** Test/parent override of the current time (ms); otherwise a 1 s ticker is used. */
   nowMs?: number;
+  /** Server clock minus device clock (ms): the ticker shows server time. Default 0. */
+  offsetMs?: number;
 };
 
 /** Countdown to the SLA deadline; colour follows the live state (OK green, WARN amber, BREACH red, bold). */
-export function SlaTimer({ startAt, dueAt, paused, nowMs }: Props) {
+export function SlaTimer({ startAt, dueAt, paused, nowMs, offsetMs = 0 }: Props) {
   const [tick, setTick] = useState<number | null>(null);
   useEffect(() => {
     if (paused || nowMs !== undefined) return;
-    const update = () => setTick(Date.now());
+    const update = () => setTick(Date.now() + offsetMs);
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [paused, nowMs]);
+  }, [paused, nowMs, offsetMs]);
 
   if (paused) {
     return (

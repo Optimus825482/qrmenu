@@ -326,6 +326,13 @@ async function transition(
       }
     }
     if (to === "IPTAL" && order.kind === "MASA") await cancelPrintJobs(tx, order, now);
+    if (to === "IPTAL" && order.kind === "ODA_SERVISI") {
+      // Only the queued receipt is withdrawn: a room order never had a kitchen ticket to cancel.
+      await tx.printJob.updateMany({
+        where: { orderId: order.id, status: "KUYRUKTA" },
+        data: { status: "HATA", error: "Sipariş iptal edildi" },
+      });
+    }
     await publish(
       {
         type: EVENT_OF[to] as string,

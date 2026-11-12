@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { createTranslator, NextIntlClientProvider } from "next-intl";
 import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -169,62 +169,27 @@ describe("OrderStatus - oda servisi adımları", () => {
     expect(screen.getByText(tr.guest.order.thanks)).toBeTruthy();
   });
 
-  it("IPTAL iken banner var, adım listesi ve Vazgeç yok", () => {
-    status(order({ status: "IPTAL" }));
+  it("IPTAL iken banner ve çevrilmiş yönlendirme var; adım listesi ve personelin yazdığı sebep yok", () => {
+    status(order({ status: "IPTAL", rejectReason: "Ürün tükendi" }));
     expect(screen.getByText(tr.guest.rs.order.cancelled)).toBeTruthy();
+    expect(screen.getByText(tr.guest.rs.order.cancelledHint)).toBeTruthy();
+    expect(document.body.textContent).not.toContain("Ürün tükendi");
     expect(steps()).toHaveLength(0);
-    expect(screen.queryByRole("button", { name: tr.guest.rs.order.cancel })).toBeNull();
+    expect(screen.queryByTestId("rs-cancel-by-phone")).toBeNull();
   });
 
-  it("Vazgeç yalnız GONDERILDI ve TEYIT_BEKLIYOR iken", () => {
-    for (const s of ["GONDERILDI", "TEYIT_BEKLIYOR"]) {
+  it("misafir iptal edemez: açık siparişte telefonla arama notu var, iptal düğmesi yok", () => {
+    for (const s of ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"]) {
       status(order({ status: s }));
-      expect(screen.getByRole("button", { name: tr.guest.rs.order.cancel }), s).toBeTruthy();
+      expect(screen.getByTestId("rs-cancel-by-phone").textContent, s).toBe(tr.guest.rs.order.cancelByPhone);
+      expect(screen.queryByRole("button"), s).toBeNull();
       cleanup();
     }
-    for (const s of ["ONAYLANDI", "HAZIR", "YOLDA", "TESLIM_EDILDI", "IPTAL"]) {
+    for (const s of ["TESLIM_EDILDI", "IPTAL"]) {
       status(order({ status: s }));
-      expect(screen.queryByRole("button", { name: tr.guest.rs.order.cancel }), s).toBeNull();
+      expect(screen.queryByTestId("rs-cancel-by-phone"), s).toBeNull();
       cleanup();
     }
-  });
-
-  it("Vazgeç önce onay diyaloğu açar, onaylanınca iptal uç noktasını çağırır", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ json: async () => ({ ok: true, data: { ok: true } }) });
-    vi.stubGlobal("fetch", fetchMock);
-    status(order());
-    fireEvent.click(screen.getByRole("button", { name: tr.guest.rs.order.cancel }));
-    const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText(tr.guest.rs.order.cancelConfirm)).toBeTruthy();
-    expect(fetchMock).not.toHaveBeenCalled();
-    fireEvent.click(within(dialog).getByRole("button", { name: tr.guest.rs.order.cancel }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("/api/q/tok/order/cancel");
-    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ orderId: "o1" });
-    await waitFor(() => expect(refresh).toHaveBeenCalled());
-  });
-
-  it("iptal reddedilirse hata görünür ve diyalog açık kalır", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({ json: async () => ({ ok: false, error: { code: "CONFLICT", message: "x" } }) }),
-    );
-    status(order());
-    fireEvent.click(screen.getByRole("button", { name: tr.guest.rs.order.cancel }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: tr.guest.rs.order.cancel }));
-    await waitFor(() => expect(screen.getByRole("alert").textContent).toContain(tr.guest.selections.failed));
-    expect(refresh).not.toHaveBeenCalled();
-  });
-
-  it("onay diyaloğunda vazgeçilirse istek atılmaz", () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    status(order());
-    fireEvent.click(screen.getByRole("button", { name: tr.guest.rs.order.cancel }));
-    fireEvent.click(screen.getByRole("button", { name: tr.guest.rs.order.keep }));
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("fiyat yalnız pricesShown iken görünür", () => {
@@ -235,11 +200,11 @@ describe("OrderStatus - oda servisi adımları", () => {
     expect(document.body.textContent).toMatch(/€|EUR/);
   });
 
-  it("masa siparişi eski dört adımı korur ve Vazgeç göstermez", () => {
+  it("masa siparişi eski dört adımı korur ve oda servisi notunu göstermez", () => {
     status(order({ kind: "MASA", roomService: undefined, roomNumber: undefined }));
     expect(steps()).toHaveLength(4);
     expect(steps()[1].textContent).toContain("Onaylandı");
-    expect(screen.queryByRole("button", { name: tr.guest.rs.order.cancel })).toBeNull();
+    expect(screen.queryByTestId("rs-cancel-by-phone")).toBeNull();
   });
 });
 
@@ -358,11 +323,12 @@ describe("oda-servisi sayfası", () => {
 
 describe("yeni metinler", () => {
   const all = { tr, en, de, ru, ar, fr, el, it: itMessages } as const;
-  it("guest.rs.unavailable ve guest.rs.order.keep sekiz dilde dolu", () => {
+  it("guest.rs.unavailable ve telefonla iptal metinleri sekiz dilde dolu", () => {
     for (const [locale, messages] of Object.entries(all)) {
       const rs = (messages as typeof tr).guest.rs;
       expect(rs.unavailable, locale).toBeTruthy();
-      expect(rs.order.keep, locale).toBeTruthy();
+      expect(rs.order.cancelByPhone, locale).toBeTruthy();
+      expect(rs.order.cancelledHint, locale).toBeTruthy();
     }
   });
 });

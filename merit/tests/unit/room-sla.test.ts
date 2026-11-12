@@ -165,6 +165,13 @@ describe("rsSlaSweep (T6a)", () => {
     expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 1 });
   });
 
+  it("ROOM_SERVICE modulu kapali otelde acik siparis yine taranir", async () => {
+    const e = await env("ROYAL", 30);
+    await testDb.hotelModule.updateMany({ where: { hotelId: e.hid, moduleKey: "ROOM_SERVICE" }, data: { enabled: false } });
+    await order(e, 31);
+    expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 1 });
+  });
+
   it("rs.slaMinutes=10 yalniz o otel icin; diger otel sistem varsayilani 30", async () => {
     const a = await env("ROYAL", 10);
     const b = await env("DIAMOND");

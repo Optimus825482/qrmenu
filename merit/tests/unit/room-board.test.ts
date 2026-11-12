@@ -242,6 +242,17 @@ describe("board.get", () => {
     expect(b.orderingEnabled).toBe(false);
   });
 
+  it("serverNow: ISO zaman damgası sunucu saatine yakın", async () => {
+    const e = await env();
+    const { ctx } = await ods(e);
+    const before = Date.now();
+    const b = await board.get(ctx, e.outlet.id);
+    const t = Date.parse(b.serverNow);
+    expect(Number.isNaN(t)).toBe(false);
+    expect(t).toBeGreaterThanOrEqual(before - 1000);
+    expect(t).toBeLessThanOrEqual(Date.now() + 1000);
+  });
+
   it("teslim yoksa avgDeliverySec anahtarı yok", async () => {
     const e = await env();
     const { ctx } = await ods(e);

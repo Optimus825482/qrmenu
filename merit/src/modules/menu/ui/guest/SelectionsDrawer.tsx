@@ -23,7 +23,11 @@ const onlineNow = () => navigator.onLine;
 const onlineOnServer = () => true;
 
 type Sent = { orderId: string; orderNo: number };
-type Problem = { kind: "closed" } | { kind: "failed" } | { kind: "unavailable"; names: string[]; ids: string[] };
+type Problem =
+  | { kind: "closed" }
+  | { kind: "limit" }
+  | { kind: "failed" }
+  | { kind: "unavailable"; names: string[]; ids: string[] };
 
 /**
  * The guest's selections: quantity, per-item note, remove, optional total (only while prices are
@@ -111,7 +115,10 @@ export function SelectionsDrawer({
         // `itemIds` (menu node ids of the unavailable dishes) matches lines exactly; names are the fallback.
         setProblem({ kind: "unavailable", names: fieldErrors.items, ids: fieldErrors.itemIds ?? [] });
       }
-      else if (code === "CONFLICT") setProblem({ kind: "closed" });
+      else if (code === "CONFLICT") {
+        // Room service: the room already has the allowed number of open orders; ordering itself is open.
+        setProblem({ kind: (fieldErrors as { limit?: string[] } | undefined)?.limit?.length ? "limit" : "closed" });
+      }
       else setProblem({ kind: "failed" });
     } catch {
       setProblem({ kind: "failed" });
@@ -138,6 +145,11 @@ export function SelectionsDrawer({
           {closed ? (
             <p className="g-banner g-banner-warn" role="alert">
               {t("menu.orderingClosed")}
+            </p>
+          ) : null}
+          {problem?.kind === "limit" ? (
+            <p className="g-banner g-banner-warn" role="alert">
+              {t("rs.limit")}
             </p>
           ) : null}
           {problem?.kind === "failed" ? (

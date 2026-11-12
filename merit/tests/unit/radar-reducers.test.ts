@@ -53,6 +53,14 @@ describe("radar reducers", () => {
     expect(s.layers.roomService!.orders).toHaveLength(0);
   });
 
+  it("oda servisi: GONDERILDI acik sayilir; olayla giren siparis anlik goruntu yenilemesi ister", () => {
+    let s = reduce(fresh(), orderStatus(T0, "rs2", "", "GONDERILDI", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
+    expect(s.layers.roomService!.orders.map((o) => o.status)).toEqual(["GONDERILDI"]);
+    expect(s.needsRefresh.has("order:rs2")).toBe(true);
+    s = reduce(s, orderStatus(T0 + 1, "rs2", "", "IPTAL", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
+    expect(s.layers.roomService!.orders).toHaveLength(0);
+  });
+
   it("cagri acik/kapali, masa tarama ve atama", () => {
     let s = reduce(fresh(), ev("call.opened", T0, { callId: "c1", tableId: "t1", callType: "GARSON" }));
     expect(table(s, "t1").call).toMatchObject({ callId: "c1", type: "GARSON" });

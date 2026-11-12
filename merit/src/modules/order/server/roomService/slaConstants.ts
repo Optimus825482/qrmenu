@@ -7,6 +7,12 @@ import type { OrderStatus } from "@/generated/prisma/client";
 /** Share of `rs.slaMinutes` after which an order is warned. */
 export const SLA_WARN_RATIO = 0.8;
 
+/**
+ * Room-service orders the radar shows as open: everything still in progress. GONDERILDI is in
+ * (the SLA sweep times it); TEYIT_BEKLIYOR is open but never timed (see `slaStateOf`).
+ */
+export const RADAR_ROOM_OPEN_STATUSES: readonly OrderStatus[] = ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"];
+
 /** Display/report state of a room-service order against its SLA. */
 export type SlaState = "OK" | "WARN" | "BREACH" | "DONE_ON_TIME" | "DONE_LATE" | "CANCELLED";
 

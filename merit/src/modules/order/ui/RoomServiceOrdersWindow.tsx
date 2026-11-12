@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { formatInTimeZone } from "date-fns-tz";
 import type { AppProps } from "@/shell/registry";
 import {
   listRoomServiceOrdersAction,
@@ -9,50 +10,84 @@ import {
 } from "../server/actions/roomServiceRecords";
 import { Icon } from "@/components/icons/Icon";
 import { formatPrice } from "@/lib/formatPrice";
+import { TZ } from "@/lib/time";
 import { HotelBadges } from "@/components/ui/HotelBadge";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 
 type OrderRow = RoomOrderListItem;
 
+/** Badge labels follow the live board (Yeni / Teyit / Hazırlanıyor / Hazır / Yolda). */
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  GONDERILDI: { label: "Yeni", color: "#1d4ed8", bg: "#dbeafe" },
   TEYIT_BEKLIYOR: { label: "Telefon Teyidi Bekliyor", color: "#b45309", bg: "#fef3c7" },
-  ALINDI: { label: "Alındı", color: "#1d4ed8", bg: "#dbeafe" },
-  ONAYLANDI: { label: "Onaylandı", color: "#047857", bg: "#d1fae5" },
-  HAZIR: { label: "Hazırlandı", color: "#059669", bg: "#a7f3d0" },
-  YOLDA: { label: "Yolda / Serviste", color: "#4338ca", bg: "#e0e7ff" },
+  ONAYLANDI: { label: "Hazırlanıyor", color: "#047857", bg: "#d1fae5" },
+  HAZIR: { label: "Hazır", color: "#059669", bg: "#a7f3d0" },
+  YOLDA: { label: "Yolda", color: "#4338ca", bg: "#e0e7ff" },
+  SERVIS_EDILDI: { label: "Servis Edildi", color: "#0f766e", bg: "#ccfbf1" },
   TESLIM_EDILDI: { label: "Teslim Edildi", color: "#15803d", bg: "#dcfce7" },
   IPTAL: { label: "İptal", color: "#b91c1c", bg: "#fee2e2" },
   REDDEDILDI: { label: "Reddedildi", color: "#991b1b", bg: "#fecaca" },
 };
 
+const PAGE_SIZE = 100;
+const SEARCH_DEBOUNCE_MS = 300;
+
+/** Wall-clock time in the hotel time zone (Europe/Nicosia), whatever the device zone is. */
+const fmtTime = (iso: string, pattern = "HH:mm") => formatInTimeZone(new Date(iso), TZ, pattern);
+
 export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
   const [orders, setOrders] = useState<RoomOrderListItem[]>([]);
+  const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<RoomServiceStats | null>(null);
   const [currency, setCurrency] = useState("EUR");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("HEPSI");
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<RoomOrderListItem | null>(null);
+  /** Counts requests so a slow, older response never overwrites a newer one. */
+  const requestId = useRef(0);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await listRoomServiceOrdersAction({
-        hotelId: hotelId || undefined,
-        status: statusFilter,
-        search: search || undefined,
-        limit: 100,
-      });
-      if (res.ok) {
-        setOrders(res.data.orders);
-        setStats(res.data.stats);
-        if (res.data.currency) setCurrency(res.data.currency);
-        setStatus(`${res.data.orders.length} oda servisi kaydı`);
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  /** Loads page `page`; pages after the first are appended to the rows already shown. */
+  const loadData = useCallback(
+    async (page = 1) => {
+      const id = ++requestId.current;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await listRoomServiceOrdersAction({
+          hotelId: hotelId || undefined,
+          status: statusFilter,
+          search: search || undefined,
+          page,
+          pageSize: PAGE_SIZE,
+        });
+        if (id !== requestId.current) return;
+        if (res.ok) {
+          setOrders((prev) => (page === 1 ? res.data.orders : [...prev, ...res.data.orders]));
+          setTotal(res.data.total);
+          setStats(res.data.stats);
+          if (res.data.currency) setCurrency(res.data.currency);
+          setStatus(`${res.data.total} oda servisi kaydı`);
+        } else {
+          setError(res.error.message);
+          setStatus("Oda servisi kayıtları yüklenemedi");
+        }
+      } catch {
+        if (id !== requestId.current) return;
+        setError("Kayıtlar yüklenemedi, tekrar deneyin");
+      } finally {
+        if (id === requestId.current) setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [hotelId, statusFilter, search, setStatus]);
+    },
+    [hotelId, statusFilter, search, setStatus],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => void loadData(), 0);
@@ -89,7 +124,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
       key: "createdAt",
       title: "Zaman",
       width: 80,
-      render: (o) => new Date(o.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+      render: (o) => fmtTime(o.createdAt),
     },
     { key: "hotelName", title: "Otel", width: 150, render: (o) => <HotelBadges names={[o.hotelName]} /> },
   ];
@@ -106,8 +141,9 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             className="border border-[#7f9db9] px-2 py-0.5 rounded bg-white text-xs"
           >
             <option value="HEPSI">Tüm Durumlar</option>
+            <option value="GONDERILDI">Yeni Gelenler</option>
             <option value="TEYIT_BEKLIYOR">Telefon Teyidi Bekleyenler</option>
-            <option value="ONAYLANDI">Onaylananlar</option>
+            <option value="ONAYLANDI">Onaylanan / Hazırlananlar</option>
             <option value="YOLDA">Yolda Olanlar</option>
             <option value="TESLIM_EDILDI">Teslim Edilenler</option>
             <option value="IPTAL">İptal / Reddedilenler</option>
@@ -116,7 +152,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
 
         <button
           type="button"
-          onClick={() => void loadData()}
+          onClick={() => void loadData(1)}
           className="border border-[#7f9db9] px-3 py-0.5 rounded bg-gradient-to-b from-white to-[#ece9d8] hover:to-[#e0ded0] active:from-[#d8d5c7] font-medium"
         >
           Yenile
@@ -134,16 +170,23 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               Teslim: {stats.delivered}
             </span>
             <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold">
-              Ciro: {formatPrice(stats.totalRevenue, currency)}
+              Teslim ciro: {formatPrice(stats.totalRevenue, currency)}
             </span>
           </div>
         )}
       </div>
 
+      {error ? (
+        <p role="alert" className="border-b border-red-300 bg-red-50 px-2 py-1 font-semibold text-red-700">
+          {error}
+        </p>
+      ) : null}
+
       {/* Main Grid & Detail Panel */}
       <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
         {/* Table List */}
-        <div className="flex-1 min-h-0 min-w-0 border-r border-[#7f9db9] bg-white">
+        <div className="flex-1 min-h-0 min-w-0 flex flex-col border-r border-[#7f9db9] bg-white">
+          <div className="flex-1 min-h-0">
           <DataGrid<OrderRow>
             columns={columns}
             rows={orders}
@@ -153,12 +196,28 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
             pageSize={Math.max(orders.length, 1)}
             onPage={() => {}}
             onSort={() => {}}
-            onSearch={setSearch}
-            q={search}
+            onSearch={setSearchInput}
+            q={searchInput}
             selectedId={selectedOrder?.id}
             onSelect={(row) => setSelectedOrder(row)}
             emptyText={loading ? "Kayıtlar yükleniyor..." : "Kayıt bulunamadı."}
           />
+          </div>
+          {orders.length < total ? (
+            <div className="flex items-center justify-center gap-2 border-t border-[#d4d0c8] bg-[#f9fafb] p-1.5">
+              <span className="text-gray-600">
+                {orders.length} / {total} kayıt gösteriliyor
+              </span>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void loadData(Math.floor(orders.length / PAGE_SIZE) + 1)}
+                className="border border-[#7f9db9] px-3 py-0.5 rounded bg-gradient-to-b from-white to-[#ece9d8] hover:to-[#e0ded0] font-medium disabled:opacity-50"
+              >
+                Daha fazla göster
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {/* Detail Sidebar */}
@@ -189,14 +248,14 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
               <div className="flex justify-between">
                 <span className="text-gray-500">Sipariş Saati:</span>
                 <span className="font-mono text-gray-700">
-                  {new Date(selectedOrder.createdAt).toLocaleString("tr-TR")}
+                  {fmtTime(selectedOrder.createdAt, "dd.MM.yyyy HH:mm")}
                 </span>
               </div>
               {selectedOrder.phoneConfirmedAt && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Teyit Saati:</span>
                   <span className="font-mono text-emerald-700 font-bold">
-                    {new Date(selectedOrder.phoneConfirmedAt).toLocaleTimeString("tr-TR")}
+                    {fmtTime(selectedOrder.phoneConfirmedAt, "HH:mm:ss")}
                   </span>
                 </div>
               )}
@@ -204,7 +263,7 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Teslim Saati:</span>
                   <span className="font-mono text-green-700 font-bold">
-                    {new Date(selectedOrder.deliveredAt).toLocaleTimeString("tr-TR")}
+                    {fmtTime(selectedOrder.deliveredAt, "HH:mm:ss")}
                   </span>
                 </div>
               )}

@@ -113,10 +113,9 @@
         },
         "confirmHint": "Nous appellerons le téléphone de votre chambre pour confirmer votre commande.",
         "eta": "Délai estimé : {min} min",
-        "cancel": "Annuler la commande",
-        "cancelConfirm": "Souhaitez-vous annuler votre commande ?",
+        "cancelByPhone": "Si vous souhaitez modifier ou annuler votre commande, nous vous prions d'appeler le service en chambre depuis le téléphone de votre chambre ; notre équipe se fera un plaisir de vous aider.",
         "cancelled": "Votre commande a été annulée.",
-        "keep": "Garder ma commande"
+        "cancelledHint": "Pour plus de détails, veuillez appeler le service en chambre depuis le téléphone de votre chambre."
       },
       "unavailable": "Indisponible pour le moment"
     },

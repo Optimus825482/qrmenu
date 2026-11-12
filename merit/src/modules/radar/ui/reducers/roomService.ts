@@ -1,11 +1,12 @@
 import type { OrderStatus } from "@/generated/prisma/client";
+import { RADAR_ROOM_OPEN_STATUSES } from "@/modules/order/server/roomService/slaConstants";
 import type { RadarEvent } from "../../types";
 import type { RadarState } from "../../state";
 import { addRefresh, replaceAt } from "./util";
 
 type Ev<T extends RadarEvent["type"]> = Extract<RadarEvent, { type: T }>;
 
-const RS_OPEN: ReadonlySet<OrderStatus> = new Set<OrderStatus>(["TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"]);
+const RS_OPEN: ReadonlySet<OrderStatus> = new Set<OrderStatus>(RADAR_ROOM_OPEN_STATUSES);
 
 function roomNumberOf(s: RadarState, roomId: string): string | undefined {
   for (const f of s.layers.minibar?.floors ?? []) {
@@ -15,7 +16,7 @@ function roomNumberOf(s: RadarState, roomId: string): string | undefined {
   return undefined;
 }
 
-/** Room-service `order.status` (kind ODA_SERVISI): open = TEYIT_BEKLIYOR..YOLDA. */
+/** Room-service `order.status` (kind ODA_SERVISI): open = GONDERILDI..YOLDA (same set as the server layer). */
 export function reduceRoomServiceOrder(s: RadarState, e: Ev<"order.status">): RadarState {
   const layer = s.layers.roomService;
   if (!layer) return s;
@@ -39,7 +40,9 @@ export function reduceRoomServiceOrder(s: RadarState, e: Ev<"order.status">): Ra
     createdAt: e.at,
     level: "OK" as const,
   };
-  return { ...s, layers: { ...s.layers, roomService: { ...layer, orders: [...layer.orders, created] } } };
+  const next = { ...s, layers: { ...s.layers, roomService: { ...layer, orders: [...layer.orders, created] } } };
+  // The event carries no createdAt/slaStartAt: show the card now, let a snapshot restore the real age.
+  return addRefresh(next, `order:${e.orderId}`);
 }
 
 export function reduceOrderSla(s: RadarState, e: Ev<"order.sla">): RadarState {

@@ -183,4 +183,33 @@ describe("escalation.run — ODA_SERVISI dalı", () => {
       body: "#9001 · Havuz Bar M1 · 2 dk",
     });
   });
+
+  it("24 saatten eski bekleyen sipariş yükseltilmez", async () => {
+    const mrId = await hotelId("ROYAL");
+    const outlet = await roomServiceOutlet(mrId);
+    const room = await getOrCreateRoom(mrId);
+    const now = new Date("2026-11-01T10:00:00.000Z");
+    const stale = await seedRoomOrder(mrId, outlet.id, room.id, { createdAt: new Date(now.getTime() - 25 * 3_600_000) });
+
+    expect(await escalation.run(now)).toBe(0);
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: stale.id } })).escalatedAt).toBeNull();
+  });
+
+  it("bir siparişin hatası sonrakileri engellemez; hatalı sipariş sonraki koşuda yükseltilir", async () => {
+    const mrId = await hotelId("ROYAL");
+    const outlet = await roomServiceOutlet(mrId);
+    const room = await getOrCreateRoom(mrId);
+    const now = new Date("2026-11-01T10:00:00.000Z");
+    const first = await seedRoomOrder(mrId, outlet.id, room.id, { createdAt: new Date(now.getTime() - 10 * 60_000) });
+    const second = await seedRoomOrder(mrId, outlet.id, room.id, { createdAt: new Date(now.getTime() - 5 * 60_000) });
+    publishMock.mockRejectedValueOnce(new Error("down"));
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    expect(await escalation.run(now)).toBe(1);
+    spy.mockRestore();
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: first.id } })).escalatedAt).toBeNull();
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: second.id } })).escalatedAt).toEqual(now);
+    expect(await escalation.run(now)).toBe(1);
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: first.id } })).escalatedAt).toEqual(now);
+  });
 });

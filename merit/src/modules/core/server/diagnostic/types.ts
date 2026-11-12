@@ -68,6 +68,8 @@ export interface DiagnosticIncidentData {
     uptimeSeconds: number;
   };
   mailSent: boolean;
+  /** Address the alert was handed to the mail server for (shown in the window so a missing mail can be traced). */
+  mailTo?: string;
   mailRecipient?: string;
   mailError?: string;
   resolved: boolean;

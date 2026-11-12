@@ -21,7 +21,6 @@ import { roomServiceState } from "./roomState";
 
 const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it"] as const;
 const roomOrderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
-const roomCancelLimiter = createRateLimiter({ max: 10, windowMs: 60_000 });
 
 function sanitize(text: string): string {
   return text
@@ -134,7 +133,9 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
       });
 
       if (openCount >= maxOpen) {
-        throw new DomainError("CONFLICT", `Odanız için en fazla ${maxOpen} açık sipariş olabilir`);
+        // `limit` tells the guest page this is the open-order limit, not "ordering is closed".
+        const message = `Odanız için en fazla ${maxOpen} açık sipariş olabilir`;
+        throw new DomainError("CONFLICT", message, { fieldErrors: { limit: [message] } });
       }
 
       // Validate selected items
@@ -220,6 +221,8 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
           body: `#${created.orderNo} · ${created.items.length} kalem${state.confirmRequired ? " · teyit bekliyor" : ""}`,
           refType: "Order",
           refId: created.id,
+          // Nobody signed in at the outlet (night shift): the hotel manager and system administrator still hear of it.
+          fallbackHotelId: state.hotelId,
         },
         tx,
       );
@@ -289,92 +292,6 @@ async function get(
   });
 }
 
-async function guestCancel(
-  token: string,
-  orderId: string,
-  meta: GuestMeta = { ip: "unknown", userAgent: "" },
-): Promise<{ ok: true }> {
-  if (!roomCancelLimiter.hit(meta.ip).allowed) {
-    throw new DomainError("RATE_LIMITED", "Çok fazla deneme, biraz sonra tekrar deneyin");
-  }
-  const target = await resolveRoom(token, meta);
-
-  return prisma.$transaction(async (tx) => {
-    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM orders WHERE id = ${orderId} FOR UPDATE`;
-    if (rows.length === 0) throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
-
-    const order = await tx.order.findUniqueOrThrow({
-      where: { id: orderId },
-      select: {
-        id: true,
-        orderNo: true,
-        roomId: true,
-        hotelId: true,
-        outletId: true,
-        status: true,
-      },
-    });
-
-    if (order.roomId !== target.room.id) {
-      throw new DomainError("NOT_FOUND", "Sipariş bulunamadı");
-    }
-
-    if (order.status !== "GONDERILDI" && order.status !== "TEYIT_BEKLIYOR") {
-      throw new DomainError("CONFLICT", "Sipariş zaten işlendi");
-    }
-
-    const now = new Date();
-    await tx.order.update({
-      where: { id: order.id },
-      data: {
-        status: "IPTAL",
-        cancelledAt: now,
-        rejectReason: "Misafir vazgeçti",
-      },
-    });
-
-    await tx.orderEvent.create({
-      data: {
-        orderId: order.id,
-        userId: null,
-        from: order.status,
-        to: "IPTAL",
-        note: "Misafir vazgeçti",
-        at: now,
-      },
-    });
-
-    await audit(tx, {
-      hotelId: order.hotelId,
-      action: "ROOM_ORDER_GUEST_CANCEL",
-      entity: "Order",
-      entityId: order.id,
-      before: { status: order.status },
-      after: { status: "IPTAL", reason: "Misafir vazgeçti" },
-    });
-
-    await publish(
-      {
-        type: "order.cancelled",
-        hotelId: order.hotelId,
-        outletId: order.outletId,
-        payload: {
-          orderId: order.id,
-          orderNo: order.orderNo,
-          status: "IPTAL",
-          from: order.status,
-          kind: "ODA_SERVISI",
-          roomId: order.roomId,
-          roomNumber: target.room.number,
-          byUserId: null,
-          cancelReason: "Misafir vazgeçti",
-        },
-      },
-      tx,
-    );
-
-    return { ok: true as const };
-  });
-}
-
-export const roomOrder = { create, get, guestCancel };
+// A guest cannot cancel a room order: they are asked to call Room Service from the room phone, and staff
+// cancel it with a written reason (orders.transition -> IPTAL).
+export const roomOrder = { create, get };
