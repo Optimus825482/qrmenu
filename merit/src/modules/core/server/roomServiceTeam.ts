@@ -10,8 +10,9 @@ const ROOM_SERVICE_SCREENS = ["RO-TAL", "RO-TEL", "RO-TES"];
  * A hotel has one room-service outlet, so a user whose role opens a room-service screen does not
  * need a separate team assignment: they join that outlet's team here. Narrow on purpose:
  * - only OUTLET roles (SISTEM/YONETIM reach the screens through the admin target, MUTFAK works on a kitchen),
- * - only in a hotel where the user has no outlet membership at all, active or not: someone already
- *   placed in a team (or removed from one on purpose) keeps exactly what an administrator gave them,
+ * - only in a hotel where the user has no outlet membership at all, active or not, and was never
+ *   removed from a team (MEMBER_REMOVE in the audit log): someone an administrator placed or took
+ *   out keeps exactly that decision; adding them again is then a manual step in Ekip Yönetimi,
  * - only when the ROOM_SERVICE module is on for the hotel and open to the role.
  * Returns the ids of the outlets the user was added to. `actorId` is who caused it (audit).
  */
@@ -57,7 +58,18 @@ export async function ensureRoomServiceMembership(
     where: { userId, outlet: { hotelId: { in: hotelIds } } },
     select: { outlet: { select: { hotelId: true } } },
   });
-  const placed = new Set(existing.map((m) => m.outlet.hotelId));
+  // Removing a member deletes the row, so the removal lives only in the audit log. A user an
+  // administrator took out of a team in this hotel must not be let back in by this shortcut.
+  const removals = await tx.auditLog.findMany({
+    where: {
+      action: "MEMBER_REMOVE",
+      entity: "OutletMember",
+      hotelId: { in: hotelIds },
+      before: { path: ["userId"], equals: userId },
+    },
+    select: { hotelId: true },
+  });
+  const placed = new Set([...existing.map((m) => m.outlet.hotelId), ...removals.flatMap((r) => (r.hotelId ? [r.hotelId] : []))]);
 
   const added: string[] = [];
   for (const hotelId of hotelIds) {

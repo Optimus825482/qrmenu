@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { testDb } from "../helpers/db";
 import {
   addMember,
+  ctxFor,
   dropReferenceData,
   hotelId,
   makeOutlet,
@@ -14,6 +15,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 
 const { ensureRoomServiceMembership } = await import("@/modules/core/server/roomServiceTeam");
 const { listTargets } = await import("@/modules/core/server/targets");
+const members = await import("@/modules/core/server/admin/members");
 
 /** The room-service outlet the reference data gives the hotel. */
 async function roomServiceOutlet(hotelCode: string) {
@@ -62,6 +64,19 @@ describe("ensureRoomServiceMembership (gerçek test DB)", () => {
     await addMember(user.id, bar.id, false);
     expect(await ensure(user.id)).toEqual([]);
     expect(await testDb.outletMember.count({ where: { userId: user.id } })).toBe(1);
+  });
+
+  it("yöneticinin ekipten çıkardığı kullanıcı girişte ya da kayıtta yeniden eklenmez", async () => {
+    const rs = await roomServiceOutlet("ROYAL");
+    const admin = await makeUser({ username: "yonetici2", roleCode: "R-SYS" });
+    const user = await makeUser({ username: "ods5", roleCode: "R-ODS", hotelCode: "ROYAL" });
+    expect(await ensure(user.id)).toEqual([rs.id]);
+    const member = await testDb.outletMember.findFirstOrThrow({ where: { userId: user.id } });
+    await members.remove(await ctxFor(admin, { hotelCode: "ROYAL" }), member.id);
+    expect(await testDb.outletMember.count({ where: { userId: user.id } })).toBe(0);
+
+    expect(await ensure(user.id)).toEqual([]);
+    expect(await listTargets(user.id)).toHaveLength(0);
   });
 
   it("oda servisi ekranı olmayan garson ve minibar rolleri eklenmez", async () => {
