@@ -100,6 +100,30 @@ export function orderJobTitles<T extends JobTitleNode>(rows: readonly T[]): (T &
   return out;
 }
 
+/** How a row of the hierarchy is drawn as a tree: the connector lines to its left. */
+export type TreeLines = {
+  /** One entry per level above the row's own connector: whether that ancestor's line runs on past this row. */
+  guides: boolean[];
+  /** Last görev under its parent: the connector ends here instead of running on down. */
+  last: boolean;
+};
+
+/** Connector lines for rows already in hierarchy order (see orderJobTitles), by row id. */
+export function treeLines(rows: readonly { id: string; depth: number }[]): Map<string, TreeLines> {
+  const out = new Map<string, TreeLines>();
+  rows.forEach((row, index) => {
+    // A line at `level` runs on when the next row at that level or above is exactly at that level.
+    const continues = (level: number) => {
+      const next = rows.slice(index + 1).find((later) => later.depth <= level);
+      return next !== undefined && next.depth === level;
+    };
+    const guides: boolean[] = [];
+    for (let level = 1; level < row.depth; level++) guides.push(continues(level));
+    out.set(row.id, { guides, last: !continues(row.depth) });
+  });
+  return out;
+}
+
 /** Whether `id` reports to `ancestorId`, directly or through the line above it (or is that görev itself). */
 export function reportsTo(rows: readonly JobTitleNode[], id: string, ancestorId: string): boolean {
   const byId = new Map(rows.map((row) => [row.id, row]));

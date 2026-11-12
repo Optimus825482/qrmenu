@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   createJobTitleAction,
   deleteJobTitleAction,
@@ -9,7 +9,7 @@ import {
   updateJobTitleAction,
 } from "@/modules/core/server/admin/actions/jobTitles";
 import type { JobTitleOptions, JobTitleRow } from "@/modules/core/server/admin/jobTitles";
-import { JOB_DEPARTMENT_LABELS, JOB_DEPARTMENTS, reportsTo } from "@/modules/core/jobTitles";
+import { JOB_DEPARTMENT_LABELS, JOB_DEPARTMENTS, reportsTo, treeLines } from "@/modules/core/jobTitles";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
@@ -22,18 +22,7 @@ import { numberOrUndefined } from "./values";
 type Props = { setStatus(text: string): void };
 type Dialog = { mode: "new"; parentId?: string } | { mode: "edit"; row: JobTitleRow } | null;
 
-const COLUMNS: Column<JobTitleRow>[] = [
-  {
-    key: "name",
-    title: "Görev",
-    render: (row) => (
-      <span style={{ paddingLeft: row.depth * 16, opacity: row.isActive ? 1 : 0.55 }}>
-        {row.depth > 0 ? "└ " : ""}
-        {row.name}
-        {row.isActive ? "" : " (pasif)"}
-      </span>
-    ),
-  },
+const DETAIL_COLUMNS: Column<JobTitleRow>[] = [
   { key: "department", title: "Bölüm", width: 130, render: (row) => JOB_DEPARTMENT_LABELS[row.department] },
   { key: "parentName", title: "Bağlı olduğu görev", width: 190, render: (row) => row.parentName ?? "—" },
   {
@@ -71,8 +60,52 @@ export function JobTitlesPanel({ setStatus }: Props) {
     };
   }, []);
 
+  // The görev column is a tree: connector lines show who reports to whom, "+" adds a görev under the row.
+  const columns = useMemo<Column<JobTitleRow>[]>(() => {
+    const lines = treeLines(list.rows);
+    return [
+      {
+        key: "name",
+        title: "Görev",
+        render: (row) => {
+          const line = lines.get(row.id);
+          return (
+            <span className="xp-jobtree-node" data-inactive={!row.isActive}>
+              {(line?.guides ?? []).map((on, level) => (
+                <span key={level} aria-hidden="true" className="xp-jobtree-guide" data-line={on} />
+              ))}
+              {row.depth > 0 ? <span aria-hidden="true" className="xp-jobtree-elbow" data-last={line?.last ?? true} /> : null}
+              {canEdit ? (
+                <button
+                  type="button"
+                  className="xp-jobtree-add"
+                  title={`“${row.name}” altına görev ekle`}
+                  aria-label={`“${row.name}” altına görev ekle`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedId(row.id);
+                    setDialog({ mode: "new", parentId: row.id });
+                  }}
+                  onDoubleClick={(event) => event.stopPropagation()}
+                >
+                  +
+                </button>
+              ) : null}
+              <span className="xp-jobtree-name">
+                {row.name}
+                {row.isActive ? "" : " (pasif)"}
+              </span>
+            </span>
+          );
+        },
+      },
+      ...DETAIL_COLUMNS,
+    ];
+  }, [list.rows, canEdit]);
+
   const editing = dialog?.mode === "edit" ? dialog.row : undefined;
   const startParent = dialog?.mode === "new" ? dialog.parentId : undefined;
+  const startParentName = list.rows.find((row) => row.id === startParent)?.name;
   // A görev cannot report to itself or to anything below it.
   const parentChoices = list.rows.filter((row) => !editing || !reportsTo(list.rows, row.id, editing.id));
 
@@ -124,7 +157,8 @@ export function JobTitlesPanel({ setStatus }: Props) {
         </p>
       ) : null}
       <DataGrid<JobTitleRow>
-        columns={COLUMNS}
+        className="xp-jobtree"
+        columns={columns}
         rows={list.rows}
         total={list.total}
         page={1}
@@ -154,7 +188,7 @@ export function JobTitlesPanel({ setStatus }: Props) {
         }
       />
       <FormDialog
-        title={editing ? "Görevi düzenle" : "Yeni görev"}
+        title={editing ? "Görevi düzenle" : startParentName ? `“${startParentName}” altına görev ekle` : "Yeni görev"}
         open={dialog !== null}
         onClose={() => setDialog(null)}
         onSubmit={submit}

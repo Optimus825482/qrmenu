@@ -5365,3 +5365,55 @@
 .xp-widget-gallery li > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .xp-widget-gallery li > div span { color: var(--xp-muted); }
 .xp-widget-gallery li .xp-button { min-width: 64px; }
+
+/* Görevler: the first column is a tree (connector lines + "add under" button). */
+.xp-jobtree .xp-grid-row:not(.xp-grid-head) > .xp-grid-cell:first-child {
+  display: flex;
+  align-items: stretch;
+  padding-top: 0;
+  padding-bottom: 0;
+  /* No row rule under the tree column: it would cut every connector line. */
+  border-bottom-width: 0;
+}
+.xp-jobtree-node { display: flex; align-items: stretch; min-width: 0; flex: 1; }
+.xp-jobtree-node[data-inactive="true"] .xp-jobtree-name { opacity: 0.6; }
+.xp-jobtree-guide,
+.xp-jobtree-elbow { position: relative; flex: 0 0 20px; }
+.xp-jobtree-guide[data-line="true"]::before,
+.xp-jobtree-elbow::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: -1px;
+  border-left: 1px solid var(--xp-tree-line, #7f9db9);
+}
+.xp-jobtree-elbow[data-last="true"]::before { bottom: 50%; }
+.xp-jobtree-elbow::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid var(--xp-tree-line, #7f9db9);
+}
+.xp-jobtree-add {
+  flex: 0 0 17px;
+  align-self: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  margin-right: 6px;
+  font: bold 13px/13px Tahoma, sans-serif;
+  color: #1a5c1a;
+  background: linear-gradient(#fff, #dfe8d8);
+  border: 1px solid #5a8a5a;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.xp-jobtree-add:hover { background: #c8e6c0; }
+.xp-jobtree-add:focus-visible { outline: 2px solid var(--xp-select, #316ac5); outline-offset: 1px; }
+.xp-jobtree-name { align-self: center; overflow: hidden; text-overflow: ellipsis; }
+.xp-grid-row[aria-selected="true"] .xp-jobtree-guide::before,
+.xp-grid-row[aria-selected="true"] .xp-jobtree-elbow::before,
+.xp-grid-row[aria-selected="true"] .xp-jobtree-elbow::after { border-color: #fff; }
