@@ -168,6 +168,27 @@ export const CALL_WAITER_POSITIONS = [
 export type CallWaiterPosition = (typeof CALL_WAITER_POSITIONS)[number]["id"];
 export const CALL_WAITER_POSITION_IDS = new Set<string>(CALL_WAITER_POSITIONS.map((p) => p.id));
 
+/** Width of the outlet logo. MEDIUM is the size every logo had before the option existed. */
+export const LOGO_SIZES = [
+  { id: "SMALL", label: "Küçük" },
+  { id: "MEDIUM", label: "Orta" },
+  { id: "LARGE", label: "Büyük" },
+  // Spans the menu column from edge to edge (a wide banner); the height follows the image.
+  { id: "FULL", label: "Tam genişlik" },
+] as const;
+
+/** Side the outlet logo sits on; has no effect on a FULL logo. */
+export const LOGO_ALIGNS = [
+  { id: "LEFT", label: "Sola" },
+  { id: "CENTER", label: "Ortala" },
+  { id: "RIGHT", label: "Sağa" },
+] as const;
+
+export type LogoSize = (typeof LOGO_SIZES)[number]["id"];
+export type LogoAlign = (typeof LOGO_ALIGNS)[number]["id"];
+const LOGO_SIZE_IDS = new Set<string>(LOGO_SIZES.map((item) => item.id));
+const LOGO_ALIGN_IDS = new Set<string>(LOGO_ALIGNS.map((item) => item.id));
+
 export type DesignOptions = {
   cardStyle: CardStyle;
   categoryTabStyle?: CategoryTabStyle;
@@ -189,6 +210,8 @@ export type DesignOptions = {
   heroImageUrl: string;
   /** Outlet logo uploaded in the studio (`/uploads/menu-logo/<outletId>/…`); printed at the top of the menu. */
   logoUrl: string;
+  logoSize: LogoSize;
+  logoAlign: LogoAlign;
   /** Opening animation: the hotel logo zooms and fades in for about two seconds before the menu shows. On by default. */
   introSplash: boolean;
   /** Large photos only on up to three chef's picks; every other dish is a text row. */
@@ -221,6 +244,8 @@ export const NEUTRAL_NEW_OPTIONS = {
   hero: "TITLE",
   heroImageUrl: "",
   logoUrl: "",
+  logoSize: "MEDIUM",
+  logoAlign: "CENTER",
   introSplash: true,
   curatedPhotos: false,
   priceLists: true,
@@ -242,6 +267,8 @@ export const NEUTRAL_NEW_OPTIONS = {
   | "hero"
   | "heroImageUrl"
   | "logoUrl"
+  | "logoSize"
+  | "logoAlign"
   | "introSplash"
   | "curatedPhotos"
   | "priceLists"
@@ -434,6 +461,15 @@ function logoUrl(value: unknown): string {
   return /^\/uploads\/menu-logo\/[A-Za-z0-9_-]+\/[a-f0-9]+\.webp$/.test(url) ? url : "";
 }
 
+/**
+ * Side a logo saved before `logoAlign` existed was drawn on: it followed the hero text, and stood centred when the
+ * menu had no hero. Keeps those menus as they were.
+ */
+function legacyLogoAlign(hero: HeroStyle, heroAlign: HeroAlign | undefined): LogoAlign {
+  if (hero === "NONE") return "CENTER";
+  return heroAlign === "center" ? "CENTER" : heroAlign === "right" ? "RIGHT" : "LEFT";
+}
+
 /** Hero colours: only `#rrggbb` (or empty = theme colour); anything else keeps the preset value. */
 function heroColor(value: unknown, fallback: string | undefined): string | undefined {
   if (typeof value !== "string") return fallback;
@@ -458,6 +494,9 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
   const raw = value as Partial<DesignOptions>;
   if (Object.keys(raw).length === 0) return { ...preset };
   const featured = typeof raw.featuredTitle === "string" ? raw.featuredTitle.trim().slice(0, 40) : preset.featuredTitle;
+  const hero = raw.hero && HERO_IDS.has(raw.hero) ? raw.hero : NEUTRAL_NEW_OPTIONS.hero;
+  const heroAlign = raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign;
+  const logo = logoUrl(raw.logoUrl);
   return {
     cardStyle: raw.cardStyle && CARD_STYLE_IDS.has(raw.cardStyle) ? raw.cardStyle : preset.cardStyle,
     categoryTabStyle: raw.categoryTabStyle && CATEGORY_TAB_STYLE_IDS.has(raw.categoryTabStyle) ? raw.categoryTabStyle : (preset.categoryTabStyle ?? "CHIPS_ROW"),
@@ -469,16 +508,23 @@ function normalizeOptions(value: unknown, preset: DesignOptions): DesignOptions 
     featuredTitle: featured,
     typography: raw.typography && TYPOGRAPHY_IDS.has(raw.typography) ? raw.typography : NEUTRAL_NEW_OPTIONS.typography,
     density: raw.density && DENSITY_IDS.has(raw.density) ? raw.density : NEUTRAL_NEW_OPTIONS.density,
-    hero: raw.hero && HERO_IDS.has(raw.hero) ? raw.hero : NEUTRAL_NEW_OPTIONS.hero,
+    hero,
     heroImageUrl: heroUrl(raw.heroImageUrl),
-    logoUrl: logoUrl(raw.logoUrl),
+    logoUrl: logo,
+    logoSize: raw.logoSize && LOGO_SIZE_IDS.has(raw.logoSize) ? raw.logoSize : NEUTRAL_NEW_OPTIONS.logoSize,
+    logoAlign:
+      raw.logoAlign && LOGO_ALIGN_IDS.has(raw.logoAlign)
+        ? raw.logoAlign
+        : logo
+          ? legacyLogoAlign(hero, heroAlign)
+          : NEUTRAL_NEW_OPTIONS.logoAlign,
     introSplash: typeof raw.introSplash === "boolean" ? raw.introSplash : NEUTRAL_NEW_OPTIONS.introSplash,
     curatedPhotos: typeof raw.curatedPhotos === "boolean" ? raw.curatedPhotos : NEUTRAL_NEW_OPTIONS.curatedPhotos,
     priceLists: typeof raw.priceLists === "boolean" ? raw.priceLists : NEUTRAL_NEW_OPTIONS.priceLists,
     showSearch: typeof raw.showSearch === "boolean" ? raw.showSearch : NEUTRAL_NEW_OPTIONS.showSearch,
     showFilters: typeof raw.showFilters === "boolean" ? raw.showFilters : NEUTRAL_NEW_OPTIONS.showFilters,
     showFeatured: typeof raw.showFeatured === "boolean" ? raw.showFeatured : NEUTRAL_NEW_OPTIONS.showFeatured,
-    heroAlign: raw.heroAlign && ["left", "center", "right"].includes(raw.heroAlign) ? raw.heroAlign : preset.heroAlign,
+    heroAlign,
     heroFontSize: raw.heroFontSize && ["small", "medium", "large", "xlarge"].includes(raw.heroFontSize) ? raw.heroFontSize : preset.heroFontSize,
     heroFontFamily: raw.heroFontFamily && HERO_FONT_FAMILY_IDS.has(raw.heroFontFamily) ? (raw.heroFontFamily as HeroFontFamily) : preset.heroFontFamily,
     heroBgColor: heroColor(raw.heroBgColor, preset.heroBgColor),

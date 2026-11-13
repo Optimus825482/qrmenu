@@ -3187,11 +3187,30 @@ body {
   margin: 0 0 0.6rem;
   object-fit: contain;
 }
-.g-design-hero[style*="center"] .g-hero-logo {
+/* Logo boyutu: MEDIUM seçeneğin eklenmesinden önceki ölçüdür (yukarıdaki temel kural). */
+.g-hero-logo[data-size="SMALL"] {
+  max-width: min(40%, 140px);
+  max-height: 64px;
+}
+.g-hero-logo[data-size="LARGE"] {
+  max-width: min(85%, 340px);
+  max-height: 150px;
+}
+/* Tam genişlik: menü sütununu kenardan kenara kaplar, oran korunur (kırpma ya da esnetme yok). */
+.g-hero-logo[data-size="FULL"] {
+  width: 100%;
+  max-width: 100%;
+  max-height: none;
+}
+/* Logo hizası: otomatik kenar boşluğu hem blok hem esnek karşılama kutusunda çalışır. */
+.g-hero-logo[data-align="LEFT"] {
+  margin-inline: 0 auto;
+}
+.g-hero-logo[data-align="CENTER"] {
   margin-inline: auto;
 }
-.g-design-hero[style*="right"] .g-hero-logo {
-  margin-inline-start: auto;
+.g-hero-logo[data-align="RIGHT"] {
+  margin-inline: auto 0;
 }
 .g-logo-only {
   display: flex;
@@ -3199,7 +3218,10 @@ body {
   padding: 1rem 1rem 0.25rem;
 }
 .g-logo-only .g-hero-logo {
-  margin: 0;
+  margin-block: 0;
+}
+.g-logo-only[data-size="FULL"] {
+  padding: 0 0 0.75rem;
 }
 .g-design-hero[data-photo] .g-hero-logo {
   z-index: 2;

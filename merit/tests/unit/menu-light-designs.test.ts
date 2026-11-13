@@ -160,13 +160,17 @@ describe("migration 20261110170000_acik_menu_tasarimlari", () => {
     const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
     if (row.options.hero === "COVER") {
       // Kapak görselli üç nokta 20261111010000 ile yeniden yazıldı; satır o migration'da birebir durur.
-      expect(COVER_MIGRATION).toContain(sqlText(JSON.stringify(row.options)));
+      // Logo boyutu ve hizası sonradan eklendi; migration metninde yok.
+      const { logoSize: coverLogoSize, logoAlign: coverLogoAlign, ...coverOptions } = row.options;
+      expect([coverLogoSize, coverLogoAlign]).toEqual(["MEDIUM", "CENTER"]);
+      expect(COVER_MIGRATION).toContain(sqlText(JSON.stringify(coverOptions)));
       expect(COVER_MIGRATION).toContain(`${sqlText(row.template)}, ${sqlText(JSON.stringify(row.layout))}`);
       expect(COVER_MIGRATION).toContain(sqlText(preset.theme));
       return;
     }
     // 170000 yazıldığında süzgeçler açıktı ve showFeatured seçeneği yoktu; ikisini 20261110200000 kapatır.
-    const { showFeatured, logoUrl, introSplash, priceLists, ...rest } = row.options;
+    const { showFeatured, logoUrl, logoSize, logoAlign, introSplash, priceLists, ...rest } = row.options;
+    expect([logoSize, logoAlign]).toEqual(["MEDIUM", "CENTER"]); // logo boyutu ve hizası sonradan eklendi, migration metninde yok
     expect(priceLists).toBe(true); // fiyat listesi seçeneği sonradan eklendi, migration metninde yok
     expect(introSplash).toBe(true); // animasyonlu açılış 20261111020000 ile her menüde açıldı
     expect(logoUrl).toBe(""); // logo seçeneği sonradan eklendi, migration metninde yok

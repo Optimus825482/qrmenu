@@ -47,6 +47,41 @@ describe("yeni tasarım seçenekleri", () => {
   });
 });
 
+describe("logo boyutu ve hizası", () => {
+  const LOGO = "/uploads/menu-logo/abc123/0123456789abcdef.webp";
+  const stored = (options: Record<string, unknown>) =>
+    designFromStored({ template: "ROYAL", options: { cardStyle: "LIST", ...options } }).options;
+
+  it("varsayılan bugünkü görünümdür: orta boy, ortalı", () => {
+    expect(NEUTRAL_NEW_OPTIONS).toMatchObject({ logoSize: "MEDIUM", logoAlign: "CENTER" });
+    expect(templatePreset("ROYAL").options).toMatchObject({ logoSize: "MEDIUM", logoAlign: "CENTER" });
+  });
+
+  it("geçerli değerleri korur", () => {
+    for (const logoSize of ["SMALL", "MEDIUM", "LARGE", "FULL"]) {
+      expect(stored({ logoUrl: LOGO, logoSize }).logoSize).toBe(logoSize);
+    }
+    for (const logoAlign of ["LEFT", "CENTER", "RIGHT"]) {
+      expect(stored({ logoUrl: LOGO, logoAlign }).logoAlign).toBe(logoAlign);
+    }
+  });
+
+  it("bozuk değerler varsayılana düşer", () => {
+    for (const junk of ["HUGE", "full", 7, null, {}]) {
+      expect(stored({ logoSize: junk, logoAlign: junk })).toMatchObject({ logoSize: "MEDIUM", logoAlign: "CENTER" });
+    }
+  });
+
+  it("seçenekten önce kaydedilmiş logo eski yerinde kalır: karşılama hizasını izler, karşılama yoksa ortalıdır", () => {
+    expect(stored({ logoUrl: LOGO })).toMatchObject({ logoSize: "MEDIUM", logoAlign: "LEFT" });
+    expect(stored({ logoUrl: LOGO, heroAlign: "center" }).logoAlign).toBe("CENTER");
+    expect(stored({ logoUrl: LOGO, heroAlign: "right", logoAlign: "X" }).logoAlign).toBe("RIGHT");
+    expect(stored({ logoUrl: LOGO, hero: "NONE" }).logoAlign).toBe("CENTER");
+    // An explicit choice always wins over the hero alignment.
+    expect(stored({ logoUrl: LOGO, heroAlign: "right", logoAlign: "LEFT" }).logoAlign).toBe("LEFT");
+  });
+});
+
 describe("designFromStored", () => {
   it("boş kayıt Royal şablonuna düşer", () => {
     expect(designFromStored(null)).toMatchObject({

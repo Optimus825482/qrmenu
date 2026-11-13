@@ -26,6 +26,8 @@ import {
   DEFAULT_OUTLET_DESIGN,
   HERO_STYLES,
   HERO_FONT_FAMILIES,
+  LOGO_ALIGNS,
+  LOGO_SIZES,
   TYPOGRAPHIES,
   templatePreset,
   type CallWaiterPosition,
@@ -783,6 +785,41 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 <small>PNG, JPEG veya WebP; en fazla 2 MB. Şeffaf zeminli PNG en iyi sonucu verir.</small>
               )}
             </div>
+            {design.options.logoUrl ? (
+              <>
+                <div className="xp-design-choices" role="group" aria-label="Logo boyutu">
+                  {LOGO_SIZES.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="xp-button"
+                      data-selected={design.options.logoSize === item.id || undefined}
+                      aria-pressed={design.options.logoSize === item.id}
+                      onClick={() => patchOptions({ logoSize: item.id })}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                {/* A full-width logo has no side to sit on. */}
+                {design.options.logoSize === "FULL" ? null : (
+                  <div className="xp-design-choices" role="group" aria-label="Logo hizası">
+                    {LOGO_ALIGNS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="xp-button"
+                        data-selected={design.options.logoAlign === item.id || undefined}
+                        aria-pressed={design.options.logoAlign === item.id}
+                        onClick={() => patchOptions({ logoAlign: item.id })}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : null}
             <label className="xp-design-field">
               Öne çıkan başlığı
               <input

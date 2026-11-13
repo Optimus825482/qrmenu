@@ -434,6 +434,21 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
       </div>
     ) : null;
 
+  // A full-width logo is a banner over the whole menu column, so it never sits inside the padded hero box.
+  const logoFull = options.logoSize === "FULL";
+  const logo = (alt: string) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className="g-hero-logo"
+      src={options.logoUrl}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      data-size={options.logoSize}
+      data-align={logoFull ? undefined : options.logoAlign}
+    />
+  );
+
   const blocks: Record<string, ReactNode> = {
     hero:
       options.hero === "NONE" && !heroCallButton && !options.logoUrl ? null : (
@@ -452,6 +467,12 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               />
             </section>
           ) : options.hero !== "NONE" ? (
+            <>
+            {options.logoUrl && logoFull ? (
+              <div className="g-logo-only" key="logo" data-size="FULL">
+                {logo("")}
+              </div>
+            ) : null}
             <section
               className="g-design-hero"
               key="hero"
@@ -475,10 +496,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   fetchPriority="high"
                 />
               ) : null}
-              {options.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img className="g-hero-logo" src={options.logoUrl} alt="" loading="eager" decoding="async" />
-              ) : null}
+              {options.logoUrl && !logoFull ? logo("") : null}
               <span style={{ ...(options.heroTextColor ? { color: options.heroTextColor } : {}) }}>
                 {state.hotelName}
               </span>
@@ -497,10 +515,10 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 {outletTitle}
               </h2>
             </section>
+            </>
           ) : options.logoUrl ? (
-            <div className="g-logo-only" key="logo">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="g-hero-logo" src={options.logoUrl} alt={outletTitle} loading="eager" decoding="async" />
+            <div className="g-logo-only" key="logo" data-size={logoFull ? "FULL" : undefined}>
+              {logo(outletTitle)}
             </div>
           ) : null}
           {heroCallButton}
