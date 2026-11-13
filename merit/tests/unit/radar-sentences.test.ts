@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RadarEvent } from "@/modules/radar/types";
-import { describeEvent } from "@/modules/radar/ui/eventSentence";
+import { describeEvent, isHeartbeat } from "@/modules/radar/ui/eventSentence";
 
 const BASE = {
   id: "e1",
@@ -96,6 +96,54 @@ describe("describeEvent", () => {
       tableId: "t1",
     };
     expect(describeEvent(withoutWaiter, people, "full", ctx)).toBe("Havuz Bar · M12 · çağrı kapatıldı");
+  });
+
+  it("names the person, role and place of a presence event", () => {
+    const rich = {
+      ...ctx,
+      session: (id?: string) => (id === "s1" ? { userId: "u1", roleCode: "R-ODS", place: "Oda Servisi" } : undefined),
+      roleCode: (id?: string) => (id === "u1" ? "R-ODS" : undefined),
+    };
+    const online: RadarEvent = { ...BASE, layer: "PERSONEL", type: "presence", sessionId: "s1", userId: "u1", status: "ONLINE" };
+    expect(describeEvent(online, people, "full", rich)).toBe("Ayşe Kaya (R-ODS) · Oda Servisi · çevrimiçi oldu");
+    const out: RadarEvent = { ...online, status: "CIKTI" };
+    expect(describeEvent(out, people, "short", rich)).toBe("Ayşe K. (R-ODS) · Oda Servisi · oturumu kapattı");
+  });
+
+  it("resolves a heartbeat (no user on the wire) through its session and flags it as one", () => {
+    const rich = { ...ctx, session: (id?: string) => (id === "s1" ? { userId: "u1", roleCode: "R-ODS" } : undefined) };
+    const tick: RadarEvent = { ...BASE, outletId: undefined, layer: "PERSONEL", type: "presence", sessionId: "s1", userId: "", status: "ONLINE" };
+    expect(isHeartbeat(tick)).toBe(true);
+    expect(isHeartbeat({ ...tick, userId: "u1" })).toBe(false);
+    expect(describeEvent(tick, people, "full", rich)).toBe("Ayşe Kaya (R-ODS) · çevrimiçi (bağlantı sinyali)");
+  });
+
+  it("adds where and what to events that carry only ids", () => {
+    const rich = {
+      ...ctx,
+      orderPlace: (id?: string) => (id === "o1" ? { outletId: "ol1", tableId: "t1" } : id === "o2" ? { roomNumber: "310" } : undefined),
+      orderNo: (id?: string) => (id === "o1" ? 45 : undefined),
+      printerOutlet: (id?: string) => (id === "p1" ? "ol1" : undefined),
+    };
+    const bare = { ...BASE, outletId: undefined, roomId: undefined, byUserId: undefined };
+    expect(describeEvent({ ...bare, layer: "SIPARIS", type: "order.escalated", orderId: "o1", orderNo: 45 }, people, "full", rich)).toBe(
+      "Havuz Bar · M12 · #45 onay bekliyor, onay süresi aşıldı",
+    );
+    expect(describeEvent({ ...bare, layer: "ODA_SERVISI", type: "order.sla", orderId: "o2", orderNo: 46, level: "BREACH" }, people, "full", rich)).toBe(
+      "Oda 310 · #46 teslim süresi aşıldı",
+    );
+    expect(
+      describeEvent({ ...bare, layer: "SIPARIS", type: "print.job", printerId: "p1", orderId: "o1", status: "HATA", reason: "BASILAMADI" }, people, "full", rich),
+    ).toBe("Havuz Bar · Bar Fiş · #45 fişi baskı hatası (yazıcı basamadı)");
+    expect(describeEvent({ ...bare, layer: "MINIBAR", type: "dnd.missed", roomIds: ["r1", "r2"] }, people, "full", rich)).toBe(
+      "2 odada DND kontrolü eksik kaldı (204 +1 oda)",
+    );
+    expect(describeEvent({ ...bare, layer: "MINIBAR", type: "upload.status", kind: "IN_HOUSE", status: "EKSIK" }, people, "full", rich)).toBe(
+      "Doluluk listesi (Konaklayanlar) bugün yüklenmedi",
+    );
+    expect(describeEvent({ ...bare, layer: "MINIBAR", type: "task.generated", date: "2026-11-03", itemCount: 24 }, people, "full", rich)).toBe(
+      "03.11.2026 için 24 oda görevi üretildi",
+    );
   });
 
   it("never leaks forbidden fields (subtotal, unitPrice, rejectReason, note) from dirty inputs", () => {

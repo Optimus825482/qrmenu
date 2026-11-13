@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import type { RadarState } from "../state";
 import type { RadarEvent } from "../types";
-import { describeEvent, lookupFromState, type NameStyle } from "./eventSentence";
+import { describeEvent, isHeartbeat, lookupFromState, type NameStyle } from "./eventSentence";
 
 export const TICKER_MAX_ITEMS = 100;
 
@@ -95,7 +95,13 @@ export function getEventBadge(ev: RadarEvent): EventBadge {
     case "upload.status":
       return { label: "Doluluk", tone: "muted", icon: "clipboard" };
     case "presence":
-      return { label: "Personel", tone: "muted", icon: "users" };
+      if (isHeartbeat(ev)) return { label: "Personel", tone: "muted", icon: "users" };
+      if (ev.status === "CIKTI" || ev.status === "DUSURULDU") {
+        return { label: ev.status === "CIKTI" ? "Oturum Kapandı" : "Oturum Sonlandı", tone: "muted", icon: "users" };
+      }
+      if (ev.status === "UYARI") return { label: "Oturum Süresi", tone: "warn", icon: "users" };
+      if (ev.status === "BOSTA") return { label: "Personel Boşta", tone: "info", icon: "users" };
+      return { label: "Personel Çevrimiçi", tone: "success", icon: "users" };
     default:
       return { label: "Sistem", tone: "muted", icon: "shield" };
   }
@@ -121,6 +127,8 @@ export function Ticker({ events, state, mode = "window", nameStyle, onSelect }: 
   const items = useMemo(() => {
     const out: RadarEvent[] = [];
     for (let i = events.length - 1; i >= 0 && out.length < limit; i--) {
+      // Per-minute session heartbeats only refresh "Son etkinlik"; they are not news.
+      if (isHeartbeat(events[i]!)) continue;
       out.push(events[i]!);
     }
     return out;
