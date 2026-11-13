@@ -77,7 +77,8 @@ export type FloorRoomCard = RoomCardData & {
 };
 
 export type FloorView = {
-  floor: { id: string; number: number; name: string; hotelId: string };
+  /** `hotelName` is printed above the rooms: the floor decides the hotel, the page says which one it is. */
+  floor: { id: string; number: number; name: string; hotelId: string; hotelName: string };
   today: string;
   filter: FloorFilter;
   rooms: FloorRoomCard[];
@@ -273,6 +274,7 @@ export async function floorOccupancy(
       number: true,
       name: true,
       hotelId: true,
+      hotel: { select: { name: true } },
       rooms: {
         where: { isActive: true },
         orderBy: { number: "asc" },
@@ -390,7 +392,7 @@ export async function floorOccupancy(
     (filter === "CIKIS" && c.departure);
 
   return {
-    floor: { id: floor.id, number: floor.number, name: floor.name, hotelId: floor.hotelId },
+    floor: { id: floor.id, number: floor.number, name: floor.name, hotelId: floor.hotelId, hotelName: floor.hotel.name },
     today: date.toISOString(),
     filter,
     rooms: cards.filter(keep),

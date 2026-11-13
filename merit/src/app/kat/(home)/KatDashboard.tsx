@@ -84,24 +84,27 @@ export function KatDashboard({
     if (initialHotelId) setSelectedHotelId(initialHotelId);
   }
 
+  // Only the latest request may fill the screen: a slow answer for the hotel left behind is dropped.
+  const requestSeq = useRef(0);
   const fetchDashboard = useCallback(async (hotelId: string) => {
+    const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
     try {
       const url = hotelId
         ? `/api/minibar/dashboard?hotelId=${encodeURIComponent(hotelId)}`
         : "/api/minibar/dashboard";
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? "Kat paneli verisi alınamadı.");
       }
       const json = (await res.json()) as DashboardState;
-      setData(json);
+      if (seq === requestSeq.current) setData(json);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Bilinmeyen hata");
+      if (seq === requestSeq.current) setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {
-      setLoading(false);
+      if (seq === requestSeq.current) setLoading(false);
     }
   }, []);
 
@@ -114,6 +117,11 @@ export function KatDashboard({
   const floors = (data?.floors ?? []).filter((floor) =>
     filter === "mybar" ? floor.mybarCount > 0 : filter === "dnd" ? floor.dndCount > 0 : true,
   );
+
+  // Links name the hotel whose floors are on screen (the answer's hotel, not the selector's state), so the
+  // way into a floor and back never depends on the session's hotel or on the address being carried along.
+  const shownHotelId = data?.hotel?.id ?? selectedHotelId;
+  const hotelQuery = shownHotelId ? `?hotelId=${encodeURIComponent(shownHotelId)}` : "";
 
   // Summary and progress stay inside the header card while they lead the screen; elsewhere each is its own card.
   const blocks = visibleBlocks(layout).map((b) => b.id);
@@ -193,6 +201,11 @@ export function KatDashboard({
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
+                  {data.hotel ? (
+                    <p data-testid="kat-otel-adi" className="text-lg font-bold uppercase tracking-wide text-text">
+                      {data.hotel.name}
+                    </p>
+                  ) : null}
                   <span className="text-xs font-semibold uppercase tracking-widest text-accent">
                     Günün Özeti · {formatDayTr(data.today)}
                   </span>
@@ -234,14 +247,17 @@ export function KatDashboard({
             <section key={id} data-guide="kat-listesi" className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold text-text">Kat Planı ve Oda Doluluk Durumu</h2>
-                <span className="text-xs text-muted">{floors.length} Kat</span>
+                <span className="text-xs text-muted">
+                  {data.hotel ? `${data.hotel.name} · ` : ""}
+                  {floors.length} Kat
+                </span>
               </div>
 
               {filter ? (
                 <p className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-text">
                   <span>Süzgeç: {FILTER_LABEL[filter]}</span>
                   <Link
-                    href="/kat"
+                    href={`/kat${hotelQuery}`}
                     style={{ minHeight: "var(--tap-action)" }}
                     className="inline-flex items-center rounded-xl border border-border bg-bg px-3 text-sm font-semibold text-accent hover:bg-surface"
                   >
@@ -264,7 +280,7 @@ export function KatDashboard({
                     <Link
                       key={floor.id}
                       data-guide={floorIdx === 0 ? "oda-karti" : undefined}
-                      href={`/kat/doluluk/${floor.id}`}
+                      href={`/kat/doluluk/${floor.id}${hotelQuery}`}
                       style={{ minHeight: "var(--tap-action)" }}
                       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-2.5 hover:bg-bg"
                     >
@@ -298,7 +314,7 @@ export function KatDashboard({
                       <Link
                         key={floor.id}
                         data-guide={floorIdx === 0 ? "oda-karti" : undefined}
-                        href={`/kat/doluluk/${floor.id}`}
+                        href={`/kat/doluluk/${floor.id}${hotelQuery}`}
                         className="group relative flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-accent/60"
                       >
                         <div>

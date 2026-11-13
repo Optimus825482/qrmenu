@@ -53,11 +53,23 @@ test("otel seçici kat listesini değiştirir ve kattan dönünce seçilen otel 
 
   // Into a floor of ROYAL and back to the list: the selector still names ROYAL, so must the floors.
   await frame.locator('a[href^="/kat/doluluk/"]').first().click();
-  await expect(frame.locator('a[href="/kat"]').first()).toBeVisible();
-  await frame.locator('a[href="/kat"]').first().click();
+  await expect(frame.getByTestId("katlar-geri")).toBeVisible();
+  await frame.getByTestId("katlar-geri").click();
   await expect(frame.getByRole("heading", { name: "Kat Planı ve Oda Doluluk Durumu" })).toBeVisible();
   await expect(select).toHaveValue(royal.value);
   await expect.poll(() => floorNames(page), { message: "kattan dönünce katlar" }).toEqual(["1. Kat", "2. Kat"]);
+
+  // The reported trip: back from one floor, into another one. Both screens name the hotel, the links carry it,
+  // and the second floor is again ROYAL's.
+  await expect(frame.getByTestId("kat-otel-adi")).toHaveText(royal.text.trim());
+  const second = frame.locator('a[href^="/kat/doluluk/"]').nth(1);
+  await expect(second).toHaveAttribute("href", new RegExp(`hotelId=${royal.value}`));
+  await second.click();
+  await expect(frame.getByRole("heading", { name: /2\. Kat/ })).toBeVisible();
+  await expect(frame.getByTestId("kat-otel-adi")).toHaveText(royal.text.trim());
+  await expect(frame.getByTestId("katlar-geri")).toHaveAttribute("href", `/kat?hotelId=${royal.value}`);
+  await frame.getByTestId("katlar-geri").click();
+  await expect.poll(() => floorNames(page), { message: "ikinci kattan dönünce katlar" }).toEqual(["1. Kat", "2. Kat"]);
 
   // And the selector keeps working after that trip.
   await select.selectOption(diamond.value);

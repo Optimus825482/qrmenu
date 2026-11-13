@@ -114,7 +114,12 @@ export default function ManuelKayitPage() {
     if (!wanted) return;
     const owner = data.floors.find((f) => f.rooms.some((r) => r.id === wanted));
     if (!owner) return;
-    window.history.replaceState(null, "", window.location.pathname);
+    // Only the two one-shot marks go: the window's `font`/`theme`/`hotelId` stay, or the next link inside the
+    // frame would lose the chosen hotel (proxy.ts carries them from this address).
+    query.delete("oda");
+    query.delete("mmd");
+    const rest = query.toString();
+    window.history.replaceState(null, "", `${window.location.pathname}${rest ? `?${rest}` : ""}`);
     const first = setTimeout(() => {
       setFloorId(owner.id);
       void pickRoom(wanted);
