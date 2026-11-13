@@ -24,7 +24,9 @@ const SCREEN = "CR-TAN";
 const INVALID = "Girilen bilgiler geçersiz";
 const NAME_TAKEN = "Bu adda bir outlet zaten var";
 const ONE_ROOM_SERVICE = "Her otelde bir oda servisi outleti olabilir";
-const CURRENCY_REQUIRED = "Para birimini seçin (3 harfli kod, örn. EUR, TRY, USD)";
+export const CURRENCY_REQUIRED = "Para birimini seçin (3 harfli kod, örn. EUR, TRY, USD)";
+/** ISO 4217 shape of `Outlet.currency`; the one rule every form that writes it shares. */
+export const CURRENCY_CODE = /^[A-Z]{3}$/;
 const HAS_OPEN_ROOM_ORDERS = "Bu outlette açık oda servisi siparişi var; önce siparişler kapatılmalı";
 const HAS_RECORDS =
   "Outlete bağlı masa, alan, sipariş, ekip, oturum veya menü kaydı var; silmek yerine pasife alın";
@@ -139,7 +141,7 @@ export const outletSchema = z
       });
     }
     const currencyGiven = value.currency !== undefined && value.currency !== "";
-    if (currencyGiven ? !/^[A-Z]{3}$/.test(value.currency ?? "") : value.currency === "" && value.priceDisplay === "SHOW") {
+    if (currencyGiven ? !CURRENCY_CODE.test(value.currency ?? "") : value.currency === "" && value.priceDisplay === "SHOW") {
       ctx.addIssue({ code: "custom", path: ["currency"], message: CURRENCY_REQUIRED });
     }
   });
@@ -365,27 +367,77 @@ async function patchById(
   const found = await prisma.outlet.findUnique({ where: { id }, select: { hotelId: true } });
   if (!found) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
   const { hotelId } = found;
-  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, async (tx) => {
-    const raw = await tx.outlet.findFirst({ where: { id, hotelId }, select: SELECT });
-    if (!raw) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
-    const before = toRow(raw);
-    const data = change(before);
-    if (!data) return before;
-    await guard?.(tx, before);
-    const row = toRow(await tx.outlet.update({ where: { id }, data, select: SELECT }));
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId,
-      action,
-      entity: "Outlet",
-      entityId: id,
-      before,
-      after: row,
-    });
-    await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
-    await publishSwitchChanges(tx, before, row);
-    return row;
+  return withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId }, (tx) =>
+    patchInTx(tx, ctx, { id, hotelId }, action, change, guard),
+  );
+}
+
+/**
+ * The write every partial outlet change shares: the outlet matched by `where` gets `change`, with the audit row
+ * (before/after), `definition.changed` and the guest-facing switch events. No change = no write, no audit row.
+ */
+async function patchInTx(
+  tx: Prisma.TransactionClient,
+  ctx: Ctx,
+  where: Prisma.OutletWhereInput & { hotelId: string },
+  action: string,
+  change: (before: OutletRow) => Prisma.OutletUpdateInput | undefined,
+  guard?: (tx: Prisma.TransactionClient, before: OutletRow) => Promise<void>,
+): Promise<OutletRow> {
+  const raw = await tx.outlet.findFirst({ where, select: SELECT });
+  if (!raw) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
+  const before = toRow(raw);
+  const { id, hotelId } = before;
+  const data = change(before);
+  if (!data) return before;
+  await guard?.(tx, before);
+  const row = toRow(await tx.outlet.update({ where: { id }, data, select: SELECT }));
+  await audit(tx, {
+    userId: ctx.user.id,
+    hotelId,
+    action,
+    entity: "Outlet",
+    entityId: id,
+    before,
+    after: row,
   });
+  await publishDefinition(tx, { hotelId, entity: "outlet", id, op: "update" });
+  await publishSwitchChanges(tx, before, row);
+  return row;
+}
+
+/** The outlet fields "Oda Servisi Ayarları" may change; everything else of the outlet stays as it is. */
+export type RoomServiceOutletPatch = {
+  orderingEnabled: boolean;
+  autoPrintReceipt: boolean;
+  priceDisplay: PriceDisplay;
+  currency: string;
+};
+
+/**
+ * Writes the room-service settings of the hotel's ODA_SERVISI outlet for a caller that the order module's
+ * `roomService/settingsAdmin` has already authorized (its editor roles, hotel in scope) and whose input it has
+ * validated. Same audit row (`OUTLET_UPDATE`) and events as `setOrderingEnabled`; no CR-TAN check, because room
+ * service is not on the outlet screens and its delegate role has no CR-TAN.
+ */
+export function updateRoomServiceOutlet(ctx: Ctx, hotelId: string, patch: RoomServiceOutletPatch): Promise<OutletRow> {
+  return prisma.$transaction((tx) =>
+    patchInTx(tx, ctx, { hotelId, type: "ODA_SERVISI" }, "OUTLET_UPDATE", (before) => {
+      const same =
+        before.orderingEnabled === patch.orderingEnabled &&
+        before.autoPrintReceipt === patch.autoPrintReceipt &&
+        before.priceDisplay === patch.priceDisplay &&
+        before.currency === patch.currency;
+      return same
+        ? undefined
+        : {
+            orderingEnabled: patch.orderingEnabled,
+            autoPrintReceipt: patch.autoPrintReceipt,
+            priceDisplay: patch.priceDisplay,
+            currency: patch.currency,
+          };
+    }),
+  );
 }
 
 export function setActive(ctx: Ctx, id: string, isActive: boolean): Promise<OutletRow> {

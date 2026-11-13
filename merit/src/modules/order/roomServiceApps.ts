@@ -98,6 +98,27 @@ export function registerRoomServiceApps(): void {
     mobile: "full",
   });
 
+  // The operational switches of the hotel's room-service outlet (order intake, prices, currency, receipt), which
+  // the outlet screens no longer list. The server finds the outlet and re-checks the role and the hotel
+  // (roomService/settingsAdmin).
+  registerCatalogApp({
+    id: "rs.ayarlar",
+    title: "Oda Servisi Ayarları",
+    launchLabel: "Oda Servisi Ayarları",
+    icon: "ayarlar",
+    moduleKey: "ROOM_SERVICE",
+    screenCode: "RO-TAL",
+    purpose: "Oda servisinin sipariş alımını açıp kapatır, misafire gösterilen fiyatları, para birimini ve fiş yazdırmayı ayarlarsın.",
+    roleCodes: ["R-OSS", "R-SYS"],
+    category: "ROOM_SERVICE",
+    needsHotel: false,
+    window: { w: 640, h: 640, minW: 420, minH: 380 },
+    kind: "component",
+    component: () =>
+      import("./ui/RoomServiceSettingsWindow").then((m) => ({ default: m.RoomServiceSettingsWindow })),
+    mobile: "full",
+  });
+
   // Cross-hotel coverage: who may watch or process the room-service requests of another hotel, and until when.
   // The server re-checks the role, the hotel and the grantee's rank (roomService/coverage).
   registerCatalogApp({
