@@ -121,13 +121,16 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
     }
     scheduleRefresh();
   }, EVENTS);
-  const act = (fn: () => Promise<{ ok: boolean }>, success?: string) =>
+  const act = (fn: () => Promise<{ ok: boolean; error?: { message: string } }>, success?: string) =>
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
         if (success) notify.success(success);
-        await refresh();
+      } else {
+        notify.error(result.error?.message ?? "İşlem tamamlanamadı");
       }
+      // A refusal nearly always means the screen was stale (someone else answered or approved first): reload too.
+      await refresh();
     });
   const openComposer = (table: { tableId: string; label: string }) => { setNotice(""); setComposerTable(table); };
   const tab = params.get("sekme") === "masalar" ? "tables" : "queue";
@@ -206,7 +209,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
             {order.note && <p className="mt-2 text-sm text-muted">Not: {order.note}</p>}
             <div className="mt-3 flex gap-2">
               <Button mutates variant="primary" disabled={!order.canApprove || pending} onClick={() => act(() => approveOrderAction(order.id))}>Onayla</Button>
-              <Button mutates variant="danger" disabled={pending} onClick={() => { void askReason({ title: `Sipariş #${order.orderNo} reddedilecek`, reasons: ORDER_REJECT_REASONS, minLength: REASON_MIN_LENGTH, confirmLabel: "Reddet", danger: true }).then((reason) => { if (reason) act(async () => { const result = await rejectOrderAction(order.id, reason); if (result.ok) notify.success(`Sipariş #${order.orderNo} reddedildi`); else notify.error(result.error.message); return result; }); }); }}>Reddet</Button>
+              <Button mutates variant="danger" disabled={pending} onClick={() => { void askReason({ title: `Sipariş #${order.orderNo} reddedilecek`, reasons: ORDER_REJECT_REASONS, minLength: REASON_MIN_LENGTH, confirmLabel: "Reddet", danger: true }).then((reason) => { if (reason) act(() => rejectOrderAction(order.id, reason), `Sipariş #${order.orderNo} reddedildi`); }); }}>Reddet</Button>
             </div>
           </article>
         ))}
