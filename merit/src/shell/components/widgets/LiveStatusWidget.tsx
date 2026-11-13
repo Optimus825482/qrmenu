@@ -1,13 +1,15 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import { hotelKey, hotelShortName } from "@/components/ui/HotelBadge";
 import type { LiveRow } from "@/modules/core/server/liveStatus";
+import type { LiveDetailKind } from "@/modules/core/server/liveStatusDetail";
 import { kpiCellVisible, viewableScreens, type KpiCell } from "../../kpiAccess";
 import { useCommandCenterKpis, affectsKpis } from "../../useCommandCenterKpis";
 import { affectsLiveStatus, LIVE_STATUS_EVENT_TYPES, useLiveStatus } from "../../useLiveStatus";
 import { useSse } from "../../useSse";
 import { useWindowStore } from "../../windowStore";
+import { DETAIL_TITLES, isDetailKind, LiveDetailDialog } from "./LiveDetailDialog";
 
 const TRIPLE_LEGEND = "alınan / tamamlanan / bekleyen";
 const SSE_TYPES: readonly string[] = [...new Set([...LIVE_STATUS_EVENT_TYPES, "session.changed", "session.closed", "notification.created"])];
@@ -167,6 +169,9 @@ export function LiveStatusWidget() {
     });
   }
 
+  const [detail, setDetail] = useState<LiveDetailKind | null>(null);
+  const closeDetail = useCallback(() => setDetail(null), []);
+
   const error = kpiError ?? liveError;
   return (
     <div className="xp-widget-status">
@@ -223,12 +228,24 @@ export function LiveStatusWidget() {
             ) : null}
             <tbody>
               {lines.map((line, index) => (
-                <tr key={line.key} data-group-start={(index === kpiLineCount && index > 0) || undefined}>
+                <tr
+                  key={line.key}
+                  data-group-start={(index === kpiLineCount && index > 0) || undefined}
+                  data-detail={isDetailKind(line.key) || undefined}
+                  onClick={isDetailKind(line.key) ? () => setDetail(line.key as LiveDetailKind) : undefined}
+                >
                   <th scope="row" title={line.hint}>
                     <svg className="xp-widget-status-icon" data-row={line.key} viewBox="0 0 16 16" aria-hidden="true">
                       <path d={ICONS[line.key] ?? ICONS.occupancy} fillRule="evenodd" />
                     </svg>
-                    <span>{line.label}</span>
+                    {isDetailKind(line.key) ? (
+                      // The row's own click handler opens the dialog; the button makes it reachable by keyboard.
+                      <button type="button" className="xp-widget-status-open" aria-haspopup="dialog" title={`${DETAIL_TITLES[line.key]} penceresini aç`}>
+                        {line.label}
+                      </button>
+                    ) : (
+                      <span>{line.label}</span>
+                    )}
                     {line.hint && line.hint !== TRIPLE_LEGEND ? <small> {line.hint}</small> : null}
                   </th>
                   {split
@@ -253,6 +270,7 @@ export function LiveStatusWidget() {
       ) : (
         <p>{error ?? "Yükleniyor…"}</p>
       )}
+      {detail ? <LiveDetailDialog kind={detail} onClose={closeDetail} /> : null}
     </div>
   );
 }

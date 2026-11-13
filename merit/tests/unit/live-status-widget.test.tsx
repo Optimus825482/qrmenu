@@ -33,6 +33,26 @@ vi.mock("@/shell/useLiveStatus", () => ({
 vi.mock("@/shell/useSse", () => ({ useSse: () => ({ status: "open" }) }));
 vi.mock("@/shell/windowStore", () => ({ useWindowStore: () => null }));
 
+const detailByKind: Record<string, unknown> = {
+  rooms: {
+    kind: "rooms",
+    generatedAt: "2026-11-14T08:00:00.000Z",
+    hotels: [
+      { hotelId: "h1", code: "ROYAL", name: "Merit Royal", totalRooms: 20, occupiedRooms: 10, floors: [{ floorId: "f2", number: 2, name: "Kat 2", total: 10, occupied: 7 }, { floorId: "f1", number: 1, name: "Kat 1", total: 10, occupied: 3 }] },
+    ],
+  },
+  online: {
+    kind: "online",
+    generatedAt: "2026-11-14T08:00:00.000Z",
+    hiddenHotels: 1,
+    rows: [
+      { id: "s1", fullName: "Ayşe Yılmaz", roleName: "Kasa", hotelName: "Merit Diamond", outletName: "Lobby Bar", deviceLabel: null, loginAt: new Date(Date.now() - 125 * 60_000).toISOString(), lastSeenAt: new Date(Date.now() - 7 * 60_000).toISOString(), status: "ONLINE" },
+    ],
+  },
+};
+const detailAction = vi.fn(async (kind: string) => ({ ok: true, data: detailByKind[kind] }));
+vi.mock("@/modules/core/server/liveStatusDetailAction", () => ({ liveStatusDetailAction: detailAction }));
+
 const { LiveStatusWidget } = await import("@/shell/components/widgets/LiveStatusWidget");
 
 afterEach(() => {
@@ -80,5 +100,31 @@ describe("LiveStatusWidget", () => {
     fireEvent.click(openBtn());
     fireEvent.click(openBtn());
     expect(heads()).toEqual(["Royal", "Diamond", "Toplam"]);
+  });
+
+  it("satıra tıklamak detay penceresini açar: kat kat doluluk, Esc ile kapanır", async () => {
+    render(<LiveStatusWidget />);
+    fireEvent.click(screen.getByRole("button", { name: "Dolu oda" }));
+    const dialog = await screen.findByRole("dialog", { name: "Kat Kat Doluluk" });
+    expect(detailAction).toHaveBeenCalledWith("rooms");
+    const floors = await screen.findAllByRole("listitem");
+    expect(floors.map((li) => li.textContent)).toEqual(["Kat 27/10", "Kat 13/10"]);
+    expect(dialog.querySelector("img")!.getAttribute("src")).toBe("/brand/hotels/royal-transparent.webp");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("çevrimiçi kullanıcı penceresi: giriş, çevrimiçi süre ve son hareket; detayı olmayan satır tıklanmaz", async () => {
+    render(<LiveStatusWidget />);
+    expect(screen.queryByRole("button", { name: "Garson çağrısı" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Çevrimiçi kullanıcı" }));
+    await screen.findByRole("dialog", { name: "Çevrimiçi Kullanıcılar" });
+    const row = (await screen.findByText("Ayşe Yılmaz")).closest("tr")!;
+    const cells = [...row.querySelectorAll("td")].map((c) => c.textContent);
+    expect(cells[0]).toBe("Diamond");
+    expect(cells[2]).toBe("2 sa 05 dk");
+    expect(cells[3]).toMatch(/^7 dk önce/);
+    expect(screen.getByText(/1 otelin oturum listesi/)).toBeTruthy();
   });
 });

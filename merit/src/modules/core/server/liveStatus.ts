@@ -1,4 +1,4 @@
-import type { ModuleKey, OrderStatus } from "@/generated/prisma/client";
+import type { ModuleKey, OrderStatus, Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
@@ -58,12 +58,65 @@ const ROWS: readonly RowDef[] = [
  * Order statuses that end an order without serving it. Everything else that is not completed is
  * pending, so a status added to the flow later counts as pending without touching this file.
  */
-const CANCELLED_ORDER: readonly OrderStatus[] = ["IPTAL", "REDDEDILDI"];
+export const CANCELLED_ORDER: readonly OrderStatus[] = ["IPTAL", "REDDEDILDI"];
 /** Served (table order) or delivered (room service): the end of the happy path (see CLOSED_STATUSES). */
-const COMPLETED_ORDER: readonly OrderStatus[] = ["SERVIS_EDILDI", "TESLIM_EDILDI"];
+export const COMPLETED_ORDER: readonly OrderStatus[] = ["SERVIS_EDILDI", "TESLIM_EDILDI"];
 
 /** Open orders of the previous day older than this are abandoned, not waiting (same window as the radar's open list). */
 const CARRY_OVER_MS = 24 * 3_600_000;
+
+/**
+ * Orders that count for "today": the business day's own, plus the night shift (taken before midnight and
+ * still open, or closed after it). Without those an order taken at 23:55 and delivered at 00:25 shows on
+ * neither day's "tamamlanan", nor as waiting meanwhile.
+ */
+export function todayOrderWhere(day: Date, since: Date, until: Date): Prisma.OrderWhereInput {
+  return {
+    OR: [
+      { businessDate: day },
+      {
+        businessDate: { lt: day },
+        createdAt: { gte: new Date(since.getTime() - CARRY_OVER_MS) },
+        status: { notIn: [...COMPLETED_ORDER, ...CANCELLED_ORDER] },
+      },
+      { businessDate: { lt: day }, deliveredAt: { gte: since, lt: until } },
+      { businessDate: { lt: day }, servedAt: { gte: since, lt: until } },
+    ],
+  };
+}
+
+/** Today's bounds: `day` for @db.Date columns, `since`/`until` for timestamptz ranges. */
+export function todayBounds(): { day: Date; since: Date; until: Date } {
+  const today = businessDate();
+  const since = businessDateStart(today);
+  const tomorrow = new Date(businessDay(today).getTime() + 86_400_000).toISOString().slice(0, 10);
+  return { day: businessDay(today), since, until: businessDateStart(tomorrow) };
+}
+
+/** Hotels whose Komuta Merkezi the caller may view; none at all -> FORBIDDEN (audited). */
+export async function commandScope(ctx: Ctx): Promise<string[]> {
+  const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-KOM", "V", h)));
+  const scope = ctx.hotelIds.filter((_, i) => allowed[i]);
+  if (scope.length === 0) {
+    await assertCan(ctx, "CR-KOM", "V", ctx.session.hotelId); // audits the denied attempt
+    throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
+  }
+  return scope;
+}
+
+/** Of `hotelIds`, those where the row's module is on and the caller may view one of its screens. */
+export async function rowHotels(ctx: Ctx, key: LiveRowKey, hotelIds: readonly string[]): Promise<string[]> {
+  const def = ROWS.find((r) => r.key === key)!;
+  const on = await prisma.hotelModule.findMany({
+    where: { hotelId: { in: [...hotelIds] }, moduleKey: def.module, enabled: true },
+    select: { hotelId: true },
+  });
+  const enabled = new Set(on.map((m) => m.hotelId));
+  const checks = await Promise.all(
+    hotelIds.map(async (h) => enabled.has(h) && (await Promise.all(def.screens.map((s) => can(ctx, s, "V", h)))).some(Boolean)),
+  );
+  return hotelIds.filter((_, i) => checks[i]);
+}
 
 type Triple = [received: number, completed: number, pending: number];
 
@@ -115,20 +168,7 @@ async function loadCounts(today: string): Promise<Counts> {
     prisma.hotelModule.findMany({ where: { enabled: true }, select: { hotelId: true, moduleKey: true } }),
     prisma.order.groupBy({
       by: ["hotelId", "kind", "status"],
-      where: {
-        OR: [
-          { businessDate: day },
-          // The night shift: taken before midnight and still open, or closed after it. Without these an order
-          // taken at 23:55 and delivered at 00:25 shows on neither day's "tamamlanan", nor as waiting meanwhile.
-          {
-            businessDate: { lt: day },
-            createdAt: { gte: new Date(since.getTime() - CARRY_OVER_MS) },
-            status: { notIn: [...COMPLETED_ORDER, ...CANCELLED_ORDER] },
-          },
-          { businessDate: { lt: day }, deliveredAt: { gte: since, lt: until } },
-          { businessDate: { lt: day }, servedAt: { gte: since, lt: until } },
-        ],
-      },
+      where: todayOrderWhere(day, since, until),
       _count: { _all: true },
     }),
     prisma.mybarRequest.groupBy({ by: ["hotelId", "status"], where: { businessDate: day }, _count: { _all: true } }),
@@ -184,12 +224,7 @@ export async function getLiveStatus(ctx: Ctx, hotelId?: string): Promise<LiveSta
     await assertCan(ctx, "CR-KOM", "V", hotelId);
     scope = [hotelId];
   } else {
-    const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-KOM", "V", h)));
-    scope = ctx.hotelIds.filter((_, i) => allowed[i]);
-    if (scope.length === 0) {
-      await assertCan(ctx, "CR-KOM", "V", ctx.session.hotelId); // audits the denied attempt
-      throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
-    }
+    scope = await commandScope(ctx);
   }
 
   const counts = await cachedCounts();
