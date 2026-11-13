@@ -22,6 +22,8 @@ import { TrayBalloonHost } from "@/shell/components/TrayBalloon";
 import { Window } from "@/shell/components/Window";
 import { useShellShortcuts } from "@/shell/keyboard";
 import { getApp, getApps } from "@/shell/registry";
+import { installFrameBridge } from "@/shell/frameAppLinks";
+import { openFramePath } from "@/shell/openFramePath";
 import { visibleApps } from "@/shell/visibleApps";
 import type { PrinterState } from "@/components/pos/usePrinterStatus";
 import { requestGuide } from "@/components/guide/guideEvents";
@@ -124,6 +126,24 @@ export function ShellClient({
       notify.error(`En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`, { title: "Pencere sınırı" });
     }
   }, []);
+  // A link inside a window's page that leads to another program opens that program's own window (frameAppLinks).
+  useEffect(() => {
+    if (mode === "mobile") return; // MobileShell answers with its own launcher
+    return installFrameBridge((href) => {
+      const outcome = openFramePath(windowStore, getApps(), href, window.location.origin);
+      if (outcome.result === "opened") {
+        requestAnimationFrame(() => document.getElementById(`xp-window-${outcome.windowId}`)?.focus());
+      } else if (outcome.result === "denied") {
+        notify.error(
+          outcome.reason === "limit"
+            ? `En fazla ${MAX_WINDOWS} pencere açılabilir. Yenisini açmak için bir pencereyi kapatın.`
+            : `"${outcome.title}" ekranını bu otelde açma yetkiniz yok.`,
+          { title: outcome.reason === "limit" ? "Pencere sınırı" : "Yetki yok" },
+        );
+      }
+      return outcome.result;
+    });
+  }, [mode]);
   const closeStart = useCallback(() => setStartOpen(false), []);
   const openHelp = () => {
     const scope = document.querySelector(".xp-window.is-active[data-has-guide]");

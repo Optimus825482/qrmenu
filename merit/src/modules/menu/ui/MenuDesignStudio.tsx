@@ -168,7 +168,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
   const [nodes, setNodes] = useState<MenuTreeNode[]>([]);
   const [dragging, setDragging] = useState<DesignBlockId | null>(null);
   const [device, setDevice] = useState<StudioDeviceId>("iphone-promax");
-  const [rail, setRail] = useState<"tasarim" | "renk" | "cagri">("tasarim");
+  const [railChoice, setRail] = useState<"tasarim" | "renk" | "cagri">("tasarim");
   const [callOptions, setCallOptions] = useState<GuestCallOption[]>([]);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [fitZoom, setFitZoom] = useState(0.8);
@@ -181,6 +181,10 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
 
   const outlet = availableTargets.find((item) => item.id === outletId) ?? availableTargets[0];
   const activeOutletId = outlet?.id ?? "";
+  // A room has no waiter to call: the room service menu shows no "Garson çağır" button, so its studio offers
+  // neither the button's settings nor the call options (the guest pages draw it for a table only).
+  const hasWaiterCall = outlet?.type !== "ODA_SERVISI";
+  const rail = !hasWaiterCall && railChoice === "cagri" ? "tasarim" : railChoice;
   const design = draft?.outletId === activeOutletId ? draft.design : (outlet?.design ?? DEFAULT_OUTLET_DESIGN);
   const themeId =
     themeOverride ??
@@ -322,7 +326,9 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
         <div className="xp-design-rail" role="tablist" aria-label="Stüdyo bölümleri">
           <button type="button" role="tab" aria-selected={rail === "tasarim"} data-selected={rail === "tasarim" || undefined} onClick={() => setRail("tasarim")}>Tasarım</button>
           <button type="button" role="tab" aria-selected={rail === "renk"} data-selected={rail === "renk" || undefined} onClick={() => setRail("renk")}>Renkler</button>
-          <button type="button" role="tab" aria-selected={rail === "cagri"} data-selected={rail === "cagri" || undefined} onClick={() => setRail("cagri")}>Garson çağrısı</button>
+          {hasWaiterCall ? (
+            <button type="button" role="tab" aria-selected={rail === "cagri"} data-selected={rail === "cagri" || undefined} onClick={() => setRail("cagri")}>Garson çağrısı</button>
+          ) : null}
         </div>
         <button
           type="button"
@@ -830,6 +836,8 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 onChange={(event) => patchOptions({ featuredTitle: event.target.value })}
               />
             </label>
+            {hasWaiterCall ? (
+              <>
             <label className="xp-design-field">
               Garson çağır butonu metni
               <input
@@ -853,6 +861,8 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                 ))}
               </select>
             </label>
+              </>
+            ) : null}
             <div className="xp-design-inspector-palette">
               <span>Arka plan<i style={{ background: selectedTheme.bg }} /></span>
               <span>Vurgu<i style={{ background: selectedTheme.accent }} /></span>
@@ -986,7 +996,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                       outletName={outlet?.name ?? "Menü"}
                       tableLabel="Masa 12"
                       headerCallWaiter={
-                        design.options.callWaiterPosition === "STICKY_HEADER" ? (
+                        hasWaiterCall && design.options.callWaiterPosition === "STICKY_HEADER" ? (
                           <CallWaiterButton
                             token="onizleme"
                             locale={previewLocale}
@@ -997,7 +1007,7 @@ export function MenuDesignStudio({ hotelId, initialOutletId, rows, targets, onSa
                         ) : undefined
                       }
                       footer={
-                        design.options.callWaiterPosition === "STICKY_FOOTER" || !design.options.callWaiterPosition ? (
+                        hasWaiterCall && (design.options.callWaiterPosition === "STICKY_FOOTER" || !design.options.callWaiterPosition) ? (
                           <div className="g-footer-actions">
                             <CallWaiterButton
                               token="onizleme"

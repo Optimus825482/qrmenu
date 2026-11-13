@@ -14,7 +14,8 @@ type RsOrder = RsLayer["orders"][number];
 type RsDelivered = NonNullable<RsLayer["delivered"]>[number];
 
 /** The delivered lane lists only the latest few; the badge carries the day's count. */
-const DELIVERED_SHOWN = 6;
+/** Room badges shown in "Teslim edildi" (newest first); the rest is a "+N" line. */
+const DELIVERED_SHOWN = 40;
 
 const LANES: { status: OrderStatus; title: string }[] = [
   { status: "GONDERILDI", title: "Onay bekliyor" },
@@ -96,17 +97,14 @@ function DeliveredCard({ order, slaMinutes }: { order: RsDelivered; slaMinutes: 
   const tookMs = Math.max(0, (Date.parse(order.deliveredAt) || 0) - (Date.parse(order.createdAt) || 0));
   const onTime = tookMs < Math.max(1, slaMinutes) * 60_000;
   return (
-    <div className="rd-card rd-rs-card" data-tone={onTime ? "success" : "danger"} data-order-id={order.orderId}>
-      <div className="rd-row" style={{ width: "100%" }}>
-        <span className="rd-card-label">Oda {order.roomNumber}</span>
-        <span className="rd-badge" data-tone={onTime ? "success" : "danger"}>
-          #{order.orderNo}
-        </span>
-      </div>
-      <span className="rd-small">
-        {Math.floor(tookMs / 60_000)} dk · {onTime ? "Zamanında" : "Geç"}
-      </span>
-    </div>
+    <li
+      className="rd-badge rd-rs-delivered"
+      data-tone={onTime ? "success" : "danger"}
+      data-order-id={order.orderId}
+      title={`Oda ${order.roomNumber} · #${order.orderNo} · ${Math.floor(tookMs / 60_000)} dk · ${onTime ? "Zamanında" : "Geç"}`}
+    >
+      {order.roomNumber}
+    </li>
   );
 }
 
@@ -201,17 +199,19 @@ function RoomServiceBoard({ view, now, onOpenApp }: Omit<RoomServiceProps, "hote
           {delivered.length === 0 ? (
             <p className="rd-muted rd-small">Bugün teslim yok.</p>
           ) : (
-            <div className="rd-list">
-              {delivered
-                .slice(-DELIVERED_SHOWN)
-                .reverse()
-                .map((o) => (
-                  <DeliveredCard key={o.orderId} order={o} slaMinutes={slaMinutes} />
-                ))}
+            <>
+              <ul className="rd-rs-delivered-list">
+                {delivered
+                  .slice(-DELIVERED_SHOWN)
+                  .reverse()
+                  .map((o) => (
+                    <DeliveredCard key={o.orderId} order={o} slaMinutes={slaMinutes} />
+                  ))}
+              </ul>
               {delivered.length > DELIVERED_SHOWN ? (
                 <p className="rd-muted rd-small">+{delivered.length - DELIVERED_SHOWN} teslim daha</p>
               ) : null}
-            </div>
+            </>
           )}
         </section>
       </div>

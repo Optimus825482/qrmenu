@@ -1,4 +1,5 @@
 import { FrameOwnBack } from "@/shell/FrameOwnBack";
+import { FrameAppLinks } from "@/shell/frameAppLinks";
 import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -34,6 +35,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
         <FrameOwnBack />
+        <FrameAppLinks />
         <StaffScreensProvider visible={visible}>
           <PersistentMybarModal hotelId={shownHotelId} />
           {children}

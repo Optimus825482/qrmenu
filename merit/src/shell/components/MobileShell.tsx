@@ -8,6 +8,7 @@ import { SnackbarHost } from "@/components/ui/Snackbar";
 import { fontVariables } from "../appearance";
 import { APP_FOLDERS } from "../appFolders";
 import { XpIcon } from "../icons";
+import { appForPath, installFrameBridge } from "../frameAppLinks";
 import type { AppDefinition } from "../registry";
 import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
 import { useMobileDefs } from "../useMobileDefs";
@@ -207,6 +208,20 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
       dispatch({ type: "launch", app: id });
     },
     [entries],
+  );
+  // A link inside an app's page that leads to another installed app opens that app (frameAppLinks).
+  useEffect(
+    () =>
+      installFrameBridge((href) => {
+        const url = new URL(href, window.location.origin);
+        const installed = [...entries.values()].flatMap((e) => (e.app ? [e.app] : []));
+        const app = appForPath(installed, url.pathname);
+        if (!app) return "unknown";
+        const hotelId = url.searchParams.get("hotelId") || undefined;
+        launch(app.id, hotelId ? { hotelId } : undefined);
+        return "opened";
+      }),
+    [entries, launch],
   );
   /** A notification leads to its screen only when that app is installed for this user (same rule as the desktop bell). */
   const canOpenNotification = useCallback(

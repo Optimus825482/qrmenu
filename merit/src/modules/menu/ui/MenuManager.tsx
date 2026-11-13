@@ -348,7 +348,8 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
           className="xp-button"
           disabled={!outletId}
           style={{ height: 26, marginLeft: translationAudit && translationAudit.totalNodes > 0 ? 0 : "auto" }}
-          onClick={() => openApp("menu.tema", { hotelId, outletId })}
+          // Room service has its own studio: the outlet studio never lists the room service outlet.
+          onClick={() => openApp(lockOutletType ? "rs.tema" : "menu.tema", { hotelId, outletId })}
         >
           Menü Tasarımı
         </button>

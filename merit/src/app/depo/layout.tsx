@@ -1,4 +1,5 @@
 import { FrameOwnBack } from "@/shell/FrameOwnBack";
+import { FrameAppLinks } from "@/shell/frameAppLinks";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { StaffShell } from "@/components/staff/StaffShell";
@@ -26,6 +27,7 @@ export default async function DepoLayout({ children }: { children: ReactNode }) 
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
         <FrameOwnBack />
+        <FrameAppLinks />
         <StaffScreensProvider visible={visible}>{children}</StaffScreensProvider>
       </>
     );

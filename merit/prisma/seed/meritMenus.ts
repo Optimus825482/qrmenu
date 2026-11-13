@@ -6,7 +6,15 @@ import { generateQrToken } from "../../src/lib/qr";
 import { ensureDefaultCallOptions } from "../../src/modules/menu/server/callOptionDefaults";
 import { HOTELS, HOTEL_MODULES } from "./hotels";
 import { seedOutletMenuDesigns } from "./menuDesigns";
-import { decideMenuSync, MENU_ARCHIVE_CATEGORY, menuStamp, menuStampKey } from "./menuSyncPolicy";
+import {
+  carryPanelEdits,
+  decideMenuSync,
+  MENU_ARCHIVE_CATEGORY,
+  menuStamp,
+  menuStampKey,
+  panelItemLookup,
+  type PanelItem,
+} from "./menuSyncPolicy";
 import { MENU_THEMES } from "./menuThemes";
 import { RENAMED_OUTLETS, SEED_OUTLETS } from "./outlets";
 
@@ -350,6 +358,33 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
 
     await db.$transaction(
       async (tx) => {
+        // Panelde yapılan iş (alerjen, etiket, yüklenen fotoğraf, "Tükendi", çeviriler) yeni menüye taşınır:
+        // eski menü silinmeden önce okunur (bkz. carryPanelEdits).
+        const oldNodes = await tx.menuNode.findMany({
+          where: { outletId: outlet.id },
+          select: {
+            id: true, parentId: true, kind: true, name: true, detail: true, imageUrl: true, imageUrls: true,
+            allergens: true, tags: true, isAvailable: true,
+            translations: { select: { lang: true, name: true, detail: true, isVerified: true } },
+          },
+        });
+        const oldById = new Map(oldNodes.map((n) => [n.id, n]));
+        const topCategoryOf = (node: (typeof oldNodes)[number]): string => {
+          let cur = node;
+          for (let depth = 0; cur.parentId && depth < 8; depth++) {
+            const parent = oldById.get(cur.parentId);
+            if (!parent) break;
+            cur = parent;
+          }
+          return cur.name;
+        };
+        const oldItems: PanelItem[] = oldNodes
+          .filter((n) => n.kind === "OGE")
+          .map((n) => ({ ...n, categoryName: topCategoryOf(n) }))
+          .filter((n) => n.categoryName !== MENU_ARCHIVE_CATEGORY);
+        const oldItemFor = panelItemLookup(oldItems);
+        let carried = 0;
+
         // Eski menü kaldırılır. Geçmiş siparişlerin gösterdiği ürünler silinemez (order_items -> menu_nodes);
         // onlar pasifleştirilip tek bir pasif arşiv kategorisine taşınır, geri kalan her şey silinir.
         const ordered = await tx.menuNode.findMany({
@@ -483,6 +518,9 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
             parentId = await ensureGroup(item.catPath[0], item.catPath[1], item.catPath[2]);
           }
 
+          const oldItem = oldItemFor(item.catPath[0], item.name);
+          const kept = carryPanelEdits(item, oldItem);
+          if (oldItem) carried++;
           const node = await tx.menuNode.create({
             data: {
               outletId: outlet.id,
@@ -492,17 +530,26 @@ export async function syncMeritMenus(db: PrismaClient): Promise<void> {
               detail: item.detail,
               price: item.price,
               currency,
-              imageUrl: item.imageUrl,
-              imageUrls: item.imageUrl ? [item.imageUrl] : [],
-              allergens: item.allergens,
-              tags: item.tags,
-              isAvailable: true,
+              imageUrl: kept.imageUrl,
+              imageUrls: kept.imageUrls,
+              allergens: kept.allergens,
+              tags: kept.tags,
+              isAvailable: kept.isAvailable,
               isActive: true,
               sortOrder: nextSort(`ITEMS:${parentId}`),
             },
             select: { id: true },
           });
           await translate(node.id, item.name, item.nameEn, item.detailEn !== item.detail ? item.detailEn : null);
+          if (kept.translations.length > 0) {
+            await tx.menuNodeTranslation.createMany({
+              data: kept.translations.map((t) => ({ ...t, nodeId: node.id })),
+              skipDuplicates: true,
+            });
+          }
+        }
+        if (carried > 0) {
+          console.log(`korundu: [${spec.hotelCode}] ${outlet.name} ${carried} üründe panel kayıtları (alerjen, etiket, fotoğraf, çeviri)`);
         }
       },
       { timeout: 120_000 },

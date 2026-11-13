@@ -1080,6 +1080,22 @@ button.rd-alert-chip {
   min-height: 72px;
 }
 
+/* Teslim edildi: yalnız oda numarası rozetleri, satır satır sarar (kart yok, şerit uzamaz) */
+.rd-rs-delivered-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rd-rs-delivered {
+  padding: 2px 8px;
+  font-size: 1em;
+  font-variant-numeric: tabular-nums;
+}
+
 .rd-staff-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
