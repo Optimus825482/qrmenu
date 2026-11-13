@@ -22,7 +22,7 @@ const OUT_DIR = path.join(ROOT, "public", "merit-menus");
 const WIDTH = 1200;
 const HEIGHT = 900;
 
-type Motif = "cloche" | "coupe" | "sun" | "teacup" | "leaf";
+type Motif = "cloche" | "coupe" | "sun" | "teacup" | "leaf" | "cutlery" | "bowl" | "olive";
 type Hotel = "diamond" | "royal" | "premium";
 
 export interface CoverSpec {
@@ -38,7 +38,7 @@ export interface CoverSpec {
   accent: string;
   soft: string;
   /** Hero font of the outlet (menuDesigns.ts). */
-  font: "cinzel" | "cormorant" | "playfair" | "greatvibes" | "montserrat" | "jakarta";
+  font: "cinzel" | "cormorant" | "playfair" | "greatvibes" | "montserrat" | "jakarta" | "bodoni";
 }
 
 export const COVERS: CoverSpec[] = [
@@ -51,6 +51,9 @@ export const COVERS: CoverSpec[] = [
   { slug: "diamond-pool-bar", hotel: "diamond", title: "Pool Bar", subtitle: "Menu", motif: "sun", bg: "#f5fbfc", accent: "#0d6973", soft: "#e1f1f4", font: "montserrat" },
   { slug: "premium-pool-bar", hotel: "premium", title: "Pool Bar", subtitle: "Menu", motif: "sun", bg: "#fffdf6", accent: "#a84b00", soft: "#faefd8", font: "jakarta" },
   { slug: "tea-lounge", hotel: "diamond", title: "Tea Lounge", subtitle: "Menu", motif: "teacup", bg: "#fff8f9", accent: "#9e3a58", soft: "#f8eaee", font: "greatvibes" },
+  { slug: "the-steakhouse", hotel: "diamond", title: "The Steakhouse", subtitle: "Menu", motif: "cutlery", bg: "#f7f4ee", accent: "#2e2b28", soft: "#ebe5da", font: "playfair" },
+  { slug: "royal-mandarin", hotel: "royal", title: "Royal Mandarin", subtitle: "Menu", motif: "bowl", bg: "#fbfbf8", accent: "#8c1c22", soft: "#e7efe9", font: "cinzel" },
+  { slug: "bella-merit", hotel: "royal", title: "Bella Merit", subtitle: "Menu", motif: "olive", bg: "#faf7ee", accent: "#556328", soft: "#eeecdc", font: "bodoni" },
   { slug: "cafe-verde", hotel: "premium", title: "Cafe Verde", subtitle: "Menu", motif: "leaf", bg: "#f7fbf8", accent: "#2d6a4f", soft: "#e6f2ea", font: "playfair" },
 ];
 
@@ -60,6 +63,7 @@ const FONTS: Record<CoverSpec["font"], { file: string; family: string; css: stri
   playfair: { file: "playfair-display.ttf", family: "Playfair Display", css: "font-weight:500; letter-spacing:0.01em; font-size:112px;" },
   greatvibes: { file: "great-vibes.ttf", family: "Great Vibes", css: "font-weight:400; font-size:150px; line-height:1.15;" },
   montserrat: { file: "montserrat.ttf", family: "Montserrat", css: "font-weight:300; letter-spacing:0.16em; text-transform:uppercase; font-size:92px;" },
+  bodoni: { file: "bodoni-moda.ttf", family: "Bodoni Moda", css: "font-weight:500; letter-spacing:0.02em; font-size:112px;" },
   jakarta: { file: "plus-jakarta-sans.ttf", family: "Plus Jakarta Sans", css: "font-weight:300; letter-spacing:0.14em; text-transform:uppercase; font-size:92px;" },
 };
 
@@ -69,6 +73,9 @@ const MOTIFS: Record<Motif, string> = {
   coupe: `<path d="M26 26h68L60 66Z"/><path d="M60 66v34"/><path d="M40 102h40"/><path d="M36 38h48"/><circle cx="72" cy="30" r="5"/><path d="M76 26l10-12"/>`,
   sun: `<path d="M34 62a26 26 0 0 1 52 0"/><path d="M60 18v10M30 30l7 7M90 30l-7 7M14 60h10M96 60h10"/><path d="M12 78c8-7 16-7 24 0s16 7 24 0 16-7 24 0 16 7 24 0"/><path d="M12 94c8-7 16-7 24 0s16 7 24 0 16-7 24 0 16 7 24 0"/>`,
   teacup: `<path d="M24 50h60v14a30 30 0 0 1-60 0Z"/><path d="M84 54h8a10 10 0 0 1 0 20h-10"/><path d="M14 102h80"/><path d="M42 36c-5-6 5-9 0-16M58 36c-5-6 5-9 0-16M74 36c-5-6 5-9 0-16"/>`,
+  cutlery: `<path d="M40 16v30a10 10 0 0 0 20 0V16"/><path d="M50 16v88"/><path d="M82 104V16c-12 8-16 24-16 44h16"/>`,
+  bowl: `<path d="M18 62h84a42 42 0 0 1-84 0Z"/><path d="M44 104h32"/><path d="M34 50l56-34M46 54l52-26"/>`,
+  olive: `<path d="M22 98c22-10 50-38 76-76"/><ellipse cx="52" cy="50" rx="8" ry="15" transform="rotate(-40 52 50)"/><ellipse cx="76" cy="62" rx="8" ry="15" transform="rotate(50 76 62)"/><ellipse cx="40" cy="74" rx="7" ry="13" transform="rotate(60 40 74)"/><circle cx="68" cy="34" r="7"/>`,
   leaf: `<path d="M60 108V44"/><path d="M60 44c0-16 10-26 26-30 2 18-8 30-26 30Z"/><path d="M60 66c-2-14-12-22-28-24 0 16 10 26 28 24Z"/><path d="M60 88c2-12 12-18 26-18-2 14-12 20-26 18Z"/>`,
 };
 

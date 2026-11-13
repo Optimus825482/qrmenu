@@ -35,6 +35,9 @@ export const GENERATED_COVERS: Readonly<Record<string, string>> = {
   "Premium Pool Bar": "/merit-menus/kapak-premium-pool-bar.jpg",
   "Tea Lounge": "/merit-menus/kapak-tea-lounge.jpg",
   "Cafe Verde": "/merit-menus/kapak-cafe-verde.jpg",
+  "The Steakhouse": "/merit-menus/kapak-the-steakhouse.jpg",
+  "Royal Mandarin": "/merit-menus/kapak-royal-mandarin.jpg",
+  "Bella Merit": "/merit-menus/kapak-bella-merit.jpg",
 };
 
 /*

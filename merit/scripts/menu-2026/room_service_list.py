@@ -15,6 +15,8 @@ MENU_NO = "808"
 # Category of the list -> (category on the menu, English name), in the order they follow the dishes.
 # The names are the lobby bars', so the two menus read alike.
 DRINK_GROUPS = [
+    ("SICAK İÇECEKLER", ("SICAK İÇECEKLER", "HOT DRINKS")),
+    ("MEŞRUBATLAR", ("MEŞRUBATLAR", "SOFT DRINKS")),
     ("BİRALAR", ("BİRALAR", "BEERS")),
     ("APERATİFLER", ("APERATİFLER", "APERITIFS")),
     ("VOTKALAR", ("VOTKALAR", "VODKAS")),
@@ -31,6 +33,36 @@ DRINK_GROUPS = [
     ("ULUSLARARASI KOKTEYLLER", ("ULUSLARARASI KOKTEYLLER", "INTERNATIONAL COCKTAILS")),
 ]
 COCKTAILS = {"İMZA KOKTEYLLER", "ULUSLARARASI KOKTEYLLER"}
+# Groups whose note in the list is the item's own text (flavours, kinds), not a measure.
+DESCRIBED = COCKTAILS | {"SICAK İÇECEKLER", "MEŞRUBATLAR"}
+
+
+def own_text(note):
+    """The item's own text in a note of the list: the option list of the source system is not menu text."""
+    m = re.match(r"^Seçenekler:\s*\w+:\s*(.+)$", note)
+    if m:
+        return m.group(1).strip()
+    return re.sub(r"\s*/\s*Seçenekler:.*$", "", note).strip()
+
+# Drinks the lobby bar does not carry: name in the list -> (English name, text, English text). The texts replace
+# the list's own, which is misspelled in places.
+OWN_DRINKS = {
+    "DEMLEME ÇAY": ("BREWED TEA", None, None),
+    "SINGLE ESPRESSO": ("SINGLE ESPRESSO", None, None),
+    "DOUBLE ESPRESSO": ("DOUBLE ESPRESSO", None, None),
+    "TAZE DEMLEME BİTKİ ÇAYLARI": (
+        "FRESHLY BREWED HERBAL TEAS",
+        "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HİBİSKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
+        "WINTER TEA, FENNEL, LINDEN, SAGE, HIBISCUS, CHAMOMILE, JASMINE, ECHINACEA, LEMON BALM"),
+    "RONNEFELDT BİTKİ ÇAYLARI": (
+        "RONNEFELDT TEAS",
+        "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LİMON, GÜL YAPRAKLARI), NANE, PAPATYA, AYURVEDA HERBS & GINGER (ZENCEFİL, LİMON), ROOIBOS CREAM ORANGE (PORTAKAL, VANİLYA), SWEET BERRIES (ÇİLEK, AHUDUDU, KIRMIZI MEYVELER), BEYAZ ÇAY",
+        "ENGLISH BREAKFAST, EARL GREY, MORGENTAU (MANGO, LEMON, ROSE PETALS), PEPPERMINT, CHAMOMILE, AYURVEDA HERBS & GINGER (GINGER, LEMON), ROOIBOS CREAM ORANGE (ORANGE, VANILLA), SWEET BERRIES (STRAWBERRY, RASPBERRY, RED FRUITS), WHITE TEA"),
+    "COCA COLA ZERO": ("COCA COLA ZERO", None, None),
+    "ICE TEA ŞEFTALİ": ("ICE TEA PEACH", None, None),
+    "ICE TEA LİMON": ("ICE TEA LEMON", None, None),
+    "LOKAL ENERJİ İÇECEĞİ": ("LOCAL ENERGY DRINK", None, None),
+}
 
 # Dish on the menu -> its name in the list, where the two are spelled too differently to be matched safely.
 FOOD_ALIAS = {}
@@ -95,12 +127,12 @@ def extract(md_path):
             food[name] = price
         elif cat in wanted:
             note = unicodedata.normalize("NFKC", cells[2]) if len(cells) > 2 else ""
-            detail = note if cat in COCKTAILS else None
+            detail = own_text(note) if cat in DESCRIBED else None
             # The list prices a spirit by its smallest measure ("5 cl / Seçenekler: ..."); the price of the larger
             # measures is not in the list, so the menu states which measure the price is for.
             mm = re.match(r"^(\d+)\s*cl(?![a-z])", note, re.I)
             groups.setdefault(cat, []).append({"name": name, "price": price, "detail": detail or None,
-                                               "measure": "%s cl" % mm.group(1) if mm and cat not in COCKTAILS else None})
+                                               "measure": "%s cl" % mm.group(1) if mm and cat not in DESCRIBED else None})
     data = {"source": "merit_tum_menuler.md (08.11.2026), Menü %s" % MENU_NO, "food": food,
             "drinks": [{"category": c, "items": groups.get(c, [])} for c, _ in DRINK_GROUPS]}
     io.open(DATA, "w", encoding="utf8", newline="\n").write(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
@@ -143,6 +175,10 @@ def apply(outlets):
             cat_tr, cat_en = names[group["category"]]
             for it in group["items"]:
                 twin = find(it["name"], by_cat.get(cat_tr, {}))
+                ours = None if twin else OWN_DRINKS.get(it["name"])
+                own += twin is None
+                if ours:
+                    twin = {"name": it["name"], "nameEn": ours[0], "detail": ours[1] or it["detail"], "detailEn": ours[2], "imageUrl": None}
                 outlet["items"].append({
                     "catPath": [cat_tr], "catPathEn": [cat_en],
                     "name": twin["name"] if twin else it["name"],
@@ -154,7 +190,6 @@ def apply(outlets):
                     "allergens": [], "tags": [],
                 })
                 added += 1
-                own += twin is None
         report.append("%-8s oda servisi: %d yemek fiyatlandı, %d fiyatsız %s; %d içki eklendi (%d'i lobi barda yok)" % (
             hotel, len(outlet["items"]) - added - len(unpriced), len(unpriced), unpriced or "", added, own))
     return report

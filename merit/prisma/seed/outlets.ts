@@ -17,10 +17,13 @@ export const SEED_OUTLETS: SeedOutlet[] = [
   { hotelCode: "DIAMOND", name: "Diamond Pool Bar", type: "HAVUZ", areas: [{ type: "ACIK", name: "Havuz terası", tableCount: 24 }] },
   { hotelCode: "DIAMOND", name: "Tea Lounge", type: "SALON", areas: [{ type: "KAPALI", name: "Pastane", tableCount: 10 }] },
   { hotelCode: "DIAMOND", name: "Whiskey Lounge", type: "BAR", areas: [{ type: "KAPALI", name: "Whiskey House", tableCount: 6 }] },
+  { hotelCode: "DIAMOND", name: "The Steakhouse", type: "SALON", areas: [{ type: "KAPALI", name: "Ana Salon", tableCount: 14 }] },
 
   { hotelCode: "ROYAL", name: "Royal Lobby Bar", type: "BAR", areas: [{ type: "KAPALI", name: "Lounge", tableCount: 8 }] },
   { hotelCode: "ROYAL", name: "Blue Sea Beach Bar", type: "SAHIL", areas: [{ type: "ACIK", name: "Sahil & İskele", tableCount: 16 }] },
   { hotelCode: "ROYAL", name: "The Roof Garden", type: "BAHCE", areas: [{ type: "ACIK", name: "Teras", tableCount: 12 }] },
+  { hotelCode: "ROYAL", name: "Royal Mandarin", type: "SALON", areas: [{ type: "KAPALI", name: "Ana Salon", tableCount: 14 }] },
+  { hotelCode: "ROYAL", name: "Bella Merit", type: "SALON", areas: [{ type: "KAPALI", name: "Ana Salon", tableCount: 14 }] },
 
   { hotelCode: "PREMIUM", name: "Premium Lobby Bar", type: "BAR", areas: [{ type: "KAPALI", name: "Atrium", tableCount: 10 }] },
   { hotelCode: "PREMIUM", name: "Premium Pool Bar", type: "HAVUZ", areas: [{ type: "ACIK", name: "Havuz terası", tableCount: 20 }] },

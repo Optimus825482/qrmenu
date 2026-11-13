@@ -74,6 +74,166 @@
  },
  "drinks": [
   {
+   "category": "SICAK İÇECEKLER",
+   "items": [
+    {
+     "name": "DEMLEME ÇAY",
+     "price": 7.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "TÜRK KAHVESİ",
+     "price": 10.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "SINGLE ESPRESSO",
+     "price": 10.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "DOUBLE ESPRESSO",
+     "price": 15.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "AMERICANO",
+     "price": 15.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "CAFE LATTE",
+     "price": 15.0,
+     "detail": "Karamel, Vanilya, Çikolata, Fındık",
+     "measure": null
+    },
+    {
+     "name": "CAPPUCCINO",
+     "price": 15.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "TAZE DEMLEME BİTKİ ÇAYLARI",
+     "price": 7.0,
+     "detail": "Kış Çayı, Rezene, Ihlamur, Ada Çayı, Hibiskus, Papatya, Yasemin, Ekinizya, Melisa",
+     "measure": null
+    },
+    {
+     "name": "RONNEFELDT BİTKİ ÇAYLARI",
+     "price": 10.0,
+     "detail": "Englısh Breakfast, Earl Grey, Morgentau (Mango, Limon, Gül Yaprakları), Nane, Papatya, Ayurveda Herbs&Ginger (Zencefil, limon), Rooıbos Cream Orange (Portakal, Vanilya), Sweet Berries (Çilek, Ahududu, Kırmızı Meyveler), Beyaz Çay",
+     "measure": null
+    },
+    {
+     "name": "SALEP",
+     "price": 20.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "SICAK ÇİKOLATA",
+     "price": 15.0,
+     "detail": null,
+     "measure": null
+    }
+   ]
+  },
+  {
+   "category": "MEŞRUBATLAR",
+   "items": [
+    {
+     "name": "MEYVE SUYU",
+     "price": 7.0,
+     "detail": "Portakal, Şeftali, Kayısı, Vişne, Elma, Ananas, Nar, Kızılcık, Domates",
+     "measure": null
+    },
+    {
+     "name": "SU CAM 330 ML.",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "SAN PELLEGRINO",
+     "price": 8.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "SODA",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "COCA COLA",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "COCA COLA ZERO",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "SPRITE",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "FANTA",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "ICE TEA ŞEFTALİ",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "ICE TEA LİMON",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "ENERJİ İÇECEĞİ",
+     "price": 8.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "LOKAL ENERJİ İÇECEĞİ",
+     "price": 7.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "LİMONATA",
+     "price": 5.0,
+     "detail": null,
+     "measure": null
+    },
+    {
+     "name": "BRITVIC",
+     "price": 5.0,
+     "detail": "Gınger Ale, Bıtter Lemon, Tonik",
+     "measure": null
+    }
+   ]
+  },
+  {
    "category": "BİRALAR",
    "items": [
     {

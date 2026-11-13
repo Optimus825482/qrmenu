@@ -5,10 +5,13 @@ import { COVER_IMAGE_PATTERN } from "@/modules/menu/design";
 import { GENERATED_COVERS, OUTLET_DESIGN_PRESETS, ROOM_SERVICE_DESIGN_PRESETS } from "../../prisma/seed/menuDesigns";
 import { MENU_THEMES } from "../../prisma/seed/menuThemes";
 import { loadMeritMenusDataset } from "../../prisma/seed/meritMenus";
+import { SEED_OUTLETS } from "../../prisma/seed/outlets";
 import { COVERS } from "../../scripts/generate-menu-covers";
 
 const ROOT = path.resolve(__dirname, "../..");
-const MIGRATION = readFileSync(path.join(ROOT, "prisma/migrations/20261114010000_uretilen_menu_kapaklari/migration.sql"), "utf8");
+const MIGRATION = ["20261114010000_uretilen_menu_kapaklari", "20261114020000_alakart_restoranlar_geri"]
+  .map((dir) => readFileSync(path.join(ROOT, "prisma/migrations", dir, "migration.sql"), "utf8"))
+  .join(" ");
 const PRINTED_COVERS = ["Whiskey Lounge", "The Roof Garden", "Blue Sea Beach Bar"];
 
 describe("üretilen menü kapakları", () => {
@@ -43,6 +46,24 @@ describe("üretilen menü kapakları", () => {
   });
 });
 
+describe("alakart restoranlar geri alındı", () => {
+  const dataset = loadMeritMenusDataset();
+  it.each([
+    ["DIAMOND", "The Steakhouse"],
+    ["ROYAL", "Royal Mandarin"],
+    ["ROYAL", "Bella Merit"],
+  ])("%s / %s: menüsü var, her ürün fiyatlı, tohumda tanımlı ve kaldırılanlar arasında değil", (hotelCode, name) => {
+    const outlet = dataset.outlets.find((o) => o.hotelCode === hotelCode && o.outletName === name)!;
+    expect(outlet.items.length).toBeGreaterThan(100);
+    expect(outlet.items.every((i) => typeof i.price === "number" && i.price > 0)).toBe(true);
+    expect(SEED_OUTLETS.some((o) => o.hotelCode === hotelCode && o.name === name)).toBe(true);
+    expect(readFileSync(path.join(ROOT, "prisma/seed/meritMenus.ts"), "utf8")).not.toContain(`name: "${name}"`);
+    for (const item of outlet.items) {
+      if (item.imageUrl) expect(existsSync(path.join(ROOT, "public", item.imageUrl)), item.imageUrl).toBe(true);
+    }
+  });
+});
+
 describe("oda servisi: ölçüyle fiyatlanan içkiler", () => {
   const dataset = loadMeritMenusDataset();
   const SPIRITS = ["VOTKALAR", "CİNLER", "ROMLAR", "TEKİLALAR", "KONYAKLAR", "BOURBON & TENNESSEE VİSKİLER", "MALT VİSKİLER", "İSKOÇ VİSKİLER", "İRLANDA VİSKİLERİ"];
@@ -53,6 +74,14 @@ describe("oda servisi: ölçüyle fiyatlanan içkiler", () => {
     for (const item of spirits) {
       expect(item.detail, item.name).toMatch(/^5 cl\b/);
       expect(item.detailEn, item.name).toMatch(/^5 cl\b/);
+    }
+    // Sıcak içecek ve meşrubatlar listede: ölçü notu almazlar, kaynak sistemin seçenek listesi de metne girmez.
+    const soft = outlet.items.filter((i) => ["SICAK İÇECEKLER", "MEŞRUBATLAR"].includes(i.catPath[0]!));
+    expect(soft).toHaveLength(25);
+    for (const item of soft) {
+      expect(item.price, item.name).toBeGreaterThan(0);
+      expect(`${item.detail ?? ""} ${item.detailEn ?? ""}`, item.name).not.toMatch(/Seçenekler|Opsiyonlar|Porsiyon|^[0-9]+ cl/);
+      expect(item.nameEn, item.name).not.toMatch(/[ÇĞİÖŞÜçğıöşü]/);
     }
     // Kokteyl ve biralar ölçüyle satılmaz.
     for (const item of outlet.items.filter((i) => ["BİRALAR", "İMZA KOKTEYLLER", "ULUSLARARASI KOKTEYLLER"].includes(i.catPath[0]!))) {

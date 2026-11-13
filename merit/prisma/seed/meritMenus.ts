@@ -44,16 +44,13 @@ const REMOVED_OUTLETS: Array<{ hotelCode: "DIAMOND" | "ROYAL" | "PREMIUM"; name:
   { hotelCode: "ROYAL", name: "Havuz Bar" },
   { hotelCode: "PREMIUM", name: "Meritta Club Park & Aile Bahçesi" },
   { hotelCode: "PREMIUM", name: "Tenis Kortları & Açık Hava Fitness" },
-  // Kasım 2026: QR menüde yalnız bar, lounge, kafe ve havuz/sahil barları var. Alakart restoranlar ile menü
-  // belgesi olmayan noktalar kaldırıldı; The Roof Garden Royal otelindedir (eski kayıt Diamond altındaydı).
-  { hotelCode: "DIAMOND", name: "The Steakhouse" },
+  // Kasım 2026: menü belgesi olmayan noktalar kaldırıldı; The Roof Garden Royal otelindedir (eski kayıt Diamond
+  // altındaydı). The Steakhouse, Royal Mandarin ve Bella Merit 14 Kasım'da geri alındı (SEED_OUTLETS).
   { hotelCode: "DIAMOND", name: "Shisha & Sunset Terrace" },
   { hotelCode: "ROYAL", name: "Dionysos Wine House" },
   { hotelCode: "ROYAL", name: "Vienna Cafe" },
   { hotelCode: "ROYAL", name: "Royal Sea View Pool Bar" },
   { hotelCode: "ROYAL", name: "Blue Sea Alakart" },
-  { hotelCode: "ROYAL", name: "Royal Mandarin" },
-  { hotelCode: "ROYAL", name: "Bella Merit" },
 ];
 
 export function loadMeritMenusDataset(): MeritMenusDataset {
@@ -62,7 +59,7 @@ export function loadMeritMenusDataset(): MeritMenusDataset {
 }
 
 /**
- * Idempotent synchronization of the 13 Merit outlets (10 bars/lounges/cafes + 3 room service) and their menus (version 3: the hotel's 2026 menu
+ * Idempotent synchronization of the 16 Merit outlets (10 bars/lounges/cafes, 3 a la carte restaurants + 3 room service) and their menus (version 3: the hotel's 2026 menu
  * documents, Turkish + English, prices in USD from the printed menus and the Micros price list).
  * - Renames outlets in place (id, tables and table QR tokens survive), then cleans up removed outlets.
  * - Creates missing outlets, areas, tables, QR tokens, call options, and menu designs.
