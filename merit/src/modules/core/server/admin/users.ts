@@ -759,12 +759,30 @@ export type BulkUpdateResult = { updated: number; failed: { id: string; fullName
 export async function bulkUpdate(ctx: Ctx, raw: BulkUpdateInput): Promise<BulkUpdateResult> {
   const { ids, patch } = parseInput(bulkUpdateSchema, raw);
   await assertCan(ctx, SCREEN, "D");
+  // Names are echoed back only for users the actor can already see in the list; any other id (another
+  // hotel, a system account, deleted, unknown) fails with one indistinguishable answer.
+  const scope = await scopeHotels(ctx, "V");
   const names = new Map(
-    (await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true } })).map((u) => [u.id, u.fullName]),
+    (
+      await prisma.user.findMany({
+        where: {
+          id: { in: ids },
+          deletedAt: null,
+          ...(scope
+            ? {
+                role: { kind: { not: "SISTEM" } },
+                OR: [{ hotelId: { in: scope } }, { userHotels: { some: { hotelId: { in: scope } } } }],
+              }
+            : {}),
+        },
+        select: { id: true, fullName: true },
+      })
+    ).map((u) => [u.id, u.fullName]),
   );
   const result: BulkUpdateResult = { updated: 0, failed: [] };
   for (const id of ids) {
     try {
+      if (!names.has(id)) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
       if ("isActive" in patch) {
         await setActive(ctx, id, patch.isActive);
       } else {

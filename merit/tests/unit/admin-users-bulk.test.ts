@@ -73,9 +73,18 @@ describe("users.bulkUpdate", () => {
     const kat = await roleByCode("R-KAT");
     const result = await users.bulkUpdate(mgr, { ids: [a.id, other.id, b.id], patch: { roleId: kat.id } });
     expect(result.updated).toBe(2);
-    expect(result.failed).toEqual([{ id: other.id, fullName: other.fullName, reason: expect.stringContaining("sistem yöneticisi") }]);
+    // A system account is not in a hotel manager's list: neither its name nor the real reason leaks.
+    expect(result.failed).toEqual([{ id: other.id, fullName: "Bilinmeyen kullanıcı", reason: "Kullanıcı bulunamadı" }]);
     expect((await testDb.user.findUniqueOrThrow({ where: { id: other.id } })).roleId).toBe(other.roleId);
     expect((await testDb.user.findUniqueOrThrow({ where: { id: b.id } })).roleId).toBe(kat.id);
+  });
+
+  it("başka oteldeki kullanıcının adı ve varlığı sızmaz", async () => {
+    const mgr = await mgmt();
+    const outsider = await makeUser({ username: "gar-d", roleCode: "R-GAR", hotelCode: "DIAMOND" });
+    const result = await users.bulkUpdate(mgr, { ids: [outsider.id], patch: { isActive: false } });
+    expect(result).toEqual({ updated: 0, failed: [{ id: outsider.id, fullName: "Bilinmeyen kullanıcı", reason: "Kullanıcı bulunamadı" }] });
+    expect((await testDb.user.findUniqueOrThrow({ where: { id: outsider.id } })).isActive).toBe(true);
   });
 
   it("kendi rolünü toplu değiştirme reddedilir (sistem yöneticisi dahil)", async () => {
