@@ -5438,15 +5438,8 @@
   height: 8px;
   border-radius: 50%;
   background: #4ade80;
-  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
-  animation: xp-widget-status-pulse 2.4s ease-out infinite;
-}
-@keyframes xp-widget-status-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .xp-widget-status-live { animation: none; }
+  /* Static halo: continuous animation is not allowed (uxSourceRules P-UX-3). */
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.3);
 }
 .xp-widget-status table { flex: 1; width: 100%; border-collapse: collapse; margin: 2px 0 0; font-size: 12px; }
 .xp-widget-status th, .xp-widget-status td { padding: 3px 7px; text-align: right; white-space: nowrap; color: var(--st-ink); font-variant-numeric: tabular-nums; }
