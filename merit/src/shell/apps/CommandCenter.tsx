@@ -14,9 +14,35 @@ import { getApps } from "../registry";
 import { KpiChips } from "@/modules/reporting/ui/KpiChips";
 import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
 import { myScreenLayoutAction } from "@/modules/core/server/actions/screenLayouts";
-import { defaultLayout, type Layout, visibleBlocks, visibleItems } from "@/modules/core/screenLayouts";
+import {
+  blockColumns,
+  blockOf,
+  blockZoom,
+  defaultLayout,
+  type Layout,
+  type LayoutBlock,
+  layoutRows,
+  SCREEN_LAYOUT_DEFS,
+  visibleItems,
+} from "@/modules/core/screenLayouts";
+import type { IconName } from "@/components/icons/paths";
 
 const FEED_LIMIT = 50;
+
+/** Frame of each operation's window row. */
+const QUICK_LOOK = {
+  hizliOutlet: { label: "OUTLET", icon: "store", box: "bg-[#f0f4f9] border-[#b8cfe5]", head: "text-[#1e3a8a]" },
+  hizliOda: { label: "ODA SERVİSİ", icon: "concierge", box: "bg-[#fdf2f8] border-[#fbcfe8]", head: "text-[#831843]" },
+  hizliMinibar: { label: "MİNİBAR", icon: "minibar", box: "bg-[#f0fdf4] border-[#bbf7d0]", head: "text-[#14532d]" },
+  hizliSistem: { label: "SİSTEM & KULLANICI", icon: "settings", box: "bg-[#fafafa] border-[#d4d4d8]", head: "text-[#27272a]" },
+} satisfies Record<string, { label: string; icon: IconName; box: string; head: string }>;
+const QUICK_TONE: Record<string, string> = {
+  ok: "font-bold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100",
+  danger: "font-bold text-red-700 bg-red-50/80 hover:bg-red-100",
+  accent: "font-bold text-blue-800 bg-blue-50/80 hover:bg-blue-100",
+};
+/** Blocks that draw their own heading: a custom title replaces it instead of being added above. */
+const OWN_HEADING = new Set(["radar", "kurulum", "online", "akis", ...Object.keys(QUICK_LOOK)]);
 
 type FeedItem = { key: number; at: Date; type: string; hotelId?: string };
 
@@ -150,90 +176,41 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           </div>
     ),
   };
-  const quickRows: Record<string, ReactNode> = {
-    outlet: (
-        <div key="outlet" className="flex flex-wrap gap-1.5 items-center bg-[#f0f4f9] p-2 rounded border border-[#b8cfe5]">
-          <span className="font-bold text-[11px] text-[#1e3a8a] mr-1"><Icon name="store" size={16} /> OUTLET:</span>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.outlet-tanim")}>
-            <Icon name="building" size={16} /> Outlet & Masa Tanımları
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.yonetim")}>
-            <Icon name="clipboard" size={16} /> Menü Yönetimi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.tema")}>
-            <Icon name="palette" size={16} /> Menü Tasarım Stüdyosu
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("menu.masaqr")}>
-            <Icon name="phone" size={16} /> Masa QR Kodları
-          </button>
+  const canOpenApp = (id: string) => appIds === null || appIds.includes(id);
+  const heading = (id: string, builtIn: string) => blockOf(layout, id)?.title ?? builtIn;
+  /** One operation's windows: only those chosen for the role and open to this user. */
+  const quickBlock = (id: keyof typeof QUICK_LOOK): ReactNode => {
+    const block = blockOf(layout, id);
+    const def = SCREEN_LAYOUT_DEFS.komuta.blocks.find((b) => b.id === id);
+    const buttons = visibleItems(layout, id)
+      .map((item) => def?.items?.find((d) => d.id === item))
+      .filter((item) => item?.app !== undefined && canOpenApp(item.app))
+      .map((item) => item!);
+    if (!block || buttons.length === 0) return null;
+    const look = QUICK_LOOK[id];
+    const tiles = block.style === "kutu";
+    return (
+      <div key={id} data-testid={`hizli-${id}`} className={`flex gap-1.5 p-2 rounded border ${tiles ? "flex-col" : "flex-wrap items-center"} ${look.box}`}>
+        <span className={`font-bold text-[11px] mr-1 ${look.head}`}>
+          <Icon name={look.icon} size={16} /> {heading(id, look.label)}:
+        </span>
+        <div
+          className={tiles || block.columns ? "grid gap-1.5 flex-1" : "contents"}
+          style={blockColumns(block) ?? (tiles ? { gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" } : undefined)}
+        >
+          {buttons.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`xp-button text-xs ${tiles ? "flex flex-col items-center gap-1 py-2 px-2 text-center" : "py-0.5 px-2"} ${item.tone ? (QUICK_TONE[item.tone] ?? "") : ""}`}
+              onClick={() => openApp?.(item.app!)}
+            >
+              {item.icon ? <Icon name={item.icon} size={tiles ? 22 : 16} /> : null} {item.label}
+            </button>
+          ))}
         </div>
-    ),
-    odaServisi: (
-        <div key="odaServisi" className="flex flex-wrap gap-1.5 items-center bg-[#fdf2f8] p-2 rounded border border-[#fbcfe8]">
-          <span className="font-bold text-[11px] text-[#831843] mr-1"><Icon name="concierge" size={16} /> ODA SERVİSİ:</span>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.menu")}>
-            <Icon name="concierge" size={16} /> Oda Servisi Menü Yönetimi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.tema")}>
-            <Icon name="palette" size={16} /> Menü Tasarım Stüdyosu
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.kayitlar")}>
-            <Icon name="clipboard" size={16} /> Oda Servisi Kayıtları
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("rs.rapor")}>
-            <Icon name="trending" size={16} /> SLA & Operasyon Raporları
-          </button>
-        </div>
-    ),
-    minibar: (
-        <div key="minibar" className="flex flex-wrap gap-1.5 items-center bg-[#f0fdf4] p-2 rounded border border-[#bbf7d0]">
-          <span className="font-bold text-[11px] text-[#14532d] mr-1"><Icon name="minibar" size={16} /> MİNİBAR:</span>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.kat")}>
-            <Icon name="minibar" size={16} /> Minibar Kat Operasyon
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.tanim")}>
-            <Icon name="settings" size={16} /> Minibar & Setup Tanımları
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.stok")}>
-            <Icon name="box" size={16} /> Otel Deposu Stoğu
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.doluluk")}>
-            <Icon name="chart" size={16} /> Excel Doluluk Girişi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("minibar.rapor")}>
-            <Icon name="trending" size={16} /> Tüketim & Görev Raporları
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100" onClick={() => openApp?.("minibar.odaqr")}>
-            <Icon name="phone" size={16} /> Oda QR Kodları &amp; Baskı
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-red-700 bg-red-50/80 hover:bg-red-100" onClick={() => openApp?.("minibar.rapor")}>
-            <Icon name="warning" size={16} /> Anormal Tüketim Takibi
-          </button>
-        </div>
-    ),
-    sistem: (
-        <div key="sistem" className="flex flex-wrap gap-1.5 items-center bg-[#fafafa] p-2 rounded border border-[#d4d4d8]">
-          <span className="font-bold text-[11px] text-[#27272a] mr-1"><Icon name="settings" size={16} /> SİSTEM & KULLANICI:</span>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.tanimlar")}>
-            <Icon name="building" size={16} /> Otel & Genel Tanımlamalar
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.kullanici")}>
-            <Icon name="users" size={16} /> Kullanıcı & Rol Yönetimi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.ekipler")}>
-            <Icon name="users" size={16} /> Ekip Yönetimi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2 font-bold text-blue-800 bg-blue-50/80 hover:bg-blue-100" onClick={() => openApp?.("core.rapor")}>
-            <Icon name="chart" size={16} /> Rapor Merkezi
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.ayarlar")}>
-            <Icon name="monitor" size={16} /> Denetim Masası
-          </button>
-          <button type="button" className="xp-button text-xs py-0.5 px-2" onClick={() => openApp?.("core.denetim")}>
-            <Icon name="list" size={16} /> Denetim Günlüğü (Audit Log)
-          </button>
-        </div>
-    ),
+      </div>
+    );
   };
   const items = (block: string, cells: Record<string, ReactNode>) => visibleItems(layout, block).map((id) => cells[id] ?? null);
 
@@ -256,7 +233,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
       </div>
     ),
     kpi: (
-      <div key="kpi" className="xp-kpis">
+      <div key="kpi" className="xp-kpis" style={blockColumns(blockOf(layout, "kpi"))}>
         {items("kpi", kpiCells)}
       </div>
     ),
@@ -266,7 +243,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           <span className="relative flex h-2.5 w-2.5">
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span>Canlı Komuta Radarı</span>
+          <span>{heading("radar", "Canlı Komuta Radarı")}</span>
           {canOpenRadar ? (
             <button
               type="button"
@@ -277,19 +254,18 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
             </button>
           ) : null}
         </legend>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge" style={blockColumns(blockOf(layout, "radar"))}>
           {items("radar", radarCells)}
         </div>
       </fieldset>
     ),
-    hizli: (
-      <div key="hizli" className="flex flex-col gap-2 my-2.5">
-        {items("hizli", quickRows)}
-      </div>
-    ),
+    hizliOutlet: quickBlock("hizliOutlet"),
+    hizliOda: quickBlock("hizliOda"),
+    hizliMinibar: quickBlock("hizliMinibar"),
+    hizliSistem: quickBlock("hizliSistem"),
     kurulum: setupRows.length > 0 ? (
         <fieldset key="kurulum" className="xp-group xp-cc-setup">
-          <legend>Kurulum %</legend>
+          <legend>{heading("kurulum", "Kurulum %")}</legend>
           <ul className="xp-list" aria-label="Kurulum durumu">
             {setupRows.map((r) => (
               <li key={r.hotelId} data-testid={`setup-${r.code}`}>
@@ -312,7 +288,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
       ) : null,
     online: (
         <fieldset key="online" className="xp-group">
-          <legend>Otellere göre online</legend>
+          <legend>{heading("online", "Otellere göre online")}</legend>
           <ul className="xp-list" aria-label="Otellere göre online">
             {kpis?.openSessionsByHotel.map((h) => (
               <li key={h.hotelId}>
@@ -325,7 +301,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
     ),
     akis: (
         <fieldset key="akis" className="xp-group">
-          <legend>Canlı Akış</legend>
+          <legend>{heading("akis", "Canlı Akış")}</legend>
           <ul className="xp-list" aria-label="Canlı Akış">
             {feed.length === 0 ? <li className="xp-list-empty">Henüz olay yok</li> : null}
             {feed.map((item) => (
@@ -341,22 +317,33 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
         </fieldset>
     ),
   };
-  // The two lists share a row when they follow each other, as on the built-in screen.
-  const order = visibleBlocks(layout).map((b) => b.id);
-  const rendered: ReactNode[] = [];
-  for (let n = 0; n < order.length; n++) {
-    const id = order[n]!;
-    const next = order[n + 1];
-    if ((id === "online" && next === "akis") || (id === "akis" && next === "online")) {
-      rendered.push(
-        <div key="listeler" className="xp-cc-cols">
-          {sections[id]}
-          {sections[next]}
-        </div>,
-      );
-      n++;
-    } else rendered.push(sections[id] ?? null);
-  }
+  /** A block at its size, under its custom title when it has no heading of its own. */
+  const frame = (block: LayoutBlock): ReactNode => {
+    const node = sections[block.id];
+    if (!node) return null;
+    const title = block.title && !OWN_HEADING.has(block.id) ? block.title : null;
+    if (!title && block.size === "normal") return node;
+    return (
+      <div key={block.id} className="xp-cc-block" style={blockZoom(block)}>
+        {title ? <h3 className="xp-cc-block-title">{title}</h3> : null}
+        {node}
+      </div>
+    );
+  };
+  // Half-width blocks that follow each other share a row; the two lists keep their built-in 1:2 split.
+  const rendered = layoutRows(layout).map((row) =>
+    row.length === 1 ? (
+      frame(row[0]!)
+    ) : (
+      <div
+        key={row.map((b) => b.id).join("+")}
+        className="xp-cc-cols"
+        data-even={row[0]!.id === "online" && row[1]!.id === "akis" ? undefined : true}
+      >
+        {row.map(frame)}
+      </div>
+    ),
+  );
 
   return (
     <div className="xp-cc">

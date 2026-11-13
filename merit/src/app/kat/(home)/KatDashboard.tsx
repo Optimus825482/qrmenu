@@ -2,12 +2,21 @@
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
 import { formatDayTr } from "@/lib/time";
-import { blockStyle, defaultLayout, type Layout, visibleBlocks, visibleItems } from "@/modules/core/screenLayouts";
+import {
+  blockOf,
+  blockStyle,
+  blockZoom,
+  defaultLayout,
+  type Layout,
+  type LayoutBlock,
+  layoutRows,
+  visibleItems,
+} from "@/modules/core/screenLayouts";
 import type { FloorSummary } from "@/modules/minibar/server/minibarTypes";
 
 export type KatFilter = "mybar" | "dnd" | null;
@@ -47,6 +56,11 @@ interface HotelOption {
 }
 
 const DEFAULT_LAYOUT = defaultLayout("kat");
+
+/** A fixed column count from tablet width up; a phone keeps the screen's own narrow grid. */
+const COLS_CLASS = "sm:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]";
+const colsStyle = (block: LayoutBlock | undefined): CSSProperties | undefined =>
+  block?.columns ? ({ "--cols": block.columns } as CSSProperties) : undefined;
 
 /** Summary boxes by layout item id. */
 const KPI: Record<string, { label: string; box: string; text: string; value(t: DashboardState["taskSummary"]): number }> = {
@@ -125,9 +139,11 @@ export function KatDashboard({
   const hotelQuery = shownHotelId ? `?hotelId=${encodeURIComponent(shownHotelId)}` : "";
 
   // Summary and progress stay inside the header card while they lead the screen; elsewhere each is its own card.
-  const blocks = visibleBlocks(layout).map((b) => b.id);
+  const rows = layoutRows(layout);
   let lead = 0;
-  while (blocks[lead] === "ozet" || blocks[lead] === "ilerleme") lead++;
+  while (rows[lead]?.every((b) => b.id === "ozet" || b.id === "ilerleme")) lead++;
+  const ozet = blockOf(layout, "ozet");
+  const katlar = blockOf(layout, "katlar");
   const kpiIds = visibleItems(layout, "ozet").filter((id) => KPI[id]);
   const strip = blockStyle(layout, "ozet") === "serit";
   const compactFloors = blockStyle(layout, "katlar") === "liste";
@@ -145,7 +161,12 @@ export function KatDashboard({
           ))}
         </div>
       ) : (
-        <div key={id} data-guide="durum-filtresi" className={`grid grid-cols-2 gap-3 ${kpiIds.length >= 5 ? "sm:grid-cols-5" : kpiIds.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"} ${card}`}>
+        <div
+          key={id}
+          data-guide="durum-filtresi"
+          style={colsStyle(ozet)}
+          className={`grid grid-cols-2 gap-3 ${ozet?.columns ? COLS_CLASS : kpiIds.length >= 5 ? "sm:grid-cols-5" : kpiIds.length === 4 ? "sm:grid-cols-4" : "sm:grid-cols-3"} ${card}`}
+        >
           {kpiIds.map((k, i) => (
             <div key={k} className={`rounded-xl border p-3.5 ${KPI[k]!.box} ${kpiIds.length % 2 === 1 && i === kpiIds.length - 1 ? "col-span-2 sm:col-span-1" : ""}`}>
               <p className={`text-xs uppercase tracking-wider ${k === "dnd" ? "text-text" : KPI[k]!.text}`}>{KPI[k]!.label}</p>
@@ -159,7 +180,7 @@ export function KatDashboard({
       return (
         <div key={id} className={card}>
           <div className="flex items-center justify-between text-xs text-muted mb-1.5">
-            <span>Tamamlanma Oranı</span>
+            <span>{blockOf(layout, "ilerleme")?.title ?? "Tamamlanma Oranı"}</span>
             <span className="font-bold text-text tabular-nums">%{d.taskSummary.completionRate}</span>
           </div>
           <div className="h-2.5 w-full overflow-hidden rounded-full bg-bg border border-border">
@@ -175,79 +196,10 @@ export function KatDashboard({
     return null;
   };
 
-  return (
-    <div className="min-h-screen bg-bg text-text">
-      {showPriorityModal && (
-        <PriorityRouteModal
-          hotelId={selectedHotelId}
-          onClose={() => setShowPriorityModal(false)}
-        />
-      )}
-
-      <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
-        {loading && !data ? (
-          <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
-            Kat planı ve günlük görevler yükleniyor...
-          </div>
-        ) : error ? (
-          <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-6 text-sm text-danger">
-            {error}
-          </div>
-        ) : data ? (
-          <>
-            <section
-              data-guide="islemlerim"
-              aria-label="Günün özeti"
-              className="rounded-2xl border border-border bg-surface p-5 space-y-4"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  {data.hotel ? (
-                    <p data-testid="kat-otel-adi" className="text-lg font-bold uppercase tracking-wide text-text">
-                      {data.hotel.name}
-                    </p>
-                  ) : null}
-                  <span className="text-xs font-semibold uppercase tracking-widest text-accent">
-                    Günün Özeti · {formatDayTr(data.today)}
-                  </span>
-                  <h2 className="text-base font-bold text-text mt-0.5">
-                    Günlük Minibar Kontrol Görevleri
-                  </h2>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPriorityModal(true)}
-                    style={{ minHeight: "var(--tap-action)" }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
-                  >
-                    <Icon name="zap" size={16} />
-                    Tavsiye İş Planı
-                    {data.taskSummary.clashCount > 0 ? (
-                      <span className="rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
-                        {data.taskSummary.clashCount}
-                      </span>
-                    ) : null}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void fetchDashboard(selectedHotelId)}
-                    style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text hover:bg-surface"
-                  >
-                    <Icon name="refresh" size={16} />
-                    Yenile
-                  </button>
-                </div>
-              </div>
-
-              {blocks.slice(0, lead).map((id) => renderBlock(id, data, false))}
-            </section>
-
-            {blocks.slice(lead).map((id) => id === "katlar" ? (
-            <section key={id} data-guide="kat-listesi" className="space-y-3">
+  const floorPlan = (data: DashboardState) => (
+            <section key="katlar" data-guide="kat-listesi" className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-text">Kat Planı ve Oda Doluluk Durumu</h2>
+                <h2 className="text-base font-bold text-text">{katlar?.title ?? "Kat Planı ve Oda Doluluk Durumu"}</h2>
                 <span className="text-xs text-muted">
                   {data.hotel ? `${data.hotel.name} · ` : ""}
                   {floors.length} Kat
@@ -305,7 +257,7 @@ export function KatDashboard({
                   ))}
                 </div>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div style={colsStyle(katlar)} className={`grid gap-4 ${katlar?.columns ? COLS_CLASS : "sm:grid-cols-2 lg:grid-cols-3"}`}>
                   {floors.map((floor, floorIdx) => {
                     const occupancyRate =
                       floor.totalRooms > 0
@@ -376,7 +328,102 @@ export function KatDashboard({
                 </div>
               )}
             </section>
-            ) : renderBlock(id, data, true))}
+  );
+
+  /** A block at its size, under its custom title when it draws no heading of its own. */
+  const frame = (block: LayoutBlock, node: ReactNode) => {
+    if (!node) return null;
+    const title = block.title && (block.id === "ozet" || block.id === "kritikStok") ? block.title : null;
+    if (!title && block.size === "normal") return node;
+    return (
+      <div key={block.id} className="space-y-2" style={blockZoom(block)}>
+        {title ? <h2 className="text-base font-bold text-text">{title}</h2> : null}
+        {node}
+      </div>
+    );
+  };
+  /** One screen row: a block, or two half-width blocks side by side from tablet width up. */
+  const renderRow = (row: LayoutBlock[], d: DashboardState, standalone: boolean) => {
+    const cells = row.map((block) => frame(block, block.id === "katlar" ? floorPlan(d) : renderBlock(block.id, d, standalone)));
+    return row.length === 1 ? (
+      cells[0]
+    ) : (
+      <div key={row.map((b) => b.id).join("+")} className="grid items-start gap-4 sm:grid-cols-2">
+        {cells}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-bg text-text">
+      {showPriorityModal && (
+        <PriorityRouteModal
+          hotelId={selectedHotelId}
+          onClose={() => setShowPriorityModal(false)}
+        />
+      )}
+
+      <main className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+        {loading && !data ? (
+          <div className="rounded-2xl border border-border bg-surface p-8 text-center text-sm text-muted">
+            Kat planı ve günlük görevler yükleniyor...
+          </div>
+        ) : error ? (
+          <div role="alert" className="rounded-2xl border border-danger/40 bg-danger/10 p-6 text-sm text-danger">
+            {error}
+          </div>
+        ) : data ? (
+          <>
+            <section
+              data-guide="islemlerim"
+              aria-label="Günün özeti"
+              className="rounded-2xl border border-border bg-surface p-5 space-y-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  {data.hotel ? (
+                    <p data-testid="kat-otel-adi" className="text-lg font-bold uppercase tracking-wide text-text">
+                      {data.hotel.name}
+                    </p>
+                  ) : null}
+                  <span className="text-xs font-semibold uppercase tracking-widest text-accent">
+                    Günün Özeti · {formatDayTr(data.today)}
+                  </span>
+                  <h2 className="text-base font-bold text-text mt-0.5">
+                    Günlük Minibar Kontrol Görevleri
+                  </h2>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPriorityModal(true)}
+                    style={{ minHeight: "var(--tap-action)" }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
+                  >
+                    <Icon name="zap" size={16} />
+                    Tavsiye İş Planı
+                    {data.taskSummary.clashCount > 0 ? (
+                      <span className="rounded-full bg-danger px-1.5 py-0.5 text-xs font-bold text-white">
+                        {data.taskSummary.clashCount}
+                      </span>
+                    ) : null}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void fetchDashboard(selectedHotelId)}
+                    style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text hover:bg-surface"
+                  >
+                    <Icon name="refresh" size={16} />
+                    Yenile
+                  </button>
+                </div>
+              </div>
+
+              {rows.slice(0, lead).map((row) => renderRow(row, data, false))}
+            </section>
+
+            {rows.slice(lead).map((row) => renderRow(row, data, true))}
           </>
         ) : null}
       </main>

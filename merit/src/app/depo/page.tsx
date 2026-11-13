@@ -6,7 +6,7 @@ import { RoutineCard } from "@/components/guide/RoutineCard";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
-import { blockStyle, visibleBlocks, visibleItems } from "@/modules/core/screenLayouts";
+import { blockOf, blockStyle, blockZoom, type LayoutBlock, layoutRows, visibleItems } from "@/modules/core/screenLayouts";
 import { getRoutines } from "@/modules/core/server/routines";
 import { myScreenLayout } from "@/modules/core/server/screenLayouts";
 import { depoDashboard } from "@/modules/minibar/server/depoDashboard";
@@ -112,6 +112,12 @@ export default async function DepoHomePage() {
     .filter((card) => card !== undefined && card.show)
     .map((card) => card!);
   const compactCards = blockStyle(layout, "kartlar") === "liste";
+  // A fixed column count applies from tablet width up; a phone keeps the screen's own narrow grid.
+  const colsClass = "sm:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]";
+  const colsStyle = (block: LayoutBlock | undefined) =>
+    block?.columns ? ({ "--cols": block.columns } as React.CSSProperties) : undefined;
+  const kpiBlock = blockOf(layout, "kpi");
+  const cardBlock = blockOf(layout, "kartlar");
   const kpis = pano
     ? {
         doluluk: { label: "Doluluk Yükleme", value: `${pano.doneCount}/3`, box: "border-border bg-surface", head: "text-muted", num: "text-text" },
@@ -124,8 +130,21 @@ export default async function DepoHomePage() {
 
   const blocks: Record<string, React.ReactNode> = {
     rutin: routines.length > 0 ? <RoutineCard key="rutin" routines={routines} /> : null,
-    kpi: kpis ? (
-      <section key="kpi" className={`grid grid-cols-2 gap-3 ${kpiIds.length >= 4 ? "sm:grid-cols-4" : kpiIds.length === 3 ? "sm:grid-cols-3" : ""}`}>
+    kpi: !kpis ? null : kpiBlock?.style === "serit" ? (
+      <section key="kpi" className="flex flex-wrap gap-2">
+        {kpiIds.map((id) => (
+          <span key={id} className={`inline-flex items-baseline gap-2 rounded-full border px-4 py-2 ${kpis[id].box}`}>
+            <span className={`text-sm uppercase tracking-wider ${kpis[id].head}`}>{kpis[id].label}</span>
+            <span className={`text-lg font-bold tabular-nums ${kpis[id].num}`}>{kpis[id].value}</span>
+          </span>
+        ))}
+      </section>
+    ) : (
+      <section
+        key="kpi"
+        style={colsStyle(kpiBlock)}
+        className={`grid grid-cols-2 gap-3 ${kpiBlock?.columns ? colsClass : kpiIds.length >= 4 ? "sm:grid-cols-4" : kpiIds.length === 3 ? "sm:grid-cols-3" : ""}`}
+      >
         {kpiIds.map((id) => (
           <div key={id} className={`rounded-2xl border p-4 ${kpis[id].box}`}>
             <p className={`text-sm uppercase tracking-wider ${kpis[id].head}`}>{kpis[id].label}</p>
@@ -133,7 +152,7 @@ export default async function DepoHomePage() {
           </div>
         ))}
       </section>
-    ) : null,
+    ),
     kartlar: compactCards ? (
       <div key="kartlar" className="overflow-hidden rounded-2xl border border-border bg-surface divide-y divide-border">
         {cards.map((card) => (
@@ -154,7 +173,7 @@ export default async function DepoHomePage() {
         ))}
       </div>
     ) : (
-      <div key="kartlar" className="grid gap-4 sm:grid-cols-2">
+      <div key="kartlar" style={colsStyle(cardBlock)} className={`grid gap-4 ${cardBlock?.columns ? colsClass : "sm:grid-cols-2"}`}>
         {cards.map((card) => (
           <Link
             key={card.href}
@@ -177,6 +196,19 @@ export default async function DepoHomePage() {
     ),
   };
 
+  /** A block at its size, under its custom title. */
+  const frame = (block: LayoutBlock) => {
+    const node = blocks[block.id];
+    if (!node) return null;
+    if (!block.title && block.size === "normal") return node;
+    return (
+      <section key={block.id} className="space-y-3" style={blockZoom(block)}>
+        {block.title ? <h2 className="text-base font-bold text-text">{block.title}</h2> : null}
+        {node}
+      </section>
+    );
+  };
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -195,7 +227,15 @@ export default async function DepoHomePage() {
         </Link>
       </header>
 
-      {visibleBlocks(layout).map((block) => blocks[block.id] ?? null)}
+      {layoutRows(layout).map((row) =>
+        row.length === 1 ? (
+          frame(row[0]!)
+        ) : (
+          <div key={row.map((b) => b.id).join("+")} className="grid items-start gap-6 sm:grid-cols-2">
+            {row.map(frame)}
+          </div>
+        ),
+      )}
     </div>
   );
 }
