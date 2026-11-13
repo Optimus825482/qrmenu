@@ -3,7 +3,6 @@
 import { type CSSProperties, useEffect, useId, useState } from "react";
 import {
   loadRoomServiceLimitsAction,
-  roomServiceLimitHotelsAction,
   setRoomServiceLimitAction,
 } from "@/modules/order/server/actions/roomServiceLimits";
 import type { RoomServiceLimitKey, RoomServiceLimits } from "@/modules/order/server/roomService/limitsAdmin";
@@ -63,37 +62,14 @@ const TOUCH: CSSProperties = { minHeight: 44, fontSize: 16 };
  * "Oda Servisi Sınırları": the open-order limit per room and the wait between two orders of a room, per hotel.
  * For the Oda Servisi Sorumlusu and the system administrator; the server authorizes every call (limitsAdmin).
  */
-export function RoomServiceLimitsWindow({ setStatus, setDirty }: AppProps) {
+export function RoomServiceLimitsWindow({ hotelId: windowHotelId, setStatus, setDirty }: AppProps) {
   const id = useId();
-  const [hotels, setHotels] = useState<{ id: string; name: string }[] | null>(null);
-  const [hotelId, setHotelId] = useState("");
+  // The hotel comes from the window header (one hotel selector for every window).
+  const hotelId = windowHotelId ?? "";
   const [limits, setLimits] = useState<RoomServiceLimits | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    roomServiceLimitHotelsAction()
-      .then((r) => {
-        if (!live) return;
-        if (r.ok) {
-          setHotels(r.data);
-          setHotelId(r.data[0]?.id ?? "");
-        } else {
-          setHotels([]);
-          setError(r.error.message);
-        }
-      })
-      .catch(() => {
-        if (!live) return;
-        setHotels([]);
-        setError("Oteller yüklenemedi");
-      });
-    return () => {
-      live = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -128,7 +104,6 @@ export function RoomServiceLimitsWindow({ setStatus, setDirty }: AppProps) {
     setDirty(dirty);
   }, [dirty, setDirty]);
 
-  const hotelName = hotels?.find((h) => h.id === hotelId)?.name ?? "";
 
   const save = async () => {
     if (!loaded || !dirty || invalid.length > 0) return;
@@ -151,7 +126,7 @@ export function RoomServiceLimitsWindow({ setStatus, setDirty }: AppProps) {
       setLimits(latest);
       setDraft(toDraft(latest));
       notify.success("Oda servisi sınırları kaydedildi.");
-      setStatus(`${hotelName}: oda servisi sınırları kaydedildi`);
+      setStatus(`Oda servisi sınırları kaydedildi`);
     } catch {
       setError("Oda servisi sınırları kaydedilemedi");
       notify.error("Oda servisi sınırları kaydedilemedi");
@@ -170,34 +145,13 @@ export function RoomServiceLimitsWindow({ setStatus, setDirty }: AppProps) {
           Misafirin odadaki QR kodu okutarak gönderdiği oda servisi siparişlerine uygulanır. Değerler otele özeldir;
           kaydedilen değer hemen geçerli olur ve her değişiklik denetim kaydına yazılır.
         </p>
-        {hotels && hotels.length > 1 ? (
-          <div className="xp-cp-color" style={{ marginBottom: 10 }}>
-            <label htmlFor={`${id}-hotel`}>Otel</label>
-            <select
-              id={`${id}-hotel`}
-              className="xp-system-select"
-              style={TOUCH}
-              value={hotelId}
-              disabled={busy}
-              onChange={(e) => setHotelId(e.target.value)}
-            >
-              {hotels.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
         {error ? (
           <p role="alert" className="xp-defs-error" style={{ padding: "4px 0" }}>
             {error}
           </p>
         ) : null}
-        {hotels === null || (hotelId && !loaded && !error) ? <p className="xp-cp-note">Yükleniyor…</p> : null}
-        {hotels && hotels.length === 0 && !error ? (
-          <p className="xp-cp-note">Oda servisi sınırlarını değiştirebileceğiniz bir otel yok.</p>
-        ) : null}
+        {hotelId && !loaded && !error ? <p className="xp-cp-note">Yükleniyor…</p> : null}
+        {!hotelId ? <p className="xp-cp-note">Pencere başlığından bir otel seçin.</p> : null}
         {loaded ? (
           <form
             noValidate

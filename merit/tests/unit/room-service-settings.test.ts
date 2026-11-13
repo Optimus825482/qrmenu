@@ -46,14 +46,14 @@ afterAll(async () => {
 });
 
 describe("oda servisi ayarları: yetkili roller", () => {
-  it("düzenleyen roller sınırlar penceresininkiyle aynı (yalnız R-OSS); şema yalnız dört ayarı tanır", () => {
-    expect(settings.ROOM_SERVICE_SETTINGS_EDITOR_ROLES).toEqual(["R-OSS"]);
+  it("düzenleyen roller: sınırlar penceresininkiler ve F&B Yönetimi; şema yalnız dört ayarı tanır", () => {
+    expect(settings.ROOM_SERVICE_SETTINGS_EDITOR_ROLES).toEqual(["R-OSS", "R-FBM"]);
     expect(Object.keys(settings.roomServiceSettingsSchema.shape).sort()).toEqual(
       ["autoPrintReceipt", "currency", "orderingEnabled", "priceDisplay"].sort(),
     );
   });
 
-  it.each(["R-OSS", "R-SYS"])("%s otelinin oda servisi outletinin ayarlarını görür ve değiştirir; diğer alanlar ve diğer outletler aynı kalır", async (code) => {
+  it.each(["R-OSS", "R-FBM", "R-SYS"])("%s otelinin oda servisi outletinin ayarlarını görür ve değiştirir; diğer alanlar ve diğer outletler aynı kalır", async (code) => {
     const royal = await hotelId("ROYAL");
     const outlet = await rsOutlet("ROYAL");
     const salon = await makeOutlet("ROYAL", "Lobi Bar");
@@ -170,7 +170,7 @@ describe("oda servisi ayarları: reddedilenler", () => {
     expect(await stored(outlet.id)).toMatchObject(START);
   });
 
-  it.each(["R-FBM", "R-ODS", "R-MTY", "R-FBY", "R-OTM"])("%s FORBIDDEN: göremez, değiştiremez, otel listesi boş, deneme denetime yazılır", async (code) => {
+  it.each(["R-ODS", "R-MTY", "R-FBY", "R-OTM"])("%s FORBIDDEN: göremez, değiştiremez, otel listesi boş, deneme denetime yazılır", async (code) => {
     const royal = await hotelId("ROYAL");
     const outlet = await rsOutlet("ROYAL");
     const ctx = await ctxOf(code);
@@ -216,7 +216,7 @@ describe("oda servisi ayarları: reddedilenler", () => {
 });
 
 describe("Oda Servisi Ayarları penceresi kaydı", () => {
-  it("rs.ayarlar yalnız R-OSS ve R-SYS'e sunulur, RO-TAL ekranına bağlıdır, amacı yazılıdır", async () => {
+  it("rs.ayarlar R-OSS, R-FBM ve R-SYS'e sunulur, RO-TAL ekranına bağlıdır, amacı yazılıdır", async () => {
     const { registerRoomServiceApps } = await import("@/modules/order/roomServiceApps");
     const { getApp } = await import("@/shell/registry");
     registerRoomServiceApps();
@@ -227,11 +227,12 @@ describe("Oda Servisi Ayarları penceresi kaydı", () => {
       moduleKey: "ROOM_SERVICE",
       category: "ROOM_SERVICE",
       kind: "component",
-      needsHotel: false,
+      needsHotel: true,
     });
     expect(app?.purpose?.length).toBeGreaterThan(20);
-    expect([...(app?.roleCodes ?? [])].sort()).toEqual(["R-OSS", "R-SYS"]);
-    expect(app?.roleCodes).toEqual(getApp("rs.sinirlar")?.roleCodes);
+    expect([...(app?.roleCodes ?? [])].sort()).toEqual(["R-FBM", "R-OSS", "R-SYS"]);
+    // One hotel selector for every window: both room-service settings windows take the hotel from the header.
+    expect(getApp("rs.sinirlar")?.needsHotel).toBe(true);
   });
 
   it("Komuta Merkezi'nin oda servisi düğmeleri pencereyi sunar (başlangıçta kapalı)", async () => {

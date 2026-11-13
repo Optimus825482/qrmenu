@@ -90,7 +90,7 @@ export function registerRoomServiceApps(): void {
     purpose: "Bir odanın aynı anda kaç açık siparişi olabileceğini ve iki sipariş arasındaki bekleme süresini belirlersin.",
     roleCodes: ["R-OSS", "R-SYS"],
     category: "ROOM_SERVICE",
-    needsHotel: false,
+    needsHotel: true,
     window: { w: 640, h: 560, minW: 420, minH: 380 },
     kind: "component",
     component: () =>
@@ -109,9 +109,9 @@ export function registerRoomServiceApps(): void {
     moduleKey: "ROOM_SERVICE",
     screenCode: "RO-TAL",
     purpose: "Oda servisinin sipariş alımını açıp kapatır, misafire gösterilen fiyatları, para birimini ve fiş yazdırmayı ayarlarsın.",
-    roleCodes: ["R-OSS", "R-SYS"],
+    roleCodes: ["R-OSS", "R-FBM", "R-SYS"],
     category: "ROOM_SERVICE",
-    needsHotel: false,
+    needsHotel: true,
     window: { w: 640, h: 640, minW: 420, minH: 380 },
     kind: "component",
     component: () =>

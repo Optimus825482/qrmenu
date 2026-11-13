@@ -4,7 +4,6 @@ import { type CSSProperties, useEffect, useId, useState } from "react";
 import { PriceDisplay } from "@/generated/prisma/enums";
 import {
   loadRoomServiceSettingsAction,
-  roomServiceSettingsHotelsAction,
   saveRoomServiceSettingsAction,
 } from "@/modules/order/server/actions/roomServiceSettings";
 import type { RoomServiceSettings } from "@/modules/order/server/roomService/settingsAdmin";
@@ -44,39 +43,16 @@ const HINT: CSSProperties = { margin: "4px 0 0" };
  * currency, receipt printing), per hotel. For the Oda Servisi Sorumlusu and the system administrator; the server
  * finds the outlet and authorizes every call (roomService/settingsAdmin).
  */
-export function RoomServiceSettingsWindow({ setStatus, setDirty }: AppProps) {
+export function RoomServiceSettingsWindow({ hotelId: windowHotelId, setStatus, setDirty }: AppProps) {
   const id = useId();
-  const [hotels, setHotels] = useState<{ id: string; name: string }[] | null>(null);
-  const [hotelId, setHotelId] = useState("");
+  // The hotel comes from the window header (one hotel selector for every window).
+  const hotelId = windowHotelId ?? "";
   const [settings, setSettings] = useState<RoomServiceSettings | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   /** Hotel whose load answered "no room-service outlet": a plain message, not an error. */
   const [missingFor, setMissingFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    roomServiceSettingsHotelsAction()
-      .then((r) => {
-        if (!live) return;
-        if (r.ok) {
-          setHotels(r.data);
-          setHotelId(r.data[0]?.id ?? "");
-        } else {
-          setHotels([]);
-          setError(r.error.message);
-        }
-      })
-      .catch(() => {
-        if (!live) return;
-        setHotels([]);
-        setError("Oteller yüklenemedi");
-      });
-    return () => {
-      live = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (!hotelId) return;
@@ -117,7 +93,6 @@ export function RoomServiceSettingsWindow({ setStatus, setDirty }: AppProps) {
     setDirty(dirty);
   }, [dirty, setDirty]);
 
-  const hotelName = hotels?.find((h) => h.id === hotelId)?.name ?? "";
   const currencies =
     loaded && !CURRENCIES.includes(settings.currency) ? [settings.currency, ...CURRENCIES] : CURRENCIES;
 
@@ -136,7 +111,7 @@ export function RoomServiceSettingsWindow({ setStatus, setDirty }: AppProps) {
       setSettings(r.data);
       setDraft(toDraft(r.data));
       notify.success("Oda servisi ayarları kaydedildi.");
-      setStatus(`${hotelName}: oda servisi ayarları kaydedildi`);
+      setStatus(`Oda servisi ayarları kaydedildi`);
     } catch {
       setError("Oda servisi ayarları kaydedilemedi");
       notify.error("Oda servisi ayarları kaydedilemedi");
@@ -155,34 +130,13 @@ export function RoomServiceSettingsWindow({ setStatus, setDirty }: AppProps) {
           Oda servisinin sipariş alımını, misafire gösterilen fiyatları ve fiş yazdırmayı buradan yönetirsiniz.
           Ayarlar otele özeldir; kaydedilen değer hemen geçerli olur ve her değişiklik denetim kaydına yazılır.
         </p>
-        {hotels && hotels.length > 1 ? (
-          <div className="xp-cp-color" style={{ marginBottom: 10 }}>
-            <label htmlFor={`${id}-hotel`}>Otel</label>
-            <select
-              id={`${id}-hotel`}
-              className="xp-system-select"
-              style={TOUCH}
-              value={hotelId}
-              disabled={busy}
-              onChange={(e) => setHotelId(e.target.value)}
-            >
-              {hotels.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
         {error ? (
           <p role="alert" className="xp-defs-error" style={{ padding: "4px 0" }}>
             {error}
           </p>
         ) : null}
-        {hotels === null || (hotelId && !loaded && !missing && !error) ? <p className="xp-cp-note">Yükleniyor…</p> : null}
-        {hotels && hotels.length === 0 && !error ? (
-          <p className="xp-cp-note">Oda servisi ayarlarını değiştirebileceğiniz bir otel yok.</p>
-        ) : null}
+        {hotelId && !loaded && !missing && !error ? <p className="xp-cp-note">Yükleniyor…</p> : null}
+        {!hotelId ? <p className="xp-cp-note">Pencere başlığından bir otel seçin.</p> : null}
         {missing ? (
           <p className="xp-cp-note">
             Bu otelde oda servisi tanımlı değil. Oda servisi kurulduğunda ayarları burada görünür.

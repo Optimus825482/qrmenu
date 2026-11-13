@@ -22,7 +22,7 @@ import { ROOM_SERVICE_LIMIT_EDITOR_ROLES } from "./limitsAdmin";
  */
 
 /** Non-system role codes allowed to edit the room-service settings: the editors of the room-service limits. */
-export const ROOM_SERVICE_SETTINGS_EDITOR_ROLES: readonly string[] = ROOM_SERVICE_LIMIT_EDITOR_ROLES;
+export const ROOM_SERVICE_SETTINGS_EDITOR_ROLES: readonly string[] = [...ROOM_SERVICE_LIMIT_EDITOR_ROLES, "R-FBM"];
 
 const NO_OUTLET = "Bu otelde oda servisi tanımlı değil";
 
