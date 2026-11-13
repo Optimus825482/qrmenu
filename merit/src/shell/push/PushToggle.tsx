@@ -5,8 +5,9 @@ import { Icon } from "@/components/icons/Icon";
 import { usePushSubscription } from "./usePushSubscription";
 
 /**
- * Profil menüsünde "Bildirimler: Aç/Kapat" öğesi. Tarayıcı push desteklemiyorsa ya da sunucuda
- * VAPID anahtarları yoksa hiçbir şey çizmez.
+ * Profil menüsünde "Bildirimler: Açık/Kapalı" öğesi. Etiket yapılacak işi değil ŞU ANKİ DURUMU
+ * söyler (personel "Kapat"ı durum sanıp karıştırıyordu); dokununca durum tersine döner.
+ * Tarayıcı push desteklemiyorsa ya da sunucuda VAPID anahtarları yoksa hiçbir şey çizmez.
  */
 export function PushToggle() {
   const { status, enable, disable } = usePushSubscription();
@@ -31,11 +32,18 @@ export function PushToggle() {
       className="staff-menu-item"
       data-testid="push-toggle"
       disabled={busy || denied}
-      title={denied ? "Bildirimler tarayıcı ayarlarından engellenmiş" : undefined}
+      aria-pressed={denied ? undefined : on}
+      title={
+        denied
+          ? "Bildirimler tarayıcı ayarlarından engellenmiş"
+          : on
+            ? "Bildirimler açık. Kapatmak için dokunun"
+            : "Bildirimler kapalı. Açmak için dokunun"
+      }
       onClick={() => void run()}
     >
       <Icon name={on ? "bell" : "bell-off"} size={20} />
-      {denied ? "Bildirimler: Engelli" : `Bildirimler: ${on ? "Kapat" : "Aç"}`}
+      {denied ? "Bildirimler: Engelli" : `Bildirimler: ${on ? "Açık" : "Kapalı"}`}
     </button>
   );
 }
