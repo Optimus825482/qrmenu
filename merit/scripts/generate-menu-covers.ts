@@ -95,8 +95,8 @@ body { width: ${WIDTH}px; height: ${HEIGHT}px; background: radial-gradient(circl
 .corner.tl { left: 32px; top: 32px; } .corner.tr { right: 32px; top: 32px; }
 .corner.bl { left: 32px; bottom: 32px; } .corner.br { right: 32px; bottom: 32px; }
 main { position: absolute; inset: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 14px 60px; }
-.logo { height: 176px; margin-bottom: 18px; }
-.motif { width: 128px; height: 128px; margin-bottom: 8px; fill: none; stroke: ${spec.accent}; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.logo { height: 264px; margin-bottom: 16px; }
+.motif { width: 100px; height: 100px; margin-bottom: 6px; fill: none; stroke: ${spec.accent}; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 h1 { font-family: "${font.family}", serif; ${font.css} line-height: 1.1; white-space: nowrap; }
 .rule { display: flex; align-items: center; gap: 18px; margin: 22px 0 20px; }
 .rule i { display: block; width: 150px; height: 2px; background: ${spec.accent}; opacity: 0.75; }
