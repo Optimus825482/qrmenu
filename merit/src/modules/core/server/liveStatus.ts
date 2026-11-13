@@ -62,6 +62,9 @@ const CANCELLED_ORDER: readonly OrderStatus[] = ["IPTAL", "REDDEDILDI"];
 /** Served (table order) or delivered (room service): the end of the happy path (see CLOSED_STATUSES). */
 const COMPLETED_ORDER: readonly OrderStatus[] = ["SERVIS_EDILDI", "TESLIM_EDILDI"];
 
+/** Open orders of the previous day older than this are abandoned, not waiting (same window as the radar's open list). */
+const CARRY_OVER_MS = 24 * 3_600_000;
+
 type Triple = [received: number, completed: number, pending: number];
 
 const add = (map: Map<string, number[]>, hotelId: string, n: number[]) => {
@@ -110,7 +113,24 @@ async function loadCounts(today: string): Promise<Counts> {
   const [hotels, moduleRows, orderRows, mybarRows, taskRows, tasks, scanRows, callRows] = await Promise.all([
     prisma.hotel.findMany({ where: { isActive: true }, select: { id: true, code: true, name: true }, orderBy: { name: "asc" } }),
     prisma.hotelModule.findMany({ where: { enabled: true }, select: { hotelId: true, moduleKey: true } }),
-    prisma.order.groupBy({ by: ["hotelId", "kind", "status"], where: { businessDate: day }, _count: { _all: true } }),
+    prisma.order.groupBy({
+      by: ["hotelId", "kind", "status"],
+      where: {
+        OR: [
+          { businessDate: day },
+          // The night shift: taken before midnight and still open, or closed after it. Without these an order
+          // taken at 23:55 and delivered at 00:25 shows on neither day's "tamamlanan", nor as waiting meanwhile.
+          {
+            businessDate: { lt: day },
+            createdAt: { gte: new Date(since.getTime() - CARRY_OVER_MS) },
+            status: { notIn: [...COMPLETED_ORDER, ...CANCELLED_ORDER] },
+          },
+          { businessDate: { lt: day }, deliveredAt: { gte: since, lt: until } },
+          { businessDate: { lt: day }, servedAt: { gte: since, lt: until } },
+        ],
+      },
+      _count: { _all: true },
+    }),
     prisma.mybarRequest.groupBy({ by: ["hotelId", "status"], where: { businessDate: day }, _count: { _all: true } }),
     // The Kat dashboard's definition (taskSummary): one task = one daily task item of the day, done = TAMAMLANDI.
     prisma.dailyTaskItem.groupBy({ by: ["taskId", "status"], where: { task: { date: day } }, _count: { _all: true } }),

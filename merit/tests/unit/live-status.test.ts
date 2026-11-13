@@ -128,7 +128,7 @@ describe("getLiveStatus (gerçek test DB)", () => {
     await order("ROYAL", "ODA_SERVISI", "TESLIM_EDILDI");
     await order("ROYAL", "ODA_SERVISI", "TESLIM_EDILDI");
     await order("ROYAL", "ODA_SERVISI", "IPTAL");
-    await order("ROYAL", "ODA_SERVISI", "GONDERILDI", YESTERDAY());
+    await order("ROYAL", "ODA_SERVISI", "TESLIM_EDILDI", YESTERDAY()); // closed yesterday
     await order("DIAMOND", "ODA_SERVISI", "ONAYLANDI");
     await order("ROYAL", "MASA", "GONDERILDI"); // a table order is not room service
 
@@ -139,6 +139,29 @@ describe("getLiveStatus (gerçek test DB)", () => {
     expect(row.total).toEqual([8, 2, 5]);
   });
 
+  it("gece yarısını aşan sipariş: dün alınıp bugün teslim edilen tamamlanan, hâlâ açık olan bekleyen sayılır", async () => {
+    const ctx = await sysCtx();
+    const dayStart = businessDateStart(businessDate());
+    // Taken at 23:55 yesterday, delivered after midnight.
+    const late = await order("DIAMOND", "ODA_SERVISI", "TESLIM_EDILDI", YESTERDAY());
+    await testDb.order.update({
+      where: { id: late.id },
+      data: { createdAt: new Date(dayStart.getTime() - 5 * 60_000), deliveredAt: new Date(dayStart.getTime() + 1000) },
+    });
+    // Taken yesterday evening, still on its way.
+    const open = await order("DIAMOND", "ODA_SERVISI", "YOLDA", YESTERDAY());
+    await testDb.order.update({ where: { id: open.id }, data: { createdAt: new Date(dayStart.getTime() - 20 * 60_000) } });
+    // Not counted: delivered yesterday, cancelled yesterday, and an order abandoned days ago.
+    const done = await order("DIAMOND", "ODA_SERVISI", "TESLIM_EDILDI", YESTERDAY());
+    await testDb.order.update({ where: { id: done.id }, data: { deliveredAt: new Date(dayStart.getTime() - 60_000) } });
+    await order("DIAMOND", "ODA_SERVISI", "IPTAL", YESTERDAY());
+    const stale = await order("DIAMOND", "ODA_SERVISI", "GONDERILDI", YESTERDAY());
+    await testDb.order.update({ where: { id: stale.id }, data: { createdAt: BEFORE_TODAY() } });
+
+    const row = rowOf(await getLiveStatus(ctx), "roomService")!;
+    expect(row.byHotel[await hotelId("DIAMOND")]).toEqual([2, 1, 1]);
+  });
+
   it("QR sipariş: yalnız MASA; SERVIS_EDILDI tamamlanan, REDDEDILDI hiçbirinde değil", async () => {
     const ctx = await sysCtx();
     await order("ROYAL", "MASA", "GONDERILDI");
@@ -146,7 +169,7 @@ describe("getLiveStatus (gerçek test DB)", () => {
     await order("ROYAL", "MASA", "SERVIS_EDILDI");
     await order("ROYAL", "MASA", "REDDEDILDI");
     await order("ROYAL", "ODA_SERVISI", "GONDERILDI");
-    await order("ROYAL", "MASA", "GONDERILDI", YESTERDAY());
+    await order("ROYAL", "MASA", "SERVIS_EDILDI", YESTERDAY()); // served yesterday
 
     const row = rowOf(await getLiveStatus(ctx), "qrOrders")!;
     expect(row.byHotel[await hotelId("ROYAL")]).toEqual([4, 1, 2]);
