@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { ScreenLink } from "@/components/staff/StaffScreens";
 import { Icon } from "@/components/icons/Icon";
 import { MybarWorkbench } from "./MybarWorkbench";
 
@@ -21,13 +21,13 @@ export function MybarRoomCard({ requestId, onChanged }: { requestId: string; onC
           <Icon name="bell" size={16} />
           Aktif Misafir MyBar Talebi
         </h2>
-        <Link
+        <ScreenLink
           href="/kat/mybar"
           style={{ minHeight: "var(--tap-action)" }}
           className="inline-flex items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text"
         >
           Tüm talepler
-        </Link>
+        </ScreenLink>
       </div>
       <MybarWorkbench requestId={requestId} onChanged={onChanged} />
     </section>

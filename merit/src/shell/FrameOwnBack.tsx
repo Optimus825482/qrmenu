@@ -3,8 +3,16 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-/** A page's own back control: a link or button led by the back arrow ("← Katlar", "← Geri"). */
+/** A page's own back control: a link or button led by the back arrow (BackLink, "← Geri"). */
 const OWN_BACK = 'a > svg[data-icon="arrow-left"], button > svg[data-icon="arrow-left"]';
+
+/** Whether a page shows a back control of its own: hidden ones (`[hidden]`, inside a closed part) do not count. */
+export function hasOwnBack(doc: Pick<Document, "querySelectorAll">): boolean {
+  for (const icon of doc.querySelectorAll(OWN_BACK)) {
+    if (!icon.closest("[hidden], [aria-hidden='true'] a, [aria-hidden='true'] button")) return true;
+  }
+  return false;
+}
 
 /**
  * Inside a tablet-shell window: tells the shell whether the page on screen has a back control of its own.
@@ -22,11 +30,11 @@ export function FrameOwnBack() {
       return; // a parent the page may not read
     }
     if (!host) return;
-    const mark = () => host.toggleAttribute("data-page-back", document.querySelector(OWN_BACK) !== null);
+    const mark = () => host.toggleAttribute("data-page-back", hasOwnBack(document));
     mark();
-    // Headers that appear after the data arrives are caught as they are drawn.
+    // Headers that appear after the data arrives are caught as they are drawn (and controls shown / hidden later).
     const observer = new MutationObserver(mark);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
     return () => {
       observer.disconnect();
       host.removeAttribute("data-page-back");
@@ -59,11 +67,28 @@ export function stepBackIfPrevious(href: string): boolean {
   const index = nav?.currentEntry?.index;
   const entries = nav?.entries?.();
   if (typeof index !== "number" || !entries || typeof nav?.traverseTo !== "function") return false;
+  const key = previousEntryKey(entries, index, href, window.location.origin);
+  if (!key) return false;
+  nav.traverseTo(key);
+  return true;
+}
+
+/**
+ * The pure part of `stepBackIfPrevious`: the key of the nearest earlier entry (at most LOOK_BACK steps) that shows
+ * the page `href` leads to: same path; the hotel is compared only when both addresses name one (a page whose data
+ * has not arrived yet links without it, and goes back to the page it was opened from, which is this window's hotel).
+ */
+export function previousEntryKey(
+  entries: readonly NavigationEntry[],
+  index: number,
+  href: string,
+  origin: string,
+): string | null {
   let to: URL;
   try {
-    to = new URL(href, window.location.origin);
+    to = new URL(href, origin);
   } catch {
-    return false;
+    return null;
   }
   for (let i = index - 1; i >= Math.max(0, index - LOOK_BACK); i--) {
     const entry = entries[i];
@@ -71,15 +96,13 @@ export function stepBackIfPrevious(href: string): boolean {
     try {
       const from = new URL(entry.url);
       if (from.origin !== to.origin || from.pathname !== to.pathname) continue;
-      // A link that names a hotel only goes back to that hotel's page; one that names none (the page's data
-      // has not arrived yet) goes back to the page it was opened from, which is this window's hotel.
       const wanted = to.searchParams.get("hotelId");
-      if (wanted && from.searchParams.get("hotelId") !== wanted) continue;
+      const had = from.searchParams.get("hotelId");
+      if (wanted && had && had !== wanted) continue;
     } catch {
       continue;
     }
-    nav.traverseTo(entry.key);
-    return true;
+    return entry.key;
   }
-  return false;
+  return null;
 }

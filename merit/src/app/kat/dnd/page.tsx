@@ -1,6 +1,8 @@
 import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
-import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { requireUser } from "@/lib/auth";
 import { listDnd } from "@/modules/minibar/server/dnd";
 
@@ -12,21 +14,14 @@ export default async function KatDndPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 space-y-5 text-text">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <BackLink />
+        <div className="min-w-0">
           <span className="text-xs font-semibold uppercase tracking-widest text-warn">
             Rahatsız Etmeyin (DND)
           </span>
-          <h1 className="text-xl font-bold text-text mt-0.5">DND Odalar</h1>
+          <h1 className="text-xl font-bold text-text mt-0.5">{screenTitle("MB-DND")}</h1>
         </div>
-        <Link
-          href="/kat"
-          style={{ minHeight: "var(--tap-action)" }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
-        >
-          <Icon name="arrow-left" size={16} />
-          Kat Planına Dön
-        </Link>
       </div>
 
       {rows.length === 0 ? (
@@ -71,7 +66,7 @@ export default async function KatDndPage() {
                   </p>
                 </div>
 
-                <Link
+                <ScreenLink
                   href={`/kat/oda-kontrol/${r.roomId}`}
                   data-guide="tamamla"
                   style={{ minHeight: "var(--tap-action)" }}
@@ -79,7 +74,7 @@ export default async function KatDndPage() {
                 >
                   Kontrol Et
                   <Icon name="arrow-right" size={14} />
-                </Link>
+                </ScreenLink>
               </li>
             );
           })}

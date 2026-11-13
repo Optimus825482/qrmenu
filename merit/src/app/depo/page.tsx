@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons/Icon";
 import { RoutineCard } from "@/components/guide/RoutineCard";
 import { requireUser } from "@/lib/auth";
-import { can } from "@/lib/rbac";
+import { visibleScreens } from "@/lib/rbac";
+import { canViewPath } from "@/components/staff/backTarget";
+import { BackLink } from "@/components/staff/BackLink";
 import { DomainError } from "@/lib/result";
 import { blockOf, blockStyle, blockZoom, type LayoutBlock, layoutRows, visibleItems } from "@/modules/core/screenLayouts";
 import { getRoutines } from "@/modules/core/server/routines";
@@ -34,13 +36,9 @@ export default async function DepoHomePage() {
     if (!(error instanceof DomainError && error.code === "FORBIDDEN")) throw error;
   }
 
-  const [seeStock, seeUpload, seeReports, seeDefs, seeCorrections] = await Promise.all([
-    can(ctx, "MB-ZIM", "V", hotelId),
-    can(ctx, "MB-DOL", "V", hotelId),
-    can(ctx, "MB-RAP", "V", hotelId),
-    can(ctx, "MB-TAN", "V", hotelId),
-    can(ctx, "MB-TAL", "V", hotelId),
-  ]);
+  // One source for every card and link (E1): a card is shown only when the page behind it opens for the user.
+  const visible = new Set(await visibleScreens(ctx, hotelId));
+  const canOpen = (href: string) => canViewPath(visible, href);
 
   const routines = await getRoutines(ctx);
 
@@ -48,7 +46,7 @@ export default async function DepoHomePage() {
     {
       id: "stok",
       href: "/depo/stok",
-      show: seeStock,
+      show: canOpen("/depo/stok"),
       title: "Minibar Stok & Talepler",
       subtitle: "Otel deposu stoğu, SKT takibi ve bekleyen kat talepleri",
       badge:
@@ -62,7 +60,8 @@ export default async function DepoHomePage() {
     {
       id: "gorevler",
       href: "/depo/gorevler",
-      show: Boolean(pano),
+      // Guarded by the floor plan (MB-KAT), not by the depot screens.
+      show: Boolean(pano) && canOpen("/depo/gorevler"),
       title: "Günlük Görevler",
       subtitle: "Günlük kontrol kalemlerinin durumu ve tamamlanma oranları",
       badge: pano?.tasks ? `${pano.tasks.completed}/${pano.tasks.total} tamamlandı` : null,
@@ -71,7 +70,7 @@ export default async function DepoHomePage() {
     {
       id: "doluluk",
       href: "/depo/doluluk-yukle",
-      show: seeUpload,
+      show: canOpen("/depo/doluluk-yukle"),
       title: "Doluluk Excel Yükleme",
       subtitle: "Günlük Konaklama (In-House), Giriş (Arrival) ve Çıkış (Departure) listeleri",
       badge: pano ? `${pano.doneCount}/3 yüklendi` : null,
@@ -80,7 +79,7 @@ export default async function DepoHomePage() {
     {
       id: "raporlar",
       href: "/depo/raporlar",
-      show: seeReports,
+      show: canOpen("/depo/raporlar"),
       title: "Minibar Raporları",
       subtitle: "Tüketim maliyet/satış analizi, görev tamamlanma ve olağandışı işlem denetimi",
       badge: pano && pano.openDnd > 0 ? `${pano.openDnd} aktif DND` : null,
@@ -89,7 +88,7 @@ export default async function DepoHomePage() {
     {
       id: "tanimlar",
       href: "/depo/tanimlar",
-      show: seeDefs,
+      show: canOpen("/depo/tanimlar"),
       title: "Minibar Tanımları",
       subtitle: "Ürün grupları, ürünler, setup şablonları, oda tipleri ve denetim kayıtları",
       badge: null,
@@ -98,7 +97,7 @@ export default async function DepoHomePage() {
     {
       id: "duzeltme",
       href: "/kat/duzeltme-onay",
-      show: seeCorrections,
+      show: canOpen("/kat/duzeltme-onay"),
       title: "Geçmiş Kayıt Düzeltme Onayları",
       subtitle: "Geçmiş tarihli oda kontrol kayıtları için gönderilen düzeltme/silme talepleri",
       badge: pano && pano.pendingCorrections > 0 ? `${pano.pendingCorrections} onay bekliyor` : null,
@@ -212,19 +211,25 @@ export default async function DepoHomePage() {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-6 py-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <span className="text-sm font-semibold uppercase tracking-widest text-accent">Depo ve Minibar Yönetimi</span>
-          <h1 className="text-xl font-bold text-text">Depo panosu</h1>
-          {pano ? <p className="text-sm text-muted">{pano.hotelName}</p> : null}
+        <div className="flex min-w-0 items-center gap-3">
+          <BackLink />
+          <div className="min-w-0">
+            <span className="text-sm font-semibold uppercase tracking-widest text-accent">Depo ve Minibar Yönetimi</span>
+            <h1 className="text-xl font-bold text-text">Depo panosu</h1>
+            {pano ? <p className="text-sm text-muted">{pano.hotelName}</p> : null}
+          </div>
         </div>
-        <Link
-          href="/kat"
-          style={{ minHeight: "var(--tap-action)" }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-text hover:bg-bg"
-        >
-          <Icon name="floor" size={16} />
-          Kat Sorumlusu Ekranı
-        </Link>
+        {/* Only with the floor plan itself (MB-KAT): the link never leads to /yetkisiz (D14). */}
+        {canOpen("/kat") ? (
+          <Link
+            href={`/kat?hotelId=${encodeURIComponent(hotelId)}`}
+            style={{ minHeight: "var(--tap-action)" }}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-text hover:bg-bg"
+          >
+            <Icon name="floor" size={16} />
+            Kat Sorumlusu Ekranı
+          </Link>
+        ) : null}
       </header>
 
       {layoutRows(layout).map((row) =>

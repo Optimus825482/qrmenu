@@ -5,6 +5,10 @@ import { ConfirmSheet } from "@/components/ui/ConfirmSheet";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { answer, confirm, confirmStore } from "@/shell/confirm";
 
+// ConfirmHost reads the address (a navigation answers the open question) and takes a history entry (phone's back).
+const nav = vi.hoisted(() => ({ pathname: "/kat", router: { push: vi.fn(), replace: vi.fn() } }));
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname, useRouter: () => nav.router }));
+
 afterEach(() => {
   cleanup();
   answer(false);
@@ -40,5 +44,30 @@ describe("ConfirmSheet", () => {
     const pending = confirm({ title: "Silinsin mi?", message: "Kayıt silinir.", danger: true, confirmLabel: "Sil" });
     fireEvent.click(await screen.findByRole("button", { name: "Sil" }));
     await expect(pending).resolves.toBe(true);
+  });
+
+  it("başka sayfaya geçilince açık soru olumsuz yanıtlanır (D7)", async () => {
+    nav.pathname = "/kat";
+    const view = render(<ConfirmHost variant="sheet" />);
+    const pending = confirm({ title: "Silinsin mi?", message: "Kayıt silinir.", danger: true, confirmLabel: "Sil" });
+    await screen.findByRole("button", { name: "Sil" });
+    nav.pathname = "/kat/stok";
+    view.rerender(<ConfirmHost variant="sheet" />);
+    await expect(pending).resolves.toBe(false);
+    nav.pathname = "/kat";
+  });
+
+  it("telefonun geri tuşu soruyu kapatır, sayfadan çıkmaz (D6)", async () => {
+    render(<ConfirmHost variant="sheet" />);
+    const pending = confirm({ title: "Silinsin mi?", message: "Kayıt silinir.", danger: true, confirmLabel: "Sil" });
+    await screen.findByRole("button", { name: "Sil" });
+    await waitFor(() => expect((window.history.state as { meritBack?: number } | null)?.meritBack).toBeTruthy());
+    window.history.back();
+    await expect(pending).resolves.toBe(false);
+    expect(window.location.pathname).toBe("/");
+  });
+
+  it("basit (tehlikesiz) soru personel sayfasında kendiliğinden evet der", async () => {
+    await expect(confirm({ title: "Kaydedilsin mi?", message: "x" })).resolves.toBe(true);
   });
 });

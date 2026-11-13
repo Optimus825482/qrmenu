@@ -3,7 +3,9 @@
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback, type ReactNode } from "react";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { Icon } from "@/components/icons/Icon";
 import { HotelBadges } from "@/components/ui/HotelBadge";
 
@@ -388,25 +390,14 @@ export default function RaporlarPage() {
   return (
     <div className="min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
-      <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md print:hidden">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md print:hidden">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {/* Inside the management shell the shell's own "Geri" leaves the report; an arrow here would
-                load the floor plan into the report's window instead. */}
-            {inShellFrame ? null : (
-              <Link
-                href={hotelHref("/depo", selectedHotelId)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center bg-bg hover:bg-border text-text rounded-lg transition"
-                aria-label="Kat paneline dön"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </Link>
-            )}
+            {/* Inside a shell window BackLink steps the window back, and shows nothing on its first screen. */}
+            <BackLink parent={hotelHref("/depo", selectedHotelId)} />
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-text flex items-center gap-2">
-                <span><Icon name="chart" size={20} /> Detaylı Minibar & Operasyon Raporları</span>
+                <span><Icon name="chart" size={20} /> {screenTitle("MB-RAP")}</span>
               </h1>
               <p className="text-xs text-muted">
                 Tüketim Analitiği • Görev Tamamlanma & DND İstatistikleri
@@ -443,26 +434,26 @@ export default function RaporlarPage() {
               <span>Yazdır</span>
             </button>
 
-            <Link
+            <ScreenLink
               href={hotelHref("/depo/doluluk-yukle", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="chart" size={20} /> Doluluk Girişi
-            </Link>
+              <Icon name="chart" size={20} /> {screenTitle("MB-DOL")}
+            </ScreenLink>
 
-            <Link
+            <ScreenLink
               href={hotelHref("/depo/stok", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="box" size={20} /> Otel Deposu
-            </Link>
+              <Icon name="box" size={20} /> {screenTitle("MB-ZIM")}
+            </ScreenLink>
 
-            <Link
+            <ScreenLink
               href={hotelHref("/depo/tanimlar", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="settings" size={20} /> Tanımlamalar & Audit
-            </Link>
+              <Icon name="settings" size={20} /> {screenTitle("MB-TAN")}
+            </ScreenLink>
           </div>
         </div>
       </header>

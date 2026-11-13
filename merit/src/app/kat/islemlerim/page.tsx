@@ -4,12 +4,23 @@ import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { useCanViewPath } from "@/components/staff/StaffScreens";
 import { askReason } from "@/components/ui/reason";
 import type { RoomCheckHistoryItem } from "@/modules/minibar/server/minibarTypes";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
+import { useBackCloses } from "@/shell/useBackCloses";
+import { askLeave, useBeforeUnload } from "@/shell/useLeaveGuard";
+
+/** Quantities that differ from the record's own (an edit or a proposed correction was typed). */
+function qtyChanged(tx: RoomCheckHistoryItem, qty: Record<string, number>): boolean {
+  return tx.items.some((it) => (qty[it.productId] ?? 0) !== it.added);
+}
 
 export default function KatIslemlerimPage() {
+  const canView = useCanViewPath();
+  const approvalsHref = "/kat/duzeltme-onay";
   const [items, setItems] = useState<RoomCheckHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -161,21 +172,34 @@ export default function KatIslemlerimPage() {
     }
   };
 
+  // Unsaved input in the open dialog: closing it (button or the phone's back) asks first (D4/D6).
+  const editDirty = editingTx !== null && (qtyChanged(editingTx, editQty) || editNote !== (editingTx.note ?? ""));
+  const correctionDirty =
+    correctionModal !== null &&
+    (correctionReason.trim() !== "" ||
+      (correctionModal.actionType === "DUZELTME" && qtyChanged(correctionModal.tx, correctionQty)));
+  useBeforeUnload(editDirty || correctionDirty);
+  const closeEdit = async (): Promise<boolean> => {
+    if (editDirty && !(await askLeave())) return false;
+    setEditingTx(null);
+    return true;
+  };
+  const closeCorrection = async (): Promise<boolean> => {
+    if (correctionDirty && !(await askLeave())) return false;
+    setCorrectionModal(null);
+    return true;
+  };
+  useBackCloses(editingTx !== null, closeEdit);
+  useBackCloses(correctionModal !== null, closeCorrection);
+
   return (
     <div className="min-h-screen bg-bg text-text">
 
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kat"
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-            >
-              <Icon name="arrow-left" size={16} />
-              Geri
-            </Link>
-            <div>
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <BackLink />
+            <div className="min-w-0">
               <h1 className="text-lg font-bold">İşlemlerim ve Oda Kontrol Kayıtları</h1>
               <p className="text-xs text-muted">
                 Bugünkü kayıtları doğrudan düzenleyebilir, geçmiş kayıtlar için yönetici onaylı düzeltme isteyebilirsiniz
@@ -183,14 +207,16 @@ export default function KatIslemlerimPage() {
             </div>
           </div>
 
-          <Link
-            href="/kat/duzeltme-onay"
-            style={{ minHeight: "var(--tap-action)" }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-3 py-2 text-xs font-semibold text-warn hover:bg-warn/25"
-          >
-            <Icon name="shield" size={16} />
-            Bekleyen Yönetici Onayları
-          </Link>
+          {canView(approvalsHref) ? (
+            <Link
+              href={approvalsHref}
+              style={{ minHeight: "var(--tap-action)" }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-warn/50 bg-warn/15 px-3 py-2 text-xs font-semibold text-warn hover:bg-warn/25"
+            >
+              <Icon name="shield" size={16} />
+              Bekleyen Yönetici Onayları
+            </Link>
+          ) : null}
         </div>
       </header>
 
@@ -327,11 +353,11 @@ export default function KatIslemlerimPage() {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setEditingTx(null)}
+                onClick={() => void closeEdit()}
                 style={{ minHeight: "var(--tap-action)" }}
                 className="rounded-xl border border-border bg-bg px-4 py-2 text-xs font-semibold text-text hover:bg-surface"
               >
-                İptal
+                Vazgeç
               </button>
               <button
                 type="button"
@@ -398,7 +424,7 @@ export default function KatIslemlerimPage() {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setCorrectionModal(null)}
+                onClick={() => void closeCorrection()}
                 style={{ minHeight: "var(--tap-action)" }}
                 className="rounded-xl border border-border bg-bg px-4 py-2 text-xs font-semibold text-text hover:bg-surface"
               >

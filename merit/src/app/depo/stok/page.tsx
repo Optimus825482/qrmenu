@@ -3,6 +3,9 @@
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { useInShellFrame } from "@/shell/useInShellFrame";
 import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { Button } from "@/components/ui/Button";
@@ -390,14 +393,11 @@ export default function DepoStokPage() {
   return (
     <div className="flex flex-col gap-4 text-text">
       <div className="flex flex-wrap items-center gap-2">
-        <Link href={hotelHref("/depo", selectedHotelId)} className={LINK_BUTTON}>
-          <Icon name="arrow-left" size={20} />
-          Geri
-        </Link>
+        <BackLink parent={hotelHref("/depo", selectedHotelId)} />
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-xl font-bold">
             <Icon name="box" size={24} />
-            Otel deposu
+            {screenTitle("MB-ZIM")}
           </h1>
           <p className="text-sm text-muted">Minibar stok takibi: otelin deposundaki ürünler, SKT ve hareketler</p>
         </div>
@@ -435,18 +435,18 @@ export default function DepoStokPage() {
             Merkez depo tedarik
           </Link>
         ) : null}
-        <Link href={hotelHref("/depo/doluluk-yukle", selectedHotelId)} className={LINK_BUTTON}>
+        <ScreenLink href={hotelHref("/depo/doluluk-yukle", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="chart" size={20} />
-          Doluluk girişi
-        </Link>
-        <Link href={hotelHref("/depo/raporlar", selectedHotelId)} className={LINK_BUTTON}>
+          {screenTitle("MB-DOL")}
+        </ScreenLink>
+        <ScreenLink href={hotelHref("/depo/raporlar", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="trending" size={20} />
-          Raporlar
-        </Link>
-        <Link href={hotelHref("/depo/tanimlar", selectedHotelId)} className={LINK_BUTTON}>
+          {screenTitle("MB-RAP")}
+        </ScreenLink>
+        <ScreenLink href={hotelHref("/depo/tanimlar", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="settings" size={20} />
-          Tanımlamalar ve denetim
-        </Link>
+          {screenTitle("MB-TAN")}
+        </ScreenLink>
       </div>
 
       {ruleHidden ? null : (
@@ -490,7 +490,8 @@ export default function DepoStokPage() {
         </div>
       ) : null}
 
-      {selectedHotelId ? (
+      {/* Only those who may request or resolve a correction can list them (the API refuses the rest). */}
+      {selectedHotelId && (canManage || canCount) ? (
         <StockCorrectionRequests
           hotelId={selectedHotelId}
           refreshKey={correctionsKey}

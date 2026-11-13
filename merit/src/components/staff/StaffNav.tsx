@@ -2,9 +2,10 @@
 
 import { NavClock } from "./NavClock";
 import Link from "next/link";
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
+import { useBackCloses } from "@/shell/useBackCloses";
 import { isNavActive, type NavModel } from "./navModel";
 
 /**
@@ -71,14 +72,14 @@ export function StaffNav({
           // Screens of the "Daha" list are plain anchors on purpose: the shell layout is rebuilt for the target page.
           if (fromMore.has(item.id)) {
             return (
-              <a key={item.id} href={item.href} className="staff-nav-item" aria-current={active ? "page" : undefined}>
+              <a key={item.href || item.id} href={item.href} className="staff-nav-item" aria-current={active ? "page" : undefined}>
                 {body}
               </a>
             );
           }
           return (
             <Link
-              key={item.id}
+              key={item.href || item.id}
               href={item.href}
               className="staff-nav-item"
               data-emphasis={item.emphasis}
@@ -99,6 +100,13 @@ function MoreSheet({ nav, pathname, sekme, onClose }: { nav: NavModel; pathname:
   const box = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   useDialogFocus(box, onClose, () => closeRef.current);
+  // The phone's back button closes the sheet (D6); a screen picked here takes the sheet's history entry over.
+  useBackCloses(true, onClose);
+  const open = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    window.location.replace(href);
+  };
   return (
     <div className="staff-sheet-backdrop" onPointerDown={(event) => event.target === event.currentTarget && onClose()}>
       <div ref={box} role="dialog" aria-modal="true" aria-label="Daha" className="staff-sheet">
@@ -106,9 +114,9 @@ function MoreSheet({ nav, pathname, sekme, onClose }: { nav: NavModel; pathname:
         {nav.more.length === 0 ? <p className="text-muted">Başka ekran yok.</p> : null}
         <ul className="staff-sheet-list">
           {nav.more.map((item) => (
-            <li key={item.id}>
+            <li key={item.href || item.id}>
               {/* A plain anchor on purpose: the shell layout is rebuilt for the target page. */}
-              <a href={item.href} className="staff-menu-item" data-current={isNavActive(item, pathname, sekme) ? "true" : undefined}>
+              <a href={item.href} onClick={(event) => open(event, item.href)} className="staff-menu-item" data-current={isNavActive(item, pathname, sekme) ? "true" : undefined}>
                 <Icon name={item.icon} size={24} />
                 {item.label}
                 {item.badge ? <span className="staff-badge staff-sheet-badge" aria-label={`${item.badge} açık talep`}>{item.badge}</span> : null}

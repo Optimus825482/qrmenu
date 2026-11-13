@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Icon } from "@/components/icons/Icon";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { DensityRoot } from "@/components/ui/Density";
 import { SnackbarHost } from "@/components/ui/Snackbar";
 import { screenForPath } from "@/modules/core/screenPaths";
+import { SCREENS } from "@/modules/core/screens";
 import { InstallPrompt } from "./InstallPrompt";
 import { isNavActive, type NavModel } from "./navModel";
 import { ProfileMenu, type ProfileExtra } from "./ProfileMenu";
@@ -65,8 +66,15 @@ const FALLBACK_TITLES: ReadonlyArray<readonly [string, string]> = [
   ["/erisimim", "Erişimim"],
 ];
 
-/** Screen name for the top bar: the nav label of the current place, else the catalogue name of the route. */
+/**
+ * Screen name for the top bar: the catalogue name when the page is a catalogue screen itself (its catalogue path is
+ * exactly this route, E2: the catalogue is the single source of screen names), else the nav label of the current
+ * place, else the catalogue name of the screen that owns the route.
+ */
 export function titleFor(pathname: string, sekme: string | null, nav: NavModel): string {
+  // Minibar screens (kat / depo) only: the other staff pages keep their nav labels.
+  const own = /^\/(kat|depo)(\/|$)/.test(pathname) ? SCREENS.find((s) => s.path === pathname) : undefined;
+  if (own) return own.name;
   const items = [...nav.primary, ...nav.more];
   const hit = items.find((item) => isNavActive(item, pathname, sekme) && item.id !== "more");
   if (hit) return hit.label;
@@ -129,6 +137,24 @@ export function StaffShell({
   useOfflineGuard(state === "offline");
 
   const title = useMemo(() => titleFor(pathname, sekme, nav), [pathname, sekme, nav]);
+  // Sticky page headers stop under the top bar (and its strips): its height is published as --staff-head-h.
+  const shellRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const head = headRef.current;
+    const shell = shellRef.current;
+    if (!head || !shell || typeof ResizeObserver === "undefined") return;
+    // A top bar that does not stick (the PC window form) covers nothing: 0 then.
+    const apply = () =>
+      shell.style.setProperty(
+        "--staff-head-h",
+        `${getComputedStyle(head).position === "sticky" ? head.getBoundingClientRect().height : 0}px`,
+      );
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(head);
+    return () => observer.disconnect();
+  }, [form]);
   const subtitle = outletName ? `${hotelName} · ${outletName}` : hotelName;
   const showFab = nav.fab && pathname === "/garson" && sekme === "masalar";
   // Left menu (PC window, rail roles, wide tablets): room for every screen, the bell and the profile button.
@@ -150,8 +176,8 @@ export function StaffShell({
 
   return (
     <DensityRoot density="personel">
-      <div className={desktop ? "staff-shell staff-xp" : "staff-shell"} data-layout={layout} data-form={form}>
-        <div className="staff-head">
+      <div ref={shellRef} className={desktop ? "staff-shell staff-xp" : "staff-shell"} data-layout={layout} data-form={form}>
+        <div ref={headRef} className="staff-head">
           <StaffTopBar
             title={title}
             subtitle={subtitle}

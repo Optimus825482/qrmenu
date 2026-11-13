@@ -13,6 +13,13 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// The close / cancel dialogs take a history entry (the phone's back closes them) and may navigate.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/kat/mybar",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 let sseHandler: ((e: MeritEvent) => void) | null = null;
 vi.mock("@/shell/useSse", () => ({
   useSse: (cb: (e: MeritEvent) => void) => {

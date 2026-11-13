@@ -8,6 +8,8 @@ import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { PersistentMybarModal } from "@/app/kat/components/PersistentMybarModal";
 import { SnackbarHost } from "@/components/ui/Snackbar";
 import { SessionWatch } from "./SessionWatch";
+import { StaffScreensProvider } from "@/components/staff/StaffScreens";
+import { visibleScreens } from "@/lib/rbac";
 
 export const dynamic = "force-dynamic";
 
@@ -21,16 +23,21 @@ export const metadata: Metadata = { manifest: "/personel.webmanifest" };
 export default async function KatLayout({ children }: { children: ReactNode }) {
   const { ctx, path, embedded } = await requireStaffLayout("/kat");
   // The MyBar alerts follow the hotel the window shows, not the session's.
-  const shownHotelId = (await pageHotelCtx(ctx)).session.hotelId;
+  const shownCtx = await pageHotelCtx(ctx);
+  const shownHotelId = shownCtx.session.hotelId;
+  // Links and back targets of the pages follow what the user may view in the hotel on screen.
+  const visible = await visibleScreens(shownCtx, shownHotelId);
   if (embedded) {
     return (
       <>
         <SessionWatch />
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
-        <PersistentMybarModal hotelId={shownHotelId} />
         <FrameOwnBack />
-        {children}
+        <StaffScreensProvider visible={visible}>
+          <PersistentMybarModal hotelId={shownHotelId} />
+          {children}
+        </StaffScreensProvider>
       </>
     );
   }
@@ -39,8 +46,10 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
     <>
       <SessionWatch />
       <ConfirmHost variant="sheet" />
-      <PersistentMybarModal hotelId={shownHotelId} />
-      <StaffShell {...shell}>{children}</StaffShell>
+      <StaffScreensProvider visible={visible}>
+        <PersistentMybarModal hotelId={shownHotelId} />
+        <StaffShell {...shell}>{children}</StaffShell>
+      </StaffScreensProvider>
     </>
   );
 }

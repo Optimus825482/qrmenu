@@ -449,6 +449,22 @@ describe("loadRoomChecklist / getRoomCheckView / startRoomCheck", () => {
     expect(row.endedAt).not.toBeNull();
     expect(await testDb.roomCheck.count({ where: { roomId: r2.id } })).toBe(1);
   });
+
+  it("startRoomCheck aynı oda / aynı gün için tekrar açılınca (geri - ileri, yenileme) aynı kaydı verir (D13)", async () => {
+    const { w, kat } = await world({ rooms: 2 });
+    const [r1, r2] = w.rooms as [typeof w.room, typeof w.room];
+    const a = await rc.startRoomCheck(kat.ctx, r1.id, T0);
+    const again = await rc.startRoomCheck(kat.ctx, r1.id, minutes(T0, 3));
+    expect(again.checkId).toBe(a.checkId);
+    expect(await testDb.roomCheck.count({ where: { userId: kat.userId, type: "ACIK" } })).toBe(1);
+    // Another room still replaces the open one; the next business day opens a new record.
+    const b = await rc.startRoomCheck(kat.ctx, r2.id, minutes(T0, 4));
+    expect(b.checkId).not.toBe(a.checkId);
+    expect(await testDb.roomCheck.findUnique({ where: { id: a.checkId } })).toBeNull();
+    const back = await rc.startRoomCheck(kat.ctx, r2.id, new Date(T0.getTime() + 24 * 3_600_000));
+    expect(back.checkId).not.toBe(b.checkId);
+    expect(await testDb.roomCheck.count({ where: { userId: kat.userId, type: "ACIK" } })).toBe(1);
+  });
 });
 
 describe("deleteMyTransaction", () => {

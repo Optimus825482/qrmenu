@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { useCanViewPath } from "@/components/staff/StaffScreens";
+import { useBackCloses } from "@/shell/useBackCloses";
 
 interface PriorityPlanEntry {
   seq?: number;
@@ -33,6 +35,14 @@ export function PriorityRouteModal({
   const [requireQrForControl, setRequireQrForControl] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // The phone's back button closes the plan; a room opened from it takes the plan's history entry over (D6).
+  const navigate = useBackCloses(true, onClose);
+  const canView = useCanViewPath();
+  const follow = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    navigate(href);
+  };
 
   useEffect(() => {
     let active = true;
@@ -188,26 +198,28 @@ export function PriorityRouteModal({
                   </div>
 
                   {requireQrForControl ? (
+                    canView("/kat/qr") ? (
                     <Link
                       href="/kat/qr"
-                      onClick={onClose}
+                      onClick={follow("/kat/qr")}
                       style={{ minHeight: "var(--tap-action)" }}
                       className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
                     >
                       <Icon name="camera" size={14} />
                       QR Okut
                     </Link>
-                  ) : (
+                    ) : null
+                  ) : canView(`/kat/oda-kontrol/${rm.roomId}`) ? (
                     <Link
                       href={`/kat/oda-kontrol/${rm.roomId}`}
-                      onClick={onClose}
+                      onClick={follow(`/kat/oda-kontrol/${rm.roomId}`)}
                       style={{ minHeight: "var(--tap-action)" }}
                       className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95"
                     >
                       Kontrol Et
                       <Icon name="arrow-right" size={14} />
                     </Link>
-                  )}
+                  ) : null}
                 </div>
               );
             })

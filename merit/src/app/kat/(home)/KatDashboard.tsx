@@ -6,6 +6,8 @@ import { type CSSProperties, type ReactNode, useCallback, useEffect, useRef, use
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
 import { Icon } from "@/components/icons/Icon";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
+import { ScreenLink, useCanView } from "@/components/staff/StaffScreens";
+import { useBackCloses } from "@/shell/useBackCloses";
 import { formatDayTr } from "@/lib/time";
 import {
   blockOf,
@@ -137,6 +139,17 @@ export function KatDashboard({
   // way into a floor and back never depends on the session's hotel or on the address being carried along.
   const shownHotelId = data?.hotel?.id ?? selectedHotelId;
   const hotelQuery = shownHotelId ? `?hotelId=${encodeURIComponent(shownHotelId)}` : "";
+
+  // The address names the hotel on screen (D10): a floor's "Geri" finds this entry in history, and a reload or a
+  // step back keeps the hotel. Other params (`filtre`, the window's `font`/`theme`) stay.
+  const answeredHotelId = data?.hotel?.id;
+  useEffect(() => {
+    if (!answeredHotelId) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("hotelId") === answeredHotelId) return;
+    url.searchParams.set("hotelId", answeredHotelId);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [answeredHotelId]);
 
   // Summary and progress stay inside the header card while they lead the screen; elsewhere each is its own card.
   const rows = layoutRows(layout);
@@ -433,6 +446,8 @@ export function KatDashboard({
 
 function CriticalStock({ count }: { count: number }) {
   const [open, setOpen] = useState(false);
+  // The list behind the number is the hotel warehouse screen's (MB-ZIM): only who may view it opens it (E1).
+  const canSeeStock = useCanView("MB-ZIM");
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm text-text">
       <div className="flex items-center gap-2.5">
@@ -441,6 +456,7 @@ function CriticalStock({ count }: { count: number }) {
           Otel deposunda <strong>{count} ürün</strong> kritik seviyenin altında!
         </span>
       </div>
+      {canSeeStock ? (
       <button
         type="button"
         data-testid="kritik-stok-ac"
@@ -451,6 +467,7 @@ function CriticalStock({ count }: { count: number }) {
         Kritik Stokları Gör
         <Icon name="arrow-right" size={16} />
       </button>
+      ) : null}
       {open ? <CriticalStockDialog onClose={() => setOpen(false)} /> : null}
     </div>
   );
@@ -471,6 +488,8 @@ function CriticalStockDialog({ onClose }: { onClose: () => void }) {
   const [data, setData] = useState<CriticalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   useDialogFocus(box, onClose, () => box.current?.querySelector<HTMLElement>("button"));
+  // The phone's back button closes the list; "Tüm stoklar" takes its history entry over (D6).
+  const navigate = useBackCloses(true, onClose);
 
   useEffect(() => {
     const first = setTimeout(async () => {
@@ -539,13 +558,18 @@ function CriticalStockDialog({ onClose }: { onClose: () => void }) {
           )}
         </div>
         <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">
-          <Link
+          <ScreenLink
             href="/kat/stok"
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              navigate("/kat/stok");
+            }}
             style={{ minHeight: "var(--tap-action)" }}
             className="inline-flex items-center rounded-xl bg-accent px-4 text-xs font-bold text-white hover:opacity-95"
           >
             Tüm stoklar
-          </Link>
+          </ScreenLink>
         </div>
       </div>
     </div>

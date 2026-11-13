@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/staff/BackLink";
+import { dropBackEntry, historyBack, pushBackEntry } from "@/shell/backStack";
+import { askLeave, useLeaveGuard, type LeaveGuard } from "@/shell/useLeaveGuard";
 
 /*
  * Merkez depo teslimi (minibar operasyonları sistem sorumlusu): what was taken from the central warehouse is
@@ -40,8 +42,6 @@ type Step = 1 | 2 | 3;
 
 const FIELD =
   "min-h-[var(--tap-std)] w-full rounded-[var(--radius-m)] border border-border bg-surface px-3 text-base text-text placeholder:text-muted";
-const LINK_BUTTON =
-  "inline-flex min-h-[var(--tap-std)] items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-4 text-sm font-semibold text-text";
 const CARD = "rounded-[var(--radius-l)] border border-border bg-surface";
 
 const today = () => {
@@ -73,6 +73,8 @@ export default function TedarikPage() {
   const [saving, setSaving] = useState(false);
   const [openReceipt, setOpenReceipt] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  /** History entries of the wizard steps 2 and 3 (decision D5): the phone's back goes one step back. */
+  const stepEntries = useRef<{ 2: number | null; 3: number | null }>({ 2: null, 3: null });
 
   const load = useCallback(async () => {
     try {
@@ -94,6 +96,31 @@ export default function TedarikPage() {
     const t = setTimeout(() => void load(), 0);
     return () => clearTimeout(t);
   }, [load]);
+
+  /** Moves forward to step 2 or 3; its own history entry brings the user back to the step before. */
+  const enterStep = (to: 2 | 3) => {
+    if (stepEntries.current[to] === null) {
+      stepEntries.current[to] = pushBackEntry(() => {
+        stepEntries.current[to] = null;
+        setStep(to === 3 ? 2 : 1);
+      });
+    }
+    setStep(to);
+  };
+  /** Takes the step entries off the history, the top-most first (a save, leaving by the page's "Geri"). */
+  const dropSteps = useCallback(() => {
+    const { 2: second, 3: third } = stepEntries.current;
+    stepEntries.current = { 2: null, 3: null };
+    const pending = [third, second].filter((id): id is number => id !== null).map((id) => dropBackEntry(id));
+    return Promise.all(pending).then(() => undefined);
+  }, []);
+  useEffect(() => () => void dropSteps(), [dropSteps]);
+  /** The in-page "Geri" of a step: the same as the phone's back (over the step's own entry). */
+  const stepBack = () => {
+    if (step === 1) return;
+    if (stepEntries.current[step] !== null) void historyBack();
+    else setStep(step === 3 ? 2 : 1);
+  };
 
   const productName = useMemo(() => new Map(products.map((p) => [p.id, p.name])), [products]);
   const patch = (key: number, change: Partial<Line>) => setLines((all) => all.map((l) => (l.key === key ? { ...l, ...change } : l)));
@@ -129,7 +156,7 @@ export default function TedarikPage() {
         .filter((l) => l.productId || l.qty > 0)
         .map((l) => (hotels.length === 1 ? { ...l, shares: { [hotels[0].id]: l.qty } } : sharesTotal(l) > l.qty ? { ...l, shares: {} } : l)),
     );
-    setStep(2);
+    enterStep(2);
   };
 
   const splitEvenly = () =>
@@ -191,6 +218,22 @@ export default function TedarikPage() {
     setOcrText(null);
   };
 
+  const dirty = step > 1 || filled.length > 0 || documentNo.trim() !== "" || note.trim() !== "" || imageToken !== null;
+  const guard = useLeaveGuard(dirty);
+  // The page's "Geri" from inside the wizard: one question, then the step entries and the guard come off the history.
+  const wizardGuard: LeaveGuard = {
+    leave: async () => {
+      if (dirty && !(await askLeave())) return false;
+      await dropSteps();
+      await guard.release();
+      return true;
+    },
+    release: async () => {
+      await dropSteps();
+      await guard.release();
+    },
+  };
+
   const save = async () => {
     try {
       setSaving(true);
@@ -216,6 +259,7 @@ export default function TedarikPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Tedarik kaydedilemedi.");
       setNotice(`Tedarik ${data.code} kaydedildi; ürünler otel depolarına eklendi.`);
+      void dropSteps();
       reset();
       void load();
     } catch (err: unknown) {
@@ -232,10 +276,7 @@ export default function TedarikPage() {
   return (
     <div className="flex flex-col gap-4 text-text">
       <div className="flex flex-wrap items-center gap-2">
-        <Link href="/depo/stok" className={LINK_BUTTON}>
-          <Icon name="arrow-left" size={20} />
-          Otel deposu
-        </Link>
+        <BackLink guard={wizardGuard} />
         <div className="min-w-0 flex-1">
           <h1 className="flex items-center gap-2 text-xl font-bold">
             <Icon name="box" size={24} />
@@ -461,10 +502,10 @@ export default function TedarikPage() {
                 </table>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <Button onClick={() => setStep(1)}>Geri</Button>
+                <Button onClick={stepBack}>Geri</Button>
                 <div className="flex flex-wrap items-center gap-3">
                   {shareProblem ? <span className="text-sm text-muted">{shareProblem}</span> : null}
-                  <Button variant="primary" disabled={!!shareProblem} onClick={() => setStep(3)}>
+                  <Button variant="primary" disabled={!!shareProblem} onClick={() => enterStep(3)}>
                     Önizlemeye geç
                   </Button>
                 </div>
@@ -503,7 +544,7 @@ export default function TedarikPage() {
                 ))}
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <Button onClick={() => setStep(2)} disabled={saving}>
+                <Button onClick={stepBack} disabled={saving}>
                   Geri
                 </Button>
                 <Button mutates variant="primary" disabled={saving} onClick={() => void save()}>

@@ -18,7 +18,7 @@ test.describe("@kabul-6 Doluluk yükleme, görevler ve öncelik planı", () => {
       const files = await makeOccupancyFiles(today(), dir);
       const uploadPage = await depo.newPage();
       await uploadPage.goto("/depo/doluluk-yukle");
-      await expect(uploadPage.getByRole("heading", { name: "Günlük Doluluk Yükleme (Excel)" })).toBeVisible();
+      await expect(uploadPage.getByRole("heading", { name: "Doluluk Yükleme" })).toBeVisible();
       for (const [file, kind, okRows, errorRows] of [[files.inhouse, "IN_HOUSE", 1, 1], [files.arrivals, "ARRIVAL", 2, 0], [files.departures, "DEPARTURE", 2, 0]] as const) {
         await uploadPage.getByTestId("occupancy-file").setInputFiles(file);
         await uploadPage.getByTestId("occupancy-kind").selectOption(kind);

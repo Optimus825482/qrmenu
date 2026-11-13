@@ -6,6 +6,9 @@ import { loadStaffShellProps, requireStaffLayout } from "@/components/staff/load
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { SnackbarHost } from "@/components/ui/Snackbar";
 import { SessionWatch } from "@/app/kat/SessionWatch";
+import { StaffScreensProvider } from "@/components/staff/StaffScreens";
+import { visibleScreens } from "@/lib/rbac";
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +17,16 @@ export const metadata: Metadata = { manifest: "/personel.webmanifest" };
 /** Every /depo page: the staff shell (rail navigation for the depot roles) and the sheet-style confirm/reason dialogs. */
 export default async function DepoLayout({ children }: { children: ReactNode }) {
   const { ctx, path, embedded } = await requireStaffLayout("/depo");
+  const shownCtx = await pageHotelCtx(ctx);
+  // Links and back targets of the pages follow what the user may view in the hotel on screen.
+  const visible = await visibleScreens(shownCtx, shownCtx.session.hotelId);
   if (embedded) {
     return (
       <>
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
         <FrameOwnBack />
-        {children}
+        <StaffScreensProvider visible={visible}>{children}</StaffScreensProvider>
       </>
     );
   }
@@ -29,7 +35,9 @@ export default async function DepoLayout({ children }: { children: ReactNode }) 
     <>
       <SessionWatch />
       <ConfirmHost variant="sheet" />
-      <StaffShell {...shell}>{children}</StaffShell>
+      <StaffScreensProvider visible={visible}>
+        <StaffShell {...shell}>{children}</StaffShell>
+      </StaffScreensProvider>
     </>
   );
 }

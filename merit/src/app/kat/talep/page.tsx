@@ -1,7 +1,8 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
 import { useCallback, useEffect, useState } from "react";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 
@@ -103,17 +104,20 @@ export default function KatTalepPage() {
   return (
     <main data-testid="kat-talep" className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
+          <BackLink />
+          <div className="min-w-0">
           <h1 className="text-lg font-bold">Ek talep</h1>
           <p className="text-xs text-muted">Önerilen ürünler için ek stok talebi oluşturun ve taleplerinizi izleyin</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/kat/stok" className={LINK_BTN}>
+          <ScreenLink href="/kat/stok" className={LINK_BTN}>
             Stoklarım
-          </Link>
-          <Link href="/kat/kritik" className={LINK_BTN}>
+          </ScreenLink>
+          <ScreenLink href="/kat/kritik" className={LINK_BTN}>
             Kritik stoklar
-          </Link>
+          </ScreenLink>
         </div>
       </div>
       {message && (

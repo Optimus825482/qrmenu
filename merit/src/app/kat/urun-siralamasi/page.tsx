@@ -1,11 +1,12 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
+import { useLeaveGuard } from "@/shell/useLeaveGuard";
 
 type Row = { productId: string; name: string; groupName: string };
 type View = { products: Row[]; standard: string[]; custom: boolean };
@@ -68,6 +69,8 @@ export default function UrunSiralamasiPage() {
   const ids = rows?.map((row) => row.productId) ?? [];
   const dirty = ids.join("|") !== saved.join("|");
   const isStandard = ids.join("|") === standard.join("|");
+  // A moved card not saved yet: leaving asks first (D4).
+  const guard = useLeaveGuard(dirty);
 
   const onPointerDown = (event: PointerEvent<HTMLButtonElement>, id: string) => {
     if (busy || (event.pointerType === "mouse" && event.button !== 0)) return;
@@ -142,6 +145,8 @@ export default function UrunSiralamasiPage() {
       message: "Kendi sıralamanız silinir; ürünler herkesin gördüğü standart sırayla gösterilir.",
       confirmLabel: "Standart sıraya dön",
       cancelLabel: "Vazgeç",
+      // Deletes the user's own order: asked always (a simple question answers itself on the staff pages).
+      danger: true,
     });
     if (!ok) return;
     setBusy(true);
@@ -160,23 +165,16 @@ export default function UrunSiralamasiPage() {
 
   return (
     <div className="min-h-screen bg-bg pb-32 text-text">
-      <header className="sticky top-0 z-20 border-b border-border bg-bg px-4 py-3">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <div>
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg px-4 py-3">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
+          <BackLink guard={guard} />
+          <div className="min-w-0">
             <h1 className="text-lg font-bold">Oda Kontrol Ürün Sıralaması</h1>
             <p className="text-xs text-muted">
               {custom ? "Kendi sıralamanızı kullanıyorsunuz." : "Standart sıralamayı kullanıyorsunuz."} Bu sıra yalnız sizin
               ekranınızı değiştirir.
             </p>
           </div>
-          <Link
-            href="/kat"
-            style={{ minHeight: "var(--tap-action)" }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-          >
-            <Icon name="home" size={16} />
-            Ana Sayfa
-          </Link>
         </div>
       </header>
 

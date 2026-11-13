@@ -3,7 +3,9 @@
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { confirm } from "@/shell/confirm";
 import { Icon } from "@/components/icons/Icon";
 import { HotelBadges } from "@/components/ui/HotelBadge";
@@ -847,24 +849,14 @@ export default function MinibarTanimlarPage() {
   return (
     <div className="depo-touch min-h-screen bg-bg text-text flex flex-col font-sans select-none">
       {/* Üst Navigasyon */}
-      <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {/* Inside a shell window the shell's own "Geri" leaves the screen; an arrow here would load another
-                screen into this window. */}
-            <Link
-              href={hotelHref("/depo", selectedHotelId)}
-              hidden={inShellFrame}
-              className="p-2 bg-bg hover:bg-border text-text rounded-lg transition"
-              title="Depo panosu"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </Link>
+            {/* Inside a shell window BackLink steps the window back, and shows nothing on its first screen. */}
+            <BackLink parent={hotelHref("/depo", selectedHotelId)} />
             <div>
               <h1 className="text-lg md:text-xl font-bold tracking-tight text-text flex items-center gap-2">
-                <span><Icon name="settings" size={20} /> Minibar & Sistem Tanımlamaları</span>
+                <span><Icon name="settings" size={20} /> {screenTitle("MB-TAN")}</span>
               </h1>
               <p className="text-xs text-muted">
                 Ürün Grupları • Ürünler • Oda Tipleri • Setuplar • <Icon name="shield" size={20} /> Silinemez Denetim Kaydı
@@ -893,26 +885,26 @@ export default function MinibarTanimlarPage() {
               </select>
             )}
 
-            <Link
+            <ScreenLink
               href={hotelHref("/depo/stok", selectedHotelId)}
-              className="px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="box" size={20} /> Otel Deposu
-            </Link>
+              <Icon name="box" size={20} /> {screenTitle("MB-ZIM")}
+            </ScreenLink>
 
-            <Link
+            <ScreenLink
               href="/kat/tavsiye-is-plani"
-              className="px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="lightbulb" size={20} /> Tavsiye Planı
-            </Link>
+              <Icon name="lightbulb" size={20} /> Tavsiye İş Planı
+            </ScreenLink>
 
-            <Link
+            <ScreenLink
               href={hotelHref("/depo/raporlar", selectedHotelId)}
-              className="px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
-              <Icon name="trending" size={20} /> Raporlar
-            </Link>
+              <Icon name="trending" size={20} /> {screenTitle("MB-RAP")}
+            </ScreenLink>
           </div>
         </div>
       </header>

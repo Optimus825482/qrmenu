@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { playCue, unlockAudio, useSoundState } from "@/components/pos/soundGate";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
+import { useCanViewPath } from "@/components/staff/StaffScreens";
 import { type MybarItem, useMybarStream } from "./useMybarStream";
 
 /** The alarm repeats until somebody presses "Gördüm". */
@@ -49,6 +50,8 @@ function AlertBody({ current, count, confirming, error, soundLocked, onConfirm }
   const boxRef = useRef<HTMLDivElement>(null);
   const ackRef = useRef<HTMLButtonElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+  // The room check is a screen of its own (MB-TUK): its link is shown only to who may open it (E1).
+  const canView = useCanViewPath();
   // Escape must never dismiss: the hook swallows it, Tab stays inside, focus starts on "Gördüm".
   useDialogFocus(boxRef, () => undefined, () => ackRef.current);
   const others = count - 1;
@@ -179,7 +182,7 @@ function AlertBody({ current, count, confirming, error, soundLocked, onConfirm }
                 Sesi aç
               </button>
             ) : null}
-            {current.roomId ? (
+            {current.roomId && canView(`/kat/oda-kontrol/${current.roomId}`) ? (
               <Link
                 href={`/kat/oda-kontrol/${current.roomId}`}
                 data-guide="oda-ac"

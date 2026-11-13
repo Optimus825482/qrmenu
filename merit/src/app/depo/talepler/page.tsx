@@ -1,9 +1,8 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
 import { useCallback, useEffect, useState } from "react";
-import { Icon } from "@/components/icons/Icon";
 import { Button } from "@/components/ui/Button";
 
 type Item = {
@@ -28,8 +27,6 @@ type Req = {
 type Data = { items: Req[]; kpis: { pending: number; approved: number; deliveredToday: number } };
 
 const FIELD = "min-h-11 w-full rounded-xl border border-border bg-bg px-3 text-sm text-text placeholder:text-muted";
-const LINK_BUTTON =
-  "inline-flex min-h-[var(--tap-std)] items-center gap-2 rounded-[var(--radius-m)] border border-border bg-surface px-4 text-sm font-semibold text-text";
 const CARD = "rounded-[var(--radius-l)] border border-border bg-surface";
 
 /** Approved but not yet delivered (partial deliveries add up). */
@@ -101,10 +98,7 @@ export default function DepoTaleplerPage() {
   return (
     <main data-testid="depo-talepler" className="flex flex-col gap-4 text-text">
       <div className="flex flex-wrap items-center gap-2">
-        <Link href="/depo/stok" className={LINK_BUTTON}>
-          <Icon name="arrow-left" size={20} />
-          Geri
-        </Link>
+        <BackLink />
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold">Ek talepler</h1>
           <p className="text-sm text-muted">Kat sorumlularının otel deposundan istediği ek ürünler</p>

@@ -1,7 +1,9 @@
 "use client";
 
 import { answer, useConfirmRequest } from "@/shell/confirm";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { useBackCloses } from "@/shell/useBackCloses";
 import { setNotifySurface } from "@/shell/notify";
 import { SnackbarHost } from "./Snackbar";
 import { ConfirmSheet } from "./ConfirmSheet";
@@ -20,6 +22,20 @@ export function ConfirmHost({ variant }: { variant: "xp" | "sheet" }) {
   useEffect(() => {
     if (variant === "sheet") setNotifySurface("snackbar");
   }, [variant]);
+  // No question survives a navigation: a new page answers the open one negatively (D7).
+  const pathname = usePathname();
+  const shownPath = useRef(pathname);
+  useEffect(() => {
+    if (shownPath.current === pathname) return;
+    shownPath.current = pathname;
+    answer(false);
+    answerReason(null);
+  }, [pathname]);
+  // On the staff pages the phone's back button closes the sheet instead of leaving the page (D6). The XP desktop
+  // and the phone shell keep their own history handling, so only the sheet surface takes an entry.
+  const sheet = variant === "sheet";
+  useBackCloses(sheet && request !== null, () => answer(false));
+  useBackCloses(sheet && reason !== null, () => answerReason(null));
   return (
     <>
       {variant === "xp" ? null : (

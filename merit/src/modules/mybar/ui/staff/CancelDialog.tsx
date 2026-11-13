@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ReasonDialog } from "@/components/ui/ReasonDialog";
+import { useBackCloses } from "@/shell/useBackCloses";
 import { cancelMybarAction } from "../../server/actions/requests";
 import type { MybarRow } from "../../server/requests";
 
@@ -24,6 +25,8 @@ type Props = {
  */
 export function CancelDialog({ row, onCancel, onCancelled }: Props) {
   const [error, setError] = useState<string | null>(null);
+  // The phone's back closes the dialog instead of leaving the page (D6).
+  useBackCloses(true, onCancel);
   return (
     <ReasonDialog
       open

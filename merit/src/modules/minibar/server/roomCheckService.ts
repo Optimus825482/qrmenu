@@ -130,7 +130,11 @@ async function announceDone(
 
 // ---------------------------------------------------------------- start
 
-/** Opens the room check of the user: every open (ACIK) check the user left behind is dropped first. */
+/**
+ * Opens the room check of the user: every open (ACIK) check the user left behind is dropped first. The user's
+ * still-open check of the same room on the same business day is kept and returned as it is (the page re-entered
+ * from history must not restart the check and its `startedAt`).
+ */
 export async function startRoomCheck(
   ctx: Ctx,
   roomId: string,
@@ -140,6 +144,15 @@ export async function startRoomCheck(
   await assertCan(ctx, SCREEN, "O", room.hotelId);
   const date = businessDay(businessDate(now));
   return prisma.$transaction(async (tx) => {
+    const open = await tx.roomCheck.findFirst({
+      where: { roomId: room.id, userId: ctx.user.id, checkDate: date, type: "ACIK", endedAt: null },
+      orderBy: { startedAt: "desc" },
+      select: { id: true },
+    });
+    if (open) {
+      await tx.roomCheck.deleteMany({ where: { userId: ctx.user.id, type: "ACIK", endedAt: null, id: { not: open.id } } });
+      return { checkId: open.id };
+    }
     await tx.roomCheck.deleteMany({ where: { userId: ctx.user.id, type: "ACIK", endedAt: null } });
     const check = await tx.roomCheck.create({
       data: { roomId: room.id, userId: ctx.user.id, checkDate: date, type: "ACIK", startedAt: now },

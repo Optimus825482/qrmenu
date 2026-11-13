@@ -2,7 +2,9 @@
 
 import { hotelFromAddress } from "@/shell/useInShellFrame";
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { confirm } from "@/shell/confirm";
 
@@ -272,11 +274,14 @@ export default function DolulukYuklePage() {
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans">
-      <header className="sticky top-0 z-40 bg-bg/95 border-b border-border px-4 py-3">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 bg-bg/95 border-b border-border px-4 py-3">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-bold text-text">Günlük Doluluk Yükleme (Excel)</h1>
-            <p className="text-xs text-muted">In House, Arrivals ve Departures dosyaları</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <BackLink parent={hotelHref("/depo", hotelId)} />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold text-text">{screenTitle("MB-DOL")}</h1>
+              <p className="text-xs text-muted">Günlük Excel dosyaları: In House, Arrivals ve Departures</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {hotels.length > 1 && (
@@ -298,20 +303,20 @@ export default function DolulukYuklePage() {
                 ))}
               </select>
             )}
-            <Link
+            <ScreenLink
               href="/kat/tavsiye-is-plani"
               style={{ minHeight: "var(--tap-action)" }}
               className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
             >
               Tavsiye İş Planı
-            </Link>
-            <Link
+            </ScreenLink>
+            <ScreenLink
               href={hotelHref("/depo/stok", hotelId)}
               style={{ minHeight: "var(--tap-action)" }}
               className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
             >
-              Otel Deposu
-            </Link>
+              {screenTitle("MB-ZIM")}
+            </ScreenLink>
           </div>
         </div>
       </header>

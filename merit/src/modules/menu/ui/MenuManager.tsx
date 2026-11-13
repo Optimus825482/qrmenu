@@ -236,7 +236,8 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
             gap: 5,
             fontWeight: 700,
             padding: "2px 10px",
-            height: 26,
+            minHeight: "var(--tap-min, 44px)",
+            minWidth: "var(--tap-min, 44px)",
           }}
         >
           <span aria-hidden="true" style={{ fontSize: 13, lineHeight: 1 }}>←</span>

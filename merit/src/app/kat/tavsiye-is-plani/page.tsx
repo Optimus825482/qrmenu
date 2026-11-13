@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
 
 interface PriorityPlanEntry {
   seq?: number;
@@ -221,23 +222,23 @@ export default function KatTavsiyeIsPlaniPage() {
 
         {/* Buton: QR Zorunlu ise doğrudan QR Okut, değilse Kontrol Et */}
         {isQrRequired ? (
-          <Link
+          <ScreenLink
             href={targetQrUrl}
             style={{ minHeight: "var(--tap-action)" }}
             className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 shadow-sm transition"
           >
             <Icon name="camera" size={15} />
             QR Okut
-          </Link>
+          </ScreenLink>
         ) : (
-          <Link
+          <ScreenLink
             href={targetControlUrl}
             style={{ minHeight: "var(--tap-action)" }}
             className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-white hover:opacity-90 transition"
           >
             Kontrol Et
             <Icon name="arrow-right" size={14} />
-          </Link>
+          </ScreenLink>
         )}
       </div>
     );
@@ -246,18 +247,11 @@ export default function KatTavsiyeIsPlaniPage() {
   return (
     <div className="min-h-screen bg-bg text-text pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kat"
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg transition"
-            >
-              <Icon name="arrow-left" size={16} />
-              Geri
-            </Link>
-            <div>
+          <div className="flex min-w-0 items-center gap-3">
+            <BackLink />
+            <div className="min-w-0">
               <h1 className="text-lg font-bold">Tavsiye Edilen Günlük İş Planı</h1>
               <p className="text-xs text-muted">
                 Çıkış + Giriş çakışmaları, erken çıkışlar ve kat sırasına göre akıllı önceliklendirme

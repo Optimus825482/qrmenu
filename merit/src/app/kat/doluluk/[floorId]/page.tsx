@@ -1,13 +1,15 @@
 "use client";
 
-import { stepBackIfPrevious } from "@/shell/FrameOwnBack";
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
+import { MMD_REASONS } from "@/modules/minibar/mmdReasons";
 import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
-import Link from "next/link";
+import { MmdConsumptionAsk } from "@/modules/minibar/ui/MmdConsumptionAsk";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { useCanView, useCanViewPath } from "@/components/staff/StaffScreens";
+import { useBackCloses } from "@/shell/useBackCloses";
 import type { RoomCardData } from "@/modules/minibar/server/minibarTypes";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 import { notify } from "@/shell/notify";
@@ -270,9 +272,17 @@ export default function KatDolulukDetailPage() {
     }
   };
 
+  // The room dialog closes on the phone's back button; a page opened from it takes the dialog's entry over (D6).
+  const dialogNavigate = useBackCloses(selectedRoom !== null, () => openRoom(null));
+  // Screens are granted one by one (E1): with the floor plan alone the floor is read-only.
+  const canView = useCanViewPath();
+  const canRecord = useCanView("MB-TUK");
+  const canCheck = (roomId: string) => canView(`/kat/oda-kontrol/${roomId}`);
+  const qrHref = "/kat/qr";
+
   const handleControlClick = (room: RoomCardData, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!data?.settings?.requireQrForControl) {
+    if (!data?.settings?.requireQrForControl && canCheck(room.id)) {
       router.push(`/kat/oda-kontrol/${room.id}`);
     }
   };
@@ -304,29 +314,18 @@ export default function KatDolulukDetailPage() {
 
   const recheckMinutes = data?.settings?.dndRecheckMinutes ?? 120;
 
-  // "Katlar" names the hotel of the floor on screen: the list it opens is that hotel's, whatever the session's
+  // "Geri" names the hotel of the floor on screen: the list it opens is that hotel's, whatever the session's
   // hotel is and whether or not the address still carries the window's `?hotelId=`.
   const floorHotelId = data?.floor.hotelId ?? "";
-  const floorsHref = floorHotelId ? `/kat?hotelId=${encodeURIComponent(floorHotelId)}` : "/kat";
+  const floorsHref = floorHotelId ? `/kat?hotelId=${encodeURIComponent(floorHotelId)}` : undefined;
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link
-              href={floorsHref}
-              data-testid="katlar-geri"
-              onClick={(e) => {
-                if (stepBackIfPrevious(floorsHref)) e.preventDefault();
-              }}
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-            >
-              <Icon name="arrow-left" size={16} />
-              Katlar
-            </Link>
-            <div>
+          <div className="flex min-w-0 items-center gap-3">
+            <BackLink parent={floorsHref} testId="katlar-geri" />
+            <div className="min-w-0">
               {data?.floor.hotelName ? (
                 <p data-testid="kat-otel-adi" className="text-sm font-bold uppercase tracking-wide text-accent">
                   {data.floor.hotelName}
@@ -599,8 +598,8 @@ export default function KatDolulukDetailPage() {
                           >
                             MyBar{mybarApproved ? <Icon name="check" size={12} /> : "!"}
                           </span>
-                        ) : data?.settings?.requireQrForControl ? (
-                          // QR zorunluluğu aktifse Kontrol linki tamamen kaldırıldı!
+                        ) : data?.settings?.requireQrForControl || !canCheck(room.id) ? (
+                          // QR zorunluluğu aktifse (ya da oda kontrolü kullanıcıya açık değilse) Kontrol linki yok.
                           null
                         ) : (
                           <button
@@ -641,6 +640,7 @@ export default function KatDolulukDetailPage() {
               </div>
               <button
                 type="button"
+                aria-label="Kapat"
                 onClick={() => openRoom(null)}
                 style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
                 className="rounded-xl border border-border bg-bg p-2 text-muted hover:text-text hover:bg-surface"
@@ -708,6 +708,7 @@ export default function KatDolulukDetailPage() {
                   ) : null}
                 </div>
 
+                {canRecord ? (
                 <div className="space-y-2">
                   <label htmlFor="dnd-note-input" className="block text-xs font-semibold text-muted">
                     DND Açıklaması / Not (İsteğe bağlı)
@@ -774,39 +775,20 @@ export default function KatDolulukDetailPage() {
                     </div>
                   ) : null}
                   {mmdAsk ? (
-                    <div
-                      role="alertdialog"
-                      aria-label="Tüketim kaydı"
-                      data-testid="mmd-soru"
-                      className="space-y-2 rounded-xl border-2 border-accent bg-bg p-3"
-                    >
-                      <p className="text-sm font-bold text-text">{mmdConsumptionQuestion(selectedRoom.number, mmdAsk)}</p>
-                      <p className="text-xs text-muted">
-                        Evet derseniz tüketim miktarlarını girersiniz; kayıt Minibar Yönetimi onayına gönderilir.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(selectedRoom.id)}&mmd=${encodeURIComponent(mmdAsk)}`)
-                          }
-                          style={{ minHeight: "var(--tap-action)" }}
-                          className="flex-1 rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white hover:opacity-90"
-                        >
-                          Evet
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMmdAsk(null)}
-                          style={{ minHeight: "var(--tap-action)" }}
-                          className="flex-1 rounded-xl border border-border bg-surface px-4 py-2.5 text-xs font-semibold text-text hover:bg-bg"
-                        >
-                          Hayır
-                        </button>
-                      </div>
-                    </div>
+                    <MmdConsumptionAsk
+                      roomNumber={selectedRoom.number}
+                      reason={mmdAsk}
+                      // `kat`: the request's "Geri" returns to this floor, not into a room check (D3).
+                      onYes={() =>
+                        dialogNavigate(
+                          `/kat/manuel-kayit?oda=${encodeURIComponent(selectedRoom.id)}&mmd=${encodeURIComponent(mmdAsk)}&kat=${encodeURIComponent(selectedRoom.floorId)}`,
+                        )
+                      }
+                      onNo={() => setMmdAsk(null)}
+                    />
                   ) : null}
                 </div>
+                ) : null}
 
                 {roomMmds.length > 0 ? (
                   <div data-testid="mmd-liste" className="pt-2 border-t border-warn/20">
@@ -856,28 +838,30 @@ export default function KatDolulukDetailPage() {
             ) : null}
 
             {/* Room Control / QR Action Button */}
-            <div className="pt-2 border-t border-border flex flex-col gap-2">
+            <div className="pt-2 border-t border-border flex flex-col gap-2 empty:hidden">
               {data?.settings?.requireQrForControl ? (
+                canView(qrHref) ? (
                 <button
                   type="button"
-                  onClick={() => router.push("/kat/qr")}
+                  onClick={() => dialogNavigate(qrHref)}
                   style={{ minHeight: "var(--tap-action)" }}
                   className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
                 >
                   <Icon name="camera" size={16} />
                   QR Okut
                 </button>
-              ) : (
+                ) : null
+              ) : canCheck(selectedRoom.id) ? (
                 <button
                   type="button"
-                  onClick={() => router.push(`/kat/oda-kontrol/${selectedRoom.id}`)}
+                  onClick={() => dialogNavigate(`/kat/oda-kontrol/${selectedRoom.id}`)}
                   style={{ minHeight: "var(--tap-action)" }}
                   className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
                 >
                   <Icon name="check" size={16} />
                   Minibar Kontrol Ekranını Aç →
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

@@ -1,16 +1,19 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink, useCanViewPath } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 
 /** Pause after an unreadable/unknown code before the camera loop scans again (the resolver allows 30/min). */
 const RESCAN_DELAY_MS = 2_000;
 
 export default function KatQrScannerPage() {
   const router = useRouter();
+  const canView = useCanViewPath();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const trackRef = useRef<MediaStreamTrack | null>(null);
@@ -76,6 +79,8 @@ export default function KatQrScannerPage() {
         }
         const roomId = json.roomId ?? json.room?.id;
         if (!roomId) throw new Error("Oda bilgisi çözümlenemedi.");
+        // The room check is a screen of its own (MB-TUK): without it the scan leads nowhere (never to /yetkisiz).
+        if (!canView(`/kat/oda-kontrol/${roomId}`)) throw new Error("Oda kontrolü ekranı size atanmadı.");
 
         stopCamera();
         // The QR permission is the server-side scan proof, not a URL parameter.
@@ -89,7 +94,7 @@ export default function KatQrScannerPage() {
         setResolving(false);
       }
     },
-    [resolving, router, stopCamera],
+    [resolving, router, stopCamera, canView],
   );
 
   const startCamera = useCallback(async () => {
@@ -176,19 +181,12 @@ export default function KatQrScannerPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
 
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/kat"
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-            >
-              <Icon name="arrow-left" size={16} />
-              Geri
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold">Oda QR Okut</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <BackLink />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold">{screenTitle("MB-KF")}</h1>
               <p className="text-xs text-muted">Oda kapısındaki veya minibardaki QR kodu okutun</p>
             </div>
           </div>
@@ -325,6 +323,7 @@ export default function KatQrScannerPage() {
             </div>
           ) : null}
 
+          {canView("/kat/manuel-kayit") ? (
           <div data-guide="form-gonder" className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-bold text-text">QR kodu okutulamıyor mu?</p>
@@ -332,15 +331,16 @@ export default function KatQrScannerPage() {
                 Odadaki tüketimi açıklamasıyla birlikte Minibar Yönetimi onayına gönderin; onaylanınca odaya işlenir.
               </p>
             </div>
-            <Link
+            <ScreenLink
               href="/kat/manuel-kayit"
               style={{ minHeight: "var(--tap-primary)" }}
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-bg px-4 py-3 text-sm font-bold text-text hover:bg-surface"
             >
               <Icon name="edit" size={18} />
               Manuel kayıt talebi
-            </Link>
+            </ScreenLink>
           </div>
+          ) : null}
         </div>
       </main>
     </div>

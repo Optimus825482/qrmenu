@@ -5,6 +5,10 @@ import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { ConfirmHost } from "@/components/ui/ConfirmHost";
 import { askReason, answerReason, reasonStore } from "@/components/ui/reason";
 
+// ConfirmHost reads the address (a navigation answers the open question) and takes a history entry (phone's back).
+const nav = vi.hoisted(() => ({ pathname: "/kat", router: { push: vi.fn(), replace: vi.fn() } }));
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname, useRouter: () => nav.router }));
+
 afterEach(() => {
   cleanup();
   answerReason(null);

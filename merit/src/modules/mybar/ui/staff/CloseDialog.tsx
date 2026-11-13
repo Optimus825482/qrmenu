@@ -2,6 +2,8 @@
 
 import { useId, useRef, useState } from "react";
 import { useDialogFocus } from "@/components/ui/useDialogFocus";
+import { useBackCloses } from "@/shell/useBackCloses";
+import { askLeave, useBeforeUnload } from "@/shell/useLeaveGuard";
 import { EXPLANATION_RULE, isValidExplanation } from "../../constants";
 import { completeMybarAction } from "../../server/actions/requests";
 import type { MybarRow } from "../../server/requests";
@@ -39,9 +41,18 @@ export function CloseDialog({ row, onCancel, onClosed }: Props) {
   const valid = isValidExplanation(text);
   const canSubmit = confirmed && valid && !busy;
 
-  useDialogFocus(boxRef, () => {
-    if (!busy) onCancel();
-  }, () => fieldRef.current);
+  // A typed explanation or a ticked box is not dropped silently (D4): "Vazgeç", Escape and the phone's back ask first.
+  const dirty = text.trim() !== "" || confirmed;
+  useBeforeUnload(dirty);
+  const close = async (): Promise<boolean> => {
+    if (busy) return false;
+    if (dirty && !(await askLeave())) return false;
+    onCancel();
+    return true;
+  };
+  useBackCloses(true, close);
+
+  useDialogFocus(boxRef, () => void close(), () => fieldRef.current);
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -122,7 +133,7 @@ export function CloseDialog({ row, onCancel, onClosed }: Props) {
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
-            onClick={onCancel}
+            onClick={() => void close()}
             disabled={busy}
             style={{ minHeight: "var(--tap-std, 48px)" }}
             className="rounded-xl border border-border bg-surface px-5 text-sm font-semibold text-text"

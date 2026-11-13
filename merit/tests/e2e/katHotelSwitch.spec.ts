@@ -177,7 +177,7 @@ test("pencerenin alt ekranları oturumun değil seçilen otelin verisini göster
     await select.selectOption({ label: name });
     await expect(frameOf(page).getByTestId("kat-otel-adi")).toHaveText(name);
     await frameOf(page).locator("body").evaluate(() => window.location.assign("/kat/stok"));
-    await expect(frameOf(page).getByRole("heading", { name: `${name} Stokları` })).toBeVisible();
+    await expect(frameOf(page).getByRole("heading", { name: `Otel Deposu · ${name}` })).toBeVisible();
     // Back at the list for the next round (the selector re-keys the frame only when the hotel changes).
     await frameOf(page).locator("body").evaluate(() => window.location.assign("/kat"));
     await expect(frameOf(page).getByTestId("kat-otel-adi")).toHaveText(name);

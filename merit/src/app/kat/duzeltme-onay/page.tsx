@@ -1,10 +1,12 @@
 "use client";
 
-import { useInShellFrame } from "@/shell/useInShellFrame";
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { askReason } from "@/components/ui/reason";
 import type { CorrectionRequestItem } from "@/modules/minibar/server/minibarTypes";
 import { StockCorrectionRequests } from "@/modules/minibar/ui/StockCorrectionRequests";
@@ -31,7 +33,6 @@ type StockRow = {
 };
 
 export default function KatDuzeltmeOnayPage() {
-  const inShellFrame = useInShellFrame();
   const [requests, setRequests] = useState<CorrectionRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,22 +121,14 @@ export default function KatDuzeltmeOnayPage() {
   return (
     <div className="min-h-screen bg-bg text-text">
 
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* In a shell window this screen can be the first one (Onaylar app): the shell "Geri" leaves it,
-                a link here would push another screen into the window. */}
-            <Link
-              href="/kat/islemlerim"
-              hidden={inShellFrame}
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-            >
-              <Icon name="arrow-left" size={16} />
-              Geri
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold">Bekleyen Yönetici Onayları</h1>
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Root of the depot menu, a sub-page of İşlemlerim on the floor menu; the first screen of a shell
+                window (Onaylar app) shows none: the shell's own arrow leaves it (BackLink). */}
+            <BackLink />
+            <div className="min-w-0">
+              <h1 className="text-lg font-bold">{screenTitle("MB-TAL")}</h1>
               <p className="text-xs text-muted">
                 Düzeltme ve silme talepleri, manuel kayıt talepleri ve ek stok talepleri — toplam {waitingCorrections + manual.length + stock.length} bekleyen
               </p>
@@ -159,9 +152,9 @@ export default function KatDuzeltmeOnayPage() {
         <section data-testid="bekleyen-manuel" className="space-y-2 rounded-2xl border border-border bg-surface p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-bold text-text">Manuel kayıt talepleri ({manual.length} bekleyen)</h2>
-            <Link href="/kat/manuel-kayit" style={{ minHeight: "var(--tap-action)" }} className={openLink}>
+            <ScreenLink href="/kat/manuel-kayit" style={{ minHeight: "var(--tap-action)" }} className={openLink}>
               Manuel kayıt taleplerini aç
-            </Link>
+            </ScreenLink>
           </div>
           {manual.length === 0 ? (
             <p className="text-xs text-muted">Onay bekleyen manuel kayıt talebi yok.</p>

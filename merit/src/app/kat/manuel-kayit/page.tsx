@@ -1,10 +1,20 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
 import { confirm } from "@/shell/confirm";
+import { useLeaveGuard } from "@/shell/useLeaveGuard";
+
+/** The page a request opened from a room or a floor goes back to (`?kat=` / `?oda=` of its first address). */
+function manualEntryParent(search: string): string | undefined {
+  const query = new URLSearchParams(search);
+  const floor = query.get("kat");
+  if (floor) return `/kat/doluluk/${encodeURIComponent(floor)}`;
+  const room = query.get("oda");
+  return room ? `/kat/oda-kontrol/${encodeURIComponent(room)}` : undefined;
+}
 
 type Floor = { id: string; name: string; rooms: { id: string; number: string }[] };
 type Line = { productId: string; name: string; groupName: string; unit: string; max: number };
@@ -71,6 +81,14 @@ export default function ManuelKayitPage() {
   const [rejectReason, setRejectReason] = useState("");
   /** MMD reason carried over from the room detail (guest unavailable but took the products at the door). */
   const [mmd, setMmd] = useState<string | null>(null);
+  /** Where "Geri" leads when the page was opened from a room or a floor (the marks leave the address below). */
+  const [backParent, setBackParent] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    const parent = manualEntryParent(window.location.search);
+    if (!parent) return;
+    const first = setTimeout(() => setBackParent(parent), 0);
+    return () => clearTimeout(first);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -119,6 +137,7 @@ export default function ManuelKayitPage() {
     // frame would lose the chosen hotel (proxy.ts carries them from this address).
     query.delete("oda");
     query.delete("mmd");
+    query.delete("kat");
     const rest = query.toString();
     window.history.replaceState(null, "", `${window.location.pathname}${rest ? `?${rest}` : ""}`);
     const first = setTimeout(() => {
@@ -214,18 +233,16 @@ export default function ManuelKayitPage() {
 
   const field = "w-full rounded-xl border border-border bg-bg px-3 py-3 text-sm text-text focus:border-accent focus:outline-none";
   const waiting = data?.requests.filter((r) => r.status === "BEKLIYOR").length ?? 0;
+  // Typed but not sent: quantities, an explanation beyond the MMD text filled in, a rejection reason (D4).
+  const prefilled = mmd ? `MMD: ${mmd}.` : "";
+  const dirty = chosen.length > 0 || (reason.trim() !== "" && reason.trim() !== prefilled) || rejectReason.trim() !== "";
+  const guard = useLeaveGuard(dirty);
 
   return (
     <div className="min-h-dvh bg-bg text-text">
       <header className="border-b border-border bg-surface px-4 py-4">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <Link
-            href="/kat"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-bg px-3 py-2 text-sm font-semibold text-text hover:bg-surface"
-          >
-            <Icon name="arrow-left" size={16} />
-            Geri
-          </Link>
+          <BackLink parent={backParent} guard={guard} />
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-text">Manuel Kayıt Talebi</h1>
             <p className="text-xs text-muted">

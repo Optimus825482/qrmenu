@@ -1,7 +1,7 @@
 "use client";
 
 import { mbFetch } from "@/modules/minibar/ui/mbFetch";
-import Link from "next/link";
+import { BackLink } from "@/components/staff/BackLink";
 import { use, useEffect, useMemo, useState } from "react";
 import { HotelLogo } from "@/components/HotelLogo";
 
@@ -104,6 +104,7 @@ export default function KatUrunPage({ params }: { params: Promise<{ productId: s
     <main data-testid="kat-urun" className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
+          <BackLink />
           {data?.hotel?.code ? <HotelLogo hotelCode={data.hotel.code} size={56} /> : null}
           <div className="min-w-0">
             <h1 className="text-lg font-bold">{data?.product?.name ?? "Ürün geçmişi"}</h1>
@@ -112,12 +113,6 @@ export default function KatUrunPage({ params }: { params: Promise<{ productId: s
             </p>
           </div>
         </div>
-        <Link
-          href="/kat/stok"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-bg"
-        >
-          <span aria-hidden="true">←</span> Stoklara dön
-        </Link>
       </div>
 
       {error && (

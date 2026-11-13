@@ -4,6 +4,8 @@ import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { list } from "@/modules/mybar/server/requests";
 import { MybarList } from "@/modules/mybar/ui/staff/MybarList";
+import { BackLink } from "@/components/staff/BackLink";
+import { screenTitle } from "@/components/staff/screenTitle";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "MyBar Talepleri" };
@@ -16,8 +18,13 @@ export default async function KatMybarPage() {
   return (
     <main className="min-h-screen bg-bg text-text pb-28">
       <header className="border-b border-border bg-bg px-4 py-4">
-        <h1 className="mx-auto max-w-3xl text-xl font-bold">MyBar Talepleri</h1>
-        <p className="mx-auto max-w-3xl text-sm text-muted">Misafirlerin odalardan gönderdiği talepler.</p>
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <BackLink />
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold">{screenTitle("MB-PERS")}</h1>
+            <p className="text-sm text-muted">Misafirlerin odalardan gönderdiği talepler.</p>
+          </div>
+        </div>
       </header>
       <MybarList initial={page.items} hotelId={hotelId} canCancel={canCancel} />
     </main>

@@ -1,7 +1,9 @@
 "use client";
 
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
+import { BackLink } from "@/components/staff/BackLink";
 import Link from "next/link";
+import { screenTitle } from "@/components/staff/screenTitle";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HotelLogo } from "@/components/HotelLogo";
 import { Icon } from "@/components/icons/Icon";
@@ -114,10 +116,11 @@ export default function KatStokPage() {
     <main data-testid="kat-stok" className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
+          <BackLink />
           {data?.hotel?.code ? <HotelLogo hotelCode={data.hotel.code} size={56} /> : null}
           <div className="min-w-0">
             <h1 data-testid="stok-baslik" className="text-lg font-bold">
-              {hotelName ? `${hotelName} Stokları` : "Otel Stokları"}
+              {hotelName ? `${screenTitle("MB-ZIM")} · ${hotelName}` : screenTitle("MB-ZIM")}
             </h1>
             <p className="text-xs text-muted">Otel deposundaki ürünler: toplam, kullanılan ve kalan adet</p>
           </div>

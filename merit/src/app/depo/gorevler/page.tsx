@@ -1,6 +1,5 @@
 import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
-import Link from "next/link";
-import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { businessDate } from "@/lib/time";
@@ -19,21 +18,14 @@ export default async function DepoGorevlerPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-4 px-4 py-5 text-text">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <BackLink />
+        <div className="min-w-0">
           <span className="text-sm font-semibold uppercase tracking-widest text-text">
             Depo & Operasyon · {day}
           </span>
           <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>
         </div>
-        <Link
-          href="/depo"
-          style={{ minHeight: "var(--tap-action)" }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
-        >
-          <Icon name="arrow-left" size={16} />
-          Depo Panosuna Dön
-        </Link>
       </div>
 
       <section

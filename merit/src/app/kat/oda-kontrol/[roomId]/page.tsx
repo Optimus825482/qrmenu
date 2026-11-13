@@ -1,12 +1,14 @@
 "use client";
 
-import { stepBackIfPrevious } from "@/shell/FrameOwnBack";
-import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
-import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
-import Link from "next/link";
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
+import { MMD_REASONS } from "@/modules/minibar/mmdReasons";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { useCanViewPath } from "@/components/staff/StaffScreens";
+import { MmdConsumptionAsk } from "@/modules/minibar/ui/MmdConsumptionAsk";
+import { useLeaveGuard } from "@/shell/useLeaveGuard";
 import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
 import { MybarRoomCard } from "@/modules/mybar/ui/staff/MybarRoomCard";
@@ -84,7 +86,7 @@ interface RoomCheckData {
 }
 
 export default function OdaKontrolPage() {
-  const hotelHref = useHotelHref();
+  const canView = useCanViewPath();
   const params = useParams<{ roomId: string }>();
   const router = useRouter();
   const roomId = params?.roomId;
@@ -101,7 +103,22 @@ export default function OdaKontrolPage() {
   const [saveKey, setSaveKey] = useState(newRequestKey);
   const [dndKey, setDndKey] = useState(newRequestKey);
   const [mmdOpen, setMmdOpen] = useState(false);
+  // The reason of the MMD just recorded: the "tüketim var mı?" question is open for it.
+  const [mmdAsk, setMmdAsk] = useState<string | null>(null);
   const quickKeys = useRef<Record<string, string>>({});
+  // The action bar is fixed: the page keeps room for it under the last row, whatever it shows (MMD options).
+  const barRef = useRef<HTMLDivElement>(null);
+  const [barHeight, setBarHeight] = useState(0);
+  const hasBar = data !== null;
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar || typeof ResizeObserver === "undefined") return;
+    const apply = () => setBarHeight(bar.getBoundingClientRect().height);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [hasBar]);
 
   const loadRoom = useCallback(async (showSpinner = false) => {
     if (!roomId) return;
@@ -129,6 +146,7 @@ export default function OdaKontrolPage() {
 
   useEffect(() => {
     if (!roomId) return;
+    // Idempotent on the server: re-entering the page keeps the open check (and its start time).
     void mbFetch(`/api/minibar/room/${roomId}/start`, { method: "POST" }).catch(() => undefined);
     const t = setTimeout(() => void loadRoom(true), 0);
     return () => clearTimeout(t);
@@ -269,6 +287,8 @@ export default function OdaKontrolPage() {
         for (const k of Object.keys(prev)) cleared[k] = 0;
         return cleared;
       });
+      // The note went with the record: nothing typed is left unsaved.
+      setNote("");
     } catch (e) {
       notify.error(errorText(e, "Kayıt hatası"));
     } finally {
@@ -292,14 +312,9 @@ export default function OdaKontrolPage() {
       if (!res.ok) throw new Error(json.error ?? "MMD kaydedilemedi.");
       setDndKey(newRequestKey());
       notify.success(`MMD kaydedildi: ${reason}`);
-      // The guest may have handed over products at the door: the consumption goes to the manager as a manual entry request.
-      const wants = await confirm({
-        title: "Tüketim kaydı",
-        message: mmdConsumptionQuestion(data.room.number, reason),
-        confirmLabel: "Evet",
-        cancelLabel: "Hayır",
-      });
-      if (wants) router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(data.room.id)}&mmd=${encodeURIComponent(reason)}`);
+      // The guest may have handed over products at the door: the consumption goes to the manager as a manual
+      // entry request. Asked in place, as in the floor page's room dialog (a simple confirm() answers itself here).
+      setMmdAsk(reason);
     } catch (e) {
       notify.error(errorText(e, "MMD hatası"));
     } finally {
@@ -321,6 +336,7 @@ export default function OdaKontrolPage() {
       const json = (await res.json()) as { message?: string; error?: string; count?: number };
       if (!res.ok) throw new Error(json.error ?? "DND kaydedilemedi.");
       setDndKey(newRequestKey());
+      setNote("");
       notify.success(json.message ?? `DND kaydedildi (${json.count ?? 1}. kontrol).`);
       await loadRoom(false);
     } catch (e) {
@@ -331,47 +347,37 @@ export default function OdaKontrolPage() {
   };
 
   const totalSelected = Object.values(quantities).reduce((a, b) => a + b, 0);
+  // Quantities picked or a note typed but not saved yet: leaving asks first (D4).
+  const guard = useLeaveGuard(totalSelected > 0 || note.trim() !== "");
+  const qrHref = "/kat/qr";
+
+  const openManualEntry = async (reason: string) => {
+    if (!data || !(await guard.leave())) return;
+    setMmdAsk(null);
+    router.push(`/kat/manuel-kayit?oda=${encodeURIComponent(data.room.id)}&mmd=${encodeURIComponent(reason)}`);
+  };
 
   return (
-    <div className="min-h-screen bg-bg text-text pb-36">
+    <div
+      className="min-h-screen bg-bg text-text"
+      style={{ paddingBottom: `calc(${Math.ceil(barHeight)}px + var(--space-6, 32px))` }}
+    >
 
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* Always the floor of the room: `router.back()` returned to the QR camera after a scan and left the
-                app when the room was the first page of the window. */}
-            <Link
-              href={hotelHref(data ? `/kat/doluluk/${data.room.floorId}` : "/kat")}
-              data-testid="oda-geri"
-              onClick={(e) => {
-                if (data && stepBackIfPrevious(hotelHref(`/kat/doluluk/${data.room.floorId}`))) e.preventDefault();
-              }}
-              style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
-              className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-            >
-              <Icon name="arrow-left" size={16} />
-              Geri
-            </Link>
-            <div>
-              <h1 className="text-lg font-bold">
-                Oda {data?.room.number ?? "..."} — Minibar Kontrol
-              </h1>
-              {data ? (
-                <p className="text-xs text-muted">
-                  {data.room.floorName} · {data.room.roomTypeName} · {data.room.cabinetCount} Dolap
-                </p>
-              ) : null}
-            </div>
+      <header className="sticky top-[var(--staff-head-h,0px)] z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center gap-3">
+          {/* Always the floor of the room (D3): `router.back()` returned to the QR camera after a scan and left the
+              app when the room was the first page of the window. */}
+          <BackLink parent={data ? `/kat/doluluk/${data.room.floorId}` : undefined} guard={guard} testId="oda-geri" />
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-lg font-bold">
+              Oda {data?.room.number ?? "..."} — Minibar Kontrol
+            </h1>
+            {data ? (
+              <p className="truncate text-xs text-muted">
+                {data.room.floorName} · {data.room.roomTypeName} · {data.room.cabinetCount} Dolap
+              </p>
+            ) : null}
           </div>
-
-          <Link
-            href="/kat"
-            style={{ minHeight: "var(--tap-action)" }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
-          >
-            <Icon name="home" size={16} />
-            Ana Sayfa
-          </Link>
         </div>
       </header>
 
@@ -393,16 +399,19 @@ export default function OdaKontrolPage() {
             <p className="text-xs text-muted leading-relaxed">
               Bu otelde oda kontrol sayfasına doğrudan erişim güvenlik gereği kapatılmıştır. Lütfen oda kapısındaki veya dolabındaki QR kodu okutunuz.
             </p>
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => router.push("/kat/qr")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:opacity-90 shadow transition"
-              >
-                <Icon name="camera" size={18} />
-                QR Okut
-              </button>
-            </div>
+            {canView(qrHref) ? (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => router.push(qrHref)}
+                  style={{ minHeight: "var(--tap-action)" }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-white hover:opacity-90 shadow transition"
+                >
+                  <Icon name="camera" size={18} />
+                  QR Okut
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : data ? (
           <>
@@ -646,7 +655,17 @@ export default function OdaKontrolPage() {
 
       {/* MMD and DND stay reachable without a scan: they are recorded when the room could not be entered. */}
       {data ? (
-        <div className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
+        <div ref={barRef} className="staff-action-bar fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur p-3">
+          {mmdAsk ? (
+            <div className="mx-auto mb-2 max-w-4xl">
+              <MmdConsumptionAsk
+                roomNumber={data.room.number}
+                reason={mmdAsk}
+                onYes={() => void openManualEntry(mmdAsk)}
+                onNo={() => setMmdAsk(null)}
+              />
+            </div>
+          ) : null}
           {mmdOpen ? (
             <div data-testid="mmd-options" className="mx-auto mb-2 flex max-w-4xl flex-wrap gap-2" role="group" aria-label="MMD nedeni">
               {MMD_REASONS.map((reason) => (

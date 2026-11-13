@@ -1,6 +1,7 @@
 import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
-import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
+import { BackLink } from "@/components/staff/BackLink";
+import { ScreenLink } from "@/components/staff/StaffScreens";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { businessDate } from "@/lib/time";
@@ -18,21 +19,14 @@ export default async function KatGorevlerPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 space-y-5 text-text">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <BackLink />
+        <div className="min-w-0">
           <span className="text-sm font-semibold uppercase tracking-widest text-text">
             Günlük Görevler · {day}
           </span>
           <h1 className="text-xl font-bold text-text mt-0.5">Günlük Görevler</h1>
         </div>
-        <Link
-          href="/kat"
-          style={{ minHeight: "var(--tap-action)" }}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-text hover:bg-bg"
-        >
-          <Icon name="arrow-left" size={16} />
-          Kat Planına Dön
-        </Link>
       </div>
 
       <section
@@ -88,14 +82,14 @@ export default async function KatGorevlerPage() {
                   </span>
                 </div>
 
-                <Link
+                <ScreenLink
                   href={`/kat/oda-kontrol/${i.roomId}`}
                   style={{ minHeight: "var(--tap-action)" }}
                   className="inline-flex items-center gap-1 rounded-xl bg-accent px-3.5 py-2 text-xs font-bold text-white hover:opacity-95"
                 >
                   Kontrol Et
                   <Icon name="arrow-right" size={14} />
-                </Link>
+                </ScreenLink>
               </li>
             );
           })}
