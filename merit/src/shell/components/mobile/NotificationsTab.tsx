@@ -10,6 +10,10 @@ type Props = {
   unread: number;
   onRead(id: string): void;
   onReadAll(): void;
+  /** Opens the screen the notification belongs to; false when there is none the user may open. */
+  onOpen?(n: NotificationDto): boolean;
+  /** Whether a tap leads somewhere (shows the "Aç" hint). */
+  canOpen?(n: NotificationDto): boolean;
 };
 
 /** HH:mm in Nicosia; other days get a dd.MM prefix. */
@@ -21,7 +25,7 @@ function stamp(iso: string): string {
 }
 
 /** Bildirimler: the last 20 own notifications; a tap marks one read. */
-export function NotificationsTab({ items, error, unread, onRead, onReadAll }: Props) {
+export function NotificationsTab({ items, error, unread, onRead, onReadAll, onOpen, canOpen }: Props) {
   return (
     <div className="mb-stack">
       <div className="mb-row-head">
@@ -49,6 +53,7 @@ export function NotificationsTab({ items, error, unread, onRead, onReadAll }: Pr
               data-read={n.isRead}
               onClick={() => {
                 if (!n.isRead) onRead(n.id);
+                onOpen?.(n);
               }}
             >
               <span className="mb-note-dot-slot">
@@ -62,6 +67,7 @@ export function NotificationsTab({ items, error, unread, onRead, onReadAll }: Pr
               </span>
               <time className="mb-note-time" dateTime={n.createdAt}>
                 {stamp(n.createdAt)}
+                {canOpen?.(n) ? " ›" : ""}
               </time>
             </button>
           </li>

@@ -12,6 +12,7 @@ import type { AppDefinition } from "../registry";
 import { affectsKpis, useCommandCenterKpis } from "../useCommandCenterKpis";
 import { useMobileDefs } from "../useMobileDefs";
 import { useAndroidForm } from "../useShellMode";
+import { FOCUS_PREFIX, notificationTarget, type NotificationRef } from "../notificationTarget";
 import { useSse, type SseStatus } from "../useSse";
 import { useWindowStore } from "../windowStore";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -207,6 +208,26 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
     },
     [entries],
   );
+  /** A notification leads to its screen only when that app is installed for this user (same rule as the desktop bell). */
+  const canOpenNotification = useCallback(
+    (n: NotificationRef) => {
+      const target = notificationTarget(n);
+      return target !== null && entries.has(target.appId);
+    },
+    [entries],
+  );
+  const openNotification = useCallback(
+    (n: NotificationRef) => {
+      const target = notificationTarget(n);
+      if (!target || !entries.has(target.appId)) return false;
+      launch(target.appId, {
+        ...(target.hotelId ? { hotelId: target.hotelId } : {}),
+        ...(target.focusId ? { panel: `${FOCUS_PREFIX}${target.focusId}` } : {}),
+      });
+      return true;
+    },
+    [entries, launch],
+  );
   const goBack = useCallback(() => dispatch({ type: "back" }), []);
   const shellRef = useRef<HTMLDivElement>(null);
   /** The shell's back buttons: the page inside the open app's frame steps back first, then the shell's layer. */
@@ -300,6 +321,8 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
             unread={notifications.unread}
             onRead={(n) => void notifications.markRead(n)}
             onReadAll={() => void notifications.markAll()}
+            onOpen={openNotification}
+            canOpen={canOpenNotification}
           />
         );
       case "ayarlar":
@@ -587,6 +610,8 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
                   unread={notifications.unread}
                   onRead={(n) => void notifications.markRead(n)}
                   onReadAll={() => void notifications.markAll()}
+                  onOpen={openNotification}
+                  canOpen={canOpenNotification}
                 />
               </div>
               <button

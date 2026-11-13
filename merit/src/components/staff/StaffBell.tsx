@@ -1,6 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { NavModel } from "./navModel";
+import { staffNotificationHref, type StaffNotificationRef } from "./notificationRoute";
 import { Icon } from "@/components/icons/Icon";
 import { showOpsNotification } from "@/components/ops/opsNotification";
 import { useSound } from "@/components/ops/useSound";
@@ -32,22 +35,38 @@ export function notificationTag(type: string, refId: string | null): string {
  * SSE olayı), ama XP görev çubuğu stili yerine belirteçli, 44 px dokunma hedefli bir sayfa.
  * Her yeni bildirim ayrıca sesli uyarı verir ve (izin verilmişse) sistem bildirimi olarak gösterilir.
  */
-export function StaffBell() {
+export function StaffBell({ nav }: { nav: NavModel }) {
   const listeners = useRef(new Set<(event: MeritEvent) => void>());
   const playAlert = useSound("call");
+  const router = useRouter();
+  // The page a notification belongs to, among the screens of the user's own menu (null: none to open).
+  const hrefOf = useCallback(
+    (n: StaffNotificationRef) =>
+      staffNotificationHref(n, [...nav.primary, ...nav.more].map((item) => item.href)),
+    [nav],
+  );
   useSse((event) => {
     for (const listener of listeners.current) listener(event);
     if (event.type !== "notification.created") return;
-    const payload = (event.payload ?? {}) as { type?: unknown; refId?: unknown; title?: unknown; body?: unknown };
+    const payload = (event.payload ?? {}) as {
+      type?: unknown;
+      refId?: unknown;
+      refType?: unknown;
+      title?: unknown;
+      body?: unknown;
+    };
     const title = typeof payload.title === "string" && payload.title ? payload.title : "Merit OS";
+    const type = typeof payload.type === "string" ? payload.type : "";
+    const href = hrefOf({ type, refType: typeof payload.refType === "string" ? payload.refType : null, title });
     playAlert();
-    showOpsNotification(title, {
-      body: typeof payload.body === "string" ? payload.body : undefined,
-      tag: notificationTag(
-        typeof payload.type === "string" ? payload.type : "",
-        typeof payload.refId === "string" ? payload.refId : null,
-      ),
-    });
+    showOpsNotification(
+      title,
+      {
+        body: typeof payload.body === "string" ? payload.body : undefined,
+        tag: notificationTag(type, typeof payload.refId === "string" ? payload.refId : null),
+      },
+      href ? { url: href, open: () => router.push(href) } : undefined,
+    );
   }, TYPES);
   const subscribe = useCallback((listener: (event: MeritEvent) => void) => {
     listeners.current.add(listener);
@@ -83,6 +102,11 @@ export function StaffBell() {
           unread={unread}
           onRead={(id) => void markRead(id)}
           onReadAll={() => void markAll()}
+          hrefOf={hrefOf}
+          onOpen={(href) => {
+            setOpen(false);
+            router.push(href);
+          }}
           onClose={() => setOpen(false)}
         />
       ) : null}
@@ -96,10 +120,12 @@ type SheetProps = {
   unread: number;
   onRead: (id: string) => void;
   onReadAll: () => void;
+  hrefOf: (n: StaffNotificationRef) => string | null;
+  onOpen: (href: string) => void;
   onClose: () => void;
 };
 
-function BellSheet({ items, error, unread, onRead, onReadAll, onClose }: SheetProps) {
+function BellSheet({ items, error, unread, onRead, onReadAll, hrefOf, onOpen, onClose }: SheetProps) {
   const box = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   useDialogFocus(box, onClose, () => closeRef.current);
@@ -128,25 +154,31 @@ function BellSheet({ items, error, unread, onRead, onReadAll, onClose }: SheetPr
         ) : null}
         {items !== null && items.length === 0 ? <p className="text-muted">Bildirim yok</p> : null}
         <ul className="staff-sheet-list">
-          {items?.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className="staff-menu-item"
-                style={{ flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "var(--space-2) var(--space-3)" }}
-                data-read={item.isRead}
-                onClick={() => {
-                  if (!item.isRead) onRead(item.id);
-                }}
-              >
-                <strong style={{ fontWeight: item.isRead ? 500 : 700 }}>{item.title}</strong>
-                <span className="text-muted" style={{ fontSize: 14 }}>{item.body}</span>
-                <time dateTime={item.createdAt} className="text-muted" style={{ fontSize: 13 }}>
-                  {stamp(item.createdAt)}
-                </time>
-              </button>
-            </li>
-          ))}
+          {items?.map((item) => {
+            const href = hrefOf(item);
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className="staff-menu-item"
+                  style={{ flexDirection: "column", alignItems: "flex-start", justifyContent: "center", padding: "var(--space-2) var(--space-3)" }}
+                  data-read={item.isRead}
+                  data-href={href ?? undefined}
+                  onClick={() => {
+                    if (!item.isRead) onRead(item.id);
+                    if (href) onOpen(href);
+                  }}
+                >
+                  <strong style={{ fontWeight: item.isRead ? 500 : 700 }}>{item.title}</strong>
+                  <span className="text-muted" style={{ fontSize: 14 }}>{item.body}</span>
+                  <time dateTime={item.createdAt} className="text-muted" style={{ fontSize: 13 }}>
+                    {stamp(item.createdAt)}
+                    {href ? " · Aç ›" : ""}
+                  </time>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

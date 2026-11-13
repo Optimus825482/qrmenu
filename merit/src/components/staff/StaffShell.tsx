@@ -136,7 +136,7 @@ export function StaffShell({
   const side = desktop || layout === "rail" || wide;
   const tools = (
     <>
-      <StaffBell />
+      <StaffBell nav={nav} />
       <ProfileMenu
         user={user}
         hotelName={hotelName}
