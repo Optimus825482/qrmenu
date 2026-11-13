@@ -6,6 +6,7 @@ import { notify } from "@/modules/core/server/notifications";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 import { onlineAt } from "@/modules/order/server/approvals";
 import { publishRadar } from "@/modules/radar/publish";
+import { coverage } from "./coverage";
 
 /**
  * Open room-service states used by the radar metrics (`reporting/server/radar/metrics.ts`): leaves out
@@ -41,12 +42,14 @@ async function outletManagers(tx: Prisma.TransactionClient, order: Subject): Pro
 
 /** WARN: the outlet's online room-service staff + F&B managers. BREACH: F&B managers + outlet managers + online staff. */
 async function slaRecipients(tx: Prisma.TransactionClient, order: Subject, level: Level): Promise<string[]> {
-  const [fbm, online, managers] = await Promise.all([
+  const [fbm, online, managers, processors] = await Promise.all([
     usersEntitledTo(order.hotelId, ["R-FBM", "R-FBY", "R-OSS"], tx),
     onlineAt(tx, order.outletId, ["R-ODS", "R-BUT", "R-MUS"]),
     level === "BREACH" ? outletManagers(tx, order) : Promise.resolve([] as string[]),
+    // Cross-hotel coverage: a signed-in ISLEME user must hear about the SLA too (IZLEME never does).
+    coverage.onlineProcessors(tx, order.hotelId),
   ]);
-  return [...new Set([...fbm, ...online, ...managers])];
+  return [...new Set([...fbm, ...online, ...managers, ...processors])];
 }
 
 /**
@@ -154,6 +157,8 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
                 ...(roomNumber ? { roomNumber } : {}),
                 level,
                 ageMin,
+                // The coverage SSE scope only forwards board events of kind ODA_SERVISI (realtime.ts).
+                kind: "ODA_SERVISI" as const,
               },
               tx,
             );

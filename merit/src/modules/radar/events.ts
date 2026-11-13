@@ -78,6 +78,7 @@ export type Wire = {
     roomNumber?: string;
     level: "WARN" | "BREACH";
     ageMin: number;
+    kind?: "ODA_SERVISI";
   };
   "scan.room": { roomId: string; roomNumber: string; floorId: string };
   "printer.status": { printerId: string; ok: boolean; reason?: "SESSIZ" };
@@ -181,6 +182,8 @@ export const RADAR_WIRE: { [K in keyof Wire]: z.ZodType<Wire[K]> } = {
     roomNumber: z.string().max(16).optional(),
     level: z.enum(["WARN", "BREACH"]),
     ageMin: count,
+    // Set by the SLA sweep so the cross-hotel coverage filter can keep its narrow ODA_SERVISI gate.
+    kind: z.literal("ODA_SERVISI").optional(),
   }),
   "scan.room": z.strictObject({ roomId: id, roomNumber: z.string().max(16), floorId: id }),
   "printer.status": z.strictObject({

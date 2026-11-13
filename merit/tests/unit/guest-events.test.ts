@@ -61,6 +61,25 @@ describe("guestEventFilter", () => {
     expect(guestEventFilter({ ...scope, outletId: undefined })(onway)).toBe(false);
   });
 
+  it("masa akışı aynı sipariş kimliği istense bile başka masa veya oda olaylarını geçirmez", () => {
+    const tableFilter = guestEventFilter({
+      outletId: "o1", hotelId: "h1", tableId: "t1", orderIds: ["ord1", "foreign-order"],
+    });
+    const approved = ev({
+      type: "order.approved", outletId: "o1", hotelId: "h1",
+      payload: { orderId: "ord1", tableId: "t1", kind: "MASA" },
+    });
+
+    expect(tableFilter(approved)).toBe(true);
+    expect(tableFilter({ ...approved, payload: { orderId: "foreign-order", tableId: "t2", kind: "MASA" } })).toBe(false);
+    expect(tableFilter({ ...approved, payload: { orderId: "ord1" } })).toBe(false);
+    expect(tableFilter({ ...approved, payload: { orderId: "ord1", roomId: "r1", kind: "ODA_SERVISI" } })).toBe(false);
+    expect(tableFilter({ ...approved, hotelId: "h2" })).toBe(false);
+    expect(tableFilter({ ...approved, hotelId: undefined })).toBe(false);
+    expect(tableFilter({ ...approved, outletId: undefined })).toBe(false);
+    expect(tableFilter({ ...approved, payload: { orderId: "not-requested", tableId: "t1", kind: "MASA" } })).toBe(false);
+  });
+
   it("order.* yalnız verilen orderIds için", () => {
     expect(filter(ev({ type: "order.approved", outletId: "o1", payload: { orderId: "ord1" } }))).toBe(true);
     expect(filter(ev({ type: "order.approved", outletId: "o1", payload: { orderId: "ord2" } }))).toBe(false);

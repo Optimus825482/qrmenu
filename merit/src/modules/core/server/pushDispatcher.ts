@@ -25,6 +25,14 @@ registerPushType("mybar.created", (n) => ({
 }));
 
 // Onay/SLA uyarıları: personel uygulama kapalıyken de duymalı (zil + SSE yetmez).
+// Masa çağrısı: kilit ekranında görüneceği için push metni masa/oda numarası, misafir notu veya
+// personel adı taşımaz; ayrıntı uygulama içi bildirimde ve SSE'dedir. Hedef çağrı panosu.
+registerPushType("call.created", (n) => ({
+  title: "Masa çağrısı",
+  body: "Yeni bir masa çağrısı var; çağrı panelini açın.",
+  url: "/garson/cagrilar",
+  tag: `call-created-${n.refId ?? "yeni"}`,
+}));
 // Yeni sipariş: yalnız başlık/gövde (misafir bilgisi yok); zil + SSE ile aynı bildirim metni.
 registerPushType("order.created", (n) => ({
   title: n.title,

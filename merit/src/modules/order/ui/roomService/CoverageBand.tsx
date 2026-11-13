@@ -20,6 +20,7 @@ const BAND_EVENTS = [
   "order.onway",
   "order.delivered",
   "order.cancelled",
+  "order.sla",
   "rs.coverage.changed",
   "realtime.resync",
 ] as const;

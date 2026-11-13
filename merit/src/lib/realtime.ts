@@ -72,6 +72,7 @@ const COVERED_EVENT_TYPES: ReadonlySet<string> = new Set([
   "order.onway",
   "order.delivered",
   "order.cancelled",
+  "order.sla",
 ]);
 
 /**

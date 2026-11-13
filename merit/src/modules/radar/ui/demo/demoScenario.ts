@@ -261,6 +261,39 @@ function calmSnapshot(base: RadarSnapshot, hotelId: string, startMs: number): Ra
 }
 
 /**
+ * Puts the Room Service orders the script will move into the snapshot as TEYIT_BEKLIYOR, so no `order.status`
+ * has to invent an order: the event payload carries no createdAt/slaStartAt and the reducer would refetch.
+ * Returns the rooms whose orders were seeded (the caller derives ids from the index).
+ */
+function seedRoomServiceOrders(
+  L: RadarSnapshot["layers"],
+  focus: DemoFocus | undefined,
+  shuffle: <T>(xs: readonly T[]) => T[],
+  startMs: number,
+): { roomId: string }[] {
+  const layer = L.roomService;
+  const allRooms = L.minibar?.floors.flatMap((f) => f.rooms) ?? [];
+  if (!layer || allRooms.length === 0) return [];
+  const occupied = allRooms.filter((r) => r.occupied);
+  // Occupancy is often not loaded yet; a Room Service demo then uses any room rather than showing nothing.
+  const pool = shuffle(occupied.length === 0 && focus === "ROOM_SERVICE" ? allRooms : occupied);
+  if (pool.length === 0) return [];
+  const count = focus === "ROOM_SERVICE" ? 10 : 3;
+  const picked = Array.from({ length: count }, (_, i) => pool[i % pool.length]);
+  const createdAt = new Date(startMs - 60_000).toISOString();
+  layer.orders = picked.map((room, i) => ({
+    orderId: `demo-rs-${i}`,
+    orderNo: 4401 + i,
+    roomNumber: room.number,
+    status: "TEYIT_BEKLIYOR" as const,
+    createdAt,
+    slaStartAt: createdAt,
+    level: "OK" as const,
+  }));
+  return picked.map((room) => ({ roomId: room.roomId }));
+}
+
+/**
  * Builds the demo: the (cleaned) snapshot at `startMs` and the events that follow it. Ids come from the live
  * snapshot when there is one, so the floor and table views animate the cells the user already sees.
  */
@@ -295,6 +328,11 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
   const jit = (max: number): number => Math.round(rng() * max);
 
   const L = snapshot.layers;
+
+  // Room Service orders start INSIDE the snapshot: an `order.status` that first creates an order has no
+  // createdAt/slaStartAt to pass on, so the reducer asks for a refetch of `order:<id>` (roomService.ts).
+  // Seeded as TEYIT_BEKLIYOR, the script only moves them, and the SLA clock has a real start.
+  const rsSeeded = seedRoomServiceOrders(L, focus, shuffle, startMs);
   const people = Object.entries(snapshot.people ?? {});
   const staff = L.staff?.sessions ?? [];
   const actor = (i: number): string | undefined => (people.length > 0 ? people[i % people.length][0] : undefined);
@@ -445,21 +483,14 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
   }
 
   // ───────── ODA_SERVISI: three orders (ten when it is the focus), some slide from WARN to BREACH ─────────
-  const allRooms = mb?.floors.flatMap((f) => f.rooms) ?? [];
-  // Occupancy is often not loaded yet; a Room Service demo then uses any room rather than showing nothing.
-  const occupiedRooms = allRooms.filter((r) => r.occupied);
-  const rsRooms = occupiedRooms.length === 0 && focus === "ROOM_SERVICE" ? allRooms : occupiedRooms;
-  if (L.roomService && rsRooms.length > 0) {
-    const pool = shuffle(rsRooms);
-    const rs = focus === "ROOM_SERVICE" ? Array.from({ length: 10 }, (_, i) => pool[i % pool.length]) : pool.slice(0, 3);
+  if (L.roomService && rsSeeded.length > 0) {
     let no = 4400;
-    rs.forEach((r, i) => {
+    rsSeeded.forEach((r, i) => {
       const orderId = `demo-rs-${i}`;
       const orderNo = ++no;
       const t = 100 + i * (focus === "ROOM_SERVICE" ? 150 : 330) + jit(40);
       const common = { layer: "ODA_SERVISI" as const, orderId, orderNo, kind: "ODA_SERVISI" as const, roomId: r.roomId };
-      add(t, { type: "order.status", ...common, to: "TEYIT_BEKLIYOR" });
-      add(t + 45, { type: "order.status", ...common, from: "TEYIT_BEKLIYOR", to: "ONAYLANDI" });
+      add(t, { type: "order.status", ...common, from: "TEYIT_BEKLIYOR", to: "ONAYLANDI" });
       if (i % 4 === 0) {
         add(t + 700, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "WARN" });
         add(t + 1000, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "BREACH" });

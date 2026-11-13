@@ -15,7 +15,7 @@ export type GuestStreamScope = {
  * Which realtime events a guest stream may carry: guest types only; the outlet's own events (or, when
  * an event names no outlet, its hotel's; an event with no hotel is system-wide, e.g. `price.display`
  * from the system setting, and reaches every outlet); `call.resolved` only for the guest's own table (after the outlet/hotel match); `order.*` only for the guest's own orders;
- * room orders also require the matching hotel, outlet and room; `mybar.*` only for the guest's own room.
+ * order events also require the matching hotel, outlet and table/room of the token; `mybar.*` only for the guest's own room.
  */
 export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => boolean {
   return (e) => {
@@ -35,7 +35,14 @@ export function guestEventFilter(scope: GuestStreamScope): (e: MeritEvent) => bo
       return scope.tableId !== undefined && p?.tableId === scope.tableId;
     }
     if (e.type.startsWith("order.")) {
-      const payload = e.payload as { orderId?: unknown; roomId?: unknown } | undefined;
+      const payload = e.payload as { orderId?: unknown; roomId?: unknown; tableId?: unknown } | undefined;
+      if (
+        scope.tableId !== undefined &&
+        (scope.outletId === undefined || e.outletId !== scope.outletId ||
+          e.hotelId !== scope.hotelId || payload?.tableId !== scope.tableId)
+      ) {
+        return false;
+      }
       if (
         scope.roomId !== undefined &&
         (scope.outletId === undefined || e.outletId !== scope.outletId ||

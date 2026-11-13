@@ -193,6 +193,46 @@ describe("dispatchNotificationEvent", () => {
     expect(PUSH_TYPES.get("order.sla.breach")!({ refId: "o1", title: "T", body: "B" })).toMatchObject({ title: "T", url: "/oda-servisi" });
   });
 
+  it("masa çağrısı (call.created) push türü kayıtlı; kilit ekranı için gizlilik korur", () => {
+    expect(PUSH_TYPES.has("call.created")).toBe(true);
+    const payload = PUSH_TYPES.get("call.created")!({
+      refId: "call1",
+      // The in-app notification text may name the outlet and table; the push must not.
+      title: "Garson çağrısı · Royal Lobi Masa 12",
+      body: "Hesap lütfen",
+    });
+    expect(payload).toEqual({
+      title: "Masa çağrısı",
+      body: "Yeni bir masa çağrısı var; çağrı panelini açın.",
+      url: "/garson/cagrilar",
+      tag: "call-created-call1",
+    });
+    expect(JSON.stringify(payload)).not.toMatch(/Masa 12|Hesap lütfen|Royal Lobi/);
+  });
+
+  it("call.created gerçek dispatch yolunda gönderilir; push metni masa/not taşımaz", async () => {
+    const { a } = await setup();
+    await notify({
+      recipients: [a.id],
+      type: "call.created",
+      title: "Garson çağrısı · Masa 12",
+      body: "Hesap lütfen",
+      refType: "WaiterCall",
+      refId: "wc1",
+    });
+    await sleep(300);
+    const event = captured.find((e) => (e.payload as { refId?: string })?.refId === "wc1")!;
+    expect(event).toBeDefined();
+    const result = await dispatchNotificationEvent(event);
+    expect(result).toMatchObject({ sent: 2, gone: 0, failed: 0 });
+    const sentPayload = JSON.parse(sent[0]!.json);
+    expect(sentPayload.url).toBe("/garson/cagrilar");
+    expect(sentPayload.tag).toBe("call-created-wc1");
+    expect(sent[0]!.json).not.toMatch(/Masa 12|Hesap lütfen/);
+    const rows = await testDb.notification.findMany({ where: { type: "call.created" } });
+    expect(rows.every((r) => r.pushedAt !== null)).toBe(true);
+  });
+
   it("minibar uyarıları (DND, kritik stok) push türü olarak kayıtlı ve zil etiketiyle aynı etiketi taşır", () => {
     for (const type of ["dnd.marked", "dnd.reminder", "dnd.dayend", "stock.critical"]) {
       expect(PUSH_TYPES.get(type)!({ refId: "r1", title: "T", body: "B" })).toMatchObject({ title: "T", body: "B", tag: `merit-${type}-r1` });

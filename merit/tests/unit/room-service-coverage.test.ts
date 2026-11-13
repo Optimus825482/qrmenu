@@ -495,6 +495,9 @@ describe("canlı akış (matchesScope) ve bildirim alıcıları", () => {
     for (const type of ["order.created", "order.approved", "order.ready", "order.onway", "order.delivered", "order.cancelled"]) {
       expect(matchesScope(rs(type), scope)).toBe(true);
     }
+    // The SLA warning is a board event too, and keeps its narrow `kind` gate.
+    expect(matchesScope(rs("order.sla"), scope)).toBe(true);
+    expect(matchesScope({ ...base, type: "order.sla", payload: { orderId: "o1" } }, scope)).toBe(false);
     // Same hotel, not a room-service request.
     expect(matchesScope({ ...base, type: "order.created", payload: { orderId: "o2", kind: "MASA" } }, scope)).toBe(false);
     expect(matchesScope({ ...base, type: "order.created" }, scope)).toBe(false);

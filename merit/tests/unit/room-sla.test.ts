@@ -22,6 +22,7 @@ beforeEach(async () => {
   await testDb.setting.deleteMany({ where: { key: "rs.slaMinutes" } });
   await testDb.auditLog.deleteMany({});
   await testDb.notification.deleteMany({});
+  await testDb.roomServiceCoverage.deleteMany({});
   await testDb.userSession.deleteMany({});
   await testDb.outletMember.deleteMany({});
   await resetTestData();
@@ -55,6 +56,15 @@ async function env(code = "ROYAL", sla?: number) {
     (await testDb.outlet.findFirst({ where: { hotelId: hid, type: "ODA_SERVISI" } })) ??
     (await testDb.outlet.create({ data: { hotelId: hid, name: "Oda Servisi", type: "ODA_SERVISI" } }));
   return { hid, room, outlet };
+}
+
+/** The ROYAL room-service outlet: the home desk a covering user is signed in at. */
+async function coverageOutlet(): Promise<string> {
+  const hid = await hotelId("ROYAL");
+  const existing = await testDb.outlet.findFirst({ where: { hotelId: hid, type: "ODA_SERVISI" }, select: { id: true } });
+  if (existing) return existing.id;
+  const created = await testDb.outlet.create({ data: { hotelId: hid, name: "Oda Servisi", type: "ODA_SERVISI" } });
+  return created.id;
 }
 
 async function order(e: Awaited<ReturnType<typeof env>>, ageMin: number, over: Record<string, unknown> = {}) {
@@ -223,5 +233,55 @@ describe("rsSlaSweep (T6a)", () => {
     expect(await testDb.notification.count({ where: { type: "order.sla.breach" } })).toBe(0);
     publishMock.mockReset();
     expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 1 });
+  });
+
+  it("SLA olayi order.sla + kind=ODA_SERVISI ile yayinlanir (kapsam filtresinin kapisi)", async () => {
+    const e = await env("ROYAL", 30);
+    await order(e, 31);
+    await rsSlaSweep(NOW);
+    const call = publishMock.mock.calls.find((c) => (c[0] as { type?: string }).type === "order.sla");
+    expect(call).toBeDefined();
+    expect((call![0] as { payload?: { kind?: string; level?: string } }).payload).toMatchObject({
+      kind: "ODA_SERVISI",
+      level: "BREACH",
+    });
+  });
+
+  it("kapsama ISLEME kullanicisi BREACH bildirimi alir; IZLEME ve suresi biten grant almaz", async () => {
+    const e = await env("DIAMOND", 30);
+    await order(e, 31);
+    const royalOutlet = await coverageOutlet();
+    const cover = async (username: string, mode: "IZLEME" | "ISLEME", over: Record<string, unknown> = {}) => {
+      const u = await staffCtx(username, "R-ODS", royalOutlet);
+      await openSession(u.user.id, royalOutlet, "R-ODS");
+      await testDb.roomServiceCoverage.create({
+        data: { userId: u.user.id, hotelId: e.hid, mode, startsAt: ago(60), grantedById: u.user.id, ...over },
+      });
+      return u;
+    };
+    const isleme = await cover("sla_cov_isleme", "ISLEME");
+    const izleme = await cover("sla_cov_izleme", "IZLEME");
+    const biten = await cover("sla_cov_biten", "ISLEME", { endsAt: ago(30) });
+
+    expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 1 });
+    const n = await notes("order.sla.breach");
+    expect(n.some((x) => x.userId === isleme.user.id)).toBe(true);
+    expect(n.some((x) => x.userId === izleme.user.id)).toBe(false);
+    expect(n.some((x) => x.userId === biten.user.id)).toBe(false);
+  });
+
+  it("kapsama ISLEME kullanicisi WARN bildirimini de alir", async () => {
+    const e = await env("DIAMOND", 30);
+    await order(e, 25);
+    const royalOutlet = await coverageOutlet();
+    const u = await staffCtx("sla_cov_warn", "R-ODS", royalOutlet);
+    await openSession(u.user.id, royalOutlet, "R-ODS");
+    await testDb.roomServiceCoverage.create({
+      data: { userId: u.user.id, hotelId: e.hid, mode: "ISLEME", startsAt: ago(60), grantedById: u.user.id },
+    });
+
+    expect(await rsSlaSweep(NOW)).toEqual({ warned: 1, breached: 0 });
+    const n = await notes("order.sla.warn");
+    expect(n.some((x) => x.userId === u.user.id)).toBe(true);
   });
 });

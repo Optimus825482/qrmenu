@@ -131,21 +131,26 @@ describe("rsSlaSweep (G13 order.sla)", () => {
     expect(row.slaBreachedAt).not.toBeNull();
   });
 
-  it("kapalı durumlar, masa siparişi ve modül kapalı otel dokunulmaz", async () => {
+  it("kapalı durumlara ve masa siparişlerine dokunulmaz", async () => {
     const env = await rsEnv("ROYAL", 20);
     for (const status of ["TESLIM_EDILDI", "IPTAL", "REDDEDILDI"] as const) await rsOrder(env, 30, { status });
     const s = await orderSetup();
     await seedOrder(s, { createdAt: ago(60) });
     expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 0 });
     expect(sent("order.sla")).toHaveLength(0);
+  });
 
+  it("modül kapansa da mevcut açık oda siparişinin SLA saati çalışmaya devam eder", async () => {
+    const env = await rsEnv("ROYAL", 20);
     const open = await rsOrder(env, 30);
     await testDb.hotelModule.updateMany({
       where: { hotelId: env.hid, moduleKey: "ROOM_SERVICE" },
       data: { enabled: false },
     });
-    expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 0 });
-    expect((await testDb.order.findUniqueOrThrow({ where: { id: open.id } })).slaBreachedAt).toBeNull();
+    expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 1 });
+    expect((await testDb.order.findUniqueOrThrow({ where: { id: open.id } })).slaBreachedAt).toEqual(NOW);
+    expect(sent("order.sla")).toHaveLength(1);
+    expect(sent("order.sla")[0]).toMatchObject({ hotelId: env.hid, payload: { orderId: open.id, level: "BREACH" } });
   });
 
   it("SLA süresi otel bazlıdır", async () => {
