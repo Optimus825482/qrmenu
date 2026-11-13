@@ -1,0 +1,822 @@
+{
+ "SETS": {
+  "R-KAT": "MB-KAT,MB-KF,MB-TUK,MB-ZIM,MB-TAL,MB-PERS,MB-DND,MB-RAP,CR-RAP",
+  "R-DEP": "MB-KAT,MB-TUK,MB-ZIM,MB-TAL,MB-DOL,MB-PERS,MB-DND,MB-RAP,MB-TAN,CR-RAP",
+  "R-HKS": "MB-KAT,MB-KF,MB-TUK,MB-ZIM,MB-TAL,MB-DOL,MB-PERS,MB-DND,MB-RAP,MB-TAN,CR-RAP",
+  "R-ODS": "RO-TAL,RO-TES,RO-SLA,CR-RAP",
+  "R-GAR": "QM-MIS,QM-CAG,QM-MEN,QM-TEM,QS-KUY,QS-KDS,CR-RAP",
+  "R-SGF": "QM-MIS,QM-CAG,QM-MEN,QM-TEM,QM-RAP,QS-KUY,QS-KAS,QS-KDS,QS-FIS,QS-IPT,QS-RAP,CR-RAP",
+  "R-BAR": "QS-KUY,QS-KDS,CR-RAP",
+  "R-BUT": "QS-KUY,QS-KDS,RO-TAL,RO-TES,RO-SLA,CR-RAP"
+ },
+ "out": {
+  "R-KAT||false": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT||true": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/oda-servisi|false": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/oda-servisi|true": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/garson|false": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/garson|true": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/kat|false": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-KAT|/kat|true": {
+   "p": [
+    "/kat/tavsiye-is-plani",
+    "/kat",
+    "/kat/qr",
+    "/kat/islemlerim",
+    "more"
+   ],
+   "m": [
+    "/kat/manuel-kayit",
+    "/kat/duzeltme-onay",
+    "/kat/stok",
+    "/kat/mybar"
+   ],
+   "f": null
+  },
+  "R-DEP||false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP||true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/oda-servisi|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/oda-servisi|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/garson|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/garson|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/kat|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-DEP|/kat|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS||false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS||true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/oda-servisi|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/oda-servisi|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/garson|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/garson|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/kat|false": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-HKS|/kat|true": {
+   "p": [
+    "/depo/stok",
+    "/kat/duzeltme-onay",
+    "/depo/raporlar",
+    "more"
+   ],
+   "m": [
+    "/depo/mybar",
+    "/kat/manuel-kayit",
+    "/depo",
+    "/depo/doluluk-yukle",
+    "/depo/tanimlar",
+    "/kat"
+   ],
+   "f": null
+  },
+  "R-ODS||false": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS||true": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/oda-servisi|false": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/oda-servisi|true": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/garson|false": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/garson|true": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/kat|false": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-ODS|/kat|true": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-GAR||false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-GAR||true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-GAR|/oda-servisi|false": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-GAR|/oda-servisi|true": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-GAR|/garson|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-GAR|/garson|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-GAR|/kat|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-GAR|/kat|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-SGF||false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-SGF||true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-SGF|/oda-servisi|false": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-SGF|/oda-servisi|true": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-SGF|/garson|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-SGF|/garson|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-SGF|/kat|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-SGF|/kat|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "/garson/cagrilar",
+    "more"
+   ],
+   "m": [
+    "/kasa",
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BAR||false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-BAR||true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BAR|/oda-servisi|false": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-BAR|/oda-servisi|true": {
+   "p": [],
+   "m": [],
+   "f": null
+  },
+  "R-BAR|/garson|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-BAR|/garson|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BAR|/kat|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": null
+  },
+  "R-BAR|/kat|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BUT||false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": null
+  },
+  "R-BUT||true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BUT|/oda-servisi|false": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-BUT|/oda-servisi|true": {
+   "p": [
+    "/oda-servisi",
+    "/oda-servisi?sekme=teslim",
+    "more"
+   ],
+   "m": [],
+   "f": null
+  },
+  "R-BUT|/garson|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": null
+  },
+  "R-BUT|/garson|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  },
+  "R-BUT|/kat|false": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": null
+  },
+  "R-BUT|/kat|true": {
+   "p": [
+    "/garson",
+    "/garson?sekme=masalar",
+    "more"
+   ],
+   "m": [
+    "/kds",
+    "/oda-servisi"
+   ],
+   "f": "/garson?sekme=masalar&yeni=1"
+  }
+ }
+}

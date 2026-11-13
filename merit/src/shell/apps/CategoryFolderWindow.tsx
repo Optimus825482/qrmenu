@@ -2,7 +2,7 @@
 
 import type { AppProps } from "@/shell/registry";
 import { getApps } from "@/shell/registry";
-import { useWindowStore } from "@/shell/windowStore";
+import { appVisibleInHotel, useWindowStore } from "@/shell/windowStore";
 import { XpIcon } from "@/shell/icons";
 import { APP_FOLDERS } from "@/shell/appFolders";
 import { SCREEN_GUIDES } from "@/modules/core/screenGuide";
@@ -21,15 +21,19 @@ export function CategoryFolderWindow({
   openApp,
 }: CategoryFolderAppProps) {
   const allowedIds = useWindowStore((s) => s.appIds);
+  const hotels = useWindowStore((s) => s.hotels);
+  const screensByHotel = useWindowStore((s) => s.screensByHotel);
   const allApps = getApps();
   const folder = APP_FOLDERS.find(({ id }) => id === categoryKey);
   // Filter apps belonging to this category, EXCLUDING the folder itself (id starting with "folder.")
-  // and checking allowed permissions for the active user
+  // and checking allowed permissions for the active user. A folder window bound to a hotel lists only
+  // what that hotel allows (a hotel-bound program the hotel's permissions do not open would not start).
   const folderApps = allApps.filter(
     (a) =>
       folder?.categories.includes(a.category) &&
       !a.id.startsWith("folder.") &&
-      (!allowedIds || allowedIds.includes(a.id)),
+      (!allowedIds || allowedIds.includes(a.id)) &&
+      (!hotelId || !a.needsHotel || appVisibleInHotel({ hotels, screensByHotel }, a, hotelId)),
   );
 
   return (

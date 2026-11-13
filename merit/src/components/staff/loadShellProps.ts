@@ -8,16 +8,13 @@ import { getSetting } from "@/lib/settings";
 import { listTargets } from "@/modules/core/server/targets";
 import { CLOSED_STATUSES } from "@/modules/order/server/transitions";
 import { formFromUserAgent } from "@/shell/deviceForm";
-import { buildNav, type NavModel } from "./navModel";
+import { buildNav, isRailNav, type NavModel } from "./navModel";
 import type { StaffShellProps } from "./StaffShell";
 
 export type StaffShellData = Omit<StaffShellProps, "children">;
 
 /** Minutes before the session end at which the persistent strip appears. */
 export const SESSION_WARN_MINUTES = 5;
-
-/** Roles whose navigation is a rail even on a phone-width screen (depot: tables of numbers). */
-const RAIL_ROLES = new Set(["R-DEP", "R-HKS"]);
 
 /**
  * Everything the staff shell needs, computed from the session's CURRENT hotel and outlet (so a
@@ -52,7 +49,7 @@ export async function loadStaffShellProps(
       : !ctx.session.outletId && target.hotelId === hotelId,
   );
 
-  const nav = buildNav(ctx.user.roleCode, new Set(visible), {
+  const nav = buildNav(new Set(visible), {
     pathname,
     canCreate: Boolean(outlet?.hasOrdering) && ordering,
   });
@@ -72,7 +69,7 @@ export async function loadStaffShellProps(
     currentTargetIndex: current?.index,
     sessionEndsAt: effectiveEndsAt?.toISOString() ?? null,
     warnMinutes: SESSION_WARN_MINUTES,
-    layout: RAIL_ROLES.has(ctx.user.roleCode) ? "rail" : "bottom",
+    layout: isRailNav(new Set(visible), pathname) ? "rail" : "bottom",
     profileExtras: [
       // A manager's home is the management desktop; a floor screen opened from a notification or the
       // personel app has no other way back to it.

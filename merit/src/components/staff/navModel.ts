@@ -84,8 +84,6 @@ const FAMILIES: Record<Family, { primary: Def[]; more: Def[] }> = {
   depo: { primary: DEPO_PRIMARY, more: DEPO_MORE },
 };
 
-const GARSON_ROLES = new Set(["R-GAR", "R-SGF", "R-BAR", "R-BUT"]);
-
 const MORE_ITEM: NavItem = { id: "more", label: "Daha", icon: "menu", href: "", screen: "" };
 
 function pathFamily(pathname: string | undefined): Family | undefined {
@@ -99,14 +97,46 @@ function pathFamily(pathname: string | undefined): Family | undefined {
   return undefined;
 }
 
-/** Role family: fixed for the minibar / room-service roles, path-driven for waiters visiting room service and for management. */
-export function navFamily(roleCode: string, pathname?: string): Family | undefined {
-  if (roleCode === "R-KAT") return "kat";
-  if (roleCode === "R-DEP" || roleCode === "R-HKS") return "depo";
-  if (roleCode === "R-ODS") return "ods";
+/** Order in which families lead when the path does not decide. */
+const FAMILY_ORDER: readonly Family[] = ["kat", "depo", "garson", "ods"];
+
+/**
+ * Screens that make a family the user's: any one of them viewable. They are the family's own entry points, not every
+ * screen of its catalogue (the depot's "Otel deposu" is also a floor-screen link, so MB-ZIM alone says nothing).
+ */
+const FAMILY_ENTRY: Record<Family, readonly string[]> = {
+  kat: ["MB-KAT", "MB-KF", "MB-TUK"],
+  depo: ["MB-DOL", "MB-TAN"],
+  garson: ["QS-KUY", "QM-CAG"],
+  ods: ["RO-TAL", "RO-TES"],
+};
+
+/**
+ * The navigation families of a user, derived from the screens they may view (rbac: hotel module, personal
+ * exception, role) and never from a role code. Several families are possible (a manager); two pairs collapse because the
+ * wider catalogue already links the narrower one: the depot's also covers the floor screens, the waiter's the room service.
+ * On a room-service page a waiter's navigation is the room-service one (their own catalogue links to it).
+ */
+export function navFamilies(visible: ReadonlySet<string>, pathname?: string): Family[] {
+  const entitled = new Set(FAMILY_ORDER.filter((f) => FAMILY_ENTRY[f].some((code) => visible.has(code))));
   const byPath = pathFamily(pathname);
-  if (GARSON_ROLES.has(roleCode)) return byPath === "ods" ? "ods" : "garson";
-  return byPath;
+  if (entitled.has("depo")) entitled.delete("kat");
+  if (entitled.has("garson")) {
+    entitled.delete("ods");
+    if (byPath === "ods" && FAMILY_ENTRY.ods.some((code) => visible.has(code))) {
+      entitled.delete("garson");
+      entitled.add("ods");
+    }
+  }
+  const families = FAMILY_ORDER.filter((f) => entitled.has(f));
+  // The family of the page being shown leads.
+  return byPath && families.includes(byPath) ? [byPath, ...families.filter((f) => f !== byPath)] : families;
+}
+
+/** The depot layout (rail even on a phone: tables of numbers) is for a user whose only family is the depot. */
+export function isRailNav(visible: ReadonlySet<string>, pathname?: string): boolean {
+  const families = navFamilies(visible, pathname);
+  return families.length === 1 && families[0] === "depo";
 }
 
 /** Resolves a definition against the visible set: the page guard screen AND the catalogue owner of the route must be visible. */
@@ -119,26 +149,34 @@ function resolve(def: Def, visible: ReadonlySet<string>): NavItem | undefined {
 }
 
 /**
- * Bottom navigation of a role (spec 2.2), filtered by the screens the session may view:
+ * Bottom navigation (spec 2.2), derived from the screens the session may view:
  * kat Bugün · Katlar · QR Okut · İşlemlerim · Daha; waiter Kuyruk · Masalarım · Çağrılar · Daha;
- * room service Talepler · Teyit · Teslim · Daha; depot Havuz · Talepler · Raporlar · Daha.
- * Never links to a screen outside `visible`; 2-5 primary entries (Daha included), empty when nothing is visible.
+ * room service Talepler · Teslim · Daha; depot Havuz · Talepler · Raporlar · Daha.
+ * A user of several families gets the leading family's entries in the bar and every other family's links under "Daha"
+ * (no duplicates, stable order). Never links to a screen outside `visible`; 2-5 primary entries (Daha included),
+ * empty when nothing is visible.
  */
-export function buildNav(roleCode: string, visible: ReadonlySet<string>, options: NavOptions = {}): NavModel {
-  const family = navFamily(roleCode, options.pathname);
-  if (!family) return { primary: [], more: [] };
-  const def = FAMILIES[family];
-  const primary = def.primary.map((d) => resolve(d, visible)).filter((i): i is NavItem => Boolean(i));
+export function buildNav(visible: ReadonlySet<string>, options: NavOptions = {}): NavModel {
+  const families = navFamilies(visible, options.pathname);
+  if (families.length === 0) return { primary: [], more: [] };
+  const resolveAll = (defs: Def[]) => defs.map((d) => resolve(d, visible)).filter((i): i is NavItem => Boolean(i));
+  const [lead, ...others] = families;
+  const primary = resolveAll(FAMILIES[lead].primary);
   const primaryHrefs = new Set(primary.map((i) => i.href));
-  const more = def.more
-    .map((d) => resolve(d, visible))
-    .filter((i): i is NavItem => Boolean(i) && !primaryHrefs.has((i as NavItem).href));
+  const more: NavItem[] = [];
+  for (const item of [
+    ...resolveAll(FAMILIES[lead].more),
+    ...others.flatMap((f) => resolveAll([...FAMILIES[f].primary, ...FAMILIES[f].more])),
+  ]) {
+    if (primaryHrefs.has(item.href) || more.some((m) => m.href === item.href)) continue;
+    more.push(item);
+  }
 
   if (primary.length === 0 && more.length > 0) primary.push(more.shift() as NavItem);
   if (primary.length === 0) return { primary: [], more: [] };
 
   const model: NavModel = { primary: [...primary, MORE_ITEM], more };
-  if (family === "garson" && options.canCreate) {
+  if (families.includes("garson") && options.canCreate) {
     const create = resolve(GARSON_PRIMARY[1], visible);
     if (create) model.fab = { label: "Yeni adisyon", icon: "plus", href: "/garson?sekme=masalar&yeni=1", screen: create.screen };
   }

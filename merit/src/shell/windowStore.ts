@@ -1,6 +1,7 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
-import { getApp, type AppDefinition } from "./registry";
+import { appsOfFolder } from "./appFolders";
+import { getApp, getApps, type AppDefinition } from "./registry";
 import {
   DEFAULT_APPEARANCE,
   FONT_FAMILIES,
@@ -252,11 +253,17 @@ function renumberZ(
 /** Whether `app` may run in `hotelId`: the hotel is in scope and the app's screen visible there. */
 export function appVisibleInHotel(
   s: Pick<ShellState, "hotels" | "screensByHotel">,
-  app: Pick<AppDefinition, "screenCode">,
+  app: Pick<AppDefinition, "screenCode"> & Partial<Pick<AppDefinition, "id">>,
   hotelId: string,
 ): boolean {
   if (!s.hotels.some((h) => h.id === hotelId)) return false;
-  return s.screensByHotel === null || (s.screensByHotel[hotelId] ?? []).includes(app.screenCode);
+  if (s.screensByHotel === null) return true;
+  const screens = s.screensByHotel[hotelId] ?? [];
+  // An operation folder has no permission of its own: it is open in a hotel where one of its programs is.
+  if (app.id?.startsWith("folder.")) {
+    return appsOfFolder(app.id, getApps()).some((p) => p.category !== "GENEL" && screens.includes(p.screenCode));
+  }
+  return screens.includes(app.screenCode);
 }
 
 /** The hotels a window of `appId` may be bound to (the banner's hotel selector). */

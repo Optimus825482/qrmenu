@@ -10,6 +10,7 @@ import { useSse } from "../useSse";
 import type { AppProps } from "../registry";
 import { Icon } from "@/components/icons/Icon";
 import { useWindowStore } from "../windowStore";
+import { kpiCellVisible, viewableScreens, type KpiCell } from "../kpiAccess";
 import { getApps } from "../registry";
 import { KpiChips } from "@/modules/reporting/ui/KpiChips";
 import { useRadarKpi } from "@/modules/reporting/ui/useRadarKpi";
@@ -69,6 +70,8 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
 
   const radarKpi = useRadarKpi(hotelId ? { scope: "hotel", hotelId } : { scope: "total" });
   const appIds = useWindowStore((s) => s.appIds);
+  const screensByHotel = useWindowStore((s) => s.screensByHotel);
+  const viewable = viewableScreens(screensByHotel, hotelId);
   const appForScreen = (code: string) =>
     getApps().find((a) => a.screenCode === code && (appIds === null || appIds.includes(a.id)));
 
@@ -176,6 +179,10 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           </div>
     ),
   };
+  // The radar cards summarise other areas' data: a cell shows only for a user who may view that area.
+  const shownRadarCells = Object.fromEntries(
+    Object.entries(radarCells).filter(([id]) => kpiCellVisible(id as KpiCell, viewable)),
+  );
   const canOpenApp = (id: string) => appIds === null || appIds.includes(id);
   const heading = (id: string, builtIn: string) => blockOf(layout, id)?.title ?? builtIn;
   /** One operation's windows: only those chosen for the role and open to this user. */
@@ -237,7 +244,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
         {items("kpi", kpiCells)}
       </div>
     ),
-    radar: (
+    radar: Object.keys(shownRadarCells).length === 0 && !canOpenRadar ? null : (
       <fieldset key="radar" className="xp-group my-2 p-2.5 bg-[#fcfdff] border-[#7f9db9] rounded shadow-xs">
         <legend className="font-bold text-[#0c3276] px-1 flex items-center gap-1.5">
           <span className="relative flex h-2.5 w-2.5">
@@ -255,7 +262,7 @@ export function CommandCenter({ hotelId, setStatus, openApp }: AppProps) {
           ) : null}
         </legend>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1" data-guide="gosterge" style={blockColumns(blockOf(layout, "radar"))}>
-          {items("radar", radarCells)}
+          {items("radar", shownRadarCells)}
         </div>
       </fieldset>
     ),

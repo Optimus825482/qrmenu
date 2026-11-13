@@ -29,7 +29,7 @@ async function previewOf(
     actionsByScreen(roleId, hotelId, userId),
     outletId ? prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } }) : null,
   ]);
-  const nav = buildNav(summary.user.roleCode, new Set(perScreen.keys()), {
+  const nav = buildNav(new Set(perScreen.keys()), {
     // Same rule as the real shell (loadShellProps): the outlet takes orders AND the role may open them.
     canCreate: Boolean(outlet?.hasOrdering) && (perScreen.get("QS-KUY")?.includes("O") ?? false),
   });

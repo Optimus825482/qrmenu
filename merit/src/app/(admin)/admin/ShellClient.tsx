@@ -22,6 +22,7 @@ import { TrayBalloonHost } from "@/shell/components/TrayBalloon";
 import { Window } from "@/shell/components/Window";
 import { useShellShortcuts } from "@/shell/keyboard";
 import { getApp, getApps } from "@/shell/registry";
+import { visibleApps } from "@/shell/visibleApps";
 import type { PrinterState } from "@/components/pos/usePrinterStatus";
 import { requestGuide } from "@/components/guide/guideEvents";
 import type { ShellPrefs } from "@/shell/types";
@@ -70,15 +71,10 @@ export function ShellClient({
 }: ShellClientProps) {
   // Desktop and Start menu show the union over the user's hotels; windows bound to a hotel are
   // limited per hotel by the store (screensByHotel).
-  const apps = useMemo(() => {
-    const visible = new Set(Object.values(screensByHotel).flat());
-    return getApps().filter(
-      (a) =>
-        (visible.has(a.screenCode) || a.alwaysForRoleCodes?.includes(user.roleCode) === true) &&
-        (!a.roleCodes || a.roleCodes.includes(user.roleCode)) &&
-        !a.hiddenForRoleCodes?.includes(user.roleCode),
-    );
-  }, [screensByHotel, user.roleCode]);
+  const apps = useMemo(
+    () => visibleApps(getApps(), screensByHotel, user.roleCode),
+    [screensByHotel, user.roleCode],
+  );
   const appIds = useMemo(() => apps.map((a) => a.id), [apps]);
   useShellShortcuts();
   useShellPersistence({
