@@ -18,6 +18,7 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { ExpiryLoginNotice } from "./ExpiryLoginNotice";
 import type { SubscribeEvents } from "./mobile/events";
 import { type MobileTabId, NavGlyph, TabIcon } from "./mobile/icons";
+import { stepBackInFrame } from "./mobile/frameHistory";
 import { MobileAppHost, type MobileLaunch } from "./mobile/MobileAppHost";
 import {
   installedOnly,
@@ -63,6 +64,34 @@ const SSE_LABEL: Record<SseStatus, string> = {
 
 /** A downward drag this long on the status bar pulls the notification shade open. */
 const PULL_PX = 24;
+/** Walking the history back after a layer closed: how long to wait for a step that moved only a frame, and the most steps. */
+const UNWIND_STEP_MS = 300;
+const UNWIND_MAX_STEPS = 40;
+
+type HistorySync = { desired: number; busy: boolean; tries: number; timer?: ReturnType<typeof setTimeout> };
+
+/**
+ * Brings the browser history to the shell's depth (`ctl.desired`): pushes the missing entries, or walks back
+ * one step at a time until the page's own entry (`history.state.mbDepth`) is the wanted one. Checked, not
+ * counted: the page inside an app's frame (a floor of the floor plan) puts its own entries on the same
+ * stack, and a step that only moved that frame fires no popstate here, so the timer takes the next step.
+ */
+function syncHistory(ctl: HistorySync): void {
+  clearTimeout(ctl.timer);
+  const at = Number((window.history.state as { mbDepth?: unknown } | null)?.mbDepth ?? 0);
+  if (at > ctl.desired && ctl.tries < UNWIND_MAX_STEPS) {
+    ctl.busy = true;
+    ctl.tries += 1;
+    window.history.back();
+    ctl.timer = setTimeout(() => syncHistory(ctl), UNWIND_STEP_MS);
+    return;
+  }
+  ctl.busy = false;
+  ctl.tries = 0;
+  for (let d = at + 1; d <= ctl.desired; d++) {
+    window.history.pushState({ ...window.history.state, mbDepth: d }, "");
+  }
+}
 
 const DAY_FORMAT = new Intl.DateTimeFormat("tr-TR", {
   weekday: "long",
@@ -179,42 +208,50 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
     [entries],
   );
   const goBack = useCallback(() => dispatch({ type: "back" }), []);
+  const shellRef = useRef<HTMLDivElement>(null);
+  /** The shell's back buttons: the page inside the open app's frame steps back first, then the shell's layer. */
+  const pressBack = () => {
+    const { open: app, overlay: layer } = nav;
+    const frame =
+      app && !layer ? shellRef.current?.querySelector<HTMLIFrameElement>(`[data-app-screen="${app}"] iframe`) : null;
+    if (!stepBackInFrame(frame)) dispatch({ type: "back" });
+  };
   const [query, setQuery] = useState("");
 
   // The phone's own back button/gesture: every layer (open app, shade, overview) is one history
   // entry, so "back" peels a layer instead of leaving /admin.
   const depth = mobileNavDepth(nav);
-  const historyDepth = useRef(0);
-  const ownPop = useRef(false);
+  const historySync = useRef<HistorySync>({ desired: 0, busy: false, tries: 0 });
   useEffect(() => {
-    const diff = depth - historyDepth.current;
-    if (diff > 0) {
-      for (let i = 1; i <= diff; i++) {
-        window.history.pushState({ ...window.history.state, mbDepth: historyDepth.current + i }, "");
-      }
-    } else if (diff < 0) {
-      ownPop.current = true;
-      window.history.go(diff);
-    }
-    historyDepth.current = depth;
+    const ctl = historySync.current;
+    ctl.desired = depth;
+    // While the history is still walking back, the walk itself picks the new depth up when it lands.
+    if (!ctl.busy) syncHistory(ctl);
   }, [depth]);
   useEffect(() => {
+    const ctl = historySync.current;
     const onPop = (e: PopStateEvent) => {
-      if (ownPop.current) {
-        ownPop.current = false;
+      if (ctl.busy) {
+        syncHistory(ctl);
         return;
       }
       const target = Number((e.state as { mbDepth?: unknown } | null)?.mbDepth ?? 0);
-      const steps = historyDepth.current - target;
-      historyDepth.current = target;
-      for (let i = 0; i < steps; i++) dispatch({ type: "back" });
+      const steps = ctl.desired - target;
+      if (steps > 0) {
+        ctl.desired = target;
+        for (let i = 0; i < steps; i++) dispatch({ type: "back" });
+      } else if (steps < 0) {
+        syncHistory(ctl); // the browser's "forward": the layers are gone, so the entry is left again
+      }
     };
     window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      clearTimeout(ctl.timer);
+    };
   }, []);
 
   // Keyboard users land on the screen that just came up.
-  const shellRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const target = overlay ? `[data-overlay="${overlay}"]` : open ? `[data-app-screen="${open}"]` : null;
     if (target) shellRef.current?.querySelector<HTMLElement>(target)?.focus();
@@ -284,7 +321,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
       data-screen={open ? "app" : "home"}
       style={fontVariables(fontScale, fontFamily, wallpaperColor)}
       onKeyDown={(e) => {
-        if (e.key === "Escape" && depth > 0) dispatch({ type: "back" });
+        if (e.key === "Escape" && depth > 0) pressBack();
       }}
     >
       <header className="mb-status">
@@ -391,7 +428,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
                 type="button"
                 className="mb-icon-button"
                 aria-label="Geri"
-                onClick={() => dispatch({ type: "back" })}
+                onClick={pressBack}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M19 12H5M11 6l-6 6 6 6" />
@@ -571,7 +608,7 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
           className="mb-sysnav-button"
           aria-label="Geri"
           disabled={depth === 0}
-          onClick={() => dispatch({ type: "back" })}
+          onClick={pressBack}
         >
           <NavGlyph id="back" />
         </button>
