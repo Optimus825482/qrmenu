@@ -18,6 +18,25 @@ export interface OutletDesignPreset {
  */
 export const BRAND_COVER_DARK_OUTLETS: ReadonlySet<string> = new Set(["Whiskey Lounge", "The Roof Garden"]);
 
+/**
+ * Outlets without a printed menu cover get a generated one (14 Kas 2026): hotel logo, outlet name and a line motif
+ * in the outlet's own theme colours and hero font (scripts/generate-menu-covers.ts). Keyed by outlet name, or by
+ * `ODA_SERVISI:<hotel code>` for the room service menus. The page design itself is untouched: only the welcome
+ * area shows the cover. Existing installs get them through migration 20261114010000_uretilen_menu_kapaklari.
+ */
+export const GENERATED_COVERS: Readonly<Record<string, string>> = {
+  "ODA_SERVISI:DIAMOND": "/merit-menus/kapak-oda-servisi-diamond.jpg",
+  "ODA_SERVISI:ROYAL": "/merit-menus/kapak-oda-servisi-royal.jpg",
+  "ODA_SERVISI:PREMIUM": "/merit-menus/kapak-oda-servisi-premium.jpg",
+  "Diamond Lobby Bar": "/merit-menus/kapak-diamond-lobby-bar.jpg",
+  "Royal Lobby Bar": "/merit-menus/kapak-royal-lobby-bar.jpg",
+  "Premium Lobby Bar": "/merit-menus/kapak-premium-lobby-bar.jpg",
+  "Diamond Pool Bar": "/merit-menus/kapak-diamond-pool-bar.jpg",
+  "Premium Pool Bar": "/merit-menus/kapak-premium-pool-bar.jpg",
+  "Tea Lounge": "/merit-menus/kapak-tea-lounge.jpg",
+  "Cafe Verde": "/merit-menus/kapak-cafe-verde.jpg",
+};
+
 /*
  * Every other Merit outlet opens on a light page (Kasım 2026 kararı). One family: ivory/cream paper, dark readable text,
  * a single deep accent per concept. Concepts that used to be dark (whisky, wine, shisha, steak, Far East) keep their
@@ -243,6 +262,7 @@ async function applyOutletPreset(
   preset: OutletDesignPreset,
   themes: Map<string, string>,
   forceDefault: boolean,
+  cover?: string,
 ): Promise<void> {
   // A design that already is this outlet's preset template is the operator's own (possibly edited) copy.
   const isLegacyPreset = Boolean(
@@ -257,7 +277,7 @@ async function applyOutletPreset(
       concept: row.concept,
       template: row.template,
       layout: row.layout as never,
-      options: row.options as never,
+      options: (cover ? { ...row.options, hero: "COVER", heroImageUrl: cover } : row.options) as never,
     };
     await db.outletMenuDesign.upsert({
       where: { outletId: outlet.id },
@@ -286,7 +306,7 @@ export async function seedOutletMenuDesigns(db: PrismaClient, forceDefault = fal
       select: { id: true, themeId: true, menuDesign: { select: { id: true, template: true } } },
     });
     for (const outlet of outlets) {
-      await applyOutletPreset(db, outlet, preset, themes, forceDefault);
+      await applyOutletPreset(db, outlet, preset, themes, forceDefault, GENERATED_COVERS[name]);
     }
   }
 
@@ -299,7 +319,7 @@ export async function seedOutletMenuDesigns(db: PrismaClient, forceDefault = fal
       select: { id: true, themeId: true, menuDesign: { select: { id: true, template: true } } },
     });
     for (const outlet of rsOutlets) {
-      await applyOutletPreset(db, outlet, preset, themes, forceDefault);
+      await applyOutletPreset(db, outlet, preset, themes, forceDefault, GENERATED_COVERS[`ODA_SERVISI:${hotelCode}`]);
     }
   }
 }

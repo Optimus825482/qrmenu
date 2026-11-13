@@ -79,47 +79,56 @@
     {
      "name": "EFES PILSEN",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "BUD",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "TUBORG",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "BECKS",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "CARLSBERG",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "BUDWEISER",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "HEINEKEN",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "MILLER",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     },
     {
      "name": "CORONA",
      "price": 15.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     }
    ]
   },
@@ -129,37 +138,44 @@
     {
      "name": "LEMONCELLO",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GRAPPA",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "APEROL",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CAMPARI",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTINI EXTRA DRY",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTINI ROSSO",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTINI BIANCO",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -169,67 +185,80 @@
     {
      "name": "ABSOLUT BLUE",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "ABSOLUT VANİLYA",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "ABSOLUT CITRON",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SMIRNOFF RED",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SMIRNOFF NORTH",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "RUSSIAN STANDART",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CIROC",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GREY GOOSE SUPER PREMIUM",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BELUGA GOLD",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BELUGA NOBLE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BELVEDERE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "KETEL ONE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HAKU",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -239,62 +268,74 @@
     {
      "name": "BEEFEATER PINK",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BEEFEATER",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BOMBAY SAPPHIRE",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GORDONS",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HENDRICKS",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "TANQUERAY NO:10",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "TANQUERAY CLASSIC",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "THE BOTANIST",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "ROKU",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MONKEY 47",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MALFY",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MALFY GRAPEFRUIT",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -304,57 +345,68 @@
     {
      "name": "CANARIO CAÇHACA",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CAPTAIN MORGAN WHITE",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CAPTAIN MORGAN DARK",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CAPTAIN MORGAN SPICED",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BACARDI CARTA BLANCA",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BACARDI CARTA NEGRA (BLACK)",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BACARDI CARTA ORO (GOLD)",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BACARDI SPICED",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HAVANA CLUB 3 ANOS",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "RON ZACAPA 23",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MALIBU CARIBBEAN RUM",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -364,42 +416,50 @@
     {
      "name": "OLMECA SILVER",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "OLMECA GOLD",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MILAGRO SILVER",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MILAGRO REPOSADO",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "PATRON ANEJO",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "PATRON SILVER",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "DON JULIO BLANCO",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "DON JULIO 1942",
      "price": 60.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -409,77 +469,92 @@
     {
      "name": "NAPOLEON V.S.O.P.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HENNESSY V.S.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HENNESSY V.S.O.P.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "HENNESSY X.O.",
      "price": 70.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "COURVOISIER V.S.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "COURVOISIER V.S.O.P.",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "COURVOISIER X.O.",
      "price": 70.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTELL V.S.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTELL V.S.O.P.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MARTELL X.O.",
      "price": 70.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "REMY MARTIN V.S.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "REMY MARTIN V.S.O.P.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "REMY MARTIN X.O.",
      "price": 70.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "METAXA 5 STAR",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "METAXA 7 STAR",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -489,142 +564,170 @@
     {
      "name": "FRANGELICO",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "ST. GERMAIN",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "DOM BENETICTINE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GALLIANO",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GRANDE ABSENTH",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SHERIDANS",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "DRAMBUIE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "PIMMS",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "PISANG AMBON",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "COINTREAU",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "PASSOA",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SKINOSS",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BATI DE COCO",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "ARCHERS",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SAFARI",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GRAND MARNIER",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JAGERMEISTER",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "FERNET BRANCA",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "TIA MARIA",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SAMBUCA",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "AMARETTO DISARONNO ORIGINALE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BAILEYS IRISH CREAM",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "KAHLUA",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CARDINAL MELON",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SOUTHERN COMFORT",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "WENNEKER APRICOT BRANDY",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHAMBORD",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "UNDERBERG",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": null
     }
    ]
   },
@@ -634,57 +737,68 @@
     {
      "name": "JIM BEAM BLACK",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JIM BEAM WHITE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JACK DANIELS NO:7",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JACK DANIELS HONEY",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JACK DANIELS SINGLE BARREL",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GENTLEMAN JACK",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JACK DANIELS NO:27 GOLD",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "WOODFORD RESERVE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BULLEIT BOURBON",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BULLEIT RYE",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MAKERS MARK",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -694,67 +808,80 @@
     {
      "name": "OBAN 14 Y.O.",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENFIDDICH 12 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENFIDDICH 15 Y.O.",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENFIDDICH 18 Y.O.",
      "price": 50.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENFIDDICH 21 Y.O.",
      "price": 90.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MACALLAN 12 Y.O.",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MACALLAN 15 Y.O.",
      "price": 50.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "SINGLETON 12 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENMORANGIE ORIGINAL 10 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BALVENIE DOUBLE WOOD 12 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "GLENLIVET 12 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "TALISKER 10 Y.O.",
      "price": 30.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "LAGAVULIN DE 1995 16 Y.O.",
      "price": 50.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -764,72 +891,86 @@
     {
      "name": "FAMOUS GROUSE",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "BALLANTINES",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JUSTERINI & BROOKS BARE",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHIVAS REGAL 12 Y.O.",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHIVAS REGAL 15 Y.O.",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHIVAS REGAL 18 Y.O.",
      "price": 50.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHIVAS REGAL 21 Y.O.",
      "price": 70.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CHIVAS REGAL 25 Y.O.",
      "price": 80.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JOHNNIE WALKER RED LABEL",
      "price": 10.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JOHNNIE WALKER 18 Y.O.",
      "price": 50.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JOHNNIE WALKER GOLD RESERVE",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "DIMPLE 15 Y.O.",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "MONKEY SHOULDER",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -839,17 +980,20 @@
     {
      "name": "JAMESON",
      "price": 20.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "JAMESON STOUT EDITION",
      "price": 40.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     },
     {
      "name": "CONNEMARA",
      "price": 15.0,
-     "detail": null
+     "detail": null,
+     "measure": "5 cl"
     }
    ]
   },
@@ -859,27 +1003,32 @@
     {
      "name": "AURA",
      "price": 35.0,
-     "detail": "İrlanda Viskisi, Kayısı Brendi, Taze Limon Suyu, Mürver Çiçeği Şurubu"
+     "detail": "İrlanda Viskisi, Kayısı Brendi, Taze Limon Suyu, Mürver Çiçeği Şurubu",
+     "measure": null
     },
     {
      "name": "HARMONY",
      "price": 35.0,
-     "detail": "Lavanta Vodka, Hibüsküs Ekşisi, Chombord, Agave Şurubu, Nane Yaprakları"
+     "detail": "Lavanta Vodka, Hibüsküs Ekşisi, Chombord, Agave Şurubu, Nane Yaprakları",
+     "measure": null
     },
     {
      "name": "ILLUSION",
      "price": 35.0,
-     "detail": "Vanilya Rooıbos Rom, Frangelico, Limon Suyu, Portakal Suyu, Şeftali Püresi, Çikolata Bitter"
+     "detail": "Vanilya Rooıbos Rom, Frangelico, Limon Suyu, Portakal Suyu, Şeftali Püresi, Çikolata Bitter",
+     "measure": null
     },
     {
      "name": "THE PASSION",
      "price": 35.0,
-     "detail": "Acı Tekila, Portakal likörü, Portakal Suyu, Çarkıfelek püresi, Limon Suyu"
+     "detail": "Acı Tekila, Portakal likörü, Portakal Suyu, Çarkıfelek püresi, Limon Suyu",
+     "measure": null
     },
     {
      "name": "PORT",
      "price": 35.0,
-     "detail": "Cin, Salatalık Suyu, Mürver Çiçeği Likörü, Limon Suyu, Zencefil Suyu, Yeşil Elma Püresi"
+     "detail": "Cin, Salatalık Suyu, Mürver Çiçeği Likörü, Limon Suyu, Zencefil Suyu, Yeşil Elma Püresi",
+     "measure": null
     }
    ]
   },
@@ -889,27 +1038,32 @@
     {
      "name": "OLD FASHIONED",
      "price": 35.0,
-     "detail": "J.W. Black Label 12 Y.O., Ceviz Marmelatı, Angustro Bıtter"
+     "detail": "J.W. Black Label 12 Y.O., Ceviz Marmelatı, Angustro Bıtter",
+     "measure": null
     },
     {
      "name": "NEGRONI",
      "price": 35.0,
-     "detail": "Camparı, Martını Rosso, Gordon Gın"
+     "detail": "Camparı, Martını Rosso, Gordon Gın",
+     "measure": null
     },
     {
      "name": "ESPRESSO MARTINI",
      "price": 35.0,
-     "detail": "Absolut Vodka, Espresso, Kahlua, Şeker Şurubu"
+     "detail": "Absolut Vodka, Espresso, Kahlua, Şeker Şurubu",
+     "measure": null
     },
     {
      "name": "WHISKEY SOUR",
      "price": 35.0,
-     "detail": "Jack Danıels, Taze Limon Suyu, Şeker Şurubu"
+     "detail": "Jack Danıels, Taze Limon Suyu, Şeker Şurubu",
+     "measure": null
     },
     {
      "name": "APEROL SPRITZ",
      "price": 35.0,
-     "detail": "Köpüklü Şarap, Aperol, Soda"
+     "detail": "Köpüklü Şarap, Aperol, Soda",
+     "measure": null
     }
    ]
   }

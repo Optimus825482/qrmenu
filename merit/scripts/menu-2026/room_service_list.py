@@ -94,12 +94,24 @@ def extract(md_path):
         if cat.startswith("YİYECEKLER"):
             food[name] = price
         elif cat in wanted:
-            detail = unicodedata.normalize("NFKC", cells[2]) if len(cells) > 2 and cat in COCKTAILS else None
-            groups.setdefault(cat, []).append({"name": name, "price": price, "detail": detail or None})
+            note = unicodedata.normalize("NFKC", cells[2]) if len(cells) > 2 else ""
+            detail = note if cat in COCKTAILS else None
+            # The list prices a spirit by its smallest measure ("5 cl / Seçenekler: ..."); the price of the larger
+            # measures is not in the list, so the menu states which measure the price is for.
+            mm = re.match(r"^(\d+)\s*cl(?![a-z])", note, re.I)
+            groups.setdefault(cat, []).append({"name": name, "price": price, "detail": detail or None,
+                                               "measure": "%s cl" % mm.group(1) if mm and cat not in COCKTAILS else None})
     data = {"source": "merit_tum_menuler.md (08.11.2026), Menü %s" % MENU_NO, "food": food,
             "drinks": [{"category": c, "items": groups.get(c, [])} for c, _ in DRINK_GROUPS]}
     io.open(DATA, "w", encoding="utf8", newline="\n").write(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
     return data
+
+
+def measured(measure, detail):
+    """The description of a drink priced by measure: the measure first, then the item's own text."""
+    if not measure:
+        return detail
+    return "%s · %s" % (measure, detail) if detail else measure
 
 
 def apply(outlets):
@@ -135,8 +147,8 @@ def apply(outlets):
                     "catPath": [cat_tr], "catPathEn": [cat_en],
                     "name": twin["name"] if twin else it["name"],
                     "nameEn": twin["nameEn"] if twin else it["name"],
-                    "detail": twin["detail"] if twin else it["detail"],
-                    "detailEn": twin["detailEn"] if twin else None,
+                    "detail": measured(it.get("measure"), twin["detail"] if twin else it["detail"]),
+                    "detailEn": measured(it.get("measure"), twin["detailEn"] if twin else None),
                     "price": it["price"],
                     "imageUrl": twin["imageUrl"] if twin else None,
                     "allergens": [], "tags": [],
