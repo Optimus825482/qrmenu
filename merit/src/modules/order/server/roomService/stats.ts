@@ -21,8 +21,6 @@ export type SlaStats = {
   onTimePct?: number;
   avgDeliverySec?: number;
   p90DeliverySec?: number;
-  /** Mean time from creation to the phone confirmation (orders that were confirmed). */
-  avgConfirmSec?: number;
   /** Orders flagged with an SLA warning (`slaBreachedAt`), whatever their final status; not the same as late deliveries. */
   breaches: number;
   /** Only hours (Nicosia, by creation time) that have orders, ascending. */
@@ -87,11 +85,10 @@ async function sla(ctx: Ctx, hotelId: string, range: SlaRange): Promise<SlaStats
   const { where, slaMinutes } = await scope(ctx, hotelId, range);
   const rows = await prisma.order.findMany({
     where,
-    select: { status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true, slaBreachedAt: true },
+    select: { status: true, createdAt: true, deliveredAt: true, slaBreachedAt: true },
   });
 
   const durations: number[] = [];
-  const confirms: number[] = [];
   const hours = new Map<number, { count: number; secs: number[] }>();
   let delivered = 0;
   let cancelled = 0;
@@ -99,7 +96,6 @@ async function sla(ctx: Ctx, hotelId: string, range: SlaRange): Promise<SlaStats
   let breaches = 0;
   for (const r of rows) {
     if (r.slaBreachedAt) breaches += 1;
-    if (r.phoneConfirmedAt) confirms.push((r.phoneConfirmedAt.getTime() - r.createdAt.getTime()) / 1000);
     const hour = Number(formatInTimeZone(r.createdAt, TZ, "H"));
     const bucket = hours.get(hour) ?? { count: 0, secs: [] };
     bucket.count += 1;
@@ -118,7 +114,6 @@ async function sla(ctx: Ctx, hotelId: string, range: SlaRange): Promise<SlaStats
   const onTimePct = delivered ? Math.round((onTime / delivered) * 100) : undefined;
   const avgDeliverySec = avg(durations);
   const p90DeliverySec = p90(durations);
-  const avgConfirmSec = avg(confirms);
   return {
     total: rows.length,
     delivered,
@@ -127,7 +122,6 @@ async function sla(ctx: Ctx, hotelId: string, range: SlaRange): Promise<SlaStats
     ...(onTimePct !== undefined ? { onTimePct } : {}),
     ...(avgDeliverySec !== undefined ? { avgDeliverySec } : {}),
     ...(p90DeliverySec !== undefined ? { p90DeliverySec } : {}),
-    ...(avgConfirmSec !== undefined ? { avgConfirmSec } : {}),
     breaches,
     byHour: [...hours.entries()]
       .sort(([a], [b]) => a - b)
@@ -149,7 +143,6 @@ async function slowest(ctx: Ctx, hotelId: string, range: SlaRange, limit = 20): 
       orderNo: true,
       businessDate: true,
       createdAt: true,
-      phoneConfirmedAt: true,
       deliveredAt: true,
       room: { select: { number: true } },
     },

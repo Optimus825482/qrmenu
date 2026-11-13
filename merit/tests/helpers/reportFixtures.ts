@@ -177,7 +177,7 @@ export async function addTaskItems(opts: {
 
 type OrderTimes = Partial<
   Record<
-    "approvedAt" | "readyAt" | "servedAt" | "escalatedAt" | "phoneConfirmedAt" | "onWayAt" | "deliveredAt" | "createdAt",
+    "approvedAt" | "readyAt" | "servedAt" | "escalatedAt" | "onWayAt" | "deliveredAt" | "createdAt",
     Date
   >
 >;

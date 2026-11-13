@@ -45,7 +45,7 @@ describe("radar reducers", () => {
     let s = reduce(fresh(), orderStatus(T0, "x1", "t1", "GONDERILDI"));
     s = reduce(s, ev("order.escalated", T0 + 1, { orderId: "x1", orderNo: 1 }));
     expect(table(s, "t1").orders[0].escalated).toBe(true);
-    s = reduce(s, orderStatus(T0 + 2, "rs1", "", "TEYIT_BEKLIYOR", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
+    s = reduce(s, orderStatus(T0 + 2, "rs1", "", "GONDERILDI", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
     expect(s.layers.roomService!.orders[0]).toMatchObject({ roomNumber: "101", level: "OK" });
     s = reduce(s, ev("order.sla", T0 + 3, { orderId: "rs1", orderNo: 1, level: "BREACH" }));
     expect(s.layers.roomService!.orders[0].level).toBe("BREACH");
@@ -156,13 +156,13 @@ describe("radar reducers", () => {
     expect(s.needsRefresh.size).toBe(0);
   });
 
-  it("onceki mybar.closed daha yeni talebi silmez; masaya TEYIT_BEKLIYOR eklenmez", () => {
+  it("onceki mybar.closed daha yeni talebi silmez; masaya YOLDA eklenmez", () => {
     let s = reduce(fresh(), ev("mybar.opened", T0, { requestId: "m2", roomId: "r1" }));
     s = reduce(s, ev("mybar.closed", T0 + 1, { requestId: "m1", roomId: "r1", outcome: "TAMAM" }));
     expect(room(s, "r1").mybar).toMatchObject({ requestId: "m2" });
     s = reduce(s, ev("mybar.closed", T0 + 2, { requestId: "m2", roomId: "r1", outcome: "TAMAM" }));
     expect(room(s, "r1").mybar).toBeNull();
-    s = reduce(fresh(), orderStatus(T0, "x", "t1", "TEYIT_BEKLIYOR"));
+    s = reduce(fresh(), orderStatus(T0, "x", "t1", "YOLDA"));
     expect(table(s, "t1").orders).toHaveLength(0);
   });
 

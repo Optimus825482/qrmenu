@@ -303,29 +303,28 @@ describe("yetki ve outlet kapsamı", () => {
 });
 
 describe("rs-sla", () => {
-  async function seedRoom(hotelCode: string, mins: { create: string; confirm?: string; deliver?: string; status: "TESLIM_EDILDI" | "TEYIT_BEKLIYOR" | "IPTAL" | "ONAYLANDI" }[]) {
+  async function seedRoom(hotelCode: string, mins: { create: string; deliver?: string; status: "TESLIM_EDILDI" | "GONDERILDI" | "IPTAL" | "ONAYLANDI" }[]) {
     for (const [i, m] of mins.entries()) {
       await addOrder({
         hotelCode, outletName: "Oda Servisi Test", kind: "ODA_SERVISI", roomNo: `10${i}`, date: D31, status: m.status,
         items: [{ name: "Tost", qty: 1 }],
         times: {
           createdAt: at(m.create),
-          ...(m.confirm ? { phoneConfirmedAt: at(m.confirm) } : {}),
           ...(m.deliver ? { deliveredAt: at(m.deliver) } : {}),
         },
       });
     }
   }
 
-  it("slaStart (teyitli ? teyit : oluşturma) → deliveredAt; SLA otel ayarından; stats.sla ile aynı", async () => {
+  it("slaStart (oluşturma) → deliveredAt; SLA otel ayarından; stats.sla ile aynı", async () => {
     const fbm = await staff("R-FBM", "ROYAL");
     const rid = await hotelId("ROYAL");
     await testDb.setting.create({ data: { hotelId: rid, key: "rs.slaMinutes", value: 20 } });
     await seedRoom("ROYAL", [
-      { create: "08:00", deliver: "08:25", status: "TESLIM_EDILDI" }, // teyitsiz: 25 dk, aşan
-      { create: "09:00", confirm: "09:10", deliver: "09:25", status: "TESLIM_EDILDI" }, // teyitli: 15 dk, aşmaz
-      { create: "10:00", status: "TEYIT_BEKLIYOR" }, // teyit bekliyor
-      { create: "11:00", confirm: "11:02", status: "ONAYLANDI" }, // açık, teyit sonrası
+      { create: "08:00", deliver: "08:25", status: "TESLIM_EDILDI" }, // 25 dk, aşan
+      { create: "09:00", deliver: "09:15", status: "TESLIM_EDILDI" }, // 15 dk, aşmaz
+      { create: "10:00", status: "GONDERILDI" }, // onay bekliyor
+      { create: "11:00", status: "ONAYLANDI" }, // açık
       { create: "12:00", status: "IPTAL" },
     ]);
     const res = await run(fbm.ctx, "rs-sla");

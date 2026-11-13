@@ -71,7 +71,7 @@ test.describe("@kabul-otel-gunu modüller arası tek iş günü", () => {
 
       const ops = await roomStaff(browser, "oda.mr"); pages.push(ops);
       const rsKitchen = await roomStaff(browser, "mutfak.oda"); pages.push(rsKitchen);
-      await deliverRoom(ops, rsKitchen, guest, await roomOrder(guest, "104"), false);
+      await deliverRoom(ops, rsKitchen, guest, await roomOrder(guest, "104"));
       const cashier = await openStaff(browser, "kasa.havuz"); pages.push(cashier);
       const kitchen = await openStaff(browser, "kds.havuz"); pages.push(kitchen);
       const waiter = await openStaff(browser, "garson.havuz"); pages.push(waiter);

@@ -51,7 +51,6 @@
     },
     "order": {
       "status": {
-        "TEYIT_BEKLIYOR": "In attesa di conferma",
         "YOLDA": "In arrivo",
         "TESLIM_EDILDI": "Consegnato",
         "GONDERILDI": "Inviato",
@@ -115,14 +114,12 @@
       "cooldown": "Abbiamo ricevuto il suo ordine poco fa. Potrà inviare il prossimo tra circa {min} min; le sue scelte restano salvate qui.",
       "order": {
         "status": {
-          "TEYIT_BEKLIYOR": "In attesa di conferma",
           "ONAYLANDI": "In preparazione",
           "HAZIR": "Pronto",
           "YOLDA": "In arrivo",
           "TESLIM_EDILDI": "Consegnato",
           "IPTAL": "Annullato"
         },
-        "confirmHint": "Ti chiameremo al telefono della camera per confermare il tuo ordine.",
         "eta": "Tempo stimato: {min} min",
         "cancelByPhone": "Se desidera modificare o annullare l'ordine, La preghiamo di chiamare il Servizio in Camera dal telefono della Sua camera; il nostro team sarà lieto di assisterLa.",
         "cancelled": "Il tuo ordine è stato annullato.",

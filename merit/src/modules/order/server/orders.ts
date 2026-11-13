@@ -136,17 +136,7 @@ async function authorizeRoomTransition(
 ): Promise<void> {
   const rights = await roomRights(tx, ctx, order, to);
   switch (to) {
-    case "ONAYLANDI": {
-      const outlet = await tx.outlet.findUnique({
-        where: { id: order.outletId },
-        select: { phoneConfirmRequired: true },
-      });
-      if (outlet?.phoneConfirmRequired) {
-        throw new DomainError("CONFLICT", "Bu outlette telefon teyidi zorunlu");
-      }
-      await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
-      break;
-    }
+    case "ONAYLANDI":
     case "HAZIR":
       await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
       break;
@@ -155,9 +145,9 @@ async function authorizeRoomTransition(
       await assertCan(ctx, "RO-TES", "D", rights.hotelId);
       break;
     case "IPTAL": {
-      const isPreApproval = from === "GONDERILDI" || from === "TEYIT_BEKLIYOR";
-      if (isPreApproval) {
-        await assertCan(ctx, "RO-TEL", "D", rights.hotelId);
+      // Before approval the order desk (RO-TAL D, the right that approves it) may cancel it.
+      if (from === "GONDERILDI") {
+        await assertCan(ctx, "RO-TAL", "D", rights.hotelId);
       } else {
         const hasTesA = await can(ctx, "RO-TES", "A", rights.hotelId);
         if (!hasTesA) {
@@ -395,94 +385,6 @@ async function transition(
   });
 }
 
-/**
- * Confirms a phone order for room service: GONDERILDI | TEYIT_BEKLIYOR -> ONAYLANDI.
- * Sets phoneConfirmedAt/ById and approvedAt/ById, creates OrderEvent, audits and publishes.
- */
-async function confirmPhone(ctx: Ctx, orderId: string, note?: string): Promise<Order> {
-  return prisma.$transaction(async (tx) => {
-    const order = await lockedOrder(tx, ctx, orderId);
-    if (order.kind !== "ODA_SERVISI" || !(order.status === "GONDERILDI" || order.status === "TEYIT_BEKLIYOR")) {
-      throw new DomainError("CONFLICT", ALREADY);
-    }
-    const rights = await roomRights(tx, ctx, order, "TELEFON_TEYIDI");
-    await assertCan(ctx, "RO-TEL", "D", rights.hotelId);
-    if (!rights.covered) forbidOutlet(ctx, order);
-
-    const now = new Date();
-    const updated = await tx.order.update({
-      where: { id: order.id },
-      data: {
-        status: "ONAYLANDI",
-        phoneConfirmedAt: now,
-        phoneConfirmedById: ctx.user.id,
-        approvedAt: now,
-        approvedById: ctx.user.id,
-      },
-    });
-
-    const noteText = "TELEFON_TEYIDI" + (note?.trim() ? `: ${note.trim()}` : "");
-    await tx.orderEvent.create({
-      data: {
-        orderId: order.id,
-        userId: ctx.user.id,
-        from: order.status,
-        to: "ONAYLANDI",
-        note: noteText,
-        at: now,
-      },
-    });
-
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: order.hotelId,
-      action: "ROOM_ORDER_PHONE_CONFIRMED",
-      entity: "Order",
-      entityId: order.id,
-      before: { status: order.status },
-      after: { status: "ONAYLANDI", note: note?.trim() || null },
-    });
-
-    await audit(tx, {
-      userId: ctx.user.id,
-      hotelId: order.hotelId,
-      action: "ORDER_ONAYLANDI",
-      entity: "Order",
-      entityId: order.id,
-      before: { status: order.status },
-      after: { status: "ONAYLANDI" },
-    });
-
-    await printJobs.enqueueReceipt(tx, updated, { printerOptional: true });
-
-    const confirmPayload = orderPayload(
-      { ...updated, table: order.table, room: order.room },
-      { from: order.status, byUserId: ctx.user.id },
-    );
-    await publish(
-      {
-        type: "order.confirmed",
-        hotelId: order.hotelId,
-        outletId: order.outletId,
-        payload: confirmPayload,
-      },
-      tx,
-    );
-
-    await publish(
-      {
-        type: "order.approved",
-        hotelId: order.hotelId,
-        outletId: order.outletId,
-        payload: confirmPayload,
-      },
-      tx,
-    );
-
-    return updated;
-  });
-}
-
 /** KDS "başla": marks an approved order as being prepared. Anything else is a no-op. */
 async function startPrep(ctx: Ctx, orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
@@ -647,4 +549,4 @@ function durations(
   return out;
 }
 
-export const orders = { transition, confirmPhone, startPrep, revertReady, get, listForOutlet, durations };
+export const orders = { transition, startPrep, revertReady, get, listForOutlet, durations };

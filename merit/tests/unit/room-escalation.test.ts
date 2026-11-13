@@ -129,28 +129,6 @@ describe("escalation.run — ODA_SERVISI dalı", () => {
     expect(await testDb.notification.count({ where: { type: "order.escalated" } })).toBe(2);
   });
 
-  it("3 dk bekleyen TEYIT_BEKLIYOR oda siparişi de yükseltilir ve gövdesi 'Teyit bekliyor' der", async () => {
-    const mrId = await hotelId("ROYAL");
-    const outlet = await roomServiceOutlet(mrId);
-    const room = await getOrCreateRoom(mrId);
-    const mus = await staffCtx("esc_room_mus_teyit", "R-MUS", outlet.id);
-    await addMember(mus.user.id, outlet.id);
-    const now = new Date("2026-11-01T10:00:00.000Z");
-    const order = await seedRoomOrder(mrId, outlet.id, room.id, {
-      status: "TEYIT_BEKLIYOR",
-      createdAt: new Date(now.getTime() - 3 * 60_000),
-    });
-
-    expect(await escalation.run(now)).toBe(1);
-    expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).escalatedAt).toEqual(now);
-    const notes = await testDb.notification.findMany({ where: { type: "order.escalated" } });
-    expect(notes.map((n) => n.userId)).toEqual([mus.user.id]);
-    expect(notes[0]).toMatchObject({
-      title: "Oda servisi onay bekliyor",
-      body: `#${order.orderNo} · Oda 101 · 2 dk · Teyit bekliyor`,
-    });
-  });
-
   it("MASA siparişinde alıcı R-MUS değil R-SGF'dir ve başlık/gövde eski biçimde kalır", async () => {
     const s = await orderSetup();
     const mrId = await hotelId("ROYAL");

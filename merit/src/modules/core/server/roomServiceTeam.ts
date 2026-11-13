@@ -4,7 +4,7 @@ import { audit } from "@/modules/core/server/audit";
 import { hotelScope, loadModuleGates } from "@/modules/core/server/entitlements";
 
 /** Staff screens of the room-service outlet; viewing any of them means the role works there. */
-const ROOM_SERVICE_SCREENS = ["RO-TAL", "RO-TEL", "RO-TES"];
+const ROOM_SERVICE_SCREENS = ["RO-TAL", "RO-TES"];
 
 /**
  * A hotel has one room-service outlet, so a user whose role opens a room-service screen does not

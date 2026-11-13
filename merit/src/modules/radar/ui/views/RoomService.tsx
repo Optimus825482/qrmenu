@@ -12,7 +12,7 @@ import { usePulse } from "../useRadar";
 type RsOrder = NonNullable<RadarState["layers"]["roomService"]>["orders"][number];
 
 const LANES: { status: OrderStatus; title: string }[] = [
-  { status: "TEYIT_BEKLIYOR", title: "Teyit bekliyor" },
+  { status: "GONDERILDI", title: "Onay bekliyor" },
   { status: "ONAYLANDI", title: "Onaylandı" },
   { status: "HAZIR", title: "Hazır" },
   { status: "YOLDA", title: "Yolda" },

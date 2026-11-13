@@ -234,7 +234,6 @@ export function RoomServiceReportsWindow({ hotelId, setStatus }: AppProps) {
         />
         <Card label="Ortalama teslim" value={show(fmtDuration(stats?.avgDeliverySec))} />
         <Card label="Teslim süresi P90" value={show(fmtDuration(stats?.p90DeliverySec))} hint="siparişlerin %90'ı bu sürede" />
-        <Card label="Ortalama teyit" value={show(fmtDuration(stats?.avgConfirmSec))} hint="oluşma - telefon teyidi" />
         {revenue ? <Card label="Teslim edilen ciro" value={show(formatPrice(revenue.amount, revenue.currency))} hint="fiyatı gösterilen teslimler" /> : null}
       </div>
 

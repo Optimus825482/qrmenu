@@ -35,7 +35,6 @@ afterAll(async () => {
 });
 
 async function setupRsEnv(over: {
-  phoneConfirmRequired?: boolean;
   pricesShown?: boolean;
   maxOpenPerRoom?: number;
   /** Wait between two orders of a room (`rs.minMinutesBetweenOrders`). The fixture turns it off (0) by default. */
@@ -84,7 +83,6 @@ async function setupRsEnv(over: {
         hasMenu: true,
         hasOrdering: true,
         orderingEnabled: over.orderingEnabled ?? true,
-        phoneConfirmRequired: over.phoneConfirmRequired ?? false,
         priceDisplay: over.pricesShown === false ? "HIDE" : "SHOW",
       },
     });
@@ -98,7 +96,6 @@ async function setupRsEnv(over: {
         hasMenu: true,
         hasOrdering: true,
         orderingEnabled: over.orderingEnabled ?? true,
-        phoneConfirmRequired: over.phoneConfirmRequired ?? false,
         priceDisplay: over.pricesShown === false ? "HIDE" : "SHOW",
       },
     });
@@ -164,8 +161,8 @@ describe("roomOrder.create & get", () => {
     expect(row.status).toBe("GONDERILDI");
   });
 
-  it("teyit zorunlu -> TEYIT_BEKLIYOR, OrderEvent 2 satır, notify ve order.created olayı", async () => {
-    const s = await setupRsEnv({ phoneConfirmRequired: true });
+  it("telefon teyidi yok: GONDERILDI, OrderEvent 1 satır, notify ve order.created olayı", async () => {
+    const s = await setupRsEnv();
 
     // Setup an online R-ODS and R-FBM
     const ods = await staffCtx("ods_online_listen", "R-ODS", s.outlet.id);
@@ -181,23 +178,21 @@ describe("roomOrder.create & get", () => {
       userAgent: "vitest",
     });
 
-    expect(res.status).toBe("TEYIT_BEKLIYOR");
+    expect(res.status).toBe("GONDERILDI");
 
     const events = await testDb.orderEvent.findMany({
       where: { orderId: res.orderId },
       orderBy: { createdAt: "asc" },
     });
-    expect(events.length).toBe(2);
+    expect(events.length).toBe(1);
     expect(events[0].to).toBe("GONDERILDI");
-    expect(events[1].to).toBe("TEYIT_BEKLIYOR");
-    expect(events[1].note).toBe("TEYIT_GEREKLI");
 
     expect(publishMock).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "order.created",
         payload: expect.objectContaining({
           orderId: res.orderId,
-          status: "TEYIT_BEKLIYOR",
+          status: "GONDERILDI",
           roomId: s.room.id,
         }),
       }),
@@ -207,7 +202,7 @@ describe("roomOrder.create & get", () => {
     const notifications = await testDb.notification.findMany();
     expect(notifications.length).toBeGreaterThanOrEqual(1);
     expect(notifications[0].title).toContain("Yeni oda servisi");
-    expect(notifications[0].body).toContain("teyit bekliyor");
+    expect(notifications[0].body).not.toContain("teyit");
   });
 
   it("pricesShown=false -> unitPrice null, subtotal null", async () => {

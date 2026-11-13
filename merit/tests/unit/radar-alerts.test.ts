@@ -137,8 +137,8 @@ describe("deriveAlerts", () => {
     expect(at(1, "BREACH")[0]?.severity).toBe("crit");
   });
 
-  it("times room-service orders from slaStartAt (phone confirmation), not createdAt; pending confirmation is not timed", () => {
-    const run = (status: "HAZIR" | "TEYIT_BEKLIYOR", createdSec: number, startSec: number) =>
+  it("times room-service orders from slaStartAt; an order waiting for approval is timed too", () => {
+    const run = (status: "HAZIR" | "GONDERILDI", createdSec: number, startSec: number) =>
       deriveAlerts(
         {
           roomService: {
@@ -160,10 +160,10 @@ describe("deriveAlerts", () => {
         TH,
         OPTS,
       ).filter((a) => a.kind === "RS_SLA");
-    // Created 20 min ago but confirmed 1 min ago: the clock has barely started.
+    // The layer's slaStartAt is the clock (the creation time on the server); it wins over createdAt.
     expect(run("HAZIR", 1200, 60)).toHaveLength(0);
     expect(run("HAZIR", 1200, 600)[0]?.severity).toBe("crit");
-    expect(run("TEYIT_BEKLIYOR", 1200, 1200)).toHaveLength(0);
+    expect(run("GONDERILDI", 1200, 1200)[0]?.severity).toBe("crit");
   });
 
   it("flags stock at the critical level but not one above", () => {

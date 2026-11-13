@@ -53,7 +53,7 @@ describe("olay tipleri", () => {
       expect(SSE_EVENT_TYPES).toContain(t);
     }
     expect(GUEST_EVENT_TYPES).toEqual([
-      "menu.availability", "menu.changed", "price.display", "ordering.changed", "order.confirmed",
+      "menu.availability", "menu.changed", "price.display", "ordering.changed",
       "order.approved", "order.rejected", "order.prep", "order.ready", "order.onway",
       "order.delivered", "order.served", "order.cancelled", "call.resolved",
       "mybar.seen", "mybar.fulfilled", "mybar.completed", "mybar.cancelled",

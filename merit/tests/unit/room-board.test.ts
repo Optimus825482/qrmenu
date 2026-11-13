@@ -27,7 +27,7 @@ afterAll(async () => {
 
 const min = (m: number) => new Date(Date.now() - m * 60_000);
 
-async function env(over: { hotel?: string; confirm?: boolean; ordering?: boolean } = {}) {
+async function env(over: { hotel?: string; ordering?: boolean } = {}) {
   const hid = await hotelId(over.hotel ?? "ROYAL");
   let floor = await testDb.floor.findFirst({ where: { hotelId: hid } });
   if (!floor) floor = await testDb.floor.create({ data: { hotelId: hid, name: "1. Kat", number: 1 } });
@@ -36,7 +36,6 @@ async function env(over: { hotel?: string; confirm?: boolean; ordering?: boolean
     hasMenu: true,
     hasOrdering: true,
     orderingEnabled: over.ordering ?? true,
-    phoneConfirmRequired: over.confirm ?? false,
   };
   const existing = await testDb.outlet.findFirst({ where: { hotelId: hid, type: "ODA_SERVISI" } });
   const outlet = existing
@@ -85,7 +84,6 @@ describe("board.get", () => {
     const room = await e.mkRoom("201", "4201");
     const ids: Record<string, string> = {};
     for (const [col, status] of [
-      ["CONFIRM", "TEYIT_BEKLIYOR"],
       ["NEW", "GONDERILDI"],
       ["PREP", "ONAYLANDI"],
       ["READY", "HAZIR"],
@@ -97,10 +95,10 @@ describe("board.get", () => {
     await mkOrder(e, room.id, "IPTAL");
     const { ctx } = await ods(e);
     const b = await board.get(ctx, e.outlet.id);
-    for (const col of ["CONFIRM", "NEW", "PREP", "READY", "ONWAY"] as const) {
+    for (const col of ["NEW", "PREP", "READY", "ONWAY"] as const) {
       expect(b.columns[col].map((c) => c.id)).toEqual([ids[col]]);
     }
-    expect(b.kpis.open).toBe(5);
+    expect(b.kpis.open).toBe(4);
   });
 
   it("sütun içi sıra slaDueAt artan (en acil üstte)", async () => {
@@ -128,26 +126,17 @@ describe("board.get", () => {
     expect(b.kpis.overdue).toBe(1);
   });
 
-  it("teyit sonrası süre phoneConfirmedAt'ten ölçülür (15 dk önce teyit, 40 dk önce oluşma -> OK)", async () => {
-    const e = await env({ confirm: true });
+  it("onay bekleyen (GONDERILDI) sipariş de oluşmadan itibaren ölçülür (40 dk önce oluşma -> BREACH)", async () => {
+    const e = await env();
     const room = await e.mkRoom("204", "4204");
-    const o = await mkOrder(e, room.id, "GONDERILDI", { createdAt: min(40), phoneConfirmedAt: min(15) });
-    const { ctx } = await ods(e);
-    const card = (await board.get(ctx, e.outlet.id)).columns.NEW.find((c) => c.id === o.id)!;
-    expect(card.slaState).toBe("OK");
-    expect(card.slaStartAt.getTime()).toBe(o.phoneConfirmedAt!.getTime());
-    expect(card.slaDueAt.getTime()).toBe(o.phoneConfirmedAt!.getTime() + 30 * 60_000);
-  });
-
-  it("TEYIT_BEKLIYOR kartı 90 dk sonra bile OK", async () => {
-    const e = await env({ confirm: true });
-    const room = await e.mkRoom("205", "4205");
-    await mkOrder(e, room.id, "TEYIT_BEKLIYOR", { createdAt: min(90) });
+    const o = await mkOrder(e, room.id, "GONDERILDI", { createdAt: min(40) });
     const { ctx } = await ods(e);
     const b = await board.get(ctx, e.outlet.id);
-    expect(b.columns.CONFIRM[0].slaState).toBe("OK");
-    expect(b.kpis.overdue).toBe(0);
-    expect(b.confirmRequired).toBe(true);
+    const card = b.columns.NEW.find((c) => c.id === o.id)!;
+    expect(card.slaState).toBe("BREACH");
+    expect(card.slaStartAt.getTime()).toBe(o.createdAt.getTime());
+    expect(card.slaDueAt.getTime()).toBe(o.createdAt.getTime() + 30 * 60_000);
+    expect(b.kpis.overdue).toBe(1);
   });
 
   it("otel ayarı rs.slaMinutes=10 kullanılır", async () => {

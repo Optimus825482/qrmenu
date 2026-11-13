@@ -150,23 +150,15 @@ describe("rsSlaSweep (T6a)", () => {
     expect((await row(o.id)).slaWarnedAt!.getTime()).toBe(warnedAt.getTime());
   });
 
-  it("TESLIM_EDILDI, IPTAL ve TEYIT_BEKLIYOR taranmaz", async () => {
+  it("TESLIM_EDILDI ve IPTAL taranmaz", async () => {
     const e = await env("ROYAL", 30);
     const ids: string[] = [];
-    for (const status of ["TESLIM_EDILDI", "IPTAL", "TEYIT_BEKLIYOR"] as const) {
+    for (const status of ["TESLIM_EDILDI", "IPTAL"] as const) {
       ids.push((await order(e, 90, { status })).id);
     }
     expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 0 });
     for (const id of ids) expect((await row(id)).slaBreachedAt).toBeNull();
     expect(await notes("order.sla.breach")).toHaveLength(0);
-  });
-
-  it("teyit sonrasi saat phoneConfirmedAt'ten isler", async () => {
-    const e = await env("ROYAL", 30);
-    const o = await order(e, 90, { phoneConfirmedAt: ago(10) });
-    expect(await rsSlaSweep(NOW)).toEqual({ warned: 0, breached: 0 });
-    expect((await row(o.id)).slaWarnedAt).toBeNull();
-    expect(await rsSlaSweep(new Date(NOW.getTime() + 15 * 60_000))).toEqual({ warned: 1, breached: 0 });
   });
 
   it("GONDERILDI taranir", async () => {

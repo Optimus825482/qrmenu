@@ -16,10 +16,9 @@ import { type Column, DataGrid } from "@/shell/ui/DataGrid";
 
 type OrderRow = RoomOrderListItem;
 
-/** Badge labels follow the live board (Yeni / Teyit / Hazırlanıyor / Hazır / Yolda). */
+/** Badge labels follow the live board (Yeni / Hazırlanıyor / Hazır / Yolda). */
 const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   GONDERILDI: { label: "Yeni", color: "#1d4ed8", bg: "#dbeafe" },
-  TEYIT_BEKLIYOR: { label: "Telefon Teyidi Bekliyor", color: "#b45309", bg: "#fef3c7" },
   ONAYLANDI: { label: "Hazırlanıyor", color: "#047857", bg: "#d1fae5" },
   HAZIR: { label: "Hazır", color: "#059669", bg: "#a7f3d0" },
   YOLDA: { label: "Yolda", color: "#4338ca", bg: "#e0e7ff" },
@@ -142,7 +141,6 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
           >
             <option value="HEPSI">Tüm Durumlar</option>
             <option value="GONDERILDI">Yeni Gelenler</option>
-            <option value="TEYIT_BEKLIYOR">Telefon Teyidi Bekleyenler</option>
             <option value="ONAYLANDI">Onaylanan / Hazırlananlar</option>
             <option value="YOLDA">Yolda Olanlar</option>
             <option value="TESLIM_EDILDI">Teslim Edilenler</option>
@@ -251,14 +249,6 @@ export function RoomServiceOrdersWindow({ hotelId, setStatus }: AppProps) {
                   {fmtTime(selectedOrder.createdAt, "dd.MM.yyyy HH:mm")}
                 </span>
               </div>
-              {selectedOrder.phoneConfirmedAt && (
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Teyit Saati:</span>
-                  <span className="font-mono text-emerald-700 font-bold">
-                    {fmtTime(selectedOrder.phoneConfirmedAt, "HH:mm:ss")}
-                  </span>
-                </div>
-              )}
               {selectedOrder.deliveredAt && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Teslim Saati:</span>

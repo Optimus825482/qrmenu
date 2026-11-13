@@ -154,7 +154,7 @@ export function deriveMotion(
           const table = `table:${e.tableId}`;
           if (e.to === "ONAYLANDI" && e.prep) push(e, "flow", "order.flow", table, `queue:${outletId}:HAZIRLANIYOR`);
           else if (e.to === "ONAYLANDI") push(e, "flow", "order.flow", table, `queue:${outletId}:YENI`);
-          else if (e.to === "GONDERILDI" || e.to === "TEYIT_BEKLIYOR") push(e, "flow", "order.flow", table, `queue:${outletId}:kasa`);
+          else if (e.to === "GONDERILDI") push(e, "flow", "order.flow", table, `queue:${outletId}:kasa`);
           else if (e.to === "HAZIR") push(e, "ready", "order.ready", `queue:${outletId}:HAZIR`, table);
           else if (e.to === "SERVIS_EDILDI" || e.to === "TESLIM_EDILDI") push(e, "served", "order.served", table);
         } else if (e.roomId && idx.rsOrders.has(e.orderId)) {

@@ -261,7 +261,7 @@ function calmSnapshot(base: RadarSnapshot, hotelId: string, startMs: number): Ra
 }
 
 /**
- * Puts the Room Service orders the script will move into the snapshot as TEYIT_BEKLIYOR, so no `order.status`
+ * Puts the Room Service orders the script will move into the snapshot as GONDERILDI, so no `order.status`
  * has to invent an order: the event payload carries no createdAt/slaStartAt and the reducer would refetch.
  * Returns the rooms whose orders were seeded (the caller derives ids from the index).
  */
@@ -285,7 +285,7 @@ function seedRoomServiceOrders(
     orderId: `demo-rs-${i}`,
     orderNo: 4401 + i,
     roomNumber: room.number,
-    status: "TEYIT_BEKLIYOR" as const,
+    status: "GONDERILDI" as const,
     createdAt,
     slaStartAt: createdAt,
     level: "OK" as const,
@@ -331,7 +331,7 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
 
   // Room Service orders start INSIDE the snapshot: an `order.status` that first creates an order has no
   // createdAt/slaStartAt to pass on, so the reducer asks for a refetch of `order:<id>` (roomService.ts).
-  // Seeded as TEYIT_BEKLIYOR, the script only moves them, and the SLA clock has a real start.
+  // Seeded as GONDERILDI, the script only moves them, and the SLA clock has a real start.
   const rsSeeded = seedRoomServiceOrders(L, focus, shuffle, startMs);
   const people = Object.entries(snapshot.people ?? {});
   const staff = L.staff?.sessions ?? [];
@@ -490,7 +490,7 @@ export function buildDemoScenario(opts: DemoOptions): DemoScenario {
       const orderNo = ++no;
       const t = 100 + i * (focus === "ROOM_SERVICE" ? 150 : 330) + jit(40);
       const common = { layer: "ODA_SERVISI" as const, orderId, orderNo, kind: "ODA_SERVISI" as const, roomId: r.roomId };
-      add(t, { type: "order.status", ...common, from: "TEYIT_BEKLIYOR", to: "ONAYLANDI" });
+      add(t, { type: "order.status", ...common, from: "GONDERILDI", to: "ONAYLANDI" });
       if (i % 4 === 0) {
         add(t + 700, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "WARN" });
         add(t + 1000, { type: "order.sla", layer: "ODA_SERVISI", orderId, orderNo, level: "BREACH" });

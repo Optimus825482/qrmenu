@@ -5,10 +5,8 @@ import { formatPrice } from "@/lib/formatPrice";
 import { SlaTimer } from "./SlaTimer";
 
 export type RoomOpsFlags = {
-  /** RO-TAL D: Onayla, Hazır. */
+  /** RO-TAL D: Onayla, Hazır, onay öncesi iptal. */
   talepD: boolean;
-  /** RO-TEL D: telefon teyidi, onay öncesi iptal. */
-  teyitD: boolean;
   /** RO-TES D: Yola çıktı, Teslim edildi. */
   teslimD: boolean;
   /** RO-TES A: onay sonrası iptal. */
@@ -19,25 +17,20 @@ export type RoomOpsFlags = {
 
 export type RoomCardActions = {
   approve(card: RoomOrderData): void;
-  confirmPhone(card: RoomOrderData): void;
   cancel(card: RoomOrderData): void;
   ready(card: RoomOrderData): void;
   onWay(card: RoomOrderData): void;
   delivered(card: RoomOrderData): void;
 };
 
-export type RoomOpsTab = "tumu" | "teyit" | "teslim";
+export type RoomOpsTab = "tumu" | "teslim";
 
 type Props = {
   card: RoomOrderData;
   column: RoomBoardColumn;
   flags: RoomOpsFlags;
-  /** Outlet requires the phone confirmation before approval. */
-  confirmRequired: boolean;
   actions: RoomCardActions;
   busy?: boolean;
-  /** Screen the card is shown on: the confirmation tab shows only the confirmation buttons. */
-  tab?: RoomOpsTab;
   /** First card of its list: carries the screen-guide anchors. */
   first?: boolean;
   /** Server clock minus device clock (ms), for the SLA timer. */
@@ -51,7 +44,6 @@ type Props = {
 };
 
 const STEP_TONE: Record<RoomBoardColumn, string> = {
-  CONFIRM: "border-warn bg-warn text-bg",
   NEW: "border-warn text-warn",
   PREP: "border-info text-info",
   READY: "border-success bg-success text-bg",
@@ -59,7 +51,6 @@ const STEP_TONE: Record<RoomBoardColumn, string> = {
 };
 
 const TONE: Record<RoomBoardColumn, string> = {
-  CONFIRM: "border-warn ring-2 ring-warn/40",
   NEW: "border-warn",
   PREP: "border-info",
   READY: "border-success",
@@ -78,10 +69,8 @@ export function RoomOrderCard({
   card,
   column,
   flags,
-  confirmRequired,
   actions,
   busy,
-  tab = "tumu",
   first,
   clockOffsetMs,
   stepLabel,
@@ -89,17 +78,13 @@ export function RoomOrderCard({
   highlight,
 }: Props) {
   const rtl = card.guestLanguage === "ar";
-  const showApprove = tab !== "teyit" && flags.talepD && (column === "NEW" || column === "CONFIRM");
-  const approveBlocked = confirmRequired || column === "CONFIRM";
-  // A sent order of an outlet that requires phone confirmation can only be confirmed by phone (the server accepts GONDERILDI).
-  const showConfirm = flags.teyitD && (column === "CONFIRM" || (column === "NEW" && confirmRequired));
-  const showPreCancel = flags.teyitD && (column === "NEW" || column === "CONFIRM");
+  const showApprove = flags.talepD && column === "NEW";
+  const showPreCancel = flags.talepD && column === "NEW";
   const showPostCancel = flags.teslimA && (column === "PREP" || column === "READY" || column === "ONWAY");
-  const showReady = tab !== "teyit" && flags.talepD && column === "PREP";
+  const showReady = flags.talepD && column === "PREP";
   const showOnWay = flags.teslimD && column === "READY";
   const showDelivered = flags.teslimD && column === "ONWAY";
-  const hasButtons =
-    showApprove || showConfirm || showPreCancel || showPostCancel || showReady || showOnWay || showDelivered;
+  const hasButtons = showApprove || showPreCancel || showPostCancel || showReady || showOnWay || showDelivered;
 
   return (
     <article
@@ -108,7 +93,7 @@ export function RoomOrderCard({
       data-sla-card={card.slaState}
       data-guide={first ? "talep-ac" : undefined}
       className={`flex flex-col justify-between gap-3 rounded-2xl border bg-surface p-4 shadow-sm ${TONE[column]} ${
-        card.slaState === "BREACH" && column !== "CONFIRM" ? "bg-danger/5 ring-2 ring-danger" : ""
+        card.slaState === "BREACH" ? "bg-danger/5 ring-2 ring-danger" : ""
       } ${highlight ? "outline outline-4 outline-offset-2 outline-accent" : ""}`}
     >
       <div className="space-y-2.5">
@@ -124,7 +109,7 @@ export function RoomOrderCard({
             </h3>
             <p className="mt-0.5 text-[13px] text-muted">{clock(card.createdAt)}</p>
           </div>
-          <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} paused={column === "CONFIRM"} offsetMs={clockOffsetMs} />
+          <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} offsetMs={clockOffsetMs} />
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -179,32 +164,17 @@ export function RoomOrderCard({
 
       {hasButtons ? (
         <div className="flex flex-wrap gap-2 border-t border-border/50 pt-3">
-          {showConfirm ? (
+          {showApprove ? (
             <button
               type="button"
               data-mutates
-              data-guide={first ? "ara" : undefined}
+              data-guide={first ? "onayla" : undefined}
               disabled={busy}
-              onClick={() => actions.confirmPhone(card)}
-              className={`${BTN} bg-warn text-bg`}
+              onClick={() => actions.approve(card)}
+              className={`${BTN} bg-info text-white`}
             >
-              Telefonla teyit edildi
+              Onayla
             </button>
-          ) : null}
-          {showApprove ? (
-            <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <button
-                type="button"
-                data-mutates
-                data-guide={first ? "onayla" : undefined}
-                disabled={busy || approveBlocked}
-                onClick={() => actions.approve(card)}
-                className={`${BTN} w-full bg-info text-white`}
-              >
-                Onayla
-              </button>
-              {approveBlocked ? <span className="text-[13px] text-muted">Önce telefonla teyit edin</span> : null}
-            </div>
           ) : null}
           {showReady ? (
             <button
@@ -249,7 +219,7 @@ export function RoomOrderCard({
               onClick={() => actions.cancel(card)}
               className="min-h-12 rounded-xl border border-danger px-3.5 text-[13px] font-bold text-danger hover:bg-danger/10 disabled:opacity-50"
             >
-              {column === "CONFIRM" && tab === "teyit" ? "Teyit edilemedi" : "İptal"}
+              İptal
             </button>
           ) : null}
         </div>

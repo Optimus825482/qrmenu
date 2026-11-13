@@ -189,7 +189,6 @@ enum RoomServiceCoverageMode {
 
 enum OrderStatus {
   GONDERILDI
-  TEYIT_BEKLIYOR
   ONAYLANDI
   HAZIR
   YOLDA
@@ -376,7 +375,6 @@ model Outlet {
   themeId                 String?      @map("theme_id")
   printerId               String?      @map("printer_id")
   kdsEnabled              Boolean      @default(false) @map("kds_enabled")
-  phoneConfirmRequired    Boolean      @default(false) @map("phone_confirm_required")
   autoPrintReceipt        Boolean      @default(true) @map("auto_print_receipt")
   autoPrintKitchen        Boolean      @default(false) @map("auto_print_kitchen")
   waiterAssignmentEnabled Boolean      @default(false) @map("waiter_assignment_enabled")
@@ -501,7 +499,6 @@ model User {
   stockCorrectionsResolved   StockCorrectionRequest[]   @relation("StockCorrectionResolvedBy")
   emailLogs                  EmailLog[]
   ordersApproved             Order[]                    @relation("OrderApprovedBy")
-  ordersPhoneConfirmed       Order[]                    @relation("OrderPhoneConfirmedBy")
   ordersAssigned             Order[]                    @relation("OrderAssignedWaiter")
   ordersServed               Order[]                    @relation("OrderServedBy")
   ordersDelivered            Order[]                    @relation("OrderDeliveredBy")
@@ -1676,8 +1673,6 @@ model Order {
   approvedById       String?     @map("approved_by_id")
   approvedAt         DateTime?   @map("approved_at") @db.Timestamptz(3)
   rejectReason       String?     @map("reject_reason")
-  phoneConfirmedById String?     @map("phone_confirmed_by_id")
-  phoneConfirmedAt   DateTime?   @map("phone_confirmed_at") @db.Timestamptz(3)
   readyAt            DateTime?   @map("ready_at") @db.Timestamptz(3)
   servedAt           DateTime?   @map("served_at") @db.Timestamptz(3)
   assignedWaiterId   String?     @map("assigned_waiter_id")
@@ -1701,7 +1696,6 @@ model Order {
   table            OutletTable? @relation(fields: [tableId], references: [id], onDelete: Restrict)
   room             Room?        @relation(fields: [roomId], references: [id], onDelete: Restrict)
   approvedBy       User?        @relation("OrderApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
-  phoneConfirmedBy User?        @relation("OrderPhoneConfirmedBy", fields: [phoneConfirmedById], references: [id], onDelete: SetNull)
   assignedWaiter   User?        @relation("OrderAssignedWaiter", fields: [assignedWaiterId], references: [id], onDelete: SetNull)
   servedBy         User?        @relation("OrderServedBy", fields: [servedById], references: [id], onDelete: SetNull)
   deliveredBy      User?        @relation("OrderDeliveredBy", fields: [deliveredById], references: [id], onDelete: SetNull)

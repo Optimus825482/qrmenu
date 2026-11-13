@@ -8,8 +8,7 @@ export const ORDER_TRANSITIONS: Record<OrderKind, Partial<Record<OrderStatus, re
     HAZIR: ["SERVIS_EDILDI", "IPTAL"],
   },
   ODA_SERVISI: {
-    GONDERILDI: ["TEYIT_BEKLIYOR", "ONAYLANDI", "IPTAL"],
-    TEYIT_BEKLIYOR: ["ONAYLANDI", "IPTAL"],
+    GONDERILDI: ["ONAYLANDI", "IPTAL"],
     ONAYLANDI: ["HAZIR", "IPTAL"],
     HAZIR: ["YOLDA", "IPTAL"],
     YOLDA: ["TESLIM_EDILDI", "IPTAL"],

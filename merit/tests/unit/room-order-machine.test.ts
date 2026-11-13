@@ -20,7 +20,6 @@ const { isAllowed } = await import("@/modules/order/server/transitions");
 const { orders } = await import("@/modules/order/server/orders");
 const {
   approveRoomOrderAction,
-  confirmRoomPhoneAction,
   cancelRoomOrderAction,
   startRoomPrepAction,
   markRoomReadyAction,
@@ -45,7 +44,7 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-async function getOrCreateRsOutlet(hotelIdStr: string, phoneConfirmRequired = false) {
+async function getOrCreateRsOutlet(hotelIdStr: string) {
   const existing = await testDb.outlet.findFirst({
     where: { hotelId: hotelIdStr, type: "ODA_SERVISI" },
   });
@@ -57,7 +56,6 @@ async function getOrCreateRsOutlet(hotelIdStr: string, phoneConfirmRequired = fa
         hasMenu: true,
         hasOrdering: true,
         orderingEnabled: true,
-        phoneConfirmRequired,
         autoPrintReceipt: true,
       },
     });
@@ -71,7 +69,6 @@ async function getOrCreateRsOutlet(hotelIdStr: string, phoneConfirmRequired = fa
       hasMenu: true,
       hasOrdering: true,
       orderingEnabled: true,
-      phoneConfirmRequired,
       autoPrintReceipt: true,
     },
   });
@@ -129,14 +126,9 @@ async function createRsOrder(
 
 describe("isAllowed tablosu", () => {
   it("ODA_SERVISI geçişleri kurallara tam uyar; GONDERILDI -> HAZIR false", () => {
-    expect(isAllowed("ODA_SERVISI", "GONDERILDI", "TEYIT_BEKLIYOR")).toBe(true);
     expect(isAllowed("ODA_SERVISI", "GONDERILDI", "ONAYLANDI")).toBe(true);
     expect(isAllowed("ODA_SERVISI", "GONDERILDI", "IPTAL")).toBe(true);
     expect(isAllowed("ODA_SERVISI", "GONDERILDI", "HAZIR")).toBe(false);
-
-    expect(isAllowed("ODA_SERVISI", "TEYIT_BEKLIYOR", "ONAYLANDI")).toBe(true);
-    expect(isAllowed("ODA_SERVISI", "TEYIT_BEKLIYOR", "IPTAL")).toBe(true);
-    expect(isAllowed("ODA_SERVISI", "TEYIT_BEKLIYOR", "HAZIR")).toBe(false);
 
     expect(isAllowed("ODA_SERVISI", "ONAYLANDI", "HAZIR")).toBe(true);
     expect(isAllowed("ODA_SERVISI", "ONAYLANDI", "IPTAL")).toBe(true);
@@ -155,9 +147,9 @@ describe("isAllowed tablosu", () => {
 });
 
 describe("orders.transition (ODA_SERVISI)", () => {
-  it("phoneConfirmRequired=false iken R-ODS approve ok, printJobs kuyruk ve olaylar", async () => {
+  it("R-ODS approve ok, printJobs kuyruk ve olaylar", async () => {
     const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, false);
+    const outlet = await getOrCreateRsOutlet(mrId);
     const room = await getOrCreateRoom(mrId);
     const ods = await staffCtx("ods_user1", "R-ODS", outlet.id);
 
@@ -190,7 +182,7 @@ describe("orders.transition (ODA_SERVISI)", () => {
 
   it("yazıcı tanımlıyken ONAYLANDI tam 1 PrintJob üretir", async () => {
     const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, false);
+    const outlet = await getOrCreateRsOutlet(mrId);
     const room = await getOrCreateRoom(mrId);
     const ods = await staffCtx("ods_user_pr", "R-ODS", outlet.id);
 
@@ -222,50 +214,9 @@ describe("orders.transition (ODA_SERVISI)", () => {
     expect(printJobsList[0].printerId).toBe(printer.id);
   });
 
-  it("phoneConfirmRequired=true iken R-ODS approve CONFLICT; confirmPhone ok", async () => {
-    const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, true);
-    const room = await getOrCreateRoom(mrId);
-    const ods = await staffCtx("ods_confirm", "R-ODS", outlet.id);
-
-    const order = await createRsOrder(mrId, outlet.id, room.id, { status: "TEYIT_BEKLIYOR" });
-
-    // approve should be CONFLICT "Bu outlette telefon teyidi zorunlu"
-    await expect(orders.transition(ods.ctx, order.id, "ONAYLANDI")).rejects.toMatchObject({
-      code: "CONFLICT",
-      message: "Bu outlette telefon teyidi zorunlu",
-    });
-
-    // confirmPhone ok
-    publishMock.mockClear();
-    const confirmed = await orders.confirmPhone(ods.ctx, order.id, "Misafir onayladı");
-    expect(confirmed.status).toBe("ONAYLANDI");
-    expect(confirmed.phoneConfirmedAt).not.toBeNull();
-    expect(confirmed.approvedAt).not.toBeNull();
-    expect(confirmed.phoneConfirmedAt?.getTime()).toBe(confirmed.approvedAt?.getTime());
-    expect(confirmed.phoneConfirmedById).toBe(ods.user.id);
-    expect(confirmed.approvedById).toBe(ods.user.id);
-
-    // OrderEvent has note
-    const ev = await testDb.orderEvent.findFirst({
-      where: { orderId: order.id, to: "ONAYLANDI" },
-    });
-    expect(ev?.note).toContain("TELEFON_TEYIDI: Misafir onayladı");
-
-    // Events: order.confirmed and order.approved
-    expect(publishMock).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "order.confirmed" }),
-      expect.anything(),
-    );
-    expect(publishMock).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "order.approved" }),
-      expect.anything(),
-    );
-  });
-
   it("R-MUS hazırlık kaydı olmadan oda siparişini HAZIR yapar, R-ODS teslim eder", async () => {
     const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, false);
+    const outlet = await getOrCreateRsOutlet(mrId);
     const room = await getOrCreateRoom(mrId);
     const mus = await staffCtx("mus_cook", "R-MUS", outlet.id);
     const ods = await staffCtx("ods_runner", "R-ODS", outlet.id);
@@ -299,7 +250,7 @@ describe("orders.transition (ODA_SERVISI)", () => {
 
   it("iptal: onay öncesi R-ODS ok, sebepsiz VALIDATION; onay sonrası R-ODS FORBIDDEN + YETKISIZ_DENEME, R-MUS ok", async () => {
     const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, false);
+    const outlet = await getOrCreateRsOutlet(mrId);
     const room = await getOrCreateRoom(mrId);
     const ods = await staffCtx("ods_canceller", "R-ODS", outlet.id);
     const mus = await staffCtx("mus_canceller", "R-MUS", outlet.id);
@@ -339,17 +290,17 @@ describe("orders.transition (ODA_SERVISI)", () => {
     expect(cancelledPost.status).toBe("IPTAL");
   });
 
-  it("eşzamanlı confirmPhone ve personel iptali: biri ok biri CONFLICT, nihai durum tutarlı", async () => {
+  it("eşzamanlı onay ve personel iptali: biri ok biri CONFLICT, nihai durum tutarlı", async () => {
     const mrId = await hotelId("ROYAL");
-    const outlet = await getOrCreateRsOutlet(mrId, true);
+    const outlet = await getOrCreateRsOutlet(mrId);
     const room = await getOrCreateRoom(mrId);
     const ods = await staffCtx("ods_race", "R-ODS", outlet.id);
 
-    const order = await createRsOrder(mrId, outlet.id, room.id, { status: "TEYIT_BEKLIYOR" });
+    const order = await createRsOrder(mrId, outlet.id, room.id, { status: "GONDERILDI" });
 
-    // Race confirmPhone vs cancel
+    // Race approve vs cancel
     const [r1, r2] = await Promise.allSettled([
-      orders.confirmPhone(ods.ctx, order.id),
+      orders.transition(ods.ctx, order.id, "ONAYLANDI"),
       orders.transition(ods.ctx, order.id, "IPTAL", { reason: "Misafir vazgeçti" }),
     ]);
 
@@ -363,11 +314,11 @@ describe("orders.transition (ODA_SERVISI)", () => {
     expect(["ONAYLANDI", "IPTAL"]).toContain(finalRow.status);
   });
 
-  it("başka otelin R-ODS'si FORBIDDEN; MASA siparişine approveRoomOrderAction NOT_FOUND; internal:true action üzerinden verilemez", async () => {
+  it("başka otelin R-ODS'si FORBIDDEN; MASA siparişine approveRoomOrderAction NOT_FOUND", async () => {
     const mrId = await hotelId("ROYAL");
     const mrdId = await hotelId("DIAMOND");
-    const outletMR = await getOrCreateRsOutlet(mrId, false);
-    const outletMRD = await getOrCreateRsOutlet(mrdId, false);
+    const outletMR = await getOrCreateRsOutlet(mrId);
+    const outletMRD = await getOrCreateRsOutlet(mrdId);
     const room = await getOrCreateRoom(mrId);
 
     const odsMRD = await staffCtx("ods_mrd_user", "R-ODS", outletMRD.id);
@@ -397,19 +348,6 @@ describe("orders.transition (ODA_SERVISI)", () => {
     expect(actionRes.ok).toBe(false);
     if (!actionRes.ok) {
       expect(actionRes.error.code).toBe("NOT_FOUND");
-    }
-
-    // internal: true cannot be passed through action
-    const outletConfirm = await getOrCreateRsOutlet(mrId, true);
-    const odsMR = await staffCtx("ods_mr_user", "R-ODS", outletConfirm.id);
-    const orderConfirm = await createRsOrder(mrId, outletConfirm.id, room.id, { status: "TEYIT_BEKLIYOR" });
-
-    requireUserMock.mockResolvedValue(odsMR.ctx);
-    const internalInjectRes = await approveRoomOrderAction({ orderId: orderConfirm.id, internal: true });
-    expect(internalInjectRes.ok).toBe(false);
-    if (!internalInjectRes.ok) {
-      expect(internalInjectRes.error.code).toBe("CONFLICT");
-      expect(internalInjectRes.error.message).toBe("Bu outlette telefon teyidi zorunlu");
     }
   });
 });

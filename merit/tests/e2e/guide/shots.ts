@@ -70,10 +70,16 @@ export const SHOTS: Shot[] = [
   shot("mutfak", "kds-mobil", "Mutfak ekranı telefonda", "egitim.kds", "/kds", { target: "Havuz Bar", viewport: phone }),
   ...[
     ["talepler", "Oda Servisi Talepleri", "/oda-servisi"],
-    ["teyit", "Telefon Teyidi", "/oda-servisi?sekme=teyit"],
+    ["pano", "Oda servisi yan yana görünüm", "/oda-servisi"],
     ["teslim", "Teslim Takibi", "/oda-servisi?sekme=teslim"],
     ["mobil", "Oda servisi telefonda", "/oda-servisi"],
-  ].map(([id, title, route], i) => shot("mutfak", id, title, "egitim.oda", route, { target: "Oda Servisi", viewport: i === 3 ? phone : wide })),
+  ].map(([id, title, route], i) => shot("mutfak", id, title, "egitim.oda", route, {
+    target: "Oda Servisi",
+    viewport: i === 3 ? phone : wide,
+    ...(id === "pano" ? { prepare: async (page: Page) => {
+      await page.getByRole("group", { name: "Görünüm" }).getByRole("button", { name: "Yan yana" }).click();
+    } } : {}),
+  })),
   ...[
     ["menu", "Misafir Menü Görünümü", "/q/{table}"],
     ["menu-en", "İngilizce menü", "/q/{table}?lang=en"],

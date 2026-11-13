@@ -16,7 +16,6 @@ describe("orderTone", () => {
   it("eşler", () => {
     expect(orderTone("HAZIR")).toBe("ready");
     expect(orderTone("GONDERILDI")).toBe("pending");
-    expect(orderTone("TEYIT_BEKLIYOR")).toBe("pending");
     expect(orderTone("ONAYLANDI")).toBe("preparing");
     expect(orderTone("YOLDA")).toBe("preparing");
     expect(orderTone("SERVIS_EDILDI")).toBe("done");

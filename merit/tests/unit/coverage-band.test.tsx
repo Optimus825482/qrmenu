@@ -27,10 +27,9 @@ const { CoverageBand } = await import("@/modules/order/ui/roomService/CoverageBa
 const NOW = Date.now();
 const later = (min: number) => new Date(NOW + min * 60_000);
 
-const flags: RoomOpsFlags = { talepD: true, teyitD: true, teslimD: true, teslimA: true, talepA: true };
+const flags: RoomOpsFlags = { talepD: true, teslimD: true, teslimA: true, talepA: true };
 const actions: RoomCardActions = {
   approve: vi.fn(),
-  confirmPhone: vi.fn(),
   cancel: vi.fn(),
   ready: vi.fn(),
   onWay: vi.fn(),
@@ -66,7 +65,6 @@ const board: CoveredBoard = {
       outletId: "outDiamond",
       mode: "ISLEME",
       canProcess: true,
-      confirmRequired: false,
       cards: [{ column: "NEW", card: card() }],
     },
   ],

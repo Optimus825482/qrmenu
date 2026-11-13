@@ -97,16 +97,16 @@ describe("stats.sla", () => {
     expect(s.slaMinutes).toBe(15);
   });
 
-  it("süre phoneConfirmedAt'ten ölçülür; avgConfirmSec ve breaches", async () => {
+  it("süre oluşmadan ölçülür; breaches slaBreachedAt sayar", async () => {
     const e = await env();
-    await delivered(e, 40, { phoneConfirmedAt: at(DAY, 10, 20), slaBreachedAt: at(DAY, 10, 35) });
-    await delivered(e, 10, { phoneConfirmedAt: at(DAY, 10, 4) });
+    await delivered(e, 40, { slaBreachedAt: at(DAY, 10, 35) });
+    await delivered(e, 10);
     const { ctx } = await fbm();
     const s = await stats.sla(ctx, e.hid, RANGE);
-    expect(s.avgDeliverySec).toBe(780); // (20 dk + 6 dk) / 2
-    expect(s.avgConfirmSec).toBe(720); // (20 dk + 4 dk) / 2
+    expect(s.avgDeliverySec).toBe(1500); // (40 dk + 10 dk) / 2
     expect(s.breaches).toBe(1);
-    expect(s.onTimePct).toBe(100);
+    expect(s.onTimePct).toBe(50);
+    expect(s).not.toHaveProperty("avgConfirmSec");
   });
 
   it("byHour oluşma saatine (Nicosia) göre", async () => {
@@ -130,7 +130,6 @@ describe("stats.sla", () => {
     expect(s.onTimePct).toBeUndefined();
     expect(s.avgDeliverySec).toBeUndefined();
     expect(s.p90DeliverySec).toBeUndefined();
-    expect(s.avgConfirmSec).toBeUndefined();
   });
 
   it("teslimsiz aralıkta onTimePct undefined", async () => {

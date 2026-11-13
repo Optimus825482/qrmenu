@@ -68,7 +68,7 @@ test("tek gezinme: garson, iç sekmeler tablist; depo ve oda servisi de tek nav"
   const rs = await newContextPage(browser);
   await signIn(rs, "fbm.mr", /Oda Servisi/);
   for (const path of ["/oda-servisi", "/oda-servisi?sekme=teslim"]) await expectSingleNav(rs, path);
-  await expect(nav(rs).getByRole("link", { name: "Teyit" })).toBeVisible();
+  await expect(nav(rs).getByRole("link", { name: "Teyit" })).toHaveCount(0);
   await rs.context().close();
 });
 
@@ -153,7 +153,7 @@ test("oturum bitişine 60 dakikadan az kalınca kalıcı şerit görünür", asy
   await expect(page.getByText(/Oturum (4[12]) dk sonra kapanacak/)).toBeVisible();
 });
 
-test("depo ana sayfası: yetkili kartlar, her kart ilgili ekrana gider; Geri bağlantısı /depo", async ({ page }) => {
+test("depo ana sayfası: yetkili kartlar, her kart ilgili ekrana gider; Geri yalnız alt sayfada", async ({ page }) => {
   await signIn(page, "depo.cok", ROYAL_MINIBAR);
   await page.goto("/depo");
   const main = page.getByRole("main");
@@ -162,8 +162,11 @@ test("depo ana sayfası: yetkili kartlar, her kart ilgili ekrana gider; Geri ba�
   await expect(main.getByRole("link", { name: /Minibar Stok & Talepler/ })).toHaveAttribute("href", "/depo/stok");
   await expect(main.getByRole("link", { name: /Geçmiş Kayıt Düzeltme Onayları/ })).toHaveAttribute("href", "/kat/duzeltme-onay");
   await expect(main.getByRole("link", { name: /Doluluk Excel Yükleme/ })).toHaveAttribute("href", "/depo/doluluk-yukle");
+  // Otel deposu is a bar entry of the depot family (a navigation root): no "Geri" there (D2); its sub-page leads back.
   await page.goto("/depo/stok");
-  await expect(page.getByRole("link", { name: "Geri" })).toHaveAttribute("href", "/depo");
+  await expect(page.getByTestId("back-link")).toHaveCount(0);
+  await page.goto("/depo/talepler");
+  await expect(page.getByRole("link", { name: /^Geri: / })).toHaveAttribute("href", "/depo/stok");
 });
 
 test("depo panosu otel kapsamı dışındaki havuz kartını göstermez", async ({ page }) => {

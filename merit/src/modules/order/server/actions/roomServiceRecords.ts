@@ -11,7 +11,6 @@ import { getRoomServiceOutlet } from "@/modules/order/server/roomService/outlet"
 
 const STATUSES = [
   "GONDERILDI",
-  "TEYIT_BEKLIYOR",
   "ONAYLANDI",
   "HAZIR",
   "YOLDA",
@@ -68,7 +67,6 @@ export type RoomOrderListItem = {
   note: string | null;
   createdAt: string;
   approvedAt: string | null;
-  phoneConfirmedAt: string | null;
   deliveredAt: string | null;
   slaBreachedAt: string | null;
   hotelName: string;
@@ -175,7 +173,7 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       const count = group._count.id;
       stats.total += count;
 
-      if (group.status === "TEYIT_BEKLIYOR" || group.status === "GONDERILDI") {
+      if (group.status === "GONDERILDI") {
         stats.pending += count;
       } else if (group.status === "ONAYLANDI" || group.status === "HAZIR") {
         stats.approved += count;
@@ -200,7 +198,6 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       note: o.note,
       createdAt: o.createdAt.toISOString(),
       approvedAt: o.approvedAt?.toISOString() ?? null,
-      phoneConfirmedAt: o.phoneConfirmedAt?.toISOString() ?? null,
       deliveredAt: o.deliveredAt?.toISOString() ?? null,
       slaBreachedAt: o.slaBreachedAt?.toISOString() ?? null,
       hotelName: o.hotel.name,

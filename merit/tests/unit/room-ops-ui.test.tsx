@@ -26,7 +26,6 @@ vi.mock("@/components/ops/useSound", () => ({
 
 const getBoard = vi.hoisted(() => vi.fn());
 const approve = vi.hoisted(() => vi.fn());
-const confirmPhone = vi.hoisted(() => vi.fn());
 const cancel = vi.hoisted(() => vi.fn());
 const ready = vi.hoisted(() => vi.fn());
 const onWay = vi.hoisted(() => vi.fn());
@@ -35,7 +34,6 @@ const setOrdering = vi.hoisted(() => vi.fn());
 vi.mock("@/modules/order/server/actions/roomServiceBoard", () => ({ getRoomBoardAction: getBoard }));
 vi.mock("@/modules/order/server/actions/roomService", () => ({
   approveRoomOrderAction: approve,
-  confirmRoomPhoneAction: confirmPhone,
   cancelRoomOrderAction: cancel,
   markRoomReadyAction: ready,
   markRoomOnWayAction: onWay,
@@ -93,23 +91,22 @@ function card(over: Partial<RoomOrderCard> = {}): RoomOrderCard {
 
 function boardOf(cols: Partial<Record<RoomBoardColumn, RoomOrderCard[]>>, over: Partial<RoomBoard> = {}): RoomBoard {
   return {
-    columns: { CONFIRM: [], NEW: [], PREP: [], READY: [], ONWAY: [], ...cols },
+    columns: { NEW: [], PREP: [], READY: [], ONWAY: [], ...cols },
     kpis: { open: 0, overdue: 0, today: 0 },
     orderingEnabled: true,
-    confirmRequired: false,
     serverNow: new Date().toISOString(),
     ...over,
   };
 }
 
-const ALL: RoomOpsFlags = { talepD: true, teyitD: true, teslimD: true, teslimA: true, talepA: true };
-const NONE: RoomOpsFlags = { talepD: false, teyitD: false, teslimD: false, teslimA: false, talepA: false };
+const ALL: RoomOpsFlags = { talepD: true, teslimD: true, teslimA: true, talepA: true };
+const NONE: RoomOpsFlags = { talepD: false, teslimD: false, teslimA: false, talepA: false };
 
 // Most cases read the side-by-side board; the queue (the default the staff sees) has its own cases.
 function ui(
   b: RoomBoard,
   flags: RoomOpsFlags,
-  tab: "tumu" | "teyit" | "teslim" = "tumu",
+  tab: "tumu" | "teslim" = "tumu",
   showMybar = false,
   view: "pano" | "kuyruk" | "default" = "pano",
 ) {
@@ -153,10 +150,10 @@ beforeEach(() => {
   listMybar.mockReset();
   listMybar.mockResolvedValue(mybarPage([]));
   window.localStorage.clear();
-  for (const fn of [approve, confirmPhone, cancel, ready, onWay, delivered, setOrdering, playNew, playReady, playCall]) {
+  for (const fn of [approve, cancel, ready, onWay, delivered, setOrdering, playNew, playReady, playCall]) {
     fn.mockReset();
   }
-  for (const fn of [approve, confirmPhone, cancel, ready, onWay, delivered, setOrdering]) fn.mockResolvedValue({ ok: true, data: {} });
+  for (const fn of [approve, cancel, ready, onWay, delivered, setOrdering]) fn.mockResolvedValue({ ok: true, data: {} });
 });
 afterEach(cleanup);
 
@@ -188,8 +185,8 @@ describe("RoomService staff board - button visibility per permission flag", () =
     expect(screen.queryByRole("button", { name: "Teslim edildi" })).toBeNull();
   });
 
-  it("cancel after approval only with RO-TES A; before approval only with RO-TEL D", () => {
-    const { unmount } = render(ui(allBoard(), { ...NONE, teyitD: true }));
+  it("cancel after approval only with RO-TES A; before approval only with RO-TAL D", () => {
+    const { unmount } = render(ui(allBoard(), { ...NONE, talepD: true }));
     expect(within(document.querySelector('[data-column-id="NEW"]') as HTMLElement).getByRole("button", { name: "İptal" })).toBeTruthy();
     for (const col of ["PREP", "READY", "ONWAY"]) {
       expect(within(document.querySelector(`[data-column-id="${col}"]`) as HTMLElement).queryByRole("button", { name: "İptal" })).toBeNull();
@@ -235,47 +232,20 @@ describe("RoomService staff board - button visibility per permission flag", () =
   });
 });
 
-describe("RoomService staff board - confirmation, labels, order", () => {
-  it("Onayla is disabled on a TEYIT card with the hint", () => {
-    render(ui(boardOf({ CONFIRM: [card({ status: "TEYIT_BEKLIYOR" })] }, { confirmRequired: true }), ALL));
-    expect((screen.getByRole("button", { name: "Onayla" }) as HTMLButtonElement).disabled).toBe(true);
-    expect(screen.getByText("Önce telefonla teyit edin")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Telefonla teyit edildi" }) as HTMLButtonElement).disabled).toBe(false);
-  });
-
-  it("Onayla is disabled on a NEW card when the outlet requires phone confirmation", () => {
-    render(ui(boardOf({ NEW: [card()] }, { confirmRequired: true }), ALL));
-    expect((screen.getByRole("button", { name: "Onayla" }) as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it("a GONDERILDI card of an outlet requiring phone confirmation offers the phone confirmation", async () => {
-    render(ui(boardOf({ NEW: [card()] }, { confirmRequired: true }), ALL));
-    fireEvent.click(screen.getByRole("button", { name: "Telefonla teyit edildi" }));
-    fireEvent.click(screen.getByRole("button", { name: "Teyidi kaydet" }));
-    await waitFor(() => expect(confirmPhone).toHaveBeenCalledWith({ orderId: "o1", note: undefined }));
-  });
-
-  it("a GONDERILDI card without the phone requirement has no phone confirmation button", () => {
+describe("RoomService staff board - approval, labels, order", () => {
+  it("a NEW card has an enabled Onayla and no phone confirmation step", () => {
     render(ui(boardOf({ NEW: [card()] }), ALL));
-    expect(screen.queryByRole("button", { name: "Telefonla teyit edildi" })).toBeNull();
+    expect((screen.getByRole("button", { name: "Onayla" }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.queryByText(/teyit/i)).toBeNull();
   });
 
-  it("Telefonla teyit edildi asks for an optional note and confirms", async () => {
-    render(ui(boardOf({ CONFIRM: [card({ status: "TEYIT_BEKLIYOR" })] }, { confirmRequired: true }), ALL, "teyit"));
-    fireEvent.click(screen.getByRole("button", { name: "Telefonla teyit edildi" }));
-    fireEvent.change(screen.getByLabelText("Teyit notu"), { target: { value: "  buz istedi " } });
-    fireEvent.click(screen.getByRole("button", { name: "Teyidi kaydet" }));
-    await waitFor(() => expect(confirmPhone).toHaveBeenCalledWith({ orderId: "o1", note: "buz istedi" }));
-  });
-
-  it("Teyit edilemedi opens the reason dialog and cancels with the reason", async () => {
-    render(ui(boardOf({ CONFIRM: [card({ status: "TEYIT_BEKLIYOR" })] }, { confirmRequired: true }), ALL, "teyit"));
-    expect(screen.queryByRole("button", { name: "Onayla" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Teyit edilemedi" }));
+  it("İptal before approval opens the reason dialog and cancels with the reason", async () => {
+    render(ui(boardOf({ NEW: [card()] }), ALL));
+    fireEvent.click(screen.getByRole("button", { name: "İptal" }));
     const dialog = await screen.findByRole("dialog");
-    fireEvent.click(within(dialog).getByRole("button", { name: "Açmadı" }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Misafir vazgeçti" }));
     fireEvent.click(within(dialog).getByRole("button", { name: "İptal et" }));
-    await waitFor(() => expect(cancel).toHaveBeenCalledWith({ orderId: "o1", reason: "Açmadı" }));
+    await waitFor(() => expect(cancel).toHaveBeenCalledWith({ orderId: "o1", reason: "Misafir vazgeçti" }));
   });
 
   it("shows 'Dahili tanımlı değil' when the room has no extension", () => {
@@ -305,11 +275,11 @@ describe("RoomService staff board - confirmation, labels, order", () => {
     expect(headings.map((h) => h.textContent)).toEqual(["#7 · Oda 101 · Dahili 4101", "#8 · Oda 101 · Dahili 4101"]);
   });
 
-  it("folds Teyit + Yeni and Hazırlanıyor + Hazır into one stage each, with a step badge per card", () => {
-    render(ui(boardOf({ CONFIRM: [card({ status: "TEYIT_BEKLIYOR" })], NEW: [card()], PREP: [card()], READY: [card()], ONWAY: [card()] }), ALL));
+  it("folds Hazırlanıyor + Hazır into one stage, with a step badge per card", () => {
+    render(ui(boardOf({ NEW: [card()], PREP: [card()], READY: [card()], ONWAY: [card()] }), ALL));
     const steps = (stage: string) =>
       Array.from(document.querySelectorAll(`[data-stage-id="${stage}"] [data-step]`)).map((n) => n.textContent);
-    expect(steps("ALINDI").sort()).toEqual(["Talep alındı", "Teyit bekliyor"]);
+    expect(steps("ALINDI")).toEqual([]);
     expect(steps("HAZIRLANIYOR").sort()).toEqual(["Hazır", "Hazırlanıyor"]);
     // one step in the stage: the column title already says it
     expect(steps("GONDERILDI")).toEqual([]);
@@ -324,12 +294,9 @@ describe("RoomService staff board - confirmation, labels, order", () => {
     expect(stage.queryByRole("button")).toBeNull();
   });
 
-  it("tabs filter the stages: teyit shows one, teslim shows Hazır and Yolda", () => {
-    const { unmount } = render(ui(allBoard(), ALL, "teyit"));
-    expect(document.querySelectorAll("[data-stage-id]")).toHaveLength(1);
-    expect(screen.queryByRole("group", { name: "Görünüm" })).toBeNull();
-    unmount();
+  it("the teslim tab shows Hazır and Yolda only, without the view switch", () => {
     render(ui(allBoard(), ALL, "teslim"));
+    expect(screen.queryByRole("group", { name: "Görünüm" })).toBeNull();
     expect(Array.from(document.querySelectorAll("[data-stage-id]")).map((n) => n.getAttribute("data-stage-id"))).toEqual(["READY", "ONWAY"]);
   });
 
@@ -430,7 +397,7 @@ describe("RoomService staff board - service queue", () => {
     expect(queue.map((e) => e.column)).toEqual(["ONWAY", "PREP", "NEW"]);
     expect(byRequestTime(queue[0], queue[1])).toBeLessThan(0);
     expect(stageOfColumn("READY")).toBe("HAZIRLANIYOR");
-    expect(stageOfColumn("CONFIRM")).toBe("ALINDI");
+    expect(stageOfColumn("NEW")).toBe("ALINDI");
   });
 
   it("Kuyruk shows every open order as one numbered list and keeps the step buttons", async () => {
@@ -611,22 +578,24 @@ describe("/oda-servisi server page gates", () => {
   it("computes the permission flags on the server", async () => {
     ctxOf({ "RO-TAL:V": true, "RO-TAL:D": true, "RO-TES:D": true, "RO-TES:A": true });
     const el = (await renderOdaServisi(Promise.resolve({}))) as { props: { flags: RoomOpsFlags; tab: string; outletId: string } };
-    expect(el.props.flags).toEqual({ talepD: true, teyitD: false, teslimD: true, teslimA: true, talepA: false });
+    expect(el.props.flags).toEqual({ talepD: true, teslimD: true, teslimA: true, talepA: false });
     expect((el.props as { showMybar?: boolean }).showMybar).toBe(false);
     expect(el.props.tab).toBe("tumu");
     expect(el.props.outletId).toBe("out1");
   });
 
-  it("blocks ?sekme=teyit without RO-TEL V", async () => {
-    ctxOf({ "RO-TAL:V": true, "RO-TES:V": true });
-    await expect(renderOdaServisi(Promise.resolve({ sekme: "teyit" }))).rejects.toThrow("NEXT_REDIRECT:/yetkisiz?ekran=RO-TEL");
-    expect(boardGet).not.toHaveBeenCalled();
+  it("the retired ?sekme=teyit falls back to the full board (RO-TAL gate)", async () => {
+    ctxOf({ "RO-TAL:V": true });
+    const el = (await renderOdaServisi(Promise.resolve({ sekme: "teyit" }))) as { props: { tab: string } };
+    expect(el.props.tab).toBe("tumu");
+    ctxOf({ "RO-TES:V": true });
+    await expect(renderOdaServisi(Promise.resolve({ sekme: "teyit" }))).rejects.toThrow("NEXT_REDIRECT:/yetkisiz?ekran=RO-TAL");
   });
 
   it("blocks ?sekme=teslim without RO-TES V and the default tab without RO-TAL V", async () => {
-    ctxOf({ "RO-TAL:V": true, "RO-TEL:V": true });
+    ctxOf({ "RO-TAL:V": true });
     await expect(renderOdaServisi(Promise.resolve({ sekme: "teslim" }))).rejects.toThrow("RO-TES");
-    ctxOf({ "RO-TEL:V": true });
+    ctxOf({ "RO-TES:V": true });
     await expect(renderOdaServisi(Promise.resolve({}))).rejects.toThrow("NEXT_REDIRECT:/yetkisiz?ekran=RO-TAL");
   });
 
@@ -634,13 +603,6 @@ describe("/oda-servisi server page gates", () => {
     ctxOf({ "RO-TAL:V": true, "MB-PERS:V": true });
     const el = (await renderOdaServisi(Promise.resolve({}))) as { props: { showMybar: boolean } };
     expect(el.props.showMybar).toBe(true);
-  });
-
-  it("allows ?sekme=teyit with RO-TEL V (no RO-TAL V needed for the gate)", async () => {
-    ctxOf({ "RO-TEL:V": true, "RO-TEL:D": true });
-    const el = (await renderOdaServisi(Promise.resolve({ sekme: "teyit" }))) as { props: { tab: string; flags: RoomOpsFlags } };
-    expect(el.props.tab).toBe("teyit");
-    expect(el.props.flags.teyitD).toBe(true);
   });
 
   it("has no first-hotel fallback: no session hotel goes to /secim, a hotel without the outlet too", async () => {

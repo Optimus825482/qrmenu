@@ -39,22 +39,13 @@ export async function roomStaff(browser: Browser, user: string): Promise<Page> {
 export const rsCard = (page: Page, no: number, column: string) => page.locator(`[data-column-id=${column}]`).locator("article").filter({ hasText: new RegExp(`#${no}\\b`) });
 
 /** Keeps the guest status page open throughout the staff chain: each assertion measures live SSE updates. */
-export async function deliverRoom(ops: Page, kitchen: Page, guest: Page, order: { id: string; token: string; no: number }, phone: boolean): Promise<void> {
+export async function deliverRoom(ops: Page, kitchen: Page, guest: Page, order: { id: string; token: string; no: number }): Promise<void> {
   await guest.goto(`/q/${order.token}/siparis/${order.id}`);
   const step = guest.getByRole("main").locator('li[aria-current="step"]');
-  await expect(step).toContainText(phone ? /Teyit/ : /Gönderildi/);
+  await expect(step).toContainText(/Gönderildi/);
   await ops.reload();
-  if (phone) {
-    await expect(rsCard(ops, order.no, "CONFIRM").getByRole("button", { name: "Onayla", exact: true })).toBeDisabled();
-    await ops.goto("/oda-servisi/teyit");
-    await rsCard(ops, order.no, "CONFIRM").getByRole("button", { name: "Telefonla teyit edildi" }).click();
-    await ops.getByRole("dialog", { name: "Telefon teyidi" }).getByRole("button", { name: "Teyidi kaydet" }).click();
-    await expect(step).toContainText(/Onaylandı|Hazırlanıyor/, { timeout: 3000 });
-    await ops.goto("/oda-servisi");
-  } else {
-    await rsCard(ops, order.no, "NEW").getByRole("button", { name: "Onayla", exact: true }).click();
-    await expect(step).toContainText(/Onaylandı|Hazırlanıyor/, { timeout: 3000 });
-  }
+  await rsCard(ops, order.no, "NEW").getByRole("button", { name: "Onayla", exact: true }).click();
+  await expect(step).toContainText(/Onaylandı|Hazırlanıyor/, { timeout: 3000 });
   await rsCard(kitchen, order.no, "PREP").getByRole("button", { name: "Hazır", exact: true }).click();
   await expect(step).toContainText(/Hazır/, { timeout: 3000 });
   await rsCard(ops, order.no, "READY").getByRole("button", { name: "Yola çıktı", exact: true }).click();

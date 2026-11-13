@@ -65,7 +65,6 @@ export type Scope = {
 /** Order event types of the room-service board; nothing else of a covered hotel is delivered. */
 const COVERED_EVENT_TYPES: ReadonlySet<string> = new Set([
   "order.created",
-  "order.confirmed",
   "order.approved",
   "order.prep",
   "order.ready",

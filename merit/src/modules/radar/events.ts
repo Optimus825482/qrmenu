@@ -196,7 +196,6 @@ export const RADAR_WIRE: { [K in keyof Wire]: z.ZodType<Wire[K]> } = {
 /** MeritEvent names the radar store subscribes to (43; `room.checked` of the spec is `roomcheck.done`). */
 export const RADAR_EVENT_TYPES: readonly string[] = [
   "order.created",
-  "order.confirmed",
   "order.approved",
   "order.rejected",
   "order.prep",
@@ -269,7 +268,6 @@ const num = (o: Obj, k: string): number | undefined => {
 
 const ORDER_STATUSES = new Set<string>([
   "GONDERILDI",
-  "TEYIT_BEKLIYOR",
   "ONAYLANDI",
   "HAZIR",
   "YOLDA",
@@ -280,7 +278,6 @@ const ORDER_STATUSES = new Set<string>([
 ]);
 const ORDER_EVENTS = new Set([
   "order.created",
-  "order.confirmed",
   "order.approved",
   "order.rejected",
   "order.prep",
@@ -347,8 +344,6 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
     const orderNo = num(p, "orderNo");
     const status = str(p, "status");
     if (!orderId || orderNo === undefined || !status || !ORDER_STATUSES.has(status)) return NONE;
-    // Phone confirmation publishes confirmed + approved with the same ONAYLANDI status: one is enough.
-    if (e.type === "order.confirmed" && status !== "TEYIT_BEKLIYOR") return NONE;
     const kind = kindOf(p, e);
     const from = str(p, "from");
     const tableId = str(p, "tableId");
@@ -672,7 +667,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
 export function SOURCE_RANK(e: RadarEvent): 0 | 1 | 2 {
   switch (e.type) {
     case "order.status":
-      return e.to === "GONDERILDI" || e.to === "TEYIT_BEKLIYOR" ? 0 : 1;
+      return e.to === "GONDERILDI" ? 0 : 1;
     case "call.opened":
     case "mybar.opened":
     case "task.generated":

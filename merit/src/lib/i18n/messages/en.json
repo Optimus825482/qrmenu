@@ -60,7 +60,6 @@
     },
     "order": {
       "status": {
-        "TEYIT_BEKLIYOR": "Awaiting confirmation",
         "YOLDA": "On the way",
         "TESLIM_EDILDI": "Delivered",
         "GONDERILDI": "Sent",
@@ -124,14 +123,12 @@
       "cooldown": "We received your order a short while ago. You can send your next one in about {min} min; your selections will be kept here.",
       "order": {
         "status": {
-          "TEYIT_BEKLIYOR": "Awaiting confirmation",
           "ONAYLANDI": "Being prepared",
           "HAZIR": "Ready",
           "YOLDA": "On the way",
           "TESLIM_EDILDI": "Delivered",
           "IPTAL": "Cancelled"
         },
-        "confirmHint": "We’ll call your room phone to confirm your order.",
         "eta": "Estimated time: {min} min",
         "cancelByPhone": "Should you wish to change or cancel your order, kindly call Room Service from the telephone in your room; our team will be delighted to assist you.",
         "cancelled": "Your order has been cancelled.",

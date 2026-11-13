@@ -11,11 +11,6 @@ const idSchema = z.object({
   orderId: z.string().min(1),
 });
 
-const confirmSchema = z.object({
-  orderId: z.string().min(1),
-  note: z.string().trim().max(200).optional(),
-});
-
 const cancelSchema = z.object({
   orderId: z.string().min(1),
   reason: z.string().trim().min(3, "Sebep en az 3 karakter olmalı").max(200, "Sebep çok uzun"),
@@ -36,14 +31,6 @@ export async function approveRoomOrderAction(raw: unknown) {
     const ctx = await requireUser();
     await requireRoomOrder(input.orderId);
     return orders.transition(ctx, input.orderId, "ONAYLANDI");
-  })(raw);
-}
-
-export async function confirmRoomPhoneAction(raw: unknown) {
-  return safeAction(confirmSchema, async (input) => {
-    const ctx = await requireUser();
-    await requireRoomOrder(input.orderId);
-    return orders.confirmPhone(ctx, input.orderId, input.note);
   })(raw);
 }
 

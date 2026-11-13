@@ -393,13 +393,13 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     unit: "adet",
     critAt: 1,
     outletScoped: true,
-    // The SLA state comes from the P6 single source (clock start = phone confirmation, paused while it is pending).
+    // The SLA state comes from the P6 single source (clock start = order creation).
     collect: (hotelIds, now, opt) =>
       perHotel(hotelIds, async (hotelId) => {
         const minutes = await getSetting("rs.slaMinutes", hotelId);
         const open = await prisma.order.findMany({
           where: { hotelId, ...outletOf(opt), kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES } },
-          select: { status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
+          select: { status: true, createdAt: true, deliveredAt: true },
         });
         return open.filter((o) => slaStateOf(o, now, minutes) === "BREACH").length;
       }),

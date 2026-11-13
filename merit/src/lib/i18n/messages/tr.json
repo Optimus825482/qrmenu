@@ -60,7 +60,6 @@
     },
     "order": {
       "status": {
-        "TEYIT_BEKLIYOR": "Teyit bekleniyor",
         "YOLDA": "Yolda",
         "TESLIM_EDILDI": "Teslim edildi",
         "GONDERILDI": "Gönderildi",
@@ -124,14 +123,12 @@
       "cooldown": "Siparişiniz kısa süre önce alındı. Yeni siparişinizi yaklaşık {min} dk sonra gönderebilirsiniz; seçimleriniz burada saklanır.",
       "order": {
         "status": {
-          "TEYIT_BEKLIYOR": "Teyit bekleniyor",
           "ONAYLANDI": "Hazırlanıyor",
           "HAZIR": "Hazır",
           "YOLDA": "Yolda",
           "TESLIM_EDILDI": "Teslim edildi",
           "IPTAL": "İptal edildi"
         },
-        "confirmHint": "Siparişinizi teyit etmek için odanızdaki telefonu arayacağız.",
         "eta": "Tahmini süre: {min} dk",
         "cancelByPhone": "Siparişinizde değişiklik yapmak ya da siparişinizi iptal etmek isterseniz, odanızdaki telefondan Oda Servisi'ni aramanızı rica ederiz; ekibimiz memnuniyetle yardımcı olacaktır.",
         "cancelled": "Siparişiniz iptal edildi.",

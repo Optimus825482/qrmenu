@@ -115,7 +115,7 @@ export function deriveAlerts(
     const slaMs = rs.slaMinutes * MINUTE_MS;
     for (const o of rs.orders) {
       const age = t - ms(o.slaStartAt ?? o.createdAt);
-      const byAge: "OK" | "WARN" | "BREACH" = o.status === "TEYIT_BEKLIYOR" ? "OK" : age >= slaMs ? "BREACH" : age >= slaMs * SLA_WARN_RATIO ? "WARN" : "OK";
+      const byAge: "OK" | "WARN" | "BREACH" = age >= slaMs ? "BREACH" : age >= slaMs * SLA_WARN_RATIO ? "WARN" : "OK";
       const level = o.level === "BREACH" || byAge === "BREACH" ? "BREACH" : o.level === "WARN" || byAge === "WARN" ? "WARN" : "OK";
       if (level === "OK") continue;
       add({

@@ -9,38 +9,33 @@ export const SLA_WARN_RATIO = 0.8;
 
 /**
  * Room-service orders the radar shows as open: everything still in progress. GONDERILDI is in
- * (the SLA sweep times it); TEYIT_BEKLIYOR is open but never timed (see `slaStateOf`).
+ * (the SLA sweep times it).
  */
-export const RADAR_ROOM_OPEN_STATUSES: readonly OrderStatus[] = ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"];
+export const RADAR_ROOM_OPEN_STATUSES: readonly OrderStatus[] = ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"];
 
 /** Display/report state of a room-service order against its SLA. */
 export type SlaState = "OK" | "WARN" | "BREACH" | "DONE_ON_TIME" | "DONE_LATE" | "CANCELLED";
 
-/**
- * SLA clock start (single source of truth): the phone confirmation when there was one, else the
- * creation time. An order still waiting for phone confirmation is never timed (see `slaStateOf`).
- */
-export function slaStart(o: { phoneConfirmedAt: Date | null; createdAt: Date }): Date {
-  return o.phoneConfirmedAt ?? o.createdAt;
+/** SLA clock start (single source of truth): the order's creation time. */
+export function slaStart(o: { createdAt: Date }): Date {
+  return o.createdAt;
 }
 
 /** Instant the SLA is breached: `slaStart + slaMinutes`. */
-export function slaDue(o: { phoneConfirmedAt: Date | null; createdAt: Date }, slaMinutes: number): Date {
+export function slaDue(o: { createdAt: Date }, slaMinutes: number): Date {
   return new Date(slaStart(o).getTime() + slaMinutes * 60_000);
 }
 
 /**
  * SLA state at `now`. Open orders: elapsed >= 100 % BREACH, >= 80 % WARN (same boundaries as the
- * sweep), else OK; TEYIT_BEKLIYOR is always OK (clock not running). Delivered: on time when it took
- * strictly less than the SLA. IPTAL/REDDEDILDI: CANCELLED.
+ * sweep), else OK. Delivered: on time when it took strictly less than the SLA. IPTAL/REDDEDILDI: CANCELLED.
  */
 export function slaStateOf(
-  o: { status: OrderStatus; phoneConfirmedAt: Date | null; createdAt: Date; deliveredAt: Date | null },
+  o: { status: OrderStatus; createdAt: Date; deliveredAt: Date | null },
   now: Date,
   slaMinutes: number,
 ): SlaState {
   if (o.status === "IPTAL" || o.status === "REDDEDILDI") return "CANCELLED";
-  if (o.status === "TEYIT_BEKLIYOR") return "OK";
   const startMs = slaStart(o).getTime();
   const limitMs = slaMinutes * 60_000;
   if (o.status === "TESLIM_EDILDI") {

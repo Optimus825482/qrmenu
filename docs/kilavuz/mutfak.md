@@ -20,13 +20,13 @@ Eğitim hesabı: egitim.kds, egitim.oda. Parolayı eğitim sorumlusu paylaşır;
 
 ![Mutfak ekranı telefonda — eğitim örneği](img/mutfak-kds-mobil.png)
 
-3. **Oda Servisi Talepleri**: Oda numarası ve dahili telefonu kontrol edin. Akış teyit gerekiyorsa Teyit bekliyor ile başlar; diğer siparişler Yeni sütununa gelir. Hazırlanıyor, Hazır ve Yolda adımlarını gerçek duruma göre ilerletin. SLA sayacı gecikmeyi gösterir.
+3. **Oda Servisi Talepleri**: Oda numarası ve dahili telefonu kontrol edin. Yeni siparişler Talep Alındı sütununa gelir; Onayla ile hazırlığa gönderin. Hazırlanıyor, Hazır ve Yolda adımlarını gerçek duruma göre ilerletin. SLA sayacı gecikmeyi gösterir.
 
 ![Oda Servisi Talepleri — eğitim örneği](img/mutfak-talepler.png)
 
-4. **Telefon Teyidi**: Telefon teyidi gereken siparişte oda/dahili bilgisiyle misafiri arayın. Ürün ve adetleri doğruladıktan sonra Telefonla teyit edildi işlemini kullanın. Teyit alınmadan hazırlığa geçmeyin.
+4. **Oda Servisi Talepleri** (yan yana görünüm): Görünüm düğmesinden Yan yana seçildiğinde talepler Talep Alındı, Hazırlanıyor, Gönderildi ve Teslim Edildi sütunlarında gösterilir. Kuyruk görünümüne aynı düğmeyle dönün.
 
-![Telefon Teyidi — eğitim örneği](img/mutfak-teyit.png)
+![Oda servisi yan yana görünüm — eğitim örneği](img/mutfak-pano.png)
 
 5. **Teslim Takibi**: Yola çıkan siparişi doğru odaya götürün. Fiziksel teslimin ardından teslim adımını kaydedin. Oda boş görünüyor rozeti varsa doluluk bilgisini resepsiyonla doğrulayın; rozeti otomatik iptal saymayın.
 
@@ -41,7 +41,6 @@ Eğitim hesabı: egitim.kds, egitim.oda. Parolayı eğitim sorumlusu paylaşır;
 | Sorun | Çözüm |
 |---|---|
 | Sipariş KDS içinde yok | Önce kasa/garson onayını ve doğru outleti kontrol edin; oda servisi için ayrı ekranı açın. |
-| Teyit sütunu boş | Otel ayarında telefon teyidi kapalı olabilir. |
 | Sayaç kırmızı | Gerçek durumu güncelleyin; SLA gecikmesini vardiya sorumlusuna bildirin. |
 | Oda boş görünüyor | Resepsiyonla doluluğu ve oda numarasını doğrulayın. |
 

@@ -46,7 +46,6 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["QR_ORDER", "QS-RAP", "Sipariş Raporları", "/admin#order.rapor"],
   // ROOM_SERVICE
   ["ROOM_SERVICE", "RO-TAL", "Oda Servisi Talepleri", "/oda-servisi"],
-  ["ROOM_SERVICE", "RO-TEL", "Telefon Teyidi", "/oda-servisi/teyit"],
   ["ROOM_SERVICE", "RO-TES", "Teslim Takibi", "/oda-servisi/teslim"],
   ["ROOM_SERVICE", "RO-SLA", "SLA Raporları", "/admin#rs.rapor"],
   // CORE

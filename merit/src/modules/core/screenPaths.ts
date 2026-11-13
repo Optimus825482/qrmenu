@@ -58,7 +58,6 @@ export function screenForPath(pathname: string): ScreenDef | undefined {
 const ROUTE_GUARDS: Readonly<Record<string, string>> = {
   "/kat": "MB-KAT",
   "/admin": "CR-KOM",
-  "/oda-servisi/teyit": "RO-TAL",
   "/oda-servisi/teslim": "RO-TAL",
 };
 

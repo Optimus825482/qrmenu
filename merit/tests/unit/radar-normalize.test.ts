@@ -34,7 +34,6 @@ const DND_P = { roomId: "r1", roomNumber: "204", floorId: "f1", count: 1, requir
 
 const SAMPLES: Record<string, MeritEvent> = {
   "order.created": env("order.created", { ...ORDER_P, status: "GONDERILDI", from: null }),
-  "order.confirmed": env("order.confirmed", { ...ORDER_P, status: "TEYIT_BEKLIYOR" }),
   "order.approved": env("order.approved", ORDER_P),
   "order.rejected": env("order.rejected", { ...ORDER_P, status: "REDDEDILDI" }),
   "order.prep": env("order.prep", ORDER_P),
@@ -84,9 +83,9 @@ const SAMPLES: Record<string, MeritEvent> = {
 };
 
 describe("RADAR_EVENT_TYPES", () => {
-  it("44 ad, hepsi geçerli SSE adı; roomcheck.done SSE_EVENT_TYPES dışında, mybar.created içinde", () => {
-    expect(RADAR_EVENT_TYPES).toHaveLength(44);
-    expect(new Set(RADAR_EVENT_TYPES).size).toBe(44);
+  it("43 ad, hepsi geçerli SSE adı; roomcheck.done SSE_EVENT_TYPES dışında, mybar.created içinde", () => {
+    expect(RADAR_EVENT_TYPES).toHaveLength(43);
+    expect(new Set(RADAR_EVENT_TYPES).size).toBe(43);
     for (const name of RADAR_EVENT_TYPES) expect(EVENT_TYPE_RE.test(name)).toBe(true);
     expect(SSE_EVENT_TYPES).not.toContain("roomcheck.done");
     expect(SSE_EVENT_TYPES).toContain("mybar.created");
@@ -141,10 +140,6 @@ describe("toRadarEvent: siparişler", () => {
   it("order.prep: prep=true, to=ONAYLANDI", () => {
     const r = toRadarEvent(env("order.prep", ORDER_P));
     expect(r.events[0]).toMatchObject({ type: "order.status", prep: true, to: "ONAYLANDI" });
-  });
-
-  it("telefon teyidinde order.confirmed(ONAYLANDI) çift olay üretmez", () => {
-    expect(toRadarEvent(env("order.confirmed", ORDER_P)).events).toEqual([]);
   });
 
   it("garson siparişi (from yok, order.created yok) yine order.status üretir", () => {

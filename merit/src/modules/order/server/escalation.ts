@@ -5,7 +5,7 @@ import { getSetting } from "@/lib/settings";
 import { notify } from "@/modules/core/server/notifications";
 import { usersEntitledTo } from "@/modules/core/server/entitlements";
 
-const WAITING = ["GONDERILDI", "TEYIT_BEKLIYOR"] as const;
+const WAITING = ["GONDERILDI"] as const;
 /** Per-run cap and age bound: a backlog or one bad row can never make a run unbounded. */
 const BATCH_SIZE = 200;
 const MAX_AGE_MS = 24 * 3_600_000;
@@ -92,9 +92,7 @@ async function run(now: Date): Promise<number> {
         const isRoom = order.kind === "ODA_SERVISI";
         const title = isRoom ? "Oda servisi onay bekliyor" : "Onay bekleyen sipariş";
         const body = isRoom
-          ? `#${order.orderNo} · Oda ${order.room?.number ?? "-"} · ${minutes} dk · ${
-              order.status === "TEYIT_BEKLIYOR" ? "Teyit bekliyor" : "Onay bekliyor"
-            }`
+          ? `#${order.orderNo} · Oda ${order.room?.number ?? "-"} · ${minutes} dk · Onay bekliyor`
           : `#${order.orderNo} · ${order.outlet.name} ${order.table?.label ?? "Masa yok"} · ${minutes} dk`;
 
         await notify(

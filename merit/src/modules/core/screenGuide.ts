@@ -469,20 +469,6 @@ const LIST: ScreenGuide[] = [
     { settings: ["rs.slaMinutes"] },
   ),
   guide(
-    "RO-TEL",
-    "personel",
-    "Oda servisi siparişini odadaki misafirle telefonla teyit edersin.",
-    [
-      ["teyit-listesi", "Teyit bekleyenler", "Teyit bekleyen talepler sırayla gelir."],
-      ["ara", "Ara", "Odayı ara ve siparişi misafirle doğrula."],
-      ["sonuc", "Sonuç", "Teyit edildi veya ulaşılamadı olarak işaretle."],
-    ],
-    [
-      "Ulaşılamayan odayı birkaç kez dene; sonucu işaretlemeyi unutma.",
-      "Teyit edilmemiş sipariş hazırlanmaz.",
-    ],
-  ),
-  guide(
     "RO-TES",
     "personel",
     "Hazırlanan siparişlerin odaya teslimini takip edersin.",

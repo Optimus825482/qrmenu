@@ -4,19 +4,18 @@ import { useTranslations } from "next-intl";
 import { Icon } from "@/components/icons/Icon";
 import type { GuestOrderView } from "../../server/guestOrder";
 
-type Step = "GONDERILDI" | "TEYIT_BEKLIYOR" | "ONAYLANDI" | "YOLDA" | "TESLIM_EDILDI";
+type Step = "GONDERILDI" | "ONAYLANDI" | "YOLDA" | "TESLIM_EDILDI";
 
 /** Room-service order progress. HAZIR (kitchen done, not yet on its way) stays on the "being prepared" step. */
 const STEP_OF: Record<string, Step> = {
   GONDERILDI: "GONDERILDI",
-  TEYIT_BEKLIYOR: "TEYIT_BEKLIYOR",
   ONAYLANDI: "ONAYLANDI",
   HAZIR: "ONAYLANDI",
   YOLDA: "YOLDA",
   TESLIM_EDILDI: "TESLIM_EDILDI",
 };
 /** While the order is on its way to the room the guest is told how to change or cancel it: by phone. */
-const OPEN_STATUSES = new Set(["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"]);
+const OPEN_STATUSES = new Set(["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"]);
 const ETA_STATUSES = new Set(["ONAYLANDI", "HAZIR", "YOLDA"]);
 
 /**
@@ -26,10 +25,7 @@ const ETA_STATUSES = new Set(["ONAYLANDI", "HAZIR", "YOLDA"]);
 export function RoomOrderStatus({ order }: { token: string; order: GuestOrderView }) {
   const t = useTranslations("guest");
   const status = order.status;
-  const steps: Step[] =
-    order.roomService?.confirmRequired || status === "TEYIT_BEKLIYOR"
-      ? ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "YOLDA", "TESLIM_EDILDI"]
-      : ["GONDERILDI", "ONAYLANDI", "YOLDA", "TESLIM_EDILDI"];
+  const steps: Step[] = ["GONDERILDI", "ONAYLANDI", "YOLDA", "TESLIM_EDILDI"];
 
   if (status === "IPTAL" || status === "REDDEDILDI") {
     return (
@@ -44,7 +40,6 @@ export function RoomOrderStatus({ order }: { token: string; order: GuestOrderVie
   const current = steps.indexOf(STEP_OF[status] ?? "GONDERILDI");
   return (
     <>
-      {status === "TEYIT_BEKLIYOR" ? <p className="g-detail">{t("rs.order.confirmHint")}</p> : null}
       {status === "GONDERILDI" ? (
         // What the guest sees right after pressing send: the request arrived and is being handled.
         <p className="g-banner g-banner-ok" role="status" data-testid="rs-received">

@@ -55,21 +55,10 @@ const BAR = {
   hasOrdering: true,
   orderingEnabled: true,
   priceDisplay: "INHERIT",
-  phoneConfirmRequired: false,
   kdsEnabled: false,
 } as const;
 
 describe("outlets: CRUD", () => {
-  it("telefon teyidi kaldırıldı: istemci true gönderse de oluşturma ve güncelleme false yazar", async () => {
-    const ctx = await sys();
-    const mr = await hotelId("ROYAL");
-    const bar = await outlets.create(ctx, mr, { ...BAR, name: "Teyitsiz Bar", phoneConfirmRequired: true });
-    expect(bar.phoneConfirmRequired).toBe(false);
-    await testDb.outlet.update({ where: { id: bar.id }, data: { phoneConfirmRequired: true } });
-    const updated = await outlets.update(ctx, mr, bar.id, { ...BAR, name: "Teyitsiz Bar", phoneConfirmRequired: true });
-    expect(updated.phoneConfirmRequired).toBe(false);
-  });
-
   it("fiyat gösterimi ve sipariş anahtarı değişince price.display / ordering.changed yayınlar", async () => {
     const ctx = await sys();
     const mr = await hotelId("ROYAL");

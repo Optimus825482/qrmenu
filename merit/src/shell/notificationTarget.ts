@@ -42,7 +42,7 @@ const BY_TYPE_PREFIX: [string, string][] = [
 ];
 
 /** Oda servisi siparişleri "Oda Servisi Kayıtları"nda; masa siparişlerinin masaüstü ekranı yok. */
-const ROOM_SERVICE_ORDER_TYPES = new Set(["order.created", "order.sla.warn", "order.sla.breach", "order.confirmed"]);
+const ROOM_SERVICE_ORDER_TYPES = new Set(["order.created", "order.sla.warn", "order.sla.breach"]);
 
 export function notificationTarget(n: NotificationRef): NotificationTarget | null {
   let appId: string | undefined;

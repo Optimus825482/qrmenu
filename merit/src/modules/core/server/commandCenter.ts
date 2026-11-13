@@ -116,14 +116,14 @@ export async function getCommandCenterKpis(
       where: { hotelId: { in: scope }, status: "BEKLEMEDE" },
       _count: { _all: true },
     }),
-    // Open room-service orders; the SLA state (clock start, phone-confirm pause) is computed below.
+    // Open room-service orders; the SLA state is computed below.
     prisma.order.findMany({
       where: {
         hotelId: { in: scope },
         kind: "ODA_SERVISI",
-        status: { in: ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] },
+        status: { in: ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"] },
       },
-      select: { hotelId: true, status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
+      select: { hotelId: true, status: true, createdAt: true, deliveredAt: true },
     }),
     prisma.order.groupBy({
       by: ["hotelId"],

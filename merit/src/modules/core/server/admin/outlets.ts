@@ -40,7 +40,6 @@ export type OutletRow = {
   priceDisplay: PriceDisplay;
   currency: string;
   kdsEnabled: boolean;
-  phoneConfirmRequired: boolean;
   autoPrintReceipt: boolean;
   autoPrintKitchen: boolean;
   waiterAssignmentEnabled: boolean;
@@ -69,7 +68,6 @@ const SELECT = {
   priceDisplay: true,
   currency: true,
   kdsEnabled: true,
-  phoneConfirmRequired: true,
   autoPrintReceipt: true,
   autoPrintKitchen: true,
   waiterAssignmentEnabled: true,
@@ -114,7 +112,6 @@ export const outletSchema = z
       .trim()
       .transform((v) => v.toUpperCase())
       .optional(),
-    phoneConfirmRequired: z.boolean().default(false),
     kdsEnabled: z.boolean().default(false),
     autoPrintReceipt: z.boolean().default(true),
     autoPrintKitchen: z.boolean().default(false),
@@ -183,7 +180,7 @@ async function assertRoomServiceFree(
 }
 
 /** Room orders still in flight: the outlet cannot stop being room service or go inactive under them. */
-const OPEN_ROOM_STATUSES = ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"] as const;
+const OPEN_ROOM_STATUSES = ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"] as const;
 
 async function assertNoOpenRoomOrders(tx: Pick<Prisma.TransactionClient, "order">, outletId: string): Promise<void> {
   const open = await tx.order.findFirst({
@@ -243,8 +240,6 @@ export async function create(ctx: Ctx, hotelId: string, raw: OutletInput): Promi
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
           ...(input.currency ? { currency: input.currency } : {}),
-          // The phone confirmation step is retired: whatever a client sends, no outlet asks for it.
-          phoneConfirmRequired: false,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,
@@ -325,8 +320,6 @@ export async function update(
           orderingEnabled: input.orderingEnabled,
           priceDisplay: input.priceDisplay,
           ...(input.currency ? { currency: input.currency } : {}),
-          // The phone confirmation step is retired: whatever a client sends, no outlet asks for it.
-          phoneConfirmRequired: false,
           kdsEnabled: input.kdsEnabled,
           autoPrintReceipt: input.autoPrintReceipt,
           autoPrintKitchen: input.autoPrintKitchen,

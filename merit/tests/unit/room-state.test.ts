@@ -18,7 +18,6 @@ afterAll(async () => {
 });
 
 async function setupRoomAndOutlet(over: {
-  phoneConfirmRequired?: boolean;
   slaMinutes?: number;
   roomActive?: boolean;
   moduleEnabled?: boolean;
@@ -52,7 +51,6 @@ async function setupRoomAndOutlet(over: {
           hasMenu: true,
           hasOrdering: true,
           orderingEnabled: true,
-          phoneConfirmRequired: over.phoneConfirmRequired ?? false,
         },
       });
     } else {
@@ -65,7 +63,6 @@ async function setupRoomAndOutlet(over: {
           hasMenu: true,
           hasOrdering: true,
           orderingEnabled: true,
-          phoneConfirmRequired: over.phoneConfirmRequired ?? false,
         },
       });
     }
@@ -151,10 +148,10 @@ describe("roomServiceState", () => {
     }
   });
 
-  it("confirmRequired ve slaMinutes (otel ayarı 20 -> 20) doğru yüklenir", async () => {
-    const { room } = await setupRoomAndOutlet({ phoneConfirmRequired: true, slaMinutes: 20 });
+  it("slaMinutes (otel ayarı 20 -> 20) doğru yüklenir; telefon teyidi alanı yok", async () => {
+    const { room } = await setupRoomAndOutlet({ slaMinutes: 20 });
     const state = await roomServiceState(room.id);
-    expect(state.confirmRequired).toBe(true);
+    expect(state).not.toHaveProperty("confirmRequired");
     expect(state.slaMinutes).toBe(20);
   });
 });

@@ -9,7 +9,6 @@ import { getRoomBoardAction } from "@/modules/order/server/actions/roomServiceBo
 import {
   approveRoomOrderAction,
   cancelRoomOrderAction,
-  confirmRoomPhoneAction,
   markRoomDeliveredAction,
   markRoomOnWayAction,
   markRoomReadyAction,
@@ -40,7 +39,6 @@ export type { RoomOpsTab } from "@/modules/order/ui/roomService/RoomOrderCard";
 /** Events that change the board; filtered by `outletId`. */
 const LIVE_EVENTS = [
   "order.created",
-  "order.confirmed",
   "order.approved",
   "order.prep",
   "order.ready",
@@ -73,7 +71,6 @@ const QUEUE_WITH_MYBAR_GRID = "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]";
 const MAX_NOTICES = 4;
 const HIGHLIGHT_MS = 4000;
 
-const CONFIRM_FAIL_REASONS = ["Açmadı", "Misafir istemedi", "Hatalı sipariş"] as const;
 const CANCEL_REASONS = ["Stok yok", "Misafir vazgeçti", "Hatalı sipariş", "Mutfak yoğun"] as const;
 
 /** Safety refresh while the push channel is healthy / while it is down. */
@@ -153,8 +150,6 @@ export default function OdaServisiClient({
   const [notices, setNotices] = useState<RoomNotice[]>([]);
   const [highlight, setHighlight] = useState("");
   const mybarOn = showMybar && tab === "tumu";
-  const [phoneFor, setPhoneFor] = useState<RoomOrderData | null>(null);
-  const [phoneNote, setPhoneNote] = useState("");
   const [cancelFor, setCancelFor] = useState<RoomOrderData | null>(null);
   // Bumped after every action: the coverage band refetches the covered hotels' requests.
   const [coverageTick, setCoverageTick] = useState(0);
@@ -190,7 +185,7 @@ export default function OdaServisiClient({
   const announce = useCallback(
     (board: RoomBoard) => {
       const known = (knownOrders.current ??= new Set(openIds(initialBoard)));
-      const columns = TAB_STAGES[tab].flatMap((stage) => stage.columns).filter((col) => col === "CONFIRM" || col === "NEW");
+      const columns = TAB_STAGES[tab].flatMap((stage) => stage.columns).filter((col) => col === "NEW");
       const fresh = entriesOf(board, columns).filter((entry) => !known.has(entry.card.id));
       for (const id of openIds(board)) known.add(id);
       if (fresh.length === 0) return;
@@ -306,10 +301,6 @@ export default function OdaServisiClient({
   const actions: RoomCardActions = useMemo(
     () => ({
       approve: (card) => void run(() => approveRoomOrderAction({ orderId: card.id })),
-      confirmPhone: (card) => {
-        setPhoneNote("");
-        setPhoneFor(card);
-      },
       cancel: (card) => setCancelFor(card),
       ready: (card) => void run(() => markRoomReadyAction({ orderId: card.id })),
       onWay: (card) => void run(() => markRoomOnWayAction({ orderId: card.id })),
@@ -344,7 +335,6 @@ export default function OdaServisiClient({
   // After a soft navigation to another ?sekme= (or a view switch) the remembered stage may not be shown.
   const shownStage = stages.some((stage) => stage.id === activeStage) ? activeStage : stages[0].id;
   const error = actionErr || loadErr;
-  const confirmRequired = data?.confirmRequired ?? false;
 
   const entriesByStage = new Map<RoomStageId, QueueEntry[]>();
   if (data) {
@@ -360,7 +350,7 @@ export default function OdaServisiClient({
   const firstCardId = stages.flatMap((stage) => entriesByStage.get(stage.id) ?? [])[0]?.card.id;
 
   // A notice lives until it is closed or its request is handled by someone.
-  const waitingOrders = new Set(data ? entriesOf(data, ["CONFIRM", "NEW"]).map((entry) => entry.card.id) : []);
+  const waitingOrders = new Set(data ? entriesOf(data, ["NEW"]).map((entry) => entry.card.id) : []);
   const pendingMybar = new Set((mybar.rows ?? []).map((row) => row.id));
   const liveNotices = notices.filter((notice) => {
     const id = notice.key.slice(notice.key.indexOf(":") + 1);
@@ -499,7 +489,7 @@ export default function OdaServisiClient({
 
       {data ? (
         <div
-          data-guide={tab === "teyit" ? "teyit-listesi" : tab === "teslim" ? "teslim-listesi" : "talep-listesi"}
+          data-guide={tab === "teslim" ? "teslim-listesi" : "talep-listesi"}
           data-view={queueView ? "kuyruk" : "pano"}
           className={`grid gap-4 ${queueView && mybarOn ? QUEUE_WITH_MYBAR_GRID : (GRID_BY_COUNT[stages.length] ?? "")}`}
         >
@@ -551,10 +541,8 @@ export default function OdaServisiClient({
                           card={card}
                           column={column}
                           flags={flags}
-                          confirmRequired={confirmRequired}
                           actions={actions}
                           busy={busy}
-                          tab={tab}
                           clockOffsetMs={clockOffset}
                           first={card.id === firstCardId}
                           stepLabel={mixed ? STEP_LABEL[column] : undefined}
@@ -571,54 +559,11 @@ export default function OdaServisiClient({
         </div>
       ) : null}
 
-      {phoneFor ? (
-        <div role="dialog" aria-modal="true" aria-label="Telefon teyidi" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl">
-            <h2 className="text-lg font-black text-text">{`Oda ${phoneFor.roomNumber} telefon teyidi`}</h2>
-            <p className="mt-1 text-[13px] text-muted">
-              {`#${phoneFor.orderNo} için misafirle görüştün mü? İsteğe bağlı not ekleyebilirsin.`}
-            </p>
-            <textarea
-              value={phoneNote}
-              onChange={(e) => setPhoneNote(e.target.value)}
-              rows={3}
-              maxLength={200}
-              aria-label="Teyit notu"
-              className="mt-3 w-full rounded-xl border border-border bg-surface-sunken p-3 text-[13px] focus:border-accent focus:outline-none"
-            />
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setPhoneFor(null)}
-                className="min-h-11 flex-1 rounded-xl border border-border text-[13px] font-bold"
-              >
-                Vazgeç
-              </button>
-              <button
-                type="button"
-                data-mutates
-                data-guide="sonuc"
-                disabled={busy}
-                onClick={() => {
-                  const orderId = phoneFor.id;
-                  const note = phoneNote.trim() || undefined;
-                  setPhoneFor(null);
-                  void run(() => confirmRoomPhoneAction({ orderId, note }));
-                }}
-                className="min-h-11 flex-1 rounded-xl bg-warn text-sm font-black text-bg"
-              >
-                Teyidi kaydet
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       <ReasonDialog
         open={cancelFor !== null}
         title={cancelFor ? `Oda ${cancelFor.roomNumber} · #${cancelFor.orderNo} iptal` : ""}
-        message={cancelFor?.status === "GONDERILDI" || cancelFor?.status === "TEYIT_BEKLIYOR" ? "Sipariş teyit edilemedi veya iptal ediliyor. Sebebi yaz." : "Onaylanmış sipariş iptal ediliyor. Sebebi yaz."}
-        reasons={cancelFor?.status === "TEYIT_BEKLIYOR" ? CONFIRM_FAIL_REASONS : CANCEL_REASONS}
+        message={cancelFor?.status === "GONDERILDI" ? "Sipariş onaylanmadan iptal ediliyor. Sebebi yaz." : "Onaylanmış sipariş iptal ediliyor. Sebebi yaz."}
+        reasons={CANCEL_REASONS}
         minLength={REASON_MIN_LENGTH}
         confirmLabel="İptal et"
         danger

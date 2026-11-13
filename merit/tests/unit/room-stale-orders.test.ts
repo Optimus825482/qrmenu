@@ -100,12 +100,12 @@ describe("closeStaleRoomOrders", () => {
     });
   });
 
-  it("HAZIR, YOLDA, GONDERILDI ve TEYIT_BEKLIYOR de kapanir", async () => {
+  it("HAZIR, YOLDA ve GONDERILDI de kapanir", async () => {
     const e = await env();
     // One at a time: the helper numbers orders, and parallel inserts collide on the order number.
     const ids: string[] = [];
-    for (const status of ["HAZIR", "YOLDA", "GONDERILDI", "TEYIT_BEKLIYOR"] as const) ids.push((await order(e, 20, { status })).id);
-    expect(await closeStaleRoomOrders(NOW)).toBe(4);
+    for (const status of ["HAZIR", "YOLDA", "GONDERILDI"] as const) ids.push((await order(e, 20, { status })).id);
+    expect(await closeStaleRoomOrders(NOW)).toBe(3);
     for (const id of ids) expect((await row(id)).status).toBe("IPTAL");
   });
 

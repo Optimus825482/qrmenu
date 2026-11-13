@@ -13,8 +13,7 @@ type Bucket = { day: string; hotelId: string; orders: number; cancelled: number;
 
 /**
  * Room-service delivery SLA per business day × hotel. Same semantics as P6 `stats.sla`: duration =
- * `deliveredAt − slaStart` (`phoneConfirmedAt ?? createdAt`), orders still waiting for the phone
- * confirmation are counted but never timed, ratio = delivered strictly under `rs.slaMinutes` (per hotel).
+ * `deliveredAt − slaStart` (`createdAt`), ratio = delivered strictly under `rs.slaMinutes` (per hotel).
  * "SLA aşan" = delivered orders at or over the SLA.
  */
 export const rsSla = defineReport({
@@ -41,7 +40,6 @@ export const rsSla = defineReport({
         businessDate: true,
         status: true,
         createdAt: true,
-        phoneConfirmedAt: true,
         deliveredAt: true,
       },
       orderBy: [{ businessDate: "asc" }, { id: "asc" }],

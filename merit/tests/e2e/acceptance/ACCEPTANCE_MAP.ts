@@ -92,7 +92,7 @@ export const ACCEPTANCE_MAP: AcceptanceEntry[] = [
   },
   {
     n: 8,
-    title: "Oda servisi: teyit adımı ayara göre var/yok; durumlar misafir ekranında canlı",
+    title: "Oda servisi: sipariş doğrudan onaya düşer (telefon teyidi yok); durumlar misafir ekranında canlı",
     acceptance: "k08-oda-servisi.spec.ts",
     supporting: ["roomServiceChain.spec.ts", "roomServiceOps.spec.ts", "guestRoomService.spec.ts"],
     unit: ["room-sla.test.ts"],

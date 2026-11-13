@@ -8,7 +8,7 @@ export const STALE_ROOM_ORDER_MS = 12 * 3_600_000;
 export const STALE_ROOM_ORDER_REASON = "Sistem: 12 saat içinde teslim edilmediği için kapatıldı";
 
 /** Not-yet-delivered states; all of them count toward the per-room open-order limit. */
-const STALE_STATUSES: OrderStatus[] = ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"];
+const STALE_STATUSES: OrderStatus[] = ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"];
 const BATCH_SIZE = 200;
 
 /**

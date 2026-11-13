@@ -4,12 +4,12 @@ import path from "node:path";
 import type { Browser, Locator, Page } from "@playwright/test";
 import { Client } from "pg";
 import { expect, login, resetAndSeed, test } from "./fixtures";
-import { e2eDatabaseUrl, setPhoneConfirm } from "./e2eDb";
+import { e2eDatabaseUrl } from "./e2eDb";
 import { newContextPage } from "./menuUi";
 import { openStaff } from "./opsUi";
 
 /**
- * P6 acceptance chain A-F (plan Task 7): guest order -> staff board -> delivered, phone confirmation, cancel,
+ * P6 acceptance chain A-F (plan Task 7): guest order -> staff board -> delivered, cancel,
  * SLA (simulated clock via helpers/run-rs-jobs.ts), scope (MASA vs ODA, KDS) and i18n. One database state for
  * the whole file; order numbers are read back from the database, never counted.
  */
@@ -67,7 +67,7 @@ async function staffPage(browser: Browser, username: string, path = "/oda-servis
   return page;
 }
 
-type ColumnId = "CONFIRM" | "NEW" | "PREP" | "READY" | "ONWAY";
+type ColumnId = "NEW" | "PREP" | "READY" | "ONWAY";
 const cardIn = (page: Page, id: ColumnId, heading: RegExp): Locator =>
   page.locator(`[data-column-id=${id}]`).locator("article", { has: page.getByRole("heading", { level: 3, name: heading }) });
 const headingOf = (no: number, room = "101", ext = "4101") => new RegExp(`^#${no} · Oda ${room} · Dahili ${ext}$`);
@@ -112,10 +112,9 @@ test.afterAll(async () => {
   await ops?.context().close();
   await kitchen?.context().close();
   await fbm?.context().close();
-  await setPhoneConfirm("ROYAL", false);
 });
 
-test("A: teyit kapalı — sipariş → onay → hazır → yolda → teslim, misafir her adımı görür; yazıcı yok = fiş ve uyarı yok, fiyat gizli @kabul-8", async ({ page: guest }) => {
+test("A: sipariş → onay → hazır → yolda → teslim, misafir her adımı görür; yazıcı yok = fiş ve uyarı yok, fiyat gizli @kabul-8", async ({ page: guest }) => {
   await setRs("price_display", "HIDE");
   const order = await guestOrder(guest);
   expect(order.status).toBe(200);
@@ -155,35 +154,6 @@ test("A2: yazıcı tanımlıyken tek fiş üretilir ve fiyat gizliyken fişte su
     await setRs("printer_id", null);
     await setRs("price_display", "INHERIT");
   }
-});
-
-test("B: teyit açık — Teyit bekliyor, Onayla pasif; telefonla teyit sonrası zincir tamamlanır @kabul-8", async ({ page: guest }) => {
-  await setPhoneConfirm("ROYAL", true);
-  await ops.reload();
-  const order = await guestOrder(guest);
-  expect(order.status).toBe(200);
-  const heading = headingOf(await orderNo(order.id));
-  const confirmCard = cardIn(ops, "CONFIRM", heading);
-  await expect(confirmCard).toBeVisible({ timeout: 15_000 });
-  await expect(confirmCard.getByRole("button", { name: "Onayla", exact: true })).toBeDisabled();
-  await guestStep(guest, order.token, order.id, /Teyit/);
-
-  await ops.goto("/oda-servisi/teyit");
-  await cardIn(ops, "CONFIRM", heading).getByRole("button", { name: "Telefonla teyit edildi" }).click();
-  await ops.getByRole("dialog", { name: "Telefon teyidi" }).getByRole("button", { name: "Teyidi kaydet" }).click();
-  await expect(cardIn(ops, "CONFIRM", heading)).toHaveCount(0);
-  await ops.goto("/oda-servisi");
-  await expect(cardIn(ops, "PREP", heading)).toBeVisible({ timeout: 15_000 });
-
-  await expect(cardIn(kitchen, "PREP", heading)).toBeVisible({ timeout: 15_000 });
-  await cardIn(kitchen, "PREP", heading).getByRole("button", { name: "Hazır", exact: true }).click();
-  await expect(cardIn(ops, "READY", heading)).toBeVisible({ timeout: 15_000 });
-  await cardIn(ops, "READY", heading).getByRole("button", { name: "Yola çıktı", exact: true }).click();
-  await cardIn(ops, "ONWAY", heading).getByRole("button", { name: "Teslim edildi", exact: true }).click();
-  await expect(ops.getByRole("heading", { level: 3, name: heading })).toHaveCount(0);
-  await guestStep(guest, order.token, order.id, /Teslim edildi/);
-  await setPhoneConfirm("ROYAL", false);
-  await ops.reload();
 });
 
 test("C: iptal — onaydan sonra oda.mr iptal edemez, fbm.mr sebepli iptal eder, misafir İptal görür @kabul-8", async ({ page: guest }) => {

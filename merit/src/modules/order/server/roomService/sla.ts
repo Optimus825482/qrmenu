@@ -12,12 +12,12 @@ import { coverage } from "./coverage";
  * Open room-service states used by the radar metrics (`reporting/server/radar/metrics.ts`): leaves out
  * GONDERILDI (not yet seen by staff). The radar layer and client reducer use `RADAR_ROOM_OPEN_STATUSES`.
  */
-export const SLA_OPEN_STATUSES: OrderStatus[] = ["TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"];
+export const SLA_OPEN_STATUSES: OrderStatus[] = ["ONAYLANDI", "HAZIR", "YOLDA"];
 
 /**
- * Statuses the SLA sweep times: the clock runs from submission/confirmation. TEYIT_BEKLIYOR is
- * excluded (clock not running); GONDERILDI is included. `SLA_OPEN_STATUSES` (radar metrics) is a
- * separate set that omits GONDERILDI; the radar layer shows `RADAR_ROOM_OPEN_STATUSES`.
+ * Statuses the SLA sweep times: the clock runs from submission (GONDERILDI included).
+ * `SLA_OPEN_STATUSES` (radar metrics) is a separate set that omits GONDERILDI; the radar layer shows
+ * `RADAR_ROOM_OPEN_STATUSES`.
  */
 export const SLA_SWEEP_STATUSES: OrderStatus[] = ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"];
 
@@ -74,7 +74,7 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
   const hotelIds = [...new Set([...modules, ...withOpenOrders].map((m) => m.hotelId))];
   let warned = 0;
   let breached = 0;
-  const levelOf = (o: { phoneConfirmedAt: Date | null; createdAt: Date }, slaMinutes: number): Level | null => {
+  const levelOf = (o: { createdAt: Date }, slaMinutes: number): Level | null => {
     const ageMs = now.getTime() - slaStart(o).getTime();
     const limit = slaMinutes * 60_000;
     return ageMs >= limit ? "BREACH" : ageMs >= limit * SLA_WARN_RATIO ? "WARN" : null;
@@ -85,7 +85,7 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
       if (!(slaMinutes > 0)) continue;
       const candidates = await prisma.order.findMany({
         where: { hotelId, kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES }, slaBreachedAt: null },
-        select: { id: true, phoneConfirmedAt: true, createdAt: true, slaWarnedAt: true },
+        select: { id: true, createdAt: true, slaWarnedAt: true },
       });
       for (const candidate of candidates) {
         const first = levelOf(candidate, slaMinutes);
@@ -99,7 +99,6 @@ export async function rsSlaSweep(now: Date): Promise<{ warned: number; breached:
                 outletId: true,
                 orderNo: true,
                 roomId: true,
-                phoneConfirmedAt: true,
                 createdAt: true,
                 slaWarnedAt: true,
                 room: { select: { number: true } },

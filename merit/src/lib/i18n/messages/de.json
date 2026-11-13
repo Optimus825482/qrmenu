@@ -60,7 +60,6 @@
     },
     "order": {
       "status": {
-        "TEYIT_BEKLIYOR": "Bestätigung ausstehend",
         "YOLDA": "Unterwegs",
         "TESLIM_EDILDI": "Geliefert",
         "GONDERILDI": "Gesendet",
@@ -124,14 +123,12 @@
       "cooldown": "Ihre Bestellung ist vor Kurzem bei uns eingegangen. Die nächste können Sie in etwa {min} Min. senden; Ihre Auswahl bleibt hier erhalten.",
       "order": {
         "status": {
-          "TEYIT_BEKLIYOR": "Bestätigung ausstehend",
           "ONAYLANDI": "Wird zubereitet",
           "HAZIR": "Fertig",
           "YOLDA": "Unterwegs",
           "TESLIM_EDILDI": "Geliefert",
           "IPTAL": "Storniert"
         },
-        "confirmHint": "Wir rufen Sie auf Ihrem Zimmertelefon an, um Ihre Bestellung zu bestätigen.",
         "eta": "Voraussichtliche Wartezeit: {min} Min.",
         "cancelByPhone": "Wenn Sie Ihre Bestellung ändern oder stornieren möchten, rufen Sie bitte den Zimmerservice über das Telefon in Ihrem Zimmer an; unser Team hilft Ihnen gern.",
         "cancelled": "Ihre Bestellung wurde storniert.",

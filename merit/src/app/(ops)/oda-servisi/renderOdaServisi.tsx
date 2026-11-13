@@ -11,14 +11,14 @@ export type OdaServisiSearch = { sekme?: string | string[] };
 /** `?sekme=` -> the screen the tab needs; anything else (also "gecmis") is the full board. */
 function tabOf(raw: string | string[] | undefined): RoomOpsTab {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return value === "teyit" || value === "teslim" ? value : "tumu";
+  return value === "teslim" ? value : "tumu";
 }
 
-const TAB_SCREEN = { tumu: "RO-TAL", teyit: "RO-TEL", teslim: "RO-TES" } as const;
+const TAB_SCREEN = { tumu: "RO-TAL", teslim: "RO-TES" } as const;
 
 /**
  * Staff room-service board. The permission matrix decides everything: the tab needs its own screen
- * code (`?sekme=teyit` -> RO-TEL, `?sekme=teslim` -> RO-TES, default RO-TAL) and every button flag
+ * code (`?sekme=teslim` -> RO-TES, default RO-TAL) and every button flag
  * is computed here, never in the browser. The hotel's single ODA_SERVISI outlet is the target — no
  * "first hotel" fallback.
  */
@@ -28,12 +28,11 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
   const hotelId = ctx.session.hotelId;
   if (!hotelId) redirect("/secim");
 
-  const [viewOk, talepV, talepD, teyitD, teslimD, teslimA, talepA, mybarV] = await Promise.all([
+  const [viewOk, talepV, talepD, teslimD, teslimA, talepA, mybarV] = await Promise.all([
     can(ctx, TAB_SCREEN[tab], "V", hotelId),
     // Cross-hotel coverage band: the same right the covered read asserts (board.covered).
     can(ctx, "RO-TAL", "V", hotelId),
     can(ctx, "RO-TAL", "D", hotelId),
-    can(ctx, "RO-TEL", "D", hotelId),
     can(ctx, "RO-TES", "D", hotelId),
     can(ctx, "RO-TES", "A", hotelId),
     can(ctx, "RO-TAL", "A", hotelId),
@@ -74,7 +73,7 @@ export async function renderOdaServisi(searchParams: Promise<OdaServisiSearch>, 
       tab={tab}
       initialBoard={initial}
       loadError={loadError}
-      flags={{ talepD, teyitD, teslimD, teslimA, talepA }}
+      flags={{ talepD, teslimD, teslimA, talepA }}
       showMybar={mybarV}
       coverageEnabled={talepV}
       initialCovered={covered}

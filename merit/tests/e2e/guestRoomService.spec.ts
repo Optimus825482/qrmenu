@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { Client } from "pg";
 import { expect, resetAndSeed, test } from "./fixtures";
-import { e2eDatabaseUrl, setPhoneConfirm } from "./e2eDb";
+import { e2eDatabaseUrl } from "./e2eDb";
 
 // One database state for the whole file: later tests reuse the first order and the S0 room-service world
 // (ROYAL rooms 101 / 102, DIAMOND room 301, menu "Çay" 25 and "Club Sandviç" 320).
@@ -69,13 +69,6 @@ async function addItem(page: Page, name: string, quantity: number, note: string)
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
-async function sendSelections(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /^Seçimlerim/ }).click();
-  const drawer = page.getByRole("dialog", { name: "Seçimlerim" });
-  await drawer.getByRole("button", { name: "Seçimleri gönder" }).click();
-  await expect(page).toHaveURL(/\/siparis\/[^/]+$/);
-}
-
 let firstOrderUrl = "";
 
 test("kart → menü → Çay ×2 + not → Seçimlerim 2 → gönder → Gönderildi #1; yenileyince aynı @kabul-8", async ({ page }) => {
@@ -108,33 +101,6 @@ test("kart → menü → Çay ×2 + not → Seçimlerim 2 → gönder → Gönde
   await page.reload();
   await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toContainText("#1");
   await expect(page.getByRole("main").locator('li[aria-current="step"]')).toContainText("Gönderildi");
-});
-
-test("teyit varyantı: Teyit adımı görünür, Vazgeç siparişi İptal durumuna çevirir @kabul-8", async ({ page }) => {
-  await setPhoneConfirm("ROYAL", true);
-  try {
-    const token = await roomToken("102");
-    await page.goto(`/q/${token}/oda-servisi`);
-    await addItem(page, "Club Sandviç", 1, "");
-    await expect(badge(page)).toHaveText("1");
-    await sendSelections(page);
-
-    const status = page.getByRole("main");
-    await expect(status.getByRole("listitem").filter({ hasText: "Teyit bekleniyor" }).first()).toBeVisible();
-    await expect(status.locator('li[aria-current="step"]')).toContainText("Teyit bekleniyor");
-
-    await status.getByRole("button", { name: "Vazgeç" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("vazgeçmek istiyor musunuz");
-    await dialog.getByRole("button", { name: "Vazgeç" }).click();
-
-    await expect(status.getByText(/iptal edildi/i).first()).toBeVisible();
-    await expect(status.getByRole("button", { name: "Vazgeç" })).toHaveCount(0);
-    await page.reload();
-    await expect(status.getByText(/iptal edildi/i).first()).toBeVisible();
-  } finally {
-    await setPhoneConfirm("ROYAL", false);
-  }
 });
 
 test("?lang=ar: sağdan sola, Arapça arayüz @kabul-10", async ({ page }) => {

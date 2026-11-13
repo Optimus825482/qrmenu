@@ -60,7 +60,6 @@
     },
     "order": {
       "status": {
-        "TEYIT_BEKLIYOR": "Aguardando confirmação",
         "YOLDA": "A caminho",
         "TESLIM_EDILDI": "Entregue",
         "GONDERILDI": "Enviado",
@@ -124,14 +123,12 @@
       "cooldown": "Recebemos seu pedido há pouco. Você poderá enviar o próximo em cerca de {min} min; suas escolhas ficam guardadas aqui.",
       "order": {
         "status": {
-          "TEYIT_BEKLIYOR": "Aguardando confirmação",
           "ONAYLANDI": "Em preparo",
           "HAZIR": "Pronto",
           "YOLDA": "A caminho",
           "TESLIM_EDILDI": "Entregue",
           "IPTAL": "Cancelado"
         },
-        "confirmHint": "Ligaremos para o telefone do seu quarto para confirmar o pedido.",
         "eta": "Tempo estimado: {min} min",
         "cancelByPhone": "Caso deseje alterar ou cancelar o seu pedido, pedimos a gentileza de ligar para o Serviço de Quarto pelo telefone do seu quarto; nossa equipe terá o maior prazer em ajudar.",
         "cancelled": "Seu pedido foi cancelado.",

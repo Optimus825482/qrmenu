@@ -2,10 +2,11 @@ import type { RoomBoard, RoomBoardColumn, RoomOrderCard } from "@/modules/order/
 import type { RoomOpsTab } from "./RoomOrderCard";
 
 /**
- * A stage is one column of the screen. The full board folds the five server columns into four
- * stages the staff reads at a glance; the order flow, the SLA and the reports keep the five steps.
+ * A stage is one column of the screen. The full board folds the four open server columns (plus the
+ * delivered list) into four stages the staff reads at a glance; the order flow, the SLA and the reports
+ * keep the individual steps.
  */
-export type RoomStageId = "ALINDI" | "HAZIRLANIYOR" | "GONDERILDI" | "TESLIM" | "CONFIRM" | "READY" | "ONWAY" | "MYBAR" | "KUYRUK";
+export type RoomStageId = "ALINDI" | "HAZIRLANIYOR" | "GONDERILDI" | "TESLIM" | "READY" | "ONWAY" | "MYBAR" | "KUYRUK";
 
 export type RoomStage = {
   id: RoomStageId;
@@ -16,12 +17,11 @@ export type RoomStage = {
 
 export const TAB_STAGES: Record<RoomOpsTab, readonly RoomStage[]> = {
   tumu: [
-    { id: "ALINDI", title: "Talep Alındı", columns: ["CONFIRM", "NEW"] },
+    { id: "ALINDI", title: "Talep Alındı", columns: ["NEW"] },
     { id: "HAZIRLANIYOR", title: "Hazırlanıyor", columns: ["PREP", "READY"] },
     { id: "GONDERILDI", title: "Gönderildi", columns: ["ONWAY"] },
     { id: "TESLIM", title: "Teslim Edildi", columns: [] },
   ],
-  teyit: [{ id: "CONFIRM", title: "Teyit", columns: ["CONFIRM"] }],
   teslim: [
     { id: "READY", title: "Hazır", columns: ["READY"] },
     { id: "ONWAY", title: "Yolda", columns: ["ONWAY"] },
@@ -33,7 +33,6 @@ export const MYBAR_STAGE: RoomStage = { id: "MYBAR", title: "MyBar Talepleri", c
 
 /** Step badge of a card inside a folded stage or the queue. */
 export const STEP_LABEL: Record<RoomBoardColumn, string> = {
-  CONFIRM: "Teyit bekliyor",
   NEW: "Talep alındı",
   PREP: "Hazırlanıyor",
   READY: "Hazır",
@@ -54,7 +53,7 @@ export function entriesOf(board: RoomBoard, columns: readonly RoomBoardColumn[])
   return columns.flatMap((column) => board.columns[column].map((card) => ({ card, column }))).sort(byRequestTime);
 }
 
-const OPEN_COLUMNS: readonly RoomBoardColumn[] = ["CONFIRM", "NEW", "PREP", "READY", "ONWAY"];
+const OPEN_COLUMNS: readonly RoomBoardColumn[] = ["NEW", "PREP", "READY", "ONWAY"];
 
 /** Service queue: every open order in request-time order. */
 export function queueOf(board: RoomBoard): QueueEntry[] {

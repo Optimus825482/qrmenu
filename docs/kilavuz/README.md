@@ -16,7 +16,7 @@ Bu set ayrı eğitim veritabanında üretilen gerçek arayüz görüntülerini i
 | Oturum | Süre | Eğitim hesapları | Alıştırmalar |
 |---|---|---|---|
 | 1 — Yönetici ve IT | 90 dk | egitim.admin, egitim.fbm | Doğru otel seçimi; kurulum/tanım sırası; rol ve Erişimim; menü/QR; rapor Excel/PDF; yetkili IT eşliğinde ayar ve yedek kontrolü |
-| 2 — Saha | 75 dk | egitim.garson1, egitim.kasa, egitim.kds, egitim.oda | Demo masa QR siparişi → kasa onayı → KDS başlat/hazır → servis; garson çağrısı; oda servisi teyit ve teslim; iptal gerekçesi |
+| 2 — Saha | 75 dk | egitim.garson1, egitim.kasa, egitim.kds, egitim.oda | Demo masa QR siparişi → kasa onayı → KDS başlat/hazır → servis; garson çağrısı; oda servisi onay ve teslim; iptal gerekçesi |
 | 3 — Minibar | 90 dk | egitim.kat1, egitim.kat2, egitim.depo | Üç doluluk dosyasının önizlemesi; +1/Sarfiyat Yok/DND; örnek MyBar karşılama ve eksik gerekçesi; ortak havuz ve rapor karşılaştırması |
 
 Her oturum sonunda katılımcı aynı akışı eğitmenin yardımı olmadan tekrarlar. Katılım ve kabul imzası [teslim kontrol listesine](../teslim-kontrol-listesi.md) işlenir. DND hatırlatması gibi süreli adımlar eğitimde süreyi beklemek yerine kabul test raporuyla açıklanır; üretim saati değiştirilmez.

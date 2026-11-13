@@ -24,7 +24,7 @@ const MASA_LABELS: Partial<Record<OrderStatus, string>> = {
 };
 
 const ODA_LABELS: Partial<Record<OrderStatus, string>> = {
-  TEYIT_BEKLIYOR: "Teyit bekliyor",
+  GONDERILDI: "Onay bekliyor",
   ONAYLANDI: "Onaylandı",
   HAZIR: "Hazır",
   YOLDA: "Yolda",

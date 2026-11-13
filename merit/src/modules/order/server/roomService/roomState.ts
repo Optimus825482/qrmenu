@@ -19,7 +19,6 @@ export type RoomServiceState = {
   roomServiceOpen: boolean;
   orderingOpen: boolean;
   rsOutletId?: string;
-  confirmRequired: boolean;
   slaMinutes: number;
   pricesShown: boolean;
   currency: string;
@@ -30,7 +29,7 @@ export type RoomServiceState = {
 /**
  * Loads guest-facing Room Service state for a room:
  * checks room and hotel active status, room service outlet presence,
- * module status via guestState, phone confirm setting and SLA minutes.
+ * module status via guestState and SLA minutes.
  */
 export async function roomServiceState(roomId: string): Promise<RoomServiceState> {
   const room = await prisma.room.findUnique({
@@ -51,7 +50,6 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       hotelName: hotel.name,
       roomServiceOpen: false,
       orderingOpen: false,
-      confirmRequired: false,
       slaMinutes,
       pricesShown: false,
       currency: "EUR",
@@ -69,7 +67,6 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       hotelName: hotel.name,
       roomServiceOpen: false,
       orderingOpen: false,
-      confirmRequired: false,
       slaMinutes,
       pricesShown: false,
       currency: "EUR",
@@ -88,7 +85,6 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
       hotelName: hotel.name,
       roomServiceOpen: false,
       orderingOpen: false,
-      confirmRequired: false,
       slaMinutes,
       pricesShown: false,
       currency: "EUR",
@@ -121,7 +117,6 @@ export async function roomServiceState(roomId: string): Promise<RoomServiceState
     roomServiceOpen: menuOpen,
     orderingOpen: menuOpen && state.orderingOpen,
     rsOutletId: rsOutlet.id,
-    confirmRequired: rsOutlet.phoneConfirmRequired,
     slaMinutes,
     pricesShown: state.pricesShown,
     currency: state.currency,

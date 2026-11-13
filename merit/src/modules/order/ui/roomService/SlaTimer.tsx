@@ -30,8 +30,6 @@ const LABEL: Record<SlaTimerState, string> = { OK: "Süre var", WARN: "Süre aza
 type Props = {
   startAt: Date | string;
   dueAt: Date | string;
-  /** Clock not running (waiting for the phone confirmation). */
-  paused?: boolean;
   /** Test/parent override of the current time (ms); otherwise a 1 s ticker is used. */
   nowMs?: number;
   /** Server clock minus device clock (ms): the ticker shows server time. Default 0. */
@@ -39,26 +37,16 @@ type Props = {
 };
 
 /** Countdown to the SLA deadline; colour follows the live state (OK green, WARN amber, BREACH red, bold). */
-export function SlaTimer({ startAt, dueAt, paused, nowMs, offsetMs = 0 }: Props) {
+export function SlaTimer({ startAt, dueAt, nowMs, offsetMs = 0 }: Props) {
   const [tick, setTick] = useState<number | null>(null);
   useEffect(() => {
-    if (paused || nowMs !== undefined) return;
+    if (nowMs !== undefined) return;
     const update = () => setTick(Date.now() + offsetMs);
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [paused, nowMs, offsetMs]);
+  }, [nowMs, offsetMs]);
 
-  if (paused) {
-    return (
-      <span
-        data-sla-state="PAUSED"
-        className="inline-flex items-center rounded-lg border border-border px-2 py-1 text-[13px] font-semibold text-muted"
-      >
-        Sayaç teyitten sonra başlar
-      </span>
-    );
-  }
   const now = nowMs ?? tick;
   const startMs = new Date(startAt).getTime();
   const dueMs = new Date(dueAt).getTime();

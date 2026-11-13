@@ -23,7 +23,6 @@ export const TONES: Record<StatusTone, { label: string; fg: string; bg: string; 
 export function orderTone(status: OrderStatus): StatusTone {
   switch (status) {
     case "GONDERILDI":
-    case "TEYIT_BEKLIYOR":
       return "pending";
     case "ONAYLANDI":
     case "YOLDA":

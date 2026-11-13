@@ -43,7 +43,7 @@ afterAll(async () => {
   await testDb.$disconnect();
 });
 
-/** The hotel's room-service outlet (created when the seed did not), without the phone-confirmation step. */
+/** The hotel's room-service outlet (created when the seed did not). */
 async function rsOutlet(hotelCode: string) {
   const id = await hotelId(hotelCode);
   const data = {
@@ -51,7 +51,6 @@ async function rsOutlet(hotelCode: string) {
     hasMenu: true,
     hasOrdering: true,
     orderingEnabled: true,
-    phoneConfirmRequired: false,
     autoPrintReceipt: true,
   };
   const existing = await testDb.outlet.findFirst({ where: { hotelId: id, type: "ODA_SERVISI" } });
@@ -297,7 +296,6 @@ describe("IZLEME: görür, hiçbir işlem yapamaz", () => {
     expect(await t(approved.id, "IPTAL")).toBe("FORBIDDEN");
     expect(await t(ready.id, "YOLDA")).toBe("FORBIDDEN");
     expect(await t(onWay.id, "TESLIM_EDILDI")).toBe("FORBIDDEN");
-    expect(await codeOf(orders.confirmPhone(w.ods.ctx, sent.id))).toBe("FORBIDDEN");
     expect(await codeOf(orders.startPrep(w.ods.ctx, approved.id))).toBe("FORBIDDEN");
     expect(await codeOf(orders.revertReady(w.ods.ctx, ready.id))).toBe("FORBIDDEN");
 
@@ -343,9 +341,9 @@ describe("ISLEME: kendi otelindeki hakları kadar işler", () => {
     const sent = await rsOrder("DIAMOND", "GONDERILDI");
     const approved = await rsOrder("DIAMOND", "ONAYLANDI");
     await give(w, "ISLEME");
-    // The attendant's home rights: no approve on delivery tracking, edit on phone confirmation.
+    // The attendant's home rights: no approve on delivery tracking, edit on the request desk.
     expect(await can(w.ods.ctx, "RO-TES", "A", w.royal)).toBe(false);
-    expect(await can(w.ods.ctx, "RO-TEL", "D", w.royal)).toBe(true);
+    expect(await can(w.ods.ctx, "RO-TAL", "D", w.royal)).toBe(true);
 
     expect(await codeOf(orders.transition(w.ods.ctx, approved.id, "IPTAL", { reason: "Stok yok" }))).toBe("FORBIDDEN");
     expect((await testDb.order.findUniqueOrThrow({ where: { id: approved.id } })).status).toBe("ONAYLANDI");
@@ -407,7 +405,6 @@ describe("süre ve kaldırma: sunucu her kullanımda saate bakar", () => {
       // Without a working grant the order does not exist for the user: the answer every out-of-scope order gets.
       expect(await codeOf(orders.transition(w.ods.ctx, order.id, "ONAYLANDI"))).toBe("NOT_FOUND");
       expect(await codeOf(orders.transition(w.ods.ctx, order.id, "IPTAL", { reason: "Misafir vazgeçti" }))).toBe("NOT_FOUND");
-      expect(await codeOf(orders.confirmPhone(w.ods.ctx, order.id))).toBe("NOT_FOUND");
     }
     expect((await testDb.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe("GONDERILDI");
   });

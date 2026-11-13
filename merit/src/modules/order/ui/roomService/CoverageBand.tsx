@@ -13,7 +13,6 @@ import { STEP_LABEL } from "./stages";
 /** Order events of a covered hotel plus the "your coverage changed" notice and the resync marker. */
 const BAND_EVENTS = [
   "order.created",
-  "order.confirmed",
   "order.approved",
   "order.prep",
   "order.ready",
@@ -31,7 +30,7 @@ const POLL_MS = 30_000;
 const REFRESH_DEBOUNCE_MS = 200;
 
 /** A watched (IZLEME) hotel: the detail opens, but no action button is drawn. The server refuses them anyway. */
-const WATCH_ONLY: RoomOpsFlags = { talepD: false, teyitD: false, teslimD: false, teslimA: false, talepA: false };
+const WATCH_ONLY: RoomOpsFlags = { talepD: false, teslimD: false, teslimA: false, talepA: false };
 
 const CARD_TONE: Record<RoomOrderData["slaState"], string> = {
   OK: "border-border",
@@ -152,7 +151,6 @@ export function CoverageBand({ initial, flags, actions, busy, refreshKey }: Prop
   };
   const closing: RoomCardActions = {
     approve: andClose(actions.approve),
-    confirmPhone: andClose(actions.confirmPhone),
     cancel: andClose(actions.cancel),
     ready: andClose(actions.ready),
     onWay: andClose(actions.onWay),
@@ -219,7 +217,6 @@ export function CoverageBand({ initial, flags, actions, busy, refreshKey }: Prop
               card={selectedEntry.card}
               column={selectedEntry.column}
               flags={selectedHotel.canProcess ? flags : WATCH_ONLY}
-              confirmRequired={selectedHotel.confirmRequired}
               actions={closing}
               busy={busy}
               clockOffsetMs={clockOffset}
@@ -283,7 +280,7 @@ function CompactCard({
     <>
       <span className="flex items-center justify-between gap-2">
         <span className="text-sm font-black text-text">{`Oda ${card.roomNumber}`}</span>
-        <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} paused={column === "CONFIRM"} offsetMs={clockOffset} />
+        <SlaTimer startAt={card.slaStartAt} dueAt={card.slaDueAt} offsetMs={clockOffset} />
       </span>
       <span className="mt-1 block truncate text-left text-[13px] font-semibold text-muted">{`#${card.orderNo} · ${STEP_LABEL[column]}`}</span>
     </>

@@ -6,7 +6,6 @@ import { createRateLimiter, scaledMax } from "@/lib/rate-limit";
 import { getSettings } from "@/lib/settings";
 import { DomainError, fromZod } from "@/lib/result";
 import { businessDate, businessDay } from "@/lib/time";
-import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import {
   type GuestMeta,
@@ -112,7 +111,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
     return toGuestOrderView(replay, {
       kind: "ODA_SERVISI",
       roomNumber: target.room.number,
-      roomService: { slaMinutes: state.slaMinutes, confirmRequired: state.confirmRequired },
+      roomService: { slaMinutes: state.slaMinutes },
     });
   }
 
@@ -207,44 +206,12 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
         include: VIEW_INCLUDE,
       });
 
-      let finalStatus: OrderStatus = created.status;
-      if (state.confirmRequired) {
-        await tx.order.update({
-          where: { id: created.id },
-          data: { status: "TEYIT_BEKLIYOR" },
-        });
-        await tx.orderEvent.create({
-          data: {
-            orderId: created.id,
-            userId: null,
-            from: "GONDERILDI",
-            to: "TEYIT_BEKLIYOR",
-            note: "TEYIT_GEREKLI",
-            at: new Date(),
-          },
-        });
-        await audit(tx, {
-          hotelId: state.hotelId,
-          action: "ORDER_TEYIT_BEKLIYOR",
-          entity: "Order",
-          entityId: created.id,
-          before: { status: "GONDERILDI" },
-          after: { status: "TEYIT_BEKLIYOR" },
-        });
-        finalStatus = "TEYIT_BEKLIYOR";
-      }
-
-      const orderForRecipients = {
-        ...created,
-        status: finalStatus,
-      };
-
       await notify(
         {
-          recipients: await approvals.recipientsFor(tx, orderForRecipients),
+          recipients: await approvals.recipientsFor(tx, created),
           type: "order.created",
           title: `Yeni oda servisi · Oda ${target.room.number}`,
-          body: `#${created.orderNo} · ${created.items.length} kalem${state.confirmRequired ? " · teyit bekliyor" : ""}`,
+          body: `#${created.orderNo} · ${created.items.length} kalem`,
           refType: "Order",
           refId: created.id,
           // Nobody signed in at the outlet (night shift): the hotel manager and system administrator still hear of it.
@@ -263,7 +230,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
             orderNo: created.orderNo,
             roomId: target.room.id,
             roomNumber: target.room.number,
-            status: finalStatus,
+            status: created.status,
             from: null,
             kind: "ODA_SERVISI",
             byUserId: null,
@@ -273,11 +240,11 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
       );
 
       return toGuestOrderView(
-        { ...created, status: finalStatus },
+        created,
         {
           kind: "ODA_SERVISI",
           roomNumber: target.room.number,
-          roomService: { slaMinutes: state.slaMinutes, confirmRequired: state.confirmRequired },
+          roomService: { slaMinutes: state.slaMinutes },
         },
       );
     });
@@ -291,7 +258,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
         return toGuestOrderView(winner, {
           kind: "ODA_SERVISI",
           roomNumber: target.room.number,
-          roomService: { slaMinutes: state.slaMinutes, confirmRequired: state.confirmRequired },
+          roomService: { slaMinutes: state.slaMinutes },
         });
       }
     }
@@ -314,7 +281,7 @@ async function get(
   return toGuestOrderView(order, {
     kind: "ODA_SERVISI",
     roomNumber: target.room.number,
-    roomService: { slaMinutes: state.slaMinutes, confirmRequired: state.confirmRequired },
+    roomService: { slaMinutes: state.slaMinutes },
   });
 }
 

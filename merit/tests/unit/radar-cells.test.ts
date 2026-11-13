@@ -19,7 +19,7 @@ describe("orderStatusLabel", () => {
     ["GONDERILDI", "MASA", "Onay bekliyor"],
     ["ONAYLANDI", "MASA", "Hazırlanıyor"],
     ["HAZIR", "MASA", "Hazır"],
-    ["TEYIT_BEKLIYOR", "ODA_SERVISI", "Teyit bekliyor"],
+    ["GONDERILDI", "ODA_SERVISI", "Onay bekliyor"],
     ["ONAYLANDI", "ODA_SERVISI", "Onaylandı"],
     ["HAZIR", "ODA_SERVISI", "Hazır"],
     ["YOLDA", "ODA_SERVISI", "Yolda"],

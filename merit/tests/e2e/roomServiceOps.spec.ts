@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Browser, Locator, Page } from "@playwright/test";
 import { Client } from "pg";
 import { expect, login, resetAndSeed, test } from "./fixtures";
-import { e2eDatabaseUrl, loadInHouse, setPhoneConfirm } from "./e2eDb";
+import { e2eDatabaseUrl, loadInHouse } from "./e2eDb";
 import { newContextPage } from "./menuUi";
 
 // One database state for the whole file: the S0 room-service world (ROYAL rooms 101 ext 4101 / 102 no extension,
@@ -62,7 +62,7 @@ async function staffPage(browser: Browser, username: string, path = "/oda-servis
   return page;
 }
 
-type ColumnId = "CONFIRM" | "NEW" | "PREP" | "READY" | "ONWAY";
+type ColumnId = "NEW" | "PREP" | "READY" | "ONWAY";
 const column = (page: Page, id: ColumnId): Locator => page.locator(`[data-column-id=${id}]`);
 const cardIn = (page: Page, id: ColumnId, heading: RegExp): Locator =>
   column(page, id).locator("article", { has: page.getByRole("heading", { level: 3, name: heading }) });
@@ -78,7 +78,6 @@ let kitchen: Page;
 test.afterAll(async () => {
   await ops?.context().close();
   await kitchen?.context().close();
-  await setPhoneConfirm("ROYAL", false);
 });
 
 test("oda.mr: Yeni → Onayla → mutfak Hazır → Yola çıktı → Teslim edildi, misafir durumu her adımı yansıtır @kabul-8", async ({ browser, page: guest }) => {
@@ -137,36 +136,6 @@ test("dahilisiz oda 102 ve doluluk: \"Dahili tanımlı değil\"; yalnız 102 dol
   await ops.reload();
   await expect(cardIn(ops, "NEW", heading101)).toBeVisible();
   await expect(ops.getByText("Oda boş görünüyor")).toHaveCount(0);
-});
-
-test("teyit varyantı: sipariş Teyit sütununda, Onayla pasif; Telefonla teyit edildi → Hazırlanıyor @kabul-8", async ({ page: guest }) => {
-  await setPhoneConfirm("ROYAL", true);
-  await ops.reload();
-
-  const order = await guestOrder(guest, "101");
-  expect(order.status).toBe(200);
-  const heading = /^#4 · Oda 101 · Dahili 4101$/;
-  const confirmCard = cardIn(ops, "CONFIRM", heading);
-  await expect(confirmCard).toBeVisible({ timeout: 15_000 });
-  await expect(confirmCard.getByRole("button", { name: "Onayla", exact: true })).toBeDisabled();
-  await expect(confirmCard).toContainText("Önce telefonla teyit edin");
-  await guestStep(guest, order.token, order.id!, /Teyit/);
-
-  // The dedicated Teyit tab renders the same board; the phone confirmation is recorded there
-  // (the same page object: a second login of oda.mr would end this session).
-  await ops.goto("/oda-servisi/teyit");
-  const teyitCard = cardIn(ops, "CONFIRM", heading);
-  await expect(teyitCard).toBeVisible();
-  await teyitCard.getByRole("button", { name: "Telefonla teyit edildi" }).click();
-  await ops.getByRole("dialog", { name: "Telefon teyidi" }).getByRole("button", { name: "Teyidi kaydet" }).click();
-  await expect(cardIn(ops, "CONFIRM", heading)).toHaveCount(0);
-  await ops.goto("/oda-servisi");
-
-  // Phone confirmation approves the order (ONAYLANDI): it leaves Teyit and shows up under Hazırlanıyor.
-  await expect(cardIn(ops, "PREP", heading)).toBeVisible({ timeout: 15_000 });
-  await expect(cardIn(ops, "CONFIRM", heading)).toHaveCount(0);
-  await expect(cardIn(ops, "PREP", heading).getByRole("button", { name: "Hazır", exact: true })).toBeEnabled();
-  await setPhoneConfirm("ROYAL", false);
 });
 
 test("sipariş alımı kapatılınca misafir gönderimi 409 döner; açılınca yeniden 200 @kabul-8", async ({ page: guest }) => {

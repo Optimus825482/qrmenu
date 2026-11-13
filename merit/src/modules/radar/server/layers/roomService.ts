@@ -32,7 +32,6 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
       orderNo: true,
       status: true,
       createdAt: true,
-      phoneConfirmedAt: true,
       slaWarnedAt: true,
       slaBreachedAt: true,
       room: { select: { number: true } },
@@ -62,9 +61,7 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
     orders: rows.map((o) => {
       const startAt = slaStart(o);
       const age = env.now.getTime() - startAt.getTime();
-      // The clock does not run while the phone confirmation is pending.
-      const timed = o.status !== "TEYIT_BEKLIYOR";
-      const byAge = !timed ? "OK" : slaMs > 0 && age >= slaMs ? "BREACH" : slaMs > 0 && age >= slaMs * SLA_WARN_RATIO ? "WARN" : "OK";
+      const byAge = slaMs > 0 && age >= slaMs ? "BREACH" : slaMs > 0 && age >= slaMs * SLA_WARN_RATIO ? "WARN" : "OK";
       const level = o.slaBreachedAt || byAge === "BREACH" ? "BREACH" : o.slaWarnedAt || byAge === "WARN" ? "WARN" : "OK";
       return {
         orderId: o.id,

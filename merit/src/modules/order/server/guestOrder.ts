@@ -70,7 +70,7 @@ export type GuestOrderView = {
   tableLabel?: string;
   kind: "MASA" | "ODA_SERVISI";
   roomNumber?: string;
-  roomService?: { slaMinutes: number; confirmRequired: boolean };
+  roomService?: { slaMinutes: number };
 };
 
 const VIEW_INCLUDE = {

@@ -41,21 +41,6 @@ async function withE2eDb<T>(run: (client: Client) => Promise<T>): Promise<T> {
 }
 
 /**
- * Sets `phoneConfirmRequired` on the hotel's Oda Servisi outlet (`hotelCode` is the DB code, e.g. "ROYAL" for MR).
- * Raw SQL, so Playwright specs can call it without the generated Prisma client.
- */
-export function setPhoneConfirm(hotelCode: string, required: boolean): Promise<void> {
-  return withE2eDb(async (db) => {
-    const { rowCount } = await db.query(
-      `UPDATE outlets SET phone_confirm_required = $2
-        WHERE type = 'ODA_SERVISI' AND hotel_id = (SELECT id FROM hotels WHERE code = $1)`,
-      [hotelCode, required],
-    );
-    if (rowCount !== 1) throw new Error(`setPhoneConfirm: ${hotelCode} için tek Oda Servisi outleti yok`);
-  });
-}
-
-/**
  * Makes exactly the listed room numbers of the hotel (`hotelCode`) in house today: replaces the hotel's IN_HOUSE
  * guest records with one stay per room (yesterday to tomorrow). Rooms outside the list become BOS, and an empty
  * list clears the occupancy so the hotel reports BILINMIYOR.

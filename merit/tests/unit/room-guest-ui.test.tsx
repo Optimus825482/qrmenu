@@ -79,7 +79,6 @@ const rsState = {
   roomServiceOpen: true,
   orderingOpen: true,
   rsOutletId: "outlet-1",
-  confirmRequired: false,
   slaMinutes: 30,
   pricesShown: true,
   currency: "EUR",
@@ -98,7 +97,7 @@ function order(over: Partial<GuestOrderView> = {}): GuestOrderView {
     pricesShown: true,
     kind: "ODA_SERVISI",
     roomNumber: "101",
-    roomService: { slaMinutes: 30, confirmRequired: false },
+    roomService: { slaMinutes: 30 },
     ...over,
   };
 }
@@ -128,7 +127,7 @@ afterEach(() => {
 });
 
 describe("OrderStatus - oda servisi adımları", () => {
-  it("teyit gerekmiyorsa 4 adım", () => {
+  it("4 adım", () => {
     status(order());
     expect(steps().map((s) => s.textContent)).toEqual([
       expect.stringContaining("Gönderildi"),
@@ -136,14 +135,6 @@ describe("OrderStatus - oda servisi adımları", () => {
       expect.stringContaining("Yolda"),
       expect.stringContaining("Teslim edildi"),
     ]);
-  });
-
-  it("teyit gerekiyorsa 5 adım ve TEYIT_BEKLIYOR iken ipucu", () => {
-    status(order({ status: "TEYIT_BEKLIYOR", roomService: { slaMinutes: 30, confirmRequired: true } }));
-    expect(steps()).toHaveLength(5);
-    expect(steps()[1].textContent).toContain("Teyit bekleniyor");
-    expect(steps()[1].getAttribute("aria-current")).toBe("step");
-    expect(screen.getByText(tr.guest.rs.order.confirmHint)).toBeTruthy();
   });
 
   it("HAZIR, Hazırlanıyor adımında kalır", () => {
@@ -158,7 +149,7 @@ describe("OrderStatus - oda servisi adımları", () => {
       expect(screen.getByText(eta), s).toBeTruthy();
       cleanup();
     }
-    for (const s of ["GONDERILDI", "TEYIT_BEKLIYOR", "TESLIM_EDILDI"]) {
+    for (const s of ["GONDERILDI", "TESLIM_EDILDI"]) {
       status(order({ status: s }));
       expect(screen.queryByText(eta), s).toBeNull();
       cleanup();
@@ -189,7 +180,7 @@ describe("OrderStatus - oda servisi adımları", () => {
   });
 
   it("misafir iptal edemez: açık siparişte telefonla arama notu var, iptal düğmesi yok", () => {
-    for (const s of ["GONDERILDI", "TEYIT_BEKLIYOR", "ONAYLANDI", "HAZIR", "YOLDA"]) {
+    for (const s of ["GONDERILDI", "ONAYLANDI", "HAZIR", "YOLDA"]) {
       status(order({ status: s }));
       expect(screen.getByTestId("rs-cancel-by-phone").textContent, s).toBe(tr.guest.rs.order.cancelByPhone);
       expect(screen.queryByRole("button"), s).toBeNull();

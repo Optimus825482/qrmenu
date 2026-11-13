@@ -11,7 +11,7 @@ import { coveredModes } from "./coverageAccess";
 import { occupancyHint, type OccupancyStatus } from "./occupancy";
 import { slaDue, slaStart, slaStateOf } from "./sla";
 
-export type RoomBoardColumn = "CONFIRM" | "NEW" | "PREP" | "READY" | "ONWAY";
+export type RoomBoardColumn = "NEW" | "PREP" | "READY" | "ONWAY";
 
 export type RoomOrderCard = {
   id: string;
@@ -51,13 +51,11 @@ export type RoomBoard = {
   delivered?: RoomDeliveredCard[];
   kpis: { open: number; overdue: number; today: number; avgDeliverySec?: number };
   orderingEnabled: boolean;
-  confirmRequired: boolean;
   /** Server clock (ISO) at read time: clients derive their clock offset from it for the SLA countdown. */
   serverNow: string;
 };
 
 const COLUMN_OF: Partial<Record<OrderStatus, RoomBoardColumn>> = {
-  TEYIT_BEKLIYOR: "CONFIRM",
   GONDERILDI: "NEW",
   ONAYLANDI: "PREP",
   HAZIR: "READY",
@@ -72,7 +70,6 @@ const CARD_SELECT = {
   roomId: true,
   status: true,
   createdAt: true,
-  phoneConfirmedAt: true,
   deliveredAt: true,
   note: true,
   guestLanguage: true,
@@ -120,13 +117,13 @@ function toCard(
 const bySla = (a: RoomOrderCard, b: RoomOrderCard) => a.slaDueAt.getTime() - b.slaDueAt.getTime() || a.orderNo - b.orderNo;
 
 /**
- * Room-service staff board of one outlet: five open-order columns (most urgent SLA first) and the
+ * Room-service staff board of one outlet: four open-order columns (most urgent SLA first) and the
  * day's KPIs. RO-TAL view in the outlet's hotel; outlet roles are bound to their session outlet.
  */
 async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
   const outlet = await prisma.outlet.findUnique({
     where: { id: outletId },
-    select: { id: true, hotelId: true, type: true, orderingEnabled: true, phoneConfirmRequired: true },
+    select: { id: true, hotelId: true, type: true, orderingEnabled: true },
   });
   if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
   await assertCan(ctx, "RO-TAL", "V", outlet.hotelId);
@@ -145,7 +142,7 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
     }),
     prisma.order.findMany({
       where: { outletId, kind: "ODA_SERVISI", businessDate: today },
-      select: { status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
+      select: { status: true, createdAt: true, deliveredAt: true },
     }),
     prisma.order.findMany({
       where: { outletId, kind: "ODA_SERVISI", businessDate: today, status: "TESLIM_EDILDI", deliveredAt: { not: null } },
@@ -164,7 +161,7 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
   const roomIds = [...new Set(openRows.flatMap((r) => (r.roomId ? [r.roomId] : [])))];
   const occupancy = await occupancyHint(outlet.hotelId, roomIds, today);
 
-  const columns: RoomBoard["columns"] = { CONFIRM: [], NEW: [], PREP: [], READY: [], ONWAY: [] };
+  const columns: RoomBoard["columns"] = { NEW: [], PREP: [], READY: [], ONWAY: [] };
   let overdue = 0;
   for (const row of openRows) {
     const built = toCard(row, now, slaMinutes, occupancy);
@@ -199,7 +196,6 @@ async function get(ctx: Ctx, outletId: string): Promise<RoomBoard> {
       ...(avgDeliverySec !== undefined ? { avgDeliverySec } : {}),
     },
     orderingEnabled: outlet.orderingEnabled,
-    confirmRequired: outlet.phoneConfirmRequired,
     serverNow: now.toISOString(),
   };
 }
@@ -214,8 +210,6 @@ export type CoveredHotelBoard = {
   mode: CoverageMode;
   /** ISLEME: the caller may move these requests with their own (home) rights. IZLEME: read-only. */
   canProcess: boolean;
-  /** The outlet's phone-confirmation switch, as the own board carries it. */
-  confirmRequired: boolean;
   /** Open requests, most urgent SLA first, each with its board column. */
   cards: { card: RoomOrderCard; column: RoomBoardColumn }[];
 };
@@ -241,7 +235,6 @@ async function covered(ctx: Ctx): Promise<CoveredBoard> {
     select: {
       id: true,
       hotelId: true,
-      phoneConfirmRequired: true,
       hotel: { select: { name: true, code: true } },
     },
   });
@@ -272,7 +265,6 @@ async function covered(ctx: Ctx): Promise<CoveredBoard> {
       outletId: outlet.id,
       mode,
       canProcess: mode === "ISLEME",
-      confirmRequired: outlet.phoneConfirmRequired,
       cards,
     });
   }

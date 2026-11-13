@@ -159,7 +159,7 @@ describe("taskCompletionPct", () => {
 });
 
 describe("room-service SLA metric uses the P6 clock", () => {
-  it("phone confirmation restarts the clock and a pending confirmation is never timed", async () => {
+  it("the clock runs from creation, an order still waiting for approval included", async () => {
     const hw = w.royal;
     const rs =
       (await testDb.outlet.findFirst({ where: { hotelId: hw.hotelId, type: "ODA_SERVISI" } })) ??
@@ -173,12 +173,11 @@ describe("room-service SLA metric uses the P6 clock", () => {
       });
     const ago = (min: number) => new Date(Date.now() - min * 60_000);
     await mk(0, { status: "ONAYLANDI", createdAt: ago(40) }); // breach
-    await mk(1, { status: "ONAYLANDI", createdAt: ago(40), phoneConfirmedAt: ago(5) }); // clock restarted
-    await mk(2, { status: "TEYIT_BEKLIYOR", createdAt: ago(90) }); // not timed
-    await mk(3, { status: "ONAYLANDI", createdAt: ago(10) });
+    await mk(1, { status: "GONDERILDI", createdAt: ago(40) }); // breach while waiting for approval
+    await mk(2, { status: "ONAYLANDI", createdAt: ago(10) });
 
     const res = await kpis(w.sys, { scope: "hotel", hotelId: hw.hotelId });
-    expect(metric(res.hotels[0], "rsOverSla")).toMatchObject({ value: 1, severity: "crit" });
+    expect(metric(res.hotels[0], "rsOverSla")).toMatchObject({ value: 2, severity: "crit" });
   });
 });
 
