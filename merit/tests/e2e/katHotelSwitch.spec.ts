@@ -6,7 +6,7 @@ import { expect, login, resetAndSeed, test } from "./fixtures";
  * load and after every step taken inside the window (into a floor and back to the list).
  * World (SEED_MINIBAR=1): ROYAL has "1. Kat" and "2. Kat", DIAMOND has "3. Kat".
  */
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "default" });
 test.use({ locale: "tr-TR", viewport: { width: 1280, height: 800 }, hasTouch: true });
 
 test.beforeAll(() => {
@@ -74,6 +74,97 @@ test("otel seçici kat listesini değiştirir ve kattan dönünce seçilen otel 
   // And the selector keeps working after that trip.
   await select.selectOption(diamond.value);
   await expect.poll(() => floorNames(page), { message: "dönüşten sonra DIAMOND" }).toEqual(["3. Kat"]);
+});
+
+/* The shell's own back buttons (app bar arrow, the bar at the bottom) and the tablet's back gesture. */
+const listHeading = (page: Page) => frameOf(page).getByRole("heading", { name: "Kat Planı ve Oda Doluluk Durumu" });
+const appScreen = (page: Page, name: string) => page.getByRole("region", { name, exact: true });
+const sysBack = (page: Page) => page.getByRole("navigation", { name: "Sistem gezinmesi" }).getByRole("button", { name: "Geri" });
+
+async function openFloorOfDiamond(page: Page): Promise<void> {
+  await login(page, "admin");
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.getByRole("button", { name: "Minibar Operasyonları" }).click();
+  await page.getByRole("button", { name: /Kat Planı/ }).first().click();
+  const select = page.locator('[id="mb-hotel-minibar.kat"]');
+  await select.selectOption({ label: "Merit Royal Diamond" });
+  await expect.poll(() => floorNames(page)).toEqual(["3. Kat"]);
+  await frameOf(page).locator('a[href^="/kat/doluluk/"]').first().click();
+  await expect(frameOf(page).getByTestId("katlar-geri")).toBeVisible();
+}
+
+async function expectDiamondFloorList(page: Page): Promise<void> {
+  await expect(appScreen(page, "Kat Planı")).toBeVisible();
+  await expect(listHeading(page)).toBeVisible();
+  await expect(page.locator('[id="mb-hotel-minibar.kat"]')).toHaveValue(/.+/);
+  await expect(page.locator('[id="mb-hotel-minibar.kat"] option:checked')).toHaveText("Merit Royal Diamond");
+  await expect.poll(() => floorNames(page)).toEqual(["3. Kat"]);
+}
+
+for (const [name, press] of [
+  // Inside a floor the page's own "Katlar" is the only arrow on screen: the app bar hides its own there.
+  ["sayfanın Katlar düğmesi, sonra uygulama çubuğundaki Geri", async (page: Page) => {
+    const bar = page.locator(".mb-app:not([hidden]) .mb-appbar").getByRole("button", { name: "Geri" });
+    const own = frameOf(page).getByTestId("katlar-geri");
+    if (await own.isVisible()) {
+      await expect(bar).toBeHidden();
+      await own.click();
+    } else {
+      await bar.click();
+    }
+  }],
+  ["alt çubuktaki Geri", (page: Page) => sysBack(page).click()],
+  ["tabletin geri hareketi", (page: Page) => page.evaluate(() => window.history.back())],
+] as const) {
+  test(`kata girdikten sonra ${name} kat listesine döner, sonra klasöre, sonra ana ekrana`, async ({ page }) => {
+    await openFloorOfDiamond(page);
+
+    await press(page);
+    await expectDiamondFloorList(page);
+
+    await press(page);
+    await expect(appScreen(page, "Minibar Operasyonları")).toBeVisible();
+    await expect(appScreen(page, "Kat Planı")).toBeHidden();
+
+    await press(page);
+    await expect(page.getByRole("main", { name: "Ana ekran" })).toBeVisible();
+    await expect(sysBack(page)).toBeDisabled();
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+}
+
+test("kat içindeyken Ana ekran'a basıp uygulamayı yeniden açınca Geri yine adım adım çalışır", async ({ page }) => {
+  await openFloorOfDiamond(page);
+  await page.getByRole("navigation", { name: "Sistem gezinmesi" }).getByRole("button", { name: "Ana ekran" }).click();
+  await expect(page.getByRole("main", { name: "Ana ekran" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Minibar Operasyonları" }).click();
+  await expect(appScreen(page, "Minibar Operasyonları")).toBeVisible();
+  // The floor's own history entries are walked off in the background; the page then rests on the folder's entry.
+  await expect.poll(() => page.evaluate(() => (window.history.state as { mbDepth?: number } | null)?.mbDepth ?? 0)).toBe(1);
+  await page.waitForTimeout(700);
+  expect(await page.evaluate(() => (window.history.state as { mbDepth?: number } | null)?.mbDepth ?? 0)).toBe(1);
+
+  await page.evaluate(() => window.history.back());
+  await expect(page.getByRole("main", { name: "Ana ekran" })).toBeVisible();
+  await expect(sysBack(page)).toBeDisabled();
+  await expect(page).toHaveURL(/\/admin$/);
+});
+
+test("kata girdikten sonra otel değiştirip geri basınca eski otelin sayfası geri gelmez", async ({ page }) => {
+  await openFloorOfDiamond(page);
+  const select = page.locator('[id="mb-hotel-minibar.kat"]');
+  await select.selectOption({ label: "Merit Royal" });
+  await expect.poll(() => floorNames(page)).toEqual(["1. Kat", "2. Kat"]);
+
+  await page.evaluate(() => window.history.back());
+  await page.waitForTimeout(1500);
+  // Whatever the step back did (nothing, or a layer of the shell), the window must not show DIAMOND under ROYAL.
+  if (await appScreen(page, "Kat Planı").isVisible()) {
+    await expect(page.locator('[id="mb-hotel-minibar.kat"] option:checked')).toHaveText("Merit Royal");
+    await expect(frameOf(page).getByTestId("kat-otel-adi")).toHaveText("Merit Royal");
+    expect(await floorNames(page).catch(() => [])).not.toContain("3. Kat");
+  }
 });
 
 test("pencerenin alt ekranları oturumun değil seçilen otelin verisini gösterir", async ({ page }) => {
