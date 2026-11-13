@@ -1,0 +1,85 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+
+/** A page's own back control: a link or button led by the back arrow ("← Katlar", "← Geri"). */
+const OWN_BACK = 'a > svg[data-icon="arrow-left"], button > svg[data-icon="arrow-left"]';
+
+/**
+ * Inside a tablet-shell window: tells the shell whether the page on screen has a back control of its own.
+ * The shell's app bar hides its arrow then (mobile.css, `data-page-back`), so a screen never shows two
+ * "back" arrows one under the other. The page's first screen has none, so the app bar keeps its arrow there.
+ * Renders nothing; a page opened directly (no frame) is left alone.
+ */
+export function FrameOwnBack() {
+  const pathname = usePathname();
+  useEffect(() => {
+    let host: Element | null = null;
+    try {
+      host = window.frameElement?.closest("[data-app-screen]") ?? null;
+    } catch {
+      return; // a parent the page may not read
+    }
+    if (!host) return;
+    const mark = () => host.toggleAttribute("data-page-back", document.querySelector(OWN_BACK) !== null);
+    mark();
+    // Headers that appear after the data arrives are caught as they are drawn.
+    const observer = new MutationObserver(mark);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      host.removeAttribute("data-page-back");
+    };
+  }, [pathname]);
+  return null;
+}
+
+type NavigationEntry = { url?: string | null; key?: string };
+type NavigationLike = {
+  currentEntry?: { index?: number } | null;
+  entries?: () => NavigationEntry[];
+  traverseTo?: (key: string) => unknown;
+};
+
+/** How far back the page looked for is searched: the list a floor was opened from is one or two entries away
+ *  (a redirect that re-adds the window's marks can leave an entry of its own in between). */
+const LOOK_BACK = 3;
+
+/**
+ * For a page's own "back" link: when the page it leads to is one the user just came from, go back to that
+ * history entry instead of adding a new one. Otherwise "Katlar" left the floor ahead in history and the
+ * shell's (or the tablet's) back button led straight into it again. Returns true when it went back; the caller
+ * then cancels the link. A hotel named by the link must match, so going back never lands on another hotel's list.
+ * The Navigation API answers for this frame alone; without it the link is followed as written.
+ */
+export function stepBackIfPrevious(href: string): boolean {
+  if (typeof window === "undefined") return false;
+  const nav = (window as unknown as { navigation?: NavigationLike }).navigation;
+  const index = nav?.currentEntry?.index;
+  const entries = nav?.entries?.();
+  if (typeof index !== "number" || !entries || typeof nav?.traverseTo !== "function") return false;
+  let to: URL;
+  try {
+    to = new URL(href, window.location.origin);
+  } catch {
+    return false;
+  }
+  for (let i = index - 1; i >= Math.max(0, index - LOOK_BACK); i--) {
+    const entry = entries[i];
+    if (!entry?.url || !entry.key) continue;
+    try {
+      const from = new URL(entry.url);
+      if (from.origin !== to.origin || from.pathname !== to.pathname) continue;
+      // A link that names a hotel only goes back to that hotel's page; one that names none (the page's data
+      // has not arrived yet) goes back to the page it was opened from, which is this window's hotel.
+      const wanted = to.searchParams.get("hotelId");
+      if (wanted && from.searchParams.get("hotelId") !== wanted) continue;
+    } catch {
+      continue;
+    }
+    nav.traverseTo(entry.key);
+    return true;
+  }
+  return false;
+}

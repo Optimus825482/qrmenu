@@ -1,5 +1,6 @@
 "use client";
 
+import { stepBackIfPrevious } from "@/shell/FrameOwnBack";
 import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
 import Link from "next/link";
@@ -342,6 +343,9 @@ export default function OdaKontrolPage() {
             <Link
               href={hotelHref(data ? `/kat/doluluk/${data.room.floorId}` : "/kat")}
               data-testid="oda-geri"
+              onClick={(e) => {
+                if (data && stepBackIfPrevious(hotelHref(`/kat/doluluk/${data.room.floorId}`))) e.preventDefault();
+              }}
               style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
               className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
             >

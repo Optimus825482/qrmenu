@@ -26,6 +26,7 @@ export function Icon({ name, size = 24, title, className }: IconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       focusable="false"
+      data-icon={name}
       className={`merit-icon inline-block shrink-0 align-[-0.2em]${className ? ` ${className}` : ""}`}
       {...(title ? { role: "img", "aria-label": title } : { "aria-hidden": true })}
     >

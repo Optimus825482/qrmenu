@@ -361,6 +361,15 @@
   border-bottom: 1px solid var(--mb-line);
 }
 
+/* The page in the window has its own back control (FrameOwnBack): one arrow on screen, the page's. */
+.mb-app[data-page-back] .mb-appbar > .mb-icon-button {
+  display: none;
+}
+
+.mb-app[data-page-back] .mb-appbar-title {
+  padding-left: 12px;
+}
+
 .mb-appbar-title {
   margin: 0;
   font-size: 20px;

@@ -416,12 +416,28 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  /**
+   * Back to the app from a Radar tab. The tab was opened by the app (window.open), so it can close itself; on
+   * a tablet or phone where the browser keeps it open (an installed app shows it without tabs or a back
+   * button), it goes back in history, or to the start page when there is nothing behind it.
+   */
+  const exitToApp = () => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    window.close();
+    window.setTimeout(() => {
+      if (window.closed) return;
+      if (window.history.length > 1) window.history.back();
+      else window.location.assign("/baslat");
+    }, 250);
+  };
+
   const menus: MenuDef[] = [
     {
       label: "Dosya",
       items: [
         { kind: "action", label: "Anlık görüntüyü yenile", shortcut: "F5", onSelect: () => void store.getState().refresh() },
         { kind: "action", label: "Duvar ekranı modu", shortcut: "Ctrl+Alt+F", onSelect: openWallTab },
+        { kind: "action", label: "Uygulamaya dön", onSelect: exitToApp },
       ],
     },
     {
@@ -640,6 +656,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
               onToggleSound={toggleSound}
               onWakeLockStatus={setWakeLockAvailable}
               wakeLockAvailable={wakeLockAvailable}
+              onExit={exitToApp}
             />
           ) : (
             <MenuBar menus={menus} />

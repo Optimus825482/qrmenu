@@ -14,6 +14,8 @@ export type WallShellProps = {
   onToggleSound(): void;
   onWakeLockStatus?(ok: boolean): void;
   wakeLockAvailable?: boolean;
+  /** Leaves the wall screen (closes its tab, or goes back where the tab cannot be closed). */
+  onExit?(): void;
 };
 
 export function WallShell({
@@ -25,6 +27,7 @@ export function WallShell({
   onToggleSound,
   onWakeLockStatus,
   wakeLockAvailable = true,
+  onExit,
 }: WallShellProps) {
   const [fsError, setFsError] = useState<string | null>(null);
   const lockRef = useRef<{ release(): void } | null>(null);
@@ -86,6 +89,22 @@ export function WallShell({
           <Icon name="fullscreen" size={16} />
           <span>Tam ekran başlat</span>
         </button>
+        {onExit ? (
+          // A tablet or phone shows the wall screen without browser chrome: this is the way back to the app.
+          <button
+            type="button"
+            className="rd-chip"
+            data-testid="duvar-cikis"
+            onClick={() => {
+              lockRef.current?.release();
+              lockRef.current = null;
+              onExit();
+            }}
+          >
+            <Icon name="arrow-left" size={16} />
+            <span>Uygulamaya dön</span>
+          </button>
+        ) : null}
         <span className="rd-conn" data-state={connection} role="status">
           <Icon name={connection === "offline" ? "wifi-off" : "wifi"} size={16} />
           <span>{CONNECTION_TEXT[connection]}</span>
