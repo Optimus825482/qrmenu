@@ -33,7 +33,8 @@ import { DEFAULT_TEMPORARY_PASSWORD } from "@/modules/core/usernames";
  * would expose every user). Every call re-checks, on the server:
  *   1. the caller's role is R-MTY or R-SYS (anything else: FORBIDDEN + YETKISIZ_DENEME audit row);
  *   2. the target's CURRENT role is R-KAT, R-DEP or R-HKS, so system and manager accounts are never reachable;
- *   3. the target shares at least one hotel with the caller (`ctx.hotelIds`); otherwise NOT_FOUND;
+ *   3. the target shares at least one hotel with the caller (`ctx.hotelIds`); otherwise NOT_FOUND. Password reset
+ *      and (de)activation need more: every hotel of the target inside the caller's scope (FORBIDDEN otherwise);
  *   4. hotel grants stay inside `ctx.hotelIds`; hotels the caller cannot see are left untouched on the target;
  *   5. the role is never edited (a new user is always R-KAT).
  */
@@ -76,6 +77,35 @@ async function loadTarget(tx: Prisma.TransactionClient, ctx: Ctx, id: string) {
     id === ctx.user.id ? null : await tx.user.findFirst({ where: { id, ...scopeWhere(ctx) }, select: USER_SELECT });
   if (!target) throw new DomainError("NOT_FOUND", NOT_FOUND);
   return target;
+}
+
+const SHARED_STAFF_FORBIDDEN =
+  "Bu personel yetki alanınız dışındaki bir otelde de çalışıyor; şifresini ve hesap durumunu yalnızca tüm otellerinin yöneticisi veya sistem yöneticisi değiştirebilir";
+
+/**
+ * Password and active state belong to the whole account, not to one hotel: a reset gives the caller a login
+ * that also works in the target's other hotels. So the caller must cover every hotel of the target (the same
+ * rule as CR-KUL, admin/users.ts assertCanManage). Profile edits stay open: they leave foreign hotels untouched.
+ */
+async function assertWholeAccountInScope(
+  ctx: Ctx,
+  target: { id: string; hotelId: string | null; userHotels: { hotelId: string }[] },
+  op: string,
+): Promise<void> {
+  if (ctx.user.roleKind === "SISTEM") return;
+  if (userHotelsOf(target).every((hotelId) => ctx.hotelIds.includes(hotelId))) return;
+  try {
+    await audit(prisma, {
+      userId: ctx.user.id,
+      hotelId: ctx.session.hotelId,
+      action: "YETKISIZ_DENEME",
+      entity: ENTITY,
+      after: { op, userId: target.id, reason: "OUT_OF_SCOPE" },
+    });
+  } catch (error) {
+    console.error("minibarUsers: YETKISIZ_DENEME denetim kaydı yazılamadı", error);
+  }
+  throw new DomainError("FORBIDDEN", SHARED_STAFF_FORBIDDEN);
 }
 
 // --- input ------------------------------------------------------------------------------------
@@ -311,6 +341,7 @@ export async function resetMinibarUserPassword(ctx: Ctx, id: string): Promise<{ 
   const temporary = DEFAULT_TEMPORARY_PASSWORD;
   await prisma.$transaction(async (tx) => {
     const target = await loadTarget(tx, ctx, id);
+    await assertWholeAccountInScope(ctx, target, "resetPassword");
     const passwordHash = await hashPassword(temporary); // only after authorisation
     await tx.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
     const sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
@@ -331,6 +362,7 @@ export async function setMinibarUserActive(ctx: Ctx, id: string, isActive: boole
   await assertManager(ctx, "setActive");
   return prisma.$transaction(async (tx) => {
     const before = await loadTarget(tx, ctx, id);
+    await assertWholeAccountInScope(ctx, before, "setActive");
     if (before.isActive === isActive) return toUserRow(before);
     const updated = await tx.user.update({ where: { id }, data: { isActive }, select: USER_SELECT });
     const sessionsClosed = isActive ? 0 : await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);

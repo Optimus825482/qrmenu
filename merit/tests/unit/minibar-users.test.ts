@@ -137,6 +137,29 @@ describe("minibarUsers", () => {
     expect(JSON.stringify(audit)).not.toContain(temporaryPassword);
   });
 
+  it("leaves password and active state of staff shared with a foreign hotel to a manager of all their hotels", async () => {
+    // ROYAL manager, target also works in PREMIUM: a reset would hand the manager a login valid in PREMIUM.
+    const ctx = await mty();
+    const shared = await makeUser({ username: "dep-shared", roleCode: "R-DEP", hotelCode: "PREMIUM", extraHotelCodes: ["ROYAL"] });
+    await expect(svc.resetMinibarUserPassword(ctx, shared.id)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(svc.setMinibarUserActive(ctx, shared.id, false)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await testDb.user.update({ where: { id: shared.id }, data: { isActive: false } });
+    await expect(svc.setMinibarUserActive(ctx, shared.id, true)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const stored = await testDb.user.findUniqueOrThrow({ where: { id: shared.id } });
+    expect(stored).toMatchObject({ passwordHash: "x", mustChangePassword: false, isActive: false });
+    expect(await testDb.auditLog.count({ where: { action: { in: ["USER_SET_PASSWORD", "USER_SET_ACTIVE"] } } })).toBe(0);
+
+    // A manager of both hotels, and the system administrator whatever the session hotel, still may.
+    await testDb.user.update({ where: { id: shared.id }, data: { isActive: true } });
+    const both = await mty(["ROYAL", "PREMIUM"]);
+    expect((await svc.setMinibarUserActive(both, shared.id, false)).isActive).toBe(false);
+    expect((await svc.setMinibarUserActive(both, shared.id, true)).isActive).toBe(true);
+    await svc.resetMinibarUserPassword(both, shared.id);
+    const sys = await ctxFor(await makeUser({ username: "sys", roleCode: "R-SYS", hotelCode: "ROYAL" }), { hotelCode: "ROYAL" });
+    await svc.resetMinibarUserPassword(sys, shared.id);
+    expect((await testDb.user.findUniqueOrThrow({ where: { id: shared.id } })).mustChangePassword).toBe(true);
+  });
+
   it("updates profile data; hotels stay inside the caller's scope and foreign hotels are preserved", async () => {
     const ctx = await mty(["ROYAL", "DIAMOND"]);
     const royal = await hotelId("ROYAL");
