@@ -23,6 +23,11 @@ describe("ctxForHotel", () => {
   it("refuses a hotel outside the user's scope instead of falling back to the session's", () => {
     expect(() => ctxForHotel(ctx, "premium")).toThrowError(/yetkiniz yok/);
   });
+  it("never moves an outlet session to another hotel, even one in scope", () => {
+    const outlet = { ...ctx, session: { ...ctx.session, outletId: "o1" } } as unknown as Ctx;
+    expect(ctxForHotel(outlet, "royal")).toBe(outlet);
+    expect(() => ctxForHotel(outlet, "diamond")).toThrowError(/yetkiniz yok/);
+  });
 });
 
 describe("mbFetch / withHotel", () => {

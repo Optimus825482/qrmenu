@@ -9,10 +9,13 @@ export const HOTEL_HEADER = "x-merit-hotel";
  * The context of a request made for another hotel of the user's scope: same user, `session.hotelId` replaced.
  * The services read `ctx.session.hotelId` for their lists and permission checks, so one swap makes a whole
  * screen follow the hotel selector. A hotel outside `ctx.hotelIds` is refused, never replaced by the session's.
+ *
+ * An outlet session never changes hotel: its role is the one of that outlet membership (auth.ts), not the
+ * role the user holds in the other hotels, so carrying it to another hotel would lend it rights there.
  */
 export function ctxForHotel(ctx: Ctx, requested: string | null | undefined): Ctx {
   if (!requested || requested === ctx.session.hotelId) return ctx;
-  if (!ctx.hotelIds.includes(requested)) throw new DomainError("FORBIDDEN", "Bu otel için yetkiniz yok");
+  if (ctx.session.outletId || !ctx.hotelIds.includes(requested)) throw new DomainError("FORBIDDEN", "Bu otel için yetkiniz yok");
   return { ...ctx, session: { ...ctx.session, hotelId: requested } };
 }
 
@@ -39,5 +42,5 @@ export async function pageHotelCtx(ctx: Ctx): Promise<Ctx> {
   const query = path?.split("?")[1];
   if (!query) return ctx;
   const requested = new URLSearchParams(query).get("hotelId");
-  return requested && ctx.hotelIds.includes(requested) ? ctxForHotel(ctx, requested) : ctx;
+  return requested && !ctx.session.outletId && ctx.hotelIds.includes(requested) ? ctxForHotel(ctx, requested) : ctx;
 }
