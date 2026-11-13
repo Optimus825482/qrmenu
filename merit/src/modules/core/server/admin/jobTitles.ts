@@ -100,7 +100,22 @@ export type JobTitleInput = z.input<typeof jobTitleSchema>;
 
 async function loadAll(db: Prisma.TransactionClient | typeof prisma): Promise<JobTitleRow[]> {
   const titles = await db.jobTitle.findMany({ select: SELECT, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
-  return orderJobTitles(titles).map((title) => toRow(title, title.depth));
+  // A user's görev is also kept as plain text (imports, titles typed before the catalogue row existed). Such
+  // a user carries no link, yet the user list filters by that text: count them under the title of the same name.
+  const loose = await db.user.groupBy({
+    by: ["jobTitle"],
+    where: { deletedAt: null, jobTitleId: null, jobTitle: { not: null } },
+    _count: { _all: true },
+  });
+  const key = (name: string) => name.trim().toLocaleLowerCase("tr-TR");
+  const unlinked = new Map<string, number>();
+  for (const row of loose) {
+    if (row.jobTitle) unlinked.set(key(row.jobTitle), (unlinked.get(key(row.jobTitle)) ?? 0) + row._count._all);
+  }
+  return orderJobTitles(titles).map((title) => {
+    const row = toRow(title, title.depth);
+    return { ...row, userCount: row.userCount + (unlinked.get(key(row.name)) ?? 0) };
+  });
 }
 
 /**

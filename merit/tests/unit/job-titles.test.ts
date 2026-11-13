@@ -103,6 +103,16 @@ describe("görev servisi", () => {
     await expect(jobTitles.create(manager, { name: "Sommelier", department: "SERVIS" })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
+  it("görevi yalnız metin olarak taşıyan (bağlantısız) kullanıcı da o görevin sayısına girer", async () => {
+    const ctx = await sys();
+    const loose = await makeUser({ username: "gar-metin", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    await testDb.user.update({ where: { id: loose.id }, data: { jobTitle: " garson ", jobTitleId: null } });
+    const linked = await makeUser({ username: "gar-bagli", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    await testDb.user.update({ where: { id: linked.id }, data: { jobTitle: "Garson", jobTitleId: (await byName("Garson")).id } });
+    const page = await jobTitles.list(ctx, {});
+    expect(page.items.find((row) => row.name === "Garson")?.userCount).toBe(2);
+  });
+
   it("ekleme, döngü reddi, ad değişikliğinin kullanıcılara yansıması ve silme", async () => {
     const ctx = await sys();
     const sef = await byName("Şef Garson");
