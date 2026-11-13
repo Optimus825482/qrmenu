@@ -16,6 +16,7 @@ import { createOnboarding } from "@/modules/core/server/admin/users";
 
 const HOTEL_CODE = "DIAMOND";
 const ACTOR_USERNAME = "admin";
+const MARKER_KEY = "seed.diamondPersonel.completedAt";
 
 type Department = "Bar" | "Restaurant" | "Banket" | "A La Carte" | "Room Service";
 type Person = { department: Department; fullName: string; jobTitle: string; roleCode: string };
@@ -47,9 +48,17 @@ export const PEOPLE: Person[] = [
 ];
 
 async function main(): Promise<number> {
-  const dryRun = process.argv.slice(2).includes("--dry-run");
-  const unknown = process.argv.slice(2).filter((a) => a !== "--dry-run");
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry-run");
+  // --once (deploy): runs a single time per database. Afterwards the list belongs to the administrators:
+  // a person they delete or rename must not come back on the next deploy.
+  const once = args.includes("--once");
+  const unknown = args.filter((a) => a !== "--dry-run" && a !== "--once");
   if (unknown.length) throw new Error(`Bilinmeyen bayrak: ${unknown.join(", ")}`);
+  if (once && (await prisma.setting.findFirst({ where: { hotelId: null, key: MARKER_KEY }, select: { id: true } }))) {
+    console.log("Diamond personel tanımlama daha önce tamamlanmış; atlandı.");
+    return 0;
+  }
 
   const hotel = await prisma.hotel.findUnique({ where: { code: HOTEL_CODE }, select: { id: true } });
   if (!hotel) throw new Error(`Otel bulunamadı: ${HOTEL_CODE}`);
@@ -59,11 +68,13 @@ async function main(): Promise<number> {
   if (missing.length) throw new Error(`Eksik rol(ler): ${missing.join(", ")} - hiçbir şey yazılmadı`);
   const roleId = new Map(roles.map((r) => [r.code, r.id]));
 
-  const actor = await prisma.user.findFirst({
-    where: { username: ACTOR_USERNAME, deletedAt: null, isActive: true, role: { code: "R-SYS" } },
-    select: { id: true, username: true, fullName: true, roleId: true, role: { select: { code: true, kind: true } } },
-  });
-  if (!actor) throw new Error(`Aktif R-SYS kullanıcısı bulunamadı: ${ACTOR_USERNAME}`);
+  // Audit rows are written in this user's name: `admin` when it exists, otherwise the oldest system administrator.
+  const actorSelect = { id: true, username: true, fullName: true, roleId: true, role: { select: { code: true, kind: true } } } as const;
+  const sysAdmin = { deletedAt: null, isActive: true, role: { code: "R-SYS" } } as const;
+  const actor =
+    (await prisma.user.findFirst({ where: { ...sysAdmin, username: ACTOR_USERNAME }, select: actorSelect })) ??
+    (await prisma.user.findFirst({ where: sysAdmin, orderBy: { createdAt: "asc" }, select: actorSelect }));
+  if (!actor) throw new Error("Aktif sistem yöneticisi (R-SYS) bulunamadı - hiçbir şey yazılmadı");
   const ctx: Ctx = {
     user: {
       id: actor.id,
@@ -110,6 +121,10 @@ async function main(): Promise<number> {
   console.log(
     `${dryRun ? "[DRY-RUN] " : ""}toplam ${rows.length}: created ${count("created")}, would-create ${count("would-create")}, skipped ${count("skipped")}`,
   );
+  if (once && !dryRun) {
+    await prisma.setting.create({ data: { hotelId: null, key: MARKER_KEY, value: new Date().toISOString() } });
+    console.log("Tamamlandı işareti yazıldı; sonraki açılışlarda atlanacak.");
+  }
   return 0;
 }
 

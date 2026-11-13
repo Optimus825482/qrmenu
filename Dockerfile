@@ -73,6 +73,7 @@ COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/scripts/oda-qr-dogrula.ts ./scripts/oda-qr-dogrula.ts
 COPY --from=builder /app/scripts/migrate-from-minibarlatest ./scripts/migrate-from-minibarlatest
 COPY --from=builder /app/scripts/ornek-kullanici-temizle.ts ./scripts/ornek-kullanici-temizle.ts
+COPY --from=builder /app/scripts/diamond-personel-tanimla.ts ./scripts/diamond-personel-tanimla.ts
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/.next ./.next

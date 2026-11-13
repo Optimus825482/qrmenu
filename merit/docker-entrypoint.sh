@@ -64,5 +64,13 @@ if [ -n "${LEGACY_DATABASE_URL:-}" ]; then
   (npx tsx scripts/migrate-from-minibarlatest/once.ts || echo "UYARI: Eski veri aktarımı tamamlanamadı; site çalışıyor. Yukarıdaki raporu inceleyin." >&2) &
 fi
 
+# Diamond F&B personelinin TEK SEFERLİK tanımlanması (13.11.2026 listesi, 50 kişi; standart geçici şifre, ilk girişte
+# değiştirilir). Tamamlanınca veritabanına işaret yazılır ve bir daha çalışmaz; sonradan silinen ya da adı değişen
+# kişi geri gelmez. Hata başlatmayı durdurmaz, sonraki açılışta yeniden denenir (var olan kişiler atlanır).
+# Kapatmak için SEED_DIAMOND_STAFF=false.
+if [ "${SEED_DIAMOND_STAFF:-true}" = "true" ]; then
+  npx tsx scripts/diamond-personel-tanimla.ts --once || echo "UYARI: Diamond personel tanımlama tamamlanamadı; site çalışıyor. Yukarıdaki hatayı inceleyin." >&2
+fi
+
 echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
 exec npm run start
