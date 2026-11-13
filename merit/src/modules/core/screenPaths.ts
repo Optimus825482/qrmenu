@@ -20,6 +20,8 @@ const ROUTE_OWNERS: ReadonlyArray<readonly [string, string]> = [
   ["/kat/urun-siralamasi", "MB-TUK"],
   // Outlet-session entry to the order reports (QS-RAP's catalogue path is a desktop window).
   ["/kasa/raporlar", "QS-RAP"],
+  // Delivered-orders lookup: part of the delivery screen, not of the requests board that owns `/oda-servisi`.
+  ["/oda-servisi/teslim-edilenler", "RO-TES"],
 ];
 
 /**

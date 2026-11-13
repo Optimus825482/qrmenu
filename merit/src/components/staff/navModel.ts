@@ -60,8 +60,10 @@ const GARSON_MORE: Def[] = [
 const ODS_PRIMARY: Def[] = [
   { id: "requests", label: "Talepler", icon: "concierge", href: "/oda-servisi", screen: "RO-TAL" },
   { id: "delivery", label: "Teslim", icon: "walk", href: "/oda-servisi?sekme=teslim", screen: "RO-TES" },
+  // Read-only lookup of delivered orders by delivery day and room.
+  { id: "delivered", label: "Teslim Edilenler", icon: "check-circle", href: "/oda-servisi/teslim-edilenler", screen: "RO-TES" },
 ];
-const ODS_MORE: Def[] = []; // no history screen on the room-service board (the "Geçmiş" link had no target)
+const ODS_MORE: Def[] = [];
 
 const DEPO_PRIMARY: Def[] = [
   { id: "pool", label: "Otel deposu", icon: "box", href: "/depo/stok", screen: "MB-ZIM" },
@@ -151,7 +153,7 @@ function resolve(def: Def, visible: ReadonlySet<string>): NavItem | undefined {
 /**
  * Bottom navigation (spec 2.2), derived from the screens the session may view:
  * kat Bugün · Katlar · QR Okut · İşlemlerim · Daha; waiter Kuyruk · Masalarım · Çağrılar · Daha;
- * room service Talepler · Teslim · Daha; depot Havuz · Talepler · Raporlar · Daha.
+ * room service Talepler · Teslim · Teslim Edilenler · Daha; depot Havuz · Talepler · Raporlar · Daha.
  * A user of several families gets the leading family's entries in the bar and every other family's links under "Daha"
  * (no duplicates, stable order). Never links to a screen outside `visible`; 2-5 primary entries (Daha included),
  * empty when nothing is visible.
