@@ -42,6 +42,13 @@ export const JOB_TITLE_CATALOG: JobTitleDef[] = [
   { code: "G-OUS", name: "Outlet Şefi", department: "SERVIS", parent: "G-OUM", role: "R-SGF" },
   { code: "G-RSS", name: "Restoran Şefi", department: "SERVIS", parent: "G-RSM", role: "R-SGF" },
   { code: "G-SSV", name: "Servis Süpervizörü", department: "SERVIS", parent: "G-SRM", role: "R-SGF" },
+  // Merit'in kullandığı servis kademeleri (13.11.2026 personel listesi): Headwaiter > Supervisor > Captain > Junior Captain.
+  { code: "G-MDH", name: "Maître d'Hôtel", department: "SERVIS", parent: "G-FBA", role: "R-SGF" },
+  { code: "G-HDW", name: "Headwaiter", department: "SERVIS", parent: "G-FBA", role: "R-SGF" },
+  { code: "G-SUP", name: "Supervisor", department: "SERVIS", parent: "G-HDW", role: "R-SGF" },
+  { code: "G-CPT", name: "Captain", department: "SERVIS", parent: "G-SUP", role: "R-GAR" },
+  { code: "G-JCP", name: "Junior Captain", department: "SERVIS", parent: "G-CPT", role: "R-GAR" },
+  { code: "G-INC", name: "Incharge (A La Carte Waiter)", department: "SERVIS", parent: "G-CPT", role: "R-GAR" },
   { code: "G-SGF", name: "Şef Garson", department: "SERVIS", parent: "G-OUS", role: "R-SGF" },
   { code: "G-GAR", name: "Garson", department: "SERVIS", parent: "G-SGF", role: "R-GAR" },
   { code: "G-KOM", name: "Komi", department: "SERVIS", parent: "G-GAR", role: "R-GAR" },

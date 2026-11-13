@@ -26,18 +26,18 @@ const p = (department: Department, roleCode: string, jobTitle: string, names: st
   names.map((fullName) => ({ department, fullName, jobTitle, roleCode }));
 
 export const PEOPLE: Person[] = [
-  ...p("Bar", "R-FBY", "F&B Asst. Manager", ["Egemen Özkarslıoğlu"]),
+  ...p("Bar", "R-FBY", "F&B Müdür Yardımcısı", ["Egemen Özkarslıoğlu"]),
   ...p("Bar", "R-SGF", "Headwaiter", ["Muhammed Özmen", "Keremcan Candan"]),
   ...p("Bar", "R-SGF", "Supervisor", ["Yunus Emre Uğurlu", "Ali Beyaz", "Süleyman Oktay", "Gökhan Kuştutan", "Gökhan Mamak"]),
   ...p("Bar", "R-BAR", "Captain", ["Meliha Sağlam", "Hüseyin Paşayev", "Hakan Baran", "Selim Çolak", "Kemal Doğanbey", "Halil Gürsoy"]),
   ...p("Bar", "R-BAR", "Junior Captain", ["Ayşenur Varol", "Devran Korkut", "Hilal Avcı", "Melih Eser", "Burak Kahraman"]),
-  ...p("Restaurant", "R-FBY", "F&B Asst. Manager", ["Mesut Urhan"]),
+  ...p("Restaurant", "R-FBY", "F&B Müdür Yardımcısı", ["Mesut Urhan"]),
   ...p("Restaurant", "R-SGF", "Headwaiter", ["Cemil Ataç"]),
   ...p("Restaurant", "R-SGF", "Supervisor", ["Ahmet Yavuz", "Ceyhun Irmakcan", "Atajan Kurbanov"]),
   ...p("Restaurant", "R-GAR", "Captain", ["Ertuğrul Yazıcı", "Yücel Öz", "Celal Katmaz"]),
   ...p("Restaurant", "R-GAR", "Junior Captain", ["Murat Gökduman", "Deniz Erdoğan", "Mehmet Demirbağ", "Baki Burak Özcan"]),
   ...p("Banket", "R-GAR", "Captain", ["Musa Koca"]),
-  ...p("A La Carte", "R-FBY", "F&B Asst. Manager", ["Eren Altay"]),
+  ...p("A La Carte", "R-FBY", "F&B Müdür Yardımcısı", ["Eren Altay"]),
   ...p("A La Carte", "R-SGF", "Supervisor", ["Halil Songür", "Halil Batak"]),
   ...p("A La Carte", "R-GAR", "Captain", ["Şeref Ceyhan", "Onur Can Sezer"]),
   ...p("A La Carte", "R-GAR", "Junior Captain", ["Semih Sağlam", "Yusuf Koçak"]),
