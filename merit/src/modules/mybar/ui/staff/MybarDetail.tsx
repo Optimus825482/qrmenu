@@ -20,7 +20,7 @@ export function MybarDetail({ row }: { row: MybarRow }) {
   const events: { label: string; at: Date | string; by?: string | null; note?: string | null }[] = [
     { label: "Talep alındı", at: row.createdAt },
   ];
-  if (row.seenAt) events.push({ label: "Görüldü", at: row.seenAt, by: row.seenByName });
+  if (row.seenAt) events.push({ label: "Onaylandı", at: row.seenAt, by: row.seenByName });
   if (row.completedAt) events.push({ label: "Tamamlandı", at: row.completedAt, by: row.completedByName, note: row.closeNote });
   if (row.cancelledAt) events.push({ label: "İptal edildi", at: row.cancelledAt, by: row.cancelledByName, note: row.cancelNote });
 

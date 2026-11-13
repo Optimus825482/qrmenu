@@ -54,9 +54,22 @@ export type MybarRow = {
   removals: MybarRemovalView[];
 };
 
+/**
+ * The four stages a request is shown in. "Gördüm" is the approval: a BEKLEMEDE request is ONAY_BEKLIYOR until
+ * somebody approves it (`seenAt`), then ONAYLANDI until it is closed (TAMAMLANDI) or cancelled (IPTAL).
+ */
+export const MYBAR_STAGES = ["ONAY_BEKLIYOR", "ONAYLANDI", "TAMAMLANDI", "IPTAL"] as const;
+export type MybarStage = (typeof MYBAR_STAGES)[number];
+
+export function mybarStage(row: { status: MybarRow["status"]; seenAt: Date | string | null }): MybarStage {
+  if (row.status === "BEKLEMEDE") return row.seenAt ? "ONAYLANDI" : "ONAY_BEKLIYOR";
+  return row.status;
+}
+
 export const mybarFilterSchema = z.object({
   hotelId: z.string().min(1).max(64).optional(),
   status: z.enum(["BEKLEMEDE", "TAMAMLANDI", "IPTAL"]).optional(),
+  stage: z.enum(MYBAR_STAGES).optional(),
   unseenOnly: z.boolean().optional(),
   from: z.iso.date().optional(),
   to: z.iso.date().optional(),
@@ -170,6 +183,9 @@ export function mybarFilterWhere(hotelId: string, input: z.output<typeof mybarFi
   const where: Prisma.MybarRequestWhereInput = { hotelId };
   if (input.status) where.status = input.status;
   if (input.unseenOnly) where.seenAt = null;
+  if (input.stage === "ONAY_BEKLIYOR") Object.assign(where, { status: "BEKLEMEDE", seenAt: null });
+  else if (input.stage === "ONAYLANDI") Object.assign(where, { status: "BEKLEMEDE", seenAt: { not: null } });
+  else if (input.stage) where.status = input.stage;
   if (input.q) where.room = { number: { startsWith: input.q, mode: "insensitive" } };
   if (input.from || input.to) {
     const createdAt: Prisma.DateTimeFilter = {};

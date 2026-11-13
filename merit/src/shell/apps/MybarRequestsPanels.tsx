@@ -1,6 +1,7 @@
 "use client";
 
-import type { MybarRow } from "@/modules/mybar/server/requests";
+import type { MybarRow, MybarStage } from "@/modules/mybar/server/requests";
+import { stageOf } from "@/modules/mybar/ui/staff/format";
 
 /** Date shape of rows that crossed the Server Action boundary. */
 export type MybarRowView = Omit<MybarRow, "createdAt" | "seenAt" | "completedAt" | "cancelledAt"> & {
@@ -12,8 +13,9 @@ export type MybarRowView = Omit<MybarRow, "createdAt" | "seenAt" | "completedAt"
 
 export type MybarKpis = { pending: number; unseen: number; completedToday: number; cancelledToday: number };
 
-export const STATUS_LABEL: Record<MybarRow["status"], string> = {
-  BEKLEMEDE: "Beklemede",
+export const STAGE_LABEL: Record<MybarStage, string> = {
+  ONAY_BEKLIYOR: "Onay bekliyor",
+  ONAYLANDI: "Onaylandı",
   TAMAMLANDI: "Tamamlandı",
   IPTAL: "İptal",
 };
@@ -30,10 +32,12 @@ export function formatWhen(value: string | Date | null): string {
   });
 }
 
-export function StatusBadge({ status }: { status: MybarRow["status"] }) {
+/** Stage of the request (approval waiting / approved / completed / cancelled); `data-status` keeps the stored status. */
+export function StatusBadge({ row }: { row: Pick<MybarRowView, "status" | "seenAt"> }) {
+  const stage = stageOf(row);
   return (
-    <span className="xp-mybar-badge" data-status={status}>
-      {STATUS_LABEL[status]}
+    <span className="xp-mybar-badge" data-status={row.status} data-stage={stage}>
+      {STAGE_LABEL[stage]}
     </span>
   );
 }
@@ -60,28 +64,40 @@ export function MybarKpiStrip({ kpis }: { kpis: MybarKpis | null }) {
   );
   return (
     <dl className="xp-mybar-kpis" aria-label="Özet" data-guide="mybar-kpi">
-      {tile("Bekleyen", kpis?.pending)}
-      {tile("Görülmemiş", kpis?.unseen)}
+      {tile("Onay bekleyen", kpis?.unseen)}
+      {tile("Onaylanan (tamamlanmamış)", kpis ? Math.max(0, kpis.pending - kpis.unseen) : undefined)}
       {tile("Bugün tamamlanan", kpis?.completedToday)}
       {tile("Bugün iptal", kpis?.cancelledToday)}
     </dl>
   );
 }
 
-/** Read-only detail of one request. Fulfilment happens on the floor side, so there is no such control here. */
+/**
+ * Detail of one request with its stage actions: approve, close as completed (both MB-PERS D) and cancel (A).
+ * Handing over products item by item stays on the floor screens.
+ */
 export function MybarRequestDetail({
   row,
+  canAct,
   canCancel,
+  busy,
+  onApprove,
+  onComplete,
   onCancel,
 }: {
   row: MybarRowView;
+  canAct: boolean;
   canCancel: boolean;
+  busy: boolean;
+  onApprove: () => void;
+  onComplete: () => void;
   onCancel: () => void;
 }) {
+  const open = row.status === "BEKLEMEDE";
   return (
     <aside className="xp-mybar-detail" aria-label="Talep ayrıntısı" data-guide="mybar-detay">
       <h3>
-        Oda {row.roomNumber} · {row.floorName} <StatusBadge status={row.status} />
+        Oda {row.roomNumber} · {row.floorName} <StatusBadge row={row} />
       </h3>
       {row.removals.length > 0 ? (
         <>
@@ -132,8 +148,8 @@ export function MybarRequestDetail({
       <dl>
         <dt>Oluşturulma</dt>
         <dd>{formatWhen(row.createdAt)}</dd>
-        <dt>Görülme</dt>
-        <dd>{row.seenAt ? `${formatWhen(row.seenAt)} · ${row.seenByName ?? "—"}` : "Henüz görülmedi"}</dd>
+        <dt>Onay</dt>
+        <dd>{row.seenAt ? `${formatWhen(row.seenAt)} · ${row.seenByName ?? "—"}` : "Henüz onaylanmadı"}</dd>
         {row.note ? (
           <>
             <dt>Misafir notu</dt>
@@ -148,7 +164,7 @@ export function MybarRequestDetail({
         ) : null}
         {row.status === "TAMAMLANDI" ? (
           <>
-            <dt>Kapatma</dt>
+            <dt>Tamamlanma</dt>
             <dd>
               {formatWhen(row.completedAt)} · {row.completedByName ?? "—"}
               {row.closedWithMissing ? " · eksik ürünle" : ""}
@@ -166,10 +182,24 @@ export function MybarRequestDetail({
           </>
         ) : null}
       </dl>
-      {canCancel && row.status === "BEKLEMEDE" ? (
-        <button type="button" className="xp-button" data-guide="mybar-iptal" onClick={onCancel}>
-          Talebi iptal et
-        </button>
+      {open && (canAct || canCancel) ? (
+        <div className="xp-mybar-actions">
+          {canAct && !row.seenAt ? (
+            <button type="button" className="xp-button" data-guide="mybar-onayla" disabled={busy} onClick={onApprove}>
+              Talebi onayla
+            </button>
+          ) : null}
+          {canAct ? (
+            <button type="button" className="xp-button" data-guide="mybar-tamamla" disabled={busy} onClick={onComplete}>
+              Tamamlandı olarak kapat
+            </button>
+          ) : null}
+          {canCancel ? (
+            <button type="button" className="xp-button" data-guide="mybar-iptal" disabled={busy} onClick={onCancel}>
+              Talebi iptal et
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </aside>
   );

@@ -207,7 +207,7 @@ describe("MybarList sıralaması", () => {
     expect(recent.map((r) => r.id)).toEqual(["cancel-new", "done-old"]);
   });
 
-  it("liste iki bölüm çizer; satıra dokununca ayrıntı açılır ve fiyat gösterilmez", async () => {
+  it("liste dört aşama sekmesi çizer; satıra dokununca ayrıntı açılır ve fiyat gösterilmez", async () => {
     getMybar.mockResolvedValue(ok(row({ id: "w1", roomNumber: "101", note: "x" })));
     render(
       <MybarList
@@ -216,13 +216,23 @@ describe("MybarList sıralaması", () => {
         initial={[
           row({ id: "w1", roomNumber: "101", note: "x" }),
           row({ id: "d1", roomNumber: "102", status: "TAMAMLANDI" }),
+          row({ id: "a1", roomNumber: "103", seenAt: new Date() }),
         ]}
       />,
     );
-    expect(screen.getByRole("heading", { name: /Bekleyen/ })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: /Son 7 gün/ })).toBeTruthy();
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(["Onay bekleyen (1)", "Onaylanan (1)", "Tamamlanan (1)", "İptal (0)"]);
+    expect(tabs[0]!.getAttribute("aria-selected")).toBe("true");
+    const shown = () => screen.getAllByTestId("mybar-row").map((r) => r.getAttribute("data-room"));
+    expect(shown()).toEqual(["101"]);
+    fireEvent.click(tabs[1]!);
+    expect(shown()).toEqual(["103"]);
+    fireEvent.click(tabs[2]!);
+    expect(shown()).toEqual(["102"]);
+    fireEvent.click(tabs[3]!);
+    expect(screen.queryAllByTestId("mybar-row")).toEqual([]);
+    fireEvent.click(tabs[0]!);
     const rows = screen.getAllByTestId("mybar-row");
-    expect(rows.map((r) => r.getAttribute("data-room"))).toEqual(["101", "102"]);
     fireEvent.click(within(rows[0]!).getByRole("button", { expanded: false }));
     await screen.findByTestId("mybar-detail");
     expect(document.body.textContent).not.toMatch(/₺|\$|€|fiyat/i);

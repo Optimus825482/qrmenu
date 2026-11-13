@@ -73,22 +73,35 @@ function taskParts(hotelIds: string[], now: Date) {
     GROUP BY t.hotel_id`);
 }
 
+/** Open MyBar requests per hotel: `seenAt: null` waits for approval, `{ not: null }` is approved and not completed. */
+async function openMybar(hotelIds: string[], now: Date, seenAt: null | { not: null }) {
+  const g = await prisma.mybarRequest.groupBy({
+    by: ["hotelId"],
+    where: { hotelId: { in: hotelIds }, status: "BEKLEMEDE", seenAt, businessDate: { lte: todayDay(now) } },
+    _count: { _all: true },
+  });
+  return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
+}
+
 export const RADAR_METRICS: RadarMetricDef[] = [
   {
     key: "mybarPending",
-    label: "Bekleyen MyBar",
+    label: "Onay bekleyen MyBar",
     moduleKey: "MINIBAR",
     screenCode: "MB-PERS",
     unit: "adet",
     warnAt: 1,
-    collect: async (hotelIds, now) => {
-      const g = await prisma.mybarRequest.groupBy({
-        by: ["hotelId"],
-        where: { hotelId: { in: hotelIds }, status: "BEKLEMEDE", businessDate: todayDay(now) },
-        _count: { _all: true },
-      });
-      return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
-    },
+    // Open requests stay counted until they are completed or cancelled, whatever day they were sent.
+    collect: (hotelIds, now) => openMybar(hotelIds, now, null),
+  },
+  {
+    key: "mybarApproved",
+    label: "Onaylanan MyBar (tamamlanmamış)",
+    moduleKey: "MINIBAR",
+    screenCode: "MB-PERS",
+    unit: "adet",
+    warnAt: 1,
+    collect: (hotelIds, now) => openMybar(hotelIds, now, { not: null }),
   },
   {
     key: "mybarStale",
@@ -104,7 +117,7 @@ export const RADAR_METRICS: RadarMetricDef[] = [
           where: {
             hotelId,
             status: "BEKLEMEDE",
-            businessDate: todayDay(now),
+            businessDate: { lte: todayDay(now) },
             createdAt: { lt: new Date(now.getTime() - minutes * MINUTE_MS) },
           },
         });

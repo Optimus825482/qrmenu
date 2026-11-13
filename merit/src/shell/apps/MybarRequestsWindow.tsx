@@ -4,7 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { isValidExplanation } from "@/modules/mybar/constants";
 import { exportMybarAction, mybarCapabilitiesAction } from "@/modules/mybar/server/actions/admin";
-import { cancelMybarAction, listMybarAction, mybarKpisAction } from "@/modules/mybar/server/actions/requests";
+import {
+  acknowledgeMybarAction,
+  cancelMybarAction,
+  completeMybarAction,
+  listMybarAction,
+  mybarKpisAction,
+} from "@/modules/mybar/server/actions/requests";
 import { FOCUS_PREFIX } from "../notificationTarget";
 import { type Column, DataGrid } from "../ui/DataGrid";
 import { useSse } from "../useSse";
@@ -40,7 +46,19 @@ const CANCEL_REASONS = [
   "Misafir talebi geri çekti",
 ] as const;
 
-type StatusFilter = "" | "BEKLEMEDE" | "TAMAMLANDI" | "IPTAL";
+/** "Durum" options: the two open stages, every open request, and the two closed states. */
+type StatusFilter = "" | "ONAY_BEKLIYOR" | "ONAYLANDI" | "BEKLEMEDE" | "TAMAMLANDI" | "IPTAL";
+const filterOf = (value: StatusFilter) =>
+  value === "ONAY_BEKLIYOR" || value === "ONAYLANDI"
+    ? { status: undefined, stage: value }
+    : { status: value || undefined, stage: undefined };
+const MISSING_REASONS = [
+  "Ürün otel deposunda kalmadı",
+  "Misafir ürünü istemekten vazgeçti",
+  "Oda rahatsız etmeyin durumunda kaldı",
+] as const;
+const MISSING_TEXT =
+  "Talepte henüz eklenmemiş ya da odadan alınmamış ürün var. Eksikle kapatmak için en az 3 kelimelik açıklama yazın.";
 
 function base64Blob(base64: string, mime: string): Blob {
   const bin = atob(base64);
@@ -51,8 +69,8 @@ function base64Blob(base64: string, mime: string): Blob {
 
 /**
  * MyBar Talepleri (minibar.mybar): management view of all guest requests of one hotel. Reads
- * through the list/KPI actions, refreshes on `mybar.*` events and cancels with a reason. Handing
- * over the products is a floor task, so there is no fulfil control here.
+ * through the list/KPI actions, refreshes on `mybar.*` events; a request is approved, closed as
+ * completed and cancelled (with a reason) here. Handing over products item by item is a floor task.
  */
 export function MybarRequestsWindow({
   hotelId,
@@ -69,7 +87,6 @@ export function MybarRequestsWindow({
   const [kpis, setKpis] = useState<MybarKpis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatusFilter] = useState<StatusFilter>("");
-  const [unseenOnly, setUnseenOnly] = useState(false);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [q, setQ] = useState("");
@@ -78,6 +95,10 @@ export function MybarRequestsWindow({
   const [selectedId, setSelectedId] = useState<string | undefined>(
     initialPanel?.startsWith(FOCUS_PREFIX) ? initialPanel.slice(FOCUS_PREFIX.length) : undefined,
   );
+  const [canAct, setCanAct] = useState(false);
+  const [acting, setActing] = useState(false);
+  const [missingTarget, setMissingTarget] = useState<Pick<MybarRowView, "id" | "roomNumber"> | null>(null);
+  const [missingMessage, setMissingMessage] = useState<string | undefined>(undefined);
   const [canCancel, setCanCancel] = useState(false);
   const [canExport, setCanExport] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Pick<MybarRowView, "id" | "roomNumber"> | null>(null);
@@ -90,15 +111,14 @@ export function MybarRequestsWindow({
     () => ({
       view: "management" as const,
       hotelId,
-      status: status || undefined,
-      unseenOnly: unseenOnly || undefined,
+      ...filterOf(status),
       from: from || undefined,
       to: to || undefined,
       q: q || undefined,
       page,
       pageSize,
     }),
-    [hotelId, status, unseenOnly, from, to, q, page, pageSize],
+    [hotelId, status, from, to, q, page, pageSize],
   );
 
   const load = useCallback(async () => {
@@ -143,6 +163,7 @@ export function MybarRequestsWindow({
     void mybarCapabilitiesAction(hotelId)
       .then((result) => {
         if (!live || !result.ok) return;
+        setCanAct(result.data.canAct);
         setCanCancel(result.data.canCancel);
         setCanExport(result.data.canExport);
       })
@@ -170,14 +191,14 @@ export function MybarRequestsWindow({
     () => [
       { key: "roomNumber", title: "Oda", width: 70 },
       { key: "floorName", title: "Kat", width: 100 },
-      { key: "status", title: "Durum", width: 100, render: (row) => <StatusBadge status={row.status} /> },
+      { key: "status", title: "Durum", width: 110, render: (row) => <StatusBadge row={row} /> },
       { key: "removals", title: "Çıkarılacak → alınan", width: 130, render: (row) => removalsSummary(row) },
       { key: "items", title: "İstenen → eklenen", width: 120, render: (row) => itemsSummary(row) },
       {
         key: "seenAt",
-        title: "Görüldü",
+        title: "Onay",
         width: 150,
-        render: (row) => (row.seenAt ? `${row.seenByName ?? "—"} · ${formatWhen(row.seenAt)}` : "Görülmedi"),
+        render: (row) => (row.seenAt ? `${row.seenByName ?? "—"} · ${formatWhen(row.seenAt)}` : "Onaylanmadı"),
       },
       { key: "createdAt", title: "Oluşturulma", width: 130, render: (row) => formatWhen(row.createdAt) },
       {
@@ -210,14 +231,52 @@ export function MybarRequestsWindow({
     await loadRef.current();
   };
 
+  const approve = async (id: string) => {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await acknowledgeMybarAction(id);
+      if (!result.ok) setError(result.error.message);
+      else await loadRef.current();
+    } catch {
+      setError("Talep onaylanamadı");
+    } finally {
+      setActing(false);
+    }
+  };
+
+  /** Closes the request; with open lines the server refuses, and the reason dialog asks for the explanation. */
+  const completeRequest = async (target: Pick<MybarRowView, "id" | "roomNumber">, closeNote?: string) => {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await completeMybarAction(target.id, closeNote ? { confirmMissing: true, closeNote } : {});
+      if (result.ok) {
+        setMissingTarget(null);
+        setMissingMessage(undefined);
+        await loadRef.current();
+      } else if (result.error.fieldErrors?.missing && !closeNote) {
+        setMissingMessage(`${MISSING_TEXT} Eksik: ${result.error.fieldErrors.missing.join(", ")}.`);
+        setMissingTarget(target);
+      } else if (closeNote) {
+        setMissingMessage(result.error.message);
+      } else {
+        setError(result.error.message);
+      }
+    } catch {
+      setError("Talep kapatılamadı");
+    } finally {
+      setActing(false);
+    }
+  };
+
   const exportFile = async (format: "csv" | "xlsx") => {
     if (exporting) return;
     setExporting(true);
     try {
       const result = await exportMybarAction({
         hotelId,
-        status: status || undefined,
-        unseenOnly: unseenOnly || undefined,
+        ...filterOf(status),
         from: from || undefined,
         to: to || undefined,
         q: q || undefined,
@@ -253,18 +312,12 @@ export function MybarRequestsWindow({
             onChange={(event) => patch(setStatusFilter)(event.target.value as StatusFilter)}
           >
             <option value="">Tümü</option>
-            <option value="BEKLEMEDE">Beklemede</option>
-            <option value="TAMAMLANDI">Tamamlandı</option>
+            <option value="ONAY_BEKLIYOR">Onay bekleyen</option>
+            <option value="ONAYLANDI">Onaylanan (tamamlanmamış)</option>
+            <option value="BEKLEMEDE">Açık taleplerin tümü</option>
+            <option value="TAMAMLANDI">Tamamlanan</option>
             <option value="IPTAL">İptal</option>
           </select>
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={unseenOnly}
-            onChange={(event) => patch(setUnseenOnly)(event.target.checked)}
-          />
-          Yalnız görülmemiş
         </label>
         <label>
           Başlangıç
@@ -332,7 +385,11 @@ export function MybarRequestsWindow({
         {selected ? (
           <MybarRequestDetail
             row={selected}
+            canAct={canAct}
             canCancel={canCancel}
+            busy={acting}
+            onApprove={() => void approve(selected.id)}
+            onComplete={() => void completeRequest({ id: selected.id, roomNumber: selected.roomNumber })}
             onCancel={() => {
               setCancelMessage(undefined);
               setCancelTarget({ id: selected.id, roomNumber: selected.roomNumber });
@@ -352,6 +409,21 @@ export function MybarRequestsWindow({
         onCancel={() => {
           setCancelTarget(null);
           setCancelMessage(undefined);
+        }}
+      />
+      <ReasonDialog
+        open={missingTarget !== null}
+        title={missingTarget ? `Oda ${missingTarget.roomNumber} talebi eksikle kapatılacak` : "Eksikle kapat"}
+        message={missingMessage ?? MISSING_TEXT}
+        reasons={MISSING_REASONS}
+        minLength={10}
+        confirmLabel="Eksikle kapat"
+        onConfirm={async (note) => {
+          if (missingTarget) await completeRequest(missingTarget, note);
+        }}
+        onCancel={() => {
+          setMissingTarget(null);
+          setMissingMessage(undefined);
         }}
       />
     </div>

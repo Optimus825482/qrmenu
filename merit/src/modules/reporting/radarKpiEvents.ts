@@ -10,7 +10,7 @@ export const KPI_DEBOUNCE_MS = 1_000;
 /** Radar events that cannot move a counter (scans, heartbeats). */
 const NO_EFFECT = new Set(["scan.table", "scan.room", "presence.tick"]);
 
-/** Stock-request and MyBar-fulfil events are not radar events but move `stockRequestsOpen` / `mybarPending`. */
+/** Stock-request and MyBar-fulfil events are not radar events but move `stockRequestsOpen` / `mybarPending` / `mybarApproved`. */
 const EXTRA = ["stockrequest.created", "stockrequest.updated", "mybar.fulfilled"];
 
 export const KPI_EVENT_TYPES: readonly string[] = [

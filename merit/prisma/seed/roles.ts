@@ -210,7 +210,8 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
     },
     // Otel deposu (12 Kas 2026): merkez depo teslimini otellere dağıtır, başlangıç stoğunu düzeltir (receipts.ts).
     // Tanımlar (12 Kas 2026): ürün grubu, ürün, setup ve setup içeriği ekler, düzenler, pasife alır (silme R-SYS'te).
-    grant: { "MB-DOL": ["O", "D"], "MB-ZIM": ["O", "D"], "MB-TAN": ["O", "D"] },
+    // MyBar (13 Kas 2026): talebi onaylar ("Gördüm") ve tamamlar (MB-PERS D); iptal (A) yok.
+    grant: { "MB-DOL": ["O", "D"], "MB-ZIM": ["O", "D"], "MB-TAN": ["O", "D"], "MB-PERS": ["D"] },
   },
   // QR Menü Yöneticisi (varsayım: ürün sahibi ayrıntı vermedi): menü ağacı / çeviri / masa QR'ları (QM-MEN) ve
   // outlet tasarımı (QM-TEM) V,O,D; menü raporları V,R; garson çağrıları (QM-CAG) ve QR_ORDER yok.

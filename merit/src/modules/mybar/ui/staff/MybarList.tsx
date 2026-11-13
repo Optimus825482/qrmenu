@@ -6,7 +6,8 @@ import type { MeritEvent } from "@/lib/realtime-events";
 import { useSse } from "@/shell/useSse";
 import { listMybarAction } from "../../server/actions/requests";
 import type { MybarRow } from "../../server/requests";
-import { itemsSummary, formatWait, orderRows, rowStatusLabel, swapSummary } from "./format";
+import type { MybarStage } from "../../server/requests";
+import { itemsSummary, formatWait, rowsOfStage, rowStatusLabel, STAGE_TABS, swapSummary } from "./format";
 import { MybarWorkbench } from "./MybarWorkbench";
 
 const LIVE = [
@@ -35,6 +36,16 @@ function useNow(): number {
   }, [now]);
   return now;
 }
+
+const clock = (d: Date | string) =>
+  new Date(d).toLocaleString("tr-TR", {
+    timeZone: "Europe/Nicosia",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+const by = (name: string | null) => (name ? ` (${name})` : "");
 
 function RequestRow({
   row,
@@ -83,6 +94,12 @@ function RequestRow({
             {waiting ? ` · ${formatWait(new Date(row.createdAt).getTime(), now)} bekliyor` : ""}
             {row.note ? " · Not var" : ""}
           </span>
+          <span data-testid="stage-times" className="block text-xs text-muted">
+            Talep {clock(row.createdAt)}
+            {row.seenAt ? ` · Onay ${clock(row.seenAt)}${by(row.seenByName)}` : ""}
+            {row.completedAt ? ` · Tamamlandı ${clock(row.completedAt)}${by(row.completedByName)}` : ""}
+            {row.cancelledAt ? ` · İptal ${clock(row.cancelledAt)}${by(row.cancelledByName)}` : ""}
+          </span>
         </span>
         <span
           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${
@@ -102,11 +119,15 @@ function RequestRow({
   );
 }
 
-/** Requests of the session hotel: waiting ones first (unseen highlighted), then the last 7 days. Live over SSE. */
+/**
+ * Requests of the session hotel in four stage tabs: waiting for approval, approved (still to be completed),
+ * completed and cancelled (the closed ones cover the last 7 days). Live over SSE.
+ */
 export function MybarList({ initial, hotelId, canCancel }: Props) {
   const [rows, setRows] = useState<MybarRow[]>(initial);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [picked, setPicked] = useState<MybarStage | null>(null);
   const now = useNow();
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const alive = useRef(true);
@@ -136,47 +157,68 @@ export function MybarList({ initial, hotelId, canCancel }: Props) {
     timer.current = setTimeout(() => void reload(), RELOAD_DEBOUNCE_MS);
   }, LIVE);
 
-  const { waiting, recent } = orderRows(rows);
-  const renderRows = (list: MybarRow[]) =>
-    list.map((r) => (
-      <RequestRow
-        key={r.id}
-        row={r}
-        now={now}
-        open={openId === r.id}
-        canCancel={canCancel}
-        onToggle={() => setOpenId((cur) => (cur === r.id ? null : r.id))}
-        onChanged={() => void reload()}
-      />
-    ));
+  const byStage = STAGE_TABS.map((tab) => ({ ...tab, rows: rowsOfStage(rows, tab.stage) }));
+  // Until a tab is picked the page opens on the first open stage that has work: approval first, then approved.
+  const firstWithWork = byStage.find((t) => t.rows.length > 0 && (t.stage === "ONAY_BEKLIYOR" || t.stage === "ONAYLANDI"));
+  const stage = picked ?? firstWithWork?.stage ?? "ONAY_BEKLIYOR";
+  const current = byStage.find((t) => t.stage === stage) ?? byStage[0];
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-4" data-testid="mybar-list">
+    <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-4" data-testid="mybar-list">
       {error ? (
         <p role="alert" className="rounded-xl border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
-      <section aria-labelledby="mybar-waiting">
-        <h2 id="mybar-waiting" className="mb-2 text-sm font-bold uppercase tracking-wide text-text">
-          Bekleyen <span className="tabular-nums text-muted">({waiting.length})</span>
-        </h2>
-        {waiting.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted">Bekleyen MyBar talebi yok.</p>
-        ) : (
-          <ul className="space-y-3">{renderRows(waiting)}</ul>
-        )}
-      </section>
+      <div role="tablist" aria-label="Talep aşaması" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {byStage.map((tab) => {
+          const selected = tab.stage === stage;
+          const urgent = tab.stage === "ONAY_BEKLIYOR" && tab.rows.length > 0;
+          const tone = selected
+            ? "border-accent bg-accent text-white"
+            : urgent
+              ? "border-2 border-danger bg-surface text-text"
+              : "border-border bg-surface text-text";
+          return (
+            <button
+              key={tab.stage}
+              type="button"
+              role="tab"
+              id={`mybar-tab-${tab.stage}`}
+              aria-selected={selected}
+              aria-controls="mybar-stage-panel"
+              data-testid={`mybar-tab-${tab.stage}`}
+              onClick={() => {
+                setPicked(tab.stage);
+                setOpenId(null);
+              }}
+              style={{ minHeight: "var(--tap-action)" }}
+              className={`rounded-xl border px-3 text-sm font-bold ${tone}`}
+            >
+              {tab.label} <span className="tabular-nums">({tab.rows.length})</span>
+            </button>
+          );
+        })}
+      </div>
 
-      <section aria-labelledby="mybar-recent">
-        <h2 id="mybar-recent" className="mb-2 text-sm font-bold uppercase tracking-wide text-text">
-          Son 7 gün <span className="tabular-nums text-muted">({recent.length})</span>
-        </h2>
-        {recent.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted">Kayıt yok.</p>
+      <section id="mybar-stage-panel" role="tabpanel" aria-labelledby={`mybar-tab-${current.stage}`}>
+        {current.rows.length === 0 ? (
+          <p className="rounded-2xl border border-border bg-surface p-4 text-sm text-muted">{current.empty}</p>
         ) : (
-          <ul className="space-y-3">{renderRows(recent)}</ul>
+          <ul className="space-y-3">
+            {current.rows.map((r) => (
+              <RequestRow
+                key={r.id}
+                row={r}
+                now={now}
+                open={openId === r.id}
+                canCancel={canCancel}
+                onToggle={() => setOpenId((cur) => (cur === r.id ? null : r.id))}
+                onChanged={() => void reload()}
+              />
+            ))}
+          </ul>
         )}
       </section>
     </div>

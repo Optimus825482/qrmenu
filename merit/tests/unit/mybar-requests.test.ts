@@ -149,6 +149,19 @@ describe("list and scope", () => {
     expect(byDate.total).toBe(120);
   });
 
+  it("stage filter separates approval-waiting, approved, completed and cancelled requests", async () => {
+    const waiting = await makeRequest(fxRoyal);
+    const approved = await makeRequest(fxRoyal, { seen: true });
+    const done = await makeRequest(fxRoyal, { status: "TAMAMLANDI", seen: true, completedAt: new Date() });
+    const cancelled = await makeRequest(fxRoyal, { status: "IPTAL", cancelledAt: new Date() });
+    const ids = async (stage: "ONAY_BEKLIYOR" | "ONAYLANDI" | "TAMAMLANDI" | "IPTAL") =>
+      (await list(dep1, { view: "management", stage })).items.map((r) => r.id);
+    expect(await ids("ONAY_BEKLIYOR")).toEqual([waiting.id]);
+    expect(await ids("ONAYLANDI")).toEqual([approved.id]);
+    expect(await ids("TAMAMLANDI")).toEqual([done.id]);
+    expect(await ids("IPTAL")).toEqual([cancelled.id]);
+  });
+
   it("hks1 can list (V) but cannot acknowledge (no D)", async () => {
     const req = await makeRequest(fxRoyal);
     const res = await list(hks1);

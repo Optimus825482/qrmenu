@@ -206,3 +206,13 @@
     border-left: 0;
   }
 }
+
+.xp-mybar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.xp-mybar-badge[data-stage="ONAY_BEKLIYOR"] {
+  color: #a11212;
+}

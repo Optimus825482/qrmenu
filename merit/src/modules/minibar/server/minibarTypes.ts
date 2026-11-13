@@ -42,6 +42,8 @@ export interface RoomCardData {
   mybarDetails?: {
     id: string;
     requestedAt: string;
+    /** When the request was approved ("Gördüm"); null while it still waits for approval. */
+    approvedAt?: string | null;
     items: { productName: string; qty: number }[];
     notes?: string | null;
   } | null;

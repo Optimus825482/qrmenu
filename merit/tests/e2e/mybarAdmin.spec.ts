@@ -88,7 +88,7 @@ test("sys: Başlat menüsünden açar, durumla süzer, nedenle iptal eder (denet
   await expect(win(page)).toBeVisible();
   const grid = win(page).getByRole("grid");
   await expect(grid.getByRole("row")).toHaveCount(4); // header + 3
-  await expect(win(page).getByLabel("Özet")).toContainText("Bekleyen");
+  await expect(win(page).getByLabel("Özet")).toContainText("Onay bekleyen");
   await expect(grid).toContainText("101");
   await expect(grid).toContainText("Tamamlandı");
 
@@ -143,7 +143,7 @@ test("sys: Başlat menüsünden açar, durumla süzer, nedenle iptal eder (denet
   await expect(grid.getByRole("row")).toHaveCount(4);
   await guestRequest(page, "104");
   await expect(grid.getByRole("row")).toHaveCount(5, { timeout: 10_000 });
-  await expect(win(page).getByLabel("Özet")).toContainText("Görülmemiş");
+  await expect(win(page).getByLabel("Özet")).toContainText("Onaylanan");
   expect(errors.filter((e) => !/Failed to load resource/.test(e))).toEqual([]);
 });
 

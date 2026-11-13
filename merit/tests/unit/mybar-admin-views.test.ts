@@ -47,10 +47,10 @@ const decode = (base64: string) => Buffer.from(base64, "base64").toString("utf8"
 
 describe("yetenekler", () => {
   it("iptal ve dışa aktarma yalnız A hakkı olanda; R-KAT ve R-HKS yalnız izler; R-GAR göremez", async () => {
-    expect(await capabilities(dep)).toEqual({ canCancel: true, canExport: true });
-    expect(await capabilities(otm)).toEqual({ canCancel: true, canExport: true });
-    expect(await capabilities(kat)).toEqual({ canCancel: false, canExport: false });
-    expect(await capabilities(hks)).toEqual({ canCancel: false, canExport: false });
+    expect(await capabilities(dep)).toEqual({ canAct: true, canCancel: true, canExport: true });
+    expect(await capabilities(otm)).toEqual({ canAct: true, canCancel: true, canExport: true });
+    expect(await capabilities(kat)).toEqual({ canAct: true, canCancel: false, canExport: false });
+    expect(await capabilities(hks)).toEqual({ canAct: false, canCancel: false, canExport: false });
     await expect(capabilities(gar)).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(await visibleScreens(gar)).not.toContain("MB-PERS");
     expect(await visibleScreens(dep)).toContain("MB-PERS");

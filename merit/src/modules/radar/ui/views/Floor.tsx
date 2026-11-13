@@ -117,7 +117,7 @@ function RoomDetail({
         <p className="rd-muted">Bugün kontrol edilmedi.</p>
       )}
       {room.mybar ? (
-        <p>MyBar isteği {room.mybar.seen ? "görüldü" : "bekliyor"} · {clock(room.mybar.since)}</p>
+        <p>MyBar talebi {room.mybar.seen ? "onaylandı, tamamlanmayı bekliyor" : "onay bekliyor"} · {clock(room.mybar.since)}</p>
       ) : null}
     </DetailBubble>
   );

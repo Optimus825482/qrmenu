@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
-import { mybarFilterSchema, mybarFilterWhere } from "./requests";
+import { mybarFilterSchema, mybarFilterWhere, mybarStage } from "./requests";
 
 /**
  * Read-only aggregates of the management window "MyBar Talepleri" (spec §6.6): which actions the
@@ -24,13 +24,14 @@ export const mybarExportSchema = mybarFilterSchema.extend({
 });
 export type MybarExportInput = z.input<typeof mybarExportSchema>;
 
-export type MybarCapabilities = { canCancel: boolean; canExport: boolean };
+/** `canAct`: approve ("Gördüm"), fulfil and close a request (MB-PERS D). */
+export type MybarCapabilities = { canAct: boolean; canCancel: boolean; canExport: boolean };
 
 export async function capabilities(ctx: Ctx, hotelId?: string): Promise<MybarCapabilities> {
   const effective = hotelId ?? ctx.session.hotelId;
   await assertCan(ctx, SCREEN, "V", effective);
-  const canManage = await can(ctx, SCREEN, "A", effective);
-  return { canCancel: canManage, canExport: canManage };
+  const [canAct, canManage] = await Promise.all([can(ctx, SCREEN, "D", effective), can(ctx, SCREEN, "A", effective)]);
+  return { canAct, canCancel: canManage, canExport: canManage };
 }
 
 export const EXPORT_HEADER = [
@@ -43,14 +44,14 @@ export const EXPORT_HEADER = [
   "Misafir notu",
   "Not (Türkçe)",
   "Oluşturulma",
-  "Görüldü (kişi)",
-  "Görüldü (zaman)",
+  "Onaylayan",
+  "Onay zamanı",
   "Kapanış (kişi)",
   "Kapanış (zaman)",
   "Kapanış / iptal notu",
 ] as const;
 
-const STATUS_TR = { BEKLEMEDE: "Beklemede", TAMAMLANDI: "Tamamlandı", IPTAL: "İptal" } as const;
+const STAGE_TR = { ONAY_BEKLIYOR: "Onay bekliyor", ONAYLANDI: "Onaylandı", TAMAMLANDI: "Tamamlandı", IPTAL: "İptal" } as const;
 
 function when(date: Date | null): string {
   if (!date) return "";
@@ -88,7 +89,7 @@ export function exportTable(rows: ExportRow[]): string[][] {
   const body = rows.map((r) => [
     r.room.number,
     r.room.floor.name,
-    STATUS_TR[r.status],
+    STAGE_TR[mybarStage(r)],
     r.language,
     r.items.map((it) => `${it.product.name} ${it.requestedQty}/${it.deliveredQty}`).join("; "),
     r.removals.map((it) => `${it.product.name} ${it.requestedQty}/${it.removedQty}`).join("; "),
@@ -161,7 +162,7 @@ export async function exportRequests(ctx: Ctx, rawInput: MybarExportInput = {}):
       after: {
         format: input.format,
         rows: rows.length,
-        filters: { status: input.status, from: input.from, to: input.to, q: input.q, unseenOnly: input.unseenOnly },
+        filters: { status: input.status, stage: input.stage, from: input.from, to: input.to, q: input.q, unseenOnly: input.unseenOnly },
       },
     });
   });

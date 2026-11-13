@@ -16,12 +16,16 @@ vi.mock("@/shell/useSse", () => ({
 const listMock = vi.hoisted(() => vi.fn());
 const kpisMock = vi.hoisted(() => vi.fn());
 const cancelMock = vi.hoisted(() => vi.fn());
+const ackMock = vi.hoisted(() => vi.fn());
+const completeMock = vi.hoisted(() => vi.fn());
 const capsMock = vi.hoisted(() => vi.fn());
 const exportMock = vi.hoisted(() => vi.fn());
 vi.mock("@/modules/mybar/server/actions/requests", () => ({
   listMybarAction: listMock,
   mybarKpisAction: kpisMock,
   cancelMybarAction: cancelMock,
+  acknowledgeMybarAction: ackMock,
+  completeMybarAction: completeMock,
 }));
 vi.mock("@/modules/mybar/server/actions/admin", () => ({
   mybarCapabilitiesAction: capsMock,
@@ -82,7 +86,9 @@ beforeEach(() => {
     data: { pending: 7, unseen: 3, completedToday: 11, cancelledToday: 2 },
   });
   cancelMock.mockReset().mockResolvedValue({ ok: true, data: undefined });
-  capsMock.mockReset().mockResolvedValue({ ok: true, data: { canCancel: true, canExport: true } });
+  ackMock.mockReset().mockResolvedValue({ ok: true, data: { firstSeen: true, seenAt: NOW } });
+  completeMock.mockReset().mockResolvedValue({ ok: true, data: { closedWithMissing: false } });
+  capsMock.mockReset().mockResolvedValue({ ok: true, data: { canAct: true, canCancel: true, canExport: true } });
   exportMock.mockReset();
 });
 afterEach(() => {
@@ -99,8 +105,9 @@ describe("MyBar Talepleri penceresi", () => {
   it("KPI sayıları mybarKpisAction yanıtından gelir", async () => {
     await open();
     const strip = screen.getByLabelText("Özet");
-    expect(within(strip).getByText("7")).toBeTruthy();
+    // 7 open requests, 3 of them not approved yet: "Onay bekleyen" 3, "Onaylanan (tamamlanmamış)" 4.
     expect(within(strip).getByText("3")).toBeTruthy();
+    expect(within(strip).getByText("4")).toBeTruthy();
     expect(within(strip).getByText("11")).toBeTruthy();
     expect(within(strip).getByText("2")).toBeTruthy();
     expect(kpisMock).toHaveBeenCalledWith("h1");
@@ -118,13 +125,56 @@ describe("MyBar Talepleri penceresi", () => {
     await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ pageSize: 50, page: 1 })));
   });
 
-  it("canCancel=false iken iptal düğmesi DOM'da yoktur; karşılama düğmesi hiçbir durumda yoktur", async () => {
-    capsMock.mockResolvedValue({ ok: true, data: { canCancel: false, canExport: false } });
+  it("aşama süzgeci: Onay bekleyen ve Onaylanan listeyi stage ile çağırır; rozet aşamayı yazar", async () => {
+    listMock.mockResolvedValue(page([row("1"), row("2", { seenAt: NOW, seenByName: "Ayşe" })]));
+    await open();
+    const grid = screen.getByRole("grid");
+    expect(within(grid).getByText("Onay bekliyor")).toBeTruthy();
+    expect(within(grid).getByText("Onaylandı")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Durum"), { target: { value: "ONAYLANDI" } });
+    await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ stage: "ONAYLANDI", status: undefined })));
+    fireEvent.change(screen.getByLabelText("Durum"), { target: { value: "ONAY_BEKLIYOR" } });
+    await waitFor(() => expect(listMock).toHaveBeenLastCalledWith(expect.objectContaining({ stage: "ONAY_BEKLIYOR" })));
+  });
+
+  it("Talebi onayla acknowledgeMybarAction çağırır ve listeyi yeniler; onaylı talepte düğme yoktur", async () => {
+    await open();
+    fireEvent.click(screen.getByText("101"));
+    const before = listMock.mock.calls.length;
+    listMock.mockResolvedValue(page([row("1", { seenAt: NOW, seenByName: "Ayşe" })]));
+    fireEvent.click(await screen.findByRole("button", { name: "Talebi onayla" }));
+    await waitFor(() => expect(ackMock).toHaveBeenCalledWith("1"));
+    await waitFor(() => expect(listMock.mock.calls.length).toBeGreaterThan(before));
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Talebi onayla" })).toBeNull());
+    expect(screen.getByRole("button", { name: "Tamamlandı olarak kapat" })).toBeTruthy();
+  });
+
+  it("Tamamlandı olarak kapat: eksik varsa açıklama ister, açıklamayla confirmMissing gönderir", async () => {
+    completeMock.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "VALIDATION", message: "eksik", fieldErrors: { missing: ["Kola (1)"] } },
+    });
+    await open();
+    fireEvent.click(screen.getByText("101"));
+    fireEvent.click(await screen.findByRole("button", { name: "Tamamlandı olarak kapat" }));
+    await waitFor(() => expect(completeMock).toHaveBeenCalledWith("1", {}));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog.textContent).toContain("Kola (1)");
+    fireEvent.change(within(dialog).getByLabelText("Diğer sebep"), { target: { value: "ürün depoda kalmadı" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Eksikle kapat" }));
+    await waitFor(() =>
+      expect(completeMock).toHaveBeenLastCalledWith("1", { confirmMissing: true, closeNote: "ürün depoda kalmadı" }),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("canAct ve canCancel yokken onay, kapatma ve iptal düğmeleri DOM'da yoktur", async () => {
+    capsMock.mockResolvedValue({ ok: true, data: { canAct: false, canCancel: false, canExport: false } });
     await open();
     fireEvent.click(screen.getByText("101"));
     await screen.findByLabelText("Talep ayrıntısı");
     expect(screen.queryByRole("button", { name: /iptal et/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /karşıla|ekle/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /onayla|kapat|karşıla|ekle/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /CSV/ })).toBeNull();
   });
 

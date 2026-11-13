@@ -63,6 +63,7 @@ interface FloorResponse {
     completed: number;
     dnd: number;
     mybar: number;
+    mybarUnapproved?: number;
   };
   settings?: {
     dndRecheckMinutes: number;
@@ -382,7 +383,10 @@ export default function KatDolulukDetailPage() {
                   ["arrival", `Giriş (${data.stats.arrival})`],
                   ["departure", `Çıkış (${data.stats.departure})`],
                   ["dnd", `DND (${data.stats.dnd})`],
-                  ["mybar", `MyBar Talebi (${data.stats.mybar})`],
+                  [
+                    "mybar",
+                    `MyBar Talebi (${data.stats.mybar}${data.stats.mybarUnapproved ? ` · ${data.stats.mybarUnapproved} onay bekliyor` : ""})`,
+                  ],
                 ] as [FilterKey, string][]
               ).map(([key, label]) => (
                 <button
@@ -420,6 +424,8 @@ export default function KatDolulukDetailPage() {
                   const isPriorityArrival = Boolean(arrivalInspection && (arrivalInspection.isUrgent || arrivalInspection.isOverdue));
                   const isPriorityDnd = Boolean(dndStatus && dndStatus.isDue);
                   const isPriorityMybar = Boolean(room.hasMybarRequest);
+                  // Approved ("Gördüm") but not completed yet: still marked, in the calmer warning tone.
+                  const mybarApproved = Boolean(room.mybarDetails?.approvedAt);
                   const isPriority = isPriorityArrival || isPriorityDnd || isPriorityMybar;
 
                   // Kontrol edilen, kontrol bekleyen ve DND odalar için belirgin renk tonları
@@ -486,9 +492,15 @@ export default function KatDolulukDetailPage() {
                                 DND Kontrolü!
                               </span>
                             ) : isPriorityMybar ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-danger text-white px-2.5 py-0.5 text-xs font-bold shadow-sm">
+                              <span
+                                data-testid="mybar-stage-badge"
+                                data-approved={mybarApproved ? "true" : "false"}
+                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold shadow-sm ${
+                                  mybarApproved ? "border border-warn bg-warn/20 text-text" : "bg-danger text-white"
+                                }`}
+                              >
                                 <Icon name="bell" size={12} />
-                                MyBar Talebi
+                                {mybarApproved ? "MyBar: Onaylandı" : "MyBar: Onay bekliyor"}
                               </span>
                             ) : null}
 
@@ -579,8 +591,12 @@ export default function KatDolulukDetailPage() {
                         </div>
 
                         {room.hasMybarRequest ? (
-                          <span className="rounded-md bg-danger px-2 py-0.5 text-xs font-bold text-white">
-                            MyBar!
+                          <span
+                            className={`rounded-md px-2 py-0.5 text-xs font-bold ${
+                              mybarApproved ? "border border-warn bg-warn/20 text-text" : "bg-danger text-white"
+                            }`}
+                          >
+                            {mybarApproved ? "MyBar ✓" : "MyBar!"}
                           </span>
                         ) : data?.settings?.requireQrForControl ? (
                           // QR zorunluluğu aktifse Kontrol linki tamamen kaldırıldı!

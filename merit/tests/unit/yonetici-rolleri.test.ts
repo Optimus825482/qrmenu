@@ -59,7 +59,9 @@ describe("seed matrisi (saf)", () => {
     const minibar = SCREENS.filter((s) => s.moduleKey === "MINIBAR").map((s) => s.code);
     const depKat = minibar.filter((s) => acts("R-DEP", s) !== "" || acts("R-KAT", s) !== "");
     for (const s of depKat) expect(acts("R-MTY", s), s).toContain("V");
-    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM", "MB-TAN"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM", "MB-TAN", "MB-PERS"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    // MyBar (13 Kas 2026, migration 20261113140000): talebi onaylar ve tamamlar; iptal (A) yok.
+    expect([...acts("R-MTY", "MB-PERS")].sort().join("")).toBe("DV");
     expect(acts("R-MTY", "MB-ZIM")).toBe("VOD"); // otel deposu: merkez depo tedariki ve başlangıç stoğu (12 Kas 2026)
     // Tanımlar (12 Kas 2026, migration 20261112120000): ürün grubu, ürün, setup ekler ve düzenler; onay ve rapor yok.
     expect(acts("R-MTY", "MB-TAN")).toBe("VOD");
@@ -288,6 +290,8 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
       ...limitsOf("20261112030000_otel_deposu_stok_takibi"),
       ...limitsOf("20261112090000_mty_radar"),
       ...limitsOf("20261112120000_mty_tanim_ve_onaysiz_duzeltme"),
+      // MB-PERS D (20261113140000): R-MTY approves and completes MyBar requests.
+      ...limitsOf("20261113140000_mty_mybar_onay"),
     ];
     expect(later.length).toBeGreaterThanOrEqual(3);
     for (const statement of later) await testDb.$executeRawUnsafe(statement);

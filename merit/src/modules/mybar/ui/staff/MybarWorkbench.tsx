@@ -89,6 +89,7 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
       notify.error(res ? res.error.message : "Onaylanamadı.");
       return;
     }
+    notify.success(`Oda ${row.roomNumber} talebi onaylandı.`);
     await changed();
   };
 
@@ -126,12 +127,13 @@ export function MybarWorkbench({ requestId, canCancel, onChanged }: Props) {
             <button
               type="button"
               data-mutates=""
+              data-testid="approve-request"
               disabled={busy}
               onClick={() => void acknowledge()}
-              style={{ minHeight: "var(--tap-action)" }}
-              className="w-full rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text disabled:opacity-50"
+              style={{ minHeight: "var(--tap-primary)" }}
+              className="w-full rounded-xl bg-accent px-4 text-base font-bold text-white disabled:opacity-50"
             >
-              Gördüm
+              Onayla
             </button>
           ) : null}
           <FulfillPanel

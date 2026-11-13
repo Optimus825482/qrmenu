@@ -91,6 +91,8 @@ export type FloorView = {
     completed: number;
     dnd: number;
     mybar: number;
+    /** Rooms whose open request nobody has approved yet (the rest of `mybar` is approved, waiting to be completed). */
+    mybarUnapproved: number;
   };
   settings?: {
     dndRecheckMinutes: number;
@@ -162,7 +164,8 @@ export async function katPlan(ctx: Ctx, day: string = businessDate(), now: Date 
       select: { roomId: true, arrivalDate: true, arrivalTime: true, departureDate: true, departureTime: true },
     }),
     prisma.mybarRequest.findMany({
-      where: { hotelId, businessDate: date, status: "BEKLEMEDE" },
+      // Open until completed or cancelled: a request of an earlier day that is still waiting stays on the map.
+      where: { hotelId, businessDate: { lte: date }, status: "BEKLEMEDE" },
       select: { roomId: true },
     }),
     taskSummary(prisma, hotelId, day),
@@ -283,10 +286,12 @@ export async function floorOccupancy(
           number: true,
           roomType: { select: { id: true, name: true } },
           mybarRequests: {
-            where: { businessDate: date, status: "BEKLEMEDE" },
+            where: { businessDate: { lte: date }, status: "BEKLEMEDE" },
+            orderBy: { createdAt: "asc" },
             select: {
               id: true,
               createdAt: true,
+              seenAt: true,
               note: true,
               items: { select: { requestedQty: true, product: { select: { name: true } } } },
             },
@@ -373,6 +378,7 @@ export async function floorOccupancy(
         ? {
             id: mybar.id,
             requestedAt: mybar.createdAt.toISOString(),
+            approvedAt: mybar.seenAt?.toISOString() ?? null,
             items: mybar.items.map((i) => ({ productName: i.product.name, qty: i.requestedQty })),
             notes: mybar.note,
           }
@@ -405,6 +411,7 @@ export async function floorOccupancy(
       completed: cards.filter((c) => c.checkStatus === "completed").length,
       dnd: cards.filter((c) => c.checkStatus === "dnd").length,
       mybar: cards.filter((c) => c.hasMybarRequest).length,
+      mybarUnapproved: cards.filter((c) => c.mybarDetails && !c.mybarDetails.approvedAt).length,
     },
     settings: {
       dndRecheckMinutes: settings["dnd.recheckMinutes"],

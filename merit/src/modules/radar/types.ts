@@ -117,6 +117,7 @@ export type RadarAlert = {
 
 export type RadarMetricKey =
   | "mybarPending"
+  | "mybarApproved"
   | "mybarStale"
   | "dndActive"
   | "tasksOpen"
