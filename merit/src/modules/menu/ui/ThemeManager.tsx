@@ -90,8 +90,13 @@ function Swatches({ row }: { row: ThemeRow }) {
   );
 }
 
+type ThemeManagerProps = AppProps & {
+  /** Opened from the room-service group (rs.tema): only outlets of this type are offered. */
+  lockOutletType?: "ODA_SERVISI";
+};
+
 /** Menü Tasarım Merkezi (QM-TEM): outlet-specific guest-menu design and its visual theme. */
-export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStatus }: AppProps) {
+export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStatus, lockOutletType }: ThemeManagerProps) {
   const [rows, setRows] = useState<ThemeRow[]>([]);
   const [canWrite, setCanWrite] = useState(false);
   const [targets, setTargets] = useState<AssignTarget[]>([]);
@@ -113,10 +118,15 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
     setRows(list.data.themes);
     setCanWrite(list.data.canWrite);
     if (assign.ok) {
-      setTargets(assign.data);
-      setHotelId((h) => (h && assign.data.some((t) => t.hotelId === h) ? h : assign.data[0]?.hotelId));
+      const scoped = lockOutletType
+        ? assign.data
+            .map((t) => ({ ...t, outlets: t.outlets.filter((o) => o.type === lockOutletType) }))
+            .filter((t) => t.outlets.length > 0)
+        : assign.data;
+      setTargets(scoped);
+      setHotelId((h) => (h && scoped.some((t) => t.hotelId === h) ? h : scoped[0]?.hotelId));
     }
-  }, []);
+  }, [lockOutletType]);
 
   useEffect(() => {
     const t = setTimeout(() => void load(), 0);

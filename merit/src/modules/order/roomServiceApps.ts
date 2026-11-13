@@ -37,7 +37,10 @@ export function registerRoomServiceApps(): void {
     needsHotel: false,
     window: { w: 1480, h: 900, minW: 880, minH: 580 },
     kind: "component",
-    component: () => import("@/modules/menu/ui/ThemeManager").then((m) => ({ default: m.ThemeManager })),
+    component: () =>
+      import("@/modules/menu/ui/ThemeManager").then((m) => ({
+        default: (props: AppProps) => m.ThemeManager({ ...props, lockOutletType: "ODA_SERVISI" }),
+      })),
     mobile: "none",
   });
 

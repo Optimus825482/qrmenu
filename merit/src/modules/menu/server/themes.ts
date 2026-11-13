@@ -208,7 +208,7 @@ export type AssignTarget = {
   hotelId: string;
   hotelName: string;
   /** Each outlet carries its own currency (K3). */
-  outlets: { id: string; name: string; themeId: string | null; currency: string; design: OutletDesign }[];
+  outlets: { id: string; name: string; type: string; themeId: string | null; currency: string; design: OutletDesign }[];
 };
 
 const designSchema = z.object({
@@ -347,7 +347,7 @@ export async function assignTargets(ctx: Ctx): Promise<AssignTarget[]> {
         ...(ctx.session.outletId ? { id: ctx.session.outletId } : {}),
       },
       orderBy: { name: "asc" },
-      select: { id: true, name: true, themeId: true, currency: true, menuDesign: true },
+      select: { id: true, name: true, type: true, themeId: true, currency: true, menuDesign: true },
     });
     if (outlets.length > 0) {
       result.push({
