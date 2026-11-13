@@ -25,9 +25,9 @@ export const WIDGETS: Record<WidgetId, WidgetDef> = {
   status: {
     id: "status",
     title: "Anlık Durum",
-    description: "Çevrimiçi kullanıcı, doluluk ve bekleyen işler; otel otel ve toplam (Komuta Merkezi rakamları).",
-    w: 380,
-    h: 196,
+    description: "Çevrimiçi kullanıcı, doluluk ve bugünkü canlı sayaçlar (oda servisi, MyBar, minibar, QR); otel otel ve toplam.",
+    w: 500,
+    h: 300,
     screenCode: "CR-KOM",
   },
 };

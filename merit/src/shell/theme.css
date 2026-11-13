@@ -5545,3 +5545,8 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Anlık Durum widget, live counters: legend line, per-row hint, pending numbers in the warning tone. */
+.xp-widget-status-legend { padding: 3px 8px 0; font-size: 10px; color: #5b6987; }
+.xp-widget-status tbody th small { font-size: 10px; color: #5b6987; }
+.xp-widget-status td[data-warn] { color: #b45309; font-weight: 700; }
