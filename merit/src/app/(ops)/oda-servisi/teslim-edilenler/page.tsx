@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons/Icon";
 import { requireUser } from "@/lib/auth";
 import { formatPrice } from "@/lib/formatPrice";
-import { prisma } from "@/lib/prisma";
 import { can } from "@/lib/rbac";
 import { businessDate, formatDayTr, TZ } from "@/lib/time";
 import { denyScreen } from "@/modules/minibar/server/pageGuard";
@@ -11,11 +10,12 @@ import {
   delivered,
   DELIVERED_SCREEN,
   parseDeliveredQuery,
+  pickDeliveredTarget,
   type DeliveredList,
   type DeliveredRow,
 } from "@/modules/order/server/roomService/delivered";
 
-type Search = { tarih?: string | string[]; oda?: string | string[]; sayfa?: string | string[] };
+type Search = { tarih?: string | string[]; oda?: string | string[]; sayfa?: string | string[]; otel?: string | string[] };
 
 const ROUTE = "/oda-servisi/teslim-edilenler";
 
@@ -27,8 +27,9 @@ function clock(value: Date): string {
 }
 
 /** Address of the list with the given filter; defaults are left out. */
-function hrefOf(filter: { day: string; room: string; page: number }, today: string): string {
+function hrefOf(filter: { day: string; room: string; page: number; hotel: string }, today: string): string {
   const params = new URLSearchParams();
+  if (filter.hotel) params.set("otel", filter.hotel);
   if (filter.day !== today) params.set("tarih", filter.day);
   if (filter.room) params.set("oda", filter.room);
   if (filter.page > 1) params.set("sayfa", String(filter.page));
@@ -37,9 +38,10 @@ function hrefOf(filter: { day: string; room: string; page: number }, today: stri
 }
 
 /**
- * Delivered room-service orders of the session hotel, by delivery day and room (`?tarih=&oda=&sayfa=`).
- * Read-only; the same gate as the delivery tab (RO-TES view) and the hotel's single ODA_SERVISI outlet,
- * exactly like the board (renderOdaServisi).
+ * Delivered room-service orders by delivery day and room (`?tarih=&oda=&sayfa=&otel=`). Read-only; the same
+ * gate as the delivery tab (RO-TES view) and the session hotel's single ODA_SERVISI outlet, exactly like the
+ * board (renderOdaServisi). A user who covers other hotels right now (cross-hotel coverage) may pick one of
+ * them with `?otel=<hotel code>`; any other value lists the session hotel.
  */
 export default async function TeslimEdilenlerPage({ searchParams }: { searchParams: Promise<Search> }) {
   const ctx = await requireUser();
@@ -47,19 +49,20 @@ export default async function TeslimEdilenlerPage({ searchParams }: { searchPara
   if (!hotelId) redirect("/secim");
   if (!(await can(ctx, DELIVERED_SCREEN, "V", hotelId))) denyScreen(DELIVERED_SCREEN);
 
-  const outlet = await prisma.outlet.findFirst({
-    where: { hotelId, type: "ODA_SERVISI" },
-    select: { id: true, hotel: { select: { name: true } } },
-  });
-  if (!outlet) redirect("/secim");
+  const allowed = await delivered.targets(ctx);
+  const home = allowed.home;
+  if (!home) redirect("/secim");
 
   const today = businessDate();
-  const filter = parseDeliveredQuery(await searchParams);
+  const query = parseDeliveredQuery(await searchParams);
+  const target = pickDeliveredTarget(allowed, query.hotel) ?? home;
+  // The address keeps `otel` only for a covered hotel; a value that is not allowed is dropped.
+  const filter = { ...query, hotel: target.covered ? target.hotelCode : "" };
 
   let data: DeliveredList | null = null;
   let loadError: string | null = null;
   try {
-    data = await delivered.list(ctx, outlet.id, filter);
+    data = await delivered.list(ctx, target.outletId, { day: filter.day, room: filter.room, page: filter.page });
   } catch (error: unknown) {
     loadError = error instanceof Error ? error.message : "Liste yüklenemedi";
   }
@@ -72,10 +75,26 @@ export default async function TeslimEdilenlerPage({ searchParams }: { searchPara
         <h1 className="flex flex-wrap items-center gap-2 text-xl font-black tracking-tight text-text">
           <Icon name="check-circle" size={20} />
           <span>Teslim Edilenler</span>
-          <span className="rounded-full border border-accent px-2 py-0.5 text-[13px] font-bold text-accent">{outlet.hotel.name}</span>
+          <span className="rounded-full border border-accent px-2 py-0.5 text-[13px] font-bold text-accent">{target.hotelName}</span>
         </h1>
 
         <form method="get" action={ROUTE} className="mt-3 flex flex-wrap items-end gap-3">
+          {allowed.covered.length > 0 ? (
+            <label className="flex flex-col gap-1 text-[13px] font-semibold text-muted">
+              <span>Otel</span>
+              <select
+                name="otel"
+                defaultValue={target.hotelCode}
+                className="min-h-11 rounded-xl border border-border bg-surface px-3 text-base font-bold text-text"
+              >
+                {[home, ...allowed.covered].map((option) => (
+                  <option key={option.hotelId} value={option.hotelCode}>
+                    {option.hotelName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label className="flex flex-col gap-1 text-[13px] font-semibold text-muted">
             <span>Teslim tarihi</span>
             <input
@@ -105,7 +124,7 @@ export default async function TeslimEdilenlerPage({ searchParams }: { searchPara
           </button>
           {filtered ? (
             <Link
-              href={ROUTE}
+              href={hrefOf({ day: today, room: "", page: 1, hotel: filter.hotel }, today)}
               className="flex min-h-11 items-center rounded-xl border border-border bg-surface px-4 text-sm font-bold text-text"
             >
               Bugüne dön
@@ -125,7 +144,7 @@ export default async function TeslimEdilenlerPage({ searchParams }: { searchPara
           <p role="status" className="flex flex-wrap items-baseline justify-between gap-2 px-1 text-sm font-bold text-text">
             <span data-testid="delivered-count">{`${data.total} teslim`}</span>
             <span className="text-[13px] font-medium text-muted">
-              {`${formatDayTr(data.day)}${data.room ? ` · Oda ${data.room}` : ""} · Hedef süre ${data.slaMinutes} dk`}
+              {`${target.hotelName} · ${formatDayTr(data.day)}${data.room ? ` · Oda ${data.room}` : ""} · Hedef süre ${data.slaMinutes} dk`}
             </span>
           </p>
 

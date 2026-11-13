@@ -9,10 +9,13 @@ import { staffCtx } from "../helpers/orderFixtures";
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 vi.mock("@/lib/realtime", () => ({ publish: vi.fn() }));
 
-const { delivered, DELIVERED_PAGE_SIZE, parseDeliveredQuery } = await import("@/modules/order/server/roomService/delivered");
+const { delivered, DELIVERED_PAGE_SIZE, parseDeliveredQuery, pickDeliveredTarget } = await import(
+  "@/modules/order/server/roomService/delivered"
+);
 
 beforeAll(resetReferenceData);
 beforeEach(async () => {
+  await testDb.roomServiceCoverage.deleteMany({});
   await testDb.guestRecord.deleteMany({});
   await testDb.orderItem.deleteMany({});
   await testDb.order.deleteMany({});
@@ -40,7 +43,10 @@ async function env(hotel = "ROYAL") {
   const outlet = existing
     ? await testDb.outlet.update({ where: { id: existing.id }, data: outletData })
     : await testDb.outlet.create({ data: { hotelId: hid, name: "Oda Servisi", type: "ODA_SERVISI", ...outletData } });
-  const mkRoom = (number: string) => testDb.room.create({ data: { hotelId: hid, floorId: floor.id, number, isActive: true } });
+  // Rooms outside the default hotel can outlive a test (resetTestData): reuse one that is already there.
+  const mkRoom = async (number: string) =>
+    (await testDb.room.findFirst({ where: { hotelId: hid, number } })) ??
+    (await testDb.room.create({ data: { hotelId: hid, floorId: floor.id, number, isActive: true } }));
   const node = await testDb.menuNode.create({
     data: { outletId: outlet.id, kind: "OGE", name: "Çay", price: "3.00", isAvailable: true, isActive: true },
   });
@@ -242,20 +248,137 @@ describe("delivered.list", () => {
   });
 });
 
+describe("delivered.list — oteller arası izin", () => {
+  const HOUR = 3_600_000;
+
+  /** Royal's attendant at Royal's desk, Diamond with a delivered order, and a way to write a grant row. */
+  async function world() {
+    const royal = await env("ROYAL");
+    const diamond = await env("DIAMOND");
+    const room = await diamond.mkRoom("9401");
+    const order = await mkOrder(diamond, room.id, at(DAY, "10:00"), at(DAY, "10:40"));
+    const { ctx, user } = await ods(royal, "ods-royal");
+    const grantor = await makeUser({ username: "oss-diamond", roleCode: "R-OSS", hotelCode: "DIAMOND" });
+    const grant = (data: Record<string, unknown> = {}) =>
+      testDb.roomServiceCoverage.create({
+        data: {
+          userId: user.id,
+          hotelId: diamond.hid,
+          mode: "IZLEME",
+          grantedById: grantor.id,
+          startsAt: new Date(Date.now() - HOUR),
+          ...data,
+        },
+      });
+    return { royal, diamond, order, ctx, user, grantor, grant };
+  }
+
+  it("geçerli izinle (izleme ya da işleme) izlenen otelin teslimleri listelenir; SLA o otelin ayarıdır", async () => {
+    const w = await world();
+    await testDb.setting.create({ data: { hotelId: w.diamond.hid, key: "rs.slaMinutes", value: 45 } });
+    await testDb.setting.create({ data: { hotelId: w.royal.hid, key: "rs.slaMinutes", value: 20 } });
+    const row = await w.grant({ mode: "IZLEME", endsAt: new Date(Date.now() + HOUR) });
+
+    const list = await delivered.list(w.ctx, w.diamond.outlet.id, { day: DAY });
+    expect(list.rows.map((r) => r.id)).toEqual([w.order.id]);
+    // 40 minutes: on time by Diamond's 45, late by Royal's 20.
+    expect(list.slaMinutes).toBe(45);
+    expect(list.rows[0].onTime).toBe(true);
+
+    await testDb.roomServiceCoverage.update({ where: { id: row.id }, data: { mode: "ISLEME", endsAt: null } });
+    expect((await delivered.list(w.ctx, w.diamond.outlet.id, { day: DAY })).total).toBe(1);
+    // The session hotel is still listed with its own setting.
+    expect((await delivered.list(w.ctx, w.royal.outlet.id, { day: DAY })).slaMinutes).toBe(20);
+  });
+
+  it("izin yoksa, süresi dolmuşsa, kaldırılmışsa ya da henüz başlamamışsa FORBIDDEN", async () => {
+    const w = await world();
+    const read = () => delivered.list(w.ctx, w.diamond.outlet.id, { day: DAY });
+    await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    const row = await w.grant({ startsAt: new Date(Date.now() - 2 * HOUR), endsAt: new Date(Date.now() - 1000) });
+    await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    await testDb.roomServiceCoverage.update({
+      where: { id: row.id },
+      data: { endsAt: null, revokedAt: new Date(Date.now() - 1000), revokedById: w.grantor.id },
+    });
+    await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+
+    await testDb.roomServiceCoverage.update({
+      where: { id: row.id },
+      data: { revokedAt: null, revokedById: null, startsAt: new Date(Date.now() + HOUR) },
+    });
+    await expect(read()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("izin yalnız verildiği oteli açar; başkasının izni işe yaramaz", async () => {
+    const w = await world();
+    await w.grant();
+    const premium = await env("PREMIUM");
+    await expect(delivered.list(w.ctx, premium.outlet.id, { day: DAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const other = await ods(w.royal, "ods-other");
+    await expect(delivered.list(other.ctx, w.diamond.outlet.id, { day: DAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("izlenen otel için panodaki koşul: oturum otelinde RO-TAL görme ve kendi oda servisi masasına erişim", async () => {
+    const w = await world();
+    await w.grant();
+    // A waiter has neither RO-TAL nor RO-TES at home: the grant alone opens nothing.
+    const waiter = await makeUser({ username: "gar-royal", roleCode: "R-GAR", hotelCode: "ROYAL" });
+    await testDb.roomServiceCoverage.create({
+      data: { userId: waiter.id, hotelId: w.diamond.hid, mode: "ISLEME", grantedById: w.grantor.id, startsAt: new Date(Date.now() - HOUR) },
+    });
+    const waiterCtx = await ctxFor(waiter, { hotelCode: "ROYAL" });
+    await expect(delivered.list(waiterCtx, w.diamond.outlet.id, { day: DAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // Signed in at another outlet of the home hotel: the home desk is closed to the session, so is the covered one.
+    const bar = await testDb.outlet.create({ data: { hotelId: w.royal.hid, name: "Bar", type: "BAR" } });
+    const elsewhere = { ...w.ctx, session: { ...w.ctx.session, outletId: bar.id } };
+    await expect(delivered.list(elsewhere, w.diamond.outlet.id, { day: DAY })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("targets: oturum oteli ve yalnız şu an geçerli izinli oteller; izinli olmayan kod oturum oteline düşer", async () => {
+    const w = await world();
+    const none = await delivered.targets(w.ctx);
+    expect(none.home).toMatchObject({ hotelId: w.royal.hid, hotelCode: "ROYAL", outletId: w.royal.outlet.id, covered: false });
+    expect(none.covered).toEqual([]);
+    expect(pickDeliveredTarget(none, "DIAMOND")).toBe(none.home);
+
+    const row = await w.grant();
+    const some = await delivered.targets(w.ctx);
+    expect(some.covered).toEqual([
+      expect.objectContaining({ hotelId: w.diamond.hid, hotelCode: "DIAMOND", outletId: w.diamond.outlet.id, covered: true }),
+    ]);
+    expect(pickDeliveredTarget(some, "DIAMOND")).toBe(some.covered[0]);
+    expect(pickDeliveredTarget(some, "PREMIUM")).toBe(some.home);
+    expect(pickDeliveredTarget(some, "")).toBe(some.home);
+
+    await testDb.roomServiceCoverage.update({ where: { id: row.id }, data: { endsAt: new Date(Date.now() - 1000) } });
+    expect((await delivered.targets(w.ctx)).covered).toEqual([]);
+  });
+});
+
 describe("parseDeliveredQuery", () => {
   const NOW = at(DAY, "00:30"); // 22:30 UTC of the previous day: the business day is the Nicosia one
 
   it("boş adres: bugün (iş günü), oda yok, ilk sayfa", () => {
-    expect(parseDeliveredQuery({}, NOW)).toEqual({ day: DAY, room: "", page: 1 });
+    expect(parseDeliveredQuery({}, NOW)).toEqual({ day: DAY, room: "", page: 1, hotel: "" });
   });
 
   it("geçerli değerler okunur", () => {
-    expect(parseDeliveredQuery({ tarih: PREV, oda: " 12 ", sayfa: "3" }, NOW)).toEqual({ day: PREV, room: "12", page: 3 });
-    expect(parseDeliveredQuery({ tarih: [PREV, DAY], oda: ["7"] }, NOW)).toEqual({ day: PREV, room: "7", page: 1 });
+    expect(parseDeliveredQuery({ tarih: PREV, oda: " 12 ", sayfa: "3" }, NOW)).toEqual({ day: PREV, room: "12", page: 3, hotel: "" });
+    expect(parseDeliveredQuery({ tarih: [PREV, DAY], oda: ["7"] }, NOW)).toEqual({ day: PREV, room: "7", page: 1, hotel: "" });
   });
 
   it("geçersiz değer varsayılana düşer", () => {
-    expect(parseDeliveredQuery({ tarih: "2026-02-31", oda: "<script>", sayfa: "-4" }, NOW)).toEqual({ day: DAY, room: "", page: 1 });
-    expect(parseDeliveredQuery({ tarih: "dün", sayfa: "abc" }, NOW)).toEqual({ day: DAY, room: "", page: 1 });
+    expect(parseDeliveredQuery({ tarih: "2026-02-31", oda: "<script>", sayfa: "-4" }, NOW)).toEqual({ day: DAY, room: "", page: 1, hotel: "" });
+    expect(parseDeliveredQuery({ tarih: "dün", sayfa: "abc" }, NOW)).toEqual({ day: DAY, room: "", page: 1, hotel: "" });
+  });
+
+  it("otel: biçimi uygun kod okunur, uygun olmayan boş kalır (izin denetimi pickDeliveredTarget içinde)", () => {
+    expect(parseDeliveredQuery({ otel: " DIAMOND " }, NOW).hotel).toBe("DIAMOND");
+    expect(parseDeliveredQuery({ otel: ["DIAMOND", "ROYAL"] }, NOW).hotel).toBe("DIAMOND");
+    expect(parseDeliveredQuery({ otel: "x' OR 1=1" }, NOW).hotel).toBe("");
+    expect(parseDeliveredQuery({ otel: "" }, NOW).hotel).toBe("");
   });
 });

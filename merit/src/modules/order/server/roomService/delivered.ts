@@ -2,11 +2,12 @@ import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { assertCan } from "@/lib/rbac";
+import { assertCan, can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { outletAllowed } from "../approvals";
+import { coveredMode, coveredModes } from "./coverageAccess";
 import { slaStart, slaStateOf } from "./slaConstants";
 
 /** Rows per page of the delivered list (a busy day has a few hundred deliveries). */
@@ -47,24 +48,79 @@ const filterSchema = z.object({
 
 export type DeliveredFilter = z.input<typeof filterSchema>;
 
+/** Hotel codes are short labels ("ROYAL"); the page checks the value against the hotels it may list. */
+const hotelCodeSchema = z.string().trim().regex(/^[\p{L}\p{N}_-]{1,32}$/u);
+
 const first = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? value[0] : value);
 
 /**
- * Filter of the page address (`?tarih=&oda=&sayfa=`). A shared or hand-edited link never breaks the page:
- * a value that does not validate falls back to its default (today, no room, first page).
+ * Filter of the page address (`?tarih=&oda=&sayfa=&otel=`). A shared or hand-edited link never breaks the page:
+ * a value that does not validate falls back to its default (today, no room, first page, the session hotel).
+ * `hotel` is only a well-formed code here: whether it may be listed is decided by `pickDeliveredTarget`.
  */
 export function parseDeliveredQuery(
-  query: { tarih?: string | string[]; oda?: string | string[]; sayfa?: string | string[] },
+  query: { tarih?: string | string[]; oda?: string | string[]; sayfa?: string | string[]; otel?: string | string[] },
   now: Date = new Date(),
-): { day: string; room: string; page: number } {
+): { day: string; room: string; page: number; hotel: string } {
   const day = daySchema.safeParse(first(query.tarih));
   const room = roomSchema.safeParse(first(query.oda) ?? "");
   const page = z.coerce.number().int().min(1).max(10_000).safeParse(first(query.sayfa) ?? "1");
+  const hotel = hotelCodeSchema.safeParse(first(query.otel));
   return {
     day: day.success ? day.data : businessDate(now),
     room: room.success ? room.data : "",
     page: page.success ? page.data : 1,
+    hotel: hotel.success ? hotel.data : "",
   };
+}
+
+/** A hotel whose delivered orders the session may list, with its room-service outlet. */
+export type DeliveredTarget = {
+  hotelId: string;
+  hotelCode: string;
+  hotelName: string;
+  outletId: string;
+  /** Reached through cross-hotel coverage (not the session hotel). */
+  covered: boolean;
+};
+
+/**
+ * Hotels the delivered list can be opened for: the session hotel (`home`, null when it has no room-service
+ * outlet) and the hotels the caller covers right now, by name. The covered ones follow the covered board
+ * (board.covered): RO-TAL view in the session hotel and an active grant of either mode (coveredModes).
+ */
+async function targets(ctx: Ctx, now: Date = new Date()): Promise<{ home: DeliveredTarget | null; covered: DeliveredTarget[] }> {
+  const select = { id: true, hotelId: true, hotel: { select: { name: true, code: true } } } as const;
+  const toTarget = (
+    o: { id: string; hotelId: string; hotel: { name: string; code: string } },
+    covered: boolean,
+  ): DeliveredTarget => ({ hotelId: o.hotelId, hotelCode: o.hotel.code, hotelName: o.hotel.name, outletId: o.id, covered });
+
+  const homeOutlet = ctx.session.hotelId
+    ? await prisma.outlet.findFirst({ where: { hotelId: ctx.session.hotelId, type: "ODA_SERVISI" }, select })
+    : null;
+  const home = homeOutlet ? toTarget(homeOutlet, false) : null;
+
+  if (!(await can(ctx, "RO-TAL", "V", ctx.session.hotelId))) return { home, covered: [] };
+  const modes = await coveredModes(ctx, now);
+  if (modes.size === 0) return { home, covered: [] };
+  const outlets = await prisma.outlet.findMany({
+    where: { hotelId: { in: [...modes.keys()] }, type: "ODA_SERVISI", hotel: { isActive: true } },
+    orderBy: [{ hotel: { name: "asc" } }, { createdAt: "asc" }, { id: "asc" }],
+    select,
+  });
+  // One room-service outlet per hotel is the rule; should two exist, the first one stands for the hotel.
+  const seen = new Set<string>();
+  const covered = outlets.filter((o) => !seen.has(o.hotelId) && seen.add(o.hotelId)).map((o) => toTarget(o, true));
+  return { home, covered };
+}
+
+/** The target `?otel=` names among the allowed ones; anything else (unknown, not covered, empty) is the session hotel. */
+export function pickDeliveredTarget(
+  allowed: { home: DeliveredTarget | null; covered: DeliveredTarget[] },
+  hotelCode: string,
+): DeliveredTarget | null {
+  return allowed.covered.find((t) => t.hotelCode === hotelCode) ?? allowed.home;
 }
 
 const nextDay = (day: string): string => new Date(businessDay(day).getTime() + 86_400_000).toISOString().slice(0, 10);
@@ -118,8 +174,12 @@ export type DeliveredList = {
 /**
  * Delivered room-service orders of one outlet for one business day, newest delivery first. The day is the
  * day of the DELIVERY (`deliveredAt`, Europe/Nicosia): an order taken at 23:55 and delivered at 00:24 is
- * listed on the second day. RO-TES view in the outlet's hotel; outlet roles are bound to their session
- * outlet. Cross-hotel coverage reads open requests only (board.covered), so it gives nothing here.
+ * listed on the second day.
+ *
+ * A hotel of the session scope: RO-TES view there; outlet roles are bound to their session outlet.
+ * A hotel outside it: only through cross-hotel coverage, with what the covered board asks of the grantee
+ * (board.covered): RO-TAL view in the session hotel and a grant that works now (coveredMode: not revoked,
+ * started, not ended, home desk open to the session). Either mode will do: the list is read-only.
  */
 async function list(ctx: Ctx, outletId: string, raw: DeliveredFilter = {}): Promise<DeliveredList> {
   const parsed = filterSchema.safeParse(raw);
@@ -129,11 +189,17 @@ async function list(ctx: Ctx, outletId: string, raw: DeliveredFilter = {}): Prom
     select: { id: true, hotelId: true, type: true },
   });
   if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
-  await assertCan(ctx, DELIVERED_SCREEN, "V", outlet.hotelId);
-  if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  const now = new Date();
+  if (ctx.hotelIds.includes(outlet.hotelId)) {
+    await assertCan(ctx, DELIVERED_SCREEN, "V", outlet.hotelId);
+    if (!outletAllowed(ctx, outletId)) throw new DomainError("FORBIDDEN", "Bu outlete erişiminiz yok");
+  } else {
+    const allowed = (await can(ctx, "RO-TAL", "V", ctx.session.hotelId)) && (await coveredMode(ctx, outlet.hotelId, now)) !== null;
+    // Fails for a hotel outside the scope: the denied attempt is audited like any other.
+    if (!allowed) await assertCan(ctx, DELIVERED_SCREEN, "V", outlet.hotelId);
+  }
   if (outlet.type !== "ODA_SERVISI") throw new DomainError("NOT_FOUND", "Oda servisi outleti bulunamadı");
 
-  const now = new Date();
   const day = parsed.data.day ?? businessDate(now);
   const room = parsed.data.room ?? "";
   const where: Prisma.OrderWhereInput = {
@@ -182,4 +248,4 @@ async function list(ctx: Ctx, outletId: string, raw: DeliveredFilter = {}): Prom
   return { day, room, page, pageSize: DELIVERED_PAGE_SIZE, pageCount, total, slaMinutes, rows };
 }
 
-export const delivered = { list };
+export const delivered = { list, targets };
