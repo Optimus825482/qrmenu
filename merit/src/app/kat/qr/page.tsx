@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,7 +28,7 @@ export default function KatQrScannerPage() {
 
   useEffect(() => {
     let live = true;
-    fetch("/api/minibar/qr/resolve")
+    mbFetch("/api/minibar/qr/resolve")
       .then((r) => (r.ok ? (r.json() as Promise<{ manualEntry?: "ALL" | "SOME" | "NONE" }>) : null))
       .then((j) => {
         if (live && j?.manualEntry) setManualEntry(j.manualEntry);
@@ -59,7 +60,7 @@ export default function KatQrScannerPage() {
       setError(null);
 
       try {
-        const res = await fetch("/api/minibar/qr/resolve", {
+        const res = await mbFetch("/api/minibar/qr/resolve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: trimmed }),

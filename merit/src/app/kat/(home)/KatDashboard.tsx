@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PriorityRouteModal } from "@/app/kat/components/PriorityRouteModal";
@@ -427,7 +428,7 @@ function CriticalStockDialog({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const first = setTimeout(async () => {
       try {
-        const res = await fetch("/api/minibar/stock?view=critical", { cache: "no-store" });
+        const res = await mbFetch("/api/minibar/stock?view=critical", { cache: "no-store" });
         const json = (await res.json()) as CriticalData & { error?: string };
         if (!res.ok) throw new Error(json.error ?? "Kritik stoklar yüklenemedi.");
         setData(json);

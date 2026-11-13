@@ -8,6 +8,7 @@ import { type Action, assertCan } from "@/lib/rbac";
 import { DomainError, fromZod } from "@/lib/result";
 import { audit } from "@/modules/core/server/audit";
 import type { UserAuditCtx } from "./minibarDefinitionsService";
+import { apiHotelCtx } from "./selectedHotel";
 
 export type { UserAuditCtx };
 
@@ -45,7 +46,8 @@ export function errorResponse(err: unknown): NextResponse {
  */
 export async function handle(fn: (ctx: Ctx) => Promise<unknown>): Promise<Response> {
   try {
-    const ctx = await requireUser();
+    // The screen names the hotel its window shows; the services then list and check that hotel.
+    const ctx = await apiHotelCtx(await requireUser());
     const data = await fn(ctx);
     return data instanceof Response ? data : NextResponse.json(data);
   } catch (err) {

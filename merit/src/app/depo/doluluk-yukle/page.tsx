@@ -1,5 +1,7 @@
 "use client";
 
+import { hotelFromAddress } from "@/shell/useInShellFrame";
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { confirm } from "@/shell/confirm";
@@ -77,6 +79,7 @@ async function readJson(res: Response): Promise<Record<string, unknown>> {
 }
 
 export default function DolulukYuklePage() {
+  const hotelHref = useHotelHref();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const [hotelId, setHotelId] = useState("");
   const [schedule, setSchedule] = useState<ScheduleInfo | null>(null);
@@ -97,13 +100,14 @@ export default function DolulukYuklePage() {
       const url = selected
         ? `/api/minibar/occupancy/history?hotelId=${encodeURIComponent(selected)}`
         : "/api/minibar/occupancy/history";
-      const res = await fetch(url);
+      const res = await mbFetch(url, undefined, selected);
       const data = await readJson(res);
       if (!res.ok) throw new Error(String(data.error ?? "Doluluk verileri alınamadı."));
       setSchedule(data.schedule as ScheduleInfo);
       setHistory((data.history as HistoryItem[]) ?? []);
       setHotels((data.hotels as HotelItem[]) ?? []);
-      if (!selected && typeof data.selectedHotelId === "string") setHotelId(data.selectedHotelId);
+      // The server names the hotel it answered for: the selector, the uploads and "yeniden üret" follow it.
+      if (typeof data.selectedHotelId === "string") setHotelId(data.selectedHotelId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bağlantı hatası.");
     } finally {
@@ -112,7 +116,8 @@ export default function DolulukYuklePage() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
+    // Inside a shell window the banner hotel (`?hotelId=`) is the one to show, not the session hotel.
+    const timer = setTimeout(() => void load(hotelFromAddress() || undefined), 0);
     return () => clearTimeout(timer);
   }, [load]);
 
@@ -146,7 +151,7 @@ export default function DolulukYuklePage() {
         fd.delete("kind");
         if (nextKind) fd.append("kind", nextKind);
       }
-      const res = await fetch("/api/minibar/occupancy/preview", { method: "POST", body: fd });
+      const res = await mbFetch("/api/minibar/occupancy/preview", { method: "POST", body: fd });
       const data = await readJson(res);
       if (!res.ok) throw new Error(String(data.error ?? "Önizleme başarısız oldu."));
       setPreview(data as unknown as Preview);
@@ -163,7 +168,7 @@ export default function DolulukYuklePage() {
     const fd = form(forHotel);
     fd.delete("kind");
     fd.append("kind", kind || detected);
-    const res = await fetch("/api/minibar/occupancy/upload", { method: "POST", body: fd });
+    const res = await mbFetch("/api/minibar/occupancy/upload", { method: "POST", body: fd });
     const data = await readJson(res);
     if (!res.ok) throw new Error(String(data.error ?? "Yükleme başarısız oldu."));
     setResult(data as unknown as CommitResult);
@@ -197,7 +202,7 @@ export default function DolulukYuklePage() {
     setError(null);
     setMessage(null);
     try {
-      const res = await fetch("/api/minibar/occupancy/preview", { method: "POST", body: form(target.id) });
+      const res = await mbFetch("/api/minibar/occupancy/preview", { method: "POST", body: form(target.id) });
       const data = await readJson(res);
       if (!res.ok) throw new Error(String(data.error ?? "Önizleme başarısız oldu."));
       const next = data as unknown as Preview;
@@ -231,7 +236,7 @@ export default function DolulukYuklePage() {
     setError(null);
     setMessage(null);
     try {
-      const res = await fetch(`/api/minibar/occupancy/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+      const res = await mbFetch(`/api/minibar/occupancy/${encodeURIComponent(item.id)}`, { method: "DELETE" });
       const data = await readJson(res);
       if (!res.ok) throw new Error(String(data.error ?? "Yükleme silinemedi."));
       const kept = Number(data.keptCompletedItems ?? 0);
@@ -249,14 +254,15 @@ export default function DolulukYuklePage() {
     setError(null);
     setMessage(null);
     try {
-      const res = await fetch("/api/minibar/tasks/regenerate", {
+      const res = await mbFetch("/api/minibar/tasks/regenerate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
-      });
+      }, hotelId);
       const data = await readJson(res);
       if (!res.ok) throw new Error(String(data.error ?? "Görevler yeniden üretilemedi."));
-      setMessage("Günlük görevler doluluk kayıtlarından yeniden üretildi.");
+      const hotelName = hotels.find((h) => h.id === hotelId)?.name;
+      setMessage(`${hotelName ? `${hotelName}: ` : ""}Günlük görevler doluluk kayıtlarından yeniden üretildi.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Görevler yeniden üretilemedi.");
     } finally {
@@ -300,7 +306,7 @@ export default function DolulukYuklePage() {
               Tavsiye İş Planı
             </Link>
             <Link
-              href="/depo/stok"
+              href={hotelHref("/depo/stok", hotelId)}
               style={{ minHeight: "var(--tap-action)" }}
               className="inline-flex items-center px-3 py-1.5 border border-border bg-surface rounded-xl text-xs font-semibold text-text hover:bg-bg"
             >

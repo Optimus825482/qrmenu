@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -46,7 +47,7 @@ export default function UrunSiralamasiPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/minibar/product-order");
+      const res = await mbFetch("/api/minibar/product-order");
       const json = (await res.json()) as View & { error?: string };
       if (!res.ok) throw new Error(json.error ?? "Ürünler yüklenemedi.");
       setRows(json.products);
@@ -117,7 +118,7 @@ export default function UrunSiralamasiPage() {
     if (!rows || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/minibar/product-order", {
+      const res = await mbFetch("/api/minibar/product-order", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productIds: rows.map((row) => row.productId) }),
@@ -145,7 +146,7 @@ export default function UrunSiralamasiPage() {
     if (!ok) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/minibar/product-order", { method: "DELETE" });
+      const res = await mbFetch("/api/minibar/product-order", { method: "DELETE" });
       const json = (await res.json()) as { message?: string; error?: string };
       if (!res.ok) throw new Error(json.error ?? "Standart sıraya dönülemedi.");
       notify.success(json.message ?? "Standart ürün sıralamasına dönüldü.");

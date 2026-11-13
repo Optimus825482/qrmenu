@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
 import { requireUser } from "@/lib/auth";
@@ -6,7 +7,7 @@ import { listDnd } from "@/modules/minibar/server/dnd";
 export const dynamic = "force-dynamic";
 
 export default async function KatDndPage() {
-  const ctx = await requireUser();
+  const ctx = await pageHotelCtx(await requireUser());
   const rows = await listDnd(ctx);
 
   return (

@@ -75,3 +75,20 @@ test("otel seçici kat listesini değiştirir ve kattan dönünce seçilen otel 
   await select.selectOption(diamond.value);
   await expect.poll(() => floorNames(page), { message: "dönüşten sonra DIAMOND" }).toEqual(["3. Kat"]);
 });
+
+test("pencerenin alt ekranları oturumun değil seçilen otelin verisini gösterir", async ({ page }) => {
+  await login(page, "admin");
+  await page.getByRole("button", { name: "Minibar Operasyonları" }).click();
+  await page.getByRole("button", { name: /Kat Planı/ }).first().click();
+  const select = page.locator('[id="mb-hotel-minibar.kat"]');
+  // Both hotels in turn: whichever one the session is on, the other proves the screen follows the selector.
+  for (const name of ["Merit Royal", "Merit Royal Diamond"]) {
+    await select.selectOption({ label: name });
+    await expect(frameOf(page).getByTestId("kat-otel-adi")).toHaveText(name);
+    await frameOf(page).locator("body").evaluate(() => window.location.assign("/kat/stok"));
+    await expect(frameOf(page).getByRole("heading", { name: `${name} Stokları` })).toBeVisible();
+    // Back at the list for the next round (the selector re-keys the frame only when the hotel changes).
+    await frameOf(page).locator("body").evaluate(() => window.location.assign("/kat"));
+    await expect(frameOf(page).getByTestId("kat-otel-adi")).toHaveText(name);
+  }
+});

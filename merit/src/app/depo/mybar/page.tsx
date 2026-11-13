@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import type { Metadata } from "next";
 import { requireStaffLayout } from "@/components/staff/loadShellProps";
 import { can } from "@/lib/rbac";
@@ -8,7 +9,8 @@ import "@/shell/theme.css";
 export const metadata: Metadata = { title: "MyBar Talepleri" };
 
 export default async function DepoMybarPage() {
-  const { ctx } = await requireStaffLayout("/depo/mybar");
+  const { ctx: sessionCtx } = await requireStaffLayout("/depo/mybar");
+  const ctx = await pageHotelCtx(sessionCtx);
   const hotelId = ctx.session.hotelId;
   if (!(await can(ctx, "MB-PERS", "V", hotelId))) denyScreen("MB-PERS");
 

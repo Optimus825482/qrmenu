@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
@@ -9,7 +10,7 @@ export const metadata: Metadata = { title: "MyBar Talepleri" };
 
 /** MB-PERS: guest MyBar requests of the session hotel. Cancel is offered only with the `A` right. */
 export default async function KatMybarPage() {
-  const ctx = await requireUser();
+  const ctx = await pageHotelCtx(await requireUser());
   const hotelId = ctx.session.hotelId;
   const [page, canCancel] = await Promise.all([list(ctx, {}), can(ctx, "MB-PERS", "A", hotelId)]);
   return (

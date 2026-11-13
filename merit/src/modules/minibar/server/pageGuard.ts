@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { can } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
+import { pageHotelCtx } from "./selectedHotel";
 
 /**
  * Server-side guard of a staff page: no valid session -> /giris (back to the page afterwards),
@@ -21,7 +22,9 @@ export async function requireScreen(screen: string): Promise<void> {
     }
     throw error;
   }
-  if (!(await can(ctx, screen, "V", ctx.session.hotelId))) denyScreen(screen);
+  // The hotel the window shows (`?hotelId=`), else the session's: the permission is checked where the data is.
+  const shown = await pageHotelCtx(ctx);
+  if (!(await can(shown, screen, "V", shown.session.hotelId))) denyScreen(screen);
 }
 
 /** Sends a signed-in user who may not view `code` to the explanation page (never into a loop). */

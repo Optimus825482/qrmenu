@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -29,7 +30,7 @@ export default function KatIslemlerimPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/minibar/my-checks");
+      const res = await mbFetch("/api/minibar/my-checks");
       const json = await res.json();
       if (!res.ok) throw new Error((json as { error?: string })?.error ?? "İşlemler alınamadı.");
       const checks: RoomCheckHistoryItem[] = Array.isArray(json)
@@ -68,7 +69,7 @@ export default function KatIslemlerimPage() {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/minibar/my-checks/${tx.id}`, {
+      const res = await mbFetch(`/api/minibar/my-checks/${tx.id}`, {
         method: "DELETE",
       });
       const json = (await res.json()) as { message?: string; error?: string };
@@ -106,7 +107,7 @@ export default function KatIslemlerimPage() {
         productId,
         qty,
       }));
-      const res = await fetch(`/api/minibar/my-checks/${editingTx.id}`, {
+      const res = await mbFetch(`/api/minibar/my-checks/${editingTx.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updatedItems, note: editNote }),
@@ -138,7 +139,7 @@ export default function KatIslemlerimPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/minibar/corrections/request", {
+      const res = await mbFetch("/api/minibar/corrections/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

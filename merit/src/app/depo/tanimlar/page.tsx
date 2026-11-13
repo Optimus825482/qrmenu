@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -263,6 +264,7 @@ function Pager({ view, noun }: { view: SortPageView; noun: string }) {
 }
 
 export default function MinibarTanimlarPage() {
+  const hotelHref = useHotelHref();
   const [activeTab, setActiveTab] = useState<
     "GROUPS" | "PRODUCTS" | "ROOM_TYPES" | "SETUPS" | "ASSIGNMENTS" | "AUDIT"
   >("PRODUCTS");
@@ -377,7 +379,7 @@ export default function MinibarTanimlarPage() {
       setErrorMsg(null);
 
       // Otelleri al
-      const hRes = await fetch("/api/minibar/depo/stock");
+      const hRes = await mbFetch("/api/minibar/depo/stock");
       if (hRes.ok) {
         const hData = await hRes.json();
         setHotels(hData.hotels || []);
@@ -390,9 +392,9 @@ export default function MinibarTanimlarPage() {
 
       // Gruplar ve Ürünler
       const [gRes, pRes, sRes] = await Promise.all([
-        fetch("/api/minibar/definitions/product-groups"),
-        fetch("/api/minibar/definitions/products"),
-        fetch("/api/minibar/definitions/setups"),
+        mbFetch("/api/minibar/definitions/product-groups"),
+        mbFetch("/api/minibar/definitions/products"),
+        mbFetch("/api/minibar/definitions/setups"),
       ]);
 
       if (gRes.ok) {
@@ -426,8 +428,8 @@ export default function MinibarTanimlarPage() {
     if (!hotelId) return;
     try {
       const [rtRes, rtsRes] = await Promise.all([
-        fetch(`/api/minibar/definitions/room-types?hotelId=${encodeURIComponent(hotelId)}`),
-        fetch(`/api/minibar/definitions/room-type-setups?hotelId=${encodeURIComponent(hotelId)}`),
+        mbFetch(`/api/minibar/definitions/room-types?hotelId=${encodeURIComponent(hotelId)}`),
+        mbFetch(`/api/minibar/definitions/room-type-setups?hotelId=${encodeURIComponent(hotelId)}`),
       ]);
 
       if (rtRes.ok) {
@@ -453,7 +455,7 @@ export default function MinibarTanimlarPage() {
   // 3. Load Audit Logs on Tab Select
   const loadAuditLogs = useCallback(async () => {
     try {
-      const res = await fetch("/api/minibar/definitions/audit-logs?limit=150");
+      const res = await mbFetch("/api/minibar/definitions/audit-logs?limit=150");
       if (res.ok) {
         const data = await res.json();
         setAuditLogs(data.logs || []);
@@ -508,7 +510,7 @@ export default function MinibarTanimlarPage() {
     if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Ürün grubu silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
-      const res = await fetch(`/api/minibar/definitions/product-groups?id=${encodeURIComponent(id)}`, {
+      const res = await mbFetch(`/api/minibar/definitions/product-groups?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -559,7 +561,7 @@ export default function MinibarTanimlarPage() {
     if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Ürün silinir; kullanımdaysa pasife alınır.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
-      const res = await fetch(`/api/minibar/definitions/products?id=${encodeURIComponent(id)}`, {
+      const res = await mbFetch(`/api/minibar/definitions/products?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -609,7 +611,7 @@ export default function MinibarTanimlarPage() {
     if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Oda tipi silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
-      const res = await fetch(`/api/minibar/definitions/room-types?id=${encodeURIComponent(id)}`, {
+      const res = await mbFetch(`/api/minibar/definitions/room-types?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -654,7 +656,7 @@ export default function MinibarTanimlarPage() {
     if (!(await confirm({ title: `"${name}" silinsin mi?`, message: "Setup silinir.", danger: true, confirmLabel: "Sil" }))) return;
     try {
       setErrorMsg(null);
-      const res = await fetch(`/api/minibar/definitions/setups?id=${encodeURIComponent(id)}`, {
+      const res = await mbFetch(`/api/minibar/definitions/setups?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -681,7 +683,7 @@ export default function MinibarTanimlarPage() {
       setErrorMsg(null);
       // A product already in the list is not added twice: its norm quantity is changed.
       const existing = activeSetupForItems.items.find((it) => it.productId === selectedProductToAdd);
-      const res = await fetch("/api/minibar/definitions/setup-items", {
+      const res = await mbFetch("/api/minibar/definitions/setup-items", {
         method: existing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
@@ -697,7 +699,7 @@ export default function MinibarTanimlarPage() {
       setSelectedQtyToAdd("2");
 
       // Refresh setups
-      const sRes = await fetch("/api/minibar/definitions/setups");
+      const sRes = await mbFetch("/api/minibar/definitions/setups");
       if (sRes.ok) {
         const sData = await sRes.json();
         setSetups(sData.setups || []);
@@ -712,7 +714,7 @@ export default function MinibarTanimlarPage() {
   const handleDeleteSetupItem = async (setupItemId: string) => {
     try {
       setErrorMsg(null);
-      const res = await fetch(`/api/minibar/definitions/setup-items?id=${encodeURIComponent(setupItemId)}`, {
+      const res = await mbFetch(`/api/minibar/definitions/setup-items?id=${encodeURIComponent(setupItemId)}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -721,7 +723,7 @@ export default function MinibarTanimlarPage() {
       notifySuccess("Ürün setup normundan çıkarıldı.");
 
       // Refresh setups
-      const sRes = await fetch("/api/minibar/definitions/setups");
+      const sRes = await mbFetch("/api/minibar/definitions/setups");
       if (sRes.ok) {
         const sData = await sRes.json();
         setSetups(sData.setups || []);
@@ -742,7 +744,7 @@ export default function MinibarTanimlarPage() {
     e.preventDefault();
     try {
       setErrorMsg(null);
-      const res = await fetch("/api/minibar/definitions/room-type-setups", {
+      const res = await mbFetch("/api/minibar/definitions/room-type-setups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -774,7 +776,7 @@ export default function MinibarTanimlarPage() {
         setupId,
       });
 
-      const res = await fetch(`/api/minibar/definitions/room-type-setups?${params.toString()}`, {
+      const res = await mbFetch(`/api/minibar/definitions/room-type-setups?${params.toString()}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -848,10 +850,13 @@ export default function MinibarTanimlarPage() {
       <header className="sticky top-0 z-40 bg-surface backdrop-blur border-b border-border px-4 py-3 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
+            {/* Inside a shell window the shell's own "Geri" leaves the screen; an arrow here would load another
+                screen into this window. */}
             <Link
-              href="/kat"
+              href={hotelHref("/depo", selectedHotelId)}
+              hidden={inShellFrame}
               className="p-2 bg-bg hover:bg-border text-text rounded-lg transition"
-              title="Dashboard"
+              title="Depo panosu"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -889,7 +894,7 @@ export default function MinibarTanimlarPage() {
             )}
 
             <Link
-              href="/depo/stok"
+              href={hotelHref("/depo/stok", selectedHotelId)}
               className="px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Otel Deposu
@@ -903,7 +908,7 @@ export default function MinibarTanimlarPage() {
             </Link>
 
             <Link
-              href="/depo/raporlar"
+              href={hotelHref("/depo/raporlar", selectedHotelId)}
               className="px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="trending" size={20} /> Raporlar

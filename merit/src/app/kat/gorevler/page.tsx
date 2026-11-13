@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import Link from "next/link";
 import { Icon } from "@/components/icons/Icon";
 import { requireUser } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { listTaskItems, taskSummary } from "@/modules/minibar/server/tasks";
 export const dynamic = "force-dynamic";
 
 export default async function KatGorevlerPage() {
-  const ctx = await requireUser();
+  const ctx = await pageHotelCtx(await requireUser());
   const day = businessDate();
   const [summary, items] = await Promise.all([
     taskSummary(prisma, ctx.session.hotelId, day),

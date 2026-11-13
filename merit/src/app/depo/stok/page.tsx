@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { useInShellFrame } from "@/shell/useInShellFrame";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
@@ -156,13 +157,13 @@ function SortTh({
   view,
   k,
   align = "left",
-  guide,
+  "data-guide": guide,
   children,
 }: {
   view: SortPageView;
   k: string;
   align?: "left" | "center";
-  guide?: string;
+  "data-guide"?: string;
   children: string;
 }) {
   const on = view.sort?.key === k;
@@ -232,6 +233,7 @@ function Pager({ view, noun }: { view: SortPageView; noun: string }) {
 }
 
 export default function DepoStokPage() {
+  const hotelHref = useHotelHref();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const [selectedHotelId, setSelectedHotelId] = useState<string>("");
   const [stockItems, setStockItems] = useState<DepoStockItem[]>([]);
@@ -388,7 +390,7 @@ export default function DepoStokPage() {
   return (
     <div className="flex flex-col gap-4 text-text">
       <div className="flex flex-wrap items-center gap-2">
-        <Link href="/depo" className={LINK_BUTTON}>
+        <Link href={hotelHref("/depo", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="arrow-left" size={20} />
           Geri
         </Link>
@@ -433,15 +435,15 @@ export default function DepoStokPage() {
             Merkez depo tedarik
           </Link>
         ) : null}
-        <Link href="/depo/doluluk-yukle" className={LINK_BUTTON}>
+        <Link href={hotelHref("/depo/doluluk-yukle", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="chart" size={20} />
           Doluluk girişi
         </Link>
-        <Link href="/depo/raporlar" className={LINK_BUTTON}>
+        <Link href={hotelHref("/depo/raporlar", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="trending" size={20} />
           Raporlar
         </Link>
-        <Link href="/depo/tanimlar" className={LINK_BUTTON}>
+        <Link href={hotelHref("/depo/tanimlar", selectedHotelId)} className={LINK_BUTTON}>
           <Icon name="settings" size={20} />
           Tanımlamalar ve denetim
         </Link>
@@ -538,7 +540,7 @@ export default function DepoStokPage() {
                       <SortTh view={stockView} k="name">Ürün adı</SortTh>
                       <SortTh view={stockView} k="category">Kategori</SortTh>
                       <SortTh view={stockView} k="qty" align="center">Depodaki miktar</SortTh>
-                      <SortTh view={stockView} k="min" align="center" guide="kritik-seviye">Kritik seviye</SortTh>
+                      <SortTh view={stockView} k="min" align="center" data-guide="kritik-seviye">Kritik seviye</SortTh>
                       <th scope="col" className="px-4 py-3 text-right">İşlemler</th>
                     </tr>
                   </thead>
@@ -771,7 +773,7 @@ function AdjustDialog({
     try {
       setBusy(true);
       setError(null);
-      const res = await fetch("/api/minibar/depo/stock", {
+      const res = await mbFetch("/api/minibar/depo/stock", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -937,7 +939,7 @@ function OpeningDialog({
     try {
       setBusy(true);
       setError(null);
-      const res = await fetch("/api/minibar/stock/opening", {
+      const res = await mbFetch("/api/minibar/stock/opening", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ formHotelId: hotelId, productId: product.productId, qty }),

@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
 import { askMmdReason } from "@/modules/minibar/ui/askMmdReason";
 import Link from "next/link";
@@ -149,7 +150,7 @@ export default function KatDolulukDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/minibar/floor/${floorId}`);
+      const res = await mbFetch(`/api/minibar/floor/${floorId}`);
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? "Kat odaları alınamadı.");
@@ -172,7 +173,7 @@ export default function KatDolulukDetailPage() {
   const loadRoomMmd = useCallback(async (roomId: string) => {
     setRoomMmds([]);
     try {
-      const res = await fetch(`/api/minibar/room/${roomId}/mmd`);
+      const res = await mbFetch(`/api/minibar/room/${roomId}/mmd`);
       if (res.ok) setRoomMmds(((await res.json()) as { rows: MmdRow[] }).rows);
     } catch {
       // The list is informative; the dialog works without it.
@@ -183,7 +184,7 @@ export default function KatDolulukDetailPage() {
     setLoadingDnd(true);
     setRoomDndData(null);
     try {
-      const res = await fetch(`/api/minibar/room/${roomId}/dnd`);
+      const res = await mbFetch(`/api/minibar/room/${roomId}/dnd`);
       if (res.ok) {
         const json = (await res.json()) as RoomDndDetailResponse;
         setRoomDndData(json);
@@ -222,7 +223,7 @@ export default function KatDolulukDetailPage() {
     setMmdOpen(false);
     setSubmittingDnd(true);
     try {
-      const res = await fetch(`/api/minibar/room/${selectedRoom.id}/mmd`, {
+      const res = await mbFetch(`/api/minibar/room/${selectedRoom.id}/mmd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason, clientRequestId: dndKey }),
@@ -247,7 +248,7 @@ export default function KatDolulukDetailPage() {
     setMmdOpen(false);
     setSubmittingDnd(true);
     try {
-      const res = await fetch(`/api/minibar/room/${selectedRoom.id}/dnd`, {
+      const res = await mbFetch(`/api/minibar/room/${selectedRoom.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: dndNote.trim() || undefined, clientRequestId: dndKey }),

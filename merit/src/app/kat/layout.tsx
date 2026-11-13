@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { StaffShell } from "@/components/staff/StaffShell";
@@ -18,13 +19,15 @@ export const metadata: Metadata = { manifest: "/personel.webmanifest" };
  */
 export default async function KatLayout({ children }: { children: ReactNode }) {
   const { ctx, path, embedded } = await requireStaffLayout("/kat");
+  // The MyBar alerts follow the hotel the window shows, not the session's.
+  const shownHotelId = (await pageHotelCtx(ctx)).session.hotelId;
   if (embedded) {
     return (
       <>
         <SessionWatch />
         <ConfirmHost variant="sheet" />
         <SnackbarHost />
-        <PersistentMybarModal hotelId={ctx.session.hotelId} />
+        <PersistentMybarModal hotelId={shownHotelId} />
         {children}
       </>
     );
@@ -34,7 +37,7 @@ export default async function KatLayout({ children }: { children: ReactNode }) {
     <>
       <SessionWatch />
       <ConfirmHost variant="sheet" />
-      <PersistentMybarModal hotelId={ctx.session.hotelId} />
+      <PersistentMybarModal hotelId={shownHotelId} />
       <StaffShell {...shell}>{children}</StaffShell>
     </>
   );

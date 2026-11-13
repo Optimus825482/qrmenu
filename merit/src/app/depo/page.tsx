@@ -1,3 +1,4 @@
+import { pageHotelCtx } from "@/modules/minibar/server/selectedHotel";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Icon } from "@/components/icons/Icon";
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function DepoHomePage() {
   let ctx;
   try {
-    ctx = await requireUser();
+    ctx = await pageHotelCtx(await requireUser());
   } catch (error) {
     if (error instanceof DomainError && error.code === "UNAUTHORIZED") {
       redirect("/giris?next=/depo");
@@ -138,7 +139,7 @@ export default async function DepoHomePage() {
         {cards.map((card) => (
           <Link
             key={card.href}
-            href={card.href}
+            href={`${card.href}?hotelId=${encodeURIComponent(hotelId)}`}
             style={{ minHeight: "var(--tap-action)" }}
             className="group flex items-center justify-between gap-3 px-5 py-3 hover:bg-bg"
           >
@@ -157,7 +158,7 @@ export default async function DepoHomePage() {
         {cards.map((card) => (
           <Link
             key={card.href}
-            href={card.href}
+            href={`${card.href}?hotelId=${encodeURIComponent(hotelId)}`}
             className="group flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-accent"
           >
             <div>

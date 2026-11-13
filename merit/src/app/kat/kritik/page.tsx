@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { HotelLogo } from "@/components/HotelLogo";
@@ -45,7 +46,7 @@ export default function KatKritikPage() {
 
   useEffect(() => {
     const t = setTimeout(async () => {
-      const res = await fetch("/api/minibar/stock?view=critical", { cache: "no-store" });
+      const res = await mbFetch("/api/minibar/stock?view=critical", { cache: "no-store" });
       const json = await res.json();
       if (res.ok) setData(json as Data);
       else setError(json.error ?? "Kritik stoklar yüklenemedi");
@@ -130,7 +131,7 @@ export default function KatKritikPage() {
           >
             <span className="block text-xs font-bold text-muted">{c.title}</span>
             <span className="block text-3xl font-bold tabular-nums">{c.value}</span>
-            <span className="block text-[11px] text-muted">{c.hint}</span>
+            <span className="block text-xs text-muted">{c.hint}</span>
           </button>
         ))}
       </div>

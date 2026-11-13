@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { MMD_REASONS, mmdConsumptionQuestion } from "@/modules/minibar/mmdReasons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -82,6 +83,7 @@ interface RoomCheckData {
 }
 
 export default function OdaKontrolPage() {
+  const hotelHref = useHotelHref();
   const params = useParams<{ roomId: string }>();
   const router = useRouter();
   const roomId = params?.roomId;
@@ -104,7 +106,7 @@ export default function OdaKontrolPage() {
     if (!roomId) return;
     if (showSpinner) setLoading(true);
     try {
-      const res = await fetch(`/api/minibar/room/${roomId}`);
+      const res = await mbFetch(`/api/minibar/room/${roomId}`);
       const json = (await res.json()) as RoomCheckData & { error?: string };
       if (!res.ok) throw new Error(json.error ?? "Oda bilgisi yüklenemedi.");
       setData(json);
@@ -126,7 +128,7 @@ export default function OdaKontrolPage() {
 
   useEffect(() => {
     if (!roomId) return;
-    void fetch(`/api/minibar/room/${roomId}/start`, { method: "POST" }).catch(() => undefined);
+    void mbFetch(`/api/minibar/room/${roomId}/start`, { method: "POST" }).catch(() => undefined);
     const t = setTimeout(() => void loadRoom(true), 0);
     return () => clearTimeout(t);
   }, [roomId, loadRoom]);
@@ -137,7 +139,7 @@ export default function OdaKontrolPage() {
     const quickId = `${setupId}:${item.productId}:${n}`;
     const clientRequestId = (quickKeys.current[quickId] ??= newRequestKey());
     try {
-      const res = await fetch(`/api/minibar/room/${data.room.id}/check`, {
+      const res = await mbFetch(`/api/minibar/room/${data.room.id}/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -164,7 +166,7 @@ export default function OdaKontrolPage() {
         txId
           ? {
               undo: async () => {
-                const delRes = await fetch(`/api/minibar/my-checks/${txId}`, { method: "DELETE" });
+                const delRes = await mbFetch(`/api/minibar/my-checks/${txId}`, { method: "DELETE" });
                 if (!delRes.ok) {
                   const delJson = (await delRes.json().catch(() => ({}))) as { error?: string };
                   notify.error(delJson.error ?? "Geri alma başarısız.");
@@ -235,7 +237,7 @@ export default function OdaKontrolPage() {
             .filter(([, qty]) => qty > 0)
             .map(([productId, qty]) => ({ productId, qty }));
 
-      const res = await fetch(`/api/minibar/room/${data.room.id}/check`, {
+      const res = await mbFetch(`/api/minibar/room/${data.room.id}/check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -279,7 +281,7 @@ export default function OdaKontrolPage() {
     setMmdOpen(false);
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/minibar/room/${data.room.id}/mmd`, {
+      const res = await mbFetch(`/api/minibar/room/${data.room.id}/mmd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reason, clientRequestId: dndKey }),
@@ -309,7 +311,7 @@ export default function OdaKontrolPage() {
     setMmdOpen(false);
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/minibar/room/${data.room.id}/dnd`, {
+      const res = await mbFetch(`/api/minibar/room/${data.room.id}/dnd`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: note.trim() || undefined, clientRequestId: dndKey }),
@@ -335,15 +337,17 @@ export default function OdaKontrolPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
+            {/* Always the floor of the room: `router.back()` returned to the QR camera after a scan and left the
+                app when the room was the first page of the window. */}
+            <Link
+              href={hotelHref(data ? `/kat/doluluk/${data.room.floorId}` : "/kat")}
+              data-testid="oda-geri"
               style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
               className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
             >
               <Icon name="arrow-left" size={16} />
               Geri
-            </button>
+            </Link>
             <div>
               <h1 className="text-lg font-bold">
                 Oda {data?.room.number ?? "..."} — Minibar Kontrol

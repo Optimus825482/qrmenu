@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -50,7 +51,7 @@ export default function DepoTaleplerPage() {
 
   const load = useCallback(async () => {
     const status = TABS.find((t) => t.key === tab)!.status;
-    const res = await fetch(`/api/minibar/stock-requests?status=${status}&pageSize=100`, { cache: "no-store" });
+    const res = await mbFetch(`/api/minibar/stock-requests?status=${status}&pageSize=100`, { cache: "no-store" });
     const json = await res.json();
     if (!res.ok) {
       setMessage(json.error ?? "Talepler yüklenemedi");
@@ -79,7 +80,7 @@ export default function DepoTaleplerPage() {
     );
     const body =
       action === "approve" || action === "deliver" ? { items } : { reason: reason[r.id] ?? "" };
-    const res = await fetch(`/api/minibar/stock-requests/${r.id}/${action}`, {
+    const res = await mbFetch(`/api/minibar/stock-requests/${r.id}/${action}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),

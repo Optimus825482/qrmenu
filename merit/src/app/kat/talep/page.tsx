@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { newRequestKey } from "@/modules/minibar/ui/requestKey";
@@ -45,8 +46,8 @@ export default function KatTalepPage() {
 
   const load = useCallback(async () => {
     const [s, l] = await Promise.all([
-      fetch("/api/minibar/stock-requests/suggest", { cache: "no-store" }),
-      fetch("/api/minibar/stock-requests?mine=1", { cache: "no-store" }),
+      mbFetch("/api/minibar/stock-requests/suggest", { cache: "no-store" }),
+      mbFetch("/api/minibar/stock-requests?mine=1", { cache: "no-store" }),
     ]);
     const sj = await s.json();
     if (s.ok) {
@@ -75,7 +76,7 @@ export default function KatTalepPage() {
       .map((x) => ({ productId: x.productId, requestedQty: Number(qty[x.productId]), urgency: x.urgency }));
     setBusy(true);
     try {
-      const res = await fetch("/api/minibar/stock-requests", {
+      const res = await mbFetch("/api/minibar/stock-requests", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ items, note: note || undefined, clientRequestId: sendKey }),
@@ -93,7 +94,7 @@ export default function KatTalepPage() {
   }
 
   async function cancel(id: string) {
-    const res = await fetch(`/api/minibar/stock-requests/${id}/cancel`, { method: "POST" });
+    const res = await mbFetch(`/api/minibar/stock-requests/${id}/cancel`, { method: "POST" });
     const json = await res.json();
     setMessage(res.ok ? "Talep iptal edildi" : (json.error ?? "İptal edilemedi"));
     await load();

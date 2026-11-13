@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HotelLogo } from "@/components/HotelLogo";
@@ -46,6 +47,7 @@ const COLUMNS: { key: SortKey; title: string; numeric: boolean }[] = [
 const PAGE_SIZES = [25, 50, 100] as const;
 
 export default function KatStokPage() {
+  const hotelHref = useHotelHref();
   const [data, setData] = useState<Data | null>(null);
   const [filter, setFilter] = useState<Status | "ALL">("ALL");
   const [search, setSearch] = useState("");
@@ -57,7 +59,7 @@ export default function KatStokPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/minibar/stock", { cache: "no-store" });
+    const res = await mbFetch("/api/minibar/stock", { cache: "no-store" });
     const json = await res.json();
     if (!res.ok) {
       setMessage(json.error ?? "Stoklar yüklenemedi");
@@ -126,7 +128,7 @@ export default function KatStokPage() {
             Kritik stoklar
           </Link>
           <a
-            href={`/api/minibar/stock/export${exportQuery ? `?${exportQuery}` : ""}`}
+            href={hotelHref(`/api/minibar/stock/export${exportQuery ? `?${exportQuery}` : ""}`)}
             data-testid="stok-excel"
             title="Listede görünen bütün satırlar (tüm sayfalar) Excel dosyasına aktarılır"
             className="inline-flex min-h-11 items-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-text hover:bg-bg"
@@ -286,7 +288,7 @@ export default function KatStokPage() {
                     {r.name}
                   </Link>
                   {!r.active ? (
-                    <span className="ml-2 rounded-full border border-border bg-bg px-2 py-0.5 text-[11px] font-bold text-muted">Katalog dışı</span>
+                    <span className="ml-2 rounded-full border border-border bg-bg px-2 py-0.5 text-xs font-bold text-muted">Katalog dışı</span>
                   ) : null}
                 </td>
                 <td className="px-3 py-2.5 text-muted">{r.groupName}</td>

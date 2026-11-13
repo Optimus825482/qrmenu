@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -73,7 +74,7 @@ export default function ManuelKayitPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/minibar/manual-requests");
+      const res = await mbFetch("/api/minibar/manual-requests");
       if (!res.ok) throw new Error(await readError(res));
       setData((await res.json()) as Overview);
       setLoadError(null);
@@ -97,7 +98,7 @@ export default function ManuelKayitPage() {
     setQty({});
     if (!id) return;
     try {
-      const res = await fetch(`/api/minibar/manual-requests?roomId=${encodeURIComponent(id)}`);
+      const res = await mbFetch(`/api/minibar/manual-requests?roomId=${encodeURIComponent(id)}`);
       if (!res.ok) throw new Error(await readError(res));
       setLines(((await res.json()) as { lines: Line[] }).lines);
     } catch (error) {
@@ -144,7 +145,7 @@ export default function ManuelKayitPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/minibar/manual-requests", {
+      const res = await mbFetch("/api/minibar/manual-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ roomId: room.id, reason: reason.trim(), items: chosen.map(([productId, value]) => ({ productId, qty: value })) }),
@@ -169,7 +170,7 @@ export default function ManuelKayitPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/minibar/manual-requests/${encodeURIComponent(id)}/resolve`, {
+      const res = await mbFetch(`/api/minibar/manual-requests/${encodeURIComponent(id)}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ approved, ...(approved ? {} : { rejectReason: rejectReason.trim() || undefined }) }),
@@ -199,7 +200,7 @@ export default function ManuelKayitPage() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/minibar/manual-requests/${encodeURIComponent(id)}/cancel`, { method: "POST" });
+      const res = await mbFetch(`/api/minibar/manual-requests/${encodeURIComponent(id)}/cancel`, { method: "POST" });
       if (!res.ok) throw new Error(await readError(res));
       const json = (await res.json()) as { message: string };
       setMessage({ tone: "ok", text: json.message });

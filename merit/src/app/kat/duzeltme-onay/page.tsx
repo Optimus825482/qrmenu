@@ -1,5 +1,7 @@
 "use client";
 
+import { useInShellFrame } from "@/shell/useInShellFrame";
+import { mbFetch } from "@/modules/minibar/ui/mbFetch";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
@@ -29,6 +31,7 @@ type StockRow = {
 };
 
 export default function KatDuzeltmeOnayPage() {
+  const inShellFrame = useInShellFrame();
   const [requests, setRequests] = useState<CorrectionRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,10 +68,11 @@ export default function KatDuzeltmeOnayPage() {
     setError(null);
     void loadOthers();
     try {
-      const res = await fetch("/api/minibar/corrections");
-      const json = (await res.json()) as { requests?: CorrectionRequestItem[]; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "Talepler alınamadı.");
-      setRequests(json.requests ?? []);
+      const res = await mbFetch("/api/minibar/corrections");
+      // The route answers with the list itself; an error answer is an object.
+      const json = (await res.json()) as CorrectionRequestItem[] | { requests?: CorrectionRequestItem[]; error?: string };
+      if (!res.ok) throw new Error((Array.isArray(json) ? undefined : json.error) ?? "Talepler alınamadı.");
+      setRequests(Array.isArray(json) ? json : (json.requests ?? []));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Bilinmeyen hata");
     } finally {
@@ -97,7 +101,7 @@ export default function KatDuzeltmeOnayPage() {
 
     setProcessingId(id);
     try {
-      const res = await fetch(`/api/minibar/corrections/${id}/resolve`, {
+      const res = await mbFetch(`/api/minibar/corrections/${id}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ approved, rejectReason }),
@@ -119,8 +123,11 @@ export default function KatDuzeltmeOnayPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur px-4 py-3">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-3">
+            {/* In a shell window this screen can be the first one (Onaylar app): the shell "Geri" leaves it,
+                a link here would push another screen into the window. */}
             <Link
               href="/kat/islemlerim"
+              hidden={inShellFrame}
               style={{ minHeight: "var(--tap-action)", minWidth: "var(--tap-action)" }}
               className="inline-flex items-center justify-center gap-1 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-bg"
             >

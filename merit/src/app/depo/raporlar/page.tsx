@@ -1,5 +1,6 @@
 "use client";
 
+import { mbFetch, useHotelHref } from "@/modules/minibar/ui/mbFetch";
 import { hotelFromAddress, useInShellFrame } from "@/shell/useInShellFrame";
 import React, { useState, useEffect, useCallback, type ReactNode } from "react";
 import Link from "next/link";
@@ -254,6 +255,7 @@ function ReportTable<T>({
 }
 
 export default function RaporlarPage() {
+  const hotelHref = useHotelHref();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   // A shell window passes the hotel chosen in its banner as `?hotelId=`; the page starts from it.
   const [selectedHotelId, setSelectedHotelId] = useState<string>(hotelFromAddress);
@@ -291,7 +293,7 @@ export default function RaporlarPage() {
       if (endDate) params.append("endDate", endDate);
       if (selectedFloorId) params.append("floorId", selectedFloorId);
 
-      const res = await fetch(`/api/minibar/reports/consumption?${params.toString()}`);
+      const res = await mbFetch(`/api/minibar/reports/consumption?${params.toString()}`);
       if (!res.ok) throw new Error("Tüketim raporu alınamadı.");
       const data = await res.json();
 
@@ -319,7 +321,7 @@ export default function RaporlarPage() {
       if (hotelId) params.append("hotelId", hotelId);
       if (startDate) params.append("date", startDate);
 
-      const res = await fetch(`/api/minibar/reports/tasks?${params.toString()}`);
+      const res = await mbFetch(`/api/minibar/reports/tasks?${params.toString()}`);
       if (!res.ok) throw new Error("Görev tamamlanma raporu alınamadı.");
       const data = await res.json();
 
@@ -344,7 +346,7 @@ export default function RaporlarPage() {
       if (hotelId) params.append("hotelId", hotelId);
       if (startDate) params.append("date", startDate);
 
-      const res = await fetch(`/api/minibar/reports/abnormal?${params.toString()}`);
+      const res = await mbFetch(`/api/minibar/reports/abnormal?${params.toString()}`);
       if (!res.ok) throw new Error("Anormal tüketim raporu alınamadı.");
       const data = await res.json();
 
@@ -372,6 +374,8 @@ export default function RaporlarPage() {
   const handleHotelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     setSelectedHotelId(id);
+    // The floors belong to the hotel left behind: a kept floor would empty the new hotel report.
+    setSelectedFloorId("");
     if (activeTab === "CONSUMPTION") {
       void loadConsumptionData(id);
     } else if (activeTab === "TASKS") {
@@ -391,7 +395,7 @@ export default function RaporlarPage() {
                 load the floor plan into the report's window instead. */}
             {inShellFrame ? null : (
               <Link
-                href="/kat"
+                href={hotelHref("/depo", selectedHotelId)}
                 className="inline-flex min-h-11 min-w-11 items-center justify-center bg-bg hover:bg-border text-text rounded-lg transition"
                 aria-label="Kat paneline dön"
               >
@@ -440,21 +444,21 @@ export default function RaporlarPage() {
             </button>
 
             <Link
-              href="/depo/doluluk-yukle"
+              href={hotelHref("/depo/doluluk-yukle", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-warn/10 hover:bg-warn/20 text-warn border border-warn/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="chart" size={20} /> Doluluk Girişi
             </Link>
 
             <Link
-              href="/depo/stok"
+              href={hotelHref("/depo/stok", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-surface hover:bg-success/20 text-success border border-success/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="box" size={20} /> Otel Deposu
             </Link>
 
             <Link
-              href="/depo/tanimlar"
+              href={hotelHref("/depo/tanimlar", selectedHotelId)}
               className="inline-flex min-h-11 items-center gap-1.5 px-3 py-1.5 bg-info/10 hover:bg-info/20 text-info border border-info/40 rounded-lg text-xs font-semibold transition"
             >
               <Icon name="settings" size={20} /> Tanımlamalar & Audit

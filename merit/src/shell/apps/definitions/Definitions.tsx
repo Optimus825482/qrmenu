@@ -1,5 +1,6 @@
 "use client";
 
+import { appFrameUrl } from "@/shell/appearance";
 import { type KeyboardEvent, useId, useMemo, useState } from "react";
 import { listOutletsAction } from "@/modules/core/server/admin/actions/outlets";
 import type { OutletRow } from "@/modules/core/server/admin/outlets";
@@ -54,6 +55,8 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
   const treeId = useId();
   const itemId = (id: string) => `${treeId}-${id}`;
   const availableHotels = useWindowStore((state) => state.hotels);
+  const fontFamily = useWindowStore((state) => state.fontFamily);
+  const theme = useWindowStore((state) => state.theme);
   const screensByHotel = useWindowStore((state) => state.screensByHotel);
   const hotelChoices = useMemo(
     () => hotelsForApp({ hotels: availableHotels, screensByHotel }, "core.tanimlar"),
@@ -140,7 +143,8 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
       <iframe
         // The page follows the window's hotel (its own selector is hidden inside a frame).
         key={hotelId ?? ""}
-        src={hotelId ? `/depo/tanimlar?hotelId=${encodeURIComponent(hotelId)}` : "/depo/tanimlar"}
+        // Marked as a shell frame (`font`/`theme`): the page drops the staff chrome and its links keep the hotel.
+        src={appFrameUrl(hotelId ? `/depo/tanimlar?hotelId=${encodeURIComponent(hotelId)}` : "/depo/tanimlar", { fontFamily, theme })}
         title="Minibar Tanımları"
         className="w-full h-full border-0 rounded-lg min-h-[500px]"
       />
