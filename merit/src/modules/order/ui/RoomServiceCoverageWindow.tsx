@@ -118,6 +118,8 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
   // The user's own hotels are never a target: they already work there.
   const hotelOptions = data && candidate ? data.hotels.filter((h) => !candidate.hotelIds.includes(h.id)) : [];
   const hotelValue = hotelOptions.some((h) => h.id === hotelId) ? hotelId : (hotelOptions[0]?.id ?? "");
+  // Why some hotels are missing from the list: said in words, or the short list looks like a fault.
+  const ownHotelNames = data && candidate ? data.hotels.filter((h) => candidate.hotelIds.includes(h.id)).map((h) => h.name) : [];
   const customBad = preset === "custom" && endOf(preset, custom, new Date()) === undefined;
   const canSubmit = !busy && candidate !== undefined && hotelValue !== "" && !customBad;
 
@@ -252,6 +254,11 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
                       </option>
                     ))}
                   </select>
+                  {candidate && ownHotelNames.length > 0 ? (
+                    <p className="xp-cp-note" style={{ margin: 0 }} data-coverage-own-hotels>
+                      {`${candidate.fullName} ekip üyesi olduğu ${ownHotelNames.join(", ")} taleplerini zaten kendi yetkisiyle görür ve işler; bu yüzden listede yalnızca diğer oteller var.`}
+                    </p>
+                  ) : null}
                 </div>
                 <div style={FIELD}>
                   <label htmlFor={`${id}-mode`}>İzin türü</label>
@@ -348,7 +355,7 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
       {data && past.length > 0 ? (
         <section className="xp-cp-section" aria-labelledby={`${id}-past`}>
           <h3 id={`${id}-past`} className="xp-cp-heading">
-            Son bir haftada biten izinler
+            Son bir haftada süresi dolan izinler
           </h3>
           <GrantTable rows={past} busy={busy} />
         </section>

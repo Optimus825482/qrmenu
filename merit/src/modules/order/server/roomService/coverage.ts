@@ -32,7 +32,7 @@ export const COVERAGE_MANAGER_ROLES: readonly string[] = ["R-OSS", "R-FBY", "R-F
 /** Realtime event addressed to the grantee (`userIds`) whenever their coverage changes. */
 export const COVERAGE_CHANGED_EVENT = "rs.coverage.changed";
 
-/** How long ended and revoked grants stay in the manager list. */
+/** How long a grant whose time ran out stays in the manager list. Revoked grants are not listed at all. */
 const RECENT_MS = 7 * 24 * 60 * 60_000;
 const LIST_LIMIT = 200;
 const ACTIVE_SESSION = ["ONLINE", "UYARI"] as const;
@@ -397,7 +397,7 @@ export type CoverageCandidate = {
 export type CoverageOverview = {
   /** Hotels whose coverage the caller manages. */
   hotels: { id: string; name: string; code: string }[];
-  /** Open grants first (newest first), then the ones that ended or were revoked in the last week. */
+  /** Open grants first (newest first), then the ones whose time ran out in the last week. Never a revoked one. */
   rows: CoverageRow[];
   /** Users the caller may grant to: active, a role below the caller, a role that has the room-service board. */
   candidates: CoverageCandidate[];
@@ -415,7 +415,9 @@ async function list(ctx: Ctx): Promise<CoverageOverview> {
     prisma.roomServiceCoverage.findMany({
       where: {
         hotelId: { in: hotelIds },
-        OR: [openAt(now), { updatedAt: { gte: new Date(now.getTime() - RECENT_MS) } }],
+        // A grant removed by hand leaves the window at once; the audit log keeps it.
+        revokedAt: null,
+        OR: [{ endsAt: null }, { endsAt: { gt: new Date(now.getTime() - RECENT_MS) } }],
       },
       include: ROW_INCLUDE,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
