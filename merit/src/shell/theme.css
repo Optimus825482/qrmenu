@@ -5405,14 +5405,78 @@
   touch-action: auto;
 }
 
-.xp-widget-status { display: flex; flex-direction: column; background: #f4f6fb; border: 1px solid #8fa3cf; border-radius: 8px; overflow: hidden; }
-.xp-widget-status-title { padding: 6px 8px; background: #1f3f8f; color: #ffffff; font-size: 12px; font-weight: 700; }
-.xp-widget-status table { flex: 1; width: 100%; border-collapse: collapse; margin: 2px 0 4px; font-size: 12px; }
-.xp-widget-status th, .xp-widget-status td { padding: 2px 6px; text-align: right; white-space: nowrap; color: #0f2466; font-variant-numeric: tabular-nums; }
-.xp-widget-status tbody th { text-align: left; font-weight: 400; color: #33415c; padding-left: 8px; }
-.xp-widget-status thead th { font-size: 11px; font-weight: 700; color: #33415c; border-bottom: 1px solid #c3cee6; }
-.xp-widget-status td.is-total { font-weight: 700; padding-right: 8px; }
-.xp-widget-status p { margin: 0; padding: 10px 8px; font-size: 12px; color: #33415c; }
+/* Anlık Durum widget: navy header with a gold hairline, hotel-coloured column heads, tinted total column. */
+.xp-widget-status {
+  --st-ink: #0f2466;
+  --st-muted: #5b6987;
+  --st-line: #e3e8f4;
+  --st-recv: #1d4ed8;
+  --st-done: #0f7a4d;
+  --st-wait: #b45309;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fd 100%);
+  border: 1px solid #7f95c8;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(8, 24, 72, 0.28);
+}
+.xp-widget-status-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  background: linear-gradient(100deg, #0b1f4b 0%, #1f3f8f 55%, #2f5fc4 100%);
+  border-bottom: 2px solid #d9b65a;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.xp-widget-status-live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  animation: xp-widget-status-pulse 2.4s ease-out infinite;
+}
+@keyframes xp-widget-status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+  70%, 100% { box-shadow: 0 0 0 7px rgba(74, 222, 128, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xp-widget-status-live { animation: none; }
+}
+.xp-widget-status table { flex: 1; width: 100%; border-collapse: collapse; margin: 2px 0 0; font-size: 12px; }
+.xp-widget-status th, .xp-widget-status td { padding: 3px 7px; text-align: right; white-space: nowrap; color: var(--st-ink); font-variant-numeric: tabular-nums; }
+.xp-widget-status tbody tr { border-top: 1px solid var(--st-line); }
+.xp-widget-status tbody tr[data-group-start] { border-top: 2px solid #c3cee6; }
+.xp-widget-status tbody th { text-align: left; font-weight: 400; color: #25324d; padding-left: 9px; }
+.xp-widget-status tbody th > span { vertical-align: middle; }
+.xp-widget-status thead th { padding-top: 4px; padding-bottom: 5px; font-size: 11px; font-weight: 700; }
+.xp-widget-status td.is-total, .xp-widget-status th.is-total { background: rgba(31, 63, 143, 0.07); padding-right: 10px; }
+.xp-widget-status td.is-total { font-weight: 700; }
+.xp-widget-status p { margin: 0; padding: 10px; font-size: 12px; color: #33415c; }
+
+.xp-widget-status-hotel { display: inline-block; padding: 1px 8px; border: 1px solid #c9ccd3; border-radius: 999px; background: #f1f2f4; color: #3d424d; line-height: 1.45; }
+.xp-widget-status-hotel[data-hotel="royal"] { border-color: #dfc37a; background: #fbf2d8; color: #6f4b00; }
+.xp-widget-status-hotel[data-hotel="diamond"] { border-color: #9cc4f2; background: #e4f0ff; color: #0b4686; }
+.xp-widget-status-hotel[data-hotel="premium"] { border-color: #c2b3ee; background: #eee8fc; color: #47309a; }
+.xp-widget-status-hotel[data-hotel="total"] { border-color: #1f3f8f; background: #1f3f8f; color: #ffffff; }
+
+.xp-widget-status-icon { width: 18px; height: 18px; margin-right: 6px; padding: 3px; border-radius: 5px; vertical-align: middle; box-sizing: border-box; background: #e7ecf8; fill: #1f3f8f; }
+.xp-widget-status-icon[data-row="online"] { background: #dcfce7; fill: #0f7a4d; }
+.xp-widget-status-icon[data-row="occupancy"], .xp-widget-status-icon[data-row="rooms"] { background: #e4f0ff; fill: #0b4686; }
+.xp-widget-status-icon[data-row="roomService"] { background: #fde8d7; fill: #b0460a; }
+.xp-widget-status-icon[data-row="mybar"], .xp-widget-status-icon[data-row="minibarTasks"] { background: #eee8fc; fill: #47309a; }
+.xp-widget-status-icon[data-row="qrViews"], .xp-widget-status-icon[data-row="qrOrders"] { background: #d9f3f1; fill: #0c6b66; }
+.xp-widget-status-icon[data-row="waiterCalls"] { background: #fbf2d8; fill: #6f4b00; }
+
+.xp-widget-status-bar { display: block; height: 4px; margin: 1px 0 1px auto; width: 56px; border-radius: 999px; background: #dfe5f2; overflow: hidden; }
+.xp-widget-status-bar i { display: block; height: 100%; border-radius: 999px; background: #d08a1c; }
+.xp-widget-status-bar[data-tone="mid"] i { background: #2f6fd6; }
+.xp-widget-status-bar[data-tone="high"] i { background: #12915c; }
 
 .xp-widget-gallery { width: min(480px, calc(100vw - 32px)); max-width: none; }
 .xp-widget-gallery-body { padding: 12px 14px 4px; background: var(--xp-body); max-height: min(60vh, 440px); overflow: auto; }
@@ -5546,7 +5610,14 @@
   overflow-wrap: anywhere;
 }
 
-/* Anlık Durum widget, live counters: legend line, per-row hint, pending numbers in the warning tone. */
-.xp-widget-status-legend { padding: 3px 8px 0; font-size: 10px; color: #5b6987; }
-.xp-widget-status tbody th small { font-size: 10px; color: #5b6987; }
-.xp-widget-status td[data-warn] { color: #b45309; font-weight: 700; }
+/* Anlık Durum widget, live counters: colour-keyed legend, per-row hint, numbers coloured by what they count. */
+.xp-widget-status-legend { padding: 5px 10px 2px; font-size: 11px; color: var(--st-muted); }
+.xp-widget-status-legend [data-role] { font-weight: 700; }
+.xp-widget-status tbody th small { font-size: 10.5px; color: var(--st-muted); }
+.xp-widget-status [data-role="recv"] { color: var(--st-recv); }
+.xp-widget-status [data-role="done"] { color: var(--st-done); }
+.xp-widget-status [data-role="wait"] { color: var(--st-wait); }
+.xp-widget-status td [data-role="wait"]:not([data-on]) { color: #6b7691; }
+.xp-widget-status td [data-role="wait"][data-on] { padding: 0 5px; border-radius: 999px; background: #fdecc8; font-weight: 700; }
+.xp-widget-status-sep { color: #9aa5bf; font-weight: 400; }
+.xp-widget-status td[data-idle], .xp-widget-status td[data-idle] [data-role] { color: #6b7691; font-weight: 400; }

@@ -48,7 +48,7 @@ describe("LiveStatusWidget", () => {
 
     const qr = screen.getByText("QR sipariş").closest("tr")!;
     expect([...qr.querySelectorAll("td")].map((c) => c.textContent)).toEqual(["2 / 1 / 1", "–", "2 / 1 / 1"]);
-    expect(screen.getByText(/alınan \/ tamamlanan \/ bekleyen/, { selector: ".xp-widget-status-legend" })).toBeTruthy();
+    expect(document.querySelector(".xp-widget-status-legend")!.textContent).toMatch(/alınan \/ tamamlanan \/ bekleyen/);
     expect(screen.getByText("Çevrimiçi kullanıcı")).toBeTruthy();
   });
 });
