@@ -4,6 +4,7 @@ from menu_lib import HERE, flat_menu, load, load_micros, price_for
 from spelling import fix, fix_pair
 from item_fixes import fix_item
 from structure import restructure
+import room_service_list
 
 MERIT = r"D:\PROJECTS\qrmenu\merit"
 OUT = os.path.join(MERIT, "prisma", "seed", "data", "merit-menus.json")
@@ -83,6 +84,7 @@ for hotel, name, variant, menu, flt in OUTLETS:
     stats.append("%-8s %-32s %4d ürün  %4d fiyatlı  %4d görselli  %2d kategori" % (
         hotel, name or "Oda Servisi", c["items"], c["priced"], c["image"], len({r["catPath"][0] for r in out})))
 
+stats += room_service_list.apply(outlets)
 data = {"version": 3, "currency": "USD", "outlets": outlets}
 io.open(OUT, "w", encoding="utf8", newline="\n").write(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
 io.open(os.path.join(HERE, "img_jobs.json"), "w", encoding="utf8").write(

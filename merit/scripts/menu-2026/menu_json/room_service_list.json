@@ -1,0 +1,917 @@
+{
+ "source": "merit_tum_menuler.md (08.11.2026), Menü 808",
+ "food": {
+  "Waffle": 24.0,
+  "Pancake": 22.0,
+  "Krep": 24.0,
+  "Sanayi Tostu": 18.0,
+  "Kıbrıs Tostu": 24.0,
+  "Sucuklu Kaşarlı Tost": 22.0,
+  "Kaşarlı Tost": 20.0,
+  "Domates Çorbası": 20.0,
+  "Mercimek Çorbası": 20.0,
+  "Narenciyeli Avokado Salatası": 28.0,
+  "Yunan Salatası": 16.0,
+  "Çoban Salata": 15.0,
+  "Kinoalı Tabule Salatası": 15.0,
+  "Sezar Salata": 30.0,
+  "İstanbul Salatası": 18.0,
+  "Yeşil Bahçe Salatası": 18.0,
+  "Tavuk Finger": 19.0,
+  "Tavuk Şinitzel": 24.0,
+  "Kalamar Tava": 28.0,
+  "Tereyağlı Karides Tava": 30.0,
+  "Dana Carpaccio": 37.0,
+  "Geleneksel Türk Meze Seçkisi": 15.0,
+  "Şarap Tabağı (2 kişilik)": 50.0,
+  "Füme Burger": 32.0,
+  "Cheeseburger": 23.0,
+  "Hamburger": 22.0,
+  "Soğuk Sandviç": 15.0,
+  "Kruvasan Sandviç": 25.0,
+  "Katsu Sando": 40.0,
+  "Club Sandwich": 24.0,
+  "Deniz Mahsullü Risotto": 28.0,
+  "Yabani Mantarlı Risotto": 48.0,
+  "El Yapımı Mantı": 15.0,
+  "Fettucine Alfredo": 25.0,
+  "Spagetti Bolenez": 30.0,
+  "Spaghetti Pomodoro": 20.0,
+  "Penne All’arrabiata": 25.0,
+  "Günün Ev Yemeği": 25.0,
+  "Izgara Karides": 30.0,
+  "Levrek Izgara": 28.0,
+  "Kuzey Atlantik Somon Filetosu": 28.0,
+  "Piliç Bonfile": 24.0,
+  "Karabiberli Bonfile": 42.0,
+  "Taze Kekikli Kuzu Pirzolası": 38.0,
+  "Izgara Kasap Köfte": 21.0,
+  "Tekirdağ Köfte": 21.0,
+  "Taze Mevsim Meyveleri": 20.0,
+  "Orman Meyveleri": 25.0,
+  "El Yapımı Çikolata Seçkisi": 22.0,
+  "Royal Baklava": 35.0,
+  "Fırın Sütlaç": 18.0,
+  "Cheesecake": 28.0,
+  "Profiterol": 15.0,
+  "Türk Kahvesi ile Hazırlanmış Tiramisu": 19.0,
+  "Sağlıklı Kahvaltı": 60.0,
+  "Yöresel Anadolu Kahvaltısı (2 kişilik)": 85.0,
+  "Klasik Kahvaltı (2 kişilik)": 56.0,
+  "Güne Başlangıç Tabağı (1 kişilik)": 43.0,
+  "Musli": 18.0,
+  "Mısır Gevreği": 15.0,
+  "Yulaf Kâsesi": 21.0,
+  "Smoothie Kâse": 21.0,
+  "Börek Tabağı": 23.0,
+  "Yumurta Benedict": 25.0,
+  "Menemen": 18.0,
+  "Yumurta Akından Omlet": 18.0,
+  "Tereyağlı Omlet": 10.0,
+  "Sahanda Yumurta": 10.0,
+  "El Yapımı Kızarmış Sosis": 25.0,
+  "El Yapımı Izgara Sucuk": 25.0
+ },
+ "drinks": [
+  {
+   "category": "BİRALAR",
+   "items": [
+    {
+     "name": "EFES PILSEN",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BUD",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "TUBORG",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BECKS",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CARLSBERG",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BUDWEISER",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "HEINEKEN",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MILLER",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CORONA",
+     "price": 15.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "APERATİFLER",
+   "items": [
+    {
+     "name": "LEMONCELLO",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GRAPPA",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "APEROL",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CAMPARI",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MARTINI EXTRA DRY",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MARTINI ROSSO",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MARTINI BIANCO",
+     "price": 10.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "VOTKALAR",
+   "items": [
+    {
+     "name": "ABSOLUT BLUE",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "ABSOLUT VANİLYA",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "ABSOLUT CITRON",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "SMIRNOFF RED",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "SMIRNOFF NORTH",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "RUSSIAN STANDART",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CIROC",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GREY GOOSE SUPER PREMIUM",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BELUGA GOLD",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "BELUGA NOBLE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BELVEDERE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "KETEL ONE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "HAKU",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "CİNLER",
+   "items": [
+    {
+     "name": "BEEFEATER PINK",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BEEFEATER",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BOMBAY SAPPHIRE",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "GORDONS",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "HENDRICKS",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "TANQUERAY NO:10",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "TANQUERAY CLASSIC",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "THE BOTANIST",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "ROKU",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MONKEY 47",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MALFY",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MALFY GRAPEFRUIT",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "ROMLAR",
+   "items": [
+    {
+     "name": "CANARIO CAÇHACA",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CAPTAIN MORGAN WHITE",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CAPTAIN MORGAN DARK",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CAPTAIN MORGAN SPICED",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BACARDI CARTA BLANCA",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BACARDI CARTA NEGRA (BLACK)",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BACARDI CARTA ORO (GOLD)",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BACARDI SPICED",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "HAVANA CLUB 3 ANOS",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "RON ZACAPA 23",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "MALIBU CARIBBEAN RUM",
+     "price": 10.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "TEKİLALAR",
+   "items": [
+    {
+     "name": "OLMECA SILVER",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "OLMECA GOLD",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MILAGRO SILVER",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "MILAGRO REPOSADO",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "PATRON ANEJO",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "PATRON SILVER",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "DON JULIO BLANCO",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "DON JULIO 1942",
+     "price": 60.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "KONYAKLAR",
+   "items": [
+    {
+     "name": "NAPOLEON V.S.O.P.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "HENNESSY V.S.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "HENNESSY V.S.O.P.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "HENNESSY X.O.",
+     "price": 70.0,
+     "detail": null
+    },
+    {
+     "name": "COURVOISIER V.S.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "COURVOISIER V.S.O.P.",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "COURVOISIER X.O.",
+     "price": 70.0,
+     "detail": null
+    },
+    {
+     "name": "MARTELL V.S.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MARTELL V.S.O.P.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "MARTELL X.O.",
+     "price": 70.0,
+     "detail": null
+    },
+    {
+     "name": "REMY MARTIN V.S.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "REMY MARTIN V.S.O.P.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "REMY MARTIN X.O.",
+     "price": 70.0,
+     "detail": null
+    },
+    {
+     "name": "METAXA 5 STAR",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "METAXA 7 STAR",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "LİKÖRLER",
+   "items": [
+    {
+     "name": "FRANGELICO",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "ST. GERMAIN",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "DOM BENETICTINE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GALLIANO",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GRANDE ABSENTH",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "SHERIDANS",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "DRAMBUIE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "PIMMS",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "PISANG AMBON",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "COINTREAU",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "PASSOA",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "SKINOSS",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BATI DE COCO",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "ARCHERS",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "SAFARI",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GRAND MARNIER",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JAGERMEISTER",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "FERNET BRANCA",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "TIA MARIA",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "SAMBUCA",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "AMARETTO DISARONNO ORIGINALE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BAILEYS IRISH CREAM",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "KAHLUA",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "CARDINAL MELON",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "SOUTHERN COMFORT",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "WENNEKER APRICOT BRANDY",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "CHAMBORD",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "UNDERBERG",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "VİSKİLER > BOURBON & TENNESSEE VİSKİLER",
+   "items": [
+    {
+     "name": "JIM BEAM BLACK",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JIM BEAM WHITE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JACK DANIELS NO:7",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JACK DANIELS HONEY",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JACK DANIELS SINGLE BARREL",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "GENTLEMAN JACK",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JACK DANIELS NO:27 GOLD",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "WOODFORD RESERVE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BULLEIT BOURBON",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "BULLEIT RYE",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MAKERS MARK",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "VİSKİLER > SINGLE MALT VİSKİ",
+   "items": [
+    {
+     "name": "OBAN 14 Y.O.",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "GLENFIDDICH 12 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "GLENFIDDICH 15 Y.O.",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "GLENFIDDICH 18 Y.O.",
+     "price": 50.0,
+     "detail": null
+    },
+    {
+     "name": "GLENFIDDICH 21 Y.O.",
+     "price": 90.0,
+     "detail": null
+    },
+    {
+     "name": "MACALLAN 12 Y.O.",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "MACALLAN 15 Y.O.",
+     "price": 50.0,
+     "detail": null
+    },
+    {
+     "name": "SINGLETON 12 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "GLENMORANGIE ORIGINAL 10 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "BALVENIE DOUBLE WOOD 12 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "GLENLIVET 12 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "TALISKER 10 Y.O.",
+     "price": 30.0,
+     "detail": null
+    },
+    {
+     "name": "LAGAVULIN DE 1995 16 Y.O.",
+     "price": 50.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "VİSKİLER > İSKOÇ VİSKİLER",
+   "items": [
+    {
+     "name": "FAMOUS GROUSE",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "BALLANTINES",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "JUSTERINI & BROOKS BARE",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CHIVAS REGAL 12 Y.O.",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "CHIVAS REGAL 15 Y.O.",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "CHIVAS REGAL 18 Y.O.",
+     "price": 50.0,
+     "detail": null
+    },
+    {
+     "name": "CHIVAS REGAL 21 Y.O.",
+     "price": 70.0,
+     "detail": null
+    },
+    {
+     "name": "CHIVAS REGAL 25 Y.O.",
+     "price": 80.0,
+     "detail": null
+    },
+    {
+     "name": "JOHNNIE WALKER RED LABEL",
+     "price": 10.0,
+     "detail": null
+    },
+    {
+     "name": "JOHNNIE WALKER BLACK LABEL 12 Y.O.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JOHNNIE WALKER 18 Y.O.",
+     "price": 50.0,
+     "detail": null
+    },
+    {
+     "name": "JOHNNIE WALKER GOLD RESERVE",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "DIMPLE 15 Y.O.",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "MONKEY SHOULDER",
+     "price": 20.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "VİSKİLER > İRLANDA VİSKİLERİ",
+   "items": [
+    {
+     "name": "JAMESON",
+     "price": 20.0,
+     "detail": null
+    },
+    {
+     "name": "JAMESON STOUT EDITION",
+     "price": 40.0,
+     "detail": null
+    },
+    {
+     "name": "CONNEMARA",
+     "price": 15.0,
+     "detail": null
+    }
+   ]
+  },
+  {
+   "category": "İMZA KOKTEYLLER",
+   "items": [
+    {
+     "name": "AURA",
+     "price": 35.0,
+     "detail": "İrlanda Viskisi, Kayısı Brendi, Taze Limon Suyu, Mürver Çiçeği Şurubu"
+    },
+    {
+     "name": "HARMONY",
+     "price": 35.0,
+     "detail": "Lavanta Vodka, Hibüsküs Ekşisi, Chombord, Agave Şurubu, Nane Yaprakları"
+    },
+    {
+     "name": "ILLUSION",
+     "price": 35.0,
+     "detail": "Vanilya Rooıbos Rom, Frangelico, Limon Suyu, Portakal Suyu, Şeftali Püresi, Çikolata Bitter"
+    },
+    {
+     "name": "THE PASSION",
+     "price": 35.0,
+     "detail": "Acı Tekila, Portakal likörü, Portakal Suyu, Çarkıfelek püresi, Limon Suyu"
+    },
+    {
+     "name": "PORT",
+     "price": 35.0,
+     "detail": "Cin, Salatalık Suyu, Mürver Çiçeği Likörü, Limon Suyu, Zencefil Suyu, Yeşil Elma Püresi"
+    }
+   ]
+  },
+  {
+   "category": "ULUSLARARASI KOKTEYLLER",
+   "items": [
+    {
+     "name": "OLD FASHIONED",
+     "price": 35.0,
+     "detail": "J.W. Black Label 12 Y.O., Ceviz Marmelatı, Angustro Bıtter"
+    },
+    {
+     "name": "NEGRONI",
+     "price": 35.0,
+     "detail": "Camparı, Martını Rosso, Gordon Gın"
+    },
+    {
+     "name": "ESPRESSO MARTINI",
+     "price": 35.0,
+     "detail": "Absolut Vodka, Espresso, Kahlua, Şeker Şurubu"
+    },
+    {
+     "name": "WHISKEY SOUR",
+     "price": 35.0,
+     "detail": "Jack Danıels, Taze Limon Suyu, Şeker Şurubu"
+    },
+    {
+     "name": "APEROL SPRITZ",
+     "price": 35.0,
+     "detail": "Köpüklü Şarap, Aperol, Soda"
+    }
+   ]
+  }
+ ]
+}
