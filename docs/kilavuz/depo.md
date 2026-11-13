@@ -16,9 +16,9 @@ Eğitim hesabı: egitim.depo. Parolayı eğitim sorumlusu paylaşır; bu belgeye
 
 ![Depo panosu — eğitim örneği](img/depo-pano.png)
 
-2. **Zimmet Havuzu**: Ürünü seçin, giriş/iade işleminin yönünü ve adedini doğrulayın. Giriş havuzu artırır; iade havuzdan çıkışı gösterir. Açıklamayı yazıp onayı okuyun. Kritik seviye eşiğini güncel tutun. Serbest düzeltme yalnız sistem yöneticisindedir; eksi bakiye oluşturmayın.
+2. **Otel Deposu**: Ürünü seçin, giriş/iade işleminin yönünü ve adedini doğrulayın. Giriş havuzu artırır; iade havuzdan çıkışı gösterir. Açıklamayı yazıp onayı okuyun. Kritik seviye eşiğini güncel tutun. Serbest düzeltme yalnız sistem yöneticisindedir; eksi bakiye oluşturmayın.
 
-![Zimmet Havuzu — eğitim örneği](img/depo-havuz.png)
+![Otel Deposu — eğitim örneği](img/depo-havuz.png)
 
 3. **Doluluk Yükleme**: Otel ve iş gününü seçin. In House, Arrivals ve Departures Excel dosyalarını eşleştirin. Önizlemede tanınmayan oda/hatalı satırları düzeltin; üç dosyanın günü uyumlu olmalıdır. Yüklemenin ardından oluşan görevleri ve öncelik planını kontrol edin.
 

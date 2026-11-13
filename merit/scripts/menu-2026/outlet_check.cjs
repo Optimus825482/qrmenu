@@ -1,7 +1,7 @@
 // Lists every outlet of the three Merit hotels with table / menu item counts. Run with cwd = merit.
-require("dotenv/config");
-const { Client } = require("pg");
 (async () => {
+  await import("dotenv/config");
+  const { Client } = await import("pg");
   const c = new Client({ connectionString: process.env.DATABASE_URL });
   await c.connect();
   const cols = await c.query(

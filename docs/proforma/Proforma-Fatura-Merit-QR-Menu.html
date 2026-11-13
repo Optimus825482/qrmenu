@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Proforma Fatura</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; color: #111; margin: 0; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2.5px solid #111; padding-bottom: 8px; }
+  h1 { font-size: 22pt; margin: 0; letter-spacing: 1px; }
+  .date { font-size: 10.5pt; }
+  .parties { display: flex; gap: 14px; margin-top: 16px; }
+  .party { flex: 1; border: 1px solid #999; padding: 10px 12px; }
+  .party h2 { font-size: 8.5pt; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 0 0 6px; }
+  .party .name { font-weight: 700; font-size: 11pt; margin-bottom: 6px; }
+  .party p { margin: 2px 0; line-height: 1.35; }
+  table { width: 100%; border-collapse: collapse; }
+  table.items { margin-top: 20px; }
+  .items th { background: #eee; font-size: 9pt; text-align: left; }
+  .items th, .items td { border: 1px solid #999; padding: 7px 8px; }
+  .num { text-align: right; white-space: nowrap; }
+  .ctr { text-align: center; }
+  .totals { width: 46%; margin: 14px 0 0 auto; }
+  .totals td { border: 1px solid #999; padding: 6px 8px; }
+  .totals tr.grand td { font-weight: 700; background: #eee; font-size: 11.5pt; }
+  .words { margin-top: 12px; }
+  .notes { margin-top: 18px; font-size: 9.5pt; line-height: 1.45; }
+  .notes h3 { font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 0 0 4px; }
+  .notes p { margin: 2px 0; }
+  .bank td { border: 1px solid #999; padding: 7px 8px; height: 26px; }
+  .bank td:first-child { width: 26%; background: #eee; }
+  .sign { margin-top: 34px; margin-left: auto; width: 46%; text-align: center; }
+  .sign .box { height: 80px; border-bottom: 1px solid #111; }
+  .sign .cap { margin-top: 5px; font-size: 9.5pt; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PROFORMA FATURA</h1>
+  <div class="date"><strong>Tarih:</strong> 13.11.2026</div>
+</header>
+
+<section class="parties">
+  <div class="party">
+    <h2>Satıcı</h2>
+    <div class="name">CANER DOĞAN – ODAK GRUP</div>
+    <p>Vergi Dairesi: AKSARAY</p>
+    <p>VKN: 3030323339</p>
+    <p>Adres: KILIÇASLAN MAH. 7 / ATATÜRK BLV. NO: 106 A İÇ KAPI NO: 20 MERKEZ / AKSARAY</p>
+  </div>
+  <div class="party">
+    <h2>Alıcı</h2>
+    <div class="name">MERİT KIBRIS TURİZM LTD. MERİT ROYAL DİAMOND HOTEL</div>
+    <p>VKN/TCKN: 2222222222</p>
+    <p>Adres: ALSANCAK MEVKİİ HALKIN CAD. M.Ş. 2843 MERSİN 10 / GİRNE, K.K.T.C</p>
+    <p>Telefon: 5488108390</p>
+    <p>E-Posta: muhittin.bayram@merithotels.com</p>
+    <p>PARTYTYPE: EXPORT</p>
+  </div>
+</section>
+
+<table class="items">
+  <thead>
+    <tr>
+      <th class="ctr">Sıra</th><th>Hizmet Açıklaması</th><th class="ctr">Miktar</th><th class="ctr">Birim</th>
+      <th class="num">Birim Fiyat (TL)</th><th class="ctr">KDV</th><th class="num">KDV Tutarı (TL)</th><th class="num">Tutar (TL)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="ctr">1</td><td>QR menü sistemi Tasarım Hizmeti Bedeli</td><td class="ctr">1</td><td class="ctr">Adet</td>
+      <td class="num">472.444,00</td><td class="ctr">%0</td><td class="num">0,00</td><td class="num">472.444,00</td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td>Ara Toplam</td><td class="num">472.444,00 TL</td></tr>
+  <tr><td>KDV (%0)</td><td class="num">0,00 TL</td></tr>
+  <tr class="grand"><td>Genel Toplam</td><td class="num">472.444,00 TL</td></tr>
+</table>
+
+<p class="words"><strong>Yazıyla:</strong> Dört yüz yetmiş iki bin dört yüz kırk dört Türk Lirası.</p>
+
+<section class="notes">
+  <h3>Notlar</h3>
+  <p>Hizmet ihracatı kapsamında KDV hesaplanmamıştır (3065 sayılı KDV Kanunu md. 11/1-a ve 12/2).</p>
+  <p>Bu belge proforma fatura olup mali değeri yoktur; bilgi amacıyla düzenlenmiştir.</p>
+</section>
+
+<section class="notes">
+  <h3>Banka Hesap Bilgileri</h3>
+  <table class="bank">
+    <tr><td>Hesap Sahibi</td><td></td></tr>
+    <tr><td>Banka / Şube</td><td></td></tr>
+    <tr><td>Hesap No</td><td></td></tr>
+    <tr><td>IBAN</td><td></td></tr>
+  </table>
+</section>
+
+<div class="sign">
+  <div class="box"></div>
+  <div class="cap">Satıcı Kaşe / İmza</div>
+</div>
+</body>
+</html>

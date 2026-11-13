@@ -33,7 +33,7 @@ describe("design tokens", () => {
   });
 
   it("defines the status tokens", () => {
-    for (const t of ["--warn:#92400e", "--warn-bg:#fef3c7", "--info:#0369a1", "--info-bg:#e0f2fe"]) {
+    for (const t of ["--warn:#92400e", "--warn-bg:#fef3c7", "--info:#075985", "--info-bg:#e0f2fe"]) {
       expect(globals).toContain(t);
     }
     for (const t of ["--success-bg", "--danger-bg", "--muted-bg"]) expect(globals).toContain(`${t}:`);

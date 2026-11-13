@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Icon } from "@/components/icons/Icon";
 import { roleOptionsAction, updateRoleAction } from "@/modules/core/server/admin/actions/roles";
 import type { RoleOptions } from "@/modules/core/server/admin/roles";
 import { saveScreenLayoutAction, screenLayoutsAction } from "@/modules/core/server/actions/screenLayouts";
@@ -453,7 +454,11 @@ function Sketch({ def, block }: { def: BlockDef; block: LayoutBlock }) {
         </div>
       );
     case "banner":
-      return <div className="xp-sk-banner">⚠ Otel deposunda 3 ürün kritik seviyenin altında · Kritik Stokları Gör →</div>;
+      return (
+        <div className="xp-sk-banner">
+          <Icon name="warning" size={16} /> Otel deposunda 3 ürün kritik seviyenin altında · Kritik Stokları Gör →
+        </div>
+      );
     case "cards": {
       const cards = items.length > 0 ? items.map((i) => i.label) : ["1. Kat", "2. Kat", "3. Kat", "4. Kat", "5. Kat", "6. Kat"];
       return (
