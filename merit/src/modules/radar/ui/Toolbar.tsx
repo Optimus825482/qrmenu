@@ -12,6 +12,7 @@ export const VIEW_LABELS: Record<ViewKey, string> = {
   masa: "Masa",
   kuyruk: "Kuyruklar",
   odaServisi: "Oda Servisi",
+  mybar: "MyBar",
   personel: "Personel",
 };
 

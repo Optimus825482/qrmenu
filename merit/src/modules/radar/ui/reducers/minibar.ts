@@ -59,7 +59,12 @@ export function reduceMybar(
   s: RadarState,
   e: Ev<"mybar.opened"> | Ev<"mybar.seen"> | Ev<"mybar.closed">,
 ): RadarState {
-  return updateRoom(s, e.roomId, (r) => {
+  // The room's open request, read before the close clears it: the closed list keeps its room and opening time.
+  const closing =
+    e.type === "mybar.closed"
+      ? s.layers.minibar?.floors.flatMap((f) => f.rooms).find((r) => r.roomId === e.roomId && r.mybar?.requestId === e.requestId)
+      : undefined;
+  const next = updateRoom(s, e.roomId, (r) => {
     if (e.type === "mybar.opened") {
       return r.mybar?.requestId === e.requestId ? r : { ...r, mybar: { requestId: e.requestId, since: e.at, seen: false } };
     }
@@ -71,6 +76,11 @@ export function reduceMybar(
     // A late close of an older request must not clear a newer one.
     return !r.mybar.requestId || r.mybar.requestId === e.requestId ? { ...r, mybar: null } : r;
   });
+  const layer = next.layers.minibar;
+  if (e.type !== "mybar.closed" || !closing?.mybar || !layer) return next;
+  if ((layer.mybarClosed ?? []).some((c) => c.requestId === e.requestId)) return next;
+  const closed = { requestId: e.requestId, roomNumber: closing.number, since: closing.mybar.since, closedAt: e.at, outcome: e.outcome };
+  return { ...next, layers: { ...next.layers, minibar: { ...layer, mybarClosed: [...(layer.mybarClosed ?? []), closed] } } };
 }
 
 export function reduceTaskUpdated(s: RadarState, e: Ev<"task.updated">): RadarState {

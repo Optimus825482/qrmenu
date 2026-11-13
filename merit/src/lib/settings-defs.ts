@@ -14,7 +14,7 @@ const wallViewsCsv = z
       const parts = v.split(",").map((x) => x.trim());
       return parts.length > 0 && parts.every((x) => (WALL_VIEWS as readonly string[]).includes(x));
     },
-    "Duvar görünümleri genel, kat, masa, kuyruk, odaServisi, personel adlarından en az biri olmalı",
+    "Duvar görünümleri genel, kat, masa, kuyruk, odaServisi, mybar, personel adlarından en az biri olmalı",
   );
 
 /** Value schema of every setting key. Adding a key here is all that is needed to type it. */
@@ -555,7 +555,7 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
   },
   "radar.wallViews": {
     label: "Duvar ekranı görünümleri",
-    description: "Virgülle ayrılmış sıra: genel, kat, masa, kuyruk, odaServisi, personel.",
+    description: "Virgülle ayrılmış sıra: genel, kat, masa, kuyruk, odaServisi, mybar, personel.",
     group: "Radar",
     type: "text",
     placeholder: "genel,kat,masa,kuyruk",

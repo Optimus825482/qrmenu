@@ -16,7 +16,7 @@ import type {
 
 export type RadarLayer = "MINIBAR" | "SIPARIS" | "ODA_SERVISI" | "PERSONEL" | "SISTEM";
 
-export type WallView = "genel" | "kat" | "masa" | "kuyruk" | "odaServisi" | "personel";
+export type WallView = "genel" | "kat" | "masa" | "kuyruk" | "odaServisi" | "mybar" | "personel";
 
 export type RadarEventBase = {
   /** Idempotency key. Live: `${type}:${refId}:${at}`; replay: `${table}:${rowId}:${sub}`. */
@@ -197,6 +197,17 @@ export type RadarSnapshot = {
       }[];
       stock: { productId: string; name: string; remaining: number; critical: number }[];
       uploads: { kind: string; status: UploadStatus | "EKSIK"; at?: string }[];
+      /**
+       * MyBar requests closed today (business day), oldest first: completed (TAMAM / EKSIK) or cancelled. Kept apart
+       * from the rooms' open request: alerts and counters read open requests only.
+       */
+      mybarClosed?: {
+        requestId: string;
+        roomNumber: string;
+        since: string;
+        closedAt: string;
+        outcome: "TAMAM" | "EKSIK" | "IPTAL";
+      }[];
     };
     order?: {
       outlets: {

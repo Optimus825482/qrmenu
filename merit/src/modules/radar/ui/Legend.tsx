@@ -56,6 +56,12 @@ const VIEW_LEGEND: Record<ViewKey, LegendItem[]> = {
     { tone: "warn", text: "SLA dikkat (≥ %80)" },
     { tone: "danger", text: "SLA kritik (≥ %100)" },
   ],
+  mybar: [
+    { tone: "info", text: "Bekleme normal" },
+    { tone: "warn", text: "Bekleme dikkat (≥ %80)" },
+    { tone: "danger", text: "Gecikti (bekleme sınırı aşıldı)" },
+    { tone: "success", text: "Tamamlandı" },
+  ],
   personel: [
     { tone: "success", text: "Etkin oturum" },
     { tone: "info", text: "Boşta (hareketsiz)" },

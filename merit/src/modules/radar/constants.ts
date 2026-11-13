@@ -4,7 +4,7 @@ import type { RadarLayer, WallView } from "./types";
 
 export const RADAR_LAYERS: readonly RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 
-export const WALL_VIEWS = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel"] as const satisfies readonly WallView[];
+export const WALL_VIEWS = ["genel", "kat", "masa", "kuyruk", "odaServisi", "mybar", "personel"] as const satisfies readonly WallView[];
 
 /** Parses `radar.wallViews` ("genel,kat"): known names only, original order, never empty. */
 export function parseWallViews(csv: string): WallView[] {

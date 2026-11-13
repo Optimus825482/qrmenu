@@ -2,6 +2,7 @@
 // floor-supervisor progress. Read-only; selects only the columns the snapshot carries.
 import { Prisma, type DndStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { businessDate, businessDateStart } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
 import type { RadarSnapshot } from "../../types";
 import { nameFor, type LayerEnv } from "../config";
@@ -137,6 +138,31 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
     }
   }
 
+  // MyBar requests closed since the start of the business day (a past instant: only what was closed by then).
+  const dayStart = businessDateStart(businessDate(now));
+  const closedRows = await prisma.mybarRequest.findMany({
+    where: {
+      hotelId,
+      OR: [
+        { status: "TAMAMLANDI", completedAt: { gte: dayStart, lte: now } },
+        { status: "IPTAL", cancelledAt: { gte: dayStart, lte: now } },
+      ],
+    },
+    select: {
+      id: true, createdAt: true, completedAt: true, cancelledAt: true, status: true, closedWithMissing: true,
+      room: { select: { number: true } },
+    },
+  });
+  const mybarClosed: NonNullable<MinibarLayer["mybarClosed"]> = closedRows
+    .map((m) => ({
+      requestId: m.id,
+      roomNumber: m.room.number,
+      since: m.createdAt.toISOString(),
+      closedAt: (m.status === "IPTAL" ? (m.cancelledAt ?? m.createdAt) : (m.completedAt ?? m.createdAt)).toISOString(),
+      outcome: m.status === "IPTAL" ? ("IPTAL" as const) : m.closedWithMissing ? ("EKSIK" as const) : ("TAMAM" as const),
+    }))
+    .sort((a, b) => (a.closedAt < b.closedAt ? -1 : a.closedAt > b.closedAt ? 1 : a.requestId < b.requestId ? -1 : 1));
+
   const occupied = new Set(guests.map((g) => g.roomId));
   // One task per room: an unfinished one first, then the lowest priority number.
   const taskByRoom = new Map<string, (typeof taskItems)[number]>();
@@ -246,6 +272,7 @@ export async function minibarLayer(env: LayerEnv): Promise<{ layer: MinibarLayer
         critical: Number(s.critical_level),
       })),
       uploads,
+      mybarClosed,
     },
     people,
   };

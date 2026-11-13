@@ -25,6 +25,7 @@ import { WallShell } from "./WallShell";
 import type { PlaybackSpeed } from "./playback";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
+import { Mybar } from "./views/Mybar";
 import { Overview } from "./views/Overview";
 import { Queues } from "./views/Queues";
 import { RoomService } from "./views/RoomService";
@@ -52,7 +53,7 @@ export type RadarRootProps = {
   chrome?: { setTitle?(title: string): void; setStatus?(text: string): void };
 };
 
-const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel"];
+const VIEW_SLOTS: ViewKey[] = ["genel", "kat", "masa", "kuyruk", "odaServisi", "personel", "mybar"];
 const LAYER_ORDER: RadarLayer[] = ["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"];
 const SKELETON_DELAY_MS = 300;
 /** The hotel, view and outlet a module demo replaced. */
@@ -173,6 +174,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     // Kuyruklar is SIPARIS + SISTEM; available in single-hotel view whenever either is active (displays empty state if QR_ORDER is off).
     if ((snap.layers.order && active.has("SIPARIS")) || active.has("SISTEM")) out.push("kuyruk");
     if (snap.layers.roomService && active.has("ODA_SERVISI")) out.push("odaServisi");
+    if (snap.layers.minibar && active.has("MINIBAR")) out.push("mybar");
     if (snap.layers.staff && active.has("PERSONEL")) out.push("personel");
     return out;
   }, [all, snap, active]);
@@ -371,6 +373,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       if (views.includes("kuyruk")) setChoice("kuyruk");
     } else if (alert.kind === "RS_SLA") {
       if (views.includes("odaServisi")) setChoice("odaServisi");
+    } else if (alert.kind === "MYBAR" && views.includes("mybar")) {
+      setChoice("mybar");
     } else if (
       alert.kind === "MYBAR" ||
       alert.kind === "DND_EKSIK" ||
@@ -382,7 +386,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   };
 
   const focusEvent = (ev: RadarEvent) => {
-    if (ev.layer === "MINIBAR" && views.includes("kat")) setChoice("kat");
+    if (ev.type.startsWith("mybar.") && views.includes("mybar")) setChoice("mybar");
+    else if (ev.layer === "MINIBAR" && views.includes("kat")) setChoice("kat");
     else if (ev.layer === "SIPARIS") {
       if (ev.outletId) setOutletId(ev.outletId);
       if (ev.type === "print.job" && views.includes("kuyruk")) setChoice("kuyruk");
@@ -632,6 +637,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   } else if (view === "odaServisi" && snap) {
     // Live only: the other hotels' boards cannot follow a scrub, a replay or a demo of this one.
     body = <RoomService view={snap} now={now} onOpenApp={openApp} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
+  } else if (view === "mybar" && snap) {
+    // Live only, as the room service boards: the other hotels cannot follow a scrub, a replay or a demo.
+    body = <Mybar view={snap} now={now} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
   } else if (view === "personel" && snap) {
     body = <Staff view={snap} now={now} nameStyle={wall ? "short" : "full"} />;
   }
