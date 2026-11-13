@@ -98,6 +98,10 @@ export type MyNotification = {
   body: string;
   isRead: boolean;
   createdAt: Date;
+  /** The hotel and record the notification is about (opens the related screen on click). */
+  hotelId: string | null;
+  refType: string | null;
+  refId: string | null;
 };
 
 const MAX_LIST = 100;
@@ -107,7 +111,7 @@ export async function listMyNotifications(ctx: Ctx, limit = 20): Promise<MyNotif
   const take = Math.min(MAX_LIST, Math.max(1, Math.trunc(limit) || 1));
   return prisma.notification.findMany({
     where: { userId: ctx.user.id },
-    select: { id: true, type: true, title: true, body: true, isRead: true, createdAt: true },
+    select: { id: true, type: true, title: true, body: true, isRead: true, createdAt: true, hotelId: true, refType: true, refId: true },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take,
   });

@@ -5372,10 +5372,11 @@
 
 .xp-widget-status { display: flex; flex-direction: column; background: #f4f6fb; border: 1px solid #8fa3cf; border-radius: 8px; overflow: hidden; }
 .xp-widget-status-title { padding: 6px 8px; background: #1f3f8f; color: #ffffff; font-size: 12px; font-weight: 700; }
-.xp-widget-status dl { margin: 0; padding: 4px 8px 6px; display: flex; flex-direction: column; justify-content: space-around; flex: 1; }
-.xp-widget-status dl > div { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
-.xp-widget-status dt { color: #33415c; }
-.xp-widget-status dd { margin: 0; font-weight: 700; color: #0f2466; }
+.xp-widget-status table { flex: 1; width: 100%; border-collapse: collapse; margin: 2px 0 4px; font-size: 12px; }
+.xp-widget-status th, .xp-widget-status td { padding: 2px 6px; text-align: right; white-space: nowrap; color: #0f2466; font-variant-numeric: tabular-nums; }
+.xp-widget-status tbody th { text-align: left; font-weight: 400; color: #33415c; padding-left: 8px; }
+.xp-widget-status thead th { font-size: 11px; font-weight: 700; color: #33415c; border-bottom: 1px solid #c3cee6; }
+.xp-widget-status td.is-total { font-weight: 700; padding-right: 8px; }
 .xp-widget-status p { margin: 0; padding: 10px 8px; font-size: 12px; color: #33415c; }
 
 .xp-widget-gallery { width: min(480px, calc(100vw - 32px)); max-width: none; }

@@ -13,6 +13,9 @@ export type NotificationDto = {
   body: string;
   isRead: boolean;
   createdAt: string;
+  hotelId: string | null;
+  refType: string | null;
+  refId: string | null;
 };
 
 const limitSchema = z.number().int().min(1).max(50).optional();

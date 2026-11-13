@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { businessDate, businessDateStart } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { testDb, truncate } from "../helpers/db";
 import {
   ctxFor,
@@ -183,5 +183,46 @@ describe("getCommandCenterKpis (gerçek test DB)", () => {
     } finally {
       await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
     }
+  });
+
+  it("doluluk: oda bir kez sayılır, pasif oda ve dünkü çıkış sayılmaz; otel otel ve toplam verilir", async () => {
+    const { ctx } = await sysCtx();
+    await truncate("guest_records", "rooms");
+    const today = businessDay(businessDate());
+    const day = (offset: number) => new Date(today.getTime() + offset * 86_400_000);
+    const room = async (hotel: string, number: string, isActive = true) => {
+      const hid = await hotelId(hotel);
+      const floor =
+        (await testDb.floor.findFirst({ where: { hotelId: hid } })) ??
+        (await testDb.floor.create({ data: { hotelId: hid, number: 1, name: "Kat 1" } }));
+      return testDb.room.create({ data: { hotelId: hid, floorId: floor.id, number, isActive } });
+    };
+    const stay = (r: { id: string; hotelId: string }, from: number, to: number, kind: "IN_HOUSE" | "ARRIVAL" = "IN_HOUSE") =>
+      testDb.guestRecord.create({
+        data: { hotelId: r.hotelId, roomId: r.id, batchCode: "T", guestCount: 2, arrivalDate: day(from), departureDate: day(to), kind },
+      });
+
+    const [r1, r2, , rOff, d1] = [
+      await room("ROYAL", "9101"),
+      await room("ROYAL", "9102"),
+      await room("ROYAL", "9103"),
+      await room("ROYAL", "9104", false),
+      await room("DIAMOND", "9201"),
+    ];
+    await room("DIAMOND", "9202");
+    // 9101: two records for the same stay (the old count read this as two occupied rooms).
+    await stay(r1, -2, 3);
+    await stay(r1, -2, 3, "ARRIVAL");
+    await stay(r2, -5, -1); // left yesterday
+    await stay(rOff, -1, 2); // inactive room
+    await stay(d1, 0, 0);
+
+    const kpis = await getCommandCenterKpis(ctx);
+    const by = Object.fromEntries(kpis.radar.byHotel.map((h) => [h.code, h]));
+    expect(by.ROYAL).toMatchObject({ totalRooms: 3, occupiedRooms: 1, occupancyPercent: 33 });
+    expect(by.DIAMOND).toMatchObject({ totalRooms: 2, occupiedRooms: 1, occupancyPercent: 50 });
+    expect(by.PREMIUM).toMatchObject({ totalRooms: 0, occupiedRooms: 0, occupancyPercent: 0 });
+    expect(kpis.radar).toMatchObject({ totalRooms: 5, occupiedRooms: 2, occupancyPercent: 40 });
+    await truncate("guest_records", "rooms");
   });
 });

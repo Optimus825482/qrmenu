@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MeritEvent } from "@/lib/realtime-events";
+import { FOCUS_PREFIX, notificationTarget } from "../notificationTarget";
 import { useSse } from "../useSse";
+import { windowStore } from "../windowStore";
 import { useNotifications } from "./mobile/useNotifications";
 
 const TYPES = ["notification.created"] as const;
@@ -95,8 +97,17 @@ export function NotificationBell() {
                   type="button"
                   className="xp-bell-item"
                   data-read={item.isRead}
+                  title={notificationTarget(item) ? "İlgili ekranı aç" : undefined}
                   onClick={() => {
                     if (!item.isRead) void markRead(item.id);
+                    const target = notificationTarget(item);
+                    if (!target) return;
+                    // null = the user may not open that screen (or the window limit is reached): stay on the list.
+                    const opened = windowStore.getState().open(target.appId, {
+                      ...(target.hotelId ? { hotelId: target.hotelId } : {}),
+                      ...(target.focusId ? { initialPanel: `${FOCUS_PREFIX}${target.focusId}` } : {}),
+                    });
+                    if (opened) setOpen(false);
                   }}
                 >
                   <span className="xp-bell-item-title">{item.title}</span>

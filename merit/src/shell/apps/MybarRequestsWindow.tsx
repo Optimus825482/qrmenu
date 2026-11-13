@@ -5,6 +5,7 @@ import { ReasonDialog } from "@/components/ui/ReasonDialog";
 import { isValidExplanation } from "@/modules/mybar/constants";
 import { exportMybarAction, mybarCapabilitiesAction } from "@/modules/mybar/server/actions/admin";
 import { cancelMybarAction, listMybarAction, mybarKpisAction } from "@/modules/mybar/server/actions/requests";
+import { FOCUS_PREFIX } from "../notificationTarget";
 import { type Column, DataGrid } from "../ui/DataGrid";
 import { useSse } from "../useSse";
 import {
@@ -53,7 +54,16 @@ function base64Blob(base64: string, mime: string): Blob {
  * through the list/KPI actions, refreshes on `mybar.*` events and cancels with a reason. Handing
  * over the products is a floor task, so there is no fulfil control here.
  */
-export function MybarRequestsWindow({ hotelId, setStatus }: { hotelId?: string; setStatus?: (text: string) => void }) {
+export function MybarRequestsWindow({
+  hotelId,
+  setStatus,
+  initialPanel,
+}: {
+  hotelId?: string;
+  setStatus?: (text: string) => void;
+  /** `kayit:<talep id>` (bildirimden açıldığında): o talep seçili gelir. */
+  initialPanel?: string;
+}) {
   const [rows, setRows] = useState<MybarRowView[]>([]);
   const [total, setTotal] = useState(0);
   const [kpis, setKpis] = useState<MybarKpis | null>(null);
@@ -65,7 +75,9 @@ export function MybarRequestsWindow({ hotelId, setStatus }: { hotelId?: string; 
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<(typeof PAGE_SIZES)[number]>(100);
-  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<string | undefined>(
+    initialPanel?.startsWith(FOCUS_PREFIX) ? initialPanel.slice(FOCUS_PREFIX.length) : undefined,
+  );
   const [canCancel, setCanCancel] = useState(false);
   const [canExport, setCanExport] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<Pick<MybarRowView, "id" | "roomNumber"> | null>(null);

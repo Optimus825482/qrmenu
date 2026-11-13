@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { hotelShortName } from "@/components/ui/HotelBadge";
 import { NOTE_MAX, type WidgetId, type WidgetPos } from "../types";
 import { useCommandCenterKpis } from "../useCommandCenterKpis";
 import { WIDGETS, widgetPosition, type WidgetDef } from "../widgets";
@@ -172,27 +173,67 @@ function NoteWidget() {
 
 function StatusWidget() {
   const { kpis, error } = useCommandCenterKpis();
-  const rows: [string, string][] = kpis
+  const hotels = kpis?.radar.byHotel ?? [];
+  // One hotel in scope: its numbers are the totals, a second column would only repeat them.
+  const split = hotels.length > 1;
+  const rows: { label: string; total: string; cells: string[] }[] = kpis
     ? [
-        ["Çevrimiçi kullanıcı", String(kpis.onlineUsers)],
-        ["Doluluk", `%${kpis.radar.occupancyPercent}`],
-        ["Açık MyBar talebi", String(kpis.radar.activeMybarRequests)],
-        ["Geciken oda siparişi", String(kpis.radar.delayedRoomOrders)],
-        ["Bekleyen sipariş", String(kpis.radar.pendingPosOrders)],
+        { label: "Çevrimiçi kullanıcı", total: String(kpis.onlineUsers), cells: hotels.map((h) => String(h.online)) },
+        {
+          label: "Doluluk",
+          total: `%${kpis.radar.occupancyPercent}`,
+          cells: hotels.map((h) => `%${h.occupancyPercent}`),
+        },
+        {
+          label: "Dolu oda",
+          total: `${kpis.radar.occupiedRooms}/${kpis.radar.totalRooms}`,
+          cells: hotels.map((h) => `${h.occupiedRooms}/${h.totalRooms}`),
+        },
+        {
+          label: "Açık MyBar talebi",
+          total: String(kpis.radar.activeMybarRequests),
+          cells: hotels.map((h) => String(h.activeMybarRequests)),
+        },
+        {
+          label: "Geciken oda siparişi",
+          total: String(kpis.radar.delayedRoomOrders),
+          cells: hotels.map((h) => String(h.delayedRoomOrders)),
+        },
+        {
+          label: "Bekleyen sipariş",
+          total: String(kpis.radar.pendingPosOrders),
+          cells: hotels.map((h) => String(h.pendingPosOrders)),
+        },
       ]
     : [];
   return (
     <div className="xp-widget-status">
       <div className="xp-widget-status-title">Anlık Durum</div>
       {kpis ? (
-        <dl>
-          {rows.map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
+        <table>
+          {split ? (
+            <thead>
+              <tr>
+                <td />
+                {hotels.map((h) => (
+                  <th key={h.hotelId} scope="col" title={h.name}>
+                    {hotelShortName(h.name)}
+                  </th>
+                ))}
+                <th scope="col">Toplam</th>
+              </tr>
+            </thead>
+          ) : null}
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                {split ? row.cells.map((cell, i) => <td key={hotels[i]!.hotelId}>{cell}</td>) : null}
+                <td className="is-total">{row.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <p>{error ?? "Yükleniyor…"}</p>
       )}

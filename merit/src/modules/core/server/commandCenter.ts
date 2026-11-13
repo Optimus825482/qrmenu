@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { assertCan, can } from "@/lib/rbac";
 import { getSetting } from "@/lib/settings";
 import { DomainError } from "@/lib/result";
-import { businessDate, businessDateStart } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
 
 export type CommandCenterKpis = {
@@ -22,8 +22,25 @@ export type CommandCenterKpis = {
     activeMybarRequests: number;
     delayedRoomOrders: number;
     pendingPosOrders: number;
+    /** The same numbers hotel by hotel (hotels in scope, by name); the fields above are their totals. */
+    byHotel: HotelKpis[];
   };
 };
+
+export type HotelKpis = {
+  hotelId: string;
+  code: string;
+  name: string;
+  online: number;
+  totalRooms: number;
+  occupiedRooms: number;
+  occupancyPercent: number;
+  activeMybarRequests: number;
+  delayedRoomOrders: number;
+  pendingPosOrders: number;
+};
+
+const percent = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
 /**
  * Live numbers for the Komuta Merkezi window. Needs view permission on CR-KOM; `hotelId`
@@ -47,11 +64,15 @@ export async function getCommandCenterKpis(
       throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
     }
   }
-  const since = businessDateStart(businessDate());
+  const today = businessDate();
+  const since = businessDateStart(today);
+  // guest_records dates are @db.Date: compare with the business DAY, not the 00:00 Nicosia instant
+  // (that instant is still the previous day in UTC and would read yesterday's guests).
+  const day = businessDay(today);
   const slaMinutes = new Map<string, number>();
   for (const h of scope) slaMinutes.set(h, await getSetting("rs.slaMinutes", h));
 
-  const [hotels, sessions, notificationsToday, totalRooms, occupiedRooms, activeMybarRequests, openRoomOrders, pendingPosOrders] = await Promise.all([
+  const [hotels, sessions, notificationsToday, roomCounts, occupiedRows, mybarCounts, openRoomOrders, posCounts] = await Promise.all([
     prisma.hotel.findMany({
       where: { id: { in: scope }, isActive: true },
       select: { id: true, code: true, name: true },
@@ -77,19 +98,23 @@ export async function getCommandCenterKpis(
         ],
       },
     }),
-    prisma.room.count({ where: { hotelId: { in: scope }, isActive: true } }),
-    prisma.guestRecord.count({
+    prisma.room.groupBy({ by: ["hotelId"], where: { hotelId: { in: scope }, isActive: true }, _count: { _all: true } }),
+    // One row per occupied ROOM (a room has one record per stay segment / guest list line, so counting
+    // records overshoots 100%). Active rooms only, the same rule as the Doluluk report and the Kat plan.
+    prisma.guestRecord.findMany({
       where: {
         hotelId: { in: scope },
-        arrivalDate: { lte: since },
-        departureDate: { gte: since },
+        room: { isActive: true },
+        arrivalDate: { lte: day },
+        departureDate: { gte: day },
       },
+      select: { hotelId: true, roomId: true },
+      distinct: ["roomId"],
     }),
-    prisma.mybarRequest.count({
-      where: {
-        hotelId: { in: scope },
-        status: "BEKLEMEDE",
-      },
+    prisma.mybarRequest.groupBy({
+      by: ["hotelId"],
+      where: { hotelId: { in: scope }, status: "BEKLEMEDE" },
+      _count: { _all: true },
     }),
     // Open room-service orders; the SLA state (clock start, phone-confirm pause) is computed below.
     prisma.order.findMany({
@@ -100,24 +125,50 @@ export async function getCommandCenterKpis(
       },
       select: { hotelId: true, status: true, createdAt: true, phoneConfirmedAt: true, deliveredAt: true },
     }),
-    prisma.order.count({
-      where: {
-        hotelId: { in: scope },
-        kind: "MASA",
-        status: "GONDERILDI",
-      },
+    prisma.order.groupBy({
+      by: ["hotelId"],
+      where: { hotelId: { in: scope }, kind: "MASA", status: "GONDERILDI" },
+      _count: { _all: true },
     }),
   ]);
 
   const now = new Date();
-  const delayedRoomOrders = openRoomOrders.filter(
-    (o) => slaStateOf(o, now, slaMinutes.get(o.hotelId) ?? 30) === "BREACH",
-  ).length;
+  const tally = (rows: { hotelId: string }[]) => {
+    const map = new Map<string, number>();
+    for (const r of rows) map.set(r.hotelId, (map.get(r.hotelId) ?? 0) + 1);
+    return map;
+  };
+  const counted = (rows: { hotelId: string; _count: { _all: number } }[]) =>
+    new Map(rows.map((r) => [r.hotelId, r._count._all]));
 
-  const usersByHotel = new Map<string, number>();
-  for (const s of sessions) usersByHotel.set(s.hotelId, (usersByHotel.get(s.hotelId) ?? 0) + 1);
+  const usersByHotel = tally(sessions);
+  const roomsByHotel = counted(roomCounts);
+  const occupiedByHotel = tally(occupiedRows);
+  const mybarByHotel = counted(mybarCounts);
+  const posByHotel = counted(posCounts);
+  const delayedByHotel = tally(
+    openRoomOrders.filter((o) => slaStateOf(o, now, slaMinutes.get(o.hotelId) ?? 30) === "BREACH"),
+  );
 
-  const occupancyPercent = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+  const byHotel: HotelKpis[] = hotels.map((h) => {
+    const totalRooms = roomsByHotel.get(h.id) ?? 0;
+    const occupiedRooms = occupiedByHotel.get(h.id) ?? 0;
+    return {
+      hotelId: h.id,
+      code: h.code,
+      name: h.name,
+      online: usersByHotel.get(h.id) ?? 0,
+      totalRooms,
+      occupiedRooms,
+      occupancyPercent: percent(occupiedRooms, totalRooms),
+      activeMybarRequests: mybarByHotel.get(h.id) ?? 0,
+      delayedRoomOrders: delayedByHotel.get(h.id) ?? 0,
+      pendingPosOrders: posByHotel.get(h.id) ?? 0,
+    };
+  });
+  const sum = (pick: (h: HotelKpis) => number) => byHotel.reduce((total, h) => total + pick(h), 0);
+  const totalRooms = sum((h) => h.totalRooms);
+  const occupiedRooms = sum((h) => h.occupiedRooms);
 
   return {
     hotels: hotels.length,
@@ -132,10 +183,11 @@ export async function getCommandCenterKpis(
     radar: {
       totalRooms,
       occupiedRooms,
-      occupancyPercent,
-      activeMybarRequests,
-      delayedRoomOrders,
-      pendingPosOrders,
+      occupancyPercent: percent(occupiedRooms, totalRooms),
+      activeMybarRequests: sum((h) => h.activeMybarRequests),
+      delayedRoomOrders: sum((h) => h.delayedRoomOrders),
+      pendingPosOrders: sum((h) => h.pendingPosOrders),
+      byHotel,
     },
   };
 }
