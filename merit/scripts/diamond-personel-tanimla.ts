@@ -1,5 +1,6 @@
 /**
- * DIAMOND oteli için F&B personelini (50 kişi) tanımlar. Tekrar çalıştırılabilir (idempotent).
+ * F&B personelini (50 kişi) tanımlar: ana otel DIAMOND, ek olarak diğer aktif oteller (üç otelde de çalışabilirler).
+ * Tekrar çalıştırılabilir (idempotent); var olan kişinin eksik oteli tamamlanır.
  *
  *   npx tsx scripts/diamond-personel-tanimla.ts --dry-run   # yalnız ne yapılacağını yazar
  *   npx tsx scripts/diamond-personel-tanimla.ts             # kullanıcıları oluşturur
@@ -12,7 +13,7 @@
 import "dotenv/config";
 import type { Ctx } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { createOnboarding } from "@/modules/core/server/admin/users";
+import { createOnboarding, update } from "@/modules/core/server/admin/users";
 
 const HOTEL_CODE = "DIAMOND";
 const ACTOR_USERNAME = "admin";
@@ -62,6 +63,9 @@ async function main(): Promise<number> {
 
   const hotel = await prisma.hotel.findUnique({ where: { code: HOTEL_CODE }, select: { id: true } });
   if (!hotel) throw new Error(`Otel bulunamadı: ${HOTEL_CODE}`);
+  // Everyone is defined in every active hotel; DIAMOND stays the primary one.
+  const others = (await prisma.hotel.findMany({ where: { isActive: true, id: { not: hotel.id } }, select: { id: true }, orderBy: { code: "asc" } })).map((h) => h.id);
+  const allHotels = [hotel.id, ...others];
   const roleCodes = [...new Set(PEOPLE.map((x) => x.roleCode))];
   const roles = await prisma.role.findMany({ where: { code: { in: roleCodes } }, select: { id: true, code: true } });
   const missing = roleCodes.filter((c) => !roles.some((r) => r.code === c));
@@ -85,21 +89,44 @@ async function main(): Promise<number> {
       roleKind: actor.role.kind,
     },
     session: { id: "script-diamond-personel", hotelId: hotel.id },
-    hotelIds: [hotel.id],
+    hotelIds: allHotels,
   };
 
   const existing = await prisma.user.findMany({
     where: { deletedAt: null, OR: [{ hotelId: hotel.id }, { userHotels: { some: { hotelId: hotel.id } } }] },
-    select: { fullName: true, username: true },
+    select: {
+      id: true, fullName: true, username: true, jobTitle: true, email: true, emailOptIn: true, phone: true,
+      roleId: true, hotelId: true, supervisorId: true, userHotels: { select: { hotelId: true } },
+    },
   });
   const key = (s: string) => s.trim().toLocaleLowerCase("tr-TR");
-  const byName = new Map(existing.map((u) => [key(u.fullName), u.username]));
+  const byName = new Map(existing.map((u) => [key(u.fullName), u]));
 
   const rows: { fullName: string; username: string; role: string; status: string }[] = [];
   for (const person of PEOPLE) {
     const found = byName.get(key(person.fullName));
     if (found) {
-      rows.push({ fullName: person.fullName, username: found, role: person.roleCode, status: "skipped" });
+      const has = new Set([found.hotelId, ...found.userHotels.map((h) => h.hotelId)]);
+      const lacking = others.filter((id) => !has.has(id));
+      if (lacking.length === 0) {
+        rows.push({ fullName: person.fullName, username: found.username, role: person.roleCode, status: "skipped" });
+        continue;
+      }
+      if (!dryRun) {
+        await update(ctx, found.id, {
+          username: found.username,
+          fullName: found.fullName,
+          jobTitle: found.jobTitle ?? "",
+          email: found.email,
+          emailOptIn: found.emailOptIn,
+          phone: found.phone,
+          roleId: found.roleId,
+          hotelId: found.hotelId ?? hotel.id,
+          hotelIds: [...new Set([...found.userHotels.map((h) => h.hotelId), ...lacking])],
+          supervisorId: found.supervisorId,
+        });
+      }
+      rows.push({ fullName: person.fullName, username: found.username, role: person.roleCode, status: dryRun ? "would-update" : "updated" });
       continue;
     }
     if (dryRun) {
@@ -111,15 +138,14 @@ async function main(): Promise<number> {
       jobTitle: person.jobTitle,
       roleId: roleId.get(person.roleCode)!,
       hotelId: hotel.id,
-      hotelIds: [],
+      hotelIds: others,
     });
-    byName.set(key(person.fullName), user.username);
     rows.push({ fullName: person.fullName, username: user.username, role: person.roleCode, status: "created" });
   }
   console.table(rows);
   const count = (s: string) => rows.filter((r) => r.status === s).length;
   console.log(
-    `${dryRun ? "[DRY-RUN] " : ""}toplam ${rows.length}: created ${count("created")}, would-create ${count("would-create")}, skipped ${count("skipped")}`,
+    `${dryRun ? "[DRY-RUN] " : ""}toplam ${rows.length}: created ${count("created")}, would-create ${count("would-create")}, updated ${count("updated")}, would-update ${count("would-update")}, skipped ${count("skipped")}`,
   );
   if (once && !dryRun) {
     await prisma.setting.create({ data: { hotelId: null, key: MARKER_KEY, value: new Date().toISOString() } });

@@ -64,7 +64,8 @@ if [ -n "${LEGACY_DATABASE_URL:-}" ]; then
   (npx tsx scripts/migrate-from-minibarlatest/once.ts || echo "UYARI: Eski veri aktarımı tamamlanamadı; site çalışıyor. Yukarıdaki raporu inceleyin." >&2) &
 fi
 
-# Diamond F&B personelinin TEK SEFERLİK tanımlanması (13.11.2026 listesi, 50 kişi; standart geçici şifre, ilk girişte
+# F&B personelinin TEK SEFERLİK tanımlanması (13.11.2026 listesi, 50 kişi; ana otel Diamond, üç otelde de yetkili,
+# hesaplar aktif — Erkan'ın kararı; standart geçici şifre, ilk girişte
 # değiştirilir). Tamamlanınca veritabanına işaret yazılır ve bir daha çalışmaz; sonradan silinen ya da adı değişen
 # kişi geri gelmez. Hata başlatmayı durdurmaz, sonraki açılışta yeniden denenir (var olan kişiler atlanır).
 # Kapatmak için SEED_DIAMOND_STAFF=false.
