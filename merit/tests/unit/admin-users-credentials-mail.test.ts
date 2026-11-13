@@ -82,6 +82,40 @@ describe("users.sendCredentials", () => {
     expect((await verifyPassword(temp, after.passwordHash)).ok).toBe(true);
   });
 
+  it("mail, kullanıcının yetkili olduğu ekranlara göre kısa bir kullanım brifingi içerir", async () => {
+    const { ctx } = await sysUser();
+    const u = await staff("garson1", { fresh: false });
+    await users.sendCredentials(ctx, { ids: [u.id] });
+    const [mail] = sentTo(u.email!);
+    expect(mail.text).toContain("SİSTEMİ NASIL KULLANACAKSINIZ");
+    expect(mail.text).toContain("Rolünüz: Servis Personeli (Merit Royal)");
+    expect(mail.text).toContain("Outlet Garson Ekranı: Masalarına gelen siparişleri onaylar");
+    // A waiter has no user management: screens outside the role never appear in the briefing.
+    expect(mail.text).not.toContain("Kullanıcılar");
+    expect(mail.html).toContain("Sistemi nasıl kullanacaksınız");
+  });
+
+  it("yönetici kendi hesabına gönderebilir: şifre ve oturum değişmez, mailde şifre yoktur", async () => {
+    const { user, ctx } = await sysUser();
+    const me = await testDb.user.update({ where: { id: user.id }, data: { mustChangePassword: false, email: "ben@example.com" } });
+    const result = await users.sendCredentials(ctx, { ids: [me.id] });
+    expect(result).toEqual({ sent: 1, failed: [] });
+    const [mail] = sentTo("ben@example.com");
+    expect(mail.text).toContain(me.username);
+    expect(mail.text).not.toContain("Geçici şifre");
+    expect((await reload(me.id)).passwordHash).toBe(me.passwordHash);
+  });
+
+  it("kendi hesabına geçici şifre gönderilmez: şifre değişmez, mail gitmez", async () => {
+    const { user, ctx } = await sysUser();
+    const me = await testDb.user.update({ where: { id: user.id }, data: { mustChangePassword: true, email: "ben@example.com" } });
+    const result = await users.sendCredentials(ctx, { ids: [me.id] });
+    expect(result.sent).toBe(0);
+    expect(result.failed[0]!.reason).toContain("Kendi hesabınıza geçici şifre gönderemezsiniz");
+    expect(sentTo("ben@example.com")).toHaveLength(0);
+    expect((await reload(me.id)).passwordHash).toBe(me.passwordHash);
+  });
+
   it("kendi şifresini belirlemiş kullanıcının şifresine dokunulmaz; mailde şifre yoktur", async () => {
     const { ctx } = await sysUser();
     const u = await staff("eski1", { fresh: false });
@@ -120,16 +154,6 @@ describe("users.sendCredentials", () => {
     ]);
     expect((await reload(noMail.id)).passwordHash).toBe(noMail.passwordHash);
     expect((await reload(off.id)).passwordHash).toBe(off.passwordHash);
-  });
-
-  it("kendi hesabına gönderilmez", async () => {
-    const { user, ctx } = await sysUser();
-    await testDb.user.update({ where: { id: user.id }, data: { email: "sys@example.com", mustChangePassword: true } });
-    const result = await users.sendCredentials(ctx, { ids: [user.id] });
-    expect(result.sent).toBe(0);
-    expect(result.failed).toHaveLength(1);
-    expect(mailMock.sendMail).not.toHaveBeenCalled();
-    expect((await reload(user.id)).passwordHash).toBe(user.passwordHash);
   });
 
   it("başka oteldeki kullanıcının adı sızmaz, dokunulmaz", async () => {

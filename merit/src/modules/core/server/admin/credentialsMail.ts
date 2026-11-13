@@ -32,19 +32,81 @@ const esc = (value: unknown): string =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+/** What the user may open, taken from the access summary: the short "how to use the system" part of the mail. */
+export type CredentialsBriefing = {
+  roleName: string;
+  hotelName: string;
+  /** Name of the screen that opens after sign-in, when it is one the user may view. */
+  landingName?: string;
+  modules: { label: string; screens: { name: string; purpose: string }[] }[];
+};
+
 export type CredentialsMailInput = {
   fullName: string;
   username: string;
   siteUrl: string;
   /** Present only when a new temporary password was issued. */
   temporaryPassword?: string;
+  /** Left out when the user's access could not be read or is empty; the mail then carries sign-in details only. */
+  briefing?: CredentialsBriefing;
 };
+
+/** Up to this many screens each one gets its purpose sentence; above it only the names, so the mail stays short. */
+export const BRIEFING_DETAIL_LIMIT = 8;
+
+type BriefingBlock = { label: string; items: string[] };
+
+/** The briefing as plain data: intro lines, then one block per module (shared by the text and HTML bodies). */
+function briefingParts(briefing: CredentialsBriefing): { intro: string[]; blocks: BriefingBlock[]; outro: string } | null {
+  const modules = briefing.modules.filter((m) => m.screens.length > 0);
+  if (modules.length === 0) return null;
+  const total = modules.reduce((sum, m) => sum + m.screens.length, 0);
+  const detailed = total <= BRIEFING_DETAIL_LIMIT;
+  const intro = [`Rolünüz: ${briefing.roleName} (${briefing.hotelName})`];
+  if (briefing.landingName) intro.push(`Giriş yaptığınızda ilk olarak “${briefing.landingName}” ekranı açılır.`);
+  const blocks = modules.map((m) => ({
+    label: m.label,
+    items: detailed ? m.screens.map((s) => `${s.name}: ${s.purpose}`) : [m.screens.map((s) => s.name).join(", ")],
+  }));
+  return {
+    intro,
+    blocks,
+    outro: "Bir ekranı ilk açtığınızda kısa bir rehber turu size adım adım yol gösterir. Yetkiniz olmayan ekranlar menüde görünmez; eksik bir yetki için yöneticinize başvurun.",
+  };
+}
 
 export const CREDENTIALS_SUBJECT = "F&B Command Center giriş bilgileriniz";
 
 /** Builds the subject, plain text and simple HTML of the sign-in details mail. */
 export function composeCredentialsMail(input: CredentialsMailInput): { subject: string; text: string; html: string } {
   const { fullName, username, siteUrl, temporaryPassword } = input;
+  const parts = input.briefing ? briefingParts(input.briefing) : null;
+  const briefingText = parts
+    ? [
+        "",
+        "SİSTEMİ NASIL KULLANACAKSINIZ",
+        ...parts.intro,
+        ...parts.blocks.flatMap((b) => ["", `${b.label}:`, ...b.items.map((item) => `- ${item}`)]),
+        "",
+        parts.outro,
+      ]
+    : [];
+  const briefingHtml = parts
+    ? `
+        <div style="margin-top: 20px; padding: 14px 16px; background: #f1f5f9; border-left: 4px solid #0f172a;">
+          <p style="margin: 0 0 8px; font-weight: bold; color: #0f172a;">Sistemi nasıl kullanacaksınız</p>
+          ${parts.intro.map((line) => `<p style="margin: 0 0 4px; font-size: 13px;">${esc(line)}</p>`).join("")}
+          ${parts.blocks
+            .map(
+              (b) =>
+                `<p style="margin: 10px 0 2px; font-size: 13px; font-weight: bold;">${esc(b.label)}</p><ul style="margin: 0; padding-left: 18px; font-size: 13px;">${b.items
+                  .map((item) => `<li>${esc(item)}</li>`)
+                  .join("")}</ul>`,
+            )
+            .join("")}
+          <p style="margin: 10px 0 0; font-size: 12px; color: #475569;">${esc(parts.outro)}</p>
+        </div>`
+    : "";
   const lines = temporaryPassword
     ? [
         `Merhaba ${fullName},`,
@@ -87,8 +149,8 @@ export function composeCredentialsMail(input: CredentialsMailInput): { subject: 
             ? "İlk girişte yeni bir şifre belirlemeniz istenecektir."
             : "Daha önce belirlediğiniz şifrenizle giriş yapabilirsiniz. Şifrenizi hatırlamıyorsanız bir sistem yöneticisinden şifre sıfırlama isteyebilirsiniz."
         }</p>
-        <p style="font-size: 13px;">Bu bilgileri kimseyle paylaşmayın.</p>
+        <p style="font-size: 13px;">Bu bilgileri kimseyle paylaşmayın.</p>${briefingHtml}
       </div>
     </div>`;
-  return { subject: CREDENTIALS_SUBJECT, text: lines.join("\n"), html };
+  return { subject: CREDENTIALS_SUBJECT, text: [...lines, ...briefingText].join("\n"), html };
 }

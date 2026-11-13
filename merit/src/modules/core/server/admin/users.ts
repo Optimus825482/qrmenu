@@ -5,7 +5,8 @@ import type { Ctx } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { isMailConfigured, sendMail } from "@/lib/mailer";
 import { maskEmail } from "@/modules/reporting/server/mail/transport";
-import { composeCredentialsMail, generateTemporaryPassword } from "./credentialsMail";
+import { accessSummary } from "../accessSummary";
+import { composeCredentialsMail, generateTemporaryPassword, type CredentialsBriefing } from "./credentialsMail";
 import { hashPassword, PASSWORD_MAX_BYTES, PASSWORD_MAX_LENGTH, passwordPolicyError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
@@ -830,6 +831,27 @@ const MAIL_SEND_FAILED = "E-posta gönderilemedi; şifre değiştirilmedi";
 const CREDENTIALS_TX_TIMEOUT_MS = 60_000;
 
 /**
+ * The "how to use the system" part of the credentials mail: the screens this user may view in their hotel
+ * (role matrix, hotel modules and personal exceptions, through `accessSummary`). The sign-in details matter
+ * more than the briefing, so a summary that cannot be built leaves the briefing out instead of failing the mail.
+ */
+async function credentialsBriefing(roleId: string, userId: string, hotelId: string): Promise<CredentialsBriefing | undefined> {
+  try {
+    const summary = await accessSummary({ roleId, hotelId, userId });
+    const screens = summary.modules.flatMap((m) => m.screens);
+    return {
+      roleName: summary.user.roleName,
+      hotelName: summary.hotel.name,
+      landingName: screens.find((s) => s.code === summary.landing.screenCode)?.name,
+      modules: summary.modules.map((m) => ({ label: m.label, screens: m.screens.map((s) => ({ name: s.name, purpose: s.purpose })) })),
+    };
+  } catch (error) {
+    if (!(error instanceof DomainError)) throw error;
+    return undefined;
+  }
+}
+
+/**
  * Mails one user's sign-in details. Everything happens in ONE transaction and the mail is sent as the LAST
  * step before commit: if sending fails the transaction rolls back, so a changed password never exists
  * without a mail. (A commit failure after a successful send is the only residual window; the user then
@@ -847,6 +869,11 @@ async function mailCredentials(ctx: Ctx, id: string): Promise<void> {
     if (!target.isActive) throw new DomainError("VALIDATION", "Kullanıcı pasif");
     // Only a user who never chose an own password gets a new one; an own password is never touched.
     const issue = target.mustChangePassword;
+    // Own account: fine while nothing changes (username and address only). A new temporary password would
+    // close the caller's own session and leave the mail as the only way back in, so that stays refused.
+    if (issue && id === ctx.user.id) {
+      throw new DomainError("VALIDATION", "Kendi hesabınıza geçici şifre gönderemezsiniz; önce şifrenizi kendiniz belirleyin");
+    }
     const temporary = issue ? generateTemporaryPassword() : undefined;
     let sessionsClosed = 0;
     if (temporary) {
@@ -868,6 +895,7 @@ async function mailCredentials(ctx: Ctx, id: string): Promise<void> {
       username: target.username,
       siteUrl: env.APP_BASE_URL.replace(/\/+$/, ""),
       temporaryPassword: temporary,
+      briefing: await credentialsBriefing(target.roleId, id, anchor ?? ctx.session.hotelId),
     });
     if (!(await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text, hotelId: anchor }))) {
       throw new DomainError("INTERNAL", MAIL_SEND_FAILED);
@@ -879,6 +907,7 @@ async function mailCredentials(ctx: Ctx, id: string): Promise<void> {
 /**
  * E-mails sign-in details to the selected users (same visibility scoping as `bulkUpdate`). A user who has
  * not set an own password yet gets a fresh random temporary password; others get username and address only.
+ * The caller may mail their own details too, but only the username-and-address form (see `mailCredentials`).
  * Refused up front when SMTP is not configured, so no password is reset without a way to deliver it.
  */
 export async function sendCredentials(ctx: Ctx, raw: SendCredentialsInput): Promise<SendCredentialsResult> {
@@ -907,7 +936,6 @@ export async function sendCredentials(ctx: Ctx, raw: SendCredentialsInput): Prom
   for (const id of ids) {
     try {
       if (!names.has(id)) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
-      if (id === ctx.user.id) throw new DomainError("VALIDATION", "Kendi hesabınıza giriş bilgisi gönderemezsiniz");
       await mailCredentials(ctx, id);
       result.sent += 1;
     } catch (error) {

@@ -247,6 +247,29 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
     list.reload();
   };
 
+  /** Right-click on one row: the same e-mail as the bulk action, for that user only. */
+  const sendCredentialsTo = async (row: UserRow) => {
+    const yes = await confirm({
+      title: "Giriş bilgilerini mail olarak gönder",
+      message: `“${row.fullName}” (${row.username}) kullanıcısına giriş bilgileri e-posta ile gönderilsin mi? Henüz kendi şifresini belirlemediyse yeni bir geçici şifre gönderilir (önceki geçici şifre geçersiz olur ve açık oturumları kapanır). Şifresini kendisi belirlediyse yalnızca kullanıcı adı ve site adresi gönderilir, şifresi değişmez.`,
+      confirmLabel: "Gönder",
+    });
+    if (!yes) return;
+    const result = await sendUserCredentialsAction({ ids: [row.id] });
+    if (!result.ok) {
+      notify.error(result.error.message, { title: "Giriş bilgileri gönderilemedi" });
+      return;
+    }
+    const failure = result.data.failed[0];
+    if (failure) {
+      notify.error(failure.reason, { title: "Giriş bilgileri gönderilemedi" });
+      return;
+    }
+    notify.success(`“${row.username}” kullanıcısına giriş bilgileri e-posta ile gönderildi.`);
+    setStatus(`${row.username}: giriş bilgileri gönderildi`);
+    list.reload();
+  };
+
   const edit = (row: UserRow, tab: "bilgi" | "yetki" = "bilgi") => {
     setCardTab(tab);
     setDialog({ mode: "edit", row });
@@ -317,6 +340,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
           { label: "Yetkiler", onSelect: () => edit(row, "yetki") },
           { label: "Kullanıcıya göster", onSelect: () => setPreviewRow(row) },
           { label: "Şifre belirle", onSelect: () => openPasswordDialog(row) },
+          { label: "Giriş bilgilerini mail olarak gönder", onSelect: () => void sendCredentialsTo(row) },
           {
             label: "Sil",
             disabled: row.roleKind === "SISTEM" || row.username.toLocaleLowerCase("tr-TR") === "admin",
