@@ -22,6 +22,7 @@ import { alertDialog, confirm } from "../confirm";
 import { XpIcon } from "../icons";
 import { useWindowCommands } from "../keyboard";
 import { getApp, type AppDefinition, type AppProps } from "../registry";
+import { registerCloseRequest } from "../windowCloseRequests";
 import {
   clampWindowPosition,
   deskHeight,
@@ -132,6 +133,8 @@ export function Window({ id, hotels, userName }: Props) {
     }
     windowStore.getState().close(id);
   }, [id, dirty]);
+  // The task button menu closes the window through the same question.
+  useEffect(() => registerCloseRequest(id, requestClose), [id, requestClose]);
 
   const appProps = useMemo<Omit<AppProps, "hotelId">>(
     () => ({

@@ -1,10 +1,12 @@
 "use client";
 
-import { useSyncExternalStore, type RefObject } from "react";
+import { useState, useSyncExternalStore, type RefObject } from "react";
 import { XpIcon } from "../icons";
 import { getApp } from "../registry";
 import { useSse, type SseStatus } from "../useSse";
+import { requestWindowClose } from "../windowCloseRequests";
 import { selectActiveId, useWindowStore, windowStore } from "../windowStore";
+import { ContextMenu, type MenuItem } from "./ContextMenu";
 import { NotificationBell } from "./NotificationBell";
 import { EnvLabel } from "@/components/EnvLabel";
 import { TrayStatusText } from "./TrayBalloon";
@@ -56,6 +58,24 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef, printerIniti
   const activeId = useWindowStore(selectActiveId);
   const { status } = useSse(ignore, NO_EVENTS);
   const clock = useClock();
+  // Right click (long press on a tablet) on a task button: the menu of that window.
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+  // A window closed from elsewhere takes its menu with it.
+  const menuWin = menu ? windows[menu.id] : undefined;
+  const menuItems: MenuItem[] = menuWin
+    ? [
+        { label: "Geri Yükle", mnemonic: "g", disabled: !menuWin.minimized, onSelect: () => windowStore.getState().focus(menuWin.id) },
+        {
+          label: "Simge Durumuna Küçült",
+          mnemonic: "s",
+          disabled: menuWin.minimized,
+          onSelect: () => windowStore.getState().minimize(menuWin.id),
+        },
+        { kind: "separator" },
+        // Through the window itself: unsaved changes still ask first.
+        { label: "Kapat", mnemonic: "k", onSelect: () => requestWindowClose(menuWin.id) },
+      ]
+    : [];
 
   return (
     <div className="xp-taskbar">
@@ -89,6 +109,10 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef, printerIniti
                 if (isActive) store.minimize(id);
                 else store.focus(id);
               }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({ id, x: e.clientX, y: e.clientY });
+              }}
             >
               <XpIcon name={getApp(win.appId)?.icon ?? "pencere"} size={16} />
               <span>{win.title}</span>
@@ -111,6 +135,9 @@ export function Taskbar({ startOpen, onToggleStart, startButtonRef, printerIniti
         />
         <time aria-label="Saat">{clock}</time>
       </div>
+      {menu && menuWin ? (
+        <ContextMenu x={menu.x} y={menu.y} items={menuItems} label={menuWin.title} onClose={() => setMenu(null)} />
+      ) : null}
     </div>
   );
 }
