@@ -5450,6 +5450,11 @@
 .xp-widget-status thead th { padding-top: 4px; padding-bottom: 5px; font-size: 11px; font-weight: 700; }
 .xp-widget-status td.is-total, .xp-widget-status th.is-total { background: rgba(31, 63, 143, 0.07); padding-right: 10px; }
 .xp-widget-status td.is-total { font-weight: 700; }
+.xp-widget-status td.xp-widget-status-fold { text-align: left; padding-left: 9px; }
+.xp-widget-status-fold button { width: 22px; height: 20px; margin-right: 3px; padding: 0; border: 1px solid #b9c4de; border-radius: 5px; background: #ffffff; color: #1f3f8f; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
+.xp-widget-status-fold button:hover:not(:disabled) { background: #e7ecf8; }
+.xp-widget-status-fold button:focus-visible { outline: 2px solid #1f3f8f; outline-offset: 1px; }
+.xp-widget-status-fold button:disabled { opacity: 0.35; cursor: default; }
 .xp-widget-status p { margin: 0; padding: 10px; font-size: 12px; color: #33415c; }
 
 .xp-widget-status-hotel { display: inline-block; padding: 1px 8px; border: 1px solid #c9ccd3; border-radius: 999px; background: #f1f2f4; color: #3d424d; line-height: 1.45; }

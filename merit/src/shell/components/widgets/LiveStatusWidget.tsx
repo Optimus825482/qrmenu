@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { hotelKey, hotelShortName } from "@/components/ui/HotelBadge";
 import type { LiveRow } from "@/modules/core/server/liveStatus";
 import { kpiCellVisible, viewableScreens, type KpiCell } from "../../kpiAccess";
@@ -93,6 +93,18 @@ function CellView({ cell }: { cell: ReactCell }) {
   );
 }
 
+const FOLD_KEY = "merit.liveStatus.folded";
+
+/** How many hotel columns the viewer folded away (kept per browser; 0 when storage is unavailable). */
+function readFolded(): number {
+  try {
+    const n = Number(window.localStorage.getItem(FOLD_KEY));
+    return Number.isInteger(n) && n > 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
 const isIdle = (cell: ReactCell) => cell.text === "–" || (cell.parts !== undefined && cell.parts.every((p) => p.value === 0));
 
 /**
@@ -114,6 +126,18 @@ export function LiveStatusWidget() {
   const hotels = kpis?.radar.byHotel ?? [];
   // One hotel in scope: its numbers are the totals, a second column would only repeat them.
   const split = hotels.length > 1;
+  // Hotel columns fold into "Toplam" one by one, from the left: 0 = every hotel, hotels.length = total only.
+  const [foldedRaw, setFoldedRaw] = useState(readFolded);
+  const folded = Math.min(foldedRaw, hotels.length);
+  const shown = hotels.map((_, i) => i).filter((i) => i >= folded);
+  const fold = (next: number) => {
+    setFoldedRaw(next);
+    try {
+      window.localStorage.setItem(FOLD_KEY, String(next));
+    } catch {
+      // The choice simply lasts until the page is reloaded.
+    }
+  };
 
   const lines: Line[] = [];
   if (kpis) {
@@ -159,14 +183,36 @@ export function LiveStatusWidget() {
             {split ? (
               <thead>
                 <tr>
-                  <td />
-                  {hotels.map((h) => (
-                    <th key={h.hotelId} scope="col" title={h.name}>
-                      <span className="xp-widget-status-hotel" data-hotel={hotelKey(h.name) ?? "other"}>
-                        {hotelShortName(h.name)}
-                      </span>
-                    </th>
-                  ))}
+                  <td className="xp-widget-status-fold">
+                    <button
+                      type="button"
+                      onClick={() => fold(folded - 1)}
+                      disabled={folded === 0}
+                      aria-label="Bir otel sütunu daha göster"
+                      title="Bir otel daha göster"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fold(folded + 1)}
+                      disabled={folded === hotels.length}
+                      aria-label="Bir otel sütununu toplama katla"
+                      title="Bir oteli toplama katla"
+                    >
+                      ›
+                    </button>
+                  </td>
+                  {shown.map((i) => {
+                    const h = hotels[i]!;
+                    return (
+                      <th key={h.hotelId} scope="col" title={h.name}>
+                        <span className="xp-widget-status-hotel" data-hotel={hotelKey(h.name) ?? "other"}>
+                          {hotelShortName(h.name)}
+                        </span>
+                      </th>
+                    );
+                  })}
                   <th scope="col" className="is-total">
                     <span className="xp-widget-status-hotel" data-hotel="total">
                       Toplam
@@ -186,11 +232,14 @@ export function LiveStatusWidget() {
                     {line.hint && line.hint !== TRIPLE_LEGEND ? <small> {line.hint}</small> : null}
                   </th>
                   {split
-                    ? line.cells.map((cell, i) => (
-                        <td key={hotels[i]!.hotelId} data-warn={cell.warn || undefined} data-idle={isIdle(cell) || undefined}>
-                          <CellView cell={cell} />
-                        </td>
-                      ))
+                    ? shown.map((i) => {
+                        const cell = line.cells[i]!;
+                        return (
+                          <td key={hotels[i]!.hotelId} data-warn={cell.warn || undefined} data-idle={isIdle(cell) || undefined}>
+                            <CellView cell={cell} />
+                          </td>
+                        );
+                      })
                     : null}
                   <td className="is-total" data-warn={line.total.warn || undefined} data-idle={isIdle(line.total) || undefined}>
                     <CellView cell={line.total} />

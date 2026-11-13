@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const kpis = {
@@ -35,7 +35,10 @@ vi.mock("@/shell/windowStore", () => ({ useWindowStore: () => null }));
 
 const { LiveStatusWidget } = await import("@/shell/components/widgets/LiveStatusWidget");
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
 
 describe("LiveStatusWidget", () => {
   it("üç değerli hücreler, '–' ve toplam sütunu; bekleyen > 0 vurgulanır", () => {
@@ -50,5 +53,32 @@ describe("LiveStatusWidget", () => {
     expect([...qr.querySelectorAll("td")].map((c) => c.textContent)).toEqual(["2 / 1 / 1", "–", "2 / 1 / 1"]);
     expect(document.querySelector(".xp-widget-status-legend")!.textContent).toMatch(/alınan \/ tamamlanan \/ bekleyen/);
     expect(screen.getByText("Çevrimiçi kullanıcı")).toBeTruthy();
+  });
+
+  it("oklar otel sütunlarını soldan birer birer toplama katlar ve geri açar; seçim hatırlanır", () => {
+    const view = render(<LiveStatusWidget />);
+    const cells = () => [...screen.getByText("Oda servisi talebi").closest("tr")!.querySelectorAll("td")].map((c) => c.textContent);
+    const heads = () => [...document.querySelectorAll("thead th")].map((c) => c.textContent);
+    const foldBtn = () => screen.getByRole("button", { name: "Bir otel sütununu toplama katla" }) as HTMLButtonElement;
+    const openBtn = () => screen.getByRole("button", { name: "Bir otel sütunu daha göster" }) as HTMLButtonElement;
+    expect(openBtn().disabled).toBe(true);
+
+    fireEvent.click(foldBtn());
+    expect(heads()).toEqual(["Diamond", "Toplam"]);
+    expect(cells()).toEqual(["4 / 4 / 0", "16 / 13 / 3"]);
+
+    fireEvent.click(foldBtn());
+    expect(heads()).toEqual(["Toplam"]);
+    expect(cells()).toEqual(["16 / 13 / 3"]);
+    expect(foldBtn().disabled).toBe(true);
+
+    // The choice survives a remount (kept in the browser).
+    view.unmount();
+    render(<LiveStatusWidget />);
+    expect(heads()).toEqual(["Toplam"]);
+
+    fireEvent.click(openBtn());
+    fireEvent.click(openBtn());
+    expect(heads()).toEqual(["Royal", "Diamond", "Toplam"]);
   });
 });
