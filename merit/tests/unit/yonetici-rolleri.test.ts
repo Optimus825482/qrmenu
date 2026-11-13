@@ -55,12 +55,14 @@ describe("seed matrisi (saf)", () => {
     for (const code of NEW_ROLES) expect(role(code), code).toBeDefined();
   });
 
-  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL ve MB-ZIM V,O,D; çekirdekte yalnız CR-KOM, CR-RAD, CR-RAP", () => {
+  it("Minibar Takip Yöneticisi: R-DEP / R-KAT minibar ekranlarında yalnız V; MB-RAP V,R; MB-DOL, MB-ZIM ve MB-TAN V,O,D; çekirdekte yalnız CR-KOM, CR-RAD, CR-RAP", () => {
     const minibar = SCREENS.filter((s) => s.moduleKey === "MINIBAR").map((s) => s.code);
     const depKat = minibar.filter((s) => acts("R-DEP", s) !== "" || acts("R-KAT", s) !== "");
     for (const s of depKat) expect(acts("R-MTY", s), s).toContain("V");
-    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
+    for (const s of minibar.filter((x) => !["MB-RAP", "MB-DOL", "MB-ZIM", "MB-TAN"].includes(x))) expect(acts("R-MTY", s), s).toBe("V");
     expect(acts("R-MTY", "MB-ZIM")).toBe("VOD"); // otel deposu: merkez depo tedariki ve başlangıç stoğu (12 Kas 2026)
+    // Tanımlar (12 Kas 2026, migration 20261112120000): ürün grubu, ürün, setup ekler ve düzenler; onay ve rapor yok.
+    expect(acts("R-MTY", "MB-TAN")).toBe("VOD");
     expect(acts("R-MTY", "MB-RAP")).toBe("VR");
     expect(acts("R-MTY", "MB-DOL")).toBe("VOD"); // yükleme O; silme / geri alma D
     for (const s of SCREENS.filter((x) => x.moduleKey === "CORE")) {
@@ -272,7 +274,8 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
     // 20261110161000 adds MB-DOL D for R-MTY on top of the block.
     const followUp = readFileSync(path.resolve(__dirname, "../../prisma/migrations/20261110161000_mty_doluluk_silme/migration.sql"), "utf8").replace(/^\s*--.*$/gm, "").trim();
     await testDb.$executeRawUnsafe(followUp);
-    // Later grants on top: MB-ZIM O,D (20261112030000, its @limits block) and CR-RAD V,R (20261112090000).
+    // Later grants on top: MB-ZIM O,D (20261112030000, its @limits block), CR-RAD V,R (20261112090000) and
+    // MB-TAN O,D (20261112120000, its @limits block).
     const limitsOf = (dir: string) => {
       const sql = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${dir}/migration.sql`), "utf8");
       return sql
@@ -281,7 +284,12 @@ describe("migration 20261110160000 seed ile aynı matrisi üretir", () => {
         .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
         .filter((x) => x.length > 0);
     };
-    const later = [...limitsOf("20261112030000_otel_deposu_stok_takibi"), ...limitsOf("20261112090000_mty_radar")];
+    const later = [
+      ...limitsOf("20261112030000_otel_deposu_stok_takibi"),
+      ...limitsOf("20261112090000_mty_radar"),
+      ...limitsOf("20261112120000_mty_tanim_ve_onaysiz_duzeltme"),
+    ];
+    expect(later.length).toBeGreaterThanOrEqual(3);
     for (const statement of later) await testDb.$executeRawUnsafe(statement);
     expect(await read()).toEqual(expected);
 

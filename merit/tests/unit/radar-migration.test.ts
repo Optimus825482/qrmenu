@@ -10,13 +10,29 @@ const sql = readFileSync(
 );
 const dataBlock = sql.slice(sql.indexOf("-- @data:begin"), sql.indexOf("-- @data:end"));
 
-async function applyData() {
-  expect(dataBlock.length).toBeGreaterThan(0);
-  const statements = dataBlock
+const statementsOf = (block: string) =>
+  block
     .split(/;\s*\n/)
     .map((x) => x.replace(/^\s*--.*$/gm, "").trim())
     .filter((x) => x.length > 0);
-  for (const statement of statements) await testDb.$executeRawUnsafe(statement);
+
+async function applyData() {
+  expect(dataBlock.length).toBeGreaterThan(0);
+  for (const statement of statementsOf(dataBlock)) await testDb.$executeRawUnsafe(statement);
+}
+
+/** The roles this migration itself gives the radar to; every later role got it from its own migration. */
+const HISTORIC_ROLES = ["R-FBM", "R-ITT", "R-OTM", "R-SYS"];
+/** Later migrations that add a CR-RAD row (their `@limits` block): R-MTY, then R-FBY and R-OSS. */
+const LATER = ["20261112090000_mty_radar", "20261112150000_kademe_rolleri"];
+
+async function applyLater() {
+  for (const dir of LATER) {
+    const file = readFileSync(path.resolve(__dirname, `../../prisma/migrations/${dir}/migration.sql`), "utf8");
+    const block = file.slice(file.indexOf("-- @limits:begin"), file.indexOf("-- @limits:end"));
+    expect(block.length, dir).toBeGreaterThan(0);
+    for (const statement of statementsOf(block)) await testDb.$executeRawUnsafe(statement);
+  }
 }
 
 async function screens() {
@@ -38,11 +54,14 @@ afterAll(async () => {
 });
 
 describe("migration veri bloğu (@data) - CR-RAD", () => {
-  it("33 ekranlı eski duruma uygulanınca ekran listesi ve izinler seed çıktısıyla aynıdır; ikinci uygulama değiştirmez", async () => {
+  it("eski duruma uygulanınca ekran listesi ve dört rolün izni seed ile aynıdır; sonraki migration'larla birlikte bütün matris seed'e döner; ikinci uygulama değiştirmez", async () => {
     const seededScreens = await screens();
     const seededMatrix = await matrix();
     const seededTotal = await testDb.roleScreenPermission.count();
-    expect(seededMatrix.length).toBe(4);
+    // Today's seed: the four historic roles, plus R-MTY (20261112090000) and R-FBY / R-OSS (20261112150000).
+    expect(seededMatrix.map((r) => r[0])).toEqual(["R-FBM", "R-FBY", "R-ITT", "R-MTY", "R-OSS", "R-OTM", "R-SYS"]);
+    const historic = seededMatrix.filter((r) => HISTORIC_ROLES.includes(String(r[0])));
+    expect(historic.length).toBe(4);
 
     // Back to the pre-radar state: no CR-RAD, later screens one place earlier.
     await testDb.appScreen.delete({ where: { code: "CR-RAD" } });
@@ -51,13 +70,21 @@ describe("migration veri bloğu (@data) - CR-RAD", () => {
     );
     expect(await testDb.appScreen.count()).toBe(seededScreens.length - 1);
 
+    // This migration alone: the screen is back in place and exactly its own four roles hold it, as the seed has them.
     await applyData();
     expect(await screens()).toEqual(seededScreens);
+    expect(await matrix()).toEqual(historic);
+
+    // With the later migrations on top the whole matrix is the seed's again.
+    await applyLater();
     expect(await matrix()).toEqual(seededMatrix);
     expect(await testDb.roleScreenPermission.count()).toBe(seededTotal);
 
+    // A second run of the whole chain changes nothing.
     await applyData();
+    await applyLater();
     expect(await screens()).toEqual(seededScreens);
+    expect(await matrix()).toEqual(seededMatrix);
     expect(await testDb.roleScreenPermission.count()).toBe(seededTotal);
   });
 
