@@ -49,6 +49,9 @@ export async function setUserActiveAction(raw: unknown): Promise<Result<users.Us
   )(raw);
 }
 
+export async function bulkUpdateUsersAction(raw: unknown): Promise<Result<users.BulkUpdateResult>> {
+  return safeAction(users.bulkUpdateSchema, async (input) => users.bulkUpdate(await requireUser(), input))(raw);
+}
 
 export async function deleteUserAction(raw: unknown): Promise<Result<null>> {
   return safeAction(z.object({ id }), async (input) => {

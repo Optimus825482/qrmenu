@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  bulkUpdateUsersAction,
   deleteUserAction,
   listUsersAction,
   setUserActiveAction,
@@ -9,7 +10,8 @@ import {
   updateUserAction,
   userOptionsAction,
 } from "@/modules/core/server/admin/actions/users";
-import type { UserOptions, UserRow } from "@/modules/core/server/admin/users";
+import type { BulkUpdateResult, UserOptions, UserRow } from "@/modules/core/server/admin/users";
+import { groupJobTitleChoices, jobTitleOptionLabel } from "@/modules/core/jobTitles";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
 import { type Column, DataGrid } from "@/shell/ui/DataGrid";
@@ -25,13 +27,13 @@ import { HotelBadges } from "@/components/ui/HotelBadge";
 
 type Props = { hotelId?: string; setStatus(text: string): void };
 
-type Dialog = { mode: "new" } | { mode: "edit"; row: UserRow } | { mode: "password"; row: UserRow } | null;
+type Dialog = { mode: "new" } | { mode: "bulkRole" } | { mode: "bulkJob" } | { mode: "edit"; row: UserRow } | { mode: "password"; row: UserRow } | null;
 type StatusFilter = "ALL" | "ACTIVE" | "INACTIVE";
 
 const formatLogin = (iso: string | null) =>
   iso ? new Date(iso).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" }) : "—";
 
-const COLUMNS: Column<UserRow>[] = [
+const DATA_COLUMNS: Column<UserRow>[] = [
   { key: "fullName", title: "Ad soyad", width: 190, sortable: true },
   { key: "username", title: "Kullanıcı adı", width: 150, sortable: true },
   { key: "jobTitle", title: "Görev", width: 170, sortable: true, render: (row) => row.jobTitle ?? "—" },
@@ -56,6 +58,8 @@ const COLUMNS: Column<UserRow>[] = [
     render: (row) => formatLogin(row.lastLoginAt),
   },
 ];
+
+type BulkNotice = { updated: number; failed: BulkUpdateResult["failed"] };
 
 /** User management list with status, hotel, and job title filters. */
 export function UsersPanel({ hotelId, setStatus }: Props) {
@@ -82,6 +86,41 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
   const [previewRow, setPreviewRow] = useState<UserRow | null>(null);
   const [cardTab, setCardTab] = useState<"bilgi" | "yetki">("bilgi");
   const selected = list.rows.find((r) => r.id === selectedId);
+  const [bulkNotice, setBulkNotice] = useState<BulkNotice | null>(null);
+  // Checked rows are kept by id and belong to one view (filters, page, sort, search): another view starts empty.
+  const viewKey = JSON.stringify([active, requestedHotelId, jobTitleFilter, roleFilter, list.page, list.pageSize, list.q, list.sort]);
+  const [picked, setPicked] = useState<{ key: string; ids: string[] }>({ key: "", ids: [] });
+  const pickedIds = useMemo(() => {
+    const present = new Set(list.rows.map((row) => row.id));
+    return picked.key === viewKey ? picked.ids.filter((id) => present.has(id)) : [];
+  }, [picked, viewKey, list.rows]);
+  const pickedSet = useMemo(() => new Set(pickedIds), [pickedIds]);
+  const setPickedIds = (ids: string[]) => setPicked({ key: viewKey, ids });
+  const allPicked = list.rows.length > 0 && pickedIds.length === list.rows.length;
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) selectAllRef.current.indeterminate = pickedIds.length > 0 && !allPicked;
+  }, [pickedIds.length, allPicked]);
+
+  const columns: Column<UserRow>[] = [
+    {
+      key: "pick",
+      title: "Seç",
+      width: 44,
+      sortable: false,
+      render: (row) => (
+        <input
+          type="checkbox"
+          aria-label={`${row.fullName} seç`}
+          checked={pickedSet.has(row.id)}
+          onChange={() => setPickedIds(pickedSet.has(row.id) ? pickedIds.filter((x) => x !== row.id) : [...pickedIds, row.id])}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+        />
+      ),
+    },
+    ...DATA_COLUMNS,
+  ];
 
   useEffect(() => {
     setStatus(`${list.total} kullanıcı`);
@@ -157,6 +196,38 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
     list.reload();
   };
 
+  const finishBulk = (result: BulkUpdateResult) => {
+    setPickedIds([]);
+    setBulkNotice({ updated: result.updated, failed: result.failed });
+    setStatus(`${result.updated} kullanıcı güncellendi`);
+    list.reload();
+  };
+
+  const bulkSubmit = (field: "roleId" | "jobTitle") => async (values: FormValues) => {
+    const value = values[field] ?? "";
+    const patch = field === "roleId" ? { roleId: value } : { jobTitle: value };
+    const result = await bulkUpdateUsersAction({ ids: pickedIds, patch });
+    if (result.ok) finishBulk(result.data);
+    return result;
+  };
+
+  const bulkSetActive = async (isActive: boolean) => {
+    if (!isActive) {
+      const yes = await confirm({
+        title: "Seçilen kullanıcıları pasife al",
+        message: `${pickedIds.length} kullanıcı pasife alınsın mı? Açık oturumları hemen kapatılır ve giriş yapamazlar.`,
+        danger: true, confirmLabel: "Pasife al",
+      });
+      if (!yes) return;
+    }
+    const result = await bulkUpdateUsersAction({ ids: pickedIds, patch: { isActive } });
+    if (!result.ok) {
+      notify.error(result.error.message, { title: "Toplu işlem yapılamadı" });
+      return;
+    }
+    finishBulk(result.data);
+  };
+
   const edit = (row: UserRow, tab: "bilgi" | "yetki" = "bilgi") => {
     setCardTab(tab);
     setDialog({ mode: "edit", row });
@@ -170,8 +241,44 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
           {list.error}
         </p>
       ) : null}
+      {bulkNotice ? (
+        <div role="status" className="xp-defs-note">
+          <p>{bulkNotice.updated} kullanıcı güncellendi</p>
+          {bulkNotice.failed.length > 0 ? (
+            <ul>
+              {bulkNotice.failed.map((item) => (
+                <li key={item.id}>{item.fullName}: {item.reason}</li>
+              ))}
+            </ul>
+          ) : null}
+          <button type="button" className="xp-button" onClick={() => setBulkNotice(null)}>Kapat</button>
+        </div>
+      ) : null}
+      <div className="xp-defs-filters" role="group" aria-label="Toplu işlem">
+        <label className="xp-user-filter">
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            aria-label="Sayfadaki tümünü seç"
+            checked={allPicked}
+            disabled={list.rows.length === 0}
+            onChange={() => setPickedIds(allPicked ? [] : list.rows.map((row) => row.id))}
+          />
+          <span>Sayfadaki tümünü seç</span>
+        </label>
+        {pickedIds.length > 0 ? (
+          <>
+            <strong>{pickedIds.length} kullanıcı seçildi</strong>
+            <button type="button" className="xp-button" onClick={() => setDialog({ mode: "bulkRole" })}>Rol değiştir</button>
+            <button type="button" className="xp-button" onClick={() => setDialog({ mode: "bulkJob" })}>Görev değiştir</button>
+            <button type="button" className="xp-button" onClick={() => void bulkSetActive(true)}>Aktif yap</button>
+            <button type="button" className="xp-button" onClick={() => void bulkSetActive(false)}>Pasif yap</button>
+            <button type="button" className="xp-button" onClick={() => setPickedIds([])}>Seçimi temizle</button>
+          </>
+        ) : null}
+      </div>
       <DataGrid<UserRow>
-        columns={COLUMNS}
+        columns={columns}
         rows={list.rows}
         total={list.total}
         page={list.page}
@@ -316,6 +423,48 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
             <UserPermissionsTab userId={editing.id} />
           </div>
         ) : null}
+      </FormDialog>
+      <FormDialog
+        title="Rol değiştir"
+        open={dialog?.mode === "bulkRole"}
+        onClose={() => setDialog(null)}
+        onSubmit={bulkSubmit("roleId")}
+        submitText="Uygula"
+        confirmBeforeSubmit
+        successMessage="Toplu rol değişikliği tamamlandı."
+      >
+        <p className="xp-defs-note">{pickedIds.length} kullanıcının rolü değiştirilecek; kişiye özel yetki istisnaları silinir ve açık oturumlar kapanır.</p>
+        <Field name="roleId" label="Rol (yetki ve ekranlar)">
+          <select defaultValue="">
+            <option value="">Rol seçin</option>
+            {(options?.roles ?? []).map((role) => (
+              <option key={role.id} value={role.id}>{role.name} ({role.code})</option>
+            ))}
+          </select>
+        </Field>
+      </FormDialog>
+      <FormDialog
+        title="Görev değiştir"
+        open={dialog?.mode === "bulkJob"}
+        onClose={() => setDialog(null)}
+        onSubmit={bulkSubmit("jobTitle")}
+        submitText="Uygula"
+        confirmBeforeSubmit
+        successMessage="Toplu görev değişikliği tamamlandı."
+      >
+        <p className="xp-defs-note">{pickedIds.length} kullanıcının görevi değiştirilecek; roller aynı kalır.</p>
+        <Field name="jobTitle" label="Görev (resmi unvan)">
+          <select defaultValue="">
+            <option value="">Görev seçin</option>
+            {groupJobTitleChoices(options?.jobTitleTree ?? []).map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((title) => (
+                  <option key={title.id} value={title.name}>{jobTitleOptionLabel(title)}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </Field>
       </FormDialog>
       <FormDialog
         title="Geçici şifre belirle"

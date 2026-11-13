@@ -735,6 +735,67 @@ export async function setActive(ctx: Ctx, id: string, isActive: boolean): Promis
   });
 }
 
+const bulkPatchSchema = z.union([
+  z.strictObject({ roleId: z.string("Rol seçin").min(1, "Rol seçin") }),
+  z.strictObject({ isActive: z.boolean() }),
+  z.strictObject({ jobTitle: z.string().trim().max(100, "En fazla 100 karakter olabilir") }),
+]);
+export const bulkUpdateSchema = z.object({
+  ids: z
+    .array(z.string().min(1))
+    .min(1, "En az bir kullanıcı seçin")
+    .max(200, "En fazla 200 kullanıcı seçilebilir")
+    .refine((ids) => new Set(ids).size === ids.length, "Kullanıcı seçimi tekrar içeriyor"),
+  patch: bulkPatchSchema,
+});
+export type BulkUpdateInput = z.input<typeof bulkUpdateSchema>;
+export type BulkUpdateResult = { updated: number; failed: { id: string; fullName: string; reason: string }[] };
+
+/**
+ * Applies one change (role, görev or active flag) to many users. Each user goes through the same
+ * single-user path (`update` / `setActive`) so every authorisation and protection rule still holds;
+ * a DomainError for one user is reported in `failed` and the rest continue. Other errors propagate.
+ */
+export async function bulkUpdate(ctx: Ctx, raw: BulkUpdateInput): Promise<BulkUpdateResult> {
+  const { ids, patch } = parseInput(bulkUpdateSchema, raw);
+  await assertCan(ctx, SCREEN, "D");
+  const names = new Map(
+    (await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true } })).map((u) => [u.id, u.fullName]),
+  );
+  const result: BulkUpdateResult = { updated: 0, failed: [] };
+  for (const id of ids) {
+    try {
+      if ("isActive" in patch) {
+        await setActive(ctx, id, patch.isActive);
+      } else {
+        // Own role changes are refused outright (SISTEM actors included); a görev change on oneself is a profile edit.
+        if ("roleId" in patch && id === ctx.user.id) throw new DomainError("FORBIDDEN", SELF_SCOPE_FORBIDDEN);
+        const current = toRow(await loadTarget(prisma, id));
+        const next: UpdateUserInput = {
+          username: current.username,
+          fullName: current.fullName,
+          jobTitle: current.jobTitle ?? "",
+          email: current.email,
+          emailOptIn: current.emailOptIn,
+          phone: current.phone,
+          roleId: current.roleId,
+          hotelId: current.hotelId ?? undefined,
+          hotelIds: current.hotelIds,
+          supervisorId: current.supervisorId,
+        };
+        if ("roleId" in patch) next.roleId = patch.roleId;
+        else next.jobTitle = patch.jobTitle;
+        await update(ctx, id, next);
+      }
+      result.updated += 1;
+    } catch (error) {
+      if (!(error instanceof DomainError)) throw error;
+      result.failed.push({ id, fullName: names.get(id) ?? "Bilinmeyen kullanıcı", reason: error.message });
+    }
+  }
+  return result;
+}
+
 /** Removes an account from login and management lists while keeping its historical references. */
 export async function deleteUser(ctx: Ctx, id: string): Promise<void> {
   if (id === ctx.user.id) {
