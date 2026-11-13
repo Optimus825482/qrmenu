@@ -205,11 +205,14 @@ export async function list(
   ctx: Ctx,
   hotelId: string,
   rawQuery: z.input<typeof outletListQuerySchema>,
+  /** Outlet screens leave room service out: it is an operation of its own with its own apps. */
+  options: { withoutRoomService?: boolean } = {},
 ): Promise<Page<OutletRow>> {
   await assertCan(ctx, SCREEN, "V", hotelId);
   const query = parseInput(outletListQuerySchema, rawQuery);
   const where: Prisma.OutletWhereInput = {
     hotelId,
+    ...(options.withoutRoomService ? { type: { not: "ODA_SERVISI" } } : {}),
     ...(query.q ? { name: { contains: query.q, mode: "insensitive" } } : {}),
   };
   const [items, total] = await Promise.all([

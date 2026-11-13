@@ -118,11 +118,13 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
     setRows(list.data.themes);
     setCanWrite(list.data.canWrite);
     if (assign.ok) {
-      const scoped = lockOutletType
-        ? assign.data
-            .map((t) => ({ ...t, outlets: t.outlets.filter((o) => o.type === lockOutletType) }))
-            .filter((t) => t.outlets.length > 0)
-        : assign.data;
+      // Room service has its own studio (lockOutletType); the outlet studio never lists it.
+      const scoped = assign.data
+        .map((t) => ({
+          ...t,
+          outlets: t.outlets.filter((o) => (lockOutletType ? o.type === lockOutletType : o.type !== "ODA_SERVISI")),
+        }))
+        .filter((t) => t.outlets.length > 0);
       setTargets(scoped);
       setHotelId((h) => (h && scoped.some((t) => t.hotelId === h) ? h : scoped[0]?.hotelId));
     }

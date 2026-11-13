@@ -12,8 +12,10 @@ const id = z.string().min(1);
 const data = z.record(z.string(), z.unknown());
 
 export async function listOutletsAction(raw: unknown): Promise<Result<Page<outlets.OutletRow>>> {
-  return safeAction(z.object({ hotelId, query: outlets.outletListQuerySchema }), async (input) =>
-    outlets.list(await requireUser(), input.hotelId, input.query),
+  return safeAction(
+    z.object({ hotelId, query: outlets.outletListQuerySchema, withoutRoomService: z.boolean().optional() }),
+    async (input) =>
+      outlets.list(await requireUser(), input.hotelId, input.query, { withoutRoomService: input.withoutRoomService }),
   )(raw);
 }
 

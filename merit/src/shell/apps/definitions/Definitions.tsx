@@ -71,7 +71,7 @@ export function Definitions({ hotelId, initialPanel, setStatus, windowId }: AppP
   const outlets = useLiveList<OutletRow>(
     (query) =>
       hotelId
-        ? listOutletsAction({ hotelId, query })
+        ? listOutletsAction({ hotelId, query, withoutRoomService: true })
         : Promise.resolve({
             ok: true as const,
             data: { items: [] as OutletRow[], total: 0, page: 1, pageSize: query.pageSize },

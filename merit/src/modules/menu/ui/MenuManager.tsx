@@ -67,7 +67,7 @@ export function MenuManager({ hotelId, setStatus, setDirty, openApp, close, lock
     setError(null);
     const outlets = lockOutletType
       ? result.data.outlets.filter((o) => o.type === lockOutletType)
-      : result.data.outlets;
+      : result.data.outlets.filter((o) => o.type !== "ODA_SERVISI");
     setContext({
       ...result.data,
       outlets,

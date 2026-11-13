@@ -170,6 +170,16 @@ describe("outlets: CRUD", () => {
     ]);
   });
 
+  it("outlet ekranları oda servisini listelemez; ekip ataması gibi tam liste isteyenler görür", async () => {
+    const ctx = await sys();
+    const mr = await hotelId("ROYAL");
+    const all = await outlets.list(ctx, mr, Q);
+    expect(all.items.some((o) => o.type === "ODA_SERVISI")).toBe(true);
+    const outletOnly = await outlets.list(ctx, mr, Q, { withoutRoomService: true });
+    expect(outletOnly.items.some((o) => o.type === "ODA_SERVISI")).toBe(false);
+    expect(outletOnly.total).toBe(all.total - 1);
+  });
+
   it("ikinci ODA_SERVISI outleti CONFLICT; tek başına hasOrdering VALIDATION; aynı ad CONFLICT", async () => {
     const ctx = await sys();
     const mr = await hotelId("ROYAL");

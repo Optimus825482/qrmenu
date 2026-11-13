@@ -60,7 +60,7 @@ const COLUMNS: Column<TableRow>[] = [
 
 /** Masalar: tables of one outlet of the window's hotel, with bulk add. */
 export function TablesPanel({ hotelId, setStatus, outletId: fixedOutletId }: Props) {
-  const outlets = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query }), {
+  const outlets = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query, withoutRoomService: true }), {
     hotelId,
     entities: ["outlet"],
     pageSize: 100,

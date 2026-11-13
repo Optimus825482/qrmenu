@@ -25,6 +25,9 @@ type Props = { hotelId: string; setStatus(text: string): void };
 /** Currencies offered in the outlet form (ISO 4217); a stored code outside the list stays selectable. */
 const CURRENCIES: readonly string[] = ["EUR", "TRY", "USD", "GBP", "RUB"];
 
+/** Room service is not an outlet operation: it is neither listed nor created from this screen. */
+const OUTLET_SCREEN_TYPES = Object.values(OutletType).filter((t) => t !== "ODA_SERVISI");
+
 type Dialog = { mode: "new" } | { mode: "edit"; row: OutletRow } | null;
 type OutletGridRow =
   | { id: string; kind: "OUTLET"; outlet: OutletRow }
@@ -32,7 +35,7 @@ type OutletGridRow =
 
 /** Outletler: outlets of the window's hotel; operational settings live in the edit forms. */
 export function OutletsPanel({ hotelId, setStatus }: Props) {
-  const list = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query }), {
+  const list = useLiveList<OutletRow>((query) => listOutletsAction({ hotelId, query, withoutRoomService: true }), {
     hotelId,
     entities: ["outlet", "outletArea"],
   });
@@ -267,15 +270,9 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
     const newType = e.target.value as OutletType;
     setSelectedType(newType);
     if (isNew) {
-      if (newType === "ODA_SERVISI") {
-        setHasOrdering(true);
-        setOrderingEnabled(true);
-        setKdsEnabled(true);
-      } else {
-        setHasOrdering(false);
-        setOrderingEnabled(false);
-        setKdsEnabled(false);
-      }
+      setHasOrdering(false);
+      setOrderingEnabled(false);
+      setKdsEnabled(false);
     }
   };
 
@@ -286,7 +283,7 @@ function OutletFields({ editing }: { editing?: OutletRow }) {
       </Field>
       <Field name="type" label="Tür">
         <select value={selectedType} onChange={onTypeChange}>
-          {Object.values(OutletType).map((t) => (
+          {OUTLET_SCREEN_TYPES.map((t) => (
             <option key={t} value={t}>
               {OUTLET_TYPE_LABELS[t]}
             </option>

@@ -41,12 +41,12 @@ const targets = [
   { hotelId: "h2", hotelName: "Park", outlets: [outlet("o3", "Havuz Bar", "BAR")] },
 ];
 
-async function open(extra: Record<string, unknown>) {
+async function open(extra: Record<string, unknown>, expected = "Royal Diamond / Oda Servisi") {
   listThemes.mockResolvedValue({ ok: true, data: { themes: [], canWrite: true } });
   assignTargets.mockResolvedValue({ ok: true, data: targets });
   const props = { windowId: "w1", setStatus: () => {}, setDirty: () => {}, close: () => {}, ...extra } as unknown as AppProps;
   render(<ThemeManager {...props} />);
-  await waitFor(() => expect(screen.getByText("Royal Diamond / Oda Servisi")).toBeDefined());
+  await waitFor(() => expect(screen.getByText(expected)).toBeDefined());
 }
 
 afterEach(() => {
@@ -61,9 +61,9 @@ describe("ThemeManager: room-service lock", () => {
     expect(screen.queryByText("Park / Havuz Bar")).toBeNull();
   });
 
-  it("keeps every outlet when opened as the general menu design center", async () => {
-    await open({});
-    expect(screen.getByText("Royal Diamond / Diamond Lobby Bar")).toBeDefined();
+  it("leaves room service out when opened as the outlet menu design center: it has a studio of its own", async () => {
+    await open({}, "Royal Diamond / Diamond Lobby Bar");
     expect(screen.getByText("Park / Havuz Bar")).toBeDefined();
+    expect(screen.queryByText("Royal Diamond / Oda Servisi")).toBeNull();
   });
 });
