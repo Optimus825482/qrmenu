@@ -235,6 +235,9 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
           const filteredOutlets = outletSearch.trim()
             ? allOutlets.filter((o) => o.name.toLowerCase().includes(outletSearch.trim().toLowerCase()))
             : allOutlets;
+          // Assigning a theme is an outlet-level right, not the system-wide `canWrite`: the server lists only the
+          // outlets this user may write (themes.assignTargets), so the button follows that list.
+          const canAssignActive = targets.some((t) => t.outlets.some((o) => o.id === studio.activeOutletId));
 
           return (
             <div className="xp-themes-panel-wrap">
@@ -266,30 +269,28 @@ export function ThemeManager({ hotelId: initialHotelId, initialOutletId, setStat
                       deleteDisabled={!selected}
                     >
                       {canWrite ? (
-                        <>
-                          <button
-                            type="button"
-                            className="xp-button"
-                            disabled={!selected || selected.isDefault}
-                            onClick={() => selected && void makeDefault(selected)}
-                          >
-                            Varsayılan yap
-                          </button>
-                          <button
-                            type="button"
-                            className="xp-button xp-theme-assign-btn"
-                            data-guide="onizle-yayinla"
-                            disabled={!selected || !studio.activeOutletId}
-                            onClick={() => {
-                              if (selected && studio.activeOutletId) {
-                                void assign(studio.activeOutletId, studio.activeOutletName, selected.id);
-                              }
-                            }}
-                            title={`“${selected?.name}” temasını önizlenen ${studio.activeOutletName || "outlete"} ata`}
-                          >
-                            <Icon name="check" size={16} /> Önizlenen Outlete Ata
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          className="xp-button"
+                          disabled={!selected || selected.isDefault}
+                          onClick={() => selected && void makeDefault(selected)}
+                        >
+                          Varsayılan yap
+                        </button>
+                      ) : null}
+                      {canAssignActive ? (
+                        <button
+                          type="button"
+                          className="xp-button xp-theme-assign-btn"
+                          data-guide="onizle-yayinla"
+                          disabled={!selected}
+                          onClick={() => {
+                            if (selected) void assign(studio.activeOutletId, studio.activeOutletName, selected.id);
+                          }}
+                          title={`“${selected?.name}” temasını önizlenen ${studio.activeOutletName || "outlete"} ata`}
+                        >
+                          <Icon name="check" size={16} /> Önizlenen Outlete Ata
+                        </button>
                       ) : null}
                     </Toolbar>
                   }
