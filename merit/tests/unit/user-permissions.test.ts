@@ -89,6 +89,25 @@ describe("kişiye özel yetki — yazma kuralları", () => {
     expect(await testDb.userScreenPermission.count({ where: { userId: user.id } })).toBe(0);
   });
 
+  it("rolün otele özel satırı varsa kısıtlama açıkça saklanır ve o otelde de geçerlidir", async () => {
+    const sys = await admin();
+    const { user, ctx } = await katUser();
+    const role = await roleByCode("R-KAT");
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "MB-TUK" } });
+    // System-wide A is false for R-KAT; ROYAL grants it through a hotel row.
+    await testDb.roleScreenPermission.create({
+      data: { roleId: role.id, screenId: screen.id, hotelId: await hotelId("ROYAL"), canView: true, canCreate: true, canEdit: true, canApprove: true },
+    });
+    try {
+      expect(await can(ctx, "MB-TUK", "A")).toBe(true);
+      const cell = await permissions.setUserScreen(sys, user.id, "MB-TUK", "A", false);
+      expect(cell.override).toEqual({ A: false });
+      expect(await can(ctx, "MB-TUK", "A")).toBe(false);
+    } finally {
+      await testDb.roleScreenPermission.deleteMany({ where: { hotelId: { not: null } } });
+    }
+  });
+
   it("matris rolün yetkisini, istisnayı ve sonucu birlikte verir", async () => {
     const sys = await admin();
     const { user } = await katUser();

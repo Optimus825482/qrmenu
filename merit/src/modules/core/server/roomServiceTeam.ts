@@ -46,9 +46,17 @@ export async function ensureRoomServiceMembership(
     where: { roleId: user.roleId, screenId: { in: screens.map((s) => s.id) }, OR: [{ hotelId: null }, { hotelId: { in: hotelIds } }] },
     select: { screenId: true, hotelId: true, canView: true },
   });
+  // The person's own exceptions win over the role (same order as rbac.ts): a screen withheld from this
+  // user must not put them in the team, one granted to them counts like the role's own right.
+  const own = await tx.userScreenPermission.findMany({
+    where: { userId, screenId: { in: screens.map((s) => s.id) } },
+    select: { screenId: true, canView: true },
+  });
   /** Hotel row first, system-wide row second (same rule as rbac.ts). */
   const canView = (hotelId: string): boolean =>
     screens.some((screen) => {
+      const exception = own.find((o) => o.screenId === screen.id)?.canView;
+      if (exception === true || exception === false) return exception;
       const rows = permissions.filter((p) => p.screenId === screen.id);
       const row = rows.find((p) => p.hotelId === hotelId) ?? rows.find((p) => p.hotelId === null);
       return row?.canView === true;

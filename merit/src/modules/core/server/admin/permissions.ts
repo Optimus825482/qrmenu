@@ -429,14 +429,18 @@ export async function setUserScreen(
     const user = await guardUserWrite(ctx, tx, userId);
     const screen = await tx.appScreen.findUnique({ where: { code: screenCode } });
     if (!screen) throw new DomainError("NOT_FOUND", "Ekran bulunamadı");
-    const [roleRow, existing] = await Promise.all([
+    const [roleRow, hotelRows, existing] = await Promise.all([
       tx.roleScreenPermission.findFirst({ where: { roleId: user.roleId, hotelId: null, screenId: screen.id } }),
+      tx.roleScreenPermission.count({ where: { roleId: user.roleId, hotelId: { not: null }, screenId: screen.id } }),
       tx.userScreenPermission.findUnique({ where: { userId_screenId: { userId, screenId: screen.id } } }),
     ]);
     const role = roleRow ? toFlags(roleRow) : NO_FLAGS;
     const before = overrideOf(existing);
     const next = { ...before };
-    if (input.value === role[input.action]) delete next[input.action];
+    // "Same as the role" clears the exception only when the role has ONE answer for this screen. With a
+    // hotel-specific role row the answer differs per hotel, so the admin's choice is kept explicitly:
+    // dropping it would let that hotel's row decide and silently undo a restriction.
+    if (input.value === role[input.action] && hotelRows === 0) delete next[input.action];
     else next[input.action] = input.value;
 
     const data = Object.fromEntries(ACTION_KEYS.map((a) => [COLUMN[a], next[a] ?? null])) as OverrideRow;
