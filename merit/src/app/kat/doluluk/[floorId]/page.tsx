@@ -592,11 +592,12 @@ export default function KatDolulukDetailPage() {
 
                         {room.hasMybarRequest ? (
                           <span
-                            className={`rounded-md px-2 py-0.5 text-xs font-bold ${
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold ${
                               mybarApproved ? "border border-warn bg-warn/20 text-text" : "bg-danger text-white"
                             }`}
+                            title={mybarApproved ? "MyBar talebi onaylandı, tamamlanmayı bekliyor" : "MyBar talebi onay bekliyor"}
                           >
-                            {mybarApproved ? "MyBar ✓" : "MyBar!"}
+                            MyBar{mybarApproved ? <Icon name="check" size={12} /> : "!"}
                           </span>
                         ) : data?.settings?.requireQrForControl ? (
                           // QR zorunluluğu aktifse Kontrol linki tamamen kaldırıldı!
