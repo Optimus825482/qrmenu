@@ -17,6 +17,7 @@ export type SseHandler = (e: MeritEvent) => void;
 export const MIN_DELAY_MS = 1000;
 export const MAX_DELAY_MS = 30_000;
 export const GRACE_MS = 5000;
+export const SWITCH_WINDOW_MS = 15_000;
 const SSE_URL = "/api/sse";
 const LOGIN_PATH = "/giris";
 /** Control frames the store always handles itself. */
@@ -46,6 +47,12 @@ export type SseClient = {
   store: StoreApi<{ status: SseStatus }>;
   /** `handler` receives every event whose type is in `types` (default SSE_EVENT_TYPES). */
   subscribe(handler: SseHandler, types?: readonly string[]): () => void;
+  /**
+   * The user is switching outlet/hotel: the server closes the old session and opens a new one for
+   * this same browser. Until the returned function is called (or SWITCH_WINDOW_MS passes), a
+   * `session.closed` frame reconnects with the new cookie instead of sending the tab to /giris.
+   */
+  expectSwitch(): () => void;
 };
 
 type Subscriber = { handler: SseHandler; types: ReadonlySet<string> };
@@ -72,6 +79,8 @@ export function createSseClient(deps: SseClientDeps): SseClient {
   let ended = false;
   /** Bumped on every connect and teardown: callbacks of an older connection are ignored. */
   let generation = 0;
+  /** Deadline of an announced outlet/hotel switch (see expectSwitch); 0 = none. */
+  let switchUntil = 0;
 
   const deliver = (type: string, data: string) => {
     let event: MeritEvent;
@@ -109,6 +118,15 @@ export function createSseClient(deps: SseClientDeps): SseClient {
         gap = true;
         delay = MIN_DELAY_MS;
         connect();
+        return;
+      }
+      if (type === SESSION_CLOSED && Date.now() < switchUntil) {
+        // Our own switch closed the old session: come back on the new cookie.
+        switchUntil = 0;
+        es.close();
+        source = undefined;
+        gap = true;
+        scheduleRetry(generation);
         return;
       }
       deliver(type, msg.data);
@@ -199,6 +217,12 @@ export function createSseClient(deps: SseClientDeps): SseClient {
 
   return {
     store,
+    expectSwitch() {
+      switchUntil = Date.now() + SWITCH_WINDOW_MS;
+      return () => {
+        switchUntil = 0;
+      };
+    },
     subscribe(handler, types = SSE_EVENT_TYPES) {
       const sub: Subscriber = { handler, types: new Set(types) };
       subscribers.add(sub);

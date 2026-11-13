@@ -97,8 +97,7 @@ test("2) Normal misafir QR akışı AR/TR dil ve yön senkronunu korumalı", asy
   await context.close();
 });
 
-// FIXME: standart e2e ortamında outlet değişimi garsonu /giris ekranına düşürüyor (13.11.2026); neden araştırılacak.
-test.fixme("3) Garson outlet geçişinde ProfileMenu ile yeni outlet verisi gelmeli", async ({ browser }) => {
+test("3) Garson outlet geçişinde ProfileMenu ile yeni outlet verisi gelmeli", async ({ browser }) => {
   const db = new Client({ connectionString: e2eDatabaseUrl() });
   await db.connect();
   try {

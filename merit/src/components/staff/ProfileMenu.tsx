@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition, type KeyboardEvent } from "
 import { requestGuide } from "@/components/guide/guideEvents";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { LogoutButton } from "@/components/LogoutButton";
+import { sseClient } from "@/shell/sseStore";
 import type { OutletTarget } from "@/components/ops/OutletSwitcher";
 import { ConfirmSheet } from "@/components/ui/ConfirmSheet";
 import { selectTargetAction } from "@/modules/core/server/loginAction";
@@ -63,9 +64,13 @@ export function ProfileMenu({ user, hotelName, outletName, targets, currentTarge
   const switchTo = (index: number) =>
     startTransition(async () => {
       setError("");
+      const cancelSwitch = sseClient().expectSwitch();
       const result = await selectTargetAction(index);
       if (result.ok) window.location.assign(result.data.next);
-      else setError(result.error.message);
+      else {
+        cancelSwitch();
+        setError(result.error.message);
+      }
     });
 
   return (

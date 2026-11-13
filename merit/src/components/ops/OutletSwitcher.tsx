@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { sseClient } from "@/shell/sseStore";
 import { selectTargetAction } from "@/modules/core/server/loginAction";
 
 export type OutletTarget = { index: number; label: string };
@@ -13,8 +14,10 @@ export function OutletSwitcher({ targets, className }: { targets: OutletTarget[]
     const index = Number(event.target.value);
     if (!Number.isInteger(index)) return;
     startTransition(async () => {
+      const cancelSwitch = sseClient().expectSwitch();
       const result = await selectTargetAction(index);
       if (result.ok) router.replace(result.data.next);
+      else cancelSwitch();
     });
   }}>
     <option value="">Outlet değiştir</option>

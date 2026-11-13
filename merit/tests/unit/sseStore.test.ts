@@ -140,6 +140,28 @@ describe("sseStore: sekme başına tek EventSource", () => {
     expect(sources).toHaveLength(1);
   });
 
+  it("outlet/otel geçişi duyurulduysa session.closed girişe atmaz, yeni oturumla yeniden bağlanır", () => {
+    client.subscribe(vi.fn());
+    last().open();
+    client.expectSwitch();
+    last().emit("session.closed", event("session.closed"));
+    expect(signedOut).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1000);
+    expect(sources).toHaveLength(2);
+    // The next session.closed is a real one again.
+    last().open();
+    last().emit("session.closed", event("session.closed"));
+    expect(signedOut).toHaveBeenCalledWith("/giris");
+  });
+
+  it("geçiş iptal edilirse session.closed yine girişe gönderir", () => {
+    client.subscribe(vi.fn());
+    last().open();
+    client.expectSwitch()();
+    last().emit("session.closed", event("session.closed"));
+    expect(signedOut).toHaveBeenCalledWith("/giris");
+  });
+
   it("reconnect: eski akış kapanır, hemen yenisi açılır", () => {
     client.subscribe(vi.fn());
     const first = last();
