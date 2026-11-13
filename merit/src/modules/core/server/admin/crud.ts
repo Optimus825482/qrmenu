@@ -32,6 +32,8 @@ export type AdminTxOptions = {
   hotelId?: string;
   /** Role codes that may make this system-wide write besides SISTEM roles (they still need the screen permission). */
   delegateRoles?: readonly string[];
+  /** Interactive transaction timeout in ms (Prisma default 5000); for transactions that wait on an external call. */
+  timeoutMs?: number;
 };
 
 /**
@@ -68,7 +70,7 @@ export async function withAdminTx<T>(
       "Sistem geneli işlemleri yalnızca sistem yöneticisi yapabilir",
     );
   }
-  return prisma.$transaction(fn);
+  return options.timeoutMs ? prisma.$transaction(fn, { timeout: options.timeoutMs }) : prisma.$transaction(fn);
 }
 
 /** Prisma error codes that mean "other rows are in the way": unique, foreign key, required relation. */

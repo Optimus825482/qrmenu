@@ -5,6 +5,7 @@ import {
   bulkUpdateUsersAction,
   deleteUserAction,
   listUsersAction,
+  sendUserCredentialsAction,
   setUserActiveAction,
   setUserPasswordAction,
   updateUserAction,
@@ -59,7 +60,7 @@ const DATA_COLUMNS: Column<UserRow>[] = [
   },
 ];
 
-type BulkNotice = { updated: number; failed: BulkUpdateResult["failed"] };
+type BulkNotice = { updated: number; failed: BulkUpdateResult["failed"]; verb?: string };
 
 /** User management list with status, hotel, and job title filters. */
 export function UsersPanel({ hotelId, setStatus }: Props) {
@@ -228,6 +229,24 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
     finishBulk(result.data);
   };
 
+  const bulkSendCredentials = async () => {
+    const yes = await confirm({
+      title: "Giriş bilgilerini e-postala",
+      message: `${pickedIds.length} kullanıcıya giriş bilgileri e-posta ile gönderilsin mi? Henüz kendi şifresini belirlememiş kullanıcılara yeni bir geçici şifre e-postayla gönderilir (önceki geçici şifre geçersiz olur ve açık oturumları kapanır). Şifresini kendisi belirlemiş kullanıcılara yalnızca kullanıcı adı ve site adresi gönderilir, şifreleri değişmez. E-posta adresi olmayan kullanıcılar atlanır.`,
+      confirmLabel: "Gönder",
+    });
+    if (!yes) return;
+    const result = await sendUserCredentialsAction({ ids: pickedIds });
+    if (!result.ok) {
+      notify.error(result.error.message, { title: "Giriş bilgileri gönderilemedi" });
+      return;
+    }
+    setPickedIds([]);
+    setBulkNotice({ updated: result.data.sent, failed: result.data.failed, verb: "gönderildi" });
+    setStatus(`${result.data.sent} kullanıcıya giriş bilgileri gönderildi`);
+    list.reload();
+  };
+
   const edit = (row: UserRow, tab: "bilgi" | "yetki" = "bilgi") => {
     setCardTab(tab);
     setDialog({ mode: "edit", row });
@@ -243,7 +262,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
       ) : null}
       {bulkNotice ? (
         <div role="status" className="xp-defs-note">
-          <p>{bulkNotice.updated} kullanıcı güncellendi</p>
+          <p>{bulkNotice.updated} kullanıcı{bulkNotice.verb ? "ya" : ""} {bulkNotice.verb ?? "güncellendi"}</p>
           {bulkNotice.failed.length > 0 ? (
             <ul>
               {bulkNotice.failed.map((item) => (
@@ -273,6 +292,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
             <button type="button" className="xp-button" onClick={() => setDialog({ mode: "bulkJob" })}>Görev değiştir</button>
             <button type="button" className="xp-button" onClick={() => void bulkSetActive(true)}>Aktif yap</button>
             <button type="button" className="xp-button" onClick={() => void bulkSetActive(false)}>Pasif yap</button>
+            <button type="button" className="xp-button" onClick={() => void bulkSendCredentials()}>Giriş bilgilerini e-postala</button>
             <button type="button" className="xp-button" onClick={() => setPickedIds([])}>Seçimi temizle</button>
           </>
         ) : null}

@@ -2,6 +2,10 @@ import { randomInt } from "node:crypto";
 import { z } from "zod";
 import type { Prisma, RoleKind } from "@/generated/prisma/client";
 import type { Ctx } from "@/lib/auth";
+import { env } from "@/lib/env";
+import { isMailConfigured, sendMail } from "@/lib/mailer";
+import { maskEmail } from "@/modules/reporting/server/mail/transport";
+import { composeCredentialsMail, generateTemporaryPassword } from "./credentialsMail";
 import { hashPassword, PASSWORD_MAX_BYTES, PASSWORD_MAX_LENGTH, passwordPolicyError } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { DomainError } from "@/lib/result";
@@ -740,12 +744,13 @@ const bulkPatchSchema = z.union([
   z.strictObject({ isActive: z.boolean() }),
   z.strictObject({ jobTitle: z.string().trim().max(100, "En fazla 100 karakter olabilir") }),
 ]);
+const userIdsSchema = z
+  .array(z.string().min(1))
+  .min(1, "En az bir kullanıcı seçin")
+  .max(200, "En fazla 200 kullanıcı seçilebilir")
+  .refine((ids) => new Set(ids).size === ids.length, "Kullanıcı seçimi tekrar içeriyor");
 export const bulkUpdateSchema = z.object({
-  ids: z
-    .array(z.string().min(1))
-    .min(1, "En az bir kullanıcı seçin")
-    .max(200, "En fazla 200 kullanıcı seçilebilir")
-    .refine((ids) => new Set(ids).size === ids.length, "Kullanıcı seçimi tekrar içeriyor"),
+  ids: userIdsSchema,
   patch: bulkPatchSchema,
 });
 export type BulkUpdateInput = z.input<typeof bulkUpdateSchema>;
@@ -806,6 +811,105 @@ export async function bulkUpdate(ctx: Ctx, raw: BulkUpdateInput): Promise<BulkUp
         await update(ctx, id, next);
       }
       result.updated += 1;
+    } catch (error) {
+      if (!(error instanceof DomainError)) throw error;
+      result.failed.push({ id, fullName: names.get(id) ?? "Bilinmeyen kullanıcı", reason: error.message });
+    }
+  }
+  return result;
+}
+
+export const sendCredentialsSchema = z.object({ ids: userIdsSchema });
+export type SendCredentialsInput = z.input<typeof sendCredentialsSchema>;
+export type SendCredentialsResult = { sent: number; failed: { id: string; fullName: string; reason: string }[] };
+
+const MAIL_NOT_CONFIGURED =
+  "E-posta gönderimi yapılandırılmamış; önce SMTP ayarlarını tamamlayın. Hiçbir şifre değiştirilmedi.";
+const MAIL_SEND_FAILED = "E-posta gönderilemedi; şifre değiştirilmedi";
+/** The SMTP call runs inside the transaction (see `mailCredentials`), so it gets more than the 5 s default. */
+const CREDENTIALS_TX_TIMEOUT_MS = 60_000;
+
+/**
+ * Mails one user's sign-in details. Everything happens in ONE transaction and the mail is sent as the LAST
+ * step before commit: if sending fails the transaction rolls back, so a changed password never exists
+ * without a mail. (A commit failure after a successful send is the only residual window; the user then
+ * holds a mail whose temporary password does not work and the admin simply sends again.)
+ */
+async function mailCredentials(ctx: Ctx, id: string): Promise<void> {
+  const anchor = await anchorHotel(id);
+  if (!(await isMailConfigured(anchor))) throw new DomainError("VALIDATION", MAIL_NOT_CONFIGURED);
+  await withAdminTx(ctx, { screen: SCREEN, action: "D", hotelId: anchor, timeoutMs: CREDENTIALS_TX_TIMEOUT_MS }, async (tx) => {
+    const target = await loadTarget(tx, id);
+    assertNotDeleted(target);
+    await assertCanManage(ctx, target, "D", "setPassword");
+    const to = target.email?.trim();
+    if (!to) throw new DomainError("VALIDATION", "E-posta adresi yok");
+    if (!target.isActive) throw new DomainError("VALIDATION", "Kullanıcı pasif");
+    // Only a user who never chose an own password gets a new one; an own password is never touched.
+    const issue = target.mustChangePassword;
+    const temporary = issue ? generateTemporaryPassword() : undefined;
+    let sessionsClosed = 0;
+    if (temporary) {
+      const passwordHash = await hashPassword(temporary);
+      await tx.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
+      sessionsClosed = await closeUserSessionsInTx(tx, id, "SISTEM", ctx.user.id);
+    }
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId: anchor,
+      action: "USER_CREDENTIALS_MAILED",
+      entity: "User",
+      entityId: id,
+      // Never the password itself, only whether a new temporary one was issued.
+      after: { to: maskEmail(to), newTemporaryPassword: issue, sessionsClosed },
+    });
+    const mail = composeCredentialsMail({
+      fullName: target.fullName,
+      username: target.username,
+      siteUrl: env.APP_BASE_URL.replace(/\/+$/, ""),
+      temporaryPassword: temporary,
+    });
+    if (!(await sendMail({ to, subject: mail.subject, html: mail.html, text: mail.text, hotelId: anchor }))) {
+      throw new DomainError("INTERNAL", MAIL_SEND_FAILED);
+    }
+    if (temporary) await publishUser(tx, id, hotelsOf(target), "update");
+  });
+}
+
+/**
+ * E-mails sign-in details to the selected users (same visibility scoping as `bulkUpdate`). A user who has
+ * not set an own password yet gets a fresh random temporary password; others get username and address only.
+ * Refused up front when SMTP is not configured, so no password is reset without a way to deliver it.
+ */
+export async function sendCredentials(ctx: Ctx, raw: SendCredentialsInput): Promise<SendCredentialsResult> {
+  const { ids } = parseInput(sendCredentialsSchema, raw);
+  await assertCan(ctx, SCREEN, "D");
+  if (!(await isMailConfigured())) throw new DomainError("VALIDATION", MAIL_NOT_CONFIGURED);
+  const scope = await scopeHotels(ctx, "V");
+  const names = new Map(
+    (
+      await prisma.user.findMany({
+        where: {
+          id: { in: ids },
+          deletedAt: null,
+          ...(scope
+            ? {
+                role: { kind: { not: "SISTEM" } },
+                OR: [{ hotelId: { in: scope } }, { userHotels: { some: { hotelId: { in: scope } } } }],
+              }
+            : {}),
+        },
+        select: { id: true, fullName: true },
+      })
+    ).map((u) => [u.id, u.fullName]),
+  );
+  const result: SendCredentialsResult = { sent: 0, failed: [] };
+  for (const id of ids) {
+    try {
+      if (!names.has(id)) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
+      if (id === ctx.user.id) throw new DomainError("VALIDATION", "Kendi hesabınıza giriş bilgisi gönderemezsiniz");
+      await mailCredentials(ctx, id);
+      result.sent += 1;
     } catch (error) {
       if (!(error instanceof DomainError)) throw error;
       result.failed.push({ id, fullName: names.get(id) ?? "Bilinmeyen kullanıcı", reason: error.message });

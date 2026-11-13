@@ -53,6 +53,10 @@ export async function bulkUpdateUsersAction(raw: unknown): Promise<Result<users.
   return safeAction(users.bulkUpdateSchema, async (input) => users.bulkUpdate(await requireUser(), input))(raw);
 }
 
+export async function sendUserCredentialsAction(raw: unknown): Promise<Result<users.SendCredentialsResult>> {
+  return safeAction(users.sendCredentialsSchema, async (input) => users.sendCredentials(await requireUser(), input))(raw);
+}
+
 export async function deleteUserAction(raw: unknown): Promise<Result<null>> {
   return safeAction(z.object({ id }), async (input) => {
     await users.deleteUser(await requireUser(), input.id);
