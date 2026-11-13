@@ -41,6 +41,26 @@ export async function resetHotelOverridesAction(raw: unknown): Promise<Result<{ 
   )(raw);
 }
 
+export async function userPermissionMatrixAction(raw: unknown): Promise<Result<permissions.UserPermissionMatrix>> {
+  return safeAction(z.object({ userId: id }), async (input) =>
+    permissions.userMatrix(await requireUser(), input.userId),
+  )(raw);
+}
+
+export async function setUserScreenPermissionAction(raw: unknown): Promise<Result<permissions.UserScreenCell>> {
+  return safeAction(
+    z.object({ userId: id, screenCode: z.string().min(1), action: z.string().min(1), value: z.boolean() }),
+    async (input) =>
+      permissions.setUserScreen(await requireUser(), input.userId, input.screenCode, input.action, input.value),
+  )(raw);
+}
+
+export async function resetUserPermissionsAction(raw: unknown): Promise<Result<{ removed: number }>> {
+  return safeAction(z.object({ userId: id }), async (input) =>
+    permissions.resetUser(await requireUser(), input.userId),
+  )(raw);
+}
+
 export async function copyPermissionsAction(
   raw: unknown,
 ): Promise<Result<{ screens: number; modules: number }>> {

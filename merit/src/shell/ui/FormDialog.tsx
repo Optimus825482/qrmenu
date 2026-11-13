@@ -32,6 +32,8 @@ type Props = {
   confirmBeforeSubmit?: boolean;
   /** Snackbar/balloon text after a successful save; default "“title” kaydedildi.". */
   successMessage?: string;
+  /** Wider dialog for content that is more than a column of fields (e.g. a table). */
+  wide?: boolean;
 };
 
 const FOCUSABLE =
@@ -54,7 +56,7 @@ export function FormDialog(props: Props) {
   return portalRoot ? createPortal(panel, portalRoot) : panel;
 }
 
-function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSubmit, successMessage }: Props) {
+function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSubmit, successMessage, wide }: Props) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -177,6 +179,7 @@ function Panel({ title, onClose, onSubmit, children, submitText, confirmBeforeSu
         aria-modal="true"
         aria-labelledby={titleId}
         className="xp-window xp-dialog xp-form-dialog"
+        style={wide ? { width: "min(760px, calc(100% - 24px))" } : undefined}
         onKeyDown={onKeyDown}
       >
         <div className="xp-titlebar" onPointerDown={startDrag}>

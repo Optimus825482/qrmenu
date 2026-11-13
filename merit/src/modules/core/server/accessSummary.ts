@@ -29,7 +29,8 @@ export type AccessSummary = {
   hash: string;
 };
 
-export type AccessSubject = { roleId: string; hotelId: string; outletId?: string; fullName?: string };
+/** `userId` set = that person (their own exceptions apply); unset = the bare role. */
+export type AccessSubject = { roleId: string; hotelId: string; outletId?: string; fullName?: string; userId?: string };
 
 
 /** Fingerprint of the screen and action set only (not of the guide texts): a permission change re-shows the summary. */
@@ -52,6 +53,7 @@ export async function accessSummary(subject: Ctx | AccessSubject, hotelId?: stri
   const roleId = ctx ? ctx.user.roleId : (subject as AccessSubject).roleId;
   const effectiveHotel = hotelId ?? (ctx ? ctx.session.hotelId : (subject as AccessSubject).hotelId);
   const outletId = ctx ? ctx.session.outletId : (subject as AccessSubject).outletId;
+  const userId = ctx ? ctx.user.id : (subject as AccessSubject).userId;
 
   const [role, hotel, outlet, perScreen] = await Promise.all([
     prisma.role.findUnique({ where: { id: roleId }, select: { code: true, name: true, defaultScreen: true } }),
@@ -59,7 +61,7 @@ export async function accessSummary(subject: Ctx | AccessSubject, hotelId?: stri
     outletId
       ? prisma.outlet.findUnique({ where: { id: outletId }, select: { id: true, name: true } })
       : Promise.resolve(null),
-    actionsByScreen(roleId, effectiveHotel),
+    actionsByScreen(roleId, effectiveHotel, userId),
   ]);
   if (!role) throw new DomainError("NOT_FOUND", "Rol bulunamadı");
   if (!hotel) throw new DomainError("NOT_FOUND", "Otel bulunamadı");

@@ -17,10 +17,16 @@ export type AccessPreview = { summary: AccessSummary; nav: NavModel };
 const userInput = z.object({ userId: z.string().min(1), hotelId: z.string().min(1), outletId: z.string().min(1).optional() });
 const roleInput = z.object({ roleId: z.string().min(1), hotelId: z.string().min(1) });
 
-async function previewOf(roleId: string, hotelId: string, outletId: string | undefined, fullName: string | undefined): Promise<AccessPreview> {
+async function previewOf(
+  roleId: string,
+  hotelId: string,
+  outletId: string | undefined,
+  fullName: string | undefined,
+  userId?: string,
+): Promise<AccessPreview> {
   const [summary, perScreen, outlet] = await Promise.all([
-    accessSummary({ roleId, hotelId, ...(outletId ? { outletId } : {}), ...(fullName !== undefined ? { fullName } : {}) }),
-    actionsByScreen(roleId, hotelId),
+    accessSummary({ roleId, hotelId, ...(outletId ? { outletId } : {}), ...(fullName !== undefined ? { fullName } : {}), ...(userId ? { userId } : {}) }),
+    actionsByScreen(roleId, hotelId, userId),
     outletId ? prisma.outlet.findUnique({ where: { id: outletId }, select: { hasOrdering: true } }) : null,
   ]);
   const nav = buildNav(summary.user.roleCode, new Set(perScreen.keys()), {
@@ -56,7 +62,7 @@ export async function previewAccessAction(input: {
       const outlet = await prisma.outlet.findFirst({ where: { id: value.outletId, hotelId: value.hotelId }, select: { id: true } });
       if (!outlet) throw new DomainError("NOT_FOUND", "Outlet bulunamadı");
     }
-    const preview = await previewOf(target.roleId, value.hotelId, value.outletId, target.fullName);
+    const preview = await previewOf(target.roleId, value.hotelId, value.outletId, target.fullName, target.id);
     await prisma.$transaction((tx) =>
       audit(tx, {
         userId: ctx.user.id,

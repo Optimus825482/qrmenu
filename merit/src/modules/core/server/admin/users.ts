@@ -631,6 +631,11 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         select: SELECT,
       });
       if (leavesSystemAdmin) await assertSystemAdminRemains(tx);
+      // A new role is a new baseline: personal exceptions measured against the old role do not carry over.
+      const overridesDropped =
+        updated.roleId !== before.roleId
+          ? (await tx.userScreenPermission.deleteMany({ where: { userId: id } })).count
+          : 0;
       const row = toRow(updated);
       // Role or hotel membership changed: open sessions carry the old privileges and end now
       // (session.closed ends their SSE streams on commit).
@@ -649,7 +654,7 @@ export async function update(ctx: Ctx, id: string, raw: UpdateUserInput): Promis
         entity: "User",
         entityId: id,
         before: toRow(before),
-        after: scopeChanged ? { ...row, sessionsClosed } : row,
+        after: scopeChanged ? { ...row, sessionsClosed, ...(overridesDropped ? { overridesDropped } : {}) } : row,
       });
       await publishUser(tx, id, [...hotelsOf(before), ...hotels], "update");
       await ensureRoomServiceMembership(tx, id, ctx.user.id);

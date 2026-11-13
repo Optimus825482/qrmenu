@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   permissionMatrixAction,
   setPermissionScreenAction,
@@ -13,6 +13,7 @@ import type { Flags, PermissionMatrix, ScreenCell } from "@/modules/core/server/
 import type { RoleOptions } from "@/modules/core/server/admin/roles";
 import { confirm } from "@/shell/confirm";
 import { notify } from "@/shell/notify";
+import { PermissionGrid } from "./PermissionGrid";
 
 type Props = { hotelId: string; setStatus(text: string): void };
 const ACTIONS = ["V", "O", "D", "A", "R"] as const;
@@ -22,15 +23,6 @@ const ACTION_TITLES: Record<(typeof ACTIONS)[number], string> = {
   D: "Düzenle",
   A: "Onayla",
   R: "Rapor",
-};
-
-const MODULE_LABELS: Record<string, string> = {
-  ALL: "Tüm Modüller",
-  MINIBAR: "Minibar Takip",
-  QR_ORDER: "QR Sipariş / Outlet",
-  QR_MENU: "QR Menü",
-  ROOM_SERVICE: "Oda Servisi",
-  CORE: "Çekirdek Sistem",
 };
 
 const FLOWS = {
@@ -88,8 +80,6 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
   const [previewHotel, setPreviewHotel] = useState(hotelId);
   const [preview, setPreview] = useState<AccessPreview | null>(null);
   const [previewError, setPreviewError] = useState("");
-  const [moduleFilter, setModuleFilter] = useState<string>("ALL");
-  const [searchFilter, setSearchFilter] = useState<string>("");
 
   const role = options?.roles.find((item) => item.id === roleId);
   const currentFlow = screenCode in FLOWS ? FLOWS[screenCode as keyof typeof FLOWS] : null;
@@ -251,6 +241,39 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
     }
   };
 
+  const setGroup = async (group: { label: string; rows: ScreenCell[] }, value: boolean) => {
+    const targets = group.rows.filter((cell) => ACTIONS.some((action) => cell[action] !== value));
+    if (targets.length === 0) return;
+    const yes = await confirm({
+      title: value ? "Alanın tüm yetkilerini ver" : "Alanın tüm yetkilerini kaldır",
+      message: `${role?.name ?? "Rol"} için “${group.label}” alanındaki ${targets.length} ekranın tüm yetkileri ${
+        value ? "açılsın" : "kapatılsın"
+      } mı?`,
+      danger: true,
+      confirmLabel: "Onayla",
+    });
+    if (!yes) return;
+    const flags: Flags = { V: value, O: value, D: value, A: value, R: value };
+    setBusy(true);
+    try {
+      for (const cell of targets) {
+        const result = await setPermissionScreenAction({ roleId, hotelId: null, screenCode: cell.code, flags });
+        if (!result.ok) {
+          setError(result.error.message);
+          return;
+        }
+        setMatrix((current) =>
+          current
+            ? { ...current, screens: current.screens.map((item) => (item.code === result.data.code ? result.data : item)) }
+            : current,
+        );
+      }
+      setError("");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const roleSelect = (
     <label>
       Rol
@@ -263,17 +286,6 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
       </select>
     </label>
   );
-
-  const matrixScreens = matrix?.screens;
-  const filteredScreens = useMemo(() => {
-    if (!matrixScreens) return [];
-    return matrixScreens.filter((s) => {
-      const matchesMod = moduleFilter === "ALL" || s.moduleKey === moduleFilter;
-      const q = searchFilter.trim().toLowerCase();
-      const matchesSearch = !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
-      return matchesMod && matchesSearch;
-    });
-  }, [matrixScreens, moduleFilter, searchFilter]);
 
   return (
     <div
@@ -442,128 +454,15 @@ export function PermissionMatrixPanel({ hotelId, setStatus }: Props) {
                 {role ? `${role.name} (${role.code}) Ekran Yetkileri` : "Ekran Yetkileri"}
               </h3>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <label style={{ fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                  Modül:
-                  <select
-                    value={moduleFilter}
-                    onChange={(e) => setModuleFilter(e.target.value)}
-                    style={{ fontSize: "12px", padding: "2px 6px" }}
-                  >
-                    <option value="ALL">Tüm Modüller ({matrix?.screens?.length ?? 0})</option>
-                    <option value="MINIBAR">Minibar Takip</option>
-                    <option value="QR_ORDER">QR Sipariş / Outlet</option>
-                    <option value="QR_MENU">QR Menü</option>
-                    <option value="ROOM_SERVICE">Oda Servisi</option>
-                    <option value="CORE">Çekirdek Sistem</option>
-                  </select>
-                </label>
-
-                <input
-                  type="search"
-                  placeholder="Ekran ara..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                  style={{ fontSize: "12px", padding: "2px 6px", width: "140px" }}
-                />
-              </div>
             </div>
 
-            <div
-              className="xp-matrix-scroll"
-              style={{
-                overflowY: "auto",
-                overflowX: "auto",
-                border: "1px solid var(--xp-body-edge, #cbd5e1)",
-                background: "var(--xp-body-light, #ffffff)",
-                maxHeight: "420px",
-                minHeight: "220px",
-              }}
-            >
-              <table className="xp-matrix-grid" style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                <thead>
-                  <tr style={{ background: "var(--xp-body, #e2e8f0)", position: "sticky", top: 0, zIndex: 1 }}>
-                    <th style={{ textAlign: "left", padding: "4px 8px" }}>Ekran Adı</th>
-                    <th style={{ textAlign: "left", padding: "4px 8px", width: "140px" }}>Modül</th>
-                    <th style={{ textAlign: "center", padding: "4px 6px", width: "42px" }} title="Görüntüle">V</th>
-                    <th style={{ textAlign: "center", padding: "4px 6px", width: "42px" }} title="Oluştur">O</th>
-                    <th style={{ textAlign: "center", padding: "4px 6px", width: "42px" }} title="Düzenle">D</th>
-                    <th style={{ textAlign: "center", padding: "4px 6px", width: "42px" }} title="Onayla">A</th>
-                    <th style={{ textAlign: "center", padding: "4px 6px", width: "42px" }} title="Rapor">R</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredScreens.map((cell) => {
-                    const isOpening = cell.code === role?.defaultScreen;
-                    return (
-                      <tr
-                        key={cell.code}
-                        style={{
-                          background: isOpening ? "rgba(40, 105, 199, 0.08)" : undefined,
-                          borderBottom: "1px solid var(--xp-body-edge, #e2e8f0)",
-                        }}
-                      >
-                        <td style={{ textAlign: "left", padding: "5px 8px" }}>
-                          <span style={{ fontWeight: isOpening ? "bold" : "normal" }}>{cell.name}</span>
-                          <span className="xp-matrix-name" style={{ marginLeft: "6px", fontSize: "11px" }}>
-                            ({cell.code})
-                          </span>
-                          {isOpening ? (
-                            <span
-                              style={{
-                                marginLeft: "6px",
-                                fontSize: "10px",
-                                padding: "1px 5px",
-                                borderRadius: "3px",
-                                background: "var(--xp-select, #316ac5)",
-                                color: "#fff",
-                                fontWeight: "bold",
-                              }}
-                            >
-                              Açılış
-                            </span>
-                          ) : null}
-                        </td>
-                        <td style={{ textAlign: "left", padding: "5px 8px", color: "var(--xp-muted, #64748b)" }}>
-                          {MODULE_LABELS[cell.moduleKey] ?? cell.moduleKey}
-                        </td>
-                        {ACTIONS.map((action) => (
-                          <td key={action} style={{ textAlign: "center", padding: "4px" }}>
-                            <input
-                              type="checkbox"
-                              aria-label={`${cell.name} · ${ACTION_TITLES[action]}`}
-                              checked={cell[action]}
-                              disabled={!options?.canEdit || locked || busy}
-                              onChange={(event) => void togglePermission(cell, action, event.target.checked)}
-                              style={{ cursor: !options?.canEdit || locked || busy ? "default" : "pointer" }}
-                            />
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                  {filteredScreens.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} style={{ textAlign: "center", padding: "16px", color: "var(--xp-muted)" }}>
-                        {matrix ? "Filtreye uygun ekran bulunamadı." : "Yetkiler yükleniyor..."}
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              className="xp-action-legend"
-              aria-label="Yetki harflerinin açıklaması"
-              style={{ flexShrink: 0, fontSize: "11px", paddingTop: "4px" }}
-            >
-              {ACTIONS.map((action) => (
-                <span key={action} style={{ marginRight: "12px" }}>
-                  <strong>{action}</strong>: {ACTION_TITLES[action]}
-                </span>
-              ))}
-            </div>
+            <PermissionGrid
+              rows={matrix?.screens ?? null}
+              disabled={!options?.canEdit || locked || busy}
+              onToggle={(cell, action, value) => void togglePermission(cell, action, value)}
+              onBulk={(group, value) => void setGroup(group, value)}
+              highlightCode={role?.defaultScreen}
+            />
           </div>
         </section>
       )}

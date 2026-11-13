@@ -29,7 +29,7 @@ export async function helpFor(ctx: Ctx, code: string, windowHotelId?: string): P
   const screen = SCREENS.find((s) => s.code === code);
   if (!screen) return null;
   const hotelId = guideHotelId(ctx, windowHotelId);
-  const actions = (await actionsByScreen(ctx.user.roleId, hotelId)).get(code);
+  const actions = (await actionsByScreen(ctx.user.roleId, hotelId, ctx.user.id)).get(code);
   if (!actions) return null;
 
   const guide = guideFor(code);

@@ -20,6 +20,7 @@ import { Toolbar } from "@/shell/ui/Toolbar";
 import { useLiveList } from "@/shell/ui/useLiveList";
 import { UserForm, userInputFromValues } from "./UserForm";
 import { UserCreateDialog } from "./UserCreateDialog";
+import { UserPermissionsTab } from "./UserPermissionsTab";
 import { HotelBadges } from "@/components/ui/HotelBadge";
 
 type Props = { hotelId?: string; setStatus(text: string): void };
@@ -58,7 +59,7 @@ const COLUMNS: Column<UserRow>[] = [
 
 /** User management list with status, hotel, and job title filters. */
 export function UsersPanel({ hotelId, setStatus }: Props) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ACTIVE");
   const [hotelFilter, setHotelFilter] = useState("");
   const [jobTitleFilter, setJobTitleFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -79,6 +80,7 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [previewRow, setPreviewRow] = useState<UserRow | null>(null);
+  const [cardTab, setCardTab] = useState<"bilgi" | "yetki">("bilgi");
   const selected = list.rows.find((r) => r.id === selectedId);
 
   useEffect(() => {
@@ -155,7 +157,10 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
     list.reload();
   };
 
-  const edit = (row: UserRow) => setDialog({ mode: "edit", row });
+  const edit = (row: UserRow, tab: "bilgi" | "yetki" = "bilgi") => {
+    setCardTab(tab);
+    setDialog({ mode: "edit", row });
+  };
   const editing = dialog?.mode === "edit" ? dialog.row : undefined;
 
   return (
@@ -179,9 +184,10 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
         q={list.q}
         selectedId={selectedId}
         onSelect={(row) => setSelectedId(row.id)}
-        onActivate={edit}
+        onActivate={(row) => edit(row)}
         rowContextActions={(row) => [
           { label: "Düzenle", onSelect: () => edit(row) },
+          { label: "Yetkiler", onSelect: () => edit(row, "yetki") },
           { label: "Kullanıcıya göster", onSelect: () => setPreviewRow(row) },
           { label: "Şifre belirle", onSelect: () => openPasswordDialog(row) },
           {
@@ -279,8 +285,37 @@ export function UsersPanel({ hotelId, setStatus }: Props) {
         onSubmit={submit}
         submitText="Kaydet"
         confirmBeforeSubmit={!!editing}
+        wide={cardTab === "yetki"}
       >
-        <UserForm options={options} editing={editing} defaultHotelId={hotelId ?? ""} />
+        <div role="tablist" aria-label="Kullanıcı kartı" className="xp-defs-filters">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={cardTab === "bilgi"}
+            className={`xp-button ${cardTab === "bilgi" ? "is-selected font-bold" : ""}`}
+            onClick={() => setCardTab("bilgi")}
+          >
+            Bilgiler
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={cardTab === "yetki"}
+            className={`xp-button ${cardTab === "yetki" ? "is-selected font-bold" : ""}`}
+            onClick={() => setCardTab("yetki")}
+          >
+            Yetkiler
+          </button>
+        </div>
+        {/* Bilgi alanları sekme değişince de formda kalır: "Kaydet" her iki sekmede aynı değerleri gönderir. */}
+        <div role="tabpanel" aria-label="Bilgiler" hidden={cardTab !== "bilgi"} style={{ display: cardTab === "bilgi" ? "contents" : "none" }}>
+          <UserForm options={options} editing={editing} defaultHotelId={hotelId ?? ""} />
+        </div>
+        {cardTab === "yetki" && editing ? (
+          <div role="tabpanel" aria-label="Yetkiler">
+            <UserPermissionsTab userId={editing.id} />
+          </div>
+        ) : null}
       </FormDialog>
       <FormDialog
         title="Geçici şifre belirle"

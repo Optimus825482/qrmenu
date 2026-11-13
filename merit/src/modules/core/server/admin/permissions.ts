@@ -287,3 +287,193 @@ export async function copyFromRole(
     return copied;
   });
 }
+
+// --- per-user exceptions ------------------------------------------------------------------------
+
+const ACTION_KEYS = ["V", "O", "D", "A", "R"] as const;
+type ActionKey = (typeof ACTION_KEYS)[number];
+const COLUMN = { V: "canView", O: "canCreate", D: "canEdit", A: "canApprove", R: "canReport" } as const;
+
+/** One screen of a user: what the role gives, the user's own exceptions, and the outcome (the flags). */
+export type UserScreenCell = Flags & {
+  code: string;
+  name: string;
+  moduleKey: ModuleKey;
+  /** The role's system-wide flags (the baseline the exceptions are measured against). */
+  role: Flags;
+  /** Only the actions that differ from the role: true = granted extra, false = withheld. */
+  override: Partial<Record<ActionKey, boolean>>;
+};
+export type UserPermissionMatrix = {
+  user: { id: string; fullName: string; username: string; roleCode: string; roleName: string };
+  /** The actor may change this user's exceptions. */
+  canEdit: boolean;
+  /** Why editing is off, in plain Turkish (empty when `canEdit`). */
+  lockReason: string;
+  screens: UserScreenCell[];
+};
+
+const USER_LOCKED = "Sistem Yöneticisi rolündeki kullanıcıların yetkileri kilitlidir";
+const USER_SELF = "Kendi yetkilerinizi değiştiremezsiniz";
+const USER_SYSTEM_ONLY = "Kişiye özel yetkiyi yalnızca sistem yöneticisi değiştirebilir";
+
+type OverrideRow = { [K in (typeof COLUMN)[ActionKey]]: boolean | null };
+
+function overrideOf(row: OverrideRow | null | undefined): Partial<Record<ActionKey, boolean>> {
+  const result: Partial<Record<ActionKey, boolean>> = {};
+  if (!row) return result;
+  for (const action of ACTION_KEYS) {
+    const value = row[COLUMN[action]];
+    if (value === true || value === false) result[action] = value;
+  }
+  return result;
+}
+
+function cellOf(
+  screen: { code: string; name: string; moduleKey: ModuleKey },
+  role: Flags,
+  override: Partial<Record<ActionKey, boolean>>,
+): UserScreenCell {
+  return { code: screen.code, name: screen.name, moduleKey: screen.moduleKey, role, override, ...role, ...override };
+}
+
+function lockReasonFor(ctx: Ctx, target: { id: string; roleCode: string }): string {
+  if (ctx.user.roleKind !== "SISTEM") return USER_SYSTEM_ONLY;
+  if (target.roleCode === "R-SYS") return USER_LOCKED;
+  if (target.id === ctx.user.id) return USER_SELF;
+  return "";
+}
+
+async function loadUserTarget(db: Prisma.TransactionClient, userId: string) {
+  const user = await db.user.findFirst({
+    where: { id: userId, deletedAt: null },
+    select: { id: true, fullName: true, username: true, roleId: true, role: { select: { code: true, name: true } } },
+  });
+  if (!user) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
+  return user;
+}
+
+/** The "Yetkiler" tab of the user card: every active screen with the role's flags and the user's exceptions. */
+export async function userMatrix(ctx: Ctx, userId: string): Promise<UserPermissionMatrix> {
+  await assertCan(ctx, SCREEN, "V");
+  const user = await loadUserTarget(prisma, userId);
+  if (ctx.user.roleKind !== "SISTEM") {
+    // A hotel manager sees only people of the hotels in their own scope (same answer as a missing user).
+    const shared = await prisma.user.count({
+      where: {
+        id: userId,
+        OR: [{ hotelId: { in: ctx.hotelIds } }, { userHotels: { some: { hotelId: { in: ctx.hotelIds } } } }],
+      },
+    });
+    if (shared === 0) throw new DomainError("NOT_FOUND", "Kullanıcı bulunamadı");
+  }
+  const [screens, rolePerms, overrides] = await Promise.all([
+    prisma.appScreen.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.roleScreenPermission.findMany({ where: { roleId: user.roleId, hotelId: null } }),
+    prisma.userScreenPermission.findMany({ where: { userId } }),
+  ]);
+  const lockReason = lockReasonFor(ctx, { id: user.id, roleCode: user.role.code });
+  return {
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      username: user.username,
+      roleCode: user.role.code,
+      roleName: user.role.name,
+    },
+    canEdit: lockReason === "",
+    lockReason,
+    screens: screens.map((s) => {
+      const role = rolePerms.find((p) => p.screenId === s.id);
+      return cellOf(s, role ? toFlags(role) : NO_FLAGS, overrideOf(overrides.find((o) => o.screenId === s.id)));
+    }),
+  };
+}
+
+/** A target that is neither R-SYS nor the actor themself (the SISTEM check runs before the transaction). */
+async function guardUserWrite(ctx: Ctx, tx: Prisma.TransactionClient, userId: string) {
+  const user = await loadUserTarget(tx, userId);
+  if (user.role.code === "R-SYS") throw new DomainError("FORBIDDEN", USER_LOCKED);
+  if (user.id === ctx.user.id) throw new DomainError("FORBIDDEN", USER_SELF);
+  return user;
+}
+
+/** Open shells of the role re-read their visible screens (the shell filters on `roleId`). */
+async function announceUser(tx: Prisma.TransactionClient, user: { id: string; roleId: string }) {
+  await publishDefinition(tx, {
+    entity: "permission",
+    id: user.roleId,
+    op: "update",
+    extra: { roleId: user.roleId, userId: user.id },
+    allRoles: true,
+  });
+}
+
+/**
+ * Sets what one action of one screen should be for this user. A value equal to the role's own flag
+ * clears the exception (the user follows the role again); a row with no exception left is removed.
+ */
+export async function setUserScreen(
+  ctx: Ctx,
+  userId: string,
+  screenCode: string,
+  action: string,
+  value: boolean,
+): Promise<UserScreenCell> {
+  const input = parseInput(
+    z.object({ action: z.enum(ACTION_KEYS, "Geçersiz yetki"), value: z.boolean("Durum gerekli") }),
+    { action, value },
+  );
+  await requireSystemActor(ctx, { action: "D", op: "setUserScreen", userId });
+  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    const user = await guardUserWrite(ctx, tx, userId);
+    const screen = await tx.appScreen.findUnique({ where: { code: screenCode } });
+    if (!screen) throw new DomainError("NOT_FOUND", "Ekran bulunamadı");
+    const [roleRow, existing] = await Promise.all([
+      tx.roleScreenPermission.findFirst({ where: { roleId: user.roleId, hotelId: null, screenId: screen.id } }),
+      tx.userScreenPermission.findUnique({ where: { userId_screenId: { userId, screenId: screen.id } } }),
+    ]);
+    const role = roleRow ? toFlags(roleRow) : NO_FLAGS;
+    const before = overrideOf(existing);
+    const next = { ...before };
+    if (input.value === role[input.action]) delete next[input.action];
+    else next[input.action] = input.value;
+
+    const data = Object.fromEntries(ACTION_KEYS.map((a) => [COLUMN[a], next[a] ?? null])) as OverrideRow;
+    if (Object.keys(next).length === 0) {
+      if (existing) await tx.userScreenPermission.delete({ where: { id: existing.id } });
+    } else if (existing) {
+      await tx.userScreenPermission.update({ where: { id: existing.id }, data });
+    } else {
+      await tx.userScreenPermission.create({ data: { userId, screenId: screen.id, ...data } });
+    }
+    await audit(tx, {
+      userId: ctx.user.id,
+      action: "PERM_SET_USER_SCREEN",
+      entity: "User",
+      entityId: userId,
+      before: { username: user.username, screen: screenCode, override: before },
+      after: { username: user.username, screen: screenCode, override: next, role },
+    });
+    await announceUser(tx, user);
+    return cellOf(screen, role, next);
+  });
+}
+
+/** Drops every exception of the user: they follow their role again. */
+export async function resetUser(ctx: Ctx, userId: string): Promise<{ removed: number }> {
+  await requireSystemActor(ctx, { action: "D", op: "resetUser", userId });
+  return withAdminTx(ctx, { screen: SCREEN, action: "D" }, async (tx) => {
+    const user = await guardUserWrite(ctx, tx, userId);
+    const { count } = await tx.userScreenPermission.deleteMany({ where: { userId } });
+    await audit(tx, {
+      userId: ctx.user.id,
+      action: "PERM_RESET_USER",
+      entity: "User",
+      entityId: userId,
+      after: { username: user.username, removed: count },
+    });
+    await announceUser(tx, user);
+    return { removed: count };
+  });
+}

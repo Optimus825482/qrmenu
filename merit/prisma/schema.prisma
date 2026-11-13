@@ -477,7 +477,8 @@ model User {
   supervisor                 User?                      @relation("UserSupervisor", fields: [supervisorId], references: [id], onDelete: SetNull)
   supervisees                User[]                     @relation("UserSupervisor")
   userHotels                 UserHotel[]
-  stockReceipts              StockReceipt[]             @relation("StockReceiptCreatedBy")
+  screenPermissions          UserScreenPermission[]
+  stockReceipts             StockReceipt[]             @relation("StockReceiptCreatedBy")
   outletMemberships          OutletMember[]
   tableAssignments           TableAssignment[]
   sessions                   UserSession[]
@@ -625,7 +626,8 @@ model AppScreen {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  permissions RoleScreenPermission[]
+  permissions     RoleScreenPermission[]
+  userPermissions UserScreenPermission[]
 
   @@map("app_screens")
 }
@@ -649,6 +651,29 @@ model RoleScreenPermission {
 
   @@unique([roleId, screenId, hotelId])
   @@map("role_screen_permissions")
+}
+
+/**
+ * Kişiye özel yetki istisnası (13 Kas 2026). Yalnız rolden FARKLI olan yetkiler saklanır:
+ * null = rolden gelir, true = ek verildi, false = kısıtlandı. Tüm otellerde geçerlidir.
+ */
+model UserScreenPermission {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  screenId   String   @map("screen_id")
+  canView    Boolean? @map("can_view")
+  canCreate  Boolean? @map("can_create")
+  canEdit    Boolean? @map("can_edit")
+  canApprove Boolean? @map("can_approve")
+  canReport  Boolean? @map("can_report")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  screen AppScreen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, screenId])
+  @@map("user_screen_permissions")
 }
 
 model RoleModuleAccess {

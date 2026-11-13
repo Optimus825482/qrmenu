@@ -71,7 +71,7 @@ const hotelIdsFrom = (values: FormValues) =>
  * The server authorises every call (role, minibar role of the target, shared hotel; minibarUsers.ts).
  */
 export function MinibarUsersWindow({ setStatus }: AppProps) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ACTIVE");
   const active = statusFilter === "ACTIVE" ? true : statusFilter === "INACTIVE" ? false : undefined;
   const list = useLiveList<UserRow>(
     (query) => listMinibarUsersAction({ ...query, ...(active !== undefined ? { active } : {}) }),
