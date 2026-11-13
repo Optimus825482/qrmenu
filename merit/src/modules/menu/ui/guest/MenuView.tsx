@@ -215,6 +215,8 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
 }) {
   const t = useTranslations("guest");
   const { state, categories } = menu;
+  // A venue keeps its proper name in every language; "Oda Servisi" is a service label and follows the guest's language.
+  const outletTitle = state.isRoomService ? t("room.card.roomService") : state.outletName;
   const [query, setQuery] = useState("");
   const [tagFilters, setTagFilters] = useState<ItemTagId[]>([]);
   const [picked, setPicked] = useState<string | null>(null);
@@ -442,7 +444,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
               <img
                 className="g-hero-cover"
                 src={heroCover}
-                alt={`${state.outletName} · ${state.hotelName}`}
+                alt={`${outletTitle} · ${state.hotelName}`}
                 loading="eager"
                 fetchPriority="high"
                 width={600}
@@ -468,7 +470,7 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                 <img
                   className="g-hero-img"
                   src={heroPhoto}
-                  alt={`${state.outletName} · ${state.hotelName}`}
+                  alt={`${outletTitle} · ${state.hotelName}`}
                   loading="eager"
                   fetchPriority="high"
                 />
@@ -492,13 +494,13 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
                   ...(options.heroTextColor ? { color: options.heroTextColor } : {}),
                 }}
               >
-                {state.outletName}
+                {outletTitle}
               </h2>
             </section>
           ) : options.logoUrl ? (
             <div className="g-logo-only" key="logo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="g-hero-logo" src={options.logoUrl} alt={state.outletName} loading="eager" decoding="async" />
+              <img className="g-hero-logo" src={options.logoUrl} alt={outletTitle} loading="eager" decoding="async" />
             </div>
           ) : null}
           {heroCallButton}

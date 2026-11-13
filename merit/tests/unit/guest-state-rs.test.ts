@@ -69,6 +69,8 @@ describe("guestState - Oda Servisi modül eşlemesi", () => {
     expect(state.menuOpen).toBe(true);
     expect(state.orderingOpen).toBe(true);
     expect(state.reason).toBeUndefined();
+    // The guest pages print the service label in the guest's language instead of the stored Turkish name.
+    expect(state.isRoomService).toBe(true);
   });
 
   it("ROOM_SERVICE kapalı iken ODA_SERVISI outletinde menuOpen=false, reason 'MENU_KAPALI'", async () => {
@@ -132,6 +134,8 @@ describe("guestState - Oda Servisi modül eşlemesi", () => {
     const state = await guestState(barOutlet.id);
     expect(state.menuOpen).toBe(false);
     expect(state.reason).toBe("MENU_KAPALI");
+    // A venue keeps its own name in every language.
+    expect(state.isRoomService).toBe(false);
   });
 
   it("pasif outlet için 'OUTLET_PASIF'", async () => {

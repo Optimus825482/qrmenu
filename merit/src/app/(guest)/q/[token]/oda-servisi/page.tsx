@@ -40,7 +40,7 @@ export default async function RoomServicePage({ params }: { params: Promise<{ to
       locale={locale}
       theme={menu.state.theme}
       design={menu.state.design}
-      outletName={menu.state.outletName}
+      outletName={menu.state.isRoomService ? t("room.card.roomService") : menu.state.outletName}
       placeLabel={place}
       embedded
       footer={

@@ -12,6 +12,11 @@ export type GuestState = {
   outletId: string;
   hotelId: string;
   outletName: string;
+  /**
+   * Room-service outlet: its name is a generic service label, not a venue's proper name, so the guest
+   * pages print it from the message catalog in the guest's language instead of the stored (Turkish) name.
+   */
+  isRoomService?: boolean;
   hotelName: string;
   /** Hotel logo for the opening animation: the uploaded one, else the bundled brand mark of the hotel. */
   hotelLogoUrl?: string;
@@ -96,6 +101,7 @@ export async function guestState(outletId: string, areaId?: string): Promise<Gue
     outletId: outlet.id,
     hotelId: outlet.hotelId,
     outletName: outlet.name,
+    isRoomService,
     hotelName: outlet.hotel.name,
     hotelLogoUrl: outlet.hotel.logoUrl || BRAND_LOGOS[outlet.hotel.code.toUpperCase()] || undefined,
     menuOpen,
