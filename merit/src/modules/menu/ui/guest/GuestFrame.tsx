@@ -1,6 +1,7 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useEffect, useState, useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { isLocale, isRtl, LANG_COOKIE, type Locale } from "@/lib/i18n/locales";
 import type { GuestTheme } from "../../server/guestState";
 import type { OutletDesign } from "../../design";
@@ -92,8 +93,12 @@ export function HtmlLangSync({
   preview?: boolean;
   onLocaleChange?: (locale: Locale) => void;
 }) {
+  const markerRef = useRef<HTMLSpanElement>(null);
+
   useEffect(() => {
-    const root = document.documentElement;
+    const doc = markerRef.current?.ownerDocument ?? document;
+    const win = doc.defaultView ?? window;
+    const root = doc.documentElement;
     const before = {
       lang: root.lang,
       dir: root.dir,
@@ -106,7 +111,7 @@ export function HtmlLangSync({
     root.dataset.os = os;
     root.dataset.mobile = isMobile ? "true" : "false";
 
-    // Step 2: Sync language & direction
+    // Step 2: Sync language & direction on the component's own document (iframe in studio, main page in live QR)
     root.lang = locale;
     root.dir = isRtl(locale) ? "rtl" : "ltr";
 
@@ -116,9 +121,9 @@ export function HtmlLangSync({
       if (deviceLocale && deviceLocale !== locale) {
         if (onLocaleChange) {
           onLocaleChange(deviceLocale);
-        } else if (token && typeof window !== "undefined" && window.location.pathname.startsWith("/q/")) {
-          document.cookie = `${LANG_COOKIE}=${deviceLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-          window.location.replace(`/api/q/${encodeURIComponent(token)}/lang?lang=${deviceLocale}`);
+        } else if (token && typeof win !== "undefined" && win.location.pathname.startsWith("/q/")) {
+          doc.cookie = `${LANG_COOKIE}=${deviceLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+          win.location.replace(`/api/q/${encodeURIComponent(token)}/lang?lang=${deviceLocale}`);
         }
       }
     }
@@ -127,10 +132,10 @@ export function HtmlLangSync({
     const suppressPwaPrompt = (e: Event) => {
       e.preventDefault();
     };
-    window.addEventListener("beforeinstallprompt", suppressPwaPrompt);
+    win.addEventListener("beforeinstallprompt", suppressPwaPrompt);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", suppressPwaPrompt);
+      win.removeEventListener("beforeinstallprompt", suppressPwaPrompt);
       root.lang = before.lang;
       if (before.dir) root.dir = before.dir;
       else root.removeAttribute("dir");
@@ -140,7 +145,7 @@ export function HtmlLangSync({
       else delete root.dataset.mobile;
     };
   }, [locale, token, preview, onLocaleChange]);
-  return null;
+  return <span ref={markerRef} hidden aria-hidden="true" />;
 }
 
 const INTRO_KEY = "merit_menu_intro:";
@@ -230,6 +235,7 @@ export function GuestFrame({
   /** Bottom bar slot: the selections button arrives with the ordering flow. */
   footer?: ReactNode;
 }) {
+  const t = useTranslations("guest.common");
   const [deviceInfo] = useState<{ os: GuestDeviceOs; isMobile: boolean }>(() => detectMobileOs());
   // The server (and the hydration pass) assumes Chrome, so no banner is in the server markup.
   const isChrome = useSyncExternalStore(subscribeNever, detectIsChrome, () => true);
@@ -301,7 +307,7 @@ export function GuestFrame({
                   type="button"
                   className="g-chrome-chip"
                   onClick={handleOpenInChrome}
-                  title="Google Chrome ile Aç"
+                  title={t("chromeTitle")}
                 >
                   <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
                     <circle cx="12" cy="12" r="10" fill="#ffffff" />
@@ -317,7 +323,7 @@ export function GuestFrame({
             </div>
           </header>
           {!preview && !isChrome && !chromeDismissed ? (
-            <aside className="g-chrome-bar" aria-label="Tarayıcı önerisi">
+            <aside className="g-chrome-bar" aria-label={t("chromeBarLabel")}>
               <div className="g-chrome-bar-info">
                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" fill="#ffffff" />
@@ -327,11 +333,11 @@ export function GuestFrame({
                   <circle cx="12" cy="12" r="4.2" fill="#ffffff" />
                   <circle cx="12" cy="12" r="3.2" fill="#1A73E8" />
                 </svg>
-                <span>Daha hızlı menü için <strong>Chrome</strong> ile açın</span>
+                <span>{t.rich("chromeHint", { b: (chunks) => <strong>{chunks}</strong> })}</span>
               </div>
               <div className="g-chrome-bar-actions">
                 <button type="button" className="g-chrome-launch-btn" onClick={handleOpenInChrome}>
-                  Chrome&apos;da Aç ↗
+                  {t("chromeOpen")} ↗
                 </button>
                 <button
                   type="button"
@@ -342,7 +348,7 @@ export function GuestFrame({
                       sessionStorage.setItem("merit_chrome_banner_closed", "1");
                     }
                   }}
-                  aria-label="Kapat"
+                  aria-label={t("close")}
                 >
                   ×
                 </button>

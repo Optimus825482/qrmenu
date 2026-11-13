@@ -72,7 +72,12 @@
       "tooMany": "Υπάρχουν πολλά αιτήματα· περιμένετε λίγο",
       "title": "Πώς μπορούμε να σας βοηθήσουμε;",
       "justCall": "Καλέστε μας",
-      "close": "Κλείσιμο"
+      "close": "Κλείσιμο",
+      "resolvedTitle": "Το αίτημά σας ελήφθη!",
+      "resolvedBody": "Η κλήση σας διαβιβάστηκε στο προσωπικό. Θα έρθουμε στο τραπέζι σας το συντομότερο δυνατό.",
+      "resolvedWaiter": "Ο σερβιτόρος σας: {name}",
+      "resolvedWish": "Σας ευχόμαστε καλή διασκέδαση.",
+      "resolvedOk": "Τέλεια, ευχαριστώ"
     },
     "common": {
       "back": "Πίσω",
@@ -86,7 +91,11 @@
       "photoIndex": "Φωτογραφία {index}",
       "selectPhoto": "Επιλογή φωτογραφίας {index}",
       "languages": "Γλώσσες",
-      "selectLanguage": "Επιλογή γλώσσας: {name}"
+      "selectLanguage": "Επιλογή γλώσσας: {name}",
+      "chromeHint": "Ανοίξτε στο <b>Chrome</b> για πιο γρήγορο μενού",
+      "chromeOpen": "Άνοιγμα στο Chrome",
+      "chromeTitle": "Άνοιγμα στο Google Chrome",
+      "chromeBarLabel": "Πρόταση προγράμματος περιήγησης"
     },
     "room": {
       "card": {

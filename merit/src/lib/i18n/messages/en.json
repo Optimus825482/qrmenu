@@ -81,7 +81,12 @@
       "tooMany": "Too many requests, please wait a moment",
       "title": "How can we help?",
       "justCall": "Just call",
-      "close": "Close"
+      "close": "Close",
+      "resolvedTitle": "Your request has been received!",
+      "resolvedBody": "Your call has been passed to our staff. Someone will be at your table shortly.",
+      "resolvedWaiter": "Your waiter: {name}",
+      "resolvedWish": "We wish you a pleasant time.",
+      "resolvedOk": "Great, thank you"
     },
     "common": {
       "back": "Back",
@@ -95,7 +100,11 @@
       "photoIndex": "Photo {index}",
       "selectPhoto": "Select photo {index}",
       "languages": "Languages",
-      "selectLanguage": "Language: {name}"
+      "selectLanguage": "Language: {name}",
+      "chromeHint": "Open in <b>Chrome</b> for a faster menu",
+      "chromeOpen": "Open in Chrome",
+      "chromeTitle": "Open in Google Chrome",
+      "chromeBarLabel": "Browser suggestion"
     },
     "room": {
       "card": {

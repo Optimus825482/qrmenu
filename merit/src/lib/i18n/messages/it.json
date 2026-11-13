@@ -72,7 +72,12 @@
       "tooMany": "Troppe richieste, attendi un momento",
       "title": "Come possiamo aiutarla?",
       "justCall": "Chiama il cameriere",
-      "close": "Chiudi"
+      "close": "Chiudi",
+      "resolvedTitle": "La sua richiesta è stata ricevuta!",
+      "resolvedBody": "La sua chiamata è stata inoltrata al personale. Arriveremo al suo tavolo al più presto.",
+      "resolvedWaiter": "Il suo cameriere: {name}",
+      "resolvedWish": "Le auguriamo una piacevole permanenza.",
+      "resolvedOk": "Perfetto, grazie"
     },
     "common": {
       "back": "Indietro",
@@ -86,7 +91,11 @@
       "photoIndex": "Foto {index}",
       "selectPhoto": "Seleziona foto {index}",
       "languages": "Lingue",
-      "selectLanguage": "Selezione lingua: {name}"
+      "selectLanguage": "Selezione lingua: {name}",
+      "chromeHint": "Apra in <b>Chrome</b> per un menu più veloce",
+      "chromeOpen": "Apri in Chrome",
+      "chromeTitle": "Apri in Google Chrome",
+      "chromeBarLabel": "Suggerimento del browser"
     },
     "room": {
       "card": {

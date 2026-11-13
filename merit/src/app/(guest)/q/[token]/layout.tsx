@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { isRtl, type Locale } from "@/lib/i18n/locales";
 import { CallWaiterButton } from "@/modules/menu/ui/guest/CallWaiterButton";
@@ -39,11 +39,9 @@ export async function generateMetadata({
   params: Promise<{ token: string }>;
 }): Promise<Metadata> {
   const { token } = await params;
-  const target = await getGuestTarget(token);
-  const title =
-    target.kind === "TABLE"
-      ? `${target.state.outletName} · Menü`
-      : "Menü";
+  const [target, t] = await Promise.all([getGuestTarget(token), getTranslations("guest.menu")]);
+  // The browser tab follows the guest language like the page itself.
+  const title = target.kind === "TABLE" ? `${target.state.outletName} · ${t("title")}` : t("title");
 
   return {
     title,

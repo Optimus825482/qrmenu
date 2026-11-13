@@ -81,7 +81,12 @@
       "tooMany": "Zu viele Anfragen, bitte warten Sie einen Moment",
       "title": "Wie können wir helfen?",
       "justCall": "Nur rufen",
-      "close": "Schließen"
+      "close": "Schließen",
+      "resolvedTitle": "Ihre Anfrage ist angekommen!",
+      "resolvedBody": "Ihr Ruf wurde an unser Personal weitergeleitet. Wir kommen so schnell wie möglich an Ihren Tisch.",
+      "resolvedWaiter": "Ihr Kellner: {name}",
+      "resolvedWish": "Wir wünschen Ihnen eine angenehme Zeit.",
+      "resolvedOk": "Prima, vielen Dank"
     },
     "common": {
       "back": "Zurück",
@@ -95,7 +100,11 @@
       "photoIndex": "Foto {index}",
       "selectPhoto": "Foto {index} auswählen",
       "languages": "Sprachen",
-      "selectLanguage": "Sprachauswahl: {name}"
+      "selectLanguage": "Sprachauswahl: {name}",
+      "chromeHint": "Für eine schnellere Speisekarte in <b>Chrome</b> öffnen",
+      "chromeOpen": "In Chrome öffnen",
+      "chromeTitle": "In Google Chrome öffnen",
+      "chromeBarLabel": "Browser-Empfehlung"
     },
     "room": {
       "card": {

@@ -72,7 +72,12 @@
       "tooMany": "Trop de demandes, veuillez patienter",
       "title": "Comment pouvons-nous vous aider ?",
       "justCall": "Appelez simplement",
-      "close": "Fermer"
+      "close": "Fermer",
+      "resolvedTitle": "Votre demande a bien été reçue !",
+      "resolvedBody": "Votre appel a été transmis à notre équipe. Nous venons à votre table dans les plus brefs délais.",
+      "resolvedWaiter": "Votre serveur : {name}",
+      "resolvedWish": "Nous vous souhaitons un agréable moment.",
+      "resolvedOk": "Parfait, merci"
     },
     "common": {
       "back": "Retour",
@@ -86,7 +91,11 @@
       "photoIndex": "Photo {index}",
       "selectPhoto": "Sélectionner la photo {index}",
       "languages": "Langues",
-      "selectLanguage": "Langue : {name}"
+      "selectLanguage": "Langue : {name}",
+      "chromeHint": "Ouvrez dans <b>Chrome</b> pour un menu plus rapide",
+      "chromeOpen": "Ouvrir dans Chrome",
+      "chromeTitle": "Ouvrir dans Google Chrome",
+      "chromeBarLabel": "Suggestion de navigateur"
     },
     "room": {
       "card": {

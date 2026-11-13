@@ -81,7 +81,12 @@
       "tooMany": "Çok sık çağrı yaptınız, lütfen biraz bekleyin",
       "title": "Size nasıl yardımcı olalım?",
       "justCall": "Sadece çağır",
-      "close": "Kapat"
+      "close": "Kapat",
+      "resolvedTitle": "Talebiniz ulaştı!",
+      "resolvedBody": "Çağrınız personele iletildi. Masanıza en kısa sürede gelinecektir.",
+      "resolvedWaiter": "İlgilenen garson: {name}",
+      "resolvedWish": "Keyifli vakitler dileriz.",
+      "resolvedOk": "Harika, teşekkürler"
     },
     "common": {
       "back": "Geri",
@@ -95,7 +100,11 @@
       "photoIndex": "{index}. fotoğraf",
       "selectPhoto": "{index}. fotoğrafı seç",
       "languages": "Diller",
-      "selectLanguage": "Dil seçimi: {name}"
+      "selectLanguage": "Dil seçimi: {name}",
+      "chromeHint": "Daha hızlı menü için <b>Chrome</b> ile açın",
+      "chromeOpen": "Chrome'da aç",
+      "chromeTitle": "Google Chrome ile aç",
+      "chromeBarLabel": "Tarayıcı önerisi"
     },
     "room": {
       "card": {

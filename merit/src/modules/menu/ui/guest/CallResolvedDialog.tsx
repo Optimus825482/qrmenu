@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Icon } from "@/components/icons/Icon";
 
@@ -9,6 +10,7 @@ export type CallResolvedDialogProps = {
 };
 
 export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogProps) {
+  const t = useTranslations("guest.call");
   useEffect(() => {
     // Hafif teyit tonu çal
     try {
@@ -65,7 +67,7 @@ export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogPr
             lineHeight: 1.2,
           }}
         >
-          Talebiniz Ulaştı!
+          {t("resolvedTitle")}
         </h3>
 
         <p
@@ -77,7 +79,7 @@ export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogPr
             marginBottom: "1rem",
           }}
         >
-          Garson çağrınız personele iletildi. Masanıza en kısa sürede gelinecektir.
+          {t("resolvedBody")}
         </p>
 
         {waiterName ? (
@@ -97,7 +99,7 @@ export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogPr
             }}
           >
             <Icon name="user" size={15} />
-            <span>İlgilenen garson: {waiterName}</span>
+            <span>{t("resolvedWaiter", { name: waiterName })}</span>
           </div>
         ) : (
           <div style={{ marginBottom: "1rem" }} />
@@ -110,7 +112,7 @@ export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogPr
             marginBottom: "1.5rem",
           }}
         >
-          Keyifli vakitler dileriz.
+          {t("resolvedWish")}
         </p>
 
         <button
@@ -126,7 +128,7 @@ export function CallResolvedDialog({ waiterName, onClose }: CallResolvedDialogPr
             cursor: "pointer",
           }}
         >
-          Harika, Teşekkürler
+          {t("resolvedOk")}
         </button>
       </div>
     </div>

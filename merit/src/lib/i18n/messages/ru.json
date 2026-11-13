@@ -81,7 +81,12 @@
       "tooMany": "Слишком много запросов, пожалуйста, подождите",
       "title": "Чем можем помочь?",
       "justCall": "Просто позвать",
-      "close": "Закрыть"
+      "close": "Закрыть",
+      "resolvedTitle": "Ваш запрос получен!",
+      "resolvedBody": "Ваш вызов передан персоналу. К вашему столику подойдут в ближайшее время.",
+      "resolvedWaiter": "Ваш официант: {name}",
+      "resolvedWish": "Желаем вам приятного отдыха.",
+      "resolvedOk": "Отлично, спасибо"
     },
     "common": {
       "back": "Назад",
@@ -95,7 +100,11 @@
       "photoIndex": "Фото {index}",
       "selectPhoto": "Выбрать фото {index}",
       "languages": "Языки",
-      "selectLanguage": "Выбор языка: {name}"
+      "selectLanguage": "Выбор языка: {name}",
+      "chromeHint": "Откройте в <b>Chrome</b>, чтобы меню работало быстрее",
+      "chromeOpen": "Открыть в Chrome",
+      "chromeTitle": "Открыть в Google Chrome",
+      "chromeBarLabel": "Рекомендация браузера"
     },
     "room": {
       "card": {

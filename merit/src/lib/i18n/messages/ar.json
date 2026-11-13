@@ -81,7 +81,12 @@
       "tooMany": "طلبات كثيرة، يرجى الانتظار قليلًا",
       "title": "كيف يمكننا مساعدتك؟",
       "justCall": "استدعاء فقط",
-      "close": "إغلاق"
+      "close": "إغلاق",
+      "resolvedTitle": "تم استلام طلبكم!",
+      "resolvedBody": "تم إبلاغ طاقمنا بندائكم. سيصل أحد أفراد الطاقم إلى طاولتكم في أقرب وقت.",
+      "resolvedWaiter": "النادل المسؤول: {name}",
+      "resolvedWish": "نتمنى لكم وقتاً ممتعاً.",
+      "resolvedOk": "رائع، شكراً"
     },
     "common": {
       "back": "رجوع",
@@ -95,7 +100,11 @@
       "photoIndex": "صورة {index}",
       "selectPhoto": "اختر صورة {index}",
       "languages": "اللغات",
-      "selectLanguage": "اختيار اللغة: {name}"
+      "selectLanguage": "اختيار اللغة: {name}",
+      "chromeHint": "افتحوا القائمة في <b>Chrome</b> لتجربة أسرع",
+      "chromeOpen": "فتح في Chrome",
+      "chromeTitle": "فتح في Google Chrome",
+      "chromeBarLabel": "اقتراح المتصفح"
     },
     "room": {
       "card": {

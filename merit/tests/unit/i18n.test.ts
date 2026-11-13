@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_LOCALE, isRtl, LOCALES, pickLocale } from "@/lib/i18n/locales";
@@ -125,5 +125,30 @@ describe("pickLocale", () => {
   it("yalnız ar sağdan sola", () => {
     expect(isRtl("ar")).toBe(true);
     expect(LOCALES.filter(isRtl)).toEqual(["ar"]);
+  });
+});
+
+describe("misafir ekranlarında sabit Türkçe metin yok", () => {
+  // Guest components must print text through the message catalog; a Turkish literal stays Turkish in every language.
+  const GUEST_DIRS = ["src/modules/menu/ui/guest", "src/modules/mybar/ui/guest", "src/modules/order/ui/guest"];
+  const root = path.resolve(__dirname, "../..");
+  const files = GUEST_DIRS.flatMap((dir) =>
+    readdirSync(path.join(root, dir))
+      .filter((name) => /\.tsx?$/.test(name))
+      .map((name) => path.join(dir, name)),
+  );
+
+  it("bileşen kodunda Türkçe harfli sabit metin geçmez", () => {
+    expect(files.length).toBeGreaterThan(20);
+    const offenders = files.flatMap((file) => {
+      const code = readFileSync(path.join(root, file), "utf8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/(^|[^:])\/\/.*$/gm, "$1");
+      return code
+        .split("\n")
+        .filter((line) => /[çğışöüÇĞİŞÖÜ]/.test(line))
+        .map((line) => `${file}: ${line.trim()}`);
+    });
+    expect(offenders).toEqual([]);
   });
 });
