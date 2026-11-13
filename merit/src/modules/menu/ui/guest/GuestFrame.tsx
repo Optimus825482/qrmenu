@@ -8,6 +8,7 @@ import type { OutletDesign } from "../../design";
 import { DESIGN_TEMPLATES } from "../../design";
 import { readableText } from "../../contrast";
 import { LanguageSwitch } from "./LanguageSwitch";
+import { previewLocaleUrl } from "./previewLocale";
 
 export type GuestDeviceOs = "ios" | "android" | "harmonyos" | "windows" | "macos" | "other";
 
@@ -289,7 +290,16 @@ export function GuestFrame({
           <HtmlLangSync locale={locale} token={token} preview={preview} onLocaleChange={onLocaleChange} />
           <header className="g-header">
             <div data-guide="dil-secimi" className="g-header-left">
-              <LanguageSwitch token={token} locale={locale} onSelect={onLocaleChange} />
+              <LanguageSwitch
+                token={token}
+                locale={locale}
+                onSelect={
+                  onLocaleChange ??
+                  (preview
+                    ? (code) => window.location.assign(previewLocaleUrl(window.location.href, code))
+                    : undefined)
+                }
+              />
             </div>
             {/* The design's hero already prints the outlet name large; the bar title would repeat it, so it stays for
                 screen readers only. Without a hero the bar title is the only name on the page. */}
