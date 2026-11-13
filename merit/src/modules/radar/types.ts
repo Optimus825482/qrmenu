@@ -252,6 +252,8 @@ export type RadarSnapshot = {
         slaStartAt?: string;
         level: "OK" | "WARN" | "BREACH";
       }[];
+      /** Delivered today (business day), oldest first. Kept apart from `orders`: alerts and counters read open orders only. */
+      delivered?: { orderId: string; orderNo: number; roomNumber: string; createdAt: string; deliveredAt: string }[];
     };
     staff?: {
       sessions: {

@@ -51,6 +51,8 @@ describe("radar reducers", () => {
     expect(s.layers.roomService!.orders[0].level).toBe("BREACH");
     s = reduce(s, orderStatus(T0 + 4, "rs1", "", "TESLIM_EDILDI", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
     expect(s.layers.roomService!.orders).toHaveLength(0);
+    // Delivered: off the open list, onto the delivered one (a repeat of the event adds nothing).
+    expect(s.layers.roomService!.delivered).toMatchObject([{ orderId: "rs1", roomNumber: "101" }]);
   });
 
   it("oda servisi: GONDERILDI acik sayilir; olayla giren siparis anlik goruntu yenilemesi ister", () => {
@@ -59,6 +61,7 @@ describe("radar reducers", () => {
     expect(s.needsRefresh.has("order:rs2")).toBe(true);
     s = reduce(s, orderStatus(T0 + 1, "rs2", "", "IPTAL", { kind: "ODA_SERVISI", tableId: undefined, roomId: "r1" }));
     expect(s.layers.roomService!.orders).toHaveLength(0);
+    expect(s.layers.roomService!.delivered ?? []).toEqual([]);
   });
 
   it("cagri acik/kapali, masa tarama ve atama", () => {

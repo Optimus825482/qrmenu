@@ -7,16 +7,20 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { orderStatusLabel, type Tone } from "../../labels";
 import type { RadarState } from "../../state";
 import { DetailBubble } from "../DetailBubble";
-import { usePulse } from "../useRadar";
+import { RadarStoreContext, usePulse, useRadar } from "../useRadar";
 
-type RsOrder = NonNullable<RadarState["layers"]["roomService"]>["orders"][number];
+type RsLayer = NonNullable<RadarState["layers"]["roomService"]>;
+type RsOrder = RsLayer["orders"][number];
+type RsDelivered = NonNullable<RsLayer["delivered"]>[number];
+
+/** The delivered lane lists only the latest few; the badge carries the day's count. */
+const DELIVERED_SHOWN = 6;
 
 const LANES: { status: OrderStatus; title: string }[] = [
   { status: "GONDERILDI", title: "Onay bekliyor" },
   { status: "ONAYLANDI", title: "Onaylandı" },
   { status: "HAZIR", title: "Hazır" },
   { status: "YOLDA", title: "Yolda" },
-  { status: "TESLIM_EDILDI", title: "Teslim edildi" },
 ];
 
 function slaModel(order: RsOrder, slaMinutes: number, now: number): {
@@ -87,17 +91,70 @@ function RsCard({
   );
 }
 
+/** A delivered order: how long it took, frozen at the delivery. */
+function DeliveredCard({ order, slaMinutes }: { order: RsDelivered; slaMinutes: number }) {
+  const tookMs = Math.max(0, (Date.parse(order.deliveredAt) || 0) - (Date.parse(order.createdAt) || 0));
+  const onTime = tookMs < Math.max(1, slaMinutes) * 60_000;
+  return (
+    <div className="rd-card rd-rs-card" data-tone={onTime ? "success" : "danger"} data-order-id={order.orderId}>
+      <div className="rd-row" style={{ width: "100%" }}>
+        <span className="rd-card-label">Oda {order.roomNumber}</span>
+        <span className="rd-badge" data-tone={onTime ? "success" : "danger"}>
+          #{order.orderNo}
+        </span>
+      </div>
+      <span className="rd-small">
+        {Math.floor(tookMs / 60_000)} dk · {onTime ? "Zamanında" : "Geç"}
+      </span>
+    </div>
+  );
+}
+
 export type RoomServiceProps = {
   view: RadarState;
   now: number;
   onOpenApp?: (appId: string) => void;
+  /** Every hotel in scope: the boards of the others are listed under the current one. Omit for a single board. */
+  hotels?: { id: string; name: string }[];
 };
 
-/** V5 Oda Servisi: status lanes with static SLA bars and read-only detail bubble (spec 2.2). */
-export function RoomService({ view, now, onOpenApp }: RoomServiceProps) {
+/** V5 Oda Servisi: one board per hotel, the window's hotel first. */
+export function RoomService({ view, now, onOpenApp, hotels }: RoomServiceProps) {
+  if (!hotels || hotels.length < 2) return <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />;
+  return (
+    <div className="rd-rs-hotels">
+      {[...hotels.filter((h) => h.id === view.hotelId), ...hotels.filter((h) => h.id !== view.hotelId)].map((hotel) => (
+        <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} oda servisi`}>
+          <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
+          {hotel.id === view.hotelId ? (
+            <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />
+          ) : (
+            <OtherHotelBoard hotelId={hotel.id} now={now} onOpenApp={onOpenApp} />
+          )}
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** The live board of a hotel other than the window's: its own store, so it keeps up with events like the main one. */
+function OtherHotelBoard({ hotelId, now, onOpenApp }: { hotelId: string; now: number; onOpenApp?: (appId: string) => void }) {
+  const { store, state } = useRadar(hotelId);
+  const view = state.hotelId === hotelId ? state.view : null;
+  if (!view) return <p className="rd-muted rd-small">Yükleniyor…</p>;
+  return (
+    <RadarStoreContext.Provider value={store}>
+      <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />
+    </RadarStoreContext.Provider>
+  );
+}
+
+/** Status lanes with static SLA bars and read-only detail bubble (spec 2.2). */
+function RoomServiceBoard({ view, now, onOpenApp }: Omit<RoomServiceProps, "hotels">) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rs = view.layers.roomService;
   if (!rs) return <EmptyState title="Bu otelde Oda Servisi kapalı." />;
+  const delivered = rs.delivered ?? [];
 
   const slaMinutes = rs.slaMinutes || view.config.slaMinutes || 30;
   const selected = selectedId ? rs.orders.find((o) => o.orderId === selectedId) : undefined;
@@ -134,6 +191,29 @@ export function RoomService({ view, now, onOpenApp }: RoomServiceProps) {
             </section>
           );
         })}
+        <section className="rd-panel rd-rs-lane" aria-label="Teslim edildi">
+          <div className="rd-row">
+            <h3>Teslim edildi</h3>
+            <span className="rd-badge" data-tone="muted">
+              {delivered.length}
+            </span>
+          </div>
+          {delivered.length === 0 ? (
+            <p className="rd-muted rd-small">Bugün teslim yok.</p>
+          ) : (
+            <div className="rd-list">
+              {delivered
+                .slice(-DELIVERED_SHOWN)
+                .reverse()
+                .map((o) => (
+                  <DeliveredCard key={o.orderId} order={o} slaMinutes={slaMinutes} />
+                ))}
+              {delivered.length > DELIVERED_SHOWN ? (
+                <p className="rd-muted rd-small">+{delivered.length - DELIVERED_SHOWN} teslim daha</p>
+              ) : null}
+            </div>
+          )}
+        </section>
       </div>
 
       {selected ? (

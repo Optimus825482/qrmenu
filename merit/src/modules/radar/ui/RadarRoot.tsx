@@ -630,7 +630,8 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       />
     );
   } else if (view === "odaServisi" && snap) {
-    body = <RoomService view={snap} now={now} onOpenApp={openApp} />;
+    // Live only: the other hotels' boards cannot follow a scrub, a replay or a demo of this one.
+    body = <RoomService view={snap} now={now} onOpenApp={openApp} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
   } else if (view === "personel" && snap) {
     body = <Staff view={snap} now={now} nameStyle={wall ? "short" : "full"} />;
   }

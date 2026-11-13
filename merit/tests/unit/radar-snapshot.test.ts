@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Ctx } from "@/lib/auth";
 import { resetSingleFlight } from "@/lib/singleFlight";
-import { businessDate, businessDay } from "@/lib/time";
+import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { findForbiddenKeys } from "@/modules/radar/privacy";
 import type { RadarSnapshot } from "@/modules/radar/types";
 import { testDb } from "../helpers/db";
@@ -375,6 +375,28 @@ describe("order content", () => {
       [hw.rooms[0]!.number, "OK"],
     ]);
     expect(snap.config.slaMinutes).toBe(30);
+    // The delivered one has no delivery time of today: neither open nor in today's delivered list.
+    expect(rsl.delivered).toEqual([]);
+  });
+
+  it("lists room-service orders delivered today apart from the open ones", async () => {
+    const hw = w.royal;
+    const rs = await rsOutlet(hw);
+    const mk = (n: number, deliveredAt: Date | null, status = "TESLIM_EDILDI") =>
+      testDb.order.create({
+        data: orderData(hw, { outletId: rs.id, kind: "ODA_SERVISI", roomId: hw.rooms[n]!.id, status, deliveredAt }),
+      });
+    const dayStart = businessDateStart(businessDate());
+    const now = Date.now();
+    const mid = new Date((dayStart.getTime() + now) / 2);
+    await mk(0, new Date(now - 1000));
+    await mk(1, mid);
+    await mk(2, new Date(dayStart.getTime() - 60_000)); // yesterday
+    await mk(3, null, "IPTAL");
+    const rsl = (await radarSnapshot(w.sys, hw.hotelId)).layers.roomService!;
+    expect(rsl.orders).toEqual([]);
+    expect(rsl.delivered!.map((o) => o.roomNumber)).toEqual([hw.rooms[1]!.number, hw.rooms[0]!.number]);
+    expect(rsl.delivered![0]!.deliveredAt).toBe(mid.toISOString());
   });
 
   it("lists only ONLINE and UYARI staff and keeps SISTEM sessions for SISTEM", async () => {

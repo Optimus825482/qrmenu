@@ -1041,6 +1041,22 @@ button.rd-alert-chip {
   gap: 4px;
 }
 
+.rd-rs-hotels {
+  display: grid;
+  gap: 14px;
+}
+
+.rd-rs-hotel {
+  display: grid;
+  gap: 6px;
+}
+
+.rd-rs-hotel-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .rd-rs-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

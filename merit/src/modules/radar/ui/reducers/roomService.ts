@@ -23,7 +23,17 @@ export function reduceRoomServiceOrder(s: RadarState, e: Ev<"order.status">): Ra
   const idx = layer.orders.findIndex((o) => o.orderId === e.orderId);
   if (!RS_OPEN.has(e.to)) {
     if (idx < 0) return s;
-    return { ...s, layers: { ...s.layers, roomService: { ...layer, orders: layer.orders.filter((_, i) => i !== idx) } } };
+    const closed = layer.orders[idx];
+    const orders = layer.orders.filter((_, i) => i !== idx);
+    // A delivery moves the card to the delivered list; a cancel or reject just drops it.
+    const delivered =
+      e.to === "TESLIM_EDILDI" && !(layer.delivered ?? []).some((d) => d.orderId === closed.orderId)
+        ? [
+            ...(layer.delivered ?? []),
+            { orderId: closed.orderId, orderNo: closed.orderNo, roomNumber: closed.roomNumber, createdAt: closed.createdAt, deliveredAt: e.at },
+          ]
+        : layer.delivered;
+    return { ...s, layers: { ...s.layers, roomService: { ...layer, orders, ...(delivered ? { delivered } : {}) } } };
   }
   if (idx >= 0) {
     if (layer.orders[idx].status === e.to) return s;

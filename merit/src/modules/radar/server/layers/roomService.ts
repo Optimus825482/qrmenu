@@ -1,5 +1,6 @@
 // Room-service layer: open room-service orders with their SLA level. Read-only; no items, notes or prices.
 import { prisma } from "@/lib/prisma";
+import { businessDate, businessDateStart } from "@/lib/time";
 import { RADAR_ROOM_OPEN_STATUSES, SLA_WARN_RATIO, slaStart } from "@/modules/order/server/roomService/sla";
 import type { RadarSnapshot } from "../../types";
 import type { LayerEnv } from "../config";
@@ -38,6 +39,17 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
     },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
+  // Delivered since the start of the business day of `now` (a past instant: only what was delivered by then).
+  const deliveredRows = await prisma.order.findMany({
+    where: {
+      hotelId: env.hotelId,
+      kind: "ODA_SERVISI",
+      status: "TESLIM_EDILDI",
+      deliveredAt: { gte: businessDateStart(businessDate(env.now)), lte: env.now },
+    },
+    select: { id: true, orderNo: true, createdAt: true, deliveredAt: true, room: { select: { number: true } } },
+    orderBy: [{ deliveredAt: "asc" }, { id: "asc" }],
+  });
   const slaMs = slaMinutes * 60_000;
   if (env.historical) {
     // Past instant: status from OrderEvent, SLA stamps only if they were already set then.
@@ -73,5 +85,12 @@ export async function roomServiceLayer(env: LayerEnv): Promise<RoomServiceLayer>
         level,
       };
     }),
+    delivered: deliveredRows.map((o) => ({
+      orderId: o.id,
+      orderNo: o.orderNo,
+      roomNumber: o.room?.number ?? "—",
+      createdAt: o.createdAt.toISOString(),
+      deliveredAt: (o.deliveredAt ?? o.createdAt).toISOString(),
+    })),
   };
 }
