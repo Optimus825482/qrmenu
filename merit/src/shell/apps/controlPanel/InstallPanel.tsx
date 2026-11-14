@@ -117,7 +117,7 @@ export function InstallPanel({ setStatus }: { setStatus(text: string): void }) {
           <dd>
             <strong style={{ color: "#1e3a8a" }}>v{VERSION}</strong>
           </dd>
-          <dt>Derleme tarihi</dt>
+          <dt>Derleme zamanı</dt>
           <dd>{BUILD_DATE}</dd>
           <dt>Cihaz durumu</dt>
           <dd>{installed ? "Uygulama olarak kurulu (PWA Standalone)" : "Web Tarayıcısı"}</dd>

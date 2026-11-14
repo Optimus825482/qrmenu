@@ -38,7 +38,7 @@ export default async function AboutPage({
           <dl>
             <dt>Sürüm</dt>
             <dd>v{APP_VERSION}</dd>
-            <dt>Derleme tarihi</dt>
+            <dt>Derleme zamanı</dt>
             <dd>{BUILD_DATE}</dd>
           </dl>
           <p>Bu pencere iframe uygulama sözleşmesinin örneğidir.</p>

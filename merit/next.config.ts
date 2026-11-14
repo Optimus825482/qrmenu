@@ -5,7 +5,8 @@ import pkg from "./package.json";
 // Guest (QR menu) pages only: the admin app never calls next-intl.
 const withNextIntl = createNextIntlPlugin("./src/lib/i18n/request.ts");
 
-const BUILD_DATE = new Date().toISOString().slice(0, 10);
+// Date and time of the build in hotel time ("2026-11-14 09:28"), shown in Denetim Masası and Hakkında.
+const BUILD_DATE = new Date().toLocaleString("sv-SE", { timeZone: "Europe/Nicosia" }).slice(0, 16);
 const BUILD_ID = `${pkg.version}.${Date.now()}`;
 
 const nextConfig: NextConfig = {

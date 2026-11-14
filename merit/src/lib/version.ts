@@ -11,8 +11,9 @@ export interface VersionInfo {
 }
 
 export const APP_VERSION = process.env.MERIT_VERSION ?? (pkg as { version?: string }).version ?? "2.8.0";
-export const BUILD_DATE = process.env.MERIT_BUILD_DATE ?? new Date().toISOString().slice(0, 10);
-export const BUILD_ID = process.env.MERIT_BUILD_ID ?? `${APP_VERSION}.${BUILD_DATE.replace(/-/g, "")}`;
+export const BUILD_DATE =
+  process.env.MERIT_BUILD_DATE ?? new Date().toLocaleString("sv-SE", { timeZone: "Europe/Nicosia" }).slice(0, 16);
+export const BUILD_ID = process.env.MERIT_BUILD_ID ?? `${APP_VERSION}.${BUILD_DATE.replace(/\D/g, "")}`;
 export const APP_NAME = "Merit Royal F&B Command Center";
 export const RELEASE_CODENAME = "Merit Royal Enterprise Suite";
 
