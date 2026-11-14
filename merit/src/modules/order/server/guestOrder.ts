@@ -158,7 +158,7 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
   if (!state.orderingOpen) throw new DomainError("CONFLICT", "Şu an sipariş alınmıyor");
 
   // Before the transaction: a provider call must not hold the row lock, and it never throws.
-  const noteTranslations = await translateOrderNotes(state.hotelId, locale, [data.note, ...data.items.map((i) => i.note)]);
+  const noteTranslations = await translateOrderNotes(state.hotelId, [data.note, ...data.items.map((i) => i.note)]);
 
   try {
     return await prisma.$transaction(async (tx) => {

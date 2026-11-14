@@ -10,21 +10,27 @@ describe("order note translation", () => {
 
   it("translates each distinct note once and keys the result by the original", async () => {
     translateNoteForStaff.mockImplementation(async (_hotel: string, note: string) => ({ noteTr: `TR:${note}`, srcLang: "ru" }));
-    const map = await translateOrderNotes("h1", "ru", ["без лука", undefined, "без лука", " ", "острый"]);
+    const map = await translateOrderNotes("h1", ["без лука", undefined, "без лука", " ", "острый"]);
     expect(translateNoteForStaff).toHaveBeenCalledTimes(2);
     expect(translatedNote(map, "без лука")).toEqual({ noteTr: "TR:без лука", srcLang: "ru" });
     expect(translatedNote(map, undefined)).toEqual({ noteTr: null, srcLang: null });
   });
 
-  it("does not call a provider for a guest reading the menu in Turkish", async () => {
-    const map = await translateOrderNotes("h1", "tr", ["soğansız"]);
-    expect(translateNoteForStaff).not.toHaveBeenCalled();
-    expect(map.size).toBe(0);
+  it("goes by the language of the note, not of the menu: a Turkish note stays as written", async () => {
+    // A guest reading the menu in Turkish may still write in another language, so every note is sent;
+    // the provider detects Turkish and returns no translation.
+    translateNoteForStaff.mockImplementation(async (_hotel: string, note: string) =>
+      note === "soğansız" ? { noteTr: null, srcLang: "tr" } : { noteTr: "soğansız", srcLang: "en" },
+    );
+    const map = await translateOrderNotes("h1", ["soğansız", "no onions"]);
+    expect(translateNoteForStaff).toHaveBeenCalledTimes(2);
+    expect(translatedNote(map, "soğansız")).toEqual({ noteTr: null, srcLang: null });
+    expect(translatedNote(map, "no onions")).toEqual({ noteTr: "soğansız", srcLang: "en" });
   });
 
   it("leaves a note the provider could not translate without an entry", async () => {
     translateNoteForStaff.mockResolvedValue({ noteTr: null, srcLang: null });
-    const map = await translateOrderNotes("h1", "en", ["no onions"]);
+    const map = await translateOrderNotes("h1", ["no onions"]);
     expect(translatedNote(map, "no onions").noteTr).toBeNull();
   });
 

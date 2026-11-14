@@ -9,15 +9,11 @@ export type NoteTranslations = Map<string, NoteTranslation>;
 /**
  * Guest notes of one order -> Turkish for staff, keyed by the original note. Runs before the order
  * transaction (provider calls must not hold a row lock) and never throws: an untranslated note simply
- * has no entry and staff sees the original. A guest reading the menu in Turkish is not translated.
+ * has no entry and staff sees the original. The language of the note decides, not the language the guest
+ * reads the menu in: every note is sent and the provider detects Turkish itself (no translation then).
  */
-export async function translateOrderNotes(
-  hotelId: string,
-  guestLocale: string,
-  notes: (string | null | undefined)[],
-): Promise<NoteTranslations> {
+export async function translateOrderNotes(hotelId: string, notes: (string | null | undefined)[]): Promise<NoteTranslations> {
   const out: NoteTranslations = new Map();
-  if (guestLocale === "tr") return out;
   const distinct = [...new Set(notes.map((n) => n?.trim() ?? "").filter(Boolean))].slice(0, MAX_NOTES_PER_ORDER);
   if (distinct.length === 0) return out;
   const results = await Promise.all(distinct.map((note) => translateNoteForStaff(hotelId, note)));
