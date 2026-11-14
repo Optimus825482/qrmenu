@@ -138,13 +138,13 @@ const LIST: ScreenGuide[] = [
     "personel",
     "Odanın minibarını kontrol edip eksikleri tamamlarsın.",
     [
-      ["urun-listesi", "Ürün listesi", "Minibarda gördüğün her ürünün adetini gir."],
-      ["eksik-ozeti", "Eksik özeti", "Tamamlaman gereken ürünler özet satırında birikir."],
+      ["urun-listesi", "Ürün listesi", "Eksik ürünü yerine koy ve adedine bas (+1, +2…): kayıt hemen yapılır."],
+      ["eksik-ozeti", "Alt çubuk", "Oda için tek seferlik kayıtlar burada: Sarfiyat Yok ve DND."],
       ["dnd-bildir", "DND", "Misafir rahatsız edilmesin diyorsa odayı DND olarak işaretle; oda ikinci kontrole kalır."],
-      ["kaydet", "Kaydet", "Kontrolü bitirince kaydet. Kayıt kat planında odayı tamamlandı yapar."],
+      ["kaydet", "Sarfiyat Yok", "Hiçbir ürün eksik değilse Sarfiyat Yok'a bas. Odaya bugün ürün eklendiyse bu düğme kilitlenir."],
     ],
     [
-      "Kaydetmeden başka odaya geçersen girdiğin adetler kaybolur.",
+      "Yanlış adede bastıysan bildirimdeki \"Geri al\" ile düzelt; geri alınca Sarfiyat Yok yeniden açılır.",
       "DND oda belirlenen kontrol sayısında tamamlanır; ilk kontrolde kapatmaya çalışma.",
     ],
     { settings: ["dnd.minChecks"] },

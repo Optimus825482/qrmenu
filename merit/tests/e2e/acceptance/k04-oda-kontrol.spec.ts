@@ -29,9 +29,8 @@ test.describe("@kabul-4 Oda kontrolü, havuz, rapor ve DND", () => {
       const add = (qty: number) => kat.request.post(`/api/minibar/room/${id}/check`, { data: { items: [{ productId: cola, setupId: mini, qty }], clientRequestId: randomUUID() } });
       const checkPage = await kat.newPage();
       await checkPage.goto(`/kat/oda-kontrol/${id}`);
-      await checkPage.getByRole("button", { name: "Kola artır" }).click();
       const firstResponse = checkPage.waitForResponse(response => response.request().method() === "POST" && new URL(response.url()).pathname === `/api/minibar/room/${id}/check`);
-      await checkPage.getByRole("button", { name: "Kaydet (1 ürün ikame)" }).click();
+      await checkPage.getByRole("button", { name: "Kola +1" }).click();
       const first = await firstResponse;
       expect(first.status(), await first.text()).toBe(200);
       expect(await first.json()).toMatchObject({ added: 1, taskCompleted: true });
@@ -49,7 +48,11 @@ test.describe("@kabul-4 Oda kontrolü, havuz, rapor ve DND", () => {
       expect(await excess.json()).toMatchObject({ code: "DAILY_LIMIT" });
       expect(await balance()).toBe(before - 2);
       await checkPage.goto(`/kat/oda-kontrol/${id}`);
-      await expect(checkPage.getByRole("button", { name: "Kola artır" })).toBeDisabled();
+      await expect(checkPage.getByRole("button", { name: "Kola +1" })).toHaveAttribute("aria-disabled", "true");
+      // Products were added today: "Sarfiyat Yok" is locked, in the page and on the server.
+      await expect(checkPage.getByTestId("sarfiyat-yok")).toBeDisabled();
+      const contradicting = await kat.request.post(`/api/minibar/room/${id}/no-consumption`, { data: { clientRequestId: randomUUID() } });
+      expect(contradicting.status(), await contradicting.text()).toBe(409);
       await checkPage.goto("/kat/stok");
       await expect(checkPage.getByTestId("kat-stok")).toContainText("Kola");
       await checkPage.close();

@@ -740,12 +740,16 @@ export async function recordNoConsumption(
       if (replay) return replay;
       await assertRoomVerified({ userId: ctx.user.id, roomId: room.id, hotelId: room.hotelId }, now, tx);
 
-      const last = await tx.minibarTransaction.findFirst({
-        where: { roomId: room.id, occurredAt: dayRange(day) },
-        orderBy: { occurredAt: "desc" },
+      // A room with a replacement today had consumption: "Sarfiyat Yok" would contradict it. Undoing the
+      // replacement (hard delete) frees the room again.
+      const today = await tx.minibarTransaction.findMany({
+        where: { roomId: room.id, type: { in: ["SETUP_KONTROL", "SARFIYAT_YOK"] }, occurredAt: dayRange(day) },
         select: { type: true },
       });
-      if (last?.type === "SARFIYAT_YOK") {
+      if (today.some((t) => t.type === "SETUP_KONTROL")) {
+        throw new DomainError("CONFLICT", 'Bu odaya bugün ürün eklendi; "Sarfiyat Yok" kaydedilemez');
+      }
+      if (today.some((t) => t.type === "SARFIYAT_YOK")) {
         throw new DomainError("CONFLICT", 'Bu oda bugün zaten "Sarfiyat Yok" olarak kaydedildi');
       }
 

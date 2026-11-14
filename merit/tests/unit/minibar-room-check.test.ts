@@ -333,7 +333,7 @@ describe("recordNoConsumption", () => {
     expect(done!.payload).toMatchObject({ checkType: "SARFIYAT_YOK", addedQty: 0 });
   });
 
-  it("aynı gün ikinci çağrı CONFLICT; aynı istek kimliği yeniden oynatılır; ikameden sonra tekrar serbest", async () => {
+  it("aynı gün ikinci çağrı CONFLICT; aynı istek kimliği yeniden oynatılır; ikameden sonra CONFLICT, geri alınca serbest", async () => {
     const { w, kat, kat2, depo } = await world();
     const rid = randomUUID();
     const first = await noUse(kat.ctx, w.room.id, T0, rid);
@@ -342,9 +342,18 @@ describe("recordNoConsumption", () => {
     expect(await codeOf(noUse(kat2.ctx, w.room.id, minutes(T0, 5)))).toBe("CONFLICT");
     expect(await notes(depo.userId, "minibar.noUse")).toBe(1);
 
-    await rep(kat2.ctx, w, 1, { now: minutes(T0, 10) });
-    expect(await codeOf(noUse(kat.ctx, w.room.id, minutes(T0, 20)))).toBe("OK");
-    expect(await testDb.minibarTransaction.count({ where: { type: "SARFIYAT_YOK" } })).toBe(2);
+    // Consumption found later the same day: +N stays possible, "Sarfiyat Yok" no longer.
+    const added = await rep(kat2.ctx, w, 1, { now: minutes(T0, 10) });
+    expect(await messageOf(noUse(kat.ctx, w.room.id, minutes(T0, 20)))).toBe('Bu odaya bugün ürün eklendi; "Sarfiyat Yok" kaydedilemez');
+    expect(await testDb.minibarTransaction.count({ where: { type: "SARFIYAT_YOK" } })).toBe(1);
+
+    // A fresh room: +N then undo frees "Sarfiyat Yok" again.
+    const w2 = await minibarWorld({ hotelCode: w.hotelCode });
+    const r2 = await rep(kat.ctx, w2, 1, { roomId: w2.room.id, setupId: w2.setup.id, now: minutes(T0, 30) });
+    expect(await codeOf(noUse(kat.ctx, w2.room.id, minutes(T0, 31)))).toBe("CONFLICT");
+    await rc.deleteMyTransaction(kat.ctx, r2.transactionId, minutes(T0, 32));
+    expect(await codeOf(noUse(kat.ctx, w2.room.id, minutes(T0, 33)))).toBe("OK");
+    expect(added.transactionId).toBeTruthy();
   });
 
   it("iki eşzamanlı Sarfiyat Yok: biri kaydolur, biri CONFLICT; AKTIF DND TAMAMLANDI olur", async () => {
