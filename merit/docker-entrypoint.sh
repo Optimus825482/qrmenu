@@ -73,5 +73,14 @@ if [ "${SEED_DIAMOND_STAFF:-true}" = "true" ]; then
   npx tsx scripts/diamond-personel-tanimla.ts --once || echo "UYARI: Diamond personel tanımlama tamamlanamadı; site çalışıyor. Yukarıdaki hatayı inceleyin." >&2
 fi
 
+# Oda servisi siparişlerinin ESKİ misafir notlarının TEK SEFERLİK Türkçeye çevrilmesi (not çevirisi 14.11.2026'da
+# geldi; önceki siparişlerin notları misafirin diliyle kalmıştı). Arka planda yürür, site önce açılır. Yalnız
+# Türkçesi olmayan notlara bakar; orijinal not silinmez. Temiz bitince veritabanına işaret yazılır ve bir daha
+# çalışmaz; çevrilemeyen not kalırsa sonraki açılışta yalnız kalanlar yeniden denenir. Hata başlatmayı durdurmaz.
+# Kapatmak için BACKFILL_ORDER_NOTES=false.
+if [ "${BACKFILL_ORDER_NOTES:-true}" = "true" ]; then
+  (npx tsx scripts/siparis-notu-geriye-donuk-ceviri.ts --once || echo "UYARI: Eski sipariş notlarının çevirisi tamamlanamadı; site çalışıyor. Yukarıdaki hatayı inceleyin." >&2) &
+fi
+
 echo "Web sunucusu başlatılıyor (port ${PORT:-3000})..."
 exec npm run start
