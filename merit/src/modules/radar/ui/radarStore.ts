@@ -412,11 +412,18 @@ export function createRadarStore(deps: RadarStoreDeps): RadarStore {
     const drift = () => {
       driftCancel = deps.schedule(drift, DRIFT_MS);
       const { hotelId, live, mode } = get();
-      if (!hotelId || hotelId === "ALL" || !live || mode === "replay") return;
+      if (!hotelId || hotelId === "ALL" || mode === "replay") return;
+      if (!live) {
+        // The first snapshot never arrived (server restart, network): try again instead of staying on the error.
+        void get().refresh();
+        return;
+      }
       const gen = generation;
       void deps.fetchSnapshot(hotelId).then(
         (snap) => {
           if (gen !== generation || get().mode === "replay") return;
+          // The server answered: an "offline" left by an earlier failed refresh is over, diff or no diff.
+          if (get().connection === "offline") set({ connection: "live" });
           get().flush(); // compare against live + flushed queue
           if (queue.length > 0) return; // hidden tab: queue not applied yet, try next round
           const cur = get().live;

@@ -3,7 +3,12 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Tone } from "../../labels";
 import type { RadarState } from "../../state";
-import { RadarStoreContext, usePulse, useRadar } from "../useRadar";
+import type { RadarLayer } from "../../types";
+import { usePulse } from "../useRadar";
+import { OtherHotelBoard } from "./OtherHotelBoard";
+
+/** What the board of another hotel loads: MyBar requests live on the minibar layer. */
+const BOARD_LAYERS: readonly RadarLayer[] = ["MINIBAR"];
 
 type MinibarLayer = NonNullable<RadarState["layers"]["minibar"]>;
 type Closed = NonNullable<MinibarLayer["mybarClosed"]>[number];
@@ -117,37 +122,33 @@ export type MybarProps = {
   now: number;
   /** Every hotel in scope: the boards of the others are listed under the current one. Omit for a single board. */
   hotels?: { id: string; name: string }[];
+  /** Cards per open lane (longest wait first), the rest as "+N": for a screen that cannot scroll. */
+  maxCards?: number;
 };
 
 /** MyBar: one board per hotel, the window's hotel first. */
-export function Mybar({ view, now, hotels }: MybarProps) {
-  if (!hotels || hotels.length < 2) return <MybarBoard view={view} now={now} />;
+export function Mybar({ view, now, hotels, maxCards }: MybarProps) {
+  if (!hotels || hotels.length < 2) return <MybarBoard view={view} now={now} maxCards={maxCards} />;
   return (
     <div className="rd-rs-hotels">
       {[...hotels.filter((h) => h.id === view.hotelId), ...hotels.filter((h) => h.id !== view.hotelId)].map((hotel) => (
         <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} MyBar`}>
           <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
-          {hotel.id === view.hotelId ? <MybarBoard view={view} now={now} /> : <OtherHotelBoard hotelId={hotel.id} now={now} />}
+          {hotel.id === view.hotelId ? (
+            <MybarBoard view={view} now={now} />
+          ) : (
+            <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
+              {(other) => <MybarBoard view={other} now={now} />}
+            </OtherHotelBoard>
+          )}
         </section>
       ))}
     </div>
   );
 }
 
-/** The live board of a hotel other than the window's: its own store, so it keeps up with events like the main one. */
-function OtherHotelBoard({ hotelId, now }: { hotelId: string; now: number }) {
-  const { store, state } = useRadar(hotelId);
-  const view = state.hotelId === hotelId ? state.view : null;
-  if (!view) return <p className="rd-muted rd-small">Yükleniyor…</p>;
-  return (
-    <RadarStoreContext.Provider value={store}>
-      <MybarBoard view={view} now={now} />
-    </RadarStoreContext.Provider>
-  );
-}
-
 /** The four stages of a MyBar request as lanes: waiting for approval, approved, completed today, cancelled today. */
-function MybarBoard({ view, now }: Omit<MybarProps, "hotels">) {
+function MybarBoard({ view, now, maxCards }: Omit<MybarProps, "hotels">) {
   const layer = view.layers.minibar;
   if (!layer) return <EmptyState title="Bu otelde MyBar izlenmiyor." />;
   const open = openMybarRequests(layer);
@@ -172,9 +173,12 @@ function MybarBoard({ view, now }: Omit<MybarProps, "hotels">) {
             <p className="rd-muted rd-small">{lane.empty}</p>
           ) : (
             <div className="rd-list">
-              {lane.items.map((r) => (
+              {(maxCards ? lane.items.slice(0, maxCards) : lane.items).map((r) => (
                 <OpenCard key={r.requestId} request={r} staleMinutes={staleMinutes} now={now} />
               ))}
+              {maxCards && lane.items.length > maxCards ? (
+                <p className="rd-muted rd-small">+{lane.items.length - maxCards} talep daha</p>
+              ) : null}
             </div>
           )}
         </section>

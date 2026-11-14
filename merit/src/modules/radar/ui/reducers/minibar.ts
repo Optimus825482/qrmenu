@@ -43,6 +43,8 @@ export function reduceDndMarked(s: RadarState, e: Ev<"dnd.marked">): RadarState 
 
 export function reduceDndMissed(s: RadarState, e: Ev<"dnd.missed">): RadarState {
   if (!s.layers.minibar) return s;
+  // The catch-up run after midnight closes yesterday: those rooms are not missing today.
+  if (e.date !== undefined && e.date !== s.businessDate) return s;
   if (e.roomIds.length === 0) return addRefresh(s, "ALL");
   let cur = s;
   for (const id of e.roomIds) {

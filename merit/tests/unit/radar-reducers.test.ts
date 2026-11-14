@@ -207,3 +207,33 @@ describe("radar reducers", () => {
     expect(H).toBe("h1");
   });
 });
+
+describe("radar reducers: bir masada birden çok çağrı, gece DND kapanışı", () => {
+  const call = (s: RadarState) => s.layers.order!.outlets.flatMap((o) => o.areas).flatMap((a) => a.tables).find((t) => t.tableId === "t1")!;
+
+  it("ikinci çağrı ilkini ezmez; ikincisi yanıtlanınca masa çalmaya devam eder", () => {
+    let s = reduce(fresh(), ev("call.opened", T0, { callId: "c1", tableId: "t1", callType: "GARSON" }));
+    s = reduce(s, ev("call.opened", T0 + 5, { callId: "c2", tableId: "t1", callType: "HESAP" }));
+    expect(call(s)).toMatchObject({ call: { callId: "c1", type: "GARSON" }, otherCalls: 1 });
+    s = reduce(s, ev("call.closed", T0 + 9, { callId: "c2", tableId: "t1" }));
+    expect(call(s)).toMatchObject({ call: { callId: "c1" }, otherCalls: 0 });
+    s = reduce(s, ev("call.closed", T0 + 12, { callId: "c1", tableId: "t1" }));
+    expect(call(s).call).toBeNull();
+  });
+
+  it("gösterilen çağrı kapanır ama başkası açıksa çağrı silinmez, anlık görüntü istenir", () => {
+    let s = reduce(fresh(), ev("call.opened", T0, { callId: "c1", tableId: "t1", callType: "GARSON" }));
+    s = reduce(s, ev("call.opened", T0 + 5, { callId: "c2", tableId: "t1", callType: "HESAP" }));
+    s = reduce(s, ev("call.closed", T0 + 9, { callId: "c1", tableId: "t1" }));
+    expect(call(s).call).not.toBeNull();
+    expect(s.needsRefresh.size).toBeGreaterThan(0);
+  });
+
+  it("dünün DND kapanışı bugünün odalarını eksik işaretlemez", () => {
+    const before = fresh();
+    const yesterday = reduce(before, ev("dnd.missed", T0, { roomIds: ["r1"], date: "2026-11-02" }));
+    expect(yesterday).toBe(before);
+    const today = reduce(before, ev("dnd.missed", T0, { roomIds: ["r1"], date: "2026-11-03" }));
+    expect(today).not.toBe(before);
+  });
+});

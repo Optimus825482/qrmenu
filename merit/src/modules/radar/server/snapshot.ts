@@ -59,9 +59,11 @@ async function build(
 export async function radarSnapshot(
   ctx: Ctx,
   hotelId: string,
-  opts: { now?: Date; asOf?: Date } = {},
+  opts: { now?: Date; asOf?: Date; layers?: readonly RadarLayer[] } = {},
 ): Promise<RadarSnapshot> {
-  const visible = await assertRadarScope(ctx, hotelId, "V");
+  const allowed = await assertRadarScope(ctx, hotelId, "V");
+  // `layers` only narrows (a board that shows one operation asks for that layer alone); it never widens the scope.
+  const visible = opts.layers ? allowed.filter((l) => opts.layers!.includes(l)) : allowed;
   // Day replay: the state at a past instant (never shared between callers, never cached).
   if (opts.asOf) return build(ctx, hotelId, opts.asOf, visible, true);
   if (opts.now) return build(ctx, hotelId, opts.now, visible);

@@ -56,11 +56,11 @@ export default async function RadarPage({ searchParams }: PageProps) {
     targetHotel.id,
   );
 
-  const views = q.gorunumler ? parseWallViews(q.gorunumler) : parseWallViews(settings["radar.wallViews"]);
+  // Only what the address pins is passed down: the hotel's own settings come with the snapshot, so a change in
+  // the settings screen reaches a wall that is already open.
+  const views = q.gorunumler ? parseWallViews(q.gorunumler) : undefined;
   const rotateSeconds =
-    typeof q.sure === "number" && Number.isFinite(q.sure)
-      ? Math.max(5, Math.min(300, Math.round(q.sure)))
-      : settings["radar.wallRotateSeconds"];
+    typeof q.sure === "number" && Number.isFinite(q.sure) ? Math.max(5, Math.min(300, Math.round(q.sure))) : undefined;
 
   return (
     <main style={{ width: "100vw", height: "100dvh", overflow: "hidden" }}>

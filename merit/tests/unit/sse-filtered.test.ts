@@ -11,7 +11,7 @@ vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).t
 const { listenerCount, publish, startRealtimeListener, stopRealtimeListener } = await import(
   "@/lib/realtime"
 );
-const { createFilteredSseStream } = await import("@/lib/sse");
+const { createFilteredSseStream, seesStaffNames, withoutStaffNames } = await import("@/lib/sse");
 const { sanitizeGuestEvent } = await import("@/modules/menu/guestEventFilter");
 const { GUEST_EVENT_TYPES, SSE_EVENT_TYPES } = await import("@/lib/realtime-events");
 
@@ -103,5 +103,30 @@ describe("createFilteredSseStream", () => {
     expect(text).not.toContain("byUserId");
     expect(text).not.toContain("staff-secret");
     await reader.cancel();
+  });
+});
+
+describe("personel adları akışta", () => {
+  it("yalnız SISTEM ve YONETIM personel adını okur", () => {
+    expect(seesStaffNames("SISTEM")).toBe(true);
+    expect(seesStaffNames("YONETIM")).toBe(true);
+    expect(seesStaffNames("OUTLET")).toBe(false);
+  });
+
+  it("call.resolved adı taşımaz, diğer alanlar ve ortak olay bozulmaz", () => {
+    const e = {
+      type: "call.resolved",
+      at: "2026-11-14T10:00:00.000Z",
+      hotelId: "h1",
+      payload: { callId: "c1", tableId: "t1", waiterId: "u1", waiterName: "Ayşe Kaya", resolvedByName: "Ayşe Kaya" },
+    };
+    const out = withoutStaffNames(e);
+    expect(out.payload).toEqual({ callId: "c1", tableId: "t1", waiterId: "u1" });
+    expect(e.payload.waiterName).toBe("Ayşe Kaya");
+  });
+
+  it("ad taşımayan olay aynen geçer", () => {
+    const e = { type: "order.ready", at: "2026-11-14T10:00:00.000Z", payload: { orderId: "o1" } };
+    expect(withoutStaffNames(e)).toBe(e);
   });
 });

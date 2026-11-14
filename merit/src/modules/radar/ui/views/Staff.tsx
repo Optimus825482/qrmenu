@@ -1,5 +1,6 @@
 "use client";
 
+import { PageMark, pageOf, type WallPaging } from "../WallPage";
 import type { RoleKind } from "@/generated/prisma/client";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { shortName } from "../../privacy";
@@ -78,10 +79,16 @@ export type StaffProps = {
   view: RadarState;
   now: number;
   nameStyle?: NameStyle;
+  /** Set on the wall: each group and side list shows one page at a time. */
+  paging?: WallPaging;
 };
 
+/** Session rows of a group, and rows of a side list, on one wall page. */
+const WALL_SESSIONS = 8;
+const WALL_SIDE_ROWS = 8;
+
 /** V6 Personel: online sessions grouped by role kind + per-outlet / per-floor staff counts (spec 2.2). */
-export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
+export function Staff({ view, now, nameStyle = "full", paging }: StaffProps) {
   const sessions = view.layers.staff?.sessions ?? [];
   const outlets = view.layers.order?.outlets ?? [];
   const supervisors = view.layers.minibar?.supervisors ?? [];
@@ -89,6 +96,8 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
 
   if (!view.layers.staff) return <EmptyState title="Personel katmanı bu kapsamda yok." />;
 
+  const outletPage = pageOf(outlets, WALL_SIDE_ROWS, paging, now);
+  const supervisorPage = pageOf(supervisors, WALL_SIDE_ROWS, paging, now);
   const outletNames = new Map<string, string>(outlets.map((o) => [o.outletId, o.name]));
 
   return (
@@ -100,6 +109,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
           GROUP_ORDER.map(({ kind, label }) => {
             const list = sessions.filter((s) => s.roleKind === kind);
             if (list.length === 0) return null;
+            const paged = pageOf(list, WALL_SESSIONS, paging, now);
             return (
               <section key={kind} className="rd-panel" aria-label={`${label} oturumları`}>
                 <div className="rd-row">
@@ -122,7 +132,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((s) => (
+                    {paged.items.map((s) => (
                       <SessionRow
                         key={s.sessionId}
                         session={s}
@@ -135,6 +145,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                   </tbody>
                 </table>
                 </div>
+                <PageMark paged={paged} total={list.length} unit="kişi" />
               </section>
             );
           })
@@ -148,7 +159,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
             <p className="rd-muted rd-small">Outlet yok.</p>
           ) : (
             <ul className="rd-list">
-              {outlets.map((o) => {
+              {outletPage.items.map((o) => {
                 const count = sessions.filter((s) => s.outletId === o.outletId).length;
                 return (
                   <li key={o.outletId} className="rd-row" data-anchor={`outlet:${o.outletId}`}>
@@ -159,6 +170,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                   </li>
                 );
               })}
+              <PageMark as="li" paged={outletPage} total={outlets.length} unit="outlet" />
             </ul>
           )}
         </section>
@@ -167,7 +179,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
           <section className="rd-panel" aria-label="Kat sorumlusu dağılımı">
             <h3>Kat sorumluları</h3>
             <ul className="rd-list">
-              {supervisors.map((sup) => {
+              {supervisorPage.items.map((sup) => {
                 const rawName = view.people[sup.userId] ?? sup.name;
                 const shown = nameStyle === "short" ? shortName(rawName) : rawName;
                 return (
@@ -179,6 +191,7 @@ export function Staff({ view, now, nameStyle = "full" }: StaffProps) {
                   </li>
                 );
               })}
+              <PageMark as="li" paged={supervisorPage} total={supervisors.length} unit="kişi" />
             </ul>
           </section>
         ) : null}

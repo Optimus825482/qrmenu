@@ -66,7 +66,7 @@ export type RadarEvent = RadarEventBase &
     | { type: "room.check.changed"; roomId: string; op: "SIL" | "DUZELT" }
     | { type: "room.scanned"; roomId: string }
     | { type: "dnd.marked"; roomId: string; count: number; minChecks: number; status: DndStatus }
-    | { type: "dnd.missed"; roomIds: string[] }
+    | { type: "dnd.missed"; roomIds: string[]; /** The day that was closed (the 00:01 run closes yesterday). */ date?: string }
     | { type: "mybar.opened"; requestId: string; roomId: string }
     | { type: "mybar.seen"; requestId: string; roomId: string }
     | { type: "mybar.closed"; requestId: string; roomId: string; outcome: "TAMAM" | "EKSIK" | "IPTAL" }
@@ -239,6 +239,8 @@ export type RadarSnapshot = {
               escalated?: boolean;
             }[];
             call: { callId: string; type: CallType; since: string } | null;
+            /** Open calls of the table beyond the one shown (the oldest). */
+            otherCalls?: number;
             scannedAt?: string;
             emptiedAt?: string;
           }[];

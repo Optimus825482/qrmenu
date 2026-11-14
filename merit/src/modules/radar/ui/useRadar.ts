@@ -7,27 +7,33 @@ import { isMotionEnabled } from "./motion/useMotionPreference";
 import { pulseOnce } from "@/components/ui/pulseOnce";
 import { deriveAlerts } from "../alerts";
 import { radarOverviewAction, radarSnapshotAction } from "../server/actions/radar";
+import type { RadarLayer } from "../types";
 import { createRadarStore, type RadarStore, type RadarStoreDeps, type RadarStoreState } from "./radarStore";
 
 /** Server minus browser clock (ms), learned from each snapshot, so alert ages do not depend on a wrong client clock. */
 let serverClockOffsetMs = 0;
 
-function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
+function browserDeps(bufferMinutes: () => number, boardLayers?: readonly RadarLayer[]): RadarStoreDeps {
   return {
     async fetchSnapshot(hotelId) {
       const t0 = Date.now();
-      const r = await radarSnapshotAction({ hotelId });
+      const r = await radarSnapshotAction(boardLayers ? { hotelId, layers: [...boardLayers] } : { hotelId });
       if (!r.ok) throw new Error(r.error.message);
       const serverMs = Date.parse(r.data.generatedAt);
       // Midpoint of the round trip approximates the instant the server stamped the snapshot.
       if (Number.isFinite(serverMs)) serverClockOffsetMs = serverMs - (t0 + Date.now()) / 2;
       return r.data;
     },
-    async fetchOverview(hotelId) {
-      const r = await radarOverviewAction({ hotelId });
-      if (!r.ok) throw new Error(r.error.message);
-      return r.data;
-    },
+    // A board store shows lanes only: no overview cards to load or keep fresh.
+    ...(boardLayers
+      ? {}
+      : {
+          async fetchOverview(hotelId: string) {
+            const r = await radarOverviewAction({ hotelId });
+            if (!r.ok) throw new Error(r.error.message);
+            return r.data;
+          },
+        }),
     subscribe: (handler, types) => sseClient().subscribe(handler, types),
     now: () => Date.now() + serverClockOffsetMs,
     schedule(cb, ms) {
@@ -60,11 +66,18 @@ function browserDeps(bufferMinutes: () => number): RadarStoreDeps {
 /**
  * The browser store of one radar window: started for `hotelId` ("ALL" = every hotel in scope) and stopped on
  * unmount. `state` re-renders on every store change (the store itself batches to 4 flushes a second).
+ * With `boardLayers` (fixed for the life of the component) it is the light store of one board: the snapshot carries
+ * those layers only and no overview is loaded.
  */
-export function useRadar(hotelId: string): { store: RadarStore; state: RadarStoreState } {
+export function useRadar(
+  hotelId: string,
+  boardLayers?: readonly RadarLayer[],
+): { store: RadarStore; state: RadarStoreState } {
   const [store] = useState<RadarStore>(() => {
     const holder: { store?: RadarStore } = {};
-    holder.store = createRadarStore(browserDeps(() => holder.store?.getState().base?.config.liveBufferMinutes ?? 30));
+    holder.store = createRadarStore(
+      browserDeps(() => holder.store?.getState().base?.config.liveBufferMinutes ?? 30, boardLayers),
+    );
     return holder.store;
   });
 

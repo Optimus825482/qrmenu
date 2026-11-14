@@ -31,6 +31,26 @@ type SseStreamOptions = SseOptions & {
   coverageReloadMs?: number;
 };
 
+/** Role kinds that may read which staff member did something (the same rule as the radar's `LayerEnv.named`). */
+export const seesStaffNames = (roleKind: Scope["roleKind"]): boolean => roleKind === "SISTEM" || roleKind === "YONETIM";
+
+/** Payload fields that carry a staff member's name, per event type. */
+const STAFF_NAME_FIELDS: Readonly<Record<string, readonly string[]>> = {
+  "call.resolved": ["waiterName", "resolvedByName"],
+};
+
+/**
+ * `e` without the staff names in its payload (a copy; the shared event is never touched). For connections whose
+ * role may not read them: the screens already hide the names, this keeps them out of the network traffic too.
+ */
+export function withoutStaffNames(e: MeritEvent): MeritEvent {
+  const fields = STAFF_NAME_FIELDS[e.type];
+  const payload = e.payload;
+  if (!fields || typeof payload !== "object" || payload === null || Array.isArray(payload)) return e;
+  const kept = Object.fromEntries(Object.entries(payload).filter(([k]) => !fields.includes(k)));
+  return { ...e, payload: kept as MeritEvent["payload"] };
+}
+
 /** Frames a stalled consumer may leave queued before its stream is closed. */
 const MAX_QUEUED_FRAMES = 256;
 

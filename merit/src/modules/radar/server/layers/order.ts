@@ -206,9 +206,12 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
     if (list) list.push(entry);
     else ordersByTable.set(o.tableId, [entry]);
   }
+  // The oldest open call of a table is the one shown; the rest are counted, so closing one keeps the table ringing.
   const callByTable = new Map<string, TableEntry["call"]>();
+  const otherCalls = new Map<string, number>();
   for (const c of calls) {
     if (!callByTable.has(c.tableId)) callByTable.set(c.tableId, { callId: c.id, type: c.type, since: c.createdAt.toISOString() });
+    else otherCalls.set(c.tableId, (otherCalls.get(c.tableId) ?? 0) + 1);
   }
   const scanByTable = new Map<string, Date>();
   for (const s of scans) if (s.tableId && !scanByTable.has(s.tableId)) scanByTable.set(s.tableId, s.createdAt);
@@ -238,6 +241,7 @@ export async function orderLayer(env: LayerEnv): Promise<{ layer: OrderLayer; pe
             ...(waiter ? { waiterId: waiter.userId, ...(env.named ? { waiterName: nameFor(env, waiter.name) } : {}) } : {}),
             orders: ordersByTable.get(t.id) ?? [],
             call: callByTable.get(t.id) ?? null,
+            ...(otherCalls.has(t.id) ? { otherCalls: otherCalls.get(t.id) } : {}),
             ...(validScan ? { scannedAt: validScan.toISOString() } : {}),
             ...(t.emptiedAt ? { emptiedAt: t.emptiedAt.toISOString() } : {}),
           };

@@ -7,7 +7,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { orderStatusLabel, type Tone } from "../../labels";
 import type { RadarState } from "../../state";
 import { DetailBubble } from "../DetailBubble";
-import { RadarStoreContext, usePulse, useRadar } from "../useRadar";
+import type { RadarLayer } from "../../types";
+import { usePulse } from "../useRadar";
+import { OtherHotelBoard } from "./OtherHotelBoard";
+
+/** What the board of another hotel loads: this operation's layer only. */
+const BOARD_LAYERS: readonly RadarLayer[] = ["ODA_SERVISI"];
 
 type RsLayer = NonNullable<RadarState["layers"]["roomService"]>;
 type RsOrder = RsLayer["orders"][number];
@@ -114,11 +119,13 @@ export type RoomServiceProps = {
   onOpenApp?: (appId: string) => void;
   /** Every hotel in scope: the boards of the others are listed under the current one. Omit for a single board. */
   hotels?: { id: string; name: string }[];
+  /** Cards per lane (oldest first), the rest as "+N": for a screen that cannot scroll. */
+  maxCards?: number;
 };
 
 /** V5 Oda Servisi: one board per hotel, the window's hotel first. */
-export function RoomService({ view, now, onOpenApp, hotels }: RoomServiceProps) {
-  if (!hotels || hotels.length < 2) return <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />;
+export function RoomService({ view, now, onOpenApp, hotels, maxCards }: RoomServiceProps) {
+  if (!hotels || hotels.length < 2) return <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} maxCards={maxCards} />;
   return (
     <div className="rd-rs-hotels">
       {[...hotels.filter((h) => h.id === view.hotelId), ...hotels.filter((h) => h.id !== view.hotelId)].map((hotel) => (
@@ -127,7 +134,9 @@ export function RoomService({ view, now, onOpenApp, hotels }: RoomServiceProps) 
           {hotel.id === view.hotelId ? (
             <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />
           ) : (
-            <OtherHotelBoard hotelId={hotel.id} now={now} onOpenApp={onOpenApp} />
+            <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
+              {(other) => <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} />}
+            </OtherHotelBoard>
           )}
         </section>
       ))}
@@ -135,20 +144,8 @@ export function RoomService({ view, now, onOpenApp, hotels }: RoomServiceProps) 
   );
 }
 
-/** The live board of a hotel other than the window's: its own store, so it keeps up with events like the main one. */
-function OtherHotelBoard({ hotelId, now, onOpenApp }: { hotelId: string; now: number; onOpenApp?: (appId: string) => void }) {
-  const { store, state } = useRadar(hotelId);
-  const view = state.hotelId === hotelId ? state.view : null;
-  if (!view) return <p className="rd-muted rd-small">Yükleniyor…</p>;
-  return (
-    <RadarStoreContext.Provider value={store}>
-      <RoomServiceBoard view={view} now={now} onOpenApp={onOpenApp} />
-    </RadarStoreContext.Provider>
-  );
-}
-
 /** Status lanes with static SLA bars and read-only detail bubble (spec 2.2). */
-function RoomServiceBoard({ view, now, onOpenApp }: Omit<RoomServiceProps, "hotels">) {
+function RoomServiceBoard({ view, now, onOpenApp, maxCards }: Omit<RoomServiceProps, "hotels">) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rs = view.layers.roomService;
   if (!rs) return <EmptyState title="Bu otelde Oda Servisi kapalı." />;
@@ -174,7 +171,7 @@ function RoomServiceBoard({ view, now, onOpenApp }: Omit<RoomServiceProps, "hote
                 <p className="rd-muted rd-small">Sipariş yok.</p>
               ) : (
                 <div className="rd-list">
-                  {items.map((o) => (
+                  {(maxCards ? items.slice(0, maxCards) : items).map((o) => (
                     <RsCard
                       key={o.orderId}
                       order={o}
@@ -184,6 +181,9 @@ function RoomServiceBoard({ view, now, onOpenApp }: Omit<RoomServiceProps, "hote
                       onSelect={() => setSelectedId(o.orderId === selectedId ? null : o.orderId)}
                     />
                   ))}
+                  {maxCards && items.length > maxCards ? (
+                    <p className="rd-muted rd-small">+{items.length - maxCards} sipariş daha</p>
+                  ) : null}
                 </div>
               )}
             </section>

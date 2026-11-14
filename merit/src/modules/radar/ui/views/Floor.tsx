@@ -1,5 +1,6 @@
 "use client";
 
+import { PageMark, pageOf, type WallPaging } from "../WallPage";
 import { useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -130,10 +131,16 @@ export type FloorProps = {
   now: number;
   onFocus?(entity: { kind: "room"; roomId: string } | null): void;
   onOpenApp?(appId: string): void;
+  /** Set on the wall: floors and the side lists show one page at a time. */
+  paging?: WallPaging;
 };
 
+/** Floors, and rows of a side list, on one wall page. */
+const WALL_FLOORS = 8;
+const WALL_SIDE_ROWS = 6;
+
 /** Kat: floors as grid rows, rooms as cells (spec 5.3) and the supervisors, pool stock and uploads on the side. */
-export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
+export function Floor({ view, now, onFocus, onOpenApp, paging }: FloorProps) {
   const minibar: Minibar | undefined = view.layers.minibar;
   const [focusId, setFocusId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -172,6 +179,9 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
 
   const selectedRoom = selected ? flat.find((x) => x.room.roomId === selected) : undefined;
   const near = minibar.stock.filter((s) => s.remaining <= s.critical * 1.2).sort((a, b) => a.remaining - b.remaining);
+  const floorPage = pageOf(minibar.floors, WALL_FLOORS, paging, now);
+  const supervisorPage = pageOf(minibar.supervisors, WALL_SIDE_ROWS, paging, now);
+  const stockPage = pageOf(near, WALL_SIDE_ROWS, paging, now);
   const missingAll = minibar.uploads.length === 0 || minibar.uploads.every((u) => u.status === "EKSIK");
 
   return (
@@ -181,7 +191,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
           <EmptyState title="Bu otelde oda tanımlı değil." />
         ) : (
           <div ref={gridRef} role="grid" aria-label="Kat ve oda ızgarası" className="rd-floor-grid">
-            {minibar.floors.map((f) => (
+            {floorPage.items.map((f) => (
               <div key={f.floorId} role="row" className="rd-floor-row">
                 <div role="rowheader" className="rd-floor-name">
                   {f.name}
@@ -204,6 +214,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
                 </div>
               </div>
             ))}
+            <PageMark paged={floorPage} total={minibar.floors.length} unit="kat" />
           </div>
         )}
       </div>
@@ -226,7 +237,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
             <p className="rd-muted">Bugün görev atanmadı.</p>
           ) : (
             <ul className="rd-list">
-              {minibar.supervisors.map((s) => {
+              {supervisorPage.items.map((s) => {
                 const pct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
                 const name = view.people[s.userId] ?? "Kat sorumlusu";
                 return (
@@ -244,6 +255,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
                   </li>
                 );
               })}
+              <PageMark as="li" paged={supervisorPage} total={minibar.supervisors.length} unit="kişi" />
             </ul>
           )}
         </section>
@@ -254,7 +266,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
             <p className="rd-muted">Kritik ürün yok.</p>
           ) : (
             <ul className="rd-list">
-              {near.map((s) => {
+              {stockPage.items.map((s) => {
                 const crit = s.remaining <= s.critical;
                 return (
                   <li key={s.productId} className="rd-row" data-anchor={`stock:${s.productId}`}>
@@ -266,6 +278,7 @@ export function Floor({ view, now, onFocus, onOpenApp }: FloorProps) {
                   </li>
                 );
               })}
+              <PageMark as="li" paged={stockPage} total={near.length} unit="ürün" />
             </ul>
           )}
         </section>

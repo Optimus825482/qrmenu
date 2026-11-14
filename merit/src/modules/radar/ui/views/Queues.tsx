@@ -1,5 +1,6 @@
 "use client";
 
+import { PageMark, pageOf, type WallPaging } from "../WallPage";
 import { Icon } from "@/components/icons/Icon";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { RadarState, StateOutlet } from "../../state";
@@ -141,12 +142,19 @@ export type QueuesProps = {
   view: RadarState;
   now: number;
   onOpenOutlet(outletId: string): void;
+  /** Set on the wall: the outlets show one page at a time. */
+  paging?: WallPaging;
 };
 
+/** Outlet rows on one wall page. */
+const WALL_OUTLETS = 7;
+
 /** V4 Kuyruklar: per-outlet Kasa, KDS, Print queue and Printer health summary (spec 2.2). */
-export function Queues({ view, now, onOpenOutlet }: QueuesProps) {
+export function Queues({ view, now, onOpenOutlet, paging }: QueuesProps) {
   const outlets = view.layers.order?.outlets ?? [];
   if (outlets.length === 0) return <EmptyState title="Bu otelde QR Sipariş kapalı." />;
+
+  const paged = pageOf(outlets, WALL_OUTLETS, paging, now);
 
   return (
     <div className="rd-queues">
@@ -163,12 +171,13 @@ export function Queues({ view, now, onOpenOutlet }: QueuesProps) {
           </tr>
         </thead>
         <tbody>
-          {outlets.map((o) => (
+          {paged.items.map((o) => (
             <OutletRow key={o.outletId} outlet={o} now={now} onSelect={onOpenOutlet} />
           ))}
         </tbody>
       </table>
       </div>
+      <PageMark paged={paged} total={outlets.length} unit="outlet" />
     </div>
   );
 }

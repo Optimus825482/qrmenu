@@ -571,7 +571,7 @@ export function toRadarEvent(e: MeritEvent | null | undefined): NormalizeResult 
       const roomIds = Array.isArray(p.roomIds) ? p.roomIds.filter((r): r is string => typeof r === "string") : [];
       if (!date) return NONE;
       if (roomIds.length === 0) return { events: [], refresh: "ALL" };
-      return out([make(date, { type: "dnd.missed", layer: "MINIBAR", roomIds })]);
+      return out([make(date, { type: "dnd.missed", layer: "MINIBAR", roomIds, date })]);
     }
     case "mybar.created":
     case "mybar.seen":

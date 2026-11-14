@@ -83,6 +83,11 @@ function useDelayed(on: boolean, ms: number): boolean {
   return on && shown;
 }
 
+/** Cards a lane shows on the wall (longest wait first); the rest is a "+N" line, since a TV cannot scroll. */
+const WALL_LANE_CARDS = 6;
+/** Long lists on the wall (floors, sessions, outlets) turn a page this often. */
+const WALL_PAGING = { periodMs: 8000 };
+
 const SHORTCUTS: [string, string][] = [
   ["1…7", "Genel Bakış · Kat · Masa · Kuyruklar · Oda Servisi · Personel · MyBar"],
   ["Alt + 1…5", "Katmanı aç veya kapat"],
@@ -612,6 +617,11 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const viewNow =
     state.mode === "replay" && state.replay ? state.replay.virtualMs : state.mode === "scrub" && state.cursor !== null ? state.cursor : now;
 
+  // The wall shows one hotel and cannot scroll: no boards of the other hotels, and lanes capped to what fits.
+  const otherBoards = !wall && state.mode === "live" && !demo.running ? initial.hotels : undefined;
+  const laneCap = wall ? WALL_LANE_CARDS : undefined;
+  const wallPaging = wall ? WALL_PAGING : undefined;
+
   let body;
   if (failed) {
     body = (
@@ -662,7 +672,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       body = skeleton ? <div className="rd-center" aria-busy="true">Genel bakış yükleniyor</div> : null;
     }
   } else if (view === "kat" && snap) {
-    body = <Floor view={snap} now={viewNow} onOpenApp={openApp} />;
+    body = <Floor view={snap} now={viewNow} onOpenApp={openApp} paging={wallPaging} />;
   } else if (view === "masa" && snap) {
     body = <Tables view={snap} now={viewNow} outletId={activeOutletId} onSelectOutlet={setOutletId} onOpenApp={openApp} />;
   } else if (view === "kuyruk" && snap) {
@@ -670,6 +680,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
       <Queues
         view={snap}
         now={viewNow}
+        paging={wallPaging}
         onOpenOutlet={(id) => {
           setOutletId(id);
           if (views.includes("masa")) setChoice("masa");
@@ -678,12 +689,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     );
   } else if (view === "odaServisi" && snap) {
     // Live only: the other hotels' boards cannot follow a scrub, a replay or a demo of this one.
-    body = <RoomService view={snap} now={viewNow} onOpenApp={openApp} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
+    body = <RoomService view={snap} now={viewNow} onOpenApp={openApp} hotels={otherBoards} maxCards={laneCap} />;
   } else if (view === "mybar" && snap) {
     // Live only, as the room service boards: the other hotels cannot follow a scrub, a replay or a demo.
-    body = <Mybar view={snap} now={viewNow} hotels={state.mode === "live" && !demo.running ? initial.hotels : undefined} />;
+    body = <Mybar view={snap} now={viewNow} hotels={otherBoards} maxCards={laneCap} />;
   } else if (view === "personel" && snap) {
-    body = <Staff view={snap} now={viewNow} nameStyle={wall ? "short" : "full"} />;
+    body = <Staff view={snap} now={viewNow} nameStyle={wall ? "short" : "full"} paging={wallPaging} />;
   }
 
   return (

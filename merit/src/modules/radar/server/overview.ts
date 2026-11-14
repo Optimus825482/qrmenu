@@ -71,6 +71,7 @@ export async function radarOverview(ctx: Ctx, hotelId = "ALL"): Promise<RadarOve
   // Fails fast for a role without the radar anywhere (the session hotel decides the audit row).
   const watchable = await Promise.all(ctx.hotelIds.map((id) => can(ctx, "CR-RAD", "V", id)));
   if (!watchable.some(Boolean)) await assertRadarScope(ctx, ctx.session.hotelId, "V");
-  const key = `overview:${hotelId}:${ctx.user.roleId}:${[...ctx.hotelIds].sort().join(",")}`;
+  // Per user: counters and cards follow that user’s own screen permissions, not only the role.
+  const key = `overview:${hotelId}:${ctx.user.id}:${[...ctx.hotelIds].sort().join(",")}`;
   return singleFlight(key, FLIGHT_TTL_MS, () => build(ctx, new Date()));
 }

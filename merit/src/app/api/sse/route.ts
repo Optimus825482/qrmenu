@@ -1,7 +1,7 @@
 import { requireUser } from "@/lib/auth";
 import { isListening, startRealtimeListener } from "@/lib/realtime";
 import { DomainError } from "@/lib/result";
-import { createSseStream } from "@/lib/sse";
+import { createSseStream, seesStaffNames, withoutStaffNames } from "@/lib/sse";
 import { sseCoverage } from "@/modules/order/server/roomService/coverageAccess";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +31,8 @@ export async function GET(request: Request): Promise<Response> {
     },
     {
       signal: request.signal,
+      // Staff names stay out of the stream of roles that may not read them.
+      ...(seesStaffNames(ctx.user.roleKind) ? {} : { map: withoutStaffNames }),
       // Cross-hotel room-service coverage, gated exactly like the covered board (RO-TAL view at home, home desk,
       // hotels outside the session scope); re-read on change and on a short interval (lib/sse.ts).
       loadCoverage: () => sseCoverage(ctx),

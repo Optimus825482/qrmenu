@@ -9,10 +9,16 @@ import { radarHotels } from "../scope";
 import { radarSnapshot } from "../snapshot";
 
 const snapshotInput = z.strictObject({ hotelId: z.string().min(1).max(64) });
+/** A snapshot may be asked for some layers only (the board of another hotel under the window's own). */
+const boardInput = snapshotInput.extend({
+  layers: z.array(z.enum(["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"])).max(5).optional(),
+});
 
 /** Server Action behind the radar store: the starting snapshot of one hotel. */
 export async function radarSnapshotAction(raw: unknown): Promise<Result<RadarSnapshot>> {
-  return safeAction(snapshotInput, async ({ hotelId }) => radarSnapshot(await requireUser(), hotelId))(raw);
+  return safeAction(boardInput, async ({ hotelId, layers }) =>
+    radarSnapshot(await requireUser(), hotelId, layers ? { layers } : {}),
+  )(raw);
 }
 
 /** Server Action for the overview cards of every hotel the caller may watch. */

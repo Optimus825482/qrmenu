@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getSetting } from "@/lib/settings";
 import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { UPLOAD_KINDS } from "@/modules/minibar/constants";
-import { SLA_OPEN_STATUSES, SLA_SWEEP_STATUSES } from "@/modules/order/server/roomService/sla";
+import { RADAR_ROOM_OPEN_STATUSES } from "@/modules/order/server/roomService/sla";
 import { slaStateOf } from "@/modules/order/server/roomService/slaConstants";
 import { NOT_WITHDRAWN } from "@/modules/order/server/printWithdrawn";
 import { UPLOAD_DEADLINE_HOUR } from "@/modules/radar/alerts";
@@ -52,6 +52,12 @@ const outletOf = (opt?: CollectOpts) => (opt?.outletId ? { outletId: opt.outletI
 
 const todayDay = (now: Date) => businessDay(businessDate(now));
 const openOrderSince = (now: Date) => new Date(now.getTime() - DAY_MS);
+/** Open room-service orders exactly as the radar layer lists them (same statuses, same 24 h window). */
+const rsOpenWhere = (now: Date) => ({
+  kind: "ODA_SERVISI" as const,
+  status: { in: [...RADAR_ROOM_OPEN_STATUSES] },
+  createdAt: { gte: openOrderSince(now) },
+});
 
 async function rawCounts(query: Prisma.Sql): Promise<Map<string, number>> {
   const rows = await prisma.$queryRaw<{ hotel_id: string; n: bigint | number }[]>(query);
@@ -181,9 +187,9 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     critAt: 1,
     collect: (hotelIds) =>
       rawCounts(Prisma.sql`
-        SELECT hotel_id, count(*) AS n FROM hotel_stocks
-        WHERE hotel_id IN (${Prisma.join(hotelIds)}) AND remaining_qty <= critical_level
-        GROUP BY hotel_id`),
+        SELECT hs.hotel_id, count(*) AS n FROM hotel_stocks hs JOIN products p ON p.id = hs.product_id
+        WHERE hs.hotel_id IN (${Prisma.join(hotelIds)}) AND p.is_active AND hs.remaining_qty <= hs.critical_level
+        GROUP BY hs.hotel_id`),
   },
   {
     key: "stockRequestsOpen",
@@ -380,7 +386,7 @@ export const RADAR_METRICS: RadarMetricDef[] = [
     collect: async (hotelIds, _now, opt) => {
       const g = await prisma.order.groupBy({
         by: ["hotelId"],
-        where: { hotelId: { in: hotelIds }, ...outletOf(opt), kind: "ODA_SERVISI", status: { in: SLA_OPEN_STATUSES } },
+        where: { hotelId: { in: hotelIds }, ...outletOf(opt), ...rsOpenWhere(_now) },
         _count: { _all: true },
       });
       return toMap(g.map((r) => ({ hotelId: r.hotelId, n: r._count._all })));
@@ -399,7 +405,7 @@ export const RADAR_METRICS: RadarMetricDef[] = [
       perHotel(hotelIds, async (hotelId) => {
         const minutes = await getSetting("rs.slaMinutes", hotelId);
         const open = await prisma.order.findMany({
-          where: { hotelId, ...outletOf(opt), kind: "ODA_SERVISI", status: { in: SLA_SWEEP_STATUSES } },
+          where: { hotelId, ...outletOf(opt), ...rsOpenWhere(now) },
           select: { status: true, createdAt: true, deliveredAt: true },
         });
         return open.filter((o) => slaStateOf(o, now, minutes) === "BREACH").length;

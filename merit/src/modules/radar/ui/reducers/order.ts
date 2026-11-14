@@ -138,12 +138,22 @@ export function reduceCall(s: RadarState, e: Ev<"call.opened"> | Ev<"call.closed
   const loc = findTable(layer.outlets, e.tableId);
   if (!loc) return addRefresh(s, `table:${e.tableId}`);
   const table = tableAt(s, loc);
+  const others = table.otherCalls ?? 0;
   if (e.type === "call.opened") {
     if (table.call?.callId === e.callId) return s;
+    // A second call on a ringing table: the oldest stays on the card (as in the snapshot), this one is counted.
+    if (table.call) return putTable(s, loc, { ...table, otherCalls: others + 1 }, false);
     return putTable(s, loc, { ...table, call: { callId: e.callId, type: e.callType, since: e.at } }, false);
   }
-  if (!table.call || table.call.callId !== e.callId) return s;
-  return putTable(s, loc, { ...table, call: null }, false);
+  if (!table.call) return s;
+  if (table.call.callId !== e.callId) {
+    // One of the counted calls was answered; the shown one is still open.
+    return others > 0 ? putTable(s, loc, { ...table, otherCalls: others - 1 }, false) : s;
+  }
+  if (others === 0) return putTable(s, loc, { ...table, call: null }, false);
+  // The shown call is closed but another one is open, and the event does not say which: keep the table ringing
+  // and let a snapshot name the call that is left.
+  return addRefresh(s, `table:${e.tableId}`);
 }
 
 export function reduceTableScanned(s: RadarState, e: Ev<"table.scanned">): RadarState {
@@ -159,7 +169,7 @@ export function reduceTableCleared(s: RadarState, e: Ev<"table.cleared">): Radar
   if (!layer) return s;
   const loc = findTable(layer.outlets, e.tableId);
   if (!loc) return addRefresh(s, `table:${e.tableId}`);
-  return putTable(s, loc, { ...tableAt(s, loc), scannedAt: undefined, call: null, emptiedAt: e.at }, false);
+  return putTable(s, loc, { ...tableAt(s, loc), scannedAt: undefined, call: null, otherCalls: undefined, emptiedAt: e.at }, false);
 }
 
 export function reduceTableAssigned(s: RadarState, e: Ev<"table.assigned">): RadarState {
