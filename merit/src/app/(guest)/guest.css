@@ -3679,3 +3679,13 @@ html:has(.g-show-host) body,
   grid-column: 1 / -1;
   padding-inline: 12px 28px;
 }
+
+/* Total of the selections on the footer button: after the label and the count, at the far end of the button. */
+.g-footer-total {
+  margin-inline-start: 12px;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid color-mix(in srgb, var(--m-text-on-accent) 45%, transparent);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}

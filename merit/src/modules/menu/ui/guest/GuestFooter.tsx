@@ -9,6 +9,7 @@ import type { GuestCallOption } from "../../callOptions";
 import type { CallWaiterPosition } from "../../design";
 import { CallWaiterButton } from "./CallWaiterButton";
 import type { GuestMenuMode } from "./MenuView";
+import { priceFormatter } from "./priceFormat";
 import { SelectionsDrawer } from "./SelectionsDrawer";
 import { RECENT_ORDERS, totalQuantity, useSelectionStore } from "./selectionStore";
 
@@ -42,11 +43,15 @@ export function GuestFooter({
   const [open, setOpen] = useState(false);
   const count = totalQuantity(items);
   const recent = orderIds.slice(-RECENT_ORDERS).reverse();
-  // Table guests can still open pending selections and read the closed notice.
-  const showSelections = orderingOpen || (mode === "table" && count > 0);
+  // The button appears with the first selection. Table guests can still open pending selections and read the
+  // closed notice; a room's button goes when ordering closes.
+  const showSelections = count > 0 && (orderingOpen || mode === "table");
+  const total = items.reduce((sum, i) => sum + (i.unitPrice ? Number(i.unitPrice) * i.qty : 0), 0);
+  const totalText = pricesShown && total > 0 ? priceFormatter(locale, currency)(total.toFixed(2)) : null;
   const showCallWaiter = mode === "table" && callWaiterPosition === "STICKY_FOOTER";
 
-  if (!showCallWaiter && !showSelections && recent.length === 0) {
+  // An open drawer stays: removing the last line inside it must not close it under the guest.
+  if (!showCallWaiter && !showSelections && recent.length === 0 && !open) {
     return null;
   }
 
@@ -77,6 +82,11 @@ export function GuestFooter({
             {count > 0 ? (
               <span className="g-count" data-testid="selection-count">
                 {count}
+              </span>
+            ) : null}
+            {totalText ? (
+              <span className="g-footer-total" data-testid="selection-total">
+                {totalText}
               </span>
             ) : null}
           </button>

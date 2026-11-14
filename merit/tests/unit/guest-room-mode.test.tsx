@@ -92,8 +92,25 @@ describe("guest room service menu", () => {
     expect(screen.queryByRole("button", { name: tr.guest.call.waiter })).toBeNull();
     expect(screen.getByRole("tablist", { name: tr.guest.rs.menu.title })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: tr.guest.cart.title }));
+    selectTea();
+    fireEvent.click(screen.getByRole("button", { name: /^Seçimlerim/ }));
     expect(screen.getByRole("button", { name: "Oda seçimlerini gönder" })).toBeTruthy();
+  });
+
+  it("the selections button appears with the first selection and carries the total", () => {
+    render(guestMenu({ token: "room-total", mode: "room" }));
+    expect(screen.queryByRole("button", { name: /^Seçimlerim/ })).toBeNull();
+    selectTea();
+    expect(screen.getByRole("button", { name: /^Seçimlerim/ })).toBeTruthy();
+    expect(screen.getByTestId("selection-count").textContent).toBe("1");
+    expect(screen.getByTestId("selection-total").textContent).toMatch(/\d/);
+  });
+
+  it("the selections button shows no total when prices are hidden", () => {
+    render(guestMenu({ token: "room-total-hidden", mode: "room", pricesShown: false }));
+    selectTea();
+    expect(screen.getByRole("button", { name: /^Seçimlerim/ })).toBeTruthy();
+    expect(screen.queryByTestId("selection-total")).toBeNull();
   });
 
   it("renders omitted mode the same as explicit table mode", () => {

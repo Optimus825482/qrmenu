@@ -117,7 +117,7 @@
       },
       "selections": {
         "submit": "Seçimleri gönder",
-        "note": "Açıklama (isteğe bağlı)"
+        "note": "Sipariş notu (isteğe bağlı)"
       },
       "limit": "Odanız için aynı anda alınabilecek sipariş sayısına ulaşıldı. Açık siparişlerinizden biri teslim edildiğinde yeni siparişinizi gönderebilirsiniz.",
       "cooldown": "Siparişiniz kısa süre önce alındı. Yeni siparişinizi yaklaşık {min} dk sonra gönderebilirsiniz; seçimleriniz burada saklanır.",
