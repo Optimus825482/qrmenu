@@ -26,8 +26,12 @@ type Db = Prisma.TransactionClient;
 
 export type CoverageMode = RoomServiceCoverageMode;
 
-/** Session role codes that may grant and revoke besides the SISTEM roles. */
-export const COVERAGE_MANAGER_ROLES: readonly string[] = ["R-OSS", "R-FBY", "R-FBM"];
+/**
+ * Screen of the "Oteller Arası Oda Servisi" window in the Yetki Matrisi: V opens the window and lists the grants,
+ * O gives (or replaces) a grant, D removes one. Always asked for the hotel whose requests are opened up.
+ */
+export const COVERAGE_SCREEN = "RO-OTA";
+type ManageAction = "V" | "O" | "D";
 
 /** Realtime event addressed to the grantee (`userIds`) whenever their coverage changes. */
 export const COVERAGE_CHANGED_EVENT = "rs.coverage.changed";
@@ -123,18 +127,14 @@ async function onlineProcessors(tx: Db, hotelId: string, now: Date = new Date())
 /* Management: grant, revoke, list                                                                              */
 /* ------------------------------------------------------------------------------------------------------------ */
 
-function managerRole(ctx: Ctx): boolean {
-  return ctx.user.roleKind === "SISTEM" || COVERAGE_MANAGER_ROLES.includes(ctx.user.roleCode);
+/** May the caller do `action` on the coverage of `hotelId`? Own hotel scope and the matrix permission there. */
+async function managesHotel(ctx: Ctx, hotelId: string, action: ManageAction): Promise<boolean> {
+  if (!ctx.hotelIds.includes(hotelId)) return false;
+  return can(ctx, COVERAGE_SCREEN, action, hotelId);
 }
 
-/** May the caller grant and revoke coverage of `hotelId`? Own hotel scope, manager role, RO-TAL approve there. */
-async function managesHotel(ctx: Ctx, hotelId: string): Promise<boolean> {
-  if (!managerRole(ctx) || !ctx.hotelIds.includes(hotelId)) return false;
-  return can(ctx, "RO-TAL", "A", hotelId);
-}
-
-async function assertManager(ctx: Ctx, hotelId: string): Promise<void> {
-  if (!managerRole(ctx) || !ctx.hotelIds.includes(hotelId)) {
+async function assertManager(ctx: Ctx, hotelId: string, action: ManageAction): Promise<void> {
+  if (!ctx.hotelIds.includes(hotelId)) {
     try {
       // Against the session hotel: the supplied hotel id may be outside the caller's scope or garbage.
       await audit(prisma, {
@@ -149,7 +149,7 @@ async function assertManager(ctx: Ctx, hotelId: string): Promise<void> {
     }
     throw new DomainError("FORBIDDEN", "Bu otel için oteller arası oda servisi izni veremezsiniz");
   }
-  await assertCan(ctx, "RO-TAL", "A", hotelId);
+  await assertCan(ctx, COVERAGE_SCREEN, action, hotelId);
 }
 
 const GRANTEE_SELECT = {
@@ -260,12 +260,12 @@ function auditShape(row: { userId: string; hotelId: string; mode: CoverageMode; 
 
 /**
  * Gives (or, when the user already has an open grant on that hotel, replaces) a coverage grant. The grantor
- * must manage the hotel (own scope, manager role, RO-TAL approve) and, unless a SISTEM role, rank above the
+ * must manage the hotel (own scope, RO-OTA create there) and, unless a SISTEM role, rank above the
  * grantee's role. The grantee must be active and must not already work in the hotel.
  */
 async function grant(ctx: Ctx, raw: unknown): Promise<CoverageRow> {
   const input = parse(grantSchema, raw);
-  await assertManager(ctx, input.hotelId);
+  await assertManager(ctx, input.hotelId, "O");
 
   const now = new Date();
   const startsAt = input.startsAt ?? now;
@@ -340,7 +340,7 @@ async function revoke(ctx: Ctx, raw: unknown): Promise<CoverageRow> {
   });
   // A grant of a hotel outside the caller's scope does not exist for them.
   if (!found || !ctx.hotelIds.includes(found.hotelId)) throw new DomainError("NOT_FOUND", "İzin bulunamadı");
-  await assertManager(ctx, found.hotelId);
+  await assertManager(ctx, found.hotelId, "D");
   assertReachable(ctx, found.user);
 
   return prisma.$transaction(async (tx) => {
@@ -373,15 +373,21 @@ async function revoke(ctx: Ctx, raw: unknown): Promise<CoverageRow> {
   });
 }
 
-async function managedHotels(ctx: Ctx): Promise<{ id: string; name: string; code: string }[]> {
-  if (!managerRole(ctx)) return [];
+async function managedHotels(ctx: Ctx): Promise<CoverageOverview["hotels"]> {
   const hotels = await prisma.hotel.findMany({
     where: { id: { in: ctx.hotelIds }, isActive: true },
     select: { id: true, name: true, code: true },
     orderBy: { name: "asc" },
   });
   const out = [];
-  for (const hotel of hotels) if (await managesHotel(ctx, hotel.id)) out.push(hotel);
+  for (const hotel of hotels) {
+    if (!(await managesHotel(ctx, hotel.id, "V"))) continue;
+    out.push({
+      ...hotel,
+      canGrant: await managesHotel(ctx, hotel.id, "O"),
+      canRevoke: await managesHotel(ctx, hotel.id, "D"),
+    });
+  }
   return out;
 }
 
@@ -395,8 +401,8 @@ export type CoverageCandidate = {
 };
 
 export type CoverageOverview = {
-  /** Hotels whose coverage the caller manages. */
-  hotels: { id: string; name: string; code: string }[];
+  /** Hotels whose coverage the caller sees; `canGrant` / `canRevoke` say what else the matrix lets them do there. */
+  hotels: { id: string; name: string; code: string; canGrant: boolean; canRevoke: boolean }[];
   /** Open grants first (newest first), then the ones whose time ran out in the last week. Never a revoked one. */
   rows: CoverageRow[];
   /** Users the caller may grant to: active, a role below the caller, a role that has the room-service board. */
@@ -410,6 +416,7 @@ async function list(ctx: Ctx): Promise<CoverageOverview> {
   if (hotels.length === 0) throw new DomainError("FORBIDDEN", "Bu işlem için yetkiniz yok");
   const now = new Date();
   const hotelIds = hotels.map((h) => h.id);
+  const grantHotelIds = hotels.filter((h) => h.canGrant).map((h) => h.id);
 
   const [rows, users] = await Promise.all([
     prisma.roomServiceCoverage.findMany({
@@ -448,8 +455,8 @@ async function list(ctx: Ctx): Promise<CoverageOverview> {
       roleName: u.role.name,
       hotelIds: [...ownHotelIds(u)],
     }))
-    // Someone who already works in every managed hotel has nothing to be granted.
-    .filter((u) => hotelIds.some((id) => !u.hotelIds.includes(id)));
+    // Someone who already works in every hotel the caller may grant has nothing to be granted.
+    .filter((u) => grantHotelIds.some((id) => !u.hotelIds.includes(id)));
 
   const mapped = rows.map((r) => toRow(r, now));
   const open = (r: CoverageRow) => r.state === "AKTIF" || r.state === "PLANLI";

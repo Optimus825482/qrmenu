@@ -6,7 +6,7 @@ import { testDb, truncate } from "../helpers/db";
 
 const db = testDb;
 /** Rows of the system-wide (hotelId = null) matrix after a fresh seed; update when the catalogue changes. */
-const EXPECTED_PERMISSION_ROWS = 284; // 201 + 23 rows of the four YR delegate roles + R-MTY CR-RAD (radar) + 51 rows of R-FBY and R-OSS (KD), minus 7 RO-TEL rows (screen retired 13 Nov 2026), plus CR-DUR (Anlık Durum) for the 8 roles with CR-KOM, plus MB-OKI (Oda Kontrol İşlemleri) for R-SYS and R-OSS, plus RO-MBT (Minibar Takip) for R-SYS, R-ODS, R-OSS, R-FBM and R-FBY
+const EXPECTED_PERMISSION_ROWS = 288; // 201 + 23 rows of the four YR delegate roles + R-MTY CR-RAD (radar) + 51 rows of R-FBY and R-OSS (KD), minus 7 RO-TEL rows (screen retired 13 Nov 2026), plus CR-DUR (Anlık Durum) for the 8 roles with CR-KOM, plus MB-OKI (Oda Kontrol İşlemleri) for R-SYS and R-OSS, plus RO-MBT (Minibar Takip) for R-SYS, R-ODS, R-OSS, R-FBM and R-FBY, plus RO-OTA (Oteller Arası Oda Servisi) for R-SYS, R-OSS, R-FBY and R-FBM
 
 async function permission(roleCode: string, screenCode: string) {
   return db.roleScreenPermission.findFirst({
@@ -45,12 +45,12 @@ describe("seed (gerçek test DB)", () => {
     await db.$disconnect();
   });
 
-  it("seed 3 otel, 23 rol, 36 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
+  it("seed 3 otel, 23 rol, 37 ekran ve admin üretir; otel başına yalnız bir Oda Servisi outleti (demo outlet yok)", async () => {
     await runSeed(db);
     expect(await db.hotel.count()).toBe(3);
     expect((await db.hotel.findMany()).every((h) => h.isSystemDefault)).toBe(true);
     expect(await db.role.count()).toBe(23);
-    expect(await db.appScreen.count()).toBe(36);
+    expect(await db.appScreen.count()).toBe(37);
     expect(await db.outlet.count()).toBe(3);
     expect(await db.outlet.count({ where: { type: "ODA_SERVISI" } })).toBe(3);
     expect(await db.hotelModule.count()).toBe(12);
@@ -111,7 +111,7 @@ describe("seed (gerçek test DB)", () => {
     const sysRows = await db.roleScreenPermission.findMany({
       where: { hotelId: null, role: { code: "R-SYS" } },
     });
-    expect(sysRows).toHaveLength(36);
+    expect(sysRows).toHaveLength(37);
     for (const row of sysRows) {
       expect([row.canView, row.canCreate, row.canEdit, row.canApprove, row.canReport]).toEqual([
         true,
@@ -224,9 +224,9 @@ describe("seed (gerçek test DB)", () => {
   it("mevcut veritabanında runSeed yeni iki ekranı ve izinlerini sonradan ekler", async () => {
     await runSeed(db);
     await db.appScreen.deleteMany({ where: { code: { in: ["CR-TAN", "CR-REH"] } } });
-    expect(await db.appScreen.count()).toBe(34);
+    expect(await db.appScreen.count()).toBe(35);
     await runSeed(db);
-    expect(await db.appScreen.count()).toBe(36);
+    expect(await db.appScreen.count()).toBe(37);
     expect(await permission("R-OTM", "CR-TAN")).toMatchObject({ canView: true, canCreate: true, canEdit: true });
   });
 
@@ -239,7 +239,7 @@ describe("seed (gerçek test DB)", () => {
     const first = await db.appScreen.findFirstOrThrow({ orderBy: { sortOrder: "asc" } });
     expect(first).toMatchObject({ code: "MB-KAT", path: "/kat", sortOrder: 1 });
     const orders = (await db.appScreen.findMany({ orderBy: { sortOrder: "asc" } })).map((s) => s.sortOrder);
-    expect(orders).toEqual(Array.from({ length: 36 }, (_, i) => i + 1));
+    expect(orders).toEqual(Array.from({ length: 37 }, (_, i) => i + 1));
   });
 
   it("toplam sistem yetki satırı sayısı sabittir (yeniden seed artırmaz)", async () => {

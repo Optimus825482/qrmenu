@@ -197,7 +197,8 @@ describe("migration 20261112150000 seed ile aynı matrisi üretir", () => {
         // MB-OKI (Oda Kontrol İşlemleri, 14 Kas 2026) came after this migration; its own migration grants it.
         // CR-DUR (Anlık Durum, migration 20261114090000) likewise.
         // RO-MBT (Minibar Takip, migration 20261114160000) likewise.
-        .filter((r) => r.screen.code !== "MB-OKI" && r.screen.code !== "CR-DUR" && r.screen.code !== "RO-MBT")
+        // RO-OTA (Oteller Arası Oda Servisi, migration 20261114180000) likewise.
+        .filter((r) => !["MB-OKI", "CR-DUR", "RO-MBT", "RO-OTA"].includes(r.screen.code))
         .map((r) => `${r.role.code}|${r.screen.code}|${[r.canView, r.canCreate, r.canEdit, r.canApprove, r.canReport].join()}`)
         .sort();
     const expected = await read();

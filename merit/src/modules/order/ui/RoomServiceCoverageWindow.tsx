@@ -115,8 +115,12 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
   }, [load]);
 
   const candidate = data?.candidates.find((c) => c.id === userId);
+  // What the Yetki Matrisi lets this user do besides looking (RO-OTA create / edit), per hotel.
+  const mayGrant = data ? data.hotels.some((h) => h.canGrant) : false;
+  const revocable = new Set(data ? data.hotels.filter((h) => h.canRevoke).map((h) => h.id) : []);
   // The user's own hotels are never a target: they already work there.
-  const hotelOptions = data && candidate ? data.hotels.filter((h) => !candidate.hotelIds.includes(h.id)) : [];
+  const hotelOptions =
+    data && candidate ? data.hotels.filter((h) => h.canGrant && !candidate.hotelIds.includes(h.id)) : [];
   const hotelValue = hotelOptions.some((h) => h.id === hotelId) ? hotelId : (hotelOptions[0]?.id ?? "");
   // Why some hotels are missing from the list: said in words, or the short list looks like a fault.
   const ownHotelNames = data && candidate ? data.hotels.filter((h) => candidate.hotelIds.includes(h.id)).map((h) => h.name) : [];
@@ -204,11 +208,15 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
       </section>
 
       {data ? (
-        <section className="xp-cp-section" aria-labelledby={`${id}-new`}>
+        <section className="xp-cp-section" aria-labelledby={`${id}-new`} data-guide="ota-yeni">
           <h3 id={`${id}-new`} className="xp-cp-heading">
             Yeni izin
           </h3>
-          {data.candidates.length === 0 ? (
+          {!mayGrant ? (
+            <p className="xp-cp-note" data-coverage-view-only>
+              İzinleri görüntüleyebilirsiniz; yeni izin vermek için Yetki Matrisi&apos;nde bu ekranın oluşturma yetkisi gerekir.
+            </p>
+          ) : data.candidates.length === 0 ? (
             <p className="xp-cp-note">İzin verebileceğiniz bir kullanıcı yok.</p>
           ) : (
             <form
@@ -340,20 +348,20 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
       ) : null}
 
       {data ? (
-        <section className="xp-cp-section" aria-labelledby={`${id}-open`}>
+        <section className="xp-cp-section" aria-labelledby={`${id}-open`} data-guide="ota-suren">
           <h3 id={`${id}-open`} className="xp-cp-heading">
             Süren izinler
           </h3>
           {open.length === 0 ? (
             <p className="xp-cp-note">Süren bir izin yok.</p>
           ) : (
-            <GrantTable rows={open} busy={busy} onRevoke={(row) => void revoke(row)} />
+            <GrantTable rows={open} busy={busy} revocable={revocable} onRevoke={(row) => void revoke(row)} />
           )}
         </section>
       ) : null}
 
       {data && past.length > 0 ? (
-        <section className="xp-cp-section" aria-labelledby={`${id}-past`}>
+        <section className="xp-cp-section" aria-labelledby={`${id}-past`} data-guide="ota-biten">
           <h3 id={`${id}-past`} className="xp-cp-heading">
             Son bir haftada süresi dolan izinler
           </h3>
@@ -364,7 +372,18 @@ export function RoomServiceCoverageWindow({ setStatus }: AppProps) {
   );
 }
 
-function GrantTable({ rows, busy, onRevoke }: { rows: CoverageRow[]; busy: boolean; onRevoke?: (row: CoverageRow) => void }) {
+function GrantTable({
+  rows,
+  busy,
+  revocable,
+  onRevoke,
+}: {
+  rows: CoverageRow[];
+  busy: boolean;
+  /** Hotels whose grants the user may remove (RO-OTA edit); the others show no button. */
+  revocable?: Set<string>;
+  onRevoke?: (row: CoverageRow) => void;
+}) {
   return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
@@ -409,9 +428,11 @@ function GrantTable({ rows, busy, onRevoke }: { rows: CoverageRow[]; busy: boole
               </td>
               {onRevoke ? (
                 <td style={CELL}>
-                  <button type="button" className="xp-button" style={TOUCH} disabled={busy} onClick={() => onRevoke(row)}>
-                    Kaldır
-                  </button>
+                  {revocable?.has(row.hotel.id) ? (
+                    <button type="button" className="xp-button" style={TOUCH} disabled={busy} onClick={() => onRevoke(row)}>
+                      Kaldır
+                    </button>
+                  ) : null}
                 </td>
               ) : null}
             </tr>

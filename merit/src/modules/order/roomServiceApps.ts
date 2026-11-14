@@ -108,7 +108,7 @@ export function registerRoomServiceApps(): void {
     launchLabel: "Oteller Arası Oda Servisi",
     icon: "otel",
     moduleKey: "ROOM_SERVICE",
-    screenCode: "RO-TAL",
+    screenCode: "RO-OTA",
     purpose: "Bir kullanıcıya başka bir otelin oda servisi taleplerini süreli olarak izleme ya da işleme izni verirsin.",
     roleCodes: ["R-OSS", "R-FBY", "R-FBM", "R-SYS"],
     category: "ROOM_SERVICE",

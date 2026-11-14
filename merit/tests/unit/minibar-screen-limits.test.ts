@@ -13,7 +13,7 @@ const set = (...a: Action[]) => [...a].sort().join("");
 
 describe("SCREEN_LIMITS tek liste", () => {
   it("her girdi plan etiketi taşır ve P5/P2/P3 girdileri vardır", () => {
-    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR", "KD", "OKI", "MBT"].includes(l.plan))).toBe(true);
+    expect(SCREEN_LIMITS.every((l) => ["P5", "P2", "P3", "P7", "YR", "KD", "OKI", "MBT", "OTA"].includes(l.plan))).toBe(true);
     for (const plan of ["P5", "P2", "P3"]) expect(SCREEN_LIMITS.some((l) => l.plan === plan)).toBe(true);
   });
 

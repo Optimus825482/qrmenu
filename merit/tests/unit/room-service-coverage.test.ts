@@ -271,6 +271,38 @@ describe("coverage.grant / revoke: kim, kime, hangi otel", () => {
     expect(view.candidates.map((c) => c.username)).toEqual(["ods-royal"]);
     expect(await codeOf(coverage.list(w.ods.ctx))).toBe("FORBIDDEN");
   });
+
+  it("yetki Yetki Matrisi'nden gelir (RO-OTA): V pencereyi açar, O izin verir, D kaldırır", async () => {
+    const w = await world();
+    expect(await can(w.oss.ctx, "RO-OTA", "V", w.diamond)).toBe(true);
+    const first = await coverage.list(w.oss.ctx);
+    expect(first.hotels).toEqual([expect.objectContaining({ id: w.diamond, canGrant: true, canRevoke: true })]);
+    const row = await give(w, "IZLEME");
+
+    const where = { hotelId: null, role: { code: "R-OSS" }, screen: { code: "RO-OTA" } };
+    try {
+      // view only: the window opens, nothing can be given or removed
+      await testDb.roleScreenPermission.updateMany({ where, data: { canCreate: false, canEdit: false } });
+      const view = await coverage.list(w.oss.ctx);
+      expect(view.hotels).toEqual([expect.objectContaining({ id: w.diamond, canGrant: false, canRevoke: false })]);
+      expect(view.rows.map((r) => r.id)).toEqual([row.id]);
+      expect(view.candidates).toEqual([]);
+      expect(await codeOf(coverage.grant(w.oss.ctx, { userId: w.ods.user.id, hotelId: w.diamond, mode: "ISLEME" }))).toBe("FORBIDDEN");
+      expect(await codeOf(coverage.revoke(w.oss.ctx, { id: row.id }))).toBe("FORBIDDEN");
+
+      // create without edit: gives, cannot remove
+      await testDb.roleScreenPermission.updateMany({ where, data: { canCreate: true } });
+      expect(await codeOf(coverage.grant(w.oss.ctx, { userId: w.ods.user.id, hotelId: w.diamond, mode: "ISLEME" }))).toBe("OK");
+      expect(await codeOf(coverage.revoke(w.oss.ctx, { id: row.id }))).not.toBe("OK");
+
+      // no view: the window is closed even though RO-TAL approve is still held
+      await testDb.roleScreenPermission.updateMany({ where, data: { canView: false, canCreate: false } });
+      expect(await can(w.oss.ctx, "RO-TAL", "A", w.diamond)).toBe(true);
+      expect(await codeOf(coverage.list(w.oss.ctx))).toBe("FORBIDDEN");
+    } finally {
+      await testDb.roleScreenPermission.updateMany({ where, data: { canView: true, canCreate: true, canEdit: true } });
+    }
+  });
 });
 
 describe("IZLEME: görür, hiçbir işlem yapamaz", () => {

@@ -99,7 +99,7 @@ const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD", "CR-DUR"]);
  * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI" | "MBT";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI" | "MBT" | "OTA";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -252,6 +252,12 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   // needed. Migration 20261114160000.
   { plan: "MBT", keep: { "RO-MBT": ["V"] } },
   { plan: "MBT", match: { exceptCodes: ["R-ODS", "R-OSS", "R-FBM", "R-FBY"] }, keep: { "RO-MBT": [] } },
+  // OTA (14 Kas 2026) — Oteller Arası Oda Servisi (RO-OTA): who may let a user watch or process another hotel's
+  // room-service requests. V opens the window, O gives a permission, D removes one. By default the roles that
+  // managed it before the screen existed (R-OSS, R-FBY, R-FBM; R-SYS has it through modules "ALL"); anybody else
+  // gets it from the Yetki Matrisi. Migration 20261114180000.
+  { plan: "OTA", keep: { "RO-OTA": ["V", "O", "D"] } },
+  { plan: "OTA", match: { exceptCodes: ["R-OSS", "R-FBY", "R-FBM"] }, keep: { "RO-OTA": [] } },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];

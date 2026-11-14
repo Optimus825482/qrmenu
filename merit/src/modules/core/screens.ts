@@ -66,6 +66,10 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   // Minibar Takip (14 Kas 2026): the read-only floor grid of the minibar room checks for the room-service team, every
   // hotel selectable. A ROOM_SERVICE screen on purpose: that team's roles do not hold the MINIBAR module.
   ["ROOM_SERVICE", "RO-MBT", "Minibar Takip", "/oda-servisi/minibar-takip"],
+  // Oteller Arası Oda Servisi (14 Kas 2026): the window that lets a user watch or process the room-service requests
+  // of another hotel for a while. Its own screen, so the Yetki Matrisi decides who sees it (V), who gives a
+  // permission (O) and who removes one (D); until then it rode on RO-TAL approve and a fixed role list.
+  ["ROOM_SERVICE", "RO-OTA", "Oteller Arası Oda Servisi", "/admin#rs.oteller-arasi"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({

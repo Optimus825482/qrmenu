@@ -519,6 +519,20 @@ const LIST: ScreenGuide[] = [
     ],
   ),
   guide(
+    "RO-OTA",
+    "xp",
+    "Bir kullanıcıya başka bir otelin oda servisi taleplerini süreli olarak izleme ya da işleme izni verirsin.",
+    [
+      ["ota-yeni", "Yeni izin", "Kullanıcıyı, talepleri görülecek oteli, izleme ya da işleme türünü ve süreyi seç."],
+      ["ota-suren", "Süren izinler", "Kimin hangi otele, ne zamana kadar izni olduğunu görürsün; gerekirse kaldırırsın."],
+      ["ota-biten", "Süresi dolanlar", "Son bir haftada süresi dolan izinler altta listelenir."],
+    ],
+    [
+      "İzin vermek oluşturma, izni kaldırmak düzenleme yetkisi ister; yalnız görüntüleme yetkisiyle liste açılır.",
+      "Süresi dolan izin kendiliğinden biter; her izin ve kaldırma denetim kaydına yazılır.",
+    ],
+  ),
+  guide(
     "RO-SLA",
     "xp",
     "Oda servisi süre hedeflerini raporlarsın.",

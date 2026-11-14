@@ -112,14 +112,15 @@ describe("masaüstü: Oda Servisi Sorumlusu (R-OSS)", () => {
     const { ctx } = await oss();
     const d = await desktop(ctx);
     expect(d.folders).toContain("folder.room-service");
-    expect(d.programsOf("folder.room-service")).toEqual(["rs.rapor"]);
+    // RO-SLA keeps the SLA window, RO-OTA (its own screen since 14 Nov 2026) the cross-hotel coverage window.
+    expect(d.programsOf("folder.room-service")).toEqual(["rs.rapor", "rs.oteller-arasi"]);
     expect(d.folders).toContain("folder.minibar");
     expect(d.programsOf("folder.minibar")).not.toContain("minibar.kat");
     expect(d.programsOf("folder.minibar")).toContain("minibar.stok");
   });
 
   it("bir operasyondaki tüm ekranlar kapanınca klasör de kaybolur", async () => {
-    await dropRolePermission("R-OSS", ["RO-TAL", "RO-TEL", "RO-TES", "RO-SLA"]);
+    await dropRolePermission("R-OSS", ["RO-TAL", "RO-TEL", "RO-TES", "RO-SLA", "RO-OTA"]);
     const { ctx } = await oss();
     const d = await desktop(ctx);
     expect(d.folders).not.toContain("folder.room-service");
