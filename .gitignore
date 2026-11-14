@@ -21,3 +21,21 @@ merit/prisma/dev.db*
 # Uretilen baski dosyalari; matbaaya giden oda QR seti (10.11.2026) depoda tutulur
 cikti/*
 !cikti/oda-qr-sablon/
+
+# Otelin kaynak fotoğraf klasörü (büyük; menü görselleri buradan üretilir) ve görsel üretim çıktıları
+/docs/29-YENİ MENÜ QR ÇALIŞMASI/
+/output/
+
+# Hiçbir menü ürününe bağlı olmayan, eski bir çalışmadan kalan görseller
+/merit/public/merit-menus/08ef3d69ad5549830d74a20f.webp
+/merit/public/merit-menus/0bf9e0439b830d9d580a6e34.webp
+/merit/public/merit-menus/0daac0c261a1a00ad9599262.webp
+/merit/public/merit-menus/1b0dbb4b2bf8c9eb5da0d5ce.webp
+/merit/public/merit-menus/39432e093a87bc75905f7938.webp
+/merit/public/merit-menus/54a287329a0c9a0d8cef21b2.webp
+/merit/public/merit-menus/8deea3c8ad9d925bbfedb81d.webp
+/merit/public/merit-menus/ae24594e14d7326addf95f4d.webp
+/merit/public/merit-menus/bc617268afd85e1821ee0759.webp
+/merit/public/merit-menus/c77e0f9f83ba7f7b977db637.webp
+/merit/public/merit-menus/ca526d6dc2b52b424e7b1ce9.webp
+/merit/public/merit-menus/d69a4d512895c8fded7a965d.webp
