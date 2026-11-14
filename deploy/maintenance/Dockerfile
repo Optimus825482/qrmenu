@@ -1,7 +1,7 @@
 # Merit bakım (güncelleme) sayfası: uygulama deploy sırasında kapalıyken Traefik'in yedek yönlendirmesi
 # isteği buraya gönderir. Sayfanın tek kaynağı merit/public/offline.html'dir (service worker da aynısını
 # gösterir); burada kopyalanır, ayrı bir kopya tutulmaz.
-# Derleme bağlamı depo köküdür (docker-compose.yaml: context ../..).
+# Derleme bağlamı depo köküdür (docker-compose.yaml: context ., Coolify --project-directory = depo kökü).
 FROM nginx:1.27-alpine
 
 COPY deploy/maintenance/nginx.conf /etc/nginx/conf.d/default.conf

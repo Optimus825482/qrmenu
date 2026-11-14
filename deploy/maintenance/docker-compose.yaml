@@ -5,7 +5,9 @@
 services:
   bakim:
     build:
-      context: ../..
+      # Coolify compose'u --project-directory <depo kökü> ile çalıştırır; göreli yollar depo köküne göre çözülür.
+      # (Yerelde: docker compose --project-directory . -f deploy/maintenance/docker-compose.yaml build)
+      context: .
       dockerfile: deploy/maintenance/Dockerfile
     restart: unless-stopped
     networks:
