@@ -1140,7 +1140,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -1320,7 +1320,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15.0,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -1356,7 +1356,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -1464,7 +1464,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -1572,7 +1572,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5.0,
+     "price": 10,
      "imageUrl": "/merit-menus/6095e88b36fdd829a2da66bd.webp",
      "allergens": [],
      "tags": []
@@ -1698,7 +1698,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -1752,7 +1752,7 @@
      "nameEn": "LIMONCELLO",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -3642,7 +3642,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 40.0,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -4128,7 +4128,7 @@
      "nameEn": "JAMESON",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 15,
      "imageUrl": "/merit-menus/cc4ddffc51b977c44e345ba1.webp",
      "allergens": [],
      "tags": []
@@ -4399,7 +4399,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -4447,7 +4447,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -4543,7 +4543,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/6095e88b36fdd829a2da66bd.webp",
      "allergens": [],
      "tags": []
@@ -4559,7 +4559,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -4607,7 +4607,7 @@
      "nameEn": "ESPRESSO, RISTRETTO, LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/89a2dc3c795538440aa434db.webp",
      "allergens": [],
      "tags": []
@@ -4671,7 +4671,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -4735,7 +4735,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -4975,7 +4975,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -5135,7 +5135,7 @@
      "nameEn": "LIMONCELLO",
      "detail": null,
      "detailEn": null,
-     "price": 20,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -5183,7 +5183,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -6079,7 +6079,7 @@
      "nameEn": "UNDERBERG",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5dd9b0b72174ed77e3a5f70d.webp",
      "allergens": [],
      "tags": []
@@ -6111,7 +6111,7 @@
      "nameEn": "WENNEKER APRICOT BRANDY",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/9e883c72bf46bcc81803ac01.webp",
      "allergens": [],
      "tags": []
@@ -6511,7 +6511,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -6735,7 +6735,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -8022,7 +8022,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -8070,7 +8070,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -8166,7 +8166,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/6095e88b36fdd829a2da66bd.webp",
      "allergens": [],
      "tags": []
@@ -8182,7 +8182,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -8438,7 +8438,7 @@
      "nameEn": "WATERMELON",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -8454,7 +8454,7 @@
      "nameEn": "MELON",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -8470,7 +8470,7 @@
      "nameEn": "KIWI",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -8486,7 +8486,7 @@
      "nameEn": "MIXED",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -8534,7 +8534,7 @@
      "nameEn": "CHOCOLATE MOCHA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": null,
      "allergens": [],
      "tags": []
@@ -8566,7 +8566,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -8598,7 +8598,7 @@
      "nameEn": "ENGLISH BREAKFAST TEA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/74492ced2cde93cc1ceb58c3.webp",
      "allergens": [],
      "tags": []
@@ -8630,7 +8630,7 @@
      "nameEn": "FILTER COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -8694,7 +8694,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -9190,7 +9190,7 @@
      "nameEn": "PORT",
      "detail": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
      "detailEn": "GİN, SALATALIK SUYU, MÜRVER ÇİÇEĞİ LİKÖRÜ, LİMON SUYU, ZENCEFİL SUYU, YEŞİL ELMA PÜRESİ",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/5695afeb29244c6b068bcf3f.webp",
      "allergens": [],
      "tags": []
@@ -9302,7 +9302,7 @@
      "nameEn": "BLOODY MARY",
      "detail": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
      "detailEn": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/adfa7ba4c78f827b5f459328.webp",
      "allergens": [],
      "tags": []
@@ -9334,7 +9334,7 @@
      "nameEn": "COSMOPOLITAN",
      "detail": "VODKA, TRIPLE SEC, CRANBERRY JUICE, LEMON JUICE",
      "detailEn": "VODKA, TRIPLE SEC, CRANBERRY JUICE, LEMON JUICE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/6af125a2cb45a3b9008e6be4.webp",
      "allergens": [],
      "tags": []
@@ -9366,7 +9366,7 @@
      "nameEn": "LONG ISLAND ICED TEA",
      "detail": "VODKA, RUM, GI, TEQUILA, TRIPLE SEC, LEMON JUICE, COKE",
      "detailEn": "VODKA, RUM, GI, TEQUILA, TRIPLE SEC, LEMON JUICE, COKE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/c18a0779dd73f872c7510e61.webp",
      "allergens": [],
      "tags": []
@@ -9382,7 +9382,7 @@
      "nameEn": "LYNCHBURG LEMONADE",
      "detail": "JACK DANIEL'S, TRIPLE SEC, SWEET & SOUR (SUGAR SYRUP & LEMON JUICE), SPRITE",
      "detailEn": "JACK DANIEL'S, TRIPLE SEC, SWEET & SOUR (SUGAR SYRUP & LEMON JUICE), SPRITE",
-     "price": 20,
+     "price": 35,
      "imageUrl": null,
      "allergens": [],
      "tags": []
@@ -9398,7 +9398,7 @@
      "nameEn": "MARGARITA",
      "detail": "TRIPLE SEC, TEQUILA, LEMON JUICE",
      "detailEn": "TRIPLE SEC, TEQUILA, LEMON JUICE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/c1d754cda9b9ca880a560ae4.webp",
      "allergens": [],
      "tags": []
@@ -9430,7 +9430,7 @@
      "nameEn": "MOJITO",
      "detail": "FRESH LIME, FRESH MINT LEAVES, BROWN SUGAR, RUM, MINERAL WATER",
      "detailEn": "FRESH LIME, FRESH MINT LEAVES, BROWN SUGAR, RUM, MINERAL WATER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/42222259822efa593c21cd49.webp",
      "allergens": [],
      "tags": []
@@ -9478,7 +9478,7 @@
      "nameEn": "ESPRESSO MARTINI",
      "detail": "VOTKA, KAHLUA, ESPRESSO",
      "detailEn": "VOTKA, KAHLUA, ESPRESSO",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/f5360d18ad9082a53faa71a2.webp",
      "allergens": [],
      "tags": []
@@ -9494,7 +9494,7 @@
      "nameEn": "FRENCH 75",
      "detail": "GIN, LEMON JUICE, SUGAR SYRUP, MINERAL WATER",
      "detailEn": "GIN, LEMON JUICE, SUGAR SYRUP, MINERAL WATER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/a7711203843def269c7de07b.webp",
      "allergens": [],
      "tags": []
@@ -9574,7 +9574,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -9750,7 +9750,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -10822,7 +10822,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -10998,7 +10998,7 @@
      "nameEn": "GLENFIDDICH 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 40,
      "imageUrl": "/merit-menus/4ca53b283b3293013212311a.webp",
      "allergens": [],
      "tags": []
@@ -11014,7 +11014,7 @@
      "nameEn": "LAGAVULIN DE 1995 16 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 50,
+     "price": 10,
      "imageUrl": "/merit-menus/a2c54766239ae3557418b34e.webp",
      "allergens": [],
      "tags": []
@@ -11030,7 +11030,7 @@
      "nameEn": "TALISKER 10 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 20,
      "imageUrl": "/merit-menus/261d82d9b2a2a3a19fd2022a.webp",
      "allergens": [],
      "tags": []
@@ -11046,7 +11046,7 @@
      "nameEn": "MACALLAN 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 40,
+     "price": 10,
      "imageUrl": "/merit-menus/396637a44ab9a10744aa8762.webp",
      "allergens": [],
      "tags": []
@@ -11302,7 +11302,7 @@
      "nameEn": "JAMESON",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 10,
      "imageUrl": "/merit-menus/cc4ddffc51b977c44e345ba1.webp",
      "allergens": [],
      "tags": []
@@ -11341,7 +11341,7 @@
      "nameEn": "MATCHA TEA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/301df59ee5940a0f47894c2f.webp",
      "allergens": [],
      "tags": []
@@ -11357,7 +11357,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/50879f8d5d5a2614fb49557f.webp",
      "allergens": [],
      "tags": []
@@ -11373,7 +11373,7 @@
      "nameEn": "TURKISH COFFEE WITH MASTIC GUM",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/76e6aa561b4559178cd09eaa.webp",
      "allergens": [],
      "tags": []
@@ -11389,7 +11389,7 @@
      "nameEn": "FILTER COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -11405,7 +11405,7 @@
      "nameEn": "DECAFFEINATED COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -11437,7 +11437,7 @@
      "nameEn": "ESPRESSO LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 15,
      "imageUrl": "/merit-menus/d8902626b664e4ac8ee3b577.webp",
      "allergens": [],
      "tags": []
@@ -11469,7 +11469,7 @@
      "nameEn": "COFFEE CORTADO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/f0842650531bac901b68cc04.webp",
      "allergens": [],
      "tags": []
@@ -11485,7 +11485,7 @@
      "nameEn": "FLAT WHITE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/f8d589788aa0d9bb1e7d2b20.webp",
      "allergens": [],
      "tags": []
@@ -11549,7 +11549,7 @@
      "nameEn": "COCONUT MATCHA LATTE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/92c562ae258767b95951093c.webp",
      "allergens": [],
      "tags": []
@@ -11629,7 +11629,7 @@
      "nameEn": "FRESHLY BREWED HERBAL TEAS",
      "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, BAMYA ÇİÇEĞİ, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
      "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, OKRA FLOWER, CAMOMILE, JASMINE, ECHINECEA, BALM",
-     "price": null,
+     "price": 7,
      "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
      "allergens": [],
      "tags": []
@@ -11645,7 +11645,7 @@
      "nameEn": "THIRD GENERATION COFFEES",
      "detail": "CHEMEX, V60, SYPHON",
      "detailEn": "CHEMEX, V60, SYPHON",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/f0b3b43a9c1c04bf9d1286ac.webp",
      "allergens": [],
      "tags": []
@@ -11903,7 +11903,7 @@
      "nameEn": "GREEN ANGEL",
      "detail": "ŞEFTALİ, ARMUT",
      "detailEn": "PEACH, PEAR",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/208751b2b3dcae84eb6cc6e3.webp",
      "allergens": [],
      "tags": []
@@ -11921,7 +11921,7 @@
      "nameEn": "WINTERDREAM",
      "detail": "ROOIBOS, KIŞ BAHARATLARI, KARAMEL, PORTAKAL",
      "detailEn": "ROOIBOS, WINTER SPICES, CARAMEL, ORANGE",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/d4964ac9ff55cd00154ed228.webp",
      "allergens": [],
      "tags": []
@@ -11939,7 +11939,7 @@
      "nameEn": "NANE & PEPPERMINT",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/289e719bb128e5ccb76f5509.webp",
      "allergens": [],
      "tags": []
@@ -11957,7 +11957,7 @@
      "nameEn": "CAMOMILE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/7c1107ecec842b59859a7fd5.webp",
      "allergens": [],
      "tags": []
@@ -11975,7 +11975,7 @@
      "nameEn": "ENGLISH BREAKFAST",
      "detail": "SİYAH ÇAY",
      "detailEn": "BLACK TEA",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/fd51fbc57aa0610232a18c9b.webp",
      "allergens": [],
      "tags": []
@@ -11993,7 +11993,7 @@
      "nameEn": "ROOIBOS VANILLA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/70d1b23612811e6dcd27bbae.webp",
      "allergens": [],
      "tags": []
@@ -12011,7 +12011,7 @@
      "nameEn": "MORGENTAU",
      "detail": "YEŞİL ÇAY(SENCHA), AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
      "detailEn": "GREEN TEA(SENCHA), SUNFLOWER, ROSE LEAVES, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/b59f2c9d450bf58fd8e78e97.webp",
      "allergens": [],
      "tags": []
@@ -12029,7 +12029,7 @@
      "nameEn": "MASALA CHAI",
      "detail": "SİYAH ÇAY(ASSAM), TARÇIN PARÇALARI, REZENE, ZENCEFİL, KARANFİL, KARABİBER, ANASON",
      "detailEn": "BLACK TEA(ASSAM), CINNAMON, FENNEL, GINGER, CLOVES, BLACK PEPPERCORNS, ANISE",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/b3164f29b6de9330fdbfbe00.webp",
      "allergens": [],
      "tags": []
@@ -12047,7 +12047,7 @@
      "nameEn": "VANILLA ROOIBOS",
      "detail": "ROOIBOS (KIRMIZI ÇALI), VANİLYA",
      "detailEn": "ROOIBOS (RED BLUSH), VANILLA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/70d1b23612811e6dcd27bbae.webp",
      "allergens": [],
      "tags": []
@@ -12065,7 +12065,7 @@
      "nameEn": "CHILL OUT WITH HERBS",
      "detail": "ROOIBOS, BÖĞÜRTLEN YAPRAKLARI, MELİSA, PORTAKAL, AYÇİÇEĞİ YAPRAKLARI, PEYGAMBER ÇİÇEĞİ",
      "detailEn": "ROOIBOS, BLACKBERRY LEAVES, BALM, ORANGE, SUNFLOWER PETALS, CORNFLOWER BLOSSOM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/c2c50dc89fc640925b6ad1a2.webp",
      "allergens": [],
      "tags": []
@@ -12083,7 +12083,7 @@
      "nameEn": "FRUITY CAMOMILE",
      "detail": "PAPATYA, PORTAKAL ÇİÇEKLERİ",
      "detailEn": "CAMOMILE, ORANGE BLOSSOM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/6bf3e07159cafbe4ab3c42d3.webp",
      "allergens": [],
      "tags": []
@@ -12101,7 +12101,7 @@
      "nameEn": "REFRESHING MINT",
      "detail": "NANE, LİMON OTU",
      "detailEn": "MINT, LEMON GRASS",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/ef0ee39f9bae42203b50e9ab.webp",
      "allergens": [],
      "tags": []
@@ -12119,7 +12119,7 @@
      "nameEn": "ROOIBOS CREAM ORANGE",
      "detail": "ROOIBOS, PORTAKAL KABUĞU, DOĞAL AROMA",
      "detailEn": "ROOIBOS, ORANGE PEEL, NATURAL AROMA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/41727dd9782f0da796b00cc5.webp",
      "allergens": [],
      "tags": []
@@ -12137,7 +12137,7 @@
      "nameEn": "HUCKLEBERRY FRIEND",
      "detail": "YEŞİL ÇAY, LİMON OTU, ELMA, YABAN MERSİNİ",
      "detailEn": "GREEN TEA, LEMON GRASS, APPLE, BLUEBERRY",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/37385fc998f31a201d419224.webp",
      "allergens": [],
      "tags": []
@@ -12155,7 +12155,7 @@
      "nameEn": "JASMINE PEARLS",
      "detail": "YEŞİL ÇAY, AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
      "detailEn": "GREEN TEA, SUNFLOWER, ROSE PETALS, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/3d3cd778176a32f483a586ba.webp",
      "allergens": [],
      "tags": []
@@ -12173,7 +12173,7 @@
      "nameEn": "EARL GREY",
      "detail": "SİYAH ÇAY(DARJEELING-TGPOF*), DOĞAL BERGAMOT AROMASI",
      "detailEn": "BLACK TEA(DARJEELING-TGPOF*), NATURAL BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/a76fe67361cdcc3115b6e310.webp",
      "allergens": [],
      "tags": []
@@ -12191,7 +12191,7 @@
      "nameEn": "GREEN LEAF",
      "detail": "YEŞİL ÇAY(SENCHA)",
      "detailEn": "GREEN TEA(SENCHA)",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/249ee561d9015bd539aa7882.webp",
      "allergens": [],
      "tags": []
@@ -12209,7 +12209,7 @@
      "nameEn": "IRISH WHISKEY CREAM",
      "detail": "SİYAH ÇAY, KAKAO KABUKLARI, MALT VİSKİ AROMASI",
      "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/d4f0be70f3f551cca927abed.webp",
      "allergens": [],
      "tags": []
@@ -12227,7 +12227,7 @@
      "nameEn": "CHINESE SPRING",
      "detail": "BEYAZ ÇAY, EBEGÜMECİ, AYNISEFA ÇİÇEĞİ, DOĞAL ÇARKIFELEK MEYVESİ AROMASI",
      "detailEn": "WHITE TEA, HIBISCUS, MARIGOLD FLOWER, NATURAL PASSION FRUIT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/32723d6d76d5e3b452960382.webp",
      "allergens": [],
      "tags": []
@@ -12245,7 +12245,7 @@
      "nameEn": "GET THE POWER",
      "detail": "AMBER ÇİÇEĞİ, BÖĞÜRTLEN YAPRAKLARI, KOLA BİTKİSİ, MÜRVER ÇİÇEĞİ, PORTAKAL KABUĞU, FRENK ÜZÜMÜ",
      "detailEn": "MUSK MALLOW, BLACKBERRY LEAVES, COLA PLANT, ELDERFLOWER, ORANGE PEEL, BLACKCURRANT",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/dc8649df57e2a5e79ab8d906.webp",
      "allergens": [],
      "tags": []
@@ -12263,7 +12263,7 @@
      "nameEn": "GINGER TWIST",
      "detail": "YEŞİL ÇAY, AYVA, ZENCEFİL, AYNISEFA ÇİÇEĞİ, SAFRAN ÇİÇEĞİ YAPRAKLARI, DOĞAL AYVA AROMASI",
      "detailEn": "GREEN TEA, QUINCE, GINGER, MARIGOLD FLOWERİ NATURAL QUINCE FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/af0b8a220d113591f3ec5671.webp",
      "allergens": [],
      "tags": []
@@ -12281,7 +12281,7 @@
      "nameEn": "WHITE YIN LONG",
      "detail": "BEYAZ ÇAY",
      "detailEn": "WHITE TEA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e916fc323a340c83c4096e16.webp",
      "allergens": [],
      "tags": []
@@ -12299,7 +12299,7 @@
      "nameEn": "ROOIBOS CHOCOLATE HEAVEN",
      "detail": "ROOIBOS, KAKAO KABUĞU, VANILYA",
      "detailEn": "ROOIBOS, COCOA SELL, VANILLA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/251d4bc099fb1381e4c5b448.webp",
      "allergens": [],
      "tags": []
@@ -12317,7 +12317,7 @@
      "nameEn": "AYURVEDA HERBS & GINGER",
      "detail": "ZENCEFİL, ANASON, REZENE, MEYAN KÖKÜ, LİMON OTU, TARÇIN, KARABİBER, PAPATYA, BÖĞÜRTLEN YAPRAKLARI, MELİSA, GÜL",
      "detailEn": "GINGER, ANISE SEED, FENNEL SEED, LICORICE ROOT, LEMON GRASS, CINNAMON PIECES, BLACK PEPPER, CAMOMILE FLOWERS, SWEET BLACKBERRY LEAVES, LEMON BALM, ROSE PETALS",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/489ca1bee3daa816ebfd6064.webp",
      "allergens": [],
      "tags": []
@@ -12381,7 +12381,7 @@
      "nameEn": "ICED COFFEE CREAM",
      "detail": "ESPRESSO, SÜT, DONDURMA",
      "detailEn": "ESPRESSO, MILK, ICE CREAM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/112a5b43559a198da51b846c.webp",
      "allergens": [],
      "tags": []
@@ -12397,7 +12397,7 @@
      "nameEn": "WHITE CHOCOLATE MOCHA",
      "detail": "ESPRESSO, SÜT, BEYAZ ÇİKOLATA",
      "detailEn": "ESPRESSO, MILK, WHITE CHOCOLATE",
-     "price": null,
+     "price": 20,
      "imageUrl": null,
      "allergens": [],
      "tags": []
@@ -12660,7 +12660,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -12820,7 +12820,7 @@
      "nameEn": "LIMONCELLO",
      "detail": null,
      "detailEn": null,
-     "price": 20,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -12868,7 +12868,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -13988,7 +13988,7 @@
      "nameEn": "UNDERBERG",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5dd9b0b72174ed77e3a5f70d.webp",
      "allergens": [],
      "tags": []
@@ -14036,7 +14036,7 @@
      "nameEn": "WENNEKER CREME DE MENTHE",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 20,
      "imageUrl": "/merit-menus/5e61007ee97864811eb18532.webp",
      "allergens": [],
      "tags": []
@@ -14052,7 +14052,7 @@
      "nameEn": "WENNEKER APRICOT BRANDY",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/9e883c72bf46bcc81803ac01.webp",
      "allergens": [],
      "tags": []
@@ -14516,7 +14516,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -15060,7 +15060,7 @@
      "nameEn": "BENRIACH 10 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/2ef9bd905db2c00ba75ba959.webp",
      "allergens": [],
      "tags": []
@@ -15076,7 +15076,7 @@
      "nameEn": "BENRIACH 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/d4aff62b0ee236775ba3d1b6.webp",
      "allergens": [],
      "tags": []
@@ -15140,7 +15140,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -15348,7 +15348,7 @@
      "nameEn": "GLENMORANGIE LASANTA 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 40,
+     "price": 30,
      "imageUrl": "/merit-menus/5448a7a91dc5e934d7d85f14.webp",
      "allergens": [],
      "tags": []
@@ -15604,7 +15604,7 @@
      "nameEn": "THE NAKED GROUSE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 10,
      "imageUrl": "/merit-menus/b18283f3c2dfea0e948f03eb.webp",
      "allergens": [],
      "tags": []
@@ -15844,7 +15844,7 @@
      "nameEn": "JOHNNIE WALKER DOUBLE BLACK",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 20,
      "imageUrl": "/merit-menus/9befa415c82c10cf1b5f5809.webp",
      "allergens": [],
      "tags": []
@@ -16132,7 +16132,7 @@
      "nameEn": "AMARETTO SOUR",
      "detail": "DISARONNO ORIGINAL, TAZE LİMON & PORTAKAL SUYU, ŞEKER ŞURUBU",
      "detailEn": "DISARONNO ORIGINAL, FRESH LEMON & ORANGE JUICE, SUGAR SYRUP",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/10eefd134dfb4a8ef2f80725.webp",
      "allergens": [],
      "tags": []
@@ -16196,7 +16196,7 @@
      "nameEn": "ESPRESSO MARTINI",
      "detail": "ABSOLUT VODKA, KAHVE LİKÖRÜ, ESPRESSO",
      "detailEn": "ABSOLUT VODKA, KAHLUA, ESPRESSO",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/d2ba56abcab77312d86b1f62.webp",
      "allergens": [],
      "tags": []
@@ -17591,7 +17591,7 @@
      "nameEn": "SASSICAIA",
      "detail": "CABERNET SAUVIGNON / BOLGHERI / ITALY",
      "detailEn": "CABERNET SAUVIGNON / BOLGHERI / ITALY",
-     "price": 990,
+     "price": 880,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17609,7 +17609,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
      "detailEn": "CABERNET SAUVIGNON / THRACE / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17645,7 +17645,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
      "detailEn": "ÖKÜZGÖZÜ, BOĞAZKERE / EASTERN ANATOLIA / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17735,7 +17735,7 @@
      "nameEn": "CIABOT DEL CONTE BAROLO",
      "detail": "NEBBIOLO / BAROLO / ITALY",
      "detailEn": "NEBBIOLO / BAROLO / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17753,7 +17753,7 @@
      "nameEn": "EPICURO Z-ELEBRATE OLD ZINFANDEL",
      "detail": "ZINFANDEL / PUGLIA / ITALY",
      "detailEn": "ZINFANDEL / PUGLIA / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17771,7 +17771,7 @@
      "nameEn": "DUCA DI SARAGNANO CHIANTI RISERVA",
      "detail": "SANGIOVESE / TOSCANA / ITALY",
      "detailEn": "SANGIOVESE / TOSCANA / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -17807,7 +17807,7 @@
      "nameEn": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
      "detail": "CORVINA, RONDINELLA, MOLINARA / VENETO / ITALY",
      "detailEn": "CORVINA, RONDINELLA, MOLINARA / VENETO / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18095,7 +18095,7 @@
      "nameEn": "PUERTO VIEJO RESERVE",
      "detail": "CARMÉNÈRE / CURICÓ VALLEY / CHILE",
      "detailEn": "CARMÉNÈRE / CURICÓ VALLEY / CHILE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18131,7 +18131,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (Glass)",
      "detail": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
      "detailEn": "MERLOT, CABERNET SAUVIGNON / BORDEAUX / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18167,7 +18167,7 @@
      "nameEn": "GRAND C RESERVE",
      "detail": "PINOT NOIR / ALSACE / FRANCE",
      "detailEn": "PINOT NOIR / ALSACE / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18185,7 +18185,7 @@
      "nameEn": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
      "detail": "SYRAH, GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
      "detailEn": "SYRAH, GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18203,7 +18203,7 @@
      "nameEn": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
      "detail": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / BORDEAUX / FRANCE",
      "detailEn": "CABERNET SAUVIGNON, MERLOT, CABERNET FRANC / BORDEAUX / FRANCE",
-     "price": 100,
+     "price": 70,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18221,7 +18221,7 @@
      "nameEn": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
      "detail": "SYRAH GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
      "detailEn": "SYRAH GRENACHE, MOURVÈDRE / RHÔNE / FRANCE",
-     "price": 140,
+     "price": 130,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -18293,7 +18293,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
      "detailEn": "SAUVIGNON BLANC / THRACE / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18329,7 +18329,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
      "detailEn": "NARİNCE, EMİR / CENTRAL ANATOLIA / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18599,7 +18599,7 @@
      "nameEn": "MONTE DO CARRAPATELO",
      "detail": "ARINTO, ROUPEIRO / ALENTEJO / PORTUGAL",
      "detailEn": "ARINTO, ROUPEIRO / ALENTEJO / PORTUGAL",
-     "price": 50,
+     "price": 70,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18653,7 +18653,7 @@
      "nameEn": "CLOUDY BAY",
      "detail": "SAUVIGNON BLANC / MARLBOROUGH / NEW ZEALAND",
      "detailEn": "SAUVIGNON BLANC / MARLBOROUGH / NEW ZEALAND",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18707,7 +18707,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX (Glass)",
      "detail": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
      "detailEn": "SAUVIGNON BLANC / BORDEAUX / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18743,7 +18743,7 @@
      "nameEn": "LE BIJOU",
      "detail": "SAUVIGNON BLANC / COTEAUX DE BÉZIERS / FRANCE",
      "detailEn": "SAUVIGNON BLANC / COTEAUX DE BÉZIERS / FRANCE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18815,7 +18815,7 @@
      "nameEn": "THOMAS LABILLE CHABLIS PREMIER CRU",
      "detail": "CHARDONNAY / BURGUNDY / FRANCE",
      "detailEn": "CHARDONNAY / BURGUNDY / FRANCE",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -18905,7 +18905,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "MERLOT, CABERNET FRANC / TÜRKİYE",
      "detailEn": "MERLOT, CABERNET FRANC / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -18977,7 +18977,7 @@
      "nameEn": "11 MINUTES PASQUA",
      "detail": "CORVINA / VENETO / ITALY",
      "detailEn": "CORVINA / VENETO / ITALY",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -19031,7 +19031,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROSÉ (Glass)",
      "detail": "MERLOT / BORDEAUX / FRANCE",
      "detailEn": "MERLOT / BORDEAUX / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -19229,7 +19229,7 @@
      "nameEn": "MARTHA'S RUBY PORT WINE",
      "detail": "TOURIGA, TEMPRANILLO, TINTA RORIZ, TINTA CÃO / PORTO / PORTUGAL",
      "detailEn": "TOURIGA, TEMPRANILLO, TINTA RORIZ, TINTA CÃO / PORTO / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -19247,7 +19247,7 @@
      "nameEn": "MARTHA'S TAWNY PORT WINE",
      "detail": "TOURIGA, TINTA BARROCA, TINTA CÃO / PORTO / PORTUGAL",
      "detailEn": "TOURIGA, TINTA BARROCA, TINTA CÃO / PORTO / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -19301,7 +19301,7 @@
      "nameEn": "NOBILIS PROSECCO EXTRA DRY",
      "detail": "GLERA / VENETO / ITALY",
      "detailEn": "GLERA / VENETO / ITALY",
-     "price": 50,
+     "price": 60,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19319,7 +19319,7 @@
      "nameEn": "BRILLA PROSECCO BRUT",
      "detail": "GLERA / VENETO / ITALY",
      "detailEn": "GLERA / VENETO / ITALY",
-     "price": 200,
+     "price": 100,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19337,7 +19337,7 @@
      "nameEn": "BRILLA PROSECCO ROSÉ",
      "detail": "CABERNET SAUVIGNON, CHARDONNAY / VENETO / ITALY",
      "detailEn": "CABERNET SAUVIGNON, CHARDONNAY / VENETO / ITALY",
-     "price": 200,
+     "price": 120,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19355,7 +19355,7 @@
      "nameEn": "BOTTEGA GOLD PROSECCO BRUT",
      "detail": "GLERA / VENETO / ITALY",
      "detailEn": "GLERA / VENETO / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19373,7 +19373,7 @@
      "nameEn": "BOTTEGA ROSÉ GOLD PROSECCO",
      "detail": "GLERA, PINOT NOIR / VENETO / ITALY",
      "detailEn": "GLERA, PINOT NOIR / VENETO / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19625,7 +19625,7 @@
      "nameEn": "DOM PERIGNON BRUT CHAMPAGNE",
      "detail": "PINOT NOIR / CHAMPAGNE / FRANCE",
      "detailEn": "PINOT NOIR / CHAMPAGNE / FRANCE",
-     "price": 1650,
+     "price": 2650,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -19643,7 +19643,7 @@
      "nameEn": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
      "detail": "PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
      "detailEn": "PINOT NOIR, CHARDONNAY / CHAMPAGNE / FRANCE",
-     "price": 2550,
+     "price": 3850,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -20788,7 +20788,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -20968,7 +20968,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15.0,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -21004,7 +21004,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -21112,7 +21112,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -21220,7 +21220,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5.0,
+     "price": 10,
      "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
      "allergens": [],
      "tags": []
@@ -21346,7 +21346,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -21400,7 +21400,7 @@
      "nameEn": "LIMONCELLO",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -23290,7 +23290,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 40.0,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -23776,7 +23776,7 @@
      "nameEn": "JAMESON",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 15,
      "imageUrl": "/merit-menus/cc4ddffc51b977c44e345ba1.webp",
      "allergens": [],
      "tags": []
@@ -24047,7 +24047,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -24095,7 +24095,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -24191,7 +24191,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
      "allergens": [],
      "tags": []
@@ -24207,7 +24207,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -24255,7 +24255,7 @@
      "nameEn": "ESPRESSO, RISTRETTO, LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/87b0497eb33855726de09533.webp",
      "allergens": [],
      "tags": []
@@ -24319,7 +24319,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -24383,7 +24383,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -24623,7 +24623,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -24783,7 +24783,7 @@
      "nameEn": "LIMONCELLO",
      "detail": null,
      "detailEn": null,
-     "price": 20,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -24831,7 +24831,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -25727,7 +25727,7 @@
      "nameEn": "UNDERBERG",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5dd9b0b72174ed77e3a5f70d.webp",
      "allergens": [],
      "tags": []
@@ -25759,7 +25759,7 @@
      "nameEn": "WENNEKER APRICOT BRANDY",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/9e883c72bf46bcc81803ac01.webp",
      "allergens": [],
      "tags": []
@@ -26159,7 +26159,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -26383,7 +26383,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -27654,7 +27654,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -27750,7 +27750,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
      "allergens": [],
      "tags": []
@@ -27766,7 +27766,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -27846,7 +27846,7 @@
      "nameEn": "CHOCOLATE MOCHA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": null,
      "allergens": [],
      "tags": []
@@ -27878,7 +27878,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -27910,7 +27910,7 @@
      "nameEn": "ENGLISH BREAKFAST TEA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/74492ced2cde93cc1ceb58c3.webp",
      "allergens": [],
      "tags": []
@@ -27942,7 +27942,7 @@
      "nameEn": "FILTER COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -28006,7 +28006,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -28054,7 +28054,7 @@
      "nameEn": "WATERMELON",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -28070,7 +28070,7 @@
      "nameEn": "MELON",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -28086,7 +28086,7 @@
      "nameEn": "KIWI",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -28118,7 +28118,7 @@
      "nameEn": "MIXED",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/5da10e8acdcc9fcce2f5e7be.webp",
      "allergens": [],
      "tags": []
@@ -28614,7 +28614,7 @@
      "nameEn": "PORT",
      "detail": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER, GREEN APPLE PUREE",
      "detailEn": "GIN, ELDER FLOWER LIQUEUR, CUCUMBER JUICE, LEMON JUICE, GINGER, GREEN APPLE PUREE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/7b815a0a9c00de1fd18de6d2.webp",
      "allergens": [],
      "tags": []
@@ -28630,7 +28630,7 @@
      "nameEn": "ROYAL",
      "detail": "PINK GIN, LIMONCELLO, HIBUSKUS TEA, LEMON JUICE, MINT SYRUP",
      "detailEn": "PINK GIN, LIMONCELLO, HIBUSKUS TEA, LEMON JUICE, MINT SYRUP",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/5211576cf2c4a5e77e7cc3ae.webp",
      "allergens": [],
      "tags": []
@@ -28646,7 +28646,7 @@
      "nameEn": "PASSION",
      "detail": "CHILI TEQUILA, ORANGE LIQUEUR, FRESH ORANGE JUICE, LEMON JUICE, PASSION FRUIT PUREE",
      "detailEn": "CHILI TEQUILA, ORANGE LIQUEUR, FRESH ORANGE JUICE, LEMON JUICE, PASSION FRUIT PUREE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/44e6c35f4081261d73579935.webp",
      "allergens": [],
      "tags": []
@@ -28742,7 +28742,7 @@
      "nameEn": "BLOODY MARY",
      "detail": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
      "detailEn": "VODKA, LEMON JUICE, TOMATO JUICE, WORCHESTER SAUCE AND TOBASCO, SALT & BLACK PEPPER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/51531834b5512c7e8b936373.webp",
      "allergens": [],
      "tags": []
@@ -28774,7 +28774,7 @@
      "nameEn": "COSMOPOLITAN",
      "detail": "VODKA, TRIPLE SEC, CRANBERRY JUICE, LEMON JUICE",
      "detailEn": "VODKA, TRIPLE SEC, CRANBERRY JUICE, LEMON JUICE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/dfe80f09826b2647aa3ccf75.webp",
      "allergens": [],
      "tags": []
@@ -28806,7 +28806,7 @@
      "nameEn": "LONG ISLAND ICED TEA",
      "detail": "VODKA, RUM, GI, TEQUILA, TRIPLE SEC, LEMON JUICE, COKE",
      "detailEn": "VODKA, RUM, GI, TEQUILA, TRIPLE SEC, LEMON JUICE, COKE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/39b85af31b2f8c7fd1299f31.webp",
      "allergens": [],
      "tags": []
@@ -28822,7 +28822,7 @@
      "nameEn": "LYNCHBURG LEMONADE",
      "detail": "JACK DANIEL'S, TRIPLE SEC, SWEET & SOUR (SUGAR SYRUP & LEMON JUICE), SPRITE",
      "detailEn": "JACK DANIEL'S, TRIPLE SEC, SWEET & SOUR (SUGAR SYRUP & LEMON JUICE), SPRITE",
-     "price": 20,
+     "price": 35,
      "imageUrl": null,
      "allergens": [],
      "tags": []
@@ -28838,7 +28838,7 @@
      "nameEn": "MARGARITA",
      "detail": "TRIPLE SEC, TEQUILA, LEMON JUICE",
      "detailEn": "TRIPLE SEC, TEQUILA, LEMON JUICE",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/f7f97150d1853b57d1fc0ba2.webp",
      "allergens": [],
      "tags": []
@@ -28870,7 +28870,7 @@
      "nameEn": "MOJITO",
      "detail": "FRESH LIME, FRESH MINT LEAVES, BROWN SUGAR, RUM, MINERAL WATER",
      "detailEn": "FRESH LIME, FRESH MINT LEAVES, BROWN SUGAR, RUM, MINERAL WATER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/e3ad84bf3e273135830ebfe8.webp",
      "allergens": [],
      "tags": []
@@ -28918,7 +28918,7 @@
      "nameEn": "ESPRESSO MARTINI",
      "detail": "VOTKA, KAHLUA, ESPRESSO",
      "detailEn": "VOTKA, KAHLUA, ESPRESSO",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/442d3a5ba98157d133fb1a78.webp",
      "allergens": [],
      "tags": []
@@ -28934,7 +28934,7 @@
      "nameEn": "FRENCH 75",
      "detail": "GIN, LEMON JUICE, SUGAR SYRUP, MINERAL WATER",
      "detailEn": "GIN, LEMON JUICE, SUGAR SYRUP, MINERAL WATER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/0df31d30d7c2c9f44f035cdd.webp",
      "allergens": [],
      "tags": []
@@ -29014,7 +29014,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -29190,7 +29190,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -30262,7 +30262,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -30438,7 +30438,7 @@
      "nameEn": "GLENFIDDICH 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 40,
      "imageUrl": "/merit-menus/4ca53b283b3293013212311a.webp",
      "allergens": [],
      "tags": []
@@ -30454,7 +30454,7 @@
      "nameEn": "LAGAVULIN DE 1995 16 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 50,
+     "price": 10,
      "imageUrl": "/merit-menus/a2c54766239ae3557418b34e.webp",
      "allergens": [],
      "tags": []
@@ -30470,7 +30470,7 @@
      "nameEn": "TALISKER 10 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 20,
      "imageUrl": "/merit-menus/261d82d9b2a2a3a19fd2022a.webp",
      "allergens": [],
      "tags": []
@@ -30486,7 +30486,7 @@
      "nameEn": "MACALLAN 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 40,
+     "price": 10,
      "imageUrl": "/merit-menus/396637a44ab9a10744aa8762.webp",
      "allergens": [],
      "tags": []
@@ -30742,7 +30742,7 @@
      "nameEn": "JAMESON",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 10,
      "imageUrl": "/merit-menus/cc4ddffc51b977c44e345ba1.webp",
      "allergens": [],
      "tags": []
@@ -30797,7 +30797,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -30845,7 +30845,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -30941,7 +30941,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/d31a90dffb8a5a97af30cfb4.webp",
      "allergens": [],
      "tags": []
@@ -30957,7 +30957,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -31005,7 +31005,7 @@
      "nameEn": "ESPRESSO, RISTRETTO, LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/54cd52868d5176490950ddb5.webp",
      "allergens": [],
      "tags": []
@@ -31069,7 +31069,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/d500bdf894c4ac3fb32516e7.webp",
      "allergens": [],
      "tags": []
@@ -31133,7 +31133,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -31901,7 +31901,7 @@
      "nameEn": "LIMONCELLO",
      "detail": null,
      "detailEn": null,
-     "price": 20,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -31933,7 +31933,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -33149,7 +33149,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -33293,7 +33293,7 @@
      "nameEn": "GLENMORANGIE 12 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": 40,
+     "price": 30,
      "imageUrl": "/merit-menus/5448a7a91dc5e934d7d85f14.webp",
      "allergens": [],
      "tags": []
@@ -33533,7 +33533,7 @@
      "nameEn": "JOHNNIE WALKER DOUBLE BLACK",
      "detail": null,
      "detailEn": null,
-     "price": 30,
+     "price": 20,
      "imageUrl": "/merit-menus/9befa415c82c10cf1b5f5809.webp",
      "allergens": [],
      "tags": []
@@ -33933,7 +33933,7 @@
      "nameEn": "AMARETTO SOUR",
      "detail": "DISARONNO ORIGINAL, JACK DANIEL'S, FRESH LEMON&ORANGE JUICE, ANGUSTRA BITTER",
      "detailEn": "DISARONNO ORIGINAL, JACK DANIEL'S, FRESH LEMON&ORANGE JUICE, ANGUSTRA BITTER",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/d59b74e40b297a82e926259c.webp",
      "allergens": [],
      "tags": []
@@ -33997,7 +33997,7 @@
      "nameEn": "ESPRESSO MARTINI",
      "detail": "ABSOLUT VODKA, ESPRESSO, KAHLUA, SUGAR SYRUP",
      "detailEn": "ABSOLUT VODKA, ESPRESSO, KAHLUA, SUGAR SYRUP",
-     "price": null,
+     "price": 35,
      "imageUrl": "/merit-menus/6844838dc0519bd49a638af1.webp",
      "allergens": [],
      "tags": []
@@ -36328,7 +36328,7 @@
      "nameEn": "SASSICAIA",
      "detail": "Cabernet Sauvignon / Bolgheri / ITALY",
      "detailEn": "Cabernet Sauvignon / Bolgheri / ITALY",
-     "price": 990,
+     "price": 880,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36346,7 +36346,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Cabernet Sauvignon / Thrace / TÜRKİYE",
      "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36382,7 +36382,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
      "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36472,7 +36472,7 @@
      "nameEn": "CIABOT DEL CONTE BAROLO",
      "detail": "Nebbiolo / Barolo / ITALY",
      "detailEn": "Nebbiolo / Barolo / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36490,7 +36490,7 @@
      "nameEn": "EPICURO Z-ELEBRATE ZINFANDEL",
      "detail": "Zinfandel / Puglia / ITALY",
      "detailEn": "Zinfandel / Puglia / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36508,7 +36508,7 @@
      "nameEn": "DUCA DI SARAGNANO CHIANTI RISERVA",
      "detail": "Sangiovese / Toscana / ITALY",
      "detailEn": "Sangiovese / Toscana / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36544,7 +36544,7 @@
      "nameEn": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
      "detail": "Corvina, Rondinella, Molinara / Veneto / ITALY",
      "detailEn": "Corvina, Rondinella, Molinara / Veneto / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36832,7 +36832,7 @@
      "nameEn": "PUERTO VIEJO RESERVE",
      "detail": "Carménère / Curicó Valley / CHILE",
      "detailEn": "Carménère / Curicó Valley / CHILE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36868,7 +36868,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (Glass)",
      "detail": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
      "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36904,7 +36904,7 @@
      "nameEn": "GRAND C RESERVE",
      "detail": "Pinot Noir / Alsace / FRANCE",
      "detailEn": "Pinot Noir / Alsace / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36922,7 +36922,7 @@
      "nameEn": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
      "detail": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
      "detailEn": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36940,7 +36940,7 @@
      "nameEn": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
      "detail": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
      "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
-     "price": 100,
+     "price": 70,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -36958,7 +36958,7 @@
      "nameEn": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
      "detail": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
      "detailEn": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
-     "price": 140,
+     "price": 130,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -37030,7 +37030,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Sauvignon Blanc / Thrace / TÜRKİYE",
      "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37066,7 +37066,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "Narince, Emir / Central Anatolia / TÜRKİYE",
      "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37336,7 +37336,7 @@
      "nameEn": "MONTE DO CARRAPATELO",
      "detail": "Arinto, Roupeiro / Alentejano / PORTUGAL",
      "detailEn": "Arinto, Roupeiro / Alentejano / PORTUGAL",
-     "price": 50,
+     "price": 70,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37390,7 +37390,7 @@
      "nameEn": "CLOUDY BAY",
      "detail": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
      "detailEn": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37444,7 +37444,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX (Glass)",
      "detail": "Sauvignon Blanc / Bordeaux / FRANCE",
      "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37480,7 +37480,7 @@
      "nameEn": "LE BIJOU",
      "detail": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
      "detailEn": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37552,7 +37552,7 @@
      "nameEn": "THOMAS LABILLE CHABLIS PREMIER CRU",
      "detail": "Chardonnay / Burgundy / FRANCE",
      "detailEn": "Chardonnay / Burgundy / FRANCE",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -37642,7 +37642,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Merlot, Cabernet Franc / TÜRKİYE",
      "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -37714,7 +37714,7 @@
      "nameEn": "11 MINUTES PASQUA",
      "detail": "Corvina / Veneto / ITALY",
      "detailEn": "Corvina / Veneto / ITALY",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -37768,7 +37768,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROSÉ (Glass)",
      "detail": "Merlot / Bordeaux / FRANCE",
      "detailEn": "Merlot / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -37966,7 +37966,7 @@
      "nameEn": "MARTHA'S RUBY PORT WINE",
      "detail": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
      "detailEn": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -37984,7 +37984,7 @@
      "nameEn": "MARTHA'S TAWNY PORT WINE",
      "detail": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
      "detailEn": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -38038,7 +38038,7 @@
      "nameEn": "NOBILIS PROSECCO EXTRA DRY",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 50,
+     "price": 60,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38056,7 +38056,7 @@
      "nameEn": "BRILLA PROSECCO BRUT",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 200,
+     "price": 100,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38074,7 +38074,7 @@
      "nameEn": "BRILLA PROSECCO ROSÉ",
      "detail": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
      "detailEn": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
-     "price": 200,
+     "price": 120,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38092,7 +38092,7 @@
      "nameEn": "BOTTEGA GOLD PROSECCO BRUT",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38110,7 +38110,7 @@
      "nameEn": "BOTTEGA ROSÉ GOLD PROSECCO",
      "detail": "Glera, Pinot Noir / Veneto / ITALY",
      "detailEn": "Glera, Pinot Noir / Veneto / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38362,7 +38362,7 @@
      "nameEn": "DOM PERIGNON BRUT CHAMPAGNE",
      "detail": "Pinot Noir / Champagne / FRANCE",
      "detailEn": "Pinot Noir / Champagne / FRANCE",
-     "price": 1650,
+     "price": 2650,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -38380,7 +38380,7 @@
      "nameEn": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
      "detail": "Pinot Noir, Chardonnay / Champagne / FRANCE",
      "detailEn": "Pinot Noir, Chardonnay / Champagne / FRANCE",
-     "price": 2550,
+     "price": 3850,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -39455,7 +39455,7 @@
      "nameEn": "SASSICAIA",
      "detail": "Cabernet Sauvignon / Bolgheri / ITALY",
      "detailEn": "Cabernet Sauvignon / Bolgheri / ITALY",
-     "price": 990,
+     "price": 880,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39473,7 +39473,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Cabernet Sauvignon / Thrace / TÜRKİYE",
      "detailEn": "Cabernet Sauvignon / Thrace / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39509,7 +39509,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
      "detailEn": "Öküzgözü, Boğazkere / Eastern Anatolia / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39599,7 +39599,7 @@
      "nameEn": "CIABOT DEL CONTE BAROLO",
      "detail": "Nebbiolo / Barolo / ITALY",
      "detailEn": "Nebbiolo / Barolo / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39617,7 +39617,7 @@
      "nameEn": "EPICURO Z-ELEBRATE ZINFANDEL",
      "detail": "Zinfandel / Puglia / ITALY",
      "detailEn": "Zinfandel / Puglia / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39635,7 +39635,7 @@
      "nameEn": "DUCA DI SARAGNANO CHIANTI RISERVA",
      "detail": "Sangiovese / Toscana / ITALY",
      "detailEn": "Sangiovese / Toscana / ITALY",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39671,7 +39671,7 @@
      "nameEn": "CASA DEFRÀ AMARONE DELLA VALPOLICELLA",
      "detail": "Corvina, Rondinella, Molinara / Veneto / ITALY",
      "detailEn": "Corvina, Rondinella, Molinara / Veneto / ITALY",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39959,7 +39959,7 @@
      "nameEn": "PUERTO VIEJO RESERVE",
      "detail": "Carménère / Curicó Valley / CHILE",
      "detailEn": "Carménère / Curicó Valley / CHILE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -39995,7 +39995,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROUGE RED WINE (Glass)",
      "detail": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
      "detailEn": "Merlot, Cabernet Sauvignon / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -40031,7 +40031,7 @@
      "nameEn": "GRAND C RESERVE",
      "detail": "Pinot Noir / Alsace / FRANCE",
      "detailEn": "Pinot Noir / Alsace / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -40049,7 +40049,7 @@
      "nameEn": "SEMASKA CÔTES-DU RHÔNE VILLAGES",
      "detail": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
      "detailEn": "Syrah, Grenache, Mourvèdre / Rhône / FRANCE",
-     "price": 100,
+     "price": 50,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -40067,7 +40067,7 @@
      "nameEn": "CHATEAU LA COURONNE SAINT- ÉMILION GRAND CRU",
      "detail": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
      "detailEn": "Cabernet Sauvignon, Merlot, Cabernet Franc / Bordeaux / FRANCE",
-     "price": 100,
+     "price": 70,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -40085,7 +40085,7 @@
      "nameEn": "LA CÔTE DE L'ANGE CHATEAUNEUF DU PAPE",
      "detail": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
      "detailEn": "Syrah Grenache, Mourvèdre / Rhône / FRANCE",
-     "price": 140,
+     "price": 130,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -40157,7 +40157,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Sauvignon Blanc / Thrace / TÜRKİYE",
      "detailEn": "Sauvignon Blanc / Thrace / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40193,7 +40193,7 @@
      "nameEn": "KAVAKLIDERE SELECTION (Glass)",
      "detail": "Narince, Emir / Central Anatolia / TÜRKİYE",
      "detailEn": "Narince, Emir / Central Anatolia / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40463,7 +40463,7 @@
      "nameEn": "MONTE DO CARRAPATELO",
      "detail": "Arinto, Roupeiro / Alentejano / PORTUGAL",
      "detailEn": "Arinto, Roupeiro / Alentejano / PORTUGAL",
-     "price": 50,
+     "price": 70,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40517,7 +40517,7 @@
      "nameEn": "CLOUDY BAY",
      "detail": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
      "detailEn": "Sauvignon Blanc / Marlborough / NEW ZEALAND",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40571,7 +40571,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX (Glass)",
      "detail": "Sauvignon Blanc / Bordeaux / FRANCE",
      "detailEn": "Sauvignon Blanc / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40607,7 +40607,7 @@
      "nameEn": "LE BIJOU",
      "detail": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
      "detailEn": "Sauvignon Blanc / Coteaux de Béziers / FRANCE",
-     "price": 70,
+     "price": 50,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40679,7 +40679,7 @@
      "nameEn": "THOMAS LABILLE CHABLIS PREMIER CRU",
      "detail": "Chardonnay / Burgundy / FRANCE",
      "detailEn": "Chardonnay / Burgundy / FRANCE",
-     "price": 120,
+     "price": 100,
      "imageUrl": "/merit-menus/5ab0aebbf6eb0e33c0cd1e43.webp",
      "allergens": [],
      "tags": []
@@ -40769,7 +40769,7 @@
      "nameEn": "SARAFİN (Glass)",
      "detail": "Merlot, Cabernet Franc / TÜRKİYE",
      "detailEn": "Merlot, Cabernet Franc / TÜRKİYE",
-     "price": 20,
+     "price": 25,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -40841,7 +40841,7 @@
      "nameEn": "11 MINUTES PASQUA",
      "detail": "Corvina / Veneto / ITALY",
      "detailEn": "Corvina / Veneto / ITALY",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -40895,7 +40895,7 @@
      "nameEn": "CHEVAL NOIR BORDEAUX ROSÉ (Glass)",
      "detail": "Merlot / Bordeaux / FRANCE",
      "detailEn": "Merlot / Bordeaux / FRANCE",
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ee0e6e2310b132f396deb2a6.webp",
      "allergens": [],
      "tags": []
@@ -41093,7 +41093,7 @@
      "nameEn": "MARTHA'S RUBY PORT WINE",
      "detail": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
      "detailEn": "Touriga, Tempranillo, Tinta Roriz, Tinta Cão / Porto / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -41111,7 +41111,7 @@
      "nameEn": "MARTHA'S TAWNY PORT WINE",
      "detail": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
      "detailEn": "Touriga, Tinta Barroca, Tinta Cão / Porto / PORTUGAL",
-     "price": 70,
+     "price": 100,
      "imageUrl": "/merit-menus/1e35a0766080744e43aa321b.webp",
      "allergens": [],
      "tags": []
@@ -41165,7 +41165,7 @@
      "nameEn": "NOBILIS PROSECCO EXTRA DRY",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 50,
+     "price": 60,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41183,7 +41183,7 @@
      "nameEn": "BRILLA PROSECCO BRUT",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 200,
+     "price": 100,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41201,7 +41201,7 @@
      "nameEn": "BRILLA PROSECCO ROSÉ",
      "detail": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
      "detailEn": "Cabernet Sauvignon, Chardonnay / Veneto / ITALY",
-     "price": 200,
+     "price": 120,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41219,7 +41219,7 @@
      "nameEn": "BOTTEGA GOLD PROSECCO BRUT",
      "detail": "Glera / Veneto / ITALY",
      "detailEn": "Glera / Veneto / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41237,7 +41237,7 @@
      "nameEn": "BOTTEGA ROSÉ GOLD PROSECCO",
      "detail": "Glera, Pinot Noir / Veneto / ITALY",
      "detailEn": "Glera, Pinot Noir / Veneto / ITALY",
-     "price": 150,
+     "price": 250,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41489,7 +41489,7 @@
      "nameEn": "DOM PERIGNON BRUT CHAMPAGNE",
      "detail": "Pinot Noir / Champagne / FRANCE",
      "detailEn": "Pinot Noir / Champagne / FRANCE",
-     "price": 1650,
+     "price": 2650,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -41507,7 +41507,7 @@
      "nameEn": "DOM PERIGNON ROSÉ BRUT CHAMPAGNE",
      "detail": "Pinot Noir, Chardonnay / Champagne / FRANCE",
      "detailEn": "Pinot Noir, Chardonnay / Champagne / FRANCE",
-     "price": 2550,
+     "price": 3850,
      "imageUrl": "/merit-menus/e9ed82a9fe1ac44482da1886.webp",
      "allergens": [],
      "tags": []
@@ -42652,7 +42652,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -42832,7 +42832,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15.0,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -42868,7 +42868,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -42976,7 +42976,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 8.0,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -43084,7 +43084,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5.0,
+     "price": 10,
      "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
      "allergens": [],
      "tags": []
@@ -43210,7 +43210,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10.0,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -43264,7 +43264,7 @@
      "nameEn": "LIMONCELLO",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -45154,7 +45154,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 40.0,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -45640,7 +45640,7 @@
      "nameEn": "JAMESON",
      "detail": "5 cl",
      "detailEn": "5 cl",
-     "price": 20.0,
+     "price": 15,
      "imageUrl": "/merit-menus/cc4ddffc51b977c44e345ba1.webp",
      "allergens": [],
      "tags": []
@@ -45911,7 +45911,7 @@
      "nameEn": "SAN PELLEGRINO",
      "detail": null,
      "detailEn": null,
-     "price": 8,
+     "price": 8.4,
      "imageUrl": "/merit-menus/36282d72b517ef8184343693.webp",
      "allergens": [],
      "tags": []
@@ -45959,7 +45959,7 @@
      "nameEn": "WATER 330 ml.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 5,
      "imageUrl": "/merit-menus/40999ea043f0d8c1907096e7.webp",
      "allergens": [],
      "tags": []
@@ -46055,7 +46055,7 @@
      "nameEn": "LEMONADE",
      "detail": null,
      "detailEn": null,
-     "price": 5,
+     "price": 10,
      "imageUrl": "/merit-menus/b8bccd3e8b01e31c8bad815f.webp",
      "allergens": [],
      "tags": []
@@ -46071,7 +46071,7 @@
      "nameEn": "ENERGY DRINK",
      "detail": null,
      "detailEn": null,
-     "price": 7,
+     "price": 8.4,
      "imageUrl": "/merit-menus/4eb9a6209dcf9fe46383367a.webp",
      "allergens": [],
      "tags": []
@@ -46119,7 +46119,7 @@
      "nameEn": "ESPRESSO, RISTRETTO, LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/87b0497eb33855726de09533.webp",
      "allergens": [],
      "tags": []
@@ -46183,7 +46183,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/2e5292adb5f869e108af555e.webp",
      "allergens": [],
      "tags": []
@@ -46247,7 +46247,7 @@
      "nameEn": "HOT CHOCOLATE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/ab9f315adecfb49a39d58604.webp",
      "allergens": [],
      "tags": []
@@ -46487,7 +46487,7 @@
      "nameEn": "HEINEKEN",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 15,
      "imageUrl": "/merit-menus/6e00803222e49658ce860f88.webp",
      "allergens": [],
      "tags": []
@@ -46647,7 +46647,7 @@
      "nameEn": "LIMONCELLO",
      "detail": null,
      "detailEn": null,
-     "price": 20,
+     "price": 10,
      "imageUrl": "/merit-menus/ae8407abe7748a27f212af56.webp",
      "allergens": [],
      "tags": []
@@ -46695,7 +46695,7 @@
      "nameEn": "SMIRNOFF NORTH",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/679de4e9d66c5689d9ec61e2.webp",
      "allergens": [],
      "tags": []
@@ -47591,7 +47591,7 @@
      "nameEn": "UNDERBERG",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/5dd9b0b72174ed77e3a5f70d.webp",
      "allergens": [],
      "tags": []
@@ -47623,7 +47623,7 @@
      "nameEn": "WENNEKER APRICOT BRANDY",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/9e883c72bf46bcc81803ac01.webp",
      "allergens": [],
      "tags": []
@@ -48023,7 +48023,7 @@
      "nameEn": "FRANGELICO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e05c00282dee2e2d39e8bf89.webp",
      "allergens": [],
      "tags": []
@@ -48247,7 +48247,7 @@
      "nameEn": "OBAN 14 Y.O.",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 30,
      "imageUrl": "/merit-menus/cb5db612e253923827b3d732.webp",
      "allergens": [],
      "tags": []
@@ -49941,7 +49941,7 @@
      "nameEn": "MATCHA TEA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/301df59ee5940a0f47894c2f.webp",
      "allergens": [],
      "tags": []
@@ -49957,7 +49957,7 @@
      "nameEn": "TURKISH COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 10,
+     "price": 20,
      "imageUrl": "/merit-menus/50879f8d5d5a2614fb49557f.webp",
      "allergens": [],
      "tags": []
@@ -49973,7 +49973,7 @@
      "nameEn": "TURKISH COFFEE WITH MASTIC GUM",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/c23ced2a27f1d6ef3ac6fff1.webp",
      "allergens": [],
      "tags": []
@@ -49989,7 +49989,7 @@
      "nameEn": "FILTER COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": 15,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -50005,7 +50005,7 @@
      "nameEn": "DECAFFEINATED COFFEE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/38122740d0e8051ae277f288.webp",
      "allergens": [],
      "tags": []
@@ -50037,7 +50037,7 @@
      "nameEn": "ESPRESSO LUNGO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 15,
      "imageUrl": "/merit-menus/998db16d06e1c8e09fd3ef3a.webp",
      "allergens": [],
      "tags": []
@@ -50069,7 +50069,7 @@
      "nameEn": "COFFEE CORTADO",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/cd9f1be52e88304fcbb0c456.webp",
      "allergens": [],
      "tags": []
@@ -50085,7 +50085,7 @@
      "nameEn": "FLAT WHITE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/776fbf1d201ff548d2a74690.webp",
      "allergens": [],
      "tags": []
@@ -50149,7 +50149,7 @@
      "nameEn": "COCONUT MATCHA LATTE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/c31d230c7d37d37315ac425f.webp",
      "allergens": [],
      "tags": []
@@ -50229,7 +50229,7 @@
      "nameEn": "FRESHLY BREWED HERBAL TEAS",
      "detail": "KIŞ ÇAYI, REZENE, IHLAMUR, ADA ÇAYI, HIBISKUS, PAPATYA, YASEMİN, EKİNEZYA, MELİSA",
      "detailEn": "WINTER TEA, FENNEL, LINDEN, SAGE TEA, HIBISCUS, CAMOMILE, JASMINE, ECHINECEA, BALM",
-     "price": null,
+     "price": 7,
      "imageUrl": "/merit-menus/e76b69a2509f5529bf7169a9.webp",
      "allergens": [],
      "tags": []
@@ -50245,7 +50245,7 @@
      "nameEn": "THIRD GENERATION COFFEES",
      "detail": "CHEMEX, V60, SYPHON",
      "detailEn": "CHEMEX, V60, SYPHON",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/f0b3b43a9c1c04bf9d1286ac.webp",
      "allergens": [],
      "tags": []
@@ -50487,7 +50487,7 @@
      "nameEn": "GREEN ANGEL",
      "detail": "ŞEFTALİ, ARMUT",
      "detailEn": "PEACH, PEAR",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/208751b2b3dcae84eb6cc6e3.webp",
      "allergens": [],
      "tags": []
@@ -50505,7 +50505,7 @@
      "nameEn": "WINTERDREAM",
      "detail": "ROOIBOS, KIŞ BAHARATLARI, KARAMEL, PORTAKAL",
      "detailEn": "ROOIBOS, WINTER SPICES, CARAMEL, ORANGE",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/d4964ac9ff55cd00154ed228.webp",
      "allergens": [],
      "tags": []
@@ -50523,7 +50523,7 @@
      "nameEn": "NANE & PEPPERMINT",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/289e719bb128e5ccb76f5509.webp",
      "allergens": [],
      "tags": []
@@ -50541,7 +50541,7 @@
      "nameEn": "CAMOMILE",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/7c1107ecec842b59859a7fd5.webp",
      "allergens": [],
      "tags": []
@@ -50559,7 +50559,7 @@
      "nameEn": "ENGLISH BREAKFAST",
      "detail": "SİYAH ÇAY",
      "detailEn": "BLACK TEA",
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/fd51fbc57aa0610232a18c9b.webp",
      "allergens": [],
      "tags": []
@@ -50577,7 +50577,7 @@
      "nameEn": "ROOIBOS VANILLA",
      "detail": null,
      "detailEn": null,
-     "price": null,
+     "price": 10,
      "imageUrl": "/merit-menus/70d1b23612811e6dcd27bbae.webp",
      "allergens": [],
      "tags": []
@@ -50595,7 +50595,7 @@
      "nameEn": "MORGENTAU",
      "detail": "YEŞİL ÇAY(SENCHA), AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
      "detailEn": "GREEN TEA(SENCHA), SUNFLOWER, ROSE LEAVES, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/b59f2c9d450bf58fd8e78e97.webp",
      "allergens": [],
      "tags": []
@@ -50613,7 +50613,7 @@
      "nameEn": "MASALA CHAI",
      "detail": "SİYAH ÇAY(ASSAM), TARÇIN PARÇALARI, REZENE, ZENCEFİL, KARANFİL, KARABİBER, ANASON",
      "detailEn": "BLACK TEA(ASSAM), CINNAMON, FENNEL, GINGER, CLOVES, BLACK PEPPERCORNS, ANISE",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/b3164f29b6de9330fdbfbe00.webp",
      "allergens": [],
      "tags": []
@@ -50631,7 +50631,7 @@
      "nameEn": "VANILLA ROOIBOS",
      "detail": "ROOIBOS (KIRMIZI ÇALI), VANİLYA",
      "detailEn": "ROOIBOS (RED BLUSH), VANILLA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/70d1b23612811e6dcd27bbae.webp",
      "allergens": [],
      "tags": []
@@ -50649,7 +50649,7 @@
      "nameEn": "CHILL OUT WITH HERBS",
      "detail": "ROOIBOS, BÖĞÜRTLEN YAPRAKLARI, MELİSA, PORTAKAL, AYÇİÇEĞİ YAPRAKLARI, PEYGAMBER ÇİÇEĞİ",
      "detailEn": "ROOIBOS, BLACKBERRY LEAVES, BALM, ORANGE, SUNFLOWER PETALS, CORNFLOWER BLOSSOM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/c2c50dc89fc640925b6ad1a2.webp",
      "allergens": [],
      "tags": []
@@ -50667,7 +50667,7 @@
      "nameEn": "FRUITY CAMOMILE",
      "detail": "PAPATYA, PORTAKAL ÇİÇEKLERİ",
      "detailEn": "CAMOMILE, ORANGE BLOSSOM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/6bf3e07159cafbe4ab3c42d3.webp",
      "allergens": [],
      "tags": []
@@ -50685,7 +50685,7 @@
      "nameEn": "REFRESHING MINT",
      "detail": "NANE, LİMON OTU",
      "detailEn": "MINT, LEMON GRASS",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/ef0ee39f9bae42203b50e9ab.webp",
      "allergens": [],
      "tags": []
@@ -50703,7 +50703,7 @@
      "nameEn": "ROOIBOS CREAM ORANGE",
      "detail": "ROOIBOS, PORTAKAL KABUĞU, DOĞAL AROMA",
      "detailEn": "ROOIBOS, ORANGE PEEL, NATURAL AROMA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/41727dd9782f0da796b00cc5.webp",
      "allergens": [],
      "tags": []
@@ -50721,7 +50721,7 @@
      "nameEn": "HUCKLEBERRY FRIEND",
      "detail": "YEŞİL ÇAY, LİMON OTU, ELMA, YABAN MERSİNİ",
      "detailEn": "GREEN TEA, LEMON GRASS, APPLE, BLUEBERRY",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/37385fc998f31a201d419224.webp",
      "allergens": [],
      "tags": []
@@ -50739,7 +50739,7 @@
      "nameEn": "JASMINE PEARLS",
      "detail": "YEŞİL ÇAY, AYÇİÇEĞİ, GÜL YAPRAKLARI, PEYGAMBER ÇİÇEĞİ, DOĞAL MANGO VE BERGAMOT AROMASI",
      "detailEn": "GREEN TEA, SUNFLOWER, ROSE PETALS, CORNFLOWER, NATURAL MANGO AND BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/3d3cd778176a32f483a586ba.webp",
      "allergens": [],
      "tags": []
@@ -50757,7 +50757,7 @@
      "nameEn": "EARL GREY",
      "detail": "SİYAH ÇAY(DARJEELING-TGPOF*), DOĞAL BERGAMOT AROMASI",
      "detailEn": "BLACK TEA(DARJEELING-TGPOF*), NATURAL BERGAMOT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/a76fe67361cdcc3115b6e310.webp",
      "allergens": [],
      "tags": []
@@ -50775,7 +50775,7 @@
      "nameEn": "GREEN LEAF",
      "detail": "YEŞİL ÇAY(SENCHA)",
      "detailEn": "GREEN TEA(SENCHA)",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/249ee561d9015bd539aa7882.webp",
      "allergens": [],
      "tags": []
@@ -50793,7 +50793,7 @@
      "nameEn": "IRISH WHISKEY CREAM",
      "detail": "SİYAH ÇAY, KAKAO KABUKLARI, MALT VİSKİ AROMASI",
      "detailEn": "BLACK TEA, COCOA PEEL, MALT WHISKEY FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/d4f0be70f3f551cca927abed.webp",
      "allergens": [],
      "tags": []
@@ -50811,7 +50811,7 @@
      "nameEn": "CHINESE SPRING",
      "detail": "BEYAZ ÇAY, EBEGÜMECİ, AYNISEFA ÇİÇEĞİ, DOĞAL ÇARKIFELEK MEYVESİ AROMASI",
      "detailEn": "WHITE TEA, HIBISCUS, MARIGOLD FLOWER, NATURAL PASSION FRUIT FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/32723d6d76d5e3b452960382.webp",
      "allergens": [],
      "tags": []
@@ -50829,7 +50829,7 @@
      "nameEn": "GET THE POWER",
      "detail": "AMBER ÇİÇEĞİ, BÖĞÜRTLEN YAPRAKLARI, KOLA BİTKİSİ, MÜRVER ÇİÇEĞİ, PORTAKAL KABUĞU, FRENK ÜZÜMÜ",
      "detailEn": "MUSK MALLOW, BLACKBERRY LEAVES, COLA PLANT, ELDERFLOWER, ORANGE PEEL, BLACKCURRANT",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/dc8649df57e2a5e79ab8d906.webp",
      "allergens": [],
      "tags": []
@@ -50847,7 +50847,7 @@
      "nameEn": "GINGER TWIST",
      "detail": "YEŞİL ÇAY, AYVA, ZENCEFİL, AYNISEFA ÇİÇEĞİ, SAFRAN ÇİÇEĞİ YAPRAKLARI, DOĞAL AYVA AROMASI",
      "detailEn": "GREEN TEA, QUINCE, GINGER, MARIGOLD FLOWERİ NATURAL QUINCE FLAVOR",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/af0b8a220d113591f3ec5671.webp",
      "allergens": [],
      "tags": []
@@ -50865,7 +50865,7 @@
      "nameEn": "WHITE YIN LONG",
      "detail": "BEYAZ ÇAY",
      "detailEn": "WHITE TEA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/e916fc323a340c83c4096e16.webp",
      "allergens": [],
      "tags": []
@@ -50883,7 +50883,7 @@
      "nameEn": "ROOIBOS CHOCOLATE HEAVEN",
      "detail": "ROOIBOS, KAKAO KABUĞU, VANİLYA",
      "detailEn": "ROOIBOS, COCOA SELL, VANILLA",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/251d4bc099fb1381e4c5b448.webp",
      "allergens": [],
      "tags": []
@@ -50901,7 +50901,7 @@
      "nameEn": "AYURVEDA HERBS & GINGER",
      "detail": "ZENCEFİL, ANASON, REZENE, MEYAN KÖKÜ, LİMON OTU, TARÇIN, KARABİBER, PAPATYA, BÖĞÜRTLEN YAPRAKLARI, MELİSA, GÜL",
      "detailEn": "GINGER, ANISE SEED, FENNEL SEED, LICORICE ROOT, LEMON GRASS, CINNAMON PIECES, BLACK PEPPER, CAMOMILE FLOWERS, SWEET BLACKBERRY LEAVES, LEMON BALM, ROSE PETALS",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/489ca1bee3daa816ebfd6064.webp",
      "allergens": [],
      "tags": []
@@ -50965,7 +50965,7 @@
      "nameEn": "ICED COFFEE CREAM",
      "detail": "ESPRESSO, SÜT, DONDURMA",
      "detailEn": "ESPRESSO, MILK, ICE CREAM",
-     "price": null,
+     "price": 20,
      "imageUrl": "/merit-menus/fe8e01dcc8feebaae973e810.webp",
      "allergens": [],
      "tags": []
@@ -50981,7 +50981,7 @@
      "nameEn": "WHITE CHOCOLATE MOCHA",
      "detail": "ESPRESSO, SÜT, BEYAZ ÇİKOLATA",
      "detailEn": "ESPRESSO, MILK, WHITE CHOCOLATE",
-     "price": null,
+     "price": 20,
      "imageUrl": null,
      "allergens": [],
      "tags": []
