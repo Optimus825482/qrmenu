@@ -54,3 +54,12 @@ export function HotelBadges({ names, empty = "—" }: { names: readonly (string 
     </span>
   );
 }
+
+/** Room number as a small badge, shown next to the hotel badge of the room. */
+export function RoomBadge({ number }: { number: string }) {
+  return (
+    <span className="room-badge" title={`Oda ${number}`}>
+      Oda {number}
+    </span>
+  );
+}

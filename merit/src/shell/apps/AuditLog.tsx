@@ -12,7 +12,7 @@ import type { PageSize, SortSpec } from "@/modules/core/server/admin/listQuery";
 import type { AppProps } from "../registry";
 import { useSse } from "../useSse";
 import { type Column, DataGrid } from "../ui/DataGrid";
-import { HotelBadges } from "@/components/ui/HotelBadge";
+import { HotelBadge, HotelBadges, RoomBadge } from "@/components/ui/HotelBadge";
 
 const AUDIT_EVENTS = ["audit.created"] as const;
 const RELOAD_DEBOUNCE_MS = 150;
@@ -167,7 +167,20 @@ export function AuditLog({ setStatus }: AppProps) {
         title: "Kullanıcı",
         width: 160,
         sortable: true,
-        render: (row) => (row.username ? `${row.fullName ?? row.username} (${row.username})` : "—"),
+        render: (row) => {
+          const who = row.username ? `${row.fullName ?? row.username} (${row.username})` : null;
+          // Oda kaydı: kimin odası olduğu id'den okunmaz, otel + oda numarası rozetleri gösterilir.
+          if (row.roomNumber) {
+            return (
+              <span className="hotel-badges" title={who ?? undefined}>
+                {row.roomHotelCode ? <HotelBadge name={row.roomHotelCode} /> : null}
+                <RoomBadge number={row.roomNumber} />
+                {who ? <span>{who}</span> : null}
+              </span>
+            );
+          }
+          return who ?? "—";
+        },
       },
       { key: "action", title: "İşlem", width: 150, sortable: true },
       {

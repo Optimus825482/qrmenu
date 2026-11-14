@@ -190,6 +190,32 @@ describe("denetim günlüğü", () => {
     expect(detail.after).toEqual({ n: "yeni" });
   });
 
+  it("oda satırı otel kodu ve oda numarasını taşır; silinmiş oda ve başka varlık boş kalır", async () => {
+    const sys = await makeUser({ username: "admin-oda", roleCode: "R-SYS", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(sys, { hotelCode: "ROYAL" });
+    const diamond = await hotelId("DIAMOND");
+    const floor = await testDb.floor.create({ data: { hotelId: diamond, number: 7, name: "Kat 7" } });
+    const room = await testDb.room.create({ data: { hotelId: diamond, floorId: floor.id, number: "714" } });
+    const scan = await testDb.auditLog.create({
+      data: { action: "QR_ESKI_KOD", entity: "Room", entityId: room.id, hotelId: diamond },
+    });
+    await testDb.auditLog.createMany({
+      data: [
+        { action: "QR_ESKI_KOD", entity: "Room", entityId: "silinmis-oda", hotelId: diamond },
+        // Another entity that happens to carry the same id must not be read as a room.
+        { action: "ORDER_X", entity: "Order", entityId: room.id, hotelId: diamond },
+      ],
+    });
+
+    const page = await auditLog.list(ctx, {});
+    const badges = page.items.map((row) => [row.entity, row.entityId, row.roomHotelCode, row.roomNumber]);
+    expect(badges).toContainEqual(["Room", room.id, "DIAMOND", "714"]);
+    expect(badges).toContainEqual(["Room", "silinmis-oda", null, null]);
+    expect(badges).toContainEqual(["Order", room.id, null, null]);
+
+    expect(await auditLog.get(ctx, scan.id)).toMatchObject({ roomHotelCode: "DIAMOND", roomNumber: "714" });
+  });
+
   it("audit() audit.created yayınlar, alıcı yalnız SISTEM, gövde before/after taşımaz", async () => {
     const mr = await hotelId("ROYAL");
     publishMock.mockClear();

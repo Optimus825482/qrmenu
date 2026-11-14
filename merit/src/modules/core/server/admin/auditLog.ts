@@ -44,6 +44,9 @@ export type AuditRow = {
   username: string | null;
   fullName: string | null;
   ip: string | null;
+  /** Set when the row is about a room (`entity === "Room"`) that still exists. */
+  roomNumber: string | null;
+  roomHotelCode: string | null;
 };
 
 export type AuditDetail = AuditRow & { before: unknown; after: unknown };
@@ -70,7 +73,21 @@ const rowSelect = {
 
 type Listed = Prisma.AuditLogGetPayload<{ select: typeof rowSelect }>;
 
-function toRow(row: Listed): AuditRow {
+type RoomInfo = { number: string; hotelCode: string };
+
+/** Rooms the given rows point at, in one query: the list shows them as hotel + room number badges. */
+async function roomsFor(rows: readonly { entity: string; entityId: string | null }[]): Promise<Map<string, RoomInfo>> {
+  const ids = [...new Set(rows.flatMap((row) => (row.entity === "Room" && row.entityId ? [row.entityId] : [])))];
+  if (ids.length === 0) return new Map();
+  const rooms = await prisma.room.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, number: true, hotel: { select: { code: true } } },
+  });
+  return new Map(rooms.map((room) => [room.id, { number: room.number, hotelCode: room.hotel.code }]));
+}
+
+function toRow(row: Listed, rooms: ReadonlyMap<string, RoomInfo>): AuditRow {
+  const room = row.entity === "Room" && row.entityId ? rooms.get(row.entityId) : undefined;
   return {
     id: row.id,
     createdAt: row.createdAt.toISOString(),
@@ -83,6 +100,8 @@ function toRow(row: Listed): AuditRow {
     username: row.user?.username ?? null,
     fullName: row.user?.fullName ?? null,
     ip: row.ip,
+    roomNumber: room?.number ?? null,
+    roomHotelCode: room?.hotelCode ?? null,
   };
 }
 
@@ -164,7 +183,12 @@ export async function list(ctx: Ctx, raw: AuditListInput = {}): Promise<Page<Aud
     }),
     prisma.auditLog.count({ where }),
   ]);
-  return toPage(items.map(toRow), total, query);
+  const rooms = await roomsFor(items);
+  return toPage(
+    items.map((row) => toRow(row, rooms)),
+    total,
+    query,
+  );
 }
 
 /** One row with before/after. Hidden and missing rows are both NOT_FOUND. */
@@ -175,8 +199,11 @@ export async function get(ctx: Ctx, id: string): Promise<AuditDetail> {
     select: { ...rowSelect, before: true, after: true },
   });
   if (!row) throw new DomainError("NOT_FOUND", "Kayıt bulunamadı");
-  return { ...toRow(row), before: row.before, after: row.after };
+  return { ...toRow(row, await roomsFor([row])), before: row.before, after: row.after };
 }
+
+/** The CSV keeps its columns: room badges are a list-only display. */
+const NO_ROOMS: ReadonlyMap<string, RoomInfo> = new Map();
 
 function csvCell(value: string): string {
   const guarded = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
@@ -202,7 +229,7 @@ export async function exportCsv(ctx: Ctx, raw: AuditListInput = {}): Promise<str
   });
   const header = "tarih,kullanici,islem,varlik,varlikId,otel,ip";
   const lines = rows.map((row) => {
-    const mapped = toRow(row);
+    const mapped = toRow(row, NO_ROOMS);
     return [
       mapped.createdAt,
       mapped.username ?? "",

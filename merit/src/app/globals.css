@@ -205,3 +205,17 @@ body {
   background: #eee8fc;
   color: #47309a;
 }
+
+/* Oda numarası rozeti: otel rozetinin yanında durur, üç otel tonundan ayrışan yeşil. */
+.room-badge {
+  display: inline-block;
+  padding: 0 7px;
+  border: 1px solid #9fd3b4;
+  border-radius: 999px;
+  background: #e3f6ea;
+  color: #14572f;
+  font-size: 0.86em;
+  font-weight: 700;
+  line-height: 1.55;
+  white-space: nowrap;
+}
