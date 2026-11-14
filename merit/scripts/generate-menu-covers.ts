@@ -39,12 +39,14 @@ export interface CoverSpec {
   soft: string;
   /** Hero font of the outlet (menuDesigns.ts). */
   font: "cinzel" | "cormorant" | "playfair" | "greatvibes" | "montserrat" | "jakarta" | "bodoni";
+  /** Logo height in px (default 264). A larger logo also gets a soft shadow and a smaller motif to make room. */
+  logoHeight?: number;
 }
 
 export const COVERS: CoverSpec[] = [
-  { slug: "oda-servisi-diamond", hotel: "diamond", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#faf8f5", accent: "#785028", soft: "#f0ebe1", font: "cinzel" },
-  { slug: "oda-servisi-royal", hotel: "royal", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#fdfbf7", accent: "#8c6218", soft: "#f4eee1", font: "cinzel" },
-  { slug: "oda-servisi-premium", hotel: "premium", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#fcf9f2", accent: "#7c5832", soft: "#f2eadb", font: "cinzel" },
+  { slug: "oda-servisi-diamond", hotel: "diamond", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#faf8f5", accent: "#785028", soft: "#f0ebe1", font: "cinzel", logoHeight: 350 },
+  { slug: "oda-servisi-royal", hotel: "royal", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#fdfbf7", accent: "#8c6218", soft: "#f4eee1", font: "cinzel", logoHeight: 350 },
+  { slug: "oda-servisi-premium", hotel: "premium", title: "Oda Servisi", subtitle: "In-Room Dining", motif: "cloche", bg: "#fcf9f2", accent: "#7c5832", soft: "#f2eadb", font: "cinzel", logoHeight: 350 },
   { slug: "diamond-lobby-bar", hotel: "diamond", title: "Lobby Bar", subtitle: "Menu", motif: "coupe", bg: "#faf8f5", accent: "#785028", soft: "#f0ebe1", font: "cormorant" },
   { slug: "royal-lobby-bar", hotel: "royal", title: "Lobby Bar", subtitle: "Menu", motif: "coupe", bg: "#f9fbff", accent: "#1e3f7a", soft: "#eaeff8", font: "playfair" },
   { slug: "premium-lobby-bar", hotel: "premium", title: "Lobby Bar", subtitle: "Menu", motif: "coupe", bg: "#fcf9f2", accent: "#7c5832", soft: "#f2eadb", font: "cormorant" },
@@ -83,6 +85,7 @@ function html(spec: CoverSpec): string {
   const font = FONTS[spec.font];
   const fontUrl = pathToFileURL(path.join(ROOT, "public", "fonts", font.file)).href;
   const capsUrl = pathToFileURL(path.join(ROOT, "public", "fonts", "montserrat.ttf")).href;
+  const big = (spec.logoHeight ?? 264) > 264;
   const logoUrl = pathToFileURL(path.join(ROOT, "public", "brand", "hotels", `${spec.hotel}.png`)).href;
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><style>
 @font-face { font-family: "${font.family}"; src: url("${fontUrl}"); font-weight: 100 900; }
@@ -95,10 +98,10 @@ body { width: ${WIDTH}px; height: ${HEIGHT}px; background: radial-gradient(circl
 .corner.tl { left: 32px; top: 32px; } .corner.tr { right: 32px; top: 32px; }
 .corner.bl { left: 32px; bottom: 32px; } .corner.br { right: 32px; bottom: 32px; }
 main { position: absolute; inset: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 14px 60px; }
-.logo { height: 264px; margin-bottom: 16px; }
-.motif { width: 100px; height: 100px; margin-bottom: 6px; fill: none; stroke: ${spec.accent}; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.logo { height: ${spec.logoHeight ?? 264}px; margin-bottom: ${big ? 10 : 16}px;${big ? " filter: drop-shadow(0 10px 18px rgba(40, 28, 10, 0.28));" : ""} }
+.motif { width: ${big ? 72 : 100}px; height: ${big ? 72 : 100}px; margin-bottom: ${big ? 2 : 6}px; fill: none; stroke: ${spec.accent}; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 h1 { font-family: "${font.family}", serif; ${font.css} line-height: 1.1; white-space: nowrap; }
-.rule { display: flex; align-items: center; gap: 18px; margin: 22px 0 20px; }
+.rule { display: flex; align-items: center; gap: 18px; margin: ${big ? "14px 0 14px" : "22px 0 20px"}; }
 .rule i { display: block; width: 150px; height: 2px; background: ${spec.accent}; opacity: 0.75; }
 .rule b { display: block; width: 14px; height: 14px; background: ${spec.accent}; transform: rotate(45deg); }
 p { font-family: "CoverCaps", sans-serif; font-weight: 400; font-size: 30px; letter-spacing: 0.42em; margin-right: -0.42em; text-transform: uppercase; }
