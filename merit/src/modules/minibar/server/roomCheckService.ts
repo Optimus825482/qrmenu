@@ -429,6 +429,9 @@ export async function getRoomCheckView(ctx: Ctx, roomId: string, now: Date = new
 
 // ---------------------------------------------------------------- +N replacement
 
+/** Most units a product may get above its daily setup capacity in one room per business day (over-setup buttons). */
+export const OVER_SETUP_DAILY_MAX = 20;
+
 const replacementSchema = z
   .strictObject({
     roomId: id,
@@ -560,9 +563,18 @@ export async function bookReplacementTx(
     return { ...it, setupQty: setup.items.find((i) => i.productId === it.productId)!.setupQty };
   });
   for (const l of lines) {
-    if (l.overSetup) continue; // pool stock is still checked in takeManyFromPool
     const capacity = caps.get(l.productId) ?? 0;
     const added = done.get(l.productId) ?? 0;
+    if (l.overSetup) {
+      // Over-setup has a hard daily ceiling on the server too (pool stock is still checked in takeManyFromPool).
+      if (added + l.qty > capacity + OVER_SETUP_DAILY_MAX) {
+        throw new DomainError(
+          "DAILY_LIMIT",
+          `Setup üstü günlük sınır aşılamaz: setup ${capacity} + en fazla ${OVER_SETUP_DAILY_MAX}, bugün eklenen ${added}`,
+        );
+      }
+      continue;
+    }
     if (added + l.qty > capacity) {
       throw new DomainError(
         "DAILY_LIMIT",
@@ -649,7 +661,7 @@ export async function bookReplacementTx(
     after: {
       roomId: room.id,
       roomNumber: room.number,
-      items: lines.map((l) => ({ productId: l.productId, setupId: l.setupId, qty: l.qty })),
+      items: lines.map((l) => ({ productId: l.productId, setupId: l.setupId, qty: l.qty, ...(l.overSetup ? { overSetup: true } : {}) })),
       clientRequestId,
       ...(p.manualRequestId ? { manualRequestId: p.manualRequestId } : {}),
     },

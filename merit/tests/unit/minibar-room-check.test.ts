@@ -204,6 +204,16 @@ describe("addReplacement", () => {
     await expectConsistent(w.hotelId, w.cola.id, 10);
   });
 
+  it("overSetup: sunucuda günlük tavan setup + 20; aşan ekleme DAILY_LIMIT, setup üstü audit'te işaretli", async () => {
+    const { w, kat } = await world({ stock: 100 });
+    await rep(kat.ctx, w, 4); // setup 4 -> full
+    expect((await rep(kat.ctx, w, 20, { overSetup: true })).added).toBe(20);
+    expect(await codeOf(rep(kat.ctx, w, 1, { overSetup: true }))).toBe("DAILY_LIMIT");
+    expect((await stockOf(w.hotelId, w.cola.id)).remainingQty).toBe(76);
+    const logs = await testDb.auditLog.findMany({ where: { action: "MINIBAR_REPLACE", hotelId: w.hotelId } });
+    expect(logs.some((l) => JSON.stringify(l.after).includes('"overSetup":true'))).toBe(true);
+  });
+
   it("iki personel eşzamanlı 5+5: kapasiteyi aşamaz (biri DAILY_LIMIT)", async () => {
     const { w, kat, kat2 } = await world({ cabinets: 2 });
     const results = await Promise.all([rep(kat.ctx, w, 5), rep(kat2.ctx, w, 5)].map(codeOf));
