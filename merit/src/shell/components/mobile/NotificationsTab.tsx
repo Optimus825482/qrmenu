@@ -24,7 +24,7 @@ function stamp(iso: string): string {
   return day(d) === day(new Date()) ? time : `${formatInTimeZone(d, TZ, "dd.MM")} ${time}`;
 }
 
-/** Bildirimler: the last 20 own notifications; a tap marks one read. */
+/** Bildirimler: the own unread notifications; a tap marks one read and takes it off the list. */
 export function NotificationsTab({ items, error, unread, onRead, onReadAll, onOpen, canOpen }: Props) {
   return (
     <div className="mb-stack">
@@ -41,7 +41,7 @@ export function NotificationsTab({ items, error, unread, onRead, onReadAll, onOp
       ) : null}
       {items !== null && items.length === 0 ? (
         <div className="mb-empty">
-          <p>Bildirim yok</p>
+          <p>Okunmamış bildirim yok</p>
         </div>
       ) : null}
       <ul className="mb-notes" aria-label="Bildirimler">
@@ -52,7 +52,7 @@ export function NotificationsTab({ items, error, unread, onRead, onReadAll, onOp
               className="mb-note"
               data-read={n.isRead}
               onClick={() => {
-                if (!n.isRead) onRead(n.id);
+                onRead(n.id);
                 onOpen?.(n);
               }}
             >

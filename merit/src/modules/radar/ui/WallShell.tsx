@@ -60,7 +60,10 @@ export function WallShell({
       <div className="rd-wall-brand">
         <Icon name="radar" size={20} />
         <strong>{hotelName || "Canlı Radar"}</strong>
-        <span className="rd-wall-clock">{clockText}</span>
+        {/* The server and the browser read the clock a moment apart: the second may differ on first paint. */}
+        <span className="rd-wall-clock" suppressHydrationWarning>
+          {clockText}
+        </span>
       </div>
 
       <div className="rd-wall-meta">

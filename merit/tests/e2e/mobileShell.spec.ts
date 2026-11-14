@@ -255,9 +255,9 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
   await expect(live).toBeVisible({ timeout: 5000 });
   await expect(list.getByRole("listitem").first()).toContainText("Yeni sipariş");
 
-  // Tap marks the row read: the dot disappears and the DB row is read.
+  // Tap marks the row read: it leaves the list (unread ones only) and the DB row is read.
   await row.click();
-  await expect(row.getByTestId("unread-dot")).toHaveCount(0);
+  await expect(row).toHaveCount(0);
   await expect
     .poll(() =>
       withDb(async (c) => {
@@ -272,7 +272,8 @@ test("Bildirimler: satır görünür, canlı eklenir, dokununca okundu olur; Tü
 
   // Mark everything read.
   await page.getByRole("button", { name: "Tümünü okundu işaretle" }).click();
-  await expect(list.getByTestId("unread-dot")).toHaveCount(0);
+  await expect(list.getByRole("listitem")).toHaveCount(0);
+  await expect(page.getByText("Okunmamış bildirim yok")).toBeVisible();
   await expect
     .poll(() =>
       withDb(async (c) => {

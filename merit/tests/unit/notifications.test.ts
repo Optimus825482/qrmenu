@@ -239,6 +239,12 @@ describe("okuma API'si (yalnız çağıranın satırları)", () => {
 
     const three = await listMyNotifications(ctx, 3);
     expect(three.map((r) => r.title)).toEqual(["N24", "N23", "N22"]);
+
+    // Unread only: a read one leaves the list, the next unread takes its place.
+    await markNotificationRead(ctx, three[1].id);
+    const unread = await listMyNotifications(ctx, 3, { unreadOnly: true });
+    expect(unread.map((r) => r.title)).toEqual(["N24", "N22", "N21"]);
+    expect(unread.every((r) => !r.isRead)).toBe(true);
   });
 
   it("markNotificationRead: kendi satırı okundu olur (isRead + readAt)", async () => {

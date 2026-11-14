@@ -19,10 +19,7 @@ function stamp(iso: string): string {
   });
 }
 
-/**
- * Taskbar bell: unread badge and the unread ones of the last 20. A notification leaves the list once it is read
- * (opened, or "Tümünü okundu işaretle"); the mobile Bildirimler tab keeps the read ones as history.
- */
+/** Taskbar bell: unread badge and the unread list; same data and actions as the mobile Bildirimler tab. */
 export function NotificationBell() {
   const listeners = useRef(new Set<(event: MeritEvent) => void>());
   useSse((event) => {
@@ -37,7 +34,6 @@ export function NotificationBell() {
   }, []);
 
   const { items, error, unread, markRead, markAll } = useNotifications(subscribe);
-  const pending = items?.filter((item) => !item.isRead) ?? null;
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -93,9 +89,9 @@ export function NotificationBell() {
               {error}
             </p>
           ) : null}
-          {pending !== null && pending.length === 0 ? <p className="xp-defs-note">Okunmamış bildirim yok</p> : null}
+          {items !== null && items.length === 0 ? <p className="xp-defs-note">Okunmamış bildirim yok</p> : null}
           <ul className="xp-bell-list">
-            {pending?.map((item) => (
+            {items?.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  listMyNotificationsAction,
+  listMyUnreadNotificationsAction,
   markAllReadAction,
   markNotificationReadAction,
   type NotificationDto,
@@ -13,9 +13,10 @@ const LIMIT = 20;
 const RELOAD_DEBOUNCE_MS = 200;
 
 /**
- * The caller's last 20 notifications. Reloads on mount and whenever a `notification.created`
- * event arrives (so a new one shows up on top), marks read optimistically and rolls back by
- * reloading when the server refuses.
+ * The caller's unread notifications (newest 20), the one list behind the desktop bell, the staff bell and the
+ * mobile Bildirimler tab, so the three behave alike: a notification leaves the list once it is read. Reloads on
+ * mount and whenever a `notification.created` event arrives (so a new one shows up on top), drops read ones
+ * optimistically and rolls back by reloading when the server refuses.
  */
 export function useNotifications(subscribe: SubscribeEvents) {
   const [items, setItems] = useState<NotificationDto[] | null>(null);
@@ -25,7 +26,7 @@ export function useNotifications(subscribe: SubscribeEvents) {
   const load = useCallback(async () => {
     const mine = ++latest.current;
     try {
-      const result = await listMyNotificationsAction(LIMIT);
+      const result = await listMyUnreadNotificationsAction(LIMIT);
       if (mine !== latest.current) return; // a newer load owns the state
       if (result.ok) {
         setItems(result.data);
@@ -56,7 +57,7 @@ export function useNotifications(subscribe: SubscribeEvents) {
 
   const markRead = useCallback(
     async (id: string) => {
-      setItems((prev) => prev?.map((n) => (n.id === id ? { ...n, isRead: true } : n)) ?? prev);
+      setItems((prev) => prev?.filter((n) => n.id !== id) ?? prev);
       try {
         const result = await markNotificationReadAction(id);
         if (!result.ok) await load();
@@ -68,15 +69,16 @@ export function useNotifications(subscribe: SubscribeEvents) {
   );
 
   const markAll = useCallback(async () => {
-    setItems((prev) => prev?.map((n) => (n.isRead ? n : { ...n, isRead: true })) ?? prev);
+    setItems((prev) => (prev ? [] : prev));
     try {
-      const result = await markAllReadAction();
-      if (!result.ok) await load();
+      await markAllReadAction();
     } catch {
-      await load();
+      // the reload below puts the list back
     }
+    // Reload either way: a refusal must put the list back, and it confirms nothing unread is left.
+    await load();
   }, [load]);
 
-  const unread = items?.filter((n) => !n.isRead).length ?? 0;
+  const unread = items?.length ?? 0;
   return { items, error, unread, markRead, markAll };
 }

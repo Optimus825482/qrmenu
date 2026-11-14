@@ -30,6 +30,17 @@ export async function listMyNotificationsAction(limit?: number): Promise<Result<
   })(limit);
 }
 
+/**
+ * The caller's unread notifications, newest first: what every bell and the mobile Bildirimler tab list. A
+ * notification leaves these lists once it is read; the row itself stays in the database.
+ */
+export async function listMyUnreadNotificationsAction(limit?: number): Promise<Result<NotificationDto[]>> {
+  return safeAction(limitSchema, async (n) => {
+    const rows = await listMyNotifications(await requireUser(), n ?? 20, { unreadOnly: true });
+    return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+  })(limit);
+}
+
 export async function markNotificationReadAction(id: string): Promise<Result<null>> {
   return safeAction(idSchema, async (nid) => {
     await markNotificationRead(await requireUser(), nid);

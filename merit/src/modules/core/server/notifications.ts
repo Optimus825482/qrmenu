@@ -115,10 +115,10 @@ export type MyNotification = {
 const MAX_LIST = 100;
 
 /** The caller's own notifications, newest first (`limit` is clamped to 1..100). */
-export async function listMyNotifications(ctx: Ctx, limit = 20): Promise<MyNotification[]> {
+export async function listMyNotifications(ctx: Ctx, limit = 20, opts: { unreadOnly?: boolean } = {}): Promise<MyNotification[]> {
   const take = Math.min(MAX_LIST, Math.max(1, Math.trunc(limit) || 1));
   return prisma.notification.findMany({
-    where: { userId: ctx.user.id },
+    where: { userId: ctx.user.id, ...(opts.unreadOnly ? { isRead: false } : {}) },
     select: { id: true, type: true, title: true, body: true, isRead: true, createdAt: true, hotelId: true, refType: true, refId: true },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take,

@@ -152,7 +152,7 @@ function BellSheet({ items, error, unread, onRead, onReadAll, hrefOf, onOpen, on
             {error}
           </p>
         ) : null}
-        {items !== null && items.length === 0 ? <p className="text-muted">Bildirim yok</p> : null}
+        {items !== null && items.length === 0 ? <p className="text-muted">Okunmamış bildirim yok</p> : null}
         <ul className="staff-sheet-list">
           {items?.map((item) => {
             const href = hrefOf(item);
@@ -165,7 +165,7 @@ function BellSheet({ items, error, unread, onRead, onReadAll, hrefOf, onOpen, on
                   data-read={item.isRead}
                   data-href={href ?? undefined}
                   onClick={() => {
-                    if (!item.isRead) onRead(item.id);
+                    onRead(item.id);
                     if (href) onOpen(href);
                   }}
                 >
