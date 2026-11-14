@@ -1138,6 +1138,17 @@ button.rd-alert-chip {
   padding: 2px 8px;
   font-size: 1em;
   font-variant-numeric: tabular-nums;
+  font-family: inherit;
+  cursor: pointer;
+  /* A room badge is a tap target on the tablet and the phone. */
+  min-height: 32px;
+  min-width: 44px;
+  justify-content: center;
+}
+
+.rd-rs-delivered[aria-pressed="true"] {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
 }
 
 .rd-staff-layout {

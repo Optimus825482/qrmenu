@@ -39,7 +39,7 @@ export async function tablePanelOrdersAction(outletId: string, tableId: string) 
           orderNo: order.orderNo,
           status: order.status,
           createdAt: order.createdAt.toISOString(),
-          note: order.note,
+          note: order.noteTr ?? order.note,
           pricesShown: order.pricesShown,
           canApprove: order.status === "GONDERILDI" && (await approvals.canApproveOrder(ctx, order)),
           items: order.items.map((item) => ({

@@ -299,7 +299,7 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
   },
   "mybar.translateNotes": {
     label: "Notları çevir",
-    description: "Misafir notları personelin diline otomatik çevrilir.",
+    description: "Misafir notları (MyBar talepleri, oda servisi ve masa siparişleri) personel için Türkçeye otomatik çevrilir; orijinali de gösterilir.",
     group: "MyBar",
     type: "boolean",
   },
@@ -502,7 +502,7 @@ export const SETTING_META: { [K in SettingKey]: SettingMeta } = {
     placeholder: "Örn: 12345678-abcd-...:fx",
     helpLink: {
       url: "https://www.deepl.com/pro-api",
-      label: "Ücretsiz DeepL API Anahtarı Al (500.000 karakter/ay)",
+      label: "Ücretsiz DeepL API Anahtarı Al",
     },
   },
   "translation.geminiKey": {

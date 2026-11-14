@@ -195,7 +195,7 @@ export async function listRoomServiceOrdersAction(raw: unknown) {
       currency: o.currency,
       itemCount: o.items.reduce((acc, i) => acc + i.qty, 0),
       itemsSummary: o.items.map((i) => `${i.qty}× ${i.nameSnapshot}`).join(", "),
-      note: o.note,
+      note: o.noteTr ?? o.note,
       createdAt: o.createdAt.toISOString(),
       approvedAt: o.approvedAt?.toISOString() ?? null,
       deliveredAt: o.deliveredAt?.toISOString() ?? null,

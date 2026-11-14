@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { assertCan } from "@/lib/rbac";
 import { DomainError } from "@/lib/result";
 import { outletAllowed } from "./approvals";
+import { staffNote } from "@/modules/order/server/noteTranslation";
 
 export type KdsOrder = {
   id: string;
@@ -12,8 +13,11 @@ export type KdsOrder = {
   approvedAt: Date;
   prepStartedAt?: Date;
   readyAt?: Date;
-  items: { name: string; qty: number; note?: string }[];
+  items: { name: string; qty: number; note?: string; noteOriginal?: string }[];
+  /** Turkish for staff; `noteOriginal` (with `noteLang`) carries the guest's own words when it was translated. */
   note?: string;
+  noteOriginal?: string;
+  noteLang?: string;
 };
 
 export type KdsBoard = {
@@ -47,9 +51,11 @@ async function board(ctx: Ctx, outletId: string): Promise<KdsBoard> {
       prepStartedAt: true,
       readyAt: true,
       note: true,
+      noteTr: true,
+      noteSrcLang: true,
       status: true,
       table: { select: { label: true } },
-      items: { orderBy: { createdAt: "asc" }, select: { nameSnapshot: true, qty: true, note: true } },
+      items: { orderBy: { createdAt: "asc" }, select: { nameSnapshot: true, qty: true, note: true, noteTr: true } },
     },
     orderBy: [{ approvedAt: "asc" }, { id: "asc" }],
   });
@@ -66,8 +72,8 @@ async function board(ctx: Ctx, outletId: string): Promise<KdsBoard> {
       approvedAt: row.approvedAt ?? row.createdAt,
       ...(row.prepStartedAt ? { prepStartedAt: row.prepStartedAt } : {}),
       ...(row.readyAt ? { readyAt: row.readyAt } : {}),
-      items: row.items.map((item) => ({ name: item.nameSnapshot, qty: item.qty, ...(item.note ? { note: item.note } : {}) })),
-      ...(row.note ? { note: row.note } : {}),
+      items: row.items.map((item) => ({ name: item.nameSnapshot, qty: item.qty, ...staffNote(item) })),
+      ...staffNote(row),
     };
     if (row.status === "HAZIR") columns.READY.push(order);
     else if (row.prepStartedAt) columns.PREP.push(order);

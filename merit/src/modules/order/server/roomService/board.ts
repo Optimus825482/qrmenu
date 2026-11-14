@@ -10,6 +10,7 @@ import type { CoverageMode } from "./coverage";
 import { coveredModes } from "./coverageAccess";
 import { occupancyHint, type OccupancyStatus } from "./occupancy";
 import { slaDue, slaStart, slaStateOf } from "./sla";
+import { staffNote } from "@/modules/order/server/noteTranslation";
 
 export type RoomBoardColumn = "NEW" | "PREP" | "READY" | "ONWAY";
 
@@ -24,8 +25,11 @@ export type RoomOrderCard = {
   slaStartAt: Date;
   slaDueAt: Date;
   slaState: "OK" | "WARN" | "BREACH";
-  items: { name: string; qty: number; note?: string }[];
+  items: { name: string; qty: number; note?: string; noteOriginal?: string }[];
+  /** Turkish for staff; `noteOriginal` (with `noteLang`) carries the guest's own words when it was translated. */
   note?: string;
+  noteOriginal?: string;
+  noteLang?: string;
   guestLanguage: string;
   occupancy: OccupancyStatus;
   /** Present only when prices were shown for this order. */
@@ -72,12 +76,14 @@ const CARD_SELECT = {
   createdAt: true,
   deliveredAt: true,
   note: true,
+  noteTr: true,
+  noteSrcLang: true,
   guestLanguage: true,
   pricesShown: true,
   subtotal: true,
   currency: true,
   room: { select: { number: true, extension: true } },
-  items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true } },
+  items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true, noteTr: true } },
 } satisfies Prisma.OrderSelect;
 
 type CardRow = Prisma.OrderGetPayload<{ select: typeof CARD_SELECT }>;
@@ -103,8 +109,8 @@ function toCard(
     slaStartAt: slaStart(row),
     slaDueAt: slaDue(row, slaMinutes),
     slaState: state === "WARN" || state === "BREACH" ? state : "OK",
-    items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...(i.note ? { note: i.note } : {}) })),
-    ...(row.note ? { note: row.note } : {}),
+    items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...staffNote(i) })),
+    ...staffNote(row),
     guestLanguage: row.guestLanguage,
     occupancy: occupancy.get(row.roomId) ?? "BILINMIYOR",
     ...(row.pricesShown && row.subtotal !== null

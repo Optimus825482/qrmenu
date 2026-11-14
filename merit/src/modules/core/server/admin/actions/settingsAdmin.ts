@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { assertCan } from "@/lib/rbac";
 import { DomainError, type Result, safeAction } from "@/lib/result";
+import { type DeeplUsage, getDeeplUsage } from "@/modules/menu/server/deeplUsage";
 import { testDeeplTranslation, testGeminiTranslation } from "@/modules/menu/server/translations";
 import * as settingsAdmin from "../settingsAdmin";
 
@@ -116,4 +117,12 @@ export async function testDeeplAction(raw: unknown): Promise<
       return testDeeplTranslation(input?.apiKey);
     },
   )(raw);
+}
+
+/** Characters left on the DeepL key in use; `null` when no key is configured. */
+export async function deeplUsageAction(): Promise<Result<DeeplUsage | null>> {
+  return safeAction(z.undefined(), async () => {
+    await requireSystemSettings(await requireUser());
+    return getDeeplUsage();
+  })(undefined);
 }

@@ -3,6 +3,7 @@
 import type { RoomBoardColumn, RoomOrderCard as RoomOrderData } from "@/modules/order/server/roomService/board";
 import { formatPrice } from "@/lib/formatPrice";
 import { SlaTimer } from "./SlaTimer";
+import { OriginalNote } from "@/modules/order/ui/OriginalNote";
 
 export type RoomOpsFlags = {
   /** RO-TAL D: Onayla, Hazır, onay öncesi iptal. */
@@ -146,14 +147,23 @@ export function RoomOrderCard({
           {card.items.map((item, index) => (
             <li key={index} className="text-sm font-semibold text-text">
               <span className="font-black">{item.qty}×</span> {item.name}
-              {item.note ? <span className="block text-[13px] font-normal text-muted">{item.note}</span> : null}
+              {item.note ? (
+                <span className="block text-[13px] font-normal text-muted" dir={item.noteOriginal ? "ltr" : undefined}>
+                  {item.note}
+                  <OriginalNote text={item.noteOriginal} />
+                </span>
+              ) : null}
             </li>
           ))}
         </ul>
 
         {card.note ? (
-          <p className="rounded-xl border border-warn/30 bg-surface p-2 text-[13px] text-warn" dir={rtl ? "rtl" : undefined}>
+          <p
+            className="rounded-xl border border-warn/30 bg-surface p-2 text-[13px] text-warn"
+            dir={rtl && !card.noteOriginal ? "rtl" : undefined}
+          >
             <strong>Misafir notu:</strong> {card.note}
+            <OriginalNote text={card.noteOriginal} lang={card.noteLang} />
           </p>
         ) : null}
 

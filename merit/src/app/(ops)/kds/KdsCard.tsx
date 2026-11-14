@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Button } from "@/components/ui/Button";
 import { formatAge, kdsTone, type AgeTone } from "@/modules/order/kdsTiming";
 import type { KdsOrder } from "@/modules/order/server/kds";
+import { OriginalNote } from "@/modules/order/ui/OriginalNote";
 
 export type KdsColumnId = "NEW" | "PREP" | "READY";
 
@@ -35,9 +36,9 @@ function KdsCardView({ order, column, now, action, pending, canEdit, canPrint, o
     </div>
     <ul className="kds-items mt-3 space-y-1">{order.items.map((item, index) => <li key={`${item.name}-${index}`}>
       <span><span className="kds-qty">{item.qty} ×</span> {item.name}</span>
-      {item.note ? <span className="block text-muted" style={{ fontSize: 16 }}>Kalem notu: {item.note}</span> : null}
+      {item.note ? <span className="block text-muted" style={{ fontSize: 16 }}>Kalem notu: {item.note}<OriginalNote text={item.noteOriginal} /></span> : null}
     </li>)}</ul>
-    {order.note ? <p className="kds-note">Not: {order.note}</p> : null}
+    {order.note ? <p className="kds-note">Not: {order.note}<OriginalNote text={order.noteOriginal} lang={order.noteLang} /></p> : null}
     {action && actionLabel ? <Button variant="primary" disabled={!canEdit || pending} onClick={() => onAction(order, action)} className="mt-4 w-full" style={{ minHeight: "var(--tap-pos)", fontSize: 22 }}>{actionLabel}</Button> : null}
     <Button disabled={!canPrint || pending} onClick={() => onPrint(order)} className="mt-2 w-full" style={{ minHeight: "var(--tap-std)", fontSize: 16 }}>Fiyatsız mutfak fişini yazdır</Button>
   </article>;

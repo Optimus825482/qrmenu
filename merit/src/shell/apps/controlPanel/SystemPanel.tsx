@@ -6,6 +6,7 @@ import {
   listSettingsAction,
   setSettingAction,
   settingsScopesAction,
+  deeplUsageAction,
   testDeeplAction,
   testGeminiAction,
 } from "@/modules/core/server/admin/actions/settingsAdmin";
@@ -489,6 +490,7 @@ function SettingRow({
           </a>
         ) : null}
       </div>
+      {item.key === "translation.deeplKey" ? <DeeplQuota refreshKey={testResult} /> : null}
       {testResult ? (
         <div
           role="status"
@@ -515,6 +517,51 @@ function SettingRow({
           {error}
         </span>
       ) : null}
+    </div>
+  );
+}
+
+type Quota = { used: number; limit: number; remaining: number; remainingPercent: number; plan: "FREE" | "PRO" };
+
+/** Characters left on the saved DeepL key, read from DeepL when the row opens and after each connection test. */
+function DeeplQuota({ refreshKey }: { refreshKey: unknown }) {
+  const [state, setState] = useState<{ quota: Quota | null; error: string | null; loaded: boolean }>({
+    quota: null,
+    error: null,
+    loaded: false,
+  });
+
+  useEffect(() => {
+    let alive = true;
+    void deeplUsageAction()
+      .then((res) => {
+        if (!alive) return;
+        if (res.ok) setState({ quota: res.data, error: null, loaded: true });
+        else setState({ quota: null, error: res.error.message || "Kota bilgisi alınamadı.", loaded: true });
+      })
+      .catch(() => {
+        if (alive) setState({ quota: null, error: "Kota bilgisi alınamadı.", loaded: true });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [refreshKey]);
+
+  if (!state.loaded) return <span className="xp-cp-note" style={{ flexBasis: "100%" }}>Kalan kota okunuyor…</span>;
+  if (state.error) return <span className="xp-cp-note" style={{ flexBasis: "100%" }}>Kalan kota: {state.error}</span>;
+  const quota = state.quota;
+  if (!quota) return null;
+  const fmt = (n: number) => n.toLocaleString("tr-TR");
+  const color = quota.remainingPercent <= 5 ? "#991b1b" : quota.remainingPercent <= 20 ? "#92400e" : "#065f46";
+  return (
+    <div role="status" data-testid="deepl-quota" style={{ flexBasis: "100%", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 12 }}>
+      <strong style={{ color }}>
+        Kalan kota: {fmt(quota.remaining)} / {fmt(quota.limit)} karakter (%{quota.remainingPercent})
+      </strong>
+      <progress max={quota.limit} value={quota.remaining} aria-label="Kalan DeepL kotası" style={{ width: 160, accentColor: color }} />
+      <span className="xp-cp-note">
+        DeepL API {quota.plan === "FREE" ? "Free" : "Pro"} · %20 ve %5 altına düştüğünde sistem yöneticisine bildirim ve e-posta, geliştiriciye e-posta gider.
+      </span>
     </div>
   );
 }

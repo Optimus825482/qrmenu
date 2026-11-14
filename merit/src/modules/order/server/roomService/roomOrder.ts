@@ -17,6 +17,7 @@ import { toGuestOrderView, type GuestOrderView } from "../guestOrder";
 import { validateCartItems } from "../cart";
 import { CLOSED_STATUSES } from "../transitions";
 import { roomServiceState } from "./roomState";
+import { translatedNote, translateOrderNotes } from "@/modules/order/server/noteTranslation";
 
 const LOCALES = ["tr", "en", "de", "ru", "ar", "fr", "el", "it", "pt"] as const;
 const roomOrderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
@@ -123,6 +124,9 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
   const maxOpen = limits["rs.maxOpenPerRoom"];
   const waitMinutes = limits["rs.minMinutesBetweenOrders"];
 
+  // Before the transaction: a provider call must not hold the row lock, and it never throws.
+  const noteTranslations = await translateOrderNotes(state.hotelId, locale, [data.note, ...data.items.map((i) => i.note)]);
+
   try {
     return await prisma.$transaction(async (tx) => {
       // Row lock on room to serialize order creation per room
@@ -190,6 +194,8 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
           currency: state.currency,
           subtotal: subtotal?.toDecimalPlaces(2) ?? null,
           note: data.note || null,
+          noteTr: translatedNote(noteTranslations, data.note).noteTr,
+          noteSrcLang: translatedNote(noteTranslations, data.note).srcLang?.slice(0, 8) ?? null,
           idempotencyKey: data.idempotencyKey,
           clientIp: data.ip,
           items: {
@@ -199,6 +205,7 @@ async function create(input: RoomOrderInput): Promise<GuestOrderView> {
               qty: l.item.qty,
               unitPrice: l.unitPrice,
               note: l.item.note || null,
+              noteTr: translatedNote(noteTranslations, l.item.note).noteTr,
             })),
           },
           events: { create: [{ userId: null, from: null, to: "GONDERILDI" }] },

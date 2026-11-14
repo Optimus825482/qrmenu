@@ -99,18 +99,40 @@ function RsCard({
   );
 }
 
-/** A delivered order: how long it took, frozen at the delivery. */
-function DeliveredCard({ order, slaMinutes }: { order: RsDelivered; slaMinutes: number }) {
+/** How long a delivered order took, frozen at the delivery (pure). */
+function deliveryModel(order: RsDelivered, slaMinutes: number): { tookMin: number; onTime: boolean } {
   const tookMs = Math.max(0, (Date.parse(order.deliveredAt) || 0) - (Date.parse(order.createdAt) || 0));
-  const onTime = tookMs < Math.max(1, slaMinutes) * 60_000;
+  return { tookMin: Math.floor(tookMs / 60_000), onTime: tookMs < Math.max(1, slaMinutes) * 60_000 };
+}
+
+/** A delivered order: the room badge opens its detail (contents, stages) like the cards of the open lanes. */
+function DeliveredCard({
+  order,
+  slaMinutes,
+  selected,
+  onSelect,
+}: {
+  order: RsDelivered;
+  slaMinutes: number;
+  selected: boolean;
+  onSelect(): void;
+}) {
+  const { tookMin, onTime } = deliveryModel(order, slaMinutes);
+  const summary = `Oda ${order.roomNumber} · #${order.orderNo} · ${tookMin} dk · ${onTime ? "Zamanında" : "Geç"}`;
   return (
-    <li
-      className="rd-badge rd-rs-delivered"
-      data-tone={onTime ? "success" : "danger"}
-      data-order-id={order.orderId}
-      title={`Oda ${order.roomNumber} · #${order.orderNo} · ${Math.floor(tookMs / 60_000)} dk · ${onTime ? "Zamanında" : "Geç"}`}
-    >
-      {order.roomNumber}
+    <li>
+      <button
+        type="button"
+        className="rd-badge rd-rs-delivered"
+        data-tone={onTime ? "success" : "danger"}
+        data-order-id={order.orderId}
+        aria-pressed={selected}
+        aria-label={`${summary} · detayı aç`}
+        title={summary}
+        onClick={onSelect}
+      >
+        {order.roomNumber}
+      </button>
     </li>
   );
 }
@@ -225,6 +247,7 @@ function RoomServiceBoard({
 
   const slaMinutes = rs.slaMinutes || view.config.slaMinutes || 30;
   const selected = selectedId ? rs.orders.find((o) => o.orderId === selectedId) : undefined;
+  const selectedDelivered = selectedId && !selected ? delivered.find((o) => o.orderId === selectedId) : undefined;
 
   const summary = deliverySummary(delivered, slaMinutes);
 
@@ -287,7 +310,13 @@ function RoomServiceBoard({
                   .slice(-DELIVERED_SHOWN)
                   .reverse()
                   .map((o) => (
-                    <DeliveredCard key={o.orderId} order={o} slaMinutes={slaMinutes} />
+                    <DeliveredCard
+                      key={o.orderId}
+                      order={o}
+                      slaMinutes={slaMinutes}
+                      selected={o.orderId === selectedId}
+                      onSelect={() => setSelectedId(o.orderId === selectedId ? null : o.orderId)}
+                    />
                   ))}
               </ul>
               {delivered.length > DELIVERED_SHOWN ? (
@@ -315,6 +344,27 @@ function RoomServiceBoard({
           </p>
           {recordDetail !== undefined ? (
             <RecordDetail hotelId={view.hotelId} kind="order" id={selected.orderId} version={selected.status} enabled={recordDetail} />
+          ) : null}
+        </DetailBubble>
+      ) : null}
+
+      {selectedDelivered ? (
+        <DetailBubble
+          title={`Oda ${selectedDelivered.roomNumber} · #${selectedDelivered.orderNo}`}
+          hotelId={view.hotelId}
+          appTarget={{ screenCode: "RO-TAL", modulePrefix: "rs.", fallbackAppId: "rs.kayitlar" }}
+          onOpenApp={onOpenApp}
+          onClose={() => setSelectedId(null)}
+        >
+          <p>
+            Durum: <strong>{orderStatusLabel("TESLIM_EDILDI", "ODA_SERVISI")}</strong>
+          </p>
+          <p>
+            Süre: {deliveryModel(selectedDelivered, slaMinutes).tookMin}/{slaMinutes} dk (
+            {deliveryModel(selectedDelivered, slaMinutes).onTime ? "Zamanında" : "Geç"})
+          </p>
+          {recordDetail !== undefined ? (
+            <RecordDetail hotelId={view.hotelId} kind="order" id={selectedDelivered.orderId} version="TESLIM_EDILDI" enabled={recordDetail} />
           ) : null}
         </DetailBubble>
       ) : null}

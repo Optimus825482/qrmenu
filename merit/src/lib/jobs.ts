@@ -15,6 +15,7 @@ import { registerMinibarJobs } from "@/modules/minibar/server/jobs";
 import { registerReportingJobs } from "@/modules/reporting/server/jobs";
 import { mybarStaleSweep } from "@/modules/mybar/server/staleSweep";
 import { mybarCheckoutSweep } from "@/modules/mybar/server/checkout";
+import { deeplQuotaSweep } from "@/modules/menu/server/deeplUsage";
 
 export const SESSION_SWEEP_QUEUE = "session.sweep";
 export const PRINT_SWEEP_QUEUE = "print.sweep";
@@ -24,6 +25,7 @@ export const RADAR_PURGE_QUEUE = "radar.purge";
 export const ORDER_ESCALATION_QUEUE = "order.escalation";
 export const MYBAR_STALE_QUEUE = "mybar.stale-sweep";
 export const MYBAR_CHECKOUT_QUEUE = "mybar.checkout-sweep";
+export const DEEPL_QUOTA_QUEUE = "translation.deepl-quota";
 
 const sessionWarnNotifier: Notifier = async (userId, title, body) => {
   await notify({ recipients: [userId], type: "session.warn", title, body });
@@ -127,6 +129,13 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
     await boss.work(MYBAR_CHECKOUT_QUEUE, async () => {
       const cancelled = await mybarCheckoutSweep(new Date());
       if (cancelled > 0) console.log(`[mybar.checkout-sweep] ${cancelled} talep çıkış nedeniyle iptal edildi`);
+    });
+
+    // DeepL quota: hourly; low quota is announced to system administrators and the developer (once a week per level).
+    await boss.createQueue(DEEPL_QUOTA_QUEUE); // idempotent
+    await boss.schedule(DEEPL_QUOTA_QUEUE, "7 * * * *", null, { tz: TZ });
+    await boss.work(DEEPL_QUOTA_QUEUE, async () => {
+      await deeplQuotaSweep(new Date());
     });
 
     // The six queue/DND/upload jobs: 00:01 daily tasks + DND catch-up, 10:00/18:00 upload warnings,

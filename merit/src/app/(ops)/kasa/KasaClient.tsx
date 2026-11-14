@@ -24,12 +24,15 @@ import CashierMenu from "./CashierMenu";
 import { RoutineCard } from "@/components/guide/RoutineCard";
 import TableBoard, { type BoardTable } from "./TableBoard";
 import TablePanel, { type PanelCall } from "./TablePanel";
+import { OriginalNote } from "@/modules/order/ui/OriginalNote";
 
 type QueueOrder = {
   id: string;
   orderNo: number;
   createdAt: Date | string;
   note: string | null;
+  noteTr?: string | null;
+  noteSrcLang?: string | null;
   pricesShown?: boolean;
   table: { label: string } | null;
   items: { id: string; nameSnapshot: string; qty: number; unitPrice?: unknown }[];
@@ -440,7 +443,8 @@ export default function KasaClient({
                       </ul>
                       {order.note ? (
                         <p className="mt-3 rounded-[var(--radius-m)] p-2 text-sm" style={{ background: "var(--warn-bg)", color: "var(--warn)" }}>
-                          <strong>Not:</strong> {order.note}
+                          <strong>Not:</strong> {order.noteTr ?? order.note}
+                          <OriginalNote text={order.noteTr ? order.note : null} lang={order.noteSrcLang} />
                         </p>
                       ) : null}
                     </div>

@@ -56,7 +56,8 @@ async function build(tx: Prisma.TransactionClient, orderId: string): Promise<Rec
   const items: ReceiptItem[] = order.items.map((item) => ({
     name: item.nameSnapshot,
     qty: item.qty,
-    ...(item.note ? { note: item.note } : {}),
+    // The kitchen reads Turkish: the translated note is what gets printed.
+    ...(item.note ? { note: item.noteTr ?? item.note } : {}),
     ...(order.pricesShown && item.unitPrice
       ? { unitPrice: money(item.unitPrice), total: money(item.unitPrice.mul(item.qty)) }
       : {}),

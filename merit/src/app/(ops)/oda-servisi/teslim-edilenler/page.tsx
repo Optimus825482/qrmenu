@@ -14,6 +14,7 @@ import {
   type DeliveredList,
   type DeliveredRow,
 } from "@/modules/order/server/roomService/delivered";
+import { OriginalNote } from "@/modules/order/ui/OriginalNote";
 
 type Search = { tarih?: string | string[]; oda?: string | string[]; sayfa?: string | string[]; otel?: string | string[] };
 
@@ -265,11 +266,11 @@ function DeliveredItem({ row }: { row: DeliveredRow }) {
               <li key={index}>
                 <span className="font-bold">{`${item.qty}× `}</span>
                 <span>{item.name}</span>
-                {item.note ? <span className="block text-[13px] text-muted">{`Not: ${item.note}`}</span> : null}
+                {item.note ? <span className="block text-[13px] text-muted">{`Not: ${item.note}`}<OriginalNote text={item.noteOriginal} /></span> : null}
               </li>
             ))}
           </ul>
-          {row.note ? <p className="mt-2 text-[13px] text-muted">{`Sipariş notu: ${row.note}`}</p> : null}
+          {row.note ? <p className="mt-2 text-[13px] text-muted">{`Sipariş notu: ${row.note}`}<OriginalNote text={row.noteOriginal} lang={row.noteLang} /></p> : null}
         </div>
       </details>
     </li>

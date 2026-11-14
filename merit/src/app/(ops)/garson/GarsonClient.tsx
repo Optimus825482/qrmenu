@@ -19,8 +19,9 @@ import { RoutineCard } from "@/components/guide/RoutineCard";
 import { Segmented } from "@/components/ui/Segmented";
 import { showOpsNotification } from "@/components/ops/opsNotification";
 import { NotificationPermissionGate } from "@/components/ops/NotificationPermissionGate";
+import { OriginalNote } from "@/modules/order/ui/OriginalNote";
 
-type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note: string | null; pricesShown: boolean; canApprove: boolean; table: { label: string } | null; items: { id: string; nameSnapshot: string; qty: number; unitPrice: { toString(): string } | null }[] };
+type QueueOrder = { id: string; orderNo: number; createdAt: string | Date; note: string | null; noteTr?: string | null; noteSrcLang?: string | null; pricesShown: boolean; canApprove: boolean; table: { label: string } | null; items: { id: string; nameSnapshot: string; qty: number; unitPrice: { toString(): string } | null }[] };
 type OpenOrder = { id: string; orderNo: number; tableId: string | null; status: string };
 type OpenCall = { id: string; tableLabel: string; type: string; note?: string | null; overdue: boolean };
 type ScanAlert = { tableId: string; tableLabel: string; timestamp: number };
@@ -206,7 +207,7 @@ export default function GarsonClient({ outletId, queue: initialQueue, tables, ca
             <ul className="mt-2 text-sm">
               {order.items.map((item) => <li key={item.id}>{item.nameSnapshot} × {item.qty}{order.pricesShown && item.unitPrice ? ` · ${formatPrice(String(item.unitPrice), currency)}` : ""}</li>)}
             </ul>
-            {order.note && <p className="mt-2 text-sm text-muted">Not: {order.note}</p>}
+            {order.note && <p className="mt-2 text-sm text-muted">Not: {order.noteTr ?? order.note}<OriginalNote text={order.noteTr ? order.note : null} lang={order.noteSrcLang} /></p>}
             <div className="mt-3 flex gap-2">
               <Button mutates variant="primary" disabled={!order.canApprove || pending} onClick={() => act(() => approveOrderAction(order.id))}>Onayla</Button>
               <Button mutates variant="danger" disabled={pending} onClick={() => { void askReason({ title: `Sipariş #${order.orderNo} reddedilecek`, reasons: ORDER_REJECT_REASONS, minLength: REASON_MIN_LENGTH, confirmLabel: "Reddet", danger: true }).then((reason) => { if (reason) act(() => rejectOrderAction(order.id, reason), `Sipariş #${order.orderNo} reddedildi`); }); }}>Reddet</Button>

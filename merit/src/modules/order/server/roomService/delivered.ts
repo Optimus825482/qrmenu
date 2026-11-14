@@ -9,6 +9,7 @@ import { businessDate, businessDateStart, businessDay } from "@/lib/time";
 import { outletAllowed } from "../approvals";
 import { coveredMode, coveredModes } from "./coverageAccess";
 import { slaStart, slaStateOf } from "./slaConstants";
+import { staffNote } from "@/modules/order/server/noteTranslation";
 
 /** Rows per page of the delivered list (a busy day has a few hundred deliveries). */
 export const DELIVERED_PAGE_SIZE = 50;
@@ -132,12 +133,14 @@ const ROW_SELECT = {
   createdAt: true,
   deliveredAt: true,
   note: true,
+  noteTr: true,
+  noteSrcLang: true,
   pricesShown: true,
   subtotal: true,
   currency: true,
   room: { select: { number: true } },
   deliveredBy: { select: { fullName: true } },
-  items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true } },
+  items: { orderBy: { createdAt: "asc" as const }, select: { nameSnapshot: true, qty: true, note: true, noteTr: true } },
 } satisfies Prisma.OrderSelect;
 
 export type DeliveredRow = {
@@ -156,7 +159,9 @@ export type DeliveredRow = {
   subtotal?: string;
   currency?: string;
   note?: string;
-  items: { name: string; qty: number; note?: string }[];
+  noteOriginal?: string;
+  noteLang?: string;
+  items: { name: string; qty: number; note?: string; noteOriginal?: string }[];
 };
 
 export type DeliveredList = {
@@ -239,8 +244,8 @@ async function list(ctx: Ctx, outletId: string, raw: DeliveredFilter = {}): Prom
         onTime: slaStateOf(row, now, slaMinutes) === "DONE_ON_TIME",
         ...(row.deliveredBy ? { deliveredBy: row.deliveredBy.fullName } : {}),
         ...(row.pricesShown && row.subtotal !== null ? { subtotal: row.subtotal.toFixed(2), currency: row.currency } : {}),
-        ...(row.note ? { note: row.note } : {}),
-        items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...(i.note ? { note: i.note } : {}) })),
+        ...staffNote(row),
+        items: row.items.map((i) => ({ name: i.nameSnapshot, qty: i.qty, ...staffNote(i) })),
       },
     ];
   });

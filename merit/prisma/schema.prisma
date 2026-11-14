@@ -1670,6 +1670,9 @@ model Order {
   currency           String      @default("EUR")
   subtotal           Decimal?    @db.Decimal(10, 2)
   note               String?
+  /// Turkish translation of `note` for staff; null when the note is Turkish, empty or could not be translated.
+  noteTr             String?     @map("note_tr")
+  noteSrcLang        String?     @map("note_src_lang") @db.VarChar(8)
   approvedById       String?     @map("approved_by_id")
   approvedAt         DateTime?   @map("approved_at") @db.Timestamptz(3)
   rejectReason       String?     @map("reject_reason")
@@ -1720,6 +1723,7 @@ model OrderItem {
   qty          Int
   unitPrice    Decimal? @map("unit_price") @db.Decimal(10, 2)
   note         String?
+  noteTr       String?  @map("note_tr")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)

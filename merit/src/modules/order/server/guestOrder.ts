@@ -13,6 +13,7 @@ import {
 import { approvals } from "./approvals";
 import { orderNo } from "./orderNo";
 import { validateCartItems } from "./cart";
+import { translatedNote, translateOrderNotes } from "@/modules/order/server/noteTranslation";
 
 /** Guest orders: 10 per minute per IP. */
 export const orderLimiter = createRateLimiter({ max: () => scaledMax(10), windowMs: 60_000 });
@@ -156,6 +157,9 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
   const { state, table } = target;
   if (!state.orderingOpen) throw new DomainError("CONFLICT", "Şu an sipariş alınmıyor");
 
+  // Before the transaction: a provider call must not hold the row lock, and it never throws.
+  const noteTranslations = await translateOrderNotes(state.hotelId, locale, [data.note, ...data.items.map((i) => i.note)]);
+
   try {
     return await prisma.$transaction(async (tx) => {
       const lines = await validateCartItems(tx, state.outletId, data.items, state.pricesShown);
@@ -188,6 +192,8 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
           currency: state.currency,
           subtotal: subtotal?.toDecimalPlaces(2) ?? null,
           note: data.note || null,
+          noteTr: translatedNote(noteTranslations, data.note).noteTr,
+          noteSrcLang: translatedNote(noteTranslations, data.note).srcLang?.slice(0, 8) ?? null,
           assignedWaiterId: assignment?.userId ?? null,
           idempotencyKey: data.idempotencyKey,
           clientIp: data.ip,
@@ -198,6 +204,7 @@ async function create(input: GuestOrderInput): Promise<GuestOrderView> {
               qty: l.item.qty,
               unitPrice: l.unitPrice,
               note: l.item.note || null,
+              noteTr: translatedNote(noteTranslations, l.item.note).noteTr,
             })),
           },
           events: { create: [{ userId: null, from: null, to: "GONDERILDI" }] },
