@@ -129,6 +129,24 @@ describe("guest room service menu", () => {
     expect(screen.getByRole("tablist", { name: tr.guest.rs.menu.title })).toBeTruthy();
   });
 
+  it("leaves the cover image out inside the room frame, which already carries the logo and the title", () => {
+    const design = {
+      ...menu.state.design,
+      options: { ...menu.state.design.options, hero: "COVER" as const, heroImageUrl: "/merit-menus/kapak-oda-servisi-diamond.jpg" },
+    };
+    const covered = (mode: "table" | "room") => (
+      <NextIntlClientProvider locale="tr" messages={messages}>
+        <MenuBrowser token={`cover-${mode}`} locale="tr" mode={mode} menu={{ ...menu, state: { ...menu.state, design } }} />
+      </NextIntlClientProvider>
+    );
+    const table = render(covered("table"));
+    expect(table.container.querySelector(".g-hero-cover")).not.toBeNull();
+    table.unmount();
+    const room = render(covered("room"));
+    expect(room.container.querySelector(".g-hero-cover")).toBeNull();
+    expect(room.container.querySelector(".g-design-hero")).toBeNull();
+  });
+
   it("hides room prices in the menu, item sheet and selections when pricesShown is false", () => {
     const { container } = render(guestMenu({ token: "room-no-prices", mode: "room", pricesShown: false }));
     expect(container.textContent).not.toContain("€");

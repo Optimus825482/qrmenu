@@ -300,6 +300,8 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
   // A photo hero without a picked image reads as the plain title block.
   const heroPhoto = options.hero === "PHOTO" && options.heroImageUrl !== "" ? options.heroImageUrl : null;
   const heroCover = options.hero === "COVER" && COVER_IMAGE_PATTERN.test(options.heroImageUrl) ? options.heroImageUrl : null;
+  // The room frame above already shows the hotel logo, the room and the menu title; the cover would repeat them.
+  const coverInRoomFrame = mode === "room" && heroCover !== null;
   const showTools = options.showSearch || options.showFilters;
 
   // Showcase: keep the open category's chip in view inside the sliding strip.
@@ -451,9 +453,9 @@ export function MenuView({ menu, locale, token, mode = "table" }: {
 
   const blocks: Record<string, ReactNode> = {
     hero:
-      options.hero === "NONE" && !heroCallButton && !options.logoUrl ? null : (
+      (options.hero === "NONE" && !heroCallButton && !options.logoUrl) || (coverInRoomFrame && !heroCallButton) ? null : (
         <div key="hero-wrap" className="g-hero-block-wrap">
-          {heroCover ? (
+          {coverInRoomFrame ? null : heroCover ? (
             <section className="g-design-hero" key="hero" data-cover="true">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
