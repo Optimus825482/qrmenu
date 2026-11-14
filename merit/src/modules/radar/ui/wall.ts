@@ -153,6 +153,25 @@ export function createWallController(opts: WallControllerOptions): WallControlle
   };
 }
 
+/**
+ * Views of the "Tüm kompleks" scope: the overview, and the operations whose board can be stacked per hotel.
+ * A floor plan, a table plan or a queue belongs to one hotel and stays out.
+ */
+export function complexViews(active: ReadonlySet<string>): WallView[] {
+  const out: WallView[] = ["genel"];
+  if (active.has("ODA_SERVISI")) out.push("odaServisi");
+  if (active.has("MINIBAR")) out.push("mybar");
+  return out;
+}
+
+/**
+ * Cards per lane when `hotelCount` boards share one wall screen that cannot scroll: the single-hotel cap is
+ * split between the boards, never below one card.
+ */
+export function complexLaneCap(singleCap: number, hotelCount: number): number {
+  return Math.max(1, Math.floor(singleCap / Math.max(1, hotelCount)));
+}
+
 export type SoundGateOptions = {
   minGapMs?: number;
   enabled: boolean;

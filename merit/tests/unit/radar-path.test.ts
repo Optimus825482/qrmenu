@@ -27,6 +27,7 @@ const labels = (steps: { label: string }[]) => steps.map((s) => s.label);
 describe("radar konum yolu: genelden özele", () => {
   it("tüm kompleks tek adımdır; tek otelde o adım yoktur", () => {
     expect(labels(pathSteps({ ...base, all: true, view: "genel", viewLabel: "Genel Bakış" }))).toEqual(["Tüm kompleks"]);
+    expect(labels(pathSteps({ ...base, all: true, snap: null, view: "odaServisi", viewLabel: "Oda Servisi" }))).toEqual(["Tüm kompleks", "Oda Servisi"]);
     expect(labels(pathSteps({ ...base, multi: false, view: "genel", viewLabel: "Genel Bakış" }))).toEqual(["Royal"]);
   });
 

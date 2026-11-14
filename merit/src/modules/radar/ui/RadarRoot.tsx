@@ -28,14 +28,15 @@ import { WallShell } from "./WallShell";
 import type { PlaybackSpeed } from "./playback";
 import { RadarStoreContext, useNow, useRadar } from "./useRadar";
 import { Floor } from "./views/Floor";
-import { Mybar } from "./views/Mybar";
+import { Mybar, MybarAll } from "./views/Mybar";
 import { Overview } from "./views/Overview";
 import { Queues } from "./views/Queues";
-import { RoomService } from "./views/RoomService";
+import { RoomService, RoomServiceAll } from "./views/RoomService";
 import { Staff } from "./views/Staff";
 import { Tables } from "./views/Tables";
-import { createSoundGate, createWallController } from "./wall";
+import { complexLaneCap, complexViews, createSoundGate, createWallController } from "./wall";
 import { playRadarSound } from "./radarSound";
+import { useWallAutoReload } from "./wallReload";
 import "./radar.css";
 
 export type RadarInitial = {
@@ -185,8 +186,10 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   );
 
   const views = useMemo<ViewKey[]>(() => {
+    // The whole complex: the overview, and the boards that stack per hotel.
+    if (all) return complexViews(active);
     const out: ViewKey[] = ["genel"];
-    if (all || !snap) return out;
+    if (!snap) return out;
     if (snap.layers.minibar && active.has("MINIBAR")) out.push("kat");
     if (snap.layers.order && active.has("SIPARIS")) out.push("masa");
     // Kuyruklar is SIPARIS + SISTEM; available in single-hotel view whenever either is active (displays empty state if QR_ORDER is off).
@@ -210,10 +213,11 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             : "genel";
 
   const wallRotateViews = useMemo<WallView[]>(() => {
-    const raw = initial.views ?? snap?.config.wallViews ?? ["genel", "kat", "masa", "kuyruk"];
+    // The whole complex has no settings of its own: it rotates through every view it has, unless the address pins some.
+    const raw = initial.views ?? (all ? views : snap?.config.wallViews) ?? ["genel", "kat", "masa", "kuyruk"];
     const filtered = raw.filter((v) => views.includes(v));
     return filtered.length > 0 ? filtered : [views[0] ?? "genel"];
-  }, [initial.views, snap?.config.wallViews, views]);
+  }, [initial.views, all, snap?.config.wallViews, views]);
 
   const wallRotateSec = initial.rotateSeconds ?? snap?.config.wallRotateSeconds ?? 20;
   // Keyed by content: a new snapshot hands over an equal list in a new array, and rebuilding the controller
@@ -353,6 +357,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
         ? "connecting"
         : "live";
 
+  // A wall has nobody to press "Güncelle": after a release it reloads itself onto the new build.
+  useWallAutoReload(wall, connection === "live");
+
   const hotelName = all ? "Tüm kompleks" : (initial.hotels.find((h) => h.id === hotelId)?.name ?? "");
   useEffect(() => {
     chrome?.setTitle?.(`Canlı Radar · ${hotelName}`);
@@ -484,7 +491,7 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   const canReplay = currentHotel?.canReplay !== false;
 
   const openWallTab = () => {
-    const code = currentHotel?.code ?? initial.hotels[0]?.code ?? "";
+    const code = all ? "ALL" : (currentHotel?.code ?? initial.hotels[0]?.code ?? "");
     const url = code ? `/radar?duvar=1&otel=${encodeURIComponent(code)}` : "/radar?duvar=1";
     window.open(url, "_blank", "noopener,noreferrer");
   };
@@ -645,6 +652,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
   // The wall shows one hotel and cannot scroll: no boards of the other hotels, and lanes capped to what fits.
   const otherBoards = !wall && state.mode === "live" && !demo.running ? initial.hotels : undefined;
   const laneCap = wall ? WALL_LANE_CARDS : undefined;
+  /** Hotels of the whole complex that run `layer` (the caller may see it there): one stacked board each. */
+  const complexHotels = (layer: RadarLayer) =>
+    (overview?.hotels ?? [])
+      .filter((h) => h.metrics.some((m) => metricLayer(m.screenCode) === layer))
+      .map((h) => ({ id: h.hotelId, name: h.name }));
+  const complexCap = (count: number) => (wall ? complexLaneCap(WALL_LANE_CARDS, count) : undefined);
   const wallPaging = wall ? WALL_PAGING : undefined;
 
   // The detail of a record is today's: it is read only while the screen shows the live state (not a scrub, a replay or a demo).
@@ -742,6 +755,12 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
     } else {
       body = skeleton ? <div className="rd-center" aria-busy="true">Genel bakış yükleniyor</div> : null;
     }
+  } else if (all && view === "odaServisi") {
+    const boards = complexHotels("ODA_SERVISI");
+    body = <RoomServiceAll hotels={boards} now={now} onOpenApp={openApp} maxCards={complexCap(boards.length)} />;
+  } else if (all && view === "mybar") {
+    const boards = complexHotels("MINIBAR");
+    body = <MybarAll hotels={boards} now={now} maxCards={complexCap(boards.length)} />;
   } else if (view === "kat" && snap) {
     body = (
       <Floor
@@ -832,7 +851,9 @@ export function RadarRoot({ mode, initial, openApp, chrome }: RadarRootProps) {
             idPrefix={idPrefix}
             hotels={initial.hotels}
             hotelId={hotelId}
-            onHotel={(id) => pickHotel(id, null)}
+            // Between a hotel and the whole complex a stacked board stays open: "Oda Servisi" of one hotel
+            // becomes "Oda Servisi" of all of them, not the overview.
+            onHotel={(id) => pickHotel(id, view !== "genel" && (all || id === "ALL") ? view : null)}
             layers={scope}
             active={active}
             onToggleLayer={toggleLayer}

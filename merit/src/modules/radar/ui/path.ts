@@ -72,7 +72,11 @@ function recordLabel(snap: RadarState, record: RadarRecord): string | undefined 
 export function pathSteps(p: PathInput): PathStep[] {
   const steps: PathStep[] = [];
   if (p.multi) steps.push({ key: "all", label: "Tüm kompleks" });
-  if (p.all) return steps;
+  if (p.all) {
+    // A stacked board of the whole complex: "Tüm kompleks" above it is the way back to the overview.
+    if (p.view !== "genel") steps.push({ key: "view", label: p.viewLabel });
+    return steps;
+  }
   steps.push({ key: "hotel", label: p.hotelName });
   if (p.view === "genel") return steps;
   steps.push({ key: "view", label: p.viewLabel });

@@ -169,6 +169,31 @@ export function RoomService({ view, now, onOpenApp, hotels, ...own }: RoomServic
   );
 }
 
+/**
+ * "Tüm kompleks": the board of every hotel, one under the other. No hotel is the window's own here, so each
+ * board keeps up through its own light store.
+ */
+export function RoomServiceAll({
+  hotels,
+  now,
+  onOpenApp,
+  maxCards,
+}: Pick<RoomServiceProps, "now" | "onOpenApp" | "maxCards"> & { hotels: { id: string; name: string }[] }) {
+  if (hotels.length === 0) return <EmptyState title="Oda Servisi izlenen otel yok." />;
+  return (
+    <div className="rd-rs-hotels">
+      {hotels.map((hotel) => (
+        <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} oda servisi`}>
+          <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
+          <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
+            {(other) => <RoomServiceBoard view={other} now={now} onOpenApp={onOpenApp} maxCards={maxCards} recordDetail />}
+          </OtherHotelBoard>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 /** Status lanes with static SLA bars and read-only detail bubble (spec 2.2). */
 function RoomServiceBoard({
   view,

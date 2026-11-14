@@ -153,3 +153,38 @@ describe("wakeLock: acquireWakeLock", () => {
     await Promise.resolve();
   });
 });
+
+describe("wall: whole complex", () => {
+  it("offers the overview and only the boards that stack per hotel", async () => {
+    const { complexViews } = await import("@/modules/radar/ui/wall");
+    expect(complexViews(new Set(["MINIBAR", "SIPARIS", "ODA_SERVISI", "PERSONEL", "SISTEM"]))).toEqual(["genel", "odaServisi", "mybar"]);
+    expect(complexViews(new Set(["SIPARIS", "ODA_SERVISI"]))).toEqual(["genel", "odaServisi"]);
+    expect(complexViews(new Set())).toEqual(["genel"]);
+  });
+
+  it("splits the lane cap between the stacked boards, never below one card", async () => {
+    const { complexLaneCap } = await import("@/modules/radar/ui/wall");
+    expect(complexLaneCap(6, 1)).toBe(6);
+    expect(complexLaneCap(6, 3)).toBe(2);
+    expect(complexLaneCap(6, 10)).toBe(1);
+    expect(complexLaneCap(6, 0)).toBe(6);
+  });
+
+  it("a pinned single view of the complex never rotates away", () => {
+    const wc = createWallController({ views: ["odaServisi"], rotateSeconds: 20 });
+    wc.tick(0);
+    expect(wc.state(500_000).view).toBe("odaServisi");
+  });
+});
+
+describe("wall: reload after a release", () => {
+  it("reloads once per new server build, never for its own build or an unknown one", async () => {
+    const { wallShouldReload } = await import("@/modules/radar/ui/wallReload");
+    expect(wallShouldReload({ clientBuildId: "a", serverBuildId: "a", reloadedFor: null })).toBe(false);
+    expect(wallShouldReload({ clientBuildId: "a", serverBuildId: undefined, reloadedFor: null })).toBe(false);
+    expect(wallShouldReload({ clientBuildId: "a", serverBuildId: "b", reloadedFor: null })).toBe(true);
+    // Already reloaded for "b" and still on "a" (a stale cached page): no loop.
+    expect(wallShouldReload({ clientBuildId: "a", serverBuildId: "b", reloadedFor: "b" })).toBe(false);
+    expect(wallShouldReload({ clientBuildId: "a", serverBuildId: "c", reloadedFor: "b" })).toBe(true);
+  });
+});

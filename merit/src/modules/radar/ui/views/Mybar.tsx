@@ -161,6 +161,23 @@ export function Mybar({ view, now, hotels, ...own }: MybarProps) {
   );
 }
 
+/** "Tüm kompleks": the MyBar board of every hotel, one under the other, each on its own light store. */
+export function MybarAll({ hotels, now, maxCards }: Pick<MybarProps, "now" | "maxCards"> & { hotels: { id: string; name: string }[] }) {
+  if (hotels.length === 0) return <EmptyState title="MyBar izlenen otel yok." />;
+  return (
+    <div className="rd-rs-hotels">
+      {hotels.map((hotel) => (
+        <section key={hotel.id} className="rd-rs-hotel" aria-label={`${hotel.name} MyBar`}>
+          <h2 className="rd-rs-hotel-name">{hotel.name}</h2>
+          <OtherHotelBoard hotelId={hotel.id} layers={BOARD_LAYERS}>
+            {(other) => <MybarBoard view={other} now={now} maxCards={maxCards} />}
+          </OtherHotelBoard>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 /** The four stages of a MyBar request as lanes: waiting for approval, approved, completed today, cancelled today. */
 function MybarBoard({ view, now, maxCards, floorId, focusRoomId }: Omit<MybarProps, "hotels">) {
   const layer = view.layers.minibar;

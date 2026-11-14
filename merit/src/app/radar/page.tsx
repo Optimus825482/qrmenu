@@ -51,6 +51,9 @@ export default async function RadarPage({ searchParams }: PageProps) {
     hotels.find((h) => h.id === ctx.session.hotelId) ??
     hotels[0]!;
 
+  // `otel=ALL`: the wall of the whole complex (the stacked boards of every hotel); needs more than one hotel.
+  const wholeComplex = q.otel?.toUpperCase() === "ALL" && hotels.length > 1;
+
   const settings = await getSettings(
     ["radar.wallViews", "radar.wallRotateSeconds", "radar.soundOnEscalation"],
     targetHotel.id,
@@ -69,7 +72,7 @@ export default async function RadarPage({ searchParams }: PageProps) {
         mode="wall"
         initial={{
           hotels,
-          hotelId: targetHotel.id,
+          hotelId: wholeComplex ? "ALL" : targetHotel.id,
           views,
           rotateSeconds,
           outletId: q.outlet,
