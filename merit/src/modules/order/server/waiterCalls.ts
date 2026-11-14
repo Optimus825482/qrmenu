@@ -6,6 +6,7 @@ import { assertCan, can } from "@/lib/rbac";
 import { publish } from "@/lib/realtime";
 import { DomainError, fromZod } from "@/lib/result";
 import { getSetting } from "@/lib/settings";
+import { audit } from "@/modules/core/server/audit";
 import { notify } from "@/modules/core/server/notifications";
 import { resolveActive } from "@/modules/menu/server/callOptions";
 import { type GuestMeta, resolveGuestTokenLimited } from "@/modules/menu/server/guestToken";
@@ -205,4 +206,64 @@ async function listOpen(ctx: Ctx, outletId: string): Promise<OpenCall[]> {
   });
 }
 
-export const waiterCalls = { createFromGuest, resolve, listOpen };
+export const CALL_CANCEL_NOTE_MIN = 3;
+export const CALL_CANCEL_NOTE_MAX = 200;
+
+/**
+ * Cancels a call that should never have been open (pressed by mistake, a prank, a table already gone): status
+ * IPTAL with who, when and why, an audit record, and the same `call.resolved` event the staff screens already
+ * listen to, so the call leaves the waiter, cashier and radar lists. Only from Sipariş ve Çağrı Yönetimi
+ * (QS-YON approve); a waiter closes a call, they do not cancel it.
+ */
+async function cancel(ctx: Ctx, callId: string, reason: string): Promise<void> {
+  const note = reason.trim();
+  if ([...note].length < CALL_CANCEL_NOTE_MIN || [...note].length > CALL_CANCEL_NOTE_MAX) {
+    const message = `Açıklama ${CALL_CANCEL_NOTE_MIN}-${CALL_CANCEL_NOTE_MAX} karakter olmalı`;
+    throw new DomainError("VALIDATION", message, { fieldErrors: { reason: [message] } });
+  }
+  await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM waiter_calls WHERE id = ${callId} FOR UPDATE`;
+    if (rows.length === 0) throw new DomainError("NOT_FOUND", "Çağrı bulunamadı");
+    const call = await tx.waiterCall.findUniqueOrThrow({
+      where: { id: callId },
+      include: { table: { select: { label: true } }, outlet: { select: { hotelId: true } } },
+    });
+    const hotelId = call.outlet.hotelId;
+    if (!ctx.hotelIds.includes(hotelId)) throw new DomainError("NOT_FOUND", "Çağrı bulunamadı");
+    await assertCan(ctx, "QS-YON", "A", hotelId);
+    if (call.status !== "ACIK" && call.status !== "YANITLANDI") throw new DomainError("CONFLICT", "Çağrı zaten işlendi");
+    const now = new Date();
+    await tx.waiterCall.update({
+      where: { id: callId },
+      data: { status: "IPTAL", cancelledById: ctx.user.id, cancelledAt: now, cancelNote: note },
+    });
+    await tx.notification.updateMany({ where: { refType: "WaiterCall", refId: callId, readAt: null }, data: { readAt: now } });
+    await audit(tx, {
+      userId: ctx.user.id,
+      hotelId,
+      action: "CALL_IPTAL",
+      entity: "WaiterCall",
+      entityId: callId,
+      before: { status: call.status },
+      after: { status: "IPTAL", reason: note },
+    });
+    await publish(
+      {
+        type: "call.resolved",
+        hotelId,
+        outletId: call.outletId,
+        payload: {
+          callId,
+          tableId: call.tableId,
+          tableLabel: call.table.label,
+          status: "IPTAL",
+          waiterId: ctx.user.id,
+          waiterName: ctx.user.fullName || ctx.user.username,
+        },
+      },
+      tx,
+    );
+  });
+}
+
+export const waiterCalls = { createFromGuest, resolve, cancel, listOpen };

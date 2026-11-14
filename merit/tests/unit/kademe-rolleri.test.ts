@@ -198,7 +198,8 @@ describe("migration 20261112150000 seed ile aynı matrisi üretir", () => {
         // CR-DUR (Anlık Durum, migration 20261114090000) likewise.
         // RO-MBT (Minibar Takip, migration 20261114160000) likewise.
         // RO-OTA (Oteller Arası Oda Servisi, migration 20261114180000) likewise.
-        .filter((r) => !["MB-OKI", "CR-DUR", "RO-MBT", "RO-OTA"].includes(r.screen.code))
+        // QS-YON (Sipariş ve Çağrı Yönetimi, migration 20261114190000) likewise.
+        .filter((r) => !["MB-OKI", "CR-DUR", "RO-MBT", "RO-OTA", "QS-YON"].includes(r.screen.code))
         .map((r) => `${r.role.code}|${r.screen.code}|${[r.canView, r.canCreate, r.canEdit, r.canApprove, r.canReport].join()}`)
         .sort();
     const expected = await read();

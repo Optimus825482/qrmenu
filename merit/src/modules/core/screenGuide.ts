@@ -533,6 +533,20 @@ const LIST: ScreenGuide[] = [
     ],
   ),
   guide(
+    "QS-YON",
+    "xp",
+    "Seçili otelin bütün outletlerindeki masa siparişlerini ve misafir çağrılarını tek listede görür, durumunu düzeltir ya da iptal edersin.",
+    [
+      ["yon-siparis", "Siparişler", "Outlet, durum, tarih ve masa ile süz; satıra tıklayınca kalemleri, notları ve aşama saatlerini görürsün."],
+      ["yon-cagri", "Çağrılar", "Garson, hesap ve diğer çağrılar; açık kalan çağrıyı yanıtlandı ya da kapandı yaparsın."],
+      ["yon-iptal", "İptal", "Sipariş ya da çağrıyı iptal ederken açıklama yazman gerekir."],
+    ],
+    [
+      "Durum düzeltmek düzenleme, iptal etmek onay yetkisi ister; yalnız görüntüleme yetkisiyle liste açılır.",
+      "Her düzeltme ve iptal denetim kaydına yazılır; garson, kasa ve mutfak ekranları kendiliğinden güncellenir.",
+    ],
+  ),
+  guide(
     "RO-SLA",
     "xp",
     "Oda servisi süre hedeflerini raporlarsın.",

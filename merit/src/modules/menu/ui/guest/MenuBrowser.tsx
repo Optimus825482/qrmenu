@@ -58,8 +58,10 @@ export function MenuBrowser({ token, locale, menu, mode = "table" }: {
           setAvailability((prev) => ({ ...prev, [nodeId]: available }));
         }
       } else if (event.type === "call.resolved") {
-        const payload = event.payload as { waiterName?: string } | undefined;
-        setResolvedCall({ waiterName: payload?.waiterName });
+        const payload = event.payload as { waiterName?: string; status?: string } | undefined;
+        // A call cancelled from the office (IPTAL) is no answer: the "your waiter is coming" notice stays closed,
+        // the call button below still resets.
+        if (payload?.status !== "IPTAL") setResolvedCall({ waiterName: payload?.waiterName });
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("merit:call-resolved", { detail: payload }));
         }

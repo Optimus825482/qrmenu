@@ -91,6 +91,9 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
     const expected = toMap(await db.roleScreenPermission.findMany({ where, include: { role: true, screen: true } }));
 
     // Rebuild the old matrix: every role holding a QR module gets its full profile on every screen of it.
+    // QS-YON (Sipariş ve Çağrı Yönetimi, migration 20261114190000) came long after 0005 and never had profile-wide
+    // rows: its own migration grants it to R-SYS only, so the old matrix has it for the "ALL" role alone.
+    const laterScreens = new Set(["QS-YON"]);
     const screens = await db.appScreen.findMany({ where: { code: { startsWith: "Q" } } });
     const roles = await db.role.findMany();
     await db.roleScreenPermission.deleteMany({ where });
@@ -99,7 +102,12 @@ describe("P5 yetki matrisi, tema seed'i ve migration 0005 (gerçek test DB)", ()
         // R-SYS keeps TAM on every screen.
       }
       for (const screen of screens) {
-        const granted = def.modules === "ALL" ? PROFILE_ACTIONS.TAM : def.modules.includes(screen.moduleKey) ? PROFILE_ACTIONS[def.profile] : [];
+        const granted =
+          def.modules === "ALL"
+            ? PROFILE_ACTIONS.TAM
+            : def.modules.includes(screen.moduleKey) && !laterScreens.has(screen.code)
+              ? PROFILE_ACTIONS[def.profile]
+              : [];
         if (granted.length === 0) continue;
         await db.roleScreenPermission.create({
           data: {

@@ -70,6 +70,9 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   // of another hotel for a while. Its own screen, so the Yetki Matrisi decides who sees it (V), who gives a
   // permission (O) and who removes one (D); until then it rode on RO-TAL approve and a fixed role list.
   ["ROOM_SERVICE", "RO-OTA", "Oteller Arası Oda Servisi", "/admin#rs.oteller-arasi"],
+  // Sipariş ve Çağrı Yönetimi (14 Kas 2026): the system administrator's list of the table orders and guest calls of
+  // every outlet of a hotel. V opens the window, D corrects a status, A cancels (with a reason).
+  ["QR_ORDER", "QS-YON", "Sipariş ve Çağrı Yönetimi", "/admin#order.yonetim"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({

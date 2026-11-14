@@ -208,6 +208,7 @@ enum CallStatus {
   ACIK
   YANITLANDI
   KAPANDI
+  IPTAL
 }
 
 enum PrintJobKind {
@@ -503,7 +504,8 @@ model User {
   ordersServed               Order[]                    @relation("OrderServedBy")
   ordersDelivered            Order[]                    @relation("OrderDeliveredBy")
   orderEvents                OrderEvent[]
-  waiterCallsResolved        WaiterCall[]
+  waiterCallsResolved        WaiterCall[]                @relation("WaiterCallResolvedBy")
+  waiterCallsCancelled       WaiterCall[]                @relation("WaiterCallCancelledBy")
   correctionRequestsMade     MinibarCorrectionRequest[] @relation("MinibarCorrectionRequester")
   correctionRequestsApproved MinibarCorrectionRequest[] @relation("MinibarCorrectionApprover")
   manualEntryRequestsMade    MinibarManualEntryRequest[] @relation("MinibarManualEntryRequester")
@@ -1777,12 +1779,17 @@ model WaiterCall {
   status       CallStatus @default(ACIK)
   resolvedById String?    @map("resolved_by_id")
   resolvedAt   DateTime?  @map("resolved_at") @db.Timestamptz(3)
+  /// Cancelled from Sipariş ve Çağrı Yönetimi (status IPTAL): who, when and the mandatory reason.
+  cancelledById String?   @map("cancelled_by_id")
+  cancelledAt  DateTime?  @map("cancelled_at") @db.Timestamptz(3)
+  cancelNote   String?    @map("cancel_note") @db.VarChar(200)
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  outlet     Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
-  table      OutletTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
-  resolvedBy User?       @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  outlet      Outlet      @relation(fields: [outletId], references: [id], onDelete: Restrict)
+  table       OutletTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
+  resolvedBy  User?       @relation("WaiterCallResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  cancelledBy User?       @relation("WaiterCallCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
 
   @@index([outletId, status])
   @@index([tableId, status])

@@ -17,10 +17,10 @@ describe("ekran kataloğu", () => {
     expect(existsSync(path.resolve(__dirname, "../../src/app/(guest)/q/[token]/page.tsx"))).toBe(true);
   });
 
-  it("37 ekran, sortOrder 1..37, kodlar benzersiz", () => {
-    expect(SCREENS).toHaveLength(37);
-    expect(SCREENS.map((s) => s.sortOrder)).toEqual(Array.from({ length: 37 }, (_, i) => i + 1));
-    expect(new Set(SCREENS.map((s) => s.code)).size).toBe(37);
+  it("38 ekran, sortOrder 1..37, kodlar benzersiz", () => {
+    expect(SCREENS).toHaveLength(38);
+    expect(SCREENS.map((s) => s.sortOrder)).toEqual(Array.from({ length: 38 }, (_, i) => i + 1));
+    expect(new Set(SCREENS.map((s) => s.code)).size).toBe(38);
   });
 
   it("düzeltilen yollar ve MB-TAL adı", () => {

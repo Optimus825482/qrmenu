@@ -99,7 +99,7 @@ const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD", "CR-DUR"]);
  * their whole global matrix (its `@limits` block). `match.exceptCodes` selects every role except those listed.
  */
 export type ScreenLimit = {
-  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI" | "MBT" | "OTA";
+  plan: "P5" | "P2" | "P3" | "P7" | "YR" | "KD" | "OKI" | "MBT" | "OTA" | "YON";
   match?: {
     kind?: RoleKind;
     profile?: Profile;
@@ -258,6 +258,10 @@ export const SCREEN_LIMITS: ScreenLimit[] = [
   // gets it from the Yetki Matrisi. Migration 20261114180000.
   { plan: "OTA", keep: { "RO-OTA": ["V", "O", "D"] } },
   { plan: "OTA", match: { exceptCodes: ["R-OSS", "R-FBY", "R-FBM"] }, keep: { "RO-OTA": [] } },
+  // YON (14 Kas 2026) — Sipariş ve Çağrı Yönetimi (QS-YON): the cross-outlet list where table orders and guest calls
+  // are corrected and cancelled. Nobody gets it by default but R-SYS (modules "ALL", never limited); anybody else
+  // gets it from the Yetki Matrisi. Migration 20261114190000.
+  { plan: "YON", keep: { "QS-YON": [] } },
 ];
 
 const ACTION_ORDER: readonly Action[] = ["V", "O", "D", "A", "R"];
