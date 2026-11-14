@@ -93,12 +93,15 @@ export function todayBounds(): { day: Date; since: Date; until: Date } {
   return { day: businessDay(today), since, until: businessDateStart(tomorrow) };
 }
 
-/** Hotels whose Komuta Merkezi the caller may view; none at all -> FORBIDDEN (audited). */
+/** The widget's own screen in the permission matrix (desktop, personel/tablet and mobile shells). */
+export const LIVE_STATUS_SCREEN = "CR-DUR";
+
+/** Hotels where the caller may view the Anlık Durum widget; none at all -> FORBIDDEN (audited). */
 export async function commandScope(ctx: Ctx): Promise<string[]> {
-  const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-KOM", "V", h)));
+  const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, LIVE_STATUS_SCREEN, "V", h)));
   const scope = ctx.hotelIds.filter((_, i) => allowed[i]);
   if (scope.length === 0) {
-    await assertCan(ctx, "CR-KOM", "V", ctx.session.hotelId); // audits the denied attempt
+    await assertCan(ctx, LIVE_STATUS_SCREEN, "V", ctx.session.hotelId); // audits the denied attempt
     throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
   }
   return scope;
@@ -221,7 +224,7 @@ async function loadCounts(today: string): Promise<Counts> {
 export async function getLiveStatus(ctx: Ctx, hotelId?: string): Promise<LiveStatus> {
   let scope: string[];
   if (hotelId) {
-    await assertCan(ctx, "CR-KOM", "V", hotelId);
+    await assertCan(ctx, LIVE_STATUS_SCREEN, "V", hotelId);
     scope = [hotelId];
   } else {
     scope = await commandScope(ctx);

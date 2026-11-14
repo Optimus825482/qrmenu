@@ -572,3 +572,26 @@
     animation-duration: 0ms !important;
   }
 }
+
+/* Anlık Durum sheet: wider than the notification sheet (hotel columns), the table scrolls sideways inside it. */
+.staff-live-sheet {
+  max-width: 44rem;
+}
+.staff-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.staff-live-head h2 {
+  margin: 0;
+}
+.staff-live-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.staff-live-scroll .xp-widget-status {
+  width: 100%;
+  min-width: max-content;
+}

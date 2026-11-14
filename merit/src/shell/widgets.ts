@@ -28,7 +28,7 @@ export const WIDGETS: Record<WidgetId, WidgetDef> = {
     description: "Çevrimiçi kullanıcı, doluluk ve bugünkü canlı sayaçlar (oda servisi, MyBar, minibar, QR); otel otel ve toplam.",
     w: 580,
     h: 336,
-    screenCode: "CR-KOM",
+    screenCode: "CR-DUR",
   },
 };
 

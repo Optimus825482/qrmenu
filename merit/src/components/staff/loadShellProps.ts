@@ -82,6 +82,8 @@ export async function loadStaffShellProps(
         : []),
     ],
     formHint: formFromUserAgent((await headers()).get("user-agent")),
+    // Anlık Durum follows the permission matrix (CR-DUR); its rows follow the other screens of the list.
+    liveStatusScreens: visible.includes("CR-DUR") ? visible : null,
   };
 }
 

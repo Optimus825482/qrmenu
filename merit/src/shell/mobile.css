@@ -1732,3 +1732,15 @@ button.mb-tile {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Anlık Durum on the home screen: the desktop widget's table, scrolling sideways when hotel columns do not fit. */
+.mb-live-status {
+  margin: 0 0 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+.mb-live-status .xp-widget-status {
+  width: 100%;
+  min-width: max-content;
+}

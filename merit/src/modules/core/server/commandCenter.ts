@@ -51,16 +51,18 @@ const percent = (part: number, whole: number) => (whole > 0 ? Math.round((part /
 export async function getCommandCenterKpis(
   ctx: Ctx,
   hotelId?: string,
+  /** The screen that scopes the numbers: Komuta Merkezi, or the Anlık Durum widget (liveStatusKpisAction). */
+  screen: "CR-KOM" | "CR-DUR" = "CR-KOM",
 ): Promise<CommandCenterKpis> {
   let scope: string[];
   if (hotelId) {
-    await assertCan(ctx, "CR-KOM", "V", hotelId);
+    await assertCan(ctx, screen, "V", hotelId);
     scope = [hotelId];
   } else {
-    const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, "CR-KOM", "V", h)));
+    const allowed = await Promise.all(ctx.hotelIds.map((h) => can(ctx, screen, "V", h)));
     scope = ctx.hotelIds.filter((_, i) => allowed[i]);
     if (scope.length === 0) {
-      await assertCan(ctx, "CR-KOM", "V", ctx.session.hotelId); // audits the denied attempt
+      await assertCan(ctx, screen, "V", ctx.session.hotelId); // audits the denied attempt
       throw new DomainError("FORBIDDEN", "Bu ekran için yetkiniz yok");
     }
   }

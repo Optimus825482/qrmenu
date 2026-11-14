@@ -4,6 +4,7 @@ import { Fragment, useCallback, useState } from "react";
 import { hotelKey, hotelShortName } from "@/components/ui/HotelBadge";
 import type { LiveRow } from "@/modules/core/server/liveStatus";
 import type { LiveDetailKind } from "@/modules/core/server/liveStatusDetail";
+import { liveStatusKpisAction } from "@/modules/core/server/liveStatusAction";
 import { kpiCellVisible, viewableScreens, type KpiCell } from "../../kpiAccess";
 import { useCommandCenterKpis, affectsKpis } from "../../useCommandCenterKpis";
 import { affectsLiveStatus, LIVE_STATUS_EVENT_TYPES, useLiveStatus } from "../../useLiveStatus";
@@ -112,13 +113,17 @@ const isIdle = (cell: ReactCell) => cell.text === "–" || (cell.parts !== undef
 /**
  * "Anlık Durum" desktop widget: online users and occupancy (Komuta Merkezi numbers) plus today's live
  * operational counters per hotel and in total. The counters refresh on the realtime events that change
- * them (debounced), with a 30 s poll as a safety net.
+ * them (debounced), with a 30 s poll as a safety net. The same table runs in the personel/tablet shell
+ * (LiveStatusPanel) and on the mobile home screen; who sees it is the CR-DUR permission.
+ *
+ * `screens`: screen codes the viewer may open, for shells without the desktop store (the personel shell
+ * passes its own list); omitted, the desktop store's per-hotel list is used.
  */
-export function LiveStatusWidget() {
-  const { kpis, error: kpiError, scheduleRefresh: refreshKpis } = useCommandCenterKpis();
+export function LiveStatusWidget({ screens }: { screens?: readonly string[] } = {}) {
+  const { kpis, error: kpiError, scheduleRefresh: refreshKpis } = useCommandCenterKpis(undefined, undefined, liveStatusKpisAction);
   const { status, error: liveError, scheduleRefresh: refreshLive } = useLiveStatus();
   const screensByHotel = useWindowStore((s) => s.screensByHotel);
-  const viewable = viewableScreens(screensByHotel);
+  const viewable = screens ? new Set(screens) : viewableScreens(screensByHotel);
 
   useSse((e) => {
     if (affectsKpis(e.type)) refreshKpis();

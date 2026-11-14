@@ -29,6 +29,7 @@ const CORE_BY_CODE: Record<string, PermissionGroupId> = {
   "CR-ONL": "kullanici",
   "CR-KOM": "radar",
   "CR-RAD": "radar",
+  "CR-DUR": "radar",
   "CR-RAP": "rapor",
 };
 

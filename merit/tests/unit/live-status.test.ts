@@ -6,6 +6,7 @@ import { ctxFor, dropReferenceData, hotelId, makeUser, resetReferenceData, reset
 vi.mock("@/lib/prisma", async () => ({ prisma: (await import("../helpers/db")).testDb }));
 
 const { getLiveStatus } = await import("@/modules/core/server/liveStatus");
+const { getCommandCenterKpis } = await import("@/modules/core/server/commandCenter");
 const { affectsLiveStatus } = await import("@/shell/useLiveStatus");
 
 const TABLES = ["audit_logs", "orders", "mybar_requests", "waiter_calls", "qr_scan_logs", "daily_tasks", "guest_records", "rooms"];
@@ -302,17 +303,37 @@ describe("getLiveStatus (gerçek test DB)", () => {
     expect(rowOf(one, "roomService")!.total).toEqual([2, 0, 2]);
   });
 
-  it("CR-KOM görme yetkisi olmayan rol (R-KAT) → FORBIDDEN", async () => {
+  it("Anlık Durum (CR-DUR) görme yetkisi olmayan rol (R-KAT) → FORBIDDEN", async () => {
     const kat = await makeUser({ username: "kat1", roleCode: "R-KAT", hotelCode: "ROYAL" });
     await expect(getLiveStatus(await ctxFor(kat, { hotelCode: "ROYAL" }))).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
-  it("otel bazlı CR-KOM yetkisi: canView=false olan otel kapsam dışı kalır", async () => {
+  it("yetki matrisinde CR-DUR verilen saha rolü (R-KAT) Anlık Durum'u ve çevrimiçi/doluluk sayılarını görür; Komuta Merkezi'ni görmez", async () => {
+    const kat = await makeUser({ username: "kat2", roleCode: "R-KAT", hotelCode: "ROYAL" });
+    const ctx = await ctxFor(kat, { hotelCode: "ROYAL" });
+    await taskItems("ROYAL", ["TAMAMLANDI", "BEKLIYOR"]);
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-DUR" } });
+    const grant = await testDb.roleScreenPermission.create({
+      data: { roleId: kat.roleId, screenId: screen.id, hotelId: null, canView: true },
+    });
+    try {
+      const s = await getLiveStatus(ctx);
+      expect(s.hotels.map((h) => h.code)).toEqual(["ROYAL"]);
+      expect(rowOf(s, "minibarTasks")!.total).toEqual([1, 2]);
+      const kpis = await getCommandCenterKpis(ctx, undefined, "CR-DUR");
+      expect(kpis.radar.byHotel.map((h) => h.code)).toEqual(["ROYAL"]);
+      await expect(getCommandCenterKpis(ctx)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    } finally {
+      await testDb.roleScreenPermission.delete({ where: { id: grant.id } });
+    }
+  });
+
+  it("otel bazlı CR-DUR yetkisi: canView=false olan otel kapsam dışı kalır", async () => {
     const user = await makeUser({ username: "otm1", roleCode: "R-OTM", hotelCode: "ROYAL", extraHotelCodes: ["DIAMOND"] });
     const ctx = await ctxFor(user, { hotelCode: "ROYAL", extraHotelCodes: ["DIAMOND"] });
     await taskItems("DIAMOND", ["TAMAMLANDI", "BEKLIYOR", "BEKLIYOR"]);
     await taskItems("ROYAL", ["TAMAMLANDI", "BEKLIYOR"]);
-    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-KOM" } });
+    const screen = await testDb.appScreen.findUniqueOrThrow({ where: { code: "CR-DUR" } });
     await testDb.roleScreenPermission.create({
       data: { roleId: user.roleId, screenId: screen.id, hotelId: await hotelId("DIAMOND"), canView: false },
     });

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CommandCenterKpis } from "@/modules/core/server/commandCenter";
 import { commandCenterKpisAction } from "@/modules/core/server/commandCenterAction";
+import type { Result } from "@/lib/result";
+
+type KpiLoader = (hotelId?: string) => Promise<Result<CommandCenterKpis>>;
 
 const REFRESH_DEBOUNCE_MS = 1000;
 /** Safety net: session open/expiry changes do not all emit events. */
@@ -16,9 +19,14 @@ export const affectsKpis = (type: string) =>
  * Komuta Merkezi numbers, shared by the desktop window and the mobile İzleme tab: loads on mount,
  * every 30 s, and when `scheduleRefresh()` is called (debounced 1 s; call it for events where
  * `affectsKpis` is true). One request at a time; a refresh asked meanwhile runs once more after.
- * `onRefreshed` fires after each successful load.
+ * `onRefreshed` fires after each successful load. `load` picks the scope: Komuta Merkezi by default, the
+ * Anlık Durum widget passes `liveStatusKpisAction` (its own permission, CR-DUR).
  */
-export function useCommandCenterKpis(hotelId?: string, onRefreshed?: (at: Date) => void) {
+export function useCommandCenterKpis(
+  hotelId?: string,
+  onRefreshed?: (at: Date) => void,
+  load: KpiLoader = commandCenterKpisAction,
+) {
   const [kpis, setKpis] = useState<CommandCenterKpis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -41,7 +49,7 @@ export function useCommandCenterKpis(hotelId?: string, onRefreshed?: (at: Date) 
         pending.current = false;
         const mine = ++latest.current;
         try {
-          const result = await commandCenterKpisAction(hotelId);
+          const result = await load(hotelId);
           if (mine !== latest.current) continue; // a newer request owns the state
           if (result.ok) {
             setKpis(result.data);
@@ -57,7 +65,7 @@ export function useCommandCenterKpis(hotelId?: string, onRefreshed?: (at: Date) 
     } finally {
       inFlight.current = false;
     }
-  }, [hotelId]);
+  }, [hotelId, load]);
 
   const scheduleRefresh = useCallback(() => {
     clearTimeout(debounce.current);

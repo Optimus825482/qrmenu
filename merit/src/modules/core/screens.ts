@@ -58,6 +58,8 @@ const CATALOG: ReadonlyArray<readonly [ModuleKey, string, string, string]> = [
   ["CORE", "CR-DEN", "Denetim Günlüğü", "/admin#core.denetim"],
   ["CORE", "CR-TAN", "Tanımlamalar", "/admin#core.tanimlar"],
   ["CORE", "CR-REH", "Kurulum Rehberi", "/admin#core.rehber"],
+  // The live counters widget (desktop, personel/tablet and mobile shells). Last, so earlier sort orders stay.
+  ["CORE", "CR-DUR", "Anlık Durum", "/admin#core.durum"],
 ];
 
 export const SCREENS: ScreenDef[] = CATALOG.map(([moduleKey, code, name, path], index) => ({

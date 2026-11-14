@@ -514,6 +514,19 @@ const LIST: ScreenGuide[] = [
     ],
   ),
   guide(
+    "CR-DUR",
+    "xp",
+    "Bugünkü canlı sayaçları (oda servisi, MyBar, minibar, QR) ve çevrimiçi kullanıcıyı otel otel görürsün.",
+    [
+      ["durum-tablo", "Anlık Durum", "Masaüstünde widget, tablette üst çubuktaki Anlık Durum düğmesi, telefonda ana ekran kartı."],
+      ["durum-satir", "Satır ayrıntısı", "Bir satıra tıklayınca o sayının dökümü açılır."],
+    ],
+    [
+      "Satırlar yalnız yetkin olan modüllerin sayılarını gösterir.",
+      "Sayılar canlı olaylarla ve 30 saniyede bir yenilenir.",
+    ],
+  ),
+  guide(
     "CR-RAD",
     "xp",
     "Kompleksin anlık operasyonunu tek pencerede salt okunur izlersin.",

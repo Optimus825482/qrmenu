@@ -10,6 +10,7 @@ import { SnackbarHost } from "@/components/ui/Snackbar";
 import { screenForPath } from "@/modules/core/screenPaths";
 import { SCREENS } from "@/modules/core/screens";
 import { InstallPrompt } from "./InstallPrompt";
+import { LiveStatusButton } from "./LiveStatusPanel";
 import { isNavActive, type NavModel } from "./navModel";
 import { ProfileMenu, type ProfileExtra } from "./ProfileMenu";
 import { EnvLabel } from "@/components/EnvLabel";
@@ -40,6 +41,8 @@ export type StaffShellProps = {
   profileExtras?: ProfileExtra[];
   /** Server's User-Agent guess of the device, for the first paint (see useDeviceForm). */
   formHint?: DeviceForm;
+  /** Viewable screens of the current hotel when the user may see the Anlık Durum widget (CR-DUR), else null. */
+  liveStatusScreens?: string[] | null;
 };
 
 const CONNECTION_TEXT: Record<OnlineState, string> = {
@@ -125,6 +128,7 @@ export function StaffShell({
   currentTargetIndex,
   profileExtras,
   formHint = "phone",
+  liveStatusScreens = null,
 }: StaffShellProps) {
   // A PC (mouse, wide window) draws the same shell as an XP window: title bar, task pane, status bar.
   const form = useDeviceForm(formHint);
@@ -162,6 +166,7 @@ export function StaffShell({
   const side = desktop || layout === "rail" || wide;
   const tools = (
     <>
+      {liveStatusScreens ? <LiveStatusButton screens={liveStatusScreens} /> : null}
       <StaffBell nav={nav} />
       <ProfileMenu
         user={user}

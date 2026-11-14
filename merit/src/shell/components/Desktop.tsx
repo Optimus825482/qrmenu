@@ -1,5 +1,6 @@
 "use client";
 
+import { viewableScreens } from "../kpiAccess";
 import { useRouter } from "next/navigation";
 import {
   useRef,
@@ -64,8 +65,10 @@ export function Desktop({ apps, onOpenApp }: Props) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [gallery, setGallery] = useState(false);
   const appById = new Map(apps.map((a) => [a.id, a]));
-  // A widget that reads a screen's data is offered only to users who may see that screen.
-  const screens = new Set(apps.map((a) => a.screenCode));
+  // A widget that reads a screen's data is offered only to users who may see that screen: the screens of the
+  // visible apps, plus screens with no window of their own (CR-DUR, the Anlık Durum widget) from the permissions.
+  const screensByHotel = useWindowStore((s) => s.screensByHotel);
+  const screens = new Set([...apps.map((a) => a.screenCode), ...(viewableScreens(screensByHotel) ?? [])]);
   const availableWidgets = WIDGET_IDS.map((id) => WIDGETS[id]).filter((def) => !def.screenCode || screens.has(def.screenCode));
 
   const menuAt = (e: ReactMouseEvent, appId?: string): MenuState => {

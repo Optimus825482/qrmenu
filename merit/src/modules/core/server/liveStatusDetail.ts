@@ -8,7 +8,7 @@ import { CANCELLED_ORDER, COMPLETED_ORDER, commandScope, rowHotels, todayBounds,
 
 /*
  * What opens when a row of the desktop "Anlık Durum" widget is clicked: the same numbers, broken down.
- * Scope is the widget's own (hotels where the caller may view CR-KOM); each kind is then narrowed to the
+ * Scope is the widget's own (hotels where the caller may view CR-DUR); each kind is then narrowed to the
  * hotels where the caller may see that area, by the same screens that gate the widget's row. A hotel the
  * caller may not see is simply absent.
  */

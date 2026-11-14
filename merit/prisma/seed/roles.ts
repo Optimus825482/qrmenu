@@ -61,7 +61,7 @@ const VIEW_REPORT: readonly Action[] = ["V", "R"];
 /** CORE screens every role may open for reporting. */
 const CORE_ALL_ROLES = new Set(["CR-RAP"]);
 /** Command center and live radar: view + report for system and management roles only. */
-const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-RAD"]);
+const CORE_MANAGEMENT = new Set(["CR-KOM", "CR-RAD", "CR-DUR"]);
 /** Online users: hotel managers may also force-logout (A). R-SYS already has A via profile TAM. */
 const ONLINE_FORCE: readonly Action[] = ["V", "A", "R"];
 /**
@@ -79,14 +79,14 @@ const CORE_ADMIN_ROLES = new Set(["R-SYS", "R-ITT"]);
  * their own module screens.
  */
 const DELEGATE_MANAGERS = new Set(["R-MTY", "R-QMY"]);
-const DELEGATE_CORE = new Set(["CR-KOM", "CR-RAP"]);
+const DELEGATE_CORE = new Set(["CR-KOM", "CR-RAP", "CR-DUR"]);
 /**
  * Oda Servisi Sorumlusu: a department head, not a hotel manager. Desktop, reports and the live radar to
  * watch the operation, user management for its own team (the roles it may assign are in roleRanks.ts);
  * no definitions, online users, audit log or system settings.
  */
 const DEPARTMENT_HEADS = new Set(["R-OSS"]);
-const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD"]);
+const DEPARTMENT_CORE_VIEW = new Set(["CR-KOM", "CR-RAP", "CR-RAD", "CR-DUR"]);
 
 /**
  * One list of screen limits applied to module screens (never CORE, never `modules: "ALL"` roles). Each entry

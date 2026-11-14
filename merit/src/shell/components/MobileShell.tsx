@@ -29,6 +29,8 @@ import {
   mobileNavReducer,
 } from "./mobile/mobileNav";
 import { MonitorTab } from "./mobile/MonitorTab";
+import { LiveStatusWidget } from "./widgets/LiveStatusWidget";
+import { viewableScreens } from "../kpiAccess";
 import { NotificationsTab } from "./mobile/NotificationsTab";
 import { ReportsTab } from "./mobile/ReportsTab";
 import { SettingsTab } from "./mobile/SettingsTab";
@@ -154,6 +156,9 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
 
   const notifications = useNotifications(subscribe);
   const { kpis, error: kpiError, scheduleRefresh } = useCommandCenterKpis();
+  // The Anlık Durum table, the same as the desktop widget, for whoever the permission matrix gives CR-DUR.
+  const screensByHotel = useWindowStore((s) => s.screensByHotel);
+  const liveStatus = viewableScreens(screensByHotel)?.has("CR-DUR") ?? false;
   useEffect(
     () =>
       subscribe((e) => {
@@ -415,6 +420,11 @@ export function MobileShell({ user, mobileDefinitions, apps: desktopApps }: Prop
               </span>
             </span>
           </button>
+          {liveStatus ? (
+            <section className="mb-live-status" aria-label="Anlık Durum" data-testid="mb-anlik-durum">
+              <LiveStatusWidget />
+            </section>
+          ) : null}
           <nav className="mb-launcher" aria-label="Uygulamalar">
             {home.map((a) => (
               <button key={a.id} type="button" className="mb-launch" onClick={() => launch(a.id)}>
